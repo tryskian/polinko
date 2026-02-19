@@ -1,10 +1,14 @@
 import os
+import json
+import logging
+import time
+import uuid
 from typing import cast
 
 from agents import Agent, ModelSettings, RunConfig, Runner
 from agents.memory import Session, SessionSettings, SQLiteSession
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel, Field
 from openai import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
 
@@ -12,11 +16,13 @@ from prompts import ACTIVE_PROMPT, ACTIVE_PROMPT_VERSION
 
 
 load_dotenv(dotenv_path=".env")
-if not os.getenv("OPENAI_API_KEY"):
-    raise RuntimeError("OPENAI_API_KEY is not set. Add it to .env or export it before starting server.py.")
-
 SESSION_DB_PATH = os.getenv("POLINKO_MEMORY_DB_PATH", ".polinko_memory.db")
 DEFAULT_SESSION_ID = "default"
+LOG_LEVEL = os.getenv("POLINKO_LOG_LEVEL", "INFO").upper()
+SERVER_API_KEY = os.getenv("POLINKO_SERVER_API_KEY")
+
+logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO), format="%(message)s")
+logger = logging.getLogger("polinko.api")
 
 app = FastAPI(title="Polinko Agent API", version="0.1.0")
 
@@ -49,6 +55,51 @@ class ResetRequest(BaseModel):
     session_id: str = Field(default=DEFAULT_SESSION_ID, min_length=1)
 
 
+def _looks_like_placeholder(value: str) -> bool:
+    normalized = value.strip().lower()
+    placeholders = {
+        "your-key",
+        "your_api_key",
+        "replace-me",
+        "changeme",
+        "dummy",
+        "placeholder",
+    }
+    return normalized in placeholders
+
+
+def validate_startup_config() -> None:
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        raise RuntimeError("OPENAI_API_KEY is not set. Add it to .env or export it before starting server.py.")
+    if not openai_api_key.startswith("sk-"):
+        raise RuntimeError("OPENAI_API_KEY appears invalid (expected it to start with 'sk-').")
+    if len(openai_api_key) < 20:
+        raise RuntimeError("OPENAI_API_KEY appears too short; check your .env value.")
+    if _looks_like_placeholder(openai_api_key):
+        raise RuntimeError("OPENAI_API_KEY is a placeholder value; set a real key.")
+
+    if SERVER_API_KEY:
+        if len(SERVER_API_KEY) < 12:
+            raise RuntimeError("POLINKO_SERVER_API_KEY is too short; use at least 12 characters.")
+        if _looks_like_placeholder(SERVER_API_KEY):
+            raise RuntimeError("POLINKO_SERVER_API_KEY is a placeholder value; set a real key.")
+
+
+def log_event(event: str, **fields: object) -> None:
+    payload = {"event": event, **fields}
+    logger.info(json.dumps(payload, default=str))
+
+
+def enforce_api_key(request: Request) -> None:
+    if not SERVER_API_KEY:
+        return
+
+    presented = request.headers.get("x-api-key")
+    if presented != SERVER_API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API key.")
+
+
 def get_session(session_id: str) -> Session:
     return cast(
         Session,
@@ -60,6 +111,41 @@ def get_session(session_id: str) -> Session:
     )
 
 
+validate_startup_config()
+
+
+@app.middleware("http")
+async def request_logging(request: Request, call_next):
+    request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
+    request.state.request_id = request_id
+    start = time.perf_counter()
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        log_event(
+            "http_error",
+            request_id=request_id,
+            method=request.method,
+            path=request.url.path,
+            duration_ms=duration_ms,
+            error_type=type(exc).__name__,
+        )
+        raise
+
+    duration_ms = round((time.perf_counter() - start) * 1000, 2)
+    response.headers["x-request-id"] = request_id
+    log_event(
+        "http_request",
+        request_id=request_id,
+        method=request.method,
+        path=request.url.path,
+        status_code=response.status_code,
+        duration_ms=duration_ms,
+    )
+    return response
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {
@@ -69,8 +155,11 @@ def health() -> dict[str, str]:
 
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest) -> ChatResponse:
+async def chat(req: ChatRequest, request: Request) -> ChatResponse:
+    enforce_api_key(request)
     session = get_session(req.session_id)
+    start = time.perf_counter()
+    request_id = getattr(request.state, "request_id", None)
     try:
         result = await Runner.run(
             agent,
@@ -79,23 +168,65 @@ async def chat(req: ChatRequest) -> ChatResponse:
             session=session,
         )
     except AuthenticationError as exc:
+        log_event(
+            "chat_error",
+            request_id=request_id,
+            session_id=req.session_id,
+            error_type="AuthenticationError",
+        )
         raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
     except RateLimitError as exc:
+        log_event(
+            "chat_error",
+            request_id=request_id,
+            session_id=req.session_id,
+            error_type="RateLimitError",
+        )
         raise HTTPException(status_code=429, detail="Rate limit reached. Try again shortly.") from exc
     except APIConnectionError as exc:
+        log_event(
+            "chat_error",
+            request_id=request_id,
+            session_id=req.session_id,
+            error_type="APIConnectionError",
+        )
         raise HTTPException(status_code=503, detail="Connection error reaching OpenAI API.") from exc
     except APIStatusError as exc:
+        log_event(
+            "chat_error",
+            request_id=request_id,
+            session_id=req.session_id,
+            error_type="APIStatusError",
+            status_code=exc.status_code,
+        )
         raise HTTPException(status_code=502, detail=f"OpenAI API error ({exc.status_code}).") from exc
 
-    return ChatResponse(
+    response = ChatResponse(
         output=str(result.final_output),
         session_id=req.session_id,
         prompt_version=ACTIVE_PROMPT_VERSION,
     )
+    duration_ms = round((time.perf_counter() - start) * 1000, 2)
+    log_event(
+        "chat_success",
+        request_id=request_id,
+        session_id=req.session_id,
+        prompt_version=ACTIVE_PROMPT_VERSION,
+        input_chars=len(req.message),
+        output_chars=len(response.output),
+        duration_ms=duration_ms,
+    )
+    return response
 
 
 @app.post("/session/reset")
-async def reset_session(req: ResetRequest) -> dict[str, str]:
+async def reset_session(req: ResetRequest, request: Request) -> dict[str, str]:
+    enforce_api_key(request)
     session = get_session(req.session_id)
     await session.clear_session()
+    log_event(
+        "session_reset",
+        request_id=getattr(request.state, "request_id", None),
+        session_id=req.session_id,
+    )
     return {"status": "ok", "session_id": req.session_id}
