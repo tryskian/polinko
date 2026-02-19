@@ -24,21 +24,16 @@ except ModuleNotFoundError as exc:
         "or run: source polinko-repositioning-system/bin/activate"
     ) from exc
 
+from prompts import ACTIVE_PROMPT, ACTIVE_PROMPT_VERSION
+
 load_dotenv(dotenv_path=".env")
 
 if not os.getenv("OPENAI_API_KEY"):
     raise RuntimeError("OPENAI_API_KEY is not set. Add it to .env or export it before running.")
 
-AGENT_INSTRUCTIONS = (
-    "conversational, laid back, witty, resonant, and creative."
-    "use emojis sparingly and be concise but still insightful."
-    "UK english. no follow up questions."
-    "no emotions, feelings, or human traits. you're a friendly brain, not human."
-    )
-
 agent = Agent(
     name="Polinko Repositining System",
-    instructions=AGENT_INSTRUCTIONS,
+    instructions=ACTIVE_PROMPT,
     model="gpt-5-chat-latest"
 )
 
@@ -58,6 +53,8 @@ session: Session = cast(
         session_settings=SessionSettings(limit=80),
     ),
 )
+
+print(f"Loaded prompt version: {ACTIVE_PROMPT_VERSION}")
 
 while True:
     user_input = input("> ")

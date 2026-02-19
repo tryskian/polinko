@@ -22,3 +22,5 @@ _virtualenv.py
 
 # Local runtime data
 .polinko_memory.db
+.polinko_memory.db-shm
+.polinko_memory.db-wal

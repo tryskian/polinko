@@ -1,5 +1,10 @@
 {
   "venvPath": ".",
   "venv": "polinko-repositioning-system",
-  "include": ["try.py"]
+  "include": [
+    "try.py",
+    "prompts.py",
+    "eval_regression.py",
+    "server.py"
+  ]
 }
