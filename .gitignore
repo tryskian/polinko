@@ -1,0 +1,24 @@
+# Secrets
+.env
+
+# OS/editor noise
+.DS_Store
+.history/
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Local virtual environments (choose one runtime, keep all untracked)
+venv
+virtualenv_name
+polinko-repositioning-system
+
+# Node (if added later)
+node_modules/
+
+# Legacy local helper file
+_virtualenv.py
+
+# Local runtime data
+.polinko_memory.db

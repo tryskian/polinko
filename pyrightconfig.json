@@ -1,0 +1,5 @@
+{
+  "venvPath": ".",
+  "venv": "polinko-repositioning-system",
+  "include": ["try.py"]
+}
