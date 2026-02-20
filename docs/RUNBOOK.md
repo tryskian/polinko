@@ -34,5 +34,5 @@ Symptom:
 Checks:
 
 1. Confirm internet access and no firewall/VPN block.
-2. Confirm `OPENAI_API_KEY` is set in `.env`.
+2. Confirm `OPENAI_API_KEY` is set in `.env` (and set as GitHub Actions secret `OPENAI_API_KEY` for CI eval).
 3. Retry command after a short wait.

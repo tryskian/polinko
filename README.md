@@ -1,6 +1,7 @@
 # Polinko
 
 Lightweight GPT agent project with:
+
 - CLI chat runner
 - FastAPI backend
 - Prompt regression checks
@@ -36,5 +37,6 @@ Run these from repo root:
 ## CI
 
 GitHub Actions runs:
+
 - unit tests on every push and PR
 - regression eval when `OPENAI_API_KEY` repository secret is configured
