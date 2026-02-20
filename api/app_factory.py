@@ -4,9 +4,9 @@ import logging
 import time
 import uuid
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
-from agents import Runner, RunConfig
+from agents import Agent, Runner, RunConfig
 from agents.memory import Session
 from fastapi import FastAPI, HTTPException, Request
 from openai import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
@@ -29,7 +29,7 @@ class RuntimeDeps:
     rate_limit_per_minute: int
     rate_limiter: SlidingWindowRateLimiter
     run_config: RunConfig
-    agent: object
+    agent: Agent[Any]
 
 
 class ChatRequest(BaseModel):
