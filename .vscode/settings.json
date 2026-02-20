@@ -8,11 +8,12 @@
 	"terminal.integrated.cursorStyle": "line",
 	"terminal.integrated.cursorStyleInactive": "underline",
 	"terminal.integrated.defaultLocation": "editor",
-	"terminal.integrated.fontSize": 13,
+	"terminal.integrated.fontSize": 12,
 	"terminal.integrated.lineHeight": 1.25,
 	"editor.formatOnPaste": true,
 	"editor.formatOnType": true,
 	"workbench.editor.wrapTabs": false,
 	"editor.wordWrap": "on",
-	"chat.editor.wordWrap": "on"
+	"chat.editor.wordWrap": "on",
+	"terminal.explorerKind": "external"
 }

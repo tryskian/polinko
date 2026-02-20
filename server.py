@@ -3,6 +3,8 @@ import json
 import logging
 import time
 import uuid
+import threading
+from collections import defaultdict, deque
 from typing import cast
 
 from agents import Agent, ModelSettings, RunConfig, Runner
@@ -20,9 +22,12 @@ SESSION_DB_PATH = os.getenv("POLINKO_MEMORY_DB_PATH", ".polinko_memory.db")
 DEFAULT_SESSION_ID = "default"
 LOG_LEVEL = os.getenv("POLINKO_LOG_LEVEL", "INFO").upper()
 SERVER_API_KEY = os.getenv("POLINKO_SERVER_API_KEY")
+RATE_LIMIT_PER_MINUTE = int(os.getenv("POLINKO_RATE_LIMIT_PER_MINUTE", "30"))
 
 logging.basicConfig(level=getattr(logging, LOG_LEVEL, logging.INFO), format="%(message)s")
 logger = logging.getLogger("polinko.api")
+rate_lock = threading.Lock()
+rate_buckets: dict[str, deque[float]] = defaultdict(deque)
 
 app = FastAPI(title="Polinko Agent API", version="0.1.0")
 
@@ -100,6 +105,35 @@ def enforce_api_key(request: Request) -> None:
         raise HTTPException(status_code=401, detail="Invalid API key.")
 
 
+def _client_identifier(request: Request, session_id: str) -> str:
+    forwarded_for = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+    client_ip = forwarded_for or (request.client.host if request.client else "unknown")
+    return f"{client_ip}:{session_id}"
+
+
+def enforce_rate_limit(identifier: str) -> None:
+    if RATE_LIMIT_PER_MINUTE <= 0:
+        return
+
+    now = time.time()
+    cutoff = now - 60.0
+    with rate_lock:
+        bucket = rate_buckets[identifier]
+        while bucket and bucket[0] <= cutoff:
+            bucket.popleft()
+        if len(bucket) >= RATE_LIMIT_PER_MINUTE:
+            retry_after = max(1, int(60 - (now - bucket[0])))
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    f"Rate limit exceeded ({RATE_LIMIT_PER_MINUTE}/min). "
+                    f"Retry in ~{retry_after}s."
+                ),
+                headers={"Retry-After": str(retry_after)},
+            )
+        bucket.append(now)
+
+
 def get_session(session_id: str) -> Session:
     return cast(
         Session,
@@ -157,6 +191,19 @@ def health() -> dict[str, str]:
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest, request: Request) -> ChatResponse:
     enforce_api_key(request)
+    limiter_id = _client_identifier(request, req.session_id)
+    try:
+        enforce_rate_limit(limiter_id)
+    except HTTPException:
+        log_event(
+            "chat_rate_limited",
+            request_id=getattr(request.state, "request_id", None),
+            session_id=req.session_id,
+            limiter_id=limiter_id,
+            limit_per_minute=RATE_LIMIT_PER_MINUTE,
+        )
+        raise
+
     session = get_session(req.session_id)
     start = time.perf_counter()
     request_id = getattr(request.state, "request_id", None)

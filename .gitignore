@@ -24,3 +24,9 @@ _virtualenv.py
 .polinko_memory.db
 .polinko_memory.db-shm
 .polinko_memory.db-wal
+
+# Local planning/handoff docs
+CHARTER.md
+STATE.md
+DECISIONS.md
+SESSION_HANDOFF.md

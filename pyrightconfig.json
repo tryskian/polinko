@@ -6,6 +6,7 @@
     "client.py",
     "prompts.py",
     "eval_regression.py",
-    "server.py"
+    "server.py",
+    "tests/test_api.py"
   ]
 }
