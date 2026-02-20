@@ -2,13 +2,12 @@ import asyncio
 import os
 import sys
 from pathlib import Path
-from typing import cast
 
 try:
-    from dotenv import load_dotenv
-    from agents import Agent, ModelSettings, RunConfig, Runner
-    from agents.memory import Session, SQLiteSession, SessionSettings
+    from agents import Runner
     from openai import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
+    from config import load_config
+    from core.runtime import create_agent, create_run_config, create_session
 except ModuleNotFoundError as exc:
     # If launched with the wrong interpreter, restart with the project virtualenv python.
     project_venv = Path(__file__).resolve().parent / "polinko-repositioning-system"
@@ -24,34 +23,15 @@ except ModuleNotFoundError as exc:
         "or run: source polinko-repositioning-system/bin/activate"
     ) from exc
 
-from prompts import ACTIVE_PROMPT, ACTIVE_PROMPT_VERSION
+from core.prompts import ACTIVE_PROMPT_VERSION
 
-load_dotenv(dotenv_path=".env")
-
-if not os.getenv("OPENAI_API_KEY"):
-    raise RuntimeError("OPENAI_API_KEY is not set. Add it to .env or export it before running.")
-
-agent = Agent(
-    name="Polinko Repositining System",
-    instructions=ACTIVE_PROMPT,
-    model="gpt-5-chat-latest"
-)
-
-run_config = RunConfig(
-    model_settings=ModelSettings(
-        temperature=1.0,
-        top_p=1.0,
-        store=True,
-    )
-)
-
-session: Session = cast(
-    Session,
-    SQLiteSession(
-        session_id="polinko-cli",
-        db_path=".polinko_memory.db",
-        session_settings=SessionSettings(limit=80),
-    ),
+config = load_config(dotenv_path=".env")
+agent = create_agent()
+run_config = create_run_config(store=True)
+session = create_session(
+    session_id=os.getenv("POLINKO_CLI_SESSION_ID", "polinko-cli"),
+    db_path=config.session_db_path,
+    limit=80,
 )
 
 print(f"Loaded prompt version: {ACTIVE_PROMPT_VERSION}")

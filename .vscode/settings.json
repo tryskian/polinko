@@ -7,7 +7,7 @@
 	"terminal.integrated.copyOnSelection": true,
 	"terminal.integrated.cursorStyle": "line",
 	"terminal.integrated.cursorStyleInactive": "underline",
-	"terminal.integrated.defaultLocation": "editor",
+	"terminal.integrated.defaultLocation": "panel",
 	"terminal.integrated.fontSize": 12,
 	"terminal.integrated.lineHeight": 1.25,
 	"editor.formatOnPaste": true,
@@ -15,5 +15,8 @@
 	"workbench.editor.wrapTabs": false,
 	"editor.wordWrap": "on",
 	"chat.editor.wordWrap": "on",
-	"terminal.explorerKind": "external"
+	"terminal.explorerKind": "external",
+	"diffEditor.wordWrap": "on",
+	"notebook.output.wordWrap": true,
+	"editor.wrapOnEscapedLineFeeds": true
 }

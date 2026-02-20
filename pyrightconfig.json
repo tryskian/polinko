@@ -2,10 +2,11 @@
   "venvPath": ".",
   "venv": "polinko-repositioning-system",
   "include": [
-    "try.py",
-    "client.py",
-    "prompts.py",
-    "eval_regression.py",
+    "config.py",
+    "app.py",
+    "api",
+    "core",
+    "tools",
     "server.py",
     "tests/test_api.py"
   ]

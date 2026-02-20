@@ -1,5 +1,6 @@
 # Secrets
 .env
+.env.example
 
 # OS/editor noise
 .DS_Store
@@ -26,7 +27,8 @@ _virtualenv.py
 .polinko_memory.db-wal
 
 # Local planning/handoff docs
-CHARTER.md
-STATE.md
-DECISIONS.md
-SESSION_HANDOFF.md
+docs/CHARTER.md
+docs/STATE.md
+docs/DECISIONS.md
+docs/SESSION_HANDOFF.md
+docs/ARCHITECTURE.md

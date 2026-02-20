@@ -1,34 +1,48 @@
 import json
-import os
+import re
 import sys
 from pathlib import Path
 from typing import Any
 
-from dotenv import load_dotenv
-from agents import Agent, ModelSettings, RunConfig, Runner
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from agents import Runner
 from openai import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
 
-from prompts import ACTIVE_PROMPT, ACTIVE_PROMPT_VERSION
+from config import load_config
+from core.runtime import create_agent, create_run_config
+from core.prompts import ACTIVE_PROMPT_VERSION
 
 
 def _count_words(text: str) -> int:
     return len(text.split())
 
 
-def _contains_all(text: str, needles: list[str]) -> list[str]:
+def _matches_needle(text: str, needle: str) -> bool:
     lower_text = text.lower()
+    lower_needle = needle.lower()
+    # Treat single-token needles as whole words to avoid false positives
+    # (e.g. "our" should not match "your").
+    if " " not in lower_needle and re.fullmatch(r"[a-z][a-z'-]*", lower_needle):
+        pattern = rf"\b{re.escape(lower_needle)}\b"
+        return re.search(pattern, lower_text) is not None
+    return lower_needle in lower_text
+
+
+def _contains_all(text: str, needles: list[str]) -> list[str]:
     missing = []
     for needle in needles:
-        if needle.lower() not in lower_text:
+        if not _matches_needle(text, needle):
             missing.append(needle)
     return missing
 
 
 def _contains_any(text: str, needles: list[str]) -> list[str]:
-    lower_text = text.lower()
     found = []
     for needle in needles:
-        if needle.lower() in lower_text:
+        if _matches_needle(text, needle):
             found.append(needle)
     return found
 
@@ -39,33 +53,24 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
 
 
 def main() -> int:
-    load_dotenv(dotenv_path=".env")
-    if not os.getenv("OPENAI_API_KEY"):
-        print("OPENAI_API_KEY is not set.")
+    try:
+        load_config(dotenv_path=".env")
+    except RuntimeError as exc:
+        print(str(exc))
         return 1
 
-    cases_path = Path("golden_prompts.json")
+    cases_path = Path("configs/golden_prompts.json")
     if not cases_path.exists():
-        print("Missing golden_prompts.json")
+        print("Missing configs/golden_prompts.json")
         return 1
 
     cases = _load_cases(cases_path)
     if not cases:
-        print("No cases found in golden_prompts.json")
+        print("No cases found in configs/golden_prompts.json")
         return 1
 
-    agent = Agent(
-        name="Polinko Repositining System",
-        instructions=ACTIVE_PROMPT,
-        model="gpt-5-chat-latest",
-    )
-    run_config = RunConfig(
-        model_settings=ModelSettings(
-            temperature=1.0,
-            top_p=1.0,
-            store=False,
-        )
-    )
+    agent = create_agent()
+    run_config = create_run_config(store=False)
 
     print(f"Running {len(cases)} regression checks with prompt {ACTIVE_PROMPT_VERSION}")
     failures = 0

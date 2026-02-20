@@ -13,9 +13,10 @@ import server  # noqa: E402
 
 class PolinkoApiTests(unittest.TestCase):
     def setUp(self) -> None:
-        server.SERVER_API_KEY = "test-server-key"
-        server.RATE_LIMIT_PER_MINUTE = 30
-        server.rate_buckets.clear()
+        deps = server.get_runtime_deps()
+        deps.server_api_key = "test-server-key"
+        deps.rate_limit_per_minute = 30
+        deps.rate_limiter.clear()
         self.client = TestClient(server.app)
 
     def test_health(self) -> None:
@@ -64,8 +65,9 @@ class PolinkoApiTests(unittest.TestCase):
 
     def test_rate_limit_includes_retry_after(self) -> None:
         original_run = server.Runner.run
-        original_limit = server.RATE_LIMIT_PER_MINUTE
-        server.RATE_LIMIT_PER_MINUTE = 1
+        deps = server.get_runtime_deps()
+        original_limit = deps.rate_limit_per_minute
+        deps.rate_limit_per_minute = 1
 
         async def fake_run(*args, **kwargs):
             return SimpleNamespace(final_output="ok")
@@ -84,12 +86,57 @@ class PolinkoApiTests(unittest.TestCase):
             )
         finally:
             server.Runner.run = original_run
-            server.RATE_LIMIT_PER_MINUTE = original_limit
-            server.rate_buckets.clear()
+            deps.rate_limit_per_minute = original_limit
+            deps.rate_limiter.clear()
 
         self.assertEqual(first.status_code, 200)
         self.assertEqual(second.status_code, 429)
         self.assertIn("Retry-After", second.headers)
+
+    def test_chat_rejects_empty_message(self) -> None:
+        resp = self.client.post(
+            "/chat",
+            headers={"x-api-key": "test-server-key"},
+            json={"message": "", "session_id": "s-empty"},
+        )
+        self.assertEqual(resp.status_code, 422)
+
+    def test_chat_rejects_malformed_json(self) -> None:
+        resp = self.client.post(
+            "/chat",
+            headers={"x-api-key": "test-server-key", "Content-Type": "application/json"},
+            content='{"message": "hello", "session_id": "oops"',
+        )
+        self.assertEqual(resp.status_code, 422)
+
+    def test_rate_limit_zero_disables_limiting(self) -> None:
+        original_run = server.Runner.run
+        deps = server.get_runtime_deps()
+        original_limit = deps.rate_limit_per_minute
+        deps.rate_limit_per_minute = 0
+
+        async def fake_run(*args, **kwargs):
+            return SimpleNamespace(final_output="ok")
+
+        server.Runner.run = fake_run
+        try:
+            first = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key", "x-forwarded-for": "9.9.9.9"},
+                json={"message": "first", "session_id": "s-no-limit"},
+            )
+            second = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key", "x-forwarded-for": "9.9.9.9"},
+                json={"message": "second", "session_id": "s-no-limit"},
+            )
+        finally:
+            server.Runner.run = original_run
+            deps.rate_limit_per_minute = original_limit
+            deps.rate_limiter.clear()
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
 
 
 if __name__ == "__main__":
