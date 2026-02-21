@@ -141,18 +141,18 @@ body {
   background: transparent;
   border: 0;
   padding: 0;
-  margin-block: 0.2rem;
+  margin-block: 0.16rem;
 }
 
 .msg.user {
   margin-left: auto;
   max-width: min(72%, 680px);
   border-radius: 18px;
-  padding: 0.5rem 0.95rem;
+  padding: 0.44rem 0.9rem;
   border: 1px solid rgba(255, 255, 255, 0.04);
   background: rgba(255, 255, 255, 0.08);
-  line-height: 1.35;
-  margin-block: 0.35rem 0.75rem;
+  line-height: 1.62;
+  margin-block: 0.3rem 0.66rem;
 }
 
 .msg.assistant {
@@ -162,7 +162,7 @@ body {
   line-height: 1.72;
   letter-spacing: 0.004em;
   max-width: min(95%, 1140px);
-  margin-block: 0.6rem 0.9rem;
+  margin-block: 0.52rem 0.78rem;
 }
 
 .msg.thinking {
@@ -177,8 +177,8 @@ body {
 }
 
 .thinking-dots .dot {
-  width: 0.36rem;
-  height: 0.36rem;
+  width: 0.44rem;
+  height: 0.44rem;
   border-radius: 999px;
   background: currentColor;
   opacity: 0.45;
@@ -242,7 +242,11 @@ body {
 }
 
 .msg.user p {
-  margin: 0;
+  margin: 0 0 1.08rem;
+}
+
+.msg.user p:last-child {
+  margin-bottom: 0;
 }
 
 .msg pre {

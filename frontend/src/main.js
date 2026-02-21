@@ -9,6 +9,7 @@ const resetEl = document.getElementById("reset");
 const emptyStateEl = document.getElementById("empty-state");
 const chatSelectEl = document.getElementById("chat-select");
 const newChatEl = document.getElementById("new-chat");
+const RESPONSE_RENDER_DELAY_MS = 220;
 
 let chats = [];
 let activeChatId = "";
@@ -177,6 +178,10 @@ function appendThinkingIndicator() {
   return node;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function sortChatsByRecent(nextChats) {
   return [...nextChats].sort((a, b) => b.updated_at - a.updated_at || b.created_at - a.created_at);
 }
@@ -283,6 +288,7 @@ composerEl.addEventListener("submit", async (event) => {
 
   try {
     const result = await sendMessage(messageText, activeChatId);
+    await sleep(RESPONSE_RENDER_DELAY_MS);
     thinkingNode.remove();
     appendMessage("assistant", result.output);
     await refreshChats();
