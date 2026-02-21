@@ -46,6 +46,12 @@
 1. Run `make test`.
 2. Fix failures before merging.
 
+## Export CLI Transcript
+
+1. Run `make chat`.
+2. In CLI, use `/export` for default markdown export.
+3. Optional custom path/format: `/export exports/session.txt` or `/export exports/session.json`.
+
 ## Common Connection Error
 
 Symptom:

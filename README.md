@@ -17,6 +17,11 @@ Run these from repo root:
 4. open `http://127.0.0.1:5173`
 5. `make test`
 
+CLI extras:
+- `/reset` clears current CLI session memory/history
+- `/export` writes transcript to `exports/<session>-<timestamp>.md`
+- `/export path/to/file.txt` or `.json` for other formats
+
 ## Setup
 
 1. Create and activate your virtualenv (or use the existing one in this repo).
