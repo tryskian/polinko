@@ -154,6 +154,13 @@ async function apiListMessages(sessionId) {
   return requestJson(`/chats/${encodeURIComponent(sessionId)}/messages`);
 }
 
+async function apiAddNote(sessionId, note) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/notes`, {
+    method: "POST",
+    body: JSON.stringify({ note }),
+  });
+}
+
 async function sendMessage(messageText, sessionId) {
   return requestJson("/chat", {
     method: "POST",
@@ -161,11 +168,30 @@ async function sendMessage(messageText, sessionId) {
   });
 }
 
+function parsePreferenceNote(value) {
+  const match = value.match(/^\/note(?:\s+|:\s*)([\s\S]+)$/i);
+  if (!match) {
+    return "";
+  }
+  return match[1].trim();
+}
+
 async function resetSession(sessionId) {
   return requestJson("/session/reset", {
     method: "POST",
     body: JSON.stringify({ session_id: sessionId }),
   });
+}
+
+async function startFreshChat({ deprecateCurrent = false } = {}) {
+  if (deprecateCurrent && activeChatId) {
+    await resetSession(activeChatId);
+  }
+  const created = await apiCreateChat();
+  await refreshChats();
+  await setActiveChat(created.session_id);
+  closeDrawer();
+  messageEl.focus();
 }
 
 function appendThinkingIndicator() {
@@ -280,11 +306,7 @@ async function ensureInitialState() {
 
 newChatEl.addEventListener("click", async () => {
   try {
-    const created = await apiCreateChat();
-    await refreshChats();
-    await setActiveChat(created.session_id);
-    closeDrawer();
-    messageEl.focus();
+    await startFreshChat();
   } catch (error) {
     appendMessage("error", String(error), { persist: false });
   }
@@ -312,6 +334,19 @@ composerEl.addEventListener("submit", async (event) => {
   event.preventDefault();
   const messageText = messageEl.value.trim();
   if (!messageText || !activeChatId) {
+    return;
+  }
+
+  const noteText = parsePreferenceNote(messageText);
+  if (noteText) {
+    try {
+      await apiAddNote(activeChatId, noteText);
+      messageEl.value = "";
+      autoSizeComposer();
+      await refreshChats();
+    } catch (error) {
+      appendMessage("error", String(error), { persist: false });
+    }
     return;
   }
 
@@ -345,10 +380,7 @@ resetEl.addEventListener("click", async () => {
     return;
   }
   try {
-    await resetSession(activeChatId);
-    currentMessages = [];
-    renderCurrentMessages();
-    await refreshChats();
+    await startFreshChat({ deprecateCurrent: true });
   } catch (error) {
     appendMessage("error", String(error), { persist: false });
   }

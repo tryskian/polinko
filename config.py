@@ -15,6 +15,7 @@ class AppConfig:
     server_api_key: str | None
     server_api_key_principals: dict[str, str]
     rate_limit_per_minute: int
+    deprecate_on_reset: bool
 
 
 def _looks_like_placeholder(value: str) -> bool:
@@ -103,6 +104,20 @@ def _load_server_api_key_principals(single_server_api_key: str | None) -> dict[s
     return principals
 
 
+def _parse_bool_env(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    normalized = raw.strip().lower()
+    truthy = {"1", "true", "yes", "on"}
+    falsy = {"0", "false", "no", "off"}
+    if normalized in truthy:
+        return True
+    if normalized in falsy:
+        return False
+    raise RuntimeError(f"{name} must be a boolean (true/false).")
+
+
 def load_config(dotenv_path: str = ".env") -> AppConfig:
     load_dotenv(dotenv_path=dotenv_path)
 
@@ -121,6 +136,7 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         raise RuntimeError(
             "POLINKO_RATE_LIMIT_PER_MINUTE must be an integer."
         ) from exc
+    deprecate_on_reset = _parse_bool_env("POLINKO_DEPRECATE_ON_RESET", True)
 
     return AppConfig(
         openai_api_key=openai_api_key,
@@ -131,4 +147,5 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         server_api_key=server_api_key,
         server_api_key_principals=server_api_key_principals,
         rate_limit_per_minute=rate_limit_per_minute,
+        deprecate_on_reset=deprecate_on_reset,
     )

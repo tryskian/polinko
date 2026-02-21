@@ -21,6 +21,7 @@ class PolinkoApiTests(unittest.TestCase):
         deps.server_api_key_principals = {"test-server-key": "default"}
         deps.rate_limit_per_minute = 30
         deps.rate_limiter.clear()
+        deps.deprecate_on_reset = False
         deps.session_db_path = os.path.join(self.tmpdir.name, "test-memory.db")
         deps.history_store = ChatHistoryStore(os.path.join(self.tmpdir.name, "test-history.db"))
         self.client = TestClient(server.app)
@@ -44,6 +45,9 @@ class PolinkoApiTests(unittest.TestCase):
 
         chats_resp = self.client.get("/chats")
         self.assertEqual(chats_resp.status_code, 401)
+
+        note_resp = self.client.post("/chats/s1/notes", json={"note": "test"})
+        self.assertEqual(note_resp.status_code, 401)
 
     def test_reset_with_valid_api_key(self) -> None:
         resp = self.client.post(
@@ -149,6 +153,107 @@ class PolinkoApiTests(unittest.TestCase):
         )
         self.assertEqual(after_reset.status_code, 200)
         self.assertEqual(after_reset.json()["messages"], [])
+
+    def test_reset_with_deprecate_hides_chat_and_blocks_sends(self) -> None:
+        session_id = "s-deprecated"
+        created = self.client.post(
+            "/chats",
+            headers={"x-api-key": "test-server-key"},
+            json={"session_id": session_id},
+        )
+        self.assertEqual(created.status_code, 200)
+
+        reset_resp = self.client.post(
+            "/session/reset",
+            headers={"x-api-key": "test-server-key"},
+            json={"session_id": session_id, "deprecate": True},
+        )
+        self.assertEqual(reset_resp.status_code, 200)
+
+        chats_resp = self.client.get("/chats", headers={"x-api-key": "test-server-key"})
+        self.assertEqual(chats_resp.status_code, 200)
+        self.assertEqual(chats_resp.json()["chats"], [])
+
+        all_chats_resp = self.client.get(
+            "/chats?include_deprecated=true",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(all_chats_resp.status_code, 200)
+        chats = all_chats_resp.json()["chats"]
+        self.assertEqual(len(chats), 1)
+        self.assertEqual(chats[0]["session_id"], session_id)
+        self.assertEqual(chats[0]["status"], "deprecated")
+        self.assertIsInstance(chats[0]["deprecated_at"], int)
+
+        send_resp = self.client.post(
+            "/chat",
+            headers={"x-api-key": "test-server-key"},
+            json={"message": "hello again", "session_id": session_id},
+        )
+        self.assertEqual(send_resp.status_code, 409)
+
+    def test_reset_uses_server_default_deprecate_mode(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.deprecate_on_reset = True
+        session_id = "s-default-deprecate"
+        created = self.client.post(
+            "/chats",
+            headers={"x-api-key": "test-server-key"},
+            json={"session_id": session_id},
+        )
+        self.assertEqual(created.status_code, 200)
+
+        reset_resp = self.client.post(
+            "/session/reset",
+            headers={"x-api-key": "test-server-key"},
+            json={"session_id": session_id},
+        )
+        self.assertEqual(reset_resp.status_code, 200)
+
+        chats_resp = self.client.get("/chats", headers={"x-api-key": "test-server-key"})
+        self.assertEqual(chats_resp.status_code, 200)
+        self.assertEqual(chats_resp.json()["chats"], [])
+
+    def test_notes_are_internal_and_not_returned_as_messages(self) -> None:
+        note_resp = self.client.post(
+            "/chats/s-note/notes",
+            headers={"x-api-key": "test-server-key"},
+            json={"note": "Use lighter rhythm and avoid full bard prose."},
+        )
+        self.assertEqual(note_resp.status_code, 200)
+
+        captured = {}
+        original_run = server.Runner.run
+
+        async def fake_run(*args, **kwargs):
+            captured["input"] = args[1]
+            return SimpleNamespace(final_output="ok")
+
+        server.Runner.run = fake_run
+        try:
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "tell me about unicorns", "session_id": "s-note"},
+            )
+        finally:
+            server.Runner.run = original_run
+
+        self.assertEqual(chat_resp.status_code, 200)
+        self.assertIn("INTERNAL_STYLE_NOTES", captured["input"])
+        self.assertIn("lighter rhythm", captured["input"])
+
+        messages_resp = self.client.get(
+            "/chats/s-note/messages",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(messages_resp.status_code, 200)
+        roles = [m["role"] for m in messages_resp.json()["messages"]]
+        self.assertEqual(roles, ["user", "assistant"])
+
+        chats_resp = self.client.get("/chats", headers={"x-api-key": "test-server-key"})
+        self.assertEqual(chats_resp.status_code, 200)
+        self.assertEqual(chats_resp.json()["chats"][0]["message_count"], 2)
 
     def test_chat_success_with_key_ring(self) -> None:
         original_run = server.Runner.run

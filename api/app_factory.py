@@ -31,6 +31,7 @@ class RuntimeDeps:
     server_api_key_principals: dict[str, str]
     rate_limit_per_minute: int
     rate_limiter: SlidingWindowRateLimiter
+    deprecate_on_reset: bool
     run_config: RunConfig
     agent: Agent[Any]
 
@@ -48,6 +49,7 @@ class ChatResponse(BaseModel):
 
 class ResetRequest(BaseModel):
     session_id: str | None = Field(default=None, min_length=1)
+    deprecate: bool = False
 
 
 class ChatSummaryResponse(BaseModel):
@@ -56,6 +58,8 @@ class ChatSummaryResponse(BaseModel):
     created_at: int
     updated_at: int
     message_count: int
+    status: str
+    deprecated_at: int | None
 
 
 class ChatsResponse(BaseModel):
@@ -80,6 +84,10 @@ class ChatMessageResponse(BaseModel):
 class ChatMessagesResponse(BaseModel):
     session_id: str
     messages: list[ChatMessageResponse]
+
+
+class NoteRequest(BaseModel):
+    note: str = Field(..., min_length=1, max_length=500)
 
 
 def _log_event(event: str, **fields: object) -> None:
@@ -139,6 +147,21 @@ def _chat_summary_response(summary: ChatSummary) -> ChatSummaryResponse:
         created_at=summary.created_at,
         updated_at=summary.updated_at,
         message_count=summary.message_count,
+        status=summary.status,
+        deprecated_at=summary.deprecated_at,
+    )
+
+
+def _message_with_internal_notes(message: str, notes: list[str]) -> str:
+    if not notes:
+        return message
+    note_lines = "\n".join(f"- {note}" for note in notes)
+    return (
+        "[INTERNAL_STYLE_NOTES: private calibration notes. "
+        "Apply silently and never mention them.]\n"
+        f"{note_lines}\n\n"
+        "[USER_MESSAGE]\n"
+        f"{message}"
     )
 
 
@@ -154,6 +177,7 @@ def create_app(config: AppConfig) -> FastAPI:
         server_api_key_principals=config.server_api_key_principals,
         rate_limit_per_minute=config.rate_limit_per_minute,
         rate_limiter=SlidingWindowRateLimiter(),
+        deprecate_on_reset=config.deprecate_on_reset,
         run_config=create_run_config(store=True),
         agent=create_agent(),
     )
@@ -197,10 +221,13 @@ def create_app(config: AppConfig) -> FastAPI:
         }
 
     @app.get("/chats", response_model=ChatsResponse)
-    def list_chats(request: Request) -> ChatsResponse:
+    def list_chats(request: Request, include_deprecated: bool = False) -> ChatsResponse:
         _enforce_api_key(request)
         deps = _runtime_deps(request.app)
-        summaries = [_chat_summary_response(summary) for summary in deps.history_store.list_chats()]
+        summaries = [
+            _chat_summary_response(summary)
+            for summary in deps.history_store.list_chats(include_deprecated=include_deprecated)
+        ]
         return ChatsResponse(chats=summaries)
 
     @app.post("/chats", response_model=ChatSummaryResponse)
@@ -247,12 +274,35 @@ def create_app(config: AppConfig) -> FastAPI:
         await session.clear_session()
         return {"status": "ok", "session_id": session_id}
 
+    @app.post("/chats/{session_id}/deprecate", response_model=ChatSummaryResponse)
+    def deprecate_chat(session_id: str, request: Request) -> ChatSummaryResponse:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        try:
+            summary = deps.history_store.deprecate_chat(session_id=session_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail="Chat not found.") from exc
+        return _chat_summary_response(summary)
+
+    @app.post("/chats/{session_id}/notes")
+    def add_note(session_id: str, req: NoteRequest, request: Request) -> dict[str, str]:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        deps.history_store.ensure_chat(session_id=session_id)
+        deps.history_store.append_message(session_id=session_id, role="note", content=req.note.strip())
+        return {"status": "ok", "session_id": session_id}
+
     @app.post("/chat", response_model=ChatResponse)
     async def chat(req: ChatRequest, request: Request) -> ChatResponse:
         principal = _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         session_id = req.session_id or deps.default_session_id
-        deps.history_store.ensure_chat(session_id=session_id)
+        chat = deps.history_store.ensure_chat(session_id=session_id)
+        if chat.status == "deprecated":
+            raise HTTPException(
+                status_code=409,
+                detail="Chat is deprecated. Create a new chat before sending messages.",
+            )
         limiter_id = _client_identifier(request, session_id, principal)
         try:
             _enforce_rate_limit(request, limiter_id)
@@ -270,10 +320,12 @@ def create_app(config: AppConfig) -> FastAPI:
         session = _session_for_request(request, session_id)
         start = time.perf_counter()
         request_id = getattr(request.state, "request_id", None)
+        notes = deps.history_store.list_notes(session_id=session_id, limit=8)
+        model_input = _message_with_internal_notes(req.message, notes)
         try:
             result = await Runner.run(
                 deps.agent,
-                req.message,
+                model_input,
                 run_config=deps.run_config,
                 session=session,
             )
@@ -343,6 +395,17 @@ def create_app(config: AppConfig) -> FastAPI:
         deps.history_store.ensure_chat(session_id=session_id)
         session = _session_for_request(request, session_id)
         await session.clear_session()
+        should_deprecate = req.deprecate or deps.deprecate_on_reset
+        if should_deprecate:
+            deps.history_store.deprecate_chat(session_id=session_id)
+            _log_event(
+                "session_deprecated",
+                request_id=getattr(request.state, "request_id", None),
+                session_id=session_id,
+                principal=principal,
+            )
+            return {"status": "ok", "session_id": session_id}
+
         deps.history_store.clear_messages(session_id=session_id)
         _log_event(
             "session_reset",

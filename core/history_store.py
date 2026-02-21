@@ -15,6 +15,8 @@ class ChatSummary:
     created_at: int
     updated_at: int
     message_count: int
+    status: str
+    deprecated_at: int | None
 
 
 @dataclass(frozen=True)
@@ -56,10 +58,13 @@ class ChatHistoryStore:
                   session_id TEXT PRIMARY KEY,
                   title TEXT NOT NULL,
                   created_at INTEGER NOT NULL,
-                  updated_at INTEGER NOT NULL
+                  updated_at INTEGER NOT NULL,
+                  status TEXT NOT NULL DEFAULT 'active',
+                  deprecated_at INTEGER
                 );
                 """
             )
+            self._ensure_chats_columns(conn)
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS chat_messages (
@@ -79,21 +84,32 @@ class ChatHistoryStore:
                 """
             )
 
+    def _ensure_chats_columns(self, conn: sqlite3.Connection) -> None:
+        columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(chats);").fetchall()
+        }
+        if "status" not in columns:
+            conn.execute(
+                "ALTER TABLE chats ADD COLUMN status TEXT NOT NULL DEFAULT 'active';"
+            )
+        if "deprecated_at" not in columns:
+            conn.execute("ALTER TABLE chats ADD COLUMN deprecated_at INTEGER;")
+
     def ensure_chat(self, session_id: str, title: str | None = None) -> ChatSummary:
         now = _now_ms()
         safe_title = (title or DEFAULT_CHAT_TITLE).strip() or DEFAULT_CHAT_TITLE
         with self._connect() as conn:
             conn.execute(
                 """
-                INSERT INTO chats(session_id, title, created_at, updated_at)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO chats(session_id, title, created_at, updated_at, status, deprecated_at)
+                VALUES (?, ?, ?, ?, 'active', NULL)
                 ON CONFLICT(session_id) DO NOTHING;
                 """,
                 (session_id, safe_title, now, now),
             )
             row = conn.execute(
                 """
-                SELECT session_id, title, created_at, updated_at
+                SELECT session_id, title, created_at, updated_at, status, deprecated_at
                 FROM chats
                 WHERE session_id = ?;
                 """,
@@ -102,7 +118,11 @@ class ChatHistoryStore:
             if row is None:
                 raise RuntimeError("Failed to create or load chat.")
             count_row = conn.execute(
-                "SELECT COUNT(*) AS message_count FROM chat_messages WHERE session_id = ?;",
+                """
+                SELECT COUNT(*) AS message_count
+                FROM chat_messages
+                WHERE session_id = ? AND role IN ('user', 'assistant');
+                """,
                 (session_id,),
             ).fetchone()
         return ChatSummary(
@@ -111,10 +131,13 @@ class ChatHistoryStore:
             created_at=int(row["created_at"]),
             updated_at=int(row["updated_at"]),
             message_count=int(count_row["message_count"]) if count_row is not None else 0,
+            status=str(row["status"]),
+            deprecated_at=int(row["deprecated_at"]) if row["deprecated_at"] is not None else None,
         )
 
-    def list_chats(self) -> list[ChatSummary]:
+    def list_chats(self, *, include_deprecated: bool = False) -> list[ChatSummary]:
         with self._connect() as conn:
+            where_clause = "" if include_deprecated else "WHERE c.status = 'active'"
             rows = conn.execute(
                 """
                 SELECT
@@ -122,13 +145,17 @@ class ChatHistoryStore:
                   c.title,
                   c.created_at,
                   c.updated_at,
+                  c.status,
+                  c.deprecated_at,
                   COALESCE(m.message_count, 0) AS message_count
                 FROM chats c
                 LEFT JOIN (
                   SELECT session_id, COUNT(*) AS message_count
                   FROM chat_messages
+                  WHERE role IN ('user', 'assistant')
                   GROUP BY session_id
                 ) m ON m.session_id = c.session_id
+                """ + where_clause + """
                 ORDER BY c.updated_at DESC, c.created_at DESC;
                 """
             ).fetchall()
@@ -139,6 +166,8 @@ class ChatHistoryStore:
                 created_at=int(row["created_at"]),
                 updated_at=int(row["updated_at"]),
                 message_count=int(row["message_count"]),
+                status=str(row["status"]),
+                deprecated_at=int(row["deprecated_at"]) if row["deprecated_at"] is not None else None,
             )
             for row in rows
         ]
@@ -152,11 +181,14 @@ class ChatHistoryStore:
                   c.title,
                   c.created_at,
                   c.updated_at,
+                  c.status,
+                  c.deprecated_at,
                   COALESCE(m.message_count, 0) AS message_count
                 FROM chats c
                 LEFT JOIN (
                   SELECT session_id, COUNT(*) AS message_count
                   FROM chat_messages
+                  WHERE role IN ('user', 'assistant')
                   GROUP BY session_id
                 ) m ON m.session_id = c.session_id
                 WHERE c.session_id = ?;
@@ -171,6 +203,8 @@ class ChatHistoryStore:
             created_at=int(row["created_at"]),
             updated_at=int(row["updated_at"]),
             message_count=int(row["message_count"]),
+            status=str(row["status"]),
+            deprecated_at=int(row["deprecated_at"]) if row["deprecated_at"] is not None else None,
         )
 
     def rename_chat(self, session_id: str, title: str) -> ChatSummary:
@@ -189,14 +223,18 @@ class ChatHistoryStore:
                 raise KeyError(session_id)
             row = conn.execute(
                 """
-                SELECT session_id, title, created_at, updated_at
+                SELECT session_id, title, created_at, updated_at, status, deprecated_at
                 FROM chats
                 WHERE session_id = ?;
                 """,
                 (session_id,),
             ).fetchone()
             count_row = conn.execute(
-                "SELECT COUNT(*) AS message_count FROM chat_messages WHERE session_id = ?;",
+                """
+                SELECT COUNT(*) AS message_count
+                FROM chat_messages
+                WHERE session_id = ? AND role IN ('user', 'assistant');
+                """,
                 (session_id,),
             ).fetchone()
         if row is None:
@@ -207,6 +245,8 @@ class ChatHistoryStore:
             created_at=int(row["created_at"]),
             updated_at=int(row["updated_at"]),
             message_count=int(count_row["message_count"]) if count_row is not None else 0,
+            status=str(row["status"]),
+            deprecated_at=int(row["deprecated_at"]) if row["deprecated_at"] is not None else None,
         )
 
     def delete_chat(self, session_id: str) -> None:
@@ -221,7 +261,7 @@ class ChatHistoryStore:
                 """
                 SELECT role, content, created_at
                 FROM chat_messages
-                WHERE session_id = ?
+                WHERE session_id = ? AND role IN ('user', 'assistant')
                 ORDER BY id ASC;
                 """,
                 (session_id,),
@@ -232,7 +272,7 @@ class ChatHistoryStore:
         ]
 
     def append_message(self, session_id: str, role: str, content: str) -> None:
-        if role not in {"user", "assistant"}:
+        if role not in {"user", "assistant", "note"}:
             raise ValueError(f"Unsupported role: {role}")
         now = _now_ms()
         with self._connect() as conn:
@@ -255,6 +295,39 @@ class ChatHistoryStore:
                 "UPDATE chats SET updated_at = ? WHERE session_id = ?;",
                 (now, session_id),
             )
+
+    def deprecate_chat(self, session_id: str) -> ChatSummary:
+        now = _now_ms()
+        with self._connect() as conn:
+            updated = conn.execute(
+                """
+                UPDATE chats
+                SET status = 'deprecated', deprecated_at = ?, updated_at = ?
+                WHERE session_id = ?;
+                """,
+                (now, now, session_id),
+            )
+            if updated.rowcount == 0:
+                raise KeyError(session_id)
+        chat = self.get_chat(session_id)
+        if chat is None:
+            raise KeyError(session_id)
+        return chat
+
+    def list_notes(self, session_id: str, limit: int = 8) -> list[str]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT content
+                FROM chat_messages
+                WHERE session_id = ? AND role = 'note'
+                ORDER BY id DESC
+                LIMIT ?;
+                """,
+                (session_id, limit),
+            ).fetchall()
+        # Preserve oldest->newest order for deterministic prompt construction.
+        return [str(row["content"]) for row in reversed(rows)]
 
     def maybe_set_title_from_first_user_message(self, session_id: str, user_message: str) -> None:
         candidate = derive_chat_title(user_message)

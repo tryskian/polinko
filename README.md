@@ -48,20 +48,26 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 - `GET /chats` list chats
 - `POST /chats` create a chat
 - `GET /chats/{session_id}/messages` load a thread
+- `POST /chats/{session_id}/notes` add internal preference note
+- `POST /chats/{session_id}/deprecate` mark a chat as deprecated (hidden from default list)
 - `PATCH /chats/{session_id}` rename a chat
 - `DELETE /chats/{session_id}` delete a chat
 
 Config:
 
 - `POLINKO_HISTORY_DB_PATH` (default: `.polinko_history.db`)
+- `POLINKO_DEPRECATE_ON_RESET` (default: `true`)
 
 ## UI Behavior
 
 - Drawer-based chat list with `New chat`
 - Per-chat thread loading from server history
-- Session reset clears only the active chat
+- Session reset follows `POLINKO_DEPRECATE_ON_RESET`:
+  - `true`: deprecate active chat and open a fresh one
+  - `false`: clear active chat in-place
 - Markdown + code block rendering for both user and assistant messages
 - Small thinking animation before assistant responses render
+- Silent preference notes via `/note ...` in the composer (stored server-side and applied silently)
 
 ## CI
 
