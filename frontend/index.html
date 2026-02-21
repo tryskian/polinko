@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Polinko UI</title>
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="bar">
+        <h1>Polinko</h1>
+        <p>Ready to dive in.</p>
+      </header>
+      <section id="chat" class="chat" aria-live="polite"></section>
+      <form id="composer" class="composer">
+        <div class="inputs">
+          <input id="message" type="text" placeholder="message bigbrain" autocomplete="off" required />
+          <input id="session-id" type="text" placeholder="session id (optional)" />
+        </div>
+        <div class="actions">
+          <button type="submit">Send</button>
+          <button id="reset" type="button">Reset Session</button>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>

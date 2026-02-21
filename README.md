@@ -10,10 +10,12 @@ Lightweight GPT agent project with:
 
 Run these from repo root:
 
-1. `make chat`
-2. `make server`
-3. `make eval`
-4. `make test`
+1. `make server`
+2. `make ui-install`
+3. `make ui-dev`
+4. open `http://127.0.0.1:5173`
+5. `make eval`
+6. `make test`
 
 Data leverage commands (from normalized ledger exports):
 
@@ -37,6 +39,7 @@ Data leverage commands (from normalized ledger exports):
 - `server.py` API entrypoint
 - `api/` API implementation
 - `core/` runtime logic
+- `frontend/` Vite chat UI
 - `tools/` local scripts
 - `configs/` regression cases
 - `docs/` project docs

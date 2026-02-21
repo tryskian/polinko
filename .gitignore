@@ -17,6 +17,7 @@ polinko-repositioning-system
 
 # Node (if added later)
 node_modules/
+dist/
 
 # Legacy local helper file
 _virtualenv.py
