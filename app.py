@@ -7,6 +7,7 @@ try:
     from agents import Runner
     from openai import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
     from config import load_config
+    from core.retrieval import build_augmented_user_message
     from core.runtime import create_agent, create_run_config, create_session
 except ModuleNotFoundError as exc:
     # If launched with the wrong interpreter, restart with the project virtualenv python.
@@ -46,7 +47,8 @@ while True:
         continue
 
     try:
-        response = Runner.run_sync(agent, user_input, run_config=run_config, session=session)
+        augmented_input = build_augmented_user_message(user_input)
+        response = Runner.run_sync(agent, augmented_input, run_config=run_config, session=session)
     except AuthenticationError:
         print("Authentication failed. Check OPENAI_API_KEY in .env.")
         continue

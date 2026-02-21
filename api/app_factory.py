@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from config import AppConfig
 from core.prompts import ACTIVE_PROMPT_VERSION
 from core.rate_limit import SlidingWindowRateLimiter
+from core.retrieval import build_augmented_user_message
 from core.runtime import create_agent, create_run_config, create_session
 
 
@@ -166,9 +167,10 @@ def create_app(config: AppConfig) -> FastAPI:
         start = time.perf_counter()
         request_id = getattr(request.state, "request_id", None)
         try:
+            augmented_message = build_augmented_user_message(req.message)
             result = await Runner.run(
                 deps.agent,
-                req.message,
+                augmented_message,
                 run_config=deps.run_config,
                 session=session,
             )

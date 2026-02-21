@@ -15,6 +15,11 @@ Run these from repo root:
 3. `make eval`
 4. `make test`
 
+Data leverage commands (from normalized ledger exports):
+
+1. `make build-eval-seed LEDGER_INPUT=path/to/transcript_turns.csv`
+2. `make build-memory-facts LEDGER_INPUT=path/to/transcript_turns.csv`
+
 ## Setup
 
 1. Create and activate your virtualenv (or use the existing one in this repo).
