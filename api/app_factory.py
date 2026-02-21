@@ -27,6 +27,7 @@ class RuntimeDeps:
     session_db_path: str
     default_session_id: str
     server_api_key: str | None
+    server_api_key_principals: dict[str, str]
     rate_limit_per_minute: int
     rate_limiter: SlidingWindowRateLimiter
     run_config: RunConfig
@@ -57,21 +58,26 @@ def _runtime_deps(app: FastAPI) -> RuntimeDeps:
     return cast(RuntimeDeps, app.state.runtime_deps)
 
 
-def _client_identifier(request: Request, session_id: str) -> str:
+def _client_identifier(request: Request, session_id: str, principal: str | None) -> str:
     forwarded_for = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
     client_ip = forwarded_for or (request.client.host if request.client else "unknown")
-    return f"{client_ip}:{session_id}"
+    subject = principal or "anonymous"
+    return f"{subject}:{client_ip}:{session_id}"
 
 
-def _enforce_api_key(request: Request) -> None:
+def _enforce_api_key(request: Request) -> str | None:
     deps = _runtime_deps(request.app)
-    configured_api_key = deps.server_api_key
-    if not configured_api_key:
-        return
+    configured_api_keys = deps.server_api_key_principals
+    if not configured_api_keys:
+        return None
 
     presented = request.headers.get("x-api-key")
-    if not presented or not hmac.compare_digest(presented, configured_api_key):
+    if not presented:
         raise HTTPException(status_code=401, detail="Invalid API key.")
+    for expected_key, principal in configured_api_keys.items():
+        if hmac.compare_digest(presented, expected_key):
+            return principal
+    raise HTTPException(status_code=401, detail="Invalid API key.")
 
 
 def _enforce_rate_limit(request: Request, identifier: str) -> None:
@@ -101,6 +107,7 @@ def create_app(config: AppConfig) -> FastAPI:
         session_db_path=config.session_db_path,
         default_session_id=config.default_session_id,
         server_api_key=config.server_api_key,
+        server_api_key_principals=config.server_api_key_principals,
         rate_limit_per_minute=config.rate_limit_per_minute,
         rate_limiter=SlidingWindowRateLimiter(),
         run_config=create_run_config(store=True),
@@ -147,10 +154,10 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/chat", response_model=ChatResponse)
     async def chat(req: ChatRequest, request: Request) -> ChatResponse:
-        _enforce_api_key(request)
+        principal = _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         session_id = req.session_id or deps.default_session_id
-        limiter_id = _client_identifier(request, session_id)
+        limiter_id = _client_identifier(request, session_id, principal)
         try:
             _enforce_rate_limit(request, limiter_id)
         except HTTPException:
@@ -159,6 +166,7 @@ def create_app(config: AppConfig) -> FastAPI:
                 request_id=getattr(request.state, "request_id", None),
                 session_id=session_id,
                 limiter_id=limiter_id,
+                principal=principal,
                 limit_per_minute=deps.rate_limit_per_minute,
             )
             raise
@@ -218,6 +226,7 @@ def create_app(config: AppConfig) -> FastAPI:
             "chat_success",
             request_id=request_id,
             session_id=session_id,
+            principal=principal,
             prompt_version=ACTIVE_PROMPT_VERSION,
             input_chars=len(req.message),
             output_chars=len(response.output),
@@ -227,7 +236,7 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/session/reset")
     async def reset_session(req: ResetRequest, request: Request) -> dict[str, str]:
-        _enforce_api_key(request)
+        principal = _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         session_id = req.session_id or deps.default_session_id
         session = _session_for_request(request, session_id)
@@ -236,6 +245,7 @@ def create_app(config: AppConfig) -> FastAPI:
             "session_reset",
             request_id=getattr(request.state, "request_id", None),
             session_id=session_id,
+            principal=principal,
         )
         return {"status": "ok", "session_id": session_id}
 

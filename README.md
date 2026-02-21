@@ -26,6 +26,8 @@ Data leverage commands (from normalized ledger exports):
 2. Install dependencies:
    `pip install -r requirements.txt`
 3. Copy `.env.example` to `.env` and fill real values.
+   Optional: configure a key ring with `POLINKO_SERVER_API_KEYS_JSON` for
+   per-principal API keys.
 4. Optional: use pinned dependencies with
    `pip install -r requirements.lock`.
 

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import json
 import os
 
 from dotenv import load_dotenv
@@ -11,6 +12,7 @@ class AppConfig:
     default_session_id: str
     log_level: str
     server_api_key: str | None
+    server_api_key_principals: dict[str, str]
     rate_limit_per_minute: int
 
 
@@ -52,11 +54,60 @@ def _validate_server_api_key(server_api_key: str | None) -> str | None:
     return server_api_key
 
 
+def _validate_principal(principal: str) -> str:
+    value = principal.strip()
+    if not value:
+        raise RuntimeError("POLINKO_SERVER_API_KEYS_JSON contains an empty principal name.")
+    return value
+
+
+def _load_server_api_key_principals(single_server_api_key: str | None) -> dict[str, str]:
+    principals: dict[str, str] = {}
+    if single_server_api_key:
+        principals[single_server_api_key] = "default"
+
+    raw_json = os.getenv("POLINKO_SERVER_API_KEYS_JSON", "").strip()
+    if not raw_json:
+        return principals
+
+    try:
+        parsed = json.loads(raw_json)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            "POLINKO_SERVER_API_KEYS_JSON must be valid JSON object: "
+            '{"principal":"api-key","principal2":"api-key-2"}'
+        ) from exc
+
+    if not isinstance(parsed, dict):
+        raise RuntimeError("POLINKO_SERVER_API_KEYS_JSON must be a JSON object.")
+
+    for raw_principal, raw_key in parsed.items():
+        if not isinstance(raw_principal, str) or not isinstance(raw_key, str):
+            raise RuntimeError(
+                "POLINKO_SERVER_API_KEYS_JSON values must be string pairs: "
+                '{"principal":"api-key"}'
+            )
+        principal = _validate_principal(raw_principal)
+        key = _validate_server_api_key(raw_key)
+        if not key:
+            continue
+        existing_principal = principals.get(key)
+        if existing_principal and existing_principal != principal:
+            raise RuntimeError(
+                "Duplicate API key mapped to different principals in "
+                "POLINKO_SERVER_API_KEYS_JSON."
+            )
+        principals[key] = principal
+
+    return principals
+
+
 def load_config(dotenv_path: str = ".env") -> AppConfig:
     load_dotenv(dotenv_path=dotenv_path)
 
     openai_api_key = _validate_openai_api_key(os.getenv("OPENAI_API_KEY"))
     server_api_key = _validate_server_api_key(os.getenv("POLINKO_SERVER_API_KEY"))
+    server_api_key_principals = _load_server_api_key_principals(server_api_key)
     log_level = os.getenv("POLINKO_LOG_LEVEL", "INFO").upper()
     default_session_id = os.getenv("POLINKO_DEFAULT_SESSION_ID", "default")
     session_db_path = os.getenv("POLINKO_MEMORY_DB_PATH", ".polinko_memory.db")
@@ -75,5 +126,6 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         default_session_id=default_session_id,
         log_level=log_level,
         server_api_key=server_api_key,
+        server_api_key_principals=server_api_key_principals,
         rate_limit_per_minute=rate_limit_per_minute,
     )

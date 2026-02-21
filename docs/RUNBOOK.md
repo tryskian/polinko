@@ -3,7 +3,7 @@
 ## Rotate API Keys
 
 1. Update `.env` with new `OPENAI_API_KEY`.
-2. If used, rotate `POLINKO_SERVER_API_KEY`.
+2. If used, rotate `POLINKO_SERVER_API_KEY` and/or update `POLINKO_SERVER_API_KEYS_JSON`.
 3. Restart running API/CLI processes.
 
 ## Reset Local Session Memory

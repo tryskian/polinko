@@ -15,6 +15,7 @@ class PolinkoApiTests(unittest.TestCase):
     def setUp(self) -> None:
         deps = server.get_runtime_deps()
         deps.server_api_key = "test-server-key"
+        deps.server_api_key_principals = {"test-server-key": "default"}
         deps.rate_limit_per_minute = 30
         deps.rate_limiter.clear()
         self.client = TestClient(server.app)
@@ -62,6 +63,31 @@ class PolinkoApiTests(unittest.TestCase):
         body = resp.json()
         self.assertEqual(body["output"], "Stubbed response")
         self.assertEqual(body["session_id"], "s-chat")
+
+    def test_chat_success_with_key_ring(self) -> None:
+        original_run = server.Runner.run
+        deps = server.get_runtime_deps()
+        deps.server_api_key_principals = {
+            "team-key-a": "team-a",
+            "team-key-b": "team-b",
+        }
+
+        async def fake_run(*args, **kwargs):
+            return SimpleNamespace(final_output="Ring response")
+
+        server.Runner.run = fake_run
+        try:
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "team-key-b"},
+                json={"message": "hello", "session_id": "s-chat-ring"},
+            )
+        finally:
+            server.Runner.run = original_run
+            deps.server_api_key_principals = {"test-server-key": "default"}
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["output"], "Ring response")
 
     def test_rate_limit_includes_retry_after(self) -> None:
         original_run = server.Runner.run
