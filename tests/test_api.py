@@ -2,6 +2,7 @@ import os
 import tempfile
 import unittest
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from core.history_store import ChatHistoryStore
@@ -14,6 +15,16 @@ import server  # noqa: E402
 
 
 class PolinkoApiTests(unittest.TestCase):
+    @staticmethod
+    def _stub_runner(output: str, capture: dict[str, str] | None = None):
+        async def fake_run(*args: object, **kwargs: object) -> SimpleNamespace:
+            del kwargs
+            if capture is not None and len(args) > 1:
+                capture["input"] = str(args[1])
+            return SimpleNamespace(final_output=output)
+
+        return patch.object(server.Runner, "run", new=fake_run)
+
     def setUp(self) -> None:
         self.tmpdir = tempfile.TemporaryDirectory()
         deps = server.get_runtime_deps()
@@ -59,20 +70,12 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(resp.json()["status"], "ok")
 
     def test_chat_success_with_stubbed_runner(self) -> None:
-        original_run = server.Runner.run
-
-        async def fake_run(*args, **kwargs):
-            return SimpleNamespace(final_output="Stubbed response")
-
-        server.Runner.run = fake_run
-        try:
+        with self._stub_runner("Stubbed response"):
             resp = self.client.post(
                 "/chat",
                 headers={"x-api-key": "test-server-key"},
                 json={"message": "hello", "session_id": "s-chat"},
             )
-        finally:
-            server.Runner.run = original_run
 
         self.assertEqual(resp.status_code, 200)
         body = resp.json()
@@ -80,20 +83,12 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(body["session_id"], "s-chat")
 
     def test_server_side_chat_history_persists(self) -> None:
-        original_run = server.Runner.run
-
-        async def fake_run(*args, **kwargs):
-            return SimpleNamespace(final_output="History response")
-
-        server.Runner.run = fake_run
-        try:
+        with self._stub_runner("History response"):
             chat_resp = self.client.post(
                 "/chat",
                 headers={"x-api-key": "test-server-key"},
                 json={"message": "hello history", "session_id": "s-history"},
             )
-        finally:
-            server.Runner.run = original_run
 
         self.assertEqual(chat_resp.status_code, 200)
 
@@ -119,20 +114,12 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(created.status_code, 200)
         session_id = created.json()["session_id"]
 
-        original_run = server.Runner.run
-
-        async def fake_run(*args, **kwargs):
-            return SimpleNamespace(final_output="ok")
-
-        server.Runner.run = fake_run
-        try:
+        with self._stub_runner("ok"):
             self.client.post(
                 "/chat",
                 headers={"x-api-key": "test-server-key"},
                 json={"message": "hello", "session_id": session_id},
             )
-        finally:
-            server.Runner.run = original_run
 
         before_reset = self.client.get(
             f"/chats/{session_id}/messages",
@@ -223,21 +210,12 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(note_resp.status_code, 200)
 
         captured = {}
-        original_run = server.Runner.run
-
-        async def fake_run(*args, **kwargs):
-            captured["input"] = args[1]
-            return SimpleNamespace(final_output="ok")
-
-        server.Runner.run = fake_run
-        try:
+        with self._stub_runner("ok", capture=captured):
             chat_resp = self.client.post(
                 "/chat",
                 headers={"x-api-key": "test-server-key"},
                 json={"message": "tell me about unicorns", "session_id": "s-note"},
             )
-        finally:
-            server.Runner.run = original_run
 
         self.assertEqual(chat_resp.status_code, 200)
         self.assertIn("INTERNAL_STYLE_NOTES", captured["input"])
@@ -256,41 +234,27 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(chats_resp.json()["chats"][0]["message_count"], 2)
 
     def test_chat_success_with_key_ring(self) -> None:
-        original_run = server.Runner.run
         deps = server.get_runtime_deps()
         deps.server_api_key_principals = {
             "team-key-a": "team-a",
             "team-key-b": "team-b",
         }
-
-        async def fake_run(*args, **kwargs):
-            return SimpleNamespace(final_output="Ring response")
-
-        server.Runner.run = fake_run
-        try:
+        with self._stub_runner("Ring response"):
             resp = self.client.post(
                 "/chat",
                 headers={"x-api-key": "team-key-b"},
                 json={"message": "hello", "session_id": "s-chat-ring"},
             )
-        finally:
-            server.Runner.run = original_run
-            deps.server_api_key_principals = {"test-server-key": "default"}
+        deps.server_api_key_principals = {"test-server-key": "default"}
 
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()["output"], "Ring response")
 
     def test_rate_limit_includes_retry_after(self) -> None:
-        original_run = server.Runner.run
         deps = server.get_runtime_deps()
         original_limit = deps.rate_limit_per_minute
         deps.rate_limit_per_minute = 1
-
-        async def fake_run(*args, **kwargs):
-            return SimpleNamespace(final_output="ok")
-
-        server.Runner.run = fake_run
-        try:
+        with self._stub_runner("ok"):
             first = self.client.post(
                 "/chat",
                 headers={"x-api-key": "test-server-key", "x-forwarded-for": "1.2.3.4"},
@@ -301,10 +265,8 @@ class PolinkoApiTests(unittest.TestCase):
                 headers={"x-api-key": "test-server-key", "x-forwarded-for": "1.2.3.4"},
                 json={"message": "second", "session_id": "s-rate"},
             )
-        finally:
-            server.Runner.run = original_run
-            deps.rate_limit_per_minute = original_limit
-            deps.rate_limiter.clear()
+        deps.rate_limit_per_minute = original_limit
+        deps.rate_limiter.clear()
 
         self.assertEqual(first.status_code, 200)
         self.assertEqual(second.status_code, 429)
@@ -327,16 +289,10 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(resp.status_code, 422)
 
     def test_rate_limit_zero_disables_limiting(self) -> None:
-        original_run = server.Runner.run
         deps = server.get_runtime_deps()
         original_limit = deps.rate_limit_per_minute
         deps.rate_limit_per_minute = 0
-
-        async def fake_run(*args, **kwargs):
-            return SimpleNamespace(final_output="ok")
-
-        server.Runner.run = fake_run
-        try:
+        with self._stub_runner("ok"):
             first = self.client.post(
                 "/chat",
                 headers={"x-api-key": "test-server-key", "x-forwarded-for": "9.9.9.9"},
@@ -347,10 +303,8 @@ class PolinkoApiTests(unittest.TestCase):
                 headers={"x-api-key": "test-server-key", "x-forwarded-for": "9.9.9.9"},
                 json={"message": "second", "session_id": "s-no-limit"},
             )
-        finally:
-            server.Runner.run = original_run
-            deps.rate_limit_per_minute = original_limit
-            deps.rate_limiter.clear()
+        deps.rate_limit_per_minute = original_limit
+        deps.rate_limiter.clear()
 
         self.assertEqual(first.status_code, 200)
         self.assertEqual(second.status_code, 200)
