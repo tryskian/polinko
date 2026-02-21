@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.12"
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
@@ -23,19 +23,32 @@ jobs:
         run: make test PYTHON=python
 
   eval:
-    if: ${{ secrets.OPENAI_API_KEY != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.12"
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+      - name: Check eval secret
+        id: check_secret
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -z "${OPENAI_API_KEY}" ]; then
+            echo "skip_eval=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip_eval=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Regression eval
+        if: steps.check_secret.outputs.skip_eval == 'false'
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           POLINKO_SERVER_API_KEY: test-server-key
         run: make eval PYTHON=python
+      - name: Eval skipped (no secret configured)
+        if: steps.check_secret.outputs.skip_eval == 'true'
+        run: echo "Skipping eval job because OPENAI_API_KEY secret is not configured."
