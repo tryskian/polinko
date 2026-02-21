@@ -4,7 +4,7 @@ Lightweight GPT agent project with:
 
 - CLI chat runner
 - FastAPI backend
-- Prompt regression checks
+- Server-side multi-chat history for the web UI
 
 ## Quickstart
 
@@ -14,13 +14,7 @@ Run these from repo root:
 2. `make ui-install`
 3. `make ui-dev`
 4. open `http://127.0.0.1:5173`
-5. `make eval`
-6. `make test`
-
-Data leverage commands (from normalized ledger exports):
-
-1. `make build-eval-seed LEDGER_INPUT=path/to/transcript_turns.csv`
-2. `make build-memory-facts LEDGER_INPUT=path/to/transcript_turns.csv`
+5. `make test`
 
 ## Setup
 
@@ -41,12 +35,24 @@ Data leverage commands (from normalized ledger exports):
 - `core/` runtime logic
 - `frontend/` Vite chat UI
 - `tools/` local scripts
-- `configs/` regression cases
 - `docs/` project docs
+
+## Server-Side Chat History
+
+The web UI now stores chat threads server-side (SQLite) instead of in browser local storage.
+
+- `GET /chats` list chats
+- `POST /chats` create a chat
+- `GET /chats/{session_id}/messages` load a thread
+- `PATCH /chats/{session_id}` rename a chat
+- `DELETE /chats/{session_id}` delete a chat
+
+Config:
+
+- `POLINKO_HISTORY_DB_PATH` (default: `.polinko_history.db`)
 
 ## CI
 
 GitHub Actions runs:
 
 - unit tests on every push and PR
-- regression eval when `OPENAI_API_KEY` repository secret is configured

@@ -13,9 +13,9 @@ from openai import APIConnectionError, APIStatusError, AuthenticationError, Rate
 from pydantic import BaseModel, Field
 
 from config import AppConfig
+from core.history_store import ChatHistoryStore, ChatSummary, DEFAULT_CHAT_TITLE
 from core.prompts import ACTIVE_PROMPT_VERSION
 from core.rate_limit import SlidingWindowRateLimiter
-from core.retrieval import build_augmented_user_message
 from core.runtime import create_agent, create_run_config, create_session
 
 
@@ -25,6 +25,7 @@ logger = logging.getLogger("polinko.api")
 @dataclass
 class RuntimeDeps:
     session_db_path: str
+    history_store: ChatHistoryStore
     default_session_id: str
     server_api_key: str | None
     server_api_key_principals: dict[str, str]
@@ -47,6 +48,38 @@ class ChatResponse(BaseModel):
 
 class ResetRequest(BaseModel):
     session_id: str | None = Field(default=None, min_length=1)
+
+
+class ChatSummaryResponse(BaseModel):
+    session_id: str
+    title: str
+    created_at: int
+    updated_at: int
+    message_count: int
+
+
+class ChatsResponse(BaseModel):
+    chats: list[ChatSummaryResponse]
+
+
+class CreateChatRequest(BaseModel):
+    session_id: str | None = Field(default=None, min_length=1)
+    title: str | None = None
+
+
+class RenameChatRequest(BaseModel):
+    title: str = Field(..., min_length=1)
+
+
+class ChatMessageResponse(BaseModel):
+    role: str
+    content: str
+    created_at: int
+
+
+class ChatMessagesResponse(BaseModel):
+    session_id: str
+    messages: list[ChatMessageResponse]
 
 
 def _log_event(event: str, **fields: object) -> None:
@@ -99,12 +132,23 @@ def _session_for_request(request: Request, session_id: str) -> Session:
     return create_session(session_id=session_id, db_path=deps.session_db_path, limit=80)
 
 
+def _chat_summary_response(summary: ChatSummary) -> ChatSummaryResponse:
+    return ChatSummaryResponse(
+        session_id=summary.session_id,
+        title=summary.title,
+        created_at=summary.created_at,
+        updated_at=summary.updated_at,
+        message_count=summary.message_count,
+    )
+
+
 def create_app(config: AppConfig) -> FastAPI:
     logging.basicConfig(level=getattr(logging, config.log_level, logging.INFO), format="%(message)s")
 
     app = FastAPI(title="Polinko Agent API", version="0.1.0")
     app.state.runtime_deps = RuntimeDeps(
         session_db_path=config.session_db_path,
+        history_store=ChatHistoryStore(config.history_db_path),
         default_session_id=config.default_session_id,
         server_api_key=config.server_api_key,
         server_api_key_principals=config.server_api_key_principals,
@@ -152,11 +196,63 @@ def create_app(config: AppConfig) -> FastAPI:
             "prompt_version": ACTIVE_PROMPT_VERSION,
         }
 
+    @app.get("/chats", response_model=ChatsResponse)
+    def list_chats(request: Request) -> ChatsResponse:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        summaries = [_chat_summary_response(summary) for summary in deps.history_store.list_chats()]
+        return ChatsResponse(chats=summaries)
+
+    @app.post("/chats", response_model=ChatSummaryResponse)
+    def create_chat(req: CreateChatRequest, request: Request) -> ChatSummaryResponse:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        session_id = req.session_id or f"chat-{uuid.uuid4()}"
+        title = (req.title or DEFAULT_CHAT_TITLE).strip() or DEFAULT_CHAT_TITLE
+        summary = deps.history_store.ensure_chat(session_id=session_id, title=title)
+        return _chat_summary_response(summary)
+
+    @app.get("/chats/{session_id}/messages", response_model=ChatMessagesResponse)
+    def list_chat_messages(session_id: str, request: Request) -> ChatMessagesResponse:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.get_chat(session_id=session_id)
+        if chat is None:
+            raise HTTPException(status_code=404, detail="Chat not found.")
+        messages = [
+            ChatMessageResponse(role=message.role, content=message.content, created_at=message.created_at)
+            for message in deps.history_store.list_messages(session_id=session_id)
+        ]
+        return ChatMessagesResponse(session_id=session_id, messages=messages)
+
+    @app.patch("/chats/{session_id}", response_model=ChatSummaryResponse)
+    def rename_chat(session_id: str, req: RenameChatRequest, request: Request) -> ChatSummaryResponse:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        try:
+            summary = deps.history_store.rename_chat(session_id=session_id, title=req.title)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail="Chat not found.") from exc
+        return _chat_summary_response(summary)
+
+    @app.delete("/chats/{session_id}")
+    async def delete_chat(session_id: str, request: Request) -> dict[str, str]:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        try:
+            deps.history_store.delete_chat(session_id=session_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail="Chat not found.") from exc
+        session = _session_for_request(request, session_id)
+        await session.clear_session()
+        return {"status": "ok", "session_id": session_id}
+
     @app.post("/chat", response_model=ChatResponse)
     async def chat(req: ChatRequest, request: Request) -> ChatResponse:
         principal = _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         session_id = req.session_id or deps.default_session_id
+        deps.history_store.ensure_chat(session_id=session_id)
         limiter_id = _client_identifier(request, session_id, principal)
         try:
             _enforce_rate_limit(request, limiter_id)
@@ -175,10 +271,9 @@ def create_app(config: AppConfig) -> FastAPI:
         start = time.perf_counter()
         request_id = getattr(request.state, "request_id", None)
         try:
-            augmented_message = build_augmented_user_message(req.message)
             result = await Runner.run(
                 deps.agent,
-                augmented_message,
+                req.message,
                 run_config=deps.run_config,
                 session=session,
             )
@@ -221,6 +316,12 @@ def create_app(config: AppConfig) -> FastAPI:
             session_id=session_id,
             prompt_version=ACTIVE_PROMPT_VERSION,
         )
+        deps.history_store.append_message(session_id=session_id, role="user", content=req.message)
+        deps.history_store.append_message(session_id=session_id, role="assistant", content=response.output)
+        deps.history_store.maybe_set_title_from_first_user_message(
+            session_id=session_id,
+            user_message=req.message,
+        )
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
         _log_event(
             "chat_success",
@@ -239,8 +340,10 @@ def create_app(config: AppConfig) -> FastAPI:
         principal = _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         session_id = req.session_id or deps.default_session_id
+        deps.history_store.ensure_chat(session_id=session_id)
         session = _session_for_request(request, session_id)
         await session.clear_session()
+        deps.history_store.clear_messages(session_id=session_id)
         _log_event(
             "session_reset",
             request_id=getattr(request.state, "request_id", None),

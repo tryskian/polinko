@@ -7,7 +7,6 @@ try:
     from agents import Runner
     from openai import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
     from config import load_config
-    from core.retrieval import build_augmented_user_message
     from core.runtime import create_agent, create_run_config, create_session
 except ModuleNotFoundError as exc:
     # If launched with the wrong interpreter, restart with the project virtualenv python.
@@ -30,7 +29,7 @@ config = load_config(dotenv_path=".env")
 agent = create_agent()
 run_config = create_run_config(store=True)
 session = create_session(
-    session_id=os.getenv("POLINKO_CLI_SESSION_ID", "polinko-cli"),
+    session_id=os.getenv("POLINKO_CLI_SESSION_ID", config.default_session_id),
     db_path=config.session_db_path,
     limit=80,
 )
@@ -47,8 +46,7 @@ while True:
         continue
 
     try:
-        augmented_input = build_augmented_user_message(user_input)
-        response = Runner.run_sync(agent, augmented_input, run_config=run_config, session=session)
+        response = Runner.run_sync(agent, user_input, run_config=run_config, session=session)
     except AuthenticationError:
         print("Authentication failed. Check OPENAI_API_KEY in .env.")
         continue

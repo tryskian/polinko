@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 class AppConfig:
     openai_api_key: str
     session_db_path: str
+    history_db_path: str
     default_session_id: str
     log_level: str
     server_api_key: str | None
@@ -111,6 +112,7 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     log_level = os.getenv("POLINKO_LOG_LEVEL", "INFO").upper()
     default_session_id = os.getenv("POLINKO_DEFAULT_SESSION_ID", "default")
     session_db_path = os.getenv("POLINKO_MEMORY_DB_PATH", ".polinko_memory.db")
+    history_db_path = os.getenv("POLINKO_HISTORY_DB_PATH", ".polinko_history.db")
 
     raw_rate_limit = os.getenv("POLINKO_RATE_LIMIT_PER_MINUTE", "30")
     try:
@@ -123,6 +125,7 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     return AppConfig(
         openai_api_key=openai_api_key,
         session_db_path=session_db_path,
+        history_db_path=history_db_path,
         default_session_id=default_session_id,
         log_level=log_level,
         server_api_key=server_api_key,
