@@ -5,6 +5,7 @@ Lightweight GPT agent project with:
 - CLI chat runner
 - FastAPI backend
 - Server-side multi-chat history for the web UI
+- Vite chat UI with drawer-based chat switching
 
 ## Quickstart
 
@@ -24,6 +25,9 @@ Run these from repo root:
 3. Copy `.env.example` to `.env` and fill real values.
    Optional: configure a key ring with `POLINKO_SERVER_API_KEYS_JSON` for
    per-principal API keys.
+   Note: current local UI does not provide an x-api-key input field. For local
+   development, keep `POLINKO_SERVER_API_KEY` unset unless your proxy injects
+   auth headers.
 4. Optional: use pinned dependencies with
    `pip install -r requirements.lock`.
 
@@ -50,6 +54,14 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 Config:
 
 - `POLINKO_HISTORY_DB_PATH` (default: `.polinko_history.db`)
+
+## UI Behavior
+
+- Drawer-based chat list with `New chat`
+- Per-chat thread loading from server history
+- Session reset clears only the active chat
+- Markdown + code block rendering for both user and assistant messages
+- Small thinking animation before assistant responses render
 
 ## CI
 

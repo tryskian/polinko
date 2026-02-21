@@ -13,7 +13,25 @@
    - `.polinko_memory.db`
    - `.polinko_memory.db-shm` (if present)
    - `.polinko_memory.db-wal` (if present)
+   - `.polinko_history.db`
+   - `.polinko_history.db-shm` (if present)
+   - `.polinko_history.db-wal` (if present)
 3. Start app again (`make chat` or `make server`).
+
+## Reset One Chat Session (API)
+
+1. Send `POST /session/reset` with `{"session_id":"your-chat-id"}`.
+2. This clears both:
+   - conversation memory in `.polinko_memory.db`
+   - persisted chat messages in `.polinko_history.db`
+
+## Chat History API
+
+- `GET /chats` list chats
+- `POST /chats` create chat
+- `GET /chats/{session_id}/messages` load chat messages
+- `PATCH /chats/{session_id}` rename chat
+- `DELETE /chats/{session_id}` delete chat and clear memory
 
 ## Run API Tests
 
@@ -30,4 +48,6 @@ Checks:
 
 1. Confirm internet access and no firewall/VPN block.
 2. Confirm `OPENAI_API_KEY` is set in `.env`.
-3. Retry command after a short wait.
+3. If auth is enabled, confirm `POLINKO_SERVER_API_KEY` or `POLINKO_SERVER_API_KEYS_JSON`
+   is configured consistently with your client/proxy.
+4. Retry command after a short wait.

@@ -7,8 +7,12 @@ const composerEl = document.getElementById("composer");
 const messageEl = document.getElementById("message");
 const resetEl = document.getElementById("reset");
 const emptyStateEl = document.getElementById("empty-state");
-const chatSelectEl = document.getElementById("chat-select");
 const newChatEl = document.getElementById("new-chat");
+const drawerToggleEl = document.getElementById("drawer-toggle");
+const drawerCloseEl = document.getElementById("drawer-close");
+const drawerEl = document.getElementById("chat-drawer");
+const drawerBackdropEl = document.getElementById("drawer-backdrop");
+const chatListEl = document.getElementById("chat-list");
 const RESPONSE_RENDER_DELAY_MS = 220;
 
 let chats = [];
@@ -186,22 +190,45 @@ function sortChatsByRecent(nextChats) {
   return [...nextChats].sort((a, b) => b.updated_at - a.updated_at || b.created_at - a.created_at);
 }
 
-function applyChats(nextChats) {
-  chats = sortChatsByRecent(nextChats);
-  refreshChatSelector();
+function openDrawer() {
+  drawerEl.classList.add("open");
+  drawerBackdropEl.classList.add("open");
 }
 
-function refreshChatSelector() {
-  chatSelectEl.innerHTML = "";
+function closeDrawer() {
+  drawerEl.classList.remove("open");
+  drawerBackdropEl.classList.remove("open");
+}
+
+function renderChatList() {
+  chatListEl.innerHTML = "";
   chats.forEach((chat) => {
-    const option = document.createElement("option");
-    option.value = chat.session_id;
-    option.textContent = chat.title;
-    chatSelectEl.appendChild(option);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "chat-item";
+    if (chat.session_id === activeChatId) {
+      button.classList.add("active");
+    }
+    button.textContent = chat.title;
+    button.addEventListener("click", async () => {
+      if (chat.session_id === activeChatId) {
+        closeDrawer();
+        return;
+      }
+      try {
+        await setActiveChat(chat.session_id);
+        closeDrawer();
+      } catch (error) {
+        appendMessage("error", String(error), { persist: false });
+      }
+    });
+    chatListEl.appendChild(button);
   });
-  if (activeChatId) {
-    chatSelectEl.value = activeChatId;
-  }
+}
+
+function applyChats(nextChats) {
+  chats = sortChatsByRecent(nextChats);
+  renderChatList();
 }
 
 async function refreshChats() {
@@ -228,7 +255,7 @@ async function loadActiveMessages() {
 async function setActiveChat(sessionId) {
   activeChatId = sessionId;
   writeActiveChatId(activeChatId);
-  chatSelectEl.value = activeChatId;
+  renderChatList();
   await loadActiveMessages();
 }
 
@@ -251,26 +278,33 @@ async function ensureInitialState() {
   await setActiveChat(defaultId);
 }
 
-chatSelectEl.addEventListener("change", async (event) => {
-  const nextId = String(event.target.value || "");
-  if (!nextId || nextId === activeChatId) {
-    return;
-  }
-  try {
-    await setActiveChat(nextId);
-  } catch (error) {
-    appendMessage("error", String(error), { persist: false });
-  }
-});
-
 newChatEl.addEventListener("click", async () => {
   try {
     const created = await apiCreateChat();
     await refreshChats();
     await setActiveChat(created.session_id);
+    closeDrawer();
     messageEl.focus();
   } catch (error) {
     appendMessage("error", String(error), { persist: false });
+  }
+});
+
+drawerToggleEl.addEventListener("click", () => {
+  openDrawer();
+});
+
+drawerCloseEl.addEventListener("click", () => {
+  closeDrawer();
+});
+
+drawerBackdropEl.addEventListener("click", () => {
+  closeDrawer();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeDrawer();
   }
 });
 
@@ -292,7 +326,6 @@ composerEl.addEventListener("submit", async (event) => {
     thinkingNode.remove();
     appendMessage("assistant", result.output);
     await refreshChats();
-    chatSelectEl.value = activeChatId;
   } catch (error) {
     thinkingNode.remove();
     appendMessage("error", String(error), { persist: false });
@@ -316,7 +349,6 @@ resetEl.addEventListener("click", async () => {
     currentMessages = [];
     renderCurrentMessages();
     await refreshChats();
-    chatSelectEl.value = activeChatId;
   } catch (error) {
     appendMessage("error", String(error), { persist: false });
   }
