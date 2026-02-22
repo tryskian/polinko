@@ -25,6 +25,7 @@ from core.history_store import ChatHistoryStore, ChatSummary, OcrRun, DEFAULT_CH
 from core.prompts import ACTIVE_PROMPT_VERSION
 from core.rate_limit import SlidingWindowRateLimiter
 from core.runtime import create_agent, create_run_config, create_session
+from core.vector_store import VectorMatch, VectorStore
 
 
 logger = logging.getLogger("polinko.api")
@@ -90,6 +91,14 @@ class RuntimeDeps:
     ocr_model: str
     ocr_prompt: str
     ocr_client: OpenAI | None
+    vector_enabled: bool
+    vector_top_k: int
+    vector_min_similarity: float
+    vector_max_chars: int
+    vector_exclude_current_session: bool
+    vector_embedding_model: str
+    vector_store: VectorStore | None
+    embedding_client: OpenAI | None
     metrics: RuntimeMetrics
     run_config: RunConfig
     agent: Agent[Any]
@@ -377,17 +386,110 @@ def _extract_text(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, str]:
     return _scaffold_extract_text(req)
 
 
-def _message_with_internal_notes(message: str, notes: list[str]) -> str:
-    if not notes:
-        return message
-    note_lines = "\n".join(f"- {note}" for note in notes)
-    return (
-        "[INTERNAL_STYLE_NOTES: private calibration notes. "
-        "Apply silently and never mention them.]\n"
-        f"{note_lines}\n\n"
-        "[USER_MESSAGE]\n"
-        f"{message}"
+def _compose_model_input(
+    *,
+    user_message: str,
+    notes: list[str],
+    retrieved_memory: list[VectorMatch],
+    max_memory_chars: int,
+) -> str:
+    segments: list[str] = []
+    if retrieved_memory:
+        memory_lines: list[str] = []
+        for item in retrieved_memory:
+            compact = " ".join(item.content.split())
+            if len(compact) > max_memory_chars:
+                compact = f"{compact[:max_memory_chars].rstrip()}..."
+            memory_lines.append(f"- {compact}")
+        segments.append(
+            "[RETRIEVED_MEMORY: examples of prior assistant style/content. "
+            "Use only if relevant. Never mention retrieval.]\n"
+            + "\n".join(memory_lines)
+        )
+
+    if notes:
+        note_lines = "\n".join(f"- {note}" for note in notes)
+        segments.append(
+            "[INTERNAL_STYLE_NOTES: private calibration notes. "
+            "Apply silently and never mention them.]\n"
+            f"{note_lines}"
+        )
+
+    if not segments:
+        return user_message
+    segments.append("[USER_MESSAGE]\n" + user_message)
+    return "\n\n".join(segments)
+
+
+def _embed_texts(texts: list[str], deps: RuntimeDeps) -> list[list[float]]:
+    if deps.embedding_client is None:
+        raise RuntimeError("Embedding client is not configured.")
+    response = deps.embedding_client.embeddings.create(
+        model=deps.vector_embedding_model,
+        input=texts,
     )
+    vectors: list[list[float]] = []
+    for item in response.data:
+        vectors.append([float(value) for value in item.embedding])
+    if len(vectors) != len(texts):
+        raise RuntimeError("Embedding response size mismatch.")
+    return vectors
+
+
+def _retrieve_memory(
+    *,
+    deps: RuntimeDeps,
+    session_id: str,
+    query_text: str,
+) -> list[VectorMatch]:
+    if not deps.vector_enabled or deps.vector_store is None:
+        return []
+    query = query_text.strip()
+    if not query:
+        return []
+    # Avoid over-influencing short acknowledgements ("nice", "cool", etc.).
+    if len(query) < 20 or len(query.split()) < 4:
+        return []
+    try:
+        query_vector = _embed_texts([query], deps)[0]
+    except Exception as exc:
+        _log_event("vector_search_error", session_id=session_id, error_type=type(exc).__name__)
+        return []
+    exclude_session_id = session_id if deps.vector_exclude_current_session else None
+    return deps.vector_store.search(
+        query_embedding=query_vector,
+        limit=deps.vector_top_k,
+        min_similarity=deps.vector_min_similarity,
+        roles=("assistant",),
+        exclude_session_id=exclude_session_id,
+    )
+
+
+def _index_assistant_output(
+    *,
+    deps: RuntimeDeps,
+    session_id: str,
+    message_id: str,
+    content: str,
+    created_at: int,
+) -> None:
+    if not deps.vector_enabled or deps.vector_store is None:
+        return
+    text = content.strip()
+    if not text:
+        return
+    try:
+        embedding = _embed_texts([text], deps)[0]
+        deps.vector_store.upsert_message_vector(
+            session_id=session_id,
+            role="assistant",
+            message_id=message_id,
+            content=text,
+            embedding=embedding,
+            created_at=created_at,
+        )
+    except Exception as exc:
+        _log_event("vector_index_error", session_id=session_id, error_type=type(exc).__name__)
 
 
 def _metrics_response(metrics: RuntimeMetrics) -> MetricsResponse:
@@ -409,6 +511,7 @@ def _metrics_response(metrics: RuntimeMetrics) -> MetricsResponse:
 def create_app(config: AppConfig) -> FastAPI:
     logging.basicConfig(level=getattr(logging, config.log_level, logging.INFO), format="%(message)s")
 
+    shared_openai_client = OpenAI(api_key=config.openai_api_key)
     app = FastAPI(title="Polinko Agent API", version="0.1.0")
     app.state.runtime_deps = RuntimeDeps(
         openai_api_key=config.openai_api_key,
@@ -423,7 +526,15 @@ def create_app(config: AppConfig) -> FastAPI:
         ocr_provider=config.ocr_provider,
         ocr_model=config.ocr_model,
         ocr_prompt=config.ocr_prompt,
-        ocr_client=OpenAI(api_key=config.openai_api_key) if config.ocr_provider == "openai" else None,
+        ocr_client=shared_openai_client if config.ocr_provider == "openai" else None,
+        vector_enabled=config.vector_enabled,
+        vector_top_k=config.vector_top_k,
+        vector_min_similarity=config.vector_min_similarity,
+        vector_max_chars=config.vector_max_chars,
+        vector_exclude_current_session=config.vector_exclude_current_session,
+        vector_embedding_model=config.vector_embedding_model,
+        vector_store=VectorStore(config.vector_db_path) if config.vector_enabled else None,
+        embedding_client=shared_openai_client if config.vector_enabled else None,
         metrics=create_runtime_metrics(),
         run_config=create_run_config(store=True),
         agent=create_agent(),
@@ -601,6 +712,8 @@ def create_app(config: AppConfig) -> FastAPI:
             deps.history_store.delete_chat(session_id=session_id)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="Chat not found.") from exc
+        if deps.vector_store is not None:
+            deps.vector_store.delete_session(session_id)
         session = _session_for_request(request, session_id)
         try:
             await session.clear_session()
@@ -616,6 +729,8 @@ def create_app(config: AppConfig) -> FastAPI:
             summary = deps.history_store.deprecate_chat(session_id=session_id)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="Chat not found.") from exc
+        if deps.vector_store is not None:
+            deps.vector_store.deactivate_session(session_id)
         return _chat_summary_response(summary)
 
     @app.post("/chats/{session_id}/notes")
@@ -656,7 +771,17 @@ def create_app(config: AppConfig) -> FastAPI:
             start = time.perf_counter()
             request_id = getattr(request.state, "request_id", None)
             notes = deps.history_store.list_notes(session_id=session_id, limit=8)
-            model_input = _message_with_internal_notes(req.message, notes)
+            retrieved_memory = _retrieve_memory(
+                deps=deps,
+                session_id=session_id,
+                query_text=req.message,
+            )
+            model_input = _compose_model_input(
+                user_message=req.message,
+                notes=notes,
+                retrieved_memory=retrieved_memory,
+                max_memory_chars=deps.vector_max_chars,
+            )
             try:
                 result = await Runner.run(
                     deps.agent,
@@ -704,7 +829,18 @@ def create_app(config: AppConfig) -> FastAPI:
                 prompt_version=ACTIVE_PROMPT_VERSION,
             )
             deps.history_store.append_message(session_id=session_id, role="user", content=req.message)
-            deps.history_store.append_message(session_id=session_id, role="assistant", content=response.output)
+            assistant_message = deps.history_store.append_message(
+                session_id=session_id,
+                role="assistant",
+                content=response.output,
+            )
+            _index_assistant_output(
+                deps=deps,
+                session_id=session_id,
+                message_id=assistant_message.message_id,
+                content=assistant_message.content,
+                created_at=assistant_message.created_at,
+            )
             deps.history_store.maybe_set_title_from_first_user_message(
                 session_id=session_id,
                 user_message=req.message,
@@ -718,6 +854,7 @@ def create_app(config: AppConfig) -> FastAPI:
                 prompt_version=ACTIVE_PROMPT_VERSION,
                 input_chars=len(req.message),
                 output_chars=len(response.output),
+                vector_matches=len(retrieved_memory),
                 duration_ms=duration_ms,
             )
             return response
@@ -738,6 +875,8 @@ def create_app(config: AppConfig) -> FastAPI:
         should_deprecate = req.deprecate or deps.deprecate_on_reset
         if should_deprecate:
             deps.history_store.deprecate_chat(session_id=session_id)
+            if deps.vector_store is not None:
+                deps.vector_store.deactivate_session(session_id)
             _log_event(
                 "session_deprecated",
                 request_id=getattr(request.state, "request_id", None),
@@ -747,6 +886,8 @@ def create_app(config: AppConfig) -> FastAPI:
             return {"status": "ok", "session_id": session_id}
 
         deps.history_store.clear_messages(session_id=session_id)
+        if deps.vector_store is not None:
+            deps.vector_store.delete_session(session_id)
         _log_event(
             "session_reset",
             request_id=getattr(request.state, "request_id", None),

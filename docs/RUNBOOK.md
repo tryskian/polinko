@@ -16,6 +16,9 @@
    - `.polinko_history.db`
    - `.polinko_history.db-shm` (if present)
    - `.polinko_history.db-wal` (if present)
+   - `.polinko_vector.db` (if present)
+   - `.polinko_vector.db-shm` (if present)
+   - `.polinko_vector.db-wal` (if present)
 3. Start app again (`make chat` or `make server`).
 
 ## Reset One Chat Session (API)
@@ -30,6 +33,7 @@
 6. A non-deprecating reset clears both:
    - conversation memory in `.polinko_memory.db`
    - persisted chat messages in `.polinko_history.db`
+   - vector memories for that session in `.polinko_vector.db` (when enabled)
 
 ## Chat History API
 
@@ -53,6 +57,19 @@
    - `POLINKO_OCR_MODEL` (default `gpt-4.1-mini`)
    - `POLINKO_OCR_PROMPT` (custom extraction prompt)
 3. Restart API after changing provider settings.
+
+## Vector Memory Toggle
+
+1. In `.env`, set:
+   - `POLINKO_VECTOR_ENABLED=true` to enable retrieval memory
+2. Optional vector settings:
+   - `POLINKO_VECTOR_DB_PATH` (default `.polinko_vector.db`)
+   - `POLINKO_VECTOR_EMBEDDING_MODEL` (default `text-embedding-3-small`)
+   - `POLINKO_VECTOR_TOP_K` (default `2`)
+   - `POLINKO_VECTOR_MIN_SIMILARITY` (default `0.40`)
+   - `POLINKO_VECTOR_MAX_CHARS` (default `220`)
+   - `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION` (default `true`)
+3. Restart API after changing vector settings.
 
 ## Run API Tests
 

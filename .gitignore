@@ -28,6 +28,9 @@ _virtualenv.py
 .polinko_history.db
 .polinko_history.db-shm
 .polinko_history.db-wal
+.polinko_vector.db
+.polinko_vector.db-shm
+.polinko_vector.db-wal
 
 # Local planning/handoff docs
 docs/CHARTER.md

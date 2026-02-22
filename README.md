@@ -42,6 +42,10 @@ CLI extras:
 5. Optional OCR mode:
    - `POLINKO_OCR_PROVIDER=scaffold` (default, no model OCR call)
    - `POLINKO_OCR_PROVIDER=openai` (uses `POLINKO_OCR_MODEL` for image OCR)
+6. Optional vector memory mode (cross-chat retrieval while tuning):
+   - `POLINKO_VECTOR_ENABLED=true`
+   - tune retrieval with `POLINKO_VECTOR_TOP_K`, `POLINKO_VECTOR_MIN_SIMILARITY`,
+     and `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION`
 
 ## Project Layout
 
@@ -72,6 +76,13 @@ Config:
 
 - `POLINKO_HISTORY_DB_PATH` (default: `.polinko_history.db`)
 - `POLINKO_DEPRECATE_ON_RESET` (default: `true`)
+- `POLINKO_VECTOR_ENABLED` (default: `false`)
+- `POLINKO_VECTOR_DB_PATH` (default: `.polinko_vector.db`)
+- `POLINKO_VECTOR_EMBEDDING_MODEL` (default: `text-embedding-3-small`)
+- `POLINKO_VECTOR_TOP_K` (default: `2`)
+- `POLINKO_VECTOR_MIN_SIMILARITY` (default: `0.40`)
+- `POLINKO_VECTOR_MAX_CHARS` (default: `220`)
+- `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION` (default: `true`)
 
 ## UI Behavior
 
@@ -84,6 +95,7 @@ Config:
 - Small thinking animation before assistant responses render
 - Silent preference notes via `/note ...` in the composer (stored server-side and applied silently)
 - OCR file upload button in composer (sends file payload to `/skills/ocr`)
+- Optional vector retrieval memory: assistant outputs are indexed and matched by similarity on new turns
 
 ## CI
 

@@ -19,6 +19,13 @@ class AppConfig:
     ocr_provider: str
     ocr_model: str
     ocr_prompt: str
+    vector_enabled: bool
+    vector_db_path: str
+    vector_embedding_model: str
+    vector_top_k: int
+    vector_min_similarity: float
+    vector_max_chars: int
+    vector_exclude_current_session: bool
 
 
 def _looks_like_placeholder(value: str) -> bool:
@@ -121,6 +128,34 @@ def _parse_bool_env(name: str, default: bool) -> bool:
     raise RuntimeError(f"{name} must be a boolean (true/false).")
 
 
+def _parse_int_env(name: str, default: int, *, minimum: int = 0) -> int:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        value = default
+    else:
+        try:
+            value = int(raw)
+        except ValueError as exc:
+            raise RuntimeError(f"{name} must be an integer.") from exc
+    if value < minimum:
+        raise RuntimeError(f"{name} must be >= {minimum}.")
+    return value
+
+
+def _parse_float_env(name: str, default: float, *, minimum: float = 0.0, maximum: float = 1.0) -> float:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        value = default
+    else:
+        try:
+            value = float(raw)
+        except ValueError as exc:
+            raise RuntimeError(f"{name} must be a float.") from exc
+    if value < minimum or value > maximum:
+        raise RuntimeError(f"{name} must be between {minimum} and {maximum}.")
+    return value
+
+
 def _validate_ocr_provider(value: str | None) -> str:
     normalized = (value or "scaffold").strip().lower()
     if normalized in {"scaffold", "openai"}:
@@ -156,6 +191,16 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         ).strip()
         or "Extract all readable text from this image. Return only the extracted text and preserve line breaks."
     )
+    vector_enabled = _parse_bool_env("POLINKO_VECTOR_ENABLED", False)
+    vector_db_path = os.getenv("POLINKO_VECTOR_DB_PATH", ".polinko_vector.db")
+    vector_embedding_model = (
+        os.getenv("POLINKO_VECTOR_EMBEDDING_MODEL", "text-embedding-3-small").strip()
+        or "text-embedding-3-small"
+    )
+    vector_top_k = _parse_int_env("POLINKO_VECTOR_TOP_K", 2, minimum=1)
+    vector_min_similarity = _parse_float_env("POLINKO_VECTOR_MIN_SIMILARITY", 0.40, minimum=0.0, maximum=1.0)
+    vector_max_chars = _parse_int_env("POLINKO_VECTOR_MAX_CHARS", 220, minimum=80)
+    vector_exclude_current_session = _parse_bool_env("POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION", True)
 
     return AppConfig(
         openai_api_key=openai_api_key,
@@ -170,4 +215,11 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         ocr_provider=ocr_provider,
         ocr_model=ocr_model,
         ocr_prompt=ocr_prompt,
+        vector_enabled=vector_enabled,
+        vector_db_path=vector_db_path,
+        vector_embedding_model=vector_embedding_model,
+        vector_top_k=vector_top_k,
+        vector_min_similarity=vector_min_similarity,
+        vector_max_chars=vector_max_chars,
+        vector_exclude_current_session=vector_exclude_current_session,
     )

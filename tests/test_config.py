@@ -46,6 +46,29 @@ class ConfigTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 load_config(dotenv_path="__missing__.env")
 
+    def test_vector_defaults(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            cfg = load_config(dotenv_path="__missing__.env")
+        self.assertFalse(cfg.vector_enabled)
+        self.assertEqual(cfg.vector_db_path, ".polinko_vector.db")
+        self.assertEqual(cfg.vector_embedding_model, "text-embedding-3-small")
+        self.assertEqual(cfg.vector_top_k, 2)
+        self.assertEqual(cfg.vector_min_similarity, 0.40)
+        self.assertEqual(cfg.vector_max_chars, 220)
+        self.assertTrue(cfg.vector_exclude_current_session)
+
+    def test_rejects_invalid_vector_min_similarity(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_VECTOR_MIN_SIMILARITY": "1.5",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(RuntimeError):
+                load_config(dotenv_path="__missing__.env")
+
 
 if __name__ == "__main__":
     unittest.main()

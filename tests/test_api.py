@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from api.app_factory import create_runtime_metrics
 from core.history_store import ChatHistoryStore
 from core.prompts import ACTIVE_PROMPT_VERSION
+from core.vector_store import VectorStore
 
 
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-key-123456789012345")
@@ -40,6 +41,14 @@ class PolinkoApiTests(unittest.TestCase):
         deps.ocr_model = "gpt-4.1-mini"
         deps.ocr_prompt = "Extract text."
         deps.ocr_client = None
+        deps.vector_enabled = False
+        deps.vector_top_k = 4
+        deps.vector_min_similarity = 0.25
+        deps.vector_max_chars = 320
+        deps.vector_exclude_current_session = True
+        deps.vector_embedding_model = "text-embedding-3-small"
+        deps.vector_store = None
+        deps.embedding_client = None
         deps.session_db_path = os.path.join(self.tmpdir.name, "test-memory.db")
         deps.history_store = ChatHistoryStore(os.path.join(self.tmpdir.name, "test-history.db"))
         deps.metrics = create_runtime_metrics()
@@ -391,6 +400,52 @@ class PolinkoApiTests(unittest.TestCase):
         chats_resp = self.client.get("/chats", headers={"x-api-key": "test-server-key"})
         self.assertEqual(chats_resp.status_code, 200)
         self.assertEqual(chats_resp.json()["chats"][0]["message_count"], 2)
+
+    def test_vector_memory_retrieval_injects_prior_assistant_context(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors.db"))
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "unicorn" in lowered else 0.0,
+                    1.0 if "horn" in lowered else 0.0,
+                    1.0 if "grow" in lowered or "growth" in lowered else 0.0,
+                    float(len(lowered) % 17) / 17.0,
+                ]
+
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                if isinstance(inputs, str):
+                    payload = [inputs]
+                else:
+                    payload = list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        with self._stub_runner("First assistant memory"):
+            first = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "How do unicorn horns grow?", "session_id": "s-memory-a"},
+            )
+        self.assertEqual(first.status_code, 200)
+
+        captured: dict[str, str] = {}
+        with self._stub_runner("Second response", capture=captured):
+            second = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "Do unicorn horns keep growing?", "session_id": "s-memory-b"},
+            )
+        self.assertEqual(second.status_code, 200)
+        self.assertIn("RETRIEVED_MEMORY", captured["input"])
+        self.assertIn("First assistant memory", captured["input"])
 
     def test_chat_success_with_key_ring(self) -> None:
         deps = server.get_runtime_deps()
