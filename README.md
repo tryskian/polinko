@@ -51,6 +51,11 @@ CLI extras:
    - `POLINKO_RESPONSES_VECTOR_STORE_ID=vs_...`
    - optional: `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH=true`
    - optional: `POLINKO_RESPONSES_HISTORY_TURN_LIMIT=12`
+8. Optional governance / hallucination guardrails:
+   - `POLINKO_GOVERNANCE_ENABLED=true`
+   - `POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH=false`
+   - `POLINKO_GOVERNANCE_LOG_ONLY=false`
+   - `POLINKO_HALLUCINATION_GUARDRAILS_ENABLED=true`
 
 ## Project Layout
 
@@ -71,6 +76,8 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 - `GET /chats/{session_id}/messages` load a thread
 - `GET /chats/{session_id}/export` export full chat transcript (+ OCR runs)
 - `POST /chats/{session_id}/notes` add internal preference note
+- `GET /chats/{session_id}/collaboration` view active collaborator + handoff timeline
+- `POST /chats/{session_id}/collaboration/handoff` apply controlled role handoff
 - `POST /chats/{session_id}/deprecate` mark a chat as deprecated (hidden from default list)
 - `PATCH /chats/{session_id}` rename a chat
 - `DELETE /chats/{session_id}` delete a chat
@@ -94,6 +101,10 @@ Config:
 - `POLINKO_RESPONSES_VECTOR_STORE_ID` (required when orchestration is enabled)
 - `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH` (default: `false`)
 - `POLINKO_RESPONSES_HISTORY_TURN_LIMIT` (default: `12`)
+- `POLINKO_GOVERNANCE_ENABLED` (default: `true`)
+- `POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH` (default: `false`)
+- `POLINKO_GOVERNANCE_LOG_ONLY` (default: `false`)
+- `POLINKO_HALLUCINATION_GUARDRAILS_ENABLED` (default: `true`)
 
 ## UI Behavior
 
@@ -114,6 +125,9 @@ Config:
 - File search endpoint uses hybrid ranking (semantic similarity + keyword overlap) over indexed vectors
 - Optional chat orchestration mode can use Responses API tools (`file_search` and optional `web_search`)
   while preserving server-side chat history
+- Governance layer can block or log disallowed tools (for example web search when disabled)
+- Hallucination guardrails add internal groundedness guidance for factual-style prompts
+- Multi-agent collaboration v1 supports explicit role handoffs with server-side audit history
 
 ## CI
 

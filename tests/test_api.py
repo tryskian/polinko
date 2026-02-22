@@ -55,6 +55,10 @@ class PolinkoApiTests(unittest.TestCase):
         deps.responses_include_web_search = False
         deps.responses_history_turn_limit = 12
         deps.responses_client = None
+        deps.governance_enabled = True
+        deps.governance_allow_web_search = False
+        deps.governance_log_only = False
+        deps.hallucination_guardrails_enabled = True
         deps.session_db_path = os.path.join(self.tmpdir.name, "test-memory.db")
         deps.history_store = ChatHistoryStore(os.path.join(self.tmpdir.name, "test-history.db"))
         deps.metrics = create_runtime_metrics()
@@ -114,6 +118,7 @@ class PolinkoApiTests(unittest.TestCase):
         deps.responses_orchestration_model = "gpt-5-chat-latest"
         deps.responses_vector_store_id = "vs_test_123"
         deps.responses_include_web_search = True
+        deps.governance_allow_web_search = True
         deps.responses_history_turn_limit = 8
         captured: dict[str, object] = {}
 
@@ -169,6 +174,33 @@ class PolinkoApiTests(unittest.TestCase):
             json={"message": "hello", "session_id": "s-rag-missing-vs"},
         )
         self.assertEqual(resp.status_code, 503)
+
+    def test_chat_orchestration_blocks_web_search_when_governed(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.responses_orchestration_enabled = True
+        deps.responses_orchestration_model = "gpt-5-chat-latest"
+        deps.responses_vector_store_id = "vs_test_block"
+        deps.responses_include_web_search = True
+        deps.governance_enabled = True
+        deps.governance_allow_web_search = False
+        deps.governance_log_only = False
+        captured: dict[str, object] = {}
+
+        class _FakeResponses:
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                captured["kwargs"] = kwargs
+                return SimpleNamespace(output_text="Governed response")
+
+        deps.responses_client = SimpleNamespace(responses=_FakeResponses())
+        resp = self.client.post(
+            "/chat",
+            headers={"x-api-key": "test-server-key"},
+            json={"message": "What's latest in AI safety policy?", "session_id": "s-rag-governed"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        tools = captured["kwargs"]["tools"]
+        self.assertEqual(tools[0]["type"], "file_search")
+        self.assertFalse(any(tool.get("type") == "web_search_preview" for tool in tools))
 
     def test_server_side_chat_history_persists(self) -> None:
         with self._stub_runner("History response"):
@@ -624,6 +656,81 @@ class PolinkoApiTests(unittest.TestCase):
         chats_resp = self.client.get("/chats", headers={"x-api-key": "test-server-key"})
         self.assertEqual(chats_resp.status_code, 200)
         self.assertEqual(chats_resp.json()["chats"][0]["message_count"], 2)
+
+    def test_collaboration_handoff_persists_and_injects_context(self) -> None:
+        handoff_resp = self.client.post(
+            "/chats/s-collab/collaboration/handoff",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "to_agent_id": "portfolio_strategist",
+                "to_role": "Portfolio Strategist",
+                "objective": "Shape clear strategic options for portfolio narratives.",
+                "reason": "Switching from general ideation to structured planning.",
+            },
+        )
+        self.assertEqual(handoff_resp.status_code, 200)
+        payload = handoff_resp.json()
+        self.assertEqual(payload["session_id"], "s-collab")
+        self.assertEqual(payload["active"]["active_agent_id"], "portfolio_strategist")
+        self.assertEqual(payload["active"]["active_role"], "Portfolio Strategist")
+        self.assertEqual(len(payload["handoffs"]), 1)
+        self.assertIsNone(payload["handoffs"][0]["from_agent_id"])
+
+        timeline = self.client.get(
+            "/chats/s-collab/collaboration",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(timeline.status_code, 200)
+        timeline_payload = timeline.json()
+        self.assertEqual(timeline_payload["active"]["active_agent_id"], "portfolio_strategist")
+        self.assertEqual(len(timeline_payload["handoffs"]), 1)
+
+        captured: dict[str, str] = {}
+        with self._stub_runner("collab-response", capture=captured):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "give me three architecture options", "session_id": "s-collab"},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+        self.assertIn("COLLABORATION_CONTEXT", captured["input"])
+        self.assertIn("portfolio_strategist", captured["input"])
+        self.assertIn("Portfolio Strategist", captured["input"])
+
+    def test_collaboration_handoff_tracks_transitions(self) -> None:
+        first = self.client.post(
+            "/chats/s-collab-2/collaboration/handoff",
+            headers={"x-api-key": "test-server-key"},
+            json={"to_agent_id": "researcher", "to_role": "Research Partner"},
+        )
+        self.assertEqual(first.status_code, 200)
+        second = self.client.post(
+            "/chats/s-collab-2/collaboration/handoff",
+            headers={"x-api-key": "test-server-key"},
+            json={"to_agent_id": "editor", "to_role": "Tone Editor"},
+        )
+        self.assertEqual(second.status_code, 200)
+        payload = self.client.get(
+            "/chats/s-collab-2/collaboration",
+            headers={"x-api-key": "test-server-key"},
+        ).json()
+        self.assertEqual(payload["active"]["active_agent_id"], "editor")
+        self.assertEqual(len(payload["handoffs"]), 2)
+        self.assertEqual(payload["handoffs"][1]["from_agent_id"], "researcher")
+        self.assertEqual(payload["handoffs"][1]["to_agent_id"], "editor")
+
+    def test_hallucination_guardrail_injected_for_factual_query(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.hallucination_guardrails_enabled = True
+        captured: dict[str, str] = {}
+        with self._stub_runner("guarded", capture=captured):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "What is the latest GDP for Canada in 2025?", "session_id": "s-guardrail"},
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("HALLUCINATION_GUARDRAIL", captured["input"])
 
     def test_vector_memory_retrieval_injects_prior_assistant_context(self) -> None:
         deps = server.get_runtime_deps()

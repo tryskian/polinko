@@ -42,6 +42,8 @@
 - `GET /chats/{session_id}/messages` load chat messages
 - `GET /chats/{session_id}/export` export transcript (+ OCR runs)
 - `POST /chats/{session_id}/notes` add internal preference note
+- `GET /chats/{session_id}/collaboration` view active collaborator + handoff timeline
+- `POST /chats/{session_id}/collaboration/handoff` apply active role handoff
 - `POST /chats/{session_id}/deprecate` deprecate a chat
 - `PATCH /chats/{session_id}` rename chat
 - `DELETE /chats/{session_id}` delete chat and clear memory
@@ -97,6 +99,31 @@
    - `POLINKO_RESPONSES_HISTORY_TURN_LIMIT` (default `12`)
 3. Restart API after changing orchestration settings.
 4. Default behavior remains unchanged when orchestration is disabled.
+
+## Governance + Hallucination Guardrails
+
+1. In `.env`, set:
+   - `POLINKO_GOVERNANCE_ENABLED=true`
+   - `POLINKO_HALLUCINATION_GUARDRAILS_ENABLED=true`
+2. Optional governance controls:
+   - `POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH=false` (blocks web search tool when false)
+   - `POLINKO_GOVERNANCE_LOG_ONLY=false` (set `true` to allow but log policy violations)
+3. Restart API after changing governance settings.
+4. Guardrails operate as internal guidance only; they do not alter API response schema.
+
+## Multi-Agent Collaboration v1
+
+1. Apply a handoff:
+   - `POST /chats/{session_id}/collaboration/handoff`
+   - body:
+     - `to_agent_id` (required)
+     - `to_role` (required)
+     - `objective` (optional)
+     - `reason` (optional)
+2. Inspect current collaboration state:
+   - `GET /chats/{session_id}/collaboration`
+3. Handoffs are server-side audited and included in a per-chat timeline.
+4. During `/chat`, active collaboration context is injected internally (not shown to users).
 
 ## Run API Tests
 

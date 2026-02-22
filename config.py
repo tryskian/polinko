@@ -31,6 +31,10 @@ class AppConfig:
     responses_vector_store_id: str | None
     responses_include_web_search: bool
     responses_history_turn_limit: int
+    governance_enabled: bool
+    governance_allow_web_search: bool
+    governance_log_only: bool
+    hallucination_guardrails_enabled: bool
 
 
 def _looks_like_placeholder(value: str) -> bool:
@@ -218,6 +222,10 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     )
     responses_include_web_search = _parse_bool_env("POLINKO_RESPONSES_INCLUDE_WEB_SEARCH", False)
     responses_history_turn_limit = _parse_int_env("POLINKO_RESPONSES_HISTORY_TURN_LIMIT", 12, minimum=1)
+    governance_enabled = _parse_bool_env("POLINKO_GOVERNANCE_ENABLED", True)
+    governance_allow_web_search = _parse_bool_env("POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH", False)
+    governance_log_only = _parse_bool_env("POLINKO_GOVERNANCE_LOG_ONLY", False)
+    hallucination_guardrails_enabled = _parse_bool_env("POLINKO_HALLUCINATION_GUARDRAILS_ENABLED", True)
 
     if responses_orchestration_enabled and not responses_vector_store_id:
         raise RuntimeError(
@@ -250,4 +258,8 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         responses_vector_store_id=responses_vector_store_id,
         responses_include_web_search=responses_include_web_search,
         responses_history_turn_limit=responses_history_turn_limit,
+        governance_enabled=governance_enabled,
+        governance_allow_web_search=governance_allow_web_search,
+        governance_log_only=governance_log_only,
+        hallucination_guardrails_enabled=hallucination_guardrails_enabled,
     )

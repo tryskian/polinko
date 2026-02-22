@@ -64,6 +64,10 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNone(cfg.responses_vector_store_id)
         self.assertFalse(cfg.responses_include_web_search)
         self.assertEqual(cfg.responses_history_turn_limit, 12)
+        self.assertTrue(cfg.governance_enabled)
+        self.assertFalse(cfg.governance_allow_web_search)
+        self.assertFalse(cfg.governance_log_only)
+        self.assertTrue(cfg.hallucination_guardrails_enabled)
 
     def test_rejects_invalid_vector_min_similarity(self) -> None:
         env = {

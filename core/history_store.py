@@ -44,6 +44,30 @@ class OcrRun:
     created_at: int
 
 
+@dataclass(frozen=True)
+class CollaborationState:
+    session_id: str
+    active_agent_id: str
+    active_role: str
+    objective: str | None
+    updated_at: int
+    updated_by: str | None
+
+
+@dataclass(frozen=True)
+class CollaborationHandoff:
+    handoff_id: str
+    session_id: str
+    from_agent_id: str | None
+    from_role: str | None
+    to_agent_id: str
+    to_role: str
+    objective: str | None
+    reason: str | None
+    created_at: int
+    created_by: str | None
+
+
 def _now_ms() -> int:
     return int(time.time() * 1000)
 
@@ -154,6 +178,42 @@ class ChatHistoryStore:
                 """
                 CREATE INDEX IF NOT EXISTS idx_ocr_runs_session_created
                 ON ocr_runs(session_id, created_at DESC);
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS chat_collaboration_state (
+                  session_id TEXT PRIMARY KEY,
+                  active_agent_id TEXT NOT NULL,
+                  active_role TEXT NOT NULL,
+                  objective TEXT,
+                  updated_at INTEGER NOT NULL,
+                  updated_by TEXT,
+                  FOREIGN KEY(session_id) REFERENCES chats(session_id) ON DELETE CASCADE
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS chat_handoffs (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  session_id TEXT NOT NULL,
+                  from_agent_id TEXT,
+                  from_role TEXT,
+                  to_agent_id TEXT NOT NULL,
+                  to_role TEXT NOT NULL,
+                  objective TEXT,
+                  reason TEXT,
+                  created_at INTEGER NOT NULL,
+                  created_by TEXT,
+                  FOREIGN KEY(session_id) REFERENCES chats(session_id) ON DELETE CASCADE
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_chat_handoffs_session_created
+                ON chat_handoffs(session_id, created_at DESC, id DESC);
                 """
             )
 
@@ -634,6 +694,190 @@ class ChatHistoryStore:
                 """,
                 (candidate, now, session_id, DEFAULT_CHAT_TITLE),
             )
+
+    def get_collaboration_state(self, session_id: str) -> CollaborationState | None:
+        with self._connection() as conn:
+            row = conn.execute(
+                """
+                SELECT
+                  session_id,
+                  active_agent_id,
+                  active_role,
+                  objective,
+                  updated_at,
+                  updated_by
+                FROM chat_collaboration_state
+                WHERE session_id = ?;
+                """,
+                (session_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return CollaborationState(
+            session_id=str(row["session_id"]),
+            active_agent_id=str(row["active_agent_id"]),
+            active_role=str(row["active_role"]),
+            objective=str(row["objective"]) if row["objective"] is not None else None,
+            updated_at=int(row["updated_at"]),
+            updated_by=str(row["updated_by"]) if row["updated_by"] is not None else None,
+        )
+
+    def list_handoffs(self, session_id: str, limit: int = 20) -> list[CollaborationHandoff]:
+        with self._connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT
+                  id,
+                  session_id,
+                  from_agent_id,
+                  from_role,
+                  to_agent_id,
+                  to_role,
+                  objective,
+                  reason,
+                  created_at,
+                  created_by
+                FROM chat_handoffs
+                WHERE session_id = ?
+                ORDER BY created_at DESC, id DESC
+                LIMIT ?;
+                """,
+                (session_id, limit),
+            ).fetchall()
+        # Return oldest->newest for deterministic timeline rendering.
+        ordered = list(reversed(rows))
+        return [
+            CollaborationHandoff(
+                handoff_id=f"handoff-{int(row['id'])}",
+                session_id=str(row["session_id"]),
+                from_agent_id=str(row["from_agent_id"]) if row["from_agent_id"] is not None else None,
+                from_role=str(row["from_role"]) if row["from_role"] is not None else None,
+                to_agent_id=str(row["to_agent_id"]),
+                to_role=str(row["to_role"]),
+                objective=str(row["objective"]) if row["objective"] is not None else None,
+                reason=str(row["reason"]) if row["reason"] is not None else None,
+                created_at=int(row["created_at"]),
+                created_by=str(row["created_by"]) if row["created_by"] is not None else None,
+            )
+            for row in ordered
+        ]
+
+    def handoff_collaboration(
+        self,
+        *,
+        session_id: str,
+        to_agent_id: str,
+        to_role: str,
+        objective: str | None = None,
+        reason: str | None = None,
+        created_by: str | None = None,
+    ) -> tuple[CollaborationState, CollaborationHandoff]:
+        safe_agent_id = to_agent_id.strip()
+        safe_role = to_role.strip()
+        if not safe_agent_id:
+            raise ValueError("to_agent_id cannot be blank.")
+        if not safe_role:
+            raise ValueError("to_role cannot be blank.")
+        safe_objective = objective.strip() if objective and objective.strip() else None
+        safe_reason = reason.strip() if reason and reason.strip() else None
+        safe_created_by = created_by.strip() if created_by and created_by.strip() else None
+
+        now = _now_ms()
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO chats(session_id, title, created_at, updated_at, status, deprecated_at)
+                VALUES (?, ?, ?, ?, 'active', NULL)
+                ON CONFLICT(session_id) DO NOTHING;
+                """,
+                (session_id, DEFAULT_CHAT_TITLE, now, now),
+            )
+            current_row = conn.execute(
+                """
+                SELECT active_agent_id, active_role
+                FROM chat_collaboration_state
+                WHERE session_id = ?;
+                """,
+                (session_id,),
+            ).fetchone()
+            from_agent_id = (
+                str(current_row["active_agent_id"]) if current_row is not None else None
+            )
+            from_role = str(current_row["active_role"]) if current_row is not None else None
+            conn.execute(
+                """
+                INSERT INTO chat_collaboration_state(
+                  session_id,
+                  active_agent_id,
+                  active_role,
+                  objective,
+                  updated_at,
+                  updated_by
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(session_id) DO UPDATE SET
+                  active_agent_id = excluded.active_agent_id,
+                  active_role = excluded.active_role,
+                  objective = excluded.objective,
+                  updated_at = excluded.updated_at,
+                  updated_by = excluded.updated_by;
+                """,
+                (session_id, safe_agent_id, safe_role, safe_objective, now, safe_created_by),
+            )
+            inserted = conn.execute(
+                """
+                INSERT INTO chat_handoffs(
+                  session_id,
+                  from_agent_id,
+                  from_role,
+                  to_agent_id,
+                  to_role,
+                  objective,
+                  reason,
+                  created_at,
+                  created_by
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """,
+                (
+                    session_id,
+                    from_agent_id,
+                    from_role,
+                    safe_agent_id,
+                    safe_role,
+                    safe_objective,
+                    safe_reason,
+                    now,
+                    safe_created_by,
+                ),
+            )
+            conn.execute(
+                "UPDATE chats SET updated_at = ? WHERE session_id = ?;",
+                (now, session_id),
+            )
+
+        handoff_row_id = int(inserted.lastrowid) if inserted.lastrowid is not None else 0
+        state = CollaborationState(
+            session_id=session_id,
+            active_agent_id=safe_agent_id,
+            active_role=safe_role,
+            objective=safe_objective,
+            updated_at=now,
+            updated_by=safe_created_by,
+        )
+        handoff = CollaborationHandoff(
+            handoff_id=f"handoff-{handoff_row_id}",
+            session_id=session_id,
+            from_agent_id=from_agent_id,
+            from_role=from_role,
+            to_agent_id=safe_agent_id,
+            to_role=safe_role,
+            objective=safe_objective,
+            reason=safe_reason,
+            created_at=now,
+            created_by=safe_created_by,
+        )
+        return state, handoff
 
     def clear_messages(self, session_id: str) -> None:
         now = _now_ms()

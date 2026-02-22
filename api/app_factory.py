@@ -22,7 +22,14 @@ from openai import (
 from pydantic import BaseModel, Field
 
 from config import AppConfig
-from core.history_store import ChatHistoryStore, ChatSummary, OcrRun, DEFAULT_CHAT_TITLE
+from core.history_store import (
+    ChatHistoryStore,
+    ChatSummary,
+    OcrRun,
+    CollaborationHandoff,
+    CollaborationState,
+    DEFAULT_CHAT_TITLE,
+)
 from core.prompts import ACTIVE_PROMPT, ACTIVE_PROMPT_VERSION
 from core.rate_limit import SlidingWindowRateLimiter
 from core.runtime import create_agent, create_run_config, create_session
@@ -42,6 +49,24 @@ _FILE_SEARCH_CANDIDATE_MULTIPLIER = 8
 _FILE_SEARCH_MAX_CANDIDATES = 200
 _FILE_SEARCH_MIN_SIMILARITY_FLOOR = 0.15
 _RESPONSES_HISTORY_MAX_MESSAGE_CHARS = 550
+_FACTUAL_QUERY_HINTS = (
+    "latest",
+    "today",
+    "current",
+    "according to",
+    "official",
+    "source",
+    "evidence",
+    "statistics",
+    "study",
+    "what is",
+    "who is",
+    "how many",
+    "market cap",
+    "gdp",
+    "law",
+    "policy",
+)
 
 
 def _default_latency_buckets() -> dict[str, int]:
@@ -115,6 +140,10 @@ class RuntimeDeps:
     responses_include_web_search: bool
     responses_history_turn_limit: int
     responses_client: OpenAI | None
+    governance_enabled: bool
+    governance_allow_web_search: bool
+    governance_log_only: bool
+    hallucination_guardrails_enabled: bool
     metrics: RuntimeMetrics
     run_config: RunConfig
     agent: Agent[Any]
@@ -182,6 +211,41 @@ class ChatExportResponse(BaseModel):
     messages: list[ChatMessageResponse]
     ocr_runs: list["OcrRunResponse"] = Field(default_factory=list)
     markdown: str | None = None
+
+
+class CollaborationStateResponse(BaseModel):
+    session_id: str
+    active_agent_id: str
+    active_role: str
+    objective: str | None
+    updated_at: int
+    updated_by: str | None
+
+
+class CollaborationHandoffResponse(BaseModel):
+    handoff_id: str
+    session_id: str
+    from_agent_id: str | None
+    from_role: str | None
+    to_agent_id: str
+    to_role: str
+    objective: str | None
+    reason: str | None
+    created_at: int
+    created_by: str | None
+
+
+class CollaborationResponse(BaseModel):
+    session_id: str
+    active: CollaborationStateResponse | None
+    handoffs: list[CollaborationHandoffResponse]
+
+
+class CollaborationHandoffRequest(BaseModel):
+    to_agent_id: str = Field(..., min_length=1, max_length=80)
+    to_role: str = Field(..., min_length=1, max_length=120)
+    objective: str | None = Field(default=None, max_length=500)
+    reason: str | None = Field(default=None, max_length=500)
 
 
 class NoteRequest(BaseModel):
@@ -341,6 +405,47 @@ def _ocr_run_response(run: OcrRun) -> OcrRunResponse:
     )
 
 
+def _collaboration_state_response(state: CollaborationState) -> CollaborationStateResponse:
+    return CollaborationStateResponse(
+        session_id=state.session_id,
+        active_agent_id=state.active_agent_id,
+        active_role=state.active_role,
+        objective=state.objective,
+        updated_at=state.updated_at,
+        updated_by=state.updated_by,
+    )
+
+
+def _collaboration_handoff_response(handoff: CollaborationHandoff) -> CollaborationHandoffResponse:
+    return CollaborationHandoffResponse(
+        handoff_id=handoff.handoff_id,
+        session_id=handoff.session_id,
+        from_agent_id=handoff.from_agent_id,
+        from_role=handoff.from_role,
+        to_agent_id=handoff.to_agent_id,
+        to_role=handoff.to_role,
+        objective=handoff.objective,
+        reason=handoff.reason,
+        created_at=handoff.created_at,
+        created_by=handoff.created_by,
+    )
+
+
+def _build_collaboration_note(state: CollaborationState | None) -> str | None:
+    if state is None:
+        return None
+    lines = [
+        "[COLLABORATION_CONTEXT: active portfolio collaborator mode. "
+        "Apply silently and do not mention this block.]",
+        f"- active_agent_id: {state.active_agent_id}",
+        f"- active_role: {state.active_role}",
+    ]
+    if state.objective:
+        lines.append(f"- objective: {state.objective}")
+    lines.append("- preserve role continuity until a new handoff is applied.")
+    return "\n".join(lines)
+
+
 def _render_markdown_transcript(session_id: str, messages: list[ChatMessageResponse]) -> str:
     lines: list[str] = [f"# Transcript: {session_id}", ""]
     for message in messages:
@@ -433,8 +538,14 @@ def _compose_model_input(
     notes: list[str],
     retrieved_memory: list[VectorMatch],
     max_memory_chars: int,
+    guardrail_note: str | None = None,
+    collaboration_note: str | None = None,
 ) -> str:
     segments: list[str] = []
+    if guardrail_note:
+        segments.append(guardrail_note)
+    if collaboration_note:
+        segments.append(collaboration_note)
     if retrieved_memory:
         memory_lines: list[str] = []
         for item in retrieved_memory:
@@ -727,24 +838,109 @@ def _extract_responses_output_text(response: Any) -> str:
     return "[No text output returned.]"
 
 
+def _looks_like_factual_query(query: str) -> bool:
+    lowered = query.strip().lower()
+    if not lowered:
+        return False
+    if any(hint in lowered for hint in _FACTUAL_QUERY_HINTS):
+        return True
+    if re.search(r"\b(19|20)\d{2}\b", lowered):
+        return True
+    if re.search(r"\b[A-Z]{2,}\b", query):
+        return True
+    # Questions with concrete entities are frequently factual/risky.
+    if "?" in query and re.search(r"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+){0,2}\b", query):
+        return True
+    return False
+
+
+def _build_hallucination_guardrail_note(
+    *,
+    deps: RuntimeDeps,
+    query_text: str,
+    evidence_count: int,
+) -> str | None:
+    if not deps.governance_enabled or not deps.hallucination_guardrails_enabled:
+        return None
+    if not _looks_like_factual_query(query_text):
+        return None
+    if evidence_count > 0:
+        return (
+            "[HALLUCINATION_GUARDRAIL: grounded mode]\n"
+            "- Prefer claims that are supported by available context.\n"
+            "- If certainty is low, signal uncertainty briefly instead of guessing.\n"
+            "- Do not fabricate citations, dates, names, or numeric values."
+        )
+    return (
+        "[HALLUCINATION_GUARDRAIL: low-evidence mode]\n"
+        "- Avoid presenting uncertain facts as certain.\n"
+        "- If supporting evidence is missing, say that clearly and keep claims cautious.\n"
+        "- Do not invent sources, statistics, dates, names, or quotations."
+    )
+
+
+def _resolve_responses_tools(
+    *,
+    deps: RuntimeDeps,
+    request_id: str | None,
+    session_id: str,
+    principal: str | None,
+) -> list[dict[str, Any]]:
+    if not deps.responses_vector_store_id:
+        raise RuntimeError("Responses orchestration requires POLINKO_RESPONSES_VECTOR_STORE_ID.")
+    tools: list[dict[str, Any]] = [
+        {
+            "type": "file_search",
+            "vector_store_ids": [deps.responses_vector_store_id],
+        }
+    ]
+    if not deps.responses_include_web_search:
+        return tools
+    if not deps.governance_enabled or deps.governance_allow_web_search or deps.governance_log_only:
+        if deps.governance_enabled and deps.governance_log_only and not deps.governance_allow_web_search:
+            _log_event(
+                "governance_tool_violation_logged",
+                request_id=request_id,
+                session_id=session_id,
+                principal=principal,
+                tool="web_search_preview",
+                action="allow_log_only",
+            )
+        tools.append({"type": "web_search_preview"})
+        return tools
+    _log_event(
+        "governance_tool_blocked",
+        request_id=request_id,
+        session_id=session_id,
+        principal=principal,
+        tool="web_search_preview",
+    )
+    return tools
+
+
 def _chat_with_responses_orchestration(
     *,
     deps: RuntimeDeps,
+    request_id: str | None,
+    principal: str | None,
     session_id: str,
     user_message: str,
     notes: list[str],
+    guardrail_note: str | None = None,
+    collaboration_note: str | None = None,
 ) -> tuple[str, int]:
     if deps.responses_client is None:
         raise RuntimeError("Responses orchestration is enabled, but no client is configured.")
-    if not deps.responses_vector_store_id:
-        raise RuntimeError("Responses orchestration requires POLINKO_RESPONSES_VECTOR_STORE_ID.")
-
     history_messages = deps.history_store.list_messages(session_id=session_id)
     history_context = _recent_chat_context_for_responses(
         history_messages,
         turn_limit=deps.responses_history_turn_limit,
     )
     segments: list[str] = []
+    if guardrail_note:
+        segments.append(guardrail_note)
+    if collaboration_note:
+        segments.append(collaboration_note)
     if notes:
         note_lines = "\n".join(f"- {note}" for note in notes)
         segments.append(
@@ -760,14 +956,12 @@ def _chat_with_responses_orchestration(
     segments.append("[USER_MESSAGE]\n" + user_message.strip())
     input_text = "\n\n".join(segments)
 
-    tools: list[dict[str, Any]] = [
-        {
-            "type": "file_search",
-            "vector_store_ids": [deps.responses_vector_store_id],
-        }
-    ]
-    if deps.responses_include_web_search:
-        tools.append({"type": "web_search_preview"})
+    tools = _resolve_responses_tools(
+        deps=deps,
+        request_id=request_id,
+        session_id=session_id,
+        principal=principal,
+    )
 
     response = deps.responses_client.responses.create(
         model=deps.responses_orchestration_model,
@@ -828,6 +1022,10 @@ def create_app(config: AppConfig) -> FastAPI:
         responses_include_web_search=config.responses_include_web_search,
         responses_history_turn_limit=config.responses_history_turn_limit,
         responses_client=shared_openai_client if config.responses_orchestration_enabled else None,
+        governance_enabled=config.governance_enabled,
+        governance_allow_web_search=config.governance_allow_web_search,
+        governance_log_only=config.governance_log_only,
+        hallucination_guardrails_enabled=config.hallucination_guardrails_enabled,
         metrics=create_runtime_metrics(),
         run_config=create_run_config(store=True),
         agent=create_agent(),
@@ -1116,6 +1314,57 @@ def create_app(config: AppConfig) -> FastAPI:
         deps.history_store.append_message(session_id=session_id, role="note", content=req.note.strip())
         return {"status": "ok", "session_id": session_id}
 
+    @app.get("/chats/{session_id}/collaboration", response_model=CollaborationResponse)
+    def get_chat_collaboration(session_id: str, request: Request, limit: int = 20) -> CollaborationResponse:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.get_chat(session_id=session_id)
+        if chat is None:
+            raise HTTPException(status_code=404, detail="Chat not found.")
+        handoff_limit = max(1, min(limit, 100))
+        state = deps.history_store.get_collaboration_state(session_id=session_id)
+        handoffs = deps.history_store.list_handoffs(session_id=session_id, limit=handoff_limit)
+        return CollaborationResponse(
+            session_id=session_id,
+            active=_collaboration_state_response(state) if state is not None else None,
+            handoffs=[_collaboration_handoff_response(item) for item in handoffs],
+        )
+
+    @app.post("/chats/{session_id}/collaboration/handoff", response_model=CollaborationResponse)
+    def handoff_chat_collaboration(
+        session_id: str,
+        req: CollaborationHandoffRequest,
+        request: Request,
+    ) -> CollaborationResponse:
+        principal = _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.ensure_chat(session_id=session_id)
+        if chat.status == "deprecated":
+            raise HTTPException(status_code=409, detail="Chat is deprecated and cannot receive handoffs.")
+        state, handoff = deps.history_store.handoff_collaboration(
+            session_id=session_id,
+            to_agent_id=req.to_agent_id,
+            to_role=req.to_role,
+            objective=req.objective,
+            reason=req.reason,
+            created_by=principal,
+        )
+        _log_event(
+            "collaboration_handoff",
+            request_id=getattr(request.state, "request_id", None),
+            session_id=session_id,
+            principal=principal,
+            from_agent_id=handoff.from_agent_id,
+            from_role=handoff.from_role,
+            to_agent_id=handoff.to_agent_id,
+            to_role=handoff.to_role,
+        )
+        return CollaborationResponse(
+            session_id=session_id,
+            active=_collaboration_state_response(state),
+            handoffs=[_collaboration_handoff_response(handoff)],
+        )
+
     @app.post("/chat", response_model=ChatResponse)
     async def chat(req: ChatRequest, request: Request) -> ChatResponse:
         principal = _enforce_api_key(request)
@@ -1146,17 +1395,29 @@ def create_app(config: AppConfig) -> FastAPI:
             start = time.perf_counter()
             request_id = getattr(request.state, "request_id", None)
             notes = deps.history_store.list_notes(session_id=session_id, limit=8)
+            collaboration_state = deps.history_store.get_collaboration_state(session_id=session_id)
+            collaboration_note = _build_collaboration_note(collaboration_state)
             pipeline = "runner"
             orchestration_tools = 0
             retrieved_memory: list[VectorMatch] = []
+            guardrail_note: str | None = None
             try:
                 if deps.responses_orchestration_enabled:
                     pipeline = "responses"
+                    guardrail_note = _build_hallucination_guardrail_note(
+                        deps=deps,
+                        query_text=req.message,
+                        evidence_count=0,
+                    )
                     output_text, orchestration_tools = _chat_with_responses_orchestration(
                         deps=deps,
+                        request_id=request_id,
+                        principal=principal,
                         session_id=session_id,
                         user_message=req.message,
                         notes=notes,
+                        guardrail_note=guardrail_note,
+                        collaboration_note=collaboration_note,
                     )
                 else:
                     retrieved_memory = _retrieve_memory(
@@ -1164,11 +1425,18 @@ def create_app(config: AppConfig) -> FastAPI:
                         session_id=session_id,
                         query_text=req.message,
                     )
+                    guardrail_note = _build_hallucination_guardrail_note(
+                        deps=deps,
+                        query_text=req.message,
+                        evidence_count=len(retrieved_memory),
+                    )
                     model_input = _compose_model_input(
                         user_message=req.message,
                         notes=notes,
                         retrieved_memory=retrieved_memory,
                         max_memory_chars=deps.vector_max_chars,
+                        guardrail_note=guardrail_note,
+                        collaboration_note=collaboration_note,
                     )
                     result = await Runner.run(
                         deps.agent,
@@ -1256,6 +1524,11 @@ def create_app(config: AppConfig) -> FastAPI:
                 input_chars=len(req.message),
                 output_chars=len(response.output),
                 vector_matches=len(retrieved_memory),
+                guardrail_applied=guardrail_note is not None,
+                collaboration_applied=collaboration_note is not None,
+                active_collaborator=(
+                    collaboration_state.active_agent_id if collaboration_state is not None else None
+                ),
                 pipeline=pipeline,
                 orchestration_tools=orchestration_tools,
                 duration_ms=duration_ms,
