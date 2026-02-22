@@ -16,6 +16,9 @@
           <p class="bar-title">Ready to dive in.</p>
         </div>
         <div class="bar-actions">
+          <button id="theme-toggle" type="button" class="header-icon" aria-label="Toggle theme" title="Toggle theme">
+            <span id="theme-toggle-icon" class="material-symbols-outlined" aria-hidden="true">light_mode</span>
+          </button>
           <label for="memory-scope-select" class="visually-hidden">Memory scope</label>
           <select
             id="memory-scope-select"
@@ -99,7 +102,7 @@
             </button>
           </div>
           <section id="memory-search-panel" class="memory-search-panel" hidden aria-label="File search">
-            <form id="memory-search-form" class="memory-search-form">
+            <div id="memory-search-form" class="memory-search-form">
               <input
                 id="memory-search-query"
                 type="text"
@@ -116,8 +119,8 @@
                 <input id="memory-search-session-scope" type="checkbox" />
                 This chat
               </label>
-              <button id="memory-search-run" type="submit" class="memory-search-run">Find</button>
-            </form>
+              <button id="memory-search-run" type="button" class="memory-search-run">Find</button>
+            </div>
             <p id="memory-search-status" class="memory-search-status" hidden></p>
             <div id="memory-search-results" class="memory-search-results"></div>
           </section>

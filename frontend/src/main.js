@@ -2,6 +2,9 @@ import "./style.css";
 import { createExportUiState } from "./export-ui-state.js";
 
 const STORAGE_ACTIVE_CHAT_KEY = "polinko.active_chat_id.v2";
+const STORAGE_THEME_KEY = "polinko.theme.v1";
+const THEME_LIGHT = "light";
+const THEME_DARK = "dark";
 
 const chatEl = document.getElementById("chat");
 const composerEl = document.getElementById("composer");
@@ -19,6 +22,8 @@ const memorySearchStatusEl = document.getElementById("memory-search-status");
 const memorySearchResultsEl = document.getElementById("memory-search-results");
 const shellEl = document.querySelector(".shell");
 const resetEl = document.getElementById("reset");
+const themeToggleEl = document.getElementById("theme-toggle");
+const themeToggleIconEl = document.getElementById("theme-toggle-icon");
 const memoryScopeSelectEl = document.getElementById("memory-scope-select");
 const exportMarkdownEl = document.getElementById("export-markdown");
 const exportJsonEl = document.getElementById("export-json");
@@ -30,12 +35,109 @@ const drawerEl = document.getElementById("chat-drawer");
 const drawerBackdropEl = document.getElementById("drawer-backdrop");
 const chatListEl = document.getElementById("chat-list");
 const RESPONSE_RENDER_DELAY_MS = 220;
+const MEMORY_SEARCH_ENABLED = false;
+const memorySearchAvailable =
+  MEMORY_SEARCH_ENABLED &&
+  Boolean(
+    memorySearchToggleEl &&
+      memorySearchPanelEl &&
+      memorySearchQueryEl &&
+      memorySearchSourceEl &&
+      memorySearchSessionScopeEl &&
+      memorySearchRunEl &&
+      memorySearchStatusEl &&
+      memorySearchResultsEl,
+  );
 
 let chats = [];
 let activeChatId = "";
 let activeMemoryScope = "global";
 let currentMessages = [];
 let memorySearchOpen = false;
+let activeTheme = THEME_LIGHT;
+const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+function normalizeTheme(value) {
+  return value === THEME_DARK ? THEME_DARK : THEME_LIGHT;
+}
+
+function readSavedTheme() {
+  try {
+    const raw = localStorage.getItem(STORAGE_THEME_KEY);
+    if (!raw) {
+      return null;
+    }
+    return normalizeTheme(raw);
+  } catch {
+    return null;
+  }
+}
+
+function writeSavedTheme(theme) {
+  try {
+    localStorage.setItem(STORAGE_THEME_KEY, theme);
+  } catch {
+    // Ignore localStorage failures.
+  }
+}
+
+function applyTheme(theme) {
+  activeTheme = normalizeTheme(theme);
+  document.documentElement.setAttribute("data-theme", activeTheme);
+  updateThemeUi();
+}
+
+function setTheme(theme) {
+  applyTheme(theme);
+  writeSavedTheme(activeTheme);
+}
+
+function updateThemeUi() {
+  let icon = "light_mode";
+  let title = "Switch to dark mode";
+  if (activeTheme === THEME_DARK) {
+    icon = "dark_mode";
+    title = "Switch to light mode";
+  }
+
+  if (themeToggleIconEl) {
+    themeToggleIconEl.textContent = icon;
+  }
+  if (themeToggleEl) {
+    themeToggleEl.title = title;
+    themeToggleEl.setAttribute("aria-label", title);
+  }
+}
+
+function toggleTheme() {
+  const nextTheme = activeTheme === THEME_DARK ? THEME_LIGHT : THEME_DARK;
+  setTheme(nextTheme);
+}
+
+function initTheme() {
+  const saved = readSavedTheme();
+  if (saved) {
+    applyTheme(saved);
+  } else {
+    applyTheme(prefersDarkScheme.matches ? THEME_DARK : THEME_LIGHT);
+  }
+
+  prefersDarkScheme.addEventListener("change", (event) => {
+    if (readSavedTheme()) {
+      return;
+    }
+    applyTheme(event.matches ? THEME_DARK : THEME_LIGHT);
+  });
+
+  themeToggleEl?.addEventListener("click", toggleTheme);
+
+  // Expose simple hooks for upcoming theme controls.
+  window.polinkoTheme = {
+    get: () => activeTheme,
+    getResolved: () => activeTheme,
+    set: setTheme,
+  };
+}
 
 const exportUiState = createExportUiState({
   getActiveChatId: () => activeChatId,
@@ -377,6 +479,9 @@ function compactSessionId(value) {
 }
 
 function normalizeSearchSourceTypes() {
+  if (!memorySearchAvailable) {
+    return ["ocr"];
+  }
   const mode = memorySearchSourceEl.value;
   if (mode === "both") {
     return ["ocr", "chat"];
@@ -388,6 +493,10 @@ function normalizeSearchSourceTypes() {
 }
 
 function setMemorySearchOpen(open) {
+  if (!memorySearchAvailable) {
+    memorySearchOpen = false;
+    return;
+  }
   memorySearchOpen = open;
   memorySearchPanelEl.hidden = !open;
   memorySearchToggleEl.classList.toggle("active", open);
@@ -398,6 +507,9 @@ function setMemorySearchOpen(open) {
 }
 
 function setMemorySearchStatus(message, { isError = false } = {}) {
+  if (!memorySearchAvailable) {
+    return;
+  }
   const text = String(message || "").trim();
   if (!text) {
     memorySearchStatusEl.hidden = true;
@@ -417,6 +529,9 @@ function buildAskPrompt(match) {
 }
 
 function renderMemorySearchResults(matches) {
+  if (!memorySearchAvailable) {
+    return;
+  }
   memorySearchResultsEl.innerHTML = "";
   if (!Array.isArray(matches) || matches.length === 0) {
     return;
@@ -723,6 +838,9 @@ drawerToggleEl.addEventListener("click", () => {
 });
 
 memorySearchToggleEl.addEventListener("click", () => {
+  if (!memorySearchAvailable) {
+    return;
+  }
   setMemorySearchOpen(!memorySearchOpen);
 });
 
@@ -740,8 +858,10 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-memorySearchFormEl.addEventListener("submit", async (event) => {
-  event.preventDefault();
+async function runMemorySearch() {
+  if (!memorySearchAvailable) {
+    return;
+  }
   const query = memorySearchQueryEl.value.trim();
   if (!query) {
     return;
@@ -772,7 +892,20 @@ memorySearchFormEl.addEventListener("submit", async (event) => {
   } finally {
     memorySearchRunEl.disabled = false;
   }
-});
+}
+
+if (memorySearchAvailable) {
+  memorySearchRunEl.addEventListener("click", async () => {
+    await runMemorySearch();
+  });
+  memorySearchQueryEl.addEventListener("keydown", async (event) => {
+    if (event.key !== "Enter") {
+      return;
+    }
+    event.preventDefault();
+    await runMemorySearch();
+  });
+}
 
 memoryScopeSelectEl.addEventListener("change", async () => {
   if (!activeChatId) {
@@ -923,9 +1056,19 @@ ocrFileInputEl.addEventListener("change", async () => {
 
 (async () => {
   try {
+    initTheme();
     syncExportControls();
-    setMemorySearchOpen(false);
-    setMemorySearchStatus("");
+    if (memorySearchAvailable) {
+      setMemorySearchOpen(false);
+      setMemorySearchStatus("");
+    } else {
+      if (memorySearchToggleEl) {
+        memorySearchToggleEl.hidden = true;
+      }
+      if (memorySearchPanelEl) {
+        memorySearchPanelEl.hidden = true;
+      }
+    }
     await ensureInitialState();
   } catch (error) {
     appendMessage("error", String(error), { persist: false });

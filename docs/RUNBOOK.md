@@ -177,3 +177,16 @@ Checks:
 3. If auth is enabled, confirm `POLINKO_SERVER_API_KEY` or `POLINKO_SERVER_API_KEYS_JSON`
    is configured consistently with your client/proxy.
 4. Retry command after a short wait.
+
+## Figma MCP Design Fetch Troubleshooting
+
+Symptom:
+
+- Figma tools return: `You currently have nothing selected.`
+
+Checks:
+
+1. Confirm Figma MCP is connected and authenticated.
+2. If using Figma desktop workflow, select the target frame/layer before fetch.
+3. If using URL workflow, ensure the link includes a valid `node-id` and retry.
+4. Restart Codex after first-time MCP login to refresh tool availability.

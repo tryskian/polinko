@@ -68,6 +68,15 @@ CLI extras:
 - `tools/` local scripts
 - `docs/` project docs
 
+## Figma Workflow (MCP)
+
+Use Figma MCP for 1:1 component implementation:
+
+1. Connect/login once with `codex mcp add figma --url https://mcp.figma.com/mcp`.
+2. Restart Codex after login.
+3. Provide a Figma link with `node-id=...` (or select a node in Figma desktop).
+4. Implement from MCP design context + screenshot in project conventions.
+
 ## Server-Side Chat History
 
 The web UI now stores chat threads server-side (SQLite) instead of in browser local storage.

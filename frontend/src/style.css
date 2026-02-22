@@ -5,17 +5,99 @@
   --sidebar-width: 270px;
   --thread-max-width: 860px;
   --composer-max-width: 860px;
-  --bg-a: #111214;
-  --bg-b: #18191d;
-  --shell: #1f2024;
-  --composer: #2a2b2f;
-  --line: rgba(255, 255, 255, 0.08);
-  --text: #e7e7e9;
-  --muted: #b6b7bc;
-  --bubble: #2d4d63;
-  --bubble-border: rgba(158, 199, 224, 0.32);
-  --error-bg: rgba(89, 24, 24, 0.44);
-  --error-line: rgba(255, 122, 122, 0.72);
+  /* Figma: Core ChatGPT Components > Colors / light mode */
+  --bg-primary: #ffffff;
+  --bg-secondary: #e8e8e8;
+  --bg-tertiary: #f3f3f3;
+  --text-primary: #0d0d0d;
+  --text-secondary: #5d5d5d;
+  --text-tertiary: #8f8f8f;
+  --text-inverted: #ffffff;
+  --border-default: #0d0d0d0d;
+  --border-light: #0d0d0d0d;
+  --accent-blue: #0285ff;
+  --accent-red: #e02e2a;
+  --accent-orange: #e25507;
+  --accent-green: #40c977;
+  --surface-elev-1: rgba(13, 13, 13, 0.03);
+  --surface-elev-2: rgba(13, 13, 13, 0.06);
+  --surface-elev-3: rgba(13, 13, 13, 0.09);
+  --surface-panel: rgba(255, 255, 255, 0.98);
+  --focus-ring: rgba(2, 133, 255, 0.45);
+  --accent-fill-soft: rgba(2, 133, 255, 0.22);
+  --accent-fill-mid: rgba(2, 133, 255, 0.28);
+  --accent-fill-strong: rgba(2, 133, 255, 0.32);
+  --code-bg: rgba(13, 13, 13, 0.06);
+  --code-border: rgba(13, 13, 13, 0.14);
+  --placeholder: rgba(93, 93, 93, 0.65);
+  --error-bg: rgba(224, 46, 42, 0.12);
+  --error-line: rgba(224, 46, 42, 0.55);
+  --overlay: rgba(0, 0, 0, 0.24);
+  --bg-glow: rgba(2, 133, 255, 0.08);
+  --search-panel-bg: rgba(255, 255, 255, 0.92);
+  /* Figma Controls node state tokens */
+  --interactive-bg-primary-default: #0d0d0d;
+  --interactive-bg-primary-hover: #0d0d0dcc;
+  --interactive-bg-primary-press: #0d0d0de5;
+  --interactive-label-primary-default: #ffffff;
+  --interactive-label-primary-hover: #ffffff;
+  --interactive-label-primary-press: #ffffff;
+  --interactive-bg-secondary-default: #0d0d0d00;
+  --interactive-bg-secondary-hover: #0d0d0d05;
+  --interactive-bg-secondary-press: #0d0d0d0d;
+  --interactive-bg-secondary-selected: #0d0d0d0d;
+  --interactive-border-secondary-default: #0d0d0d1a;
+  --interactive-border-secondary-hover: #0d0d0d0d;
+  --interactive-border-secondary-press: #0d0d0d0d;
+  --interactive-label-secondary-default: #0d0d0d;
+  --interactive-label-secondary-hover: #0d0d0de5;
+  --interactive-label-secondary-press: #0d0d0dcc;
+  --shell: var(--bg-primary);
+  --composer: var(--bg-secondary);
+  --line: var(--border-default);
+  --text: var(--text-primary);
+  --muted: var(--text-secondary);
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg-primary: #212121;
+  --bg-secondary: #303030;
+  --bg-tertiary: #414141;
+  --text-primary: #ffffff;
+  --text-secondary: #cdcdcd;
+  --text-tertiary: #afafaf;
+  --text-inverted: #212121;
+  --border-default: #ffffff26;
+  --surface-elev-1: rgba(255, 255, 255, 0.04);
+  --surface-elev-2: rgba(255, 255, 255, 0.06);
+  --surface-elev-3: rgba(255, 255, 255, 0.09);
+  --surface-panel: rgba(33, 33, 33, 0.98);
+  --code-bg: rgba(0, 0, 0, 0.35);
+  --code-border: rgba(255, 255, 255, 0.14);
+  --placeholder: rgba(205, 205, 205, 0.58);
+  --error-bg: rgba(224, 46, 42, 0.22);
+  --error-line: rgba(224, 46, 42, 0.72);
+  --overlay: rgba(0, 0, 0, 0.36);
+  --bg-glow: rgba(255, 255, 255, 0.03);
+  --search-panel-bg: rgba(33, 33, 33, 0.82);
+  --interactive-bg-primary-default: #ffffff;
+  --interactive-bg-primary-hover: #ffffffcc;
+  --interactive-bg-primary-press: #ffffffe5;
+  --interactive-label-primary-default: #212121;
+  --interactive-label-primary-hover: #212121;
+  --interactive-label-primary-press: #212121;
+  --interactive-bg-secondary-default: #ffffff00;
+  --interactive-bg-secondary-hover: #ffffff0f;
+  --interactive-bg-secondary-press: #ffffff1a;
+  --interactive-bg-secondary-selected: #ffffff1a;
+  --interactive-border-secondary-default: #ffffff26;
+  --interactive-border-secondary-hover: #ffffff1f;
+  --interactive-border-secondary-press: #ffffff26;
+  --interactive-label-secondary-default: #ffffff;
+  --interactive-label-secondary-hover: #ffffffe5;
+  --interactive-label-secondary-press: #ffffffcc;
+  color-scheme: dark;
 }
 
 * {
@@ -32,8 +114,8 @@ body {
   color: var(--text);
   font-family: "Indivisible", "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
   background:
-    radial-gradient(80rem 60rem at 50% -20%, rgba(18, 57, 89, 0.35), transparent 60%),
-    linear-gradient(180deg, var(--bg-a), var(--bg-b));
+    radial-gradient(80rem 60rem at 50% -20%, var(--bg-glow), transparent 60%),
+    linear-gradient(180deg, var(--bg-primary), var(--bg-primary));
   display: block;
   padding: 0;
 }
@@ -82,10 +164,10 @@ body {
 }
 
 .memory-scope-select {
-  border: 1px solid var(--line);
+  border: 1px solid var(--interactive-border-secondary-default);
   border-radius: 0.72rem;
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text);
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
   font: inherit;
   font-size: 0.78rem;
   padding: 0.34rem 0.5rem;
@@ -93,7 +175,7 @@ body {
 }
 
 .memory-scope-select:focus {
-  border-color: rgba(158, 199, 224, 0.45);
+  border-color: var(--focus-ring);
   outline: none;
 }
 
@@ -104,16 +186,16 @@ body {
 
 .bar-title {
   margin: 0;
-  color: #d9dade;
+  color: var(--text-secondary);
   font-size: clamp(0.96rem, 1.15vw, 1.18rem);
   font-weight: 500;
 }
 
 .reset,
 .header-icon {
-  border: 0;
-  background: transparent;
-  color: var(--muted);
+  border: 1px solid var(--interactive-border-secondary-default);
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
   font-size: 1.55rem;
   line-height: 1;
   width: 2.2rem;
@@ -126,8 +208,16 @@ body {
 
 .reset:hover,
 .header-icon:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text);
+  border-color: var(--interactive-border-secondary-hover);
+  background: var(--interactive-bg-secondary-hover);
+  color: var(--interactive-label-secondary-hover);
+}
+
+.reset:active,
+.header-icon:active {
+  border-color: var(--interactive-border-secondary-press);
+  background: var(--interactive-bg-secondary-press);
+  color: var(--interactive-label-secondary-press);
 }
 
 .header-icon:disabled {
@@ -137,9 +227,9 @@ body {
 
 .drawer-toggle,
 .drawer-close {
-  border: 0;
-  background: transparent;
-  color: var(--muted);
+  border: 1px solid var(--interactive-border-secondary-default);
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
   width: 2.2rem;
   height: 2.2rem;
   display: grid;
@@ -154,8 +244,16 @@ body {
 
 .drawer-toggle:hover,
 .drawer-close:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text);
+  border-color: var(--interactive-border-secondary-hover);
+  background: var(--interactive-bg-secondary-hover);
+  color: var(--interactive-label-secondary-hover);
+}
+
+.drawer-toggle:active,
+.drawer-close:active {
+  border-color: var(--interactive-border-secondary-press);
+  background: var(--interactive-bg-secondary-press);
+  color: var(--interactive-label-secondary-press);
 }
 
 .chat-drawer {
@@ -163,7 +261,7 @@ body {
   grid-row: 1 / 4;
   position: relative;
   width: 100%;
-  background: rgba(20, 21, 25, 0.98);
+  background: var(--surface-panel);
   border-right: 1px solid var(--line);
   padding: 0.95rem 0.8rem 0.8rem;
   display: flex;
@@ -189,7 +287,7 @@ body {
 .drawer-title {
   margin: 0;
   font-size: 0.9rem;
-  color: #d7d8dd;
+  color: var(--text-secondary);
 }
 
 .drawer-backdrop {
@@ -216,8 +314,8 @@ body {
   text-align: left;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  color: #e2e4e8;
+  background: var(--surface-elev-1);
+  color: var(--text-primary);
   font: inherit;
   font-size: 0.84rem;
   padding: 0.45rem 0.58rem;
@@ -231,12 +329,12 @@ body {
 }
 
 .chat-item.active {
-  background: rgba(83, 142, 184, 0.32);
-  border-color: rgba(158, 199, 224, 0.34);
+  background: var(--accent-fill-strong);
+  border-color: var(--focus-ring);
 }
 
 .new-chat {
-  background: rgba(83, 142, 184, 0.24);
+  background: var(--accent-fill-soft);
 }
 
 .chat-item-actions {
@@ -247,7 +345,7 @@ body {
 
 .chat-item-action {
   border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elev-1);
   color: var(--muted);
   width: 1.75rem;
   height: 1.75rem;
@@ -263,7 +361,7 @@ body {
 
 .chat-item-action:hover {
   color: var(--text);
-  background: rgba(255, 255, 255, 0.09);
+  background: var(--surface-elev-3);
 }
 
 .chat {
@@ -284,7 +382,7 @@ body {
 .empty-state {
   margin: auto;
   text-align: center;
-  color: #d8d8db;
+  color: var(--text-secondary);
   font-size: clamp(1.3rem, 3.2vw, 2.8rem);
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -311,7 +409,7 @@ body {
   max-width: min(70%, 620px);
   border-radius: 18px;
   padding: 0.4rem 0.84rem;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.08);
   line-height: 1.5;
   margin-block: 0.2rem 0.52rem;
@@ -319,7 +417,7 @@ body {
 
 .msg.assistant {
   justify-self: stretch;
-  color: #e2e3e7;
+  color: var(--text-primary);
   width: 100%;
   padding-inline: 0.14rem;
   line-height: 1.6;
@@ -381,7 +479,7 @@ body {
   justify-self: start;
   max-width: min(86%, 840px);
   border-color: var(--error-line);
-  color: #ffd2d2;
+  color: #ffe5e5;
   background: var(--error-bg);
   border: 1px solid var(--error-line);
   border-radius: 18px;
@@ -390,8 +488,8 @@ body {
 
 .msg code {
   font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
-  background: rgba(10, 15, 20, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
   border-radius: 0.45rem;
   padding: 0.05rem 0.28rem;
   font-size: 0.92em;
@@ -415,8 +513,8 @@ body {
 
 .msg pre {
   margin: 0.25rem 0 1rem;
-  background: rgba(10, 15, 20, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
   border-radius: 0.7rem;
   padding: 0.6rem 0.7rem;
   overflow-x: auto;
@@ -469,7 +567,7 @@ body {
 }
 
 #message::placeholder {
-  color: rgba(229, 229, 232, 0.55);
+  color: var(--placeholder);
 }
 
 .composer-row {
@@ -490,23 +588,30 @@ body {
   width: 2.2rem;
   height: 2.2rem;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--muted);
+  border: 1px solid var(--interactive-border-secondary-default);
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
   line-height: 0;
   display: grid;
   place-items: center;
 }
 
 .icon-button:hover {
-  color: var(--text);
-  background: rgba(255, 255, 255, 0.09);
+  color: var(--interactive-label-secondary-hover);
+  border-color: var(--interactive-border-secondary-hover);
+  background: var(--interactive-bg-secondary-hover);
 }
 
 .icon-button.active {
-  color: var(--text);
-  background: rgba(83, 142, 184, 0.28);
-  border-color: rgba(158, 199, 224, 0.34);
+  color: var(--interactive-label-secondary-default);
+  background: var(--interactive-bg-secondary-selected);
+  border-color: var(--focus-ring);
+}
+
+.icon-button:active {
+  color: var(--interactive-label-secondary-press);
+  border-color: var(--interactive-border-secondary-press);
+  background: var(--interactive-bg-secondary-press);
 }
 
 .icon-button:disabled {
@@ -518,7 +623,7 @@ body {
   margin-top: 0.45rem;
   border: 1px solid var(--line);
   border-radius: 1rem;
-  background: rgba(16, 17, 22, 0.7);
+  background: var(--search-panel-bg);
   padding: 0.5rem;
   display: grid;
   gap: 0.45rem;
@@ -535,7 +640,7 @@ body {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 0.72rem;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elev-1);
   color: var(--text);
   font: inherit;
   font-size: 0.88rem;
@@ -547,13 +652,13 @@ body {
 
 #memory-search-query:focus,
 #memory-search-source:focus {
-  border-color: rgba(158, 199, 224, 0.45);
+  border-color: var(--focus-ring);
 }
 
 #memory-search-source {
   border: 1px solid var(--line);
   border-radius: 0.72rem;
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--surface-elev-1);
   color: var(--text);
   font: inherit;
   font-size: 0.82rem;
@@ -571,14 +676,14 @@ body {
 }
 
 .memory-search-scope input {
-  accent-color: #95c1df;
+  accent-color: var(--accent-blue);
 }
 
 .memory-search-run {
-  border: 1px solid var(--line);
+  border: 1px solid var(--interactive-border-secondary-default);
   border-radius: 0.72rem;
-  background: rgba(83, 142, 184, 0.22);
-  color: #dce8f1;
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
   font: inherit;
   font-size: 0.84rem;
   font-weight: 500;
@@ -587,7 +692,15 @@ body {
 }
 
 .memory-search-run:hover {
-  background: rgba(83, 142, 184, 0.3);
+  border-color: var(--interactive-border-secondary-hover);
+  background: var(--interactive-bg-secondary-hover);
+  color: var(--interactive-label-secondary-hover);
+}
+
+.memory-search-run:active {
+  border-color: var(--interactive-border-secondary-press);
+  background: var(--interactive-bg-secondary-press);
+  color: var(--interactive-label-secondary-press);
 }
 
 .memory-search-run:disabled {
@@ -602,7 +715,7 @@ body {
 }
 
 .memory-search-status.error {
-  color: #ffcbcb;
+  color: #ffe5e5;
 }
 
 .memory-search-results {
@@ -631,7 +744,7 @@ body {
 
 .memory-search-snippet {
   margin: 0;
-  color: #d9dde2;
+  color: var(--text-secondary);
   font-size: 0.8rem;
   line-height: 1.35;
   white-space: pre-wrap;
@@ -646,7 +759,7 @@ body {
 .memory-search-action {
   border: 1px solid var(--line);
   border-radius: 0.62rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--surface-elev-1);
   color: var(--text);
   font: inherit;
   font-size: 0.75rem;
@@ -654,7 +767,7 @@ body {
 }
 
 .memory-search-action:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--surface-elev-3);
 }
 
 .visually-hidden {
@@ -689,12 +802,22 @@ button {
   height: 2.25rem;
   border-radius: 999px;
   border: 0;
-  background: #f3f4f6;
-  color: #111216;
+  background: var(--interactive-bg-primary-default);
+  color: var(--interactive-label-primary-default);
   line-height: 0;
   display: grid;
   place-items: center;
   font-weight: 700;
+}
+
+.send:hover {
+  background: var(--interactive-bg-primary-hover);
+  color: var(--interactive-label-primary-hover);
+}
+
+.send:active {
+  background: var(--interactive-bg-primary-press);
+  color: var(--interactive-label-primary-press);
 }
 
 @media (max-width: 900px) {
@@ -743,7 +866,7 @@ button {
     left: 0;
     border: 0;
     display: block;
-    background: rgba(0, 0, 0, 0.36);
+    background: var(--overlay);
     opacity: 0;
     pointer-events: none;
     transition: opacity 180ms ease;
