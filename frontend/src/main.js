@@ -9,6 +9,9 @@ const ocrFileInputEl = document.getElementById("ocr-file-input");
 const ocrUploadEl = document.getElementById("ocr-upload");
 const shellEl = document.querySelector(".shell");
 const resetEl = document.getElementById("reset");
+const exportMarkdownEl = document.getElementById("export-markdown");
+const exportJsonEl = document.getElementById("export-json");
+const exportOcrEl = document.getElementById("export-ocr");
 const emptyStateEl = document.getElementById("empty-state");
 const newChatEl = document.getElementById("new-chat");
 const drawerToggleEl = document.getElementById("drawer-toggle");
@@ -20,6 +23,7 @@ const RESPONSE_RENDER_DELAY_MS = 220;
 let chats = [];
 let activeChatId = "";
 let currentMessages = [];
+let exportInFlight = false;
 
 function autoSizeComposer() {
   messageEl.style.height = "auto";
@@ -188,6 +192,76 @@ async function runOcr(payload) {
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+async function apiExportChat(sessionId, { includeMarkdown = false } = {}) {
+  const query = includeMarkdown ? "?include_markdown=true" : "";
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/export${query}`);
+}
+
+function safeFilePart(value, fallback) {
+  const cleaned = String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+  return cleaned || fallback;
+}
+
+function formatExportTimestamp(value) {
+  const date = new Date(Number(value) || Date.now());
+  const pad = (num) => String(num).padStart(2, "0");
+  return (
+    `${date.getUTCFullYear()}${pad(date.getUTCMonth() + 1)}${pad(date.getUTCDate())}` +
+    `-${pad(date.getUTCHours())}${pad(date.getUTCMinutes())}${pad(date.getUTCSeconds())}Z`
+  );
+}
+
+function exportBaseName(payload) {
+  const titlePart = safeFilePart(payload?.title, "chat");
+  const sessionPart = safeFilePart(payload?.session_id || activeChatId, "session");
+  const stampPart = formatExportTimestamp(payload?.exported_at);
+  return `${titlePart}-${sessionPart}-${stampPart}`;
+}
+
+function triggerDownload(filename, content, contentType) {
+  const blob = new Blob([content], { type: contentType });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+function downloadJson(filename, payload) {
+  triggerDownload(filename, `${JSON.stringify(payload, null, 2)}\n`, "application/json;charset=utf-8");
+}
+
+function setExportButtonsDisabled(disabled) {
+  exportMarkdownEl.disabled = disabled;
+  exportJsonEl.disabled = disabled;
+  exportOcrEl.disabled = disabled;
+}
+
+function syncExportControls() {
+  setExportButtonsDisabled(!activeChatId || exportInFlight);
+}
+
+async function withExportLock(task) {
+  if (exportInFlight) {
+    return;
+  }
+  exportInFlight = true;
+  syncExportControls();
+  try {
+    await task();
+  } finally {
+    exportInFlight = false;
+    syncExportControls();
+  }
 }
 
 function parsePreferenceNote(value) {
@@ -443,6 +517,7 @@ async function setActiveChat(sessionId) {
   activeChatId = sessionId;
   writeActiveChatId(activeChatId);
   renderChatList();
+  syncExportControls();
   await loadActiveMessages();
 }
 
@@ -543,6 +618,62 @@ resetEl.addEventListener("click", async () => {
   }
 });
 
+exportMarkdownEl.addEventListener("click", async () => {
+  if (!activeChatId) {
+    return;
+  }
+  await withExportLock(async () => {
+    try {
+      const payload = await apiExportChat(activeChatId, { includeMarkdown: true });
+      const markdown = String(payload.markdown || "").trim();
+      if (!markdown) {
+        throw new Error("No markdown transcript available for this chat.");
+      }
+      triggerDownload(
+        `${exportBaseName(payload)}.md`,
+        `${payload.markdown}\n`,
+        "text/markdown;charset=utf-8",
+      );
+    } catch (error) {
+      appendMessage("error", String(error), { persist: false });
+    }
+  });
+});
+
+exportJsonEl.addEventListener("click", async () => {
+  if (!activeChatId) {
+    return;
+  }
+  await withExportLock(async () => {
+    try {
+      const payload = await apiExportChat(activeChatId);
+      downloadJson(`${exportBaseName(payload)}.json`, payload);
+    } catch (error) {
+      appendMessage("error", String(error), { persist: false });
+    }
+  });
+});
+
+exportOcrEl.addEventListener("click", async () => {
+  if (!activeChatId) {
+    return;
+  }
+  await withExportLock(async () => {
+    try {
+      const payload = await apiExportChat(activeChatId);
+      downloadJson(`${exportBaseName(payload)}.ocr-runs.json`, {
+        session_id: payload.session_id,
+        title: payload.title,
+        exported_at: payload.exported_at,
+        ocr_run_count: Array.isArray(payload.ocr_runs) ? payload.ocr_runs.length : 0,
+        ocr_runs: payload.ocr_runs || [],
+      });
+    } catch (error) {
+      appendMessage("error", String(error), { persist: false });
+    }
+  });
+});
+
 ocrUploadEl.addEventListener("click", () => {
   if (!activeChatId || ocrUploadEl.disabled) {
     return;
@@ -557,6 +688,7 @@ ocrFileInputEl.addEventListener("change", async () => {
 
 (async () => {
   try {
+    syncExportControls();
     await ensureInitialState();
   } catch (error) {
     appendMessage("error", String(error), { persist: false });

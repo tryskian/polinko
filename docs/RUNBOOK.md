@@ -87,6 +87,14 @@
    - `/rename <title>` rename current chat
    - `/close` deprecate current chat and create a fresh session
 
+## Export From UI
+
+1. Open a chat in the web UI.
+2. Use header controls to download:
+   - transcript markdown (`.md`)
+   - transcript json (`.json`)
+   - OCR run history json (`.ocr-runs.json`)
+
 ## Common Connection Error
 
 Symptom:

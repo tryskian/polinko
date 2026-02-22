@@ -95,6 +95,7 @@ Config:
 - Small thinking animation before assistant responses render
 - Silent preference notes via `/note ...` in the composer (stored server-side and applied silently)
 - OCR file upload button in composer (sends file payload to `/skills/ocr`)
+- Header export controls download: transcript markdown, transcript json, and OCR run history json
 - Optional vector retrieval memory: assistant outputs are indexed and matched by similarity on new turns
 
 ## CI

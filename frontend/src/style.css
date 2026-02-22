@@ -75,6 +75,12 @@ body {
   gap: 0.5rem;
 }
 
+.bar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .bar-title {
   margin: 0;
   color: #d9dade;
@@ -82,7 +88,8 @@ body {
   font-weight: 500;
 }
 
-.reset {
+.reset,
+.header-icon {
   border: 0;
   background: transparent;
   color: var(--muted);
@@ -96,9 +103,15 @@ body {
   cursor: pointer;
 }
 
-.reset:hover {
+.reset:hover,
+.header-icon:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text);
+}
+
+.header-icon:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .drawer-toggle,

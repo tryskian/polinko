@@ -15,9 +15,38 @@
           </button>
           <p class="bar-title">Ready to dive in.</p>
         </div>
-        <button id="reset" type="button" class="reset" aria-label="Reset session" title="Reset session">
-          <span class="material-symbols-outlined" aria-hidden="true">history</span>
-        </button>
+        <div class="bar-actions">
+          <button
+            id="export-markdown"
+            type="button"
+            class="header-icon"
+            aria-label="Download transcript markdown"
+            title="Download transcript markdown"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">description</span>
+          </button>
+          <button
+            id="export-json"
+            type="button"
+            class="header-icon"
+            aria-label="Download transcript json"
+            title="Download transcript json"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">download</span>
+          </button>
+          <button
+            id="export-ocr"
+            type="button"
+            class="header-icon"
+            aria-label="Download OCR run history"
+            title="Download OCR run history"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
+          </button>
+          <button id="reset" type="button" class="reset" aria-label="Reset session" title="Reset session">
+            <span class="material-symbols-outlined" aria-hidden="true">history</span>
+          </button>
+        </div>
       </header>
       <aside id="chat-drawer" class="chat-drawer" aria-label="Chats">
         <div class="drawer-head">
