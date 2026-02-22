@@ -3,6 +3,7 @@ import binascii
 import hmac
 import json
 import logging
+import re
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -32,6 +33,14 @@ logger = logging.getLogger("polinko.api")
 
 
 _LATENCY_BUCKET_EDGES_MS = (10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2000.0)
+_OCR_VECTOR_CHUNK_CHARS = 700
+_OCR_VECTOR_CHUNK_OVERLAP = 120
+_FILE_SEARCH_DEFAULT_SOURCE_TYPES = ("ocr",)
+_FILE_SEARCH_ALLOWED_SOURCE_TYPES = {"chat", "ocr"}
+_FILE_SEARCH_TOKEN_RE = re.compile(r"[a-z0-9]+")
+_FILE_SEARCH_CANDIDATE_MULTIPLIER = 8
+_FILE_SEARCH_MAX_CANDIDATES = 200
+_FILE_SEARCH_MIN_SIMILARITY_FLOOR = 0.15
 
 
 def _default_latency_buckets() -> dict[str, int]:
@@ -196,6 +205,31 @@ class OcrRunResponse(BaseModel):
 
 class OcrResponse(BaseModel):
     run: OcrRunResponse
+
+
+class FileSearchRequest(BaseModel):
+    query: str = Field(..., min_length=2, max_length=500)
+    session_id: str | None = Field(default=None, min_length=1)
+    limit: int = Field(default=5, ge=1, le=20)
+    source_types: list[str] | None = None
+
+
+class FileSearchMatchResponse(BaseModel):
+    vector_id: str
+    session_id: str
+    source_type: str
+    source_ref: str | None
+    similarity: float
+    keyword_score: float
+    score: float
+    snippet: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class FileSearchResponse(BaseModel):
+    query: str
+    searched_at: int
+    matches: list[FileSearchMatchResponse]
 
 
 class MetricsResponse(BaseModel):
@@ -436,6 +470,37 @@ def _embed_texts(texts: list[str], deps: RuntimeDeps) -> list[list[float]]:
     return vectors
 
 
+def _chunk_text_for_vectors(
+    text: str,
+    *,
+    max_chars: int = _OCR_VECTOR_CHUNK_CHARS,
+    overlap: int = _OCR_VECTOR_CHUNK_OVERLAP,
+) -> list[str]:
+    compact = text.strip()
+    if not compact:
+        return []
+    if len(compact) <= max_chars:
+        return [compact]
+
+    chunks: list[str] = []
+    start = 0
+    while start < len(compact):
+        end = min(len(compact), start + max_chars)
+        if end < len(compact):
+            split_at = compact.rfind("\n", start, end)
+            if split_at <= start:
+                split_at = compact.rfind(" ", start, end)
+            if split_at > start + int(max_chars * 0.55):
+                end = split_at
+        chunk = compact[start:end].strip()
+        if chunk:
+            chunks.append(chunk)
+        if end >= len(compact):
+            break
+        start = max(0, end - overlap)
+    return chunks
+
+
 def _retrieve_memory(
     *,
     deps: RuntimeDeps,
@@ -462,6 +527,7 @@ def _retrieve_memory(
         min_similarity=deps.vector_min_similarity,
         roles=("assistant",),
         exclude_session_id=exclude_session_id,
+        source_types=("chat",),
     )
 
 
@@ -486,10 +552,131 @@ def _index_assistant_output(
             message_id=message_id,
             content=text,
             embedding=embedding,
+            source_type="chat",
+            source_ref=message_id,
+            metadata={"source": "chat"},
             created_at=created_at,
         )
     except Exception as exc:
         _log_event("vector_index_error", session_id=session_id, error_type=type(exc).__name__)
+
+
+def _index_ocr_output(
+    *,
+    deps: RuntimeDeps,
+    session_id: str,
+    run: OcrRun,
+) -> None:
+    if not deps.vector_enabled or deps.vector_store is None:
+        return
+    chunks = _chunk_text_for_vectors(run.extracted_text)
+    if not chunks:
+        return
+    try:
+        embeddings = _embed_texts(chunks, deps)
+        for index, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+            chunk_ref = f"{run.run_id}:{index + 1}/{len(chunks)}"
+            deps.vector_store.upsert_message_vector(
+                session_id=session_id,
+                role="assistant",
+                message_id=None,
+                content=chunk,
+                embedding=embedding,
+                source_type="ocr",
+                source_ref=chunk_ref,
+                metadata={
+                    "source": "ocr",
+                    "ocr_run_id": run.run_id,
+                    "source_name": run.source_name,
+                    "mime_type": run.mime_type,
+                    "source_message_id": run.source_message_id,
+                    "result_message_id": run.result_message_id,
+                    "chunk_index": index,
+                    "chunk_count": len(chunks),
+                },
+                created_at=run.created_at,
+            )
+    except Exception as exc:
+        _log_event(
+            "vector_ocr_index_error",
+            session_id=session_id,
+            run_id=run.run_id,
+            error_type=type(exc).__name__,
+        )
+
+
+def _normalize_file_search_source_types(source_types: list[str] | None) -> tuple[str, ...]:
+    if not source_types:
+        return _FILE_SEARCH_DEFAULT_SOURCE_TYPES
+    normalized: list[str] = []
+    for raw in source_types:
+        value = raw.strip().lower()
+        if value:
+            normalized.append(value)
+    if not normalized:
+        return _FILE_SEARCH_DEFAULT_SOURCE_TYPES
+    invalid = sorted({value for value in normalized if value not in _FILE_SEARCH_ALLOWED_SOURCE_TYPES})
+    if invalid:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Unsupported source_types: {', '.join(invalid)}.",
+        )
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for value in normalized:
+        if value in seen:
+            continue
+        seen.add(value)
+        deduped.append(value)
+    return tuple(deduped)
+
+
+def _tokenize_file_search_text(text: str) -> list[str]:
+    lowered = text.lower()
+    return _FILE_SEARCH_TOKEN_RE.findall(lowered)
+
+
+def _keyword_overlap_score(query_tokens: list[str], content: str) -> float:
+    if not query_tokens:
+        return 0.0
+    content_tokens = _tokenize_file_search_text(content)
+    if not content_tokens:
+        return 0.0
+    unique_query_tokens = list(dict.fromkeys(query_tokens))
+    token_set = set(content_tokens)
+    overlap = sum(1 for token in unique_query_tokens if token in token_set)
+    score = overlap / len(unique_query_tokens)
+    phrase = " ".join(unique_query_tokens)
+    normalized_content = " ".join(content_tokens)
+    if phrase and phrase in normalized_content:
+        score = min(1.0, score + 0.15)
+    return score
+
+
+def _file_search_snippet(content: str, query_tokens: list[str], *, max_chars: int = 240) -> str:
+    compact = " ".join(content.split())
+    if len(compact) <= max_chars:
+        return compact
+    lowered = compact.lower()
+    anchor = -1
+    for token in query_tokens:
+        idx = lowered.find(token)
+        if idx < 0:
+            continue
+        if anchor == -1 or idx < anchor:
+            anchor = idx
+    if anchor < 0:
+        anchor = 0
+    start = max(0, anchor - max_chars // 3)
+    end = min(len(compact), start + max_chars)
+    if end - start < max_chars and start > 0:
+        start = max(0, end - max_chars)
+    snippet = compact[start:end].strip()
+    if start > 0:
+        snippet = f"...{snippet}"
+    if end < len(compact):
+        snippet = f"{snippet}..."
+    return snippet
 
 
 def _metrics_response(metrics: RuntimeMetrics) -> MetricsResponse:
@@ -682,6 +869,7 @@ def create_app(config: AppConfig) -> FastAPI:
             status=status,
             extracted_text=extracted_text,
         )
+        _index_ocr_output(deps=deps, session_id=session_id, run=run)
         _log_event(
             "ocr_run",
             request_id=getattr(request.state, "request_id", None),
@@ -691,8 +879,89 @@ def create_app(config: AppConfig) -> FastAPI:
             provider=deps.ocr_provider,
             status=run.status,
             chars=len(run.extracted_text),
+            vector_chunks=len(_chunk_text_for_vectors(run.extracted_text)),
         )
         return OcrResponse(run=_ocr_run_response(run))
+
+    @app.post("/skills/file_search", response_model=FileSearchResponse)
+    def file_search(req: FileSearchRequest, request: Request) -> FileSearchResponse:
+        principal = _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        if not deps.vector_enabled or deps.vector_store is None:
+            raise HTTPException(status_code=503, detail="Vector memory is not enabled.")
+
+        query = req.query.strip()
+        source_types = _normalize_file_search_source_types(req.source_types)
+        search_min_similarity = max(
+            _FILE_SEARCH_MIN_SIMILARITY_FLOOR,
+            deps.vector_min_similarity - 0.15,
+        )
+        candidate_limit = min(
+            _FILE_SEARCH_MAX_CANDIDATES,
+            max(req.limit * _FILE_SEARCH_CANDIDATE_MULTIPLIER, 40),
+        )
+        request_id = getattr(request.state, "request_id", None)
+
+        try:
+            query_vector = _embed_texts([query], deps)[0]
+        except AuthenticationError as exc:
+            raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
+        except RateLimitError as exc:
+            raise HTTPException(status_code=429, detail="Rate limit reached. Try file search again shortly.") from exc
+        except APIConnectionError as exc:
+            raise HTTPException(status_code=503, detail="Connection error reaching OpenAI embeddings API.") from exc
+        except APIStatusError as exc:
+            raise HTTPException(status_code=502, detail=f"OpenAI embeddings API error ({exc.status_code}).") from exc
+
+        candidates = deps.vector_store.search(
+            query_embedding=query_vector,
+            limit=candidate_limit,
+            min_similarity=search_min_similarity,
+            roles=("assistant",),
+            source_types=source_types,
+        )
+        query_tokens = _tokenize_file_search_text(query)
+        ranked: list[tuple[float, float, float, VectorMatch]] = []
+        for candidate in candidates:
+            if req.session_id and candidate.session_id != req.session_id:
+                continue
+            keyword_score = _keyword_overlap_score(query_tokens, candidate.content)
+            score = (candidate.similarity * 0.78) + (keyword_score * 0.22)
+            ranked.append((score, candidate.similarity, keyword_score, candidate))
+
+        ranked.sort(key=lambda item: (item[0], item[1], item[3].created_at), reverse=True)
+        top = ranked[: req.limit]
+
+        matches = [
+            FileSearchMatchResponse(
+                vector_id=candidate.vector_id,
+                session_id=candidate.session_id,
+                source_type=candidate.source_type,
+                source_ref=candidate.source_ref,
+                similarity=round(similarity, 4),
+                keyword_score=round(keyword_score, 4),
+                score=round(score, 4),
+                snippet=_file_search_snippet(candidate.content, query_tokens),
+                metadata=candidate.metadata,
+            )
+            for score, similarity, keyword_score, candidate in top
+        ]
+
+        _log_event(
+            "file_search",
+            request_id=request_id,
+            principal=principal,
+            session_id=req.session_id,
+            source_types=list(source_types),
+            query_chars=len(query),
+            candidate_count=len(candidates),
+            result_count=len(matches),
+        )
+        return FileSearchResponse(
+            query=query,
+            searched_at=int(time.time() * 1000),
+            matches=matches,
+        )
 
     @app.patch("/chats/{session_id}", response_model=ChatSummaryResponse)
     def rename_chat(session_id: str, req: RenameChatRequest, request: Request) -> ChatSummaryResponse:

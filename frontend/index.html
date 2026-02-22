@@ -71,6 +71,15 @@
           ></textarea>
           <div class="composer-row">
             <div class="composer-actions">
+              <button
+                id="memory-search-toggle"
+                type="button"
+                class="icon-button"
+                aria-label="Search indexed memory"
+                title="Search indexed memory"
+              >
+                <span class="material-symbols-outlined" aria-hidden="true">search</span>
+              </button>
               <button id="ocr-upload" type="button" class="icon-button" aria-label="Upload for OCR" title="Upload for OCR">
                 <span class="material-symbols-outlined" aria-hidden="true">attach_file</span>
               </button>
@@ -79,6 +88,29 @@
               <span class="material-symbols-outlined" aria-hidden="true">north</span>
             </button>
           </div>
+          <section id="memory-search-panel" class="memory-search-panel" hidden aria-label="File search">
+            <form id="memory-search-form" class="memory-search-form">
+              <input
+                id="memory-search-query"
+                type="text"
+                placeholder="Search indexed OCR and chat content"
+                autocomplete="off"
+                required
+              />
+              <select id="memory-search-source" aria-label="Search source filter">
+                <option value="ocr" selected>OCR</option>
+                <option value="chat">Chat</option>
+                <option value="both">OCR + chat</option>
+              </select>
+              <label class="memory-search-scope">
+                <input id="memory-search-session-scope" type="checkbox" />
+                This chat
+              </label>
+              <button id="memory-search-run" type="submit" class="memory-search-run">Find</button>
+            </form>
+            <p id="memory-search-status" class="memory-search-status" hidden></p>
+            <div id="memory-search-results" class="memory-search-results"></div>
+          </section>
         </div>
       </form>
     </main>

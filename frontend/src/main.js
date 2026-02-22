@@ -8,6 +8,15 @@ const composerEl = document.getElementById("composer");
 const messageEl = document.getElementById("message");
 const ocrFileInputEl = document.getElementById("ocr-file-input");
 const ocrUploadEl = document.getElementById("ocr-upload");
+const memorySearchToggleEl = document.getElementById("memory-search-toggle");
+const memorySearchPanelEl = document.getElementById("memory-search-panel");
+const memorySearchFormEl = document.getElementById("memory-search-form");
+const memorySearchQueryEl = document.getElementById("memory-search-query");
+const memorySearchSourceEl = document.getElementById("memory-search-source");
+const memorySearchSessionScopeEl = document.getElementById("memory-search-session-scope");
+const memorySearchRunEl = document.getElementById("memory-search-run");
+const memorySearchStatusEl = document.getElementById("memory-search-status");
+const memorySearchResultsEl = document.getElementById("memory-search-results");
 const shellEl = document.querySelector(".shell");
 const resetEl = document.getElementById("reset");
 const exportMarkdownEl = document.getElementById("export-markdown");
@@ -24,6 +33,7 @@ const RESPONSE_RENDER_DELAY_MS = 220;
 let chats = [];
 let activeChatId = "";
 let currentMessages = [];
+let memorySearchOpen = false;
 
 const exportUiState = createExportUiState({
   getActiveChatId: () => activeChatId,
@@ -45,6 +55,20 @@ function readActiveChatId() {
   } catch {
     return "";
   }
+}
+
+function setComposerText(value) {
+  messageEl.value = value;
+  autoSizeComposer();
+  messageEl.focus();
+  const cursor = messageEl.value.length;
+  messageEl.setSelectionRange(cursor, cursor);
+}
+
+function appendComposerText(value) {
+  const trimmedCurrent = messageEl.value.trim();
+  const next = trimmedCurrent ? `${messageEl.value}\n\n${value}` : value;
+  setComposerText(next);
 }
 
 function writeActiveChatId(value) {
@@ -203,6 +227,21 @@ async function runOcr(payload) {
   });
 }
 
+async function apiFileSearch({ query, sessionId, sourceTypes, limit = 6 }) {
+  const body = {
+    query,
+    limit,
+    source_types: sourceTypes,
+  };
+  if (sessionId) {
+    body.session_id = sessionId;
+  }
+  return requestJson("/skills/file_search", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
 async function apiExportChat(sessionId, { includeMarkdown = false } = {}) {
   const query = includeMarkdown ? "?include_markdown=true" : "";
   return requestJson(`/chats/${encodeURIComponent(sessionId)}/export${query}`);
@@ -307,6 +346,99 @@ function readFileAsDataUrl(file) {
     reader.onerror = () => reject(new Error("Failed to read file."));
     reader.onload = () => resolve(String(reader.result || ""));
     reader.readAsDataURL(file);
+  });
+}
+
+function compactSessionId(value) {
+  if (!value || value.length <= 16) {
+    return value || "";
+  }
+  return `${value.slice(0, 8)}…${value.slice(-4)}`;
+}
+
+function normalizeSearchSourceTypes() {
+  const mode = memorySearchSourceEl.value;
+  if (mode === "both") {
+    return ["ocr", "chat"];
+  }
+  if (mode === "chat") {
+    return ["chat"];
+  }
+  return ["ocr"];
+}
+
+function setMemorySearchOpen(open) {
+  memorySearchOpen = open;
+  memorySearchPanelEl.hidden = !open;
+  memorySearchToggleEl.classList.toggle("active", open);
+  memorySearchToggleEl.setAttribute("aria-expanded", open ? "true" : "false");
+  if (open) {
+    memorySearchQueryEl.focus();
+  }
+}
+
+function setMemorySearchStatus(message, { isError = false } = {}) {
+  const text = String(message || "").trim();
+  if (!text) {
+    memorySearchStatusEl.hidden = true;
+    memorySearchStatusEl.textContent = "";
+    memorySearchStatusEl.classList.remove("error");
+    return;
+  }
+  memorySearchStatusEl.hidden = false;
+  memorySearchStatusEl.textContent = text;
+  memorySearchStatusEl.classList.toggle("error", isError);
+}
+
+function buildAskPrompt(match) {
+  const sourceName = String(match.metadata?.source_name || "").trim();
+  const descriptor = sourceName ? `${match.source_type} • ${sourceName}` : match.source_type;
+  return `Use this retrieved context (${descriptor}):\n${match.snippet}\n\nQuestion: `;
+}
+
+function renderMemorySearchResults(matches) {
+  memorySearchResultsEl.innerHTML = "";
+  if (!Array.isArray(matches) || matches.length === 0) {
+    return;
+  }
+
+  matches.forEach((match) => {
+    const item = document.createElement("article");
+    item.className = "memory-search-match";
+
+    const meta = document.createElement("p");
+    meta.className = "memory-search-meta";
+    const score = Number(match.score || 0);
+    meta.textContent = `${String(match.source_type || "unknown").toUpperCase()} • ${compactSessionId(
+      String(match.session_id || ""),
+    )} • ${score.toFixed(2)}`;
+
+    const snippet = document.createElement("p");
+    snippet.className = "memory-search-snippet";
+    snippet.textContent = String(match.snippet || "");
+
+    const actions = document.createElement("div");
+    actions.className = "memory-search-actions";
+
+    const insertButton = document.createElement("button");
+    insertButton.type = "button";
+    insertButton.className = "memory-search-action";
+    insertButton.textContent = "Insert";
+    insertButton.addEventListener("click", () => {
+      appendComposerText(String(match.snippet || ""));
+    });
+
+    const askButton = document.createElement("button");
+    askButton.type = "button";
+    askButton.className = "memory-search-action";
+    askButton.textContent = "Ask";
+    askButton.addEventListener("click", () => {
+      setComposerText(buildAskPrompt(match));
+    });
+
+    actions.append(insertButton, askButton);
+    item.append(meta, snippet, actions);
+    memorySearchResultsEl.appendChild(item);
   });
 }
 
@@ -545,13 +677,55 @@ drawerToggleEl.addEventListener("click", () => {
   toggleDrawer();
 });
 
+memorySearchToggleEl.addEventListener("click", () => {
+  setMemorySearchOpen(!memorySearchOpen);
+});
+
 drawerBackdropEl.addEventListener("click", () => {
   closeDrawer();
 });
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    if (memorySearchOpen) {
+      setMemorySearchOpen(false);
+      return;
+    }
     closeDrawer();
+  }
+});
+
+memorySearchFormEl.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const query = memorySearchQueryEl.value.trim();
+  if (!query) {
+    return;
+  }
+  const sourceTypes = normalizeSearchSourceTypes();
+  const useSessionScope = memorySearchSessionScopeEl.checked;
+  const scopedSessionId = useSessionScope ? activeChatId : null;
+
+  memorySearchRunEl.disabled = true;
+  setMemorySearchStatus("Searching index...");
+  memorySearchResultsEl.innerHTML = "";
+  try {
+    const payload = await apiFileSearch({
+      query,
+      sessionId: scopedSessionId,
+      sourceTypes,
+      limit: 6,
+    });
+    const matches = Array.isArray(payload.matches) ? payload.matches : [];
+    renderMemorySearchResults(matches);
+    if (matches.length === 0) {
+      setMemorySearchStatus("No matches found. Try broader terms or another source.");
+      return;
+    }
+    setMemorySearchStatus(`Found ${matches.length} match${matches.length === 1 ? "" : "es"}.`);
+  } catch (error) {
+    setMemorySearchStatus(String(error), { isError: true });
+  } finally {
+    memorySearchRunEl.disabled = false;
   }
 });
 
@@ -682,6 +856,8 @@ ocrFileInputEl.addEventListener("change", async () => {
 (async () => {
   try {
     syncExportControls();
+    setMemorySearchOpen(false);
+    setMemorySearchStatus("");
     await ensureInitialState();
   } catch (error) {
     appendMessage("error", String(error), { persist: false });

@@ -46,6 +46,7 @@
 - `PATCH /chats/{session_id}` rename chat
 - `DELETE /chats/{session_id}` delete chat and clear memory
 - `POST /skills/ocr` run OCR (scaffold or OpenAI mode)
+- `POST /skills/file_search` search indexed vector content (OCR/chat sources)
 - `GET /metrics` request counters, status counts, latency buckets, rate-limit totals
 
 ## OCR Provider Toggle
@@ -57,6 +58,18 @@
    - `POLINKO_OCR_MODEL` (default `gpt-4.1-mini`)
    - `POLINKO_OCR_PROMPT` (custom extraction prompt)
 3. Restart API after changing provider settings.
+4. If vector memory is enabled, OCR outputs are chunked and indexed automatically with OCR metadata.
+
+## File Search (Vector Index)
+
+1. Ensure vector memory is enabled (`POLINKO_VECTOR_ENABLED=true`) and restart API.
+2. Index content first (for example via `POST /skills/ocr`).
+3. Search with `POST /skills/file_search`:
+   - required: `query`
+   - optional: `session_id` to scope results to one chat
+   - optional: `limit` (default `5`, max `20`)
+   - optional: `source_types` (`["ocr"]`, `["chat"]`, or both)
+4. Results include similarity, keyword score, combined score, snippet, and source metadata.
 
 ## Vector Memory Toggle
 
@@ -70,6 +83,8 @@
    - `POLINKO_VECTOR_MAX_CHARS` (default `220`)
    - `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION` (default `true`)
 3. Restart API after changing vector settings.
+4. Chat retrieval currently uses chat-response vectors for tone consistency; OCR vectors are stored with
+   metadata for search/retrieval workflows.
 
 ## Run API Tests
 

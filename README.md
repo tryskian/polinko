@@ -70,6 +70,7 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 - `PATCH /chats/{session_id}` rename a chat
 - `DELETE /chats/{session_id}` delete a chat
 - `POST /skills/ocr` OCR endpoint (scaffold mode or OpenAI image OCR, based on env)
+- `POST /skills/file_search` search indexed vectors (defaults to OCR sources)
 - `GET /metrics` API metrics (request totals, status counts, latency buckets, 429 count)
 
 Config:
@@ -95,8 +96,12 @@ Config:
 - Small thinking animation before assistant responses render
 - Silent preference notes via `/note ...` in the composer (stored server-side and applied silently)
 - OCR file upload button in composer (sends file payload to `/skills/ocr`)
+- Indexed search panel in composer (search icon) with one-click `Insert`/`Ask` snippet actions
 - Header export controls download: transcript markdown, transcript json, and OCR run history json
 - Optional vector retrieval memory: assistant outputs are indexed and matched by similarity on new turns
+- OCR outputs are chunked and indexed into vectors with source metadata (`ocr_run_id`, file name, mime type)
+  when vector memory is enabled
+- File search endpoint uses hybrid ranking (semantic similarity + keyword overlap) over indexed vectors
 
 ## CI
 

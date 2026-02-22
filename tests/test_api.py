@@ -42,9 +42,9 @@ class PolinkoApiTests(unittest.TestCase):
         deps.ocr_prompt = "Extract text."
         deps.ocr_client = None
         deps.vector_enabled = False
-        deps.vector_top_k = 4
-        deps.vector_min_similarity = 0.25
-        deps.vector_max_chars = 320
+        deps.vector_top_k = 2
+        deps.vector_min_similarity = 0.40
+        deps.vector_max_chars = 220
         deps.vector_exclude_current_session = True
         deps.vector_embedding_model = "text-embedding-3-small"
         deps.vector_store = None
@@ -276,6 +276,162 @@ class PolinkoApiTests(unittest.TestCase):
         kwargs = captured["kwargs"]
         self.assertEqual(kwargs["model"], deps.ocr_model)
         self.assertIn("input", kwargs)
+
+    def test_ocr_indexes_chunked_vectors_with_metadata(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-ocr.db"))
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "invoice" in lowered else 0.0,
+                    1.0 if "line item" in lowered else 0.0,
+                    float(len(lowered) % 31) / 31.0,
+                    1.0 if "total" in lowered else 0.0,
+                ]
+
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                if isinstance(inputs, str):
+                    payload = [inputs]
+                else:
+                    payload = list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        ocr_text = "\n".join(
+            [
+                "Invoice archive extraction",
+                "line item A: custom scanner tune",
+                "line item B: calibration ledger",
+                "subtotal and total noted",
+            ]
+            * 80
+        )
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-index",
+                "source_name": "invoice_scan.png",
+                "mime_type": "image/png",
+                "text_hint": ocr_text,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        run = run_resp.json()["run"]
+
+        self.assertGreater(deps.vector_store.active_count(), 1)
+        query_vector = _FakeEmbeddings._embed("find invoice line item totals")
+        matches = deps.vector_store.search(
+            query_embedding=query_vector,
+            limit=10,
+            min_similarity=0.0,
+            roles=("assistant",),
+            source_types=("ocr",),
+        )
+        self.assertGreater(len(matches), 1)
+        self.assertTrue(all(match.source_type == "ocr" for match in matches))
+        self.assertTrue(all(match.metadata.get("source") == "ocr" for match in matches))
+        self.assertTrue(any(match.metadata.get("ocr_run_id") == run["run_id"] for match in matches))
+        self.assertTrue(any(match.metadata.get("source_name") == "invoice_scan.png" for match in matches))
+
+    def test_file_search_returns_ranked_ocr_matches(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-search.db"))
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "invoice" in lowered else 0.0,
+                    1.0 if "line item" in lowered else 0.0,
+                    1.0 if "total" in lowered else 0.0,
+                    1.0 if "shipping" in lowered else 0.0,
+                    float(len(lowered) % 23) / 23.0,
+                ]
+
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                if isinstance(inputs, str):
+                    payload = [inputs]
+                else:
+                    payload = list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        run_a = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-search-a",
+                "source_name": "invoice-2026.png",
+                "mime_type": "image/png",
+                "text_hint": (
+                    "Invoice 2026\n"
+                    "line item 1: calibration\n"
+                    "line item 2: scanner pass\n"
+                    "total: 1840"
+                ),
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_a.status_code, 200)
+
+        run_b = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-search-b",
+                "source_name": "shipping-note.png",
+                "mime_type": "image/png",
+                "text_hint": (
+                    "Shipping note\n"
+                    "dock 7\n"
+                    "tracking 8841\n"
+                    "no invoice reference"
+                ),
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_b.status_code, 200)
+
+        search = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "query": "find invoice line item totals",
+                "session_id": "s-search-a",
+                "limit": 3,
+            },
+        )
+        self.assertEqual(search.status_code, 200)
+        payload = search.json()
+        self.assertEqual(payload["query"], "find invoice line item totals")
+        self.assertGreater(len(payload["matches"]), 0)
+        first = payload["matches"][0]
+        self.assertEqual(first["source_type"], "ocr")
+        self.assertEqual(first["session_id"], "s-search-a")
+        self.assertIn("invoice", first["snippet"].lower())
+        self.assertIn("ocr_run_id", first["metadata"])
+
+    def test_file_search_requires_vector_memory(self) -> None:
+        resp = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={"query": "invoice totals"},
+        )
+        self.assertEqual(resp.status_code, 503)
 
     def test_create_chat_and_reset_clears_messages(self) -> None:
         created = self.client.post("/chats", headers={"x-api-key": "test-server-key"}, json={})
