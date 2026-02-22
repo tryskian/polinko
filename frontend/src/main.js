@@ -1,4 +1,5 @@
 import "./style.css";
+import { createExportUiState } from "./export-ui-state.js";
 
 const STORAGE_ACTIVE_CHAT_KEY = "polinko.active_chat_id.v2";
 
@@ -23,7 +24,15 @@ const RESPONSE_RENDER_DELAY_MS = 220;
 let chats = [];
 let activeChatId = "";
 let currentMessages = [];
-let exportInFlight = false;
+
+const exportUiState = createExportUiState({
+  getActiveChatId: () => activeChatId,
+  setButtonsDisabled(disabled) {
+    exportMarkdownEl.disabled = disabled;
+    exportJsonEl.disabled = disabled;
+    exportOcrEl.disabled = disabled;
+  },
+});
 
 function autoSizeComposer() {
   messageEl.style.height = "auto";
@@ -240,28 +249,12 @@ function downloadJson(filename, payload) {
   triggerDownload(filename, `${JSON.stringify(payload, null, 2)}\n`, "application/json;charset=utf-8");
 }
 
-function setExportButtonsDisabled(disabled) {
-  exportMarkdownEl.disabled = disabled;
-  exportJsonEl.disabled = disabled;
-  exportOcrEl.disabled = disabled;
-}
-
 function syncExportControls() {
-  setExportButtonsDisabled(!activeChatId || exportInFlight);
+  exportUiState.sync();
 }
 
 async function withExportLock(task) {
-  if (exportInFlight) {
-    return;
-  }
-  exportInFlight = true;
-  syncExportControls();
-  try {
-    await task();
-  } finally {
-    exportInFlight = false;
-    syncExportControls();
-  }
+  await exportUiState.runLocked(task);
 }
 
 function parsePreferenceNote(value) {
