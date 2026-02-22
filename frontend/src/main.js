@@ -5,11 +5,11 @@ const STORAGE_ACTIVE_CHAT_KEY = "polinko.active_chat_id.v2";
 const chatEl = document.getElementById("chat");
 const composerEl = document.getElementById("composer");
 const messageEl = document.getElementById("message");
+const shellEl = document.querySelector(".shell");
 const resetEl = document.getElementById("reset");
 const emptyStateEl = document.getElementById("empty-state");
 const newChatEl = document.getElementById("new-chat");
 const drawerToggleEl = document.getElementById("drawer-toggle");
-const drawerCloseEl = document.getElementById("drawer-close");
 const drawerEl = document.getElementById("chat-drawer");
 const drawerBackdropEl = document.getElementById("drawer-backdrop");
 const chatListEl = document.getElementById("chat-list");
@@ -154,6 +154,19 @@ async function apiListMessages(sessionId) {
   return requestJson(`/chats/${encodeURIComponent(sessionId)}/messages`);
 }
 
+async function apiRenameChat(sessionId, title) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ title }),
+  });
+}
+
+async function apiDeprecateChat(sessionId) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/deprecate`, {
+    method: "POST",
+  });
+}
+
 async function apiAddNote(sessionId, note) {
   return requestJson(`/chats/${encodeURIComponent(sessionId)}/notes`, {
     method: "POST",
@@ -219,36 +232,137 @@ function sortChatsByRecent(nextChats) {
 function openDrawer() {
   drawerEl.classList.add("open");
   drawerBackdropEl.classList.add("open");
+  shellEl?.classList.remove("drawer-collapsed");
+  drawerToggleEl.setAttribute("aria-expanded", "true");
 }
 
 function closeDrawer() {
   drawerEl.classList.remove("open");
   drawerBackdropEl.classList.remove("open");
+  shellEl?.classList.add("drawer-collapsed");
+  drawerToggleEl.setAttribute("aria-expanded", "false");
+}
+
+function isDrawerOpen() {
+  return !shellEl?.classList.contains("drawer-collapsed");
+}
+
+function toggleDrawer() {
+  if (isDrawerOpen()) {
+    closeDrawer();
+    return;
+  }
+  openDrawer();
 }
 
 function renderChatList() {
   chatListEl.innerHTML = "";
   chats.forEach((chat) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "chat-item";
+    const row = document.createElement("div");
+    row.className = "chat-item-row";
+
+    const chatButton = document.createElement("button");
+    chatButton.type = "button";
+    chatButton.className = "chat-item";
     if (chat.session_id === activeChatId) {
-      button.classList.add("active");
+      chatButton.classList.add("active");
     }
-    button.textContent = chat.title;
-    button.addEventListener("click", async () => {
-      if (chat.session_id === activeChatId) {
-        closeDrawer();
+    chatButton.textContent = chat.title;
+    chatButton.title = "Double-click to rename";
+    let clickTimer = null;
+
+    async function renameChat() {
+      const currentTitle = chat.title || "New chat";
+      const nextTitle = window.prompt("Rename chat", currentTitle);
+      if (nextTitle === null) {
+        return;
+      }
+      const trimmed = nextTitle.trim();
+      if (!trimmed || trimmed === currentTitle) {
         return;
       }
       try {
-        await setActiveChat(chat.session_id);
-        closeDrawer();
+        await apiRenameChat(chat.session_id, trimmed);
+        await refreshChats();
+      } catch (error) {
+        appendMessage("error", String(error), { persist: false });
+      }
+    }
+
+    chatButton.addEventListener("click", async (event) => {
+      if (event.detail > 1) {
+        return;
+      }
+      if (clickTimer !== null) {
+        clearTimeout(clickTimer);
+      }
+      clickTimer = window.setTimeout(async () => {
+        clickTimer = null;
+        if (chat.session_id === activeChatId) {
+          closeDrawer();
+          return;
+        }
+        try {
+          await setActiveChat(chat.session_id);
+          closeDrawer();
+        } catch (error) {
+          appendMessage("error", String(error), { persist: false });
+        }
+      }, 220);
+    });
+
+    chatButton.addEventListener("dblclick", async () => {
+      if (clickTimer !== null) {
+        clearTimeout(clickTimer);
+        clickTimer = null;
+      }
+      await renameChat();
+    });
+
+    chatButton.addEventListener("touchstart", () => {
+      if (clickTimer !== null) {
+        clearTimeout(clickTimer);
+        clickTimer = null;
+      }
+    });
+
+    const actions = document.createElement("div");
+    actions.className = "chat-item-actions";
+
+    const closeButton = document.createElement("button");
+    closeButton.type = "button";
+    closeButton.className = "chat-item-action";
+    closeButton.setAttribute("aria-label", "Close chat");
+    closeButton.title = "Close";
+    closeButton.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">close</span>';
+    closeButton.addEventListener("click", async (event) => {
+      event.stopPropagation();
+      const confirmed = window.confirm("Close this chat? It will be hidden from the sidebar.");
+      if (!confirmed) {
+        return;
+      }
+      try {
+        const wasActive = chat.session_id === activeChatId;
+        await apiDeprecateChat(chat.session_id);
+        const knownChats = await refreshChats();
+        if (!wasActive) {
+          return;
+        }
+        if (knownChats.length === 0) {
+          const created = await apiCreateChat();
+          await refreshChats();
+          await setActiveChat(created.session_id);
+          return;
+        }
+        await setActiveChat(knownChats[0].session_id);
       } catch (error) {
         appendMessage("error", String(error), { persist: false });
       }
     });
-    chatListEl.appendChild(button);
+
+    actions.append(closeButton);
+    row.append(chatButton, actions);
+    chatListEl.appendChild(row);
   });
 }
 
@@ -313,11 +427,7 @@ newChatEl.addEventListener("click", async () => {
 });
 
 drawerToggleEl.addEventListener("click", () => {
-  openDrawer();
-});
-
-drawerCloseEl.addEventListener("click", () => {
-  closeDrawer();
+  toggleDrawer();
 });
 
 drawerBackdropEl.addEventListener("click", () => {
@@ -392,6 +502,11 @@ resetEl.addEventListener("click", async () => {
   } catch (error) {
     appendMessage("error", String(error), { persist: false });
   } finally {
+    if (window.matchMedia("(min-width: 901px)").matches) {
+      openDrawer();
+    } else {
+      closeDrawer();
+    }
     autoSizeComposer();
     syncEmptyState();
   }

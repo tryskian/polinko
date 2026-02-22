@@ -51,6 +51,11 @@
 1. Run `make chat`.
 2. In CLI, use `/export` for default markdown export.
 3. Optional custom path/format: `/export exports/session.txt` or `/export exports/session.json`.
+4. CLI chat management:
+   - `/chats` list active chats
+   - `/switch <session-id>` switch chat
+   - `/rename <title>` rename current chat
+   - `/close` deprecate current chat and create a fresh session
 
 ## Common Connection Error
 

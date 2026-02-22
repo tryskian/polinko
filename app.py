@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sys
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -32,14 +33,14 @@ from core.prompts import ACTIVE_PROMPT_VERSION
 config = load_config(dotenv_path=".env")
 agent = create_agent()
 run_config = create_run_config(store=True)
-cli_session_id = os.getenv("POLINKO_CLI_SESSION_ID", config.default_session_id)
+current_session_id = os.getenv("POLINKO_CLI_SESSION_ID", config.default_session_id)
 session = create_session(
-    session_id=cli_session_id,
+    session_id=current_session_id,
     db_path=config.session_db_path,
     limit=80,
 )
 history_store = ChatHistoryStore(config.history_db_path)
-history_store.ensure_chat(session_id=cli_session_id)
+history_store.ensure_chat(session_id=current_session_id)
 
 
 def _safe_session_slug(value: str) -> str:
@@ -53,9 +54,9 @@ def _default_export_path(session_id: str) -> Path:
     return Path("exports") / filename
 
 
-def _format_md(messages: list[object]) -> str:
+def _format_md(messages: list[object], *, session_id: str) -> str:
     lines: list[str] = [
-        f"# Transcript: {cli_session_id}",
+        f"# Transcript: {session_id}",
         f"Exported: {datetime.now(tz=timezone.utc).isoformat()}",
         "",
     ]
@@ -88,12 +89,12 @@ def _format_json(messages: list[object]) -> str:
     return json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
 
 
-def export_transcript(target: str | None = None) -> Path:
-    messages = history_store.list_messages(session_id=cli_session_id)
+def export_transcript(session_id: str, target: str | None = None) -> Path:
+    messages = history_store.list_messages(session_id=session_id)
     if not messages:
         raise RuntimeError("No messages in this session yet.")
 
-    destination = Path(target).expanduser() if target else _default_export_path(cli_session_id)
+    destination = Path(target).expanduser() if target else _default_export_path(session_id)
     if destination.suffix.lower() not in {".md", ".txt", ".json"}:
         destination = destination.with_suffix(".md")
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -104,26 +105,103 @@ def export_transcript(target: str | None = None) -> Path:
     elif suffix == ".json":
         rendered = _format_json(messages)
     else:
-        rendered = _format_md(messages)
+        rendered = _format_md(messages, session_id=session_id)
     destination.write_text(rendered, encoding="utf-8")
     return destination
 
+
+def _new_cli_session_id() -> str:
+    return f"cli-{uuid.uuid4().hex[:8]}"
+
+
+def _switch_session(session_id: str):
+    next_session = create_session(
+        session_id=session_id,
+        db_path=config.session_db_path,
+        limit=80,
+    )
+    history_store.ensure_chat(session_id=session_id)
+    return next_session
+
+
+def _print_chats(session_id: str) -> None:
+    chats = history_store.list_chats()
+    if not chats:
+        print("No active chats.")
+        return
+    print("Active chats:")
+    for chat in chats[:20]:
+        marker = "*" if chat.session_id == session_id else " "
+        print(f"{marker} {chat.session_id} | {chat.title} ({chat.message_count})")
+
 print(f"Loaded prompt version: {ACTIVE_PROMPT_VERSION}")
-print("Commands: /reset, /export [path], exit")
+print(f"Session: {current_session_id}")
+print("Commands: /chats, /switch <id>, /rename <title>, /close, /reset, /export [path], exit")
 
 while True:
     user_input = input("> ")
-    if user_input.lower() in ("exit", "quit"):
+    trimmed_input = user_input.strip()
+    lowered = trimmed_input.lower()
+    if lowered in ("exit", "quit"):
         break
-    if user_input.strip().lower() == "/reset":
+
+    if lowered == "/chats":
+        _print_chats(current_session_id)
+        continue
+
+    if lowered.startswith("/switch "):
+        target_session_id = trimmed_input[len("/switch") :].strip()
+        if not target_session_id:
+            print("Usage: /switch <session-id>")
+            continue
+        target = history_store.get_chat(target_session_id)
+        if target is None:
+            print(f"Chat not found: {target_session_id}")
+            continue
+        if target.status == "deprecated":
+            print(f"Chat is deprecated and cannot be opened: {target_session_id}")
+            continue
+        current_session_id = target_session_id
+        session = _switch_session(current_session_id)
+        print(f"Switched to {current_session_id}")
+        continue
+
+    if lowered.startswith("/rename "):
+        next_title = trimmed_input[len("/rename") :].strip()
+        if not next_title:
+            print("Usage: /rename <new title>")
+            continue
+        try:
+            renamed = history_store.rename_chat(current_session_id, next_title)
+        except KeyError:
+            print(f"Chat not found: {current_session_id}")
+            continue
+        print(f'Renamed "{renamed.title}"')
+        continue
+
+    if lowered == "/close":
+        try:
+            history_store.deprecate_chat(current_session_id)
+        except KeyError:
+            print(f"Chat not found: {current_session_id}")
+            continue
         asyncio.run(session.clear_session())
-        history_store.clear_messages(session_id=cli_session_id)
+        previous_session_id = current_session_id
+        current_session_id = _new_cli_session_id()
+        session = _switch_session(current_session_id)
+        print(f"Closed {previous_session_id}. Switched to {current_session_id}")
+        continue
+
+    if lowered == "/reset":
+        asyncio.run(session.clear_session())
+        history_store.clear_messages(session_id=current_session_id)
         print("Memory cleared.")
         continue
-    if user_input.strip().lower().startswith("/export"):
-        raw_target = user_input.strip()[len("/export") :].strip()
+
+    if lowered.startswith("/export"):
+        raw_target = trimmed_input[len("/export") :].strip()
         try:
-            exported = export_transcript(raw_target or None)
+            exported = export_transcript(current_session_id, raw_target or None)
         except RuntimeError as exc:
             print(str(exc))
             continue
@@ -145,10 +223,10 @@ while True:
         print(f"OpenAI API error ({exc.status_code}). Try again in a moment.")
         continue
 
-    history_store.append_message(session_id=cli_session_id, role="user", content=user_input)
-    history_store.append_message(session_id=cli_session_id, role="assistant", content=str(response.final_output))
+    history_store.append_message(session_id=current_session_id, role="user", content=user_input)
+    history_store.append_message(session_id=current_session_id, role="assistant", content=str(response.final_output))
     history_store.maybe_set_title_from_first_user_message(
-        session_id=cli_session_id,
+        session_id=current_session_id,
         user_message=user_input,
     )
     print(response.final_output)

@@ -21,6 +21,10 @@ CLI extras:
 - `/reset` clears current CLI session memory/history
 - `/export` writes transcript to `exports/<session>-<timestamp>.md`
 - `/export path/to/file.txt` or `.json` for other formats
+- `/chats` lists active chats
+- `/switch <session-id>` switches active CLI chat
+- `/rename <title>` renames active CLI chat
+- `/close` deprecates active chat and moves CLI to a fresh session
 
 ## Setup
 
