@@ -35,6 +35,9 @@ const drawerEl = document.getElementById("chat-drawer");
 const drawerBackdropEl = document.getElementById("drawer-backdrop");
 const chatListEl = document.getElementById("chat-list");
 const RESPONSE_RENDER_DELAY_MS = 220;
+const ASSISTANT_TYPE_MIN_MS = 120;
+const ASSISTANT_TYPE_MAX_MS = 700;
+const ASSISTANT_TYPE_MS_PER_CHAR = 1.1;
 const MEMORY_SEARCH_ENABLED = false;
 const memorySearchAvailable =
   MEMORY_SEARCH_ENABLED &&
@@ -249,6 +252,63 @@ function appendMessage(kind, text, { persist = true, scroll = true } = {}) {
   if (scroll) {
     chatEl.scrollTop = chatEl.scrollHeight;
   }
+}
+
+async function appendAssistantTypedMessage(text, { persist = true } = {}) {
+  const content = String(text ?? "");
+  const node = document.createElement("article");
+  node.className = "msg assistant";
+  node.textContent = "";
+  chatEl.appendChild(node);
+
+  const durationMs = Math.min(
+    ASSISTANT_TYPE_MAX_MS,
+    Math.max(ASSISTANT_TYPE_MIN_MS, Math.round(content.length * ASSISTANT_TYPE_MS_PER_CHAR)),
+  );
+  const totalChars = content.length;
+  if (totalChars === 0) {
+    node.innerHTML = renderMarkdown(content);
+    if (persist) {
+      currentMessages.push({ kind: "assistant", text: content });
+    }
+    syncEmptyState();
+    chatEl.scrollTop = chatEl.scrollHeight;
+    return;
+  }
+
+  await new Promise((resolve) => {
+    const start = performance.now();
+    let lastCount = -1;
+
+    function step(now) {
+      const elapsed = now - start;
+      const rawProgress = durationMs <= 0 ? 1 : Math.min(1, elapsed / durationMs);
+      // Ease-out so the first part feels lively while still ending smoothly.
+      const eased = 1 - (1 - rawProgress) * (1 - rawProgress);
+      const count = Math.min(totalChars, Math.floor(eased * totalChars));
+
+      if (count !== lastCount) {
+        lastCount = count;
+        node.textContent = content.slice(0, count);
+        chatEl.scrollTop = chatEl.scrollHeight;
+      }
+
+      if (rawProgress >= 1 || count >= totalChars) {
+        resolve();
+        return;
+      }
+      requestAnimationFrame(step);
+    }
+
+    requestAnimationFrame(step);
+  });
+
+  node.innerHTML = renderMarkdown(content);
+  if (persist) {
+    currentMessages.push({ kind: "assistant", text: content });
+  }
+  syncEmptyState();
+  chatEl.scrollTop = chatEl.scrollHeight;
 }
 
 function renderCurrentMessages() {
@@ -837,7 +897,7 @@ drawerToggleEl.addEventListener("click", () => {
   toggleDrawer();
 });
 
-memorySearchToggleEl.addEventListener("click", () => {
+memorySearchToggleEl?.addEventListener("click", () => {
   if (!memorySearchAvailable) {
     return;
   }
@@ -959,7 +1019,7 @@ composerEl.addEventListener("submit", async (event) => {
     const result = await sendMessage(messageText, activeChatId);
     await sleep(RESPONSE_RENDER_DELAY_MS);
     thinkingNode.remove();
-    appendMessage("assistant", result.output);
+    await appendAssistantTypedMessage(result.output);
     await refreshChats();
   } catch (error) {
     thinkingNode.remove();
@@ -1042,14 +1102,14 @@ exportOcrEl.addEventListener("click", async () => {
   });
 });
 
-ocrUploadEl.addEventListener("click", () => {
+ocrUploadEl?.addEventListener("click", () => {
   if (!activeChatId || ocrUploadEl.disabled) {
     return;
   }
   ocrFileInputEl.click();
 });
 
-ocrFileInputEl.addEventListener("change", async () => {
+ocrFileInputEl?.addEventListener("change", async () => {
   const [file] = ocrFileInputEl.files || [];
   await handleOcrUpload(file);
 });
@@ -1062,9 +1122,6 @@ ocrFileInputEl.addEventListener("change", async () => {
       setMemorySearchOpen(false);
       setMemorySearchStatus("");
     } else {
-      if (memorySearchToggleEl) {
-        memorySearchToggleEl.hidden = true;
-      }
       if (memorySearchPanelEl) {
         memorySearchPanelEl.hidden = true;
       }

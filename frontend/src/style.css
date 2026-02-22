@@ -798,6 +798,7 @@ button {
 }
 
 .send {
+  margin-left: auto;
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 999px;
