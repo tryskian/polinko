@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 from core.history_store import ChatHistoryStore
+from core.prompts import ACTIVE_PROMPT_VERSION
 
 
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-key-123456789012345")
@@ -108,6 +109,75 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual([m["role"] for m in messages], ["user", "assistant"])
         self.assertEqual(messages[0]["content"], "hello history")
         self.assertEqual(messages[1]["content"], "History response")
+        self.assertRegex(messages[0]["message_id"], r"^msg_[0-9a-f]{24}$")
+        self.assertIsNone(messages[0]["parent_message_id"])
+        self.assertEqual(messages[1]["parent_message_id"], messages[0]["message_id"])
+
+    def test_messages_include_parent_lineage_across_turns(self) -> None:
+        with self._stub_runner("turn-1"):
+            first = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "first turn", "session_id": "s-lineage"},
+            )
+        self.assertEqual(first.status_code, 200)
+
+        with self._stub_runner("turn-2"):
+            second = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "second turn", "session_id": "s-lineage"},
+            )
+        self.assertEqual(second.status_code, 200)
+
+        messages_resp = self.client.get(
+            "/chats/s-lineage/messages",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(messages_resp.status_code, 200)
+        messages = messages_resp.json()["messages"]
+        self.assertEqual([m["role"] for m in messages], ["user", "assistant", "user", "assistant"])
+        self.assertEqual(messages[0]["parent_message_id"], None)
+        self.assertEqual(messages[1]["parent_message_id"], messages[0]["message_id"])
+        self.assertEqual(messages[2]["parent_message_id"], messages[1]["message_id"])
+        self.assertEqual(messages[3]["parent_message_id"], messages[2]["message_id"])
+
+    def test_chat_export_json_and_markdown(self) -> None:
+        with self._stub_runner("Export response"):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "hello export", "session_id": "s-export"},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+
+        export_resp = self.client.get(
+            "/chats/s-export/export",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(export_resp.status_code, 200)
+        payload = export_resp.json()
+        self.assertEqual(payload["session_id"], "s-export")
+        self.assertEqual(payload["status"], "active")
+        self.assertEqual(payload["prompt_version"], ACTIVE_PROMPT_VERSION)
+        self.assertEqual(payload["message_count"], 2)
+        self.assertEqual(payload["markdown"], None)
+        self.assertEqual([m["role"] for m in payload["messages"]], ["user", "assistant"])
+        self.assertIn("message_id", payload["messages"][0])
+        self.assertIn("parent_message_id", payload["messages"][1])
+
+        md_resp = self.client.get(
+            "/chats/s-export/export?include_markdown=true",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(md_resp.status_code, 200)
+        md_payload = md_resp.json()
+        self.assertIsInstance(md_payload["markdown"], str)
+        self.assertIn("# Transcript: s-export", md_payload["markdown"])
+        self.assertIn("## User", md_payload["markdown"])
+        self.assertIn("## Assistant", md_payload["markdown"])
+        self.assertIn("hello export", md_payload["markdown"])
+        self.assertIn("Export response", md_payload["markdown"])
 
     def test_create_chat_and_reset_clears_messages(self) -> None:
         created = self.client.post("/chats", headers={"x-api-key": "test-server-key"}, json={})

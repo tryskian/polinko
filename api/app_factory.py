@@ -76,6 +76,8 @@ class RenameChatRequest(BaseModel):
 
 
 class ChatMessageResponse(BaseModel):
+    message_id: str
+    parent_message_id: str | None
     role: str
     content: str
     created_at: int
@@ -84,6 +86,17 @@ class ChatMessageResponse(BaseModel):
 class ChatMessagesResponse(BaseModel):
     session_id: str
     messages: list[ChatMessageResponse]
+
+
+class ChatExportResponse(BaseModel):
+    session_id: str
+    title: str
+    status: str
+    prompt_version: str
+    exported_at: int
+    message_count: int
+    messages: list[ChatMessageResponse]
+    markdown: str | None = None
 
 
 class NoteRequest(BaseModel):
@@ -150,6 +163,25 @@ def _chat_summary_response(summary: ChatSummary) -> ChatSummaryResponse:
         status=summary.status,
         deprecated_at=summary.deprecated_at,
     )
+
+
+def _chat_message_response(message: Any) -> ChatMessageResponse:
+    return ChatMessageResponse(
+        message_id=message.message_id,
+        parent_message_id=message.parent_message_id,
+        role=message.role,
+        content=message.content,
+        created_at=message.created_at,
+    )
+
+
+def _render_markdown_transcript(session_id: str, messages: list[ChatMessageResponse]) -> str:
+    lines: list[str] = [f"# Transcript: {session_id}", ""]
+    for message in messages:
+        lines.append(f"## {message.role.capitalize()}")
+        lines.append(message.content)
+        lines.append("")
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def _message_with_internal_notes(message: str, notes: list[str]) -> str:
@@ -247,10 +279,33 @@ def create_app(config: AppConfig) -> FastAPI:
         if chat is None:
             raise HTTPException(status_code=404, detail="Chat not found.")
         messages = [
-            ChatMessageResponse(role=message.role, content=message.content, created_at=message.created_at)
+            _chat_message_response(message)
             for message in deps.history_store.list_messages(session_id=session_id)
         ]
         return ChatMessagesResponse(session_id=session_id, messages=messages)
+
+    @app.get("/chats/{session_id}/export", response_model=ChatExportResponse)
+    def export_chat(session_id: str, request: Request, include_markdown: bool = False) -> ChatExportResponse:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.get_chat(session_id=session_id)
+        if chat is None:
+            raise HTTPException(status_code=404, detail="Chat not found.")
+        messages = [
+            _chat_message_response(message)
+            for message in deps.history_store.list_messages(session_id=session_id)
+        ]
+        markdown = _render_markdown_transcript(session_id, messages) if include_markdown else None
+        return ChatExportResponse(
+            session_id=session_id,
+            title=chat.title,
+            status=chat.status,
+            prompt_version=ACTIVE_PROMPT_VERSION,
+            exported_at=int(time.time() * 1000),
+            message_count=len(messages),
+            messages=messages,
+            markdown=markdown,
+        )
 
     @app.patch("/chats/{session_id}", response_model=ChatSummaryResponse)
     def rename_chat(session_id: str, req: RenameChatRequest, request: Request) -> ChatSummaryResponse:

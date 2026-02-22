@@ -80,6 +80,8 @@ def _format_txt(messages: list[object]) -> str:
 def _format_json(messages: list[object]) -> str:
     payload = [
         {
+            "message_id": getattr(message, "message_id", ""),
+            "parent_message_id": getattr(message, "parent_message_id", None),
             "role": getattr(message, "role", ""),
             "content": getattr(message, "content", ""),
             "created_at": getattr(message, "created_at", 0),

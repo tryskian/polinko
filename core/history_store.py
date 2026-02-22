@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import sqlite3
 import time
 from dataclasses import dataclass
@@ -21,6 +22,8 @@ class ChatSummary:
 
 @dataclass(frozen=True)
 class ChatMessage:
+    message_id: str
+    parent_message_id: str | None
     role: str
     content: str
     created_at: int
@@ -28,6 +31,19 @@ class ChatMessage:
 
 def _now_ms() -> int:
     return int(time.time() * 1000)
+
+
+def _build_message_id(
+    *,
+    session_id: str,
+    row_id: int,
+    role: str,
+    created_at: int,
+    content: str,
+) -> str:
+    payload = f"{session_id}:{row_id}:{role}:{created_at}:{content}".encode("utf-8")
+    digest = hashlib.sha256(payload).hexdigest()[:24]
+    return f"msg_{digest}"
 
 
 def derive_chat_title(text: str, max_len: int = 42) -> str:
@@ -73,14 +89,24 @@ class ChatHistoryStore:
                   role TEXT NOT NULL,
                   content TEXT NOT NULL,
                   created_at INTEGER NOT NULL,
+                  message_id TEXT,
+                  parent_message_id TEXT,
                   FOREIGN KEY(session_id) REFERENCES chats(session_id) ON DELETE CASCADE
                 );
                 """
             )
+            self._ensure_chat_messages_columns(conn)
             conn.execute(
                 """
                 CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id_id
                 ON chat_messages(session_id, id);
+                """
+            )
+            conn.execute(
+                """
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_messages_message_id_unique
+                ON chat_messages(message_id)
+                WHERE message_id IS NOT NULL;
                 """
             )
 
@@ -94,6 +120,64 @@ class ChatHistoryStore:
             )
         if "deprecated_at" not in columns:
             conn.execute("ALTER TABLE chats ADD COLUMN deprecated_at INTEGER;")
+
+    def _ensure_chat_messages_columns(self, conn: sqlite3.Connection) -> None:
+        columns = {
+            row["name"] for row in conn.execute("PRAGMA table_info(chat_messages);").fetchall()
+        }
+        if "message_id" not in columns:
+            conn.execute("ALTER TABLE chat_messages ADD COLUMN message_id TEXT;")
+        if "parent_message_id" not in columns:
+            conn.execute("ALTER TABLE chat_messages ADD COLUMN parent_message_id TEXT;")
+        self._backfill_message_lineage(conn)
+
+    def _backfill_message_lineage(self, conn: sqlite3.Connection) -> None:
+        rows = conn.execute(
+            """
+            SELECT id, session_id, role, content, created_at, message_id, parent_message_id
+            FROM chat_messages
+            ORDER BY id ASC;
+            """
+        ).fetchall()
+
+        latest_visible_message_by_session: dict[str, str] = {}
+        for row in rows:
+            row_id = int(row["id"])
+            session_id = str(row["session_id"])
+            role = str(row["role"])
+            content = str(row["content"])
+            created_at = int(row["created_at"])
+
+            current_message_id = (
+                str(row["message_id"]) if row["message_id"] is not None else None
+            )
+            current_parent_id = (
+                str(row["parent_message_id"]) if row["parent_message_id"] is not None else None
+            )
+
+            next_message_id = current_message_id or _build_message_id(
+                session_id=session_id,
+                row_id=row_id,
+                role=role,
+                created_at=created_at,
+                content=content,
+            )
+            next_parent_id = current_parent_id
+            if role in {"user", "assistant"} and next_parent_id is None:
+                next_parent_id = latest_visible_message_by_session.get(session_id)
+
+            if current_message_id != next_message_id or current_parent_id != next_parent_id:
+                conn.execute(
+                    """
+                    UPDATE chat_messages
+                    SET message_id = ?, parent_message_id = ?
+                    WHERE id = ?;
+                    """,
+                    (next_message_id, next_parent_id, row_id),
+                )
+
+            if role in {"user", "assistant"}:
+                latest_visible_message_by_session[session_id] = next_message_id
 
     def ensure_chat(self, session_id: str, title: str | None = None) -> ChatSummary:
         now = _now_ms()
@@ -259,7 +343,7 @@ class ChatHistoryStore:
         with self._connect() as conn:
             rows = conn.execute(
                 """
-                SELECT role, content, created_at
+                SELECT message_id, parent_message_id, role, content, created_at
                 FROM chat_messages
                 WHERE session_id = ? AND role IN ('user', 'assistant')
                 ORDER BY id ASC;
@@ -267,7 +351,17 @@ class ChatHistoryStore:
                 (session_id,),
             ).fetchall()
         return [
-            ChatMessage(role=str(row["role"]), content=str(row["content"]), created_at=int(row["created_at"]))
+            ChatMessage(
+                message_id=str(row["message_id"]),
+                parent_message_id=(
+                    str(row["parent_message_id"])
+                    if row["parent_message_id"] is not None
+                    else None
+                ),
+                role=str(row["role"]),
+                content=str(row["content"]),
+                created_at=int(row["created_at"]),
+            )
             for row in rows
         ]
 
@@ -276,6 +370,20 @@ class ChatHistoryStore:
             raise ValueError(f"Unsupported role: {role}")
         now = _now_ms()
         with self._connect() as conn:
+            parent_message_id: str | None = None
+            if role in {"user", "assistant"}:
+                parent_row = conn.execute(
+                    """
+                    SELECT message_id
+                    FROM chat_messages
+                    WHERE session_id = ? AND role IN ('user', 'assistant')
+                    ORDER BY id DESC
+                    LIMIT 1;
+                    """,
+                    (session_id,),
+                ).fetchone()
+                if parent_row is not None and parent_row["message_id"] is not None:
+                    parent_message_id = str(parent_row["message_id"])
             conn.execute(
                 """
                 INSERT INTO chats(session_id, title, created_at, updated_at)
@@ -284,12 +392,33 @@ class ChatHistoryStore:
                 """,
                 (session_id, DEFAULT_CHAT_TITLE, now, now),
             )
-            conn.execute(
+            insert_result = conn.execute(
                 """
-                INSERT INTO chat_messages(session_id, role, content, created_at)
-                VALUES (?, ?, ?, ?);
+                INSERT INTO chat_messages(
+                  session_id,
+                  role,
+                  content,
+                  created_at,
+                  message_id,
+                  parent_message_id
+                )
+                VALUES (?, ?, ?, ?, NULL, ?);
                 """,
-                (session_id, role, content, now),
+                (session_id, role, content, now, parent_message_id),
+            )
+            if insert_result.lastrowid is None:
+                raise RuntimeError("Failed to persist chat message row id.")
+            row_id = int(insert_result.lastrowid)
+            message_id = _build_message_id(
+                session_id=session_id,
+                row_id=row_id,
+                role=role,
+                created_at=now,
+                content=content,
+            )
+            conn.execute(
+                "UPDATE chat_messages SET message_id = ? WHERE id = ?;",
+                (message_id, row_id),
             )
             conn.execute(
                 "UPDATE chats SET updated_at = ? WHERE session_id = ?;",
