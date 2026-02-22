@@ -28,6 +28,7 @@ from core.history_store import (
     OcrRun,
     CollaborationHandoff,
     CollaborationState,
+    PersonalizationSettings,
     DEFAULT_CHAT_TITLE,
 )
 from core.prompts import ACTIVE_PROMPT, ACTIVE_PROMPT_VERSION
@@ -144,6 +145,7 @@ class RuntimeDeps:
     governance_allow_web_search: bool
     governance_log_only: bool
     hallucination_guardrails_enabled: bool
+    personalization_default_memory_scope: str
     metrics: RuntimeMetrics
     run_config: RunConfig
     agent: Agent[Any]
@@ -252,6 +254,10 @@ class NoteRequest(BaseModel):
     note: str = Field(..., min_length=1, max_length=500)
 
 
+class PersonalizationRequest(BaseModel):
+    memory_scope: str = Field(..., min_length=1, max_length=20)
+
+
 class OcrRequest(BaseModel):
     session_id: str | None = Field(default=None, min_length=1)
     source_name: str | None = None
@@ -301,6 +307,13 @@ class FileSearchResponse(BaseModel):
     query: str
     searched_at: int
     matches: list[FileSearchMatchResponse]
+
+
+class PersonalizationResponse(BaseModel):
+    session_id: str
+    memory_scope: str
+    updated_at: int
+    updated_by: str | None
 
 
 class MetricsResponse(BaseModel):
@@ -444,6 +457,15 @@ def _build_collaboration_note(state: CollaborationState | None) -> str | None:
         lines.append(f"- objective: {state.objective}")
     lines.append("- preserve role continuity until a new handoff is applied.")
     return "\n".join(lines)
+
+
+def _personalization_response(settings: PersonalizationSettings) -> PersonalizationResponse:
+    return PersonalizationResponse(
+        session_id=settings.session_id,
+        memory_scope=settings.memory_scope,
+        updated_at=settings.updated_at,
+        updated_by=settings.updated_by,
+    )
 
 
 def _render_markdown_transcript(session_id: str, messages: list[ChatMessageResponse]) -> str:
@@ -624,6 +646,7 @@ def _retrieve_memory(
     deps: RuntimeDeps,
     session_id: str,
     query_text: str,
+    memory_scope: str,
 ) -> list[VectorMatch]:
     if not deps.vector_enabled or deps.vector_store is None:
         return []
@@ -638,12 +661,19 @@ def _retrieve_memory(
     except Exception as exc:
         _log_event("vector_search_error", session_id=session_id, error_type=type(exc).__name__)
         return []
-    exclude_session_id = session_id if deps.vector_exclude_current_session else None
+    normalized_scope = memory_scope.strip().lower()
+    include_session_id: str | None = None
+    exclude_session_id: str | None = None
+    if normalized_scope == "session":
+        include_session_id = session_id
+    else:
+        exclude_session_id = session_id if deps.vector_exclude_current_session else None
     return deps.vector_store.search(
         query_embedding=query_vector,
         limit=deps.vector_top_k,
         min_similarity=deps.vector_min_similarity,
         roles=("assistant",),
+        include_session_id=include_session_id,
         exclude_session_id=exclude_session_id,
         source_types=("chat",),
     )
@@ -1026,6 +1056,7 @@ def create_app(config: AppConfig) -> FastAPI:
         governance_allow_web_search=config.governance_allow_web_search,
         governance_log_only=config.governance_log_only,
         hallucination_guardrails_enabled=config.hallucination_guardrails_enabled,
+        personalization_default_memory_scope=config.personalization_default_memory_scope,
         metrics=create_runtime_metrics(),
         run_config=create_run_config(store=True),
         agent=create_agent(),
@@ -1314,6 +1345,52 @@ def create_app(config: AppConfig) -> FastAPI:
         deps.history_store.append_message(session_id=session_id, role="note", content=req.note.strip())
         return {"status": "ok", "session_id": session_id}
 
+    @app.post("/chats/{session_id}/personalization", response_model=PersonalizationResponse)
+    def set_chat_personalization(
+        session_id: str,
+        req: PersonalizationRequest,
+        request: Request,
+    ) -> PersonalizationResponse:
+        principal = _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.ensure_chat(session_id=session_id)
+        if chat.status == "deprecated":
+            raise HTTPException(status_code=409, detail="Chat is deprecated and cannot be personalized.")
+        try:
+            settings = deps.history_store.set_personalization(
+                session_id=session_id,
+                memory_scope=req.memory_scope,
+                updated_by=principal,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        _log_event(
+            "personalization_updated",
+            request_id=getattr(request.state, "request_id", None),
+            principal=principal,
+            session_id=session_id,
+            memory_scope=settings.memory_scope,
+        )
+        return _personalization_response(settings)
+
+    @app.get("/chats/{session_id}/personalization", response_model=PersonalizationResponse)
+    def get_chat_personalization(session_id: str, request: Request) -> PersonalizationResponse:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.get_chat(session_id=session_id)
+        if chat is None:
+            raise HTTPException(status_code=404, detail="Chat not found.")
+        settings = deps.history_store.get_personalization(session_id=session_id)
+        if settings is None:
+            # No explicit override yet; reflect effective default scope.
+            return PersonalizationResponse(
+                session_id=session_id,
+                memory_scope=deps.personalization_default_memory_scope,
+                updated_at=chat.updated_at,
+                updated_by=None,
+            )
+        return _personalization_response(settings)
+
     @app.get("/chats/{session_id}/collaboration", response_model=CollaborationResponse)
     def get_chat_collaboration(session_id: str, request: Request, limit: int = 20) -> CollaborationResponse:
         _enforce_api_key(request)
@@ -1395,6 +1472,12 @@ def create_app(config: AppConfig) -> FastAPI:
             start = time.perf_counter()
             request_id = getattr(request.state, "request_id", None)
             notes = deps.history_store.list_notes(session_id=session_id, limit=8)
+            personalization = deps.history_store.get_personalization(session_id=session_id)
+            memory_scope = (
+                personalization.memory_scope
+                if personalization is not None
+                else deps.personalization_default_memory_scope
+            )
             collaboration_state = deps.history_store.get_collaboration_state(session_id=session_id)
             collaboration_note = _build_collaboration_note(collaboration_state)
             pipeline = "runner"
@@ -1424,6 +1507,7 @@ def create_app(config: AppConfig) -> FastAPI:
                         deps=deps,
                         session_id=session_id,
                         query_text=req.message,
+                        memory_scope=memory_scope,
                     )
                     guardrail_note = _build_hallucination_guardrail_note(
                         deps=deps,
@@ -1524,6 +1608,7 @@ def create_app(config: AppConfig) -> FastAPI:
                 input_chars=len(req.message),
                 output_chars=len(response.output),
                 vector_matches=len(retrieved_memory),
+                memory_scope=memory_scope,
                 guardrail_applied=guardrail_note is not None,
                 collaboration_applied=collaboration_note is not None,
                 active_collaborator=(

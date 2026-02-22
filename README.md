@@ -18,6 +18,7 @@ Run these from repo root:
 5. `make test`
 
 CLI extras:
+
 - `/reset` clears current CLI session memory/history
 - `/export` writes transcript to `exports/<session>-<timestamp>.md`
 - `/export path/to/file.txt` or `.json` for other formats
@@ -76,6 +77,8 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 - `GET /chats/{session_id}/messages` load a thread
 - `GET /chats/{session_id}/export` export full chat transcript (+ OCR runs)
 - `POST /chats/{session_id}/notes` add internal preference note
+- `POST /chats/{session_id}/personalization` set retrieval memory scope (`session` or `global`)
+- `GET /chats/{session_id}/personalization` read effective retrieval memory scope
 - `GET /chats/{session_id}/collaboration` view active collaborator + handoff timeline
 - `POST /chats/{session_id}/collaboration/handoff` apply controlled role handoff
 - `POST /chats/{session_id}/deprecate` mark a chat as deprecated (hidden from default list)
@@ -105,6 +108,7 @@ Config:
 - `POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH` (default: `false`)
 - `POLINKO_GOVERNANCE_LOG_ONLY` (default: `false`)
 - `POLINKO_HALLUCINATION_GUARDRAILS_ENABLED` (default: `true`)
+- `POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE` (default: `global`, values: `session|global`)
 
 ## UI Behavior
 

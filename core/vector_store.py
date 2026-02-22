@@ -219,6 +219,7 @@ class VectorStore:
         limit: int,
         min_similarity: float,
         roles: tuple[str, ...] = ("assistant",),
+        include_session_id: str | None = None,
         exclude_session_id: str | None = None,
         source_types: tuple[str, ...] | None = None,
     ) -> list[VectorMatch]:
@@ -226,6 +227,9 @@ class VectorStore:
             return []
         placeholders = ",".join("?" for _ in roles)
         params: list[object] = [*roles]
+        include_clause = "AND session_id = ?" if include_session_id else ""
+        if include_session_id:
+            params.append(include_session_id)
         clause = "AND session_id != ?" if exclude_session_id else ""
         if exclude_session_id:
             params.append(exclude_session_id)
@@ -252,6 +256,7 @@ class VectorStore:
                 FROM message_vectors
                 WHERE active = 1
                   AND role IN ({placeholders})
+                  {include_clause}
                   {clause}
                   {source_clause}
                 ORDER BY created_at DESC

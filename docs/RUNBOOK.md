@@ -42,6 +42,8 @@
 - `GET /chats/{session_id}/messages` load chat messages
 - `GET /chats/{session_id}/export` export transcript (+ OCR runs)
 - `POST /chats/{session_id}/notes` add internal preference note
+- `POST /chats/{session_id}/personalization` set retrieval memory scope (`session` or `global`)
+- `GET /chats/{session_id}/personalization` read effective retrieval memory scope
 - `GET /chats/{session_id}/collaboration` view active collaborator + handoff timeline
 - `POST /chats/{session_id}/collaboration/handoff` apply active role handoff
 - `POST /chats/{session_id}/deprecate` deprecate a chat
@@ -124,6 +126,19 @@
    - `GET /chats/{session_id}/collaboration`
 3. Handoffs are server-side audited and included in a per-chat timeline.
 4. During `/chat`, active collaboration context is injected internally (not shown to users).
+
+## Personalization Memory Scope
+
+1. Set default scope in `.env`:
+   - `POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE=global` (cross-chat retrieval)
+   - or `session` (same-chat retrieval only)
+2. Override per chat:
+   - `POST /chats/{session_id}/personalization`
+   - body: `{"memory_scope":"session"}` or `{"memory_scope":"global"}`
+3. Inspect effective per-chat scope:
+   - `GET /chats/{session_id}/personalization`
+   - returns explicit override if present, otherwise current default scope.
+4. This affects retrieval memory selection during `/chat` while keeping response schema unchanged.
 
 ## Run API Tests
 

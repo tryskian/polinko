@@ -16,6 +16,16 @@
           <p class="bar-title">Ready to dive in.</p>
         </div>
         <div class="bar-actions">
+          <label for="memory-scope-select" class="visually-hidden">Memory scope</label>
+          <select
+            id="memory-scope-select"
+            class="memory-scope-select"
+            aria-label="Memory scope"
+            title="Memory scope for this chat"
+          >
+            <option value="global">Global memory</option>
+            <option value="session">This chat</option>
+          </select>
           <button
             id="export-markdown"
             type="button"

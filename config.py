@@ -35,6 +35,7 @@ class AppConfig:
     governance_allow_web_search: bool
     governance_log_only: bool
     hallucination_guardrails_enabled: bool
+    personalization_default_memory_scope: str
 
 
 def _looks_like_placeholder(value: str) -> bool:
@@ -172,6 +173,13 @@ def _validate_ocr_provider(value: str | None) -> str:
     raise RuntimeError("POLINKO_OCR_PROVIDER must be one of: scaffold, openai.")
 
 
+def _validate_personalization_memory_scope(value: str | None) -> str:
+    normalized = (value or "global").strip().lower()
+    if normalized in {"session", "global"}:
+        return normalized
+    raise RuntimeError("POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE must be one of: session, global.")
+
+
 def load_config(dotenv_path: str = ".env") -> AppConfig:
     load_dotenv(dotenv_path=dotenv_path)
 
@@ -226,6 +234,9 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     governance_allow_web_search = _parse_bool_env("POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH", False)
     governance_log_only = _parse_bool_env("POLINKO_GOVERNANCE_LOG_ONLY", False)
     hallucination_guardrails_enabled = _parse_bool_env("POLINKO_HALLUCINATION_GUARDRAILS_ENABLED", True)
+    personalization_default_memory_scope = _validate_personalization_memory_scope(
+        os.getenv("POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE", "global")
+    )
 
     if responses_orchestration_enabled and not responses_vector_store_id:
         raise RuntimeError(
@@ -262,4 +273,5 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         governance_allow_web_search=governance_allow_web_search,
         governance_log_only=governance_log_only,
         hallucination_guardrails_enabled=hallucination_guardrails_enabled,
+        personalization_default_memory_scope=personalization_default_memory_scope,
     )

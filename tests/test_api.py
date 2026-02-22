@@ -59,6 +59,7 @@ class PolinkoApiTests(unittest.TestCase):
         deps.governance_allow_web_search = False
         deps.governance_log_only = False
         deps.hallucination_guardrails_enabled = True
+        deps.personalization_default_memory_scope = "global"
         deps.session_db_path = os.path.join(self.tmpdir.name, "test-memory.db")
         deps.history_store = ChatHistoryStore(os.path.join(self.tmpdir.name, "test-history.db"))
         deps.metrics = create_runtime_metrics()
@@ -731,6 +732,110 @@ class PolinkoApiTests(unittest.TestCase):
             )
         self.assertEqual(resp.status_code, 200)
         self.assertIn("HALLUCINATION_GUARDRAIL", captured["input"])
+
+    def test_personalization_endpoint_sets_scope(self) -> None:
+        resp = self.client.post(
+            "/chats/s-personal/personalization",
+            headers={"x-api-key": "test-server-key"},
+            json={"memory_scope": "session"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertEqual(payload["session_id"], "s-personal")
+        self.assertEqual(payload["memory_scope"], "session")
+        self.assertEqual(payload["updated_by"], "default")
+
+    def test_personalization_get_returns_default_when_not_set(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.personalization_default_memory_scope = "global"
+        deps.history_store.ensure_chat("s-personal-default")
+        resp = self.client.get(
+            "/chats/s-personal-default/personalization",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertEqual(payload["session_id"], "s-personal-default")
+        self.assertEqual(payload["memory_scope"], "global")
+        self.assertIsNone(payload["updated_by"])
+
+    def test_personalization_get_returns_persisted_scope(self) -> None:
+        set_resp = self.client.post(
+            "/chats/s-personal-get/personalization",
+            headers={"x-api-key": "test-server-key"},
+            json={"memory_scope": "session"},
+        )
+        self.assertEqual(set_resp.status_code, 200)
+        resp = self.client.get(
+            "/chats/s-personal-get/personalization",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertEqual(payload["session_id"], "s-personal-get")
+        self.assertEqual(payload["memory_scope"], "session")
+        self.assertEqual(payload["updated_by"], "default")
+
+    def test_personalization_session_scope_limits_retrieval_to_same_chat(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-personal.db"))
+        deps.personalization_default_memory_scope = "global"
+        deps.vector_min_similarity = 0.0
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "unicorn" in lowered else 0.0,
+                    1.0 if "horn" in lowered else 0.0,
+                    1.0 if "grow" in lowered or "growth" in lowered else 0.0,
+                    float(len(lowered) % 17) / 17.0,
+                ]
+
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        with self._stub_runner("From chat A"):
+            first_a = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "How do unicorn horns grow over time?", "session_id": "s-person-a"},
+            )
+        self.assertEqual(first_a.status_code, 200)
+
+        with self._stub_runner("From chat B"):
+            first_b = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "How do unicorn horns grow over time?", "session_id": "s-person-b"},
+            )
+        self.assertEqual(first_b.status_code, 200)
+
+        set_scope = self.client.post(
+            "/chats/s-person-b/personalization",
+            headers={"x-api-key": "test-server-key"},
+            json={"memory_scope": "session"},
+        )
+        self.assertEqual(set_scope.status_code, 200)
+
+        captured: dict[str, str] = {}
+        with self._stub_runner("Scoped response", capture=captured):
+            second_b = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "Do unicorn horns keep growing in adulthood?", "session_id": "s-person-b"},
+            )
+        self.assertEqual(second_b.status_code, 200)
+        self.assertIn("RETRIEVED_MEMORY", captured["input"])
+        self.assertIn("From chat B", captured["input"])
+        self.assertNotIn("From chat A", captured["input"])
 
     def test_vector_memory_retrieval_injects_prior_assistant_context(self) -> None:
         deps = server.get_runtime_deps()

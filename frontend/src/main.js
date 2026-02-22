@@ -19,6 +19,7 @@ const memorySearchStatusEl = document.getElementById("memory-search-status");
 const memorySearchResultsEl = document.getElementById("memory-search-results");
 const shellEl = document.querySelector(".shell");
 const resetEl = document.getElementById("reset");
+const memoryScopeSelectEl = document.getElementById("memory-scope-select");
 const exportMarkdownEl = document.getElementById("export-markdown");
 const exportJsonEl = document.getElementById("export-json");
 const exportOcrEl = document.getElementById("export-ocr");
@@ -32,6 +33,7 @@ const RESPONSE_RENDER_DELAY_MS = 220;
 
 let chats = [];
 let activeChatId = "";
+let activeMemoryScope = "global";
 let currentMessages = [];
 let memorySearchOpen = false;
 
@@ -213,6 +215,17 @@ async function apiAddNote(sessionId, note) {
   });
 }
 
+async function apiGetPersonalization(sessionId) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/personalization`);
+}
+
+async function apiSetPersonalization(sessionId, memoryScope) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/personalization`, {
+    method: "POST",
+    body: JSON.stringify({ memory_scope: memoryScope }),
+  });
+}
+
 async function sendMessage(messageText, sessionId) {
   return requestJson("/chat", {
     method: "POST",
@@ -302,6 +315,13 @@ function parsePreferenceNote(value) {
     return "";
   }
   return match[1].trim();
+}
+
+function normalizeMemoryScope(value) {
+  if (value === "session") {
+    return "session";
+  }
+  return "global";
 }
 
 async function resetSession(sessionId) {
@@ -644,6 +664,31 @@ async function setActiveChat(sessionId) {
   renderChatList();
   syncExportControls();
   await loadActiveMessages();
+  await loadActivePersonalization(activeChatId);
+}
+
+async function loadActivePersonalization(sessionId) {
+  if (!sessionId) {
+    return;
+  }
+  memoryScopeSelectEl.disabled = true;
+  try {
+    const payload = await apiGetPersonalization(sessionId);
+    if (sessionId !== activeChatId) {
+      return;
+    }
+    activeMemoryScope = normalizeMemoryScope(payload.memory_scope);
+    memoryScopeSelectEl.value = activeMemoryScope;
+  } catch (error) {
+    if (sessionId === activeChatId) {
+      appendMessage("error", String(error), { persist: false });
+      memoryScopeSelectEl.value = activeMemoryScope;
+    }
+  } finally {
+    if (sessionId === activeChatId) {
+      memoryScopeSelectEl.disabled = false;
+    }
+  }
 }
 
 async function ensureInitialState() {
@@ -726,6 +771,29 @@ memorySearchFormEl.addEventListener("submit", async (event) => {
     setMemorySearchStatus(String(error), { isError: true });
   } finally {
     memorySearchRunEl.disabled = false;
+  }
+});
+
+memoryScopeSelectEl.addEventListener("change", async () => {
+  if (!activeChatId) {
+    return;
+  }
+  const previousScope = activeMemoryScope;
+  const nextScope = normalizeMemoryScope(memoryScopeSelectEl.value);
+  if (nextScope === previousScope) {
+    return;
+  }
+
+  memoryScopeSelectEl.disabled = true;
+  try {
+    const payload = await apiSetPersonalization(activeChatId, nextScope);
+    activeMemoryScope = normalizeMemoryScope(payload.memory_scope);
+    memoryScopeSelectEl.value = activeMemoryScope;
+  } catch (error) {
+    memoryScopeSelectEl.value = previousScope;
+    appendMessage("error", String(error), { persist: false });
+  } finally {
+    memoryScopeSelectEl.disabled = false;
   }
 });
 

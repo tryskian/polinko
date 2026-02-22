@@ -68,6 +68,7 @@ class ConfigTests(unittest.TestCase):
         self.assertFalse(cfg.governance_allow_web_search)
         self.assertFalse(cfg.governance_log_only)
         self.assertTrue(cfg.hallucination_guardrails_enabled)
+        self.assertEqual(cfg.personalization_default_memory_scope, "global")
 
     def test_rejects_invalid_vector_min_similarity(self) -> None:
         env = {
@@ -82,6 +83,15 @@ class ConfigTests(unittest.TestCase):
         env = {
             "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
             "POLINKO_RESPONSES_ORCHESTRATION_ENABLED": "true",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(RuntimeError):
+                load_config(dotenv_path="__missing__.env")
+
+    def test_rejects_invalid_personalization_memory_scope(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE": "planetary",
         }
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaises(RuntimeError):

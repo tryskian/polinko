@@ -81,6 +81,27 @@ body {
   gap: 0.3rem;
 }
 
+.memory-scope-select {
+  border: 1px solid var(--line);
+  border-radius: 0.72rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.34rem 0.5rem;
+  min-height: 2rem;
+}
+
+.memory-scope-select:focus {
+  border-color: rgba(158, 199, 224, 0.45);
+  outline: none;
+}
+
+.memory-scope-select:disabled {
+  opacity: 0.58;
+  cursor: default;
+}
+
 .bar-title {
   margin: 0;
   color: #d9dade;

@@ -68,6 +68,14 @@ class CollaborationHandoff:
     created_by: str | None
 
 
+@dataclass(frozen=True)
+class PersonalizationSettings:
+    session_id: str
+    memory_scope: str
+    updated_at: int
+    updated_by: str | None
+
+
 def _now_ms() -> int:
     return int(time.time() * 1000)
 
@@ -214,6 +222,17 @@ class ChatHistoryStore:
                 """
                 CREATE INDEX IF NOT EXISTS idx_chat_handoffs_session_created
                 ON chat_handoffs(session_id, created_at DESC, id DESC);
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS chat_personalization (
+                  session_id TEXT PRIMARY KEY,
+                  memory_scope TEXT NOT NULL,
+                  updated_at INTEGER NOT NULL,
+                  updated_by TEXT,
+                  FOREIGN KEY(session_id) REFERENCES chats(session_id) ON DELETE CASCADE
+                );
                 """
             )
 
@@ -878,6 +897,68 @@ class ChatHistoryStore:
             created_by=safe_created_by,
         )
         return state, handoff
+
+    def get_personalization(self, session_id: str) -> PersonalizationSettings | None:
+        with self._connection() as conn:
+            row = conn.execute(
+                """
+                SELECT session_id, memory_scope, updated_at, updated_by
+                FROM chat_personalization
+                WHERE session_id = ?;
+                """,
+                (session_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return PersonalizationSettings(
+            session_id=str(row["session_id"]),
+            memory_scope=str(row["memory_scope"]),
+            updated_at=int(row["updated_at"]),
+            updated_by=str(row["updated_by"]) if row["updated_by"] is not None else None,
+        )
+
+    def set_personalization(
+        self,
+        *,
+        session_id: str,
+        memory_scope: str,
+        updated_by: str | None = None,
+    ) -> PersonalizationSettings:
+        safe_scope = memory_scope.strip().lower()
+        if safe_scope not in {"session", "global"}:
+            raise ValueError("memory_scope must be 'session' or 'global'.")
+        now = _now_ms()
+        safe_updated_by = updated_by.strip() if updated_by and updated_by.strip() else None
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO chats(session_id, title, created_at, updated_at, status, deprecated_at)
+                VALUES (?, ?, ?, ?, 'active', NULL)
+                ON CONFLICT(session_id) DO NOTHING;
+                """,
+                (session_id, DEFAULT_CHAT_TITLE, now, now),
+            )
+            conn.execute(
+                """
+                INSERT INTO chat_personalization(session_id, memory_scope, updated_at, updated_by)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(session_id) DO UPDATE SET
+                  memory_scope = excluded.memory_scope,
+                  updated_at = excluded.updated_at,
+                  updated_by = excluded.updated_by;
+                """,
+                (session_id, safe_scope, now, safe_updated_by),
+            )
+            conn.execute(
+                "UPDATE chats SET updated_at = ? WHERE session_id = ?;",
+                (now, session_id),
+            )
+        return PersonalizationSettings(
+            session_id=session_id,
+            memory_scope=safe_scope,
+            updated_at=now,
+            updated_by=safe_updated_by,
+        )
 
     def clear_messages(self, session_id: str) -> None:
         now = _now_ms()
