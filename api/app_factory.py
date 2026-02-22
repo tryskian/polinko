@@ -1,19 +1,27 @@
+import base64
+import binascii
 import hmac
 import json
 import logging
 import time
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, cast
 
 from agents import Agent, Runner, RunConfig
 from agents.memory import Session
 from fastapi import FastAPI, HTTPException, Request
-from openai import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
+from openai import (
+    APIConnectionError,
+    APIStatusError,
+    AuthenticationError,
+    OpenAI,
+    RateLimitError,
+)
 from pydantic import BaseModel, Field
 
 from config import AppConfig
-from core.history_store import ChatHistoryStore, ChatSummary, DEFAULT_CHAT_TITLE
+from core.history_store import ChatHistoryStore, ChatSummary, OcrRun, DEFAULT_CHAT_TITLE
 from core.prompts import ACTIVE_PROMPT_VERSION
 from core.rate_limit import SlidingWindowRateLimiter
 from core.runtime import create_agent, create_run_config, create_session
@@ -22,8 +30,54 @@ from core.runtime import create_agent, create_run_config, create_session
 logger = logging.getLogger("polinko.api")
 
 
+_LATENCY_BUCKET_EDGES_MS = (10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2000.0)
+
+
+def _default_latency_buckets() -> dict[str, int]:
+    buckets = {f"le_{int(edge)}ms": 0 for edge in _LATENCY_BUCKET_EDGES_MS}
+    buckets["gt_2000ms"] = 0
+    return buckets
+
+
+def _latency_bucket_label(duration_ms: float) -> str:
+    for edge in _LATENCY_BUCKET_EDGES_MS:
+        if duration_ms <= edge:
+            return f"le_{int(edge)}ms"
+    return "gt_2000ms"
+
+
+@dataclass
+class RuntimeMetrics:
+    started_at_ms: int
+    started_monotonic: float
+    requests_total: int = 0
+    status_counts: dict[str, int] = field(default_factory=dict)
+    rate_limited_total: int = 0
+    cumulative_duration_ms: float = 0.0
+    latency_buckets: dict[str, int] = field(default_factory=_default_latency_buckets)
+
+
+def create_runtime_metrics() -> RuntimeMetrics:
+    return RuntimeMetrics(
+        started_at_ms=int(time.time() * 1000),
+        started_monotonic=time.perf_counter(),
+    )
+
+
+def _record_metrics(metrics: RuntimeMetrics, status_code: int, duration_ms: float) -> None:
+    status_key = str(status_code)
+    metrics.requests_total += 1
+    metrics.status_counts[status_key] = metrics.status_counts.get(status_key, 0) + 1
+    metrics.cumulative_duration_ms += duration_ms
+    if status_code == 429:
+        metrics.rate_limited_total += 1
+    bucket = _latency_bucket_label(duration_ms)
+    metrics.latency_buckets[bucket] = metrics.latency_buckets.get(bucket, 0) + 1
+
+
 @dataclass
 class RuntimeDeps:
+    openai_api_key: str
     session_db_path: str
     history_store: ChatHistoryStore
     default_session_id: str
@@ -32,6 +86,11 @@ class RuntimeDeps:
     rate_limit_per_minute: int
     rate_limiter: SlidingWindowRateLimiter
     deprecate_on_reset: bool
+    ocr_provider: str
+    ocr_model: str
+    ocr_prompt: str
+    ocr_client: OpenAI | None
+    metrics: RuntimeMetrics
     run_config: RunConfig
     agent: Agent[Any]
 
@@ -96,11 +155,48 @@ class ChatExportResponse(BaseModel):
     exported_at: int
     message_count: int
     messages: list[ChatMessageResponse]
+    ocr_runs: list["OcrRunResponse"] = Field(default_factory=list)
     markdown: str | None = None
 
 
 class NoteRequest(BaseModel):
     note: str = Field(..., min_length=1, max_length=500)
+
+
+class OcrRequest(BaseModel):
+    session_id: str | None = Field(default=None, min_length=1)
+    source_name: str | None = None
+    mime_type: str | None = None
+    data_base64: str | None = None
+    text_hint: str | None = None
+    source_message_id: str | None = None
+    attach_to_chat: bool = True
+
+
+class OcrRunResponse(BaseModel):
+    run_id: str
+    session_id: str
+    source_name: str | None
+    mime_type: str | None
+    source_message_id: str | None
+    result_message_id: str | None
+    status: str
+    extracted_text: str
+    created_at: int
+
+
+class OcrResponse(BaseModel):
+    run: OcrRunResponse
+
+
+class MetricsResponse(BaseModel):
+    started_at_ms: int
+    uptime_seconds: float
+    requests_total: int
+    status_counts: dict[str, int]
+    rate_limited_total: int
+    avg_latency_ms: float
+    latency_buckets: dict[str, int]
 
 
 def _log_event(event: str, **fields: object) -> None:
@@ -153,6 +249,12 @@ def _session_for_request(request: Request, session_id: str) -> Session:
     return create_session(session_id=session_id, db_path=deps.session_db_path, limit=80)
 
 
+def _close_session(session: Session) -> None:
+    close_fn = getattr(session, "close", None)
+    if callable(close_fn):
+        close_fn()
+
+
 def _chat_summary_response(summary: ChatSummary) -> ChatSummaryResponse:
     return ChatSummaryResponse(
         session_id=summary.session_id,
@@ -175,6 +277,20 @@ def _chat_message_response(message: Any) -> ChatMessageResponse:
     )
 
 
+def _ocr_run_response(run: OcrRun) -> OcrRunResponse:
+    return OcrRunResponse(
+        run_id=run.run_id,
+        session_id=run.session_id,
+        source_name=run.source_name,
+        mime_type=run.mime_type,
+        source_message_id=run.source_message_id,
+        result_message_id=run.result_message_id,
+        status=run.status,
+        extracted_text=run.extracted_text,
+        created_at=run.created_at,
+    )
+
+
 def _render_markdown_transcript(session_id: str, messages: list[ChatMessageResponse]) -> str:
     lines: list[str] = [f"# Transcript: {session_id}", ""]
     for message in messages:
@@ -182,6 +298,83 @@ def _render_markdown_transcript(session_id: str, messages: list[ChatMessageRespo
         lines.append(message.content)
         lines.append("")
     return "\n".join(lines).rstrip() + "\n"
+
+
+def _decode_base64_payload(req: OcrRequest) -> tuple[bytes, str | None]:
+    if not req.data_base64 or not req.data_base64.strip():
+        raise HTTPException(status_code=422, detail="Provide text_hint or data_base64.")
+    raw_data = req.data_base64.strip()
+    mime_type = req.mime_type.strip() if req.mime_type else None
+    if raw_data.startswith("data:") and "," in raw_data:
+        header, raw_data = raw_data.split(",", 1)
+        if ";base64" in header:
+            parsed_mime = header[5:].split(";", 1)[0].strip()
+            if parsed_mime and not mime_type:
+                mime_type = parsed_mime
+    try:
+        decoded = base64.b64decode(raw_data, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="Invalid data_base64 payload.") from exc
+    return decoded, mime_type
+
+
+def _scaffold_extract_text(req: OcrRequest) -> tuple[str, str]:
+    if req.text_hint and req.text_hint.strip():
+        return req.text_hint.strip(), "ok"
+
+    decoded, _mime_type = _decode_base64_payload(req)
+    text = decoded.decode("utf-8", errors="ignore").strip()
+    if text:
+        return text, "ok"
+    return "[OCR scaffold] Binary payload received. Connect OCR engine for text extraction.", "stub"
+
+
+def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, str]:
+    if req.text_hint and req.text_hint.strip():
+        return req.text_hint.strip(), "ok"
+
+    decoded, detected_mime = _decode_base64_payload(req)
+    mime_type = detected_mime or "application/octet-stream"
+    if not mime_type.startswith("image/"):
+        # Keep a soft fallback for non-image payloads while OCR provider is enabled.
+        return _scaffold_extract_text(req)
+
+    if deps.ocr_client is None:
+        raise HTTPException(status_code=503, detail="OCR provider client is not configured.")
+
+    data_url = f"data:{mime_type};base64,{base64.b64encode(decoded).decode('ascii')}"
+    try:
+        response = deps.ocr_client.responses.create(
+            model=deps.ocr_model,
+            input=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": deps.ocr_prompt},
+                        {"type": "input_image", "image_url": data_url},
+                    ],
+                }
+            ],
+        )
+    except AuthenticationError as exc:
+        raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
+    except RateLimitError as exc:
+        raise HTTPException(status_code=429, detail="Rate limit reached. Try OCR again shortly.") from exc
+    except APIConnectionError as exc:
+        raise HTTPException(status_code=503, detail="Connection error reaching OpenAI OCR provider.") from exc
+    except APIStatusError as exc:
+        raise HTTPException(status_code=502, detail=f"OpenAI OCR error ({exc.status_code}).") from exc
+
+    output_text = getattr(response, "output_text", None)
+    if isinstance(output_text, str) and output_text.strip():
+        return output_text.strip(), "ok"
+    return "[OCR] No text detected.", "ok"
+
+
+def _extract_text(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, str]:
+    if deps.ocr_provider == "openai":
+        return _extract_text_with_openai(req, deps)
+    return _scaffold_extract_text(req)
 
 
 def _message_with_internal_notes(message: str, notes: list[str]) -> str:
@@ -197,11 +390,28 @@ def _message_with_internal_notes(message: str, notes: list[str]) -> str:
     )
 
 
+def _metrics_response(metrics: RuntimeMetrics) -> MetricsResponse:
+    avg_latency_ms = 0.0
+    if metrics.requests_total > 0:
+        avg_latency_ms = round(metrics.cumulative_duration_ms / metrics.requests_total, 2)
+    uptime_seconds = round(max(0.0, time.perf_counter() - metrics.started_monotonic), 2)
+    return MetricsResponse(
+        started_at_ms=metrics.started_at_ms,
+        uptime_seconds=uptime_seconds,
+        requests_total=metrics.requests_total,
+        status_counts=dict(metrics.status_counts),
+        rate_limited_total=metrics.rate_limited_total,
+        avg_latency_ms=avg_latency_ms,
+        latency_buckets=dict(metrics.latency_buckets),
+    )
+
+
 def create_app(config: AppConfig) -> FastAPI:
     logging.basicConfig(level=getattr(logging, config.log_level, logging.INFO), format="%(message)s")
 
     app = FastAPI(title="Polinko Agent API", version="0.1.0")
     app.state.runtime_deps = RuntimeDeps(
+        openai_api_key=config.openai_api_key,
         session_db_path=config.session_db_path,
         history_store=ChatHistoryStore(config.history_db_path),
         default_session_id=config.default_session_id,
@@ -210,6 +420,11 @@ def create_app(config: AppConfig) -> FastAPI:
         rate_limit_per_minute=config.rate_limit_per_minute,
         rate_limiter=SlidingWindowRateLimiter(),
         deprecate_on_reset=config.deprecate_on_reset,
+        ocr_provider=config.ocr_provider,
+        ocr_model=config.ocr_model,
+        ocr_prompt=config.ocr_prompt,
+        ocr_client=OpenAI(api_key=config.openai_api_key) if config.ocr_provider == "openai" else None,
+        metrics=create_runtime_metrics(),
         run_config=create_run_config(store=True),
         agent=create_agent(),
     )
@@ -223,6 +438,8 @@ def create_app(config: AppConfig) -> FastAPI:
             response = await call_next(request)
         except Exception as exc:
             duration_ms = round((time.perf_counter() - start) * 1000, 2)
+            deps = _runtime_deps(request.app)
+            _record_metrics(deps.metrics, status_code=500, duration_ms=duration_ms)
             _log_event(
                 "http_error",
                 request_id=request_id,
@@ -234,6 +451,8 @@ def create_app(config: AppConfig) -> FastAPI:
             raise
 
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
+        deps = _runtime_deps(request.app)
+        _record_metrics(deps.metrics, status_code=response.status_code, duration_ms=duration_ms)
         response.headers["x-request-id"] = request_id
         _log_event(
             "http_request",
@@ -251,6 +470,12 @@ def create_app(config: AppConfig) -> FastAPI:
             "status": "ok",
             "prompt_version": ACTIVE_PROMPT_VERSION,
         }
+
+    @app.get("/metrics", response_model=MetricsResponse)
+    def metrics(request: Request) -> MetricsResponse:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        return _metrics_response(deps.metrics)
 
     @app.get("/chats", response_model=ChatsResponse)
     def list_chats(request: Request, include_deprecated: bool = False) -> ChatsResponse:
@@ -295,6 +520,7 @@ def create_app(config: AppConfig) -> FastAPI:
             _chat_message_response(message)
             for message in deps.history_store.list_messages(session_id=session_id)
         ]
+        ocr_runs = [_ocr_run_response(run) for run in deps.history_store.list_ocr_runs(session_id=session_id)]
         markdown = _render_markdown_transcript(session_id, messages) if include_markdown else None
         return ChatExportResponse(
             session_id=session_id,
@@ -304,8 +530,58 @@ def create_app(config: AppConfig) -> FastAPI:
             exported_at=int(time.time() * 1000),
             message_count=len(messages),
             messages=messages,
+            ocr_runs=ocr_runs,
             markdown=markdown,
         )
+
+    @app.post("/skills/ocr", response_model=OcrResponse)
+    def run_ocr(req: OcrRequest, request: Request) -> OcrResponse:
+        principal = _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        session_id = req.session_id or deps.default_session_id
+        chat = deps.history_store.ensure_chat(session_id=session_id)
+        if chat.status == "deprecated":
+            raise HTTPException(
+                status_code=409,
+                detail="Chat is deprecated. Create a new chat before running OCR.",
+            )
+        if req.source_message_id and not deps.history_store.message_exists(
+            session_id=session_id,
+            message_id=req.source_message_id,
+        ):
+            raise HTTPException(status_code=404, detail="source_message_id not found in this chat.")
+
+        extracted_text, status = _extract_text(req, deps)
+        result_message_id: str | None = None
+        if req.attach_to_chat:
+            appended = deps.history_store.append_message(
+                session_id=session_id,
+                role="assistant",
+                content=f"[OCR]\n{extracted_text}",
+            )
+            result_message_id = appended.message_id
+
+        run = deps.history_store.record_ocr_run(
+            run_id=f"ocr-{uuid.uuid4().hex[:12]}",
+            session_id=session_id,
+            source_name=req.source_name,
+            mime_type=req.mime_type,
+            source_message_id=req.source_message_id,
+            result_message_id=result_message_id,
+            status=status,
+            extracted_text=extracted_text,
+        )
+        _log_event(
+            "ocr_run",
+            request_id=getattr(request.state, "request_id", None),
+            session_id=session_id,
+            principal=principal,
+            run_id=run.run_id,
+            provider=deps.ocr_provider,
+            status=run.status,
+            chars=len(run.extracted_text),
+        )
+        return OcrResponse(run=_ocr_run_response(run))
 
     @app.patch("/chats/{session_id}", response_model=ChatSummaryResponse)
     def rename_chat(session_id: str, req: RenameChatRequest, request: Request) -> ChatSummaryResponse:
@@ -326,7 +602,10 @@ def create_app(config: AppConfig) -> FastAPI:
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="Chat not found.") from exc
         session = _session_for_request(request, session_id)
-        await session.clear_session()
+        try:
+            await session.clear_session()
+        finally:
+            _close_session(session)
         return {"status": "ok", "session_id": session_id}
 
     @app.post("/chats/{session_id}/deprecate", response_model=ChatSummaryResponse)
@@ -373,74 +652,77 @@ def create_app(config: AppConfig) -> FastAPI:
             raise
 
         session = _session_for_request(request, session_id)
-        start = time.perf_counter()
-        request_id = getattr(request.state, "request_id", None)
-        notes = deps.history_store.list_notes(session_id=session_id, limit=8)
-        model_input = _message_with_internal_notes(req.message, notes)
         try:
-            result = await Runner.run(
-                deps.agent,
-                model_input,
-                run_config=deps.run_config,
-                session=session,
-            )
-        except AuthenticationError as exc:
-            _log_event(
-                "chat_error",
-                request_id=request_id,
-                session_id=session_id,
-                error_type="AuthenticationError",
-            )
-            raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
-        except RateLimitError as exc:
-            _log_event(
-                "chat_error",
-                request_id=request_id,
-                session_id=session_id,
-                error_type="RateLimitError",
-            )
-            raise HTTPException(status_code=429, detail="Rate limit reached. Try again shortly.") from exc
-        except APIConnectionError as exc:
-            _log_event(
-                "chat_error",
-                request_id=request_id,
-                session_id=session_id,
-                error_type="APIConnectionError",
-            )
-            raise HTTPException(status_code=503, detail="Connection error reaching OpenAI API.") from exc
-        except APIStatusError as exc:
-            _log_event(
-                "chat_error",
-                request_id=request_id,
-                session_id=session_id,
-                error_type="APIStatusError",
-                status_code=exc.status_code,
-            )
-            raise HTTPException(status_code=502, detail=f"OpenAI API error ({exc.status_code}).") from exc
+            start = time.perf_counter()
+            request_id = getattr(request.state, "request_id", None)
+            notes = deps.history_store.list_notes(session_id=session_id, limit=8)
+            model_input = _message_with_internal_notes(req.message, notes)
+            try:
+                result = await Runner.run(
+                    deps.agent,
+                    model_input,
+                    run_config=deps.run_config,
+                    session=session,
+                )
+            except AuthenticationError as exc:
+                _log_event(
+                    "chat_error",
+                    request_id=request_id,
+                    session_id=session_id,
+                    error_type="AuthenticationError",
+                )
+                raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
+            except RateLimitError as exc:
+                _log_event(
+                    "chat_error",
+                    request_id=request_id,
+                    session_id=session_id,
+                    error_type="RateLimitError",
+                )
+                raise HTTPException(status_code=429, detail="Rate limit reached. Try again shortly.") from exc
+            except APIConnectionError as exc:
+                _log_event(
+                    "chat_error",
+                    request_id=request_id,
+                    session_id=session_id,
+                    error_type="APIConnectionError",
+                )
+                raise HTTPException(status_code=503, detail="Connection error reaching OpenAI API.") from exc
+            except APIStatusError as exc:
+                _log_event(
+                    "chat_error",
+                    request_id=request_id,
+                    session_id=session_id,
+                    error_type="APIStatusError",
+                    status_code=exc.status_code,
+                )
+                raise HTTPException(status_code=502, detail=f"OpenAI API error ({exc.status_code}).") from exc
 
-        response = ChatResponse(
-            output=str(result.final_output),
-            session_id=session_id,
-            prompt_version=ACTIVE_PROMPT_VERSION,
-        )
-        deps.history_store.append_message(session_id=session_id, role="user", content=req.message)
-        deps.history_store.append_message(session_id=session_id, role="assistant", content=response.output)
-        deps.history_store.maybe_set_title_from_first_user_message(
-            session_id=session_id,
-            user_message=req.message,
-        )
-        duration_ms = round((time.perf_counter() - start) * 1000, 2)
-        _log_event(
-            "chat_success",
-            request_id=request_id,
-            session_id=session_id,
-            principal=principal,
-            prompt_version=ACTIVE_PROMPT_VERSION,
-            input_chars=len(req.message),
-            output_chars=len(response.output),
-            duration_ms=duration_ms,
-        )
-        return response
+            response = ChatResponse(
+                output=str(result.final_output),
+                session_id=session_id,
+                prompt_version=ACTIVE_PROMPT_VERSION,
+            )
+            deps.history_store.append_message(session_id=session_id, role="user", content=req.message)
+            deps.history_store.append_message(session_id=session_id, role="assistant", content=response.output)
+            deps.history_store.maybe_set_title_from_first_user_message(
+                session_id=session_id,
+                user_message=req.message,
+            )
+            duration_ms = round((time.perf_counter() - start) * 1000, 2)
+            _log_event(
+                "chat_success",
+                request_id=request_id,
+                session_id=session_id,
+                principal=principal,
+                prompt_version=ACTIVE_PROMPT_VERSION,
+                input_chars=len(req.message),
+                output_chars=len(response.output),
+                duration_ms=duration_ms,
+            )
+            return response
+        finally:
+            _close_session(session)
 
     @app.post("/session/reset")
     async def reset_session(req: ResetRequest, request: Request) -> dict[str, str]:
@@ -449,7 +731,10 @@ def create_app(config: AppConfig) -> FastAPI:
         session_id = req.session_id or deps.default_session_id
         deps.history_store.ensure_chat(session_id=session_id)
         session = _session_for_request(request, session_id)
-        await session.clear_session()
+        try:
+            await session.clear_session()
+        finally:
+            _close_session(session)
         should_deprecate = req.deprecate or deps.deprecate_on_reset
         if should_deprecate:
             deps.history_store.deprecate_chat(session_id=session_id)

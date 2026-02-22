@@ -39,6 +39,9 @@ CLI extras:
    auth headers.
 4. Optional: use pinned dependencies with
    `pip install -r requirements.lock`.
+5. Optional OCR mode:
+   - `POLINKO_OCR_PROVIDER=scaffold` (default, no model OCR call)
+   - `POLINKO_OCR_PROVIDER=openai` (uses `POLINKO_OCR_MODEL` for image OCR)
 
 ## Project Layout
 
@@ -57,10 +60,13 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 - `GET /chats` list chats
 - `POST /chats` create a chat
 - `GET /chats/{session_id}/messages` load a thread
+- `GET /chats/{session_id}/export` export full chat transcript (+ OCR runs)
 - `POST /chats/{session_id}/notes` add internal preference note
 - `POST /chats/{session_id}/deprecate` mark a chat as deprecated (hidden from default list)
 - `PATCH /chats/{session_id}` rename a chat
 - `DELETE /chats/{session_id}` delete a chat
+- `POST /skills/ocr` OCR endpoint (scaffold mode or OpenAI image OCR, based on env)
+- `GET /metrics` API metrics (request totals, status counts, latency buckets, 429 count)
 
 Config:
 
@@ -77,6 +83,7 @@ Config:
 - Markdown + code block rendering for both user and assistant messages
 - Small thinking animation before assistant responses render
 - Silent preference notes via `/note ...` in the composer (stored server-side and applied silently)
+- OCR file upload button in composer (sends file payload to `/skills/ocr`)
 
 ## CI
 

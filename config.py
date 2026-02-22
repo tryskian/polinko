@@ -16,6 +16,9 @@ class AppConfig:
     server_api_key_principals: dict[str, str]
     rate_limit_per_minute: int
     deprecate_on_reset: bool
+    ocr_provider: str
+    ocr_model: str
+    ocr_prompt: str
 
 
 def _looks_like_placeholder(value: str) -> bool:
@@ -118,6 +121,13 @@ def _parse_bool_env(name: str, default: bool) -> bool:
     raise RuntimeError(f"{name} must be a boolean (true/false).")
 
 
+def _validate_ocr_provider(value: str | None) -> str:
+    normalized = (value or "scaffold").strip().lower()
+    if normalized in {"scaffold", "openai"}:
+        return normalized
+    raise RuntimeError("POLINKO_OCR_PROVIDER must be one of: scaffold, openai.")
+
+
 def load_config(dotenv_path: str = ".env") -> AppConfig:
     load_dotenv(dotenv_path=dotenv_path)
 
@@ -137,6 +147,15 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
             "POLINKO_RATE_LIMIT_PER_MINUTE must be an integer."
         ) from exc
     deprecate_on_reset = _parse_bool_env("POLINKO_DEPRECATE_ON_RESET", True)
+    ocr_provider = _validate_ocr_provider(os.getenv("POLINKO_OCR_PROVIDER"))
+    ocr_model = os.getenv("POLINKO_OCR_MODEL", "gpt-4.1-mini").strip() or "gpt-4.1-mini"
+    ocr_prompt = (
+        os.getenv(
+            "POLINKO_OCR_PROMPT",
+            "Extract all readable text from this image. Return only the extracted text and preserve line breaks.",
+        ).strip()
+        or "Extract all readable text from this image. Return only the extracted text and preserve line breaks."
+    )
 
     return AppConfig(
         openai_api_key=openai_api_key,
@@ -148,4 +167,7 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         server_api_key_principals=server_api_key_principals,
         rate_limit_per_minute=rate_limit_per_minute,
         deprecate_on_reset=deprecate_on_reset,
+        ocr_provider=ocr_provider,
+        ocr_model=ocr_model,
+        ocr_prompt=ocr_prompt,
     )

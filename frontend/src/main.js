@@ -5,6 +5,8 @@ const STORAGE_ACTIVE_CHAT_KEY = "polinko.active_chat_id.v2";
 const chatEl = document.getElementById("chat");
 const composerEl = document.getElementById("composer");
 const messageEl = document.getElementById("message");
+const ocrFileInputEl = document.getElementById("ocr-file-input");
+const ocrUploadEl = document.getElementById("ocr-upload");
 const shellEl = document.querySelector(".shell");
 const resetEl = document.getElementById("reset");
 const emptyStateEl = document.getElementById("empty-state");
@@ -181,6 +183,13 @@ async function sendMessage(messageText, sessionId) {
   });
 }
 
+async function runOcr(payload) {
+  return requestJson("/skills/ocr", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 function parsePreferenceNote(value) {
   const match = value.match(/^\/note(?:\s+|:\s*)([\s\S]+)$/i);
   if (!match) {
@@ -223,6 +232,44 @@ function appendThinkingIndicator() {
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Failed to read file."));
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleOcrUpload(file) {
+  if (!file || !activeChatId) {
+    return;
+  }
+
+  ocrUploadEl.disabled = true;
+  const thinkingNode = appendThinkingIndicator();
+  try {
+    const dataBase64 = await readFileAsDataUrl(file);
+    await runOcr({
+      session_id: activeChatId,
+      source_name: file.name,
+      mime_type: file.type || null,
+      data_base64: dataBase64,
+      attach_to_chat: true,
+    });
+    await sleep(RESPONSE_RENDER_DELAY_MS);
+    thinkingNode.remove();
+    await loadActiveMessages();
+    await refreshChats();
+  } catch (error) {
+    thinkingNode.remove();
+    appendMessage("error", String(error), { persist: false });
+  } finally {
+    ocrUploadEl.disabled = false;
+    ocrFileInputEl.value = "";
+  }
 }
 
 function sortChatsByRecent(nextChats) {
@@ -494,6 +541,18 @@ resetEl.addEventListener("click", async () => {
   } catch (error) {
     appendMessage("error", String(error), { persist: false });
   }
+});
+
+ocrUploadEl.addEventListener("click", () => {
+  if (!activeChatId || ocrUploadEl.disabled) {
+    return;
+  }
+  ocrFileInputEl.click();
+});
+
+ocrFileInputEl.addEventListener("change", async () => {
+  const [file] = ocrFileInputEl.files || [];
+  await handleOcrUpload(file);
 });
 
 (async () => {

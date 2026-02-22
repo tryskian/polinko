@@ -29,6 +29,23 @@ class ConfigTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 load_config(dotenv_path="__missing__.env")
 
+    def test_ocr_provider_defaults_to_scaffold(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            cfg = load_config(dotenv_path="__missing__.env")
+        self.assertEqual(cfg.ocr_provider, "scaffold")
+
+    def test_rejects_invalid_ocr_provider(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_OCR_PROVIDER": "banana",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(RuntimeError):
+                load_config(dotenv_path="__missing__.env")
+
 
 if __name__ == "__main__":
     unittest.main()

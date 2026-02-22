@@ -1,3 +1,4 @@
+import base64
 import os
 import tempfile
 import unittest
@@ -5,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+from api.app_factory import create_runtime_metrics
 from core.history_store import ChatHistoryStore
 from core.prompts import ACTIVE_PROMPT_VERSION
 
@@ -34,8 +36,13 @@ class PolinkoApiTests(unittest.TestCase):
         deps.rate_limit_per_minute = 30
         deps.rate_limiter.clear()
         deps.deprecate_on_reset = False
+        deps.ocr_provider = "scaffold"
+        deps.ocr_model = "gpt-4.1-mini"
+        deps.ocr_prompt = "Extract text."
+        deps.ocr_client = None
         deps.session_db_path = os.path.join(self.tmpdir.name, "test-memory.db")
         deps.history_store = ChatHistoryStore(os.path.join(self.tmpdir.name, "test-history.db"))
+        deps.metrics = create_runtime_metrics()
         self.client = TestClient(server.app)
 
     def tearDown(self) -> None:
@@ -60,6 +67,9 @@ class PolinkoApiTests(unittest.TestCase):
 
         note_resp = self.client.post("/chats/s1/notes", json={"note": "test"})
         self.assertEqual(note_resp.status_code, 401)
+
+        metrics_resp = self.client.get("/metrics")
+        self.assertEqual(metrics_resp.status_code, 401)
 
     def test_reset_with_valid_api_key(self) -> None:
         resp = self.client.post(
@@ -162,6 +172,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(payload["prompt_version"], ACTIVE_PROMPT_VERSION)
         self.assertEqual(payload["message_count"], 2)
         self.assertEqual(payload["markdown"], None)
+        self.assertEqual(payload["ocr_runs"], [])
         self.assertEqual([m["role"] for m in payload["messages"]], ["user", "assistant"])
         self.assertIn("message_id", payload["messages"][0])
         self.assertIn("parent_message_id", payload["messages"][1])
@@ -178,6 +189,84 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("## Assistant", md_payload["markdown"])
         self.assertIn("hello export", md_payload["markdown"])
         self.assertIn("Export response", md_payload["markdown"])
+
+    def test_ocr_skill_records_run_and_links_export(self) -> None:
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr",
+                "source_name": "scribble.txt",
+                "mime_type": "text/plain",
+                "text_hint": "luminous notes from a scribble",
+                "attach_to_chat": True,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        run = run_resp.json()["run"]
+        self.assertRegex(run["run_id"], r"^ocr-[0-9a-f]{12}$")
+        self.assertEqual(run["session_id"], "s-ocr")
+        self.assertEqual(run["status"], "ok")
+        self.assertEqual(run["source_name"], "scribble.txt")
+        self.assertEqual(run["mime_type"], "text/plain")
+        self.assertIn("scribble", run["extracted_text"])
+        self.assertRegex(run["result_message_id"], r"^msg_[0-9a-f]{24}$")
+
+        messages_resp = self.client.get(
+            "/chats/s-ocr/messages",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(messages_resp.status_code, 200)
+        messages = messages_resp.json()["messages"]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0]["role"], "assistant")
+        self.assertEqual(messages[0]["message_id"], run["result_message_id"])
+        self.assertIn("[OCR]", messages[0]["content"])
+
+        export_resp = self.client.get(
+            "/chats/s-ocr/export",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(export_resp.status_code, 200)
+        export_payload = export_resp.json()
+        self.assertEqual(len(export_payload["ocr_runs"]), 1)
+        self.assertEqual(export_payload["ocr_runs"][0]["run_id"], run["run_id"])
+        self.assertEqual(export_payload["ocr_runs"][0]["result_message_id"], run["result_message_id"])
+        self.assertEqual(export_payload["message_count"], 1)
+
+    def test_ocr_skill_openai_provider_path(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.ocr_provider = "openai"
+        captured: dict[str, object] = {}
+
+        class _FakeResponses:
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                captured["kwargs"] = kwargs
+                return SimpleNamespace(output_text="detected by openai ocr")
+
+        deps.ocr_client = SimpleNamespace(responses=_FakeResponses())
+        payload_b64 = base64.b64encode(b"not-really-an-image").decode("ascii")
+
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-openai",
+                "source_name": "scan.png",
+                "mime_type": "image/png",
+                "data_base64": payload_b64,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        run = run_resp.json()["run"]
+        self.assertEqual(run["status"], "ok")
+        self.assertEqual(run["extracted_text"], "detected by openai ocr")
+        self.assertIsNone(run["result_message_id"])
+        self.assertIn("kwargs", captured)
+        kwargs = captured["kwargs"]
+        self.assertEqual(kwargs["model"], deps.ocr_model)
+        self.assertIn("input", kwargs)
 
     def test_create_chat_and_reset_clears_messages(self) -> None:
         created = self.client.post("/chats", headers={"x-api-key": "test-server-key"}, json={})
@@ -341,6 +430,38 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(first.status_code, 200)
         self.assertEqual(second.status_code, 429)
         self.assertIn("Retry-After", second.headers)
+
+    def test_metrics_reports_counts_and_latency_buckets(self) -> None:
+        deps = server.get_runtime_deps()
+        original_limit = deps.rate_limit_per_minute
+        deps.rate_limit_per_minute = 1
+        with self._stub_runner("ok"):
+            first = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key", "x-forwarded-for": "1.1.1.1"},
+                json={"message": "first", "session_id": "s-metrics"},
+            )
+            second = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key", "x-forwarded-for": "1.1.1.1"},
+                json={"message": "second", "session_id": "s-metrics"},
+            )
+        deps.rate_limit_per_minute = original_limit
+        deps.rate_limiter.clear()
+
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 429)
+
+        metrics_resp = self.client.get("/metrics", headers={"x-api-key": "test-server-key"})
+        self.assertEqual(metrics_resp.status_code, 200)
+        metrics = metrics_resp.json()
+        self.assertEqual(metrics["requests_total"], 2)
+        self.assertEqual(metrics["status_counts"]["200"], 1)
+        self.assertEqual(metrics["status_counts"]["429"], 1)
+        self.assertEqual(metrics["rate_limited_total"], 1)
+        self.assertGreaterEqual(metrics["uptime_seconds"], 0)
+        self.assertGreater(metrics["avg_latency_ms"], 0)
+        self.assertEqual(sum(metrics["latency_buckets"].values()), metrics["requests_total"])
 
     def test_chat_rejects_empty_message(self) -> None:
         resp = self.client.post(

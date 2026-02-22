@@ -36,10 +36,23 @@
 - `GET /chats` list chats
 - `POST /chats` create chat
 - `GET /chats/{session_id}/messages` load chat messages
+- `GET /chats/{session_id}/export` export transcript (+ OCR runs)
 - `POST /chats/{session_id}/notes` add internal preference note
 - `POST /chats/{session_id}/deprecate` deprecate a chat
 - `PATCH /chats/{session_id}` rename chat
 - `DELETE /chats/{session_id}` delete chat and clear memory
+- `POST /skills/ocr` run OCR (scaffold or OpenAI mode)
+- `GET /metrics` request counters, status counts, latency buckets, rate-limit totals
+
+## OCR Provider Toggle
+
+1. In `.env`, set:
+   - `POLINKO_OCR_PROVIDER=scaffold` for fallback mode (default)
+   - `POLINKO_OCR_PROVIDER=openai` for model OCR
+2. Optional OCR settings:
+   - `POLINKO_OCR_MODEL` (default `gpt-4.1-mini`)
+   - `POLINKO_OCR_PROMPT` (custom extraction prompt)
+3. Restart API after changing provider settings.
 
 ## Run API Tests
 

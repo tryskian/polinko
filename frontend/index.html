@@ -32,6 +32,7 @@
       </section>
       <form id="composer" class="composer">
         <div class="composer-inner">
+          <input id="ocr-file-input" class="visually-hidden" type="file" accept="image/*" aria-hidden="true" tabindex="-1" />
           <textarea
             id="message"
             placeholder="message bigbrain"
@@ -40,6 +41,11 @@
             required
           ></textarea>
           <div class="composer-row">
+            <div class="composer-actions">
+              <button id="ocr-upload" type="button" class="icon-button" aria-label="Upload for OCR" title="Upload for OCR">
+                <span class="material-symbols-outlined" aria-hidden="true">attach_file</span>
+              </button>
+            </div>
             <button type="submit" class="send" aria-label="Send">
               <span class="material-symbols-outlined" aria-hidden="true">north</span>
             </button>

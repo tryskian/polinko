@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import sqlite3
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 
 
@@ -26,6 +28,19 @@ class ChatMessage:
     parent_message_id: str | None
     role: str
     content: str
+    created_at: int
+
+
+@dataclass(frozen=True)
+class OcrRun:
+    run_id: str
+    session_id: str
+    source_name: str | None
+    mime_type: str | None
+    source_message_id: str | None
+    result_message_id: str | None
+    status: str
+    extracted_text: str
     created_at: int
 
 
@@ -66,8 +81,17 @@ class ChatHistoryStore:
         conn.execute("PRAGMA foreign_keys = ON;")
         return conn
 
+    @contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
+        conn = self._connect()
+        try:
+            with conn:
+                yield conn
+        finally:
+            conn.close()
+
     def _initialize(self) -> None:
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS chats (
@@ -107,6 +131,29 @@ class ChatHistoryStore:
                 CREATE UNIQUE INDEX IF NOT EXISTS idx_chat_messages_message_id_unique
                 ON chat_messages(message_id)
                 WHERE message_id IS NOT NULL;
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS ocr_runs (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  run_id TEXT UNIQUE NOT NULL,
+                  session_id TEXT NOT NULL,
+                  source_name TEXT,
+                  mime_type TEXT,
+                  source_message_id TEXT,
+                  result_message_id TEXT,
+                  status TEXT NOT NULL,
+                  extracted_text TEXT NOT NULL,
+                  created_at INTEGER NOT NULL,
+                  FOREIGN KEY(session_id) REFERENCES chats(session_id) ON DELETE CASCADE
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_ocr_runs_session_created
+                ON ocr_runs(session_id, created_at DESC);
                 """
             )
 
@@ -182,7 +229,7 @@ class ChatHistoryStore:
     def ensure_chat(self, session_id: str, title: str | None = None) -> ChatSummary:
         now = _now_ms()
         safe_title = (title or DEFAULT_CHAT_TITLE).strip() or DEFAULT_CHAT_TITLE
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 INSERT INTO chats(session_id, title, created_at, updated_at, status, deprecated_at)
@@ -220,7 +267,7 @@ class ChatHistoryStore:
         )
 
     def list_chats(self, *, include_deprecated: bool = False) -> list[ChatSummary]:
-        with self._connect() as conn:
+        with self._connection() as conn:
             where_clause = "" if include_deprecated else "WHERE c.status = 'active'"
             rows = conn.execute(
                 """
@@ -257,7 +304,7 @@ class ChatHistoryStore:
         ]
 
     def get_chat(self, session_id: str) -> ChatSummary | None:
-        with self._connect() as conn:
+        with self._connection() as conn:
             row = conn.execute(
                 """
                 SELECT
@@ -294,7 +341,7 @@ class ChatHistoryStore:
     def rename_chat(self, session_id: str, title: str) -> ChatSummary:
         safe_title = title.strip() or DEFAULT_CHAT_TITLE
         now = _now_ms()
-        with self._connect() as conn:
+        with self._connection() as conn:
             updated = conn.execute(
                 """
                 UPDATE chats
@@ -334,13 +381,13 @@ class ChatHistoryStore:
         )
 
     def delete_chat(self, session_id: str) -> None:
-        with self._connect() as conn:
+        with self._connection() as conn:
             deleted = conn.execute("DELETE FROM chats WHERE session_id = ?;", (session_id,))
             if deleted.rowcount == 0:
                 raise KeyError(session_id)
 
     def list_messages(self, session_id: str) -> list[ChatMessage]:
-        with self._connect() as conn:
+        with self._connection() as conn:
             rows = conn.execute(
                 """
                 SELECT message_id, parent_message_id, role, content, created_at
@@ -365,11 +412,11 @@ class ChatHistoryStore:
             for row in rows
         ]
 
-    def append_message(self, session_id: str, role: str, content: str) -> None:
+    def append_message(self, session_id: str, role: str, content: str) -> ChatMessage:
         if role not in {"user", "assistant", "note"}:
             raise ValueError(f"Unsupported role: {role}")
         now = _now_ms()
-        with self._connect() as conn:
+        with self._connection() as conn:
             parent_message_id: str | None = None
             if role in {"user", "assistant"}:
                 parent_row = conn.execute(
@@ -424,10 +471,127 @@ class ChatHistoryStore:
                 "UPDATE chats SET updated_at = ? WHERE session_id = ?;",
                 (now, session_id),
             )
+        return ChatMessage(
+            message_id=message_id,
+            parent_message_id=parent_message_id,
+            role=role,
+            content=content,
+            created_at=now,
+        )
+
+    def message_exists(self, session_id: str, message_id: str) -> bool:
+        with self._connection() as conn:
+            row = conn.execute(
+                """
+                SELECT 1
+                FROM chat_messages
+                WHERE session_id = ? AND message_id = ?
+                LIMIT 1;
+                """,
+                (session_id, message_id),
+            ).fetchone()
+        return row is not None
+
+    def record_ocr_run(
+        self,
+        *,
+        run_id: str,
+        session_id: str,
+        source_name: str | None,
+        mime_type: str | None,
+        source_message_id: str | None,
+        result_message_id: str | None,
+        status: str,
+        extracted_text: str,
+    ) -> OcrRun:
+        now = _now_ms()
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO ocr_runs(
+                  run_id,
+                  session_id,
+                  source_name,
+                  mime_type,
+                  source_message_id,
+                  result_message_id,
+                  status,
+                  extracted_text,
+                  created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """,
+                (
+                    run_id,
+                    session_id,
+                    source_name,
+                    mime_type,
+                    source_message_id,
+                    result_message_id,
+                    status,
+                    extracted_text,
+                    now,
+                ),
+            )
+            conn.execute(
+                "UPDATE chats SET updated_at = ? WHERE session_id = ?;",
+                (now, session_id),
+            )
+        return OcrRun(
+            run_id=run_id,
+            session_id=session_id,
+            source_name=source_name,
+            mime_type=mime_type,
+            source_message_id=source_message_id,
+            result_message_id=result_message_id,
+            status=status,
+            extracted_text=extracted_text,
+            created_at=now,
+        )
+
+    def list_ocr_runs(self, session_id: str, limit: int = 100) -> list[OcrRun]:
+        with self._connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT
+                  run_id,
+                  session_id,
+                  source_name,
+                  mime_type,
+                  source_message_id,
+                  result_message_id,
+                  status,
+                  extracted_text,
+                  created_at
+                FROM ocr_runs
+                WHERE session_id = ?
+                ORDER BY created_at ASC, id ASC
+                LIMIT ?;
+                """,
+                (session_id, limit),
+            ).fetchall()
+        return [
+            OcrRun(
+                run_id=str(row["run_id"]),
+                session_id=str(row["session_id"]),
+                source_name=str(row["source_name"]) if row["source_name"] is not None else None,
+                mime_type=str(row["mime_type"]) if row["mime_type"] is not None else None,
+                source_message_id=(
+                    str(row["source_message_id"]) if row["source_message_id"] is not None else None
+                ),
+                result_message_id=(
+                    str(row["result_message_id"]) if row["result_message_id"] is not None else None
+                ),
+                status=str(row["status"]),
+                extracted_text=str(row["extracted_text"]),
+                created_at=int(row["created_at"]),
+            )
+            for row in rows
+        ]
 
     def deprecate_chat(self, session_id: str) -> ChatSummary:
         now = _now_ms()
-        with self._connect() as conn:
+        with self._connection() as conn:
             updated = conn.execute(
                 """
                 UPDATE chats
@@ -444,7 +608,7 @@ class ChatHistoryStore:
         return chat
 
     def list_notes(self, session_id: str, limit: int = 8) -> list[str]:
-        with self._connect() as conn:
+        with self._connection() as conn:
             rows = conn.execute(
                 """
                 SELECT content
@@ -461,7 +625,7 @@ class ChatHistoryStore:
     def maybe_set_title_from_first_user_message(self, session_id: str, user_message: str) -> None:
         candidate = derive_chat_title(user_message)
         now = _now_ms()
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 UPDATE chats
@@ -473,6 +637,6 @@ class ChatHistoryStore:
 
     def clear_messages(self, session_id: str) -> None:
         now = _now_ms()
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.execute("DELETE FROM chat_messages WHERE session_id = ?;", (session_id,))
             conn.execute("UPDATE chats SET updated_at = ? WHERE session_id = ?;", (now, session_id))
