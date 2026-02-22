@@ -26,6 +26,11 @@ class AppConfig:
     vector_min_similarity: float
     vector_max_chars: int
     vector_exclude_current_session: bool
+    responses_orchestration_enabled: bool
+    responses_orchestration_model: str
+    responses_vector_store_id: str | None
+    responses_include_web_search: bool
+    responses_history_turn_limit: int
 
 
 def _looks_like_placeholder(value: str) -> bool:
@@ -201,6 +206,24 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     vector_min_similarity = _parse_float_env("POLINKO_VECTOR_MIN_SIMILARITY", 0.40, minimum=0.0, maximum=1.0)
     vector_max_chars = _parse_int_env("POLINKO_VECTOR_MAX_CHARS", 220, minimum=80)
     vector_exclude_current_session = _parse_bool_env("POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION", True)
+    responses_orchestration_enabled = _parse_bool_env("POLINKO_RESPONSES_ORCHESTRATION_ENABLED", False)
+    responses_orchestration_model = (
+        os.getenv("POLINKO_RESPONSES_MODEL", "gpt-5-chat-latest").strip() or "gpt-5-chat-latest"
+    )
+    raw_responses_vector_store_id = os.getenv("POLINKO_RESPONSES_VECTOR_STORE_ID")
+    responses_vector_store_id = (
+        raw_responses_vector_store_id.strip()
+        if raw_responses_vector_store_id and raw_responses_vector_store_id.strip()
+        else None
+    )
+    responses_include_web_search = _parse_bool_env("POLINKO_RESPONSES_INCLUDE_WEB_SEARCH", False)
+    responses_history_turn_limit = _parse_int_env("POLINKO_RESPONSES_HISTORY_TURN_LIMIT", 12, minimum=1)
+
+    if responses_orchestration_enabled and not responses_vector_store_id:
+        raise RuntimeError(
+            "POLINKO_RESPONSES_VECTOR_STORE_ID is required when "
+            "POLINKO_RESPONSES_ORCHESTRATION_ENABLED=true."
+        )
 
     return AppConfig(
         openai_api_key=openai_api_key,
@@ -222,4 +245,9 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         vector_min_similarity=vector_min_similarity,
         vector_max_chars=vector_max_chars,
         vector_exclude_current_session=vector_exclude_current_session,
+        responses_orchestration_enabled=responses_orchestration_enabled,
+        responses_orchestration_model=responses_orchestration_model,
+        responses_vector_store_id=responses_vector_store_id,
+        responses_include_web_search=responses_include_web_search,
+        responses_history_turn_limit=responses_history_turn_limit,
     )

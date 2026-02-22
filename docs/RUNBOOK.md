@@ -86,6 +86,18 @@
 4. Chat retrieval currently uses chat-response vectors for tone consistency; OCR vectors are stored with
    metadata for search/retrieval workflows.
 
+## Responses Orchestration Toggle (RAG)
+
+1. In `.env`, set:
+   - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED=true`
+   - `POLINKO_RESPONSES_VECTOR_STORE_ID=vs_...`
+2. Optional settings:
+   - `POLINKO_RESPONSES_MODEL` (default `gpt-5-chat-latest`)
+   - `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH` (`true`/`false`)
+   - `POLINKO_RESPONSES_HISTORY_TURN_LIMIT` (default `12`)
+3. Restart API after changing orchestration settings.
+4. Default behavior remains unchanged when orchestration is disabled.
+
 ## Run API Tests
 
 1. Run `make test`.

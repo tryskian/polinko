@@ -23,7 +23,7 @@ from pydantic import BaseModel, Field
 
 from config import AppConfig
 from core.history_store import ChatHistoryStore, ChatSummary, OcrRun, DEFAULT_CHAT_TITLE
-from core.prompts import ACTIVE_PROMPT_VERSION
+from core.prompts import ACTIVE_PROMPT, ACTIVE_PROMPT_VERSION
 from core.rate_limit import SlidingWindowRateLimiter
 from core.runtime import create_agent, create_run_config, create_session
 from core.vector_store import VectorMatch, VectorStore
@@ -41,6 +41,7 @@ _FILE_SEARCH_TOKEN_RE = re.compile(r"[a-z0-9]+")
 _FILE_SEARCH_CANDIDATE_MULTIPLIER = 8
 _FILE_SEARCH_MAX_CANDIDATES = 200
 _FILE_SEARCH_MIN_SIMILARITY_FLOOR = 0.15
+_RESPONSES_HISTORY_MAX_MESSAGE_CHARS = 550
 
 
 def _default_latency_buckets() -> dict[str, int]:
@@ -108,6 +109,12 @@ class RuntimeDeps:
     vector_embedding_model: str
     vector_store: VectorStore | None
     embedding_client: OpenAI | None
+    responses_orchestration_enabled: bool
+    responses_orchestration_model: str
+    responses_vector_store_id: str | None
+    responses_include_web_search: bool
+    responses_history_turn_limit: int
+    responses_client: OpenAI | None
     metrics: RuntimeMetrics
     run_config: RunConfig
     agent: Agent[Any]
@@ -679,6 +686,99 @@ def _file_search_snippet(content: str, query_tokens: list[str], *, max_chars: in
     return snippet
 
 
+def _recent_chat_context_for_responses(messages: list[Any], turn_limit: int) -> str:
+    visible = [msg for msg in messages if getattr(msg, "role", "") in {"user", "assistant"}]
+    if not visible:
+        return ""
+    max_messages = max(1, turn_limit * 2)
+    recent = visible[-max_messages:]
+    lines: list[str] = []
+    for msg in recent:
+        role = str(getattr(msg, "role", "assistant")).upper()
+        content = " ".join(str(getattr(msg, "content", "")).split())
+        if len(content) > _RESPONSES_HISTORY_MAX_MESSAGE_CHARS:
+            content = f"{content[:_RESPONSES_HISTORY_MAX_MESSAGE_CHARS].rstrip()}..."
+        lines.append(f"{role}: {content}")
+    return "\n".join(lines)
+
+
+def _extract_responses_output_text(response: Any) -> str:
+    output_text = getattr(response, "output_text", None)
+    if isinstance(output_text, str) and output_text.strip():
+        return output_text.strip()
+
+    pieces: list[str] = []
+    output = getattr(response, "output", None)
+    if isinstance(output, list):
+        for item in output:
+            content_blocks = getattr(item, "content", None)
+            if not isinstance(content_blocks, list):
+                continue
+            for block in content_blocks:
+                text_value = getattr(block, "text", None)
+                if isinstance(text_value, str) and text_value.strip():
+                    pieces.append(text_value.strip())
+                    continue
+                nested_value = getattr(text_value, "value", None)
+                if isinstance(nested_value, str) and nested_value.strip():
+                    pieces.append(nested_value.strip())
+    if pieces:
+        return "\n\n".join(pieces)
+    return "[No text output returned.]"
+
+
+def _chat_with_responses_orchestration(
+    *,
+    deps: RuntimeDeps,
+    session_id: str,
+    user_message: str,
+    notes: list[str],
+) -> tuple[str, int]:
+    if deps.responses_client is None:
+        raise RuntimeError("Responses orchestration is enabled, but no client is configured.")
+    if not deps.responses_vector_store_id:
+        raise RuntimeError("Responses orchestration requires POLINKO_RESPONSES_VECTOR_STORE_ID.")
+
+    history_messages = deps.history_store.list_messages(session_id=session_id)
+    history_context = _recent_chat_context_for_responses(
+        history_messages,
+        turn_limit=deps.responses_history_turn_limit,
+    )
+    segments: list[str] = []
+    if notes:
+        note_lines = "\n".join(f"- {note}" for note in notes)
+        segments.append(
+            "[INTERNAL_STYLE_NOTES: private calibration notes. "
+            "Apply silently and never mention them.]\n"
+            f"{note_lines}"
+        )
+    if history_context:
+        segments.append(
+            "[RECENT_CHAT_CONTEXT: prior dialogue turns. Keep continuity without re-summarizing.]\n"
+            f"{history_context}"
+        )
+    segments.append("[USER_MESSAGE]\n" + user_message.strip())
+    input_text = "\n\n".join(segments)
+
+    tools: list[dict[str, Any]] = [
+        {
+            "type": "file_search",
+            "vector_store_ids": [deps.responses_vector_store_id],
+        }
+    ]
+    if deps.responses_include_web_search:
+        tools.append({"type": "web_search_preview"})
+
+    response = deps.responses_client.responses.create(
+        model=deps.responses_orchestration_model,
+        instructions=ACTIVE_PROMPT,
+        input=input_text,
+        tools=tools,
+    )
+    output = _extract_responses_output_text(response)
+    return output, len(tools)
+
+
 def _metrics_response(metrics: RuntimeMetrics) -> MetricsResponse:
     avg_latency_ms = 0.0
     if metrics.requests_total > 0:
@@ -722,6 +822,12 @@ def create_app(config: AppConfig) -> FastAPI:
         vector_embedding_model=config.vector_embedding_model,
         vector_store=VectorStore(config.vector_db_path) if config.vector_enabled else None,
         embedding_client=shared_openai_client if config.vector_enabled else None,
+        responses_orchestration_enabled=config.responses_orchestration_enabled,
+        responses_orchestration_model=config.responses_orchestration_model,
+        responses_vector_store_id=config.responses_vector_store_id,
+        responses_include_web_search=config.responses_include_web_search,
+        responses_history_turn_limit=config.responses_history_turn_limit,
+        responses_client=shared_openai_client if config.responses_orchestration_enabled else None,
         metrics=create_runtime_metrics(),
         run_config=create_run_config(store=True),
         agent=create_agent(),
@@ -1040,30 +1146,44 @@ def create_app(config: AppConfig) -> FastAPI:
             start = time.perf_counter()
             request_id = getattr(request.state, "request_id", None)
             notes = deps.history_store.list_notes(session_id=session_id, limit=8)
-            retrieved_memory = _retrieve_memory(
-                deps=deps,
-                session_id=session_id,
-                query_text=req.message,
-            )
-            model_input = _compose_model_input(
-                user_message=req.message,
-                notes=notes,
-                retrieved_memory=retrieved_memory,
-                max_memory_chars=deps.vector_max_chars,
-            )
+            pipeline = "runner"
+            orchestration_tools = 0
+            retrieved_memory: list[VectorMatch] = []
             try:
-                result = await Runner.run(
-                    deps.agent,
-                    model_input,
-                    run_config=deps.run_config,
-                    session=session,
-                )
+                if deps.responses_orchestration_enabled:
+                    pipeline = "responses"
+                    output_text, orchestration_tools = _chat_with_responses_orchestration(
+                        deps=deps,
+                        session_id=session_id,
+                        user_message=req.message,
+                        notes=notes,
+                    )
+                else:
+                    retrieved_memory = _retrieve_memory(
+                        deps=deps,
+                        session_id=session_id,
+                        query_text=req.message,
+                    )
+                    model_input = _compose_model_input(
+                        user_message=req.message,
+                        notes=notes,
+                        retrieved_memory=retrieved_memory,
+                        max_memory_chars=deps.vector_max_chars,
+                    )
+                    result = await Runner.run(
+                        deps.agent,
+                        model_input,
+                        run_config=deps.run_config,
+                        session=session,
+                    )
+                    output_text = str(result.final_output)
             except AuthenticationError as exc:
                 _log_event(
                     "chat_error",
                     request_id=request_id,
                     session_id=session_id,
                     error_type="AuthenticationError",
+                    pipeline=pipeline,
                 )
                 raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
             except RateLimitError as exc:
@@ -1072,6 +1192,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     request_id=request_id,
                     session_id=session_id,
                     error_type="RateLimitError",
+                    pipeline=pipeline,
                 )
                 raise HTTPException(status_code=429, detail="Rate limit reached. Try again shortly.") from exc
             except APIConnectionError as exc:
@@ -1080,6 +1201,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     request_id=request_id,
                     session_id=session_id,
                     error_type="APIConnectionError",
+                    pipeline=pipeline,
                 )
                 raise HTTPException(status_code=503, detail="Connection error reaching OpenAI API.") from exc
             except APIStatusError as exc:
@@ -1089,11 +1211,21 @@ def create_app(config: AppConfig) -> FastAPI:
                     session_id=session_id,
                     error_type="APIStatusError",
                     status_code=exc.status_code,
+                    pipeline=pipeline,
                 )
                 raise HTTPException(status_code=502, detail=f"OpenAI API error ({exc.status_code}).") from exc
+            except RuntimeError as exc:
+                _log_event(
+                    "chat_error",
+                    request_id=request_id,
+                    session_id=session_id,
+                    error_type="RuntimeError",
+                    pipeline=pipeline,
+                )
+                raise HTTPException(status_code=503, detail=str(exc)) from exc
 
             response = ChatResponse(
-                output=str(result.final_output),
+                output=output_text,
                 session_id=session_id,
                 prompt_version=ACTIVE_PROMPT_VERSION,
             )
@@ -1124,6 +1256,8 @@ def create_app(config: AppConfig) -> FastAPI:
                 input_chars=len(req.message),
                 output_chars=len(response.output),
                 vector_matches=len(retrieved_memory),
+                pipeline=pipeline,
+                orchestration_tools=orchestration_tools,
                 duration_ms=duration_ms,
             )
             return response

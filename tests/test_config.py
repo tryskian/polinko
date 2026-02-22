@@ -59,11 +59,25 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(cfg.vector_min_similarity, 0.40)
         self.assertEqual(cfg.vector_max_chars, 220)
         self.assertTrue(cfg.vector_exclude_current_session)
+        self.assertFalse(cfg.responses_orchestration_enabled)
+        self.assertEqual(cfg.responses_orchestration_model, "gpt-5-chat-latest")
+        self.assertIsNone(cfg.responses_vector_store_id)
+        self.assertFalse(cfg.responses_include_web_search)
+        self.assertEqual(cfg.responses_history_turn_limit, 12)
 
     def test_rejects_invalid_vector_min_similarity(self) -> None:
         env = {
             "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
             "POLINKO_VECTOR_MIN_SIMILARITY": "1.5",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(RuntimeError):
+                load_config(dotenv_path="__missing__.env")
+
+    def test_responses_orchestration_requires_vector_store_id(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_RESPONSES_ORCHESTRATION_ENABLED": "true",
         }
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaises(RuntimeError):

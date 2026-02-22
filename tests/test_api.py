@@ -49,6 +49,12 @@ class PolinkoApiTests(unittest.TestCase):
         deps.vector_embedding_model = "text-embedding-3-small"
         deps.vector_store = None
         deps.embedding_client = None
+        deps.responses_orchestration_enabled = False
+        deps.responses_orchestration_model = "gpt-5-chat-latest"
+        deps.responses_vector_store_id = None
+        deps.responses_include_web_search = False
+        deps.responses_history_turn_limit = 12
+        deps.responses_client = None
         deps.session_db_path = os.path.join(self.tmpdir.name, "test-memory.db")
         deps.history_store = ChatHistoryStore(os.path.join(self.tmpdir.name, "test-history.db"))
         deps.metrics = create_runtime_metrics()
@@ -101,6 +107,68 @@ class PolinkoApiTests(unittest.TestCase):
         body = resp.json()
         self.assertEqual(body["output"], "Stubbed response")
         self.assertEqual(body["session_id"], "s-chat")
+
+    def test_chat_success_with_responses_orchestration(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.responses_orchestration_enabled = True
+        deps.responses_orchestration_model = "gpt-5-chat-latest"
+        deps.responses_vector_store_id = "vs_test_123"
+        deps.responses_include_web_search = True
+        deps.responses_history_turn_limit = 8
+        captured: dict[str, object] = {}
+
+        class _FakeResponses:
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                captured["kwargs"] = kwargs
+                return SimpleNamespace(output_text="Orchestrated response")
+
+        deps.responses_client = SimpleNamespace(responses=_FakeResponses())
+
+        first = self.client.post(
+            "/chat",
+            headers={"x-api-key": "test-server-key"},
+            json={"message": "first orchestration prompt", "session_id": "s-rag"},
+        )
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(first.json()["output"], "Orchestrated response")
+        self.assertIn("kwargs", captured)
+
+        kwargs = captured["kwargs"]
+        self.assertEqual(kwargs["model"], "gpt-5-chat-latest")
+        self.assertIn("input", kwargs)
+        self.assertIn("[USER_MESSAGE]", kwargs["input"])
+        tools = kwargs["tools"]
+        self.assertEqual(tools[0]["type"], "file_search")
+        self.assertEqual(tools[0]["vector_store_ids"], ["vs_test_123"])
+        self.assertTrue(any(tool.get("type") == "web_search_preview" for tool in tools))
+
+        second = self.client.post(
+            "/chat",
+            headers={"x-api-key": "test-server-key"},
+            json={"message": "follow-up orchestration", "session_id": "s-rag"},
+        )
+        self.assertEqual(second.status_code, 200)
+        second_kwargs = captured["kwargs"]
+        self.assertIn("RECENT_CHAT_CONTEXT", second_kwargs["input"])
+        self.assertIn("ASSISTANT: Orchestrated response", second_kwargs["input"])
+
+    def test_chat_orchestration_requires_vector_store_id(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.responses_orchestration_enabled = True
+        deps.responses_vector_store_id = None
+
+        class _FakeResponses:
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                del kwargs
+                return SimpleNamespace(output_text="unused")
+
+        deps.responses_client = SimpleNamespace(responses=_FakeResponses())
+        resp = self.client.post(
+            "/chat",
+            headers={"x-api-key": "test-server-key"},
+            json={"message": "hello", "session_id": "s-rag-missing-vs"},
+        )
+        self.assertEqual(resp.status_code, 503)
 
     def test_server_side_chat_history_persists(self) -> None:
         with self._stub_runner("History response"):

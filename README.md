@@ -46,6 +46,11 @@ CLI extras:
    - `POLINKO_VECTOR_ENABLED=true`
    - tune retrieval with `POLINKO_VECTOR_TOP_K`, `POLINKO_VECTOR_MIN_SIMILARITY`,
      and `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION`
+7. Optional Responses orchestration mode (feature-flagged, RAG via OpenAI file search tool):
+   - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED=true`
+   - `POLINKO_RESPONSES_VECTOR_STORE_ID=vs_...`
+   - optional: `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH=true`
+   - optional: `POLINKO_RESPONSES_HISTORY_TURN_LIMIT=12`
 
 ## Project Layout
 
@@ -84,6 +89,11 @@ Config:
 - `POLINKO_VECTOR_MIN_SIMILARITY` (default: `0.40`)
 - `POLINKO_VECTOR_MAX_CHARS` (default: `220`)
 - `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION` (default: `true`)
+- `POLINKO_RESPONSES_ORCHESTRATION_ENABLED` (default: `false`)
+- `POLINKO_RESPONSES_MODEL` (default: `gpt-5-chat-latest`)
+- `POLINKO_RESPONSES_VECTOR_STORE_ID` (required when orchestration is enabled)
+- `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH` (default: `false`)
+- `POLINKO_RESPONSES_HISTORY_TURN_LIMIT` (default: `12`)
 
 ## UI Behavior
 
@@ -102,6 +112,8 @@ Config:
 - OCR outputs are chunked and indexed into vectors with source metadata (`ocr_run_id`, file name, mime type)
   when vector memory is enabled
 - File search endpoint uses hybrid ranking (semantic similarity + keyword overlap) over indexed vectors
+- Optional chat orchestration mode can use Responses API tools (`file_search` and optional `web_search`)
+  while preserving server-side chat history
 
 ## CI
 
