@@ -43,6 +43,7 @@ logger = logging.getLogger("polinko.api")
 _LATENCY_BUCKET_EDGES_MS = (10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2000.0)
 _OCR_VECTOR_CHUNK_CHARS = 700
 _OCR_VECTOR_CHUNK_OVERLAP = 120
+_OCR_MAX_BYTES = 5 * 1024 * 1024
 _FILE_SEARCH_DEFAULT_SOURCE_TYPES = ("ocr",)
 _FILE_SEARCH_ALLOWED_SOURCE_TYPES = {"chat", "ocr"}
 _FILE_SEARCH_TOKEN_RE = re.compile(r"[a-z0-9]+")
@@ -260,8 +261,8 @@ class PersonalizationRequest(BaseModel):
 
 class OcrRequest(BaseModel):
     session_id: str | None = Field(default=None, min_length=1)
-    source_name: str | None = None
-    mime_type: str | None = None
+    source_name: str | None = Field(default=None, max_length=255)
+    mime_type: str | None = Field(default=None, max_length=120)
     data_base64: str | None = None
     text_hint: str | None = None
     source_message_id: str | None = None
@@ -488,10 +489,24 @@ def _decode_base64_payload(req: OcrRequest) -> tuple[bytes, str | None]:
             parsed_mime = header[5:].split(";", 1)[0].strip()
             if parsed_mime and not mime_type:
                 mime_type = parsed_mime
+    # Avoid decoding unreasonably large payloads.
+    max_base64_chars = ((max(_OCR_MAX_BYTES, 1) + 2) // 3) * 4
+    if len(raw_data) > max_base64_chars * 2:
+        raise HTTPException(
+            status_code=413,
+            detail=f"OCR payload is too large. Keep files under {_OCR_MAX_BYTES // (1024 * 1024)} MB.",
+        )
     try:
         decoded = base64.b64decode(raw_data, validate=True)
     except (binascii.Error, ValueError) as exc:
         raise HTTPException(status_code=422, detail="Invalid data_base64 payload.") from exc
+    if not decoded:
+        raise HTTPException(status_code=422, detail="data_base64 payload decoded to empty content.")
+    if len(decoded) > _OCR_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"OCR payload is too large. Keep files under {_OCR_MAX_BYTES // (1024 * 1024)} MB.",
+        )
     return decoded, mime_type
 
 
@@ -511,10 +526,12 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
         return req.text_hint.strip(), "ok"
 
     decoded, detected_mime = _decode_base64_payload(req)
-    mime_type = detected_mime or "application/octet-stream"
+    mime_type = (detected_mime or "application/octet-stream").strip().lower()
     if not mime_type.startswith("image/"):
-        # Keep a soft fallback for non-image payloads while OCR provider is enabled.
-        return _scaffold_extract_text(req)
+        raise HTTPException(
+            status_code=422,
+            detail="OpenAI OCR expects image input. Provide image/* data_base64 or use text_hint.",
+        )
 
     if deps.ocr_client is None:
         raise HTTPException(status_code=503, detail="OCR provider client is not configured.")

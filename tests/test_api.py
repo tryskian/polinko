@@ -378,6 +378,42 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(kwargs["model"], deps.ocr_model)
         self.assertIn("input", kwargs)
 
+    def test_ocr_skill_openai_rejects_non_image_payload(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.ocr_provider = "openai"
+        deps.ocr_client = SimpleNamespace(responses=SimpleNamespace(create=lambda **_: None))
+        payload_b64 = base64.b64encode(b"plain-text-payload").decode("ascii")
+
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-openai-non-image",
+                "mime_type": "text/plain",
+                "data_base64": payload_b64,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 422)
+        self.assertIn("expects image input", run_resp.json()["detail"])
+
+    def test_ocr_skill_rejects_oversized_payload(self) -> None:
+        raw_bytes = b"A" * 64
+        payload_b64 = base64.b64encode(raw_bytes).decode("ascii")
+        with patch("api.app_factory._OCR_MAX_BYTES", 32):
+            run_resp = self.client.post(
+                "/skills/ocr",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-ocr-too-big",
+                    "mime_type": "image/png",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+        self.assertEqual(run_resp.status_code, 413)
+        self.assertIn("too large", run_resp.json()["detail"])
+
     def test_ocr_indexes_chunked_vectors_with_metadata(self) -> None:
         deps = server.get_runtime_deps()
         deps.vector_enabled = True
