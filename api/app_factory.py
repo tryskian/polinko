@@ -44,6 +44,8 @@ _LATENCY_BUCKET_EDGES_MS = (10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2000.
 _OCR_VECTOR_CHUNK_CHARS = 700
 _OCR_VECTOR_CHUNK_OVERLAP = 120
 _OCR_MAX_BYTES = 5 * 1024 * 1024
+_OCR_RETRY_AFTER_RATE_LIMIT_SECONDS = 10
+_OCR_RETRY_AFTER_TRANSIENT_SECONDS = 3
 _FILE_SEARCH_DEFAULT_SOURCE_TYPES = ("ocr",)
 _FILE_SEARCH_ALLOWED_SOURCE_TYPES = {"chat", "ocr"}
 _FILE_SEARCH_TOKEN_RE = re.compile(r"[a-z0-9]+")
@@ -510,6 +512,21 @@ def _decode_base64_payload(req: OcrRequest) -> tuple[bytes, str | None]:
     return decoded, mime_type
 
 
+def _retry_after_header_value(exc: Exception, default_seconds: int) -> str:
+    response = getattr(exc, "response", None)
+    headers = getattr(response, "headers", None)
+    if headers is not None:
+        raw = headers.get("Retry-After") or headers.get("retry-after")
+        if raw:
+            try:
+                parsed = int(raw.strip())
+                if parsed > 0:
+                    return str(parsed)
+            except (TypeError, ValueError):
+                pass
+    return str(default_seconds)
+
+
 def _scaffold_extract_text(req: OcrRequest) -> tuple[str, str]:
     if req.text_hint and req.text_hint.strip():
         return req.text_hint.strip(), "ok"
@@ -553,10 +570,40 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
     except AuthenticationError as exc:
         raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
     except RateLimitError as exc:
-        raise HTTPException(status_code=429, detail="Rate limit reached. Try OCR again shortly.") from exc
+        retry_after = _retry_after_header_value(exc, _OCR_RETRY_AFTER_RATE_LIMIT_SECONDS)
+        raise HTTPException(
+            status_code=429,
+            detail="OCR rate limit reached. Try again shortly.",
+            headers={"Retry-After": retry_after},
+        ) from exc
     except APIConnectionError as exc:
-        raise HTTPException(status_code=503, detail="Connection error reaching OpenAI OCR provider.") from exc
+        raise HTTPException(
+            status_code=503,
+            detail="Connection error reaching OpenAI OCR provider.",
+            headers={"Retry-After": str(_OCR_RETRY_AFTER_TRANSIENT_SECONDS)},
+        ) from exc
     except APIStatusError as exc:
+        if exc.status_code == 429:
+            retry_after = _retry_after_header_value(exc, _OCR_RETRY_AFTER_RATE_LIMIT_SECONDS)
+            raise HTTPException(
+                status_code=429,
+                detail="OCR rate limit reached. Try again shortly.",
+                headers={"Retry-After": retry_after},
+            ) from exc
+        if exc.status_code in {400, 413, 415, 422}:
+            raise HTTPException(
+                status_code=422,
+                detail="OpenAI OCR rejected the image payload. Verify format and size.",
+            ) from exc
+        if exc.status_code in {401, 403}:
+            raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
+        if 500 <= exc.status_code <= 599:
+            retry_after = _retry_after_header_value(exc, _OCR_RETRY_AFTER_TRANSIENT_SECONDS)
+            raise HTTPException(
+                status_code=503,
+                detail=f"OpenAI OCR is temporarily unavailable ({exc.status_code}).",
+                headers={"Retry-After": retry_after},
+            ) from exc
         raise HTTPException(status_code=502, detail=f"OpenAI OCR error ({exc.status_code}).") from exc
 
     output_text = getattr(response, "output_text", None)

@@ -2,10 +2,12 @@ import base64
 import os
 import tempfile
 import unittest
+import httpx
 from types import SimpleNamespace
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+from openai import APIConnectionError, APIStatusError, RateLimitError
 from api.app_factory import create_runtime_metrics
 from core.history_store import ChatHistoryStore
 from core.prompts import ACTIVE_PROMPT_VERSION
@@ -413,6 +415,83 @@ class PolinkoApiTests(unittest.TestCase):
             )
         self.assertEqual(run_resp.status_code, 413)
         self.assertIn("too large", run_resp.json()["detail"])
+
+    def test_ocr_openai_rate_limit_sets_retry_after(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.ocr_provider = "openai"
+        request = httpx.Request("POST", "https://api.openai.com/v1/responses")
+        response = httpx.Response(429, request=request, headers={"Retry-After": "7"})
+
+        class _FakeResponses:
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                del kwargs
+                raise RateLimitError("rate limited", response=response, body={})
+
+        deps.ocr_client = SimpleNamespace(responses=_FakeResponses())
+        payload_b64 = base64.b64encode(b"fake-image").decode("ascii")
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-openai-rate-limit",
+                "mime_type": "image/png",
+                "data_base64": payload_b64,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 429)
+        self.assertEqual(run_resp.headers.get("Retry-After"), "7")
+
+    def test_ocr_openai_provider_5xx_sets_retry_after(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.ocr_provider = "openai"
+        request = httpx.Request("POST", "https://api.openai.com/v1/responses")
+        response = httpx.Response(503, request=request, headers={"Retry-After": "2"})
+
+        class _FakeResponses:
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                del kwargs
+                raise APIStatusError("upstream unavailable", response=response, body={})
+
+        deps.ocr_client = SimpleNamespace(responses=_FakeResponses())
+        payload_b64 = base64.b64encode(b"fake-image").decode("ascii")
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-openai-5xx",
+                "mime_type": "image/png",
+                "data_base64": payload_b64,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 503)
+        self.assertEqual(run_resp.headers.get("Retry-After"), "2")
+
+    def test_ocr_openai_connection_error_sets_retry_after(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.ocr_provider = "openai"
+        request = httpx.Request("POST", "https://api.openai.com/v1/responses")
+
+        class _FakeResponses:
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                del kwargs
+                raise APIConnectionError(message="connection error", request=request)
+
+        deps.ocr_client = SimpleNamespace(responses=_FakeResponses())
+        payload_b64 = base64.b64encode(b"fake-image").decode("ascii")
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-openai-conn",
+                "mime_type": "image/png",
+                "data_base64": payload_b64,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 503)
+        self.assertEqual(run_resp.headers.get("Retry-After"), "3")
 
     def test_ocr_indexes_chunked_vectors_with_metadata(self) -> None:
         deps = server.get_runtime_deps()
