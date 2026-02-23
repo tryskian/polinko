@@ -55,6 +55,7 @@ _FILE_SEARCH_CANDIDATE_MULTIPLIER = 8
 _FILE_SEARCH_MAX_CANDIDATES = 200
 _FILE_SEARCH_MIN_SIMILARITY_FLOOR = 0.15
 _RESPONSES_HISTORY_MAX_MESSAGE_CHARS = 550
+_STRUCTURED_PREVIEW_MAX_CHARS = 240
 _FACTUAL_QUERY_HINTS = (
     "latest",
     "today",
@@ -284,6 +285,7 @@ class OcrRunResponse(BaseModel):
     result_message_id: str | None
     status: str
     extracted_text: str
+    structured: "ExtractionStructuredResponse"
     created_at: int
 
 
@@ -309,6 +311,19 @@ class PdfIngestResponse(BaseModel):
     extracted_chars: int
     vector_chunks: int
     result_message_id: str | None
+    structured: "ExtractionStructuredResponse"
+
+
+class ExtractionStructuredResponse(BaseModel):
+    schema_version: str
+    source_type: str
+    source_name: str | None
+    mime_type: str | None
+    text_sha256: str
+    char_count: int
+    word_count: int
+    line_count: int
+    preview: str
 
 
 class FileSearchRequest(BaseModel):
@@ -460,7 +475,38 @@ def _ocr_run_response(run: OcrRun) -> OcrRunResponse:
         result_message_id=run.result_message_id,
         status=run.status,
         extracted_text=run.extracted_text,
+        structured=_build_structured_extraction(
+            source_type="ocr",
+            source_name=run.source_name,
+            mime_type=run.mime_type,
+            text=run.extracted_text,
+        ),
         created_at=run.created_at,
+    )
+
+
+def _build_structured_extraction(
+    *,
+    source_type: str,
+    source_name: str | None,
+    mime_type: str | None,
+    text: str,
+) -> ExtractionStructuredResponse:
+    normalized = text.replace("\r\n", "\n").replace("\r", "\n")
+    lines = [line for line in (chunk.strip() for chunk in normalized.split("\n")) if line]
+    compact_preview = " ".join(normalized.split())
+    if len(compact_preview) > _STRUCTURED_PREVIEW_MAX_CHARS:
+        compact_preview = compact_preview[:_STRUCTURED_PREVIEW_MAX_CHARS].rstrip() + "..."
+    return ExtractionStructuredResponse(
+        schema_version="v1",
+        source_type=source_type,
+        source_name=source_name,
+        mime_type=mime_type,
+        text_sha256=_sha256_text(text),
+        char_count=len(text),
+        word_count=len([word for word in normalized.split() if word]),
+        line_count=len(lines),
+        preview=compact_preview,
     )
 
 
@@ -1488,6 +1534,12 @@ def create_app(config: AppConfig) -> FastAPI:
             extracted_chars=len(extracted_text),
             vector_chunks=len(chunks),
             result_message_id=result_message_id,
+            structured=_build_structured_extraction(
+                source_type="pdf",
+                source_name=req.source_name,
+                mime_type=resolved_mime or req.mime_type,
+                text=extracted_text,
+            ),
         )
 
     @app.post("/skills/file_search", response_model=FileSearchResponse)

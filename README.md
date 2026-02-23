@@ -105,8 +105,9 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 - `POST /chats/{session_id}/deprecate` mark a chat as deprecated (hidden from default list)
 - `PATCH /chats/{session_id}` rename a chat
 - `DELETE /chats/{session_id}` delete a chat
-- `POST /skills/ocr` OCR endpoint (scaffold mode or OpenAI image OCR, based on env)
+- `POST /skills/ocr` OCR endpoint (scaffold/OpenAI mode, includes `run.structured` normalized extraction payload)
 - `POST /skills/file_search` search indexed vectors (defaults to OCR sources)
+- `POST /skills/pdf_ingest` PDF extract + index endpoint (includes `structured` normalized extraction payload)
 - `GET /metrics` API metrics (request totals, status counts, latency buckets, 429 count)
 
 Config:

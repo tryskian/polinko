@@ -49,8 +49,8 @@
 - `POST /chats/{session_id}/deprecate` deprecate a chat
 - `PATCH /chats/{session_id}` rename chat
 - `DELETE /chats/{session_id}` delete chat and clear memory
-- `POST /skills/ocr` run OCR (scaffold or OpenAI mode)
-- `POST /skills/pdf_ingest` extract and index PDF text into vector memory
+- `POST /skills/ocr` run OCR (scaffold or OpenAI mode, includes `run.structured`)
+- `POST /skills/pdf_ingest` extract and index PDF text into vector memory (includes `structured`)
 - `POST /skills/file_search` search indexed vector content (OCR/chat sources)
 - `GET /metrics` request counters, status counts, latency buckets, rate-limit totals
 

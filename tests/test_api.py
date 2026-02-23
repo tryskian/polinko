@@ -340,6 +340,18 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(run["mime_type"], "text/plain")
         self.assertIn("scribble", run["extracted_text"])
         self.assertRegex(run["result_message_id"], r"^msg_[0-9a-f]{24}$")
+        structured = run["structured"]
+        self.assertEqual(structured["schema_version"], "v1")
+        self.assertEqual(structured["source_type"], "ocr")
+        self.assertEqual(structured["source_name"], "scribble.txt")
+        self.assertEqual(structured["mime_type"], "text/plain")
+        self.assertEqual(structured["char_count"], len(run["extracted_text"]))
+        self.assertEqual(
+            structured["text_sha256"],
+            hashlib.sha256(run["extracted_text"].encode("utf-8")).hexdigest(),
+        )
+        self.assertGreaterEqual(structured["word_count"], 1)
+        self.assertGreaterEqual(structured["line_count"], 1)
 
         messages_resp = self.client.get(
             "/chats/s-ocr/messages",
@@ -392,6 +404,8 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(run["status"], "ok")
         self.assertEqual(run["extracted_text"], "detected by openai ocr")
         self.assertIsNone(run["result_message_id"])
+        self.assertEqual(run["structured"]["source_type"], "ocr")
+        self.assertEqual(run["structured"]["schema_version"], "v1")
         self.assertIn("kwargs", captured)
         kwargs = captured["kwargs"]
         self.assertEqual(kwargs["model"], deps.ocr_model)
@@ -562,6 +576,16 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(ingest["status"], "ok")
         self.assertGreaterEqual(ingest["vector_chunks"], 1)
         self.assertGreater(ingest["extracted_chars"], 20)
+        structured = ingest["structured"]
+        self.assertEqual(structured["schema_version"], "v1")
+        self.assertEqual(structured["source_type"], "pdf")
+        self.assertEqual(structured["source_name"], "invoice-2026.pdf")
+        self.assertEqual(structured["mime_type"], "application/pdf")
+        self.assertEqual(structured["char_count"], len(pdf_text))
+        self.assertEqual(
+            structured["text_sha256"],
+            hashlib.sha256(pdf_text.encode("utf-8")).hexdigest(),
+        )
 
         search = self.client.post(
             "/skills/file_search",
