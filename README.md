@@ -27,6 +27,18 @@ CLI extras:
 - `/rename <title>` renames active CLI chat
 - `/close` deprecates active chat and moves CLI to a fresh session
 
+API client extras (`python tools/client.py`):
+
+- `/help` show command help
+- `/reset` clear active API session memory
+- `/ocr <file>` run OCR ingest from a local file
+- `/pdf <file>` run PDF ingest from a local PDF
+- `/search <query>` search indexed content (chat/ocr/pdf)
+- `/search-ocr <query>` OCR-only search
+- `/search-pdf <query>` PDF-only search
+- `/search-chat <query>` chat-only search
+- `/export` print transcript/export summary for active session
+
 ## Setup
 
 1. Create and activate your virtualenv (or use the existing one in this repo).

@@ -173,6 +173,20 @@ Hash fields in responses:
    - `/rename <title>` rename current chat
    - `/close` deprecate current chat and create a fresh session
 
+## API Client (`tools/client.py`)
+
+1. Run `python tools/client.py --session-id local-dev`.
+2. Useful commands:
+   - `/help`
+   - `/reset`
+   - `/ocr path/to/image.png`
+   - `/pdf path/to/file.pdf`
+   - `/search your query`
+   - `/search-ocr your query`
+   - `/search-pdf your query`
+   - `/search-chat your query`
+   - `/export`
+
 ## Export From UI
 
 1. Open a chat in the web UI.
