@@ -5,6 +5,7 @@ import tempfile
 import unittest
 import httpx
 from types import SimpleNamespace
+from typing import Any
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
@@ -24,7 +25,7 @@ import server  # noqa: E402
 class PolinkoApiTests(unittest.TestCase):
     @staticmethod
     def _stub_runner(output: str, capture: dict[str, str] | None = None):
-        async def fake_run(*args: object, **kwargs: object) -> SimpleNamespace:
+        async def fake_run(*args: object, **kwargs: Any) -> SimpleNamespace:
             del kwargs
             if capture is not None and len(args) > 1:
                 capture["input"] = str(args[1])
@@ -124,10 +125,10 @@ class PolinkoApiTests(unittest.TestCase):
         deps.responses_include_web_search = True
         deps.governance_allow_web_search = True
         deps.responses_history_turn_limit = 8
-        captured: dict[str, object] = {}
+        captured: dict[str, Any] = {}
 
         class _FakeResponses:
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 captured["kwargs"] = kwargs
                 return SimpleNamespace(output_text="Orchestrated response")
 
@@ -167,7 +168,7 @@ class PolinkoApiTests(unittest.TestCase):
         deps.responses_vector_store_id = None
 
         class _FakeResponses:
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 del kwargs
                 return SimpleNamespace(output_text="unused")
 
@@ -188,10 +189,10 @@ class PolinkoApiTests(unittest.TestCase):
         deps.governance_enabled = True
         deps.governance_allow_web_search = False
         deps.governance_log_only = False
-        captured: dict[str, object] = {}
+        captured: dict[str, Any] = {}
 
         class _FakeResponses:
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 captured["kwargs"] = kwargs
                 return SimpleNamespace(output_text="Governed response")
 
@@ -365,10 +366,10 @@ class PolinkoApiTests(unittest.TestCase):
     def test_ocr_skill_openai_provider_path(self) -> None:
         deps = server.get_runtime_deps()
         deps.ocr_provider = "openai"
-        captured: dict[str, object] = {}
+        captured: dict[str, Any] = {}
 
         class _FakeResponses:
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 captured["kwargs"] = kwargs
                 return SimpleNamespace(output_text="detected by openai ocr")
 
@@ -439,7 +440,7 @@ class PolinkoApiTests(unittest.TestCase):
         response = httpx.Response(429, request=request, headers={"Retry-After": "7"})
 
         class _FakeResponses:
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 del kwargs
                 raise RateLimitError("rate limited", response=response, body={})
 
@@ -465,7 +466,7 @@ class PolinkoApiTests(unittest.TestCase):
         response = httpx.Response(503, request=request, headers={"Retry-After": "2"})
 
         class _FakeResponses:
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 del kwargs
                 raise APIStatusError("upstream unavailable", response=response, body={})
 
@@ -490,7 +491,7 @@ class PolinkoApiTests(unittest.TestCase):
         request = httpx.Request("POST", "https://api.openai.com/v1/responses")
 
         class _FakeResponses:
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 del kwargs
                 raise APIConnectionError(message="connection error", request=request)
 
@@ -525,7 +526,7 @@ class PolinkoApiTests(unittest.TestCase):
                     float(len(lowered) % 19) / 19.0,
                 ]
 
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 inputs = kwargs["input"]
                 if isinstance(inputs, str):
                     payload = [inputs]
@@ -638,7 +639,7 @@ class PolinkoApiTests(unittest.TestCase):
                     1.0 if "total" in lowered else 0.0,
                 ]
 
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 inputs = kwargs["input"]
                 if isinstance(inputs, str):
                     payload = [inputs]
@@ -704,7 +705,7 @@ class PolinkoApiTests(unittest.TestCase):
                     float(len(lowered) % 23) / 23.0,
                 ]
 
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 inputs = kwargs["input"]
                 if isinstance(inputs, str):
                     payload = [inputs]
@@ -1038,7 +1039,7 @@ class PolinkoApiTests(unittest.TestCase):
                     float(len(lowered) % 17) / 17.0,
                 ]
 
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 inputs = kwargs["input"]
                 payload = [inputs] if isinstance(inputs, str) else list(inputs)
                 data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
@@ -1097,7 +1098,7 @@ class PolinkoApiTests(unittest.TestCase):
                     float(len(lowered) % 17) / 17.0,
                 ]
 
-            def create(self, **kwargs: object) -> SimpleNamespace:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
                 inputs = kwargs["input"]
                 if isinstance(inputs, str):
                     payload = [inputs]
