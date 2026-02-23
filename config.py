@@ -31,6 +31,8 @@ class AppConfig:
     responses_vector_store_id: str | None
     responses_include_web_search: bool
     responses_history_turn_limit: int
+    extraction_structured_enabled: bool
+    extraction_structured_model: str
     governance_enabled: bool
     governance_allow_web_search: bool
     governance_log_only: bool
@@ -230,6 +232,10 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     )
     responses_include_web_search = _parse_bool_env("POLINKO_RESPONSES_INCLUDE_WEB_SEARCH", False)
     responses_history_turn_limit = _parse_int_env("POLINKO_RESPONSES_HISTORY_TURN_LIMIT", 12, minimum=1)
+    extraction_structured_enabled = _parse_bool_env("POLINKO_EXTRACTION_STRUCTURED_ENABLED", False)
+    extraction_structured_model = (
+        os.getenv("POLINKO_EXTRACTION_STRUCTURED_MODEL", "gpt-4.1-mini").strip() or "gpt-4.1-mini"
+    )
     governance_enabled = _parse_bool_env("POLINKO_GOVERNANCE_ENABLED", True)
     governance_allow_web_search = _parse_bool_env("POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH", False)
     governance_log_only = _parse_bool_env("POLINKO_GOVERNANCE_LOG_ONLY", False)
@@ -269,6 +275,8 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         responses_vector_store_id=responses_vector_store_id,
         responses_include_web_search=responses_include_web_search,
         responses_history_turn_limit=responses_history_turn_limit,
+        extraction_structured_enabled=extraction_structured_enabled,
+        extraction_structured_model=extraction_structured_model,
         governance_enabled=governance_enabled,
         governance_allow_web_search=governance_allow_web_search,
         governance_log_only=governance_log_only,

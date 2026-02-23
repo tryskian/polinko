@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import json
 import os
 import tempfile
 import unittest
@@ -59,6 +60,8 @@ class PolinkoApiTests(unittest.TestCase):
         deps.responses_include_web_search = False
         deps.responses_history_turn_limit = 12
         deps.responses_client = None
+        deps.extraction_structured_enabled = False
+        deps.extraction_structured_model = "gpt-4.1-mini"
         deps.governance_enabled = True
         deps.governance_allow_web_search = False
         deps.governance_log_only = False
@@ -523,6 +526,51 @@ class PolinkoApiTests(unittest.TestCase):
         )
         self.assertEqual(run_resp.status_code, 503)
         self.assertEqual(run_resp.headers.get("Retry-After"), "3")
+
+    def test_ocr_structured_preview_enrichment_via_responses(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.extraction_structured_enabled = True
+        captured: dict[str, Any] = {}
+        source_text = "line one from scan\nline two from scan"
+        expected_hash = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                captured["kwargs"] = kwargs
+                payload = {
+                    "schema_version": "v1",
+                    "source_type": "ocr",
+                    "source_name": "scan.png",
+                    "mime_type": "image/png",
+                    "text_sha256": expected_hash,
+                    "char_count": len(source_text),
+                    "word_count": 8,
+                    "line_count": 2,
+                    "preview": "Model-tuned preview.",
+                }
+                return SimpleNamespace(output_text=json.dumps(payload))
+
+        deps.responses_client = SimpleNamespace(responses=_FakeResponses())
+
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-structured",
+                "source_name": "scan.png",
+                "mime_type": "image/png",
+                "text_hint": source_text,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        run = run_resp.json()["run"]
+        self.assertEqual(run["structured"]["preview"], "Model-tuned preview.")
+        self.assertEqual(run["structured"]["text_sha256"], expected_hash)
+        self.assertEqual(run["structured"]["char_count"], len(source_text))
+        kwargs = captured["kwargs"]
+        self.assertEqual(kwargs["model"], deps.extraction_structured_model)
+        self.assertEqual(kwargs["text"]["format"]["type"], "json_schema")
 
     def test_pdf_ingest_indexes_vectors_and_is_searchable(self) -> None:
         deps = server.get_runtime_deps()

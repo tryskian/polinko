@@ -56,6 +56,7 @@ _FILE_SEARCH_MAX_CANDIDATES = 200
 _FILE_SEARCH_MIN_SIMILARITY_FLOOR = 0.15
 _RESPONSES_HISTORY_MAX_MESSAGE_CHARS = 550
 _STRUCTURED_PREVIEW_MAX_CHARS = 240
+_STRUCTURED_SOURCE_MAX_CHARS = 6000
 _FACTUAL_QUERY_HINTS = (
     "latest",
     "today",
@@ -80,6 +81,34 @@ def _default_latency_buckets() -> dict[str, int]:
     buckets = {f"le_{int(edge)}ms": 0 for edge in _LATENCY_BUCKET_EDGES_MS}
     buckets["gt_2000ms"] = 0
     return buckets
+
+
+_EXTRACTION_STRUCTURED_JSON_SCHEMA: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": [
+        "schema_version",
+        "source_type",
+        "source_name",
+        "mime_type",
+        "text_sha256",
+        "char_count",
+        "word_count",
+        "line_count",
+        "preview",
+    ],
+    "properties": {
+        "schema_version": {"type": "string"},
+        "source_type": {"type": "string"},
+        "source_name": {"type": ["string", "null"]},
+        "mime_type": {"type": ["string", "null"]},
+        "text_sha256": {"type": "string"},
+        "char_count": {"type": "integer", "minimum": 0},
+        "word_count": {"type": "integer", "minimum": 0},
+        "line_count": {"type": "integer", "minimum": 0},
+        "preview": {"type": "string"},
+    },
+}
 
 
 def _latency_bucket_label(duration_ms: float) -> str:
@@ -147,6 +176,8 @@ class RuntimeDeps:
     responses_include_web_search: bool
     responses_history_turn_limit: int
     responses_client: OpenAI | None
+    extraction_structured_enabled: bool
+    extraction_structured_model: str
     governance_enabled: bool
     governance_allow_web_search: bool
     governance_log_only: bool
@@ -491,13 +522,17 @@ def _build_structured_extraction(
     source_name: str | None,
     mime_type: str | None,
     text: str,
+    deps: RuntimeDeps | None = None,
+    request_id: str | None = None,
+    session_id: str | None = None,
+    principal: str | None = None,
 ) -> ExtractionStructuredResponse:
     normalized = text.replace("\r\n", "\n").replace("\r", "\n")
     lines = [line for line in (chunk.strip() for chunk in normalized.split("\n")) if line]
     compact_preview = " ".join(normalized.split())
     if len(compact_preview) > _STRUCTURED_PREVIEW_MAX_CHARS:
         compact_preview = compact_preview[:_STRUCTURED_PREVIEW_MAX_CHARS].rstrip() + "..."
-    return ExtractionStructuredResponse(
+    base = ExtractionStructuredResponse(
         schema_version="v1",
         source_type=source_type,
         source_name=source_name,
@@ -508,6 +543,75 @@ def _build_structured_extraction(
         line_count=len(lines),
         preview=compact_preview,
     )
+    if (
+        deps is None
+        or not deps.extraction_structured_enabled
+        or deps.responses_client is None
+    ):
+        return base
+
+    source_snippet = text[:_STRUCTURED_SOURCE_MAX_CHARS]
+    prompt = (
+        "Return a strict JSON object matching the provided schema. "
+        "Preserve metadata values exactly. Improve only preview readability.\n\n"
+        f"schema_version: {base.schema_version}\n"
+        f"source_type: {base.source_type}\n"
+        f"source_name: {base.source_name!r}\n"
+        f"mime_type: {base.mime_type!r}\n"
+        f"text_sha256: {base.text_sha256}\n"
+        f"char_count: {base.char_count}\n"
+        f"word_count: {base.word_count}\n"
+        f"line_count: {base.line_count}\n"
+        f"default_preview: {base.preview}\n\n"
+        "[SOURCE_TEXT]\n"
+        f"{source_snippet}"
+    )
+    try:
+        response = deps.responses_client.responses.create(
+            model=deps.extraction_structured_model,
+            input=prompt,
+            text={
+                "format": {
+                    "type": "json_schema",
+                    "name": "extraction_structured_v1",
+                    "strict": True,
+                    "schema": _EXTRACTION_STRUCTURED_JSON_SCHEMA,
+                }
+            },
+        )
+        payload = json.loads(_extract_responses_output_text(response))
+        if not isinstance(payload, dict):
+            raise ValueError("Structured extraction payload must be a JSON object.")
+        model_structured = ExtractionStructuredResponse.model_validate(payload)
+        preview = model_structured.preview.strip() or base.preview
+        _log_event(
+            "structured_extraction_enriched",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            source_type=source_type,
+        )
+        return base.model_copy(update={"preview": preview})
+    except (json.JSONDecodeError, ValueError, TypeError):
+        _log_event(
+            "structured_extraction_fallback",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            source_type=source_type,
+            reason="invalid_json",
+        )
+        return base
+    except (AuthenticationError, RateLimitError, APIConnectionError, APIStatusError):
+        _log_event(
+            "structured_extraction_fallback",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            source_type=source_type,
+            reason="responses_error",
+        )
+        return base
 
 
 def _collaboration_state_response(state: CollaborationState) -> CollaborationStateResponse:
@@ -1265,7 +1369,11 @@ def create_app(config: AppConfig) -> FastAPI:
         responses_vector_store_id=config.responses_vector_store_id,
         responses_include_web_search=config.responses_include_web_search,
         responses_history_turn_limit=config.responses_history_turn_limit,
-        responses_client=shared_openai_client if config.responses_orchestration_enabled else None,
+        responses_client=shared_openai_client
+        if (config.responses_orchestration_enabled or config.extraction_structured_enabled)
+        else None,
+        extraction_structured_enabled=config.extraction_structured_enabled,
+        extraction_structured_model=config.extraction_structured_model,
         governance_enabled=config.governance_enabled,
         governance_allow_web_search=config.governance_allow_web_search,
         governance_log_only=config.governance_log_only,
@@ -1431,7 +1539,30 @@ def create_app(config: AppConfig) -> FastAPI:
             chars=len(run.extracted_text),
             vector_chunks=len(_chunk_text_for_vectors(run.extracted_text)),
         )
-        return OcrResponse(run=_ocr_run_response(run))
+        structured = _build_structured_extraction(
+            source_type="ocr",
+            source_name=run.source_name,
+            mime_type=run.mime_type,
+            text=run.extracted_text,
+            deps=deps,
+            request_id=getattr(request.state, "request_id", None),
+            session_id=session_id,
+            principal=principal,
+        )
+        return OcrResponse(
+            run=OcrRunResponse(
+                run_id=run.run_id,
+                session_id=run.session_id,
+                source_name=run.source_name,
+                mime_type=run.mime_type,
+                source_message_id=run.source_message_id,
+                result_message_id=run.result_message_id,
+                status=run.status,
+                extracted_text=run.extracted_text,
+                structured=structured,
+                created_at=run.created_at,
+            )
+        )
 
     @app.post("/skills/pdf_ingest", response_model=PdfIngestResponse)
     def pdf_ingest(req: PdfIngestRequest, request: Request) -> PdfIngestResponse:
@@ -1539,6 +1670,10 @@ def create_app(config: AppConfig) -> FastAPI:
                 source_name=req.source_name,
                 mime_type=resolved_mime or req.mime_type,
                 text=extracted_text,
+                deps=deps,
+                request_id=getattr(request.state, "request_id", None),
+                session_id=session_id,
+                principal=principal,
             ),
         )
 

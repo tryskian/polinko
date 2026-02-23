@@ -69,6 +69,9 @@ API client extras (`python tools/client.py`):
    - `POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH=false`
    - `POLINKO_GOVERNANCE_LOG_ONLY=false`
    - `POLINKO_HALLUCINATION_GUARDRAILS_ENABLED=true`
+9. Optional structured extraction enrichment for OCR/PDF responses:
+   - `POLINKO_EXTRACTION_STRUCTURED_ENABLED=true`
+   - `POLINKO_EXTRACTION_STRUCTURED_MODEL=gpt-4.1-mini`
 
 ## Project Layout
 
@@ -126,6 +129,8 @@ Config:
 - `POLINKO_RESPONSES_VECTOR_STORE_ID` (required when orchestration is enabled)
 - `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH` (default: `false`)
 - `POLINKO_RESPONSES_HISTORY_TURN_LIMIT` (default: `12`)
+- `POLINKO_EXTRACTION_STRUCTURED_ENABLED` (default: `false`)
+- `POLINKO_EXTRACTION_STRUCTURED_MODEL` (default: `gpt-4.1-mini`)
 - `POLINKO_GOVERNANCE_ENABLED` (default: `true`)
 - `POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH` (default: `false`)
 - `POLINKO_GOVERNANCE_LOG_ONLY` (default: `false`)

@@ -64,11 +64,24 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNone(cfg.responses_vector_store_id)
         self.assertFalse(cfg.responses_include_web_search)
         self.assertEqual(cfg.responses_history_turn_limit, 12)
+        self.assertFalse(cfg.extraction_structured_enabled)
+        self.assertEqual(cfg.extraction_structured_model, "gpt-4.1-mini")
         self.assertTrue(cfg.governance_enabled)
         self.assertFalse(cfg.governance_allow_web_search)
         self.assertFalse(cfg.governance_log_only)
         self.assertTrue(cfg.hallucination_guardrails_enabled)
         self.assertEqual(cfg.personalization_default_memory_scope, "global")
+
+    def test_structured_extraction_config_from_env(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_EXTRACTION_STRUCTURED_ENABLED": "true",
+            "POLINKO_EXTRACTION_STRUCTURED_MODEL": "gpt-5-chat-latest",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            cfg = load_config(dotenv_path="__missing__.env")
+        self.assertTrue(cfg.extraction_structured_enabled)
+        self.assertEqual(cfg.extraction_structured_model, "gpt-5-chat-latest")
 
     def test_rejects_invalid_vector_min_similarity(self) -> None:
         env = {

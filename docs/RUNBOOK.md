@@ -119,6 +119,16 @@ Hash fields in responses:
 3. Restart API after changing orchestration settings.
 4. Default behavior remains unchanged when orchestration is disabled.
 
+## Structured Extraction Enrichment
+
+1. In `.env`, set:
+   - `POLINKO_EXTRACTION_STRUCTURED_ENABLED=true`
+2. Optional model override:
+   - `POLINKO_EXTRACTION_STRUCTURED_MODEL=gpt-4.1-mini`
+3. Restart API after changing extraction settings.
+4. When enabled, OCR/PDF endpoints attempt a strict JSON-schema normalization pass for extraction metadata and
+   gracefully fall back to deterministic local shaping if unavailable.
+
 ## Governance + Hallucination Guardrails
 
 1. In `.env`, set:
