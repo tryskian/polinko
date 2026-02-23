@@ -66,6 +66,9 @@ Hash fields in responses:
 2. Optional OCR settings:
    - `POLINKO_OCR_MODEL` (default `gpt-4.1-mini`)
    - `POLINKO_OCR_PROMPT` (custom extraction prompt)
+   - `POLINKO_IMAGE_CONTEXT_ENABLED` (default `false`, best-effort visual-scene extraction for retrieval)
+   - `POLINKO_IMAGE_CONTEXT_MODEL` (default `gpt-4.1-mini`)
+   - `POLINKO_IMAGE_CONTEXT_PROMPT` (custom visual context prompt)
 3. Restart API after changing provider settings.
 4. If vector memory is enabled, OCR outputs are chunked and indexed automatically with OCR metadata.
 
@@ -79,7 +82,7 @@ Hash fields in responses:
    - optional: `limit` (default `5`, max `20`)
    - optional: `source_types` (`["ocr"]`, `["chat"]`, or both)
 4. Results include similarity, keyword score, combined score, snippet, and source metadata.
-5. `source_types` now supports `ocr`, `chat`, and `pdf`.
+5. `source_types` now supports `ocr`, `chat`, `pdf`, and `image`.
 
 ## PDF Ingest (Vector Index)
 
@@ -107,7 +110,7 @@ Hash fields in responses:
    - `POLINKO_VECTOR_MAX_CHARS` (default `220`)
    - `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION` (default `true`)
 3. Restart API after changing vector settings.
-4. Chat retrieval currently uses chat-response vectors for tone consistency; OCR vectors are stored with
+4. Chat retrieval currently uses chat-response vectors for tone consistency; OCR/image vectors are stored with
    metadata for search/retrieval workflows.
 
 ## Responses Orchestration Toggle (RAG)

@@ -45,6 +45,9 @@ class PolinkoApiTests(unittest.TestCase):
         deps.ocr_provider = "scaffold"
         deps.ocr_model = "gpt-4.1-mini"
         deps.ocr_prompt = "Extract text."
+        deps.image_context_enabled = False
+        deps.image_context_model = "gpt-4.1-mini"
+        deps.image_context_prompt = "Summarize the visual scene for retrieval."
         deps.ocr_client = None
         deps.vector_enabled = False
         deps.vector_top_k = 2
@@ -572,6 +575,76 @@ class PolinkoApiTests(unittest.TestCase):
         kwargs = captured["kwargs"]
         self.assertEqual(kwargs["model"], deps.extraction_structured_model)
         self.assertEqual(kwargs["text"]["format"]["type"], "json_schema")
+
+    def test_ocr_optionally_indexes_image_context_vectors(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-image-context.db"))
+        deps.image_context_enabled = True
+        deps.image_context_model = "gpt-4.1-mini"
+        deps.image_context_prompt = "Summarize scene."
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "nimbus" in lowered else 0.0,
+                    1.0 if "awning" in lowered else 0.0,
+                    1.0 if "clinic" in lowered else 0.0,
+                    float(len(lowered) % 23) / 23.0,
+                ]
+
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                return SimpleNamespace(
+                    output_text="A storefront sign reads Nimbus Clinic under a blue awning."
+                )
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+        deps.responses_client = SimpleNamespace(responses=_FakeResponses())
+
+        payload_b64 = base64.b64encode(b"\x89PNG fake").decode("ascii")
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-image-context",
+                "source_name": "storefront.png",
+                "mime_type": "image/png",
+                "data_base64": payload_b64,
+                "text_hint": "OCR baseline text",
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        run = run_resp.json()["run"]
+        self.assertIn("Nimbus Clinic", run["visual_context"])
+
+        search = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "query": "nimbus clinic blue awning",
+                "session_id": "s-ocr-image-context",
+                "source_types": ["image"],
+                "limit": 3,
+            },
+        )
+        self.assertEqual(search.status_code, 200)
+        matches = search.json()["matches"]
+        self.assertGreater(len(matches), 0)
+        first = matches[0]
+        self.assertEqual(first["source_type"], "image")
+        self.assertEqual(first["metadata"]["source"], "image_context")
+        self.assertEqual(first["metadata"]["source_name"], "storefront.png")
 
     def test_pdf_ingest_indexes_vectors_and_is_searchable(self) -> None:
         deps = server.get_runtime_deps()

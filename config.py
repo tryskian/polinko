@@ -19,6 +19,9 @@ class AppConfig:
     ocr_provider: str
     ocr_model: str
     ocr_prompt: str
+    image_context_enabled: bool
+    image_context_model: str
+    image_context_prompt: str
     vector_enabled: bool
     vector_db_path: str
     vector_embedding_model: str
@@ -211,6 +214,15 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         ).strip()
         or "Extract all readable text from this image. Return only the extracted text and preserve line breaks."
     )
+    image_context_enabled = _parse_bool_env("POLINKO_IMAGE_CONTEXT_ENABLED", False)
+    image_context_model = os.getenv("POLINKO_IMAGE_CONTEXT_MODEL", "gpt-4.1-mini").strip() or "gpt-4.1-mini"
+    image_context_prompt = (
+        os.getenv(
+            "POLINKO_IMAGE_CONTEXT_PROMPT",
+            "Summarize the visual scene for retrieval: key entities, visible text cues, layout, and notable attributes. Keep it concise, factual, and grounded in what is visible.",
+        ).strip()
+        or "Summarize the visual scene for retrieval: key entities, visible text cues, layout, and notable attributes. Keep it concise, factual, and grounded in what is visible."
+    )
     vector_enabled = _parse_bool_env("POLINKO_VECTOR_ENABLED", False)
     vector_db_path = os.getenv("POLINKO_VECTOR_DB_PATH", ".polinko_vector.db")
     vector_embedding_model = (
@@ -270,6 +282,9 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         ocr_provider=ocr_provider,
         ocr_model=ocr_model,
         ocr_prompt=ocr_prompt,
+        image_context_enabled=image_context_enabled,
+        image_context_model=image_context_model,
+        image_context_prompt=image_context_prompt,
         vector_enabled=vector_enabled,
         vector_db_path=vector_db_path,
         vector_embedding_model=vector_embedding_model,

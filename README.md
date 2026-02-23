@@ -55,22 +55,26 @@ API client extras (`python tools/client.py`):
 5. Optional OCR mode:
    - `POLINKO_OCR_PROVIDER=scaffold` (default, no model OCR call)
    - `POLINKO_OCR_PROVIDER=openai` (uses `POLINKO_OCR_MODEL` for image OCR)
-6. Optional vector memory mode (cross-chat retrieval while tuning):
+6. Optional visual context extraction for image retrieval memory:
+   - `POLINKO_IMAGE_CONTEXT_ENABLED=true`
+   - `POLINKO_IMAGE_CONTEXT_MODEL=gpt-4.1-mini`
+   - optional: `POLINKO_IMAGE_CONTEXT_PROMPT=...`
+7. Optional vector memory mode (cross-chat retrieval while tuning):
    - `POLINKO_VECTOR_ENABLED=true`
    - tune retrieval with `POLINKO_VECTOR_TOP_K`, `POLINKO_VECTOR_MIN_SIMILARITY`,
      and `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION`
-7. Optional Responses orchestration mode (feature-flagged, RAG via OpenAI file search tool):
+8. Optional Responses orchestration mode (feature-flagged, RAG via OpenAI file search tool):
    - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED=true`
    - `POLINKO_RESPONSES_VECTOR_STORE_ID=vs_...`
    - optional: `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH=true`
    - optional: `POLINKO_RESPONSES_HISTORY_TURN_LIMIT=12`
    - optional: `POLINKO_RESPONSES_PDF_INGEST_ENABLED=true` (best-effort PDF upload into same vector store)
-8. Optional governance / hallucination guardrails:
+9. Optional governance / hallucination guardrails:
    - `POLINKO_GOVERNANCE_ENABLED=true`
    - `POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH=false`
    - `POLINKO_GOVERNANCE_LOG_ONLY=false`
    - `POLINKO_HALLUCINATION_GUARDRAILS_ENABLED=true`
-9. Optional structured extraction enrichment for OCR/PDF responses:
+10. Optional structured extraction enrichment for OCR/PDF responses:
    - `POLINKO_EXTRACTION_STRUCTURED_ENABLED=true`
    - `POLINKO_EXTRACTION_STRUCTURED_MODEL=gpt-4.1-mini`
 
@@ -118,6 +122,9 @@ Config:
 
 - `POLINKO_HISTORY_DB_PATH` (default: `.polinko_history.db`)
 - `POLINKO_DEPRECATE_ON_RESET` (default: `true`)
+- `POLINKO_IMAGE_CONTEXT_ENABLED` (default: `false`)
+- `POLINKO_IMAGE_CONTEXT_MODEL` (default: `gpt-4.1-mini`)
+- `POLINKO_IMAGE_CONTEXT_PROMPT` (default: concise visual-scene retrieval summary prompt)
 - `POLINKO_VECTOR_ENABLED` (default: `false`)
 - `POLINKO_VECTOR_DB_PATH` (default: `.polinko_vector.db`)
 - `POLINKO_VECTOR_EMBEDDING_MODEL` (default: `text-embedding-3-small`)
@@ -155,6 +162,7 @@ Config:
 - Optional vector retrieval memory: assistant outputs are indexed and matched by similarity on new turns
 - OCR outputs are chunked and indexed into vectors with source metadata (`ocr_run_id`, file name, mime type)
   when vector memory is enabled
+- Optional image-context extraction adds `image` source vectors for visual-scene retrieval from image inputs
 - File search endpoint uses hybrid ranking (semantic similarity + keyword overlap) over indexed vectors
 - Optional chat orchestration mode can use Responses API tools (`file_search` and optional `web_search`)
   while preserving server-side chat history

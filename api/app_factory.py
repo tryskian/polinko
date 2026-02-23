@@ -49,7 +49,7 @@ _PDF_MAX_BYTES = 10 * 1024 * 1024
 _OCR_RETRY_AFTER_RATE_LIMIT_SECONDS = 10
 _OCR_RETRY_AFTER_TRANSIENT_SECONDS = 3
 _FILE_SEARCH_DEFAULT_SOURCE_TYPES = ("ocr",)
-_FILE_SEARCH_ALLOWED_SOURCE_TYPES = {"chat", "ocr", "pdf"}
+_FILE_SEARCH_ALLOWED_SOURCE_TYPES = {"chat", "ocr", "pdf", "image"}
 _FILE_SEARCH_TOKEN_RE = re.compile(r"[a-z0-9]+")
 _FILE_SEARCH_CANDIDATE_MULTIPLIER = 8
 _FILE_SEARCH_MAX_CANDIDATES = 200
@@ -57,6 +57,7 @@ _FILE_SEARCH_MIN_SIMILARITY_FLOOR = 0.15
 _RESPONSES_HISTORY_MAX_MESSAGE_CHARS = 550
 _STRUCTURED_PREVIEW_MAX_CHARS = 240
 _STRUCTURED_SOURCE_MAX_CHARS = 6000
+_IMAGE_CONTEXT_MAX_CHARS = 1200
 _FACTUAL_QUERY_HINTS = (
     "latest",
     "today",
@@ -161,6 +162,9 @@ class RuntimeDeps:
     ocr_provider: str
     ocr_model: str
     ocr_prompt: str
+    image_context_enabled: bool
+    image_context_model: str
+    image_context_prompt: str
     ocr_client: OpenAI | None
     vector_enabled: bool
     vector_top_k: int
@@ -317,6 +321,7 @@ class OcrRunResponse(BaseModel):
     result_message_id: str | None
     status: str
     extracted_text: str
+    visual_context: str | None = None
     structured: "ExtractionStructuredResponse"
     created_at: int
 
@@ -507,6 +512,7 @@ def _ocr_run_response(run: OcrRun) -> OcrRunResponse:
         result_message_id=run.result_message_id,
         status=run.status,
         extracted_text=run.extracted_text,
+        visual_context=None,
         structured=_build_structured_extraction(
             source_type="ocr",
             source_name=run.source_name,
@@ -972,6 +978,108 @@ def _extract_text(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, str]:
     return _scaffold_extract_text(req)
 
 
+def _extract_image_context(
+    *,
+    req: OcrRequest,
+    deps: RuntimeDeps,
+    request_id: str | None,
+    session_id: str,
+    principal: str | None,
+) -> str | None:
+    if not deps.image_context_enabled:
+        return None
+    if deps.responses_client is None:
+        return None
+    if not req.data_base64 or not req.data_base64.strip():
+        return None
+
+    try:
+        decoded, detected_mime = _decode_base64_payload(req)
+    except HTTPException:
+        return None
+
+    mime_type = (detected_mime or "").strip().lower()
+    if not mime_type.startswith("image/"):
+        return None
+
+    data_url = f"data:{mime_type};base64,{base64.b64encode(decoded).decode('ascii')}"
+    try:
+        response = deps.responses_client.responses.create(
+            model=deps.image_context_model,
+            input=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "input_text", "text": deps.image_context_prompt},
+                        {"type": "input_image", "image_url": data_url},
+                    ],
+                }
+            ],
+        )
+        context_text = _extract_responses_output_text(response).strip()
+        if not context_text:
+            return None
+        compact = context_text[:_IMAGE_CONTEXT_MAX_CHARS].strip()
+        _log_event(
+            "image_context_extracted",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            chars=len(compact),
+        )
+        return compact
+    except AuthenticationError as exc:
+        _log_event(
+            "image_context_error",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            reason="authentication_error",
+            error_type=type(exc).__name__,
+        )
+        return None
+    except RateLimitError as exc:
+        _log_event(
+            "image_context_error",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            reason="rate_limited",
+            error_type=type(exc).__name__,
+        )
+        return None
+    except APIConnectionError as exc:
+        _log_event(
+            "image_context_error",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            reason="connection_error",
+            error_type=type(exc).__name__,
+        )
+        return None
+    except APIStatusError as exc:
+        _log_event(
+            "image_context_error",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            reason=f"api_status_{exc.status_code}",
+            error_type=type(exc).__name__,
+        )
+        return None
+    except Exception as exc:
+        _log_event(
+            "image_context_error",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            reason="unexpected_error",
+            error_type=type(exc).__name__,
+        )
+        return None
+
+
 def _compose_model_input(
     *,
     user_message: str,
@@ -1132,39 +1240,70 @@ def _index_ocr_output(
     deps: RuntimeDeps,
     session_id: str,
     run: OcrRun,
+    visual_context: str | None = None,
 ) -> None:
     if not deps.vector_enabled or deps.vector_store is None:
         return
     chunks = _chunk_text_for_vectors(run.extracted_text)
-    if not chunks:
+    if chunks:
+        try:
+            embeddings = _embed_texts(chunks, deps)
+            for index, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+                chunk_ref = f"{run.run_id}:{index + 1}/{len(chunks)}"
+                deps.vector_store.upsert_message_vector(
+                    session_id=session_id,
+                    role="assistant",
+                    message_id=None,
+                    content=chunk,
+                    embedding=embedding,
+                    source_type="ocr",
+                    source_ref=chunk_ref,
+                    metadata={
+                        "source": "ocr",
+                        "ocr_run_id": run.run_id,
+                        "source_name": run.source_name,
+                        "mime_type": run.mime_type,
+                        "source_message_id": run.source_message_id,
+                        "result_message_id": run.result_message_id,
+                        "chunk_index": index,
+                        "chunk_count": len(chunks),
+                    },
+                    created_at=run.created_at,
+                )
+        except Exception as exc:
+            _log_event(
+                "vector_ocr_index_error",
+                session_id=session_id,
+                run_id=run.run_id,
+                error_type=type(exc).__name__,
+            )
+
+    context_text = (visual_context or "").strip()
+    if not context_text:
         return
     try:
-        embeddings = _embed_texts(chunks, deps)
-        for index, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
-            chunk_ref = f"{run.run_id}:{index + 1}/{len(chunks)}"
-            deps.vector_store.upsert_message_vector(
-                session_id=session_id,
-                role="assistant",
-                message_id=None,
-                content=chunk,
-                embedding=embedding,
-                source_type="ocr",
-                source_ref=chunk_ref,
-                metadata={
-                    "source": "ocr",
-                    "ocr_run_id": run.run_id,
-                    "source_name": run.source_name,
-                    "mime_type": run.mime_type,
-                    "source_message_id": run.source_message_id,
-                    "result_message_id": run.result_message_id,
-                    "chunk_index": index,
-                    "chunk_count": len(chunks),
-                },
-                created_at=run.created_at,
-            )
+        context_embedding = _embed_texts([context_text], deps)[0]
+        deps.vector_store.upsert_message_vector(
+            session_id=session_id,
+            role="assistant",
+            message_id=None,
+            content=context_text,
+            embedding=context_embedding,
+            source_type="image",
+            source_ref=f"{run.run_id}:visual_context",
+            metadata={
+                "source": "image_context",
+                "ocr_run_id": run.run_id,
+                "source_name": run.source_name,
+                "mime_type": run.mime_type,
+                "source_message_id": run.source_message_id,
+                "result_message_id": run.result_message_id,
+            },
+            created_at=run.created_at,
+        )
     except Exception as exc:
         _log_event(
-            "vector_ocr_index_error",
+            "vector_image_context_index_error",
             session_id=session_id,
             run_id=run.run_id,
             error_type=type(exc).__name__,
@@ -1455,6 +1594,9 @@ def create_app(config: AppConfig) -> FastAPI:
         ocr_provider=config.ocr_provider,
         ocr_model=config.ocr_model,
         ocr_prompt=config.ocr_prompt,
+        image_context_enabled=config.image_context_enabled,
+        image_context_model=config.image_context_model,
+        image_context_prompt=config.image_context_prompt,
         ocr_client=shared_openai_client if config.ocr_provider == "openai" else None,
         vector_enabled=config.vector_enabled,
         vector_top_k=config.vector_top_k,
@@ -1475,6 +1617,7 @@ def create_app(config: AppConfig) -> FastAPI:
             config.responses_orchestration_enabled
             or config.extraction_structured_enabled
             or config.responses_pdf_ingest_enabled
+            or config.image_context_enabled
         )
         else None,
         extraction_structured_enabled=config.extraction_structured_enabled,
@@ -1613,6 +1756,13 @@ def create_app(config: AppConfig) -> FastAPI:
             raise HTTPException(status_code=404, detail="source_message_id not found in this chat.")
 
         extracted_text, status = _extract_text(req, deps)
+        visual_context = _extract_image_context(
+            req=req,
+            deps=deps,
+            request_id=getattr(request.state, "request_id", None),
+            session_id=session_id,
+            principal=principal,
+        )
         result_message_id: str | None = None
         if req.attach_to_chat:
             appended = deps.history_store.append_message(
@@ -1632,7 +1782,12 @@ def create_app(config: AppConfig) -> FastAPI:
             status=status,
             extracted_text=extracted_text,
         )
-        _index_ocr_output(deps=deps, session_id=session_id, run=run)
+        _index_ocr_output(
+            deps=deps,
+            session_id=session_id,
+            run=run,
+            visual_context=visual_context,
+        )
         _log_event(
             "ocr_run",
             request_id=getattr(request.state, "request_id", None),
@@ -1664,6 +1819,7 @@ def create_app(config: AppConfig) -> FastAPI:
                 result_message_id=run.result_message_id,
                 status=run.status,
                 extracted_text=run.extracted_text,
+                visual_context=visual_context,
                 structured=structured,
                 created_at=run.created_at,
             )

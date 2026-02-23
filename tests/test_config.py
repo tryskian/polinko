@@ -72,6 +72,9 @@ class ConfigTests(unittest.TestCase):
         self.assertFalse(cfg.governance_log_only)
         self.assertTrue(cfg.hallucination_guardrails_enabled)
         self.assertEqual(cfg.personalization_default_memory_scope, "global")
+        self.assertFalse(cfg.image_context_enabled)
+        self.assertEqual(cfg.image_context_model, "gpt-4.1-mini")
+        self.assertIn("visual scene", cfg.image_context_prompt.lower())
 
     def test_structured_extraction_config_from_env(self) -> None:
         env = {
@@ -83,6 +86,19 @@ class ConfigTests(unittest.TestCase):
             cfg = load_config(dotenv_path="__missing__.env")
         self.assertTrue(cfg.extraction_structured_enabled)
         self.assertEqual(cfg.extraction_structured_model, "gpt-5-chat-latest")
+
+    def test_image_context_config_from_env(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_IMAGE_CONTEXT_ENABLED": "true",
+            "POLINKO_IMAGE_CONTEXT_MODEL": "gpt-5-chat-latest",
+            "POLINKO_IMAGE_CONTEXT_PROMPT": "Describe scene for retrieval.",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            cfg = load_config(dotenv_path="__missing__.env")
+        self.assertTrue(cfg.image_context_enabled)
+        self.assertEqual(cfg.image_context_model, "gpt-5-chat-latest")
+        self.assertEqual(cfg.image_context_prompt, "Describe scene for retrieval.")
 
     def test_responses_pdf_ingest_requires_vector_store_id(self) -> None:
         env = {
