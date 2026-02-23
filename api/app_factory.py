@@ -1,5 +1,6 @@
 import base64
 import binascii
+import hashlib
 import hmac
 import json
 import logging
@@ -198,6 +199,7 @@ class ChatMessageResponse(BaseModel):
     parent_message_id: str | None
     role: str
     content: str
+    content_sha256: str
     created_at: int
 
 
@@ -213,6 +215,7 @@ class ChatExportResponse(BaseModel):
     prompt_version: str
     exported_at: int
     message_count: int
+    transcript_sha256: str
     messages: list[ChatMessageResponse]
     ocr_runs: list["OcrRunResponse"] = Field(default_factory=list)
     markdown: str | None = None
@@ -403,8 +406,27 @@ def _chat_message_response(message: Any) -> ChatMessageResponse:
         parent_message_id=message.parent_message_id,
         role=message.role,
         content=message.content,
+        content_sha256=_sha256_text(message.content),
         created_at=message.created_at,
     )
+
+
+def _sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
+def _transcript_sha256(messages: list[ChatMessageResponse]) -> str:
+    parts = [
+        (
+            f"{message.message_id}\x1f"
+            f"{message.parent_message_id or ''}\x1f"
+            f"{message.role}\x1f"
+            f"{message.created_at}\x1f"
+            f"{message.content_sha256}"
+        )
+        for message in messages
+    ]
+    return _sha256_text("\x1e".join(parts))
 
 
 def _ocr_run_response(run: OcrRun) -> OcrRunResponse:
@@ -1226,6 +1248,7 @@ def create_app(config: AppConfig) -> FastAPI:
             prompt_version=ACTIVE_PROMPT_VERSION,
             exported_at=int(time.time() * 1000),
             message_count=len(messages),
+            transcript_sha256=_transcript_sha256(messages),
             messages=messages,
             ocr_runs=ocr_runs,
             markdown=markdown,

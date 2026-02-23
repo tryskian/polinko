@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import os
 import tempfile
 import unittest
@@ -232,6 +233,8 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(messages[0]["content"], "hello history")
         self.assertEqual(messages[1]["content"], "History response")
         self.assertRegex(messages[0]["message_id"], r"^msg_[0-9a-f]{24}$")
+        self.assertRegex(messages[0]["content_sha256"], r"^[0-9a-f]{64}$")
+        self.assertRegex(messages[1]["content_sha256"], r"^[0-9a-f]{64}$")
         self.assertIsNone(messages[0]["parent_message_id"])
         self.assertEqual(messages[1]["parent_message_id"], messages[0]["message_id"])
 
@@ -288,6 +291,19 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual([m["role"] for m in payload["messages"]], ["user", "assistant"])
         self.assertIn("message_id", payload["messages"][0])
         self.assertIn("parent_message_id", payload["messages"][1])
+        self.assertRegex(payload["messages"][0]["content_sha256"], r"^[0-9a-f]{64}$")
+        self.assertRegex(payload["messages"][1]["content_sha256"], r"^[0-9a-f]{64}$")
+        self.assertRegex(payload["transcript_sha256"], r"^[0-9a-f]{64}$")
+
+        expected_parts = [
+            (
+                f"{m['message_id']}\x1f{m['parent_message_id'] or ''}\x1f"
+                f"{m['role']}\x1f{m['created_at']}\x1f{m['content_sha256']}"
+            )
+            for m in payload["messages"]
+        ]
+        expected_transcript_sha = hashlib.sha256("\x1e".join(expected_parts).encode("utf-8")).hexdigest()
+        self.assertEqual(payload["transcript_sha256"], expected_transcript_sha)
 
         md_resp = self.client.get(
             "/chats/s-export/export?include_markdown=true",

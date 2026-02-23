@@ -53,6 +53,10 @@
 - `POST /skills/file_search` search indexed vector content (OCR/chat sources)
 - `GET /metrics` request counters, status counts, latency buckets, rate-limit totals
 
+Hash fields in responses:
+- `messages[*].content_sha256` is a deterministic SHA-256 hash of message content.
+- `export.transcript_sha256` is a deterministic SHA-256 fingerprint over ordered message lineage + content hashes.
+
 ## OCR Provider Toggle
 
 1. In `.env`, set:
