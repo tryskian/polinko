@@ -4,7 +4,7 @@
 # OS/editor noise
 .DS_Store
 .history/
-.vscode/settings.json
+.vscode/
 
 # Python caches
 __pycache__/
@@ -39,3 +39,4 @@ docs/STATE.md
 docs/DECISIONS.md
 docs/SESSION_HANDOFF.md
 docs/ARCHITECTURE.md
+docs/FIGMA_NODE_TRACKER.md
