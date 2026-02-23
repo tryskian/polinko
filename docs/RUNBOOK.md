@@ -50,6 +50,7 @@
 - `PATCH /chats/{session_id}` rename chat
 - `DELETE /chats/{session_id}` delete chat and clear memory
 - `POST /skills/ocr` run OCR (scaffold or OpenAI mode)
+- `POST /skills/pdf_ingest` extract and index PDF text into vector memory
 - `POST /skills/file_search` search indexed vector content (OCR/chat sources)
 - `GET /metrics` request counters, status counts, latency buckets, rate-limit totals
 
@@ -78,6 +79,18 @@ Hash fields in responses:
    - optional: `limit` (default `5`, max `20`)
    - optional: `source_types` (`["ocr"]`, `["chat"]`, or both)
 4. Results include similarity, keyword score, combined score, snippet, and source metadata.
+5. `source_types` now supports `ocr`, `chat`, and `pdf`.
+
+## PDF Ingest (Vector Index)
+
+1. Ensure vector memory is enabled (`POLINKO_VECTOR_ENABLED=true`) and restart API.
+2. Ensure PDF parser dependency is available:
+   - `pip install pypdf`
+3. Ingest with `POST /skills/pdf_ingest`:
+   - required: `data_base64` (PDF bytes)
+   - optional: `session_id`, `source_name`, `mime_type` (`application/pdf`)
+   - optional: `attach_to_chat` (default `true`)
+4. Search indexed PDF chunks with `POST /skills/file_search` and `source_types: ["pdf"]`.
 
 ## Vector Memory Toggle
 

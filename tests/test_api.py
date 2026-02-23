@@ -509,6 +509,119 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(run_resp.status_code, 503)
         self.assertEqual(run_resp.headers.get("Retry-After"), "3")
 
+    def test_pdf_ingest_indexes_vectors_and_is_searchable(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf.db"))
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "invoice" in lowered else 0.0,
+                    1.0 if "retainer" in lowered else 0.0,
+                    1.0 if "total" in lowered else 0.0,
+                    float(len(lowered) % 19) / 19.0,
+                ]
+
+            def create(self, **kwargs: object) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                if isinstance(inputs, str):
+                    payload = [inputs]
+                else:
+                    payload = list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        pdf_text = (
+            "Invoice archive\n"
+            "retainer services listed\n"
+            "subtotal and total included"
+        )
+        payload_b64 = base64.b64encode(b"%PDF-1.7 fake-payload").decode("ascii")
+        with patch("api.app_factory._extract_text_from_pdf_bytes", return_value=pdf_text):
+            ingest_resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf",
+                    "source_name": "invoice-2026.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+
+        self.assertEqual(ingest_resp.status_code, 200)
+        ingest = ingest_resp.json()
+        self.assertRegex(ingest["ingest_id"], r"^pdf-[0-9a-f]{12}$")
+        self.assertEqual(ingest["status"], "ok")
+        self.assertGreaterEqual(ingest["vector_chunks"], 1)
+        self.assertGreater(ingest["extracted_chars"], 20)
+
+        search = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "query": "find invoice retainer total",
+                "session_id": "s-pdf",
+                "source_types": ["pdf"],
+                "limit": 3,
+            },
+        )
+        self.assertEqual(search.status_code, 200)
+        matches = search.json()["matches"]
+        self.assertGreater(len(matches), 0)
+        first = matches[0]
+        self.assertEqual(first["source_type"], "pdf")
+        self.assertEqual(first["session_id"], "s-pdf")
+        self.assertIn("pdf_ingest_id", first["metadata"])
+        self.assertEqual(first["metadata"]["source_name"], "invoice-2026.pdf")
+
+    def test_pdf_ingest_rejects_non_pdf_payload(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf-reject.db"))
+
+        payload_b64 = base64.b64encode(b"plain-text").decode("ascii")
+        resp = self.client.post(
+            "/skills/pdf_ingest",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-pdf-bad",
+                "source_name": "notes.txt",
+                "mime_type": "text/plain",
+                "data_base64": payload_b64,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(resp.status_code, 422)
+        self.assertIn("application/pdf", resp.json()["detail"])
+
+    def test_pdf_ingest_rejects_oversized_payload(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf-size.db"))
+
+        payload_b64 = base64.b64encode(b"%PDF" + (b"A" * 64)).decode("ascii")
+        with patch("api.app_factory._PDF_MAX_BYTES", 32):
+            resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf-size",
+                    "source_name": "oversized.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+        self.assertEqual(resp.status_code, 413)
+        self.assertIn("too large", resp.json()["detail"])
+
     def test_ocr_indexes_chunked_vectors_with_metadata(self) -> None:
         deps = server.get_runtime_deps()
         deps.vector_enabled = True

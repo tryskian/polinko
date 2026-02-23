@@ -45,10 +45,11 @@ _LATENCY_BUCKET_EDGES_MS = (10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2000.
 _OCR_VECTOR_CHUNK_CHARS = 700
 _OCR_VECTOR_CHUNK_OVERLAP = 120
 _OCR_MAX_BYTES = 5 * 1024 * 1024
+_PDF_MAX_BYTES = 10 * 1024 * 1024
 _OCR_RETRY_AFTER_RATE_LIMIT_SECONDS = 10
 _OCR_RETRY_AFTER_TRANSIENT_SECONDS = 3
 _FILE_SEARCH_DEFAULT_SOURCE_TYPES = ("ocr",)
-_FILE_SEARCH_ALLOWED_SOURCE_TYPES = {"chat", "ocr"}
+_FILE_SEARCH_ALLOWED_SOURCE_TYPES = {"chat", "ocr", "pdf"}
 _FILE_SEARCH_TOKEN_RE = re.compile(r"[a-z0-9]+")
 _FILE_SEARCH_CANDIDATE_MULTIPLIER = 8
 _FILE_SEARCH_MAX_CANDIDATES = 200
@@ -288,6 +289,26 @@ class OcrRunResponse(BaseModel):
 
 class OcrResponse(BaseModel):
     run: OcrRunResponse
+
+
+class PdfIngestRequest(BaseModel):
+    session_id: str | None = Field(default=None, min_length=1)
+    source_name: str | None = Field(default=None, max_length=255)
+    mime_type: str | None = Field(default=None, max_length=120)
+    data_base64: str = Field(..., min_length=1)
+    source_message_id: str | None = None
+    attach_to_chat: bool = True
+
+
+class PdfIngestResponse(BaseModel):
+    ingest_id: str
+    session_id: str
+    source_name: str | None
+    mime_type: str | None
+    status: str
+    extracted_chars: int
+    vector_chunks: int
+    result_message_id: str | None
 
 
 class FileSearchRequest(BaseModel):
@@ -532,6 +553,67 @@ def _decode_base64_payload(req: OcrRequest) -> tuple[bytes, str | None]:
             detail=f"OCR payload is too large. Keep files under {_OCR_MAX_BYTES // (1024 * 1024)} MB.",
         )
     return decoded, mime_type
+
+
+def _decode_pdf_payload(req: PdfIngestRequest) -> tuple[bytes, str | None]:
+    raw_data = req.data_base64.strip()
+    mime_type = req.mime_type.strip().lower() if req.mime_type else None
+    if raw_data.startswith("data:") and "," in raw_data:
+        header, raw_data = raw_data.split(",", 1)
+        if ";base64" in header:
+            parsed_mime = header[5:].split(";", 1)[0].strip().lower()
+            if parsed_mime and not mime_type:
+                mime_type = parsed_mime
+
+    max_base64_chars = ((max(_PDF_MAX_BYTES, 1) + 2) // 3) * 4
+    if len(raw_data) > max_base64_chars * 2:
+        raise HTTPException(
+            status_code=413,
+            detail=f"PDF payload is too large. Keep files under {_PDF_MAX_BYTES // (1024 * 1024)} MB.",
+        )
+    try:
+        decoded = base64.b64decode(raw_data, validate=True)
+    except (binascii.Error, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="Invalid data_base64 payload.") from exc
+    if not decoded:
+        raise HTTPException(status_code=422, detail="data_base64 payload decoded to empty content.")
+    if len(decoded) > _PDF_MAX_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"PDF payload is too large. Keep files under {_PDF_MAX_BYTES // (1024 * 1024)} MB.",
+        )
+    return decoded, mime_type
+
+
+def _extract_text_from_pdf_bytes(payload: bytes) -> str:
+    try:
+        from io import BytesIO
+        from pypdf import PdfReader
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="PDF extractor dependency is missing. Install `pypdf`.",
+        ) from exc
+
+    try:
+        reader = PdfReader(BytesIO(payload))
+    except Exception as exc:
+        raise HTTPException(status_code=422, detail="Invalid or unreadable PDF payload.") from exc
+
+    parts: list[str] = []
+    for page in reader.pages:
+        try:
+            text = page.extract_text() or ""
+        except Exception:
+            text = ""
+        compact = text.strip()
+        if compact:
+            parts.append(compact)
+
+    merged = "\n\n".join(parts).strip()
+    if not merged:
+        raise HTTPException(status_code=422, detail="No extractable text found in PDF.")
+    return merged
 
 
 def _retry_after_header_value(exc: Exception, default_seconds: int) -> str:
@@ -1304,6 +1386,109 @@ def create_app(config: AppConfig) -> FastAPI:
             vector_chunks=len(_chunk_text_for_vectors(run.extracted_text)),
         )
         return OcrResponse(run=_ocr_run_response(run))
+
+    @app.post("/skills/pdf_ingest", response_model=PdfIngestResponse)
+    def pdf_ingest(req: PdfIngestRequest, request: Request) -> PdfIngestResponse:
+        principal = _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        if not deps.vector_enabled or deps.vector_store is None:
+            raise HTTPException(status_code=503, detail="Vector memory is not enabled.")
+
+        session_id = req.session_id or deps.default_session_id
+        chat = deps.history_store.ensure_chat(session_id=session_id)
+        if chat.status == "deprecated":
+            raise HTTPException(
+                status_code=409,
+                detail="Chat is deprecated. Create a new chat before ingesting PDF content.",
+            )
+        if req.source_message_id and not deps.history_store.message_exists(
+            session_id=session_id,
+            message_id=req.source_message_id,
+        ):
+            raise HTTPException(status_code=404, detail="source_message_id not found in this chat.")
+
+        decoded, detected_mime = _decode_pdf_payload(req)
+        resolved_mime = (detected_mime or "").strip().lower()
+        name_hint = (req.source_name or "").strip().lower()
+        if resolved_mime and resolved_mime != "application/pdf":
+            raise HTTPException(status_code=422, detail="PDF ingest expects application/pdf payload.")
+        if not resolved_mime and not name_hint.endswith(".pdf"):
+            raise HTTPException(
+                status_code=422,
+                detail="PDF ingest requires mime_type=application/pdf or a .pdf source_name.",
+            )
+        if b"%PDF" not in decoded[:1024]:
+            raise HTTPException(status_code=422, detail="Invalid PDF payload header.")
+
+        extracted_text = _extract_text_from_pdf_bytes(decoded)
+        result_message_id: str | None = None
+        if req.attach_to_chat:
+            appended = deps.history_store.append_message(
+                session_id=session_id,
+                role="assistant",
+                content=f"[PDF]\n{extracted_text}",
+            )
+            result_message_id = appended.message_id
+
+        chunks = _chunk_text_for_vectors(extracted_text)
+        if not chunks:
+            raise HTTPException(status_code=422, detail="No extractable text found in PDF.")
+        try:
+            embeddings = _embed_texts(chunks, deps)
+        except AuthenticationError as exc:
+            raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
+        except RateLimitError as exc:
+            raise HTTPException(status_code=429, detail="Rate limit reached. Try PDF ingest again shortly.") from exc
+        except APIConnectionError as exc:
+            raise HTTPException(status_code=503, detail="Connection error reaching OpenAI embeddings API.") from exc
+        except APIStatusError as exc:
+            raise HTTPException(status_code=502, detail=f"OpenAI embeddings API error ({exc.status_code}).") from exc
+
+        ingest_id = f"pdf-{uuid.uuid4().hex[:12]}"
+        created_at = int(time.time() * 1000)
+        for index, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+            chunk_ref = f"{ingest_id}:{index + 1}/{len(chunks)}"
+            deps.vector_store.upsert_message_vector(
+                session_id=session_id,
+                role="assistant",
+                message_id=None,
+                content=chunk,
+                embedding=embedding,
+                source_type="pdf",
+                source_ref=chunk_ref,
+                metadata={
+                    "source": "pdf",
+                    "pdf_ingest_id": ingest_id,
+                    "source_name": req.source_name,
+                    "mime_type": resolved_mime or req.mime_type,
+                    "source_message_id": req.source_message_id,
+                    "result_message_id": result_message_id,
+                    "chunk_index": index,
+                    "chunk_count": len(chunks),
+                },
+                created_at=created_at,
+            )
+
+        _log_event(
+            "pdf_ingest",
+            request_id=getattr(request.state, "request_id", None),
+            session_id=session_id,
+            principal=principal,
+            ingest_id=ingest_id,
+            chars=len(extracted_text),
+            vector_chunks=len(chunks),
+            source_name=req.source_name,
+        )
+        return PdfIngestResponse(
+            ingest_id=ingest_id,
+            session_id=session_id,
+            source_name=req.source_name,
+            mime_type=resolved_mime or req.mime_type,
+            status="ok",
+            extracted_chars=len(extracted_text),
+            vector_chunks=len(chunks),
+            result_message_id=result_message_id,
+        )
 
     @app.post("/skills/file_search", response_model=FileSearchResponse)
     def file_search(req: FileSearchRequest, request: Request) -> FileSearchResponse:
