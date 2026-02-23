@@ -64,6 +64,7 @@ API client extras (`python tools/client.py`):
    - `POLINKO_RESPONSES_VECTOR_STORE_ID=vs_...`
    - optional: `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH=true`
    - optional: `POLINKO_RESPONSES_HISTORY_TURN_LIMIT=12`
+   - optional: `POLINKO_RESPONSES_PDF_INGEST_ENABLED=true` (best-effort PDF upload into same vector store)
 8. Optional governance / hallucination guardrails:
    - `POLINKO_GOVERNANCE_ENABLED=true`
    - `POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH=false`
@@ -129,6 +130,7 @@ Config:
 - `POLINKO_RESPONSES_VECTOR_STORE_ID` (required when orchestration is enabled)
 - `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH` (default: `false`)
 - `POLINKO_RESPONSES_HISTORY_TURN_LIMIT` (default: `12`)
+- `POLINKO_RESPONSES_PDF_INGEST_ENABLED` (default: `false`, requires `POLINKO_RESPONSES_VECTOR_STORE_ID`)
 - `POLINKO_EXTRACTION_STRUCTURED_ENABLED` (default: `false`)
 - `POLINKO_EXTRACTION_STRUCTURED_MODEL` (default: `gpt-4.1-mini`)
 - `POLINKO_GOVERNANCE_ENABLED` (default: `true`)

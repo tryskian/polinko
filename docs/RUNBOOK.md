@@ -91,6 +91,9 @@ Hash fields in responses:
    - optional: `session_id`, `source_name`, `mime_type` (`application/pdf`)
    - optional: `attach_to_chat` (default `true`)
 4. Search indexed PDF chunks with `POST /skills/file_search` and `source_types: ["pdf"]`.
+5. Optional: enable best-effort upload into your OpenAI Responses vector store:
+   - `POLINKO_RESPONSES_PDF_INGEST_ENABLED=true`
+   - Requires `POLINKO_RESPONSES_VECTOR_STORE_ID=vs_...`
 
 ## Vector Memory Toggle
 
@@ -116,6 +119,7 @@ Hash fields in responses:
    - `POLINKO_RESPONSES_MODEL` (default `gpt-5-chat-latest`)
    - `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH` (`true`/`false`)
    - `POLINKO_RESPONSES_HISTORY_TURN_LIMIT` (default `12`)
+   - `POLINKO_RESPONSES_PDF_INGEST_ENABLED` (`true`/`false`, requires vector store id)
 3. Restart API after changing orchestration settings.
 4. Default behavior remains unchanged when orchestration is disabled.
 

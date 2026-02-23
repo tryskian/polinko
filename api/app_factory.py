@@ -175,6 +175,7 @@ class RuntimeDeps:
     responses_vector_store_id: str | None
     responses_include_web_search: bool
     responses_history_turn_limit: int
+    responses_pdf_ingest_enabled: bool
     responses_client: OpenAI | None
     extraction_structured_enabled: bool
     extraction_structured_model: str
@@ -764,6 +765,105 @@ def _extract_text_from_pdf_bytes(payload: bytes) -> str:
     if not merged:
         raise HTTPException(status_code=422, detail="No extractable text found in PDF.")
     return merged
+
+
+def _index_pdf_in_responses_vector_store(
+    *,
+    deps: RuntimeDeps,
+    request_id: str | None,
+    session_id: str,
+    principal: str | None,
+    ingest_id: str,
+    source_name: str | None,
+    payload: bytes,
+) -> str | None:
+    if not deps.responses_pdf_ingest_enabled:
+        return None
+    if deps.responses_client is None or not deps.responses_vector_store_id:
+        return None
+
+    from io import BytesIO
+
+    file_name = (source_name or "").strip() or f"{ingest_id}.pdf"
+    if not file_name.lower().endswith(".pdf"):
+        file_name = f"{file_name}.pdf"
+    upload_payload = BytesIO(payload)
+    setattr(upload_payload, "name", file_name)
+
+    try:
+        vector_file = deps.responses_client.vector_stores.files.upload_and_poll(
+            vector_store_id=deps.responses_vector_store_id,
+            file=upload_payload,
+        )
+    except AuthenticationError as exc:
+        _log_event(
+            "pdf_ingest_responses_index_failed",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            ingest_id=ingest_id,
+            reason="authentication_error",
+            error_type=type(exc).__name__,
+        )
+        return None
+    except RateLimitError as exc:
+        _log_event(
+            "pdf_ingest_responses_index_failed",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            ingest_id=ingest_id,
+            reason="rate_limited",
+            error_type=type(exc).__name__,
+        )
+        return None
+    except APIConnectionError as exc:
+        _log_event(
+            "pdf_ingest_responses_index_failed",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            ingest_id=ingest_id,
+            reason="connection_error",
+            error_type=type(exc).__name__,
+        )
+        return None
+    except APIStatusError as exc:
+        _log_event(
+            "pdf_ingest_responses_index_failed",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            ingest_id=ingest_id,
+            reason=f"api_status_{exc.status_code}",
+            error_type=type(exc).__name__,
+        )
+        return None
+    except Exception as exc:
+        _log_event(
+            "pdf_ingest_responses_index_failed",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            ingest_id=ingest_id,
+            reason="unexpected_error",
+            error_type=type(exc).__name__,
+        )
+        return None
+
+    vector_file_id = getattr(vector_file, "id", None)
+    if not isinstance(vector_file_id, str) or not vector_file_id:
+        vector_file_id = None
+    _log_event(
+        "pdf_ingest_responses_indexed",
+        request_id=request_id,
+        session_id=session_id,
+        principal=principal,
+        ingest_id=ingest_id,
+        vector_store_id=deps.responses_vector_store_id,
+        vector_store_file_id=vector_file_id,
+    )
+    return vector_file_id
 
 
 def _retry_after_header_value(exc: Exception, default_seconds: int) -> str:
@@ -1369,8 +1469,13 @@ def create_app(config: AppConfig) -> FastAPI:
         responses_vector_store_id=config.responses_vector_store_id,
         responses_include_web_search=config.responses_include_web_search,
         responses_history_turn_limit=config.responses_history_turn_limit,
+        responses_pdf_ingest_enabled=config.responses_pdf_ingest_enabled,
         responses_client=shared_openai_client
-        if (config.responses_orchestration_enabled or config.extraction_structured_enabled)
+        if (
+            config.responses_orchestration_enabled
+            or config.extraction_structured_enabled
+            or config.responses_pdf_ingest_enabled
+        )
         else None,
         extraction_structured_enabled=config.extraction_structured_enabled,
         extraction_structured_model=config.extraction_structured_model,
@@ -1656,6 +1761,24 @@ def create_app(config: AppConfig) -> FastAPI:
             vector_chunks=len(chunks),
             source_name=req.source_name,
         )
+        responses_vector_store_file_id = _index_pdf_in_responses_vector_store(
+            deps=deps,
+            request_id=getattr(request.state, "request_id", None),
+            session_id=session_id,
+            principal=principal,
+            ingest_id=ingest_id,
+            source_name=req.source_name,
+            payload=decoded,
+        )
+        if responses_vector_store_file_id:
+            _log_event(
+                "pdf_ingest_responses_linked",
+                request_id=getattr(request.state, "request_id", None),
+                session_id=session_id,
+                principal=principal,
+                ingest_id=ingest_id,
+                vector_store_file_id=responses_vector_store_file_id,
+            )
         return PdfIngestResponse(
             ingest_id=ingest_id,
             session_id=session_id,

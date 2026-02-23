@@ -31,6 +31,7 @@ class AppConfig:
     responses_vector_store_id: str | None
     responses_include_web_search: bool
     responses_history_turn_limit: int
+    responses_pdf_ingest_enabled: bool
     extraction_structured_enabled: bool
     extraction_structured_model: str
     governance_enabled: bool
@@ -232,6 +233,7 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     )
     responses_include_web_search = _parse_bool_env("POLINKO_RESPONSES_INCLUDE_WEB_SEARCH", False)
     responses_history_turn_limit = _parse_int_env("POLINKO_RESPONSES_HISTORY_TURN_LIMIT", 12, minimum=1)
+    responses_pdf_ingest_enabled = _parse_bool_env("POLINKO_RESPONSES_PDF_INGEST_ENABLED", False)
     extraction_structured_enabled = _parse_bool_env("POLINKO_EXTRACTION_STRUCTURED_ENABLED", False)
     extraction_structured_model = (
         os.getenv("POLINKO_EXTRACTION_STRUCTURED_MODEL", "gpt-4.1-mini").strip() or "gpt-4.1-mini"
@@ -248,6 +250,11 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         raise RuntimeError(
             "POLINKO_RESPONSES_VECTOR_STORE_ID is required when "
             "POLINKO_RESPONSES_ORCHESTRATION_ENABLED=true."
+        )
+    if responses_pdf_ingest_enabled and not responses_vector_store_id:
+        raise RuntimeError(
+            "POLINKO_RESPONSES_VECTOR_STORE_ID is required when "
+            "POLINKO_RESPONSES_PDF_INGEST_ENABLED=true."
         )
 
     return AppConfig(
@@ -275,6 +282,7 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         responses_vector_store_id=responses_vector_store_id,
         responses_include_web_search=responses_include_web_search,
         responses_history_turn_limit=responses_history_turn_limit,
+        responses_pdf_ingest_enabled=responses_pdf_ingest_enabled,
         extraction_structured_enabled=extraction_structured_enabled,
         extraction_structured_model=extraction_structured_model,
         governance_enabled=governance_enabled,

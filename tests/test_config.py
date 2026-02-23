@@ -64,6 +64,7 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNone(cfg.responses_vector_store_id)
         self.assertFalse(cfg.responses_include_web_search)
         self.assertEqual(cfg.responses_history_turn_limit, 12)
+        self.assertFalse(cfg.responses_pdf_ingest_enabled)
         self.assertFalse(cfg.extraction_structured_enabled)
         self.assertEqual(cfg.extraction_structured_model, "gpt-4.1-mini")
         self.assertTrue(cfg.governance_enabled)
@@ -82,6 +83,15 @@ class ConfigTests(unittest.TestCase):
             cfg = load_config(dotenv_path="__missing__.env")
         self.assertTrue(cfg.extraction_structured_enabled)
         self.assertEqual(cfg.extraction_structured_model, "gpt-5-chat-latest")
+
+    def test_responses_pdf_ingest_requires_vector_store_id(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_RESPONSES_PDF_INGEST_ENABLED": "true",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(RuntimeError):
+                load_config(dotenv_path="__missing__.env")
 
     def test_rejects_invalid_vector_min_similarity(self) -> None:
         env = {

@@ -59,6 +59,7 @@ class PolinkoApiTests(unittest.TestCase):
         deps.responses_vector_store_id = None
         deps.responses_include_web_search = False
         deps.responses_history_turn_limit = 12
+        deps.responses_pdf_ingest_enabled = False
         deps.responses_client = None
         deps.extraction_structured_enabled = False
         deps.extraction_structured_model = "gpt-4.1-mini"
@@ -653,6 +654,55 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(first["session_id"], "s-pdf")
         self.assertIn("pdf_ingest_id", first["metadata"])
         self.assertEqual(first["metadata"]["source_name"], "invoice-2026.pdf")
+
+    def test_pdf_ingest_optionally_indexes_in_responses_vector_store(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf-responses.db"))
+        deps.responses_pdf_ingest_enabled = True
+        deps.responses_vector_store_id = "vs_pdf_test_123"
+        captured: dict[str, Any] = {}
+
+        class _FakeEmbeddings:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=[0.1, 0.2, 0.3, 0.4]) for _ in payload]
+                return SimpleNamespace(data=data)
+
+        class _FakeVectorStoreFiles:
+            def upload_and_poll(self, **kwargs: Any) -> SimpleNamespace:
+                captured["vector_store_id"] = kwargs["vector_store_id"]
+                upload_file = kwargs["file"]
+                captured["file_name"] = getattr(upload_file, "name", "")
+                captured["file_head"] = upload_file.read(5)
+                upload_file.seek(0)
+                return SimpleNamespace(id="vsf_test_456")
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+        deps.responses_client = SimpleNamespace(
+            vector_stores=SimpleNamespace(files=_FakeVectorStoreFiles())
+        )
+
+        payload = b"%PDF-1.7 fake-payload-for-responses"
+        payload_b64 = base64.b64encode(payload).decode("ascii")
+        with patch("api.app_factory._extract_text_from_pdf_bytes", return_value="PDF text for indexing"):
+            resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf-responses",
+                    "source_name": "retrieval-brief.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(captured["vector_store_id"], "vs_pdf_test_123")
+        self.assertEqual(captured["file_name"], "retrieval-brief.pdf")
+        self.assertEqual(captured["file_head"], b"%PDF-")
 
     def test_pdf_ingest_rejects_non_pdf_payload(self) -> None:
         deps = server.get_runtime_deps()
