@@ -4,6 +4,7 @@
 # OS/editor noise
 .DS_Store
 .history/
+.vscode/settings.json
 
 # Python caches
 __pycache__/
