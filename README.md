@@ -78,8 +78,9 @@ API client extras (`python tools/client.py`):
    - `POLINKO_GOVERNANCE_LOG_ONLY=false`
    - `POLINKO_HALLUCINATION_GUARDRAILS_ENABLED=true`
 10. Optional structured extraction enrichment for OCR/PDF responses:
-   - `POLINKO_EXTRACTION_STRUCTURED_ENABLED=true`
-   - `POLINKO_EXTRACTION_STRUCTURED_MODEL=gpt-4.1-mini`
+
+- `POLINKO_EXTRACTION_STRUCTURED_ENABLED=true`
+- `POLINKO_EXTRACTION_STRUCTURED_MODEL=gpt-4.1-mini`
 
 ## Project Layout
 

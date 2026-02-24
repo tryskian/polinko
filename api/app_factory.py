@@ -94,31 +94,56 @@ def _default_latency_buckets() -> dict[str, int]:
     return buckets
 
 
-_EXTRACTION_STRUCTURED_JSON_SCHEMA: dict[str, object] = {
+_EXTRACTION_STRUCTURED_REQUIRED_FIELDS = [
+    "schema_version",
+    "source_type",
+    "source_name",
+    "mime_type",
+    "text_sha256",
+    "char_count",
+    "word_count",
+    "line_count",
+    "preview",
+]
+
+_EXTRACTION_STRUCTURED_COMMON_PROPERTIES: dict[str, object] = {
+    "schema_version": {"type": "string", "const": "v1"},
+    "source_type": {"type": "string"},
+    "source_name": {"type": ["string", "null"]},
+    "mime_type": {"type": ["string", "null"]},
+    "text_sha256": {"type": "string"},
+    "char_count": {"type": "integer", "minimum": 0},
+    "word_count": {"type": "integer", "minimum": 0},
+    "line_count": {"type": "integer", "minimum": 0},
+    "preview": {"type": "string"},
+}
+
+_EXTRACTION_STRUCTURED_OCR_JSON_SCHEMA: dict[str, object] = {
     "type": "object",
     "additionalProperties": False,
-    "required": [
-        "schema_version",
-        "source_type",
-        "source_name",
-        "mime_type",
-        "text_sha256",
-        "char_count",
-        "word_count",
-        "line_count",
-        "preview",
-    ],
+    "required": _EXTRACTION_STRUCTURED_REQUIRED_FIELDS,
     "properties": {
-        "schema_version": {"type": "string"},
-        "source_type": {"type": "string"},
-        "source_name": {"type": ["string", "null"]},
-        "mime_type": {"type": ["string", "null"]},
-        "text_sha256": {"type": "string"},
-        "char_count": {"type": "integer", "minimum": 0},
-        "word_count": {"type": "integer", "minimum": 0},
-        "line_count": {"type": "integer", "minimum": 0},
-        "preview": {"type": "string"},
+        **_EXTRACTION_STRUCTURED_COMMON_PROPERTIES,
+        "source_type": {"type": "string", "const": "ocr"},
     },
+}
+
+_EXTRACTION_STRUCTURED_PDF_JSON_SCHEMA: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": _EXTRACTION_STRUCTURED_REQUIRED_FIELDS,
+    "properties": {
+        **_EXTRACTION_STRUCTURED_COMMON_PROPERTIES,
+        "source_type": {"type": "string", "const": "pdf"},
+        "mime_type": {"type": ["string", "null"], "const": "application/pdf"},
+    },
+}
+
+_EXTRACTION_STRUCTURED_DEFAULT_JSON_SCHEMA: dict[str, object] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": _EXTRACTION_STRUCTURED_REQUIRED_FIELDS,
+    "properties": _EXTRACTION_STRUCTURED_COMMON_PROPERTIES,
 }
 
 
@@ -127,6 +152,15 @@ def _latency_bucket_label(duration_ms: float) -> str:
         if duration_ms <= edge:
             return f"le_{int(edge)}ms"
     return "gt_2000ms"
+
+
+def _structured_schema_for_source_type(source_type: str) -> tuple[str, dict[str, object]]:
+    normalized = source_type.strip().lower()
+    if normalized == "ocr":
+        return ("extraction_structured_ocr_v1", _EXTRACTION_STRUCTURED_OCR_JSON_SCHEMA)
+    if normalized == "pdf":
+        return ("extraction_structured_pdf_v1", _EXTRACTION_STRUCTURED_PDF_JSON_SCHEMA)
+    return ("extraction_structured_v1", _EXTRACTION_STRUCTURED_DEFAULT_JSON_SCHEMA)
 
 
 @dataclass
@@ -610,6 +644,7 @@ def _build_structured_extraction(
     responses_client = deps.responses_client
 
     source_snippet = text[:_STRUCTURED_SOURCE_MAX_CHARS]
+    schema_name, schema_payload = _structured_schema_for_source_type(source_type=source_type)
     prompt = (
         "Return a strict JSON object matching the provided schema. "
         "Preserve metadata values exactly. Improve only preview readability.\n\n"
@@ -634,9 +669,9 @@ def _build_structured_extraction(
                 {
                     "format": {
                         "type": "json_schema",
-                        "name": "extraction_structured_v1",
+                        "name": schema_name,
                         "strict": True,
-                        "schema": _EXTRACTION_STRUCTURED_JSON_SCHEMA,
+                        "schema": schema_payload,
                     }
                 },
             ),

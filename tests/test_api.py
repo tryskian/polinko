@@ -580,6 +580,11 @@ class PolinkoApiTests(unittest.TestCase):
         kwargs = captured["kwargs"]
         self.assertEqual(kwargs["model"], deps.extraction_structured_model)
         self.assertEqual(kwargs["text"]["format"]["type"], "json_schema")
+        self.assertEqual(kwargs["text"]["format"]["name"], "extraction_structured_ocr_v1")
+        self.assertEqual(
+            kwargs["text"]["format"]["schema"]["properties"]["source_type"]["const"],
+            "ocr",
+        )
 
     def test_ocr_structured_falls_back_when_model_output_is_invalid_json(self) -> None:
         deps = server.get_runtime_deps()
@@ -882,6 +887,69 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(structured["text_sha256"], expected_hash)
         self.assertEqual(structured["char_count"], len(pdf_text))
         self.assertTrue(structured["preview"].startswith("Fallback PDF structured text"))
+
+    def test_pdf_ingest_structured_enrichment_uses_pdf_schema(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf-structured.db"))
+        deps.extraction_structured_enabled = True
+        captured: dict[str, Any] = {}
+        pdf_text = "Invoice policy text with independent signals and audit markers."
+        expected_hash = hashlib.sha256(pdf_text.encode("utf-8")).hexdigest()
+
+        class _FakeEmbeddings:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=[0.1, 0.2, 0.3, 0.4]) for _ in payload]
+                return SimpleNamespace(data=data)
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                captured["kwargs"] = kwargs
+                payload = {
+                    "schema_version": "v1",
+                    "source_type": "pdf",
+                    "source_name": "policy.pdf",
+                    "mime_type": "application/pdf",
+                    "text_sha256": expected_hash,
+                    "char_count": len(pdf_text),
+                    "word_count": 9,
+                    "line_count": 1,
+                    "preview": "PDF preview tuned.",
+                }
+                return SimpleNamespace(output_text=json.dumps(payload))
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+        deps.responses_client = SimpleNamespace(responses=_FakeResponses())
+
+        payload_b64 = base64.b64encode(b"%PDF-1.7 fake-payload").decode("ascii")
+        with patch("api.app_factory._extract_text_from_pdf_bytes", return_value=pdf_text):
+            ingest_resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf-structured",
+                    "source_name": "policy.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+
+        self.assertEqual(ingest_resp.status_code, 200)
+        self.assertEqual(ingest_resp.json()["structured"]["preview"], "PDF preview tuned.")
+        kwargs = captured["kwargs"]
+        self.assertEqual(kwargs["model"], deps.extraction_structured_model)
+        self.assertEqual(kwargs["text"]["format"]["name"], "extraction_structured_pdf_v1")
+        self.assertEqual(
+            kwargs["text"]["format"]["schema"]["properties"]["source_type"]["const"],
+            "pdf",
+        )
+        self.assertEqual(
+            kwargs["text"]["format"]["schema"]["properties"]["mime_type"]["const"],
+            "application/pdf",
+        )
 
     def test_pdf_ingest_optionally_indexes_in_responses_vector_store(self) -> None:
         deps = server.get_runtime_deps()
