@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "id": "grounded_invoice_total",
+      "expected_mode": "grounded",
+      "seed_text": "Invoice record: line items subtotal 1680 and total 1840 including tax.",
+      "source_name": "invoice-note.txt",
+      "query": "What total is listed in the invoice record?",
+      "must_not_contain": ["according to bloomberg", "source: reuters"]
+    },
+    {
+      "id": "grounded_policy_join",
+      "expected_mode": "grounded",
+      "seed_text": "Raven bridge policy disallows speculative joins unless two independent signals agree.",
+      "source_name": "policy-note.txt",
+      "query": "When are speculative joins allowed in raven bridge policy?",
+      "must_not_contain": ["always allowed", "no restrictions"]
+    },
+    {
+      "id": "grounded_guardrails",
+      "expected_mode": "grounded",
+      "seed_text": "Willow guardrails require citations when factual confidence depends on retrieved memory.",
+      "source_name": "guardrail-note.txt",
+      "query": "When do willow guardrails require citations?",
+      "must_not_contain": ["never required", "citations are optional in all cases"]
+    },
+    {
+      "id": "cautious_no_financial_data",
+      "expected_mode": "cautious",
+      "seed_text": "",
+      "query": "What was Nimbus Clinic's exact quarterly revenue in 2025?",
+      "must_not_contain": ["$", "million", "billion", "exactly"]
+    },
+    {
+      "id": "cautious_no_legal_claim",
+      "expected_mode": "cautious",
+      "seed_text": "",
+      "query": "What does the latest federal policy require for AI watermarking in Canada?",
+      "must_not_contain": ["as of today", "definitively requires"]
+    },
+    {
+      "id": "cautious_no_event_fabrication",
+      "expected_mode": "cautious",
+      "seed_text": "",
+      "query": "Who won the fictional 2029 Aurora Prize in computational mythology?",
+      "must_not_contain": ["won by", "official winner"]
+    }
+  ]
+}
+

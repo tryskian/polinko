@@ -5,7 +5,7 @@ DOCKER_IMAGE ?= polinko:dev
 DOCKER_PORT ?= 8000
 ENV_FILE ?= .env
 
-.PHONY: chat server test eval-retrieval ui-install ui-dev ui-build docker-build docker-run dev
+.PHONY: chat server test eval-retrieval eval-hallucination ui-install ui-dev ui-build docker-build docker-run dev
 
 chat:
 	$(PYTHON) app.py
@@ -18,6 +18,9 @@ test:
 
 eval-retrieval:
 	$(PYTHON) tools/eval_retrieval.py
+
+eval-hallucination:
+	$(PYTHON) tools/eval_hallucination.py
 
 ui-dev:
 	cd frontend && $(NPM) run dev

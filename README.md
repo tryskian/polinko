@@ -193,3 +193,21 @@ Notes:
 - Uses `docs/retrieval_eval_cases.json` (12 seeded OCR cases)
 - Uses `/chat.memory_used` citations for pass/fail checks
 - Cleans up generated eval chats by default (`--keep-chats` to retain)
+
+## Hallucination Eval Harness (P1 Scaffold)
+
+Use the judge-based evaluator to score groundedness and hallucination risk of `/chat` outputs.
+
+Command:
+
+- `make eval-hallucination`
+
+Optional strict mode (CI gate style):
+
+- `python tools/eval_hallucination.py --strict`
+
+Notes:
+
+- Uses `docs/hallucination_eval_cases.json` (grounded + cautious scenarios)
+- Uses OpenAI model judging (`--judge-model`, default `gpt-4.1-mini`)
+- Non-blocking by default; strict mode fails on any judged case failure

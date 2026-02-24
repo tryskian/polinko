@@ -188,6 +188,17 @@ Hash fields in responses:
    - custom endpoint: `python tools/eval_retrieval.py --base-url http://127.0.0.1:8000`
    - retain generated eval chats: `python tools/eval_retrieval.py --keep-chats`
 
+## Run Hallucination Eval (Judge-Based)
+
+1. Ensure API is running locally (`make server`).
+2. Ensure `OPENAI_API_KEY` is set in `.env` (judge model call).
+3. Run `make eval-hallucination`.
+4. Optional strict mode:
+   - `python tools/eval_hallucination.py --strict`
+5. Optional tuning:
+   - choose model: `python tools/eval_hallucination.py --judge-model gpt-4.1-mini`
+   - retain generated chats: `python tools/eval_hallucination.py --keep-chats`
+
 ## Export CLI Transcript
 
 1. Run `make chat`.
