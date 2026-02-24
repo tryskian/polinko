@@ -1351,6 +1351,142 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(first["metadata"].get("source"), "pdf")
         self.assertEqual(first["metadata"].get("pdf_ingest_id"), ingest_id)
 
+    def test_file_search_prefers_responses_vector_store_for_pdf(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-search-pdf-responses.db"))
+        deps.responses_pdf_ingest_enabled = True
+        deps.responses_vector_store_id = "vs_pdf_search_123"
+        captured: dict[str, Any] = {}
+
+        class _FailEmbeddings:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                raise AssertionError("Local embeddings path should not be used when responses search succeeds.")
+
+        class _FakeVectorStores:
+            def search(self, **kwargs: Any) -> SimpleNamespace:
+                captured["kwargs"] = kwargs
+                return SimpleNamespace(
+                    data=[
+                        SimpleNamespace(
+                            file_id="file_abc123",
+                            filename="policy-joins.pdf",
+                            score=0.91,
+                            attributes={
+                                "session_id": "s-rag-pdf",
+                                "source": "pdf",
+                                "pdf_ingest_id": "pdf-abc123",
+                                "source_ref": "pdf-abc123:chunk-0",
+                            },
+                            content=[
+                                SimpleNamespace(
+                                    type="text",
+                                    text="Policy joins are disallowed unless two independent signals agree.",
+                                )
+                            ],
+                        )
+                    ]
+                )
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FailEmbeddings())
+        deps.responses_client = SimpleNamespace(vector_stores=_FakeVectorStores())
+
+        search = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "query": "policy join signals",
+                "session_id": "s-rag-pdf",
+                "source_types": ["pdf"],
+                "limit": 3,
+            },
+        )
+        self.assertEqual(search.status_code, 200)
+        payload = search.json()
+        self.assertEqual(payload["query"], "policy join signals")
+        self.assertGreater(len(payload["matches"]), 0)
+        first = payload["matches"][0]
+        self.assertTrue(first["vector_id"].startswith("resp:file_abc123:"))
+        self.assertEqual(first["source_type"], "pdf")
+        self.assertEqual(first["session_id"], "s-rag-pdf")
+        self.assertIn("independent signals", first["snippet"].lower())
+        self.assertEqual(first["metadata"].get("file_id"), "file_abc123")
+        self.assertEqual(first["metadata"].get("filename"), "policy-joins.pdf")
+        kwargs = captured["kwargs"]
+        self.assertEqual(kwargs["vector_store_id"], "vs_pdf_search_123")
+        self.assertEqual(kwargs["query"], "policy join signals")
+
+    def test_file_search_falls_back_to_local_pdf_vectors_on_responses_failure(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-search-pdf-fallback.db"))
+        deps.responses_pdf_ingest_enabled = False
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "policy" in lowered else 0.0,
+                    1.0 if "join" in lowered else 0.0,
+                    1.0 if "signal" in lowered else 0.0,
+                    float(len(lowered) % 29) / 29.0,
+                ]
+
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        payload_b64 = base64.b64encode(b"%PDF-1.7 fallback-policy").decode("ascii")
+        with patch(
+            "api.app_factory._extract_text_from_pdf_bytes",
+            return_value="Policy joins require two independent signals before approval.",
+        ):
+            ingest_resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf-fallback-search",
+                    "source_name": "policy-fallback.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+        self.assertEqual(ingest_resp.status_code, 200)
+
+        class _BrokenVectorStores:
+            def search(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                raise RuntimeError("responses search unavailable")
+
+        deps.responses_pdf_ingest_enabled = True
+        deps.responses_vector_store_id = "vs_pdf_fallback_123"
+        deps.responses_client = SimpleNamespace(vector_stores=_BrokenVectorStores())
+
+        search = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "query": "policy join signals",
+                "session_id": "s-pdf-fallback-search",
+                "source_types": ["pdf"],
+                "limit": 3,
+            },
+        )
+        self.assertEqual(search.status_code, 200)
+        payload = search.json()
+        self.assertGreater(len(payload["matches"]), 0)
+        first = payload["matches"][0]
+        self.assertEqual(first["source_type"], "pdf")
+        self.assertEqual(first["session_id"], "s-pdf-fallback-search")
+        self.assertIn("policy", first["snippet"].lower())
+
     def test_file_search_requires_vector_memory(self) -> None:
         resp = self.client.post(
             "/skills/file_search",

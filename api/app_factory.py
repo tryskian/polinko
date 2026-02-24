@@ -1528,6 +1528,121 @@ def _file_search_snippet(content: str, query_tokens: list[str], *, max_chars: in
     return snippet
 
 
+def _responses_file_search_enabled(deps: RuntimeDeps, source_types: tuple[str, ...]) -> bool:
+    return (
+        "pdf" in source_types
+        and deps.responses_pdf_ingest_enabled
+        and deps.responses_client is not None
+        and bool(deps.responses_vector_store_id)
+    )
+
+
+def _responses_search_text(content: Any) -> str:
+    if isinstance(content, str):
+        return content.strip()
+    if not isinstance(content, list):
+        return ""
+    parts: list[str] = []
+    for item in content:
+        text: object | None = None
+        if isinstance(item, dict):
+            text = item.get("text")
+        else:
+            text = getattr(item, "text", None)
+        if isinstance(text, str):
+            compact = text.strip()
+            if compact:
+                parts.append(compact)
+    return "\n".join(parts).strip()
+
+
+def _responses_file_search(
+    *,
+    deps: RuntimeDeps,
+    query: str,
+    session_filter: str | None,
+    source_types: tuple[str, ...],
+    limit: int,
+    candidate_limit: int,
+) -> tuple[list[FileSearchMatchResponse], int]:
+    client = deps.responses_client
+    vector_store_id = deps.responses_vector_store_id
+    if client is None or not vector_store_id:
+        return [], 0
+
+    response = client.vector_stores.search(
+        vector_store_id=vector_store_id,
+        query=query,
+        max_num_results=candidate_limit,
+    )
+
+    raw_data = getattr(response, "data", None)
+    if raw_data is None:
+        response_items: list[Any] = []
+    else:
+        response_items = list(raw_data)
+
+    query_tokens = _tokenize_file_search_text(query)
+    ranked: list[tuple[float, float, float, FileSearchMatchResponse]] = []
+
+    for idx, item in enumerate(response_items):
+        raw_attributes = getattr(item, "attributes", None)
+        attributes = dict(raw_attributes) if isinstance(raw_attributes, dict) else {}
+
+        source_type = str(attributes.get("source") or "pdf").strip().lower() or "pdf"
+        if source_type not in source_types:
+            continue
+
+        stored_session = attributes.get("session_id")
+        stored_session_text = str(stored_session).strip() if stored_session is not None else ""
+        if session_filter and stored_session_text != session_filter:
+            continue
+
+        content_text = _responses_search_text(getattr(item, "content", None))
+        if not content_text:
+            continue
+
+        raw_similarity = getattr(item, "score", 0.0)
+        try:
+            similarity = float(raw_similarity)
+        except (TypeError, ValueError):
+            similarity = 0.0
+        keyword_score = _keyword_overlap_score(query_tokens, content_text)
+        score = (similarity * 0.78) + (keyword_score * 0.22)
+
+        file_id = getattr(item, "file_id", None)
+        file_id_text = file_id if isinstance(file_id, str) and file_id else None
+        filename = getattr(item, "filename", None)
+        filename_text = filename if isinstance(filename, str) and filename else None
+        source_ref = attributes.get("source_ref")
+        source_ref_text = str(source_ref).strip() if source_ref else None
+
+        metadata = dict(attributes)
+        if file_id_text and "file_id" not in metadata:
+            metadata["file_id"] = file_id_text
+        if filename_text and "filename" not in metadata:
+            metadata["filename"] = filename_text
+        if "source" not in metadata:
+            metadata["source"] = source_type
+
+        candidate = FileSearchMatchResponse(
+            vector_id=f"resp:{file_id_text or 'unknown'}:{idx}",
+            session_id=stored_session_text or session_filter or "global",
+            source_type=source_type,
+            source_ref=source_ref_text or file_id_text,
+            similarity=round(similarity, 4),
+            keyword_score=round(keyword_score, 4),
+            score=round(score, 4),
+            snippet=_file_search_snippet(content_text, query_tokens),
+            metadata=metadata,
+        )
+        ranked.append((score, similarity, keyword_score, candidate))
+
+    ranked.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    matches = [candidate for _, _, _, candidate in ranked[:limit]]
+    return matches, len(response_items)
+
+
 def _recent_chat_context_for_responses(messages: list[Any], turn_limit: int) -> str:
     visible = [msg for msg in messages if getattr(msg, "role", "") in {"user", "assistant"}]
     if not visible:
@@ -2169,6 +2284,79 @@ def create_app(config: AppConfig) -> FastAPI:
         )
         request_id = getattr(request.state, "request_id", None)
 
+        if _responses_file_search_enabled(deps, source_types):
+            try:
+                responses_matches, responses_candidates = _responses_file_search(
+                    deps=deps,
+                    query=query,
+                    session_filter=session_filter,
+                    source_types=source_types,
+                    limit=req.limit,
+                    candidate_limit=candidate_limit,
+                )
+                if responses_matches:
+                    _log_event(
+                        "file_search",
+                        request_id=request_id,
+                        principal=principal,
+                        session_id=req.session_id,
+                        source_types=list(source_types),
+                        query_chars=len(query),
+                        candidate_count=responses_candidates,
+                        result_count=len(responses_matches),
+                        backend="responses_vector_store",
+                    )
+                    return FileSearchResponse(
+                        query=query,
+                        searched_at=int(time.time() * 1000),
+                        matches=responses_matches,
+                    )
+            except AuthenticationError as exc:
+                _log_event(
+                    "file_search_responses_fallback",
+                    request_id=request_id,
+                    principal=principal,
+                    session_id=req.session_id,
+                    reason="authentication_error",
+                    error_type=type(exc).__name__,
+                )
+            except RateLimitError as exc:
+                _log_event(
+                    "file_search_responses_fallback",
+                    request_id=request_id,
+                    principal=principal,
+                    session_id=req.session_id,
+                    reason="rate_limited",
+                    error_type=type(exc).__name__,
+                )
+            except APIConnectionError as exc:
+                _log_event(
+                    "file_search_responses_fallback",
+                    request_id=request_id,
+                    principal=principal,
+                    session_id=req.session_id,
+                    reason="connection_error",
+                    error_type=type(exc).__name__,
+                )
+            except APIStatusError as exc:
+                _log_event(
+                    "file_search_responses_fallback",
+                    request_id=request_id,
+                    principal=principal,
+                    session_id=req.session_id,
+                    reason=f"api_status_{exc.status_code}",
+                    error_type=type(exc).__name__,
+                )
+            except Exception as exc:
+                _log_event(
+                    "file_search_responses_fallback",
+                    request_id=request_id,
+                    principal=principal,
+                    session_id=req.session_id,
+                    reason="unexpected_error",
+                    error_type=type(exc).__name__,
+                )
+
         try:
             query_vector = _embed_texts([query], deps)[0]
         except AuthenticationError as exc:
@@ -2222,6 +2410,7 @@ def create_app(config: AppConfig) -> FastAPI:
             query_chars=len(query),
             candidate_count=len(candidates),
             result_count=len(matches),
+            backend="local_vector_store",
         )
         return FileSearchResponse(
             query=query,
