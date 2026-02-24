@@ -1176,10 +1176,13 @@ def _compose_model_input(
             compact = " ".join(item.content.split())
             if len(compact) > max_memory_chars:
                 compact = f"{compact[:max_memory_chars].rstrip()}..."
-            memory_lines.append(f"- {compact}")
+            memory_lines.append(f"- [{item.source_type}] {compact}")
         segments.append(
-            "[RETRIEVED_MEMORY: examples of prior assistant style/content. "
-            "Use only if relevant. Never mention retrieval.]\n"
+            "[RETRIEVED_MEMORY: retrieved context snippets. Use only if relevant.]\n"
+            "- Treat [ocr], [pdf], and [image] snippets as grounding evidence; do not contradict them.\n"
+            "- Treat [chat] snippets as prior conversational context/style, not external facts.\n"
+            "- If evidence is limited, stay cautious rather than inventing specifics.\n"
+            "- Never mention retrieval.\n"
             + "\n".join(memory_lines)
         )
 

@@ -4,8 +4,10 @@ DOCKER ?= docker
 DOCKER_IMAGE ?= polinko:dev
 DOCKER_PORT ?= 8000
 ENV_FILE ?= .env
+GATE_PORT ?= 8066
+GATE_BASE_URL ?= http://127.0.0.1:$(GATE_PORT)
 
-.PHONY: chat server test eval-retrieval eval-hallucination ui-install ui-dev ui-build docker-build docker-run dev
+.PHONY: chat server test eval-retrieval eval-hallucination quality-gate ui-install ui-dev ui-build docker-build docker-run dev
 
 chat:
 	$(PYTHON) app.py
@@ -21,6 +23,30 @@ eval-retrieval:
 
 eval-hallucination:
 	$(PYTHON) tools/eval_hallucination.py
+
+quality-gate:
+	@echo "Running quality gate (tests + retrieval eval + hallucination eval)..."
+	@set -eu; \
+	BASE_URL="$(GATE_BASE_URL)"; \
+	$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port $(GATE_PORT) >/tmp/polinko-quality-gate.log 2>&1 & \
+	SERVER_PID=$$!; \
+	trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
+	READY=0; \
+	for i in $$(seq 1 100); do \
+		if curl -fsS "$$BASE_URL/health" >/dev/null 2>&1; then \
+			READY=1; \
+			break; \
+		fi; \
+		sleep 0.2; \
+	done; \
+	if [ "$$READY" -ne 1 ]; then \
+		echo "Server failed to start. See /tmp/polinko-quality-gate.log"; \
+		exit 1; \
+	fi; \
+	$(PYTHON) -m unittest discover -s tests -p "test_*.py"; \
+	$(PYTHON) tools/eval_retrieval.py --base-url "$$BASE_URL"; \
+	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict; \
+	echo "Quality gate passed."
 
 ui-dev:
 	cd frontend && $(NPM) run dev

@@ -180,6 +180,15 @@ Hash fields in responses:
 1. Run `make test`.
 2. Fix failures before merging.
 
+## Run One-Command Quality Gate
+
+1. Ensure `.env` includes `OPENAI_API_KEY` (judge eval requires it).
+2. Run `make quality-gate`.
+3. If startup fails, inspect `/tmp/polinko-quality-gate.log`.
+4. Optional overrides:
+   - `make quality-gate GATE_PORT=8099`
+   - `make quality-gate GATE_BASE_URL=http://127.0.0.1:8099`
+
 ## Run Retrieval Eval
 
 1. Ensure API is running locally (`make server`).
@@ -198,6 +207,8 @@ Hash fields in responses:
 5. Optional tuning:
    - choose model: `python tools/eval_hallucination.py --judge-model gpt-4.1-mini`
    - retain generated chats: `python tools/eval_hallucination.py --keep-chats`
+6. Eval isolation behavior:
+   - Each generated eval chat is set to `memory_scope=session` to reduce cross-chat retrieval noise.
 
 ## Export CLI Transcript
 

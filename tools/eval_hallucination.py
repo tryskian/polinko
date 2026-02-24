@@ -200,6 +200,24 @@ def _chat(
     )
 
 
+def _set_memory_scope(
+    *,
+    base_url: str,
+    headers: dict[str, str],
+    session_id: str,
+    scope: str,
+    timeout: int,
+) -> None:
+    _request_json(
+        method="POST",
+        base_url=base_url,
+        path=f"/chats/{session_id}/personalization",
+        headers=headers,
+        payload={"memory_scope": scope},
+        timeout=timeout,
+    )
+
+
 def _preflight(base_url: str, headers: dict[str, str], timeout: int) -> None:
     health = _request_json(
         method="GET",
@@ -345,6 +363,14 @@ def main() -> int:
         print(f"\n[{index}/{len(cases)}] {case['id']}")
         try:
             _create_chat(args.base_url, headers, session_id, args.timeout)
+            # Keep eval deterministic by isolating each case from cross-chat retrieval noise.
+            _set_memory_scope(
+                base_url=args.base_url,
+                headers=headers,
+                session_id=session_id,
+                scope="session",
+                timeout=args.timeout,
+            )
             if case["seed_text"]:
                 _seed_ocr_memory(
                     base_url=args.base_url,
@@ -413,4 +439,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

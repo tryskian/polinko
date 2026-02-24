@@ -16,6 +16,7 @@ Run these from repo root:
 3. `make ui-dev`
 4. open `http://127.0.0.1:5173`
 5. `make test`
+6. `make quality-gate` (single pre-push gate; requires `OPENAI_API_KEY` for judge eval)
 
 CLI extras:
 
@@ -216,4 +217,23 @@ Notes:
 
 - Uses `docs/hallucination_eval_cases.json` (grounded + cautious scenarios)
 - Uses OpenAI model judging (`--judge-model`, default `gpt-4.1-mini`)
+- Sets each eval chat to `memory_scope=session` for deterministic isolation
 - Non-blocking by default; strict mode fails on any judged case failure
+
+## One-Command Quality Gate
+
+Use this before pushing:
+
+- `make quality-gate`
+
+What it runs:
+
+- unit tests
+- retrieval eval
+- hallucination eval in strict mode
+
+Details:
+
+- Starts a temporary local API server on `127.0.0.1:8066`
+- Uses `GATE_BASE_URL`/`GATE_PORT` if overridden
+- Requires `OPENAI_API_KEY` for hallucination judge scoring
