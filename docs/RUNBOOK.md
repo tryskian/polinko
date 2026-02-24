@@ -197,6 +197,17 @@ Hash fields in responses:
    - custom endpoint: `python tools/eval_retrieval.py --base-url http://127.0.0.1:8000`
    - retain generated eval chats: `python tools/eval_retrieval.py --keep-chats`
 
+## Run File Search Eval
+
+1. Ensure API is running locally (`make server`).
+2. Run `make eval-file-search`.
+3. Optional:
+   - custom endpoint: `python tools/eval_file_search.py --base-url http://127.0.0.1:8000`
+   - retain generated eval chats: `python tools/eval_file_search.py --keep-chats`
+4. Cases:
+   - uses `docs/file_search_eval_cases.json` (OCR + PDF + optional image-context smoke test)
+   - image-context case is skipped automatically when `POLINKO_IMAGE_CONTEXT_ENABLED=false`
+
 ## Run Hallucination Eval (Judge-Based)
 
 1. Ensure API is running locally (`make server`).

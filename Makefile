@@ -7,7 +7,7 @@ ENV_FILE ?= .env
 GATE_PORT ?= 8066
 GATE_BASE_URL ?= http://127.0.0.1:$(GATE_PORT)
 
-.PHONY: chat server test eval-retrieval eval-hallucination quality-gate ui-install ui-dev ui-build docker-build docker-run dev
+.PHONY: chat server test eval-retrieval eval-file-search eval-hallucination quality-gate ui-install ui-dev ui-build docker-build docker-run dev
 
 chat:
 	$(PYTHON) app.py
@@ -20,6 +20,9 @@ test:
 
 eval-retrieval:
 	$(PYTHON) tools/eval_retrieval.py
+
+eval-file-search:
+	$(PYTHON) tools/eval_file_search.py
 
 eval-hallucination:
 	$(PYTHON) tools/eval_hallucination.py
@@ -45,6 +48,7 @@ quality-gate:
 	fi; \
 	$(PYTHON) -m unittest discover -s tests -p "test_*.py"; \
 	$(PYTHON) tools/eval_retrieval.py --base-url "$$BASE_URL"; \
+	$(PYTHON) tools/eval_file_search.py --base-url "$$BASE_URL"; \
 	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict; \
 	echo "Quality gate passed."
 

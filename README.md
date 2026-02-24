@@ -201,6 +201,24 @@ Notes:
 - Uses `/chat.memory_used` citations for pass/fail checks
 - Cleans up generated eval chats by default (`--keep-chats` to retain)
 
+## File Search Eval Harness
+
+Use the deterministic file-search evaluator to verify:
+
+- scoped search precision (session filter behaves correctly)
+- global search recall (seeded OCR evidence is discoverable without session filter)
+- no scoped cross-session leakage
+
+Command:
+
+- `make eval-file-search`
+
+Notes:
+
+- Uses `docs/file_search_eval_cases.json` (mixed `ocr` + `pdf` + optional `image_context` seed methods)
+- Seeds OCR vectors per case, then validates `/skills/file_search` behavior
+- Cleans up generated eval chats by default (`--keep-chats` to retain)
+
 ## Hallucination Eval Harness (P1 Scaffold)
 
 Use the judge-based evaluator to score groundedness and hallucination risk of `/chat` outputs.
@@ -230,6 +248,7 @@ What it runs:
 
 - unit tests
 - retrieval eval
+- file-search eval
 - hallucination eval in strict mode
 
 Details:
