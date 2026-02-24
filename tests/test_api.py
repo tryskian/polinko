@@ -617,6 +617,48 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(structured["source_type"], "ocr")
         self.assertEqual(structured["preview"], "alpha line beta line")
 
+    def test_ocr_structured_falls_back_when_model_schema_mismatches_source_type(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.extraction_structured_enabled = True
+        source_text = "source text that should remain grounded"
+        expected_hash = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                payload = {
+                    "schema_version": "v1",
+                    "source_type": "pdf",
+                    "source_name": "wrong-type.pdf",
+                    "mime_type": "application/pdf",
+                    "text_sha256": expected_hash,
+                    "char_count": len(source_text),
+                    "word_count": 6,
+                    "line_count": 1,
+                    "preview": "This should be rejected by OCR schema.",
+                }
+                return SimpleNamespace(output_text=json.dumps(payload))
+
+        deps.responses_client = SimpleNamespace(responses=_FakeResponses())
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-structured-type-mismatch",
+                "source_name": "scan-mismatch.png",
+                "mime_type": "image/png",
+                "text_hint": source_text,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        structured = run_resp.json()["run"]["structured"]
+        self.assertEqual(structured["source_type"], "ocr")
+        self.assertEqual(structured["source_name"], "scan-mismatch.png")
+        self.assertEqual(structured["mime_type"], "image/png")
+        self.assertEqual(structured["text_sha256"], expected_hash)
+        self.assertEqual(structured["preview"], "source text that should remain grounded")
+
     def test_ocr_structured_uses_only_preview_and_clamps_length(self) -> None:
         deps = server.get_runtime_deps()
         deps.extraction_structured_enabled = True
@@ -630,12 +672,12 @@ class PolinkoApiTests(unittest.TestCase):
                 payload = {
                     "schema_version": "v1",
                     "source_type": "ocr",
-                    "source_name": "model-override.png",
+                    "source_name": "scan-clamp.png",
                     "mime_type": "image/png",
-                    "text_sha256": "badbadbad",
-                    "char_count": 99999,
-                    "word_count": 9999,
-                    "line_count": 777,
+                    "text_sha256": expected_hash,
+                    "char_count": len(source_text),
+                    "word_count": 3,
+                    "line_count": 1,
                     "preview": long_preview,
                 }
                 return SimpleNamespace(output_text=json.dumps(payload))
@@ -887,6 +929,62 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(structured["text_sha256"], expected_hash)
         self.assertEqual(structured["char_count"], len(pdf_text))
         self.assertTrue(structured["preview"].startswith("Fallback PDF structured text"))
+
+    def test_pdf_ingest_structured_falls_back_when_model_mime_mismatches(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf-mime-mismatch.db"))
+        deps.extraction_structured_enabled = True
+        pdf_text = "PDF content must keep mime as application/pdf."
+        expected_hash = hashlib.sha256(pdf_text.encode("utf-8")).hexdigest()
+
+        class _FakeEmbeddings:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=[0.1, 0.2, 0.3, 0.4]) for _ in payload]
+                return SimpleNamespace(data=data)
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                payload = {
+                    "schema_version": "v1",
+                    "source_type": "pdf",
+                    "source_name": "invoice.pdf",
+                    "mime_type": "text/plain",
+                    "text_sha256": expected_hash,
+                    "char_count": len(pdf_text),
+                    "word_count": 7,
+                    "line_count": 1,
+                    "preview": "Model suggested non-pdf mime.",
+                }
+                return SimpleNamespace(output_text=json.dumps(payload))
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+        deps.responses_client = SimpleNamespace(responses=_FakeResponses())
+
+        payload_b64 = base64.b64encode(b"%PDF-1.7 fake-payload").decode("ascii")
+        with patch("api.app_factory._extract_text_from_pdf_bytes", return_value=pdf_text):
+            ingest_resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf-mime-mismatch",
+                    "source_name": "invoice.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+
+        self.assertEqual(ingest_resp.status_code, 200)
+        structured = ingest_resp.json()["structured"]
+        self.assertEqual(structured["source_type"], "pdf")
+        self.assertEqual(structured["mime_type"], "application/pdf")
+        self.assertEqual(structured["source_name"], "invoice.pdf")
+        self.assertEqual(structured["text_sha256"], expected_hash)
+        self.assertEqual(structured["preview"], "PDF content must keep mime as application/pdf.")
 
     def test_pdf_ingest_structured_enrichment_uses_pdf_schema(self) -> None:
         deps = server.get_runtime_deps()

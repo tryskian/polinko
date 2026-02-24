@@ -680,6 +680,32 @@ def _build_structured_extraction(
         if not isinstance(payload, dict):
             raise ValueError("Structured extraction payload must be a JSON object.")
         model_structured = ExtractionStructuredResponse.model_validate(payload)
+        metadata_fields = (
+            "schema_version",
+            "source_type",
+            "source_name",
+            "mime_type",
+            "text_sha256",
+            "char_count",
+            "word_count",
+            "line_count",
+        )
+        metadata_mismatch = [
+            field_name
+            for field_name in metadata_fields
+            if getattr(model_structured, field_name) != getattr(base, field_name)
+        ]
+        if metadata_mismatch:
+            _log_event(
+                "structured_extraction_fallback",
+                request_id=request_id,
+                session_id=session_id,
+                principal=principal,
+                source_type=source_type,
+                reason="metadata_mismatch",
+                mismatch_fields=",".join(metadata_mismatch),
+            )
+            return base
         preview = _normalize_preview_text(model_structured.preview, max_chars=_STRUCTURED_PREVIEW_MAX_CHARS)
         if not preview:
             preview = base.preview
