@@ -58,6 +58,7 @@ _RESPONSES_HISTORY_MAX_MESSAGE_CHARS = 550
 _STRUCTURED_PREVIEW_MAX_CHARS = 240
 _STRUCTURED_SOURCE_MAX_CHARS = 6000
 _IMAGE_CONTEXT_MAX_CHARS = 1200
+_CHAT_MEMORY_CITATION_MAX_CHARS = 180
 _FACTUAL_QUERY_HINTS = (
     "latest",
     "today",
@@ -202,6 +203,17 @@ class ChatResponse(BaseModel):
     output: str
     session_id: str
     prompt_version: str
+    memory_used: list["MemoryCitationResponse"] = Field(default_factory=list)
+
+
+class MemoryCitationResponse(BaseModel):
+    vector_id: str
+    session_id: str
+    source_type: str
+    source_ref: str | None
+    similarity: float
+    snippet: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ResetRequest(BaseModel):
@@ -488,6 +500,34 @@ def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def _normalize_preview_text(value: str, *, max_chars: int) -> str:
+    compact = " ".join(value.split()).strip()
+    if len(compact) <= max_chars:
+        return compact
+    if max_chars <= 3:
+        return compact[:max_chars]
+    return compact[: max_chars - 3].rstrip() + "..."
+
+
+def _compact_for_citation(value: str, *, max_chars: int) -> str:
+    compact = " ".join(value.split())
+    if len(compact) > max_chars:
+        return f"{compact[:max_chars].rstrip()}..."
+    return compact
+
+
+def _memory_citation_response(item: VectorMatch, *, max_chars: int) -> MemoryCitationResponse:
+    return MemoryCitationResponse(
+        vector_id=item.vector_id,
+        session_id=item.session_id,
+        source_type=item.source_type,
+        source_ref=item.source_ref,
+        similarity=round(float(item.similarity), 4),
+        snippet=_compact_for_citation(item.content, max_chars=max_chars),
+        metadata=item.metadata,
+    )
+
+
 def _transcript_sha256(messages: list[ChatMessageResponse]) -> str:
     parts = [
         (
@@ -536,9 +576,7 @@ def _build_structured_extraction(
 ) -> ExtractionStructuredResponse:
     normalized = text.replace("\r\n", "\n").replace("\r", "\n")
     lines = [line for line in (chunk.strip() for chunk in normalized.split("\n")) if line]
-    compact_preview = " ".join(normalized.split())
-    if len(compact_preview) > _STRUCTURED_PREVIEW_MAX_CHARS:
-        compact_preview = compact_preview[:_STRUCTURED_PREVIEW_MAX_CHARS].rstrip() + "..."
+    compact_preview = _normalize_preview_text(normalized, max_chars=_STRUCTURED_PREVIEW_MAX_CHARS)
     base = ExtractionStructuredResponse(
         schema_version="v1",
         source_type=source_type,
@@ -590,7 +628,9 @@ def _build_structured_extraction(
         if not isinstance(payload, dict):
             raise ValueError("Structured extraction payload must be a JSON object.")
         model_structured = ExtractionStructuredResponse.model_validate(payload)
-        preview = model_structured.preview.strip() or base.preview
+        preview = _normalize_preview_text(model_structured.preview, max_chars=_STRUCTURED_PREVIEW_MAX_CHARS)
+        if not preview:
+            preview = base.preview
         _log_event(
             "structured_extraction_enriched",
             request_id=request_id,
@@ -617,6 +657,16 @@ def _build_structured_extraction(
             principal=principal,
             source_type=source_type,
             reason="responses_error",
+        )
+        return base
+    except Exception:
+        _log_event(
+            "structured_extraction_fallback",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            source_type=source_type,
+            reason="unexpected_error",
         )
         return base
 
@@ -1201,7 +1251,7 @@ def _retrieve_memory(
         roles=("assistant",),
         include_session_id=include_session_id,
         exclude_session_id=exclude_session_id,
-        source_types=("chat",),
+        source_types=("chat", "ocr", "image", "pdf"),
     )
 
 
@@ -2318,6 +2368,13 @@ def create_app(config: AppConfig) -> FastAPI:
                 output=output_text,
                 session_id=session_id,
                 prompt_version=ACTIVE_PROMPT_VERSION,
+                memory_used=[
+                    _memory_citation_response(
+                        item,
+                        max_chars=min(deps.vector_max_chars, _CHAT_MEMORY_CITATION_MAX_CHARS),
+                    )
+                    for item in retrieved_memory
+                ],
             )
             deps.history_store.append_message(session_id=session_id, role="user", content=req.message)
             assistant_message = deps.history_store.append_message(

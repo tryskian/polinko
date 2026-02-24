@@ -123,6 +123,7 @@ class PolinkoApiTests(unittest.TestCase):
         body = resp.json()
         self.assertEqual(body["output"], "Stubbed response")
         self.assertEqual(body["session_id"], "s-chat")
+        self.assertEqual(body["memory_used"], [])
 
     def test_chat_success_with_responses_orchestration(self) -> None:
         deps = server.get_runtime_deps()
@@ -576,6 +577,111 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(kwargs["model"], deps.extraction_structured_model)
         self.assertEqual(kwargs["text"]["format"]["type"], "json_schema")
 
+    def test_ocr_structured_falls_back_when_model_output_is_invalid_json(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.extraction_structured_enabled = True
+        source_text = "alpha line\nbeta line"
+        expected_hash = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                return SimpleNamespace(output_text="{not-json")
+
+        deps.responses_client = SimpleNamespace(responses=_FakeResponses())
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-structured-invalid-json",
+                "source_name": "scan-invalid.png",
+                "mime_type": "image/png",
+                "text_hint": source_text,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        structured = run_resp.json()["run"]["structured"]
+        self.assertEqual(structured["text_sha256"], expected_hash)
+        self.assertEqual(structured["char_count"], len(source_text))
+        self.assertEqual(structured["source_name"], "scan-invalid.png")
+        self.assertEqual(structured["source_type"], "ocr")
+        self.assertEqual(structured["preview"], "alpha line beta line")
+
+    def test_ocr_structured_uses_only_preview_and_clamps_length(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.extraction_structured_enabled = True
+        source_text = "trusted source text"
+        expected_hash = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
+        long_preview = "model preview " * 60
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                payload = {
+                    "schema_version": "v1",
+                    "source_type": "ocr",
+                    "source_name": "model-override.png",
+                    "mime_type": "image/png",
+                    "text_sha256": "badbadbad",
+                    "char_count": 99999,
+                    "word_count": 9999,
+                    "line_count": 777,
+                    "preview": long_preview,
+                }
+                return SimpleNamespace(output_text=json.dumps(payload))
+
+        deps.responses_client = SimpleNamespace(responses=_FakeResponses())
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-structured-clamp",
+                "source_name": "scan-clamp.png",
+                "mime_type": "image/png",
+                "text_hint": source_text,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        structured = run_resp.json()["run"]["structured"]
+        self.assertEqual(structured["text_sha256"], expected_hash)
+        self.assertEqual(structured["char_count"], len(source_text))
+        self.assertEqual(structured["source_name"], "scan-clamp.png")
+        self.assertLessEqual(len(structured["preview"]), 240)
+        self.assertTrue(structured["preview"].startswith("model preview"))
+
+    def test_ocr_structured_unexpected_error_falls_back_to_base_schema(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.extraction_structured_enabled = True
+        source_text = "fallback when enrichment fails unexpectedly"
+        expected_hash = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                raise RuntimeError("unexpected parser failure")
+
+        deps.responses_client = SimpleNamespace(responses=_FakeResponses())
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-structured-unexpected",
+                "source_name": "scan-unexpected.png",
+                "mime_type": "image/png",
+                "text_hint": source_text,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        structured = run_resp.json()["run"]["structured"]
+        self.assertEqual(structured["text_sha256"], expected_hash)
+        self.assertEqual(structured["char_count"], len(source_text))
+        self.assertEqual(structured["source_name"], "scan-unexpected.png")
+        self.assertEqual(structured["source_type"], "ocr")
+        self.assertTrue(structured["preview"].startswith("fallback when enrichment"))
+
     def test_ocr_optionally_indexes_image_context_vectors(self) -> None:
         deps = server.get_runtime_deps()
         deps.vector_enabled = True
@@ -727,6 +833,51 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(first["session_id"], "s-pdf")
         self.assertIn("pdf_ingest_id", first["metadata"])
         self.assertEqual(first["metadata"]["source_name"], "invoice-2026.pdf")
+
+    def test_pdf_ingest_structured_unexpected_error_falls_back(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf-fallback.db"))
+        deps.extraction_structured_enabled = True
+
+        class _FakeEmbeddings:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=[0.2, 0.1, 0.3, 0.4]) for _ in payload]
+                return SimpleNamespace(data=data)
+
+        class _BrokenResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                raise RuntimeError("unexpected structured failure")
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+        deps.responses_client = SimpleNamespace(responses=_BrokenResponses())
+
+        pdf_text = "Fallback PDF structured text with invoice totals"
+        expected_hash = hashlib.sha256(pdf_text.encode("utf-8")).hexdigest()
+        payload_b64 = base64.b64encode(b"%PDF-1.7 fake-payload").decode("ascii")
+        with patch("api.app_factory._extract_text_from_pdf_bytes", return_value=pdf_text):
+            ingest_resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf-fallback",
+                    "source_name": "fallback.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+
+        self.assertEqual(ingest_resp.status_code, 200)
+        structured = ingest_resp.json()["structured"]
+        self.assertEqual(structured["source_type"], "pdf")
+        self.assertEqual(structured["source_name"], "fallback.pdf")
+        self.assertEqual(structured["text_sha256"], expected_hash)
+        self.assertEqual(structured["char_count"], len(pdf_text))
+        self.assertTrue(structured["preview"].startswith("Fallback PDF structured text"))
 
     def test_pdf_ingest_optionally_indexes_in_responses_vector_store(self) -> None:
         deps = server.get_runtime_deps()
@@ -1273,6 +1424,12 @@ class PolinkoApiTests(unittest.TestCase):
                 json={"message": "Do unicorn horns keep growing in adulthood?", "session_id": "s-person-b"},
             )
         self.assertEqual(second_b.status_code, 200)
+        response_payload = second_b.json()
+        citations = response_payload["memory_used"]
+        self.assertGreaterEqual(len(citations), 1)
+        self.assertTrue(all(citation["session_id"] == "s-person-b" for citation in citations))
+        self.assertTrue(all(citation["source_type"] == "chat" for citation in citations))
+        self.assertTrue(all("From chat A" not in citation["snippet"] for citation in citations))
         self.assertIn("RETRIEVED_MEMORY", captured["input"])
         self.assertIn("From chat B", captured["input"])
         self.assertNotIn("From chat A", captured["input"])
@@ -1320,6 +1477,12 @@ class PolinkoApiTests(unittest.TestCase):
                 json={"message": "Do unicorn horns keep growing?", "session_id": "s-memory-b"},
             )
         self.assertEqual(second.status_code, 200)
+        response_payload = second.json()
+        citations = response_payload["memory_used"]
+        self.assertGreaterEqual(len(citations), 1)
+        self.assertRegex(citations[0]["vector_id"], r"^vec-[0-9a-f]{12}$")
+        self.assertEqual(citations[0]["source_type"], "chat")
+        self.assertIn("First assistant memory", citations[0]["snippet"])
         self.assertIn("RETRIEVED_MEMORY", captured["input"])
         self.assertIn("First assistant memory", captured["input"])
 

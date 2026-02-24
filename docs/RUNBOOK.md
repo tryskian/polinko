@@ -49,6 +49,7 @@
 - `POST /chats/{session_id}/deprecate` deprecate a chat
 - `PATCH /chats/{session_id}` rename chat
 - `DELETE /chats/{session_id}` delete chat and clear memory
+- `POST /chat` returns `memory_used` citations (vector snippets + source metadata) when retrieval is used
 - `POST /skills/ocr` run OCR (scaffold or OpenAI mode, includes `run.structured`)
 - `POST /skills/pdf_ingest` extract and index PDF text into vector memory (includes `structured`)
 - `POST /skills/file_search` search indexed vector content (OCR/chat sources)
@@ -178,6 +179,14 @@ Hash fields in responses:
 
 1. Run `make test`.
 2. Fix failures before merging.
+
+## Run Retrieval Eval
+
+1. Ensure API is running locally (`make server`).
+2. Run `make eval-retrieval`.
+3. Optional:
+   - custom endpoint: `python tools/eval_retrieval.py --base-url http://127.0.0.1:8000`
+   - retain generated eval chats: `python tools/eval_retrieval.py --keep-chats`
 
 ## Export CLI Transcript
 

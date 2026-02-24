@@ -113,6 +113,7 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 - `POST /chats/{session_id}/deprecate` mark a chat as deprecated (hidden from default list)
 - `PATCH /chats/{session_id}` rename a chat
 - `DELETE /chats/{session_id}` delete a chat
+- `POST /chat` returns assistant output and `memory_used` citations when vector retrieval is applied
 - `POST /skills/ocr` OCR endpoint (scaffold/OpenAI mode, includes `run.structured` normalized extraction payload)
 - `POST /skills/file_search` search indexed vectors (defaults to OCR sources)
 - `POST /skills/pdf_ingest` PDF extract + index endpoint (includes `structured` normalized extraction payload)
@@ -175,3 +176,20 @@ Config:
 GitHub Actions runs:
 
 - unit tests on every push and PR
+
+## Retrieval Eval Harness
+
+Use the deterministic retrieval evaluator to verify:
+
+- global cross-chat recall (retrieval works across sessions when scope is `global`)
+- session isolation (no cross-chat citations when scope is `session`)
+
+Command:
+
+- `make eval-retrieval`
+
+Notes:
+
+- Uses `docs/retrieval_eval_cases.json` (12 seeded OCR cases)
+- Uses `/chat.memory_used` citations for pass/fail checks
+- Cleans up generated eval chats by default (`--keep-chats` to retain)
