@@ -1287,6 +1287,70 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("invoice", first["snippet"].lower())
         self.assertIn("ocr_run_id", first["metadata"])
 
+    def test_file_search_returns_ranked_pdf_matches(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-search-pdf.db"))
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "policy" in lowered else 0.0,
+                    1.0 if "join" in lowered else 0.0,
+                    1.0 if "signal" in lowered else 0.0,
+                    float(len(lowered) % 29) / 29.0,
+                ]
+
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        payload_b64 = base64.b64encode(b"%PDF-1.7 fake-policy").decode("ascii")
+        with patch(
+            "api.app_factory._extract_text_from_pdf_bytes",
+            return_value="Policy update: joins require two independent signals.",
+        ):
+            ingest_resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-search-pdf",
+                    "source_name": "policy-joins.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+
+        self.assertEqual(ingest_resp.status_code, 200)
+        ingest_id = ingest_resp.json()["ingest_id"]
+
+        search = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "query": "policy join signals",
+                "session_id": "s-search-pdf",
+                "source_types": ["pdf"],
+                "limit": 3,
+            },
+        )
+        self.assertEqual(search.status_code, 200)
+        payload = search.json()
+        self.assertGreater(len(payload["matches"]), 0)
+        first = payload["matches"][0]
+        self.assertEqual(first["source_type"], "pdf")
+        self.assertEqual(first["session_id"], "s-search-pdf")
+        self.assertIn("policy", first["snippet"].lower())
+        self.assertEqual(first["metadata"].get("source"), "pdf")
+        self.assertEqual(first["metadata"].get("pdf_ingest_id"), ingest_id)
+
     def test_file_search_requires_vector_memory(self) -> None:
         resp = self.client.post(
             "/skills/file_search",
