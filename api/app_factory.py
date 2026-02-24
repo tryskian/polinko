@@ -367,6 +367,7 @@ class OcrRequest(BaseModel):
     mime_type: str | None = Field(default=None, max_length=120)
     data_base64: str | None = None
     text_hint: str | None = None
+    visual_context_hint: str | None = None
     source_message_id: str | None = None
     attach_to_chat: bool = True
 
@@ -1118,6 +1119,19 @@ def _extract_image_context(
     session_id: str,
     principal: str | None,
 ) -> str | None:
+    hint = (req.visual_context_hint or "").strip()
+    if hint:
+        compact_hint = hint[:_IMAGE_CONTEXT_MAX_CHARS].strip()
+        if compact_hint:
+            _log_event(
+                "image_context_hint_used",
+                request_id=request_id,
+                session_id=session_id,
+                principal=principal,
+                chars=len(compact_hint),
+            )
+            return compact_hint
+
     if not deps.image_context_enabled:
         return None
     if deps.responses_client is None:

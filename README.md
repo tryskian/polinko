@@ -118,7 +118,7 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 - `PATCH /chats/{session_id}` rename a chat
 - `DELETE /chats/{session_id}` delete a chat
 - `POST /chat` returns assistant output and `memory_used` citations when vector retrieval is applied
-- `POST /skills/ocr` OCR endpoint (scaffold/OpenAI mode, includes `run.structured` normalized extraction payload)
+- `POST /skills/ocr` OCR endpoint (scaffold/OpenAI mode, includes `run.structured` normalized extraction payload; optional `visual_context_hint` for deterministic image-context indexing)
 - `POST /skills/file_search` search indexed vectors (defaults to OCR sources)
 - `POST /skills/pdf_ingest` PDF extract + index endpoint (includes `structured` normalized extraction payload)
 - `GET /metrics` API metrics (request totals, status counts, latency buckets, 429 count)
@@ -216,7 +216,7 @@ Command:
 
 Notes:
 
-- Uses `docs/file_search_eval_cases.json` (mixed `ocr` + `pdf` + optional `image_context` seed methods)
+- Uses `docs/file_search_eval_cases.json` (mixed `ocr` + `pdf` + `image_context` seed methods)
 - Seeds OCR vectors per case, then validates `/skills/file_search` behavior
 - Cleans up generated eval chats by default (`--keep-chats` to retain)
 

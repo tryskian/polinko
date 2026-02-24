@@ -233,6 +233,8 @@ def _seed_image_context_memory(
     headers: dict[str, str],
     session_id: str,
     source_name: str,
+    text_hint: str,
+    visual_context_hint: str,
     timeout: int,
 ) -> None:
     _request_json(
@@ -245,6 +247,8 @@ def _seed_image_context_memory(
             "source_name": source_name if source_name.lower().endswith(".png") else f"{source_name}.png",
             "mime_type": "image/png",
             "data_base64": _ONE_BY_ONE_PNG_BASE64,
+            "text_hint": text_hint,
+            "visual_context_hint": visual_context_hint,
             "attach_to_chat": False,
         },
         timeout=timeout,
@@ -327,13 +331,6 @@ def _preflight(base_url: str, headers: dict[str, str], timeout: int) -> None:
     )
 
 
-def _bool_env(name: str, default: bool = False) -> bool:
-    raw = os.getenv(name)
-    if raw is None:
-        return default
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run file_search reliability checks for scoped and global lookup behavior.",
@@ -394,8 +391,6 @@ def main() -> int:
     global_failures = 0
     leak_failures = 0
     error_failures = 0
-    image_context_enabled = _bool_env("POLINKO_IMAGE_CONTEXT_ENABLED", False)
-
     for index, case in enumerate(cases, start=1):
         case_id = case["id"]
         seed_session = f"{args.session_prefix}-{run_id}-seed-{case_id}"
@@ -408,11 +403,6 @@ def main() -> int:
 
         print(f"\n[{index}/{len(cases)}] {case_id}")
         try:
-            if seed_method == "image_context" and not image_context_enabled:
-                skipped.append(f"{case_id}: image_context disabled")
-                print("  SKIP: POLINKO_IMAGE_CONTEXT_ENABLED is false.")
-                continue
-
             _create_chat(args.base_url, headers, seed_session, args.timeout)
             _create_chat(args.base_url, headers, distractor_session, args.timeout)
 
@@ -440,6 +430,8 @@ def main() -> int:
                     headers=headers,
                     session_id=seed_session,
                     source_name=source_name,
+                    text_hint=case["seed_text"],
+                    visual_context_hint=case["seed_text"],
                     timeout=args.timeout,
                 )
             else:
