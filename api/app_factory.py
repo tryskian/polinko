@@ -2014,6 +2014,11 @@ def create_app(config: AppConfig) -> FastAPI:
             raise HTTPException(status_code=503, detail="Vector memory is not enabled.")
 
         query = req.query.strip()
+        if not query:
+            raise HTTPException(status_code=422, detail="query cannot be blank.")
+        session_filter = req.session_id.strip() if req.session_id else None
+        if req.session_id is not None and not session_filter:
+            raise HTTPException(status_code=422, detail="session_id cannot be blank.")
         source_types = _normalize_file_search_source_types(req.source_types)
         search_min_similarity = max(
             _FILE_SEARCH_MIN_SIMILARITY_FLOOR,
@@ -2041,13 +2046,12 @@ def create_app(config: AppConfig) -> FastAPI:
             limit=candidate_limit,
             min_similarity=search_min_similarity,
             roles=("assistant",),
+            include_session_id=session_filter,
             source_types=source_types,
         )
         query_tokens = _tokenize_file_search_text(query)
         ranked: list[tuple[float, float, float, VectorMatch]] = []
         for candidate in candidates:
-            if req.session_id and candidate.session_id != req.session_id:
-                continue
             keyword_score = _keyword_overlap_score(query_tokens, candidate.content)
             score = (candidate.similarity * 0.78) + (keyword_score * 0.22)
             ranked.append((score, candidate.similarity, keyword_score, candidate))

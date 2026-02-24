@@ -1125,6 +1125,54 @@ class PolinkoApiTests(unittest.TestCase):
         )
         self.assertEqual(resp.status_code, 503)
 
+    def test_file_search_rejects_blank_query_after_trim(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-search-query.db"))
+        deps.embedding_client = SimpleNamespace(
+            embeddings=SimpleNamespace(create=lambda **_: SimpleNamespace(data=[SimpleNamespace(embedding=[0.1, 0.2])]))
+        )
+
+        resp = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={"query": "   "},
+        )
+        self.assertEqual(resp.status_code, 422)
+        self.assertEqual(resp.json()["detail"], "query cannot be blank.")
+
+    def test_file_search_rejects_blank_session_id_after_trim(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-search-session.db"))
+        deps.embedding_client = SimpleNamespace(
+            embeddings=SimpleNamespace(create=lambda **_: SimpleNamespace(data=[SimpleNamespace(embedding=[0.1, 0.2])]))
+        )
+
+        resp = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={"query": "invoice", "session_id": "   "},
+        )
+        self.assertEqual(resp.status_code, 422)
+        self.assertEqual(resp.json()["detail"], "session_id cannot be blank.")
+
+    def test_file_search_rejects_unsupported_source_types(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-search-source-types.db"))
+        deps.embedding_client = SimpleNamespace(
+            embeddings=SimpleNamespace(create=lambda **_: SimpleNamespace(data=[SimpleNamespace(embedding=[0.1, 0.2])]))
+        )
+
+        resp = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={"query": "invoice", "source_types": ["ocr", "banana"]},
+        )
+        self.assertEqual(resp.status_code, 422)
+        self.assertIn("Unsupported source_types", resp.json()["detail"])
+
     def test_create_chat_and_reset_clears_messages(self) -> None:
         created = self.client.post("/chats", headers={"x-api-key": "test-server-key"}, json={})
         self.assertEqual(created.status_code, 200)
