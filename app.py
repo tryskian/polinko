@@ -6,6 +6,18 @@ import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
+
+Runner: Any
+APIConnectionError: type[Exception]
+APIStatusError: type[Exception]
+AuthenticationError: type[Exception]
+RateLimitError: type[Exception]
+load_config: Any
+ChatHistoryStore: Any
+create_agent: Any
+create_run_config: Any
+create_session: Any
 
 try:
     from agents import Runner
@@ -116,7 +128,7 @@ def _new_cli_session_id() -> str:
     return f"cli-{uuid.uuid4().hex[:8]}"
 
 
-def _switch_session(session_id: str):
+def _switch_session(session_id: str) -> Any:
     next_session = create_session(
         session_id=session_id,
         db_path=config.session_db_path,

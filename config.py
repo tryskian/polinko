@@ -26,7 +26,11 @@ class AppConfig:
     vector_db_path: str
     vector_embedding_model: str
     vector_top_k: int
+    vector_top_k_global: int
+    vector_top_k_session: int
     vector_min_similarity: float
+    vector_min_similarity_global: float
+    vector_min_similarity_session: float
     vector_max_chars: int
     vector_exclude_current_session: bool
     responses_orchestration_enabled: bool
@@ -230,7 +234,21 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         or "text-embedding-3-small"
     )
     vector_top_k = _parse_int_env("POLINKO_VECTOR_TOP_K", 2, minimum=1)
+    vector_top_k_global = _parse_int_env("POLINKO_VECTOR_TOP_K_GLOBAL", vector_top_k, minimum=1)
+    vector_top_k_session = _parse_int_env("POLINKO_VECTOR_TOP_K_SESSION", vector_top_k, minimum=1)
     vector_min_similarity = _parse_float_env("POLINKO_VECTOR_MIN_SIMILARITY", 0.40, minimum=0.0, maximum=1.0)
+    vector_min_similarity_global = _parse_float_env(
+        "POLINKO_VECTOR_MIN_SIMILARITY_GLOBAL",
+        vector_min_similarity,
+        minimum=0.0,
+        maximum=1.0,
+    )
+    vector_min_similarity_session = _parse_float_env(
+        "POLINKO_VECTOR_MIN_SIMILARITY_SESSION",
+        vector_min_similarity,
+        minimum=0.0,
+        maximum=1.0,
+    )
     vector_max_chars = _parse_int_env("POLINKO_VECTOR_MAX_CHARS", 220, minimum=80)
     vector_exclude_current_session = _parse_bool_env("POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION", True)
     responses_orchestration_enabled = _parse_bool_env("POLINKO_RESPONSES_ORCHESTRATION_ENABLED", False)
@@ -289,7 +307,11 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         vector_db_path=vector_db_path,
         vector_embedding_model=vector_embedding_model,
         vector_top_k=vector_top_k,
+        vector_top_k_global=vector_top_k_global,
+        vector_top_k_session=vector_top_k_session,
         vector_min_similarity=vector_min_similarity,
+        vector_min_similarity_global=vector_min_similarity_global,
+        vector_min_similarity_session=vector_min_similarity_session,
         vector_max_chars=vector_max_chars,
         vector_exclude_current_session=vector_exclude_current_session,
         responses_orchestration_enabled=responses_orchestration_enabled,

@@ -10,7 +10,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any, cast
 
-from agents import Agent, Runner, RunConfig
+from agents import Agent, ModelSettings, Runner, RunConfig
 from agents.memory import Session
 from fastapi import FastAPI, HTTPException, Request
 from openai import (
@@ -76,6 +76,15 @@ _FACTUAL_QUERY_HINTS = (
     "gdp",
     "law",
     "policy",
+)
+_FACTUAL_GROUNDED_TEMPERATURE = 0.25
+_FACTUAL_LOW_EVIDENCE_TEMPERATURE = 0.15
+_FICTIONAL_QUERY_HINTS = (
+    "fictional",
+    "fictitious",
+    "imaginary",
+    "made-up",
+    "made up",
 )
 
 
@@ -169,7 +178,11 @@ class RuntimeDeps:
     ocr_client: OpenAI | None
     vector_enabled: bool
     vector_top_k: int
+    vector_top_k_global: int
+    vector_top_k_session: int
     vector_min_similarity: float
+    vector_min_similarity_global: float
+    vector_min_similarity_session: float
     vector_max_chars: int
     vector_exclude_current_session: bool
     vector_embedding_model: str
@@ -594,6 +607,7 @@ def _build_structured_extraction(
         or deps.responses_client is None
     ):
         return base
+    responses_client = deps.responses_client
 
     source_snippet = text[:_STRUCTURED_SOURCE_MAX_CHARS]
     prompt = (
@@ -612,17 +626,20 @@ def _build_structured_extraction(
         f"{source_snippet}"
     )
     try:
-        response = deps.responses_client.responses.create(
+        response = responses_client.responses.create(
             model=deps.extraction_structured_model,
             input=prompt,
-            text={
-                "format": {
-                    "type": "json_schema",
-                    "name": "extraction_structured_v1",
-                    "strict": True,
-                    "schema": _EXTRACTION_STRUCTURED_JSON_SCHEMA,
-                }
-            },
+            text=cast(
+                Any,
+                {
+                    "format": {
+                        "type": "json_schema",
+                        "name": "extraction_structured_v1",
+                        "strict": True,
+                        "schema": _EXTRACTION_STRUCTURED_JSON_SCHEMA,
+                    }
+                },
+            ),
         )
         payload = json.loads(_extract_responses_output_text(response))
         if not isinstance(payload, dict):
@@ -964,18 +981,22 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
         raise HTTPException(status_code=503, detail="OCR provider client is not configured.")
 
     data_url = f"data:{mime_type};base64,{base64.b64encode(decoded).decode('ascii')}"
+    ocr_input = cast(
+        Any,
+        [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": deps.ocr_prompt},
+                    {"type": "input_image", "image_url": data_url},
+                ],
+            }
+        ],
+    )
     try:
         response = deps.ocr_client.responses.create(
             model=deps.ocr_model,
-            input=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "input_text", "text": deps.ocr_prompt},
-                        {"type": "input_image", "image_url": data_url},
-                    ],
-                }
-            ],
+            input=ocr_input,
         )
     except AuthenticationError as exc:
         raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
@@ -1040,6 +1061,7 @@ def _extract_image_context(
         return None
     if deps.responses_client is None:
         return None
+    responses_client = deps.responses_client
     if not req.data_base64 or not req.data_base64.strip():
         return None
 
@@ -1053,18 +1075,22 @@ def _extract_image_context(
         return None
 
     data_url = f"data:{mime_type};base64,{base64.b64encode(decoded).decode('ascii')}"
+    image_context_input = cast(
+        Any,
+        [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": deps.image_context_prompt},
+                    {"type": "input_image", "image_url": data_url},
+                ],
+            }
+        ],
+    )
     try:
-        response = deps.responses_client.responses.create(
+        response = responses_client.responses.create(
             model=deps.image_context_model,
-            input=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "input_text", "text": deps.image_context_prompt},
-                        {"type": "input_image", "image_url": data_url},
-                    ],
-                }
-            ],
+            input=image_context_input,
         )
         context_text = _extract_responses_output_text(response).strip()
         if not context_text:
@@ -1240,14 +1266,18 @@ def _retrieve_memory(
     normalized_scope = memory_scope.strip().lower()
     include_session_id: str | None = None
     exclude_session_id: str | None = None
+    top_k = deps.vector_top_k_global
+    min_similarity = deps.vector_min_similarity_global
     if normalized_scope == "session":
         include_session_id = session_id
+        top_k = deps.vector_top_k_session
+        min_similarity = deps.vector_min_similarity_session
     else:
         exclude_session_id = session_id if deps.vector_exclude_current_session else None
     return deps.vector_store.search(
         query_embedding=query_vector,
-        limit=deps.vector_top_k,
-        min_similarity=deps.vector_min_similarity,
+        limit=top_k,
+        min_similarity=min_similarity,
         roles=("assistant",),
         include_session_id=include_session_id,
         exclude_session_id=exclude_session_id,
@@ -1504,16 +1534,56 @@ def _build_hallucination_guardrail_note(
     if evidence_count > 0:
         return (
             "[HALLUCINATION_GUARDRAIL: grounded mode]\n"
-            "- Prefer claims that are supported by available context.\n"
-            "- If certainty is low, signal uncertainty briefly instead of guessing.\n"
-            "- Do not fabricate citations, dates, names, or numeric values."
+            "- Constrain claims to retrieved/available evidence.\n"
+            "- Do not add mechanisms, conditions, or specifics that are not present in evidence.\n"
+            "- If certainty is low, say that briefly instead of guessing.\n"
+            "- Do not fabricate citations, dates, names, winners, or numeric values."
         )
     return (
         "[HALLUCINATION_GUARDRAIL: low-evidence mode]\n"
         "- Avoid presenting uncertain facts as certain.\n"
-        "- If supporting evidence is missing, say that clearly and keep claims cautious.\n"
-        "- Do not invent sources, statistics, dates, names, or quotations."
+        "- If supporting evidence is missing, state that clearly before any answer.\n"
+        "- Do not invent sources, statistics, dates, names, winners, organizations, or quotations.\n"
+        "- For unknown/fictional events, do not fabricate a winner or concrete outcome."
     )
+
+
+def _factual_run_config(
+    *,
+    deps: RuntimeDeps,
+    query_text: str,
+    evidence_count: int,
+) -> RunConfig:
+    if not _looks_like_factual_query(query_text):
+        return deps.run_config
+    temperature = (
+        _FACTUAL_GROUNDED_TEMPERATURE if evidence_count > 0 else _FACTUAL_LOW_EVIDENCE_TEMPERATURE
+    )
+    store = True
+    base_settings = getattr(deps.run_config, "model_settings", None)
+    if base_settings is not None and getattr(base_settings, "store", None) is not None:
+        store = bool(base_settings.store)
+    return RunConfig(
+        model_settings=ModelSettings(
+            temperature=temperature,
+            top_p=1.0,
+            store=store,
+        )
+    )
+
+
+def _low_evidence_factual_reply(query_text: str, evidence_count: int) -> str | None:
+    if evidence_count > 0:
+        return None
+    if not _looks_like_factual_query(query_text):
+        return None
+    lowered = query_text.lower()
+    if any(hint in lowered for hint in _FICTIONAL_QUERY_HINTS):
+        return (
+            "I can’t verify a winner for that because the event is fictional and there is no "
+            "grounding evidence in this session."
+        )
+    return None
 
 
 def _resolve_responses_tools(
@@ -1568,6 +1638,7 @@ def _chat_with_responses_orchestration(
 ) -> tuple[str, int]:
     if deps.responses_client is None:
         raise RuntimeError("Responses orchestration is enabled, but no client is configured.")
+    responses_client = deps.responses_client
     history_messages = deps.history_store.list_messages(session_id=session_id)
     history_context = _recent_chat_context_for_responses(
         history_messages,
@@ -1600,11 +1671,11 @@ def _chat_with_responses_orchestration(
         principal=principal,
     )
 
-    response = deps.responses_client.responses.create(
+    response = responses_client.responses.create(
         model=deps.responses_orchestration_model,
         instructions=ACTIVE_PROMPT,
         input=input_text,
-        tools=tools,
+        tools=cast(Any, tools),
     )
     output = _extract_responses_output_text(response)
     return output, len(tools)
@@ -1650,7 +1721,11 @@ def create_app(config: AppConfig) -> FastAPI:
         ocr_client=shared_openai_client if config.ocr_provider == "openai" else None,
         vector_enabled=config.vector_enabled,
         vector_top_k=config.vector_top_k,
+        vector_top_k_global=config.vector_top_k_global,
+        vector_top_k_session=config.vector_top_k_session,
         vector_min_similarity=config.vector_min_similarity,
+        vector_min_similarity_global=config.vector_min_similarity_global,
+        vector_min_similarity_session=config.vector_min_similarity_session,
         vector_max_chars=config.vector_max_chars,
         vector_exclude_current_session=config.vector_exclude_current_session,
         vector_embedding_model=config.vector_embedding_model,
@@ -2314,13 +2389,23 @@ def create_app(config: AppConfig) -> FastAPI:
                         guardrail_note=guardrail_note,
                         collaboration_note=collaboration_note,
                     )
-                    result = await Runner.run(
-                        deps.agent,
-                        model_input,
-                        run_config=deps.run_config,
-                        session=session,
+                    low_evidence_reply = _low_evidence_factual_reply(
+                        req.message, len(retrieved_memory)
                     )
-                    output_text = str(result.final_output)
+                    if low_evidence_reply is not None:
+                        output_text = low_evidence_reply
+                    else:
+                        result = await Runner.run(
+                            deps.agent,
+                            model_input,
+                            run_config=_factual_run_config(
+                                deps=deps,
+                                query_text=req.message,
+                                evidence_count=len(retrieved_memory),
+                            ),
+                            session=session,
+                        )
+                        output_text = str(result.final_output)
             except AuthenticationError as exc:
                 _log_event(
                     "chat_error",

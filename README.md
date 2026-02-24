@@ -62,6 +62,8 @@ API client extras (`python tools/client.py`):
 7. Optional vector memory mode (cross-chat retrieval while tuning):
    - `POLINKO_VECTOR_ENABLED=true`
    - tune retrieval with `POLINKO_VECTOR_TOP_K`, `POLINKO_VECTOR_MIN_SIMILARITY`,
+     `POLINKO_VECTOR_TOP_K_GLOBAL`, `POLINKO_VECTOR_TOP_K_SESSION`,
+     `POLINKO_VECTOR_MIN_SIMILARITY_GLOBAL`, `POLINKO_VECTOR_MIN_SIMILARITY_SESSION`,
      and `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION`
 8. Optional Responses orchestration mode (feature-flagged, RAG via OpenAI file search tool):
    - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED=true`
@@ -130,7 +132,11 @@ Config:
 - `POLINKO_VECTOR_DB_PATH` (default: `.polinko_vector.db`)
 - `POLINKO_VECTOR_EMBEDDING_MODEL` (default: `text-embedding-3-small`)
 - `POLINKO_VECTOR_TOP_K` (default: `2`)
+- `POLINKO_VECTOR_TOP_K_GLOBAL` (default: inherits `POLINKO_VECTOR_TOP_K`)
+- `POLINKO_VECTOR_TOP_K_SESSION` (default: inherits `POLINKO_VECTOR_TOP_K`)
 - `POLINKO_VECTOR_MIN_SIMILARITY` (default: `0.40`)
+- `POLINKO_VECTOR_MIN_SIMILARITY_GLOBAL` (default: inherits `POLINKO_VECTOR_MIN_SIMILARITY`)
+- `POLINKO_VECTOR_MIN_SIMILARITY_SESSION` (default: inherits `POLINKO_VECTOR_MIN_SIMILARITY`)
 - `POLINKO_VECTOR_MAX_CHARS` (default: `220`)
 - `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION` (default: `true`)
 - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED` (default: `false`)

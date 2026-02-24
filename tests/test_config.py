@@ -56,7 +56,11 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(cfg.vector_db_path, ".polinko_vector.db")
         self.assertEqual(cfg.vector_embedding_model, "text-embedding-3-small")
         self.assertEqual(cfg.vector_top_k, 2)
+        self.assertEqual(cfg.vector_top_k_global, 2)
+        self.assertEqual(cfg.vector_top_k_session, 2)
         self.assertEqual(cfg.vector_min_similarity, 0.40)
+        self.assertEqual(cfg.vector_min_similarity_global, 0.40)
+        self.assertEqual(cfg.vector_min_similarity_session, 0.40)
         self.assertEqual(cfg.vector_max_chars, 220)
         self.assertTrue(cfg.vector_exclude_current_session)
         self.assertFalse(cfg.responses_orchestration_enabled)
@@ -117,6 +121,25 @@ class ConfigTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaises(RuntimeError):
                 load_config(dotenv_path="__missing__.env")
+
+    def test_vector_scope_overrides_from_env(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_VECTOR_TOP_K": "3",
+            "POLINKO_VECTOR_TOP_K_GLOBAL": "4",
+            "POLINKO_VECTOR_TOP_K_SESSION": "2",
+            "POLINKO_VECTOR_MIN_SIMILARITY": "0.45",
+            "POLINKO_VECTOR_MIN_SIMILARITY_GLOBAL": "0.55",
+            "POLINKO_VECTOR_MIN_SIMILARITY_SESSION": "0.35",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            cfg = load_config(dotenv_path="__missing__.env")
+        self.assertEqual(cfg.vector_top_k, 3)
+        self.assertEqual(cfg.vector_top_k_global, 4)
+        self.assertEqual(cfg.vector_top_k_session, 2)
+        self.assertEqual(cfg.vector_min_similarity, 0.45)
+        self.assertEqual(cfg.vector_min_similarity_global, 0.55)
+        self.assertEqual(cfg.vector_min_similarity_session, 0.35)
 
     def test_responses_orchestration_requires_vector_store_id(self) -> None:
         env = {

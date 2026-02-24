@@ -51,7 +51,11 @@ class PolinkoApiTests(unittest.TestCase):
         deps.ocr_client = None
         deps.vector_enabled = False
         deps.vector_top_k = 2
+        deps.vector_top_k_global = 2
+        deps.vector_top_k_session = 2
         deps.vector_min_similarity = 0.40
+        deps.vector_min_similarity_global = 0.40
+        deps.vector_min_similarity_session = 0.40
         deps.vector_max_chars = 220
         deps.vector_exclude_current_session = True
         deps.vector_embedding_model = "text-embedding-3-small"
@@ -1371,6 +1375,30 @@ class PolinkoApiTests(unittest.TestCase):
             )
         self.assertEqual(resp.status_code, 200)
         self.assertIn("HALLUCINATION_GUARDRAIL", captured["input"])
+        self.assertIn("do not fabricate", captured["input"].lower())
+        self.assertIn("unknown/fictional events", captured["input"].lower())
+
+    def test_fictional_factual_query_short_circuits_without_runner(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.hallucination_guardrails_enabled = True
+
+        async def _runner_should_not_be_called(*args: object, **kwargs: Any) -> SimpleNamespace:
+            del args, kwargs
+            raise AssertionError("Runner.run should not be called for fictional low-evidence factual query.")
+
+        with patch.object(server.Runner, "run", new=_runner_should_not_be_called):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "Who won the fictional 2029 Aurora Prize in computational mythology?",
+                    "session_id": "s-fictional-guardrail",
+                },
+            )
+        self.assertEqual(resp.status_code, 200)
+        output = resp.json()["output"].lower()
+        self.assertIn("fictional", output)
+        self.assertIn("no grounding evidence", output)
 
     def test_personalization_endpoint_sets_scope(self) -> None:
         resp = self.client.post(
@@ -1421,6 +1449,8 @@ class PolinkoApiTests(unittest.TestCase):
         deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-personal.db"))
         deps.personalization_default_memory_scope = "global"
         deps.vector_min_similarity = 0.0
+        deps.vector_min_similarity_global = 0.0
+        deps.vector_min_similarity_session = 0.0
 
         class _FakeEmbeddings:
             @staticmethod
