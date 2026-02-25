@@ -236,6 +236,8 @@ Hash fields in responses:
 5. Optional tuning:
    - choose model: `python tools/eval_hallucination.py --judge-model gpt-4.1-mini`
    - retain generated chats: `python tools/eval_hallucination.py --keep-chats`
+   - write JSON report: `python tools/eval_hallucination.py --report-json eval_reports/hallucination-latest.json`
+   - one-command report run: `make eval-hallucination-report`
 6. Eval isolation behavior:
    - Each generated eval chat is set to `memory_scope=session` to reduce cross-chat retrieval noise.
 

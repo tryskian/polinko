@@ -245,10 +245,12 @@ Use the judge-based evaluator to score groundedness and hallucination risk of `/
 Command:
 
 - `make eval-hallucination`
+- `make eval-hallucination-report` (writes a timestamped JSON report under `eval_reports/`)
 
 Optional strict mode (CI gate style):
 
 - `python tools/eval_hallucination.py --strict`
+- `python tools/eval_hallucination.py --strict --report-json eval_reports/hallucination-latest.json`
 
 Notes:
 
@@ -256,6 +258,7 @@ Notes:
 - Uses OpenAI model judging (`--judge-model`, default `gpt-4.1-mini`)
 - Sets each eval chat to `memory_scope=session` for deterministic isolation
 - Non-blocking by default; strict mode fails on any judged case failure
+- Report JSON includes case-level scores, risk labels, and judge notes for offline review/ingest.
 
 ## Style Eval Harness
 

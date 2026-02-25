@@ -323,6 +323,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Keep generated eval chats instead of deleting them.",
     )
+    parser.add_argument(
+        "--report-json",
+        default="",
+        help="Optional path to write a JSON run report artifact.",
+    )
     return parser
 
 
@@ -357,6 +362,7 @@ def main() -> int:
     passes = 0
     failures: list[str] = []
     risk_counts = {"low": 0, "medium": 0, "high": 0}
+    case_results: list[dict[str, Any]] = []
 
     for index, case in enumerate(cases, start=1):
         session_id = f"{args.session_prefix}-{run_id}-{case['id']}"
@@ -403,16 +409,38 @@ def main() -> int:
 
             passed = bool(judgment.get("pass"))
             score = int(judgment.get("score", 0))
+            grounding = str(judgment.get("grounding", "unknown"))
+            notes = str(judgment.get("notes", "")).strip()
+            case_results.append(
+                {
+                    "id": case["id"],
+                    "session_id": session_id,
+                    "pass": passed,
+                    "score": score,
+                    "risk": risk,
+                    "grounding": grounding,
+                    "notes": notes,
+                    "answer": answer,
+                }
+            )
             if passed:
                 passes += 1
                 print(f"  PASS score={score} risk={risk}")
             else:
-                note = str(judgment.get("notes", "")).strip()
-                failures.append(f"{case['id']}: score={score} risk={risk} notes={note}")
+                failures.append(f"{case['id']}: score={score} risk={risk} notes={notes}")
                 print(f"  FAIL score={score} risk={risk}")
         except Exception as exc:
-            failures.append(f"{case['id']}: error - {exc}")
-            print(f"  ERROR {exc}")
+            error_text = str(exc)
+            case_results.append(
+                {
+                    "id": case["id"],
+                    "session_id": session_id,
+                    "pass": False,
+                    "error": error_text,
+                }
+            )
+            failures.append(f"{case['id']}: error - {error_text}")
+            print(f"  ERROR {error_text}")
         finally:
             if not args.keep_chats:
                 try:
@@ -432,6 +460,34 @@ def main() -> int:
     if failures:
         for item in failures:
             print(f"  - {item}")
+
+    report_path = args.report_json.strip()
+    if report_path:
+        output_path = Path(report_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(
+                {
+                    "run_id": run_id,
+                    "base_url": args.base_url,
+                    "judge_model": args.judge_model,
+                    "strict": bool(args.strict),
+                    "total_cases": len(cases),
+                    "passed": passes,
+                    "failed": len(failures),
+                    "risk_counts": risk_counts,
+                    "cases": case_results,
+                    "summary_lines": failures,
+                    "timestamp_unix": int(time.time()),
+                },
+                ensure_ascii=False,
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        print(f"Report written: {output_path}")
+
     if args.strict and failures:
         return 1
     return 0

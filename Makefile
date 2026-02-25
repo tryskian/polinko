@@ -7,7 +7,7 @@ ENV_FILE ?= .env
 GATE_PORT ?= 8066
 GATE_BASE_URL ?= http://127.0.0.1:$(GATE_PORT)
 
-.PHONY: chat server test eval-retrieval eval-file-search eval-hallucination eval-style eval-ocr quality-gate ui-install ui-dev ui-build docker-build docker-run dev
+.PHONY: chat server test eval-retrieval eval-file-search eval-hallucination eval-hallucination-report eval-style eval-ocr quality-gate ui-install ui-dev ui-build docker-build docker-run dev
 
 chat:
 	$(PYTHON) app.py
@@ -26,6 +26,11 @@ eval-file-search:
 
 eval-hallucination:
 	$(PYTHON) tools/eval_hallucination.py
+
+eval-hallucination-report:
+	@mkdir -p eval_reports
+	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
+	$(PYTHON) tools/eval_hallucination.py --run-id $$RUN_ID --report-json "eval_reports/hallucination-$$RUN_ID.json"
 
 eval-style:
 	$(PYTHON) tools/eval_style.py
