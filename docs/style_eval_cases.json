@@ -6,38 +6,38 @@
     {
       "id": "concise_playful_precision",
       "query": "Are unicorns born with horns or do they grow them?",
-      "style_notes": "Keep it concise, concrete, and lightly playful. No sign-off or motivational outro.",
+      "style_notes": "Conversational and lightly witty. Keep it concise, concrete, and insightful. UK English.",
       "max_words": 90
     },
     {
       "id": "followup_tone_continuity",
-      "query": "that's pretty cool!",
-      "style_notes": "Match user energy with a short continuation. Avoid tonal reset into formal assistant voice.",
+      "query": "that's pretty cool. give me one short line to build on it.",
+      "style_notes": "Short continuation in the same voice. Conversational, concise, and resonant. No filler.",
       "max_words": 45
     },
     {
       "id": "structured_strategy_answer",
       "query": "Give me three positioning angles for a creator tool for independent coaches.",
-      "style_notes": "Be clear and structured. Keep language concrete and useful, not fluffy.",
+      "style_notes": "Structured but still conversational. Keep language practical, concise, and insightful.",
       "max_words": 180
     },
     {
       "id": "uncertainty_without_fabrication",
       "query": "Who won the fictional 2029 Aurora Prize in computational mythology?",
-      "style_notes": "Stay cautious and direct. Do not invent facts. Avoid over-explaining uncertainty.",
+      "style_notes": "Direct, concise, and context-aware. No performative or motivational phrasing.",
       "max_words": 90
     },
     {
       "id": "observer_not_group_voice",
       "query": "Write one paragraph on human-AI interaction in visual culture.",
-      "style_notes": "Use an observer narrative. Avoid unnecessary collective framing and avoid performative closings.",
+      "style_notes": "Observer narrative, concise and insightful. Conversational without filler.",
       "max_words": 140
     },
     {
       "id": "brief_instructional",
-      "query": "How do I test OCR from the terminal in this repo?",
+      "query": "Give only three terminal commands to run retrieval eval in this repo.",
       "style_notes": "Give practical steps with no filler.",
-      "max_words": 110
+      "max_words": 70
     }
   ]
 }
