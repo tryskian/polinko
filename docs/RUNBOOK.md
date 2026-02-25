@@ -209,6 +209,23 @@ Hash fields in responses:
    - uses `docs/file_search_eval_cases.json` (OCR + PDF + optional image-context smoke test)
    - image-context case is skipped automatically when `POLINKO_IMAGE_CONTEXT_ENABLED=false`
 
+## Run OCR Eval
+
+1. Ensure API is running locally (`make server`).
+2. Run `make eval-ocr`.
+3. Optional:
+   - custom endpoint: `python tools/eval_ocr.py --base-url http://127.0.0.1:8000`
+   - show extracted text: `python tools/eval_ocr.py --show-text`
+   - strict fail on any failed case: `python tools/eval_ocr.py --strict`
+   - retain generated eval chats: `python tools/eval_ocr.py --keep-chats`
+4. Cases:
+   - default cases file: `docs/ocr_eval_cases.json`
+   - supports image cases (`image_path`) and deterministic text-hint cases (`text_hint`)
+   - optional per-case controls:
+     - `transcription_mode` (`verbatim` or `normalized`)
+     - `must_contain`, `must_contain_any`, `must_not_contain`
+     - `min_chars`, `max_chars`, `case_sensitive`
+
 ## Run Hallucination Eval (Judge-Based)
 
 1. Ensure API is running locally (`make server`).

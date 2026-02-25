@@ -7,7 +7,7 @@ ENV_FILE ?= .env
 GATE_PORT ?= 8066
 GATE_BASE_URL ?= http://127.0.0.1:$(GATE_PORT)
 
-.PHONY: chat server test eval-retrieval eval-file-search eval-hallucination quality-gate ui-install ui-dev ui-build docker-build docker-run dev
+.PHONY: chat server test eval-retrieval eval-file-search eval-hallucination eval-style eval-ocr quality-gate ui-install ui-dev ui-build docker-build docker-run dev
 
 chat:
 	$(PYTHON) app.py
@@ -26,6 +26,12 @@ eval-file-search:
 
 eval-hallucination:
 	$(PYTHON) tools/eval_hallucination.py
+
+eval-style:
+	$(PYTHON) tools/eval_style.py
+
+eval-ocr:
+	$(PYTHON) tools/eval_ocr.py
 
 quality-gate:
 	@echo "Running quality gate (tests + retrieval eval + hallucination eval)..."

@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {
+      "id": "ocr_verbatim_smoke",
+      "text_hint": "Line one\nLine two",
+      "transcription_mode": "verbatim",
+      "must_contain": ["Line one", "Line two"],
+      "must_not_contain": ["[OCR scaffold]"],
+      "min_chars": 10
+    },
+    {
+      "id": "ocr_normalized_smoke",
+      "text_hint": "alpha   beta\n\n   gamma",
+      "transcription_mode": "normalized",
+      "must_contain": ["alpha beta", "gamma"],
+      "must_not_contain": ["  ", "\n\n"],
+      "min_chars": 8
+    }
+  ]
+}

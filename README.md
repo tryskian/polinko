@@ -220,6 +220,24 @@ Notes:
 - Seeds OCR vectors per case, then validates `/skills/file_search` behavior
 - Cleans up generated eval chats by default (`--keep-chats` to retain)
 
+## OCR Eval Harness
+
+Use the OCR evaluator to verify extraction behavior for both real image cases and deterministic text-hint cases.
+
+Command:
+
+- `make eval-ocr`
+
+Optional strict mode:
+
+- `python tools/eval_ocr.py --strict`
+
+Notes:
+
+- Uses `docs/ocr_eval_cases.json`
+- Supports `image_path` cases (OCR path) and `text_hint` cases (deterministic smoke checks)
+- Supports per-case `transcription_mode` (`verbatim|normalized`) plus phrase checks and char limits
+
 ## Hallucination Eval Harness (P1 Scaffold)
 
 Use the judge-based evaluator to score groundedness and hallucination risk of `/chat` outputs.
