@@ -239,6 +239,27 @@ Notes:
 - Sets each eval chat to `memory_scope=session` for deterministic isolation
 - Non-blocking by default; strict mode fails on any judged case failure
 
+## Style Eval Harness
+
+Use the judge-based style evaluator to keep tone consistency calibrated without adding runtime guardrails.
+
+Command:
+
+- `make eval-style`
+
+Optional strict mode (CI gate style):
+
+- `python tools/eval_style.py --strict`
+
+Notes:
+
+- Uses `docs/style_eval_cases.json`.
+- Supports phrase-level eval-only fail rules:
+  - `global_forbidden_phrases` at file root (applies to all cases)
+  - `forbidden_phrases` per case (case-specific)
+- Phrase matching is case-insensitive.
+- These checks affect eval pass/fail only; they do not change runtime model behavior.
+
 ## One-Command Quality Gate
 
 Use this before pushing:

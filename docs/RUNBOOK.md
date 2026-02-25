@@ -34,6 +34,7 @@
    - conversation memory in `.polinko_memory.db`
    - persisted chat messages in `.polinko_history.db`
    - vector memories for that session in `.polinko_vector.db` (when enabled)
+7. Deprecation/reset is chat lifecycle state management, not model-weights training or a direct runtime penalty signal.
 
 ## Chat History API
 
@@ -220,6 +221,21 @@ Hash fields in responses:
    - retain generated chats: `python tools/eval_hallucination.py --keep-chats`
 6. Eval isolation behavior:
    - Each generated eval chat is set to `memory_scope=session` to reduce cross-chat retrieval noise.
+
+## Run Style Eval (Judge-Based)
+
+1. Ensure API is running locally (`make server`).
+2. Ensure `OPENAI_API_KEY` is set in `.env` (judge model call).
+3. Run `make eval-style`.
+4. Optional strict mode:
+   - `python tools/eval_style.py --strict`
+5. Optional tuning:
+   - choose model: `python tools/eval_style.py --judge-model gpt-4.1-mini`
+   - retain generated chats: `python tools/eval_style.py --keep-chats`
+6. Eval-only phrase fail rules (no runtime behavior changes):
+   - `docs/style_eval_cases.json` root `global_forbidden_phrases` applies to all cases
+   - per-case `forbidden_phrases` applies only to that case
+   - phrase checks are case-insensitive
 
 ## Export CLI Transcript
 

@@ -1,4 +1,7 @@
 {
+  "global_forbidden_phrases": [
+    "let me guess"
+  ],
   "cases": [
     {
       "id": "concise_playful_precision",

@@ -77,10 +77,29 @@ def _word_count(text: str) -> int:
     return len(re.findall(r"\b\w+\b", text))
 
 
-def _load_cases(path: Path) -> list[dict[str, Any]]:
+def _normalize_phrase_list(raw: Any, *, field_name: str, case_id: str | None = None) -> list[str]:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        where = f"case '{case_id}'" if case_id else "root payload"
+        raise RuntimeError(f"{where} field '{field_name}' must be a list of strings.")
+    phrases: list[str] = []
+    for value in raw:
+        phrase = str(value).strip()
+        if not phrase:
+            continue
+        phrases.append(phrase.lower())
+    return phrases
+
+
+def _load_cases(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise RuntimeError("Cases file must be a JSON object.")
+    global_forbidden_phrases = _normalize_phrase_list(
+        payload.get("global_forbidden_phrases"),
+        field_name="global_forbidden_phrases",
+    )
     cases = payload.get("cases")
     if not isinstance(cases, list) or not cases:
         raise RuntimeError("Cases file must include a non-empty 'cases' list.")
@@ -93,6 +112,11 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
         query = str(case.get("query", "")).strip()
         style_notes = str(case.get("style_notes", "")).strip()
         max_words_raw = case.get("max_words")
+        case_forbidden_phrases = _normalize_phrase_list(
+            case.get("forbidden_phrases"),
+            field_name="forbidden_phrases",
+            case_id=case_id,
+        )
         max_words: int | None = None
         if max_words_raw is not None:
             try:
@@ -110,9 +134,10 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
                 "query": query,
                 "style_notes": style_notes,
                 "max_words": max_words,
+                "forbidden_phrases": sorted(set(global_forbidden_phrases + case_forbidden_phrases)),
             }
         )
-    return normalized
+    return normalized, global_forbidden_phrases
 
 
 def _create_chat(base_url: str, headers: dict[str, str], session_id: str, timeout: int) -> None:
@@ -266,7 +291,7 @@ def main() -> int:
     cases_path = Path(args.cases)
     if not cases_path.exists():
         raise SystemExit(f"Cases file not found: {cases_path}")
-    cases = _load_cases(cases_path)
+    cases, global_forbidden_phrases = _load_cases(cases_path)
 
     openai_api_key = os.getenv("OPENAI_API_KEY")
     if not openai_api_key:
@@ -279,6 +304,8 @@ def main() -> int:
 
     print(f"Running style eval on {args.base_url}")
     print(f"Cases: {len(cases)} | run_id={run_id}")
+    if global_forbidden_phrases:
+        print(f"Global forbidden phrases: {', '.join(global_forbidden_phrases)}")
 
     try:
         _preflight(args.base_url, headers, args.timeout)
@@ -302,6 +329,7 @@ def main() -> int:
                 timeout=args.timeout,
             )
             answer = str(chat_payload.get("output", "")).strip()
+            answer_lower = answer.lower()
             wc = _word_count(answer)
             result = _judge_case(
                 judge_client=judge_client,
@@ -324,6 +352,17 @@ def main() -> int:
 
             if not passed:
                 case_failed = True
+
+            forbidden_hits = [
+                phrase for phrase in case.get("forbidden_phrases", []) if phrase in answer_lower
+            ]
+            if forbidden_hits:
+                case_failed = True
+                forbidden_text = ", ".join(forbidden_hits)
+                if notes:
+                    notes = f"{notes} | Contains forbidden phrase(s): {forbidden_text}."
+                else:
+                    notes = f"Contains forbidden phrase(s): {forbidden_text}."
 
             status_text = "PASS" if not case_failed else "FAIL"
             print(f"[{status_text}] {case['id']} score={result.get('score')} fit={result.get('fit')} words={wc}")
