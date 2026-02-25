@@ -8,6 +8,7 @@ const THEME_DARK = "dark";
 
 const chatEl = document.getElementById("chat");
 const composerEl = document.getElementById("composer");
+const composerAttachmentsEl = document.getElementById("composer-attachments");
 const messageEl = document.getElementById("message");
 const ocrFileInputEl = document.getElementById("ocr-file-input");
 const ocrUploadEl = document.getElementById("ocr-upload");
@@ -38,6 +39,8 @@ const RESPONSE_RENDER_DELAY_MS = 220;
 const ASSISTANT_TYPE_MIN_MS = 120;
 const ASSISTANT_TYPE_MAX_MS = 700;
 const ASSISTANT_TYPE_MS_PER_CHAR = 1.1;
+const DEFAULT_ATTACHMENT_PROMPT =
+  "Transcribe visible text from the attached image(s) verbatim. Do not interpret.";
 const MEMORY_SEARCH_ENABLED = false;
 const memorySearchAvailable =
   MEMORY_SEARCH_ENABLED &&
@@ -58,6 +61,8 @@ let activeMemoryScope = "global";
 let currentMessages = [];
 let memorySearchOpen = false;
 let activeTheme = THEME_LIGHT;
+let pendingAttachments = [];
+let attachmentDragDepth = 0;
 const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
 
 function normalizeTheme(value) {
@@ -413,17 +418,14 @@ async function apiSetPersonalization(sessionId, memoryScope) {
   });
 }
 
-async function sendMessage(messageText, sessionId) {
+async function sendMessage(messageText, sessionId, { attachments = [] } = {}) {
+  const body = { message: messageText, session_id: sessionId };
+  if (Array.isArray(attachments) && attachments.length > 0) {
+    body.attachments = attachments;
+  }
   return requestJson("/chat", {
     method: "POST",
-    body: JSON.stringify({ message: messageText, session_id: sessionId }),
-  });
-}
-
-async function runOcr(payload) {
-  return requestJson("/skills/ocr", {
-    method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(body),
   });
 }
 
@@ -556,6 +558,95 @@ function readFileAsDataUrl(file) {
   });
 }
 
+function escapeAttachmentName(value) {
+  return String(value || "attachment")
+    .replace(/[\r\n\t]+/g, " ")
+    .trim();
+}
+
+function attachmentId() {
+  if (typeof crypto?.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `att-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+}
+
+function renderPendingAttachments() {
+  if (!composerAttachmentsEl) {
+    return;
+  }
+  composerAttachmentsEl.innerHTML = "";
+  if (pendingAttachments.length === 0) {
+    composerAttachmentsEl.hidden = true;
+    return;
+  }
+
+  for (const item of pendingAttachments) {
+    const pill = document.createElement("div");
+    pill.className = "composer-attachment";
+
+    const thumb = document.createElement("img");
+    thumb.className = "composer-attachment-thumb";
+    thumb.src = item.data_base64;
+    thumb.alt = item.source_name ? `Attachment: ${item.source_name}` : "Attachment";
+    thumb.loading = "lazy";
+    pill.appendChild(thumb);
+
+    const label = document.createElement("span");
+    label.className = "composer-attachment-label";
+    label.textContent = item.source_name || "attachment";
+    pill.appendChild(label);
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "composer-attachment-remove";
+    removeButton.setAttribute("aria-label", `Remove ${item.source_name || "attachment"}`);
+    removeButton.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true">close</span>';
+    removeButton.addEventListener("click", () => {
+      pendingAttachments = pendingAttachments.filter((candidate) => candidate.id !== item.id);
+      renderPendingAttachments();
+    });
+    pill.appendChild(removeButton);
+
+    composerAttachmentsEl.appendChild(pill);
+  }
+
+  composerAttachmentsEl.hidden = false;
+}
+
+function clearPendingAttachments() {
+  pendingAttachments = [];
+  renderPendingAttachments();
+}
+
+async function queueAttachmentFiles(files) {
+  const nextFiles = [...files].filter((file) => file instanceof File);
+  if (nextFiles.length === 0) {
+    return;
+  }
+
+  const added = [];
+  for (const file of nextFiles) {
+    if ((file.type || "").trim() && !file.type.startsWith("image/")) {
+      throw new Error(`Only image attachments are supported right now: ${file.name}`);
+    }
+    const dataBase64 = await readFileAsDataUrl(file);
+    added.push({
+      id: attachmentId(),
+      source_name: escapeAttachmentName(file.name),
+      mime_type: file.type || null,
+      data_base64: dataBase64,
+      memory_scope: "global",
+    });
+  }
+  pendingAttachments = [...pendingAttachments, ...added];
+  renderPendingAttachments();
+}
+
+function setComposerDropActive(active) {
+  composerEl.classList.toggle("drop-active", active);
+}
+
 function compactSessionId(value) {
   if (!value || value.length <= 16) {
     return value || "";
@@ -660,41 +751,6 @@ function renderMemorySearchResults(matches) {
     item.append(meta, snippet, actions);
     memorySearchResultsEl.appendChild(item);
   });
-}
-
-async function handleOcrUpload(file) {
-  if (!file || !activeChatId) {
-    return;
-  }
-
-  ocrUploadEl.disabled = true;
-  try {
-    const dataBase64 = await readFileAsDataUrl(file);
-    appendImagePrompt(dataBase64, file.name);
-    const thinkingNode = appendThinkingIndicator();
-    const payload = await runOcr({
-      session_id: activeChatId,
-      source_name: file.name,
-      mime_type: file.type || null,
-      data_base64: dataBase64,
-      attach_to_chat: true,
-    });
-    await sleep(RESPONSE_RENDER_DELAY_MS);
-    thinkingNode.remove();
-    const extractedText = String(payload?.run?.extracted_text || "").trim();
-    if (extractedText) {
-      await appendAssistantTypedMessage(`[OCR]\n${extractedText}`);
-    } else {
-      await loadActiveMessages();
-    }
-    await refreshChats();
-  } catch (error) {
-    chatEl.querySelector(".msg.thinking")?.remove();
-    appendMessage("error", String(error), { persist: false });
-  } finally {
-    ocrUploadEl.disabled = false;
-    ocrFileInputEl.value = "";
-  }
 }
 
 function sortChatsByRecent(nextChats) {
@@ -865,6 +921,7 @@ async function loadActiveMessages() {
 }
 
 async function setActiveChat(sessionId) {
+  clearPendingAttachments();
   activeChatId = sessionId;
   writeActiveChatId(activeChatId);
   renderChatList();
@@ -1024,12 +1081,13 @@ memoryScopeSelectEl.addEventListener("change", async () => {
 composerEl.addEventListener("submit", async (event) => {
   event.preventDefault();
   const messageText = messageEl.value.trim();
-  if (!messageText || !activeChatId) {
+  const queuedAttachments = [...pendingAttachments];
+  if ((!messageText && queuedAttachments.length === 0) || !activeChatId) {
     return;
   }
 
   const noteText = parsePreferenceNote(messageText);
-  if (noteText) {
+  if (noteText && queuedAttachments.length === 0) {
     try {
       await apiAddNote(activeChatId, noteText);
       messageEl.value = "";
@@ -1041,13 +1099,27 @@ composerEl.addEventListener("submit", async (event) => {
     return;
   }
 
-  appendMessage("user", messageText);
+  for (const attachment of queuedAttachments) {
+    appendImagePrompt(attachment.data_base64, attachment.source_name, { scroll: false });
+  }
+  if (messageText) {
+    appendMessage("user", messageText);
+  }
   messageEl.value = "";
+  clearPendingAttachments();
   autoSizeComposer();
   const thinkingNode = appendThinkingIndicator();
 
   try {
-    const result = await sendMessage(messageText, activeChatId);
+    const outboundMessage = messageText || DEFAULT_ATTACHMENT_PROMPT;
+    const result = await sendMessage(outboundMessage, activeChatId, {
+      attachments: queuedAttachments.map((attachment) => ({
+        data_base64: attachment.data_base64,
+        source_name: attachment.source_name,
+        mime_type: attachment.mime_type,
+        memory_scope: attachment.memory_scope,
+      })),
+    });
     await sleep(RESPONSE_RENDER_DELAY_MS);
     thinkingNode.remove();
     await appendAssistantTypedMessage(result.output);
@@ -1141,8 +1213,70 @@ ocrUploadEl?.addEventListener("click", () => {
 });
 
 ocrFileInputEl?.addEventListener("change", async () => {
-  const [file] = ocrFileInputEl.files || [];
-  await handleOcrUpload(file);
+  const files = [...(ocrFileInputEl.files || [])];
+  if (files.length === 0) {
+    return;
+  }
+  ocrUploadEl.disabled = true;
+  try {
+    await queueAttachmentFiles(files);
+  } catch (error) {
+    appendMessage("error", String(error), { persist: false });
+  } finally {
+    ocrUploadEl.disabled = false;
+    ocrFileInputEl.value = "";
+  }
+});
+
+composerEl.addEventListener("dragenter", (event) => {
+  const types = event.dataTransfer?.types;
+  if (!types || !Array.from(types).includes("Files")) {
+    return;
+  }
+  event.preventDefault();
+  attachmentDragDepth += 1;
+  setComposerDropActive(true);
+});
+
+composerEl.addEventListener("dragover", (event) => {
+  const types = event.dataTransfer?.types;
+  if (!types || !Array.from(types).includes("Files")) {
+    return;
+  }
+  event.preventDefault();
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = "copy";
+  }
+});
+
+composerEl.addEventListener("dragleave", (event) => {
+  const types = event.dataTransfer?.types;
+  if (!types || !Array.from(types).includes("Files")) {
+    return;
+  }
+  event.preventDefault();
+  attachmentDragDepth = Math.max(0, attachmentDragDepth - 1);
+  if (attachmentDragDepth === 0) {
+    setComposerDropActive(false);
+  }
+});
+
+composerEl.addEventListener("drop", async (event) => {
+  event.preventDefault();
+  attachmentDragDepth = 0;
+  setComposerDropActive(false);
+  const files = [...(event.dataTransfer?.files || [])];
+  if (files.length === 0) {
+    return;
+  }
+  ocrUploadEl.disabled = true;
+  try {
+    await queueAttachmentFiles(files);
+  } catch (error) {
+    appendMessage("error", String(error), { persist: false });
+  } finally {
+    ocrUploadEl.disabled = false;
+  }
 });
 
 (async () => {

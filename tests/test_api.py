@@ -129,6 +129,191 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(body["session_id"], "s-chat")
         self.assertEqual(body["memory_used"], [])
 
+    def test_chat_attachment_indexes_global_memory_lane(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-chat-attachments.db"))
+        deps.vector_min_similarity = 0.0
+        deps.vector_min_similarity_global = 0.0
+        deps.vector_min_similarity_session = 0.0
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "tensor" in lowered else 0.0,
+                    1.0 if "field" in lowered else 0.0,
+                    1.0 if "perspective" in lowered else 0.0,
+                    float(len(lowered) % 19) / 19.0,
+                ]
+
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        payload_b64 = base64.b64encode(b"placeholder").decode("ascii")
+        captured: dict[str, str] = {}
+        with self._stub_runner("Attachment stored", capture=captured):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "Store this attachment context for future recall.",
+                    "session_id": "s-attach-global",
+                    "attachments": [
+                        {
+                            "source_name": "tensor-note.png",
+                            "mime_type": "image/png",
+                            "data_base64": payload_b64,
+                            "text_hint": "knotted tensor field of perspective",
+                            "memory_scope": "global",
+                        }
+                    ],
+                },
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("ATTACHMENT_CONTEXT", captured["input"])
+
+        query_vector = _FakeEmbeddings._embed("tensor field perspective")
+        matches = deps.vector_store.search(
+            query_embedding=query_vector,
+            limit=10,
+            min_similarity=0.0,
+            roles=("assistant",),
+            include_session_id="__global_memory__",
+            source_types=("ocr", "image"),
+        )
+        self.assertGreaterEqual(len(matches), 1)
+        self.assertTrue(any(match.metadata.get("origin_session_id") == "s-attach-global" for match in matches))
+
+    def test_chat_attachment_global_memory_is_retrievable_across_chats(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(
+            os.path.join(self.tmpdir.name, "test-vectors-chat-attachments-retrieval.db")
+        )
+        deps.vector_min_similarity = 0.0
+        deps.vector_min_similarity_global = 0.0
+        deps.vector_min_similarity_session = 0.0
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "tensor" in lowered else 0.0,
+                    1.0 if "field" in lowered else 0.0,
+                    1.0 if "perspective" in lowered else 0.0,
+                    float(len(lowered) % 23) / 23.0,
+                ]
+
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+        payload_b64 = base64.b64encode(b"placeholder").decode("ascii")
+
+        with self._stub_runner("Seeded response"):
+            seeded = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "Store this phrase in memory for later retrieval.",
+                    "session_id": "s-attach-seed",
+                    "attachments": [
+                        {
+                            "source_name": "seed.png",
+                            "mime_type": "image/png",
+                            "data_base64": payload_b64,
+                            "text_hint": "scalar tensor field supports perspective invariance",
+                            "memory_scope": "global",
+                        }
+                    ],
+                },
+            )
+        self.assertEqual(seeded.status_code, 200)
+
+        captured: dict[str, str] = {}
+        with self._stub_runner("Cross-chat response", capture=captured):
+            followup = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "From earlier scanned notes, what phrase described tensor field perspective invariance?",
+                    "session_id": "s-attach-followup",
+                },
+            )
+        self.assertEqual(followup.status_code, 200)
+        payload = followup.json()
+        self.assertGreaterEqual(len(payload["memory_used"]), 1)
+        self.assertTrue(any(item["source_type"] == "ocr" for item in payload["memory_used"]))
+        self.assertTrue(any(item["session_id"] == "s-attach-seed" for item in payload["memory_used"]))
+        self.assertIn("RETRIEVED_MEMORY", captured["input"])
+
+    def test_chat_attachment_ocr_query_uses_literal_transcription_reply(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-chat-attachments-literal.db"))
+        deps.embedding_client = SimpleNamespace(
+            embeddings=SimpleNamespace(create=lambda **_: SimpleNamespace(data=[SimpleNamespace(embedding=[0.1, 0.2])]))
+        )
+
+        payload_b64 = base64.b64encode(b"placeholder").decode("ascii")
+
+        async def _runner_should_not_be_called(*args: object, **kwargs: Any) -> SimpleNamespace:
+            del args, kwargs
+            raise AssertionError("Runner.run should not be called for literal OCR attachment reply.")
+
+        with patch.object(server.Runner, "run", new=_runner_should_not_be_called):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "what does this say?",
+                    "session_id": "s-attach-literal",
+                    "attachments": [
+                        {
+                            "source_name": "sample.png",
+                            "mime_type": "image/png",
+                            "data_base64": payload_b64,
+                            "text_hint": "gyrus folds within",
+                            "memory_scope": "global",
+                        }
+                    ],
+                },
+            )
+        self.assertEqual(resp.status_code, 200)
+        output = resp.json()["output"]
+        self.assertIn("[OCR]", output)
+        self.assertIn("gyrus folds within", output)
+
+    def test_chat_ocr_followup_without_new_image_blocks_reguessing(self) -> None:
+        async def _runner_should_not_be_called(*args: object, **kwargs: Any) -> SimpleNamespace:
+            del args, kwargs
+            raise AssertionError("Runner.run should not be called for no-new-image OCR follow-up.")
+
+        with patch.object(server.Runner, "run", new=_runner_should_not_be_called):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "try again without using memory",
+                    "session_id": "s-ocr-followup-no-image",
+                },
+            )
+        self.assertEqual(resp.status_code, 200)
+        output = resp.json()["output"].lower()
+        self.assertIn("no new image evidence", output)
+        self.assertIn("attach a new image", output)
+
     def test_chat_success_with_responses_orchestration(self) -> None:
         deps = server.get_runtime_deps()
         deps.responses_orchestration_enabled = True

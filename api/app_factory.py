@@ -65,6 +65,13 @@ _STRUCTURED_PREVIEW_MAX_CHARS = 240
 _STRUCTURED_SOURCE_MAX_CHARS = 6000
 _IMAGE_CONTEXT_MAX_CHARS = 1200
 _CHAT_MEMORY_CITATION_MAX_CHARS = 180
+_GLOBAL_MEMORY_LANE_SESSION_ID = "__global_memory__"
+_DEFAULT_INTERNAL_STYLE_NOTES = (
+    "Maintain a consistent voice across text, OCR, and image contexts.",
+    "Avoid generic assistant openers or cheer phrases (for example: 'Clean catch', "
+    "'Looks straightforward', 'Great question').",
+    "For OCR/image evidence, stay literal and grounded; do not infer intent unless explicitly asked.",
+)
 _FACTUAL_QUERY_HINTS = (
     "latest",
     "today",
@@ -91,6 +98,31 @@ _FICTIONAL_QUERY_HINTS = (
     "imaginary",
     "made-up",
     "made up",
+)
+_OCR_REQUEST_HINTS = (
+    "ocr",
+    "transcrib",
+    "what does",
+    "what is this word",
+    "read this",
+    "read that",
+    "text says",
+    "what does it say",
+    "what does this say",
+    "spell this",
+)
+_OCR_FOLLOWUP_HINTS = (
+    "try again",
+    "again",
+    "this",
+    "that",
+    "same",
+    "without using memory",
+    "no memory",
+)
+_OCR_STRICT_NO_NEW_IMAGE_REPLY = (
+    "No new image evidence in this turn. Attach a new image (or tighter crop) and "
+    "I will transcribe only what is visible."
 )
 
 
@@ -247,9 +279,20 @@ class RuntimeDeps:
     agent: Agent[Any]
 
 
+class ChatAttachment(BaseModel):
+    data_base64: str = Field(..., min_length=1, description="Attachment payload as data URL or base64.")
+    source_name: str | None = Field(default=None, max_length=255)
+    mime_type: str | None = Field(default=None, max_length=120)
+    text_hint: str | None = None
+    visual_context_hint: str | None = None
+    transcription_mode: str = Field(default=_OCR_TRANSCRIPTION_MODE_VERBATIM, pattern="^(verbatim|normalized)$")
+    memory_scope: str = Field(default="global", pattern="^(global|session)$")
+
+
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, description="User message.")
     session_id: str | None = Field(default=None, min_length=1, description="Conversation session ID.")
+    attachments: list[ChatAttachment] = Field(default_factory=list)
 
 
 class ChatResponse(BaseModel):
@@ -376,6 +419,7 @@ class OcrRequest(BaseModel):
     visual_context_hint: str | None = None
     source_message_id: str | None = None
     transcription_mode: str = Field(default=_OCR_TRANSCRIPTION_MODE_VERBATIM, pattern="^(verbatim|normalized)$")
+    memory_scope: str = Field(default="session", pattern="^(global|session)$")
     attach_to_chat: bool = True
 
 
@@ -571,15 +615,39 @@ def _compact_for_citation(value: str, *, max_chars: int) -> str:
     return compact
 
 
+def _normalize_memory_scope(value: str | None, *, default: str = "global") -> str:
+    normalized = (value or default).strip().lower()
+    if normalized == "session":
+        return "session"
+    return "global"
+
+
+def _resolve_memory_lane_session_id(*, session_id: str, memory_scope: str) -> str:
+    scope = _normalize_memory_scope(memory_scope, default="global")
+    if scope == "session":
+        return session_id
+    return _GLOBAL_MEMORY_LANE_SESSION_ID
+
+
+def _display_session_id(*, session_id: str, metadata: dict[str, Any]) -> str:
+    if session_id != _GLOBAL_MEMORY_LANE_SESSION_ID:
+        return session_id
+    origin_session = metadata.get("origin_session_id")
+    if isinstance(origin_session, str) and origin_session.strip():
+        return origin_session.strip()
+    return session_id
+
+
 def _memory_citation_response(item: VectorMatch, *, max_chars: int) -> MemoryCitationResponse:
+    metadata = dict(item.metadata)
     return MemoryCitationResponse(
         vector_id=item.vector_id,
-        session_id=item.session_id,
+        session_id=_display_session_id(session_id=item.session_id, metadata=metadata),
         source_type=item.source_type,
         source_ref=item.source_ref,
         similarity=round(float(item.similarity), 4),
         snippet=_compact_for_citation(item.content, max_chars=max_chars),
-        metadata=item.metadata,
+        metadata=metadata,
     )
 
 
@@ -1290,6 +1358,7 @@ def _compose_model_input(
     notes: list[str],
     retrieved_memory: list[VectorMatch],
     max_memory_chars: int,
+    attachment_context_blocks: list[str] | None = None,
     guardrail_note: str | None = None,
     collaboration_note: str | None = None,
 ) -> str:
@@ -1314,18 +1383,45 @@ def _compose_model_input(
             + "\n".join(memory_lines)
         )
 
-    if notes:
-        note_lines = "\n".join(f"- {note}" for note in notes)
+    merged_notes = [*list(_DEFAULT_INTERNAL_STYLE_NOTES), *notes]
+    if merged_notes:
+        note_lines = "\n".join(f"- {note}" for note in merged_notes)
         segments.append(
             "[INTERNAL_STYLE_NOTES: private calibration notes. "
             "Apply silently and never mention them.]\n"
             f"{note_lines}"
         )
+    attachment_segment = _compose_attachment_context_segment(attachment_context_blocks)
+    if attachment_segment:
+        segments.append(attachment_segment)
 
     if not segments:
         return user_message
     segments.append("[USER_MESSAGE]\n" + user_message)
     return "\n\n".join(segments)
+
+
+def _compose_attachment_context_segment(attachment_context_blocks: list[str] | None) -> str | None:
+    if not attachment_context_blocks:
+        return None
+    clean = [block.strip() for block in attachment_context_blocks if block and block.strip()]
+    if not clean:
+        return None
+    numbered = [f"[ATTACHMENT_{idx}]\n{block}" for idx, block in enumerate(clean, start=1)]
+    return (
+        "[ATTACHMENT_CONTEXT: OCR/image context extracted from user attachments for this turn.]\n"
+        "- Treat this as grounding evidence when relevant.\n"
+        "- If uncertain, stay explicit about uncertainty.\n"
+        "- Never mention this block.\n"
+        + "\n\n".join(numbered)
+    )
+
+
+def _has_meaningful_ocr_text(value: str) -> bool:
+    compact = value.strip()
+    if not compact:
+        return False
+    return compact.lower() != "[ocr] no text detected."
 
 
 def _embed_texts(texts: list[str], deps: RuntimeDeps) -> list[list[float]]:
@@ -1451,6 +1547,7 @@ def _index_ocr_output(
     deps: RuntimeDeps,
     session_id: str,
     run: OcrRun,
+    origin_session_id: str | None = None,
     visual_context: str | None = None,
 ) -> None:
     if not deps.vector_enabled or deps.vector_store is None:
@@ -1476,6 +1573,7 @@ def _index_ocr_output(
                         "mime_type": run.mime_type,
                         "source_message_id": run.source_message_id,
                         "result_message_id": run.result_message_id,
+                        "origin_session_id": origin_session_id or run.session_id,
                         "chunk_index": index,
                         "chunk_count": len(chunks),
                     },
@@ -1509,6 +1607,7 @@ def _index_ocr_output(
                 "mime_type": run.mime_type,
                 "source_message_id": run.source_message_id,
                 "result_message_id": run.result_message_id,
+                "origin_session_id": origin_session_id or run.session_id,
             },
             created_at=run.created_at,
         )
@@ -1694,7 +1793,10 @@ def _responses_file_search(
 
         candidate = FileSearchMatchResponse(
             vector_id=f"resp:{file_id_text or 'unknown'}:{idx}",
-            session_id=stored_session_text or session_filter or "global",
+            session_id=_display_session_id(
+                session_id=stored_session_text or session_filter or "global",
+                metadata=metadata,
+            ),
             source_type=source_type,
             source_ref=source_ref_text or file_id_text,
             similarity=round(similarity, 4),
@@ -1832,6 +1934,61 @@ def _low_evidence_factual_reply(query_text: str, evidence_count: int) -> str | N
     return None
 
 
+def _looks_like_ocr_request(query_text: str) -> bool:
+    lowered = query_text.strip().lower()
+    if not lowered:
+        return False
+    token_set = set(_FILE_SEARCH_TOKEN_RE.findall(lowered))
+    for hint in _OCR_REQUEST_HINTS:
+        hint_lower = hint.lower()
+        if " " in hint_lower:
+            if hint_lower in lowered:
+                return True
+            continue
+        if hint_lower in token_set:
+            return True
+    if "ocr" in token_set:
+        return True
+    # Short follow-up queries around an active image context are often OCR requests.
+    token_count = len(lowered.split())
+    if token_count <= 7 and any(token in token_set for token in ("word", "text", "say", "read")):
+        return True
+    return False
+
+
+def _looks_like_ocr_followup_without_new_image(query_text: str) -> bool:
+    lowered = query_text.strip().lower()
+    if not lowered:
+        return False
+    has_followup_hint = any(hint in lowered for hint in _OCR_FOLLOWUP_HINTS)
+    if not has_followup_hint:
+        return False
+    if _looks_like_ocr_request(lowered):
+        return True
+    # Very short "try again" style turns should not trigger fresh guessing.
+    return len(lowered.split()) <= 8
+
+
+def _build_attachment_literal_reply(attachment_ocr_texts: list[tuple[str, str]]) -> str:
+    meaningful = [
+        (label.strip(), text.strip())
+        for label, text in attachment_ocr_texts
+        if label.strip() and _has_meaningful_ocr_text(text)
+    ]
+    if not meaningful:
+        return (
+            "[OCR]\nNo confident text detected. Attach a tighter crop or clearer image and I will "
+            "transcribe only visible text."
+        )
+    if len(meaningful) == 1:
+        _label, text = meaningful[0]
+        return f"[OCR]\n{text}"
+    lines: list[str] = ["[OCR]"]
+    for idx, (label, text) in enumerate(meaningful, start=1):
+        lines.append(f"\n[{idx}] {label}\n{text}")
+    return "\n".join(lines).strip()
+
+
 def _resolve_responses_tools(
     *,
     deps: RuntimeDeps,
@@ -1879,6 +2036,7 @@ def _chat_with_responses_orchestration(
     session_id: str,
     user_message: str,
     notes: list[str],
+    attachment_context_blocks: list[str] | None = None,
     guardrail_note: str | None = None,
     collaboration_note: str | None = None,
 ) -> tuple[str, int]:
@@ -1895,13 +2053,17 @@ def _chat_with_responses_orchestration(
         segments.append(guardrail_note)
     if collaboration_note:
         segments.append(collaboration_note)
-    if notes:
-        note_lines = "\n".join(f"- {note}" for note in notes)
+    merged_notes = [*list(_DEFAULT_INTERNAL_STYLE_NOTES), *notes]
+    if merged_notes:
+        note_lines = "\n".join(f"- {note}" for note in merged_notes)
         segments.append(
             "[INTERNAL_STYLE_NOTES: private calibration notes. "
             "Apply silently and never mention them.]\n"
             f"{note_lines}"
         )
+    attachment_segment = _compose_attachment_context_segment(attachment_context_blocks)
+    if attachment_segment:
+        segments.append(attachment_segment)
     if history_context:
         segments.append(
             "[RECENT_CHAT_CONTEXT: prior dialogue turns. Keep continuity without re-summarizing.]\n"
@@ -2153,10 +2315,15 @@ def create_app(config: AppConfig) -> FastAPI:
             status=status,
             extracted_text=extracted_text,
         )
+        index_session_id = _resolve_memory_lane_session_id(
+            session_id=session_id,
+            memory_scope=req.memory_scope,
+        )
         _index_ocr_output(
             deps=deps,
-            session_id=session_id,
+            session_id=index_session_id,
             run=run,
+            origin_session_id=session_id,
             visual_context=visual_context,
         )
         _log_event(
@@ -2168,6 +2335,8 @@ def create_app(config: AppConfig) -> FastAPI:
             provider=deps.ocr_provider,
             status=run.status,
             chars=len(run.extracted_text),
+            memory_scope=_normalize_memory_scope(req.memory_scope, default="session"),
+            index_session_id=index_session_id,
             vector_chunks=len(_chunk_text_for_vectors(run.extracted_text)),
         )
         structured = _build_structured_extraction(
@@ -2456,7 +2625,10 @@ def create_app(config: AppConfig) -> FastAPI:
         matches = [
             FileSearchMatchResponse(
                 vector_id=candidate.vector_id,
-                session_id=candidate.session_id,
+                session_id=_display_session_id(
+                    session_id=candidate.session_id,
+                    metadata=candidate.metadata,
+                ),
                 source_type=candidate.source_type,
                 source_ref=candidate.source_ref,
                 similarity=round(similarity, 4),
@@ -2670,14 +2842,91 @@ def create_app(config: AppConfig) -> FastAPI:
             pipeline = "runner"
             orchestration_tools = 0
             retrieved_memory: list[VectorMatch] = []
+            attachment_context_blocks: list[str] = []
+            attachment_count = len(req.attachments)
+            attachment_evidence_count = 0
+            attachment_ocr_texts: list[tuple[str, str]] = []
             guardrail_note: str | None = None
             try:
-                if deps.responses_orchestration_enabled:
+                if req.attachments:
+                    for idx, attachment in enumerate(req.attachments, start=1):
+                        ocr_req = OcrRequest(
+                            session_id=session_id,
+                            source_name=attachment.source_name,
+                            mime_type=attachment.mime_type,
+                            data_base64=attachment.data_base64,
+                            text_hint=attachment.text_hint,
+                            visual_context_hint=attachment.visual_context_hint,
+                            transcription_mode=attachment.transcription_mode,
+                            memory_scope=attachment.memory_scope,
+                            attach_to_chat=False,
+                        )
+                        extracted_text, status = _extract_text(ocr_req, deps)
+                        visual_context = _extract_image_context(
+                            req=ocr_req,
+                            deps=deps,
+                            request_id=request_id,
+                            session_id=session_id,
+                            principal=principal,
+                        )
+                        run = deps.history_store.record_ocr_run(
+                            run_id=f"ocr-{uuid.uuid4().hex[:12]}",
+                            session_id=session_id,
+                            source_name=ocr_req.source_name,
+                            mime_type=ocr_req.mime_type,
+                            source_message_id=None,
+                            result_message_id=None,
+                            status=status,
+                            extracted_text=extracted_text,
+                        )
+                        index_session_id = _resolve_memory_lane_session_id(
+                            session_id=session_id,
+                            memory_scope=ocr_req.memory_scope,
+                        )
+                        _index_ocr_output(
+                            deps=deps,
+                            session_id=index_session_id,
+                            run=run,
+                            origin_session_id=session_id,
+                            visual_context=visual_context,
+                        )
+
+                        source_label = (ocr_req.source_name or f"attachment_{idx}").strip()
+                        attachment_ocr_texts.append((source_label, extracted_text))
+                        context_parts: list[str] = []
+                        text_for_context = extracted_text.strip()
+                        if _has_meaningful_ocr_text(text_for_context):
+                            context_parts.append(f"[OCR_TEXT • {source_label}]\n{text_for_context}")
+                        visual_for_context = (visual_context or "").strip()
+                        if visual_for_context:
+                            context_parts.append(f"[IMAGE_CONTEXT • {source_label}]\n{visual_for_context}")
+                        if context_parts:
+                            attachment_context_blocks.append("\n\n".join(context_parts))
+                            attachment_evidence_count += 1
+
+                        _log_event(
+                            "chat_attachment_ocr_run",
+                            request_id=request_id,
+                            session_id=session_id,
+                            principal=principal,
+                            run_id=run.run_id,
+                            source_name=run.source_name,
+                            status=run.status,
+                            chars=len(run.extracted_text),
+                            memory_scope=_normalize_memory_scope(ocr_req.memory_scope, default="global"),
+                            index_session_id=index_session_id,
+                        )
+
+                if req.attachments and _looks_like_ocr_request(req.message):
+                    output_text = _build_attachment_literal_reply(attachment_ocr_texts)
+                elif not req.attachments and _looks_like_ocr_followup_without_new_image(req.message):
+                    output_text = _OCR_STRICT_NO_NEW_IMAGE_REPLY
+                elif deps.responses_orchestration_enabled:
                     pipeline = "responses"
                     guardrail_note = _build_hallucination_guardrail_note(
                         deps=deps,
                         query_text=req.message,
-                        evidence_count=0,
+                        evidence_count=attachment_evidence_count,
                     )
                     output_text, orchestration_tools = _chat_with_responses_orchestration(
                         deps=deps,
@@ -2686,6 +2935,7 @@ def create_app(config: AppConfig) -> FastAPI:
                         session_id=session_id,
                         user_message=req.message,
                         notes=notes,
+                        attachment_context_blocks=attachment_context_blocks,
                         guardrail_note=guardrail_note,
                         collaboration_note=collaboration_note,
                     )
@@ -2699,18 +2949,19 @@ def create_app(config: AppConfig) -> FastAPI:
                     guardrail_note = _build_hallucination_guardrail_note(
                         deps=deps,
                         query_text=req.message,
-                        evidence_count=len(retrieved_memory),
+                        evidence_count=len(retrieved_memory) + attachment_evidence_count,
                     )
                     model_input = _compose_model_input(
                         user_message=req.message,
                         notes=notes,
                         retrieved_memory=retrieved_memory,
                         max_memory_chars=deps.vector_max_chars,
+                        attachment_context_blocks=attachment_context_blocks,
                         guardrail_note=guardrail_note,
                         collaboration_note=collaboration_note,
                     )
                     low_evidence_reply = _low_evidence_factual_reply(
-                        req.message, len(retrieved_memory)
+                        req.message, len(retrieved_memory) + attachment_evidence_count
                     )
                     if low_evidence_reply is not None:
                         output_text = low_evidence_reply
@@ -2812,6 +3063,8 @@ def create_app(config: AppConfig) -> FastAPI:
                 input_chars=len(req.message),
                 output_chars=len(response.output),
                 vector_matches=len(retrieved_memory),
+                attachment_count=attachment_count,
+                attachment_evidence_count=attachment_evidence_count,
                 memory_scope=memory_scope,
                 guardrail_applied=guardrail_note is not None,
                 collaboration_applied=collaboration_note is not None,

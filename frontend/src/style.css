@@ -568,6 +568,11 @@ body {
   padding: 0.58rem 1.1rem 0.9rem;
 }
 
+.composer.drop-active .composer-inner {
+  border-color: var(--focus-ring);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-ring) 22%, transparent);
+}
+
 .composer-inner {
   max-width: var(--composer-max-width);
   width: 100%;
@@ -576,6 +581,67 @@ body {
   border: 1px solid var(--line);
   border-radius: 1.7rem;
   padding: 0.45rem 0.68rem 0.56rem;
+}
+
+.composer-attachments {
+  display: flex;
+  align-items: center;
+  gap: 0.44rem;
+  overflow-x: auto;
+  padding: 0.12rem 0.16rem 0.44rem;
+}
+
+.composer-attachment {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  max-width: min(64vw, 320px);
+  border: 1px solid var(--line);
+  border-radius: 0.82rem;
+  background: var(--surface-elev-1);
+  padding: 0.24rem 0.32rem;
+}
+
+.composer-attachment-thumb {
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.48rem;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: var(--surface-elev-2);
+}
+
+.composer-attachment-label {
+  color: var(--text-secondary);
+  font-size: 0.77rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(48vw, 210px);
+}
+
+.composer-attachment-remove {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
+  border: 1px solid var(--interactive-border-secondary-default);
+  border-radius: 999px;
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.composer-attachment-remove:hover {
+  border-color: var(--interactive-border-secondary-hover);
+  background: var(--interactive-bg-secondary-hover);
+  color: var(--interactive-label-secondary-hover);
+}
+
+.composer-attachment-remove .material-symbols-outlined {
+  font-size: 1.03rem;
 }
 
 #message {
