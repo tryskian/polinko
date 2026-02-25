@@ -289,6 +289,7 @@ What it runs:
 - unit tests
 - retrieval eval
 - file-search eval
+- OCR eval in strict mode
 - hallucination eval in strict mode
 
 Details:
