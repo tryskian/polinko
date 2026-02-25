@@ -214,9 +214,11 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     ocr_prompt = (
         os.getenv(
             "POLINKO_OCR_PROMPT",
-            "Extract all readable text from this image. Return only the extracted text and preserve line breaks.",
+            "Extract all readable text from this image. Preserve line breaks and symbols exactly. "
+            "Do not invent letters or words; if uncertain, output [?].",
         ).strip()
-        or "Extract all readable text from this image. Return only the extracted text and preserve line breaks."
+        or "Extract all readable text from this image. Preserve line breaks and symbols exactly. "
+        "Do not invent letters or words; if uncertain, output [?]."
     )
     image_context_enabled = _parse_bool_env("POLINKO_IMAGE_CONTEXT_ENABLED", False)
     image_context_model = os.getenv("POLINKO_IMAGE_CONTEXT_MODEL", "gpt-4.1-mini").strip() or "gpt-4.1-mini"

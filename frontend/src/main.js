@@ -254,6 +254,31 @@ function appendMessage(kind, text, { persist = true, scroll = true } = {}) {
   }
 }
 
+function appendImagePrompt(src, sourceName, { scroll = true } = {}) {
+  const node = document.createElement("article");
+  node.className = "msg user user-image";
+
+  const image = document.createElement("img");
+  image.className = "user-image-preview";
+  image.src = src;
+  image.alt = sourceName ? `Uploaded image: ${sourceName}` : "Uploaded image";
+  image.loading = "lazy";
+  node.appendChild(image);
+
+  if (sourceName) {
+    const label = document.createElement("p");
+    label.className = "user-image-label";
+    label.textContent = sourceName;
+    node.appendChild(label);
+  }
+
+  chatEl.appendChild(node);
+  syncEmptyState();
+  if (scroll) {
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
+}
+
 async function appendAssistantTypedMessage(text, { persist = true } = {}) {
   const content = String(text ?? "");
   const node = document.createElement("article");
@@ -643,10 +668,11 @@ async function handleOcrUpload(file) {
   }
 
   ocrUploadEl.disabled = true;
-  const thinkingNode = appendThinkingIndicator();
   try {
     const dataBase64 = await readFileAsDataUrl(file);
-    await runOcr({
+    appendImagePrompt(dataBase64, file.name);
+    const thinkingNode = appendThinkingIndicator();
+    const payload = await runOcr({
       session_id: activeChatId,
       source_name: file.name,
       mime_type: file.type || null,
@@ -655,10 +681,15 @@ async function handleOcrUpload(file) {
     });
     await sleep(RESPONSE_RENDER_DELAY_MS);
     thinkingNode.remove();
-    await loadActiveMessages();
+    const extractedText = String(payload?.run?.extracted_text || "").trim();
+    if (extractedText) {
+      await appendAssistantTypedMessage(`[OCR]\n${extractedText}`);
+    } else {
+      await loadActiveMessages();
+    }
     await refreshChats();
   } catch (error) {
-    thinkingNode.remove();
+    chatEl.querySelector(".msg.thinking")?.remove();
     appendMessage("error", String(error), { persist: false });
   } finally {
     ocrUploadEl.disabled = false;

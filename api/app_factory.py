@@ -48,6 +48,12 @@ _OCR_MAX_BYTES = 5 * 1024 * 1024
 _PDF_MAX_BYTES = 10 * 1024 * 1024
 _OCR_RETRY_AFTER_RATE_LIMIT_SECONDS = 10
 _OCR_RETRY_AFTER_TRANSIENT_SECONDS = 3
+_OCR_TRANSCRIPTION_MODE_VERBATIM = "verbatim"
+_OCR_TRANSCRIPTION_MODE_NORMALIZED = "normalized"
+_OCR_TRANSCRIPTION_MODES = {
+    _OCR_TRANSCRIPTION_MODE_VERBATIM,
+    _OCR_TRANSCRIPTION_MODE_NORMALIZED,
+}
 _FILE_SEARCH_DEFAULT_SOURCE_TYPES = ("ocr",)
 _FILE_SEARCH_ALLOWED_SOURCE_TYPES = {"chat", "ocr", "pdf", "image"}
 _FILE_SEARCH_TOKEN_RE = re.compile(r"[a-z0-9]+")
@@ -369,6 +375,7 @@ class OcrRequest(BaseModel):
     text_hint: str | None = None
     visual_context_hint: str | None = None
     source_message_id: str | None = None
+    transcription_mode: str = Field(default=_OCR_TRANSCRIPTION_MODE_VERBATIM, pattern="^(verbatim|normalized)$")
     attach_to_chat: bool = True
 
 
@@ -1016,20 +1023,66 @@ def _retry_after_header_value(exc: Exception, default_seconds: int) -> str:
     return str(default_seconds)
 
 
+def _resolve_ocr_transcription_mode(value: str | None) -> str:
+    normalized = (value or _OCR_TRANSCRIPTION_MODE_VERBATIM).strip().lower()
+    if normalized in _OCR_TRANSCRIPTION_MODES:
+        return normalized
+    return _OCR_TRANSCRIPTION_MODE_VERBATIM
+
+
+def _ocr_prompt_for_mode(base_prompt: str, mode: str) -> str:
+    shared_rules = (
+        "Transcription rules:\n"
+        "- Do not invent letters, words, symbols, or punctuation.\n"
+        "- Preserve visible line order and line breaks.\n"
+        "- Preserve symbols exactly when identifiable.\n"
+        "- If a mark is ambiguous, output `[?]` instead of guessing.\n"
+        "- Return only extracted text, no explanations."
+    )
+    if mode == _OCR_TRANSCRIPTION_MODE_NORMALIZED:
+        return (
+            f"{base_prompt}\n\n"
+            "Output mode: normalized.\n"
+            "Normalize whitespace and wrapping for readability, while preserving original words, "
+            "numbers, symbols, and punctuation.\n\n"
+            f"{shared_rules}"
+        )
+    return (
+        f"{base_prompt}\n\n"
+        "Output mode: verbatim.\n"
+        "Preserve visible line breaks, spacing, punctuation, symbols, and casing.\n\n"
+        f"{shared_rules}"
+    )
+
+
+def _normalize_ocr_text(text: str) -> str:
+    lines = [re.sub(r"\s+", " ", line).strip() for line in text.splitlines()]
+    compact_lines = [line for line in lines if line]
+    return "\n".join(compact_lines).strip()
+
+
+def _apply_ocr_transcription_mode(text: str, mode: str) -> str:
+    if mode == _OCR_TRANSCRIPTION_MODE_NORMALIZED:
+        return _normalize_ocr_text(text)
+    return text.strip()
+
+
 def _scaffold_extract_text(req: OcrRequest) -> tuple[str, str]:
+    mode = _resolve_ocr_transcription_mode(req.transcription_mode)
     if req.text_hint and req.text_hint.strip():
-        return req.text_hint.strip(), "ok"
+        return _apply_ocr_transcription_mode(req.text_hint, mode), "ok"
 
     decoded, _mime_type = _decode_base64_payload(req)
     text = decoded.decode("utf-8", errors="ignore").strip()
     if text:
-        return text, "ok"
+        return _apply_ocr_transcription_mode(text, mode), "ok"
     return "[OCR scaffold] Binary payload received. Connect OCR engine for text extraction.", "stub"
 
 
 def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, str]:
+    mode = _resolve_ocr_transcription_mode(req.transcription_mode)
     if req.text_hint and req.text_hint.strip():
-        return req.text_hint.strip(), "ok"
+        return _apply_ocr_transcription_mode(req.text_hint, mode), "ok"
 
     decoded, detected_mime = _decode_base64_payload(req)
     mime_type = (detected_mime or "application/octet-stream").strip().lower()
@@ -1049,7 +1102,7 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
             {
                 "role": "user",
                 "content": [
-                    {"type": "input_text", "text": deps.ocr_prompt},
+                    {"type": "input_text", "text": _ocr_prompt_for_mode(deps.ocr_prompt, mode)},
                     {"type": "input_image", "image_url": data_url},
                 ],
             }
@@ -1101,7 +1154,7 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
 
     output_text = getattr(response, "output_text", None)
     if isinstance(output_text, str) and output_text.strip():
-        return output_text.strip(), "ok"
+        return _apply_ocr_transcription_mode(output_text, mode), "ok"
     return "[OCR] No text detected.", "ok"
 
 

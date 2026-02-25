@@ -118,7 +118,7 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 - `PATCH /chats/{session_id}` rename a chat
 - `DELETE /chats/{session_id}` delete a chat
 - `POST /chat` returns assistant output and `memory_used` citations when vector retrieval is applied
-- `POST /skills/ocr` OCR endpoint (scaffold/OpenAI mode, includes `run.structured` normalized extraction payload; optional `visual_context_hint` for deterministic image-context indexing)
+- `POST /skills/ocr` OCR endpoint (scaffold/OpenAI mode, includes `run.structured` normalized extraction payload; optional `visual_context_hint` for deterministic image-context indexing; optional `transcription_mode` = `verbatim|normalized`, default `verbatim`)
 - `POST /skills/file_search` search indexed vectors (defaults to OCR sources)
 - `POST /skills/pdf_ingest` PDF extract + index endpoint (includes `structured` normalized extraction payload)
 - `GET /metrics` API metrics (request totals, status counts, latency buckets, 429 count)

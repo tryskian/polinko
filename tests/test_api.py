@@ -422,6 +422,36 @@ class PolinkoApiTests(unittest.TestCase):
         kwargs = captured["kwargs"]
         self.assertEqual(kwargs["model"], deps.ocr_model)
         self.assertIn("input", kwargs)
+        ocr_prompt_text = kwargs["input"][0]["content"][0]["text"]
+        self.assertIn("Output mode: verbatim.", ocr_prompt_text)
+
+    def test_ocr_skill_openai_normalized_mode_applies_normalization(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.ocr_provider = "openai"
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                return SimpleNamespace(output_text="  line   one  \n\nline   two  ")
+
+        deps.ocr_client = SimpleNamespace(responses=_FakeResponses())
+        payload_b64 = base64.b64encode(b"not-really-an-image").decode("ascii")
+
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-openai-normalized",
+                "source_name": "scan.png",
+                "mime_type": "image/png",
+                "data_base64": payload_b64,
+                "transcription_mode": "normalized",
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        run = run_resp.json()["run"]
+        self.assertEqual(run["extracted_text"], "line one\nline two")
 
     def test_ocr_skill_openai_rejects_non_image_payload(self) -> None:
         deps = server.get_runtime_deps()

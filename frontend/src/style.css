@@ -415,6 +415,35 @@ body {
   margin-block: 0.2rem 0.52rem;
 }
 
+.msg.user.user-image {
+  width: min(70%, 620px);
+  max-width: min(70%, 620px);
+  display: grid;
+  gap: 0.44rem;
+  padding: 0.5rem 0.58rem 0.5rem;
+  overflow: visible;
+}
+
+.user-image-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: min(480px, 60vh);
+  object-fit: contain;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-elev-1);
+}
+
+.user-image-label {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .msg.assistant {
   justify-self: stretch;
   color: var(--text-primary);

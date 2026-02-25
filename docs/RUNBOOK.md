@@ -50,7 +50,7 @@
 - `PATCH /chats/{session_id}` rename chat
 - `DELETE /chats/{session_id}` delete chat and clear memory
 - `POST /chat` returns `memory_used` citations (vector snippets + source metadata) when retrieval is used
-- `POST /skills/ocr` run OCR (scaffold or OpenAI mode, includes `run.structured`)
+- `POST /skills/ocr` run OCR (scaffold or OpenAI mode, includes `run.structured`; optional `transcription_mode=verbatim|normalized`)
 - `POST /skills/pdf_ingest` extract and index PDF text into vector memory (includes `structured`)
 - `POST /skills/file_search` search indexed vector content (OCR/chat sources)
 - `GET /metrics` request counters, status counts, latency buckets, rate-limit totals
@@ -239,6 +239,7 @@ Hash fields in responses:
    - `/help`
    - `/reset`
    - `/ocr path/to/image.png`
+   - `/ocr --mode normalized path/to/image.png`
    - `/pdf path/to/file.pdf`
    - `/search your query`
    - `/search-ocr your query`

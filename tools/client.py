@@ -40,7 +40,8 @@ def _print_help() -> None:
     print("Commands:")
     print("  /help                     show command help")
     print("  /reset                    clear server-side memory for active session")
-    print("  /ocr <file>               run OCR ingest for a local file")
+    print("  /ocr <file>               run OCR ingest for a local file (verbatim mode)")
+    print("  /ocr --mode normalized <file>   run OCR with normalized whitespace mode")
     print("  /pdf <file>               run PDF ingest for a local PDF file")
     print("  /search <query>           search indexed content (chat/ocr/pdf)")
     print("  /search-ocr <query>       search only OCR-indexed content")
@@ -58,6 +59,41 @@ def _read_file_base64(file_path: str) -> tuple[str, str, str]:
     payload = base64.b64encode(path.read_bytes()).decode("ascii")
     mime_type = mimetypes.guess_type(str(path))[0] or "application/octet-stream"
     return payload, mime_type, path.name
+
+
+def _parse_ocr_command(tokens: list[str]) -> tuple[str, str] | None:
+    if not tokens:
+        return None
+
+    mode = "verbatim"
+    file_path: str | None = None
+    index = 0
+    while index < len(tokens):
+        token = tokens[index]
+        if token == "--mode":
+            index += 1
+            if index >= len(tokens):
+                return None
+            candidate = tokens[index].strip().lower()
+            if candidate not in {"verbatim", "normalized"}:
+                return None
+            mode = candidate
+        elif token.startswith("--mode="):
+            candidate = token.split("=", 1)[1].strip().lower()
+            if candidate not in {"verbatim", "normalized"}:
+                return None
+            mode = candidate
+        elif token.startswith("-"):
+            return None
+        elif file_path is None:
+            file_path = token
+        else:
+            return None
+        index += 1
+
+    if not file_path:
+        return None
+    return file_path, mode
 
 
 def _run_search(
@@ -176,11 +212,21 @@ def main() -> int:
                 continue
 
             if command in {"/ocr", "/pdf"}:
-                if len(tokens) < 2:
-                    print(f"Usage: {command} <file-path>")
-                    continue
+                ocr_mode = "verbatim"
+                file_arg = ""
+                if command == "/ocr":
+                    parsed = _parse_ocr_command(tokens[1:])
+                    if parsed is None:
+                        print("Usage: /ocr [--mode verbatim|normalized] <file-path>")
+                        continue
+                    file_arg, ocr_mode = parsed
+                else:
+                    if len(tokens) < 2:
+                        print("Usage: /pdf <file-path>")
+                        continue
+                    file_arg = tokens[1]
                 try:
-                    payload_b64, mime_type, source_name = _read_file_base64(tokens[1])
+                    payload_b64, mime_type, source_name = _read_file_base64(file_arg)
                 except (OSError, FileNotFoundError) as exc:
                     print(str(exc))
                     continue
@@ -188,17 +234,20 @@ def main() -> int:
                 endpoint = "/skills/ocr" if command == "/ocr" else "/skills/pdf_ingest"
                 if command == "/pdf":
                     mime_type = "application/pdf"
+                payload: dict[str, Any] = {
+                    "session_id": args.session_id,
+                    "source_name": source_name,
+                    "mime_type": mime_type,
+                    "data_base64": payload_b64,
+                    "attach_to_chat": True,
+                }
+                if command == "/ocr":
+                    payload["transcription_mode"] = ocr_mode
                 resp = _post_json(
                     base_url=args.base_url,
                     path=endpoint,
                     headers=headers,
-                    payload={
-                        "session_id": args.session_id,
-                        "source_name": source_name,
-                        "mime_type": mime_type,
-                        "data_base64": payload_b64,
-                        "attach_to_chat": True,
-                    },
+                    payload=payload,
                     timeout=180,
                 )
                 if not resp.ok:
