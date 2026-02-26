@@ -255,6 +255,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Keep generated eval chats instead of deleting them.",
     )
+    parser.add_argument(
+        "--report-json",
+        default="",
+        help="Optional path to write a JSON run report artifact.",
+    )
     return parser
 
 
@@ -287,6 +292,7 @@ def main() -> int:
     global_miss_count = 0
     leak_count = 0
     error_count = 0
+    case_results: list[dict[str, Any]] = []
 
     for index, case in enumerate(cases, start=1):
         case_id = case["id"]
@@ -297,6 +303,12 @@ def main() -> int:
         source_type = case["source_type"]
 
         print(f"\n[{index}/{len(cases)}] {case_id}")
+        case_status = "PASS"
+        case_error = ""
+        detail = ""
+        global_memory_count = 0
+        global_found = False
+        session_leak = False
         try:
             _create_chat(args.base_url, headers, seed_session, args.timeout)
             _create_chat(args.base_url, headers, target_session, args.timeout)
@@ -326,6 +338,7 @@ def main() -> int:
             global_memory = global_chat.get("memory_used")
             if not isinstance(global_memory, list):
                 raise RuntimeError("Missing or invalid memory_used in /chat response.")
+            global_memory_count = len([item for item in global_memory if isinstance(item, dict)])
             global_citation = _find_expected_citation(
                 memory_used=[item for item in global_memory if isinstance(item, dict)],
                 seed_session=seed_session,
@@ -333,13 +346,15 @@ def main() -> int:
                 must_include_terms=must_include,
             )
             if global_citation is None:
+                case_status = "FAIL"
                 global_miss_count += 1
-                memory_count = len([item for item in global_memory if isinstance(item, dict)])
+                detail = f"global retrieval miss (memory_used={global_memory_count})"
                 failures.append(
                     f"{case_id}: global retrieval miss (expected seed citation from {seed_session})."
                 )
-                print(f"  FAIL global retrieval miss (memory_used={memory_count})")
+                print(f"  FAIL {detail}")
                 continue
+            global_found = True
 
             _set_memory_scope(
                 base_url=args.base_url,
@@ -360,7 +375,10 @@ def main() -> int:
                 raise RuntimeError("Missing or invalid memory_used in session-scope response.")
             session_items = [item for item in session_memory if isinstance(item, dict)]
             if _has_cross_session_leak(session_items, seed_session):
+                case_status = "FAIL"
+                session_leak = True
                 leak_count += 1
+                detail = "session-scope leak"
                 failures.append(
                     f"{case_id}: session-scope leak (found citation from {seed_session})."
                 )
@@ -368,12 +386,32 @@ def main() -> int:
                 continue
 
             passes += 1
+            detail = "global recall + session isolation"
             print("  PASS global recall + session isolation")
         except Exception as exc:  # pragma: no cover - CLI operational guard
+            case_status = "ERROR"
+            case_error = str(exc)
+            detail = case_error
             error_count += 1
             failures.append(f"{case_id}: error - {exc}")
             print(f"  ERROR {exc}")
         finally:
+            case_results.append(
+                {
+                    "id": case_id,
+                    "seed_session": seed_session,
+                    "target_session": target_session,
+                    "source_type": source_type,
+                    "must_include": must_include,
+                    "query": case["query"],
+                    "status": case_status,
+                    "detail": detail,
+                    "error": case_error,
+                    "global_citation_found": global_found,
+                    "session_scope_leak": session_leak,
+                    "global_memory_count": global_memory_count,
+                }
+            )
             if not args.keep_chats:
                 for session_id in (seed_session, target_session):
                     try:
@@ -391,6 +429,34 @@ def main() -> int:
     print(f"  Passed: {passes}/{len(cases)}")
     print(f"  Failed: {len(failures)}")
     print(f"  Breakdown: global_miss={global_miss_count} leak={leak_count} errors={error_count}")
+    report_json = str(args.report_json or "").strip()
+    if report_json:
+        output_path = Path(report_json)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(
+                {
+                    "run_id": run_id,
+                    "base_url": args.base_url,
+                    "cases_path": str(cases_path),
+                    "summary": {
+                        "total": len(cases),
+                        "passed": passes,
+                        "failed": len(failures),
+                        "global_miss": global_miss_count,
+                        "leak": leak_count,
+                        "errors": error_count,
+                    },
+                    "failures": failures,
+                    "cases": case_results,
+                    "generated_at": int(time.time()),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        print(f"  Report: {output_path}")
     if failures:
         for failure in failures:
             print(f"  - {failure}")

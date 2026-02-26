@@ -197,6 +197,8 @@ Hash fields in responses:
 3. Optional:
    - custom endpoint: `python tools/eval_retrieval.py --base-url http://127.0.0.1:8000`
    - retain generated eval chats: `python tools/eval_retrieval.py --keep-chats`
+   - write JSON report: `python tools/eval_retrieval.py --report-json eval_reports/retrieval-latest.json`
+   - one-command report run: `make eval-retrieval-report`
 
 ## Run File Search Eval
 

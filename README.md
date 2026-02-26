@@ -195,12 +195,14 @@ Use the deterministic retrieval evaluator to verify:
 Command:
 
 - `make eval-retrieval`
+- `make eval-retrieval-report` (writes a timestamped JSON report under `eval_reports/`)
 
 Notes:
 
 - Uses `docs/retrieval_eval_cases.json` (12 seeded OCR cases)
 - Uses `/chat.memory_used` citations for pass/fail checks
 - Cleans up generated eval chats by default (`--keep-chats` to retain)
+- Supports JSON artifacts: `python tools/eval_retrieval.py --report-json eval_reports/retrieval-latest.json`
 
 ## File Search Eval Harness
 
