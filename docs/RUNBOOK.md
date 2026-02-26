@@ -222,6 +222,8 @@ Hash fields in responses:
    - show extracted text: `python tools/eval_ocr.py --show-text`
    - strict fail on any failed case: `python tools/eval_ocr.py --strict`
    - retain generated eval chats: `python tools/eval_ocr.py --keep-chats`
+   - write JSON report: `python tools/eval_ocr.py --report-json eval_reports/ocr-latest.json`
+   - one-command report run: `make eval-ocr-report`
 4. Cases:
    - default cases file: `docs/ocr_eval_cases.json`
    - supports image cases (`image_path`) and deterministic text-hint cases (`text_hint`)

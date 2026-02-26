@@ -231,6 +231,7 @@ Use the OCR evaluator to verify extraction behavior for both real image cases an
 Command:
 
 - `make eval-ocr`
+- `make eval-ocr-report` (writes a timestamped JSON report under `eval_reports/`)
 
 Optional strict mode:
 
@@ -241,6 +242,7 @@ Notes:
 - Uses `docs/ocr_eval_cases.json`
 - Supports `image_path` cases (OCR path) and `text_hint` cases (deterministic smoke checks)
 - Supports per-case `transcription_mode` (`verbatim|normalized`) plus phrase checks and char limits
+- Supports JSON artifacts: `python tools/eval_ocr.py --report-json eval_reports/ocr-latest.json`
 
 ## Hallucination Eval Harness (P1 Scaffold)
 

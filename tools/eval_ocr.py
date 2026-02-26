@@ -226,6 +226,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--strict", action="store_true", help="Exit non-zero if any case fails.")
     parser.add_argument("--keep-chats", action="store_true", help="Keep generated eval chats.")
     parser.add_argument("--show-text", action="store_true", help="Print extracted text for each case.")
+    parser.add_argument(
+        "--report-json",
+        default="",
+        help="Optional path to write a JSON run report artifact.",
+    )
     return parser
 
 
@@ -252,6 +257,7 @@ def main() -> int:
     failures = 0
     errors = 0
     session_ids: list[str] = []
+    case_results: list[dict[str, Any]] = []
 
     for index, case in enumerate(cases, start=1):
         case_id = case["id"]
@@ -259,6 +265,11 @@ def main() -> int:
         session_ids.append(session_id)
         image_path_value = str(case["image_path"]).strip()
         image_path = Path(image_path_value).expanduser() if image_path_value else None
+        extracted_text = ""
+        reasons: list[str] = []
+        status = "PASS"
+        error_text = ""
+        mime_type = ""
         try:
             _create_chat(args.base_url, headers, session_id, args.timeout)
             if image_path is not None:
@@ -297,9 +308,34 @@ def main() -> int:
             if not passed:
                 failures += 1
         except Exception as exc:
+            status = "ERROR"
+            error_text = str(exc)
             errors += 1
             failures += 1
             print(f"[ERROR] {case_id}: {exc}")
+        finally:
+            case_results.append(
+                {
+                    "id": case_id,
+                    "session_id": session_id,
+                    "status": status,
+                    "error": error_text,
+                    "image_path": str(image_path) if image_path is not None else None,
+                    "source_name": case["source_name"],
+                    "mime_type": mime_type or case["mime_type"],
+                    "transcription_mode": case["transcription_mode"],
+                    "text_hint_present": bool(case["text_hint"]),
+                    "visual_context_hint_present": bool(case["visual_context_hint"]),
+                    "must_contain": list(case["must_contain"]),
+                    "must_contain_any": list(case["must_contain_any"]),
+                    "must_not_contain": list(case["must_not_contain"]),
+                    "min_chars": case["min_chars"],
+                    "max_chars": case["max_chars"],
+                    "char_count": len(extracted_text),
+                    "reasons": reasons,
+                    "extracted_text": extracted_text,
+                }
+            )
 
     if not args.keep_chats:
         for session_id in session_ids:
@@ -313,6 +349,32 @@ def main() -> int:
     print(f"  Passed: {passed}/{len(cases)}")
     print(f"  Failed: {failures}")
     print(f"  Errors: {errors}")
+    report_json = str(args.report_json or "").strip()
+    if report_json:
+        output_path = Path(report_json)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(
+                {
+                    "run_id": run_id,
+                    "base_url": args.base_url,
+                    "cases_path": str(cases_path),
+                    "strict": bool(args.strict),
+                    "summary": {
+                        "total": len(cases),
+                        "passed": passed,
+                        "failed": failures,
+                        "errors": errors,
+                    },
+                    "cases": case_results,
+                    "generated_at": int(time.time()),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        print(f"  Report: {output_path}")
 
     if failures > 0 and args.strict:
         return 1
