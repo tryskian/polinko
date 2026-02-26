@@ -207,6 +207,8 @@ Hash fields in responses:
 3. Optional:
    - custom endpoint: `python tools/eval_file_search.py --base-url http://127.0.0.1:8000`
    - retain generated eval chats: `python tools/eval_file_search.py --keep-chats`
+   - write JSON report: `python tools/eval_file_search.py --report-json eval_reports/file-search-latest.json`
+   - one-command report run: `make eval-file-search-report`
 4. Cases:
    - uses `docs/file_search_eval_cases.json` (OCR + PDF + optional image-context smoke test)
    - image-context case is skipped automatically when `POLINKO_IMAGE_CONTEXT_ENABLED=false`

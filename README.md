@@ -215,12 +215,14 @@ Use the deterministic file-search evaluator to verify:
 Command:
 
 - `make eval-file-search`
+- `make eval-file-search-report` (writes a timestamped JSON report under `eval_reports/`)
 
 Notes:
 
 - Uses `docs/file_search_eval_cases.json` (mixed `ocr` + `pdf` + `image_context` seed methods)
 - Seeds OCR vectors per case, then validates `/skills/file_search` behavior
 - Cleans up generated eval chats by default (`--keep-chats` to retain)
+- Supports JSON artifacts: `python tools/eval_file_search.py --report-json eval_reports/file-search-latest.json`
 
 ## OCR Eval Harness
 

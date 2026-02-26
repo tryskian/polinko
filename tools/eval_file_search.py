@@ -357,6 +357,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Keep generated eval chats instead of deleting them.",
     )
+    parser.add_argument(
+        "--report-json",
+        default="",
+        help="Optional path to write a JSON run report artifact.",
+    )
     return parser
 
 
@@ -391,6 +396,7 @@ def main() -> int:
     global_failures = 0
     leak_failures = 0
     error_failures = 0
+    case_results: list[dict[str, Any]] = []
     for index, case in enumerate(cases, start=1):
         case_id = case["id"]
         seed_session = f"{args.session_prefix}-{run_id}-seed-{case_id}"
@@ -402,6 +408,12 @@ def main() -> int:
         optional = bool(case["optional"])
 
         print(f"\n[{index}/{len(cases)}] {case_id}")
+        case_status = "PASS"
+        detail = "scoped+global pass"
+        case_error = ""
+        scoped_hit_found = False
+        global_hit_found = False
+        scoped_leak_detected = False
         try:
             _create_chat(args.base_url, headers, seed_session, args.timeout)
             _create_chat(args.base_url, headers, distractor_session, args.timeout)
@@ -463,13 +475,18 @@ def main() -> int:
             )
             if scoped_hit is None:
                 if optional:
+                    case_status = "SKIP"
+                    detail = "optional scoped miss"
                     skipped.append(f"{case_id}: optional scoped miss")
                     print("  SKIP optional: scoped hit not found.")
                 else:
+                    case_status = "FAIL"
+                    detail = "scoped search miss"
                     scoped_failures += 1
                     failures.append(f"{case_id}: scoped search miss")
                     print("  FAIL scoped: expected seeded snippet not found.")
             else:
+                scoped_hit_found = True
                 print(
                     "  PASS scoped:"
                     f" score={scoped_hit.get('score')} source_ref={scoped_hit.get('source_ref')}"
@@ -480,10 +497,15 @@ def main() -> int:
                 for item in scoped
             )
             if leaked:
+                scoped_leak_detected = True
                 if optional:
+                    case_status = "SKIP"
+                    detail = "optional scoped leak"
                     skipped.append(f"{case_id}: optional scoped leak")
                     print("  SKIP optional: scoped results leaked across sessions.")
                 else:
+                    case_status = "FAIL"
+                    detail = "scoped search leak"
                     leak_failures += 1
                     failures.append(f"{case_id}: scoped search leak")
                     print("  FAIL scoped: returned results from outside session filter.")
@@ -504,13 +526,18 @@ def main() -> int:
             )
             if global_hit is None:
                 if optional:
+                    case_status = "SKIP"
+                    detail = "optional global miss"
                     skipped.append(f"{case_id}: optional global miss")
                     print("  SKIP optional: global hit not found.")
                 else:
+                    case_status = "FAIL"
+                    detail = "global search miss"
                     global_failures += 1
                     failures.append(f"{case_id}: global search miss")
                     print("  FAIL global: expected seeded snippet not found.")
             else:
+                global_hit_found = True
                 print(
                     "  PASS global:"
                     f" score={global_hit.get('score')} source_ref={global_hit.get('source_ref')}"
@@ -518,15 +545,40 @@ def main() -> int:
 
             if scoped_hit is not None and not leaked and global_hit is not None:
                 passes += 1
+                case_status = "PASS"
+                detail = "scoped+global pass"
         except Exception as exc:
             if optional:
+                case_status = "SKIP"
+                detail = f"optional error - {exc}"
                 skipped.append(f"{case_id}: optional error - {exc}")
                 print(f"  SKIP optional error: {exc}")
             else:
+                case_status = "ERROR"
+                case_error = str(exc)
+                detail = case_error
                 error_failures += 1
                 failures.append(f"{case_id}: error - {exc}")
                 print(f"  ERROR: {exc}")
         finally:
+            case_results.append(
+                {
+                    "id": case_id,
+                    "seed_session": seed_session,
+                    "distractor_session": distractor_session,
+                    "seed_method": seed_method,
+                    "source_type": source_type,
+                    "optional": optional,
+                    "query": case["query"],
+                    "must_include": must_include,
+                    "status": case_status,
+                    "detail": detail,
+                    "error": case_error,
+                    "scoped_hit_found": scoped_hit_found,
+                    "global_hit_found": global_hit_found,
+                    "scoped_leak_detected": scoped_leak_detected,
+                }
+            )
             if not args.keep_chats:
                 for session_id in (seed_session, distractor_session):
                     try:
@@ -545,6 +597,37 @@ def main() -> int:
         f" scoped_leak={leak_failures}"
         f" errors={error_failures}"
     )
+    report_json = str(args.report_json or "").strip()
+    if report_json:
+        output_path = Path(report_json)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(
+                {
+                    "run_id": run_id,
+                    "base_url": args.base_url,
+                    "cases_path": str(cases_path),
+                    "summary": {
+                        "total": len(cases),
+                        "passed": passes,
+                        "failed": len(failures),
+                        "skipped": len(skipped),
+                        "scoped_miss": scoped_failures,
+                        "global_miss": global_failures,
+                        "scoped_leak": leak_failures,
+                        "errors": error_failures,
+                    },
+                    "failures": failures,
+                    "skipped_entries": skipped,
+                    "cases": case_results,
+                    "generated_at": int(time.time()),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+        print(f"  Report: {output_path}")
     for entry in failures:
         print(f"  - {entry}")
     for entry in skipped:
