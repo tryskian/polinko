@@ -282,6 +282,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Keep generated eval chats instead of deleting them.",
     )
+    parser.add_argument(
+        "--report-json",
+        default="",
+        help="Optional path to write a JSON report.",
+    )
     return parser
 
 
@@ -315,10 +320,20 @@ def main() -> int:
 
     failures = 0
     session_ids: list[str] = []
+    case_results: list[dict[str, Any]] = []
 
     for index, case in enumerate(cases, start=1):
         session_id = f"{args.session_prefix}-{run_id}-{index:02d}"
         session_ids.append(session_id)
+        answer = ""
+        wc = 0
+        score: Any = None
+        fit: Any = None
+        judge_pass: bool | None = None
+        notes = ""
+        forbidden_hits: list[str] = []
+        error_text: str | None = None
+        status_text = "PASS"
         try:
             _create_chat(args.base_url, headers, session_id, args.timeout)
             chat_payload = _chat(
@@ -338,7 +353,10 @@ def main() -> int:
                 answer=answer,
                 word_count=wc,
             )
+            score = result.get("score")
+            fit = result.get("fit")
             passed = bool(result.get("pass", False))
+            judge_pass = passed
             case_failed = False
             notes = str(result.get("notes", "")).strip()
 
@@ -365,7 +383,7 @@ def main() -> int:
                     notes = f"Contains forbidden phrase(s): {forbidden_text}."
 
             status_text = "PASS" if not case_failed else "FAIL"
-            print(f"[{status_text}] {case['id']} score={result.get('score')} fit={result.get('fit')} words={wc}")
+            print(f"[{status_text}] {case['id']} score={score} fit={fit} words={wc}")
             if notes:
                 print(f"  notes: {notes}")
 
@@ -373,7 +391,28 @@ def main() -> int:
                 failures += 1
         except Exception as exc:
             failures += 1
+            status_text = "ERROR"
+            error_text = str(exc)
             print(f"[ERROR] {case['id']}: {exc}")
+        finally:
+            max_words = case["max_words"]
+            case_results.append(
+                {
+                    "id": case["id"],
+                    "session_id": session_id,
+                    "status": status_text,
+                    "judge_pass": judge_pass,
+                    "score": score,
+                    "fit": fit,
+                    "notes": notes,
+                    "error": error_text,
+                    "word_count": wc,
+                    "max_words": max_words,
+                    "forbidden_hits": forbidden_hits,
+                    "query": case["query"],
+                    "answer": answer,
+                }
+            )
 
     if not args.keep_chats:
         for session_id in session_ids:
@@ -386,6 +425,28 @@ def main() -> int:
     print("\nSummary")
     print(f"  Passed: {passed}/{len(cases)}")
     print(f"  Failed: {failures}")
+
+    report_json = str(args.report_json or "").strip()
+    if report_json:
+        report_path = Path(report_json)
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        report_payload = {
+            "run_id": run_id,
+            "base_url": args.base_url,
+            "cases_path": str(cases_path),
+            "judge_model": args.judge_model,
+            "strict": bool(args.strict),
+            "global_forbidden_phrases": global_forbidden_phrases,
+            "summary": {
+                "total": len(cases),
+                "passed": passed,
+                "failed": failures,
+            },
+            "cases": case_results,
+            "generated_at": int(time.time()),
+        }
+        report_path.write_text(json.dumps(report_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"  Report: {report_path}")
 
     if failures > 0 and args.strict:
         return 1

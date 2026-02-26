@@ -267,10 +267,12 @@ Use the judge-based style evaluator to keep tone consistency calibrated without 
 Command:
 
 - `make eval-style`
+- `make eval-style-report` (writes a timestamped JSON report under `eval_reports/`)
 
 Optional strict mode (CI gate style):
 
 - `python tools/eval_style.py --strict`
+- `python tools/eval_style.py --strict --report-json eval_reports/style-latest.json`
 
 Notes:
 
@@ -280,6 +282,7 @@ Notes:
   - `forbidden_phrases` per case (case-specific)
 - Phrase matching is case-insensitive.
 - These checks affect eval pass/fail only; they do not change runtime model behavior.
+- Report JSON includes case-level scores, fit labels, and judge notes for offline review/ingest.
 
 ## One-Command Quality Gate
 
@@ -293,6 +296,7 @@ What it runs:
 - retrieval eval
 - file-search eval
 - OCR eval in strict mode
+- style eval in strict mode
 - hallucination eval in strict mode
 
 Details:

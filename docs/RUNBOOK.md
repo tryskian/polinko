@@ -251,6 +251,8 @@ Hash fields in responses:
 5. Optional tuning:
    - choose model: `python tools/eval_style.py --judge-model gpt-4.1-mini`
    - retain generated chats: `python tools/eval_style.py --keep-chats`
+   - write JSON report: `python tools/eval_style.py --report-json eval_reports/style-latest.json`
+   - one-command report run: `make eval-style-report`
 6. Eval-only phrase fail rules (no runtime behavior changes):
    - `docs/style_eval_cases.json` root `global_forbidden_phrases` applies to all cases
    - per-case `forbidden_phrases` applies only to that case
