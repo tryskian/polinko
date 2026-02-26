@@ -290,6 +290,12 @@ Notes:
 - These checks affect eval pass/fail only; they do not change runtime model behavior.
 - Report JSON includes case-level scores, fit labels, and judge notes for offline review/ingest.
 
+## All Eval Reports (One Command)
+
+Generate timestamped JSON reports for retrieval, file-search, OCR, style, and hallucination evals:
+
+- `make eval-reports`
+
 ## One-Command Quality Gate
 
 Use this before pushing:

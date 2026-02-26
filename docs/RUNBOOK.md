@@ -264,6 +264,13 @@ Hash fields in responses:
    - per-case `forbidden_phrases` applies only to that case
    - phrase checks are case-insensitive
 
+## Generate All Eval Reports
+
+1. Ensure API is running locally (`make server`).
+2. Ensure `OPENAI_API_KEY` is set in `.env` (judge eval reports require it).
+3. Run `make eval-reports`.
+4. Reports are written under `eval_reports/` with timestamped filenames.
+
 ## Export CLI Transcript
 
 1. Run `make chat`.

@@ -7,7 +7,7 @@ ENV_FILE ?= .env
 GATE_PORT ?= 8066
 GATE_BASE_URL ?= http://127.0.0.1:$(GATE_PORT)
 
-.PHONY: chat server test eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report quality-gate ui-install ui-dev ui-build docker-build docker-run dev
+.PHONY: chat server test eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports quality-gate ui-install ui-dev ui-build docker-build docker-run dev
 
 chat:
 	$(PYTHON) app.py
@@ -57,6 +57,13 @@ eval-ocr-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
 	$(PYTHON) tools/eval_ocr.py --run-id $$RUN_ID --report-json "eval_reports/ocr-$$RUN_ID.json"
+
+eval-reports:
+	@$(MAKE) eval-retrieval-report
+	@$(MAKE) eval-file-search-report
+	@$(MAKE) eval-ocr-report
+	@$(MAKE) eval-style-report
+	@$(MAKE) eval-hallucination-report
 
 quality-gate:
 	@echo "Running quality gate (tests + retrieval eval + file-search eval + OCR eval + style eval + hallucination eval)..."
