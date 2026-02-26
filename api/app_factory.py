@@ -599,6 +599,91 @@ def _sha256_text(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def _sha256_bytes(value: bytes) -> str:
+    return hashlib.sha256(value).hexdigest()
+
+
+def _build_ingest_dedup_key(
+    *,
+    operation: str,
+    principal: str | None,
+    session_id: str,
+    payload: dict[str, Any],
+) -> str:
+    canonical_payload = {
+        "principal": principal or "",
+        "session_id": session_id,
+        "operation": operation,
+        **payload,
+    }
+    canonical = json.dumps(canonical_payload, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return f"{operation}:{hashlib.sha256(canonical.encode('utf-8')).hexdigest()}"
+
+
+def _build_ocr_dedup_key(
+    *,
+    req: OcrRequest,
+    deps: RuntimeDeps,
+    principal: str | None,
+    session_id: str,
+) -> str:
+    payload: dict[str, Any] = {
+        "source_name": req.source_name,
+        "mime_type": (req.mime_type or "").strip().lower() or None,
+        "source_message_id": req.source_message_id,
+        "text_hint": req.text_hint,
+        "visual_context_hint": req.visual_context_hint,
+        "transcription_mode": req.transcription_mode,
+        "memory_scope": _normalize_memory_scope(req.memory_scope, default="session"),
+        "attach_to_chat": bool(req.attach_to_chat),
+        "ocr_provider": deps.ocr_provider,
+        "ocr_model": deps.ocr_model,
+        "ocr_prompt_sha256": _sha256_text(deps.ocr_prompt),
+        "image_context_enabled": bool(deps.image_context_enabled),
+        "image_context_model": deps.image_context_model,
+        "image_context_prompt_sha256": _sha256_text(deps.image_context_prompt),
+    }
+    if req.data_base64 and req.data_base64.strip():
+        decoded, detected_mime = _decode_base64_payload(req)
+        payload["data_sha256"] = _sha256_bytes(decoded)
+        payload["detected_mime_type"] = (detected_mime or "").strip().lower() or None
+    return _build_ingest_dedup_key(
+        operation="ocr",
+        principal=principal,
+        session_id=session_id,
+        payload=payload,
+    )
+
+
+def _build_pdf_ingest_dedup_key(
+    *,
+    req: PdfIngestRequest,
+    deps: RuntimeDeps,
+    principal: str | None,
+    session_id: str,
+    payload_bytes: bytes,
+    resolved_mime_type: str | None,
+) -> str:
+    return _build_ingest_dedup_key(
+        operation="pdf_ingest",
+        principal=principal,
+        session_id=session_id,
+        payload={
+            "source_name": req.source_name,
+            "mime_type": (req.mime_type or "").strip().lower() or None,
+            "resolved_mime_type": resolved_mime_type,
+            "source_message_id": req.source_message_id,
+            "attach_to_chat": bool(req.attach_to_chat),
+            "data_sha256": _sha256_bytes(payload_bytes),
+            "vector_embedding_model": deps.vector_embedding_model,
+            "extraction_structured_enabled": bool(deps.extraction_structured_enabled),
+            "extraction_structured_model": deps.extraction_structured_model,
+            "responses_pdf_ingest_enabled": bool(deps.responses_pdf_ingest_enabled),
+            "responses_vector_store_id": deps.responses_vector_store_id,
+        },
+    )
+
+
 def _normalize_preview_text(value: str, *, max_chars: int) -> str:
     compact = " ".join(value.split()).strip()
     if len(compact) <= max_chars:
@@ -2287,6 +2372,48 @@ def create_app(config: AppConfig) -> FastAPI:
             message_id=req.source_message_id,
         ):
             raise HTTPException(status_code=404, detail="source_message_id not found in this chat.")
+        dedup_key = _build_ocr_dedup_key(
+            req=req,
+            deps=deps,
+            principal=principal,
+            session_id=session_id,
+        )
+
+        cached_payload = deps.history_store.get_ingest_dedup_response(
+            dedup_key=dedup_key,
+            operation="ocr",
+        )
+        if cached_payload is not None:
+            try:
+                cached_response = OcrResponse.model_validate(cached_payload)
+            except Exception:
+                _log_event(
+                    "ocr_run_dedup_payload_invalid",
+                    request_id=getattr(request.state, "request_id", None),
+                    session_id=session_id,
+                    principal=principal,
+                )
+            else:
+                cached_run = cached_response.run
+                index_session_id = _resolve_memory_lane_session_id(
+                    session_id=session_id,
+                    memory_scope=req.memory_scope,
+                )
+                _log_event(
+                    "ocr_run",
+                    request_id=getattr(request.state, "request_id", None),
+                    session_id=session_id,
+                    principal=principal,
+                    run_id=cached_run.run_id,
+                    provider=deps.ocr_provider,
+                    status=cached_run.status,
+                    chars=len(cached_run.extracted_text),
+                    memory_scope=_normalize_memory_scope(req.memory_scope, default="session"),
+                    index_session_id=index_session_id,
+                    vector_chunks=len(_chunk_text_for_vectors(cached_run.extracted_text)),
+                    dedup_hit=True,
+                )
+                return cached_response
 
         extracted_text, status = _extract_text(req, deps)
         visual_context = _extract_image_context(
@@ -2338,6 +2465,7 @@ def create_app(config: AppConfig) -> FastAPI:
             memory_scope=_normalize_memory_scope(req.memory_scope, default="session"),
             index_session_id=index_session_id,
             vector_chunks=len(_chunk_text_for_vectors(run.extracted_text)),
+            dedup_hit=False,
         )
         structured = _build_structured_extraction(
             source_type="ocr",
@@ -2349,7 +2477,7 @@ def create_app(config: AppConfig) -> FastAPI:
             session_id=session_id,
             principal=principal,
         )
-        return OcrResponse(
+        response_payload = OcrResponse(
             run=OcrRunResponse(
                 run_id=run.run_id,
                 session_id=run.session_id,
@@ -2364,6 +2492,13 @@ def create_app(config: AppConfig) -> FastAPI:
                 created_at=run.created_at,
             )
         )
+        deps.history_store.record_ingest_dedup_response(
+            dedup_key=dedup_key,
+            operation="ocr",
+            session_id=session_id,
+            response_payload=response_payload.model_dump(),
+        )
+        return response_payload
 
     @app.post("/skills/pdf_ingest", response_model=PdfIngestResponse)
     def pdf_ingest(req: PdfIngestRequest, request: Request) -> PdfIngestResponse:
@@ -2397,6 +2532,42 @@ def create_app(config: AppConfig) -> FastAPI:
             )
         if b"%PDF" not in decoded[:1024]:
             raise HTTPException(status_code=422, detail="Invalid PDF payload header.")
+
+        dedup_key = _build_pdf_ingest_dedup_key(
+            req=req,
+            deps=deps,
+            principal=principal,
+            session_id=session_id,
+            payload_bytes=decoded,
+            resolved_mime_type=resolved_mime or None,
+        )
+        cached_payload = deps.history_store.get_ingest_dedup_response(
+            dedup_key=dedup_key,
+            operation="pdf_ingest",
+        )
+        if cached_payload is not None:
+            try:
+                cached_response = PdfIngestResponse.model_validate(cached_payload)
+            except Exception:
+                _log_event(
+                    "pdf_ingest_dedup_payload_invalid",
+                    request_id=getattr(request.state, "request_id", None),
+                    session_id=session_id,
+                    principal=principal,
+                )
+            else:
+                _log_event(
+                    "pdf_ingest",
+                    request_id=getattr(request.state, "request_id", None),
+                    session_id=session_id,
+                    principal=principal,
+                    ingest_id=cached_response.ingest_id,
+                    chars=cached_response.extracted_chars,
+                    vector_chunks=cached_response.vector_chunks,
+                    source_name=cached_response.source_name,
+                    dedup_hit=True,
+                )
+                return cached_response
 
         extracted_text = _extract_text_from_pdf_bytes(decoded)
         result_message_id: str | None = None
@@ -2456,6 +2627,7 @@ def create_app(config: AppConfig) -> FastAPI:
             chars=len(extracted_text),
             vector_chunks=len(chunks),
             source_name=req.source_name,
+            dedup_hit=False,
         )
         responses_vector_store_file_id = _index_pdf_in_responses_vector_store(
             deps=deps,
@@ -2475,7 +2647,7 @@ def create_app(config: AppConfig) -> FastAPI:
                 ingest_id=ingest_id,
                 vector_store_file_id=responses_vector_store_file_id,
             )
-        return PdfIngestResponse(
+        response_payload = PdfIngestResponse(
             ingest_id=ingest_id,
             session_id=session_id,
             source_name=req.source_name,
@@ -2495,6 +2667,13 @@ def create_app(config: AppConfig) -> FastAPI:
                 principal=principal,
             ),
         )
+        deps.history_store.record_ingest_dedup_response(
+            dedup_key=dedup_key,
+            operation="pdf_ingest",
+            session_id=session_id,
+            response_payload=response_payload.model_dump(),
+        )
+        return response_payload
 
     @app.post("/skills/file_search", response_model=FileSearchResponse)
     def file_search(req: FileSearchRequest, request: Request) -> FileSearchResponse:
@@ -2861,35 +3040,95 @@ def create_app(config: AppConfig) -> FastAPI:
                             memory_scope=attachment.memory_scope,
                             attach_to_chat=False,
                         )
-                        extracted_text, status = _extract_text(ocr_req, deps)
-                        visual_context = _extract_image_context(
-                            req=ocr_req,
-                            deps=deps,
-                            request_id=request_id,
-                            session_id=session_id,
-                            principal=principal,
-                        )
-                        run = deps.history_store.record_ocr_run(
-                            run_id=f"ocr-{uuid.uuid4().hex[:12]}",
-                            session_id=session_id,
-                            source_name=ocr_req.source_name,
-                            mime_type=ocr_req.mime_type,
-                            source_message_id=None,
-                            result_message_id=None,
-                            status=status,
-                            extracted_text=extracted_text,
-                        )
                         index_session_id = _resolve_memory_lane_session_id(
                             session_id=session_id,
                             memory_scope=ocr_req.memory_scope,
                         )
-                        _index_ocr_output(
+                        dedup_key = _build_ocr_dedup_key(
+                            req=ocr_req,
                             deps=deps,
-                            session_id=index_session_id,
-                            run=run,
-                            origin_session_id=session_id,
-                            visual_context=visual_context,
+                            principal=principal,
+                            session_id=session_id,
                         )
+                        dedup_hit = False
+                        cached_payload = deps.history_store.get_ingest_dedup_response(
+                            dedup_key=dedup_key,
+                            operation="ocr",
+                        )
+                        if cached_payload is not None:
+                            try:
+                                cached_response = OcrResponse.model_validate(cached_payload)
+                            except Exception:
+                                _log_event(
+                                    "chat_attachment_ocr_dedup_payload_invalid",
+                                    request_id=request_id,
+                                    session_id=session_id,
+                                    principal=principal,
+                                )
+                            else:
+                                dedup_hit = True
+                                cached_run = cached_response.run
+                                extracted_text = cached_run.extracted_text
+                                visual_context = (cached_run.visual_context or "").strip() or None
+                                run_id = cached_run.run_id
+                                run_status = cached_run.status
+                                run_source_name = cached_run.source_name
+
+                        if not dedup_hit:
+                            extracted_text, status = _extract_text(ocr_req, deps)
+                            visual_context = _extract_image_context(
+                                req=ocr_req,
+                                deps=deps,
+                                request_id=request_id,
+                                session_id=session_id,
+                                principal=principal,
+                            )
+                            run = deps.history_store.record_ocr_run(
+                                run_id=f"ocr-{uuid.uuid4().hex[:12]}",
+                                session_id=session_id,
+                                source_name=ocr_req.source_name,
+                                mime_type=ocr_req.mime_type,
+                                source_message_id=None,
+                                result_message_id=None,
+                                status=status,
+                                extracted_text=extracted_text,
+                            )
+                            _index_ocr_output(
+                                deps=deps,
+                                session_id=index_session_id,
+                                run=run,
+                                origin_session_id=session_id,
+                                visual_context=visual_context,
+                            )
+                            dedup_payload = OcrResponse(
+                                run=OcrRunResponse(
+                                    run_id=run.run_id,
+                                    session_id=run.session_id,
+                                    source_name=run.source_name,
+                                    mime_type=run.mime_type,
+                                    source_message_id=run.source_message_id,
+                                    result_message_id=run.result_message_id,
+                                    status=run.status,
+                                    extracted_text=run.extracted_text,
+                                    visual_context=visual_context,
+                                    structured=_build_structured_extraction(
+                                        source_type="ocr",
+                                        source_name=run.source_name,
+                                        mime_type=run.mime_type,
+                                        text=run.extracted_text,
+                                    ),
+                                    created_at=run.created_at,
+                                )
+                            )
+                            deps.history_store.record_ingest_dedup_response(
+                                dedup_key=dedup_key,
+                                operation="ocr",
+                                session_id=session_id,
+                                response_payload=dedup_payload.model_dump(),
+                            )
+                            run_id = run.run_id
+                            run_status = run.status
+                            run_source_name = run.source_name
 
                         source_label = (ocr_req.source_name or f"attachment_{idx}").strip()
                         attachment_ocr_texts.append((source_label, extracted_text))
@@ -2909,12 +3148,13 @@ def create_app(config: AppConfig) -> FastAPI:
                             request_id=request_id,
                             session_id=session_id,
                             principal=principal,
-                            run_id=run.run_id,
-                            source_name=run.source_name,
-                            status=run.status,
-                            chars=len(run.extracted_text),
+                            run_id=run_id,
+                            source_name=run_source_name,
+                            status=run_status,
+                            chars=len(extracted_text),
                             memory_scope=_normalize_memory_scope(ocr_req.memory_scope, default="global"),
                             index_session_id=index_session_id,
+                            dedup_hit=dedup_hit,
                         )
 
                 if req.attachments and _looks_like_ocr_request(req.message):

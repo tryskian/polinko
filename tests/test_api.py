@@ -258,6 +258,103 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertTrue(any(item["session_id"] == "s-attach-seed" for item in payload["memory_used"]))
         self.assertIn("RETRIEVED_MEMORY", captured["input"])
 
+    def test_chat_attachment_ocr_dedups_identical_requests(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-chat-attachments-dedup.db"))
+        deps.vector_min_similarity = 0.0
+        deps.vector_min_similarity_global = 0.0
+        deps.vector_min_similarity_session = 0.0
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "dedup" in lowered else 0.0,
+                    1.0 if "attachment" in lowered else 0.0,
+                    1.0 if "context" in lowered else 0.0,
+                    float(len(lowered) % 29) / 29.0,
+                ]
+
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        payload_b64 = base64.b64encode(b"placeholder").decode("ascii")
+        request_payload = {
+            "message": "Store this attachment for dedup.",
+            "session_id": "s-attach-dedup",
+            "attachments": [
+                {
+                    "source_name": "dedup-attachment.png",
+                    "mime_type": "image/png",
+                    "data_base64": payload_b64,
+                    "text_hint": "dedup attachment context",
+                    "memory_scope": "global",
+                }
+            ],
+        }
+        with self._stub_runner("Attachment stored"):
+            first = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json=request_payload,
+            )
+        self.assertEqual(first.status_code, 200)
+        vector_count_after_first = deps.vector_store.active_count()
+        self.assertGreater(vector_count_after_first, 0)
+        runs_after_first = deps.history_store.list_ocr_runs(session_id="s-attach-dedup")
+        self.assertEqual(len(runs_after_first), 1)
+        ocr_query_vector = _FakeEmbeddings._embed("dedup attachment context")
+        ocr_matches_after_first = deps.vector_store.search(
+            query_embedding=ocr_query_vector,
+            limit=50,
+            min_similarity=0.0,
+            roles=("assistant",),
+            include_session_id="__global_memory__",
+            source_types=("ocr", "image"),
+        )
+        ocr_match_count_after_first = len(
+            [match for match in ocr_matches_after_first if match.metadata.get("origin_session_id") == "s-attach-dedup"]
+        )
+        self.assertGreater(ocr_match_count_after_first, 0)
+
+        with (
+            patch("api.app_factory._extract_text", side_effect=AssertionError("should not re-extract OCR text")),
+            patch(
+                "api.app_factory._extract_image_context",
+                side_effect=AssertionError("should not re-run image context extraction"),
+            ),
+            self._stub_runner("Attachment reused"),
+        ):
+            second = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json=request_payload,
+            )
+        self.assertEqual(second.status_code, 200)
+        self.assertGreater(deps.vector_store.active_count(), vector_count_after_first)
+        runs_after_second = deps.history_store.list_ocr_runs(session_id="s-attach-dedup")
+        self.assertEqual(len(runs_after_second), 1)
+        self.assertEqual(runs_after_second[0].run_id, runs_after_first[0].run_id)
+        ocr_matches_after_second = deps.vector_store.search(
+            query_embedding=ocr_query_vector,
+            limit=50,
+            min_similarity=0.0,
+            roles=("assistant",),
+            include_session_id="__global_memory__",
+            source_types=("ocr", "image"),
+        )
+        ocr_match_count_after_second = len(
+            [match for match in ocr_matches_after_second if match.metadata.get("origin_session_id") == "s-attach-dedup"]
+        )
+        self.assertEqual(ocr_match_count_after_second, ocr_match_count_after_first)
+
     def test_chat_attachment_ocr_query_uses_literal_transcription_reply(self) -> None:
         deps = server.get_runtime_deps()
         deps.vector_enabled = True
@@ -609,6 +706,57 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("input", kwargs)
         ocr_prompt_text = kwargs["input"][0]["content"][0]["text"]
         self.assertIn("Output mode: verbatim.", ocr_prompt_text)
+
+    def test_ocr_skill_dedups_identical_requests(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-ocr-dedup.db"))
+
+        class _FakeEmbeddings:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=[0.1, 0.2, 0.3, float(len(text) % 17) / 17.0]) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        request_payload = {
+            "session_id": "s-ocr-dedup",
+            "source_name": "dedup-note.txt",
+            "mime_type": "text/plain",
+            "text_hint": "dedup check line one\ndedup check line two",
+            "attach_to_chat": True,
+        }
+        first_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json=request_payload,
+        )
+        self.assertEqual(first_resp.status_code, 200)
+        first_run = first_resp.json()["run"]
+        vector_count_after_first = deps.vector_store.active_count()
+        self.assertGreater(vector_count_after_first, 0)
+
+        second_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json=request_payload,
+        )
+        self.assertEqual(second_resp.status_code, 200)
+        second_run = second_resp.json()["run"]
+        self.assertEqual(second_run["run_id"], first_run["run_id"])
+        self.assertEqual(second_run["result_message_id"], first_run["result_message_id"])
+        self.assertEqual(deps.vector_store.active_count(), vector_count_after_first)
+
+        messages_resp = self.client.get(
+            "/chats/s-ocr-dedup/messages",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(messages_resp.status_code, 200)
+        messages = messages_resp.json()["messages"]
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0]["message_id"], first_run["result_message_id"])
 
     def test_ocr_skill_openai_normalized_mode_applies_normalization(self) -> None:
         deps = server.get_runtime_deps()
@@ -1206,6 +1354,52 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(structured["text_sha256"], expected_hash)
         self.assertEqual(structured["char_count"], len(pdf_text))
         self.assertTrue(structured["preview"].startswith("Fallback PDF structured text"))
+
+    def test_pdf_ingest_dedups_identical_requests(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf-dedup.db"))
+
+        class _FakeEmbeddings:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=[0.3, 0.2, 0.1, float(len(text) % 13) / 13.0]) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        pdf_text = "Invoice archive\nretainer line item\ntotal due"
+        payload_b64 = base64.b64encode(b"%PDF-1.7 fake-dedup-payload").decode("ascii")
+        request_payload = {
+            "session_id": "s-pdf-dedup",
+            "source_name": "dedup.pdf",
+            "mime_type": "application/pdf",
+            "data_base64": payload_b64,
+            "attach_to_chat": False,
+        }
+        with patch("api.app_factory._extract_text_from_pdf_bytes", return_value=pdf_text):
+            first_resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json=request_payload,
+            )
+        self.assertEqual(first_resp.status_code, 200)
+        first_ingest = first_resp.json()
+        vector_count_after_first = deps.vector_store.active_count()
+        self.assertGreater(vector_count_after_first, 0)
+
+        with patch("api.app_factory._extract_text_from_pdf_bytes", side_effect=AssertionError("should not re-extract")):
+            second_resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json=request_payload,
+            )
+        self.assertEqual(second_resp.status_code, 200)
+        second_ingest = second_resp.json()
+        self.assertEqual(second_ingest["ingest_id"], first_ingest["ingest_id"])
+        self.assertEqual(second_ingest["vector_chunks"], first_ingest["vector_chunks"])
+        self.assertEqual(deps.vector_store.active_count(), vector_count_after_first)
 
     def test_pdf_ingest_structured_falls_back_when_model_mime_mismatches(self) -> None:
         deps = server.get_runtime_deps()

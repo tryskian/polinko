@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import sqlite3
 import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from typing import Any
 
 
 DEFAULT_CHAT_TITLE = "New chat"
@@ -186,6 +188,25 @@ class ChatHistoryStore:
                 """
                 CREATE INDEX IF NOT EXISTS idx_ocr_runs_session_created
                 ON ocr_runs(session_id, created_at DESC);
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS ingest_dedup (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  dedup_key TEXT UNIQUE NOT NULL,
+                  operation TEXT NOT NULL,
+                  session_id TEXT NOT NULL,
+                  response_json TEXT NOT NULL,
+                  created_at INTEGER NOT NULL,
+                  FOREIGN KEY(session_id) REFERENCES chats(session_id) ON DELETE CASCADE
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_ingest_dedup_operation_created
+                ON ingest_dedup(operation, created_at DESC);
                 """
             )
             conn.execute(
@@ -667,6 +688,55 @@ class ChatHistoryStore:
             )
             for row in rows
         ]
+
+    def get_ingest_dedup_response(
+        self,
+        *,
+        dedup_key: str,
+        operation: str,
+    ) -> dict[str, Any] | None:
+        with self._connection() as conn:
+            row = conn.execute(
+                """
+                SELECT response_json
+                FROM ingest_dedup
+                WHERE dedup_key = ? AND operation = ?
+                LIMIT 1;
+                """,
+                (dedup_key, operation),
+            ).fetchone()
+        if row is None:
+            return None
+        try:
+            payload = json.loads(str(row["response_json"]))
+        except (TypeError, ValueError):
+            return None
+        return payload if isinstance(payload, dict) else None
+
+    def record_ingest_dedup_response(
+        self,
+        *,
+        dedup_key: str,
+        operation: str,
+        session_id: str,
+        response_payload: dict[str, Any],
+    ) -> None:
+        now = _now_ms()
+        serialized = json.dumps(response_payload, ensure_ascii=False, separators=(",", ":"))
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO ingest_dedup(
+                  dedup_key,
+                  operation,
+                  session_id,
+                  response_json,
+                  created_at
+                )
+                VALUES (?, ?, ?, ?, ?);
+                """,
+                (dedup_key, operation, session_id, serialized, now),
+            )
 
     def deprecate_chat(self, session_id: str) -> ChatSummary:
         now = _now_ms()
