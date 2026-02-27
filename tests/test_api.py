@@ -707,6 +707,39 @@ class PolinkoApiTests(unittest.TestCase):
         ocr_prompt_text = kwargs["input"][0]["content"][0]["text"]
         self.assertIn("Output mode: verbatim.", ocr_prompt_text)
 
+    def test_ocr_skill_openai_strips_commentary_preface_lines(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.ocr_provider = "openai"
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                return SimpleNamespace(
+                    output_text=(
+                        'The text appears to read: "gyrus-fold-within."\n'
+                        "All lowercase, each word in sequence with dashes marking the steps."
+                    )
+                )
+
+        deps.ocr_client = SimpleNamespace(responses=_FakeResponses())
+        payload_b64 = base64.b64encode(b"not-really-an-image").decode("ascii")
+
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-openai-cleanup",
+                "source_name": "scan.png",
+                "mime_type": "image/png",
+                "data_base64": payload_b64,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        run = run_resp.json()["run"]
+        self.assertEqual(run["status"], "ok")
+        self.assertEqual(run["extracted_text"], "gyrus-fold-within.")
+
     def test_ocr_skill_dedups_identical_requests(self) -> None:
         deps = server.get_runtime_deps()
         deps.vector_enabled = True

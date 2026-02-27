@@ -1220,6 +1220,75 @@ def _apply_ocr_transcription_mode(text: str, mode: str) -> str:
     return text.strip()
 
 
+def _clean_ocr_line(value: str) -> str:
+    line = value.strip()
+    if not line:
+        return ""
+    if line.startswith("[OCR]"):
+        line = line[len("[OCR]") :].strip()
+    line = re.sub(r"^\*\*(.+)\*\*$", r"\1", line)
+    line = line.strip("“”\"'")
+    return line.strip()
+
+
+def _coerce_literal_ocr_output(text: str) -> str:
+    raw = text.strip()
+    if not raw:
+        return ""
+
+    lines = [line.strip() for line in raw.replace("\r\n", "\n").replace("\r", "\n").split("\n")]
+    kept: list[str] = []
+    preface_kept: list[str] = []
+
+    prefix_rewrites = (
+        r"^(?:the\s+)?text\s+(?:reads|read|appears(?:\s+to\s+read)?|appears\s+as)\s*[:\-]\s*(.+)$",
+        r"^it\s+(?:reads|appears)\s*[:\-]\s*(.+)$",
+    )
+    commentary_prefixes = (
+        "the image shows",
+        "looks straightforward",
+        "nothing else visible",
+        "all lowercase",
+        "capitalised at the start",
+        "capitalized at the start",
+        "the words are",
+        "the words appear",
+        "the second word likely",
+    )
+
+    for line in lines:
+        if not line:
+            continue
+        lowered = line.lower()
+
+        rewritten = None
+        for pattern in prefix_rewrites:
+            match = re.match(pattern, lowered, flags=re.IGNORECASE)
+            if match:
+                original_match = re.match(pattern, line, flags=re.IGNORECASE)
+                if original_match:
+                    rewritten = original_match.group(1).strip()
+                break
+        if rewritten is not None:
+            cleaned = _clean_ocr_line(rewritten)
+            if cleaned:
+                preface_kept.append(cleaned)
+            continue
+
+        if any(lowered.startswith(prefix) for prefix in commentary_prefixes):
+            continue
+
+        cleaned = _clean_ocr_line(line)
+        if cleaned:
+            kept.append(cleaned)
+
+    if preface_kept:
+        return "\n".join(preface_kept).strip()
+    if kept:
+        return "\n".join(kept).strip()
+    return raw
+
+
 def _scaffold_extract_text(req: OcrRequest) -> tuple[str, str]:
     mode = _resolve_ocr_transcription_mode(req.transcription_mode)
     if req.text_hint and req.text_hint.strip():
@@ -1307,7 +1376,8 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
 
     output_text = getattr(response, "output_text", None)
     if isinstance(output_text, str) and output_text.strip():
-        return _apply_ocr_transcription_mode(output_text, mode), "ok"
+        literal_output = _coerce_literal_ocr_output(output_text)
+        return _apply_ocr_transcription_mode(literal_output, mode), "ok"
     return "[OCR] No text detected.", "ok"
 
 
