@@ -183,6 +183,7 @@ Config:
 
 GitHub Actions runs:
 
+- markdown lint (`README.md` + `docs/**/*.md`) on every push and PR
 - unit tests on every push and PR
 
 ## Retrieval Eval Harness
