@@ -4,6 +4,7 @@ import os
 import time
 from pathlib import Path
 from typing import Any
+from typing import Literal
 
 import requests
 from dotenv import load_dotenv
@@ -33,6 +34,7 @@ _JUDGE_SCHEMA: dict[str, Any] = {
 }
 
 _MIN_ACCEPTABLE_SCORE = 5
+EvaluationMode = Literal["judge", "deterministic", "auto"]
 
 
 def _headers(api_key: str | None) -> dict[str, str]:
@@ -322,6 +324,41 @@ def _apply_deterministic_gate(
     return fail_reasons
 
 
+def _deterministic_assessment(
+    *,
+    case: dict[str, Any],
+    answer: str,
+    memory_used: list[dict[str, Any]],
+) -> dict[str, Any]:
+    forbidden_hits = _contains_forbidden_phrases(answer, case["must_not_contain"])
+    has_memory = bool(memory_used)
+    expected_mode = str(case.get("expected_mode", "cautious")).lower()
+
+    if expected_mode == "grounded":
+        grounding = "grounded" if has_memory else "partially_grounded"
+        risk = "low" if has_memory and not forbidden_hits else "high"
+    else:
+        grounding = "grounded"
+        risk = "high" if forbidden_hits else "low"
+
+    score = 9 if risk != "high" else 0
+    passed = risk != "high" and (expected_mode != "grounded" or has_memory)
+
+    note_parts = ["deterministic assessment"]
+    if expected_mode == "grounded" and not has_memory:
+        note_parts.append("no retrieved memory evidence")
+    if forbidden_hits:
+        note_parts.append(f"forbidden_phrases={forbidden_hits}")
+
+    return {
+        "pass": passed,
+        "score": score,
+        "risk": risk,
+        "grounding": grounding,
+        "notes": "; ".join(note_parts),
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run hallucination-risk eval using an LLM judge over /chat outputs.",
@@ -349,6 +386,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="OpenAI model for judge pass/fail scoring.",
     )
     parser.add_argument(
+        "--evaluation-mode",
+        choices=["judge", "deterministic", "auto"],
+        default="judge",
+        help=(
+            "Scoring mode: "
+            "'judge' requires OPENAI_API_KEY, "
+            "'deterministic' uses local rule checks only, "
+            "'auto' uses judge when available and falls back to deterministic."
+        ),
+    )
+    parser.add_argument(
         "--strict",
         action="store_true",
         help="Exit non-zero if any case fails (CI gate mode).",
@@ -374,17 +422,35 @@ def main() -> int:
         raise SystemExit(f"Cases file not found: {cases_path}")
     cases = _load_cases(cases_path)
 
+    requested_mode: EvaluationMode = args.evaluation_mode
     openai_api_key = os.getenv("OPENAI_API_KEY")
-    if not openai_api_key:
-        raise SystemExit("OPENAI_API_KEY is required for hallucination judge eval.")
-    judge_client = OpenAI(api_key=openai_api_key)
+    judge_client: OpenAI | None = None
+    effective_mode: Literal["judge", "deterministic"] = "deterministic"
+    if requested_mode == "judge":
+        if not openai_api_key:
+            raise SystemExit("OPENAI_API_KEY is required when --evaluation-mode=judge.")
+        judge_client = OpenAI(api_key=openai_api_key)
+        effective_mode = "judge"
+    elif requested_mode == "auto":
+        if openai_api_key:
+            judge_client = OpenAI(api_key=openai_api_key)
+            effective_mode = "judge"
+        else:
+            effective_mode = "deterministic"
+            print("OPENAI_API_KEY missing; using deterministic hallucination scoring.")
+    else:
+        effective_mode = "deterministic"
 
     run_id = args.run_id.strip() or str(int(time.time()))
     server_api_key = os.getenv("POLINKO_SERVER_API_KEY")
     headers = _headers(server_api_key)
 
     print(f"Running hallucination eval on {args.base_url}")
-    print(f"Cases: {len(cases)} | run_id={run_id} | judge_model={args.judge_model}")
+    print(
+        f"Cases: {len(cases)} | run_id={run_id} | "
+        f"requested_mode={requested_mode} | effective_mode={effective_mode} | "
+        f"judge_model={args.judge_model}"
+    )
     try:
         _preflight(args.base_url, headers, args.timeout)
     except Exception as exc:
@@ -431,13 +497,37 @@ def main() -> int:
             answer = str(chat_payload.get("output", "")).strip()
             memory_used_raw = chat_payload.get("memory_used")
             memory_used = memory_used_raw if isinstance(memory_used_raw, list) else []
-            judgment = _judge_case(
-                judge_client=judge_client,
-                model=args.judge_model,
-                case=case,
-                answer=answer,
-                memory_used=[item for item in memory_used if isinstance(item, dict)],
-            )
+            normalized_memory_used = [item for item in memory_used if isinstance(item, dict)]
+            case_eval_mode: Literal["judge", "deterministic"] = effective_mode
+            if effective_mode == "judge":
+                try:
+                    if judge_client is None:
+                        raise RuntimeError("Judge client unavailable.")
+                    judgment = _judge_case(
+                        judge_client=judge_client,
+                        model=args.judge_model,
+                        case=case,
+                        answer=answer,
+                        memory_used=normalized_memory_used,
+                    )
+                except Exception as exc:
+                    if requested_mode == "auto":
+                        case_eval_mode = "deterministic"
+                        judgment = _deterministic_assessment(
+                            case=case,
+                            answer=answer,
+                            memory_used=normalized_memory_used,
+                        )
+                        judgment["notes"] = f"judge_error={exc}; {judgment['notes']}"
+                        print(f"  WARN judge failed, used deterministic fallback: {exc}")
+                    else:
+                        raise
+            else:
+                judgment = _deterministic_assessment(
+                    case=case,
+                    answer=answer,
+                    memory_used=normalized_memory_used,
+                )
             risk = str(judgment.get("risk", "medium")).lower()
             if risk in risk_counts:
                 risk_counts[risk] += 1
@@ -465,6 +555,7 @@ def main() -> int:
                     "notes": notes,
                     "answer": answer,
                     "fail_reasons": fail_reasons,
+                    "evaluation_mode": case_eval_mode,
                 }
             )
             if passed:
@@ -518,6 +609,8 @@ def main() -> int:
                     "run_id": run_id,
                     "base_url": args.base_url,
                     "judge_model": args.judge_model,
+                    "requested_evaluation_mode": requested_mode,
+                    "effective_evaluation_mode": effective_mode,
                     "strict": bool(args.strict),
                     "total_cases": len(cases),
                     "passed": passes,

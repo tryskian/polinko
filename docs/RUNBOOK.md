@@ -222,12 +222,28 @@ Hash fields in responses:
 
 ## Run One-Command Quality Gate
 
-1. Ensure `.env` includes `OPENAI_API_KEY` (judge eval requires it).
+1. Default mode uses hallucination judge scoring:
+   - ensure `.env` includes `OPENAI_API_KEY`
 2. Run `make quality-gate`.
-3. If startup fails, inspect `/tmp/polinko-quality-gate.log`.
-4. Optional overrides:
+3. No judge key available? Run deterministic mode:
+   - `make quality-gate-deterministic`
+4. If startup fails, inspect `/tmp/polinko-quality-gate.log`.
+5. Optional overrides:
    - `make quality-gate GATE_PORT=8099`
    - `make quality-gate GATE_BASE_URL=http://127.0.0.1:8099`
+   - `make quality-gate HALLUCINATION_EVAL_MODE=deterministic`
+
+## Run Hallucination Eval
+
+1. Ensure API is running locally (`make server`).
+2. Run default judge mode:
+   - `make eval-hallucination`
+3. Run deterministic mode (no OpenAI judge dependency):
+   - `make eval-hallucination-deterministic`
+4. Tool-level mode options:
+   - `python tools/eval_hallucination.py --evaluation-mode judge`
+   - `python tools/eval_hallucination.py --evaluation-mode deterministic`
+   - `python tools/eval_hallucination.py --evaluation-mode auto`
 
 ## Run Retrieval Eval
 
@@ -284,21 +300,22 @@ Hash fields in responses:
      - `must_match_regex`, `must_not_match_regex` (pattern assertions)
      - `min_chars`, `max_chars`, `case_sensitive`
 
-## Run Hallucination Eval (Judge-Based)
+## Hallucination Eval Notes
 
-1. Ensure API is running locally (`make server`).
-2. Ensure `OPENAI_API_KEY` is set in `.env` (judge model call).
-3. Run `make eval-hallucination`.
-4. Optional strict mode:
+1. Optional strict mode:
    - `python tools/eval_hallucination.py --strict`
-5. Optional tuning:
+2. Optional tuning:
    - choose model:
      `python tools/eval_hallucination.py --judge-model gpt-4.1-mini`
+   - mode selection:
+     - `python tools/eval_hallucination.py --evaluation-mode judge`
+     - `python tools/eval_hallucination.py --evaluation-mode deterministic`
+     - `python tools/eval_hallucination.py --evaluation-mode auto`
    - retain generated chats: `python tools/eval_hallucination.py --keep-chats`
    - write JSON report:
      `python tools/eval_hallucination.py --report-json eval_reports/hallucination-latest.json`
    - one-command report run: `make eval-hallucination-report`
-6. Eval isolation behavior:
+3. Eval isolation behavior:
    - Each generated eval chat is set to `memory_scope=session` to reduce
      cross-chat retrieval noise.
 

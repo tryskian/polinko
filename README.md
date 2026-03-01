@@ -16,7 +16,8 @@ Run these from repo root:
 3. `make ui-dev`
 4. open `http://127.0.0.1:5173`
 5. `make test`
-6. `make quality-gate` (single pre-push gate; requires `OPENAI_API_KEY` for judge eval)
+6. `make quality-gate` (single pre-push gate; default hallucination mode uses judge)
+   - no `OPENAI_API_KEY`? use `make quality-gate-deterministic`
 
 CLI extras:
 
@@ -220,6 +221,21 @@ Command:
 
 - `make eval-file-search`
 - `make eval-file-search-report` (writes a timestamped JSON report under `eval_reports/`)
+
+## Hallucination Eval Modes
+
+`tools/eval_hallucination.py` supports:
+
+- `--evaluation-mode judge` (default): uses OpenAI judge model (requires `OPENAI_API_KEY`)
+- `--evaluation-mode deterministic`: local rule-only scoring (no judge model/API key)
+- `--evaluation-mode auto`: uses judge when key is present, falls back to deterministic
+
+Convenience targets:
+
+- `make eval-hallucination` (default judge mode)
+- `make eval-hallucination-deterministic`
+- `make quality-gate` (respects `HALLUCINATION_EVAL_MODE`, defaults to `judge`)
+- `make quality-gate-deterministic`
 
 Notes:
 

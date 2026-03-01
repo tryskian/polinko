@@ -3,6 +3,7 @@ import unittest
 from tools.eval_hallucination import _MIN_ACCEPTABLE_SCORE
 from tools.eval_hallucination import _apply_deterministic_gate
 from tools.eval_hallucination import _contains_forbidden_phrases
+from tools.eval_hallucination import _deterministic_assessment
 
 
 class HallucinationEvalGateTests(unittest.TestCase):
@@ -60,6 +61,35 @@ class HallucinationEvalGateTests(unittest.TestCase):
             grounding="partially_grounded",
         )
         self.assertIn("grounded case returned grounding='partially_grounded'", reasons)
+
+    def test_deterministic_assessment_grounded_requires_memory(self) -> None:
+        result = _deterministic_assessment(
+            case={"expected_mode": "grounded", "must_not_contain": []},
+            answer="Answer without citations.",
+            memory_used=[],
+        )
+        self.assertFalse(result["pass"])
+        self.assertEqual(result["risk"], "high")
+        self.assertEqual(result["grounding"], "partially_grounded")
+
+    def test_deterministic_assessment_cautious_passes_without_memory(self) -> None:
+        result = _deterministic_assessment(
+            case={"expected_mode": "cautious", "must_not_contain": []},
+            answer="I cannot verify this claim from available evidence.",
+            memory_used=[],
+        )
+        self.assertTrue(result["pass"])
+        self.assertEqual(result["risk"], "low")
+        self.assertEqual(result["grounding"], "grounded")
+
+    def test_deterministic_assessment_flags_forbidden_phrase(self) -> None:
+        result = _deterministic_assessment(
+            case={"expected_mode": "cautious", "must_not_contain": ["let me guess"]},
+            answer="Let me guess, this happened in 2029.",
+            memory_used=[],
+        )
+        self.assertFalse(result["pass"])
+        self.assertEqual(result["risk"], "high")
 
 
 if __name__ == "__main__":

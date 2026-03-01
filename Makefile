@@ -7,8 +7,9 @@ ENV_FILE ?= .env
 GATE_PORT ?= 8066
 GATE_BASE_URL ?= http://127.0.0.1:$(GATE_PORT)
 WORKBENCH_PORT ?= 8020
+HALLUCINATION_EVAL_MODE ?= judge
 
-.PHONY: chat server test eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports quality-gate ui-install ui-dev ui-build docker-build docker-run dev workbench
+.PHONY: chat server test eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports quality-gate quality-gate-deterministic ui-install ui-dev ui-build docker-build docker-run dev workbench
 
 chat:
 	$(PYTHON) app.py
@@ -37,6 +38,9 @@ eval-file-search-report:
 
 eval-hallucination:
 	$(PYTHON) tools/eval_hallucination.py
+
+eval-hallucination-deterministic:
+	$(PYTHON) tools/eval_hallucination.py --evaluation-mode deterministic
 
 eval-hallucination-report:
 	@mkdir -p eval_reports
@@ -90,8 +94,11 @@ quality-gate:
 	$(PYTHON) tools/eval_file_search.py --base-url "$$BASE_URL"; \
 	$(PYTHON) tools/eval_ocr.py --base-url "$$BASE_URL" --strict; \
 	$(PYTHON) tools/eval_style.py --base-url "$$BASE_URL" --strict; \
-	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict; \
+	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)"; \
 	echo "Quality gate passed."
+
+quality-gate-deterministic:
+	@$(MAKE) quality-gate HALLUCINATION_EVAL_MODE=deterministic
 
 ui-dev:
 	cd frontend && $(NPM) run dev
