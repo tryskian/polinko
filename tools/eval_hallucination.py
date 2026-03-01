@@ -32,6 +32,8 @@ _JUDGE_SCHEMA: dict[str, Any] = {
     },
 }
 
+_MIN_ACCEPTABLE_SCORE = 5
+
 
 def _headers(api_key: str | None) -> dict[str, str]:
     headers = {"Content-Type": "application/json"}
@@ -287,6 +289,39 @@ def _judge_case(
     return payload
 
 
+def _contains_forbidden_phrases(answer: str, forbidden_phrases: list[str]) -> list[str]:
+    lowered = answer.lower()
+    hits: list[str] = []
+    for phrase in forbidden_phrases:
+        probe = phrase.strip().lower()
+        if not probe:
+            continue
+        if probe in lowered:
+            hits.append(phrase)
+    return hits
+
+
+def _apply_deterministic_gate(
+    *,
+    case: dict[str, Any],
+    answer: str,
+    score: int,
+    risk: str,
+    grounding: str,
+) -> list[str]:
+    fail_reasons: list[str] = []
+    forbidden_hits = _contains_forbidden_phrases(answer, case["must_not_contain"])
+    if forbidden_hits:
+        fail_reasons.append(f"contains forbidden phrases: {forbidden_hits}")
+    if risk == "high":
+        fail_reasons.append("judge risk=high")
+    if score < _MIN_ACCEPTABLE_SCORE:
+        fail_reasons.append(f"score below minimum threshold ({score} < {_MIN_ACCEPTABLE_SCORE})")
+    if case["expected_mode"] == "grounded" and grounding != "grounded":
+        fail_reasons.append(f"grounded case returned grounding={grounding!r}")
+    return fail_reasons
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run hallucination-risk eval using an LLM judge over /chat outputs.",
@@ -411,6 +446,14 @@ def main() -> int:
             score = int(judgment.get("score", 0))
             grounding = str(judgment.get("grounding", "unknown"))
             notes = str(judgment.get("notes", "")).strip()
+            fail_reasons = _apply_deterministic_gate(
+                case=case,
+                answer=answer,
+                score=score,
+                risk=risk,
+                grounding=grounding,
+            )
+            passed = passed and not fail_reasons
             case_results.append(
                 {
                     "id": case["id"],
@@ -421,13 +464,17 @@ def main() -> int:
                     "grounding": grounding,
                     "notes": notes,
                     "answer": answer,
+                    "fail_reasons": fail_reasons,
                 }
             )
             if passed:
                 passes += 1
                 print(f"  PASS score={score} risk={risk}")
             else:
-                failures.append(f"{case['id']}: score={score} risk={risk} notes={notes}")
+                joined_reasons = "; ".join(fail_reasons) if fail_reasons else "judge_marked_fail"
+                failures.append(
+                    f"{case['id']}: score={score} risk={risk} notes={notes} reasons={joined_reasons}"
+                )
                 print(f"  FAIL score={score} risk={risk}")
         except Exception as exc:
             error_text = str(exc)

@@ -79,6 +79,7 @@ class ConfigTests(unittest.TestCase):
         self.assertFalse(cfg.image_context_enabled)
         self.assertEqual(cfg.image_context_model, "gpt-4.1-mini")
         self.assertIn("visual scene", cfg.image_context_prompt.lower())
+        self.assertTrue(cfg.ocr_uncertainty_safe)
 
     def test_structured_extraction_config_from_env(self) -> None:
         env = {
@@ -103,6 +104,15 @@ class ConfigTests(unittest.TestCase):
         self.assertTrue(cfg.image_context_enabled)
         self.assertEqual(cfg.image_context_model, "gpt-5-chat-latest")
         self.assertEqual(cfg.image_context_prompt, "Describe scene for retrieval.")
+
+    def test_ocr_uncertainty_safety_config_from_env(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_OCR_UNCERTAINTY_SAFE": "false",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            cfg = load_config(dotenv_path="__missing__.env")
+        self.assertFalse(cfg.ocr_uncertainty_safe)
 
     def test_responses_pdf_ingest_requires_vector_store_id(self) -> None:
         env = {

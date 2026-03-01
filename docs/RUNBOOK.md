@@ -61,10 +61,14 @@
 - `POST /chat` returns `memory_used` citations (vector snippets + source
   metadata) when retrieval is used
 - `POST /skills/ocr` run OCR (scaffold or OpenAI mode, includes
-  `run.structured`; optional `transcription_mode=verbatim|normalized`)
+  `run.structured` with `enrichment_status` and `fallback_reason`; optional
+  `transcription_mode=verbatim|normalized`)
 - `POST /skills/pdf_ingest` extract and index PDF text into vector memory
-  (includes `structured`)
-- `POST /skills/file_search` search indexed vector content (OCR/chat sources)
+  (includes `structured` with `enrichment_status` and `fallback_reason`, plus
+  Responses index metadata: `responses_index_status`,
+  `responses_index_reason`, `responses_vector_store_file_id`)
+- `POST /skills/file_search` search indexed vector content (OCR/chat sources,
+  includes `backend`, `fallback_reason`, and `candidate_count`)
 - `GET /metrics` request counters, status counts, latency buckets, rate-limit
   totals
 
@@ -83,6 +87,8 @@ Hash fields in responses:
 2. Optional OCR settings:
    - `POLINKO_OCR_MODEL` (default `gpt-4.1-mini`)
    - `POLINKO_OCR_PROMPT` (custom extraction prompt)
+   - `POLINKO_OCR_UNCERTAINTY_SAFE` (default `true`; maps speculative guesses
+     to `[?]`)
    - `POLINKO_IMAGE_CONTEXT_ENABLED` (default `false`, best-effort visual-scene
      extraction for retrieval)
    - `POLINKO_IMAGE_CONTEXT_MODEL` (default `gpt-4.1-mini`)
@@ -101,8 +107,8 @@ Hash fields in responses:
    - optional: `session_id` to scope results to one chat
    - optional: `limit` (default `5`, max `20`)
    - optional: `source_types` (`["ocr"]`, `["chat"]`, or both)
-4. Results include similarity, keyword score, combined score, snippet, and
-   source metadata.
+4. Results include backend/fallback metadata plus similarity, keyword score,
+   combined score, snippet, and source metadata.
 5. `source_types` now supports `ocr`, `chat`, `pdf`, and `image`.
 
 ## PDF Ingest (Vector Index)
@@ -120,6 +126,10 @@ Hash fields in responses:
 5. Optional: enable best-effort upload into your OpenAI Responses vector store:
    - `POLINKO_RESPONSES_PDF_INGEST_ENABLED=true`
    - Requires `POLINKO_RESPONSES_VECTOR_STORE_ID=vs_...`
+6. Response payload explicitly reports Responses indexing outcome:
+   - `responses_index_status`: `disabled|indexed|failed`
+   - `responses_index_reason`: reason code when disabled/failed
+   - `responses_vector_store_file_id`: populated when indexed
 
 ## Vector Memory Toggle
 
@@ -269,6 +279,9 @@ Hash fields in responses:
    - optional per-case controls:
      - `transcription_mode` (`verbatim` or `normalized`)
      - `must_contain`, `must_contain_any`, `must_not_contain`
+     - `must_not_contain_words` (whole-word bans)
+     - `must_appear_in_order` (ordered phrase assertions)
+     - `must_match_regex`, `must_not_match_regex` (pattern assertions)
      - `min_chars`, `max_chars`, `case_sensitive`
 
 ## Run Hallucination Eval (Judge-Based)

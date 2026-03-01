@@ -81,6 +81,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.client = TestClient(server.app)
 
     def tearDown(self) -> None:
+        self.client.close()
         self.tmpdir.cleanup()
 
     def test_health(self) -> None:
@@ -740,6 +741,67 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(run["status"], "ok")
         self.assertEqual(run["extracted_text"], "gyrus-fold-within.")
 
+    def test_ocr_skill_openai_uncertain_guesses_become_unknown(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.ocr_provider = "openai"
+        deps.ocr_uncertainty_safe = True
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                return SimpleNamespace(
+                    output_text='The second word likely represents "sulcin" or "sulcus" with missing letters.'
+                )
+
+        deps.ocr_client = SimpleNamespace(responses=_FakeResponses())
+        payload_b64 = base64.b64encode(b"not-really-an-image").decode("ascii")
+
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-openai-uncertain",
+                "source_name": "scan.png",
+                "mime_type": "image/png",
+                "data_base64": payload_b64,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        run = run_resp.json()["run"]
+        self.assertEqual(run["status"], "ok")
+        self.assertEqual(run["extracted_text"], "[?]")
+
+    def test_ocr_skill_openai_uncertainty_safety_can_be_disabled(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.ocr_provider = "openai"
+        deps.ocr_uncertainty_safe = False
+        uncertain_line = 'The second word likely represents "sulcin" or "sulcus" with missing letters.'
+
+        class _FakeResponses:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                return SimpleNamespace(output_text=uncertain_line)
+
+        deps.ocr_client = SimpleNamespace(responses=_FakeResponses())
+        payload_b64 = base64.b64encode(b"not-really-an-image").decode("ascii")
+
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-openai-uncertain-off",
+                "source_name": "scan.png",
+                "mime_type": "image/png",
+                "data_base64": payload_b64,
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        run = run_resp.json()["run"]
+        self.assertEqual(run["status"], "ok")
+        self.assertEqual(run["extracted_text"], uncertain_line)
+
     def test_ocr_skill_dedups_identical_requests(self) -> None:
         deps = server.get_runtime_deps()
         deps.vector_enabled = True
@@ -973,6 +1035,8 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(run["structured"]["preview"], "Model-tuned preview.")
         self.assertEqual(run["structured"]["text_sha256"], expected_hash)
         self.assertEqual(run["structured"]["char_count"], len(source_text))
+        self.assertEqual(run["structured"]["enrichment_status"], "enriched")
+        self.assertIsNone(run["structured"]["fallback_reason"])
         kwargs = captured["kwargs"]
         self.assertEqual(kwargs["model"], deps.extraction_structured_model)
         self.assertEqual(kwargs["text"]["format"]["type"], "json_schema")
@@ -1012,6 +1076,8 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(structured["source_name"], "scan-invalid.png")
         self.assertEqual(structured["source_type"], "ocr")
         self.assertEqual(structured["preview"], "alpha line beta line")
+        self.assertEqual(structured["enrichment_status"], "fallback")
+        self.assertEqual(structured["fallback_reason"], "invalid_json")
 
     def test_ocr_structured_falls_back_when_model_schema_mismatches_source_type(self) -> None:
         deps = server.get_runtime_deps()
@@ -1054,6 +1120,8 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(structured["mime_type"], "image/png")
         self.assertEqual(structured["text_sha256"], expected_hash)
         self.assertEqual(structured["preview"], "source text that should remain grounded")
+        self.assertEqual(structured["enrichment_status"], "fallback")
+        self.assertEqual(structured["fallback_reason"], "metadata_mismatch")
 
     def test_ocr_structured_uses_only_preview_and_clamps_length(self) -> None:
         deps = server.get_runtime_deps()
@@ -1097,6 +1165,8 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(structured["source_name"], "scan-clamp.png")
         self.assertLessEqual(len(structured["preview"]), 240)
         self.assertTrue(structured["preview"].startswith("model preview"))
+        self.assertEqual(structured["enrichment_status"], "enriched")
+        self.assertIsNone(structured["fallback_reason"])
 
     def test_ocr_structured_unexpected_error_falls_back_to_base_schema(self) -> None:
         deps = server.get_runtime_deps()
@@ -1128,6 +1198,8 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(structured["source_name"], "scan-unexpected.png")
         self.assertEqual(structured["source_type"], "ocr")
         self.assertTrue(structured["preview"].startswith("fallback when enrichment"))
+        self.assertEqual(structured["enrichment_status"], "fallback")
+        self.assertEqual(structured["fallback_reason"], "unexpected_error")
 
     def test_ocr_optionally_indexes_image_context_vectors(self) -> None:
         deps = server.get_runtime_deps()
@@ -1313,6 +1385,9 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(ingest["status"], "ok")
         self.assertGreaterEqual(ingest["vector_chunks"], 1)
         self.assertGreater(ingest["extracted_chars"], 20)
+        self.assertEqual(ingest["responses_index_status"], "disabled")
+        self.assertEqual(ingest["responses_index_reason"], "feature_disabled")
+        self.assertIsNone(ingest["responses_vector_store_file_id"])
         structured = ingest["structured"]
         self.assertEqual(structured["schema_version"], "v1")
         self.assertEqual(structured["source_type"], "pdf")
@@ -1387,6 +1462,8 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(structured["text_sha256"], expected_hash)
         self.assertEqual(structured["char_count"], len(pdf_text))
         self.assertTrue(structured["preview"].startswith("Fallback PDF structured text"))
+        self.assertEqual(structured["enrichment_status"], "fallback")
+        self.assertEqual(structured["fallback_reason"], "unexpected_error")
 
     def test_pdf_ingest_dedups_identical_requests(self) -> None:
         deps = server.get_runtime_deps()
@@ -1489,6 +1566,8 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(structured["source_name"], "invoice.pdf")
         self.assertEqual(structured["text_sha256"], expected_hash)
         self.assertEqual(structured["preview"], "PDF content must keep mime as application/pdf.")
+        self.assertEqual(structured["enrichment_status"], "fallback")
+        self.assertEqual(structured["fallback_reason"], "metadata_mismatch")
 
     def test_pdf_ingest_structured_enrichment_uses_pdf_schema(self) -> None:
         deps = server.get_runtime_deps()
@@ -1541,6 +1620,8 @@ class PolinkoApiTests(unittest.TestCase):
 
         self.assertEqual(ingest_resp.status_code, 200)
         self.assertEqual(ingest_resp.json()["structured"]["preview"], "PDF preview tuned.")
+        self.assertEqual(ingest_resp.json()["structured"]["enrichment_status"], "enriched")
+        self.assertIsNone(ingest_resp.json()["structured"]["fallback_reason"])
         kwargs = captured["kwargs"]
         self.assertEqual(kwargs["model"], deps.extraction_structured_model)
         self.assertEqual(kwargs["text"]["format"]["name"], "extraction_structured_pdf_v1")
@@ -1598,9 +1679,96 @@ class PolinkoApiTests(unittest.TestCase):
             )
 
         self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
         self.assertEqual(captured["vector_store_id"], "vs_pdf_test_123")
         self.assertEqual(captured["file_name"], "retrieval-brief.pdf")
         self.assertEqual(captured["file_head"], b"%PDF-")
+        self.assertEqual(payload["responses_index_status"], "indexed")
+        self.assertIsNone(payload["responses_index_reason"])
+        self.assertEqual(payload["responses_vector_store_file_id"], "vsf_test_456")
+
+    def test_pdf_ingest_reports_responses_index_failure_reason(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf-responses-failure.db"))
+        deps.responses_pdf_ingest_enabled = True
+        deps.responses_vector_store_id = "vs_pdf_test_fail_123"
+
+        class _FakeEmbeddings:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=[0.1, 0.2, 0.3, 0.4]) for _ in payload]
+                return SimpleNamespace(data=data)
+
+        class _BrokenVectorStoreFiles:
+            def upload_and_poll(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                raise RuntimeError("responses upload unavailable")
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+        deps.responses_client = SimpleNamespace(
+            vector_stores=SimpleNamespace(files=_BrokenVectorStoreFiles())
+        )
+
+        payload = b"%PDF-1.7 fake-payload-for-responses-failure"
+        payload_b64 = base64.b64encode(payload).decode("ascii")
+        with patch("api.app_factory._extract_text_from_pdf_bytes", return_value="PDF text for indexing"):
+            resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf-responses-failure",
+                    "source_name": "retrieval-brief.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertEqual(payload["responses_index_status"], "failed")
+        self.assertEqual(payload["responses_index_reason"], "unexpected_error")
+        self.assertIsNone(payload["responses_vector_store_file_id"])
+
+    def test_pdf_ingest_reports_not_configured_when_responses_indexing_unavailable(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf-responses-not-configured.db"))
+        deps.responses_pdf_ingest_enabled = True
+        deps.responses_vector_store_id = None
+        deps.responses_client = None
+
+        class _FakeEmbeddings:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=[0.1, 0.2, 0.3, 0.4]) for _ in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        payload = b"%PDF-1.7 fake-payload-for-responses-not-configured"
+        payload_b64 = base64.b64encode(payload).decode("ascii")
+        with patch("api.app_factory._extract_text_from_pdf_bytes", return_value="PDF text for indexing"):
+            resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf-responses-not-configured",
+                    "source_name": "retrieval-brief.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertEqual(payload["responses_index_status"], "disabled")
+        self.assertEqual(payload["responses_index_reason"], "not_configured")
+        self.assertIsNone(payload["responses_vector_store_file_id"])
 
     def test_pdf_ingest_rejects_non_pdf_payload(self) -> None:
         deps = server.get_runtime_deps()
@@ -1847,6 +2015,9 @@ class PolinkoApiTests(unittest.TestCase):
         )
         self.assertEqual(search.status_code, 200)
         payload = search.json()
+        self.assertEqual(payload["backend"], "local_vector_store")
+        self.assertIsNone(payload["fallback_reason"])
+        self.assertGreater(payload["candidate_count"], 0)
         self.assertGreater(len(payload["matches"]), 0)
         first = payload["matches"][0]
         self.assertEqual(first["source_type"], "pdf")
@@ -1909,6 +2080,9 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(search.status_code, 200)
         payload = search.json()
         self.assertEqual(payload["query"], "policy join signals")
+        self.assertEqual(payload["backend"], "responses_vector_store")
+        self.assertIsNone(payload["fallback_reason"])
+        self.assertEqual(payload["candidate_count"], 1)
         self.assertGreater(len(payload["matches"]), 0)
         first = payload["matches"][0]
         self.assertTrue(first["vector_id"].startswith("resp:file_abc123:"))
@@ -1985,11 +2159,94 @@ class PolinkoApiTests(unittest.TestCase):
         )
         self.assertEqual(search.status_code, 200)
         payload = search.json()
+        self.assertEqual(payload["backend"], "local_vector_store")
+        self.assertEqual(payload["fallback_reason"], "unexpected_error")
+        self.assertGreater(payload["candidate_count"], 0)
         self.assertGreater(len(payload["matches"]), 0)
         first = payload["matches"][0]
         self.assertEqual(first["source_type"], "pdf")
         self.assertEqual(first["session_id"], "s-pdf-fallback-search")
         self.assertIn("policy", first["snippet"].lower())
+
+    def test_file_search_falls_back_with_reason_when_responses_has_no_matches(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-search-pdf-no-match.db"))
+        deps.responses_pdf_ingest_enabled = True
+        deps.responses_vector_store_id = "vs_pdf_no_match_123"
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "policy" in lowered else 0.0,
+                    1.0 if "join" in lowered else 0.0,
+                    1.0 if "signal" in lowered else 0.0,
+                    float(len(lowered) % 29) / 29.0,
+                ]
+
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        class _FakeVectorStores:
+            def search(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                return SimpleNamespace(
+                    data=[
+                        SimpleNamespace(
+                            file_id="file_other",
+                            filename="other.pdf",
+                            score=0.88,
+                            attributes={
+                                "session_id": "different-session",
+                                "source": "pdf",
+                            },
+                            content=[SimpleNamespace(type="text", text="Unrelated policy text.")],
+                        )
+                    ]
+                )
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+        deps.responses_client = SimpleNamespace(vector_stores=_FakeVectorStores())
+
+        payload_b64 = base64.b64encode(b"%PDF-1.7 local-no-match-policy").decode("ascii")
+        with patch(
+            "api.app_factory._extract_text_from_pdf_bytes",
+            return_value="Policy joins require two independent signals before approval.",
+        ):
+            ingest_resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf-no-match-search",
+                    "source_name": "policy-local.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+        self.assertEqual(ingest_resp.status_code, 200)
+
+        search = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "query": "policy join signals",
+                "session_id": "s-pdf-no-match-search",
+                "source_types": ["pdf"],
+                "limit": 3,
+            },
+        )
+        self.assertEqual(search.status_code, 200)
+        payload = search.json()
+        self.assertEqual(payload["backend"], "local_vector_store")
+        self.assertEqual(payload["fallback_reason"], "responses_no_matches")
+        self.assertGreater(payload["candidate_count"], 0)
+        self.assertGreater(len(payload["matches"]), 0)
 
     def test_file_search_requires_vector_memory(self) -> None:
         resp = self.client.post(

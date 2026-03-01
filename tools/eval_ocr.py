@@ -3,6 +3,7 @@ import base64
 import json
 import mimetypes
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -79,6 +80,10 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
         must_contain = [str(x).strip() for x in case.get("must_contain", []) if str(x).strip()]
         must_contain_any = [str(x).strip() for x in case.get("must_contain_any", []) if str(x).strip()]
         must_not_contain = [str(x).strip() for x in case.get("must_not_contain", []) if str(x).strip()]
+        must_not_contain_words = [str(x).strip() for x in case.get("must_not_contain_words", []) if str(x).strip()]
+        must_appear_in_order = [str(x).strip() for x in case.get("must_appear_in_order", []) if str(x).strip()]
+        must_match_regex = [str(x).strip() for x in case.get("must_match_regex", []) if str(x).strip()]
+        must_not_match_regex = [str(x).strip() for x in case.get("must_not_match_regex", []) if str(x).strip()]
         transcription_mode = str(case.get("transcription_mode", "verbatim")).strip() or "verbatim"
         if transcription_mode not in {"verbatim", "normalized"}:
             raise RuntimeError(f"Case '{case_id}' transcription_mode must be verbatim|normalized.")
@@ -106,6 +111,10 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
                 "must_contain": must_contain,
                 "must_contain_any": must_contain_any,
                 "must_not_contain": must_not_contain,
+                "must_not_contain_words": must_not_contain_words,
+                "must_appear_in_order": must_appear_in_order,
+                "must_match_regex": must_match_regex,
+                "must_not_match_regex": must_not_match_regex,
                 "min_chars": min_chars,
                 "max_chars": max_chars,
                 "case_sensitive": bool(case.get("case_sensitive", False)),
@@ -189,6 +198,11 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
         probe = needle if case_sensitive else needle.lower()
         return probe in haystack
 
+    def contains_word(word: str) -> bool:
+        probe = word if case_sensitive else word.lower()
+        pattern = re.compile(rf"(?<!\w){re.escape(probe)}(?!\w)")
+        return bool(pattern.search(haystack))
+
     for phrase in case["must_contain"]:
         if not contains(phrase):
             reasons.append(f"missing required phrase: {phrase!r}")
@@ -200,6 +214,37 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
     for phrase in case["must_not_contain"]:
         if contains(phrase):
             reasons.append(f"contains forbidden phrase: {phrase!r}")
+
+    for word in case["must_not_contain_words"]:
+        if contains_word(word):
+            reasons.append(f"contains forbidden whole word: {word!r}")
+
+    if case["must_appear_in_order"]:
+        cursor = 0
+        for phrase in case["must_appear_in_order"]:
+            probe = phrase if case_sensitive else phrase.lower()
+            index = haystack.find(probe, cursor)
+            if index < 0:
+                reasons.append(
+                    f"missing ordered phrase: {phrase!r} after offset {cursor}"
+                )
+                break
+            cursor = index + len(probe)
+
+    regex_flags = 0 if case_sensitive else re.IGNORECASE
+    for pattern in case["must_match_regex"]:
+        try:
+            if re.search(pattern, extracted_text, flags=regex_flags) is None:
+                reasons.append(f"regex did not match: /{pattern}/")
+        except re.error as exc:
+            reasons.append(f"invalid must_match_regex pattern /{pattern}/: {exc}")
+
+    for pattern in case["must_not_match_regex"]:
+        try:
+            if re.search(pattern, extracted_text, flags=regex_flags) is not None:
+                reasons.append(f"forbidden regex matched: /{pattern}/")
+        except re.error as exc:
+            reasons.append(f"invalid must_not_match_regex pattern /{pattern}/: {exc}")
 
     length = len(extracted_text)
     min_chars = case["min_chars"]
@@ -329,6 +374,10 @@ def main() -> int:
                     "must_contain": list(case["must_contain"]),
                     "must_contain_any": list(case["must_contain_any"]),
                     "must_not_contain": list(case["must_not_contain"]),
+                    "must_not_contain_words": list(case["must_not_contain_words"]),
+                    "must_appear_in_order": list(case["must_appear_in_order"]),
+                    "must_match_regex": list(case["must_match_regex"]),
+                    "must_not_match_regex": list(case["must_not_match_regex"]),
                     "min_chars": case["min_chars"],
                     "max_chars": case["max_chars"],
                     "char_count": len(extracted_text),

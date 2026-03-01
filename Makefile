@@ -6,8 +6,9 @@ DOCKER_PORT ?= 8000
 ENV_FILE ?= .env
 GATE_PORT ?= 8066
 GATE_BASE_URL ?= http://127.0.0.1:$(GATE_PORT)
+WORKBENCH_PORT ?= 8020
 
-.PHONY: chat server test eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports quality-gate ui-install ui-dev ui-build docker-build docker-run dev
+.PHONY: chat server test eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports quality-gate ui-install ui-dev ui-build docker-build docker-run dev workbench
 
 chat:
 	$(PYTHON) app.py
@@ -110,6 +111,10 @@ dev:
 	UI_PID=$$!; \
 	trap 'kill $$SERVER_PID $$UI_PID 2>/dev/null || true' EXIT INT TERM; \
 	wait $$SERVER_PID $$UI_PID
+
+workbench:
+	@echo "Starting portfolio workbench on http://127.0.0.1:$(WORKBENCH_PORT)/workbench.html"
+	$(PYTHON) tools/workbench_server.py --port $(WORKBENCH_PORT)
 
 docker-build:
 	$(DOCKER) build -t $(DOCKER_IMAGE) .

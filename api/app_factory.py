@@ -8,7 +8,7 @@ import re
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 from agents import Agent, ModelSettings, Runner, RunConfig
 from agents.memory import Session
@@ -54,6 +54,21 @@ _OCR_TRANSCRIPTION_MODES = {
     _OCR_TRANSCRIPTION_MODE_VERBATIM,
     _OCR_TRANSCRIPTION_MODE_NORMALIZED,
 }
+_OCR_UNCERTAINTY_CUE_PHRASES = (
+    "likely",
+    "possibly",
+    "maybe",
+    "might be",
+    "could be",
+    "appears to",
+    "seems to",
+    "unclear",
+    "illegible",
+)
+_OCR_QUOTED_ALTERNATIVES_RE = re.compile(
+    r'[\"“][^\"”]{1,80}[\"”]\s*(?:or|/)\s*[\"“][^\"”]{1,80}[\"”]',
+    flags=re.IGNORECASE,
+)
 _FILE_SEARCH_DEFAULT_SOURCE_TYPES = ("ocr",)
 _FILE_SEARCH_ALLOWED_SOURCE_TYPES = {"chat", "ocr", "pdf", "image"}
 _FILE_SEARCH_TOKEN_RE = re.compile(r"[a-z0-9]+")
@@ -244,6 +259,7 @@ class RuntimeDeps:
     ocr_provider: str
     ocr_model: str
     ocr_prompt: str
+    ocr_uncertainty_safe: bool
     image_context_enabled: bool
     image_context_model: str
     image_context_prompt: str
@@ -459,6 +475,9 @@ class PdfIngestResponse(BaseModel):
     extracted_chars: int
     vector_chunks: int
     result_message_id: str | None
+    responses_index_status: Literal["disabled", "indexed", "failed"] = "disabled"
+    responses_index_reason: str | None = None
+    responses_vector_store_file_id: str | None = None
     structured: "ExtractionStructuredResponse"
 
 
@@ -472,6 +491,8 @@ class ExtractionStructuredResponse(BaseModel):
     word_count: int
     line_count: int
     preview: str
+    enrichment_status: Literal["baseline", "enriched", "fallback"] = "baseline"
+    fallback_reason: str | None = None
 
 
 class FileSearchRequest(BaseModel):
@@ -496,6 +517,9 @@ class FileSearchMatchResponse(BaseModel):
 class FileSearchResponse(BaseModel):
     query: str
     searched_at: int
+    backend: Literal["responses_vector_store", "local_vector_store"]
+    fallback_reason: str | None = None
+    candidate_count: int | None = None
     matches: list[FileSearchMatchResponse]
 
 
@@ -795,6 +819,8 @@ def _build_structured_extraction(
         word_count=len([word for word in normalized.split() if word]),
         line_count=len(lines),
         preview=compact_preview,
+        enrichment_status="baseline",
+        fallback_reason=None,
     )
     if (
         deps is None
@@ -866,7 +892,12 @@ def _build_structured_extraction(
                 reason="metadata_mismatch",
                 mismatch_fields=",".join(metadata_mismatch),
             )
-            return base
+            return base.model_copy(
+                update={
+                    "enrichment_status": "fallback",
+                    "fallback_reason": "metadata_mismatch",
+                }
+            )
         preview = _normalize_preview_text(model_structured.preview, max_chars=_STRUCTURED_PREVIEW_MAX_CHARS)
         if not preview:
             preview = base.preview
@@ -877,7 +908,13 @@ def _build_structured_extraction(
             principal=principal,
             source_type=source_type,
         )
-        return base.model_copy(update={"preview": preview})
+        return base.model_copy(
+            update={
+                "preview": preview,
+                "enrichment_status": "enriched",
+                "fallback_reason": None,
+            }
+        )
     except (json.JSONDecodeError, ValueError, TypeError):
         _log_event(
             "structured_extraction_fallback",
@@ -887,7 +924,12 @@ def _build_structured_extraction(
             source_type=source_type,
             reason="invalid_json",
         )
-        return base
+        return base.model_copy(
+            update={
+                "enrichment_status": "fallback",
+                "fallback_reason": "invalid_json",
+            }
+        )
     except (AuthenticationError, RateLimitError, APIConnectionError, APIStatusError):
         _log_event(
             "structured_extraction_fallback",
@@ -897,7 +939,12 @@ def _build_structured_extraction(
             source_type=source_type,
             reason="responses_error",
         )
-        return base
+        return base.model_copy(
+            update={
+                "enrichment_status": "fallback",
+                "fallback_reason": "responses_error",
+            }
+        )
     except Exception:
         _log_event(
             "structured_extraction_fallback",
@@ -907,7 +954,12 @@ def _build_structured_extraction(
             source_type=source_type,
             reason="unexpected_error",
         )
-        return base
+        return base.model_copy(
+            update={
+                "enrichment_status": "fallback",
+                "fallback_reason": "unexpected_error",
+            }
+        )
 
 
 def _collaboration_state_response(state: CollaborationState) -> CollaborationStateResponse:
@@ -1071,11 +1123,11 @@ def _index_pdf_in_responses_vector_store(
     ingest_id: str,
     source_name: str | None,
     payload: bytes,
-) -> str | None:
+) -> tuple[Literal["disabled", "indexed", "failed"], str | None, str | None]:
     if not deps.responses_pdf_ingest_enabled:
-        return None
+        return "disabled", "feature_disabled", None
     if deps.responses_client is None or not deps.responses_vector_store_id:
-        return None
+        return "disabled", "not_configured", None
 
     from io import BytesIO
 
@@ -1100,7 +1152,7 @@ def _index_pdf_in_responses_vector_store(
             reason="authentication_error",
             error_type=type(exc).__name__,
         )
-        return None
+        return "failed", "authentication_error", None
     except RateLimitError as exc:
         _log_event(
             "pdf_ingest_responses_index_failed",
@@ -1111,7 +1163,7 @@ def _index_pdf_in_responses_vector_store(
             reason="rate_limited",
             error_type=type(exc).__name__,
         )
-        return None
+        return "failed", "rate_limited", None
     except APIConnectionError as exc:
         _log_event(
             "pdf_ingest_responses_index_failed",
@@ -1122,7 +1174,7 @@ def _index_pdf_in_responses_vector_store(
             reason="connection_error",
             error_type=type(exc).__name__,
         )
-        return None
+        return "failed", "connection_error", None
     except APIStatusError as exc:
         _log_event(
             "pdf_ingest_responses_index_failed",
@@ -1133,7 +1185,7 @@ def _index_pdf_in_responses_vector_store(
             reason=f"api_status_{exc.status_code}",
             error_type=type(exc).__name__,
         )
-        return None
+        return "failed", f"api_status_{exc.status_code}", None
     except Exception as exc:
         _log_event(
             "pdf_ingest_responses_index_failed",
@@ -1144,11 +1196,20 @@ def _index_pdf_in_responses_vector_store(
             reason="unexpected_error",
             error_type=type(exc).__name__,
         )
-        return None
+        return "failed", "unexpected_error", None
 
     vector_file_id = getattr(vector_file, "id", None)
     if not isinstance(vector_file_id, str) or not vector_file_id:
-        vector_file_id = None
+        _log_event(
+            "pdf_ingest_responses_index_failed",
+            request_id=request_id,
+            session_id=session_id,
+            principal=principal,
+            ingest_id=ingest_id,
+            reason="missing_file_id",
+            error_type=type(vector_file).__name__,
+        )
+        return "failed", "missing_file_id", None
     _log_event(
         "pdf_ingest_responses_indexed",
         request_id=request_id,
@@ -1158,7 +1219,7 @@ def _index_pdf_in_responses_vector_store(
         vector_store_id=deps.responses_vector_store_id,
         vector_store_file_id=vector_file_id,
     )
-    return vector_file_id
+    return "indexed", None, vector_file_id
 
 
 def _retry_after_header_value(exc: Exception, default_seconds: int) -> str:
@@ -1190,6 +1251,7 @@ def _ocr_prompt_for_mode(base_prompt: str, mode: str) -> str:
         "- Preserve visible line order and line breaks.\n"
         "- Preserve symbols exactly when identifiable.\n"
         "- If a mark is ambiguous, output `[?]` instead of guessing.\n"
+        "- Do not output best-guess alternatives or candidate words.\n"
         "- Return only extracted text, no explanations."
     )
     if mode == _OCR_TRANSCRIPTION_MODE_NORMALIZED:
@@ -1289,6 +1351,40 @@ def _coerce_literal_ocr_output(text: str) -> str:
     return raw
 
 
+def _is_uncertain_ocr_line(value: str) -> bool:
+    lowered = value.lower()
+    if "[?]" in value:
+        return False
+    if _OCR_QUOTED_ALTERNATIVES_RE.search(value):
+        return True
+    return any(cue in lowered for cue in _OCR_UNCERTAINTY_CUE_PHRASES)
+
+
+def _apply_ocr_uncertainty_safety(text: str) -> str:
+    raw = text.strip()
+    if not raw:
+        return raw
+    lines = [line.strip() for line in raw.replace("\r\n", "\n").replace("\r", "\n").split("\n")]
+    normalized_lines: list[str] = []
+    for line in lines:
+        if not line:
+            continue
+        if _is_uncertain_ocr_line(line):
+            normalized_lines.append("[?]")
+            continue
+        normalized_lines.append(line)
+
+    if not normalized_lines:
+        return raw
+
+    deduped: list[str] = []
+    for line in normalized_lines:
+        if line == "[?]" and deduped and deduped[-1] == "[?]":
+            continue
+        deduped.append(line)
+    return "\n".join(deduped).strip()
+
+
 def _scaffold_extract_text(req: OcrRequest) -> tuple[str, str]:
     mode = _resolve_ocr_transcription_mode(req.transcription_mode)
     if req.text_hint and req.text_hint.strip():
@@ -1377,6 +1473,8 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
     output_text = getattr(response, "output_text", None)
     if isinstance(output_text, str) and output_text.strip():
         literal_output = _coerce_literal_ocr_output(output_text)
+        if deps.ocr_uncertainty_safe:
+            literal_output = _apply_ocr_uncertainty_safety(literal_output)
         return _apply_ocr_transcription_mode(literal_output, mode), "ok"
     return "[OCR] No text detected.", "ok"
 
@@ -2278,6 +2376,7 @@ def create_app(config: AppConfig) -> FastAPI:
         ocr_provider=config.ocr_provider,
         ocr_model=config.ocr_model,
         ocr_prompt=config.ocr_prompt,
+        ocr_uncertainty_safe=config.ocr_uncertainty_safe,
         image_context_enabled=config.image_context_enabled,
         image_context_model=config.image_context_model,
         image_context_prompt=config.image_context_prompt,
@@ -2699,7 +2798,7 @@ def create_app(config: AppConfig) -> FastAPI:
             source_name=req.source_name,
             dedup_hit=False,
         )
-        responses_vector_store_file_id = _index_pdf_in_responses_vector_store(
+        responses_index_status, responses_index_reason, responses_vector_store_file_id = _index_pdf_in_responses_vector_store(
             deps=deps,
             request_id=getattr(request.state, "request_id", None),
             session_id=session_id,
@@ -2708,7 +2807,7 @@ def create_app(config: AppConfig) -> FastAPI:
             source_name=req.source_name,
             payload=decoded,
         )
-        if responses_vector_store_file_id:
+        if responses_index_status == "indexed" and responses_vector_store_file_id:
             _log_event(
                 "pdf_ingest_responses_linked",
                 request_id=getattr(request.state, "request_id", None),
@@ -2726,6 +2825,9 @@ def create_app(config: AppConfig) -> FastAPI:
             extracted_chars=len(extracted_text),
             vector_chunks=len(chunks),
             result_message_id=result_message_id,
+            responses_index_status=responses_index_status,
+            responses_index_reason=responses_index_reason,
+            responses_vector_store_file_id=responses_vector_store_file_id,
             structured=_build_structured_extraction(
                 source_type="pdf",
                 source_name=req.source_name,
@@ -2768,6 +2870,7 @@ def create_app(config: AppConfig) -> FastAPI:
             max(req.limit * _FILE_SEARCH_CANDIDATE_MULTIPLIER, 40),
         )
         request_id = getattr(request.state, "request_id", None)
+        fallback_reason: str | None = None
 
         if _responses_file_search_enabled(deps, source_types):
             try:
@@ -2794,9 +2897,13 @@ def create_app(config: AppConfig) -> FastAPI:
                     return FileSearchResponse(
                         query=query,
                         searched_at=int(time.time() * 1000),
+                        backend="responses_vector_store",
+                        candidate_count=responses_candidates,
                         matches=responses_matches,
                     )
+                fallback_reason = "responses_no_matches"
             except AuthenticationError as exc:
+                fallback_reason = "authentication_error"
                 _log_event(
                     "file_search_responses_fallback",
                     request_id=request_id,
@@ -2806,6 +2913,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     error_type=type(exc).__name__,
                 )
             except RateLimitError as exc:
+                fallback_reason = "rate_limited"
                 _log_event(
                     "file_search_responses_fallback",
                     request_id=request_id,
@@ -2815,6 +2923,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     error_type=type(exc).__name__,
                 )
             except APIConnectionError as exc:
+                fallback_reason = "connection_error"
                 _log_event(
                     "file_search_responses_fallback",
                     request_id=request_id,
@@ -2824,6 +2933,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     error_type=type(exc).__name__,
                 )
             except APIStatusError as exc:
+                fallback_reason = f"api_status_{exc.status_code}"
                 _log_event(
                     "file_search_responses_fallback",
                     request_id=request_id,
@@ -2833,6 +2943,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     error_type=type(exc).__name__,
                 )
             except Exception as exc:
+                fallback_reason = "unexpected_error"
                 _log_event(
                     "file_search_responses_fallback",
                     request_id=request_id,
@@ -2903,6 +3014,9 @@ def create_app(config: AppConfig) -> FastAPI:
         return FileSearchResponse(
             query=query,
             searched_at=int(time.time() * 1000),
+            backend="local_vector_store",
+            fallback_reason=fallback_reason,
+            candidate_count=len(candidates),
             matches=matches,
         )
 

@@ -56,6 +56,8 @@ API client extras (`python tools/client.py`):
 5. Optional OCR mode:
    - `POLINKO_OCR_PROVIDER=scaffold` (default, no model OCR call)
    - `POLINKO_OCR_PROVIDER=openai` (uses `POLINKO_OCR_MODEL` for image OCR)
+   - `POLINKO_OCR_UNCERTAINTY_SAFE=true` (default, converts speculative
+     alternatives to `[?]`)
 6. Optional visual context extraction for image retrieval memory:
    - `POLINKO_IMAGE_CONTEXT_ENABLED=true`
    - `POLINKO_IMAGE_CONTEXT_MODEL=gpt-4.1-mini`
@@ -118,9 +120,9 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 - `PATCH /chats/{session_id}` rename a chat
 - `DELETE /chats/{session_id}` delete a chat
 - `POST /chat` returns assistant output and `memory_used` citations when vector retrieval is applied
-- `POST /skills/ocr` OCR endpoint (scaffold/OpenAI mode, includes `run.structured` normalized extraction payload; optional `visual_context_hint` for deterministic image-context indexing; optional `transcription_mode` = `verbatim|normalized`, default `verbatim`)
-- `POST /skills/file_search` search indexed vectors (defaults to OCR sources)
-- `POST /skills/pdf_ingest` PDF extract + index endpoint (includes `structured` normalized extraction payload)
+- `POST /skills/ocr` OCR endpoint (scaffold/OpenAI mode, includes `run.structured` normalized extraction payload with `enrichment_status` and `fallback_reason`; optional `visual_context_hint` for deterministic image-context indexing; optional `transcription_mode` = `verbatim|normalized`, default `verbatim`)
+- `POST /skills/file_search` search indexed vectors (defaults to OCR sources; response includes `backend`, `fallback_reason`, and `candidate_count`)
+- `POST /skills/pdf_ingest` PDF extract + index endpoint (includes `structured` normalized extraction payload with `enrichment_status` and `fallback_reason`, plus Responses index status fields: `responses_index_status`, `responses_index_reason`, `responses_vector_store_file_id`)
 - `GET /metrics` API metrics (request totals, status counts, latency buckets, 429 count)
 
 Config:
@@ -141,6 +143,7 @@ Config:
 - `POLINKO_VECTOR_MIN_SIMILARITY_SESSION` (default: inherits `POLINKO_VECTOR_MIN_SIMILARITY`)
 - `POLINKO_VECTOR_MAX_CHARS` (default: `220`)
 - `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION` (default: `true`)
+- `POLINKO_OCR_UNCERTAINTY_SAFE` (default: `true`)
 - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED` (default: `false`)
 - `POLINKO_RESPONSES_MODEL` (default: `gpt-5-chat-latest`)
 - `POLINKO_RESPONSES_VECTOR_STORE_ID` (required when orchestration is enabled)

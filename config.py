@@ -19,6 +19,7 @@ class AppConfig:
     ocr_provider: str
     ocr_model: str
     ocr_prompt: str
+    ocr_uncertainty_safe: bool
     image_context_enabled: bool
     image_context_model: str
     image_context_prompt: str
@@ -220,6 +221,7 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         or "Extract all readable text from this image. Preserve line breaks and symbols exactly. "
         "Do not invent letters or words; if uncertain, output [?]."
     )
+    ocr_uncertainty_safe = _parse_bool_env("POLINKO_OCR_UNCERTAINTY_SAFE", True)
     image_context_enabled = _parse_bool_env("POLINKO_IMAGE_CONTEXT_ENABLED", False)
     image_context_model = os.getenv("POLINKO_IMAGE_CONTEXT_MODEL", "gpt-4.1-mini").strip() or "gpt-4.1-mini"
     image_context_prompt = (
@@ -302,6 +304,7 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         ocr_provider=ocr_provider,
         ocr_model=ocr_model,
         ocr_prompt=ocr_prompt,
+        ocr_uncertainty_safe=ocr_uncertainty_safe,
         image_context_enabled=image_context_enabled,
         image_context_model=image_context_model,
         image_context_prompt=image_context_prompt,
