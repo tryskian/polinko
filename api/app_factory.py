@@ -129,11 +129,12 @@ _OCR_REQUEST_HINTS = (
 _OCR_FOLLOWUP_HINTS = (
     "try again",
     "again",
-    "this",
-    "that",
-    "same",
     "without using memory",
     "no memory",
+    "ocr again",
+    "transcribe again",
+    "read again",
+    "retry ocr",
 )
 _OCR_STRICT_NO_NEW_IMAGE_REPLY = (
     "No new image evidence in this turn. Attach a new image (or tighter crop) and "
@@ -315,6 +316,7 @@ class ChatResponse(BaseModel):
     output: str
     session_id: str
     prompt_version: str
+    memory_scope: str
     memory_used: list["MemoryCitationResponse"] = Field(default_factory=list)
 
 
@@ -339,6 +341,7 @@ class ChatSummaryResponse(BaseModel):
     created_at: int
     updated_at: int
     message_count: int
+    memory_scope: str
     status: str
     deprecated_at: int | None
 
@@ -374,6 +377,7 @@ class ChatExportResponse(BaseModel):
     session_id: str
     title: str
     status: str
+    memory_scope: str
     prompt_version: str
     exported_at: int
     message_count: int
@@ -596,13 +600,21 @@ def _close_session(session: Session) -> None:
         close_fn()
 
 
-def _chat_summary_response(summary: ChatSummary) -> ChatSummaryResponse:
+def _resolve_chat_memory_scope(*, deps: RuntimeDeps, session_id: str) -> str:
+    settings = deps.history_store.get_personalization(session_id=session_id)
+    if settings is None:
+        return _normalize_memory_scope(deps.personalization_default_memory_scope, default="global")
+    return _normalize_memory_scope(settings.memory_scope, default="global")
+
+
+def _chat_summary_response(summary: ChatSummary, *, deps: RuntimeDeps) -> ChatSummaryResponse:
     return ChatSummaryResponse(
         session_id=summary.session_id,
         title=summary.title,
         created_at=summary.created_at,
         updated_at=summary.updated_at,
         message_count=summary.message_count,
+        memory_scope=_resolve_chat_memory_scope(deps=deps, session_id=summary.session_id),
         status=summary.status,
         deprecated_at=summary.deprecated_at,
     )
@@ -2213,13 +2225,23 @@ def _looks_like_ocr_followup_without_new_image(query_text: str) -> bool:
     lowered = query_text.strip().lower()
     if not lowered:
         return False
+    if _looks_like_ocr_request(lowered):
+        return True
     has_followup_hint = any(hint in lowered for hint in _OCR_FOLLOWUP_HINTS)
     if not has_followup_hint:
         return False
-    if _looks_like_ocr_request(lowered):
-        return True
-    # Very short "try again" style turns should not trigger fresh guessing.
-    return len(lowered.split()) <= 8
+    # Only explicit OCR retry language should trigger no-new-image blocking.
+    explicit_retry_patterns = (
+        r"^\s*again[.!?]*\s*$",
+        r"\btry again\b",
+        r"\bwithout using memory\b",
+        r"\bno memory\b",
+        r"\bocr again\b",
+        r"\btranscrib(?:e|ing) again\b",
+        r"\bread again\b",
+        r"\bretry ocr\b",
+    )
+    return any(re.search(pattern, lowered) is not None for pattern in explicit_retry_patterns)
 
 
 def _build_attachment_literal_reply(attachment_ocr_texts: list[tuple[str, str]]) -> str:
@@ -2472,7 +2494,7 @@ def create_app(config: AppConfig) -> FastAPI:
         _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         summaries = [
-            _chat_summary_response(summary)
+            _chat_summary_response(summary, deps=deps)
             for summary in deps.history_store.list_chats(include_deprecated=include_deprecated)
         ]
         return ChatsResponse(chats=summaries)
@@ -2484,7 +2506,7 @@ def create_app(config: AppConfig) -> FastAPI:
         session_id = req.session_id or f"chat-{uuid.uuid4()}"
         title = (req.title or DEFAULT_CHAT_TITLE).strip() or DEFAULT_CHAT_TITLE
         summary = deps.history_store.ensure_chat(session_id=session_id, title=title)
-        return _chat_summary_response(summary)
+        return _chat_summary_response(summary, deps=deps)
 
     @app.get("/chats/{session_id}/messages", response_model=ChatMessagesResponse)
     def list_chat_messages(session_id: str, request: Request) -> ChatMessagesResponse:
@@ -2516,6 +2538,7 @@ def create_app(config: AppConfig) -> FastAPI:
             session_id=session_id,
             title=chat.title,
             status=chat.status,
+            memory_scope=_resolve_chat_memory_scope(deps=deps, session_id=session_id),
             prompt_version=ACTIVE_PROMPT_VERSION,
             exported_at=int(time.time() * 1000),
             message_count=len(messages),
@@ -3028,7 +3051,7 @@ def create_app(config: AppConfig) -> FastAPI:
             summary = deps.history_store.rename_chat(session_id=session_id, title=req.title)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="Chat not found.") from exc
-        return _chat_summary_response(summary)
+        return _chat_summary_response(summary, deps=deps)
 
     @app.delete("/chats/{session_id}")
     async def delete_chat(session_id: str, request: Request) -> dict[str, str]:
@@ -3057,7 +3080,7 @@ def create_app(config: AppConfig) -> FastAPI:
             raise HTTPException(status_code=404, detail="Chat not found.") from exc
         if deps.vector_store is not None:
             deps.vector_store.deactivate_session(session_id)
-        return _chat_summary_response(summary)
+        return _chat_summary_response(summary, deps=deps)
 
     @app.post("/chats/{session_id}/notes")
     def add_note(session_id: str, req: NoteRequest, request: Request) -> dict[str, str]:
@@ -3452,6 +3475,7 @@ def create_app(config: AppConfig) -> FastAPI:
                 output=output_text,
                 session_id=session_id,
                 prompt_version=ACTIVE_PROMPT_VERSION,
+                memory_scope=_normalize_memory_scope(memory_scope, default="global"),
                 memory_used=[
                     _memory_citation_response(
                         item,

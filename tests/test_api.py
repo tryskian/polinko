@@ -128,6 +128,7 @@ class PolinkoApiTests(unittest.TestCase):
         body = resp.json()
         self.assertEqual(body["output"], "Stubbed response")
         self.assertEqual(body["session_id"], "s-chat")
+        self.assertEqual(body["memory_scope"], "global")
         self.assertEqual(body["memory_used"], [])
 
     def test_chat_attachment_indexes_global_memory_lane(self) -> None:
@@ -412,6 +413,19 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("no new image evidence", output)
         self.assertIn("attach a new image", output)
 
+    def test_chat_short_non_ocr_reply_does_not_trigger_ocr_followup_block(self) -> None:
+        with self._stub_runner("Normal conversational reply"):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "haha yeah, that totally makes sense!",
+                    "session_id": "s-non-ocr-short-reply",
+                },
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["output"], "Normal conversational reply")
+
     def test_chat_success_with_responses_orchestration(self) -> None:
         deps = server.get_runtime_deps()
         deps.responses_orchestration_enabled = True
@@ -518,6 +532,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(len(chats), 1)
         self.assertEqual(chats[0]["session_id"], "s-history")
         self.assertEqual(chats[0]["message_count"], 2)
+        self.assertEqual(chats[0]["memory_scope"], "global")
 
         messages_resp = self.client.get(
             "/chats/s-history/messages",
@@ -580,6 +595,7 @@ class PolinkoApiTests(unittest.TestCase):
         payload = export_resp.json()
         self.assertEqual(payload["session_id"], "s-export")
         self.assertEqual(payload["status"], "active")
+        self.assertEqual(payload["memory_scope"], "global")
         self.assertEqual(payload["prompt_version"], ACTIVE_PROMPT_VERSION)
         self.assertEqual(payload["message_count"], 2)
         self.assertEqual(payload["markdown"], None)
@@ -2569,6 +2585,27 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(payload["session_id"], "s-personal-get")
         self.assertEqual(payload["memory_scope"], "session")
         self.assertEqual(payload["updated_by"], "default")
+
+    def test_chat_summary_and_export_include_personalization_scope(self) -> None:
+        set_resp = self.client.post(
+            "/chats/s-personal-summary/personalization",
+            headers={"x-api-key": "test-server-key"},
+            json={"memory_scope": "session"},
+        )
+        self.assertEqual(set_resp.status_code, 200)
+
+        chats_resp = self.client.get("/chats", headers={"x-api-key": "test-server-key"})
+        self.assertEqual(chats_resp.status_code, 200)
+        chats = chats_resp.json()["chats"]
+        target = next(chat for chat in chats if chat["session_id"] == "s-personal-summary")
+        self.assertEqual(target["memory_scope"], "session")
+
+        export_resp = self.client.get(
+            "/chats/s-personal-summary/export",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(export_resp.status_code, 200)
+        self.assertEqual(export_resp.json()["memory_scope"], "session")
 
     def test_personalization_session_scope_limits_retrieval_to_same_chat(self) -> None:
         deps = server.get_runtime_deps()
