@@ -117,7 +117,6 @@ _FICTIONAL_QUERY_HINTS = (
 _OCR_REQUEST_HINTS = (
     "ocr",
     "transcrib",
-    "what does",
     "what is this word",
     "read this",
     "read that",
@@ -135,6 +134,18 @@ _OCR_FOLLOWUP_HINTS = (
     "transcribe again",
     "read again",
     "retry ocr",
+)
+_OCR_CORRECTION_HINTS = (
+    "incorrect",
+    "wrong",
+    "should be",
+    "it should be",
+    "it is",
+    "it's",
+    "that should be",
+    "this should be",
+    "not that",
+    "no,",
 )
 _OCR_STRICT_NO_NEW_IMAGE_REPLY = (
     "No new image evidence in this turn. Attach a new image (or tighter crop) and "
@@ -274,6 +285,7 @@ class RuntimeDeps:
     vector_min_similarity_session: float
     vector_max_chars: int
     vector_exclude_current_session: bool
+    vector_local_embedding_fallback: bool
     vector_embedding_model: str
     vector_store: VectorStore | None
     embedding_client: OpenAI | None
@@ -317,6 +329,7 @@ class ChatResponse(BaseModel):
     session_id: str
     prompt_version: str
     memory_scope: str
+    context_scope: str = Field(..., pattern="^(global|local)$")
     memory_used: list["MemoryCitationResponse"] = Field(default_factory=list)
 
 
@@ -342,6 +355,7 @@ class ChatSummaryResponse(BaseModel):
     updated_at: int
     message_count: int
     memory_scope: str
+    context_scope: str = Field(..., pattern="^(global|local)$")
     status: str
     deprecated_at: int | None
 
@@ -378,6 +392,7 @@ class ChatExportResponse(BaseModel):
     title: str
     status: str
     memory_scope: str
+    context_scope: str = Field(..., pattern="^(global|local)$")
     prompt_version: str
     exported_at: int
     message_count: int
@@ -607,14 +622,21 @@ def _resolve_chat_memory_scope(*, deps: RuntimeDeps, session_id: str) -> str:
     return _normalize_memory_scope(settings.memory_scope, default="global")
 
 
+def _context_scope_from_memory_scope(memory_scope: str) -> str:
+    normalized_scope = _normalize_memory_scope(memory_scope, default="global")
+    return "local" if normalized_scope == "session" else "global"
+
+
 def _chat_summary_response(summary: ChatSummary, *, deps: RuntimeDeps) -> ChatSummaryResponse:
+    memory_scope = _resolve_chat_memory_scope(deps=deps, session_id=summary.session_id)
     return ChatSummaryResponse(
         session_id=summary.session_id,
         title=summary.title,
         created_at=summary.created_at,
         updated_at=summary.updated_at,
         message_count=summary.message_count,
-        memory_scope=_resolve_chat_memory_scope(deps=deps, session_id=summary.session_id),
+        memory_scope=memory_scope,
+        context_scope=_context_scope_from_memory_scope(memory_scope),
         status=summary.status,
         deprecated_at=summary.deprecated_at,
     )
@@ -1357,10 +1379,35 @@ def _coerce_literal_ocr_output(text: str) -> str:
             kept.append(cleaned)
 
     if preface_kept:
-        return "\n".join(preface_kept).strip()
-    if kept:
-        return "\n".join(kept).strip()
-    return raw
+        candidate = "\n".join(preface_kept).strip()
+    elif kept:
+        candidate = "\n".join(kept).strip()
+    else:
+        candidate = raw
+    return _disambiguate_model_acronyms(candidate)
+
+
+def _disambiguate_model_acronyms(text: str) -> str:
+    """Apply narrow OCR acronym fixes in strong model-language context only."""
+    compact = text.strip()
+    if not compact:
+        return text
+    # Only run when context strongly implies model-language discussion.
+    lowered = compact.lower()
+    has_model_context = any(
+        token in lowered
+        for token in (
+            "language model",
+            "model",
+            "reasoning",
+            "human semiotics",
+            "lexeme",
+        )
+    )
+    if not has_model_context:
+        return text
+    # Common handwriting ambiguity: "LLM" rendered as "UM".
+    return re.sub(r"\bUM\b", "LLM", compact)
 
 
 def _is_uncertain_ocr_line(value: str) -> bool:
@@ -1683,25 +1730,81 @@ def _compose_attachment_context_segment(attachment_context_blocks: list[str] | N
 
 
 def _has_meaningful_ocr_text(value: str) -> bool:
+    if _is_low_confidence_ocr_text(value):
+        return False
+    return True
+
+
+def _is_low_confidence_ocr_text(value: str) -> bool:
     compact = value.strip()
     if not compact:
-        return False
-    return compact.lower() != "[ocr] no text detected."
+        return True
+    if compact.lower() == "[ocr] no text detected.":
+        return True
+
+    lines = [line.strip() for line in compact.replace("\r\n", "\n").replace("\r", "\n").split("\n")]
+    non_empty = [line for line in lines if line]
+    if not non_empty:
+        return True
+
+    uncertain_tokens = {"[?]", "?", "[unknown]", "unknown", "unclear", "illegible"}
+    if all(line.lower() in uncertain_tokens for line in non_empty):
+        return True
+    return False
 
 
 def _embed_texts(texts: list[str], deps: RuntimeDeps) -> list[list[float]]:
     if deps.embedding_client is None:
         raise RuntimeError("Embedding client is not configured.")
-    response = deps.embedding_client.embeddings.create(
-        model=deps.vector_embedding_model,
-        input=texts,
-    )
-    vectors: list[list[float]] = []
-    for item in response.data:
-        vectors.append([float(value) for value in item.embedding])
-    if len(vectors) != len(texts):
-        raise RuntimeError("Embedding response size mismatch.")
-    return vectors
+    try:
+        response = deps.embedding_client.embeddings.create(
+            model=deps.vector_embedding_model,
+            input=texts,
+        )
+        vectors: list[list[float]] = []
+        for item in response.data:
+            vectors.append([float(value) for value in item.embedding])
+        if len(vectors) != len(texts):
+            raise RuntimeError("Embedding response size mismatch.")
+        return vectors
+    except APIConnectionError as exc:
+        if not deps.vector_local_embedding_fallback:
+            raise
+        _log_event(
+            "vector_embedding_fallback",
+            reason="connection_error",
+            error_type=type(exc).__name__,
+        )
+    except APIStatusError as exc:
+        if not deps.vector_local_embedding_fallback or not (500 <= exc.status_code <= 599):
+            raise
+        _log_event(
+            "vector_embedding_fallback",
+            reason=f"api_status_{exc.status_code}",
+            error_type=type(exc).__name__,
+        )
+
+    return [_local_fallback_embedding(text) for text in texts]
+
+
+def _local_fallback_embedding(text: str, *, dims: int = 256) -> list[float]:
+    tokens = _FILE_SEARCH_TOKEN_RE.findall(text.lower())
+    if not tokens:
+        compact = text.strip().lower()
+        tokens = [compact] if compact else ["_empty_"]
+
+    vector = [0.0] * dims
+    for token in tokens:
+        digest = hashlib.sha256(token.encode("utf-8")).digest()
+        for offset in range(0, 8, 2):
+            idx = int.from_bytes(digest[offset : offset + 2], "big") % dims
+            sign = 1.0 if (digest[offset + 2] & 1) == 0 else -1.0
+            vector[idx] += sign
+
+    norm = sum(value * value for value in vector) ** 0.5
+    if norm <= 0.0:
+        return vector
+    return [value / norm for value in vector]
 
 
 def _chunk_text_for_vectors(
@@ -2244,6 +2347,31 @@ def _looks_like_ocr_followup_without_new_image(query_text: str) -> bool:
     return any(re.search(pattern, lowered) is not None for pattern in explicit_retry_patterns)
 
 
+def _looks_like_ocr_correction_without_new_image(query_text: str) -> bool:
+    lowered = query_text.strip().lower()
+    if not lowered:
+        return False
+    if any(hint in lowered for hint in _OCR_CORRECTION_HINTS):
+        return True
+    # Short correction payloads like "1916", "LLM", "not X, Y".
+    if re.fullmatch(r"[a-z0-9+\-:/. ]{1,24}", lowered):
+        token_count = len(lowered.split())
+        has_digit = any(ch.isdigit() for ch in lowered)
+        has_letter = any(ch.isalpha() for ch in lowered)
+        if token_count <= 4 and (has_digit or has_letter):
+            return True
+    return False
+
+
+def _has_recent_ocr_activity(*, deps: RuntimeDeps, session_id: str, max_age_seconds: int = 600) -> bool:
+    runs = deps.history_store.list_ocr_runs(session_id=session_id, limit=1)
+    if not runs:
+        return False
+    latest = runs[0]
+    age_ms = int(time.time() * 1000) - int(latest.created_at)
+    return age_ms <= max_age_seconds * 1000
+
+
 def _build_attachment_literal_reply(attachment_ocr_texts: list[tuple[str, str]]) -> str:
     meaningful = [
         (label.strip(), text.strip())
@@ -2412,6 +2540,7 @@ def create_app(config: AppConfig) -> FastAPI:
         vector_min_similarity_session=config.vector_min_similarity_session,
         vector_max_chars=config.vector_max_chars,
         vector_exclude_current_session=config.vector_exclude_current_session,
+        vector_local_embedding_fallback=config.vector_local_embedding_fallback,
         vector_embedding_model=config.vector_embedding_model,
         vector_store=VectorStore(config.vector_db_path) if config.vector_enabled else None,
         embedding_client=shared_openai_client if config.vector_enabled else None,
@@ -2528,6 +2657,7 @@ def create_app(config: AppConfig) -> FastAPI:
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
             raise HTTPException(status_code=404, detail="Chat not found.")
+        memory_scope = _resolve_chat_memory_scope(deps=deps, session_id=session_id)
         messages = [
             _chat_message_response(message)
             for message in deps.history_store.list_messages(session_id=session_id)
@@ -2538,7 +2668,8 @@ def create_app(config: AppConfig) -> FastAPI:
             session_id=session_id,
             title=chat.title,
             status=chat.status,
-            memory_scope=_resolve_chat_memory_scope(deps=deps, session_id=session_id),
+            memory_scope=memory_scope,
+            context_scope=_context_scope_from_memory_scope(memory_scope),
             prompt_version=ACTIVE_PROMPT_VERSION,
             exported_at=int(time.time() * 1000),
             message_count=len(messages),
@@ -3364,9 +3495,16 @@ def create_app(config: AppConfig) -> FastAPI:
                             dedup_hit=dedup_hit,
                         )
 
+                has_recent_ocr = _has_recent_ocr_activity(deps=deps, session_id=session_id)
                 if req.attachments and _looks_like_ocr_request(req.message):
                     output_text = _build_attachment_literal_reply(attachment_ocr_texts)
                 elif not req.attachments and _looks_like_ocr_followup_without_new_image(req.message):
+                    output_text = _OCR_STRICT_NO_NEW_IMAGE_REPLY
+                elif (
+                    not req.attachments
+                    and has_recent_ocr
+                    and _looks_like_ocr_correction_without_new_image(req.message)
+                ):
                     output_text = _OCR_STRICT_NO_NEW_IMAGE_REPLY
                 elif deps.responses_orchestration_enabled:
                     pipeline = "responses"
@@ -3476,6 +3614,7 @@ def create_app(config: AppConfig) -> FastAPI:
                 session_id=session_id,
                 prompt_version=ACTIVE_PROMPT_VERSION,
                 memory_scope=_normalize_memory_scope(memory_scope, default="global"),
+                context_scope=_context_scope_from_memory_scope(memory_scope),
                 memory_used=[
                     _memory_citation_response(
                         item,

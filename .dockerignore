@@ -3,6 +3,7 @@
 .env
 .history
 .vscode
+.devcontainer
 __pycache__
 *.pyc
 *.pyo
@@ -13,3 +14,10 @@ polinko-repositioning-system
 .polinko_memory.db
 .polinko_memory.db-shm
 .polinko_memory.db-wal
+.polinko_history.db
+.polinko_history.db-shm
+.polinko_history.db-wal
+.polinko_vector.db
+.polinko_vector.db-shm
+.polinko_vector.db-wal
+eval_reports/

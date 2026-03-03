@@ -12,6 +12,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 from openai import APIConnectionError, APIStatusError, RateLimitError
 from api.app_factory import create_runtime_metrics
+from api import app_factory
 from core.history_store import ChatHistoryStore
 from core.prompts import ACTIVE_PROMPT_VERSION
 from core.vector_store import VectorStore
@@ -129,6 +130,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(body["output"], "Stubbed response")
         self.assertEqual(body["session_id"], "s-chat")
         self.assertEqual(body["memory_scope"], "global")
+        self.assertEqual(body["context_scope"], "global")
         self.assertEqual(body["memory_used"], [])
 
     def test_chat_attachment_indexes_global_memory_lane(self) -> None:
@@ -426,6 +428,52 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()["output"], "Normal conversational reply")
 
+    def test_chat_regular_what_does_query_is_not_misclassified_as_ocr(self) -> None:
+        with self._stub_runner("Grounded retrieval answer"):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "What does nimbus grid attach to anomaly scores first?",
+                    "session_id": "s-non-ocr-what-does",
+                },
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["output"], "Grounded retrieval answer")
+        self.assertNotIn("no new image evidence", resp.json()["output"].lower())
+
+    def test_chat_ocr_numeric_correction_without_new_image_blocks_after_recent_ocr(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.history_store.ensure_chat(session_id="s-ocr-correction-no-image")
+        deps.history_store.record_ocr_run(
+            run_id="ocr-test-recent",
+            session_id="s-ocr-correction-no-image",
+            source_name="sample.png",
+            mime_type="image/png",
+            source_message_id=None,
+            result_message_id=None,
+            status="ok",
+            extracted_text="1914",
+        )
+
+        async def _runner_should_not_be_called(*args: object, **kwargs: Any) -> SimpleNamespace:
+            del args, kwargs
+            raise AssertionError("Runner.run should not be called for no-new-image OCR correction.")
+
+        with patch.object(server.Runner, "run", new=_runner_should_not_be_called):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "1916",
+                    "session_id": "s-ocr-correction-no-image",
+                },
+            )
+        self.assertEqual(resp.status_code, 200)
+        output = resp.json()["output"].lower()
+        self.assertIn("no new image evidence", output)
+        self.assertIn("attach a new image", output)
+
     def test_chat_success_with_responses_orchestration(self) -> None:
         deps = server.get_runtime_deps()
         deps.responses_orchestration_enabled = True
@@ -533,6 +581,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(chats[0]["session_id"], "s-history")
         self.assertEqual(chats[0]["message_count"], 2)
         self.assertEqual(chats[0]["memory_scope"], "global")
+        self.assertEqual(chats[0]["context_scope"], "global")
 
         messages_resp = self.client.get(
             "/chats/s-history/messages",
@@ -596,6 +645,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(payload["session_id"], "s-export")
         self.assertEqual(payload["status"], "active")
         self.assertEqual(payload["memory_scope"], "global")
+        self.assertEqual(payload["context_scope"], "global")
         self.assertEqual(payload["prompt_version"], ACTIVE_PROMPT_VERSION)
         self.assertEqual(payload["message_count"], 2)
         self.assertEqual(payload["markdown"], None)
@@ -756,6 +806,19 @@ class PolinkoApiTests(unittest.TestCase):
         run = run_resp.json()["run"]
         self.assertEqual(run["status"], "ok")
         self.assertEqual(run["extracted_text"], "gyrus-fold-within.")
+
+    def test_ocr_coerce_disambiguates_um_to_llm_in_model_context(self) -> None:
+        raw = (
+            "This not only creates a model\n"
+            "that reasons through its own reasoning but also requires\n"
+            "the user to adjust + transform\n"
+            "their own output so\n"
+            "that the UM can understand\n"
+            "human semiotics + lexeme."
+        )
+        out = app_factory._coerce_literal_ocr_output(raw)
+        self.assertIn("LLM", out)
+        self.assertNotIn(" UM ", f" {out} ")
 
     def test_ocr_skill_openai_uncertain_guesses_become_unknown(self) -> None:
         deps = server.get_runtime_deps()
@@ -2599,13 +2662,16 @@ class PolinkoApiTests(unittest.TestCase):
         chats = chats_resp.json()["chats"]
         target = next(chat for chat in chats if chat["session_id"] == "s-personal-summary")
         self.assertEqual(target["memory_scope"], "session")
+        self.assertEqual(target["context_scope"], "local")
 
         export_resp = self.client.get(
             "/chats/s-personal-summary/export",
             headers={"x-api-key": "test-server-key"},
         )
         self.assertEqual(export_resp.status_code, 200)
-        self.assertEqual(export_resp.json()["memory_scope"], "session")
+        export_payload = export_resp.json()
+        self.assertEqual(export_payload["memory_scope"], "session")
+        self.assertEqual(export_payload["context_scope"], "local")
 
     def test_personalization_session_scope_limits_retrieval_to_same_chat(self) -> None:
         deps = server.get_runtime_deps()

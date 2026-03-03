@@ -6,6 +6,27 @@ from config import load_config
 
 
 class ConfigTests(unittest.TestCase):
+    def test_accepts_quoted_openai_api_key(self) -> None:
+        env = {
+            "OPENAI_API_KEY": '"sk-test-key-12345678901234567890"',
+        }
+        with patch.dict(os.environ, env, clear=True):
+            cfg = load_config(dotenv_path="__missing__.env")
+        self.assertEqual(cfg.openai_api_key, "sk-test-key-12345678901234567890")
+
+    def test_accepts_quoted_env_values(self) -> None:
+        env = {
+            "OPENAI_API_KEY": '"sk-test-key-12345678901234567890"',
+            "POLINKO_OCR_PROVIDER": '"openai"',
+            "POLINKO_VECTOR_ENABLED": '"true"',
+            "POLINKO_VECTOR_TOP_K": '"4"',
+        }
+        with patch.dict(os.environ, env, clear=True):
+            cfg = load_config(dotenv_path="__missing__.env")
+        self.assertEqual(cfg.ocr_provider, "openai")
+        self.assertTrue(cfg.vector_enabled)
+        self.assertEqual(cfg.vector_top_k, 4)
+
     def test_loads_server_api_key_principals_from_json(self) -> None:
         env = {
             "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
@@ -63,6 +84,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(cfg.vector_min_similarity_session, 0.40)
         self.assertEqual(cfg.vector_max_chars, 220)
         self.assertTrue(cfg.vector_exclude_current_session)
+        self.assertFalse(cfg.vector_local_embedding_fallback)
         self.assertFalse(cfg.responses_orchestration_enabled)
         self.assertEqual(cfg.responses_orchestration_model, "gpt-5-chat-latest")
         self.assertIsNone(cfg.responses_vector_store_id)
@@ -141,6 +163,7 @@ class ConfigTests(unittest.TestCase):
             "POLINKO_VECTOR_MIN_SIMILARITY": "0.45",
             "POLINKO_VECTOR_MIN_SIMILARITY_GLOBAL": "0.55",
             "POLINKO_VECTOR_MIN_SIMILARITY_SESSION": "0.35",
+            "POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK": "true",
         }
         with patch.dict(os.environ, env, clear=True):
             cfg = load_config(dotenv_path="__missing__.env")
@@ -150,6 +173,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(cfg.vector_min_similarity, 0.45)
         self.assertEqual(cfg.vector_min_similarity_global, 0.55)
         self.assertEqual(cfg.vector_min_similarity_session, 0.35)
+        self.assertTrue(cfg.vector_local_embedding_fallback)
 
     def test_responses_orchestration_requires_vector_store_id(self) -> None:
         env = {

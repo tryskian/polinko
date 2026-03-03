@@ -6,10 +6,12 @@ DOCKER_PORT ?= 8000
 ENV_FILE ?= .env
 GATE_PORT ?= 8066
 GATE_BASE_URL ?= http://127.0.0.1:$(GATE_PORT)
+GATE_SESSION_DB ?= /tmp/polinko-quality-gate-sessions.db
+GATE_VECTOR_DB ?= /tmp/polinko-quality-gate-vector.db
 WORKBENCH_PORT ?= 8020
 HALLUCINATION_EVAL_MODE ?= judge
 
-.PHONY: chat server test eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports quality-gate quality-gate-deterministic ui-install ui-dev ui-build docker-build docker-run dev workbench
+.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports quality-gate quality-gate-deterministic evidence-index ui-install ui-dev ui-build docker-build docker-run dev workbench
 
 chat:
 	$(PYTHON) app.py
@@ -19,6 +21,9 @@ server:
 
 test:
 	$(PYTHON) -m unittest discover -s tests -p "test_*.py"
+
+doctor-env:
+	$(PYTHON) tools/doctor_env.py
 
 eval-retrieval:
 	$(PYTHON) tools/eval_retrieval.py
@@ -74,6 +79,10 @@ quality-gate:
 	@echo "Running quality gate (tests + retrieval eval + file-search eval + OCR eval + style eval + hallucination eval)..."
 	@set -eu; \
 	BASE_URL="$(GATE_BASE_URL)"; \
+	rm -f "$(GATE_SESSION_DB)" "$(GATE_VECTOR_DB)"; \
+	POLINKO_SESSION_DB_PATH="$(GATE_SESSION_DB)" \
+	POLINKO_VECTOR_DB_PATH="$(GATE_VECTOR_DB)" \
+	POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
 	$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port $(GATE_PORT) >/tmp/polinko-quality-gate.log 2>&1 & \
 	SERVER_PID=$$!; \
 	trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
@@ -99,6 +108,9 @@ quality-gate:
 
 quality-gate-deterministic:
 	@$(MAKE) quality-gate HALLUCINATION_EVAL_MODE=deterministic
+
+evidence-index:
+	$(PYTHON) tools/build_evidence_index.py
 
 ui-dev:
 	cd frontend && $(NPM) run dev

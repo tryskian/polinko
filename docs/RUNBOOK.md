@@ -142,6 +142,8 @@ Hash fields in responses:
    - `POLINKO_VECTOR_MIN_SIMILARITY` (default `0.40`)
    - `POLINKO_VECTOR_MAX_CHARS` (default `220`)
    - `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION` (default `true`)
+   - `POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK` (default `false`, enables local
+     deterministic embedding fallback on transient API connection/5xx failures)
 3. Restart API after changing vector settings.
 4. Chat retrieval currently uses chat-response vectors for tone consistency;
    OCR/image vectors are stored with metadata for search/retrieval workflows.
@@ -232,6 +234,9 @@ Hash fields in responses:
    - `make quality-gate GATE_PORT=8099`
    - `make quality-gate GATE_BASE_URL=http://127.0.0.1:8099`
    - `make quality-gate HALLUCINATION_EVAL_MODE=deterministic`
+6. Note: `make quality-gate` sets
+   `POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true` for the temporary gate server
+   to reduce transient embedding API flakes.
 
 ## Run Hallucination Eval
 

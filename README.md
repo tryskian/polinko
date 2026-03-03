@@ -11,6 +11,7 @@ Lightweight GPT agent project with:
 
 Run these from repo root:
 
+0. `make doctor-env` (optional environment sanity check)
 1. `make server`
 2. `make ui-install`
 3. `make ui-dev`
@@ -43,7 +44,10 @@ API client extras (`python tools/client.py`):
 
 ## Setup
 
-1. Create and activate your virtualenv (or use the existing one in this repo).
+1. Create and activate your virtualenv (or use the existing one in this repo):
+   `source polinko-repositioning-system/bin/activate`
+   (If you prefer, skip activation and run commands through `make`, which already
+   uses `./polinko-repositioning-system/bin/python`.)
 2. Install dependencies:
    `pip install -r requirements.txt`
 3. Copy `.env.example` to `.env` and fill real values.
@@ -68,7 +72,8 @@ API client extras (`python tools/client.py`):
    - tune retrieval with `POLINKO_VECTOR_TOP_K`, `POLINKO_VECTOR_MIN_SIMILARITY`,
      `POLINKO_VECTOR_TOP_K_GLOBAL`, `POLINKO_VECTOR_TOP_K_SESSION`,
      `POLINKO_VECTOR_MIN_SIMILARITY_GLOBAL`, `POLINKO_VECTOR_MIN_SIMILARITY_SESSION`,
-     and `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION`
+     `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION`, and
+     `POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK`
 8. Optional Responses orchestration mode (feature-flagged, RAG via OpenAI file search tool):
    - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED=true`
    - `POLINKO_RESPONSES_VECTOR_STORE_ID=vs_...`
@@ -144,6 +149,7 @@ Config:
 - `POLINKO_VECTOR_MIN_SIMILARITY_SESSION` (default: inherits `POLINKO_VECTOR_MIN_SIMILARITY`)
 - `POLINKO_VECTOR_MAX_CHARS` (default: `220`)
 - `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION` (default: `true`)
+- `POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK` (default: `false`; allows local deterministic fallback on transient embedding API connectivity/5xx failures)
 - `POLINKO_OCR_UNCERTAINTY_SAFE` (default: `true`)
 - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED` (default: `false`)
 - `POLINKO_RESPONSES_MODEL` (default: `gpt-5-chat-latest`)
@@ -336,3 +342,4 @@ Details:
 - Starts a temporary local API server on `127.0.0.1:8066`
 - Uses `GATE_BASE_URL`/`GATE_PORT` if overridden
 - Requires `OPENAI_API_KEY` for hallucination judge scoring
+- Sets `POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true` for the gate process to reduce transient embedding connectivity flakes

@@ -1195,6 +1195,8 @@ exportOcrEl.addEventListener("click", async () => {
       downloadJson(`${exportBaseName(payload)}.ocr-runs.json`, {
         session_id: payload.session_id,
         title: payload.title,
+        memory_scope: normalizeMemoryScope(payload.memory_scope),
+        context_scope: payload.context_scope === "local" ? "local" : "global",
         exported_at: payload.exported_at,
         ocr_run_count: Array.isArray(payload.ocr_runs) ? payload.ocr_runs.length : 0,
         ocr_runs: payload.ocr_runs || [],

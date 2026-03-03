@@ -5,6 +5,7 @@
 .DS_Store
 .history/
 .vscode/
+.devcontainer/
 .idea/
 *.swp
 *.swo
