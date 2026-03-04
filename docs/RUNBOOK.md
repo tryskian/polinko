@@ -9,6 +9,29 @@
    `POLINKO_SERVER_API_KEYS_JSON`.
 3. Restart running API/CLI processes.
 
+## Environment Doctor
+
+1. Run `make doctor-env`.
+2. Review warnings:
+   - `VIRTUAL_ENV is not set` is expected when using `make`.
+   - `python` is not on PATH is informational when only `python3` is
+     available.
+3. Resolve actionable issues (missing imports, interpreter mismatch, or
+   `compaudit` findings) before running evals.
+
+## Docker Build/Run Smoke
+
+1. Build image: `make docker-build`.
+2. Run container: `make docker-run`.
+3. Probe health:
+   - `curl -fsS http://127.0.0.1:8000/health`
+4. If the container exits immediately:
+   - confirm `.env` includes required values (`OPENAI_API_KEY`).
+   - check logs:
+     - `docker ps -a`
+     - `docker logs <container_id>`
+5. `.env` supports both `KEY=value` and quoted `KEY="value"` styles.
+
 ## Reset Local Session Memory
 
 1. Stop running processes.

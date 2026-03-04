@@ -1,0 +1,40 @@
+{
+  "name": "polinko-dev",
+  "image": "python:3.14-slim-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "22"
+    }
+  },
+  "forwardPorts": [8000, 5173, 8020],
+  "postCreateCommand": "/bin/bash -lc 'set -euo pipefail; VENV_DIR=polinko-repositioning-system; rm -rf \"$VENV_DIR\"; python3 -m venv --copies \"$VENV_DIR\"; if [ ! -x \"$VENV_DIR/bin/python3\" ]; then echo \"Expected venv interpreter missing: $VENV_DIR/bin/python3\"; exit 1; fi; \"$VENV_DIR/bin/python3\" -m pip install --upgrade pip; \"$VENV_DIR/bin/python3\" -m pip install -r requirements.lock; ln -sfn \"$VENV_DIR\" venv; ln -sfn \"$VENV_DIR\" virtualenv_name; npm install -g npm@latest --no-fund --no-audit; hash -r; cd frontend; npm ci --no-audit --no-fund'",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/venv/bin/python3",
+        "python.analysis.extraPaths": ["${workspaceFolder}"],
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "window.commandCenter": true,
+        "window.titleBarStyle": "custom",
+        "window.customTitleBarVisibility": "auto"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.debugpy",
+        "charliermarsh.ruff",
+        "DavidAnson.vscode-markdownlint",
+        "eamodio.gitlens",
+        "redhat.vscode-yaml",
+        "tamasfe.even-better-toml",
+        "ms-azuretools.vscode-docker",
+        "openai.chatgpt",
+        "mikestead.dotenv",
+        "Vue.volar",
+        "esbenp.prettier-vscode",
+        "figma.figma-vscode-extension"
+      ]
+    }
+  },
+  "remoteUser": "root"
+}

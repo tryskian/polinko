@@ -53,6 +53,8 @@ API client extras (`python tools/client.py`):
 3. Copy `.env.example` to `.env` and fill real values.
    Optional: configure a key ring with `POLINKO_SERVER_API_KEYS_JSON` for
    per-principal API keys.
+   Use unquoted values when possible (`KEY=value`). Quoted values
+   (`KEY="value"`) are also accepted by runtime config parsing.
    Note: current local UI does not provide an x-api-key input field. For local
    development, keep `POLINKO_SERVER_API_KEY` unset unless your proxy injects
    auth headers.
@@ -86,9 +88,55 @@ API client extras (`python tools/client.py`):
    - `POLINKO_GOVERNANCE_LOG_ONLY=false`
    - `POLINKO_HALLUCINATION_GUARDRAILS_ENABLED=true`
 10. Optional structured extraction enrichment for OCR/PDF responses:
+    - `POLINKO_EXTRACTION_STRUCTURED_ENABLED=true`
+    - `POLINKO_EXTRACTION_STRUCTURED_MODEL=gpt-4.1-mini`
 
-- `POLINKO_EXTRACTION_STRUCTURED_ENABLED=true`
-- `POLINKO_EXTRACTION_STRUCTURED_MODEL=gpt-4.1-mini`
+## Environment Doctor
+
+Run a local environment sanity check:
+
+- `make doctor-env`
+
+What it validates:
+
+- active interpreter path
+- required imports (`agents`, `openai`, `fastapi`, `uvicorn`, `dotenv`)
+- `zsh` completion directory safety (`compaudit`)
+
+Common warnings:
+
+- `VIRTUAL_ENV is not set` is expected when running via `make` (explicit
+  interpreter path is used).
+- `python` is not on PATH is informational on macOS setups that only expose
+  `python3`.
+
+## Docker Smoke Test
+
+Build and run the API container locally:
+
+- `make docker-build`
+- `make docker-run`
+
+Defaults:
+
+- image tag: `polinko:dev`
+- host port: `8000` (`DOCKER_PORT` override supported)
+- env file: `.env` (`ENV_FILE` override supported)
+
+Health probe:
+
+- `curl -fsS http://127.0.0.1:8000/health`
+
+If startup fails:
+
+- confirm required env values in `.env` (especially `OPENAI_API_KEY`)
+- check container logs with `docker ps -a` and `docker logs <container_id>`
+
+## Evidence Index Builder
+
+Build/refresh the local evidence index artifact:
+
+- `make evidence-index`
 
 ## Project Layout
 

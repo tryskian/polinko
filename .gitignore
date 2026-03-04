@@ -5,7 +5,6 @@
 .DS_Store
 .history/
 .vscode/
-.devcontainer/
 .idea/
 *.swp
 *.swo
@@ -47,13 +46,7 @@ _virtualenv.py
 .polinko_vector.db-shm
 .polinko_vector.db-wal
 
-# Local planning/handoff docs
-docs/CHARTER.md
-docs/STATE.md
-docs/DECISIONS.md
-docs/SESSION_HANDOFF.md
-docs/ARCHITECTURE.md
-docs/FIGMA_NODE_TRACKER.md
+# Local planning sandbox docs
 docs/portfolio/
 
 # Local eval artifacts
