@@ -35,6 +35,8 @@
 - Hallucination score threshold is now configurable with
   `HALLUCINATION_MIN_ACCEPTABLE_SCORE`; calibration helper is available via
   `make calibrate-hallucination-threshold`.
+- P2 CLIP experiment scaffolding has started with `make eval-clip-ab` and
+  report artifact mode `make eval-clip-ab-report`.
 - Dedicated strict hallucination gate target is available: `make hallucination-gate`.
 - CI includes optional Braintrust hallucination gate wiring when
   `BRAINTRUST_OPENAI_BASE_URL` (repo var) and `BRAINTRUST_API_KEY`

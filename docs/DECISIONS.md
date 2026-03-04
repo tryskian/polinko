@@ -165,3 +165,11 @@
   (`make calibrate-hallucination-threshold`).
 - Why: Supports explicit Braintrust threshold tuning in CI while preserving
   default behavior when calibration vars are not yet set.
+
+## D-030: Start P2 multimodal retrieval A/B harness with CLIP-proxy arm
+
+- Decision: Add a non-runtime evaluation harness (`make eval-clip-ab`) that
+  compares baseline mixed-source retrieval vs an image-prioritized proxy arm on
+  image-context cases.
+- Why: Establishes measurable A/B scaffolding now, so full CLIP embedding
+  integration can be validated against a stable experiment contract later.

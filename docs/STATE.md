@@ -44,6 +44,8 @@
 - Hallucination score gating now supports configurable minimum threshold via
   `HALLUCINATION_MIN_ACCEPTABLE_SCORE`; report-based calibration helper is
   available through `make calibrate-hallucination-threshold`.
+- P2 CLIP experiment scaffolding has started with
+  `make eval-clip-ab` (baseline mixed-source vs image-prioritized proxy arm).
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.
@@ -95,6 +97,7 @@
 - Evidence index builder: `tools/build_evidence_index.py`
 - Portfolio metadata auditor: `tools/audit_portfolio_metadata.py`
 - Hallucination threshold calibrator: `tools/calibrate_hallucination_threshold.py`
+- CLIP A/B eval harness: `tools/eval_clip_ab.py`
 
 ## Known Constraints
 

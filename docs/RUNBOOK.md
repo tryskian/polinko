@@ -365,6 +365,19 @@ Hash fields in responses:
    - image-context case is skipped automatically when
      `POLINKO_IMAGE_CONTEXT_ENABLED=false`
 
+## Run CLIP A/B Scaffold Eval
+
+1. Ensure API is running locally (`make server`) with vector memory enabled.
+2. Run baseline-vs-proxy A/B harness:
+   - `make eval-clip-ab`
+3. Optional:
+   - include additional source types:
+     `make eval-clip-ab CLIP_AB_SOURCE_TYPES=image,pdf`
+   - write JSON report artifact:
+     `make eval-clip-ab-report`
+4. Current B arm is an image-prioritized proxy (`source_types=["image"]`) used
+   to establish experiment wiring ahead of full CLIP embedding integration.
+
 ## Run OCR Eval
 
 1. Ensure API is running locally (`make server`).

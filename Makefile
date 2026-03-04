@@ -14,8 +14,9 @@ HALLUCINATION_JUDGE_MODEL ?= gpt-4.1-mini
 HALLUCINATION_JUDGE_API_KEY_ENV ?= OPENAI_API_KEY
 HALLUCINATION_JUDGE_BASE_URL ?=
 HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
+CLIP_AB_SOURCE_TYPES ?= image
 
-.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index portfolio-metadata-audit ui-install ui-dev ui-build docker-build docker-run dev workbench
+.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-clip-ab eval-clip-ab-report eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index portfolio-metadata-audit ui-install ui-dev ui-build docker-build docker-run dev workbench
 
 chat:
 	$(PYTHON) app.py
@@ -77,6 +78,14 @@ eval-ocr-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
 	$(PYTHON) tools/eval_ocr.py --run-id $$RUN_ID --report-json "eval_reports/ocr-$$RUN_ID.json"
+
+eval-clip-ab:
+	$(PYTHON) tools/eval_clip_ab.py --source-types "$(CLIP_AB_SOURCE_TYPES)"
+
+eval-clip-ab-report:
+	@mkdir -p eval_reports
+	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
+	$(PYTHON) tools/eval_clip_ab.py --source-types "$(CLIP_AB_SOURCE_TYPES)" --run-id $$RUN_ID --report-json "eval_reports/clip-ab-$$RUN_ID.json"
 
 eval-reports:
 	@$(MAKE) eval-retrieval-report
