@@ -133,3 +133,20 @@
   Braintrust endpoint when repo vars/secrets are present.
 - Why: Enables P1 judge-gate rollout without changing runtime assistant
   behavior and avoids hard-coding a single judge provider path.
+
+## D-026: Host/container interpreter separation for VS Code Python resolution
+
+- Decision: Keep host-side Python interpreter selection unpinned from
+  container-built venv binaries and rely on host auto-discovery (or explicit
+  host interpreter) outside the devcontainer.
+- Why: Prevent recurring `Could not resolve interpreter path` failures caused by
+  macOS attempting to execute Linux ELF venv binaries created in container
+  workflows.
+
+## D-027: Evidence triage tracks action-taken state until passing evidence exists
+
+- Decision: Extend evidence indexing to track `recommended_action`,
+  `action_taken`, and `status` for FAIL records, with optional triage override
+  input and auto-closure when a later PASS artifact exists for the same chat.
+- Why: Preserve remediation traceability and avoid losing unresolved FAIL
+  context between eval cycles.

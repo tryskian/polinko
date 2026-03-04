@@ -73,6 +73,25 @@
    - `docker version`
 4. If still broken, check Docker Desktop is running on host and retry rebuild.
 
+## Python Interpreter Path (Host vs Container)
+
+1. Do not pin a host VS Code interpreter to a devcontainer-created venv path
+   if that venv was built inside Linux.
+   - Example bad host pin: `/Users/.../polinko-repositioning-system/bin/python`
+   - Symptom: `Could not resolve interpreter path` / `Unable to handle .../bin/python`
+2. Root cause:
+   - host macOS cannot execute Linux ELF binaries (`exec format error`).
+3. On host mode:
+   - prefer Python extension auto-discovery, or explicitly select a macOS
+     interpreter (for example `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3`).
+4. On devcontainer mode:
+   - use container interpreter paths only (for example
+     `${containerWorkspaceFolder}/venv/bin/python3`).
+5. If warnings persist:
+   - remove stale `python.defaultInterpreterPath` entries from local workspace
+     settings/workspace files.
+   - run `Developer: Reload Window`.
+
 ## Reset Local Session Memory
 
 1. Stop running processes.
@@ -413,6 +432,28 @@ Hash fields in responses:
 2. Ensure `OPENAI_API_KEY` is set in `.env` (judge eval reports require it).
 3. Run `make eval-reports`.
 4. Reports are written under `eval_reports/` with timestamped filenames.
+
+## Evidence Triage Lifecycle (FAIL -> PASS)
+
+1. Store evidence artifacts under:
+   - `docs/portfolio/raw_evidence/FAIL`
+   - `docs/portfolio/raw_evidence/PASS`
+   - optional intake buckets: `MIXED`, `INBOX`
+2. Run index builder:
+   - `make evidence-index`
+3. FAIL entries now carry lifecycle fields in generated index:
+   - `failure_reason`
+   - `recommended_action`
+   - `action_taken`
+   - `status` (`OPEN`/`CLOSED`)
+   - optional `resolved_by` PASS artifact reference
+4. To record human triage updates, create:
+   - `docs/portfolio/raw_evidence/triage_overrides.json`
+   - Example:
+     - `{"files":{"<artifact-filename>":{"action_taken":"...", "status":"OPEN", "notes":"..."}}}`
+5. Closure rule:
+   - FAIL remains `OPEN` until a later PASS artifact exists for the same
+     `chat_id`; then it auto-closes and links `resolved_by`.
 
 ## Export CLI Transcript
 

@@ -48,6 +48,9 @@
   `/health` probe).
 - Devcontainer Docker connectivity is stabilized with Docker-outside-of-Docker
   support and UI-side Docker extension routing for reliable `Containers` view.
+- Local IDE interpreter-path drift is now documented and resolved:
+  host workspaces should not pin Python to container-built Linux venv binaries;
+  use host interpreter auto-discovery (or explicit host Python) on macOS.
 - Local environment doctor is available via `make doctor-env` for interpreter,
   import, and `zsh` completion checks.
 - OCR supports a provider flag:
@@ -67,6 +70,9 @@
   noise in strict test runs).
 - Eval harnesses support JSON report artifacts via `--report-json`
   (hallucination, style, retrieval, file-search, OCR).
+- Evidence indexing now tracks FAIL remediation lifecycle with
+  `recommended_action`, `action_taken`, `status`, and optional PASS-linked
+  closure metadata.
 - Integration tests exist and pass locally (`tests/test_api.py`).
 - Collaboration v1 supports explicit agent-role handoffs per chat with audit history.
 

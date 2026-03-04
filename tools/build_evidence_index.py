@@ -178,6 +178,33 @@ def _infer_reason_and_action(outcome: str, text: str) -> tuple[str, str]:
     )
 
 
+def _default_status(outcome: str) -> str:
+    if outcome == "PASS":
+        return "CLOSED"
+    if outcome in {"FAIL", "MIXED", "INBOX"}:
+        return "OPEN"
+    return "OPEN"
+
+
+def _default_action_taken(outcome: str) -> str:
+    if outcome == "PASS":
+        return "Not required (pass control)."
+    if outcome == "FAIL":
+        return "Pending"
+    if outcome == "MIXED":
+        return "Pending split into PASS/FAIL artifacts."
+    return "Pending triage."
+
+
+def _parse_iso_utc(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
 @dataclass
 class EvidenceRecord:
     evidence_id: str
@@ -188,7 +215,11 @@ class EvidenceRecord:
     timestamp_utc: str | None
     memory_scope: str | None
     failure_reason: str
-    action: str
+    recommended_action: str
+    action_taken: str
+    status: str
+    resolved_by: str | None
+    triage_notes: str | None
     preview: str
 
 
@@ -225,12 +256,121 @@ def _scan_bucket(bucket_dir: Path, bucket: str) -> list[EvidenceRecord]:
                 timestamp_utc=_parse_stamp(path.name),
                 memory_scope=_extract_memory_scope(raw_text),
                 failure_reason=reason,
-                action=action,
+                recommended_action=action,
+                action_taken=_default_action_taken(bucket),
+                status=_default_status(bucket),
+                resolved_by=None,
+                triage_notes=None,
                 preview=_compact(raw_text),
             )
         )
 
     return records
+
+
+def _load_triage_overrides(path: Path) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
+    if not path.exists():
+        return {}, {}
+
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}, {}
+
+    raw_entries: list[tuple[str, dict[str, Any]]] = []
+    if isinstance(payload, dict):
+        files_obj = payload.get("files")
+        if isinstance(files_obj, dict):
+            for key, value in files_obj.items():
+                if isinstance(key, str) and isinstance(value, dict):
+                    raw_entries.append((key, value))
+        else:
+            for key, value in payload.items():
+                if isinstance(key, str) and isinstance(value, dict):
+                    raw_entries.append((key, value))
+    elif isinstance(payload, list):
+        for item in payload:
+            if not isinstance(item, dict):
+                continue
+            file_key = item.get("file")
+            if isinstance(file_key, str):
+                raw_entries.append((file_key, item))
+
+    by_exact: dict[str, dict[str, Any]] = {}
+    by_basename: dict[str, dict[str, Any]] = {}
+    for key, value in raw_entries:
+        by_exact[key] = value
+        by_basename[Path(key).name] = value
+    return by_exact, by_basename
+
+
+def _apply_triage_overrides(
+    records: list[EvidenceRecord], by_exact: dict[str, dict[str, Any]], by_basename: dict[str, dict[str, Any]]
+) -> None:
+    for record in records:
+        override = by_exact.get(record.file)
+        if override is None:
+            override = by_basename.get(Path(record.file).name)
+        if override is None:
+            continue
+
+        recommended_action = override.get("recommended_action")
+        if isinstance(recommended_action, str) and recommended_action.strip():
+            record.recommended_action = recommended_action.strip()
+
+        action_taken = override.get("action_taken")
+        if isinstance(action_taken, str) and action_taken.strip():
+            record.action_taken = action_taken.strip()
+
+        status = override.get("status")
+        if isinstance(status, str) and status.strip():
+            record.status = status.strip().upper()
+
+        resolved_by = override.get("resolved_by")
+        if isinstance(resolved_by, str) and resolved_by.strip():
+            record.resolved_by = resolved_by.strip()
+
+        notes = override.get("notes")
+        if isinstance(notes, str) and notes.strip():
+            record.triage_notes = notes.strip()
+
+
+def _auto_close_failures(records: list[EvidenceRecord]) -> None:
+    passes_by_chat: dict[str, list[EvidenceRecord]] = {}
+    for record in records:
+        if record.outcome != "PASS" or not record.chat_id:
+            continue
+        passes_by_chat.setdefault(record.chat_id, []).append(record)
+
+    for pass_records in passes_by_chat.values():
+        pass_records.sort(key=lambda r: _parse_iso_utc(r.timestamp_utc) or datetime.min.replace(tzinfo=timezone.utc))
+
+    for record in records:
+        if record.outcome != "FAIL":
+            continue
+        if not record.chat_id:
+            continue
+        if record.status.upper() == "CLOSED":
+            continue
+
+        candidates = passes_by_chat.get(record.chat_id, [])
+        if not candidates:
+            continue
+
+        fail_ts = _parse_iso_utc(record.timestamp_utc)
+        resolved_with: EvidenceRecord | None = None
+        for candidate in candidates:
+            pass_ts = _parse_iso_utc(candidate.timestamp_utc)
+            if fail_ts is None or pass_ts is None or pass_ts >= fail_ts:
+                resolved_with = candidate
+                break
+        if resolved_with is None:
+            continue
+
+        record.status = "CLOSED"
+        if record.action_taken in {"Pending", "Pending triage."}:
+            record.action_taken = "Validated by subsequent PASS evidence."
+        record.resolved_by = resolved_with.file
 
 
 def _render_markdown(records: list[EvidenceRecord]) -> str:
@@ -270,7 +410,13 @@ def _render_markdown(records: list[EvidenceRecord]) -> str:
             if record.memory_scope:
                 lines.append(f"- Memory Scope Seen: `{record.memory_scope}`")
             lines.append(f"- Failure Reason: {record.failure_reason}")
-            lines.append(f"- Action: {record.action}")
+            lines.append(f"- Recommended Action: {record.recommended_action}")
+            lines.append(f"- Action Taken: {record.action_taken}")
+            lines.append(f"- Status: `{record.status}`")
+            if record.resolved_by:
+                lines.append(f"- Resolved By: `{record.resolved_by}`")
+            if record.triage_notes:
+                lines.append(f"- Triage Notes: {record.triage_notes}")
             lines.append(f"- Preview: {record.preview}")
             lines.append("")
 
@@ -294,16 +440,28 @@ def main() -> int:
         default="docs/portfolio/raw_evidence/index.json",
         help="Output JSON path.",
     )
+    parser.add_argument(
+        "--triage-overrides",
+        default=None,
+        help="Optional path to triage override JSON (defaults to <root>/triage_overrides.json).",
+    )
     args = parser.parse_args()
 
     root = Path(args.root)
     root.mkdir(parents=True, exist_ok=True)
+    triage_overrides_path = (
+        Path(args.triage_overrides) if args.triage_overrides else root / "triage_overrides.json"
+    )
 
     records: list[EvidenceRecord] = []
     for bucket in ("PASS", "FAIL", "MIXED", "INBOX"):
         bucket_dir = root / bucket
         bucket_dir.mkdir(parents=True, exist_ok=True)
         records.extend(_scan_bucket(bucket_dir, bucket))
+
+    by_exact, by_basename = _load_triage_overrides(triage_overrides_path)
+    _apply_triage_overrides(records, by_exact, by_basename)
+    _auto_close_failures(records)
 
     records.sort(
         key=lambda record: (record.timestamp_utc or "", Path(record.file).name.lower()),
@@ -324,6 +482,8 @@ def main() -> int:
     print(f"Indexed {len(records)} evidence file(s).")
     print(f"Markdown: {out_md}")
     print(f"JSON: {out_json}")
+    if triage_overrides_path.exists():
+        print(f"Triage overrides: {triage_overrides_path}")
     return 0
 
 

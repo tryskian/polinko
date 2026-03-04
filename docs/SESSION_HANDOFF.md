@@ -40,7 +40,12 @@
 - Devcontainer Docker connectivity is now stabilized (Docker-outside-of-Docker
   and Docker extension UI-side routing), resolving `Containers` pane connection
   mismatch in remote sessions.
+- Host-side VS Code interpreter warnings were resolved by removing stale
+  workspace interpreter pins to Linux container venv binaries; host sessions
+  now rely on host interpreter auto-discovery/selection.
 - Environment doctor is available for local sanity checks: `make doctor-env`.
+- Evidence indexing now records FAIL lifecycle state (`action_taken`, `status`)
+  and supports optional triage overrides until a linked PASS closes the issue.
 
 ## Latest Local Commit
 
