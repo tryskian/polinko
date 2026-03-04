@@ -40,11 +40,14 @@ class HallucinationEvalGateTests(unittest.TestCase):
                 "https://braintrust.example/v1",
                 "--evaluation-mode",
                 "judge",
+                "--min-acceptable-score",
+                "70",
             ]
         )
         self.assertEqual(args.judge_api_key_env, "BRAINTRUST_API_KEY")
         self.assertEqual(args.judge_base_url, "https://braintrust.example/v1")
         self.assertEqual(args.evaluation_mode, "judge")
+        self.assertEqual(args.min_acceptable_score, 70)
 
     def test_contains_forbidden_phrases_matches_case_insensitive(self) -> None:
         answer = "This includes a Let Me Guess phrase."
@@ -58,6 +61,7 @@ class HallucinationEvalGateTests(unittest.TestCase):
             score=_MIN_ACCEPTABLE_SCORE,
             risk="low",
             grounding="grounded",
+            min_acceptable_score=_MIN_ACCEPTABLE_SCORE,
         )
         self.assertEqual(reasons, [])
 
@@ -68,6 +72,7 @@ class HallucinationEvalGateTests(unittest.TestCase):
             score=9,
             risk="low",
             grounding="grounded",
+            min_acceptable_score=_MIN_ACCEPTABLE_SCORE,
         )
         self.assertTrue(any("contains forbidden phrases" in reason for reason in reasons))
 
@@ -78,6 +83,7 @@ class HallucinationEvalGateTests(unittest.TestCase):
             score=9,
             risk="high",
             grounding="partially_grounded",
+            min_acceptable_score=_MIN_ACCEPTABLE_SCORE,
         )
         self.assertIn("judge risk=high", reasons)
 
@@ -88,6 +94,7 @@ class HallucinationEvalGateTests(unittest.TestCase):
             score=_MIN_ACCEPTABLE_SCORE - 1,
             risk="low",
             grounding="partially_grounded",
+            min_acceptable_score=_MIN_ACCEPTABLE_SCORE,
         )
         self.assertTrue(any("score below minimum threshold" in reason for reason in reasons))
 
@@ -98,8 +105,20 @@ class HallucinationEvalGateTests(unittest.TestCase):
             score=9,
             risk="low",
             grounding="partially_grounded",
+            min_acceptable_score=_MIN_ACCEPTABLE_SCORE,
         )
         self.assertIn("grounded case returned grounding='partially_grounded'", reasons)
+
+    def test_deterministic_gate_respects_custom_threshold(self) -> None:
+        reasons = _apply_deterministic_gate(
+            case={"expected_mode": "cautious", "must_not_contain": []},
+            answer="Concise grounded answer.",
+            score=65,
+            risk="low",
+            grounding="grounded",
+            min_acceptable_score=70,
+        )
+        self.assertIn("score below minimum threshold (65 < 70)", reasons)
 
     def test_deterministic_assessment_grounded_requires_memory(self) -> None:
         result = _deterministic_assessment(

@@ -41,6 +41,9 @@
   base URL (`--judge-api-key-env`, `--judge-base-url`) so OpenAI-compatible
   judge backends (including Braintrust gateways) can be wired without runtime
   behavior changes.
+- Hallucination score gating now supports configurable minimum threshold via
+  `HALLUCINATION_MIN_ACCEPTABLE_SCORE`; report-based calibration helper is
+  available through `make calibrate-hallucination-threshold`.
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.
@@ -91,6 +94,7 @@
 - Environment doctor: `tools/doctor_env.py`
 - Evidence index builder: `tools/build_evidence_index.py`
 - Portfolio metadata auditor: `tools/audit_portfolio_metadata.py`
+- Hallucination threshold calibrator: `tools/calibrate_hallucination_threshold.py`
 
 ## Known Constraints
 

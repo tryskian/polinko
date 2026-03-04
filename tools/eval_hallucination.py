@@ -324,6 +324,7 @@ def _apply_deterministic_gate(
     score: int,
     risk: str,
     grounding: str,
+    min_acceptable_score: int,
 ) -> list[str]:
     fail_reasons: list[str] = []
     forbidden_hits = _contains_forbidden_phrases(answer, case["must_not_contain"])
@@ -331,8 +332,8 @@ def _apply_deterministic_gate(
         fail_reasons.append(f"contains forbidden phrases: {forbidden_hits}")
     if risk == "high":
         fail_reasons.append("judge risk=high")
-    if score < _MIN_ACCEPTABLE_SCORE:
-        fail_reasons.append(f"score below minimum threshold ({score} < {_MIN_ACCEPTABLE_SCORE})")
+    if score < min_acceptable_score:
+        fail_reasons.append(f"score below minimum threshold ({score} < {min_acceptable_score})")
     if case["expected_mode"] == "grounded" and grounding != "grounded":
         fail_reasons.append(f"grounded case returned grounding={grounding!r}")
     return fail_reasons
@@ -426,6 +427,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Exit non-zero if any case fails (CI gate mode).",
     )
     parser.add_argument(
+        "--min-acceptable-score",
+        type=int,
+        default=_MIN_ACCEPTABLE_SCORE,
+        help=(
+            "Minimum acceptable judge score (0-100) for case pass. "
+            f"Default: {_MIN_ACCEPTABLE_SCORE}."
+        ),
+    )
+    parser.add_argument(
         "--keep-chats",
         action="store_true",
         help="Keep generated eval chats instead of deleting them.",
@@ -445,6 +455,8 @@ def main() -> int:
     if not cases_path.exists():
         raise SystemExit(f"Cases file not found: {cases_path}")
     cases = _load_cases(cases_path)
+    if args.min_acceptable_score < 0 or args.min_acceptable_score > 100:
+        raise SystemExit("--min-acceptable-score must be between 0 and 100.")
 
     requested_mode: EvaluationMode = args.evaluation_mode
     judge_client: OpenAI | None = None
@@ -482,7 +494,8 @@ def main() -> int:
     print(
         f"Cases: {len(cases)} | run_id={run_id} | "
         f"requested_mode={requested_mode} | effective_mode={effective_mode} | "
-        f"judge_model={args.judge_model} | judge_key_env={args.judge_api_key_env}"
+        f"judge_model={args.judge_model} | judge_key_env={args.judge_api_key_env} | "
+        f"min_score={args.min_acceptable_score}"
     )
     try:
         _preflight(args.base_url, headers, args.timeout)
@@ -575,6 +588,7 @@ def main() -> int:
                 score=score,
                 risk=risk,
                 grounding=grounding,
+                min_acceptable_score=args.min_acceptable_score,
             )
             passed = passed and not fail_reasons
             case_results.append(
@@ -644,6 +658,7 @@ def main() -> int:
                     "judge_model": args.judge_model,
                     "judge_api_key_env": args.judge_api_key_env,
                     "judge_base_url": args.judge_base_url or None,
+                    "min_acceptable_score": args.min_acceptable_score,
                     "requested_evaluation_mode": requested_mode,
                     "effective_evaluation_mode": effective_mode,
                     "strict": bool(args.strict),

@@ -317,6 +317,7 @@ Hash fields in responses:
    - `make quality-gate GATE_PORT=8099`
    - `make quality-gate GATE_BASE_URL=http://127.0.0.1:8099`
    - `make quality-gate HALLUCINATION_EVAL_MODE=deterministic`
+   - `make quality-gate HALLUCINATION_MIN_ACCEPTABLE_SCORE=70`
 6. Note: `make quality-gate` sets
    `POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true` for the temporary gate server
    to reduce transient embedding API flakes.
@@ -332,6 +333,7 @@ Hash fields in responses:
    - `python tools/eval_hallucination.py --evaluation-mode judge`
    - `python tools/eval_hallucination.py --evaluation-mode deterministic`
    - `python tools/eval_hallucination.py --evaluation-mode auto`
+   - `python tools/eval_hallucination.py --min-acceptable-score 70`
 
 ## Run Retrieval Eval
 
@@ -395,6 +397,8 @@ Hash fields in responses:
 2. Optional tuning:
    - choose model:
      `python tools/eval_hallucination.py --judge-model gpt-4.1-mini`
+   - tune score threshold:
+     `python tools/eval_hallucination.py --min-acceptable-score 70`
    - mode selection:
      - `python tools/eval_hallucination.py --evaluation-mode judge`
      - `python tools/eval_hallucination.py --evaluation-mode deterministic`
@@ -432,6 +436,18 @@ Hash fields in responses:
 2. Ensure `OPENAI_API_KEY` is set in `.env` (judge eval reports require it).
 3. Run `make eval-reports`.
 4. Reports are written under `eval_reports/` with timestamped filenames.
+
+## Calibrate Hallucination Threshold
+
+1. Generate one or more hallucination report artifacts:
+   - `make eval-hallucination-report`
+2. Run calibration helper:
+   - `make calibrate-hallucination-threshold`
+3. Review summary:
+   - `eval_reports/hallucination-threshold-calibration.json`
+4. Apply chosen threshold:
+   - local gate runs: `HALLUCINATION_MIN_ACCEPTABLE_SCORE=<value>`
+   - CI repo variable: `BRAINTRUST_HALLUCINATION_MIN_SCORE`
 
 ## Evidence Triage Lifecycle (FAIL -> PASS)
 

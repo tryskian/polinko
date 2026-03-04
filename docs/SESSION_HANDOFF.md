@@ -32,6 +32,9 @@
 - Single-command quality gate is available and passing: `make quality-gate`.
 - Hallucination judge path now supports configurable key env + base URL for
   OpenAI-compatible judge providers (including Braintrust gateway wiring).
+- Hallucination score threshold is now configurable with
+  `HALLUCINATION_MIN_ACCEPTABLE_SCORE`; calibration helper is available via
+  `make calibrate-hallucination-threshold`.
 - Dedicated strict hallucination gate target is available: `make hallucination-gate`.
 - CI includes optional Braintrust hallucination gate wiring when
   `BRAINTRUST_OPENAI_BASE_URL` (repo var) and `BRAINTRUST_API_KEY`

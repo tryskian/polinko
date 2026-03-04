@@ -157,3 +157,11 @@
   that validates evidence index completeness and evidence-log field coverage.
 - Why: Ensures portfolio claims remain traceable to complete, machine-readable
   metadata before publication.
+
+## D-029: Configurable hallucination gate threshold + calibration helper
+
+- Decision: Make hallucination gate score threshold configurable via
+  `HALLUCINATION_MIN_ACCEPTABLE_SCORE` and add a report-based calibration helper
+  (`make calibrate-hallucination-threshold`).
+- Why: Supports explicit Braintrust threshold tuning in CI while preserving
+  default behavior when calibration vars are not yet set.
