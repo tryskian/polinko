@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-03
+- 2026-03-04
 
 ## Current Snapshot
 
@@ -37,12 +37,15 @@
   `BRAINTRUST_OPENAI_BASE_URL` (repo var) and `BRAINTRUST_API_KEY`
   (repo secret) are configured.
 - Docker smoke path is validated (`make docker-build` + `make docker-run` + `/health`).
+- Devcontainer Docker connectivity is now stabilized (Docker-outside-of-Docker
+  + Docker extension UI-side routing), resolving `Containers` pane connection
+  mismatch in remote sessions.
 - Environment doctor is available for local sanity checks: `make doctor-env`.
 
 ## Latest Local Commit
 
-- `de77f75` on `main` (synced with `origin/main`)
-- Summary: chore: stabilize env/docker workflow and harden retrieval tests
+- `c95570b` on `main` (synced with `origin/main`)
+- Summary: chore: fix docker connectivity in devcontainer
 
 ## Key Files To Read First
 

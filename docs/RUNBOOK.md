@@ -32,6 +32,19 @@
      - `docker logs <container_id>`
 5. `.env` supports both `KEY=value` and quoted `KEY="value"` styles.
 
+## Devcontainer Troubleshooting
+
+1. After changing `.devcontainer/devcontainer.json`, run:
+   - `Dev Containers: Rebuild and Reopen in Container`
+2. If `Remote Explorer > Dev Containers` shows connected but the Docker
+   `Containers` tab says `Failed to connect`:
+   - run `Developer: Reload Window`
+   - confirm Docker extension runs on UI host via
+     `remote.extensionKind.ms-azuretools.vscode-docker=["ui"]`
+3. Validate from the devcontainer terminal:
+   - `docker version`
+4. If still broken, check Docker Desktop is running on host and retry rebuild.
+
 ## Reset Local Session Memory
 
 1. Stop running processes.

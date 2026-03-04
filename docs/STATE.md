@@ -46,6 +46,8 @@
   wiring when repository vars/secrets are configured.
 - Docker smoke is validated locally (`make docker-build` + `make docker-run` +
   `/health` probe).
+- Devcontainer Docker connectivity is stabilized with Docker-outside-of-Docker
+  support and UI-side Docker extension routing for reliable `Containers` view.
 - Local environment doctor is available via `make doctor-env` for interpreter,
   import, and `zsh` completion checks.
 - OCR supports a provider flag:
