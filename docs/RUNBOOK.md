@@ -529,6 +529,20 @@ Hash fields in responses:
    - transcript json (`.json`)
    - OCR run history json (`.ocr-runs.json`)
 
+## Dev Startup (Auto Port Hygiene)
+
+1. Start backend + frontend:
+   - `make dev`
+2. Behavior:
+   - preflights ports `8000` (backend) and `5173` (frontend)
+   - stops stale listeners on those ports before launch
+   - starts frontend with strict port binding (`5173`) to avoid drift
+3. Stop listeners only:
+   - `make dev-stop`
+4. Optional overrides:
+   - `DEV_AUTOKILL=0 make dev` (fail on non-dev port owners instead of stopping)
+   - `DEV_BACKEND_PORT=9000 DEV_FRONTEND_PORT=5175 make dev`
+
 ## Common Connection Error
 
 Symptom:

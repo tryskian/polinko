@@ -10,6 +10,10 @@ NPM ?= npm
 DOCKER ?= docker
 DOCKER_IMAGE ?= polinko:dev
 DOCKER_PORT ?= 8000
+DEV_HOST ?= 127.0.0.1
+DEV_BACKEND_PORT ?= 8000
+DEV_FRONTEND_PORT ?= 5173
+DEV_AUTOKILL ?= 1
 ENV_FILE ?= .env
 GATE_PORT ?= 8066
 GATE_BASE_URL ?= http://127.0.0.1:$(GATE_PORT)
@@ -23,7 +27,7 @@ HALLUCINATION_JUDGE_BASE_URL ?=
 HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
 CLIP_AB_SOURCE_TYPES ?= image
 
-.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-clip-ab eval-clip-ab-report eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit ui-install ui-dev ui-build docker-build docker-run dev workbench
+.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-clip-ab eval-clip-ab-report eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit ui-install ui-dev ui-build docker-build docker-run dev dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
@@ -195,14 +199,10 @@ ui-build:
 	cd frontend && $(NPM) run build
 
 dev:
-	@echo "Starting backend (8000) and frontend (5173). Press Ctrl+C to stop both."
-	@set -e; \
-	$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload & \
-	SERVER_PID=$$!; \
-	cd frontend && $(NPM) run dev & \
-	UI_PID=$$!; \
-	trap 'kill $$SERVER_PID $$UI_PID 2>/dev/null || true' EXIT INT TERM; \
-	wait $$SERVER_PID $$UI_PID
+	@PYTHON_BIN="$(PYTHON)" NPM_BIN="$(NPM)" DEV_HOST="$(DEV_HOST)" DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_FRONTEND_PORT="$(DEV_FRONTEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" bash tools/dev_run.sh
+
+dev-stop:
+	@DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_FRONTEND_PORT="$(DEV_FRONTEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" DEV_STOP_ONLY=1 bash tools/dev_run.sh
 
 workbench:
 	@echo "Starting portfolio workbench on http://127.0.0.1:$(WORKBENCH_PORT)/workbench.html"
