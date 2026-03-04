@@ -32,3 +32,16 @@ jobs:
           OPENAI_API_KEY: sk-test-key-123456789012345
           POLINKO_SERVER_API_KEY: test-server-key
         run: make test PYTHON=python
+      - name: Hallucination Judge Gate (Braintrust, optional)
+        if: ${{ vars.BRAINTRUST_OPENAI_BASE_URL != '' && secrets.BRAINTRUST_API_KEY != '' }}
+        env:
+          OPENAI_API_KEY: sk-test-key-123456789012345
+          POLINKO_SERVER_API_KEY: test-server-key
+          BRAINTRUST_API_KEY: ${{ secrets.BRAINTRUST_API_KEY }}
+        run: |
+          make hallucination-gate \
+            PYTHON=python \
+            GATE_PORT=8067 \
+            HALLUCINATION_EVAL_MODE=judge \
+            HALLUCINATION_JUDGE_API_KEY_ENV=BRAINTRUST_API_KEY \
+            HALLUCINATION_JUDGE_BASE_URL="${{ vars.BRAINTRUST_OPENAI_BASE_URL }}"

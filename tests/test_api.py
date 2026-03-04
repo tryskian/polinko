@@ -10,7 +10,7 @@ from typing import Any
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
-from openai import APIConnectionError, APIStatusError, RateLimitError
+from openai import APIConnectionError, APIStatusError, AuthenticationError, RateLimitError
 from api.app_factory import create_runtime_metrics
 from api import app_factory
 from core.history_store import ChatHistoryStore
@@ -1811,6 +1811,134 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(payload["responses_index_reason"], "unexpected_error")
         self.assertIsNone(payload["responses_vector_store_file_id"])
 
+    def test_pdf_ingest_reports_classified_responses_index_failure_reasons(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf-responses-failure-map.db"))
+        deps.responses_pdf_ingest_enabled = True
+        deps.responses_vector_store_id = "vs_pdf_test_fail_map_123"
+
+        class _FakeEmbeddings:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=[0.1, 0.2, 0.3, 0.4]) for _ in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        request = httpx.Request("POST", "https://api.openai.com/v1/vector_stores/vs_pdf_test_fail_map_123/files")
+
+        cases = (
+            (
+                "authentication_error",
+                lambda: AuthenticationError(
+                    "auth failed",
+                    response=httpx.Response(401, request=request),
+                    body={},
+                ),
+            ),
+            (
+                "rate_limited",
+                lambda: RateLimitError(
+                    "rate limited",
+                    response=httpx.Response(429, request=request),
+                    body={},
+                ),
+            ),
+            (
+                "connection_error",
+                lambda: APIConnectionError(message="connection error", request=request),
+            ),
+            (
+                "api_status_503",
+                lambda: APIStatusError(
+                    "upstream unavailable",
+                    response=httpx.Response(503, request=request),
+                    body={},
+                ),
+            ),
+        )
+
+        payload = b"%PDF-1.7 fake-payload-for-responses-failure-map"
+        payload_b64 = base64.b64encode(payload).decode("ascii")
+
+        for expected_reason, build_error in cases:
+            with self.subTest(expected_reason=expected_reason):
+
+                class _BrokenVectorStoreFiles:
+                    def upload_and_poll(self, **kwargs: Any) -> SimpleNamespace:
+                        del kwargs
+                        raise build_error()
+
+                deps.responses_client = SimpleNamespace(
+                    vector_stores=SimpleNamespace(files=_BrokenVectorStoreFiles())
+                )
+
+                with patch("api.app_factory._extract_text_from_pdf_bytes", return_value="PDF text for indexing"):
+                    resp = self.client.post(
+                        "/skills/pdf_ingest",
+                        headers={"x-api-key": "test-server-key"},
+                        json={
+                            "session_id": f"s-pdf-responses-failure-{expected_reason}",
+                            "source_name": "retrieval-brief.pdf",
+                            "mime_type": "application/pdf",
+                            "data_base64": payload_b64,
+                            "attach_to_chat": False,
+                        },
+                    )
+
+                self.assertEqual(resp.status_code, 200)
+                body = resp.json()
+                self.assertEqual(body["responses_index_status"], "failed")
+                self.assertEqual(body["responses_index_reason"], expected_reason)
+                self.assertIsNone(body["responses_vector_store_file_id"])
+
+    def test_pdf_ingest_reports_missing_responses_file_id(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-pdf-responses-missing-file-id.db"))
+        deps.responses_pdf_ingest_enabled = True
+        deps.responses_vector_store_id = "vs_pdf_test_missing_file_123"
+
+        class _FakeEmbeddings:
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=[0.1, 0.2, 0.3, 0.4]) for _ in payload]
+                return SimpleNamespace(data=data)
+
+        class _MissingFileIdVectorStoreFiles:
+            def upload_and_poll(self, **kwargs: Any) -> SimpleNamespace:
+                del kwargs
+                return SimpleNamespace(id=None)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+        deps.responses_client = SimpleNamespace(
+            vector_stores=SimpleNamespace(files=_MissingFileIdVectorStoreFiles())
+        )
+
+        payload = b"%PDF-1.7 fake-payload-for-responses-missing-file-id"
+        payload_b64 = base64.b64encode(payload).decode("ascii")
+        with patch("api.app_factory._extract_text_from_pdf_bytes", return_value="PDF text for indexing"):
+            resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf-responses-missing-file-id",
+                    "source_name": "retrieval-brief.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertEqual(body["responses_index_status"], "failed")
+        self.assertEqual(body["responses_index_reason"], "missing_file_id")
+        self.assertIsNone(body["responses_vector_store_file_id"])
+
     def test_pdf_ingest_reports_not_configured_when_responses_indexing_unavailable(self) -> None:
         deps = server.get_runtime_deps()
         deps.vector_enabled = True
@@ -2326,6 +2454,109 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(payload["fallback_reason"], "responses_no_matches")
         self.assertGreater(payload["candidate_count"], 0)
         self.assertGreater(len(payload["matches"]), 0)
+
+    def test_file_search_falls_back_with_classified_responses_failure_reasons(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-search-pdf-fallback-map.db"))
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "policy" in lowered else 0.0,
+                    1.0 if "join" in lowered else 0.0,
+                    1.0 if "signal" in lowered else 0.0,
+                    float(len(lowered) % 29) / 29.0,
+                ]
+
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        payload_b64 = base64.b64encode(b"%PDF-1.7 fallback-policy-map").decode("ascii")
+        with patch(
+            "api.app_factory._extract_text_from_pdf_bytes",
+            return_value="Policy joins require two independent signals before approval.",
+        ):
+            ingest_resp = self.client.post(
+                "/skills/pdf_ingest",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "session_id": "s-pdf-fallback-map",
+                    "source_name": "policy-fallback-map.pdf",
+                    "mime_type": "application/pdf",
+                    "data_base64": payload_b64,
+                    "attach_to_chat": False,
+                },
+            )
+        self.assertEqual(ingest_resp.status_code, 200)
+
+        deps.responses_pdf_ingest_enabled = True
+        deps.responses_vector_store_id = "vs_pdf_fallback_map_123"
+        request = httpx.Request("POST", "https://api.openai.com/v1/vector_stores/vs_pdf_fallback_map_123/search")
+        cases = (
+            (
+                "authentication_error",
+                lambda: AuthenticationError(
+                    "auth failed",
+                    response=httpx.Response(401, request=request),
+                    body={},
+                ),
+            ),
+            (
+                "rate_limited",
+                lambda: RateLimitError(
+                    "rate limited",
+                    response=httpx.Response(429, request=request),
+                    body={},
+                ),
+            ),
+            (
+                "connection_error",
+                lambda: APIConnectionError(message="connection error", request=request),
+            ),
+            (
+                "api_status_502",
+                lambda: APIStatusError(
+                    "upstream unavailable",
+                    response=httpx.Response(502, request=request),
+                    body={},
+                ),
+            ),
+        )
+
+        for expected_reason, build_error in cases:
+            with self.subTest(expected_reason=expected_reason):
+
+                class _BrokenVectorStores:
+                    def search(self, **kwargs: Any) -> SimpleNamespace:
+                        del kwargs
+                        raise build_error()
+
+                deps.responses_client = SimpleNamespace(vector_stores=_BrokenVectorStores())
+
+                search = self.client.post(
+                    "/skills/file_search",
+                    headers={"x-api-key": "test-server-key"},
+                    json={
+                        "query": "policy join signals",
+                        "session_id": "s-pdf-fallback-map",
+                        "source_types": ["pdf"],
+                        "limit": 3,
+                    },
+                )
+                self.assertEqual(search.status_code, 200)
+                body = search.json()
+                self.assertEqual(body["backend"], "local_vector_store")
+                self.assertEqual(body["fallback_reason"], expected_reason)
+                self.assertGreater(body["candidate_count"], 0)
+                self.assertGreater(len(body["matches"]), 0)
 
     def test_file_search_requires_vector_memory(self) -> None:
         resp = self.client.post(

@@ -1,12 +1,51 @@
 import unittest
+from unittest.mock import patch
 
 from tools.eval_hallucination import _MIN_ACCEPTABLE_SCORE
 from tools.eval_hallucination import _apply_deterministic_gate
 from tools.eval_hallucination import _contains_forbidden_phrases
 from tools.eval_hallucination import _deterministic_assessment
+from tools.eval_hallucination import _resolve_judge_client
+from tools.eval_hallucination import build_parser
 
 
 class HallucinationEvalGateTests(unittest.TestCase):
+    def test_resolve_judge_client_returns_none_when_env_key_missing(self) -> None:
+        with patch.dict("os.environ", {}, clear=True):
+            client, api_key = _resolve_judge_client(api_key_env="BRAINTRUST_API_KEY", base_url="")
+        self.assertIsNone(client)
+        self.assertIsNone(api_key)
+
+    def test_resolve_judge_client_builds_client_with_base_url(self) -> None:
+        with patch.dict("os.environ", {"BRAINTRUST_API_KEY": "bt-key"}, clear=True):
+            with patch("tools.eval_hallucination.OpenAI") as openai_cls:
+                _client, api_key = _resolve_judge_client(
+                    api_key_env="BRAINTRUST_API_KEY",
+                    base_url="https://braintrust.example/v1",
+                )
+
+        openai_cls.assert_called_once_with(
+            api_key="bt-key",
+            base_url="https://braintrust.example/v1",
+        )
+        self.assertEqual(api_key, "bt-key")
+
+    def test_parser_accepts_judge_endpoint_flags(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(
+            [
+                "--judge-api-key-env",
+                "BRAINTRUST_API_KEY",
+                "--judge-base-url",
+                "https://braintrust.example/v1",
+                "--evaluation-mode",
+                "judge",
+            ]
+        )
+        self.assertEqual(args.judge_api_key_env, "BRAINTRUST_API_KEY")
+        self.assertEqual(args.judge_base_url, "https://braintrust.example/v1")
+        self.assertEqual(args.evaluation_mode, "judge")
+
     def test_contains_forbidden_phrases_matches_case_insensitive(self) -> None:
         answer = "This includes a Let Me Guess phrase."
         hits = _contains_forbidden_phrases(answer, ["let me guess", "cheers"])

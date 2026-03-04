@@ -10,8 +10,11 @@ GATE_SESSION_DB ?= /tmp/polinko-quality-gate-sessions.db
 GATE_VECTOR_DB ?= /tmp/polinko-quality-gate-vector.db
 WORKBENCH_PORT ?= 8020
 HALLUCINATION_EVAL_MODE ?= judge
+HALLUCINATION_JUDGE_MODEL ?= gpt-4.1-mini
+HALLUCINATION_JUDGE_API_KEY_ENV ?= OPENAI_API_KEY
+HALLUCINATION_JUDGE_BASE_URL ?=
 
-.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports quality-gate quality-gate-deterministic evidence-index ui-install ui-dev ui-build docker-build docker-run dev workbench
+.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports hallucination-gate quality-gate quality-gate-deterministic evidence-index ui-install ui-dev ui-build docker-build docker-run dev workbench
 
 chat:
 	$(PYTHON) app.py
@@ -47,6 +50,9 @@ eval-hallucination:
 eval-hallucination-deterministic:
 	$(PYTHON) tools/eval_hallucination.py --evaluation-mode deterministic
 
+eval-hallucination-braintrust:
+	$(PYTHON) tools/eval_hallucination.py --evaluation-mode judge --judge-api-key-env BRAINTRUST_API_KEY --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)"
+
 eval-hallucination-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
@@ -74,6 +80,32 @@ eval-reports:
 	@$(MAKE) eval-ocr-report
 	@$(MAKE) eval-style-report
 	@$(MAKE) eval-hallucination-report
+
+hallucination-gate:
+	@echo "Running hallucination gate..."
+	@set -eu; \
+	BASE_URL="$(GATE_BASE_URL)"; \
+	rm -f "$(GATE_SESSION_DB)" "$(GATE_VECTOR_DB)"; \
+	POLINKO_SESSION_DB_PATH="$(GATE_SESSION_DB)" \
+	POLINKO_VECTOR_DB_PATH="$(GATE_VECTOR_DB)" \
+	POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
+	$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port $(GATE_PORT) >/tmp/polinko-hallucination-gate.log 2>&1 & \
+	SERVER_PID=$$!; \
+	trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
+	READY=0; \
+	for i in $$(seq 1 100); do \
+		if curl -fsS "$$BASE_URL/health" >/dev/null 2>&1; then \
+			READY=1; \
+			break; \
+		fi; \
+		sleep 0.2; \
+	done; \
+	if [ "$$READY" -ne 1 ]; then \
+		echo "Server failed to start. See /tmp/polinko-hallucination-gate.log"; \
+		exit 1; \
+	fi; \
+	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)"; \
+	echo "Hallucination gate passed."
 
 quality-gate:
 	@echo "Running quality gate (tests + retrieval eval + file-search eval + OCR eval + style eval + hallucination eval)..."
@@ -103,7 +135,7 @@ quality-gate:
 	$(PYTHON) tools/eval_file_search.py --base-url "$$BASE_URL"; \
 	$(PYTHON) tools/eval_ocr.py --base-url "$$BASE_URL" --strict; \
 	$(PYTHON) tools/eval_style.py --base-url "$$BASE_URL" --strict; \
-	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)"; \
+	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)"; \
 	echo "Quality gate passed."
 
 quality-gate-deterministic:

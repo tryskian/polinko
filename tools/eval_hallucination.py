@@ -140,6 +140,20 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
     return normalized
 
 
+def _resolve_judge_client(
+    *,
+    api_key_env: str,
+    base_url: str,
+) -> tuple[OpenAI | None, str | None]:
+    api_key = os.getenv(api_key_env.strip() or "OPENAI_API_KEY")
+    if not api_key:
+        return None, None
+    configured_base_url = base_url.strip()
+    if configured_base_url:
+        return OpenAI(api_key=api_key, base_url=configured_base_url), api_key
+    return OpenAI(api_key=api_key), api_key
+
+
 def _create_chat(base_url: str, headers: dict[str, str], session_id: str, timeout: int) -> None:
     _request_json(
         method="POST",
@@ -386,6 +400,16 @@ def build_parser() -> argparse.ArgumentParser:
         help="OpenAI model for judge pass/fail scoring.",
     )
     parser.add_argument(
+        "--judge-api-key-env",
+        default="OPENAI_API_KEY",
+        help="Environment variable name that stores the judge API key.",
+    )
+    parser.add_argument(
+        "--judge-base-url",
+        default="",
+        help="Optional OpenAI-compatible base URL for judge requests (for example Braintrust gateway).",
+    )
+    parser.add_argument(
         "--evaluation-mode",
         choices=["judge", "deterministic", "auto"],
         default="judge",
@@ -423,21 +447,30 @@ def main() -> int:
     cases = _load_cases(cases_path)
 
     requested_mode: EvaluationMode = args.evaluation_mode
-    openai_api_key = os.getenv("OPENAI_API_KEY")
     judge_client: OpenAI | None = None
     effective_mode: Literal["judge", "deterministic"] = "deterministic"
     if requested_mode == "judge":
-        if not openai_api_key:
-            raise SystemExit("OPENAI_API_KEY is required when --evaluation-mode=judge.")
-        judge_client = OpenAI(api_key=openai_api_key)
+        judge_client, _judge_api_key = _resolve_judge_client(
+            api_key_env=args.judge_api_key_env,
+            base_url=args.judge_base_url,
+        )
+        if judge_client is None:
+            raise SystemExit(
+                f"{args.judge_api_key_env} is required when --evaluation-mode=judge."
+            )
         effective_mode = "judge"
     elif requested_mode == "auto":
-        if openai_api_key:
-            judge_client = OpenAI(api_key=openai_api_key)
+        judge_client, _judge_api_key = _resolve_judge_client(
+            api_key_env=args.judge_api_key_env,
+            base_url=args.judge_base_url,
+        )
+        if judge_client is not None:
             effective_mode = "judge"
         else:
             effective_mode = "deterministic"
-            print("OPENAI_API_KEY missing; using deterministic hallucination scoring.")
+            print(
+                f"{args.judge_api_key_env} missing; using deterministic hallucination scoring."
+            )
     else:
         effective_mode = "deterministic"
 
@@ -449,7 +482,7 @@ def main() -> int:
     print(
         f"Cases: {len(cases)} | run_id={run_id} | "
         f"requested_mode={requested_mode} | effective_mode={effective_mode} | "
-        f"judge_model={args.judge_model}"
+        f"judge_model={args.judge_model} | judge_key_env={args.judge_api_key_env}"
     )
     try:
         _preflight(args.base_url, headers, args.timeout)
@@ -609,6 +642,8 @@ def main() -> int:
                     "run_id": run_id,
                     "base_url": args.base_url,
                     "judge_model": args.judge_model,
+                    "judge_api_key_env": args.judge_api_key_env,
+                    "judge_base_url": args.judge_base_url or None,
                     "requested_evaluation_mode": requested_mode,
                     "effective_evaluation_mode": effective_mode,
                     "strict": bool(args.strict),
