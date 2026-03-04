@@ -38,14 +38,21 @@ jobs:
           POLINKO_SERVER_API_KEY: test-server-key
           BRAINTRUST_OPENAI_BASE_URL: ${{ vars.BRAINTRUST_OPENAI_BASE_URL }}
           BRAINTRUST_API_KEY: ${{ secrets.BRAINTRUST_API_KEY }}
+          BRAINTRUST_HALLUCINATION_MIN_SCORE: ${{ vars.BRAINTRUST_HALLUCINATION_MIN_SCORE }}
         run: |
           if [ -z "${BRAINTRUST_OPENAI_BASE_URL}" ] || [ -z "${BRAINTRUST_API_KEY}" ]; then
             echo "Skipping Braintrust hallucination gate (missing repo var/secret)."
             exit 0
           fi
+          if [ -z "${BRAINTRUST_HALLUCINATION_MIN_SCORE}" ]; then
+            echo "BRAINTRUST_HALLUCINATION_MIN_SCORE is unset; using fallback threshold 5."
+            BRAINTRUST_HALLUCINATION_MIN_SCORE=5
+          fi
+          echo "Running Braintrust hallucination gate with min_score=${BRAINTRUST_HALLUCINATION_MIN_SCORE}"
           make hallucination-gate \
             PYTHON=python \
             GATE_PORT=8067 \
             HALLUCINATION_EVAL_MODE=judge \
             HALLUCINATION_JUDGE_API_KEY_ENV=BRAINTRUST_API_KEY \
-            HALLUCINATION_JUDGE_BASE_URL="${BRAINTRUST_OPENAI_BASE_URL}"
+            HALLUCINATION_JUDGE_BASE_URL="${BRAINTRUST_OPENAI_BASE_URL}" \
+            HALLUCINATION_MIN_ACCEPTABLE_SCORE="${BRAINTRUST_HALLUCINATION_MIN_SCORE}"

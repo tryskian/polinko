@@ -1,4 +1,11 @@
-PYTHON ?= ./polinko-repositioning-system/bin/python
+PYTHON ?= $(shell \
+	if [ -x ./polinko-repositioning-system/bin/python ] && ./polinko-repositioning-system/bin/python -V >/dev/null 2>&1; then \
+		echo ./polinko-repositioning-system/bin/python; \
+	elif [ -x ./venv/bin/python ] && ./venv/bin/python -V >/dev/null 2>&1; then \
+		echo ./venv/bin/python; \
+	else \
+		echo python3; \
+	fi)
 NPM ?= npm
 DOCKER ?= docker
 DOCKER_IMAGE ?= polinko:dev
@@ -13,8 +20,10 @@ HALLUCINATION_EVAL_MODE ?= judge
 HALLUCINATION_JUDGE_MODEL ?= gpt-4.1-mini
 HALLUCINATION_JUDGE_API_KEY_ENV ?= OPENAI_API_KEY
 HALLUCINATION_JUDGE_BASE_URL ?=
+HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
+CLIP_AB_SOURCE_TYPES ?= image
 
-.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports hallucination-gate quality-gate quality-gate-deterministic evidence-index ui-install ui-dev ui-build docker-build docker-run dev workbench
+.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-clip-ab eval-clip-ab-report eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index portfolio-metadata-audit ui-install ui-dev ui-build docker-build docker-run dev workbench
 
 chat:
 	$(PYTHON) app.py
@@ -45,18 +54,21 @@ eval-file-search-report:
 	$(PYTHON) tools/eval_file_search.py --run-id $$RUN_ID --report-json "eval_reports/file-search-$$RUN_ID.json"
 
 eval-hallucination:
-	$(PYTHON) tools/eval_hallucination.py
+	$(PYTHON) tools/eval_hallucination.py --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 eval-hallucination-deterministic:
-	$(PYTHON) tools/eval_hallucination.py --evaluation-mode deterministic
+	$(PYTHON) tools/eval_hallucination.py --evaluation-mode deterministic --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 eval-hallucination-braintrust:
-	$(PYTHON) tools/eval_hallucination.py --evaluation-mode judge --judge-api-key-env BRAINTRUST_API_KEY --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)"
+	$(PYTHON) tools/eval_hallucination.py --evaluation-mode judge --judge-api-key-env BRAINTRUST_API_KEY --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 eval-hallucination-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) tools/eval_hallucination.py --run-id $$RUN_ID --report-json "eval_reports/hallucination-$$RUN_ID.json"
+	$(PYTHON) tools/eval_hallucination.py --run-id $$RUN_ID --report-json "eval_reports/hallucination-$$RUN_ID.json" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
+
+calibrate-hallucination-threshold:
+	$(PYTHON) tools/calibrate_hallucination_threshold.py
 
 eval-style:
 	$(PYTHON) tools/eval_style.py
@@ -73,6 +85,14 @@ eval-ocr-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
 	$(PYTHON) tools/eval_ocr.py --run-id $$RUN_ID --report-json "eval_reports/ocr-$$RUN_ID.json"
+
+eval-clip-ab:
+	$(PYTHON) tools/eval_clip_ab.py --source-types "$(CLIP_AB_SOURCE_TYPES)"
+
+eval-clip-ab-report:
+	@mkdir -p eval_reports
+	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
+	$(PYTHON) tools/eval_clip_ab.py --source-types "$(CLIP_AB_SOURCE_TYPES)" --run-id $$RUN_ID --report-json "eval_reports/clip-ab-$$RUN_ID.json"
 
 eval-reports:
 	@$(MAKE) eval-retrieval-report
@@ -104,7 +124,7 @@ hallucination-gate:
 		echo "Server failed to start. See /tmp/polinko-hallucination-gate.log"; \
 		exit 1; \
 	fi; \
-	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)"; \
+	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"; \
 	echo "Hallucination gate passed."
 
 quality-gate:
@@ -135,7 +155,7 @@ quality-gate:
 	$(PYTHON) tools/eval_file_search.py --base-url "$$BASE_URL"; \
 	$(PYTHON) tools/eval_ocr.py --base-url "$$BASE_URL" --strict; \
 	$(PYTHON) tools/eval_style.py --base-url "$$BASE_URL" --strict; \
-	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)"; \
+	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"; \
 	echo "Quality gate passed."
 
 quality-gate-deterministic:
@@ -143,6 +163,9 @@ quality-gate-deterministic:
 
 evidence-index:
 	$(PYTHON) tools/build_evidence_index.py
+
+portfolio-metadata-audit:
+	$(PYTHON) tools/audit_portfolio_metadata.py --strict
 
 ui-dev:
 	cd frontend && $(NPM) run dev

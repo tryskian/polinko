@@ -32,6 +32,11 @@
 - Single-command quality gate is available and passing: `make quality-gate`.
 - Hallucination judge path now supports configurable key env + base URL for
   OpenAI-compatible judge providers (including Braintrust gateway wiring).
+- Hallucination score threshold is now configurable with
+  `HALLUCINATION_MIN_ACCEPTABLE_SCORE`; calibration helper is available via
+  `make calibrate-hallucination-threshold`.
+- P2 CLIP experiment scaffolding has started with `make eval-clip-ab` and
+  report artifact mode `make eval-clip-ab-report`.
 - Dedicated strict hallucination gate target is available: `make hallucination-gate`.
 - CI includes optional Braintrust hallucination gate wiring when
   `BRAINTRUST_OPENAI_BASE_URL` (repo var) and `BRAINTRUST_API_KEY`
@@ -40,7 +45,14 @@
 - Devcontainer Docker connectivity is now stabilized (Docker-outside-of-Docker
   and Docker extension UI-side routing), resolving `Containers` pane connection
   mismatch in remote sessions.
+- Host-side VS Code interpreter warnings were resolved by removing stale
+  workspace interpreter pins to Linux container venv binaries; host sessions
+  now rely on host interpreter auto-discovery/selection.
 - Environment doctor is available for local sanity checks: `make doctor-env`.
+- Evidence indexing now records FAIL lifecycle state (`action_taken`, `status`)
+  and supports optional triage overrides until a linked PASS closes the issue.
+- Portfolio metadata audit is now available via
+  `make portfolio-metadata-audit` for strict evidence/docs metadata checks.
 
 ## Latest Local Commit
 
@@ -63,7 +75,8 @@
 3. `make hallucination-gate HALLUCINATION_EVAL_MODE=deterministic`
 4. `make doctor-env`
 5. `cd frontend && npm run build`
-6. `make server` and spot-check `/health`, `/chat`, `/skills/ocr`
+6. `make portfolio-metadata-audit`
+7. `make server` and spot-check `/health`, `/chat`, `/skills/ocr`
 
 ## Known Constraint
 
@@ -77,4 +90,4 @@
 
 ## Copy/Paste Rehydrate Prompt
 
-`Read docs/CHARTER.md, docs/STATE.md, docs/DECISIONS.md, and docs/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behavior drift and full test/build validation.`
+`Read docs/CHARTER.md, docs/STATE.md, docs/DECISIONS.md, and docs/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, and confirm active git branch. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behavior drift and full test/build validation.`

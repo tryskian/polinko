@@ -41,6 +41,11 @@
   base URL (`--judge-api-key-env`, `--judge-base-url`) so OpenAI-compatible
   judge backends (including Braintrust gateways) can be wired without runtime
   behavior changes.
+- Hallucination score gating now supports configurable minimum threshold via
+  `HALLUCINATION_MIN_ACCEPTABLE_SCORE`; report-based calibration helper is
+  available through `make calibrate-hallucination-threshold`.
+- P2 CLIP experiment scaffolding has started with
+  `make eval-clip-ab` (baseline mixed-source vs image-prioritized proxy arm).
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.
@@ -48,6 +53,9 @@
   `/health` probe).
 - Devcontainer Docker connectivity is stabilized with Docker-outside-of-Docker
   support and UI-side Docker extension routing for reliable `Containers` view.
+- Local IDE interpreter-path drift is now documented and resolved:
+  host workspaces should not pin Python to container-built Linux venv binaries;
+  use host interpreter auto-discovery (or explicit host Python) on macOS.
 - Local environment doctor is available via `make doctor-env` for interpreter,
   import, and `zsh` completion checks.
 - OCR supports a provider flag:
@@ -67,6 +75,11 @@
   noise in strict test runs).
 - Eval harnesses support JSON report artifacts via `--report-json`
   (hallucination, style, retrieval, file-search, OCR).
+- Evidence indexing now tracks FAIL remediation lifecycle with
+  `recommended_action`, `action_taken`, `status`, and optional PASS-linked
+  closure metadata.
+- Portfolio metadata audit tooling is available (`make portfolio-metadata-audit`)
+  and validates evidence-index + evidence-log metadata completeness.
 - Integration tests exist and pass locally (`tests/test_api.py`).
 - Collaboration v1 supports explicit agent-role handoffs per chat with audit history.
 
@@ -82,6 +95,9 @@
 - Local API client: `tools/client.py`
 - Environment doctor: `tools/doctor_env.py`
 - Evidence index builder: `tools/build_evidence_index.py`
+- Portfolio metadata auditor: `tools/audit_portfolio_metadata.py`
+- Hallucination threshold calibrator: `tools/calibrate_hallucination_threshold.py`
+- CLIP A/B eval harness: `tools/eval_clip_ab.py`
 
 ## Known Constraints
 

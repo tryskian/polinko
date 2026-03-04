@@ -133,3 +133,43 @@
   Braintrust endpoint when repo vars/secrets are present.
 - Why: Enables P1 judge-gate rollout without changing runtime assistant
   behavior and avoids hard-coding a single judge provider path.
+
+## D-026: Host/container interpreter separation for VS Code Python resolution
+
+- Decision: Keep host-side Python interpreter selection unpinned from
+  container-built venv binaries and rely on host auto-discovery (or explicit
+  host interpreter) outside the devcontainer.
+- Why: Prevent recurring `Could not resolve interpreter path` failures caused by
+  macOS attempting to execute Linux ELF venv binaries created in container
+  workflows.
+
+## D-027: Evidence triage tracks action-taken state until passing evidence exists
+
+- Decision: Extend evidence indexing to track `recommended_action`,
+  `action_taken`, and `status` for FAIL records, with optional triage override
+  input and auto-closure when a later PASS artifact exists for the same chat.
+- Why: Preserve remediation traceability and avoid losing unresolved FAIL
+  context between eval cycles.
+
+## D-028: Portfolio metadata audit as a strict gate
+
+- Decision: Add a dedicated metadata audit command (`make portfolio-metadata-audit`)
+  that validates evidence index completeness and evidence-log field coverage.
+- Why: Ensures portfolio claims remain traceable to complete, machine-readable
+  metadata before publication.
+
+## D-029: Configurable hallucination gate threshold + calibration helper
+
+- Decision: Make hallucination gate score threshold configurable via
+  `HALLUCINATION_MIN_ACCEPTABLE_SCORE` and add a report-based calibration helper
+  (`make calibrate-hallucination-threshold`).
+- Why: Supports explicit Braintrust threshold tuning in CI while preserving
+  default behavior when calibration vars are not yet set.
+
+## D-030: Start P2 multimodal retrieval A/B harness with CLIP-proxy arm
+
+- Decision: Add a non-runtime evaluation harness (`make eval-clip-ab`) that
+  compares baseline mixed-source retrieval vs an image-prioritized proxy arm on
+  image-context cases.
+- Why: Establishes measurable A/B scaffolding now, so full CLIP embedding
+  integration can be validated against a stable experiment contract later.

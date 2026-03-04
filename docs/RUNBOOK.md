@@ -2,6 +2,34 @@
 
 # Runbook
 
+## Branch, Fork, and Worktree Policy
+
+1. Default workflow is branch-based in the canonical local repo:
+   - `/Users/tryskian/Github/polinko`
+2. Do not fork this repository for normal day-to-day project work.
+3. Create a task branch per change set:
+   - `git switch -c codex/bigbrain/<task-name>`
+4. Use a worktree only when you need parallel active tracks (for example:
+   CI calibration in one tree and feature scaffold in another):
+   - `git worktree add /Users/tryskian/Github/polinko-<task> -b codex/bigbrain/<task> main`
+5. Keep one logical task per branch; merge or close before starting the next.
+
+## Repo vs Container Working Modes
+
+1. Canonical source of truth is always:
+   - `/Users/tryskian/Github/polinko`
+2. Host mode (default):
+   - Open and work directly in the canonical path.
+   - Best for fast iteration and stable Codex thread/workspace mapping.
+3. Devcontainer mode (when needed):
+   - Use `Reopen in Container` on the canonical repo.
+   - This keeps one checkout and mounts the same files into the container.
+4. Avoid `Clone in Volume` unless you explicitly want a separate checkout.
+   - Volume clones create a second workspace copy and can cause context drift.
+5. Do not mix multiple workspace roots for the same task session
+   (host path + container clone + alternate workspace file), or thread opening
+   and IDE handoff can become inconsistent.
+
 ## Rotate API Keys
 
 1. Update `.env` with new `OPENAI_API_KEY`.
@@ -44,6 +72,25 @@
 3. Validate from the devcontainer terminal:
    - `docker version`
 4. If still broken, check Docker Desktop is running on host and retry rebuild.
+
+## Python Interpreter Path (Host vs Container)
+
+1. Do not pin a host VS Code interpreter to a devcontainer-created venv path
+   if that venv was built inside Linux.
+   - Example bad host pin: `/Users/.../polinko-repositioning-system/bin/python`
+   - Symptom: `Could not resolve interpreter path` / `Unable to handle .../bin/python`
+2. Root cause:
+   - host macOS cannot execute Linux ELF binaries (`exec format error`).
+3. On host mode:
+   - prefer Python extension auto-discovery, or explicitly select a macOS
+     interpreter (for example `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3`).
+4. On devcontainer mode:
+   - use container interpreter paths only (for example
+     `${containerWorkspaceFolder}/venv/bin/python3`).
+5. If warnings persist:
+   - remove stale `python.defaultInterpreterPath` entries from local workspace
+     settings/workspace files.
+   - run `Developer: Reload Window`.
 
 ## Reset Local Session Memory
 
@@ -270,6 +317,7 @@ Hash fields in responses:
    - `make quality-gate GATE_PORT=8099`
    - `make quality-gate GATE_BASE_URL=http://127.0.0.1:8099`
    - `make quality-gate HALLUCINATION_EVAL_MODE=deterministic`
+   - `make quality-gate HALLUCINATION_MIN_ACCEPTABLE_SCORE=70`
 6. Note: `make quality-gate` sets
    `POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true` for the temporary gate server
    to reduce transient embedding API flakes.
@@ -285,6 +333,7 @@ Hash fields in responses:
    - `python tools/eval_hallucination.py --evaluation-mode judge`
    - `python tools/eval_hallucination.py --evaluation-mode deterministic`
    - `python tools/eval_hallucination.py --evaluation-mode auto`
+   - `python tools/eval_hallucination.py --min-acceptable-score 70`
 
 ## Run Retrieval Eval
 
@@ -315,6 +364,19 @@ Hash fields in responses:
      smoke test)
    - image-context case is skipped automatically when
      `POLINKO_IMAGE_CONTEXT_ENABLED=false`
+
+## Run CLIP A/B Scaffold Eval
+
+1. Ensure API is running locally (`make server`) with vector memory enabled.
+2. Run baseline-vs-proxy A/B harness:
+   - `make eval-clip-ab`
+3. Optional:
+   - include additional source types:
+     `make eval-clip-ab CLIP_AB_SOURCE_TYPES=image,pdf`
+   - write JSON report artifact:
+     `make eval-clip-ab-report`
+4. Current B arm is an image-prioritized proxy (`source_types=["image"]`) used
+   to establish experiment wiring ahead of full CLIP embedding integration.
 
 ## Run OCR Eval
 
@@ -348,6 +410,8 @@ Hash fields in responses:
 2. Optional tuning:
    - choose model:
      `python tools/eval_hallucination.py --judge-model gpt-4.1-mini`
+   - tune score threshold:
+     `python tools/eval_hallucination.py --min-acceptable-score 70`
    - mode selection:
      - `python tools/eval_hallucination.py --evaluation-mode judge`
      - `python tools/eval_hallucination.py --evaluation-mode deterministic`
@@ -385,6 +449,45 @@ Hash fields in responses:
 2. Ensure `OPENAI_API_KEY` is set in `.env` (judge eval reports require it).
 3. Run `make eval-reports`.
 4. Reports are written under `eval_reports/` with timestamped filenames.
+
+## Calibrate Hallucination Threshold
+
+1. Generate one or more hallucination report artifacts:
+   - `make eval-hallucination-report`
+2. Run calibration helper:
+   - `make calibrate-hallucination-threshold`
+3. Review summary:
+   - `eval_reports/hallucination-threshold-calibration.json`
+4. Apply chosen threshold:
+   - local gate runs: `HALLUCINATION_MIN_ACCEPTABLE_SCORE=<value>`
+   - CI repo variable: `BRAINTRUST_HALLUCINATION_MIN_SCORE`
+
+## Evidence Triage Lifecycle (FAIL -> PASS)
+
+1. Store evidence artifacts under:
+   - `docs/portfolio/raw_evidence/FAIL`
+   - `docs/portfolio/raw_evidence/PASS`
+   - optional intake buckets: `MIXED`, `INBOX`
+2. Run index builder:
+   - `make evidence-index`
+3. FAIL entries now carry lifecycle fields in generated index:
+   - `failure_reason`
+   - `recommended_action`
+   - `action_taken`
+   - `status` (`OPEN`/`CLOSED`)
+   - optional `resolved_by` PASS artifact reference
+4. To record human triage updates, create:
+   - `docs/portfolio/raw_evidence/triage_overrides.json`
+   - Example:
+     - `{"files":{"<artifact-filename>":{"action_taken":"...", "status":"OPEN", "notes":"..."}}}`
+5. Closure rule:
+   - FAIL remains `OPEN` until a later PASS artifact exists for the same
+     `chat_id`; then it auto-closes and links `resolved_by`.
+6. Audit metadata completeness (strict):
+   - `make portfolio-metadata-audit`
+   - writes:
+     - `docs/portfolio/raw_evidence/metadata_audit.json`
+     - `docs/portfolio/raw_evidence/metadata_audit.md`
 
 ## Export CLI Transcript
 
