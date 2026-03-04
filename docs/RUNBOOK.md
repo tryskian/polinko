@@ -468,22 +468,27 @@ Hash fields in responses:
    - `docs/portfolio/raw_evidence/FAIL`
    - `docs/portfolio/raw_evidence/PASS`
    - optional intake buckets: `MIXED`, `INBOX`
-2. Run index builder:
+2. Run one-command refresh (recommended):
+   - `make evidence-refresh`
+   - runs `make evidence-index` + `make portfolio-metadata-audit`
+   - bootstraps `docs/portfolio/raw_evidence/triage_overrides.json` from
+     template when missing
+3. Run index builder directly (manual mode):
    - `make evidence-index`
-3. FAIL entries now carry lifecycle fields in generated index:
+4. FAIL entries now carry lifecycle fields in generated index:
    - `failure_reason`
    - `recommended_action`
    - `action_taken`
    - `status` (`OPEN`/`CLOSED`)
    - optional `resolved_by` PASS artifact reference
-4. To record human triage updates, create:
+5. To record human triage updates, create:
    - `docs/portfolio/raw_evidence/triage_overrides.json`
    - Example:
      - `{"files":{"<artifact-filename>":{"action_taken":"...", "status":"OPEN", "notes":"..."}}}`
-5. Closure rule:
+6. Closure rule:
    - FAIL remains `OPEN` until a later PASS artifact exists for the same
      `chat_id`; then it auto-closes and links `resolved_by`.
-6. Audit metadata completeness (strict):
+7. Audit metadata completeness (strict):
    - `make portfolio-metadata-audit`
    - writes:
      - `docs/portfolio/raw_evidence/metadata_audit.json`

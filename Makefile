@@ -23,7 +23,7 @@ HALLUCINATION_JUDGE_BASE_URL ?=
 HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
 CLIP_AB_SOURCE_TYPES ?= image
 
-.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-clip-ab eval-clip-ab-report eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index portfolio-metadata-audit ui-install ui-dev ui-build docker-build docker-run dev workbench
+.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-clip-ab eval-clip-ab-report eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit ui-install ui-dev ui-build docker-build docker-run dev workbench
 
 chat:
 	$(PYTHON) app.py
@@ -163,6 +163,24 @@ quality-gate-deterministic:
 
 evidence-index:
 	$(PYTHON) tools/build_evidence_index.py
+
+evidence-refresh:
+	@set -eu; \
+	OVERRIDES="docs/portfolio/raw_evidence/triage_overrides.json"; \
+	TEMPLATE="docs/portfolio/raw_evidence/triage_overrides.example.json"; \
+	if [ ! -f "$$OVERRIDES" ] && [ -f "$$TEMPLATE" ]; then \
+		cp "$$TEMPLATE" "$$OVERRIDES"; \
+		echo "Initialized $$OVERRIDES from template."; \
+	fi; \
+	$(MAKE) evidence-index; \
+	$(MAKE) portfolio-metadata-audit; \
+	INDEX_JSON="docs/portfolio/raw_evidence/index.json"; \
+	if [ -f "$$INDEX_JSON" ]; then \
+		TOTAL=$$(rg -o '"evidence_id"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
+		OPEN=$$(rg -o '"status": "OPEN"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
+		CLOSED=$$(rg -o '"status": "CLOSED"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
+		echo "Evidence refresh summary: total=$$TOTAL open=$$OPEN closed=$$CLOSED"; \
+	fi
 
 portfolio-metadata-audit:
 	$(PYTHON) tools/audit_portfolio_metadata.py --strict
