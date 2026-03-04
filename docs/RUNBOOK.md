@@ -2,6 +2,34 @@
 
 # Runbook
 
+## Branch, Fork, and Worktree Policy
+
+1. Default workflow is branch-based in the canonical local repo:
+   - `/Users/tryskian/Github/polinko`
+2. Do not fork this repository for normal day-to-day project work.
+3. Create a task branch per change set:
+   - `git switch -c codex/bigbrain/<task-name>`
+4. Use a worktree only when you need parallel active tracks (for example:
+   CI calibration in one tree and feature scaffold in another):
+   - `git worktree add /Users/tryskian/Github/polinko-<task> -b codex/bigbrain/<task> main`
+5. Keep one logical task per branch; merge or close before starting the next.
+
+## Repo vs Container Working Modes
+
+1. Canonical source of truth is always:
+   - `/Users/tryskian/Github/polinko`
+2. Host mode (default):
+   - Open and work directly in the canonical path.
+   - Best for fast iteration and stable Codex thread/workspace mapping.
+3. Devcontainer mode (when needed):
+   - Use `Reopen in Container` on the canonical repo.
+   - This keeps one checkout and mounts the same files into the container.
+4. Avoid `Clone in Volume` unless you explicitly want a separate checkout.
+   - Volume clones create a second workspace copy and can cause context drift.
+5. Do not mix multiple workspace roots for the same task session
+   (host path + container clone + alternate workspace file), or thread opening
+   and IDE handoff can become inconsistent.
+
 ## Rotate API Keys
 
 1. Update `.env` with new `OPENAI_API_KEY`.

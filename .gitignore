@@ -51,3 +51,9 @@ docs/portfolio/
 
 # Local eval artifacts
 eval_reports/
+
+# Local transcript exports
+docs/transcripts/
+
+# Local VS Code workspace wrapper
+polinko.code-workspace
