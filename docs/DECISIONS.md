@@ -150,3 +150,10 @@
   input and auto-closure when a later PASS artifact exists for the same chat.
 - Why: Preserve remediation traceability and avoid losing unresolved FAIL
   context between eval cycles.
+
+## D-028: Portfolio metadata audit as a strict gate
+
+- Decision: Add a dedicated metadata audit command (`make portfolio-metadata-audit`)
+  that validates evidence index completeness and evidence-log field coverage.
+- Why: Ensures portfolio claims remain traceable to complete, machine-readable
+  metadata before publication.

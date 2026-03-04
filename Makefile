@@ -14,7 +14,7 @@ HALLUCINATION_JUDGE_MODEL ?= gpt-4.1-mini
 HALLUCINATION_JUDGE_API_KEY_ENV ?= OPENAI_API_KEY
 HALLUCINATION_JUDGE_BASE_URL ?=
 
-.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports hallucination-gate quality-gate quality-gate-deterministic evidence-index ui-install ui-dev ui-build docker-build docker-run dev workbench
+.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-reports hallucination-gate quality-gate quality-gate-deterministic evidence-index portfolio-metadata-audit ui-install ui-dev ui-build docker-build docker-run dev workbench
 
 chat:
 	$(PYTHON) app.py
@@ -143,6 +143,9 @@ quality-gate-deterministic:
 
 evidence-index:
 	$(PYTHON) tools/build_evidence_index.py
+
+portfolio-metadata-audit:
+	$(PYTHON) tools/audit_portfolio_metadata.py --strict
 
 ui-dev:
 	cd frontend && $(NPM) run dev

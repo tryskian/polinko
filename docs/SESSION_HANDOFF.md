@@ -46,6 +46,8 @@
 - Environment doctor is available for local sanity checks: `make doctor-env`.
 - Evidence indexing now records FAIL lifecycle state (`action_taken`, `status`)
   and supports optional triage overrides until a linked PASS closes the issue.
+- Portfolio metadata audit is now available via
+  `make portfolio-metadata-audit` for strict evidence/docs metadata checks.
 
 ## Latest Local Commit
 
@@ -68,7 +70,8 @@
 3. `make hallucination-gate HALLUCINATION_EVAL_MODE=deterministic`
 4. `make doctor-env`
 5. `cd frontend && npm run build`
-6. `make server` and spot-check `/health`, `/chat`, `/skills/ocr`
+6. `make portfolio-metadata-audit`
+7. `make server` and spot-check `/health`, `/chat`, `/skills/ocr`
 
 ## Known Constraint
 

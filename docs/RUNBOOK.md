@@ -454,6 +454,11 @@ Hash fields in responses:
 5. Closure rule:
    - FAIL remains `OPEN` until a later PASS artifact exists for the same
      `chat_id`; then it auto-closes and links `resolved_by`.
+6. Audit metadata completeness (strict):
+   - `make portfolio-metadata-audit`
+   - writes:
+     - `docs/portfolio/raw_evidence/metadata_audit.json`
+     - `docs/portfolio/raw_evidence/metadata_audit.md`
 
 ## Export CLI Transcript
 

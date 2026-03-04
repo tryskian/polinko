@@ -73,6 +73,8 @@
 - Evidence indexing now tracks FAIL remediation lifecycle with
   `recommended_action`, `action_taken`, `status`, and optional PASS-linked
   closure metadata.
+- Portfolio metadata audit tooling is available (`make portfolio-metadata-audit`)
+  and validates evidence-index + evidence-log metadata completeness.
 - Integration tests exist and pass locally (`tests/test_api.py`).
 - Collaboration v1 supports explicit agent-role handoffs per chat with audit history.
 
@@ -88,6 +90,7 @@
 - Local API client: `tools/client.py`
 - Environment doctor: `tools/doctor_env.py`
 - Evidence index builder: `tools/build_evidence_index.py`
+- Portfolio metadata auditor: `tools/audit_portfolio_metadata.py`
 
 ## Known Constraints
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 from dataclasses import asdict, dataclass
@@ -133,6 +134,39 @@ def _extract_memory_scope(raw_text: str) -> str | None:
     return matches[-1].lower()
 
 
+def _hash_sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def _extract_first_str(payload: Any, keys: set[str]) -> str | None:
+    stack: list[Any] = [payload]
+    while stack:
+        current = stack.pop()
+        if isinstance(current, dict):
+            for key, value in current.items():
+                if isinstance(key, str) and key in keys and isinstance(value, str) and value.strip():
+                    return value.strip()
+                stack.append(value)
+        elif isinstance(current, list):
+            stack.extend(current)
+    return None
+
+
+def _infer_test_type(path: Path, text: str) -> str:
+    probe = f"{path.name.lower()} {text.lower()}"
+    if "ocr" in probe or "transcribe" in probe:
+        return "ocr"
+    if "file_search" in probe or "file search" in probe:
+        return "file-search"
+    if "retrieval" in probe:
+        return "retrieval"
+    if "hallucination" in probe:
+        return "hallucination"
+    if "style" in probe:
+        return "style"
+    return "general"
+
+
 def _compact(text: str, limit: int = 260) -> str:
     one = re.sub(r"\s+", " ", text).strip()
     if len(one) <= limit:
@@ -211,8 +245,13 @@ class EvidenceRecord:
     outcome: str
     file: str
     source_type: str
+    artifact_sha256: str
+    artifact_bytes: int
+    test_type: str
     chat_id: str | None
     timestamp_utc: str | None
+    model: str | None
+    response_id: str | None
     memory_scope: str | None
     failure_reason: str
     recommended_action: str
@@ -235,15 +274,27 @@ def _scan_bucket(bucket_dir: Path, bucket: str) -> list[EvidenceRecord]:
 
     for idx, path in enumerate(files, start=1):
         source_type = path.suffix.lower().lstrip(".")
+        file_bytes = path.read_bytes()
+        model: str | None = None
+        response_id: str | None = None
         if path.suffix.lower() == ".json":
+            payload: Any
+            try:
+                payload = json.loads(file_bytes.decode("utf-8", errors="replace"))
+            except Exception:
+                payload = None
+
             turns = _extract_turns_from_json(path)
             raw_text = (
                 "\n\n".join(f"{role}: {text}" for role, text in turns)
                 if turns
                 else path.read_text(encoding="utf-8", errors="replace")
             )
+            if payload is not None:
+                model = _extract_first_str(payload, {"model", "judge_model"})
+                response_id = _extract_first_str(payload, {"response_id", "openai_response_id", "run_id"})
         else:
-            raw_text = path.read_text(encoding="utf-8", errors="replace")
+            raw_text = file_bytes.decode("utf-8", errors="replace")
 
         reason, action = _infer_reason_and_action(bucket, raw_text)
         records.append(
@@ -252,8 +303,13 @@ def _scan_bucket(bucket_dir: Path, bucket: str) -> list[EvidenceRecord]:
                 outcome=bucket,
                 file=str(path),
                 source_type=source_type,
+                artifact_sha256=_hash_sha256(file_bytes),
+                artifact_bytes=len(file_bytes),
+                test_type=_infer_test_type(path, raw_text),
                 chat_id=_extract_chat_id(path.name),
                 timestamp_utc=_parse_stamp(path.name),
+                model=model,
+                response_id=response_id,
                 memory_scope=_extract_memory_scope(raw_text),
                 failure_reason=reason,
                 recommended_action=action,
@@ -402,11 +458,18 @@ def _render_markdown(records: list[EvidenceRecord]) -> str:
             lines.append("")
             lines.append(f"- Outcome: {record.outcome}")
             lines.append(f"- Source Type: `{record.source_type}`")
+            lines.append(f"- Test Type: `{record.test_type}`")
             lines.append(f"- File: `{record.file}`")
+            lines.append(f"- Artifact SHA256: `{record.artifact_sha256}`")
+            lines.append(f"- Artifact Bytes: `{record.artifact_bytes}`")
             if record.chat_id:
                 lines.append(f"- Chat ID: `{record.chat_id}`")
             if record.timestamp_utc:
                 lines.append(f"- Timestamp (UTC): `{record.timestamp_utc}`")
+            if record.model:
+                lines.append(f"- Model Seen: `{record.model}`")
+            if record.response_id:
+                lines.append(f"- Response ID Seen: `{record.response_id}`")
             if record.memory_scope:
                 lines.append(f"- Memory Scope Seen: `{record.memory_scope}`")
             lines.append(f"- Failure Reason: {record.failure_reason}")
