@@ -1,4 +1,11 @@
-PYTHON ?= ./polinko-repositioning-system/bin/python
+PYTHON ?= $(shell \
+	if [ -x ./polinko-repositioning-system/bin/python ] && ./polinko-repositioning-system/bin/python -V >/dev/null 2>&1; then \
+		echo ./polinko-repositioning-system/bin/python; \
+	elif [ -x ./venv/bin/python ] && ./venv/bin/python -V >/dev/null 2>&1; then \
+		echo ./venv/bin/python; \
+	else \
+		echo python3; \
+	fi)
 NPM ?= npm
 DOCKER ?= docker
 DOCKER_IMAGE ?= polinko:dev

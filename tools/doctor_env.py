@@ -13,6 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_VENV = ROOT / "polinko-repositioning-system"
 EXPECTED_PYTHON = EXPECTED_VENV / "bin" / "python"
+ALT_EXPECTED_PYTHON = ROOT / "venv" / "bin" / "python"
 
 
 def _ok(message: str) -> None:
@@ -23,19 +24,44 @@ def _warn(message: str) -> None:
     print(f"[warn] {message}")
 
 
+def _is_runnable_python(path: Path) -> bool:
+    if not path.exists():
+        return False
+    try:
+        proc = subprocess.run(
+            [str(path), "-V"],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError:
+        return False
+    return proc.returncode == 0
+
+
 def _check_interpreter() -> int:
     issues = 0
     current_raw = Path(sys.executable)
-    expected_raw = EXPECTED_PYTHON
     current = current_raw.resolve()
-    expected = expected_raw.resolve()
-    if current == expected:
-        _ok(f"Interpreter: {current_raw} (resolved: {current})")
+    expected_candidates = [EXPECTED_PYTHON, ALT_EXPECTED_PYTHON]
+    runnable_candidates = [path for path in expected_candidates if _is_runnable_python(path)]
+
+    if runnable_candidates:
+        expected_raw = runnable_candidates[0]
+        expected = expected_raw.resolve()
+        if current == expected:
+            _ok(f"Interpreter: {current_raw} (resolved: {current})")
+        else:
+            issues += 1
+            _warn(f"Interpreter mismatch: {current_raw} (resolved: {current})")
+            _warn(f"Expected: {expected_raw} (resolved: {expected})")
+            _warn("Use: source polinko-repositioning-system/bin/activate")
     else:
-        issues += 1
-        _warn(f"Interpreter mismatch: {current_raw} (resolved: {current})")
-        _warn(f"Expected: {expected_raw} (resolved: {expected})")
-        _warn("Use: source polinko-repositioning-system/bin/activate")
+        _warn(
+            "No runnable project venv interpreter found "
+            "(common when host is macOS and venv was built in Linux container)."
+        )
+        _ok(f"Using host interpreter: {current_raw} (resolved: {current})")
 
     active_venv = os.environ.get("VIRTUAL_ENV")
     if active_venv:
