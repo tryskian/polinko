@@ -38,7 +38,7 @@
   (repo secret) are configured.
 - Docker smoke path is validated (`make docker-build` + `make docker-run` + `/health`).
 - Devcontainer Docker connectivity is now stabilized (Docker-outside-of-Docker
-  + Docker extension UI-side routing), resolving `Containers` pane connection
+  and Docker extension UI-side routing), resolving `Containers` pane connection
   mismatch in remote sessions.
 - Environment doctor is available for local sanity checks: `make doctor-env`.
 
