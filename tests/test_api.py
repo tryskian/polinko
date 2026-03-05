@@ -5,6 +5,7 @@ import os
 import tempfile
 import unittest
 import httpx
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import patch
@@ -37,6 +38,7 @@ class PolinkoApiTests(unittest.TestCase):
 
     def setUp(self) -> None:
         self.tmpdir = tempfile.TemporaryDirectory()
+        app_factory._DEFAULT_FEEDBACK_EVIDENCE_ROOT = Path(self.tmpdir.name) / "raw_evidence"
         deps = server.get_runtime_deps()
         deps.server_api_key = "test-server-key"
         deps.server_api_key_principals = {"test-server-key": "default"}
@@ -132,6 +134,116 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(body["memory_scope"], "global")
         self.assertEqual(body["context_scope"], "global")
         self.assertEqual(body["memory_used"], [])
+        self.assertTrue(body["assistant_message_id"])
+
+    def test_submit_and_list_message_feedback(self) -> None:
+        with self._stub_runner("Feedback candidate"):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "hello", "session_id": "s-feedback"},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+        assistant_message_id = chat_resp.json()["assistant_message_id"]
+        self.assertTrue(assistant_message_id)
+
+        submit_resp = self.client.post(
+            "/chats/s-feedback/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": assistant_message_id,
+                "outcome": "pass",
+                "tags": ["accurate", "grounded"],
+                "note": "Clean response.",
+            },
+        )
+        self.assertEqual(submit_resp.status_code, 200)
+        payload = submit_resp.json()
+        self.assertEqual(payload["outcome"], "pass")
+        self.assertEqual(payload["status"], "closed")
+        self.assertEqual(payload["tags"], ["accurate", "grounded"])
+        self.assertIsNone(payload["recommended_action"])
+
+        list_resp = self.client.get(
+            "/chats/s-feedback/feedback",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(list_resp.status_code, 200)
+        listed = list_resp.json()["feedback"]
+        self.assertEqual(len(listed), 1)
+        self.assertEqual(listed[0]["message_id"], assistant_message_id)
+
+    def test_fail_feedback_generates_recommended_action_and_logs_inbox(self) -> None:
+        with self._stub_runner("Please inspect this OCR output."):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "run OCR", "session_id": "s-feedback-fail"},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+        assistant_message_id = chat_resp.json()["assistant_message_id"]
+
+        bad_target_resp = self.client.get(
+            "/chats/s-feedback-fail/messages",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(bad_target_resp.status_code, 200)
+        user_message_id = bad_target_resp.json()["messages"][0]["message_id"]
+        user_feedback_resp = self.client.post(
+            "/chats/s-feedback-fail/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={"message_id": user_message_id, "outcome": "pass"},
+        )
+        self.assertEqual(user_feedback_resp.status_code, 400)
+
+        submit_resp = self.client.post(
+            "/chats/s-feedback-fail/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": assistant_message_id,
+                "outcome": "fail",
+                "tags": ["ocr_miss"],
+                "note": "Handwriting token mismatch.",
+            },
+        )
+        self.assertEqual(submit_resp.status_code, 200)
+        payload = submit_resp.json()
+        self.assertEqual(payload["outcome"], "fail")
+        self.assertEqual(payload["status"], "open")
+        self.assertIn("Retry OCR", payload["recommended_action"])
+
+        action_log = Path(self.tmpdir.name) / "raw_evidence" / "INBOX" / "feedback_actions.md"
+        self.assertTrue(action_log.exists())
+        content = action_log.read_text(encoding="utf-8")
+        self.assertIn("recommended_action", content)
+
+    def test_feedback_rejects_missing_or_invalid_reason_tags(self) -> None:
+        with self._stub_runner("Feedback candidate"):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "hello", "session_id": "s-feedback-tags"},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+        assistant_message_id = chat_resp.json()["assistant_message_id"]
+
+        missing_tags_resp = self.client.post(
+            "/chats/s-feedback-tags/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={"message_id": assistant_message_id, "outcome": "pass", "tags": []},
+        )
+        self.assertEqual(missing_tags_resp.status_code, 400)
+
+        invalid_tags_resp = self.client.post(
+            "/chats/s-feedback-tags/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": assistant_message_id,
+                "outcome": "pass",
+                "tags": ["ocr_miss"],
+            },
+        )
+        self.assertEqual(invalid_tags_resp.status_code, 400)
 
     def test_chat_attachment_indexes_global_memory_lane(self) -> None:
         deps = server.get_runtime_deps()

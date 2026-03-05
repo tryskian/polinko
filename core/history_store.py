@@ -78,6 +78,20 @@ class PersonalizationSettings:
     updated_by: str | None
 
 
+@dataclass(frozen=True)
+class MessageFeedback:
+    session_id: str
+    message_id: str
+    outcome: str
+    tags: list[str]
+    note: str | None
+    recommended_action: str | None
+    action_taken: str | None
+    status: str
+    created_at: int
+    updated_at: int
+
+
 def _now_ms() -> int:
     return int(time.time() * 1000)
 
@@ -254,6 +268,31 @@ class ChatHistoryStore:
                   updated_by TEXT,
                   FOREIGN KEY(session_id) REFERENCES chats(session_id) ON DELETE CASCADE
                 );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS message_feedback (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  session_id TEXT NOT NULL,
+                  message_id TEXT NOT NULL,
+                  outcome TEXT NOT NULL,
+                  tags_json TEXT NOT NULL DEFAULT '[]',
+                  note TEXT,
+                  recommended_action TEXT,
+                  action_taken TEXT,
+                  status TEXT NOT NULL DEFAULT 'logged',
+                  created_at INTEGER NOT NULL,
+                  updated_at INTEGER NOT NULL,
+                  FOREIGN KEY(session_id) REFERENCES chats(session_id) ON DELETE CASCADE,
+                  UNIQUE(session_id, message_id)
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_message_feedback_session_updated
+                ON message_feedback(session_id, updated_at DESC, id DESC);
                 """
             )
 
@@ -591,6 +630,129 @@ class ChatHistoryStore:
                 (session_id, message_id),
             ).fetchone()
         return row is not None
+
+    def get_message_role(self, session_id: str, message_id: str) -> str | None:
+        with self._connection() as conn:
+            row = conn.execute(
+                """
+                SELECT role
+                FROM chat_messages
+                WHERE session_id = ? AND message_id = ?
+                LIMIT 1;
+                """,
+                (session_id, message_id),
+            ).fetchone()
+        if row is None:
+            return None
+        return str(row["role"])
+
+    def upsert_message_feedback(
+        self,
+        *,
+        session_id: str,
+        message_id: str,
+        outcome: str,
+        tags: list[str],
+        note: str | None,
+        recommended_action: str | None,
+        action_taken: str | None,
+        status: str,
+    ) -> MessageFeedback:
+        normalized_outcome = outcome.strip().upper()
+        normalized_tags = [tag.strip() for tag in tags if tag.strip()]
+        normalized_note = note.strip() if note is not None and note.strip() else None
+        normalized_recommended_action = (
+            recommended_action.strip() if recommended_action is not None and recommended_action.strip() else None
+        )
+        normalized_action_taken = (
+            action_taken.strip() if action_taken is not None and action_taken.strip() else None
+        )
+        normalized_status = status.strip().upper() if status.strip() else "LOGGED"
+        now = _now_ms()
+        serialized_tags = json.dumps(normalized_tags, ensure_ascii=False, separators=(",", ":"))
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO message_feedback(
+                  session_id,
+                  message_id,
+                  outcome,
+                  tags_json,
+                  note,
+                  recommended_action,
+                  action_taken,
+                  status,
+                  created_at,
+                  updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(session_id, message_id) DO UPDATE SET
+                  outcome = excluded.outcome,
+                  tags_json = excluded.tags_json,
+                  note = excluded.note,
+                  recommended_action = excluded.recommended_action,
+                  action_taken = excluded.action_taken,
+                  status = excluded.status,
+                  updated_at = excluded.updated_at;
+                """,
+                (
+                    session_id,
+                    message_id,
+                    normalized_outcome,
+                    serialized_tags,
+                    normalized_note,
+                    normalized_recommended_action,
+                    normalized_action_taken,
+                    normalized_status,
+                    now,
+                    now,
+                ),
+            )
+            row = conn.execute(
+                """
+                SELECT
+                  session_id,
+                  message_id,
+                  outcome,
+                  tags_json,
+                  note,
+                  recommended_action,
+                  action_taken,
+                  status,
+                  created_at,
+                  updated_at
+                FROM message_feedback
+                WHERE session_id = ? AND message_id = ?
+                LIMIT 1;
+                """,
+                (session_id, message_id),
+            ).fetchone()
+        if row is None:
+            raise RuntimeError("Failed to upsert message feedback.")
+        return _message_feedback_from_row(row)
+
+    def list_message_feedback(self, session_id: str) -> list[MessageFeedback]:
+        with self._connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT
+                  session_id,
+                  message_id,
+                  outcome,
+                  tags_json,
+                  note,
+                  recommended_action,
+                  action_taken,
+                  status,
+                  created_at,
+                  updated_at
+                FROM message_feedback
+                WHERE session_id = ?
+                ORDER BY updated_at DESC, id DESC;
+                """,
+                (session_id,),
+            ).fetchall()
+        return [_message_feedback_from_row(row) for row in rows]
 
     def record_ocr_run(
         self,
@@ -1035,3 +1197,29 @@ class ChatHistoryStore:
         with self._connection() as conn:
             conn.execute("DELETE FROM chat_messages WHERE session_id = ?;", (session_id,))
             conn.execute("UPDATE chats SET updated_at = ? WHERE session_id = ?;", (now, session_id))
+
+
+def _message_feedback_from_row(row: sqlite3.Row) -> MessageFeedback:
+    parsed_tags: list[str] = []
+    raw_tags = row["tags_json"]
+    if raw_tags is not None:
+        try:
+            decoded = json.loads(str(raw_tags))
+        except (TypeError, ValueError):
+            decoded = []
+        if isinstance(decoded, list):
+            parsed_tags = [str(item).strip() for item in decoded if str(item).strip()]
+    return MessageFeedback(
+        session_id=str(row["session_id"]),
+        message_id=str(row["message_id"]),
+        outcome=str(row["outcome"]),
+        tags=parsed_tags,
+        note=str(row["note"]) if row["note"] is not None else None,
+        recommended_action=(
+            str(row["recommended_action"]) if row["recommended_action"] is not None else None
+        ),
+        action_taken=str(row["action_taken"]) if row["action_taken"] is not None else None,
+        status=str(row["status"]),
+        created_at=int(row["created_at"]),
+        updated_at=int(row["updated_at"]),
+    )

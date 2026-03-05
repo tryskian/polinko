@@ -42,6 +42,10 @@ const ASSISTANT_TYPE_MS_PER_CHAR = 1.1;
 const DEFAULT_ATTACHMENT_PROMPT =
   "Transcribe visible text from the attached image(s) verbatim. Do not interpret.";
 const MEMORY_SEARCH_ENABLED = false;
+const FEEDBACK_TAG_OPTIONS = {
+  pass: ["accurate", "grounded", "style", "complete", "useful"],
+  fail: ["ocr_miss", "grounding_gap", "style_mismatch", "hallucination_risk", "needs_retry"],
+};
 const memorySearchAvailable =
   MEMORY_SEARCH_ENABLED &&
   Boolean(
@@ -59,6 +63,7 @@ let chats = [];
 let activeChatId = "";
 let activeMemoryScope = "global";
 let currentMessages = [];
+let messageFeedbackById = new Map();
 let memorySearchOpen = false;
 let activeTheme = THEME_LIGHT;
 let pendingAttachments = [];
@@ -241,7 +246,201 @@ function syncEmptyState() {
   emptyStateEl.style.display = hasMessages ? "none" : "";
 }
 
-function appendMessage(kind, text, { persist = true, scroll = true } = {}) {
+function formatFeedbackStatusText(feedback) {
+  if (!feedback) {
+    return "";
+  }
+  const parts = [feedback.outcome?.toUpperCase() || ""];
+  if (Array.isArray(feedback.tags) && feedback.tags.length > 0) {
+    parts.push(feedback.tags.join(", "));
+  }
+  return parts.filter(Boolean).join(" • ");
+}
+
+function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
+  const root = document.createElement("section");
+  root.className = "msg-feedback";
+  root.dataset.messageId = messageId;
+
+  const buttons = document.createElement("div");
+  buttons.className = "msg-feedback-buttons";
+
+  const passButton = document.createElement("button");
+  passButton.type = "button";
+  passButton.className = "msg-feedback-toggle";
+  passButton.textContent = "Pass";
+
+  const failButton = document.createElement("button");
+  failButton.type = "button";
+  failButton.className = "msg-feedback-toggle";
+  failButton.textContent = "Fail";
+
+  const status = document.createElement("p");
+  status.className = "msg-feedback-status";
+
+  const card = document.createElement("div");
+  card.className = "msg-feedback-card";
+  card.hidden = true;
+
+  const cardTitle = document.createElement("h4");
+  cardTitle.className = "msg-feedback-title";
+  cardTitle.textContent = "Evaluate response";
+
+  const cardClose = document.createElement("button");
+  cardClose.type = "button";
+  cardClose.className = "msg-feedback-close";
+  cardClose.setAttribute("aria-label", "Close evaluation");
+  cardClose.textContent = "×";
+
+  const cardHead = document.createElement("div");
+  cardHead.className = "msg-feedback-head";
+  cardHead.append(cardTitle, cardClose);
+
+  const tagsLabel = document.createElement("p");
+  tagsLabel.className = "msg-feedback-label";
+  tagsLabel.textContent = "Reason tags";
+
+  const tagsWrap = document.createElement("div");
+  tagsWrap.className = "msg-feedback-tags";
+
+  const noteLabel = document.createElement("label");
+  noteLabel.className = "msg-feedback-label";
+  noteLabel.textContent = "Notes";
+
+  const noteEl = document.createElement("textarea");
+  noteEl.className = "msg-feedback-note";
+  noteEl.rows = 3;
+  noteEl.maxLength = 1200;
+  noteEl.placeholder = "Optional context";
+
+  const actionHint = document.createElement("p");
+  actionHint.className = "msg-feedback-action";
+
+  const saveButton = document.createElement("button");
+  saveButton.type = "button";
+  saveButton.className = "msg-feedback-save";
+  saveButton.textContent = "Save";
+
+  const cancelButton = document.createElement("button");
+  cancelButton.type = "button";
+  cancelButton.className = "msg-feedback-cancel";
+  cancelButton.textContent = "Cancel";
+
+  const actions = document.createElement("div");
+  actions.className = "msg-feedback-actions";
+  actions.append(saveButton, cancelButton);
+
+  card.append(cardHead, tagsLabel, tagsWrap, noteLabel, noteEl, actionHint, actions);
+  buttons.append(passButton, failButton);
+  root.append(buttons, status, card);
+
+  let current = feedback ? { ...feedback } : null;
+  let selectedOutcome = feedback?.outcome || "pass";
+  let selectedTags = new Set(Array.isArray(feedback?.tags) ? feedback.tags : []);
+
+  function renderTagChips() {
+    tagsWrap.innerHTML = "";
+    const options = FEEDBACK_TAG_OPTIONS[selectedOutcome] || [];
+    options.forEach((tag) => {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "msg-feedback-chip";
+      chip.textContent = tag;
+      if (selectedTags.has(tag)) {
+        chip.classList.add("active");
+      }
+      chip.addEventListener("click", () => {
+        if (selectedTags.has(tag)) {
+          selectedTags.delete(tag);
+        } else {
+          selectedTags.add(tag);
+        }
+        renderTagChips();
+      });
+      tagsWrap.appendChild(chip);
+    });
+  }
+
+  function renderStatus() {
+    const text = formatFeedbackStatusText(current);
+    status.textContent = text;
+    status.hidden = !text;
+    actionHint.textContent = current?.recommended_action || "";
+    actionHint.hidden = !current?.recommended_action;
+  }
+
+  function renderToggleState() {
+    passButton.classList.toggle("active", selectedOutcome === "pass");
+    failButton.classList.toggle("active", selectedOutcome === "fail");
+  }
+
+  function ensureDefaultReasonTag() {
+    if (selectedTags.size > 0) {
+      return;
+    }
+    const options = FEEDBACK_TAG_OPTIONS[selectedOutcome] || [];
+    if (options.length > 0) {
+      selectedTags.add(options[0]);
+    }
+  }
+
+  function openCard(outcome) {
+    selectedOutcome = outcome;
+    if (current?.outcome !== selectedOutcome) {
+      selectedTags = new Set();
+      noteEl.value = "";
+    } else {
+      selectedTags = new Set(current?.tags || []);
+      noteEl.value = current?.note || "";
+    }
+    cardTitle.textContent = selectedOutcome === "pass" ? "Pass reasons" : "Fail reasons";
+    ensureDefaultReasonTag();
+    renderToggleState();
+    renderTagChips();
+    card.hidden = false;
+  }
+
+  function closeCard() {
+    card.hidden = true;
+  }
+
+  passButton.addEventListener("click", () => openCard("pass"));
+  failButton.addEventListener("click", () => openCard("fail"));
+  cardClose.addEventListener("click", closeCard);
+  cancelButton.addEventListener("click", closeCard);
+  saveButton.addEventListener("click", async () => {
+    saveButton.disabled = true;
+    cancelButton.disabled = true;
+    try {
+      const saved = await apiSubmitFeedback(sessionId, {
+        message_id: messageId,
+        outcome: selectedOutcome,
+        tags: [...selectedTags],
+        note: noteEl.value.trim() || null,
+      });
+      current = saved;
+      messageFeedbackById.set(messageId, saved);
+      renderStatus();
+      closeCard();
+    } catch (error) {
+      status.textContent = String(error);
+      status.hidden = false;
+    } finally {
+      saveButton.disabled = false;
+      cancelButton.disabled = false;
+    }
+  });
+
+  renderToggleState();
+  renderStatus();
+  return root;
+}
+
+function appendMessage(
+  kind,
+  text,
+  { persist = true, scroll = true, messageId = null, sessionId = activeChatId, feedback = null } = {},
+) {
   const node = document.createElement("article");
   node.className = `msg ${kind}`;
   if (kind === "assistant" || kind === "user") {
@@ -249,9 +448,13 @@ function appendMessage(kind, text, { persist = true, scroll = true } = {}) {
   } else {
     node.textContent = text;
   }
+  if (kind === "assistant" && messageId) {
+    const controls = createAssistantFeedbackControls({ sessionId, messageId, feedback });
+    node.appendChild(controls);
+  }
   chatEl.appendChild(node);
   if (persist) {
-    currentMessages.push({ kind, text });
+    currentMessages.push({ kind, text, messageId, feedback });
   }
   syncEmptyState();
   if (scroll) {
@@ -284,7 +487,10 @@ function appendImagePrompt(src, sourceName, { scroll = true } = {}) {
   }
 }
 
-async function appendAssistantTypedMessage(text, { persist = true } = {}) {
+async function appendAssistantTypedMessage(
+  text,
+  { persist = true, messageId = null, sessionId = activeChatId, feedback = null } = {},
+) {
   const content = String(text ?? "");
   const node = document.createElement("article");
   node.className = "msg assistant";
@@ -298,8 +504,11 @@ async function appendAssistantTypedMessage(text, { persist = true } = {}) {
   const totalChars = content.length;
   if (totalChars === 0) {
     node.innerHTML = renderMarkdown(content);
+    if (messageId) {
+      node.appendChild(createAssistantFeedbackControls({ sessionId, messageId, feedback }));
+    }
     if (persist) {
-      currentMessages.push({ kind: "assistant", text: content });
+      currentMessages.push({ kind: "assistant", text: content, messageId, feedback });
     }
     syncEmptyState();
     chatEl.scrollTop = chatEl.scrollHeight;
@@ -334,8 +543,11 @@ async function appendAssistantTypedMessage(text, { persist = true } = {}) {
   });
 
   node.innerHTML = renderMarkdown(content);
+  if (messageId) {
+    node.appendChild(createAssistantFeedbackControls({ sessionId, messageId, feedback }));
+  }
   if (persist) {
-    currentMessages.push({ kind: "assistant", text: content });
+    currentMessages.push({ kind: "assistant", text: content, messageId, feedback });
   }
   syncEmptyState();
   chatEl.scrollTop = chatEl.scrollHeight;
@@ -344,7 +556,13 @@ async function appendAssistantTypedMessage(text, { persist = true } = {}) {
 function renderCurrentMessages() {
   chatEl.querySelectorAll(".msg").forEach((node) => node.remove());
   currentMessages.forEach((entry) => {
-    appendMessage(entry.kind, entry.text, { persist: false, scroll: false });
+    appendMessage(entry.kind, entry.text, {
+      persist: false,
+      scroll: false,
+      messageId: entry.messageId || null,
+      sessionId: activeChatId,
+      feedback: entry.feedback || null,
+    });
   });
   syncEmptyState();
   chatEl.scrollTop = chatEl.scrollHeight;
@@ -385,6 +603,17 @@ async function apiCreateChat() {
 
 async function apiListMessages(sessionId) {
   return requestJson(`/chats/${encodeURIComponent(sessionId)}/messages`);
+}
+
+async function apiListFeedback(sessionId) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback`);
+}
+
+async function apiSubmitFeedback(sessionId, payload) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 async function apiRenameChat(sessionId, title) {
@@ -527,7 +756,6 @@ async function startFreshChat({ deprecateCurrent = false } = {}) {
   const created = await apiCreateChat();
   await refreshChats();
   await setActiveChat(created.session_id);
-  closeDrawer();
   messageEl.focus();
 }
 
@@ -827,12 +1055,10 @@ function renderChatList() {
       clickTimer = window.setTimeout(async () => {
         clickTimer = null;
         if (chat.session_id === activeChatId) {
-          closeDrawer();
           return;
         }
         try {
           await setActiveChat(chat.session_id);
-          closeDrawer();
         } catch (error) {
           appendMessage("error", String(error), { persist: false });
         }
@@ -908,14 +1134,23 @@ async function refreshChats() {
 async function loadActiveMessages() {
   if (!activeChatId) {
     currentMessages = [];
+    messageFeedbackById = new Map();
     renderCurrentMessages();
     return;
   }
 
-  const payload = await apiListMessages(activeChatId);
+  const [payload, feedbackPayload] = await Promise.all([
+    apiListMessages(activeChatId),
+    apiListFeedback(activeChatId),
+  ]);
+  messageFeedbackById = new Map(
+    (feedbackPayload.feedback || []).map((item) => [item.message_id, item]),
+  );
   currentMessages = (payload.messages ?? []).map((entry) => ({
     kind: entry.role === "assistant" ? "assistant" : "user",
     text: entry.content,
+    messageId: entry.message_id || null,
+    feedback: messageFeedbackById.get(entry.message_id) || null,
   }));
   renderCurrentMessages();
 }
@@ -1122,7 +1357,13 @@ composerEl.addEventListener("submit", async (event) => {
     });
     await sleep(RESPONSE_RENDER_DELAY_MS);
     thinkingNode.remove();
-    await appendAssistantTypedMessage(result.output);
+    await appendAssistantTypedMessage(result.output, {
+      messageId: result.assistant_message_id || null,
+      sessionId: activeChatId,
+      feedback: result.assistant_message_id
+        ? messageFeedbackById.get(result.assistant_message_id) || null
+        : null,
+    });
     await refreshChats();
   } catch (error) {
     thinkingNode.remove();

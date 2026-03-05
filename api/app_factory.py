@@ -4,10 +4,12 @@ import hashlib
 import hmac
 import json
 import logging
+import os
 import re
 import time
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Literal, cast
 
 from agents import Agent, ModelSettings, Runner, RunConfig
@@ -30,6 +32,7 @@ from core.history_store import (
     CollaborationHandoff,
     CollaborationState,
     PersonalizationSettings,
+    MessageFeedback,
     DEFAULT_CHAT_TITLE,
 )
 from core.prompts import ACTIVE_PROMPT, ACTIVE_PROMPT_VERSION
@@ -150,6 +153,29 @@ _OCR_CORRECTION_HINTS = (
 _OCR_STRICT_NO_NEW_IMAGE_REPLY = (
     "No new image evidence in this turn. Attach a new image (or tighter crop) and "
     "I will transcribe only what is visible."
+)
+_FEEDBACK_TAG_MAX = 8
+_FEEDBACK_TAG_LEN_MAX = 36
+_FEEDBACK_NOTE_LEN_MAX = 1200
+_FEEDBACK_ACTION_LOG_FILENAME = "feedback_actions.md"
+_FEEDBACK_ALLOWED_TAGS = {
+    "pass": {
+        "accurate",
+        "grounded",
+        "style",
+        "complete",
+        "useful",
+    },
+    "fail": {
+        "ocr_miss",
+        "grounding_gap",
+        "style_mismatch",
+        "hallucination_risk",
+        "needs_retry",
+    },
+}
+_DEFAULT_FEEDBACK_EVIDENCE_ROOT = Path(
+    os.getenv("POLINKO_FEEDBACK_EVIDENCE_ROOT", "docs/portfolio/raw_evidence")
 )
 
 
@@ -327,6 +353,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     output: str
     session_id: str
+    assistant_message_id: str | None = None
     prompt_version: str
     memory_scope: str
     context_scope: str = Field(..., pattern="^(global|local)$")
@@ -443,6 +470,32 @@ class NoteRequest(BaseModel):
 
 class PersonalizationRequest(BaseModel):
     memory_scope: str = Field(..., min_length=1, max_length=20)
+
+
+class MessageFeedbackRequest(BaseModel):
+    message_id: str = Field(..., min_length=1, max_length=120)
+    outcome: str = Field(..., min_length=1, max_length=10)
+    tags: list[str] = Field(default_factory=list)
+    note: str | None = Field(default=None, max_length=_FEEDBACK_NOTE_LEN_MAX)
+    action_taken: str | None = Field(default=None, max_length=_FEEDBACK_NOTE_LEN_MAX)
+
+
+class MessageFeedbackResponse(BaseModel):
+    session_id: str
+    message_id: str
+    outcome: str
+    tags: list[str]
+    note: str | None
+    recommended_action: str | None
+    action_taken: str | None
+    status: str
+    created_at: int
+    updated_at: int
+
+
+class ChatFeedbackResponse(BaseModel):
+    session_id: str
+    feedback: list[MessageFeedbackResponse]
 
 
 class OcrRequest(BaseModel):
@@ -651,6 +704,105 @@ def _chat_message_response(message: Any) -> ChatMessageResponse:
         content_sha256=_sha256_text(message.content),
         created_at=message.created_at,
     )
+
+
+def _message_feedback_response(entry: MessageFeedback) -> MessageFeedbackResponse:
+    return MessageFeedbackResponse(
+        session_id=entry.session_id,
+        message_id=entry.message_id,
+        outcome=entry.outcome.lower(),
+        tags=list(entry.tags),
+        note=entry.note,
+        recommended_action=entry.recommended_action,
+        action_taken=entry.action_taken,
+        status=entry.status.lower(),
+        created_at=entry.created_at,
+        updated_at=entry.updated_at,
+    )
+
+
+def _normalize_feedback_outcome(value: str) -> str:
+    normalized = value.strip().lower()
+    if normalized not in {"pass", "fail"}:
+        raise HTTPException(status_code=400, detail="outcome must be 'pass' or 'fail'.")
+    return normalized
+
+
+def _normalize_feedback_tags(*, outcome: str, tags: list[str]) -> list[str]:
+    normalized: list[str] = []
+    for raw in tags:
+        tag = " ".join(raw.strip().lower().split())
+        if not tag:
+            continue
+        tag = re.sub(r"[^a-z0-9 _-]+", "", tag).strip(" _-")
+        if not tag:
+            continue
+        if len(tag) > _FEEDBACK_TAG_LEN_MAX:
+            tag = tag[:_FEEDBACK_TAG_LEN_MAX].rstrip()
+        if tag not in normalized:
+            normalized.append(tag)
+        if len(normalized) >= _FEEDBACK_TAG_MAX:
+            break
+    if not normalized:
+        raise HTTPException(status_code=400, detail="Select at least one reason tag.")
+    allowed = _FEEDBACK_ALLOWED_TAGS.get(outcome, set())
+    invalid = [tag for tag in normalized if tag not in allowed]
+    if invalid:
+        allowed_text = ", ".join(sorted(allowed))
+        invalid_text = ", ".join(invalid)
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported reason tag(s): {invalid_text}. Allowed for {outcome}: {allowed_text}.",
+        )
+    return normalized
+
+
+def _suggest_feedback_action(*, outcome: str, tags: list[str], note: str | None) -> str | None:
+    if outcome != "fail":
+        return None
+    tag_text = " ".join(tags)
+    note_text = (note or "").lower()
+    probe = f"{tag_text} {note_text}"
+    if any(token in probe for token in ("ocr", "transcrib", "handwriting", "image")):
+        return "Retry OCR with a tighter crop and attach fresh image evidence for comparison."
+    if any(token in probe for token in ("ground", "halluc", "citation", "factual")):
+        return "Re-run with explicit grounding constraints and verify response against source evidence."
+    if any(token in probe for token in ("retrieval", "search", "memory", "recall")):
+        return "Seed missing context and re-run retrieval/file-search checks for this exact prompt."
+    if any(token in probe for token in ("style", "tone", "voice")):
+        return "Adjust style notes and add this sample to style eval regression cases."
+    return "Capture expected vs actual output, then run the closest eval harness and record remediation."
+
+
+def _feedback_status_for_outcome(outcome: str) -> str:
+    return "closed" if outcome == "pass" else "open"
+
+
+def _append_feedback_action_log(
+    *,
+    session_id: str,
+    message_id: str,
+    tags: list[str],
+    note: str | None,
+    recommended_action: str | None,
+) -> None:
+    if not recommended_action:
+        return
+    root = _DEFAULT_FEEDBACK_EVIDENCE_ROOT
+    inbox_dir = root / "INBOX"
+    inbox_dir.mkdir(parents=True, exist_ok=True)
+    target = inbox_dir / _FEEDBACK_ACTION_LOG_FILENAME
+    timestamp = int(time.time() * 1000)
+    tag_text = ", ".join(tags) if tags else "none"
+    lines = [
+        f"- [{timestamp}] session={session_id} message={message_id}",
+        f"  - tags: {tag_text}",
+        f"  - recommended_action: {recommended_action}",
+    ]
+    if note:
+        lines.append(f"  - note: {note.strip()}")
+    with target.open("a", encoding="utf-8") as handle:
+        handle.write("\n".join(lines) + "\n")
 
 
 def _sha256_text(value: str) -> str:
@@ -2650,6 +2802,71 @@ def create_app(config: AppConfig) -> FastAPI:
         ]
         return ChatMessagesResponse(session_id=session_id, messages=messages)
 
+    @app.get("/chats/{session_id}/feedback", response_model=ChatFeedbackResponse)
+    def list_chat_feedback(session_id: str, request: Request) -> ChatFeedbackResponse:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.get_chat(session_id=session_id)
+        if chat is None:
+            raise HTTPException(status_code=404, detail="Chat not found.")
+        feedback = [
+            _message_feedback_response(item)
+            for item in deps.history_store.list_message_feedback(session_id=session_id)
+        ]
+        return ChatFeedbackResponse(session_id=session_id, feedback=feedback)
+
+    @app.post("/chats/{session_id}/feedback", response_model=MessageFeedbackResponse)
+    def submit_chat_feedback(
+        session_id: str,
+        req: MessageFeedbackRequest,
+        request: Request,
+    ) -> MessageFeedbackResponse:
+        principal = _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.get_chat(session_id=session_id)
+        if chat is None:
+            raise HTTPException(status_code=404, detail="Chat not found.")
+        if not deps.history_store.message_exists(session_id=session_id, message_id=req.message_id):
+            raise HTTPException(status_code=404, detail="message_id not found in this chat.")
+        message_role = deps.history_store.get_message_role(session_id=session_id, message_id=req.message_id)
+        if message_role != "assistant":
+            raise HTTPException(status_code=400, detail="Only assistant messages can be evaluated.")
+        outcome = _normalize_feedback_outcome(req.outcome)
+        tags = _normalize_feedback_tags(outcome=outcome, tags=req.tags)
+        note = req.note.strip() if req.note is not None and req.note.strip() else None
+        action_taken = req.action_taken.strip() if req.action_taken is not None and req.action_taken.strip() else None
+        recommended_action = _suggest_feedback_action(outcome=outcome, tags=tags, note=note)
+        status = _feedback_status_for_outcome(outcome)
+        saved = deps.history_store.upsert_message_feedback(
+            session_id=session_id,
+            message_id=req.message_id,
+            outcome=outcome,
+            tags=tags,
+            note=note,
+            recommended_action=recommended_action,
+            action_taken=action_taken,
+            status=status,
+        )
+        if outcome == "fail":
+            _append_feedback_action_log(
+                session_id=session_id,
+                message_id=req.message_id,
+                tags=tags,
+                note=note,
+                recommended_action=recommended_action,
+            )
+        _log_event(
+            "chat_feedback_submitted",
+            request_id=getattr(request.state, "request_id", None),
+            session_id=session_id,
+            principal=principal,
+            message_id=req.message_id,
+            outcome=outcome,
+            tag_count=len(tags),
+            status=status,
+        )
+        return _message_feedback_response(saved)
+
     @app.get("/chats/{session_id}/export", response_model=ChatExportResponse)
     def export_chat(session_id: str, request: Request, include_markdown: bool = False) -> ChatExportResponse:
         _enforce_api_key(request)
@@ -3609,25 +3826,11 @@ def create_app(config: AppConfig) -> FastAPI:
                 )
                 raise HTTPException(status_code=503, detail=str(exc)) from exc
 
-            response = ChatResponse(
-                output=output_text,
-                session_id=session_id,
-                prompt_version=ACTIVE_PROMPT_VERSION,
-                memory_scope=_normalize_memory_scope(memory_scope, default="global"),
-                context_scope=_context_scope_from_memory_scope(memory_scope),
-                memory_used=[
-                    _memory_citation_response(
-                        item,
-                        max_chars=min(deps.vector_max_chars, _CHAT_MEMORY_CITATION_MAX_CHARS),
-                    )
-                    for item in retrieved_memory
-                ],
-            )
             deps.history_store.append_message(session_id=session_id, role="user", content=req.message)
             assistant_message = deps.history_store.append_message(
                 session_id=session_id,
                 role="assistant",
-                content=response.output,
+                content=output_text,
             )
             _index_assistant_output(
                 deps=deps,
@@ -3639,6 +3842,21 @@ def create_app(config: AppConfig) -> FastAPI:
             deps.history_store.maybe_set_title_from_first_user_message(
                 session_id=session_id,
                 user_message=req.message,
+            )
+            response = ChatResponse(
+                output=output_text,
+                session_id=session_id,
+                assistant_message_id=assistant_message.message_id,
+                prompt_version=ACTIVE_PROMPT_VERSION,
+                memory_scope=_normalize_memory_scope(memory_scope, default="global"),
+                context_scope=_context_scope_from_memory_scope(memory_scope),
+                memory_used=[
+                    _memory_citation_response(
+                        item,
+                        max_chars=min(deps.vector_max_chars, _CHAT_MEMORY_CITATION_MAX_CHARS),
+                    )
+                    for item in retrieved_memory
+                ],
             )
             duration_ms = round((time.perf_counter() - start) * 1000, 2)
             _log_event(

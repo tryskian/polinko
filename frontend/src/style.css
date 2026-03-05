@@ -454,6 +454,147 @@ body {
   margin-block: 0.3rem 0.56rem;
 }
 
+.msg-feedback {
+  margin-top: 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.58rem 0.64rem;
+  background: var(--surface-elev-1);
+}
+
+.msg-feedback-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.msg-feedback-toggle {
+  border: 1px solid var(--interactive-border-secondary-default);
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
+  border-radius: 999px;
+  padding: 0.26rem 0.68rem;
+  font: inherit;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.msg-feedback-toggle.active {
+  background: var(--interactive-bg-primary-default);
+  color: var(--interactive-label-primary-default);
+  border-color: var(--interactive-bg-primary-default);
+}
+
+.msg-feedback-status {
+  margin: 0.45rem 0 0;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.msg-feedback-card {
+  margin-top: 0.54rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.54rem;
+  background: var(--bg-primary);
+  display: grid;
+  gap: 0.46rem;
+}
+
+.msg-feedback-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.msg-feedback-title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.msg-feedback-close {
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 1.15rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.msg-feedback-label {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+
+.msg-feedback-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.34rem;
+}
+
+.msg-feedback-chip {
+  border: 1px solid var(--interactive-border-secondary-default);
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.msg-feedback-chip.active {
+  background: var(--interactive-bg-primary-default);
+  color: var(--interactive-label-primary-default);
+  border-color: var(--interactive-bg-primary-default);
+}
+
+.msg-feedback-note {
+  width: 100%;
+  min-height: 4.8rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.5rem;
+  resize: vertical;
+}
+
+.msg-feedback-action {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--accent-orange);
+}
+
+.msg-feedback-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.msg-feedback-save,
+.msg-feedback-cancel {
+  border: 1px solid var(--interactive-border-secondary-default);
+  border-radius: 999px;
+  padding: 0.24rem 0.68rem;
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
+  font: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+.msg-feedback-save {
+  background: var(--interactive-bg-primary-default);
+  color: var(--interactive-label-primary-default);
+  border-color: var(--interactive-bg-primary-default);
+}
+
 .msg.thinking {
   justify-self: start;
   color: var(--muted);
