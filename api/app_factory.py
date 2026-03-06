@@ -90,6 +90,9 @@ _DEFAULT_INTERNAL_STYLE_NOTES = (
     "'Looks straightforward', 'Great question').",
     "For OCR/image evidence, stay literal and grounded; do not infer intent unless explicitly asked.",
 )
+_ADAPTIVE_STYLE_FEEDBACK_WINDOW = 16
+_ADAPTIVE_STYLE_GROUNDED_THRESHOLD = 2
+_ADAPTIVE_STYLE_HIGH_VALUE_THRESHOLD = 2
 _FACTUAL_QUERY_HINTS = (
     "latest",
     "today",
@@ -850,6 +853,50 @@ def _suggest_feedback_action(
 
 def _feedback_status_for_outcome(outcome: str) -> str:
     return "closed" if outcome == "pass" else "open"
+
+
+def _derive_adaptive_style_notes(feedback_entries: list[MessageFeedback]) -> list[str]:
+    if not feedback_entries:
+        return []
+    style_entries = [
+        entry
+        for entry in feedback_entries[:_ADAPTIVE_STYLE_FEEDBACK_WINDOW]
+        if "style" in entry.positive_tags and "style_mismatch" not in entry.negative_tags
+    ]
+    if not style_entries:
+        return []
+
+    grounded_passes = sum(
+        1
+        for entry in style_entries
+        if entry.outcome == "PASS"
+        and "grounded" in entry.positive_tags
+        and "hallucination_risk" not in entry.negative_tags
+        and "grounding_gap" not in entry.negative_tags
+    )
+    high_value_passes = sum(
+        1
+        for entry in style_entries
+        if entry.outcome == "PASS"
+        and "high_value" in entry.positive_tags
+        and "hallucination_risk" not in entry.negative_tags
+    )
+    saw_hallucination_risk = any("hallucination_risk" in entry.negative_tags for entry in style_entries)
+
+    notes: list[str] = []
+    if grounded_passes >= _ADAPTIVE_STYLE_GROUNDED_THRESHOLD:
+        notes.append(
+            "Soft style target: mirror the user's language and continue active metaphors before introducing new framing."
+        )
+    if high_value_passes >= _ADAPTIVE_STYLE_HIGH_VALUE_THRESHOLD:
+        notes.append(
+            "Soft style target: keep replies concise (usually 1-3 sentences), vivid, and continuity-first."
+        )
+    if saw_hallucination_risk:
+        notes.append(
+            "Soft style guardrail: if specific references are uncertain, acknowledge uncertainty briefly instead of guessing."
+        )
+    return notes
 
 
 def _append_feedback_action_log(
@@ -3657,6 +3704,12 @@ def create_app(config: AppConfig) -> FastAPI:
             start = time.perf_counter()
             request_id = getattr(request.state, "request_id", None)
             notes = deps.history_store.list_notes(session_id=session_id, limit=8)
+            adaptive_style_notes = _derive_adaptive_style_notes(
+                deps.history_store.list_message_feedback(session_id=session_id)
+            )
+            for note in adaptive_style_notes:
+                if note not in notes:
+                    notes.append(note)
             personalization = deps.history_store.get_personalization(session_id=session_id)
             memory_scope = (
                 personalization.memory_scope

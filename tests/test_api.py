@@ -2949,6 +2949,44 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(chats_resp.status_code, 200)
         self.assertEqual(chats_resp.json()["chats"][0]["message_count"], 2)
 
+    def test_feedback_style_signals_add_soft_internal_style_notes(self) -> None:
+        session_id = "s-style-adaptive"
+        message_ids: list[str] = []
+        for prompt in ("first turn", "second turn"):
+            with self._stub_runner("style candidate"):
+                chat_resp = self.client.post(
+                    "/chat",
+                    headers={"x-api-key": "test-server-key"},
+                    json={"message": prompt, "session_id": session_id},
+                )
+            self.assertEqual(chat_resp.status_code, 200)
+            message_ids.append(chat_resp.json()["assistant_message_id"])
+
+        for message_id in message_ids:
+            feedback_resp = self.client.post(
+                f"/chats/{session_id}/feedback",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message_id": message_id,
+                    "outcome": "pass",
+                    "positive_tags": ["style", "grounded", "high_value"],
+                    "note": "Target style match.",
+                },
+            )
+            self.assertEqual(feedback_resp.status_code, 200)
+
+        captured: dict[str, str] = {}
+        with self._stub_runner("adaptive style output", capture=captured):
+            final_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "continue this thread", "session_id": session_id},
+            )
+        self.assertEqual(final_resp.status_code, 200)
+        self.assertIn("INTERNAL_STYLE_NOTES", captured["input"])
+        self.assertIn("Soft style target: mirror the user's language", captured["input"])
+        self.assertIn("Soft style target: keep replies concise", captured["input"])
+
     def test_collaboration_handoff_persists_and_injects_context(self) -> None:
         handoff_resp = self.client.post(
             "/chats/s-collab/collaboration/handoff",
