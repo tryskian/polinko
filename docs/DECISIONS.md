@@ -273,3 +273,12 @@
   the preferred first target when deployment work resumes.
 - Why: Aligns future deployment planning with the OpenAI ecosystem and keeps
   docs consistent while avoiding immediate infra churn.
+
+## D-033: Eval-generated chats use deterministic titles
+
+- Category: `eval_quality`
+- Tags: `eval_hygiene`, `chat_naming`, `ui_clarity`, `traceability`
+- Decision: Update eval harness chat creation to set `title=session_id` for
+  generated chats instead of relying on default `New chat`.
+- Why: Prevents ambiguous sidebar artifacts during retained eval runs and keeps
+  eval sessions easy to identify and clean up.

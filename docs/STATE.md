@@ -31,12 +31,21 @@
 - Frontend includes indexed search UI in composer (`Search` toggle with `Insert`/`Ask` actions).
 - Figma/UI parity work is intentionally paused; current execution focus is backend retrieval, OCR, and file-search reliability.
 - Quality gate is implemented and passing locally via `make quality-gate`:
-  - unit tests (`119`)
+  - unit tests (`134`)
   - retrieval eval (`12/12`)
   - file-search eval (`5/5`, including image-context smoke)
   - OCR eval strict (`6/6`)
   - style eval strict (`6/6`)
   - hallucination eval strict (`6/6`)
+- Latest local report baseline (March 6, 2026) is green:
+  - `make eval-ocr-report` PASS
+  - `make eval-file-search-report` PASS
+  - `make eval-style-report` PASS
+  - `make eval-hallucination-report` PASS
+  - `make eval-retrieval-report` PASS
+- Eval runs no longer produce ambiguous generic `New chat` helper rows in the
+  UI; generated eval chats now use deterministic session-id titles when
+  retained.
 - Hallucination judge evaluation now supports configurable judge credentials and
   base URL (`--judge-api-key-env`, `--judge-base-url`) so OpenAI-compatible
   judge backends (including Braintrust gateways) can be wired without runtime
