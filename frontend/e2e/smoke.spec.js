@@ -245,5 +245,5 @@ test("creates a fresh chat from sidebar", async ({ page }) => {
   await page.getByRole("button", { name: "New chat" }).click();
 
   await expect(page.getByRole("button", { name: "E2E Seed Chat" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "New chat" })).toBeVisible();
+  await expect(page.getByLabel("Chat threads").getByRole("button", { name: "New chat" })).toBeVisible();
 });
