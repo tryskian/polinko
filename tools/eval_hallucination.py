@@ -160,7 +160,7 @@ def _create_chat(base_url: str, headers: dict[str, str], session_id: str, timeou
         base_url=base_url,
         path="/chats",
         headers=headers,
-        payload={"session_id": session_id},
+        payload={"session_id": session_id, "title": session_id},
         timeout=timeout,
     )
 
