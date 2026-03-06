@@ -583,8 +583,8 @@ def main() -> int:
                 for session_id in (seed_session, distractor_session):
                     try:
                         _delete_chat(args.base_url, headers, session_id, args.timeout)
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        print(f"  WARN cleanup failed for {session_id}: {exc}")
 
     print("\nSummary")
     print(f"  Passed: {passes}/{len(cases)}")

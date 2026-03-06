@@ -494,6 +494,27 @@ Hash fields in responses:
      - `docs/portfolio/raw_evidence/metadata_audit.json`
      - `docs/portfolio/raw_evidence/metadata_audit.md`
 
+## UI Feedback Tagging (OCR + Grounding)
+
+1. For each assistant response, open the UI feedback card:
+   - click `Pass`, `Partial`, or `Fail`
+   - `Pass`: select at least one pass-reason chip
+   - `Fail`: select at least one fail-reason chip
+   - `Partial`: select at least one chip in both pass and fail groups
+   - optional note
+   - save
+2. Use this OCR classification mapping:
+   - Wrong OCR guardrail/refusal path (for example, "no new image evidence"
+     triggered with no OCR context): `FAIL` + `ocr_miss` + `grounding_gap`
+   - Fabricated OCR text/guessing without visible evidence: `FAIL` +
+     `ocr_miss` + `hallucination_risk`
+   - Correct refusal after real OCR context with no new image attached:
+     `PASS` + `accurate` + `grounded`
+3. For FAIL entries, add a short note describing expected vs actual behavior to
+   speed up remediation.
+4. Use `Partial` when a response has grounded/accurate portions but still
+   needs remediation (for example: correct guardrail intent with OCR token miss).
+
 ## Export CLI Transcript
 
 1. Run `make chat`.

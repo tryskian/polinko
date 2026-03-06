@@ -158,21 +158,23 @@ _FEEDBACK_TAG_MAX = 8
 _FEEDBACK_TAG_LEN_MAX = 36
 _FEEDBACK_NOTE_LEN_MAX = 1200
 _FEEDBACK_ACTION_LOG_FILENAME = "feedback_actions.md"
-_FEEDBACK_ALLOWED_TAGS = {
-    "pass": {
-        "accurate",
-        "grounded",
-        "style",
-        "complete",
-        "useful",
-    },
-    "fail": {
-        "ocr_miss",
-        "grounding_gap",
-        "style_mismatch",
-        "hallucination_risk",
-        "needs_retry",
-    },
+_FEEDBACK_POSITIVE_TAGS = {
+    "accurate",
+    "high_value",
+    "medium_value",
+    "low_value",
+    "ocr_accurate",
+    "grounded",
+    "style",
+    "complete",
+    "useful",
+}
+_FEEDBACK_NEGATIVE_TAGS = {
+    "ocr_miss",
+    "grounding_gap",
+    "style_mismatch",
+    "hallucination_risk",
+    "needs_retry",
 }
 _DEFAULT_FEEDBACK_EVIDENCE_ROOT = Path(
     os.getenv("POLINKO_FEEDBACK_EVIDENCE_ROOT", "docs/portfolio/raw_evidence")
@@ -474,8 +476,10 @@ class PersonalizationRequest(BaseModel):
 
 class MessageFeedbackRequest(BaseModel):
     message_id: str = Field(..., min_length=1, max_length=120)
-    outcome: str = Field(..., min_length=1, max_length=10)
+    outcome: str = Field(..., min_length=1, max_length=12)
     tags: list[str] = Field(default_factory=list)
+    positive_tags: list[str] = Field(default_factory=list)
+    negative_tags: list[str] = Field(default_factory=list)
     note: str | None = Field(default=None, max_length=_FEEDBACK_NOTE_LEN_MAX)
     action_taken: str | None = Field(default=None, max_length=_FEEDBACK_NOTE_LEN_MAX)
 
@@ -484,6 +488,8 @@ class MessageFeedbackResponse(BaseModel):
     session_id: str
     message_id: str
     outcome: str
+    positive_tags: list[str]
+    negative_tags: list[str]
     tags: list[str]
     note: str | None
     recommended_action: str | None
@@ -711,6 +717,8 @@ def _message_feedback_response(entry: MessageFeedback) -> MessageFeedbackRespons
         session_id=entry.session_id,
         message_id=entry.message_id,
         outcome=entry.outcome.lower(),
+        positive_tags=list(entry.positive_tags),
+        negative_tags=list(entry.negative_tags),
         tags=list(entry.tags),
         note=entry.note,
         recommended_action=entry.recommended_action,
@@ -723,12 +731,12 @@ def _message_feedback_response(entry: MessageFeedback) -> MessageFeedbackRespons
 
 def _normalize_feedback_outcome(value: str) -> str:
     normalized = value.strip().lower()
-    if normalized not in {"pass", "fail"}:
-        raise HTTPException(status_code=400, detail="outcome must be 'pass' or 'fail'.")
+    if normalized not in {"pass", "partial", "fail"}:
+        raise HTTPException(status_code=400, detail="outcome must be 'pass', 'partial', or 'fail'.")
     return normalized
 
 
-def _normalize_feedback_tags(*, outcome: str, tags: list[str]) -> list[str]:
+def _normalize_feedback_tag_list(tags: list[str]) -> list[str]:
     normalized: list[str] = []
     for raw in tags:
         tag = " ".join(raw.strip().lower().split())
@@ -743,24 +751,90 @@ def _normalize_feedback_tags(*, outcome: str, tags: list[str]) -> list[str]:
             normalized.append(tag)
         if len(normalized) >= _FEEDBACK_TAG_MAX:
             break
-    if not normalized:
-        raise HTTPException(status_code=400, detail="Select at least one reason tag.")
-    allowed = _FEEDBACK_ALLOWED_TAGS.get(outcome, set())
-    invalid = [tag for tag in normalized if tag not in allowed]
-    if invalid:
-        allowed_text = ", ".join(sorted(allowed))
-        invalid_text = ", ".join(invalid)
-        raise HTTPException(
-            status_code=400,
-            detail=f"Unsupported reason tag(s): {invalid_text}. Allowed for {outcome}: {allowed_text}.",
-        )
     return normalized
 
 
-def _suggest_feedback_action(*, outcome: str, tags: list[str], note: str | None) -> str | None:
-    if outcome != "fail":
+def _normalize_feedback_tags(
+    *,
+    outcome: str,
+    tags: list[str],
+    positive_tags: list[str],
+    negative_tags: list[str],
+) -> tuple[list[str], list[str], list[str]]:
+    normalized_positive = _normalize_feedback_tag_list(positive_tags)
+    normalized_negative = _normalize_feedback_tag_list(negative_tags)
+    normalized_legacy = _normalize_feedback_tag_list(tags)
+
+    if not normalized_positive and not normalized_negative and normalized_legacy:
+        if outcome == "pass":
+            normalized_positive = normalized_legacy
+        elif outcome == "fail":
+            normalized_negative = normalized_legacy
+        else:
+            normalized_positive = [tag for tag in normalized_legacy if tag in _FEEDBACK_POSITIVE_TAGS]
+            normalized_negative = [tag for tag in normalized_legacy if tag in _FEEDBACK_NEGATIVE_TAGS]
+            invalid_legacy = [
+                tag
+                for tag in normalized_legacy
+                if tag not in _FEEDBACK_POSITIVE_TAGS and tag not in _FEEDBACK_NEGATIVE_TAGS
+            ]
+            if invalid_legacy:
+                invalid_text = ", ".join(invalid_legacy)
+                allowed_text = ", ".join(sorted(_FEEDBACK_POSITIVE_TAGS | _FEEDBACK_NEGATIVE_TAGS))
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Unsupported reason tag(s): {invalid_text}. Allowed: {allowed_text}.",
+                )
+
+    invalid_positive = [tag for tag in normalized_positive if tag not in _FEEDBACK_POSITIVE_TAGS]
+    if invalid_positive:
+        invalid_text = ", ".join(invalid_positive)
+        allowed_text = ", ".join(sorted(_FEEDBACK_POSITIVE_TAGS))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported positive reason tag(s): {invalid_text}. Allowed: {allowed_text}.",
+        )
+    invalid_negative = [tag for tag in normalized_negative if tag not in _FEEDBACK_NEGATIVE_TAGS]
+    if invalid_negative:
+        invalid_text = ", ".join(invalid_negative)
+        allowed_text = ", ".join(sorted(_FEEDBACK_NEGATIVE_TAGS))
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported negative reason tag(s): {invalid_text}. Allowed: {allowed_text}.",
+        )
+
+    if outcome == "pass":
+        if not normalized_positive:
+            raise HTTPException(status_code=400, detail="Pass requires at least one positive reason tag.")
+        if normalized_negative:
+            raise HTTPException(status_code=400, detail="Pass cannot include negative reason tags.")
+    elif outcome == "fail":
+        if not normalized_negative:
+            raise HTTPException(status_code=400, detail="Fail requires at least one negative reason tag.")
+        if normalized_positive:
+            raise HTTPException(status_code=400, detail="Fail cannot include positive reason tags.")
+    else:
+        if not normalized_positive or not normalized_negative:
+            raise HTTPException(
+                status_code=400,
+                detail="Partial requires at least one positive and one negative reason tag.",
+            )
+
+    normalized_tags = list(dict.fromkeys(normalized_positive + normalized_negative))
+    return normalized_positive, normalized_negative, normalized_tags
+
+
+def _suggest_feedback_action(
+    *,
+    outcome: str,
+    positive_tags: list[str],
+    negative_tags: list[str],
+    note: str | None,
+) -> str | None:
+    del positive_tags
+    if outcome == "pass" or not negative_tags:
         return None
-    tag_text = " ".join(tags)
+    tag_text = " ".join(negative_tags)
     note_text = (note or "").lower()
     probe = f"{tag_text} {note_text}"
     if any(token in probe for token in ("ocr", "transcrib", "handwriting", "image")):
@@ -782,7 +856,8 @@ def _append_feedback_action_log(
     *,
     session_id: str,
     message_id: str,
-    tags: list[str],
+    positive_tags: list[str],
+    negative_tags: list[str],
     note: str | None,
     recommended_action: str | None,
 ) -> None:
@@ -793,10 +868,12 @@ def _append_feedback_action_log(
     inbox_dir.mkdir(parents=True, exist_ok=True)
     target = inbox_dir / _FEEDBACK_ACTION_LOG_FILENAME
     timestamp = int(time.time() * 1000)
-    tag_text = ", ".join(tags) if tags else "none"
+    positive_text = ", ".join(positive_tags) if positive_tags else "none"
+    negative_text = ", ".join(negative_tags) if negative_tags else "none"
     lines = [
         f"- [{timestamp}] session={session_id} message={message_id}",
-        f"  - tags: {tag_text}",
+        f"  - positive_tags: {positive_text}",
+        f"  - negative_tags: {negative_text}",
         f"  - recommended_action: {recommended_action}",
     ]
     if note:
@@ -2832,26 +2909,39 @@ def create_app(config: AppConfig) -> FastAPI:
         if message_role != "assistant":
             raise HTTPException(status_code=400, detail="Only assistant messages can be evaluated.")
         outcome = _normalize_feedback_outcome(req.outcome)
-        tags = _normalize_feedback_tags(outcome=outcome, tags=req.tags)
+        positive_tags, negative_tags, tags = _normalize_feedback_tags(
+            outcome=outcome,
+            tags=req.tags,
+            positive_tags=req.positive_tags,
+            negative_tags=req.negative_tags,
+        )
         note = req.note.strip() if req.note is not None and req.note.strip() else None
         action_taken = req.action_taken.strip() if req.action_taken is not None and req.action_taken.strip() else None
-        recommended_action = _suggest_feedback_action(outcome=outcome, tags=tags, note=note)
+        recommended_action = _suggest_feedback_action(
+            outcome=outcome,
+            positive_tags=positive_tags,
+            negative_tags=negative_tags,
+            note=note,
+        )
         status = _feedback_status_for_outcome(outcome)
         saved = deps.history_store.upsert_message_feedback(
             session_id=session_id,
             message_id=req.message_id,
             outcome=outcome,
+            positive_tags=positive_tags,
+            negative_tags=negative_tags,
             tags=tags,
             note=note,
             recommended_action=recommended_action,
             action_taken=action_taken,
             status=status,
         )
-        if outcome == "fail":
+        if negative_tags:
             _append_feedback_action_log(
                 session_id=session_id,
                 message_id=req.message_id,
-                tags=tags,
+                positive_tags=positive_tags,
+                negative_tags=negative_tags,
                 note=note,
                 recommended_action=recommended_action,
             )
@@ -2863,6 +2953,8 @@ def create_app(config: AppConfig) -> FastAPI:
             message_id=req.message_id,
             outcome=outcome,
             tag_count=len(tags),
+            positive_tag_count=len(positive_tags),
+            negative_tag_count=len(negative_tags),
             status=status,
         )
         return _message_feedback_response(saved)

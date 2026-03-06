@@ -29,6 +29,7 @@ const memoryScopeSelectEl = document.getElementById("memory-scope-select");
 const exportMarkdownEl = document.getElementById("export-markdown");
 const exportJsonEl = document.getElementById("export-json");
 const exportOcrEl = document.getElementById("export-ocr");
+const evalSubmitEl = document.getElementById("eval-submit");
 const emptyStateEl = document.getElementById("empty-state");
 const newChatEl = document.getElementById("new-chat");
 const drawerToggleEl = document.getElementById("drawer-toggle");
@@ -42,10 +43,24 @@ const ASSISTANT_TYPE_MS_PER_CHAR = 1.1;
 const DEFAULT_ATTACHMENT_PROMPT =
   "Transcribe visible text from the attached image(s) verbatim. Do not interpret.";
 const MEMORY_SEARCH_ENABLED = false;
-const FEEDBACK_TAG_OPTIONS = {
-  pass: ["accurate", "grounded", "style", "complete", "useful"],
-  fail: ["ocr_miss", "grounding_gap", "style_mismatch", "hallucination_risk", "needs_retry"],
-};
+const FEEDBACK_POSITIVE_TAG_OPTIONS = [
+  "accurate",
+  "high_value",
+  "medium_value",
+  "low_value",
+  "ocr_accurate",
+  "grounded",
+  "style",
+  "complete",
+  "useful",
+];
+const FEEDBACK_NEGATIVE_TAG_OPTIONS = [
+  "ocr_miss",
+  "grounding_gap",
+  "style_mismatch",
+  "hallucination_risk",
+  "needs_retry",
+];
 const memorySearchAvailable =
   MEMORY_SEARCH_ENABLED &&
   Boolean(
@@ -250,8 +265,22 @@ function formatFeedbackStatusText(feedback) {
   if (!feedback) {
     return "";
   }
-  const parts = [feedback.outcome?.toUpperCase() || ""];
-  if (Array.isArray(feedback.tags) && feedback.tags.length > 0) {
+  const outcome = (feedback.outcome || "").toLowerCase();
+  const parts = [outcome.toUpperCase()];
+  const positiveTags = Array.isArray(feedback.positive_tags) ? feedback.positive_tags : [];
+  const negativeTags = Array.isArray(feedback.negative_tags) ? feedback.negative_tags : [];
+  if (outcome === "pass" && positiveTags.length > 0) {
+    parts.push(positiveTags.join(", "));
+  } else if (outcome === "fail" && negativeTags.length > 0) {
+    parts.push(negativeTags.join(", "));
+  } else if (outcome === "partial") {
+    if (positiveTags.length > 0) {
+      parts.push(`+ ${positiveTags.join(", ")}`);
+    }
+    if (negativeTags.length > 0) {
+      parts.push(`- ${negativeTags.join(", ")}`);
+    }
+  } else if (Array.isArray(feedback.tags) && feedback.tags.length > 0) {
     parts.push(feedback.tags.join(", "));
   }
   return parts.filter(Boolean).join(" • ");
@@ -275,8 +304,23 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
   failButton.className = "msg-feedback-toggle";
   failButton.textContent = "Fail";
 
+  const partialButton = document.createElement("button");
+  partialButton.type = "button";
+  partialButton.className = "msg-feedback-toggle";
+  partialButton.textContent = "Partial";
+
   const status = document.createElement("p");
   status.className = "msg-feedback-status";
+
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.className = "msg-feedback-edit";
+  editButton.textContent = "Edit";
+  editButton.hidden = true;
+
+  const summaryRow = document.createElement("div");
+  summaryRow.className = "msg-feedback-summary";
+  summaryRow.append(status, editButton);
 
   const card = document.createElement("div");
   card.className = "msg-feedback-card";
@@ -296,12 +340,23 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
   cardHead.className = "msg-feedback-head";
   cardHead.append(cardTitle, cardClose);
 
-  const tagsLabel = document.createElement("p");
-  tagsLabel.className = "msg-feedback-label";
-  tagsLabel.textContent = "Reason tags";
+  const positiveBlock = document.createElement("div");
+  positiveBlock.className = "msg-feedback-reason-block";
+  const positiveLabel = document.createElement("p");
+  positiveLabel.className = "msg-feedback-label";
+  positiveLabel.textContent = "Pass reasons";
+  const positiveTagsWrap = document.createElement("div");
+  positiveTagsWrap.className = "msg-feedback-tags";
+  positiveBlock.append(positiveLabel, positiveTagsWrap);
 
-  const tagsWrap = document.createElement("div");
-  tagsWrap.className = "msg-feedback-tags";
+  const negativeBlock = document.createElement("div");
+  negativeBlock.className = "msg-feedback-reason-block";
+  const negativeLabel = document.createElement("p");
+  negativeLabel.className = "msg-feedback-label";
+  negativeLabel.textContent = "Fail reasons";
+  const negativeTagsWrap = document.createElement("div");
+  negativeTagsWrap.className = "msg-feedback-tags";
+  negativeBlock.append(negativeLabel, negativeTagsWrap);
 
   const noteLabel = document.createElement("label");
   noteLabel.className = "msg-feedback-label";
@@ -330,17 +385,45 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
   actions.className = "msg-feedback-actions";
   actions.append(saveButton, cancelButton);
 
-  card.append(cardHead, tagsLabel, tagsWrap, noteLabel, noteEl, actionHint, actions);
-  buttons.append(passButton, failButton);
-  root.append(buttons, status, card);
+  card.append(cardHead, positiveBlock, negativeBlock, noteLabel, noteEl, actionHint, actions);
+  buttons.append(passButton, partialButton, failButton);
+  root.append(buttons, summaryRow, card);
 
   let current = feedback ? { ...feedback } : null;
-  let selectedOutcome = feedback?.outcome || "pass";
-  let selectedTags = new Set(Array.isArray(feedback?.tags) ? feedback.tags : []);
+  let selectedOutcome = null;
+  let selectedPositiveTags = new Set();
+  let selectedNegativeTags = new Set();
 
-  function renderTagChips() {
-    tagsWrap.innerHTML = "";
-    const options = FEEDBACK_TAG_OPTIONS[selectedOutcome] || [];
+  function setSelectionsFromFeedback(entry) {
+    const outcome = (entry?.outcome || "").toLowerCase();
+    const positive = Array.isArray(entry?.positive_tags) ? entry.positive_tags : [];
+    const negative = Array.isArray(entry?.negative_tags) ? entry.negative_tags : [];
+    if (positive.length > 0 || negative.length > 0) {
+      selectedPositiveTags = new Set(positive);
+      selectedNegativeTags = new Set(negative);
+      return;
+    }
+    const legacyTags = Array.isArray(entry?.tags) ? entry.tags : [];
+    if (outcome === "fail") {
+      selectedPositiveTags = new Set();
+      selectedNegativeTags = new Set(legacyTags);
+      return;
+    }
+    if (outcome === "partial") {
+      const positiveSet = new Set(FEEDBACK_POSITIVE_TAG_OPTIONS);
+      const negativeSet = new Set(FEEDBACK_NEGATIVE_TAG_OPTIONS);
+      selectedPositiveTags = new Set(legacyTags.filter((tag) => positiveSet.has(tag)));
+      selectedNegativeTags = new Set(legacyTags.filter((tag) => negativeSet.has(tag)));
+      return;
+    }
+    selectedPositiveTags = new Set(legacyTags);
+    selectedNegativeTags = new Set();
+  }
+
+  setSelectionsFromFeedback(current);
+
+  function renderTagChips(targetWrap, options, selectedTags) {
+    targetWrap.innerHTML = "";
     options.forEach((tag) => {
       const chip = document.createElement("button");
       chip.type = "button";
@@ -355,9 +438,9 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
         } else {
           selectedTags.add(tag);
         }
-        renderTagChips();
+        renderTagChips(targetWrap, options, selectedTags);
       });
-      tagsWrap.appendChild(chip);
+      targetWrap.appendChild(chip);
     });
   }
 
@@ -365,58 +448,117 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
     const text = formatFeedbackStatusText(current);
     status.textContent = text;
     status.hidden = !text;
-    actionHint.textContent = current?.recommended_action || "";
-    actionHint.hidden = !current?.recommended_action;
+    renderActionHint();
+  }
+
+  function renderActionHint() {
+    const isEditing = !card.hidden;
+    const currentOutcome = (current?.outcome || "").toLowerCase();
+    const shouldShow =
+      isEditing &&
+      Boolean(current?.recommended_action) &&
+      selectedOutcome === currentOutcome &&
+      currentOutcome !== "pass";
+    actionHint.textContent = shouldShow ? String(current?.recommended_action || "") : "";
+    actionHint.hidden = !shouldShow;
   }
 
   function renderToggleState() {
-    passButton.classList.toggle("active", selectedOutcome === "pass");
-    failButton.classList.toggle("active", selectedOutcome === "fail");
+    const isEditing = !card.hidden;
+    passButton.classList.toggle("active", isEditing && selectedOutcome === "pass");
+    partialButton.classList.toggle("active", isEditing && selectedOutcome === "partial");
+    failButton.classList.toggle("active", isEditing && selectedOutcome === "fail");
   }
 
-  function ensureDefaultReasonTag() {
-    if (selectedTags.size > 0) {
-      return;
-    }
-    const options = FEEDBACK_TAG_OPTIONS[selectedOutcome] || [];
-    if (options.length > 0) {
-      selectedTags.add(options[0]);
-    }
+  function renderOutcomeSections() {
+    positiveBlock.hidden = selectedOutcome === "fail";
+    negativeBlock.hidden = selectedOutcome === "pass";
+    renderTagChips(positiveTagsWrap, FEEDBACK_POSITIVE_TAG_OPTIONS, selectedPositiveTags);
+    renderTagChips(negativeTagsWrap, FEEDBACK_NEGATIVE_TAG_OPTIONS, selectedNegativeTags);
+  }
+
+  function renderReadState() {
+    const isEditing = !card.hidden;
+    const hasSaved = Boolean(current);
+    const showSavedState = hasSaved && !isEditing;
+    buttons.hidden = showSavedState;
+    editButton.hidden = !showSavedState;
+    root.classList.toggle("is-saved", showSavedState);
   }
 
   function openCard(outcome) {
-    selectedOutcome = outcome;
-    if (current?.outcome !== selectedOutcome) {
-      selectedTags = new Set();
+    selectedOutcome = ["pass", "partial", "fail"].includes(outcome) ? outcome : "pass";
+    if (!current) {
+      selectedPositiveTags = new Set();
+      selectedNegativeTags = new Set();
       noteEl.value = "";
     } else {
-      selectedTags = new Set(current?.tags || []);
+      setSelectionsFromFeedback(current);
       noteEl.value = current?.note || "";
+      if (selectedOutcome === "pass") {
+        selectedNegativeTags = new Set();
+      } else if (selectedOutcome === "fail") {
+        selectedPositiveTags = new Set();
+      }
     }
-    cardTitle.textContent = selectedOutcome === "pass" ? "Pass reasons" : "Fail reasons";
-    ensureDefaultReasonTag();
-    renderToggleState();
-    renderTagChips();
+    if (selectedOutcome === "pass") {
+      cardTitle.textContent = "Pass reasons";
+    } else if (selectedOutcome === "partial") {
+      cardTitle.textContent = "Partial reasons";
+    } else {
+      cardTitle.textContent = "Fail reasons";
+    }
     card.hidden = false;
+    renderOutcomeSections();
+    renderToggleState();
+    renderActionHint();
+    renderReadState();
   }
 
   function closeCard() {
     card.hidden = true;
+    selectedOutcome = null;
+    renderToggleState();
+    renderActionHint();
+    renderReadState();
   }
 
   passButton.addEventListener("click", () => openCard("pass"));
+  partialButton.addEventListener("click", () => openCard("partial"));
   failButton.addEventListener("click", () => openCard("fail"));
+  editButton.addEventListener("click", () => openCard((current?.outcome || "pass").toLowerCase()));
   cardClose.addEventListener("click", closeCard);
   cancelButton.addEventListener("click", closeCard);
   saveButton.addEventListener("click", async () => {
+    const positiveTags = [...selectedPositiveTags];
+    const negativeTags = [...selectedNegativeTags];
+    if (selectedOutcome === "pass" && positiveTags.length === 0) {
+      status.textContent = "Pass requires at least one pass reason.";
+      status.hidden = false;
+      return;
+    }
+    if (selectedOutcome === "fail" && negativeTags.length === 0) {
+      status.textContent = "Fail requires at least one fail reason.";
+      status.hidden = false;
+      return;
+    }
+    if (selectedOutcome === "partial" && (positiveTags.length === 0 || negativeTags.length === 0)) {
+      status.textContent = "Partial requires at least one pass reason and one fail reason.";
+      status.hidden = false;
+      return;
+    }
     saveButton.disabled = true;
     cancelButton.disabled = true;
     try {
-      const saved = await apiSubmitFeedback(sessionId, {
+      const payload = {
         message_id: messageId,
         outcome: selectedOutcome,
-        tags: [...selectedTags],
+        positive_tags: selectedOutcome === "fail" ? [] : positiveTags,
+        negative_tags: selectedOutcome === "pass" ? [] : negativeTags,
         note: noteEl.value.trim() || null,
+      };
+      const saved = await apiSubmitFeedback(sessionId, {
+        ...payload,
       });
       current = saved;
       messageFeedbackById.set(messageId, saved);
@@ -433,6 +575,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
 
   renderToggleState();
   renderStatus();
+  renderReadState();
   return root;
 }
 
@@ -725,6 +868,39 @@ function syncExportControls() {
 
 async function withExportLock(task) {
   await exportUiState.runLocked(task);
+}
+
+async function submitEvalCheckpoint() {
+  if (!activeChatId) {
+    throw new Error("No active chat selected.");
+  }
+  const payload = await apiListFeedback(activeChatId);
+  const entries = Array.isArray(payload.feedback) ? payload.feedback : [];
+  if (entries.length === 0) {
+    throw new Error("No saved evals in this chat yet.");
+  }
+  let passCount = 0;
+  let failCount = 0;
+  let otherCount = 0;
+  entries.forEach((entry) => {
+    const outcome = (entry?.outcome || "").toLowerCase();
+    if (outcome === "pass") {
+      passCount += 1;
+      return;
+    }
+    if (outcome === "fail") {
+      failCount += 1;
+      return;
+    }
+    otherCount += 1;
+  });
+  const note = `EVAL_SUBMIT ${new Date().toISOString()} total=${entries.length} pass=${passCount} fail=${failCount} other=${otherCount}`;
+  await apiAddNote(activeChatId, note);
+  appendMessage(
+    "meta",
+    `Eval submit logged for ${activeChatId}: total=${entries.length}, pass=${passCount}, fail=${failCount}, other=${otherCount}.`,
+    { persist: false },
+  );
 }
 
 function parsePreferenceNote(value) {
@@ -1387,6 +1563,20 @@ resetEl.addEventListener("click", async () => {
     await startFreshChat({ deprecateCurrent: true });
   } catch (error) {
     appendMessage("error", String(error), { persist: false });
+  }
+});
+
+evalSubmitEl?.addEventListener("click", async () => {
+  if (!activeChatId || evalSubmitEl.disabled) {
+    return;
+  }
+  evalSubmitEl.disabled = true;
+  try {
+    await submitEvalCheckpoint();
+  } catch (error) {
+    appendMessage("error", String(error), { persist: false });
+  } finally {
+    evalSubmitEl.disabled = false;
   }
 });
 

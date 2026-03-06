@@ -421,9 +421,8 @@ def main() -> int:
                             session_id,
                             timeout=args.timeout,
                         )
-                    except Exception:
-                        # Cleanup should not block eval result reporting.
-                        pass
+                    except Exception as exc:
+                        print(f"  WARN cleanup failed for {session_id}: {exc}")
 
     print("\nSummary")
     print(f"  Passed: {passes}/{len(cases)}")

@@ -104,6 +104,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   margin: 0;
@@ -462,10 +466,22 @@ body {
   background: var(--surface-elev-1);
 }
 
+.msg-feedback.is-saved {
+  background: var(--bg-secondary);
+  opacity: 0.84;
+}
+
 .msg-feedback-buttons {
   display: inline-flex;
   align-items: center;
   gap: 0.42rem;
+}
+
+.msg-feedback-summary {
+  margin-top: 0.45rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .msg-feedback-toggle {
@@ -486,9 +502,21 @@ body {
 }
 
 .msg-feedback-status {
-  margin: 0.45rem 0 0;
+  margin: 0;
   font-size: 0.76rem;
   color: var(--text-secondary);
+  flex: 1 1 auto;
+}
+
+.msg-feedback-edit {
+  border: 1px solid var(--interactive-border-secondary-default);
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
+  border-radius: 999px;
+  padding: 0.24rem 0.68rem;
+  font: inherit;
+  font-size: 0.74rem;
+  cursor: pointer;
 }
 
 .msg-feedback-card {
@@ -527,6 +555,11 @@ body {
   margin: 0;
   font-size: 0.72rem;
   color: var(--text-secondary);
+}
+
+.msg-feedback-reason-block {
+  display: grid;
+  gap: 0.34rem;
 }
 
 .msg-feedback-tags {
@@ -568,7 +601,8 @@ body {
 .msg-feedback-action {
   margin: 0;
   font-size: 0.74rem;
-  color: var(--accent-orange);
+  color: var(--text-secondary);
+  opacity: 0.9;
 }
 
 .msg-feedback-actions {

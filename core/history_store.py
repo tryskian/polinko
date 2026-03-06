@@ -83,6 +83,8 @@ class MessageFeedback:
     session_id: str
     message_id: str
     outcome: str
+    positive_tags: list[str]
+    negative_tags: list[str]
     tags: list[str]
     note: str | None
     recommended_action: str | None
@@ -652,14 +654,31 @@ class ChatHistoryStore:
         session_id: str,
         message_id: str,
         outcome: str,
-        tags: list[str],
+        positive_tags: list[str] | None = None,
+        negative_tags: list[str] | None = None,
+        tags: list[str] | None = None,
         note: str | None,
         recommended_action: str | None,
         action_taken: str | None,
         status: str,
     ) -> MessageFeedback:
         normalized_outcome = outcome.strip().upper()
-        normalized_tags = [tag.strip() for tag in tags if tag.strip()]
+        normalized_positive_tags = [
+            tag.strip() for tag in (positive_tags or []) if tag.strip()
+        ]
+        normalized_negative_tags = [
+            tag.strip() for tag in (negative_tags or []) if tag.strip()
+        ]
+        # Backward compatibility with legacy callers that only send `tags`.
+        if not normalized_positive_tags and not normalized_negative_tags and tags:
+            legacy_tags = [tag.strip() for tag in tags if tag.strip()]
+            if normalized_outcome == "PASS":
+                normalized_positive_tags = legacy_tags
+            elif normalized_outcome == "FAIL":
+                normalized_negative_tags = legacy_tags
+            else:
+                normalized_positive_tags = legacy_tags
+        normalized_tags = list(dict.fromkeys(normalized_positive_tags + normalized_negative_tags))
         normalized_note = note.strip() if note is not None and note.strip() else None
         normalized_recommended_action = (
             recommended_action.strip() if recommended_action is not None and recommended_action.strip() else None
@@ -669,7 +688,15 @@ class ChatHistoryStore:
         )
         normalized_status = status.strip().upper() if status.strip() else "LOGGED"
         now = _now_ms()
-        serialized_tags = json.dumps(normalized_tags, ensure_ascii=False, separators=(",", ":"))
+        serialized_tags = json.dumps(
+            {
+                "positive": normalized_positive_tags,
+                "negative": normalized_negative_tags,
+                "all": normalized_tags,
+            },
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
         with self._connection() as conn:
             conn.execute(
                 """
@@ -1200,6 +1227,8 @@ class ChatHistoryStore:
 
 
 def _message_feedback_from_row(row: sqlite3.Row) -> MessageFeedback:
+    parsed_positive_tags: list[str] = []
+    parsed_negative_tags: list[str] = []
     parsed_tags: list[str] = []
     raw_tags = row["tags_json"]
     if raw_tags is not None:
@@ -1207,12 +1236,33 @@ def _message_feedback_from_row(row: sqlite3.Row) -> MessageFeedback:
             decoded = json.loads(str(raw_tags))
         except (TypeError, ValueError):
             decoded = []
+        if isinstance(decoded, dict):
+            raw_positive = decoded.get("positive")
+            if isinstance(raw_positive, list):
+                parsed_positive_tags = [str(item).strip() for item in raw_positive if str(item).strip()]
+            raw_negative = decoded.get("negative")
+            if isinstance(raw_negative, list):
+                parsed_negative_tags = [str(item).strip() for item in raw_negative if str(item).strip()]
+            raw_all = decoded.get("all")
+            if isinstance(raw_all, list):
+                parsed_tags = [str(item).strip() for item in raw_all if str(item).strip()]
         if isinstance(decoded, list):
             parsed_tags = [str(item).strip() for item in decoded if str(item).strip()]
+            outcome = str(row["outcome"]).strip().upper()
+            if outcome == "FAIL":
+                parsed_negative_tags = parsed_tags
+            else:
+                parsed_positive_tags = parsed_tags
+    parsed_positive_tags = list(dict.fromkeys(parsed_positive_tags))
+    parsed_negative_tags = list(dict.fromkeys(parsed_negative_tags))
+    if not parsed_tags:
+        parsed_tags = list(dict.fromkeys(parsed_positive_tags + parsed_negative_tags))
     return MessageFeedback(
         session_id=str(row["session_id"]),
         message_id=str(row["message_id"]),
         outcome=str(row["outcome"]),
+        positive_tags=parsed_positive_tags,
+        negative_tags=parsed_negative_tags,
         tags=parsed_tags,
         note=str(row["note"]) if row["note"] is not None else None,
         recommended_action=(
