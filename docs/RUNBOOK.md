@@ -60,6 +60,40 @@
      - `docker logs <container_id>`
 5. `.env` supports both `KEY=value` and quoted `KEY="value"` styles.
 
+## Playwright E2E
+
+1. Install frontend deps (if needed):
+   - `make ui-install`
+2. Install Playwright browsers once per machine/container:
+   - `make ui-e2e-install`
+3. Run E2E suite:
+   - `make ui-e2e`
+4. Run in headed mode (direct npm):
+   - `cd frontend && npm run test:e2e:headed`
+5. Current E2E tests use mocked API responses so they run without starting
+   the backend server.
+
+## Tooling Baseline
+
+1. Install local CLIs (macOS/Homebrew):
+   - `brew install act k6 trivy`
+2. `Dependabot` is configured in `.github/dependabot.yml` for:
+   - GitHub Actions (`/`)
+   - Python (`/`)
+   - npm (`/frontend`)
+3. Install and run `pre-commit`:
+   - `make precommit-install`
+   - `make precommit-run`
+4. Run CI workflow locally with `act`:
+   - list jobs: `make act-list`
+   - run CI workflow: `make act-ci`
+5. Run k6 chat smoke load test (requires local API server running):
+   - default: `make k6-chat-smoke`
+   - custom: `make k6-chat-smoke K6_BASE_URL=http://127.0.0.1:8000 K6_API_KEY=<key> K6_VUS=5 K6_DURATION=30s`
+6. Run Trivy security scans:
+   - filesystem dependencies/secrets/misconfig: `make trivy-fs`
+   - built image: `make trivy-image`
+
 ## Devcontainer Troubleshooting
 
 1. After changing `.devcontainer/devcontainer.json`, run:

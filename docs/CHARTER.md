@@ -45,4 +45,4 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - In scope: local development, API hardening, test coverage.
 - In scope: retrieval/OCR/file-search reliability and eval hardening.
 - Paused: Figma-first UI parity while backend retrieval milestones are being finalized.
-- Paused: AWS deployment automation (removed from repo for now).
+- Paused: cloud deployment automation (removed from repo for now; Azure is the preferred target when resumed).

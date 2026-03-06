@@ -1,0 +1,25 @@
+minimum_pre_commit_version: "3.7.0"
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: ./venv/bin/python -m ruff check .
+        language: system
+        pass_filenames: false
+      - id: ruff-format-check
+        name: ruff format --check
+        entry: ./venv/bin/python -m ruff format --check .
+        language: system
+        pass_filenames: false
+      - id: markdownlint-docs
+        name: markdownlint docs
+        entry: bash -lc 'markdownlint-cli2 "README.md" "docs/**/*.md"'
+        language: system
+        pass_filenames: false

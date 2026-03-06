@@ -264,3 +264,12 @@
   interaction, enables deterministic remediation trails (`FAIL -> action ->
   PASS`), and reduces documentation friction by generating structured evidence
   metadata from normal usage.
+
+## D-032: Azure-first target when cloud deployment resumes
+
+- Category: `workflow_environment`
+- Tags: `deployment_target`, `azure_first`, `cloud_pause`
+- Decision: Keep cloud deployment automation paused for now, and treat Azure as
+  the preferred first target when deployment work resumes.
+- Why: Aligns future deployment planning with the OpenAI ecosystem and keeps
+  docs consistent while avoiding immediate infra churn.

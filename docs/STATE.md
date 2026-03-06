@@ -103,8 +103,9 @@
 
 - Network-dependent API calls may fail in restricted environments (handled as
   503 in API / friendly error in CLI).
-- AWS deployment is intentionally paused and AWS scripts were removed from the
-  repo.
+- Cloud deployment automation is intentionally paused and previous AWS scripts
+  were removed from the repo; Azure is the preferred target when deployment
+  work resumes.
 
 ## Resume Prompt (For New Chats)
 

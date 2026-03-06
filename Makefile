@@ -15,6 +15,11 @@ DEV_BACKEND_PORT ?= 8000
 DEV_FRONTEND_PORT ?= 5173
 DEV_AUTOKILL ?= 1
 ENV_FILE ?= .env
+K6_BASE_URL ?= http://127.0.0.1:8000
+K6_API_KEY ?= test-server-key
+K6_VUS ?= 3
+K6_DURATION ?= 10s
+TRIVY_SEVERITY ?= HIGH,CRITICAL
 GATE_PORT ?= 8066
 GATE_BASE_URL ?= http://127.0.0.1:$(GATE_PORT)
 GATE_SESSION_DB ?= /tmp/polinko-quality-gate-sessions.db
@@ -27,7 +32,7 @@ HALLUCINATION_JUDGE_BASE_URL ?=
 HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
 CLIP_AB_SOURCE_TYPES ?= image
 
-.PHONY: chat server test doctor-env eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-clip-ab eval-clip-ab-report eval-cleanup eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit ui-install ui-dev ui-build docker-build docker-run dev dev-stop workbench
+.PHONY: chat server test doctor-env precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-clip-ab eval-clip-ab-report eval-cleanup eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
@@ -40,6 +45,27 @@ test:
 
 doctor-env:
 	$(PYTHON) tools/doctor_env.py
+
+precommit-install:
+	$(PYTHON) -m pip install pre-commit
+
+precommit-run:
+	$(PYTHON) -m pre_commit run --all-files
+
+act-list:
+	act -l
+
+act-ci:
+	act -W .github/workflows/ci.yml
+
+k6-chat-smoke:
+	k6 run tests/perf/chat_smoke.js -e BASE_URL="$(K6_BASE_URL)" -e POLINKO_SERVER_API_KEY="$(K6_API_KEY)" -e VUS="$(K6_VUS)" -e DURATION="$(K6_DURATION)"
+
+trivy-fs:
+	trivy fs --severity "$(TRIVY_SEVERITY)" --exit-code 1 .
+
+trivy-image:
+	$(DOCKER) build -t $(DOCKER_IMAGE) . && trivy image --severity "$(TRIVY_SEVERITY)" --exit-code 1 $(DOCKER_IMAGE)
 
 eval-retrieval:
 	$(PYTHON) tools/eval_retrieval.py
@@ -200,6 +226,12 @@ ui-install:
 
 ui-build:
 	cd frontend && $(NPM) run build
+
+ui-e2e-install:
+	cd frontend && npx playwright install
+
+ui-e2e:
+	cd frontend && $(NPM) run test:e2e
 
 dev:
 	@PYTHON_BIN="$(PYTHON)" NPM_BIN="$(NPM)" DEV_HOST="$(DEV_HOST)" DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_FRONTEND_PORT="$(DEV_FRONTEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" bash tools/dev_run.sh
