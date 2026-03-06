@@ -57,3 +57,13 @@ docs/transcripts/
 
 # Local VS Code workspace wrapper
 polinko.code-workspace
+
+# Local workstream planning doc
+docs/WORKSTREAMS.md
+
+# Local proprietary research/theory materials
+docs/research/
+docs/theory/
+
+# Local maintenance helper script
+tools/cleanup_eval_chats.py
