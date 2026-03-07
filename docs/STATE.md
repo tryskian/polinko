@@ -87,6 +87,10 @@
 - Evidence indexing now tracks FAIL remediation lifecycle with
   `recommended_action`, `action_taken`, `status`, and optional PASS-linked
   closure metadata.
+- Adaptive runtime note selection now applies decay-weighted feedback scoring,
+  near-duplicate suppression, and a max of two active notes, with note-change
+  events logged as `adaptive_style_notes_updated` to prevent prompt/input
+  over-indexing.
 - Portfolio metadata audit tooling is available (`make portfolio-metadata-audit`)
   and validates evidence-index + evidence-log metadata completeness.
 - Integration tests exist and pass locally (`tests/test_api.py`).

@@ -282,3 +282,14 @@
   generated chats instead of relying on default `New chat`.
 - Why: Prevents ambiguous sidebar artifacts during retained eval runs and keeps
   eval sessions easy to identify and clean up.
+
+## D-034: Adaptive note merge prevents feedback over-indexing in model input
+
+- Category: `collaboration_method`
+- Tags: `adaptive_notes`, `input_hygiene`, `over_indexing_control`, `style_recovery`
+- Decision: Build model input notes with near-duplicate suppression, decay-weighted
+  feedback scoring, and a hard cap of two active adaptive notes, while logging
+  note transitions per chat.
+- Why: Keeps runtime guidance subtle and stable so repeated feedback does not
+  stack into rigid behavior, and preserves natural recovery flow after
+  uncertainty/grounding corrections.

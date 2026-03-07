@@ -53,6 +53,10 @@
   and supports optional triage overrides until a linked PASS closes the issue.
 - Portfolio metadata audit is now available via
   `make portfolio-metadata-audit` for strict evidence/docs metadata checks.
+- Adaptive style-note handling now uses decay-weighted signal, near-duplicate
+  note suppression, and a max of two active notes with
+  `adaptive_style_notes_updated` event logging to avoid model-input
+  over-indexing from repeated guidance.
 
 ## Latest Local Commit
 

@@ -553,25 +553,35 @@ class ChatHistoryStore:
             for row in rows
         ]
 
-    def append_message(self, session_id: str, role: str, content: str) -> ChatMessage:
+    def append_message(
+        self,
+        session_id: str,
+        role: str,
+        content: str,
+        *,
+        parent_message_id_override: str | None = None,
+    ) -> ChatMessage:
         if role not in {"user", "assistant", "note"}:
             raise ValueError(f"Unsupported role: {role}")
         now = _now_ms()
         with self._connection() as conn:
             parent_message_id: str | None = None
             if role in {"user", "assistant"}:
-                parent_row = conn.execute(
-                    """
-                    SELECT message_id
-                    FROM chat_messages
-                    WHERE session_id = ? AND role IN ('user', 'assistant')
-                    ORDER BY id DESC
-                    LIMIT 1;
-                    """,
-                    (session_id,),
-                ).fetchone()
-                if parent_row is not None and parent_row["message_id"] is not None:
-                    parent_message_id = str(parent_row["message_id"])
+                if parent_message_id_override is not None:
+                    parent_message_id = parent_message_id_override
+                else:
+                    parent_row = conn.execute(
+                        """
+                        SELECT message_id
+                        FROM chat_messages
+                        WHERE session_id = ? AND role IN ('user', 'assistant')
+                        ORDER BY id DESC
+                        LIMIT 1;
+                        """,
+                        (session_id,),
+                    ).fetchone()
+                    if parent_row is not None and parent_row["message_id"] is not None:
+                        parent_message_id = str(parent_row["message_id"])
             conn.execute(
                 """
                 INSERT INTO chats(session_id, title, created_at, updated_at)

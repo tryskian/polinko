@@ -30,6 +30,8 @@ const exportMarkdownEl = document.getElementById("export-markdown");
 const exportJsonEl = document.getElementById("export-json");
 const exportOcrEl = document.getElementById("export-ocr");
 const evalSubmitEl = document.getElementById("eval-submit");
+const appPipEl = document.getElementById("app-pip");
+const appPipIconEl = document.getElementById("app-pip-icon");
 const emptyStateEl = document.getElementById("empty-state");
 const newChatEl = document.getElementById("new-chat");
 const drawerToggleEl = document.getElementById("drawer-toggle");
@@ -48,6 +50,7 @@ const FEEDBACK_POSITIVE_TAG_OPTIONS = [
   "high_value",
   "medium_value",
   "low_value",
+  "recovered",
   "ocr_accurate",
   "grounded",
   "style",
@@ -79,11 +82,27 @@ let activeChatId = "";
 let activeMemoryScope = "global";
 let currentMessages = [];
 let messageFeedbackById = new Map();
+let assistantVariantSelectionByParent = new Map();
 let memorySearchOpen = false;
 let activeTheme = THEME_LIGHT;
 let pendingAttachments = [];
 let attachmentDragDepth = 0;
+let activeFeedbackPipRelease = null;
+let appPipWindow = null;
+let appPipSourceParent = null;
+let appPipSourceNextSibling = null;
+let appCompactPopupWindow = null;
+const COMPACT_MODE = new URLSearchParams(window.location.search).get("compact") === "1";
 const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+function clearActiveFeedbackPip(except = null) {
+  if (typeof activeFeedbackPipRelease === "function" && activeFeedbackPipRelease !== except) {
+    activeFeedbackPipRelease();
+  }
+  if (except === null || activeFeedbackPipRelease !== except) {
+    activeFeedbackPipRelease = null;
+  }
+}
 
 function normalizeTheme(value) {
   return value === THEME_DARK ? THEME_DARK : THEME_LIGHT;
@@ -112,7 +131,150 @@ function writeSavedTheme(theme) {
 function applyTheme(theme) {
   activeTheme = normalizeTheme(theme);
   document.documentElement.setAttribute("data-theme", activeTheme);
+  if (appPipWindow && !appPipWindow.closed) {
+    appPipWindow.document.documentElement.setAttribute("data-theme", activeTheme);
+  }
   updateThemeUi();
+}
+
+function hasDocumentPipSupport() {
+  return Boolean(window.documentPictureInPicture?.requestWindow);
+}
+
+function isAppPipActive() {
+  return Boolean(
+    (appPipWindow && !appPipWindow.closed) || (appCompactPopupWindow && !appCompactPopupWindow.closed),
+  );
+}
+
+function updateAppPipUi() {
+  if (!appPipEl) {
+    return;
+  }
+  if (COMPACT_MODE) {
+    appPipEl.hidden = true;
+    return;
+  }
+  const active = isAppPipActive();
+  const wantsDocPip = hasDocumentPipSupport();
+  appPipEl.setAttribute("aria-label", active ? "Close mini app window" : "Open mini app window");
+  appPipEl.title = active ? "Close mini app window" : "Open mini app window";
+  if (appPipIconEl) {
+    appPipIconEl.textContent = active
+      ? "close"
+      : wantsDocPip
+        ? "picture_in_picture_alt"
+        : "open_in_new";
+  }
+}
+
+function restoreShellFromPip() {
+  if (!shellEl || !appPipSourceParent) {
+    return;
+  }
+  if (appPipSourceNextSibling && appPipSourceNextSibling.parentNode === appPipSourceParent) {
+    appPipSourceParent.insertBefore(shellEl, appPipSourceNextSibling);
+  } else {
+    appPipSourceParent.appendChild(shellEl);
+  }
+  appPipSourceParent = null;
+  appPipSourceNextSibling = null;
+}
+
+function cloneStylesIntoDocument(targetDoc) {
+  const styleNodes = document.querySelectorAll('link[rel="stylesheet"], style');
+  styleNodes.forEach((node) => {
+    targetDoc.head.appendChild(node.cloneNode(true));
+  });
+}
+
+async function openDocumentPipWindow() {
+  if (!hasDocumentPipSupport() || !shellEl || !shellEl.parentElement) {
+    return false;
+  }
+  const pip = await window.documentPictureInPicture.requestWindow({
+    width: 520,
+    height: 760,
+  });
+  const pipDoc = pip.document;
+  pipDoc.title = document.title;
+  cloneStylesIntoDocument(pipDoc);
+  pipDoc.documentElement.setAttribute("data-theme", activeTheme);
+  pipDoc.body.style.margin = "0";
+  pipDoc.body.style.height = "100vh";
+  pipDoc.body.style.background = getComputedStyle(document.body).background;
+  appPipSourceParent = shellEl.parentElement;
+  appPipSourceNextSibling = shellEl.nextSibling;
+  pipDoc.body.appendChild(shellEl);
+  appPipWindow = pip;
+  pip.addEventListener(
+    "pagehide",
+    () => {
+      restoreShellFromPip();
+      appPipWindow = null;
+      updateAppPipUi();
+    },
+    { once: true },
+  );
+  return true;
+}
+
+function openCompactPopupWindow() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("compact", "1");
+  appCompactPopupWindow = window.open(
+    url.toString(),
+    "polinko-mini",
+    "popup=yes,width=520,height=760,resizable=yes,scrollbars=yes",
+  );
+  if (!appCompactPopupWindow) {
+    throw new Error("Popup blocked. Allow popups for this app to open mini mode.");
+  }
+  const pollId = window.setInterval(() => {
+    if (!appCompactPopupWindow || appCompactPopupWindow.closed) {
+      window.clearInterval(pollId);
+      appCompactPopupWindow = null;
+      updateAppPipUi();
+    }
+  }, 500);
+}
+
+function closeAppPip() {
+  if (appPipWindow && !appPipWindow.closed) {
+    appPipWindow.close();
+  }
+  restoreShellFromPip();
+  appPipWindow = null;
+  if (appCompactPopupWindow && !appCompactPopupWindow.closed) {
+    appCompactPopupWindow.close();
+  }
+  appCompactPopupWindow = null;
+  updateAppPipUi();
+}
+
+async function toggleAppPip() {
+  if (isAppPipActive()) {
+    closeAppPip();
+    return;
+  }
+  try {
+    const openedDocPip = await openDocumentPipWindow();
+    if (!openedDocPip) {
+      openCompactPopupWindow();
+    }
+  } catch (_error) {
+    openCompactPopupWindow();
+  } finally {
+    updateAppPipUi();
+  }
+}
+
+function applyCompactModeIfNeeded() {
+  if (!COMPACT_MODE || !shellEl) {
+    return;
+  }
+  shellEl.classList.add("compact-mode");
+  closeDrawer();
 }
 
 function setTheme(theme) {
@@ -286,7 +448,79 @@ function formatFeedbackStatusText(feedback) {
   return parts.filter(Boolean).join(" • ");
 }
 
-function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
+function resolveRetryContextForAssistant({ assistantMessageId, parentMessageId }) {
+  let sourceUserMessageId = String(parentMessageId || "").trim();
+  let prompt = "";
+
+  if (sourceUserMessageId) {
+    const directParent = currentMessages.find(
+      (entry) => entry.messageId === sourceUserMessageId && entry.kind === "user",
+    );
+    if (directParent?.text) {
+      prompt = String(directParent.text);
+    }
+  }
+
+  const idx = currentMessages.findIndex((entry) => entry.messageId === assistantMessageId);
+  if ((!sourceUserMessageId || !prompt) && idx > 0) {
+    for (let i = idx - 1; i >= 0; i -= 1) {
+      const candidate = currentMessages[i];
+      if (candidate.kind === "user" && String(candidate.text || "").trim()) {
+        if (!sourceUserMessageId && candidate.messageId) {
+          sourceUserMessageId = String(candidate.messageId);
+        }
+        if (!prompt) {
+          prompt = String(candidate.text);
+        }
+        break;
+      }
+    }
+  }
+
+  return {
+    prompt: String(prompt || ""),
+    sourceUserMessageId: sourceUserMessageId || "",
+  };
+}
+
+async function retryAssistantVariant({ assistantMessageId, parentMessageId, statusEl = null }) {
+  if (!activeChatId) {
+    return;
+  }
+  const { prompt, sourceUserMessageId } = resolveRetryContextForAssistant({
+    assistantMessageId,
+    parentMessageId,
+  });
+  if (!prompt || !sourceUserMessageId) {
+    if (statusEl) {
+      statusEl.textContent = "Cannot resolve source prompt lineage for retry.";
+      statusEl.hidden = false;
+    }
+    return;
+  }
+
+  const sessionId = activeChatId;
+  const thinkingNode = appendThinkingIndicator();
+  try {
+    await sendMessage(prompt, sessionId, { sourceUserMessageId });
+    if (activeChatId !== sessionId) {
+      return;
+    }
+    await loadActiveMessages();
+    await refreshChats();
+  } catch (error) {
+    if (statusEl) {
+      statusEl.textContent = String(error);
+      statusEl.hidden = false;
+    } else {
+      appendMessage("error", String(error), { persist: false });
+    }
+  } finally {
+    thinkingNode.remove();
+  }
+}
+
+function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId = null, feedback }) {
   const root = document.createElement("section");
   root.className = "msg-feedback";
   root.dataset.messageId = messageId;
@@ -318,9 +552,15 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
   editButton.textContent = "Edit";
   editButton.hidden = true;
 
+  const retryButton = document.createElement("button");
+  retryButton.type = "button";
+  retryButton.className = "msg-feedback-retry";
+  retryButton.textContent = "Retry response";
+  retryButton.setAttribute("aria-label", "Retry this response with the same prompt");
+
   const summaryRow = document.createElement("div");
   summaryRow.className = "msg-feedback-summary";
-  summaryRow.append(status, editButton);
+  summaryRow.append(status, retryButton, editButton);
 
   const card = document.createElement("div");
   card.className = "msg-feedback-card";
@@ -336,9 +576,19 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
   cardClose.setAttribute("aria-label", "Close evaluation");
   cardClose.textContent = "×";
 
+  const pipButton = document.createElement("button");
+  pipButton.type = "button";
+  pipButton.className = "msg-feedback-pip";
+  pipButton.textContent = "PiP";
+  pipButton.setAttribute("aria-label", "Pop out eval panel");
+
+  const cardHeadActions = document.createElement("div");
+  cardHeadActions.className = "msg-feedback-head-actions";
+  cardHeadActions.append(pipButton, cardClose);
+
   const cardHead = document.createElement("div");
   cardHead.className = "msg-feedback-head";
-  cardHead.append(cardTitle, cardClose);
+  cardHead.append(cardTitle, cardHeadActions);
 
   const positiveBlock = document.createElement("div");
   positiveBlock.className = "msg-feedback-reason-block";
@@ -393,6 +643,24 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
   let selectedOutcome = null;
   let selectedPositiveTags = new Set();
   let selectedNegativeTags = new Set();
+  let isPip = false;
+
+  function setPipMode(enabled) {
+    const next = Boolean(enabled) && !card.hidden;
+    if (next) {
+      clearActiveFeedbackPip(setPipMode);
+    }
+    isPip = next;
+    root.classList.toggle("is-pip", isPip);
+    pipButton.classList.toggle("active", isPip);
+    pipButton.textContent = isPip ? "Dock" : "PiP";
+    pipButton.setAttribute("aria-label", isPip ? "Dock eval panel" : "Pop out eval panel");
+    if (isPip) {
+      activeFeedbackPipRelease = setPipMode;
+    } else if (activeFeedbackPipRelease === setPipMode) {
+      activeFeedbackPipRelease = null;
+    }
+  }
 
   function setSelectionsFromFeedback(entry) {
     const outcome = (entry?.outcome || "").toLowerCase();
@@ -516,6 +784,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
   }
 
   function closeCard() {
+    setPipMode(false);
     card.hidden = true;
     selectedOutcome = null;
     renderToggleState();
@@ -527,6 +796,19 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
   partialButton.addEventListener("click", () => openCard("partial"));
   failButton.addEventListener("click", () => openCard("fail"));
   editButton.addEventListener("click", () => openCard((current?.outcome || "pass").toLowerCase()));
+  retryButton.addEventListener("click", async () => {
+    retryButton.disabled = true;
+    try {
+      await retryAssistantVariant({
+        assistantMessageId: messageId,
+        parentMessageId,
+        statusEl: status,
+      });
+    } finally {
+      retryButton.disabled = false;
+    }
+  });
+  pipButton.addEventListener("click", () => setPipMode(!isPip));
   cardClose.addEventListener("click", closeCard);
   cancelButton.addEventListener("click", closeCard);
   saveButton.addEventListener("click", async () => {
@@ -582,7 +864,15 @@ function createAssistantFeedbackControls({ sessionId, messageId, feedback }) {
 function appendMessage(
   kind,
   text,
-  { persist = true, scroll = true, messageId = null, sessionId = activeChatId, feedback = null } = {},
+  {
+    persist = true,
+    scroll = true,
+    messageId = null,
+    parentMessageId = null,
+    sessionId = activeChatId,
+    feedback = null,
+    variantMeta = null,
+  } = {},
 ) {
   const node = document.createElement("article");
   node.className = `msg ${kind}`;
@@ -591,18 +881,94 @@ function appendMessage(
   } else {
     node.textContent = text;
   }
+  if (kind === "user" && String(text || "").trim().length > 0) {
+    node.appendChild(createUserPromptControls(String(text)));
+  }
   if (kind === "assistant" && messageId) {
-    const controls = createAssistantFeedbackControls({ sessionId, messageId, feedback });
+    if (variantMeta && Number(variantMeta.total || 0) > 1) {
+      node.appendChild(createAssistantVariantControls(variantMeta));
+    }
+    const controls = createAssistantFeedbackControls({ sessionId, messageId, parentMessageId, feedback });
     node.appendChild(controls);
   }
   chatEl.appendChild(node);
   if (persist) {
-    currentMessages.push({ kind, text, messageId, feedback });
+    currentMessages.push({ kind, text, messageId, parentMessageId, feedback, variantMeta });
   }
   syncEmptyState();
   if (scroll) {
     chatEl.scrollTop = chatEl.scrollHeight;
   }
+}
+
+function createUserPromptControls(promptText) {
+  const actions = document.createElement("div");
+  actions.className = "msg-user-actions";
+
+  const editButton = document.createElement("button");
+  editButton.type = "button";
+  editButton.className = "msg-user-action";
+  editButton.textContent = "Edit prompt";
+  editButton.setAttribute("aria-label", "Edit this prompt");
+
+  editButton.addEventListener("click", () => {
+    setComposerText(promptText);
+  });
+
+  actions.append(editButton);
+  return actions;
+}
+
+function createAssistantVariantControls(variantMeta) {
+  const parentMessageId = String(variantMeta?.parentMessageId || "").trim();
+  const total = Number(variantMeta?.total || 0);
+  const index = Number(variantMeta?.index || 1);
+  const ids = Array.isArray(variantMeta?.messageIds)
+    ? variantMeta.messageIds.map((value) => String(value || "")).filter(Boolean)
+    : [];
+  if (!parentMessageId || total <= 1 || ids.length === 0) {
+    return document.createElement("div");
+  }
+
+  const wrap = document.createElement("div");
+  wrap.className = "msg-variant-controls";
+
+  const label = document.createElement("p");
+  label.className = "msg-variant-label";
+  label.textContent = `Variant ${Math.max(1, index)} of ${total}`;
+
+  const prevButton = document.createElement("button");
+  prevButton.type = "button";
+  prevButton.className = "msg-variant-button";
+  prevButton.textContent = "Prev";
+  prevButton.disabled = index <= 1;
+
+  const nextButton = document.createElement("button");
+  nextButton.type = "button";
+  nextButton.className = "msg-variant-button";
+  nextButton.textContent = "Next";
+  nextButton.disabled = index >= total;
+
+  prevButton.addEventListener("click", () => {
+    const targetId = ids[Math.max(0, index - 2)];
+    if (!targetId) {
+      return;
+    }
+    assistantVariantSelectionByParent.set(parentMessageId, targetId);
+    renderCurrentMessages();
+  });
+
+  nextButton.addEventListener("click", () => {
+    const targetId = ids[Math.min(ids.length - 1, index)];
+    if (!targetId) {
+      return;
+    }
+    assistantVariantSelectionByParent.set(parentMessageId, targetId);
+    renderCurrentMessages();
+  });
+
+  wrap.append(label, prevButton, nextButton);
+  return wrap;
 }
 
 function appendImagePrompt(src, sourceName, { scroll = true } = {}) {
@@ -632,7 +998,13 @@ function appendImagePrompt(src, sourceName, { scroll = true } = {}) {
 
 async function appendAssistantTypedMessage(
   text,
-  { persist = true, messageId = null, sessionId = activeChatId, feedback = null } = {},
+  {
+    persist = true,
+    messageId = null,
+    parentMessageId = null,
+    sessionId = activeChatId,
+    feedback = null,
+  } = {},
 ) {
   const content = String(text ?? "");
   const node = document.createElement("article");
@@ -648,10 +1020,12 @@ async function appendAssistantTypedMessage(
   if (totalChars === 0) {
     node.innerHTML = renderMarkdown(content);
     if (messageId) {
-      node.appendChild(createAssistantFeedbackControls({ sessionId, messageId, feedback }));
+      node.appendChild(
+        createAssistantFeedbackControls({ sessionId, messageId, parentMessageId, feedback }),
+      );
     }
     if (persist) {
-      currentMessages.push({ kind: "assistant", text: content, messageId, feedback });
+      currentMessages.push({ kind: "assistant", text: content, messageId, parentMessageId, feedback });
     }
     syncEmptyState();
     chatEl.scrollTop = chatEl.scrollHeight;
@@ -687,24 +1061,91 @@ async function appendAssistantTypedMessage(
 
   node.innerHTML = renderMarkdown(content);
   if (messageId) {
-    node.appendChild(createAssistantFeedbackControls({ sessionId, messageId, feedback }));
+    node.appendChild(createAssistantFeedbackControls({ sessionId, messageId, parentMessageId, feedback }));
   }
   if (persist) {
-    currentMessages.push({ kind: "assistant", text: content, messageId, feedback });
+    currentMessages.push({ kind: "assistant", text: content, messageId, parentMessageId, feedback });
   }
   syncEmptyState();
   chatEl.scrollTop = chatEl.scrollHeight;
 }
 
+function buildRenderableMessages(messages) {
+  const assistantVariantsByParent = new Map();
+  messages.forEach((entry) => {
+    if (entry.kind !== "assistant" || !entry.parentMessageId || !entry.messageId) {
+      return;
+    }
+    const parentId = String(entry.parentMessageId);
+    const variants = assistantVariantsByParent.get(parentId) || [];
+    variants.push(entry);
+    assistantVariantsByParent.set(parentId, variants);
+  });
+
+  for (const parentId of assistantVariantSelectionByParent.keys()) {
+    if (!assistantVariantsByParent.has(parentId)) {
+      assistantVariantSelectionByParent.delete(parentId);
+    }
+  }
+
+  const rendered = [];
+  const renderedVariantParents = new Set();
+
+  messages.forEach((entry) => {
+    if (entry.kind !== "assistant" || !entry.parentMessageId || !entry.messageId) {
+      rendered.push({ ...entry, variantMeta: null });
+      return;
+    }
+    const parentId = String(entry.parentMessageId);
+    const variants = assistantVariantsByParent.get(parentId) || [];
+    if (variants.length <= 1) {
+      rendered.push({ ...entry, variantMeta: null });
+      return;
+    }
+    if (renderedVariantParents.has(parentId)) {
+      return;
+    }
+    const variantIds = variants.map((item) => String(item.messageId || "")).filter(Boolean);
+    let selectedId = assistantVariantSelectionByParent.get(parentId) || "";
+    if (!selectedId || !variantIds.includes(selectedId)) {
+      selectedId = variantIds[variantIds.length - 1] || "";
+      if (selectedId) {
+        assistantVariantSelectionByParent.set(parentId, selectedId);
+      }
+    }
+    const selectedVariant =
+      variants.find((item) => String(item.messageId || "") === selectedId) || variants[variants.length - 1];
+    const selectedIndex = Math.max(
+      0,
+      variants.findIndex((item) => String(item.messageId || "") === String(selectedVariant.messageId || "")),
+    );
+    rendered.push({
+      ...selectedVariant,
+      variantMeta: {
+        parentMessageId: parentId,
+        total: variants.length,
+        index: selectedIndex + 1,
+        messageIds: variantIds,
+      },
+    });
+    renderedVariantParents.add(parentId);
+  });
+  return rendered;
+}
+
 function renderCurrentMessages() {
+  clearActiveFeedbackPip();
   chatEl.querySelectorAll(".msg").forEach((node) => node.remove());
-  currentMessages.forEach((entry) => {
+  const renderableMessages = buildRenderableMessages(currentMessages);
+  renderableMessages.forEach((entry) => {
     appendMessage(entry.kind, entry.text, {
       persist: false,
       scroll: false,
       messageId: entry.messageId || null,
+      parentMessageId: entry.parentMessageId || null,
       sessionId: activeChatId,
       feedback: entry.feedback || null,
+      variantMeta: entry.variantMeta || null,
     });
   });
   syncEmptyState();
@@ -790,10 +1231,17 @@ async function apiSetPersonalization(sessionId, memoryScope) {
   });
 }
 
-async function sendMessage(messageText, sessionId, { attachments = [] } = {}) {
+async function sendMessage(
+  messageText,
+  sessionId,
+  { attachments = [], sourceUserMessageId = null } = {},
+) {
   const body = { message: messageText, session_id: sessionId };
   if (Array.isArray(attachments) && attachments.length > 0) {
     body.attachments = attachments;
+  }
+  if (sourceUserMessageId) {
+    body.source_user_message_id = sourceUserMessageId;
   }
   return requestJson("/chat", {
     method: "POST",
@@ -1326,6 +1774,7 @@ async function loadActiveMessages() {
     kind: entry.role === "assistant" ? "assistant" : "user",
     text: entry.content,
     messageId: entry.message_id || null,
+    parentMessageId: entry.parent_message_id || null,
     feedback: messageFeedbackById.get(entry.message_id) || null,
   }));
   renderCurrentMessages();
@@ -1334,6 +1783,7 @@ async function loadActiveMessages() {
 async function setActiveChat(sessionId) {
   clearPendingAttachments();
   activeChatId = sessionId;
+  assistantVariantSelectionByParent = new Map();
   writeActiveChatId(activeChatId);
   renderChatList();
   syncExportControls();
@@ -1580,6 +2030,10 @@ evalSubmitEl?.addEventListener("click", async () => {
   }
 });
 
+appPipEl?.addEventListener("click", async () => {
+  await toggleAppPip();
+});
+
 exportMarkdownEl.addEventListener("click", async () => {
   if (!activeChatId) {
     return;
@@ -1715,6 +2169,8 @@ composerEl.addEventListener("drop", async (event) => {
 (async () => {
   try {
     initTheme();
+    applyCompactModeIfNeeded();
+    updateAppPipUi();
     syncExportControls();
     if (memorySearchAvailable) {
       setMemorySearchOpen(false);
