@@ -140,6 +140,22 @@ body {
   grid-template-columns: 0 1fr;
 }
 
+.shell.compact-mode {
+  grid-template-columns: 1fr;
+}
+
+.shell.compact-mode .bar,
+.shell.compact-mode .chat,
+.shell.compact-mode .composer {
+  grid-column: 1;
+}
+
+.shell.compact-mode .chat-drawer,
+.shell.compact-mode .drawer-backdrop,
+.shell.compact-mode .drawer-toggle {
+  display: none !important;
+}
+
 .bar {
   position: relative;
   z-index: 25;
@@ -417,6 +433,7 @@ body {
   background: rgba(255, 255, 255, 0.08);
   line-height: 1.5;
   margin-block: 0.2rem 0.52rem;
+  position: relative;
 }
 
 .msg.user.user-image {
@@ -426,6 +443,36 @@ body {
   gap: 0.44rem;
   padding: 0.5rem 0.58rem 0.5rem;
   overflow: visible;
+}
+
+.msg-user-actions {
+  margin-top: 0.36rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.msg-user-action {
+  border: 1px solid var(--interactive-border-secondary-default);
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
+  border-radius: 999px;
+  padding: 0.14rem 0.52rem;
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.msg-user-action:hover {
+  border-color: var(--interactive-border-secondary-hover);
+  background: var(--interactive-bg-secondary-hover);
+  color: var(--interactive-label-secondary-hover);
+}
+
+.msg-user-action:active {
+  border-color: var(--interactive-border-secondary-press);
+  background: var(--interactive-bg-secondary-press);
+  color: var(--interactive-label-secondary-press);
 }
 
 .user-image-preview {
@@ -456,6 +503,35 @@ body {
   line-height: 1.6;
   letter-spacing: 0.002em;
   margin-block: 0.3rem 0.56rem;
+}
+
+.msg-variant-controls {
+  margin-top: 0.52rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.44rem;
+}
+
+.msg-variant-label {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.msg-variant-button {
+  border: 1px solid var(--interactive-border-secondary-default);
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
+  border-radius: 999px;
+  padding: 0.18rem 0.62rem;
+  font: inherit;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.msg-variant-button:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 .msg-feedback {
@@ -508,7 +584,8 @@ body {
   flex: 1 1 auto;
 }
 
-.msg-feedback-edit {
+.msg-feedback-edit,
+.msg-feedback-retry {
   border: 1px solid var(--interactive-border-secondary-default);
   background: var(--interactive-bg-secondary-default);
   color: var(--interactive-label-secondary-default);
@@ -536,6 +613,12 @@ body {
   gap: 0.5rem;
 }
 
+.msg-feedback-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 .msg-feedback-title {
   margin: 0;
   font-size: 0.82rem;
@@ -549,6 +632,23 @@ body {
   font-size: 1.15rem;
   line-height: 1;
   cursor: pointer;
+}
+
+.msg-feedback-pip {
+  border: 1px solid var(--interactive-border-secondary-default);
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
+  border-radius: 999px;
+  padding: 0.16rem 0.52rem;
+  font: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.msg-feedback-pip.active {
+  background: var(--interactive-bg-primary-default);
+  color: var(--interactive-label-primary-default);
+  border-color: var(--interactive-bg-primary-default);
 }
 
 .msg-feedback-label {
@@ -627,6 +727,33 @@ body {
   background: var(--interactive-bg-primary-default);
   color: var(--interactive-label-primary-default);
   border-color: var(--interactive-bg-primary-default);
+}
+
+.msg-feedback.is-pip {
+  margin-top: 0;
+  border-color: transparent;
+  background: transparent;
+  padding: 0;
+}
+
+.msg-feedback.is-pip .msg-feedback-buttons,
+.msg-feedback.is-pip .msg-feedback-summary {
+  display: none;
+}
+
+.msg-feedback.is-pip .msg-feedback-card {
+  margin-top: 0;
+  position: fixed;
+  right: 1rem;
+  bottom: calc(var(--bar-height) + 1rem);
+  width: min(420px, calc(100vw - 1.5rem));
+  max-height: min(68vh, 560px);
+  overflow-y: auto;
+  z-index: 45;
+  border-radius: 12px;
+  border-color: var(--line);
+  background: var(--surface-panel);
+  box-shadow: 0 22px 38px rgba(0, 0, 0, 0.24);
 }
 
 .msg.thinking {
@@ -1191,6 +1318,14 @@ button {
   #memory-search-source,
   .memory-search-run {
     width: 100%;
+  }
+
+  .msg-feedback.is-pip .msg-feedback-card {
+    right: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+    bottom: 0.5rem;
+    max-height: 58vh;
   }
 
 }

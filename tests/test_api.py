@@ -15,6 +15,7 @@ from openai import APIConnectionError, APIStatusError, AuthenticationError, Rate
 from api.app_factory import create_runtime_metrics
 from api import app_factory
 from core.history_store import ChatHistoryStore
+from core.history_store import MessageFeedback
 from core.prompts import ACTIVE_PROMPT_VERSION
 from core.vector_store import VectorStore
 
@@ -837,6 +838,85 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(messages[1]["parent_message_id"], messages[0]["message_id"])
         self.assertEqual(messages[2]["parent_message_id"], messages[1]["message_id"])
         self.assertEqual(messages[3]["parent_message_id"], messages[2]["message_id"])
+
+    def test_chat_retry_variant_branches_under_existing_user_message(self) -> None:
+        with self._stub_runner("turn-1"):
+            first = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "first turn", "session_id": "s-variant"},
+            )
+        self.assertEqual(first.status_code, 200)
+
+        initial_messages_resp = self.client.get(
+            "/chats/s-variant/messages",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(initial_messages_resp.status_code, 200)
+        initial_messages = initial_messages_resp.json()["messages"]
+        self.assertEqual([m["role"] for m in initial_messages], ["user", "assistant"])
+        source_user_message_id = initial_messages[0]["message_id"]
+
+        with self._stub_runner("turn-1 retry"):
+            retry_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "first turn",
+                    "session_id": "s-variant",
+                    "source_user_message_id": source_user_message_id,
+                },
+            )
+        self.assertEqual(retry_resp.status_code, 200)
+
+        messages_resp = self.client.get(
+            "/chats/s-variant/messages",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(messages_resp.status_code, 200)
+        messages = messages_resp.json()["messages"]
+        self.assertEqual([m["role"] for m in messages], ["user", "assistant", "assistant"])
+        self.assertEqual(messages[1]["parent_message_id"], source_user_message_id)
+        self.assertEqual(messages[2]["parent_message_id"], source_user_message_id)
+        self.assertEqual(messages[2]["content"], "turn-1 retry")
+
+    def test_chat_retry_variant_rejects_invalid_source_user_message_id(self) -> None:
+        with self._stub_runner("base turn"):
+            base = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "base", "session_id": "s-variant-invalid"},
+            )
+        self.assertEqual(base.status_code, 200)
+
+        missing_source = self.client.post(
+            "/chat",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message": "retry",
+                "session_id": "s-variant-invalid",
+                "source_user_message_id": "msg_missing_source_000000000000",
+            },
+        )
+        self.assertEqual(missing_source.status_code, 404)
+
+        messages_resp = self.client.get(
+            "/chats/s-variant-invalid/messages",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(messages_resp.status_code, 200)
+        assistant_message_id = messages_resp.json()["messages"][1]["message_id"]
+
+        assistant_as_source = self.client.post(
+            "/chat",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message": "retry",
+                "session_id": "s-variant-invalid",
+                "source_user_message_id": assistant_message_id,
+            },
+        )
+        self.assertEqual(assistant_as_source.status_code, 400)
 
     def test_chat_export_json_and_markdown(self) -> None:
         with self._stub_runner("Export response"):
@@ -2986,6 +3066,230 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("INTERNAL_STYLE_NOTES", captured["input"])
         self.assertIn("Soft style target: mirror the user's language", captured["input"])
         self.assertIn("Soft style target: keep replies concise", captured["input"])
+
+    def test_recovered_pass_suppresses_caution_note_and_adds_recovery_note(self) -> None:
+        session_id = "s-style-recovery"
+
+        with self._stub_runner("style candidate risk"):
+            first_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "first turn", "session_id": session_id},
+            )
+        self.assertEqual(first_resp.status_code, 200)
+        first_message_id = first_resp.json()["assistant_message_id"]
+
+        risk_feedback = self.client.post(
+            f"/chats/{session_id}/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": first_message_id,
+                "outcome": "partial",
+                "positive_tags": ["style", "grounded"],
+                "negative_tags": ["hallucination_risk"],
+                "note": "Good style, but a risky specific claim.",
+            },
+        )
+        self.assertEqual(risk_feedback.status_code, 200)
+
+        with self._stub_runner("style candidate recovered"):
+            second_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "second turn", "session_id": session_id},
+            )
+        self.assertEqual(second_resp.status_code, 200)
+        second_message_id = second_resp.json()["assistant_message_id"]
+
+        recovery_feedback = self.client.post(
+            f"/chats/{session_id}/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": second_message_id,
+                "outcome": "pass",
+                "positive_tags": ["style", "grounded", "recovered", "high_value"],
+                "note": "Recovered cleanly with grounded tone continuity.",
+            },
+        )
+        self.assertEqual(recovery_feedback.status_code, 200)
+
+        captured: dict[str, str] = {}
+        with self._stub_runner("adaptive style output", capture=captured):
+            final_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "continue this thread", "session_id": session_id},
+            )
+        self.assertEqual(final_resp.status_code, 200)
+        self.assertIn("INTERNAL_STYLE_NOTES", captured["input"])
+        self.assertIn("Soft style recovery: after a brief uncertainty clause", captured["input"])
+        self.assertNotIn("Soft style guardrail: if specifics are uncertain", captured["input"])
+
+    def test_adaptive_style_notes_decay_downweights_stale_signal(self) -> None:
+        entries: list[MessageFeedback] = []
+        now = 1773000000000
+        for idx in range(8):
+            entries.append(
+                MessageFeedback(
+                    session_id="s-style-decay",
+                    message_id=f"msg_decay_recent_{idx}",
+                    outcome="FAIL",
+                    positive_tags=["style"],
+                    negative_tags=["needs_retry"],
+                    tags=["style", "needs_retry"],
+                    note=None,
+                    recommended_action=None,
+                    action_taken=None,
+                    status="OPEN",
+                    created_at=now - idx,
+                    updated_at=now - idx,
+                )
+            )
+        entries.append(
+            MessageFeedback(
+                session_id="s-style-decay",
+                message_id="msg_decay_old_style",
+                outcome="PASS",
+                positive_tags=["style", "grounded", "high_value"],
+                negative_tags=[],
+                tags=["style", "grounded", "high_value"],
+                note=None,
+                recommended_action=None,
+                action_taken=None,
+                status="CLOSED",
+                created_at=now - 9999,
+                updated_at=now - 9999,
+            )
+        )
+
+        notes = app_factory._derive_adaptive_style_notes(entries)
+        self.assertEqual(notes, [])
+
+    def test_adaptive_style_notes_caps_to_two_active_notes(self) -> None:
+        now = 1773000100000
+        entries = [
+            MessageFeedback(
+                session_id="s-style-cap",
+                message_id="msg_risk",
+                outcome="PARTIAL",
+                positive_tags=["style", "grounded"],
+                negative_tags=["hallucination_risk"],
+                tags=["style", "grounded", "hallucination_risk"],
+                note=None,
+                recommended_action=None,
+                action_taken=None,
+                status="OPEN",
+                created_at=now,
+                updated_at=now,
+            ),
+            MessageFeedback(
+                session_id="s-style-cap",
+                message_id="msg_pass_1",
+                outcome="PASS",
+                positive_tags=["style", "grounded", "high_value"],
+                negative_tags=[],
+                tags=["style", "grounded", "high_value"],
+                note=None,
+                recommended_action=None,
+                action_taken=None,
+                status="CLOSED",
+                created_at=now - 1,
+                updated_at=now - 1,
+            ),
+            MessageFeedback(
+                session_id="s-style-cap",
+                message_id="msg_pass_2",
+                outcome="PASS",
+                positive_tags=["style", "grounded", "high_value"],
+                negative_tags=[],
+                tags=["style", "grounded", "high_value"],
+                note=None,
+                recommended_action=None,
+                action_taken=None,
+                status="CLOSED",
+                created_at=now - 2,
+                updated_at=now - 2,
+            ),
+        ]
+
+        notes = app_factory._derive_adaptive_style_notes(entries)
+        self.assertLessEqual(len(notes), 2)
+        self.assertTrue(any("Soft style target:" in item for item in notes))
+
+    def test_near_duplicate_note_detection(self) -> None:
+        first = "Soft style target: keep replies concise (usually 1-3 sentences), vivid, and continuity-first."
+        second = "Soft style target keep replies concise vivid and continuity first."
+        different = "Soft style guardrail: if specifics are uncertain, use one brief uncertainty clause."
+        self.assertTrue(app_factory._notes_are_near_duplicate(first, second))
+        self.assertFalse(app_factory._notes_are_near_duplicate(first, different))
+
+    def test_adaptive_style_note_transitions_are_logged_once(self) -> None:
+        session_id = "s-style-log"
+        with self._stub_runner("style candidate"):
+            first_chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "first turn", "session_id": session_id},
+            )
+        self.assertEqual(first_chat_resp.status_code, 200)
+        first_message_id = first_chat_resp.json()["assistant_message_id"]
+
+        feedback_resp = self.client.post(
+            f"/chats/{session_id}/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": first_message_id,
+                "outcome": "pass",
+                "positive_tags": ["style", "grounded", "high_value"],
+            },
+        )
+        self.assertEqual(feedback_resp.status_code, 200)
+
+        with self._stub_runner("style candidate second"):
+            second_seed_chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "second seed turn", "session_id": session_id},
+            )
+        self.assertEqual(second_seed_chat_resp.status_code, 200)
+        second_seed_message_id = second_seed_chat_resp.json()["assistant_message_id"]
+
+        second_feedback_resp = self.client.post(
+            f"/chats/{session_id}/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": second_seed_message_id,
+                "outcome": "pass",
+                "positive_tags": ["style", "grounded", "high_value"],
+            },
+        )
+        self.assertEqual(second_feedback_resp.status_code, 200)
+
+        events: list[tuple[str, dict[str, Any]]] = []
+
+        def _capture_event(event_name: str, **kwargs: Any) -> None:
+            events.append((event_name, kwargs))
+
+        with patch("api.app_factory._log_event", new=_capture_event):
+            with self._stub_runner("style followup"):
+                third_chat_resp = self.client.post(
+                    "/chat",
+                    headers={"x-api-key": "test-server-key"},
+                    json={"message": "third turn", "session_id": session_id},
+                )
+            self.assertEqual(third_chat_resp.status_code, 200)
+
+            with self._stub_runner("style followup again"):
+                fourth_chat_resp = self.client.post(
+                    "/chat",
+                    headers={"x-api-key": "test-server-key"},
+                    json={"message": "fourth turn", "session_id": session_id},
+                )
+            self.assertEqual(fourth_chat_resp.status_code, 200)
+
+        note_events = [item for item in events if item[0] == "adaptive_style_notes_updated"]
+        self.assertEqual(len(note_events), 1)
+        self.assertGreaterEqual(note_events[0][1].get("active_count", 0), 1)
 
     def test_collaboration_handoff_persists_and_injects_context(self) -> None:
         handoff_resp = self.client.post(

@@ -91,8 +91,11 @@ _DEFAULT_INTERNAL_STYLE_NOTES = (
     "For OCR/image evidence, stay literal and grounded; do not infer intent unless explicitly asked.",
 )
 _ADAPTIVE_STYLE_FEEDBACK_WINDOW = 16
-_ADAPTIVE_STYLE_GROUNDED_THRESHOLD = 2
-_ADAPTIVE_STYLE_HIGH_VALUE_THRESHOLD = 2
+_ADAPTIVE_STYLE_DECAY = 0.86
+_ADAPTIVE_STYLE_GROUNDED_WEIGHT_THRESHOLD = 1.5
+_ADAPTIVE_STYLE_HIGH_VALUE_WEIGHT_THRESHOLD = 1.5
+_ADAPTIVE_STYLE_RISK_WEIGHT_THRESHOLD = 0.65
+_ADAPTIVE_STYLE_MAX_ACTIVE_NOTES = 2
 _FACTUAL_QUERY_HINTS = (
     "latest",
     "today",
@@ -166,6 +169,7 @@ _FEEDBACK_POSITIVE_TAGS = {
     "high_value",
     "medium_value",
     "low_value",
+    "recovered",
     "ocr_accurate",
     "grounded",
     "style",
@@ -337,6 +341,7 @@ class RuntimeDeps:
     metrics: RuntimeMetrics
     run_config: RunConfig
     agent: Agent[Any]
+    adaptive_note_signatures: dict[str, tuple[str, ...]] = field(default_factory=dict)
 
 
 class ChatAttachment(BaseModel):
@@ -353,6 +358,12 @@ class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, description="User message.")
     session_id: str | None = Field(default=None, min_length=1, description="Conversation session ID.")
     attachments: list[ChatAttachment] = Field(default_factory=list)
+    source_user_message_id: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=120,
+        description="Existing user message id to branch assistant variants from (retry flow).",
+    )
 
 
 class ChatResponse(BaseModel):
@@ -855,6 +866,42 @@ def _feedback_status_for_outcome(outcome: str) -> str:
     return "closed" if outcome == "pass" else "open"
 
 
+def _normalize_note_text(note: str) -> str:
+    compact = re.sub(r"[^a-z0-9\s]+", " ", note.lower())
+    return " ".join(compact.split())
+
+
+def _notes_are_near_duplicate(a: str, b: str) -> bool:
+    norm_a = _normalize_note_text(a)
+    norm_b = _normalize_note_text(b)
+    if not norm_a or not norm_b:
+        return False
+    if norm_a == norm_b:
+        return True
+    if len(norm_a) >= 24 and (norm_a in norm_b or norm_b in norm_a):
+        return True
+    tokens_a = set(norm_a.split())
+    tokens_b = set(norm_b.split())
+    if not tokens_a or not tokens_b:
+        return False
+    overlap = len(tokens_a & tokens_b)
+    union = len(tokens_a | tokens_b)
+    if union <= 0:
+        return False
+    jaccard = overlap / union
+    return overlap >= 6 and jaccard >= 0.68
+
+
+def _append_unique_note(target: list[str], candidate: str) -> bool:
+    if not candidate.strip():
+        return False
+    for existing in target:
+        if _notes_are_near_duplicate(existing, candidate):
+            return False
+    target.append(candidate)
+    return True
+
+
 def _derive_adaptive_style_notes(feedback_entries: list[MessageFeedback]) -> list[str]:
     if not feedback_entries:
         return []
@@ -866,37 +913,68 @@ def _derive_adaptive_style_notes(feedback_entries: list[MessageFeedback]) -> lis
     if not style_entries:
         return []
 
-    grounded_passes = sum(
-        1
-        for entry in style_entries
-        if entry.outcome == "PASS"
-        and "grounded" in entry.positive_tags
-        and "hallucination_risk" not in entry.negative_tags
-        and "grounding_gap" not in entry.negative_tags
-    )
-    high_value_passes = sum(
-        1
-        for entry in style_entries
-        if entry.outcome == "PASS"
-        and "high_value" in entry.positive_tags
-        and "hallucination_risk" not in entry.negative_tags
-    )
-    saw_hallucination_risk = any("hallucination_risk" in entry.negative_tags for entry in style_entries)
+    grounded_weight = 0.0
+    high_value_weight = 0.0
+    risk_weight = 0.0
+    recovered_weight = 0.0
 
-    notes: list[str] = []
-    if grounded_passes >= _ADAPTIVE_STYLE_GROUNDED_THRESHOLD:
-        notes.append(
-            "Soft style target: mirror the user's language and continue active metaphors before introducing new framing."
+    for idx, entry in enumerate(style_entries):
+        weight = _ADAPTIVE_STYLE_DECAY**idx
+        is_clean_grounded_pass = (
+            entry.outcome == "PASS"
+            and "grounded" in entry.positive_tags
+            and "hallucination_risk" not in entry.negative_tags
+            and "grounding_gap" not in entry.negative_tags
         )
-    if high_value_passes >= _ADAPTIVE_STYLE_HIGH_VALUE_THRESHOLD:
-        notes.append(
-            "Soft style target: keep replies concise (usually 1-3 sentences), vivid, and continuity-first."
+        if is_clean_grounded_pass:
+            grounded_weight += weight
+        if (
+            entry.outcome == "PASS"
+            and "high_value" in entry.positive_tags
+            and "hallucination_risk" not in entry.negative_tags
+        ):
+            high_value_weight += weight
+        if "hallucination_risk" in entry.negative_tags:
+            risk_weight += weight
+        if is_clean_grounded_pass and "recovered" in entry.positive_tags:
+            recovered_weight += weight
+
+    scored_candidates: list[tuple[float, str]] = []
+    if grounded_weight >= _ADAPTIVE_STYLE_GROUNDED_WEIGHT_THRESHOLD:
+        scored_candidates.append(
+            (
+                grounded_weight,
+                "Soft style target: mirror the user's language and continue active metaphors before introducing new framing.",
+            )
         )
-    if saw_hallucination_risk:
-        notes.append(
-            "Soft style guardrail: if specific references are uncertain, acknowledge uncertainty briefly instead of guessing."
+    if high_value_weight >= _ADAPTIVE_STYLE_HIGH_VALUE_WEIGHT_THRESHOLD:
+        scored_candidates.append(
+            (
+                high_value_weight,
+                "Soft style target: keep replies concise (usually 1-3 sentences), vivid, and continuity-first.",
+            )
         )
-    return notes
+    if risk_weight >= _ADAPTIVE_STYLE_RISK_WEIGHT_THRESHOLD and recovered_weight < risk_weight:
+        scored_candidates.append(
+            (
+                risk_weight,
+                "Soft style guardrail: if specifics are uncertain, use one brief uncertainty clause, then continue in the user's tone without guessing.",
+            )
+        )
+    if recovered_weight >= _ADAPTIVE_STYLE_RISK_WEIGHT_THRESHOLD:
+        scored_candidates.append(
+            (
+                recovered_weight + 0.05,
+                "Soft style recovery: after a brief uncertainty clause, return to natural cadence and metaphor continuity.",
+            )
+        )
+
+    scored_candidates.sort(key=lambda item: item[0], reverse=True)
+    selected: list[str] = []
+    for _score, note in scored_candidates:
+        if _append_unique_note(selected, note) and len(selected) >= _ADAPTIVE_STYLE_MAX_ACTIVE_NOTES:
+            break
+    return selected
 
 
 def _append_feedback_action_log(
@@ -1971,7 +2049,9 @@ def _compose_model_input(
             + "\n".join(memory_lines)
         )
 
-    merged_notes = [*list(_DEFAULT_INTERNAL_STYLE_NOTES), *notes]
+    merged_notes: list[str] = []
+    for candidate in [*list(_DEFAULT_INTERNAL_STYLE_NOTES), *notes]:
+        _append_unique_note(merged_notes, candidate)
     if merged_notes:
         note_lines = "\n".join(f"- {note}" for note in merged_notes)
         segments.append(
@@ -2528,13 +2608,15 @@ def _build_hallucination_guardrail_note(
             "[HALLUCINATION_GUARDRAIL: grounded mode]\n"
             "- Constrain claims to retrieved/available evidence.\n"
             "- Do not add mechanisms, conditions, or specifics that are not present in evidence.\n"
-            "- If certainty is low, say that briefly instead of guessing.\n"
+            "- If certainty is low, use one concise uncertainty clause, then continue with the best grounded framing.\n"
+            "- Keep the user's established tone and rhythm while staying factual.\n"
             "- Do not fabricate citations, dates, names, winners, or numeric values."
         )
     return (
         "[HALLUCINATION_GUARDRAIL: low-evidence mode]\n"
         "- Avoid presenting uncertain facts as certain.\n"
-        "- If supporting evidence is missing, state that clearly before any answer.\n"
+        "- If supporting evidence is missing, state that clearly in one short line before any answer.\n"
+        "- Keep tone continuity with the user; avoid sterile or repetitive disclaimer phrasing.\n"
         "- Do not invent sources, statistics, dates, names, winners, organizations, or quotations.\n"
         "- For unknown/fictional events, do not fabricate a winner or concrete outcome."
     )
@@ -3679,12 +3761,27 @@ def create_app(config: AppConfig) -> FastAPI:
         principal = _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         session_id = req.session_id or deps.default_session_id
+        source_user_message_id = (
+            req.source_user_message_id.strip() if req.source_user_message_id else None
+        )
         chat = deps.history_store.ensure_chat(session_id=session_id)
         if chat.status == "deprecated":
             raise HTTPException(
                 status_code=409,
                 detail="Chat is deprecated. Create a new chat before sending messages.",
             )
+        if source_user_message_id is not None:
+            if not deps.history_store.message_exists(
+                session_id=session_id,
+                message_id=source_user_message_id,
+            ):
+                raise HTTPException(status_code=404, detail="source_user_message_id not found in this chat.")
+            source_role = deps.history_store.get_message_role(
+                session_id=session_id,
+                message_id=source_user_message_id,
+            )
+            if source_role != "user":
+                raise HTTPException(status_code=400, detail="source_user_message_id must reference a user message.")
         limiter_id = _client_identifier(request, session_id, principal)
         try:
             _enforce_rate_limit(request, limiter_id)
@@ -3707,9 +3804,23 @@ def create_app(config: AppConfig) -> FastAPI:
             adaptive_style_notes = _derive_adaptive_style_notes(
                 deps.history_store.list_message_feedback(session_id=session_id)
             )
+            previous_adaptive_signature = deps.adaptive_note_signatures.get(session_id, tuple())
+            next_adaptive_signature = tuple(adaptive_style_notes)
+            if next_adaptive_signature != previous_adaptive_signature:
+                previous_set = set(previous_adaptive_signature)
+                next_set = set(next_adaptive_signature)
+                _log_event(
+                    "adaptive_style_notes_updated",
+                    request_id=request_id,
+                    session_id=session_id,
+                    principal=principal,
+                    added_notes=[note for note in adaptive_style_notes if note not in previous_set],
+                    removed_notes=[note for note in previous_adaptive_signature if note not in next_set],
+                    active_count=len(adaptive_style_notes),
+                )
+                deps.adaptive_note_signatures[session_id] = next_adaptive_signature
             for note in adaptive_style_notes:
-                if note not in notes:
-                    notes.append(note)
+                _append_unique_note(notes, note)
             personalization = deps.history_store.get_personalization(session_id=session_id)
             memory_scope = (
                 personalization.memory_scope
@@ -3971,11 +4082,13 @@ def create_app(config: AppConfig) -> FastAPI:
                 )
                 raise HTTPException(status_code=503, detail=str(exc)) from exc
 
-            deps.history_store.append_message(session_id=session_id, role="user", content=req.message)
+            if source_user_message_id is None:
+                deps.history_store.append_message(session_id=session_id, role="user", content=req.message)
             assistant_message = deps.history_store.append_message(
                 session_id=session_id,
                 role="assistant",
                 content=output_text,
+                parent_message_id_override=source_user_message_id,
             )
             _index_assistant_output(
                 deps=deps,
@@ -3984,10 +4097,11 @@ def create_app(config: AppConfig) -> FastAPI:
                 content=assistant_message.content,
                 created_at=assistant_message.created_at,
             )
-            deps.history_store.maybe_set_title_from_first_user_message(
-                session_id=session_id,
-                user_message=req.message,
-            )
+            if source_user_message_id is None:
+                deps.history_store.maybe_set_title_from_first_user_message(
+                    session_id=session_id,
+                    user_message=req.message,
+                )
             response = ChatResponse(
                 output=output_text,
                 session_id=session_id,
@@ -4016,6 +4130,7 @@ def create_app(config: AppConfig) -> FastAPI:
                 attachment_count=attachment_count,
                 attachment_evidence_count=attachment_evidence_count,
                 memory_scope=memory_scope,
+                variant_retry=source_user_message_id is not None,
                 guardrail_applied=guardrail_note is not None,
                 collaboration_applied=collaboration_note is not None,
                 active_collaborator=(
