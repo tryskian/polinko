@@ -465,6 +465,10 @@ Hash fields in responses:
      - `python tools/eval_hallucination.py --evaluation-mode judge`
      - `python tools/eval_hallucination.py --evaluation-mode deterministic`
      - `python tools/eval_hallucination.py --evaluation-mode auto`
+   - Braintrust judge mode:
+     - set `BRAINTRUST_OPENAI_BASE_URL=https://api.braintrust.dev/v1/proxy`
+     - set `BRAINTRUST_API_KEY` (env/secret)
+     - run `make eval-hallucination-braintrust`
    - retain generated chats: `python tools/eval_hallucination.py --keep-chats`
    - write JSON report:
      `python tools/eval_hallucination.py --report-json eval_reports/hallucination-latest.json`
