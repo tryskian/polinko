@@ -30,6 +30,18 @@
    (host path + container clone + alternate workspace file), or thread opening
    and IDE handoff can become inconsistent.
 
+## Local-Only Tracker Docs
+
+1. The following docs are intentionally local-only and ignored by git:
+   - `docs/FIGMA_NODE_TRACKER.md`
+   - `docs/WORKSTREAMS.md`
+2. Use them for live planning/tracking, but do not rely on them for repository
+   source-of-truth handoff.
+3. Canonical handoff artifacts remain:
+   - `docs/STATE.md`
+   - `docs/DECISIONS.md`
+   - `docs/SESSION_HANDOFF.md`
+
 ## Rotate API Keys
 
 1. Update `.env` with new `OPENAI_API_KEY`.
@@ -72,6 +84,9 @@
    - `cd frontend && npm run test:e2e:headed`
 5. Current E2E tests use mocked API responses so they run without starting
    the backend server.
+6. Retry-variant regression coverage is in:
+   - `frontend/e2e/smoke.spec.js`
+   - run targeted: `cd frontend && npx playwright test e2e/smoke.spec.js`
 
 ## Tooling Baseline
 

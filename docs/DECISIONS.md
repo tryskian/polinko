@@ -293,3 +293,13 @@
 - Why: Keeps runtime guidance subtle and stable so repeated feedback does not
   stack into rigid behavior, and preserves natural recovery flow after
   uncertainty/grounding corrections.
+
+## D-035: Playwright smoke covers retry-variant lineage behavior
+
+- Category: `eval_quality`
+- Tags: `playwright`, `e2e`, `retry_variant`, `regression_guard`
+- Decision: Extend frontend smoke E2E coverage to validate retry-generated
+  assistant variants (`source_user_message_id` lineage), including variant
+  navigation and no duplicate user prompt rows.
+- Why: Protects the highest-risk UI/runtime integration path with fast
+  deterministic browser checks after variant and feedback-flow changes.

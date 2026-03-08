@@ -46,6 +46,9 @@
 - Eval runs no longer produce ambiguous generic `New chat` helper rows in the
   UI; generated eval chats now use deterministic session-id titles when
   retained.
+- Playwright smoke E2E now validates retry-variant lineage behavior end-to-end
+  (assistant variant creation, `Variant X of Y` controls, and no duplicate user
+  prompt rows in the rendered thread).
 - Hallucination judge evaluation now supports configurable judge credentials and
   base URL (`--judge-api-key-env`, `--judge-base-url`) so OpenAI-compatible
   judge backends (including Braintrust gateways) can be wired without runtime

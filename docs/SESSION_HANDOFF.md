@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-04
+- 2026-03-07
 
 ## Current Snapshot
 
@@ -57,11 +57,19 @@
   note suppression, and a max of two active notes with
   `adaptive_style_notes_updated` event logging to avoid model-input
   over-indexing from repeated guidance.
+- Frontend Playwright smoke E2E includes retry-variant lineage coverage
+  (`source_user_message_id` flow), including variant navigation and duplicate
+  user-row prevention assertions.
+- Branch rules now enforce PR + required checks (`test`, `markdownlint`) on
+  default branch (`main`) while allowing normal push/PR workflow on feature
+  branches.
+- `docs/FIGMA_NODE_TRACKER.md` is now intentionally local-only and gitignored
+  for proprietary/live node-tracking use.
 
 ## Latest Local Commit
 
-- `c95570b` on `main` (synced with `origin/main`)
-- Summary: chore: fix docker connectivity in devcontainer
+- `4f08304` on `main` (local ahead of `origin/main` by local housekeeping/docs commits)
+- Summary: chore: add figma tracker to gitignore
 
 ## Key Files To Read First
 
@@ -80,7 +88,8 @@
 4. `make doctor-env`
 5. `cd frontend && npm run build`
 6. `make portfolio-metadata-audit`
-7. `make server` and spot-check `/health`, `/chat`, `/skills/ocr`
+7. `cd frontend && npx playwright test e2e/smoke.spec.js`
+8. `make server` and spot-check `/health`, `/chat`, `/skills/ocr`
 
 ## Known Constraint
 
