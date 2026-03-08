@@ -28,6 +28,7 @@ WORKBENCH_PORT ?= 8020
 HALLUCINATION_EVAL_MODE ?= judge
 HALLUCINATION_JUDGE_MODEL ?= gpt-4.1-mini
 HALLUCINATION_JUDGE_API_KEY_ENV ?= OPENAI_API_KEY
+BRAINTRUST_OPENAI_BASE_URL ?=
 HALLUCINATION_JUDGE_BASE_URL ?=
 HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
 CLIP_AB_SOURCE_TYPES ?= image
@@ -90,7 +91,22 @@ eval-hallucination-deterministic:
 	$(PYTHON) tools/eval_hallucination.py --evaluation-mode deterministic --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 eval-hallucination-braintrust:
-	$(PYTHON) tools/eval_hallucination.py --evaluation-mode judge --judge-api-key-env BRAINTRUST_API_KEY --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
+	@set -eu; \
+	BASE_URL="$(HALLUCINATION_JUDGE_BASE_URL)"; \
+	if [ -z "$$BASE_URL" ]; then \
+		BASE_URL="$(BRAINTRUST_OPENAI_BASE_URL)"; \
+	fi; \
+	if [ -z "$$BASE_URL" ]; then \
+		echo "Missing Braintrust base URL."; \
+		echo "Set BRAINTRUST_OPENAI_BASE_URL (recommended: https://api.braintrust.dev/v1/proxy)"; \
+		echo "or pass HALLUCINATION_JUDGE_BASE_URL explicitly."; \
+		exit 2; \
+	fi; \
+	if [ -z "$${BRAINTRUST_API_KEY:-}" ]; then \
+		echo "Missing BRAINTRUST_API_KEY in environment."; \
+		exit 2; \
+	fi; \
+	$(PYTHON) tools/eval_hallucination.py --evaluation-mode judge --judge-api-key-env BRAINTRUST_API_KEY --judge-base-url "$$BASE_URL" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 eval-hallucination-report:
 	@mkdir -p eval_reports
