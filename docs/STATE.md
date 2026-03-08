@@ -26,6 +26,10 @@
   - periodic stale bucket cleanup in the in-memory limiter
   - per-chat personalization memory scope (`session` vs `global`)
   - `/chat` retrieval citations via `memory_used` when vector memory contributes context
+  - emotional-distress safety guardrails in chat composition (supportive tone,
+    high-risk escalation language, and explicit human-AI boundary constraints)
+  - recursive-rumination and interpersonal-attribution guardrails to reduce
+    motive-certainty loops, stereotype reinforcement, and divination-based certainty claims
 - Frontend now exposes per-chat personalization memory scope control in the header.
 - Frontend includes OCR upload wiring that posts to `/skills/ocr` and appends extracted text to the active chat.
 - Frontend includes indexed search UI in composer (`Search` toggle with `Insert`/`Ask` actions).

@@ -12,6 +12,10 @@
 - Prompt behavior stays minimal and aligned to legacy `try.py` style.
 - Optional Responses orchestration path is available behind env flags.
 - Governance and hallucination guardrails are now available behind env flags.
+- Emotional-distress guardrails are active in `/chat` composition with
+  supportive boundary guidance and high-risk escalation language.
+- Recursive rumination + interpersonal attribution guardrails are active for
+  repeated personal "why" loops, stereotype prompts, and divination-certainty framing.
 - Per-scope retrieval tuning is implemented and validated in API flow.
 - Collaboration v1 is live with explicit role handoff endpoints + per-chat handoff timeline.
 - Personalization v1 is live: per-chat retrieval memory scope (`session` or `global`).

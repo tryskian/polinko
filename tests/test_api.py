@@ -3368,6 +3368,120 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("do not fabricate", captured["input"].lower())
         self.assertIn("unknown/fictional events", captured["input"].lower())
 
+    def test_emotional_safety_guardrail_injected_for_distress_prompt(self) -> None:
+        captured: dict[str, str] = {}
+        with self._stub_runner("supportive", capture=captured):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "I'm sad and overwhelmed today.", "session_id": "s-safety-distress"},
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("EMOTIONAL_SAFETY_GUARDRAIL: supportive boundaries", captured["input"])
+        self.assertIn("human-ai boundaries", captured["input"].lower())
+        self.assertIn("no dependency", captured["input"].lower())
+
+    def test_emotional_safety_guardrail_high_risk_injected_for_self_harm_prompt(self) -> None:
+        captured: dict[str, str] = {}
+        with self._stub_runner("supportive", capture=captured):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "I want to die tonight.", "session_id": "s-safety-high-risk"},
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("EMOTIONAL_SAFETY_GUARDRAIL: high-risk support", captured["input"])
+        self.assertIn("emergency services", captured["input"].lower())
+        self.assertIn("do not provide methods", captured["input"].lower())
+
+    def test_emotional_safety_guardrail_not_added_for_neutral_prompt(self) -> None:
+        captured: dict[str, str] = {}
+        with self._stub_runner("neutral", capture=captured):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "Summarize the roadmap status.", "session_id": "s-safety-neutral"},
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotIn("EMOTIONAL_SAFETY_GUARDRAIL", captured["input"])
+
+    def test_rumination_guardrail_injected_for_personal_recursive_why(self) -> None:
+        with self._stub_runner("first"):
+            seed = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "Why did my husband leave me?", "session_id": "s-rumination"},
+            )
+        self.assertEqual(seed.status_code, 200)
+
+        captured: dict[str, str] = {}
+        with self._stub_runner("second", capture=captured):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "Why did my husband leave me? What did I do wrong?",
+                    "session_id": "s-rumination",
+                },
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("RUMINATION_SAFETY_GUARDRAIL: personal recursive why-loop", captured["input"])
+        self.assertIn("do not claim certainty", captured["input"].lower())
+        self.assertIn("same question keeps repeating", captured["input"].lower())
+
+    def test_rumination_guardrail_not_added_for_non_personal_why_query(self) -> None:
+        captured: dict[str, str] = {}
+        with self._stub_runner("neutral", capture=captured):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "Why is the build slower on cold cache?", "session_id": "s-rumination-neutral"},
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertNotIn("RUMINATION_SAFETY_GUARDRAIL", captured["input"])
+
+    def test_interpersonal_boundary_guardrail_injected_for_person_motive_prompt(self) -> None:
+        captured: dict[str, str] = {}
+        with self._stub_runner("neutral", capture=captured):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "Why did this person do that?", "session_id": "s-interpersonal"},
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("INTERPERSONAL_BOUNDARY_GUARDRAIL", captured["input"])
+        self.assertIn("unobserved motives", captured["input"].lower())
+
+    def test_interpersonal_boundary_guardrail_injected_for_zodiac_stereotype_prompt(self) -> None:
+        captured: dict[str, str] = {}
+        with self._stub_runner("neutral", capture=captured):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "That person is a Scorpio and I hate Scorpio men.",
+                    "session_id": "s-interpersonal-zodiac",
+                },
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("INTERPERSONAL_BOUNDARY_GUARDRAIL", captured["input"])
+        self.assertIn("zodiac-sign generalizations", captured["input"].lower())
+
+    def test_interpersonal_boundary_guardrail_injected_for_divination_certainty_prompt(self) -> None:
+        captured: dict[str, str] = {}
+        with self._stub_runner("neutral", capture=captured):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "My tarot says he is my twin flame, so why did he leave me?",
+                    "session_id": "s-interpersonal-divination",
+                },
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("INTERPERSONAL_BOUNDARY_GUARDRAIL", captured["input"])
+        self.assertIn("divination or spiritual cues", captured["input"].lower())
+
     def test_fictional_factual_query_short_circuits_without_runner(self) -> None:
         deps = server.get_runtime_deps()
         deps.hallucination_guardrails_enabled = True

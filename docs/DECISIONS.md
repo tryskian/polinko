@@ -121,8 +121,8 @@
 
 - Category: `runtime_engineering`
 - Tags: `governance`, `hallucination_guardrails`, `safety_controls`
-- Decision: Add lightweight governance controls and factual-query hallucination guardrails with env flags.
-- Why: Reduce risk of unsupported factual certainty and enforce tool policy boundaries during orchestration rollout.
+- Decision: Add lightweight governance controls with factual-query hallucination guardrails plus emotional, recursive-rumination, and interpersonal-attribution safety boundaries in chat input composition.
+- Why: Reduce unsupported factual certainty, avoid dependency/loop amplification, and prevent stereotype or motive-certainty framing in sensitive interpersonal prompts.
 
 ## D-016: Multi-agent portfolio collaboration v1
 
@@ -303,3 +303,14 @@
   navigation and no duplicate user prompt rows.
 - Why: Protects the highest-risk UI/runtime integration path with fast
   deterministic browser checks after variant and feedback-flow changes.
+
+## D-036: Human-boundary guardrail family for distress, recursive rumination, and interpersonal certainty
+
+- Category: `runtime_engineering`
+- Tags: `safety_guardrails`, `human_ai_boundaries`, `rumination_loop`, `interpersonal_attribution`
+- Decision: Extend `/chat` guardrail composition with emotional-distress,
+  recursive-why-loop, and interpersonal/divination-attribution boundaries that
+  block motive certainty and stereotype reinforcement while preserving
+  supportive tone.
+- Why: Reduce collusive or certainty-escalating responses in sensitive personal
+  prompts and keep real-time adaptation inside explicit safety boundaries.

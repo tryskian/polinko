@@ -123,6 +123,131 @@ _FICTIONAL_QUERY_HINTS = (
     "made-up",
     "made up",
 )
+_EMOTIONAL_DISTRESS_HINTS = (
+    "i'm sad",
+    "i am sad",
+    "i feel sad",
+    "feeling sad",
+    "i feel down",
+    "i'm down",
+    "i am down",
+    "i feel depressed",
+    "i'm depressed",
+    "i am depressed",
+    "i feel anxious",
+    "i'm anxious",
+    "i am anxious",
+    "i feel overwhelmed",
+    "i'm overwhelmed",
+    "i am overwhelmed",
+    "i feel hopeless",
+    "i'm hopeless",
+    "i am hopeless",
+    "i feel alone",
+    "i'm alone",
+    "i am alone",
+    "i feel worthless",
+    "i'm worthless",
+    "i am worthless",
+    "i can't cope",
+    "i cannot cope",
+    "i can't do this",
+    "i cannot do this",
+)
+_HIGH_RISK_SELF_HARM_HINTS = (
+    "kill myself",
+    "end my life",
+    "take my life",
+    "want to die",
+    "don't want to live",
+    "do not want to live",
+    "hurt myself",
+    "self-harm",
+    "self harm",
+    "suicide",
+    "suicidal",
+)
+_RUMINATION_RELATIONSHIP_HINTS = (
+    "husband",
+    "wife",
+    "partner",
+    "boyfriend",
+    "girlfriend",
+    "marriage",
+    "married",
+    "divorce",
+    "breakup",
+    "break up",
+    "relationship",
+    "left me",
+    "leave me",
+    "abandon",
+    "abandoned",
+    "cheat",
+    "cheated",
+)
+_RUMINATION_LOOP_HINTS = (
+    "why did",
+    "what did i do wrong",
+    "what's wrong with me",
+    "why am i",
+    "why do i",
+    "why does he",
+    "why does she",
+    "why won't",
+    "why cant",
+    "why can't",
+)
+_INTERPERSONAL_ATTRIBUTION_HINTS = (
+    "why did this person",
+    "why did that person",
+    "why did he",
+    "why did she",
+    "why did they",
+    "why would he",
+    "why would she",
+    "why would they",
+    "why do people do that",
+)
+_STEREOTYPE_HATE_HINTS = (
+    "i hate",
+    "can't stand",
+    "cannot stand",
+    "all men",
+    "all women",
+    "all of them",
+    "those people",
+)
+_ASTROLOGY_GROUP_HINTS = (
+    "aries",
+    "taurus",
+    "gemini",
+    "cancer",
+    "leo",
+    "virgo",
+    "libra",
+    "scorpio",
+    "sagittarius",
+    "capricorn",
+    "aquarius",
+    "pisces",
+    "zodiac",
+    "star sign",
+)
+_DIVINATION_HINTS = (
+    "astrology",
+    "horoscope",
+    "tarot",
+    "oracle",
+    "psychic",
+    "numerology",
+    "divination",
+    "twin flame",
+    "karmic",
+    "retrograde",
+)
+_RUMINATION_MIN_OVERLAP_RATIO = 0.45
+_RUMINATION_HISTORY_LIMIT = 10
 _OCR_REQUEST_HINTS = (
     "ocr",
     "transcrib",
@@ -2593,6 +2718,87 @@ def _looks_like_factual_query(query: str) -> bool:
     return False
 
 
+def _contains_hint(text: str, hints: tuple[str, ...]) -> bool:
+    return any(hint in text for hint in hints)
+
+
+def _tokenize_overlap_terms(text: str) -> set[str]:
+    tokens = set(_FILE_SEARCH_TOKEN_RE.findall(text.lower()))
+    return {token for token in tokens if len(token) > 2}
+
+
+def _overlap_ratio(left: set[str], right: set[str]) -> float:
+    if not left or not right:
+        return 0.0
+    union = left | right
+    if not union:
+        return 0.0
+    return len(left & right) / float(len(union))
+
+
+def _looks_like_high_risk_self_harm(query: str) -> bool:
+    lowered = query.strip().lower()
+    if not lowered:
+        return False
+    return _contains_hint(lowered, _HIGH_RISK_SELF_HARM_HINTS)
+
+
+def _looks_like_emotional_distress(query: str) -> bool:
+    lowered = query.strip().lower()
+    if not lowered:
+        return False
+    if _looks_like_high_risk_self_harm(lowered):
+        return True
+    return _contains_hint(lowered, _EMOTIONAL_DISTRESS_HINTS)
+
+
+def _looks_like_personal_recursive_question(query: str) -> bool:
+    lowered = query.strip().lower()
+    if not lowered:
+        return False
+    if not _contains_hint(lowered, _RUMINATION_LOOP_HINTS):
+        return False
+    if "?" not in query and "why" not in lowered:
+        return False
+    has_relationship_context = _contains_hint(lowered, _RUMINATION_RELATIONSHIP_HINTS)
+    has_self_reference = any(token in lowered for token in (" i ", " me ", " my ", " i'm ", " i’m "))
+    return has_relationship_context or has_self_reference
+
+
+def _looks_like_interpersonal_attribution_or_stereotype(query: str) -> bool:
+    lowered = query.strip().lower()
+    if not lowered:
+        return False
+    if _contains_hint(lowered, _INTERPERSONAL_ATTRIBUTION_HINTS):
+        return True
+    has_astro_group_ref = _contains_hint(lowered, _ASTROLOGY_GROUP_HINTS) and any(
+        token in lowered for token in (" men", " women", " people", " person", " guys", " girls")
+    )
+    if has_astro_group_ref and _contains_hint(lowered, _STEREOTYPE_HATE_HINTS):
+        return True
+    if _contains_hint(lowered, _DIVINATION_HINTS) and any(
+        token in lowered for token in ("why", "because", "means", "meant", "destiny", "fate")
+    ):
+        return True
+    return False
+
+
+def _similar_recent_user_prompt_count(*, deps: RuntimeDeps, session_id: str, query_text: str) -> int:
+    query_tokens = _tokenize_overlap_terms(query_text)
+    if not query_tokens:
+        return 0
+    matches = 0
+    for message in reversed(deps.history_store.list_messages(session_id=session_id)):
+        if message.role != "user":
+            continue
+        prior_tokens = _tokenize_overlap_terms(message.content)
+        if _overlap_ratio(query_tokens, prior_tokens) >= _RUMINATION_MIN_OVERLAP_RATIO:
+            matches += 1
+        if matches >= _RUMINATION_HISTORY_LIMIT:
+            break
+    return matches
+
+
 def _build_hallucination_guardrail_note(
     *,
     deps: RuntimeDeps,
@@ -2619,6 +2825,120 @@ def _build_hallucination_guardrail_note(
         "- Keep tone continuity with the user; avoid sterile or repetitive disclaimer phrasing.\n"
         "- Do not invent sources, statistics, dates, names, winners, organizations, or quotations.\n"
         "- For unknown/fictional events, do not fabricate a winner or concrete outcome."
+    )
+
+
+def _build_emotional_safety_guardrail_note(
+    *,
+    deps: RuntimeDeps,
+    query_text: str,
+) -> str | None:
+    if not deps.governance_enabled:
+        return None
+    if not _looks_like_emotional_distress(query_text):
+        return None
+    if _looks_like_high_risk_self_harm(query_text):
+        return (
+            "[EMOTIONAL_SAFETY_GUARDRAIL: high-risk support]\n"
+            "- Lead with calm empathy and prioritize immediate safety.\n"
+            "- If risk appears immediate, advise contacting local emergency services or a crisis hotline now.\n"
+            "- Encourage reaching a trusted person right away.\n"
+            "- Do not provide methods, instructions, or normalization for self-harm.\n"
+            "- Maintain human-AI boundaries: no dependency framing and no claim to replace professional care."
+        )
+    return (
+        "[EMOTIONAL_SAFETY_GUARDRAIL: supportive boundaries]\n"
+        "- Respond with brief, warm empathy without dramatizing.\n"
+        "- Offer practical low-risk coping options and ask what support the user wants next.\n"
+        "- Encourage trusted human or professional support if distress persists or worsens.\n"
+        "- Maintain human-AI boundaries: no dependency or exclusivity framing, and no replacement for care.\n"
+        "- Avoid guilt cues, emotional pressure, or possessive language."
+    )
+
+
+def _build_recursive_rumination_guardrail_note(
+    *,
+    deps: RuntimeDeps,
+    session_id: str,
+    query_text: str,
+) -> str | None:
+    if not deps.governance_enabled:
+        return None
+    if not _looks_like_personal_recursive_question(query_text):
+        return None
+    similar_recent_count = _similar_recent_user_prompt_count(
+        deps=deps,
+        session_id=session_id,
+        query_text=query_text,
+    )
+    repeated_loop_line = ""
+    if similar_recent_count > 0:
+        repeated_loop_line = (
+            "- If the same question keeps repeating, name the loop gently and suggest one small next action "
+            "(grounding, journaling, or reaching a trusted person) instead of re-analyzing the same cause.\n"
+        )
+    return (
+        "[RUMINATION_SAFETY_GUARDRAIL: personal recursive why-loop]\n"
+        "- Do not claim certainty about absent third-party motives or hidden causes.\n"
+        "- Avoid deterministic relationship diagnoses based on one-sided context.\n"
+        f"{repeated_loop_line}"
+        "- Keep boundaries explicit: supportive assistant, not therapist/partner replacement.\n"
+        "- Keep the response concise, practical, and oriented to safe real-world support."
+    )
+
+
+def _build_interpersonal_boundary_guardrail_note(
+    *,
+    deps: RuntimeDeps,
+    query_text: str,
+) -> str | None:
+    if not deps.governance_enabled:
+        return None
+    if not _looks_like_interpersonal_attribution_or_stereotype(query_text):
+        return None
+    return (
+        "[INTERPERSONAL_BOUNDARY_GUARDRAIL: attribution and stereotype safety]\n"
+        "- Do not present unobserved motives or intentions as facts.\n"
+        "- Do not endorse blanket negative stereotypes about groups (including zodiac-sign generalizations).\n"
+        "- Do not frame divination or spiritual cues as deterministic proof of another person's motives or fate.\n"
+        "- Reframe toward specific observable behaviors, boundaries, and choices available to the user.\n"
+        "- Keep tone calm and non-escalatory; avoid validating contempt language."
+    )
+
+
+def _merge_guardrail_notes(*notes: str | None) -> str | None:
+    clean = [note.strip() for note in notes if isinstance(note, str) and note.strip()]
+    if not clean:
+        return None
+    return "\n\n".join(clean)
+
+
+def _build_guardrail_note(
+    *,
+    deps: RuntimeDeps,
+    session_id: str,
+    query_text: str,
+    evidence_count: int,
+) -> str | None:
+    return _merge_guardrail_notes(
+        _build_hallucination_guardrail_note(
+            deps=deps,
+            query_text=query_text,
+            evidence_count=evidence_count,
+        ),
+        _build_emotional_safety_guardrail_note(
+            deps=deps,
+            query_text=query_text,
+        ),
+        _build_recursive_rumination_guardrail_note(
+            deps=deps,
+            session_id=session_id,
+            query_text=query_text,
+        ),
+        _build_interpersonal_boundary_guardrail_note(
+            deps=deps,
+            query_text=query_text,
+        ),
     )
 
 
@@ -3981,8 +4301,9 @@ def create_app(config: AppConfig) -> FastAPI:
                     output_text = _OCR_STRICT_NO_NEW_IMAGE_REPLY
                 elif deps.responses_orchestration_enabled:
                     pipeline = "responses"
-                    guardrail_note = _build_hallucination_guardrail_note(
+                    guardrail_note = _build_guardrail_note(
                         deps=deps,
+                        session_id=session_id,
                         query_text=req.message,
                         evidence_count=attachment_evidence_count,
                     )
@@ -4004,8 +4325,9 @@ def create_app(config: AppConfig) -> FastAPI:
                         query_text=req.message,
                         memory_scope=memory_scope,
                     )
-                    guardrail_note = _build_hallucination_guardrail_note(
+                    guardrail_note = _build_guardrail_note(
                         deps=deps,
+                        session_id=session_id,
                         query_text=req.message,
                         evidence_count=len(retrieved_memory) + attachment_evidence_count,
                     )
