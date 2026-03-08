@@ -98,6 +98,11 @@
   near-duplicate suppression, and a max of two active notes, with note-change
   events logged as `adaptive_style_notes_updated` to prevent prompt/input
   over-indexing.
+- Exploratory style-patterning trace was captured for low-context symbolic
+  exchanges (emoticon-only turns): observed verbosity compression, motif
+  lock-in, reward over-indexing after positive reinforcement, and collapse
+  behavior after malformed-emoticon/render events. This is currently a planning
+  signal for eval refinement, not a formal benchmark.
 - Portfolio metadata audit tooling is available (`make portfolio-metadata-audit`)
   and validates evidence-index + evidence-log metadata completeness.
 - Integration tests exist and pass locally (`tests/test_api.py`).
@@ -141,6 +146,8 @@ Use this in a new chat:
 4. Add ELT-style batch extraction pipeline (OCR alternative path) for large archive ingestion.
 5. Resume Figma/UI parity after backend retrieval/OCR/file-search milestones are stable.
 6. Add model-graders evaluation loop after retrieval quality and schema stability are locked.
+7. Convert the low-context style-patterning trace into a reproducible micro-eval
+   (minimal greeting anti-filler + motif-diversity checks).
 
 ## Cookbook Roadmap (Prioritized)
 

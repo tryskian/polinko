@@ -61,6 +61,11 @@
   note suppression, and a max of two active notes with
   `adaptive_style_notes_updated` event logging to avoid model-input
   over-indexing from repeated guidance.
+- Exploratory low-context style-patterning traces were captured (symbolic
+  emoticon exchanges) and surfaced a useful eval-design signal: verbosity
+  compression under minimal prompts, motif lock-in (for example star/diamond
+  endings), reward over-indexing after positive preference cues, and occasional
+  repetition collapse after malformed-emoticon/render events.
 - Frontend Playwright smoke E2E includes retry-variant lineage coverage
   (`source_user_message_id` flow), including variant navigation and duplicate
   user-row prevention assertions.
@@ -104,6 +109,8 @@
 - Calibrate and enable the Braintrust hallucination judge gate in CI
   (threshold confirmation + repo vars/secrets), then begin:
   - P2: CLIP multimodal retrieval A/B experiment
+  - style micro-eval: low-context anti-filler + motif-diversity regression
+    checks from exploratory trace
 
 ## Copy/Paste Rehydrate Prompt
 
