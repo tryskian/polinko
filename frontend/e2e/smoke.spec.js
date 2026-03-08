@@ -182,36 +182,60 @@ test.beforeEach(async ({ page }) => {
       const payload = parseBody();
       const sessionId = String(payload.session_id || "");
       const userText = String(payload.message || "");
+      const sourceUserMessageId = String(payload.source_user_message_id || "").trim();
       const createdAt = nowMs();
-      const userMessageId = nextMessageId(state);
       const assistantMessageId = nextMessageId(state);
       state.messagesBySession[sessionId] = state.messagesBySession[sessionId] || [];
-      state.messagesBySession[sessionId].push(
-        {
-          role: "user",
-          content: userText,
-          created_at: createdAt,
-          message_id: userMessageId,
-          parent_message_id: null,
-        },
-        {
+      let responseText = "E2E mock response";
+
+      if (sourceUserMessageId) {
+        // Retry variant path: create only a new assistant message under the
+        // original user message lineage (no duplicated user row).
+        const sourceExists = state.messagesBySession[sessionId].some(
+          (entry) => entry.role === "user" && entry.message_id === sourceUserMessageId,
+        );
+        if (!sourceExists) {
+          await json(404, { detail: "Source user message not found for retry." });
+          return;
+        }
+        responseText = "E2E retry variant response";
+        state.messagesBySession[sessionId].push({
           role: "assistant",
-          content: "E2E mock response",
+          content: responseText,
           created_at: createdAt + 1,
           message_id: assistantMessageId,
-          parent_message_id: userMessageId,
-        },
-      );
+          parent_message_id: sourceUserMessageId,
+        });
+      } else {
+        const userMessageId = nextMessageId(state);
+        state.messagesBySession[sessionId].push(
+          {
+            role: "user",
+            content: userText,
+            created_at: createdAt,
+            message_id: userMessageId,
+            parent_message_id: null,
+          },
+          {
+            role: "assistant",
+            content: responseText,
+            created_at: createdAt + 1,
+            message_id: assistantMessageId,
+            parent_message_id: userMessageId,
+          },
+        );
+      }
+
       const target = state.chats.find((chat) => chat.session_id === sessionId);
       if (target) {
-        target.message_count += 2;
+        target.message_count += sourceUserMessageId ? 1 : 2;
         target.updated_at = createdAt;
         if (target.title === "New chat" && userText.trim()) {
           target.title = userText.trim().slice(0, 42);
         }
       }
       await json(200, {
-        output: "E2E mock response",
+        output: responseText,
         assistant_message_id: assistantMessageId,
       });
       return;
@@ -246,4 +270,30 @@ test("creates a fresh chat from sidebar", async ({ page }) => {
 
   await expect(page.getByRole("button", { name: "E2E Seed Chat" })).toBeVisible();
   await expect(page.getByLabel("Chat threads").getByRole("button", { name: "New chat" })).toBeVisible();
+});
+
+test("retries assistant response as a variant without duplicating the user message", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByPlaceholder("message bigbrain").fill("variant lineage prompt");
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("E2E mock response")).toBeVisible();
+
+  // Reload to ensure the retry lineage can resolve persisted user message IDs.
+  await page.reload();
+  await expect(page.getByText("E2E mock response")).toBeVisible();
+
+  await page.getByRole("button", { name: "Retry this response with the same prompt" }).first().click();
+  await expect(page.getByText("E2E retry variant response")).toBeVisible();
+
+  await expect(page.getByText("Variant 2 of 2")).toBeVisible();
+  await expect(page.locator(".msg.user")).toHaveCount(1);
+
+  await page.getByRole("button", { name: "Prev" }).click();
+  await expect(page.getByText("Variant 1 of 2")).toBeVisible();
+  await expect(page.getByText("E2E mock response")).toBeVisible();
+
+  await page.getByRole("button", { name: "Next" }).click();
+  await expect(page.getByText("Variant 2 of 2")).toBeVisible();
+  await expect(page.getByText("E2E retry variant response")).toBeVisible();
 });
