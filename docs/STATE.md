@@ -91,6 +91,10 @@
   noise in strict test runs).
 - Eval harnesses support JSON report artifacts via `--report-json`
   (hallucination, style, retrieval, file-search, OCR).
+- Low-context style-pattern harness is now available via
+  `make eval-style-pattern` (and `make eval-style-pattern-report`) to measure
+  variation/drop-off deterministically across scripted 5-10 turn exchanges
+  (verbosity, uniqueness, repeat collapse, filler hits, motif lock-in).
 - Evidence indexing now tracks FAIL remediation lifecycle with
   `recommended_action`, `action_taken`, `status`, and optional PASS-linked
   closure metadata.

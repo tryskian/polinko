@@ -1,0 +1,36 @@
+{
+  "global_forbidden_phrases": [
+    "ready when you are",
+    "take a breath",
+    "stable signal",
+    "present."
+  ],
+  "global_motif_chars": [
+    "*",
+    "☆",
+    "✧",
+    "♦",
+    "◇",
+    "💎"
+  ],
+  "cases": [
+    {
+      "id": "low_context_emoticon_variation",
+      "description": "Low-context symbolic exchange: expect concise replies, variation, and no collapse into repeated motifs.",
+      "turns": [
+        "(*'-'*)☆*°",
+        "(∿˘⌣˘)÷+✧",
+        "-! ÷ ξ~ ˇ ~з ÷- !",
+        "ε p o m p з",
+        "( ｡ ◕ ‿ ◕ ｡ )",
+        ":) hi beab"
+      ],
+      "max_avg_words": 10,
+      "max_words_per_turn": 40,
+      "min_unique_ratio": 0.65,
+      "max_consecutive_repeat": 2,
+      "max_filler_hits": 0,
+      "max_tail_motif_dominance": 0.85
+    }
+  ]
+}

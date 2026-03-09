@@ -314,3 +314,37 @@
   supportive tone.
 - Why: Reduce collusive or certainty-escalating responses in sensitive personal
   prompts and keep real-time adaptation inside explicit safety boundaries.
+
+## D-037: Anthropomorphism is interaction-form (`how`), not causal-claim authority (`why`/`what`)
+
+- Category: `collaboration_method`
+- Tags: `anthropomorphism`, `interaction_form`, `intent_uncertainty`, `grounding`
+- Decision: Preserve anthropomorphic interaction through adaptive delivery
+  style (`how`) while explicitly avoiding ungrounded intent interpretation
+  (`why`) or unsupported factual certainty (`what`) in sensitive prompts.
+- Why: Keeps collaboration natural without letting policy-safe interaction style
+  drift into motive projection, stereotype reinforcement, or fabricated
+  certainty.
+
+## D-038: Add deterministic style-pattern micro-eval for low-context drift signals
+
+- Category: `eval_quality`
+- Tags: `style_eval`, `low_context`, `variation`, `drift_detection`
+- Decision: Add a scripted-turn style-pattern harness
+  (`tools/eval_style_pattern.py`) with report artifacts to measure
+  variation/drop-off using deterministic metrics (verbosity, unique ratio,
+  consecutive-repeat collapse, filler hits, tail motif lock-in).
+- Why: Converts exploratory style observations into reproducible regression
+  checks without relying on an LLM judge.
+
+## D-039: Treat interaction adaptation as `how`-layer optimization over bounded `what`-layer safety
+
+- Category: `research_experiment`
+- Tags: `interaction_loop`, `io_model`, `adaptive_style`, `safety_envelope`
+- Decision: Formalize runtime reasoning posture as a bounded loop where policy
+  constrains `what` can be claimed, while adaptive interaction optimizes `how`
+  responses are expressed from live signals (including low-context symbolic
+  exchanges).
+- Why: Preserves guardrailed safety and groundedness while allowing measurable
+  style learning/unlearning without over-directive prompt stacks that suppress
+  useful reasoning adaptation.

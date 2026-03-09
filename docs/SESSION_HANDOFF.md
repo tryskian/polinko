@@ -69,6 +69,10 @@
 - Frontend Playwright smoke E2E includes retry-variant lineage coverage
   (`source_user_message_id` flow), including variant navigation and duplicate
   user-row prevention assertions.
+- Style-pattern micro-eval harness is implemented for low-context scripted
+  turn sequences (`make eval-style-pattern`), with report mode
+  (`make eval-style-pattern-report`) and metrics for verbosity, uniqueness,
+  repeat collapse, filler hits, and motif lock-in.
 - Branch rules now enforce PR + required checks (`test`, `markdownlint`) on
   default branch (`main`) while allowing normal push/PR workflow on feature
   branches.
