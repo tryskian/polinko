@@ -141,6 +141,29 @@
      settings/workspace files.
    - run `Developer: Reload Window`.
 
+## Agent-Safe Environment Changes (No-Guessing Policy)
+
+1. Verify context before any env/tooling mutation:
+   - `pwd` must be `/Users/tryskian/Github/polinko` (canonical repo path).
+   - confirm mode: host vs devcontainer.
+   - confirm branch: `git rev-parse --abbrev-ref HEAD`.
+2. Prefer repo-scoped changes first:
+   - `.vscode/settings.json`
+   - `.devcontainer/devcontainer.json`
+   - repo scripts/Make targets
+3. Do not modify user-level shell/profile or global editor config without
+   explicit approval in-chat:
+   - `~/.zshrc`, `~/.zprofile`, `~/.bashrc`
+   - `~/Library/Application Support/Code/User/settings.json`
+4. Do not introduce auto-start shell hooks (for example `chpwd` +
+   `make server`) unless explicitly requested and documented in the repo.
+5. If a rogue/accidental agent change is suspected, run triage in this order:
+   - inspect tracked repo changes (`git status`, `git diff`)
+   - inspect suspicious files/symlinks inside repo only
+   - restore tracked files from git first, then re-run `make doctor-env`
+6. Treat unknown binary/corrupt artifact files as suspect; do not "repair" by
+   guessing content. Remove/replace only after provenance is confirmed.
+
 ## Reset Local Session Memory
 
 1. Stop running processes.
