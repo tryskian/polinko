@@ -303,6 +303,7 @@
   navigation and no duplicate user prompt rows.
 - Why: Protects the highest-risk UI/runtime integration path with fast
   deterministic browser checks after variant and feedback-flow changes.
+
 ## D-037: Verification-first environment mutation policy (anti-gremlin)
 
 - Category: `workflow_environment`
