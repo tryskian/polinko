@@ -303,3 +303,14 @@
   navigation and no duplicate user prompt rows.
 - Why: Protects the highest-risk UI/runtime integration path with fast
   deterministic browser checks after variant and feedback-flow changes.
+## D-037: Verification-first environment mutation policy (anti-gremlin)
+
+- Category: `workflow_environment`
+- Tags: `agent_hygiene`, `no_guessing`, `scope_control`, `env_stability`
+- Decision: Adopt a strict verify-before-mutate workflow for environment fixes:
+  confirm canonical repo path, host/container mode, and branch first; prefer
+  repo-scoped configuration edits; block user-level shell/profile or global VS
+  Code settings changes unless explicitly approved in-chat.
+- Why: Prevents recurring configuration drift from speculative fixes, limits
+  blast radius during troubleshooting, and preserves reproducible startup
+  behavior across sessions and agents.

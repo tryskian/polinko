@@ -65,6 +65,10 @@
   branches.
 - `docs/FIGMA_NODE_TRACKER.md` is now intentionally local-only and gitignored
   for proprietary/live node-tracking use.
+- Environment troubleshooting now follows a verification-first, no-guessing
+  policy: verify repo path/mode/branch first, prefer repo-scoped config
+  changes, and do not mutate `~/.zshrc` or global VS Code settings without
+  explicit in-chat approval.
 
 ## Latest Local Commit
 
@@ -94,6 +98,8 @@
 ## Known Constraint
 
 - No open high-priority runtime constraints currently tracked.
+- Workflow constraint: user-level shell/profile and global editor settings are
+  immutable by default during normal repo troubleshooting.
 
 ## Immediate Next Step
 
@@ -103,4 +109,4 @@
 
 ## Copy/Paste Rehydrate Prompt
 
-`Read docs/CHARTER.md, docs/STATE.md, docs/DECISIONS.md, and docs/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, and confirm active git branch. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behavior drift and full test/build validation.`
+`Read docs/CHARTER.md, docs/STATE.md, docs/DECISIONS.md, and docs/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, and confirm active git branch. Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behavior drift and full test/build validation.`
