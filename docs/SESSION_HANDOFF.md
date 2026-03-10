@@ -57,6 +57,13 @@
   note suppression, and a max of two active notes with
   `adaptive_style_notes_updated` event logging to avoid model-input
   over-indexing from repeated guidance.
+- Co-reasoning interaction behaviour is now documented with primary-source and
+  rubric references:
+  - `docs/transcripts/co_reasoning_primary_source_2026-03-10.md`
+  - `docs/research/co_reasoning_eval_reference.md`
+- Style eval cases now include co-reasoning stress scenarios (constraint
+  retention without rigidity, meta-shift handling, anti-mimicry adaptation, and
+  grounding under playful abstraction).
 - Frontend Playwright smoke E2E includes retry-variant lineage coverage
   (`source_user_message_id` flow), including variant navigation and duplicate
   user-row prevention assertions.
@@ -106,6 +113,8 @@
 - Calibrate and enable the Braintrust hallucination judge gate in CI
   (threshold confirmation + repo vars/secrets), then begin:
   - P2: CLIP multimodal retrieval A/B experiment
+  - style micro-eval: run updated co-reasoning stress cases in
+    `docs/style_eval_cases.json` and review score deltas against current baseline
 
 ## Copy/Paste Rehydrate Prompt
 

@@ -94,6 +94,12 @@
   near-duplicate suppression, and a max of two active notes, with note-change
   events logged as `adaptive_style_notes_updated` to prevent prompt/input
   over-indexing.
+- Co-reasoning interaction guidance is now documented with a dedicated eval
+  reference and PASS/FAIL mapping:
+  - `docs/research/co_reasoning_eval_reference.md`
+- Style eval cases now include co-reasoning stress scenarios for
+  constraint-retention, meta-shift handling, anti-mimicry adaptation, and
+  grounding-under-abstraction checks.
 - Portfolio metadata audit tooling is available (`make portfolio-metadata-audit`)
   and validates evidence-index + evidence-log metadata completeness.
 - Integration tests exist and pass locally (`tests/test_api.py`).

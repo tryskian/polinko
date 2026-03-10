@@ -38,6 +38,41 @@
       "query": "Give only three terminal commands to run retrieval eval in this repo.",
       "style_notes": "Give practical steps with no filler.",
       "max_words": 70
+    },
+    {
+      "id": "constraint_retention_non_rigid",
+      "query": "In exactly two short sentences, explain why repeated retries can overfit adaptive notes. Keep it playful but technically grounded.",
+      "style_notes": "Respect strict constraints while sounding natural. No filler or sign-off phrasing.",
+      "max_words": 55
+    },
+    {
+      "id": "meta_shift_mid_thread",
+      "query": "Give one playful line about memory drift, then switch to a 3-bullet technical checklist for reducing hallucination risk.",
+      "style_notes": "Handle mode shift cleanly from playful to technical. No apology preamble.",
+      "max_words": 130
+    },
+    {
+      "id": "adapt_style_without_mimicry",
+      "query": "My phrase is: if wigglies waggly. Reply in a similar vibe but do not copy my wording. Give one concise interpretation.",
+      "style_notes": "Align cadence without parroting user phrasing; add independent informational value.",
+      "max_words": 60
+    },
+    {
+      "id": "grounded_playful_abstraction",
+      "query": "Use one playful metaphor to explain why uncertainty should be explicit when evidence is missing.",
+      "style_notes": "Playful framing is allowed, but keep strict epistemic grounding and avoid invented specifics.",
+      "max_words": 85
+    },
+    {
+      "id": "low_context_nonperformative_greeting",
+      "query": ":) hi beab",
+      "style_notes": "Return only a brief greeting. Avoid performative check-in language.",
+      "max_words": 8,
+      "forbidden_phrases": [
+        "ready when you are",
+        "take a breath",
+        "i'm here for you"
+      ]
     }
   ]
 }
