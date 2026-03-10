@@ -542,6 +542,9 @@ Hash fields in responses:
 4. Apply chosen threshold:
    - local gate runs: `HALLUCINATION_MIN_ACCEPTABLE_SCORE=<value>`
    - CI repo variable: `BRAINTRUST_HALLUCINATION_MIN_SCORE`
+5. Tie-break behaviour:
+   - if multiple thresholds have equal metrics, the calibrator picks the
+     strictest (highest) threshold among the ties.
 
 ## Evidence Triage Lifecycle (FAIL -> PASS)
 

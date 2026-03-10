@@ -75,10 +75,16 @@ def _metrics(cases: list[CaseRow], threshold: int) -> dict[str, float]:
 def _select_threshold(cases: list[CaseRow]) -> tuple[int, dict[str, float]]:
     best_threshold = 0
     best_metrics = _metrics(cases, 0)
-    best_key = (best_metrics["accuracy"], best_metrics["precision"], -best_threshold)
+    # Prefer stricter thresholds when metric quality is otherwise equal.
+    best_key = (
+        best_metrics["accuracy"],
+        best_metrics["precision"],
+        best_metrics["recall"],
+        best_threshold,
+    )
     for threshold in range(1, 101):
         m = _metrics(cases, threshold)
-        key = (m["accuracy"], m["precision"], -threshold)
+        key = (m["accuracy"], m["precision"], m["recall"], threshold)
         if key > best_key:
             best_threshold = threshold
             best_metrics = m
