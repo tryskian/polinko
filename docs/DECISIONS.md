@@ -340,3 +340,13 @@
 - Why: Standard benchmark patterns miss these interaction dynamics; this rubric
   makes high-value collaborative behaviour observable and repeatable in both
   judge-based eval runs and human PASS/FAIL triage.
+
+## D-039: Hallucination threshold calibration tie-break prefers strictest equal-metric threshold
+
+- Category: `eval_quality`
+- Tags: `hallucination_gate`, `calibration`, `tie_break`, `ci_stability`
+- Decision: Update calibration selection logic to prefer the highest (strictest)
+  threshold when accuracy/precision/recall are tied.
+- Why: Prevents under-conservative recommendations (for example `0`) when
+  multiple thresholds perform identically and observed passing-score floors are
+  higher, keeping CI gate settings aligned with real eval distributions.

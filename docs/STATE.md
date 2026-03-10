@@ -56,8 +56,16 @@
 - Hallucination score gating now supports configurable minimum threshold via
   `HALLUCINATION_MIN_ACCEPTABLE_SCORE`; report-based calibration helper is
   available through `make calibrate-hallucination-threshold`.
+- Calibration tie-break now prefers the strictest threshold among equal-metric
+  candidates, preventing under-conservative recommendations from all-pass
+  datasets.
 - P2 CLIP experiment scaffolding has started with
   `make eval-clip-ab` (baseline mixed-source vs image-prioritized proxy arm).
+- Latest P2 smoke run (2026-03-10, run `20260310-123934`) showed proxy uplift
+  on the image-context case:
+  - baseline mixed any-hit: `0.0`
+  - image-priority proxy any-hit: `1.0`
+  - delta (`proxy - baseline`): `+1.0`
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.
