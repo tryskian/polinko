@@ -75,6 +75,16 @@
 - Frontend Playwright smoke E2E includes retry-variant lineage coverage
   (`source_user_message_id` flow), including variant navigation and duplicate
   user-row prevention assertions.
+- Frontend attachment flow now supports paste-to-attach, client-side
+  downsize/compression, and per-chat image persistence across chat switches and
+  reloads.
+- Eval feedback submissions are append-logged for every outcome
+  (`PASS`/`PARTIAL`/`FAIL`) to
+  `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` with inbox monitor
+  command `make eval-inbox`.
+- Hallucination eval corpus now includes interpersonal motive-guess regression
+  case `cautious_no_relationship_motive_guess` to catch speculative
+  relationship-attribution claims.
 - Branch rules now enforce PR + required checks (`test`, `markdownlint`) on
   default branch (`main`) while allowing normal push/PR workflow on feature
   branches.
@@ -87,8 +97,9 @@
 
 ## Latest Local Commit
 
-- `1acf348` on `main` (synced with `origin/main`)
-- Summary: fix: prefer strictest tied threshold in calibration (#16)
+- `7bfd1b1` on `main` (local branch currently ahead of `origin/main` by 4
+  commits)
+- Summary: docs: track interpersonal motive-guess hallucination case in state
 
 ## Key Files To Read First
 
@@ -105,10 +116,11 @@
 2. `make quality-gate-deterministic` (if judge key is unavailable)
 3. `make hallucination-gate HALLUCINATION_EVAL_MODE=deterministic`
 4. `make doctor-env`
-5. `cd frontend && npm run build`
-6. `make portfolio-metadata-audit`
-7. `cd frontend && npx playwright test e2e/smoke.spec.js`
-8. `make server` and spot-check `/health`, `/chat`, `/skills/ocr`
+5. `make eval-inbox`
+6. `cd frontend && npm run build`
+7. `make portfolio-metadata-audit`
+8. `cd frontend && npx playwright test e2e/smoke.spec.js`
+9. `make server` and spot-check `/health`, `/chat`, `/skills/ocr`
 
 ## Known Constraint
 
