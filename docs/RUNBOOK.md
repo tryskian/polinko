@@ -627,6 +627,12 @@ Hash fields in responses:
    speed up remediation.
 4. Use `Partial` when a response has grounded/accurate portions but still
    needs remediation (for example: correct guardrail intent with OCR token miss).
+5. Eval submissions are auto-logged on every save (PASS/PARTIAL/FAIL):
+   - `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl`
+   - each line includes session id, title, outcome, tags, note, and timestamp.
+6. Quick "what's new" inbox command:
+   - `make eval-inbox`
+   - shows newly logged eval submissions since last cursor checkpoint.
 
 ## UI Feedback Tagging (Co-Reasoning Stress Cases)
 

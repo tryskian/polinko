@@ -53,6 +53,7 @@ _virtualenv.py
 .polinko_vector.db
 .polinko_vector.db-shm
 .polinko_vector.db-wal
+.eval_inbox.cursor
 
 # Local planning sandbox docs
 docs/portfolio/
