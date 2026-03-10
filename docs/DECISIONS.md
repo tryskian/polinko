@@ -363,3 +363,13 @@
   - zero errors and zero skipped cases in both arms
 - Why: Keeps escalation objective and repeatable, and prevents integrating on a
   single favorable run or under-powered sample.
+
+## D-041: Persist all eval submissions and add a cursor-based inbox monitor
+
+- Category: `evidence_governance`
+- Tags: `eval_inbox`, `feedback_logging`, `triage_visibility`, `workflow_speed`
+- Decision: Append every UI eval submission (`PASS`, `PARTIAL`, `FAIL`) to
+  `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` and add
+  `make eval-inbox` to show new entries since the last local cursor checkpoint.
+- Why: Makes new eval activity immediately discoverable, improves remediation
+  triage speed, and preserves a complete chronological submission trail.
