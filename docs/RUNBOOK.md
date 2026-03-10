@@ -518,6 +518,11 @@ Hash fields in responses:
      cases
    - per-case `forbidden_phrases` applies only to that case
    - phrase checks are case-insensitive
+7. Co-reasoning stress cases are included in `docs/style_eval_cases.json` for:
+   - constraint retention without rigidity
+   - meta-level shift handling
+   - anti-mimicry style adaptation
+   - grounding under playful abstraction
 
 ## Generate All Eval Reports
 
@@ -590,6 +595,30 @@ Hash fields in responses:
    speed up remediation.
 4. Use `Partial` when a response has grounded/accurate portions but still
    needs remediation (for example: correct guardrail intent with OCR token miss).
+
+## UI Feedback Tagging (Co-Reasoning Stress Cases)
+
+1. Use this section for interaction-heavy sessions where the user is
+   co-reasoning (not only Q&A retrieval).
+2. Evaluate against four dimensions:
+   - constraint retention without rigidity
+   - meta-level shift handling mid-thread
+   - style adaptation without mimicry collapse
+   - grounding under playful abstraction
+3. Tagging baseline:
+   - `PASS`: include `grounded` + `style` and one value tag (`high_value` or
+     `medium_value`)
+   - `PARTIAL`: include at least one pass tag and one fail tag
+   - `FAIL`: use root-cause fail tags (`grounding_gap`, `hallucination_risk`,
+     `style_mismatch`, `needs_retry`)
+4. Notes template (recommended):
+   - `constraint_state=...`
+   - `shift_handling=...`
+   - `style_mode=...`
+   - `grounding_state=...`
+   - `action=...`
+5. Detailed scoring guidance:
+   - `docs/research/co_reasoning_eval_reference.md`
 
 ## Export CLI Transcript
 

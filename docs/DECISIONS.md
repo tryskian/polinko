@@ -304,6 +304,17 @@
 - Why: Protects the highest-risk UI/runtime integration path with fast
   deterministic browser checks after variant and feedback-flow changes.
 
+## D-036: Human-boundary guardrail family for distress, recursive rumination, and interpersonal certainty
+
+- Category: `runtime_engineering`
+- Tags: `safety_guardrails`, `human_ai_boundaries`, `rumination_loop`, `interpersonal_attribution`
+- Decision: Extend `/chat` guardrail composition with emotional-distress,
+  recursive-why-loop, and interpersonal/divination-attribution boundaries that
+  block motive certainty and stereotype reinforcement while preserving
+  supportive tone.
+- Why: Reduce collusive or certainty-escalating responses in sensitive personal
+  prompts and keep real-time adaptation inside explicit safety boundaries.
+
 ## D-037: Verification-first environment mutation policy (anti-gremlin)
 
 - Category: `workflow_environment`
@@ -315,3 +326,17 @@
 - Why: Prevents recurring configuration drift from speculative fixes, limits
   blast radius during troubleshooting, and preserves reproducible startup
   behavior across sessions and agents.
+
+## D-038: Co-reasoning interaction rubric for style/eval reliability
+
+- Category: `eval_quality`
+- Tags: `co_reasoning`, `interaction_dynamics`, `style_eval`, `benchmark_gap`
+- Decision: Add an explicit co-reasoning evaluation rubric and style-eval stress
+  cases that test:
+  - constraint retention without rigidity
+  - meta-level shift handling mid-thread
+  - style adaptation without mimicry collapse
+  - grounding under playful abstraction
+- Why: Standard benchmark patterns miss these interaction dynamics; this rubric
+  makes high-value collaborative behaviour observable and repeatable in both
+  judge-based eval runs and human PASS/FAIL triage.
