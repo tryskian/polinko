@@ -447,8 +447,18 @@ Hash fields in responses:
      `make eval-clip-ab CLIP_AB_SOURCE_TYPES=image,pdf`
    - write JSON report artifact:
      `make eval-clip-ab-report`
-4. Current B arm is an image-prioritized proxy (`source_types=["image"]`) used
+4. Cases:
+   - default CLIP A/B case file: `docs/clip_ab_eval_cases.json`
+   - current baseline set: 4 image-context retrieval cases with distractors
+5. Current B arm is an image-prioritized proxy (`source_types=["image"]`) used
    to establish experiment wiring ahead of full CLIP embedding integration.
+6. CLIP integration go/no-go criterion:
+   - `GO` when two consecutive report runs with `cases_count >= 4` satisfy:
+     - `clip_proxy_image_only.any_rate >= 0.90`
+     - `any_rate_delta_proxy_minus_baseline >= 0.50`
+     - `errors == 0` and `skipped == 0` for both arms
+   - `NO-GO` otherwise; keep proxy/scaffold mode and add cases or fix retrieval
+     behavior before integration escalation.
 
 ## Run OCR Eval
 

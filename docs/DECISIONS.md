@@ -340,3 +340,26 @@
 - Why: Standard benchmark patterns miss these interaction dynamics; this rubric
   makes high-value collaborative behaviour observable and repeatable in both
   judge-based eval runs and human PASS/FAIL triage.
+
+## D-039: Hallucination threshold calibration tie-break prefers strictest equal-metric threshold
+
+- Category: `eval_quality`
+- Tags: `hallucination_gate`, `calibration`, `tie_break`, `ci_stability`
+- Decision: Update calibration selection logic to prefer the highest (strictest)
+  threshold when accuracy/precision/recall are tied.
+- Why: Prevents under-conservative recommendations (for example `0`) when
+  multiple thresholds perform identically and observed passing-score floors are
+  higher, keeping CI gate settings aligned with real eval distributions.
+
+## D-040: Define explicit CLIP A/B escalation criterion before integration
+
+- Date: 2026-03-10
+- Category: `evaluation`
+- Tags: `clip_ab`, `go_no_go`, `multimodal`, `integration_gate`
+- Decision: Promote CLIP from scaffold/proxy phase only when two consecutive
+  CLIP A/B report runs (`cases_count >= 4`) meet all of:
+  - proxy any-hit rate `>= 0.90`
+  - any-hit delta (`proxy - baseline`) `>= 0.50`
+  - zero errors and zero skipped cases in both arms
+- Why: Keeps escalation objective and repeatable, and prevents integrating on a
+  single favorable run or under-powered sample.

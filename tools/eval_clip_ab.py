@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import os
 import time
@@ -10,27 +11,20 @@ from typing import Any
 from dotenv import load_dotenv
 
 try:
-    from tools.eval_file_search import _create_chat
-    from tools.eval_file_search import _delete_chat
-    from tools.eval_file_search import _file_search
-    from tools.eval_file_search import _find_matching_result
-    from tools.eval_file_search import _headers
-    from tools.eval_file_search import _load_cases
-    from tools.eval_file_search import _preflight
-    from tools.eval_file_search import _seed_image_context_memory
-    from tools.eval_file_search import _seed_ocr_memory
-    from tools.eval_file_search import _seed_pdf_memory
+    from tools import eval_file_search as _eval_file_search
 except ModuleNotFoundError:
-    from eval_file_search import _create_chat
-    from eval_file_search import _delete_chat
-    from eval_file_search import _file_search
-    from eval_file_search import _find_matching_result
-    from eval_file_search import _headers
-    from eval_file_search import _load_cases
-    from eval_file_search import _preflight
-    from eval_file_search import _seed_image_context_memory
-    from eval_file_search import _seed_ocr_memory
-    from eval_file_search import _seed_pdf_memory
+    _eval_file_search = importlib.import_module("eval_file_search")
+
+_create_chat = _eval_file_search._create_chat
+_delete_chat = _eval_file_search._delete_chat
+_file_search = _eval_file_search._file_search
+_find_matching_result = _eval_file_search._find_matching_result
+_headers = _eval_file_search._headers
+_load_cases = _eval_file_search._load_cases
+_preflight = _eval_file_search._preflight
+_seed_image_context_memory = _eval_file_search._seed_image_context_memory
+_seed_ocr_memory = _eval_file_search._seed_ocr_memory
+_seed_pdf_memory = _eval_file_search._seed_pdf_memory
 
 
 def _parse_csv(value: str) -> list[str]:
@@ -156,7 +150,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
     parser.add_argument(
         "--cases",
-        default="docs/file_search_eval_cases.json",
+        default="docs/clip_ab_eval_cases.json",
         help="Path to file-search eval cases JSON file.",
     )
     parser.add_argument(
