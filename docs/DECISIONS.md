@@ -350,3 +350,16 @@
 - Why: Prevents under-conservative recommendations (for example `0`) when
   multiple thresholds perform identically and observed passing-score floors are
   higher, keeping CI gate settings aligned with real eval distributions.
+
+## D-040: Define explicit CLIP A/B escalation criterion before integration
+
+- Date: 2026-03-10
+- Category: `evaluation`
+- Tags: `clip_ab`, `go_no_go`, `multimodal`, `integration_gate`
+- Decision: Promote CLIP from scaffold/proxy phase only when two consecutive
+  CLIP A/B report runs (`cases_count >= 4`) meet all of:
+  - proxy any-hit rate `>= 0.90`
+  - any-hit delta (`proxy - baseline`) `>= 0.50`
+  - zero errors and zero skipped cases in both arms
+- Why: Keeps escalation objective and repeatable, and prevents integrating on a
+  single favorable run or under-powered sample.

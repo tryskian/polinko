@@ -61,11 +61,15 @@
   datasets.
 - P2 CLIP experiment scaffolding has started with
   `make eval-clip-ab` (baseline mixed-source vs image-prioritized proxy arm).
-- Latest P2 smoke run (2026-03-10, run `20260310-123934`) showed proxy uplift
-  on the image-context case:
+- Latest P2 expanded run (2026-03-10, run `20260310-125230`) used 4
+  image-context cases and showed stable proxy uplift:
   - baseline mixed any-hit: `0.0`
   - image-priority proxy any-hit: `1.0`
   - delta (`proxy - baseline`): `+1.0`
+  - errors/skipped: `0/0` in both arms
+- CLIP go/no-go criterion is now explicit (two consecutive runs with
+  `cases_count >= 4`, proxy `any_rate >= 0.90`, delta `>= 0.50`, zero
+  errors/skips) before integration escalation.
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.

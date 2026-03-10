@@ -39,8 +39,12 @@
   avoid under-conservative recommendations from all-pass datasets.
 - P2 CLIP experiment scaffolding has started with `make eval-clip-ab` and
   report artifact mode `make eval-clip-ab-report`.
-- Latest CLIP A/B smoke report (`20260310-123934`) shows positive proxy uplift
-  on the image-context case (`any_rate_delta_proxy_minus_baseline=+1.0`).
+- Latest CLIP A/B expanded report (`20260310-125230`) shows positive proxy
+  uplift across 4 image-context cases
+  (`any_rate_delta_proxy_minus_baseline=+1.0`, `errors=0`, `skipped=0`).
+- CLIP integration go/no-go criterion is now defined and documented
+  (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
+  delta `>= 0.50`, zero errors/skips).
 - Dedicated strict hallucination gate target is available: `make hallucination-gate`.
 - CI includes optional Braintrust hallucination gate wiring when
   `BRAINTRUST_OPENAI_BASE_URL` (repo var) and `BRAINTRUST_API_KEY`
@@ -114,10 +118,10 @@
 
 ## Immediate Next Step
 
-- Expand P2 CLIP multimodal retrieval A/B beyond smoke:
-  - add at least 3 additional image-context cases with distractors
-  - run `make eval-clip-ab-report` and compare deltas across runs
-  - set an explicit go/no-go criterion for CLIP integration escalation
+- Add automated criterion check for CLIP escalation readiness:
+  - implement a small script/target to compare latest two CLIP A/B reports
+  - return explicit `GO`/`NO-GO` based on D-040 thresholds
+  - run full validation (`tests + make eval-clip-ab-report`) and capture output
 
 ## Copy/Paste Rehydrate Prompt
 
