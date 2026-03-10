@@ -114,6 +114,9 @@
   (`PASS`/`PARTIAL`/`FAIL`) to
   `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl`, with quick
   latest-view command: `make eval-inbox`.
+- Hallucination eval cases now include an interpersonal motive-guess regression
+  guard (`cautious_no_relationship_motive_guess`) to catch speculative
+  relationship attribution and enforce uncertainty-forward responses.
 - Co-reasoning interaction guidance is now documented with a dedicated eval
   reference and PASS/FAIL mapping:
   - `docs/research/co_reasoning_eval_reference.md`
