@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 
 from tools.eval_clip_ab import _aggregate_arm_results
 from tools.eval_clip_ab import _parse_csv
@@ -14,7 +15,7 @@ class ClipABEvalTests(unittest.TestCase):
         self.assertEqual(_parse_csv("image, OCR , pdf"), ["image", "ocr", "pdf"])
 
     def test_aggregate_arm_results_computes_rates(self) -> None:
-        records = [
+        records: list[dict[str, Any]] = [
             {"arm": "baseline_mixed", "top1_hit": True, "any_hit": True},
             {"arm": "baseline_mixed", "top1_hit": False, "any_hit": True},
             {"arm": "clip_proxy_image_only", "top1_hit": True, "any_hit": True},
@@ -27,7 +28,7 @@ class ClipABEvalTests(unittest.TestCase):
         self.assertAlmostEqual(summary["clip_proxy_image_only"]["any_rate"], 1.0)
 
     def test_aggregate_arm_results_tracks_errors(self) -> None:
-        records = [
+        records: list[dict[str, Any]] = [
             {"arm": "baseline_mixed", "error": "boom"},
             {"arm": "baseline_mixed", "top1_hit": True, "any_hit": True},
         ]
