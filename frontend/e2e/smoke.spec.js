@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 
+const ONE_BY_ONE_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+qW6QAAAAASUVORK5CYII=";
+
 function nowMs() {
   return Date.now();
 }
@@ -296,4 +299,58 @@ test("retries assistant response as a variant without duplicating the user messa
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page.getByText("Variant 2 of 2")).toBeVisible();
   await expect(page.getByText("E2E retry variant response")).toBeVisible();
+});
+
+test("keeps uploaded images visible after switching chats and back", async ({ page }) => {
+  await page.goto("/");
+
+  await page.locator("#ocr-file-input").setInputFiles({
+    name: "phi.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(ONE_BY_ONE_PNG_BASE64, "base64"),
+  });
+  await page.getByPlaceholder("message bigbrain").fill("phi persists");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+
+  await expect(page.locator(".msg.user.user-image img.user-image-preview")).toHaveCount(1);
+  await expect(page.getByText("phi.png")).toBeVisible();
+
+  await page.getByRole("button", { name: "New chat" }).click();
+  await expect(page.getByLabel("Chat threads").getByRole("button", { name: "New chat" })).toBeVisible();
+
+  await page.getByRole("button", { name: "E2E Seed Chat" }).click();
+  await expect(page.locator(".msg.user.user-image img.user-image-preview")).toHaveCount(1);
+  await expect(page.getByText("phi.png")).toBeVisible();
+
+  await page.reload();
+  await expect(page.locator(".msg.user.user-image img.user-image-preview")).toHaveCount(1);
+  await expect(page.getByText("phi.png")).toBeVisible();
+});
+
+test("supports pasting an image directly into the prompt field", async ({ page }) => {
+  await page.goto("/");
+
+  await page.evaluate((base64) => {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let idx = 0; idx < binary.length; idx += 1) {
+      bytes[idx] = binary.charCodeAt(idx);
+    }
+    const file = new File([bytes], "pasted-image.png", { type: "image/png" });
+    const transfer = new DataTransfer();
+    transfer.items.add(file);
+    const textarea = document.querySelector("#message");
+    const pasteEvent = new Event("paste", { bubbles: true, cancelable: true });
+    Object.defineProperty(pasteEvent, "clipboardData", {
+      value: transfer,
+    });
+    textarea.dispatchEvent(pasteEvent);
+  }, ONE_BY_ONE_PNG_BASE64);
+
+  await expect(page.getByText("pasted-image.png")).toBeVisible();
+  await page.getByPlaceholder("message bigbrain").fill("from paste");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await expect(page.locator(".msg.user.user-image img.user-image-preview")).toHaveCount(1);
 });

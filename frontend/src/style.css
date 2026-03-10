@@ -437,8 +437,8 @@ body {
 }
 
 .msg.user.user-image {
-  width: min(70%, 620px);
-  max-width: min(70%, 620px);
+  width: min(58%, 520px);
+  max-width: min(58%, 520px);
   display: grid;
   gap: 0.44rem;
   padding: 0.5rem 0.58rem 0.5rem;
@@ -479,7 +479,7 @@ body {
   display: block;
   width: 100%;
   height: auto;
-  max-height: min(480px, 60vh);
+  max-height: min(360px, 48vh);
   object-fit: contain;
   border-radius: 12px;
   border: 1px solid var(--line);
@@ -1288,6 +1288,11 @@ button {
 
   .msg.user {
     max-width: 88%;
+  }
+
+  .msg.user.user-image {
+    width: min(88%, 430px);
+    max-width: min(88%, 430px);
   }
 
   .chat {

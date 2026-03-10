@@ -485,6 +485,25 @@ Hash fields in responses:
      - `must_match_regex`, `must_not_match_regex` (pattern assertions)
      - `min_chars`, `max_chars`, `case_sensitive`
 
+## Run OCR Ambiguity/Recovery Eval
+
+1. Ensure API is running locally (`make server`).
+2. Run `make eval-ocr-recovery`.
+3. Optional:
+   - strict fail on any failed case: `python tools/eval_ocr_recovery.py --strict`
+   - retain generated eval chats: `python tools/eval_ocr_recovery.py --keep-chats`
+   - show full assistant outputs per step:
+     `python tools/eval_ocr_recovery.py --show-text`
+   - write JSON report:
+     `python tools/eval_ocr_recovery.py --report-json eval_reports/ocr-recovery-latest.json`
+   - one-command report run: `make eval-ocr-recovery-report`
+4. Cases:
+   - default case file: `docs/ocr_recovery_eval_cases.json`
+   - each case runs a seeded OCR prompt with attachment, then one or more
+     follow-up user turns in the same chat
+   - designed for ambiguity stress + correction/recovery traces with
+     deterministic phrase/regex assertions
+
 ## Hallucination Eval Notes
 
 1. Optional strict mode:
