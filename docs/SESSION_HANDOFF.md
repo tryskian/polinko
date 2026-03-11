@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-10
+- 2026-03-11
 
 ## Current Snapshot
 
@@ -94,6 +94,12 @@
   policy: verify repo path/mode/branch first, prefer repo-scoped config
   changes, and do not mutate `~/.zshrc` or global VS Code settings without
   explicit in-chat approval.
+- Ruff housekeeping is green (`ruff check .`) after preserving
+  `server.Runner` for test patch compatibility and resolving import placement.
+- Mypy housekeeping is now stable and repo-scoped via `mypy.ini`; workspace
+  diagnostics are bound to `venv/bin/mypy` + `--config-file mypy.ini`.
+- Dependabot dependency-order note: `openai-agents==0.11.1` (PR `#13`) requires
+  `openai>=2.26.0`; merge PR `#5` (`openai` bump) before retrying PR `#13`.
 
 ## Latest Local Commit
 
@@ -127,6 +133,9 @@
 - No open high-priority runtime constraints currently tracked.
 - Workflow constraint: user-level shell/profile and global editor settings are
   immutable by default during normal repo troubleshooting.
+- Dependency-management constraint: open Dependabot updates can fail CI when
+  resolver-coupled pins land out of order; verify transitive constraints before
+  merging isolated bump PRs.
 
 ## Immediate Next Step
 

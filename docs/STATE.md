@@ -83,6 +83,11 @@
   use host interpreter auto-discovery (or explicit host Python) on macOS.
 - Local environment doctor is available via `make doctor-env` for interpreter,
   import, and `zsh` completion checks.
+- Python static analysis is now repo-scoped and stable:
+  - `mypy.ini` is the single source of truth for mypy checks
+  - workspace diagnostics run in `workspace` scope and use repo mypy config
+  - generated/venv and high-noise test shim paths are excluded from default
+    mypy reporting to keep signals actionable
 - OCR supports a provider flag:
   - `POLINKO_OCR_PROVIDER=scaffold` (default fallback)
   - `POLINKO_OCR_PROVIDER=openai` (image OCR via OpenAI model)
@@ -151,6 +156,8 @@
 - Cloud deployment automation is intentionally paused and previous AWS scripts
   were removed from the repo; Azure is the preferred target when deployment
   work resumes.
+- Dependabot PR `#13` (`openai-agents==0.11.1`) is blocked until OpenAI SDK pin
+  is raised first (`openai>=2.26.0` via PR `#5`); merge order matters.
 
 ## Resume Prompt (For New Chats)
 

@@ -59,6 +59,28 @@
 3. Resolve actionable issues (missing imports, interpreter mismatch, or
    `compaudit` findings) before running evals.
 
+## Python Diagnostics (Ruff + Mypy)
+
+1. Use repo-local tools for deterministic output:
+   - `venv/bin/ruff check .`
+   - `venv/bin/mypy . --config-file mypy.ini`
+2. `mypy.ini` is the canonical type-check config for this repo.
+3. VS Code should use workspace-wide diagnostics (not only active file).
+4. If Problems panel looks stale after config changes:
+   - `Mypy: Restart Server`
+   - `Developer: Reload Window`
+5. Ensure Problems view is not filtered to active file only.
+
+## Optional Keep-Awake Session Policy
+
+1. Default state is off (do not run `caffeinate` unless requested).
+2. Start keep-awake only on explicit session code phrase:
+   - `hi! new day!`
+3. Start command:
+   - `nohup caffeinate -d -i -m >/tmp/polinko-caffeinate.log 2>&1 &`
+4. Stop command at wrap:
+   - `pkill -f "caffeinate -d -i -m"`
+
 ## Docker Build/Run Smoke
 
 1. Build image: `make docker-build`.
