@@ -14,6 +14,22 @@
    - `git worktree add /Users/tryskian/Github/polinko-<task> -b codex/bigbrain/<task> main`
 5. Keep one logical task per branch; merge or close before starting the next.
 
+## Protected Main PR Flow
+
+1. Do not push directly to `main` (protected branch rules require PR + checks).
+2. Work on a feature/chore branch:
+   - `git switch -c <branch-name>`
+3. Commit locally, then push branch:
+   - `git push -u origin <branch-name>`
+4. Open PR to `main` and wait for required checks:
+   - `test`
+   - `markdownlint`
+5. Merge PR, then sync local `main`:
+   - `git switch main`
+   - `git pull --ff-only`
+6. If direct push returns `GH013`, treat it as expected branch protection
+   behavior and continue via PR flow.
+
 ## Repo vs Container Working Modes
 
 1. Canonical source of truth is always:
@@ -80,6 +96,8 @@
    - `nohup caffeinate -d -i -m >/tmp/polinko-caffeinate.log 2>&1 &`
 4. Stop command at wrap:
    - `pkill -f "caffeinate -d -i -m"`
+5. `decaffeinated` is workflow shorthand only (not a built-in shell command).
+   Use the explicit stop command above.
 
 ## Docker Build/Run Smoke
 

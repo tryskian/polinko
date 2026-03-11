@@ -136,6 +136,8 @@
 - Dependency-management constraint: open Dependabot updates can fail CI when
   resolver-coupled pins land out of order; verify transitive constraints before
   merging isolated bump PRs.
+- Session policy constraint: keep-awake is opt-in and code-phrase triggered
+  only (`hi! new day!`), with explicit stop at wrap (`pkill -f "caffeinate -d -i -m"`).
 
 ## Immediate Next Step
 
