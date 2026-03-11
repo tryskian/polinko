@@ -29,7 +29,7 @@ class RuntimeSessionTests(unittest.TestCase):
             tracked_before_close = list(cast(Any, session)._tracked_connections)
             self.assertGreaterEqual(len(tracked_before_close), 1)
 
-            session.close()
+            cast(Any, session).close()
 
             self.assertEqual(len(cast(Any, session)._tracked_connections), 0)
             for conn in tracked_before_close:

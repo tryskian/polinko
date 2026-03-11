@@ -355,8 +355,8 @@ def main() -> int:
             )
             score = result.get("score")
             fit = result.get("fit")
-            passed = bool(result.get("pass", False))
-            judge_pass = passed
+            case_pass = bool(result.get("pass", False))
+            judge_pass = case_pass
             case_failed = False
             notes = str(result.get("notes", "")).strip()
 
@@ -368,7 +368,7 @@ def main() -> int:
                 else:
                     notes = f"Word count {wc} exceeds limit {max_words}."
 
-            if not passed:
+            if not case_pass:
                 case_failed = True
 
             forbidden_hits = [
