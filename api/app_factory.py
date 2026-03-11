@@ -164,6 +164,7 @@ _FEEDBACK_TAG_MAX = 8
 _FEEDBACK_TAG_LEN_MAX = 36
 _FEEDBACK_NOTE_LEN_MAX = 1200
 _FEEDBACK_ACTION_LOG_FILENAME = "feedback_actions.md"
+_FEEDBACK_SUBMISSIONS_LOG_FILENAME = "eval_submissions.jsonl"
 _FEEDBACK_POSITIVE_TAGS = {
     "accurate",
     "high_value",
@@ -1005,6 +1006,41 @@ def _append_feedback_action_log(
         lines.append(f"  - note: {note.strip()}")
     with target.open("a", encoding="utf-8") as handle:
         handle.write("\n".join(lines) + "\n")
+
+
+def _append_feedback_submission_log(
+    *,
+    session_id: str,
+    chat_title: str,
+    message_id: str,
+    outcome: str,
+    positive_tags: list[str],
+    negative_tags: list[str],
+    status: str,
+    note: str | None,
+    recommended_action: str | None,
+    action_taken: str | None,
+) -> None:
+    root = _DEFAULT_FEEDBACK_EVIDENCE_ROOT
+    inbox_dir = root / "INBOX"
+    inbox_dir.mkdir(parents=True, exist_ok=True)
+    target = inbox_dir / _FEEDBACK_SUBMISSIONS_LOG_FILENAME
+    timestamp = int(time.time() * 1000)
+    payload = {
+        "timestamp_ms": timestamp,
+        "session_id": session_id,
+        "chat_title": chat_title,
+        "message_id": message_id,
+        "outcome": outcome,
+        "positive_tags": positive_tags,
+        "negative_tags": negative_tags,
+        "status": status,
+        "note": note,
+        "recommended_action": recommended_action,
+        "action_taken": action_taken,
+    }
+    with target.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
 
 
 def _sha256_text(value: str) -> str:
@@ -3064,6 +3100,18 @@ def create_app(config: AppConfig) -> FastAPI:
             recommended_action=recommended_action,
             action_taken=action_taken,
             status=status,
+        )
+        _append_feedback_submission_log(
+            session_id=session_id,
+            chat_title=chat.title,
+            message_id=req.message_id,
+            outcome=outcome,
+            positive_tags=positive_tags,
+            negative_tags=negative_tags,
+            status=status,
+            note=note,
+            recommended_action=recommended_action,
+            action_taken=action_taken,
         )
         if negative_tags:
             _append_feedback_action_log(

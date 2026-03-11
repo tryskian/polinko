@@ -14,6 +14,22 @@
    - `git worktree add /Users/tryskian/Github/polinko-<task> -b codex/bigbrain/<task> main`
 5. Keep one logical task per branch; merge or close before starting the next.
 
+## Protected Main PR Flow
+
+1. Do not push directly to `main` (protected branch rules require PR + checks).
+2. Work on a feature/chore branch:
+   - `git switch -c <branch-name>`
+3. Commit locally, then push branch:
+   - `git push -u origin <branch-name>`
+4. Open PR to `main` and wait for required checks:
+   - `test`
+   - `markdownlint`
+5. Merge PR, then sync local `main`:
+   - `git switch main`
+   - `git pull --ff-only`
+6. If direct push returns `GH013`, treat it as expected branch protection
+   behavior and continue via PR flow.
+
 ## Repo vs Container Working Modes
 
 1. Canonical source of truth is always:
@@ -58,6 +74,30 @@
      available.
 3. Resolve actionable issues (missing imports, interpreter mismatch, or
    `compaudit` findings) before running evals.
+
+## Python Diagnostics (Ruff + Mypy)
+
+1. Use repo-local tools for deterministic output:
+   - `venv/bin/ruff check .`
+   - `venv/bin/mypy . --config-file mypy.ini`
+2. `mypy.ini` is the canonical type-check config for this repo.
+3. VS Code should use workspace-wide diagnostics (not only active file).
+4. If Problems panel looks stale after config changes:
+   - `Mypy: Restart Server`
+   - `Developer: Reload Window`
+5. Ensure Problems view is not filtered to active file only.
+
+## Optional Keep-Awake Session Policy
+
+1. Default state is off (do not run `caffeinate` unless requested).
+2. Start keep-awake only on explicit session code phrase:
+   - `hi! new day!`
+3. Start command:
+   - `nohup caffeinate -d -i -m >/tmp/polinko-caffeinate.log 2>&1 &`
+4. Stop command at wrap:
+   - `pkill -f "caffeinate -d -i -m"`
+5. `decaffeinated` is workflow shorthand only (not a built-in shell command).
+   Use the explicit stop command above.
 
 ## Docker Build/Run Smoke
 
@@ -485,6 +525,25 @@ Hash fields in responses:
      - `must_match_regex`, `must_not_match_regex` (pattern assertions)
      - `min_chars`, `max_chars`, `case_sensitive`
 
+## Run OCR Ambiguity/Recovery Eval
+
+1. Ensure API is running locally (`make server`).
+2. Run `make eval-ocr-recovery`.
+3. Optional:
+   - strict fail on any failed case: `python tools/eval_ocr_recovery.py --strict`
+   - retain generated eval chats: `python tools/eval_ocr_recovery.py --keep-chats`
+   - show full assistant outputs per step:
+     `python tools/eval_ocr_recovery.py --show-text`
+   - write JSON report:
+     `python tools/eval_ocr_recovery.py --report-json eval_reports/ocr-recovery-latest.json`
+   - one-command report run: `make eval-ocr-recovery-report`
+4. Cases:
+   - default case file: `docs/ocr_recovery_eval_cases.json`
+   - each case runs a seeded OCR prompt with attachment, then one or more
+     follow-up user turns in the same chat
+   - designed for ambiguity stress + correction/recovery traces with
+     deterministic phrase/regex assertions
+
 ## Hallucination Eval Notes
 
 1. Optional strict mode:
@@ -608,6 +667,12 @@ Hash fields in responses:
    speed up remediation.
 4. Use `Partial` when a response has grounded/accurate portions but still
    needs remediation (for example: correct guardrail intent with OCR token miss).
+5. Eval submissions are auto-logged on every save (PASS/PARTIAL/FAIL):
+   - `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl`
+   - each line includes session id, title, outcome, tags, note, and timestamp.
+6. Quick "what's new" inbox command:
+   - `make eval-inbox`
+   - shows newly logged eval submissions since last cursor checkpoint.
 
 ## UI Feedback Tagging (Co-Reasoning Stress Cases)
 

@@ -33,7 +33,7 @@ HALLUCINATION_JUDGE_BASE_URL ?=
 HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
 CLIP_AB_SOURCE_TYPES ?= image
 
-.PHONY: chat server test doctor-env precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-clip-ab eval-clip-ab-report eval-cleanup eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
+.PHONY: chat server test doctor-env precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
@@ -132,6 +132,14 @@ eval-ocr-report:
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
 	$(PYTHON) tools/eval_ocr.py --run-id $$RUN_ID --report-json "eval_reports/ocr-$$RUN_ID.json"
 
+eval-ocr-recovery:
+	$(PYTHON) tools/eval_ocr_recovery.py
+
+eval-ocr-recovery-report:
+	@mkdir -p eval_reports
+	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
+	$(PYTHON) tools/eval_ocr_recovery.py --run-id $$RUN_ID --report-json "eval_reports/ocr-recovery-$$RUN_ID.json"
+
 eval-clip-ab:
 	$(PYTHON) tools/eval_clip_ab.py --source-types "$(CLIP_AB_SOURCE_TYPES)"
 
@@ -139,6 +147,9 @@ eval-clip-ab-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
 	$(PYTHON) tools/eval_clip_ab.py --source-types "$(CLIP_AB_SOURCE_TYPES)" --run-id $$RUN_ID --report-json "eval_reports/clip-ab-$$RUN_ID.json"
+
+eval-inbox:
+	$(PYTHON) tools/eval_inbox.py --new --limit 30
 
 eval-cleanup:
 	$(PYTHON) tools/cleanup_eval_chats.py

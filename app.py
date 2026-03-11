@@ -40,7 +40,7 @@ except ModuleNotFoundError as exc:
         "or run: source polinko-repositioning-system/bin/activate"
     ) from exc
 
-from core.prompts import ACTIVE_PROMPT_VERSION
+from core.prompts import ACTIVE_PROMPT_VERSION  # noqa: E402
 
 config = load_config(dotenv_path=".env")
 agent = create_agent()
@@ -234,7 +234,8 @@ while True:
         print("Connection error reaching OpenAI API. Check internet/VPN/firewall and try again.")
         continue
     except APIStatusError as exc:
-        print(f"OpenAI API error ({exc.status_code}). Try again in a moment.")
+        status_code = getattr(exc, "status_code", "unknown")
+        print(f"OpenAI API error ({status_code}). Try again in a moment.")
         continue
 
     history_store.append_message(session_id=current_session_id, role="user", content=user_input)

@@ -1,0 +1,56 @@
+{
+  "cases": [
+    {
+      "id": "phi_ambiguity_recovery_template",
+      "labeling_guidance": {
+        "outcome": "partial",
+        "pass_tags": [
+          "grounded",
+          "style",
+          "high_value"
+        ],
+        "fail_tags": [
+          "ocr_miss",
+          "grounding_gap",
+          "needs_retry"
+        ],
+        "note": "High recovery quality after ambiguity; unstable initial OCR-to-claim mapping."
+      },
+      "seed_prompt": "What Greek letter is this?",
+      "attachment": {
+        "source_name": "handwritten-phi-template.png",
+        "mime_type": "image/png",
+        "text_hint": "ambiguous handwritten glyph candidate set: phi or tau",
+        "visual_context_hint": "single handwritten symbol with looped upper stroke"
+      },
+      "steps": [
+        {
+          "id": "seed_ambiguity_response",
+          "must_contain_any": [
+            "phi",
+            "tau",
+            "uncertain",
+            "not sure"
+          ],
+          "must_not_contain": [
+            "definitely",
+            "without question"
+          ]
+        },
+        {
+          "id": "contextual_recovery",
+          "user": "Context: this is a handwritten phi from my research documentation. Re-check and answer with only the letter name.",
+          "must_contain_any": [
+            "phi"
+          ],
+          "must_not_contain": [
+            "tau"
+          ],
+          "must_not_match_regex": [
+            "\\b(?:definitely|absolutely)\\b"
+          ]
+        }
+      ]
+    }
+  ]
+}

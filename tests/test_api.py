@@ -175,6 +175,18 @@ class PolinkoApiTests(unittest.TestCase):
         listed = list_resp.json()["feedback"]
         self.assertEqual(len(listed), 1)
         self.assertEqual(listed[0]["message_id"], assistant_message_id)
+        submissions_log = Path(self.tmpdir.name) / "raw_evidence" / "INBOX" / "eval_submissions.jsonl"
+        self.assertTrue(submissions_log.exists())
+        entries = [
+            json.loads(line)
+            for line in submissions_log.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["session_id"], "s-feedback")
+        self.assertEqual(entries[0]["message_id"], assistant_message_id)
+        self.assertEqual(entries[0]["outcome"], "pass")
+        self.assertEqual(entries[0]["status"], "closed")
 
     def test_fail_feedback_generates_recommended_action_and_logs_inbox(self) -> None:
         with self._stub_runner("Please inspect this OCR output."):
@@ -221,6 +233,17 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertTrue(action_log.exists())
         content = action_log.read_text(encoding="utf-8")
         self.assertIn("recommended_action", content)
+        submissions_log = Path(self.tmpdir.name) / "raw_evidence" / "INBOX" / "eval_submissions.jsonl"
+        self.assertTrue(submissions_log.exists())
+        entries = [
+            json.loads(line)
+            for line in submissions_log.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertEqual(entries[-1]["session_id"], "s-feedback-fail")
+        self.assertEqual(entries[-1]["message_id"], assistant_message_id)
+        self.assertEqual(entries[-1]["outcome"], "fail")
+        self.assertEqual(entries[-1]["status"], "open")
 
     def test_feedback_rejects_missing_or_invalid_reason_tags(self) -> None:
         with self._stub_runner("Feedback candidate"):

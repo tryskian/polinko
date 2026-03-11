@@ -8,15 +8,25 @@ from agents.memory import Session, SessionSettings, SQLiteSession
 from core.prompts import ACTIVE_PROMPT
 
 
-AGENT_NAME = "Polinko Repositining System"
+AGENT_NAME = "Polinko Repositioning System"
 MODEL_NAME = "gpt-5-chat-latest"
 
 
 class ManagedSQLiteSession(SQLiteSession):
     """SQLiteSession wrapper that closes all thread-local connections on close()."""
 
-    def __init__(self, *args: object, **kwargs: object) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(
+        self,
+        *,
+        session_id: str,
+        db_path: str,
+        session_settings: SessionSettings | None = None,
+    ) -> None:
+        super().__init__(
+            session_id=session_id,
+            db_path=db_path,
+            session_settings=session_settings,
+        )
         self._tracked_connections: set[sqlite3.Connection] = set()
         self._tracked_connections_lock = threading.Lock()
 

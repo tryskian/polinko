@@ -363,3 +363,24 @@
   - zero errors and zero skipped cases in both arms
 - Why: Keeps escalation objective and repeatable, and prevents integrating on a
   single favorable run or under-powered sample.
+
+## D-041: Persist all eval submissions and add a cursor-based inbox monitor
+
+- Category: `evidence_governance`
+- Tags: `eval_inbox`, `feedback_logging`, `triage_visibility`, `workflow_speed`
+- Decision: Append every UI eval submission (`PASS`, `PARTIAL`, `FAIL`) to
+  `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` and add
+  `make eval-inbox` to show new entries since the last local cursor checkpoint.
+- Why: Makes new eval activity immediately discoverable, improves remediation
+  triage speed, and preserves a complete chronological submission trail.
+
+## D-042: Repo-scoped mypy configuration and workspace diagnostics
+
+- Category: `workflow_environment`
+- Tags: `mypy`, `ruff`, `diagnostic_noise`, `repo_scoped_config`
+- Decision: Add `mypy.ini` as the canonical type-check config, run mypy from
+  the workspace venv binary, and configure editor diagnostics in workspace
+  scope with repo-level exclusions for generated/derived high-noise paths.
+- Why: Keeps type/lint signals consistent between CLI and IDE, reduces false
+  positives from non-product scaffolding, and preserves focus on actionable
+  runtime issues.

@@ -28,6 +28,7 @@
   - `/chat` retrieval citations via `memory_used` when vector memory contributes context
 - Frontend now exposes per-chat personalization memory scope control in the header.
 - Frontend includes OCR upload wiring that posts to `/skills/ocr` and appends extracted text to the active chat.
+- Frontend image attachments now support paste-to-attach, client-side downsize/compression, and per-chat persistence across chat switches and page reloads.
 - Frontend includes indexed search UI in composer (`Search` toggle with `Insert`/`Ask` actions).
 - Figma/UI parity work is intentionally paused; current execution focus is backend retrieval, OCR, and file-search reliability.
 - Quality gate is implemented and passing locally via `make quality-gate`:
@@ -82,6 +83,11 @@
   use host interpreter auto-discovery (or explicit host Python) on macOS.
 - Local environment doctor is available via `make doctor-env` for interpreter,
   import, and `zsh` completion checks.
+- Python static analysis is now repo-scoped and stable:
+  - `mypy.ini` is the single source of truth for mypy checks
+  - workspace diagnostics run in `workspace` scope and use repo mypy config
+  - generated/venv and high-noise test shim paths are excluded from default
+    mypy reporting to keep signals actionable
 - OCR supports a provider flag:
   - `POLINKO_OCR_PROVIDER=scaffold` (default fallback)
   - `POLINKO_OCR_PROVIDER=openai` (image OCR via OpenAI model)
@@ -99,6 +105,9 @@
   noise in strict test runs).
 - Eval harnesses support JSON report artifacts via `--report-json`
   (hallucination, style, retrieval, file-search, OCR).
+- OCR ambiguity/recovery eval harness is available via
+  `make eval-ocr-recovery` with case template
+  `docs/ocr_recovery_eval_cases.json`.
 - Evidence indexing now tracks FAIL remediation lifecycle with
   `recommended_action`, `action_taken`, `status`, and optional PASS-linked
   closure metadata.
@@ -106,6 +115,13 @@
   near-duplicate suppression, and a max of two active notes, with note-change
   events logged as `adaptive_style_notes_updated` to prevent prompt/input
   over-indexing.
+- Eval feedback submissions are now append-logged for all outcomes
+  (`PASS`/`PARTIAL`/`FAIL`) to
+  `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl`, with quick
+  latest-view command: `make eval-inbox`.
+- Hallucination eval cases now include an interpersonal motive-guess regression
+  guard (`cautious_no_relationship_motive_guess`) to catch speculative
+  relationship attribution and enforce uncertainty-forward responses.
 - Co-reasoning interaction guidance is now documented with a dedicated eval
   reference and PASS/FAIL mapping:
   - `docs/research/co_reasoning_eval_reference.md`
@@ -140,6 +156,8 @@
 - Cloud deployment automation is intentionally paused and previous AWS scripts
   were removed from the repo; Azure is the preferred target when deployment
   work resumes.
+- Dependabot PR `#13` (`openai-agents==0.11.1`) is blocked until OpenAI SDK pin
+  is raised first (`openai>=2.26.0` via PR `#5`); merge order matters.
 
 ## Resume Prompt (For New Chats)
 

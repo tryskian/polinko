@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-10
+- 2026-03-11
 
 ## Current Snapshot
 
@@ -75,6 +75,16 @@
 - Frontend Playwright smoke E2E includes retry-variant lineage coverage
   (`source_user_message_id` flow), including variant navigation and duplicate
   user-row prevention assertions.
+- Frontend attachment flow now supports paste-to-attach, client-side
+  downsize/compression, and per-chat image persistence across chat switches and
+  reloads.
+- Eval feedback submissions are append-logged for every outcome
+  (`PASS`/`PARTIAL`/`FAIL`) to
+  `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` with inbox monitor
+  command `make eval-inbox`.
+- Hallucination eval corpus now includes interpersonal motive-guess regression
+  case `cautious_no_relationship_motive_guess` to catch speculative
+  relationship-attribution claims.
 - Branch rules now enforce PR + required checks (`test`, `markdownlint`) on
   default branch (`main`) while allowing normal push/PR workflow on feature
   branches.
@@ -84,11 +94,18 @@
   policy: verify repo path/mode/branch first, prefer repo-scoped config
   changes, and do not mutate `~/.zshrc` or global VS Code settings without
   explicit in-chat approval.
+- Ruff housekeeping is green (`ruff check .`) after preserving
+  `server.Runner` for test patch compatibility and resolving import placement.
+- Mypy housekeeping is now stable and repo-scoped via `mypy.ini`; workspace
+  diagnostics are bound to `venv/bin/mypy` + `--config-file mypy.ini`.
+- Dependabot dependency-order note: `openai-agents==0.11.1` (PR `#13`) requires
+  `openai>=2.26.0`; merge PR `#5` (`openai` bump) before retrying PR `#13`.
 
 ## Latest Local Commit
 
-- `1acf348` on `main` (synced with `origin/main`)
-- Summary: fix: prefer strictest tied threshold in calibration (#16)
+- `7bfd1b1` on `main` (local branch currently ahead of `origin/main` by 4
+  commits)
+- Summary: docs: track interpersonal motive-guess hallucination case in state
 
 ## Key Files To Read First
 
@@ -105,16 +122,22 @@
 2. `make quality-gate-deterministic` (if judge key is unavailable)
 3. `make hallucination-gate HALLUCINATION_EVAL_MODE=deterministic`
 4. `make doctor-env`
-5. `cd frontend && npm run build`
-6. `make portfolio-metadata-audit`
-7. `cd frontend && npx playwright test e2e/smoke.spec.js`
-8. `make server` and spot-check `/health`, `/chat`, `/skills/ocr`
+5. `make eval-inbox`
+6. `cd frontend && npm run build`
+7. `make portfolio-metadata-audit`
+8. `cd frontend && npx playwright test e2e/smoke.spec.js`
+9. `make server` and spot-check `/health`, `/chat`, `/skills/ocr`
 
 ## Known Constraint
 
 - No open high-priority runtime constraints currently tracked.
 - Workflow constraint: user-level shell/profile and global editor settings are
   immutable by default during normal repo troubleshooting.
+- Dependency-management constraint: open Dependabot updates can fail CI when
+  resolver-coupled pins land out of order; verify transitive constraints before
+  merging isolated bump PRs.
+- Session policy constraint: keep-awake is opt-in and code-phrase triggered
+  only (`hi! new day!`), with explicit stop at wrap (`pkill -f "caffeinate -d -i -m"`).
 
 ## Immediate Next Step
 

@@ -393,9 +393,9 @@ def main() -> int:
             except Exception as exc:
                 print(f"  WARN cleanup failed for {session_id}: {exc}")
 
-    passed = len(cases) - failures
+    passed_count = len(cases) - failures
     print("\nSummary")
-    print(f"  Passed: {passed}/{len(cases)}")
+    print(f"  Passed: {passed_count}/{len(cases)}")
     print(f"  Failed: {failures}")
     print(f"  Errors: {errors}")
     report_json = str(args.report_json or "").strip()
@@ -411,7 +411,7 @@ def main() -> int:
                     "strict": bool(args.strict),
                     "summary": {
                         "total": len(cases),
-                        "passed": passed,
+                        "passed": passed_count,
                         "failed": failures,
                         "errors": errors,
                     },
