@@ -322,6 +322,12 @@ body {
   padding-right: 0.2rem;
 }
 
+.chat-list-empty {
+  margin: 0.25rem 0.1rem;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+}
+
 .chat-item-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -383,6 +389,42 @@ body {
 
 .new-chat {
   background: var(--accent-fill-soft);
+}
+
+.queue-controls {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.queue-sort-select {
+  width: 100%;
+  border: 1px solid var(--interactive-border-secondary-default);
+  border-radius: 10px;
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.34rem 0.5rem;
+  min-height: 2rem;
+}
+
+.queue-sort-select:focus {
+  border-color: var(--focus-ring);
+  outline: none;
+}
+
+.queue-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+}
+
+.queue-filter-toggle input[type="checkbox"] {
+  width: 0.9rem;
+  height: 0.9rem;
+  accent-color: var(--accent-blue);
 }
 
 .chat-item-actions {

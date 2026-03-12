@@ -79,6 +79,9 @@
   downsize/compression, per-chat image persistence across chat switches/reloads,
   and OCR follow-up turns that reuse the latest persisted image batch when no
   new image is attached.
+- Frontend chat drawer now includes eval review queue controls:
+  sort (`recent`, `unreviewed`, `fail_ratio`) plus `unreviewed only` filter for
+  faster checkpoint triage.
 - Eval feedback submissions are append-logged for every outcome
   (`PASS`/`PARTIAL`/`FAIL`) to
   `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` with inbox monitor
