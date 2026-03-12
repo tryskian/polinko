@@ -4,6 +4,7 @@ import { createExportUiState } from "./export-ui-state.js";
 const STORAGE_ACTIVE_CHAT_KEY = "polinko.active_chat_id.v2";
 const STORAGE_THEME_KEY = "polinko.theme.v1";
 const STORAGE_IMAGE_MESSAGES_KEY = "polinko.image_messages.v1";
+const STORAGE_CHECKPOINT_SEEN_KEY = "polinko.eval_checkpoint_seen_count.v1";
 const THEME_LIGHT = "light";
 const THEME_DARK = "dark";
 
@@ -31,6 +32,7 @@ const exportMarkdownEl = document.getElementById("export-markdown");
 const exportJsonEl = document.getElementById("export-json");
 const exportOcrEl = document.getElementById("export-ocr");
 const evalSubmitEl = document.getElementById("eval-submit");
+const checkpointJumpEl = document.getElementById("checkpoint-jump");
 const appPipEl = document.getElementById("app-pip");
 const appPipIconEl = document.getElementById("app-pip-icon");
 const emptyStateEl = document.getElementById("empty-state");
@@ -49,6 +51,7 @@ const ATTACHMENT_REENCODE_QUALITY = 0.84;
 const IMAGE_MESSAGE_MAX_PER_CHAT = 20;
 const IMAGE_MESSAGE_MAX_TOTAL = 80;
 const IMAGE_MESSAGE_STORAGE_MAX_CHARS = 3_200_000;
+const CHECKPOINT_SUMMARY_REFRESH_TTL_MS = 15_000;
 const DEFAULT_ATTACHMENT_PROMPT =
   "Transcribe visible text from the attached image(s) verbatim. Do not interpret.";
 const OCR_REQUEST_HINTS = [
@@ -127,6 +130,8 @@ let pendingAttachments = [];
 let attachmentDragDepth = 0;
 let imageMessagesBySession = new Map();
 let evalCheckpointsBySession = new Map();
+let checkpointSeenCountBySession = new Map();
+let checkpointSummaryFetchedAtBySession = new Map();
 let activeFeedbackPipRelease = null;
 let appPipWindow = null;
 let appPipSourceParent = null;
@@ -408,6 +413,45 @@ function appendComposerText(value) {
 function writeActiveChatId(value) {
   try {
     localStorage.setItem(STORAGE_ACTIVE_CHAT_KEY, value);
+  } catch {
+    // Ignore localStorage failures.
+  }
+}
+
+function loadCheckpointSeenStore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_CHECKPOINT_SEEN_KEY);
+    if (!raw) {
+      checkpointSeenCountBySession = new Map();
+      return;
+    }
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      checkpointSeenCountBySession = new Map();
+      return;
+    }
+    checkpointSeenCountBySession = new Map(
+      Object.entries(parsed).map(([sessionId, count]) => [
+        String(sessionId || "").trim(),
+        Math.max(0, Number(count || 0)),
+      ]),
+    );
+  } catch {
+    checkpointSeenCountBySession = new Map();
+  }
+}
+
+function persistCheckpointSeenStore() {
+  try {
+    const payload = {};
+    for (const [sessionId, count] of checkpointSeenCountBySession.entries()) {
+      const normalizedSessionId = String(sessionId || "").trim();
+      if (!normalizedSessionId) {
+        continue;
+      }
+      payload[normalizedSessionId] = Math.max(0, Number(count || 0));
+    }
+    localStorage.setItem(STORAGE_CHECKPOINT_SEEN_KEY, JSON.stringify(payload));
   } catch {
     // Ignore localStorage failures.
   }
@@ -1041,6 +1085,7 @@ function appendMessage(
     sessionId = activeChatId,
     feedback = null,
     variantMeta = null,
+    checkpointId = null,
   } = {},
 ) {
   const node = document.createElement("article");
@@ -1060,9 +1105,13 @@ function appendMessage(
     const controls = createAssistantFeedbackControls({ sessionId, messageId, parentMessageId, feedback });
     node.appendChild(controls);
   }
+  if (kind === "meta" && checkpointId) {
+    node.dataset.checkpointId = String(checkpointId);
+    node.classList.add("eval-checkpoint");
+  }
   chatEl.appendChild(node);
   if (persist) {
-    currentMessages.push({ kind, text, messageId, parentMessageId, feedback, variantMeta });
+    currentMessages.push({ kind, text, messageId, parentMessageId, feedback, variantMeta, checkpointId });
   }
   syncEmptyState();
   if (scroll) {
@@ -1181,6 +1230,65 @@ function buildEvalCheckpointMetaMessages(sessionId) {
   }));
 }
 
+function checkpointCountForSession(sessionId) {
+  const checkpoints = evalCheckpointsBySession.get(sessionId) || [];
+  return checkpoints.length;
+}
+
+function unreviewedCheckpointCountForSession(sessionId) {
+  const totalCount = checkpointCountForSession(sessionId);
+  const seenCount = Math.max(0, Number(checkpointSeenCountBySession.get(sessionId) || 0));
+  return Math.max(0, totalCount - seenCount);
+}
+
+function markChatCheckpointsSeen(sessionId) {
+  if (!sessionId) {
+    return;
+  }
+  const totalCount = checkpointCountForSession(sessionId);
+  const currentSeen = Math.max(0, Number(checkpointSeenCountBySession.get(sessionId) || 0));
+  if (totalCount <= currentSeen) {
+    return;
+  }
+  checkpointSeenCountBySession.set(sessionId, totalCount);
+  persistCheckpointSeenStore();
+}
+
+function syncCheckpointJumpControl() {
+  if (!checkpointJumpEl) {
+    return;
+  }
+  const checkpoints = activeChatId ? evalCheckpointsBySession.get(activeChatId) || [] : [];
+  checkpointJumpEl.disabled = checkpoints.length === 0;
+}
+
+async function refreshCheckpointSummaries(sessionIds) {
+  const normalizedIds = [...new Set((sessionIds || []).map((value) => String(value || "").trim()).filter(Boolean))];
+  if (normalizedIds.length === 0) {
+    return;
+  }
+  const now = Date.now();
+  const idsToFetch = normalizedIds.filter((sessionId) => {
+    const fetchedAt = Number(checkpointSummaryFetchedAtBySession.get(sessionId) || 0);
+    return now - fetchedAt >= CHECKPOINT_SUMMARY_REFRESH_TTL_MS || !evalCheckpointsBySession.has(sessionId);
+  });
+  if (idsToFetch.length === 0) {
+    return;
+  }
+  const settled = await Promise.allSettled(idsToFetch.map((sessionId) => apiListEvalCheckpoints(sessionId)));
+  settled.forEach((result, index) => {
+    const sessionId = idsToFetch[index];
+    if (result.status !== "fulfilled") {
+      return;
+    }
+    const checkpoints = (result.value.checkpoints || [])
+      .map(normalizeEvalCheckpointEntry)
+      .filter((entry) => entry !== null);
+    evalCheckpointsBySession.set(sessionId, checkpoints);
+    checkpointSummaryFetchedAtBySession.set(sessionId, Date.now());
+  });
+}
+
 function tokenizeText(value) {
   return String(value || "")
     .toLowerCase()
@@ -1264,6 +1372,34 @@ function latestImageBatchBeforeMostRecentUserMessage(messages) {
     return [];
   }
   return imageEntries.reverse();
+}
+
+function latestImageBatchFromEntries(entries) {
+  const normalized = (Array.isArray(entries) ? entries : [])
+    .filter((entry) => entry?.kind === "user_image" && String(entry?.imageSrc || "").trim())
+    .map((entry) => ({
+      ...entry,
+      createdAt: Number(entry?.createdAt || 0),
+      batchId: String(entry?.batchId || "").trim(),
+    }))
+    .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+  if (normalized.length === 0) {
+    return [];
+  }
+  const latest = normalized[normalized.length - 1];
+  if (!latest.batchId) {
+    return [latest];
+  }
+  return normalized.filter((entry) => entry.batchId === latest.batchId);
+}
+
+function latestImageBatchForFollowup({ sessionId, messages }) {
+  const persistedEntries = imageMessagesBySession.get(sessionId) || [];
+  const persistedBatch = latestImageBatchFromEntries(persistedEntries);
+  if (persistedBatch.length > 0) {
+    return persistedBatch;
+  }
+  return latestImageBatchFromEntries(latestImageBatchBeforeMostRecentUserMessage(messages));
 }
 
 function attachmentsFromImageBatch(imageEntries) {
@@ -1558,6 +1694,7 @@ function renderCurrentMessages() {
       sessionId: activeChatId,
       feedback: entry.feedback || null,
       variantMeta: entry.variantMeta || null,
+      checkpointId: entry.checkpointId || null,
     });
   });
   syncEmptyState();
@@ -1755,7 +1892,32 @@ async function submitEvalCheckpoint() {
     saved,
   ].sort((a, b) => Number(a.created_at || 0) - Number(b.created_at || 0));
   evalCheckpointsBySession.set(activeChatId, merged);
+  checkpointSummaryFetchedAtBySession.set(activeChatId, Date.now());
+  markChatCheckpointsSeen(activeChatId);
   await loadActiveMessages();
+  renderChatList();
+  syncCheckpointJumpControl();
+}
+
+function jumpToLatestCheckpoint() {
+  if (!activeChatId) {
+    return;
+  }
+  const checkpoints = evalCheckpointsBySession.get(activeChatId) || [];
+  if (checkpoints.length === 0) {
+    appendMessage("error", "No eval checkpoints found in this chat.", { persist: false });
+    return;
+  }
+  const latest = checkpoints[checkpoints.length - 1];
+  const selector = `.msg.meta[data-checkpoint-id="${String(latest.checkpoint_id)}"]`;
+  const target = chatEl.querySelector(selector);
+  if (!target) {
+    appendMessage("error", "Latest checkpoint is not visible in this chat yet.", { persist: false });
+    return;
+  }
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+  target.classList.add("checkpoint-target");
+  window.setTimeout(() => target.classList.remove("checkpoint-target"), 1400);
 }
 
 function parsePreferenceNote(value) {
@@ -2134,7 +2296,21 @@ function renderChatList() {
     if (chat.session_id === activeChatId) {
       chatButton.classList.add("active");
     }
-    chatButton.textContent = chat.title;
+
+    const titleSpan = document.createElement("span");
+    titleSpan.className = "chat-item-title";
+    titleSpan.textContent = chat.title;
+    chatButton.appendChild(titleSpan);
+
+    const unreviewedCount = unreviewedCheckpointCountForSession(chat.session_id);
+    if (unreviewedCount > 0) {
+      chatButton.classList.add("has-unreviewed");
+      const badge = document.createElement("span");
+      badge.className = "chat-item-badge";
+      badge.textContent = String(unreviewedCount);
+      badge.title = `${unreviewedCount} unreviewed eval checkpoint${unreviewedCount === 1 ? "" : "s"}`;
+      chatButton.appendChild(badge);
+    }
     chatButton.title = "Double-click to rename";
     let clickTimer = null;
 
@@ -2210,7 +2386,11 @@ function renderChatList() {
         const wasActive = chat.session_id === activeChatId;
         await apiDeprecateChat(chat.session_id);
         imageMessagesBySession.delete(chat.session_id);
+        evalCheckpointsBySession.delete(chat.session_id);
+        checkpointSummaryFetchedAtBySession.delete(chat.session_id);
+        checkpointSeenCountBySession.delete(chat.session_id);
         persistImageMessagesStore();
+        persistCheckpointSeenStore();
         const knownChats = await refreshChats();
         if (!wasActive) {
           return;
@@ -2240,7 +2420,11 @@ function applyChats(nextChats) {
 
 async function refreshChats() {
   const payload = await apiListChats();
-  applyChats(payload.chats ?? []);
+  const nextChats = payload.chats ?? [];
+  applyChats(nextChats);
+  await refreshCheckpointSummaries(nextChats.map((chat) => chat.session_id));
+  renderChatList();
+  syncCheckpointJumpControl();
   return chats;
 }
 
@@ -2249,6 +2433,7 @@ async function loadActiveMessages() {
     currentMessages = [];
     messageFeedbackById = new Map();
     renderCurrentMessages();
+    syncCheckpointJumpControl();
     return;
   }
 
@@ -2264,6 +2449,7 @@ async function loadActiveMessages() {
     .map(normalizeEvalCheckpointEntry)
     .filter((entry) => entry !== null);
   evalCheckpointsBySession.set(activeChatId, checkpoints);
+  checkpointSummaryFetchedAtBySession.set(activeChatId, Date.now());
   const baseMessages = (payload.messages ?? []).map((entry) => ({
     kind: entry.role === "assistant" ? "assistant" : "user",
     text: entry.content,
@@ -2279,6 +2465,7 @@ async function loadActiveMessages() {
     ...checkpointMessages,
   ];
   renderCurrentMessages();
+  syncCheckpointJumpControl();
 }
 
 async function setActiveChat(sessionId) {
@@ -2289,6 +2476,8 @@ async function setActiveChat(sessionId) {
   renderChatList();
   syncExportControls();
   await loadActiveMessages();
+  markChatCheckpointsSeen(activeChatId);
+  renderChatList();
   await loadActivePersonalization(activeChatId);
 }
 
@@ -2446,7 +2635,10 @@ composerEl.addEventListener("submit", async (event) => {
   const queuedAttachments = [...pendingAttachments];
   let effectiveAttachments = queuedAttachments;
   if (queuedAttachments.length === 0 && looksLikeOcrFollowupWithoutAttachment(messageText)) {
-    const latestBatch = latestImageBatchBeforeMostRecentUserMessage(currentMessages);
+    const latestBatch = latestImageBatchForFollowup({
+      sessionId: activeChatId,
+      messages: currentMessages,
+    });
     if (latestBatch.length > 0) {
       effectiveAttachments = attachmentsFromImageBatch(latestBatch);
     }
@@ -2543,6 +2735,10 @@ evalSubmitEl?.addEventListener("click", async () => {
   } finally {
     evalSubmitEl.disabled = false;
   }
+});
+
+checkpointJumpEl?.addEventListener("click", () => {
+  jumpToLatestCheckpoint();
 });
 
 appPipEl?.addEventListener("click", async () => {
@@ -2699,6 +2895,7 @@ messageEl.addEventListener("paste", async (event) => {
     initTheme();
     applyCompactModeIfNeeded();
     loadImageMessagesStore();
+    loadCheckpointSeenStore();
     updateAppPipUi();
     syncExportControls();
     if (memorySearchAvailable) {

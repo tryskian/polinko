@@ -24,6 +24,7 @@ function makeChat({ sessionId, title, createdAt, updatedAt, messageCount = 0, st
 function createMockState() {
   const createdAt = nowMs();
   const sessionId = "e2e-seed-chat";
+  const secondarySessionId = "e2e-checkpoint-chat";
   return {
     seq: 0,
     chats: [
@@ -33,9 +34,16 @@ function createMockState() {
         createdAt,
         updatedAt: createdAt,
       }),
+      makeChat({
+        sessionId: secondarySessionId,
+        title: "E2E Checkpoint Chat",
+        createdAt: createdAt - 1000,
+        updatedAt: createdAt - 1000,
+      }),
     ],
     messagesBySession: {
       [sessionId]: [],
+      [secondarySessionId]: [],
     },
     feedbackBySession: {
       [sessionId]: [
@@ -57,6 +65,17 @@ function createMockState() {
     },
     checkpointsBySession: {
       [sessionId]: [],
+      [secondarySessionId]: [
+        {
+          checkpoint_id: "eval_seed_secondary_1",
+          session_id: secondarySessionId,
+          total_count: 2,
+          pass_count: 1,
+          fail_count: 1,
+          other_count: 0,
+          created_at: createdAt - 500,
+        },
+      ],
     },
     memoryScopeBySession: {
       [sessionId]: "global",
@@ -266,7 +285,8 @@ test.beforeEach(async ({ page }) => {
           parent_message_id: sourceUserMessageId,
         });
       } else {
-        if (userText.trim().toLowerCase() === "try again") {
+        const normalizedUserText = userText.trim().toLowerCase();
+        if (normalizedUserText === "try again" || normalizedUserText === "again") {
           if (attachmentCount > 0) {
             responseText = "E2E OCR retry reused prior image";
           } else {
@@ -338,6 +358,17 @@ test("creates a fresh chat from sidebar", async ({ page }) => {
   await expect(page.getByLabel("Chat threads").getByRole("button", { name: "New chat" })).toBeVisible();
 });
 
+test("shows unreviewed checkpoint badge per chat and clears it when reviewed", async ({ page }) => {
+  await page.goto("/");
+
+  const checkpointRow = page.locator(".chat-item-row", { hasText: "E2E Checkpoint Chat" });
+  await expect(checkpointRow.locator(".chat-item-badge")).toHaveText("1");
+
+  await page.getByRole("button", { name: "E2E Checkpoint Chat" }).click();
+  await expect(page.getByText(/Eval checkpoint 1/i)).toBeVisible();
+  await expect(checkpointRow.locator(".chat-item-badge")).toHaveCount(0);
+});
+
 test("retries assistant response as a variant without duplicating the user message", async ({ page }) => {
   await page.goto("/");
 
@@ -362,6 +393,23 @@ test("retries assistant response as a variant without duplicating the user messa
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page.getByText("Variant 2 of 2")).toBeVisible();
   await expect(page.getByText("E2E retry variant response")).toBeVisible();
+});
+
+test("jump to latest checkpoint focuses the most recent submission", async ({ page }) => {
+  await page.goto("/");
+
+  const jumpButton = page.getByRole("button", { name: "Jump to latest eval checkpoint" });
+  await expect(jumpButton).toBeDisabled();
+
+  await page.getByRole("button", { name: "Submit eval checkpoint" }).click();
+  await page.getByRole("button", { name: "Submit eval checkpoint" }).click();
+  await expect(page.getByText(/Eval checkpoint 2/i)).toBeVisible();
+  await expect(jumpButton).toBeEnabled();
+
+  await jumpButton.click();
+  await expect(page.locator(".msg.meta.eval-checkpoint.checkpoint-target")).toContainText(
+    /Eval checkpoint 2/i,
+  );
 });
 
 test("jump-to-latest retry selection works after browsing older variants", async ({ page }) => {
@@ -475,4 +523,8 @@ test("reuses the latest image batch on OCR follow-up turns without re-upload", a
   await page.getByPlaceholder("message bigbrain").fill("try again");
   await page.keyboard.press("Enter");
   await expect(page.getByText("E2E OCR retry reused prior image")).toBeVisible();
+
+  await page.getByPlaceholder("message bigbrain").fill("again");
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("E2E OCR retry reused prior image")).toHaveCount(2);
 });
