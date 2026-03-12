@@ -188,6 +188,119 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(entries[0]["outcome"], "pass")
         self.assertEqual(entries[0]["status"], "closed")
 
+    def test_submit_and_list_eval_feedback_checkpoints(self) -> None:
+        with self._stub_runner("Checkpoint candidate one"):
+            first_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "first prompt", "session_id": "s-feedback-checkpoint"},
+            )
+        self.assertEqual(first_resp.status_code, 200)
+        first_assistant_id = first_resp.json()["assistant_message_id"]
+
+        with self._stub_runner("Checkpoint candidate two"):
+            second_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "second prompt", "session_id": "s-feedback-checkpoint"},
+            )
+        self.assertEqual(second_resp.status_code, 200)
+        second_assistant_id = second_resp.json()["assistant_message_id"]
+
+        with self._stub_runner("Checkpoint candidate three"):
+            third_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "third prompt", "session_id": "s-feedback-checkpoint"},
+            )
+        self.assertEqual(third_resp.status_code, 200)
+        third_assistant_id = third_resp.json()["assistant_message_id"]
+
+        pass_submit = self.client.post(
+            "/chats/s-feedback-checkpoint/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": first_assistant_id,
+                "outcome": "pass",
+                "positive_tags": ["accurate"],
+            },
+        )
+        self.assertEqual(pass_submit.status_code, 200)
+
+        fail_submit = self.client.post(
+            "/chats/s-feedback-checkpoint/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": second_assistant_id,
+                "outcome": "fail",
+                "negative_tags": ["grounding_gap"],
+            },
+        )
+        self.assertEqual(fail_submit.status_code, 200)
+
+        partial_submit = self.client.post(
+            "/chats/s-feedback-checkpoint/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": third_assistant_id,
+                "outcome": "partial",
+                "positive_tags": ["grounded"],
+                "negative_tags": ["needs_retry"],
+            },
+        )
+        self.assertEqual(partial_submit.status_code, 200)
+
+        checkpoint_submit = self.client.post(
+            "/chats/s-feedback-checkpoint/feedback/checkpoints",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(checkpoint_submit.status_code, 200)
+        checkpoint_payload = checkpoint_submit.json()
+        self.assertTrue(checkpoint_payload["checkpoint_id"].startswith("eval-"))
+        self.assertEqual(checkpoint_payload["session_id"], "s-feedback-checkpoint")
+        self.assertEqual(checkpoint_payload["total_count"], 3)
+        self.assertEqual(checkpoint_payload["pass_count"], 1)
+        self.assertEqual(checkpoint_payload["fail_count"], 1)
+        self.assertEqual(checkpoint_payload["other_count"], 1)
+
+        listed = self.client.get(
+            "/chats/s-feedback-checkpoint/feedback/checkpoints",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(listed.status_code, 200)
+        checkpoints = listed.json()["checkpoints"]
+        self.assertEqual(len(checkpoints), 1)
+        self.assertEqual(checkpoints[0]["checkpoint_id"], checkpoint_payload["checkpoint_id"])
+        self.assertEqual(checkpoints[0]["total_count"], 3)
+
+        checkpoints_log = Path(self.tmpdir.name) / "raw_evidence" / "INBOX" / "eval_checkpoints.jsonl"
+        self.assertTrue(checkpoints_log.exists())
+        entries = [
+            json.loads(line)
+            for line in checkpoints_log.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        self.assertGreaterEqual(len(entries), 1)
+        self.assertEqual(entries[-1]["session_id"], "s-feedback-checkpoint")
+        self.assertEqual(entries[-1]["checkpoint_id"], checkpoint_payload["checkpoint_id"])
+        self.assertEqual(entries[-1]["total_count"], 3)
+
+    def test_submit_eval_checkpoint_requires_existing_feedback(self) -> None:
+        with self._stub_runner("No eval yet"):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "hello", "session_id": "s-feedback-empty-checkpoint"},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+
+        checkpoint_submit = self.client.post(
+            "/chats/s-feedback-empty-checkpoint/feedback/checkpoints",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(checkpoint_submit.status_code, 400)
+        self.assertIn("No saved evals", checkpoint_submit.json()["detail"])
+
     def test_fail_feedback_generates_recommended_action_and_logs_inbox(self) -> None:
         with self._stub_runner("Please inspect this OCR output."):
             chat_resp = self.client.post(

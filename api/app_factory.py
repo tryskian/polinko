@@ -29,6 +29,7 @@ from core.history_store import (
     ChatHistoryStore,
     ChatSummary,
     OcrRun,
+    EvalCheckpoint,
     CollaborationHandoff,
     CollaborationState,
     PersonalizationSettings,
@@ -165,6 +166,7 @@ _FEEDBACK_TAG_LEN_MAX = 36
 _FEEDBACK_NOTE_LEN_MAX = 1200
 _FEEDBACK_ACTION_LOG_FILENAME = "feedback_actions.md"
 _FEEDBACK_SUBMISSIONS_LOG_FILENAME = "eval_submissions.jsonl"
+_FEEDBACK_CHECKPOINTS_LOG_FILENAME = "eval_checkpoints.jsonl"
 _FEEDBACK_POSITIVE_TAGS = {
     "accurate",
     "high_value",
@@ -519,6 +521,21 @@ class ChatFeedbackResponse(BaseModel):
     feedback: list[MessageFeedbackResponse]
 
 
+class EvalCheckpointResponse(BaseModel):
+    checkpoint_id: str
+    session_id: str
+    total_count: int
+    pass_count: int
+    fail_count: int
+    other_count: int
+    created_at: int
+
+
+class ChatEvalCheckpointsResponse(BaseModel):
+    session_id: str
+    checkpoints: list[EvalCheckpointResponse]
+
+
 class OcrRequest(BaseModel):
     session_id: str | None = Field(default=None, min_length=1)
     source_name: str | None = Field(default=None, max_length=255)
@@ -741,6 +758,18 @@ def _message_feedback_response(entry: MessageFeedback) -> MessageFeedbackRespons
         status=entry.status.lower(),
         created_at=entry.created_at,
         updated_at=entry.updated_at,
+    )
+
+
+def _eval_checkpoint_response(entry: EvalCheckpoint) -> EvalCheckpointResponse:
+    return EvalCheckpointResponse(
+        checkpoint_id=entry.checkpoint_id,
+        session_id=entry.session_id,
+        total_count=entry.total_count,
+        pass_count=entry.pass_count,
+        fail_count=entry.fail_count,
+        other_count=entry.other_count,
+        created_at=entry.created_at,
     )
 
 
@@ -1038,6 +1067,34 @@ def _append_feedback_submission_log(
         "note": note,
         "recommended_action": recommended_action,
         "action_taken": action_taken,
+    }
+    with target.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
+
+
+def _append_eval_checkpoint_log(
+    *,
+    checkpoint_id: str,
+    session_id: str,
+    chat_title: str,
+    total_count: int,
+    pass_count: int,
+    fail_count: int,
+    other_count: int,
+) -> None:
+    root = _DEFAULT_FEEDBACK_EVIDENCE_ROOT
+    inbox_dir = root / "INBOX"
+    inbox_dir.mkdir(parents=True, exist_ok=True)
+    target = inbox_dir / _FEEDBACK_CHECKPOINTS_LOG_FILENAME
+    payload = {
+        "timestamp_ms": int(time.time() * 1000),
+        "checkpoint_id": checkpoint_id,
+        "session_id": session_id,
+        "chat_title": chat_title,
+        "total_count": int(total_count),
+        "pass_count": int(pass_count),
+        "fail_count": int(fail_count),
+        "other_count": int(other_count),
     }
     with target.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
@@ -3135,6 +3192,64 @@ def create_app(config: AppConfig) -> FastAPI:
             status=status,
         )
         return _message_feedback_response(saved)
+
+    @app.get("/chats/{session_id}/feedback/checkpoints", response_model=ChatEvalCheckpointsResponse)
+    def list_eval_checkpoints(session_id: str, request: Request) -> ChatEvalCheckpointsResponse:
+        _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.get_chat(session_id=session_id)
+        if chat is None:
+            raise HTTPException(status_code=404, detail="Chat not found.")
+        checkpoints = [
+            _eval_checkpoint_response(item)
+            for item in deps.history_store.list_eval_checkpoints(session_id=session_id)
+        ]
+        return ChatEvalCheckpointsResponse(session_id=session_id, checkpoints=checkpoints)
+
+    @app.post("/chats/{session_id}/feedback/checkpoints", response_model=EvalCheckpointResponse)
+    def submit_eval_checkpoint(session_id: str, request: Request) -> EvalCheckpointResponse:
+        principal = _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.get_chat(session_id=session_id)
+        if chat is None:
+            raise HTTPException(status_code=404, detail="Chat not found.")
+        entries = deps.history_store.list_message_feedback(session_id=session_id)
+        if not entries:
+            raise HTTPException(status_code=400, detail="No saved evals in this chat yet.")
+        pass_count = sum(1 for entry in entries if entry.outcome.lower() == "pass")
+        fail_count = sum(1 for entry in entries if entry.outcome.lower() == "fail")
+        total_count = len(entries)
+        other_count = max(0, total_count - pass_count - fail_count)
+        checkpoint_id = f"eval-{uuid.uuid4().hex[:12]}"
+        saved = deps.history_store.record_eval_checkpoint(
+            checkpoint_id=checkpoint_id,
+            session_id=session_id,
+            total_count=total_count,
+            pass_count=pass_count,
+            fail_count=fail_count,
+            other_count=other_count,
+        )
+        _append_eval_checkpoint_log(
+            checkpoint_id=saved.checkpoint_id,
+            session_id=session_id,
+            chat_title=chat.title,
+            total_count=saved.total_count,
+            pass_count=saved.pass_count,
+            fail_count=saved.fail_count,
+            other_count=saved.other_count,
+        )
+        _log_event(
+            "chat_eval_checkpoint_submitted",
+            request_id=getattr(request.state, "request_id", None),
+            session_id=session_id,
+            principal=principal,
+            checkpoint_id=saved.checkpoint_id,
+            total_count=saved.total_count,
+            pass_count=saved.pass_count,
+            fail_count=saved.fail_count,
+            other_count=saved.other_count,
+        )
+        return _eval_checkpoint_response(saved)
 
     @app.get("/chats/{session_id}/export", response_model=ChatExportResponse)
     def export_chat(session_id: str, request: Request, include_markdown: bool = False) -> ChatExportResponse:

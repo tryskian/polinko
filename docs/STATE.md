@@ -71,6 +71,9 @@
 - CLIP go/no-go criterion is now explicit (two consecutive runs with
   `cases_count >= 4`, proxy `any_rate >= 0.90`, delta `>= 0.50`, zero
   errors/skips) before integration escalation.
+- Automated CLIP readiness gate is available via
+  `make eval-clip-ab-readiness`; it inspects the latest two report artifacts
+  and returns explicit `GO`/`NO-GO` against the D-040 threshold.
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.

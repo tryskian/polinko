@@ -38,6 +38,24 @@ function createMockState() {
       [sessionId]: [],
     },
     feedbackBySession: {
+      [sessionId]: [
+        {
+          session_id: sessionId,
+          message_id: "seed-feedback-msg",
+          outcome: "pass",
+          positive_tags: ["accurate"],
+          negative_tags: [],
+          tags: ["accurate"],
+          note: null,
+          recommended_action: null,
+          action_taken: null,
+          status: "closed",
+          created_at: createdAt,
+          updated_at: createdAt,
+        },
+      ],
+    },
+    checkpointsBySession: {
       [sessionId]: [],
     },
     memoryScopeBySession: {
@@ -115,6 +133,7 @@ test.beforeEach(async ({ page }) => {
       state.chats.unshift(chat);
       state.messagesBySession[sessionId] = [];
       state.feedbackBySession[sessionId] = [];
+      state.checkpointsBySession[sessionId] = [];
       state.memoryScopeBySession[sessionId] = "global";
       await json(200, chat);
       return;
@@ -137,6 +156,42 @@ test.beforeEach(async ({ page }) => {
         session_id: sessionId,
         feedback: state.feedbackBySession[sessionId] || [],
       });
+      return;
+    }
+
+    const checkpointsMatch = path.match(/^\/chats\/([^/]+)\/feedback\/checkpoints$/);
+    if (checkpointsMatch && method === "GET") {
+      const sessionId = decodeURIComponent(checkpointsMatch[1]);
+      await json(200, {
+        session_id: sessionId,
+        checkpoints: state.checkpointsBySession[sessionId] || [],
+      });
+      return;
+    }
+
+    if (checkpointsMatch && method === "POST") {
+      const sessionId = decodeURIComponent(checkpointsMatch[1]);
+      const feedback = state.feedbackBySession[sessionId] || [];
+      if (feedback.length === 0) {
+        await json(400, { detail: "No saved evals in this chat yet." });
+        return;
+      }
+      const passCount = feedback.filter((entry) => String(entry.outcome || "").toLowerCase() === "pass").length;
+      const failCount = feedback.filter((entry) => String(entry.outcome || "").toLowerCase() === "fail").length;
+      const totalCount = feedback.length;
+      const otherCount = Math.max(0, totalCount - passCount - failCount);
+      const checkpoint = {
+        checkpoint_id: `eval_e2e_${nowMs()}_${(state.checkpointsBySession[sessionId] || []).length + 1}`,
+        session_id: sessionId,
+        total_count: totalCount,
+        pass_count: passCount,
+        fail_count: failCount,
+        other_count: otherCount,
+        created_at: nowMs(),
+      };
+      const existing = state.checkpointsBySession[sessionId] || [];
+      state.checkpointsBySession[sessionId] = [...existing, checkpoint];
+      await json(200, checkpoint);
       return;
     }
 
@@ -186,6 +241,7 @@ test.beforeEach(async ({ page }) => {
       const sessionId = String(payload.session_id || "");
       const userText = String(payload.message || "");
       const sourceUserMessageId = String(payload.source_user_message_id || "").trim();
+      const attachmentCount = Array.isArray(payload.attachments) ? payload.attachments.length : 0;
       const createdAt = nowMs();
       const assistantMessageId = nextMessageId(state);
       state.messagesBySession[sessionId] = state.messagesBySession[sessionId] || [];
@@ -210,6 +266,13 @@ test.beforeEach(async ({ page }) => {
           parent_message_id: sourceUserMessageId,
         });
       } else {
+        if (userText.trim().toLowerCase() === "try again") {
+          if (attachmentCount > 0) {
+            responseText = "E2E OCR retry reused prior image";
+          } else {
+            responseText = "No new image evidence in this turn.";
+          }
+        }
         const userMessageId = nextMessageId(state);
         state.messagesBySession[sessionId].push(
           {
@@ -301,6 +364,48 @@ test("retries assistant response as a variant without duplicating the user messa
   await expect(page.getByText("E2E retry variant response")).toBeVisible();
 });
 
+test("jump-to-latest retry selection works after browsing older variants", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByPlaceholder("message bigbrain").fill("multi retry lineage prompt");
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("E2E mock response")).toBeVisible();
+
+  // Ensure persisted lineage IDs are loaded before retrying variants.
+  await page.reload();
+  await expect(page.getByText("E2E mock response")).toBeVisible();
+
+  await page.getByRole("button", { name: "Retry this response with the same prompt" }).first().click();
+  await expect(page.getByText("Variant 2 of 2")).toBeVisible();
+
+  await page.getByRole("button", { name: "Prev" }).click();
+  await expect(page.getByText("Variant 1 of 2")).toBeVisible();
+
+  await page.getByRole("button", { name: "Retry this response with the same prompt" }).first().click();
+  await expect(page.getByText("Variant 3 of 3")).toBeVisible();
+});
+
+test("eval checkpoint confirmations persist across reload and chat switches", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Submit eval checkpoint" }).click();
+  await expect(page.getByText(/Eval checkpoint 1/i)).toBeVisible();
+
+  await page.getByRole("button", { name: "Submit eval checkpoint" }).click();
+  await expect(page.getByText(/Eval checkpoint 2/i)).toBeVisible();
+
+  await page.getByRole("button", { name: "New chat" }).click();
+  await expect(page.getByLabel("Chat threads").getByRole("button", { name: "New chat" })).toBeVisible();
+
+  await page.getByRole("button", { name: "E2E Seed Chat" }).click();
+  await expect(page.getByText(/Eval checkpoint 1/i)).toBeVisible();
+  await expect(page.getByText(/Eval checkpoint 2/i)).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText(/Eval checkpoint 1/i)).toBeVisible();
+  await expect(page.getByText(/Eval checkpoint 2/i)).toBeVisible();
+});
+
 test("keeps uploaded images visible after switching chats and back", async ({ page }) => {
   await page.goto("/");
 
@@ -353,4 +458,21 @@ test("supports pasting an image directly into the prompt field", async ({ page }
   await page.keyboard.press("Enter");
   await page.keyboard.press("Enter");
   await expect(page.locator(".msg.user.user-image img.user-image-preview")).toHaveCount(1);
+});
+
+test("reuses the latest image batch on OCR follow-up turns without re-upload", async ({ page }) => {
+  await page.goto("/");
+
+  await page.locator("#ocr-file-input").setInputFiles({
+    name: "phi.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(ONE_BY_ONE_PNG_BASE64, "base64"),
+  });
+  await page.getByPlaceholder("message bigbrain").fill("what letters are these?");
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("E2E mock response")).toBeVisible();
+
+  await page.getByPlaceholder("message bigbrain").fill("try again");
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("E2E OCR retry reused prior image")).toBeVisible();
 });

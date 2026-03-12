@@ -499,6 +499,10 @@ Hash fields in responses:
      - `errors == 0` and `skipped == 0` for both arms
    - `NO-GO` otherwise; keep proxy/scaffold mode and add cases or fix retrieval
      behavior before integration escalation.
+7. Automated readiness check:
+   - `make eval-clip-ab-readiness`
+   - uses the latest two `eval_reports/clip-ab-*.json` artifacts
+   - exits `0` on `GO`, `1` on `NO-GO`
 
 ## Run OCR Eval
 

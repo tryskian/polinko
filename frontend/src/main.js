@@ -51,6 +51,37 @@ const IMAGE_MESSAGE_MAX_TOTAL = 80;
 const IMAGE_MESSAGE_STORAGE_MAX_CHARS = 3_200_000;
 const DEFAULT_ATTACHMENT_PROMPT =
   "Transcribe visible text from the attached image(s) verbatim. Do not interpret.";
+const OCR_REQUEST_HINTS = [
+  "ocr",
+  "transcrib",
+  "what is this word",
+  "read this",
+  "read that",
+  "text says",
+  "what does it say",
+  "what does this say",
+  "spell this",
+];
+const OCR_FOLLOWUP_HINTS = [
+  "try again",
+  "again",
+  "without using memory",
+  "no memory",
+  "ocr again",
+  "transcribe again",
+  "read again",
+  "retry ocr",
+];
+const OCR_EXPLICIT_RETRY_PATTERNS = [
+  /^\s*again[.!?]*\s*$/i,
+  /\btry again\b/i,
+  /\bwithout using memory\b/i,
+  /\bno memory\b/i,
+  /\bocr again\b/i,
+  /\btranscrib(?:e|ing) again\b/i,
+  /\bread again\b/i,
+  /\bretry ocr\b/i,
+];
 const MEMORY_SEARCH_ENABLED = false;
 const FEEDBACK_POSITIVE_TAG_OPTIONS = [
   "accurate",
@@ -95,6 +126,7 @@ let activeTheme = THEME_LIGHT;
 let pendingAttachments = [];
 let attachmentDragDepth = 0;
 let imageMessagesBySession = new Map();
+let evalCheckpointsBySession = new Map();
 let activeFeedbackPipRelease = null;
 let appPipWindow = null;
 let appPipSourceParent = null;
@@ -635,7 +667,11 @@ async function retryAssistantVariant({ assistantMessageId, parentMessageId, stat
   const sessionId = activeChatId;
   const thinkingNode = appendThinkingIndicator();
   try {
-    await sendMessage(prompt, sessionId, { sourceUserMessageId });
+    const result = await sendMessage(prompt, sessionId, { sourceUserMessageId });
+    const latestVariantId = String(result?.assistant_message_id || "").trim();
+    if (latestVariantId) {
+      assistantVariantSelectionByParent.set(sourceUserMessageId, latestVariantId);
+    }
     if (activeChatId !== sessionId) {
       return;
     }
@@ -1110,6 +1146,144 @@ function normalizePromptText(value) {
     .trim();
 }
 
+function normalizeEvalCheckpointEntry(entry) {
+  const checkpointId = String(entry?.checkpoint_id || "").trim();
+  if (!checkpointId) {
+    return null;
+  }
+  return {
+    checkpoint_id: checkpointId,
+    session_id: String(entry?.session_id || "").trim() || activeChatId,
+    total_count: Math.max(0, Number(entry?.total_count || 0)),
+    pass_count: Math.max(0, Number(entry?.pass_count || 0)),
+    fail_count: Math.max(0, Number(entry?.fail_count || 0)),
+    other_count: Math.max(0, Number(entry?.other_count || 0)),
+    created_at: Math.max(0, Number(entry?.created_at || 0)),
+  };
+}
+
+function checkpointSummaryText(entry, index) {
+  const createdAt = Number(entry?.created_at || 0);
+  const timestamp = createdAt > 0 ? new Date(createdAt).toLocaleString() : "unknown time";
+  return (
+    `Eval checkpoint ${index} • ${timestamp} • total=${entry.total_count}, ` +
+    `pass=${entry.pass_count}, fail=${entry.fail_count}, other=${entry.other_count}.`
+  );
+}
+
+function buildEvalCheckpointMetaMessages(sessionId) {
+  const checkpoints = evalCheckpointsBySession.get(sessionId) || [];
+  return checkpoints.map((entry, idx) => ({
+    kind: "meta",
+    text: checkpointSummaryText(entry, idx + 1),
+    checkpointId: entry.checkpoint_id,
+    createdAt: Number(entry.created_at || 0),
+  }));
+}
+
+function tokenizeText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .match(/[a-z0-9]+/g) || [];
+}
+
+function looksLikeOcrRequest(value) {
+  const lowered = String(value || "").trim().toLowerCase();
+  if (!lowered) {
+    return false;
+  }
+  const tokens = tokenizeText(lowered);
+  const tokenSet = new Set(tokens);
+  for (const hint of OCR_REQUEST_HINTS) {
+    const normalizedHint = hint.toLowerCase();
+    if (normalizedHint.includes(" ")) {
+      if (lowered.includes(normalizedHint)) {
+        return true;
+      }
+      continue;
+    }
+    if (tokenSet.has(normalizedHint)) {
+      return true;
+    }
+  }
+  if (tokenSet.has("ocr")) {
+    return true;
+  }
+  return (
+    tokens.length <= 7 &&
+    ["word", "text", "say", "read"].some((token) => tokenSet.has(token))
+  );
+}
+
+function looksLikeOcrFollowupWithoutAttachment(value) {
+  const lowered = String(value || "").trim().toLowerCase();
+  if (!lowered) {
+    return false;
+  }
+  if (looksLikeOcrRequest(lowered)) {
+    return true;
+  }
+  if (!OCR_FOLLOWUP_HINTS.some((hint) => lowered.includes(hint))) {
+    return false;
+  }
+  return OCR_EXPLICIT_RETRY_PATTERNS.some((pattern) => pattern.test(lowered));
+}
+
+function inferMimeTypeFromDataUrl(dataUrl) {
+  const match = /^data:([^;,]+)[;,]/i.exec(String(dataUrl || ""));
+  if (!match) {
+    return null;
+  }
+  return String(match[1] || "").trim().toLowerCase() || null;
+}
+
+function latestImageBatchBeforeMostRecentUserMessage(messages) {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return [];
+  }
+  let userIndex = -1;
+  for (let idx = messages.length - 1; idx >= 0; idx -= 1) {
+    if (messages[idx]?.kind === "user") {
+      userIndex = idx;
+      break;
+    }
+  }
+  if (userIndex <= 0) {
+    return [];
+  }
+  const imageEntries = [];
+  for (let idx = userIndex - 1; idx >= 0; idx -= 1) {
+    const entry = messages[idx];
+    if (entry?.kind === "user_image") {
+      imageEntries.push(entry);
+      continue;
+    }
+    break;
+  }
+  if (imageEntries.length === 0) {
+    return [];
+  }
+  return imageEntries.reverse();
+}
+
+function attachmentsFromImageBatch(imageEntries) {
+  return imageEntries
+    .map((entry) => {
+      const dataBase64 = String(entry?.imageSrc || "").trim();
+      if (!dataBase64) {
+        return null;
+      }
+      return {
+        id: attachmentId(),
+        source_name: escapeAttachmentName(entry?.sourceName || "image.png"),
+        mime_type: inferMimeTypeFromDataUrl(dataBase64),
+        data_base64: dataBase64,
+        memory_scope: "global",
+      };
+    })
+    .filter((entry) => entry !== null);
+}
+
 function rememberImageMessage(sessionId, entry) {
   if (!sessionId) {
     return;
@@ -1431,6 +1605,16 @@ async function apiListFeedback(sessionId) {
   return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback`);
 }
 
+async function apiListEvalCheckpoints(sessionId) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback/checkpoints`);
+}
+
+async function apiSubmitEvalCheckpoint(sessionId) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback/checkpoints`, {
+    method: "POST",
+  });
+}
+
 async function apiSubmitFeedback(sessionId, payload) {
   return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback`, {
     method: "POST",
@@ -1560,33 +1744,18 @@ async function submitEvalCheckpoint() {
   if (!activeChatId) {
     throw new Error("No active chat selected.");
   }
-  const payload = await apiListFeedback(activeChatId);
-  const entries = Array.isArray(payload.feedback) ? payload.feedback : [];
-  if (entries.length === 0) {
-    throw new Error("No saved evals in this chat yet.");
+  const savedRaw = await apiSubmitEvalCheckpoint(activeChatId);
+  const saved = normalizeEvalCheckpointEntry(savedRaw);
+  if (!saved) {
+    throw new Error("Checkpoint could not be parsed.");
   }
-  let passCount = 0;
-  let failCount = 0;
-  let otherCount = 0;
-  entries.forEach((entry) => {
-    const outcome = (entry?.outcome || "").toLowerCase();
-    if (outcome === "pass") {
-      passCount += 1;
-      return;
-    }
-    if (outcome === "fail") {
-      failCount += 1;
-      return;
-    }
-    otherCount += 1;
-  });
-  const note = `EVAL_SUBMIT ${new Date().toISOString()} total=${entries.length} pass=${passCount} fail=${failCount} other=${otherCount}`;
-  await apiAddNote(activeChatId, note);
-  appendMessage(
-    "meta",
-    `Eval submit logged for ${activeChatId}: total=${entries.length}, pass=${passCount}, fail=${failCount}, other=${otherCount}.`,
-    { persist: false },
-  );
+  const existing = evalCheckpointsBySession.get(activeChatId) || [];
+  const merged = [
+    ...existing.filter((entry) => entry.checkpoint_id !== saved.checkpoint_id),
+    saved,
+  ].sort((a, b) => Number(a.created_at || 0) - Number(b.created_at || 0));
+  evalCheckpointsBySession.set(activeChatId, merged);
+  await loadActiveMessages();
 }
 
 function parsePreferenceNote(value) {
@@ -2083,22 +2252,32 @@ async function loadActiveMessages() {
     return;
   }
 
-  const [payload, feedbackPayload] = await Promise.all([
+  const [payload, feedbackPayload, checkpointsPayload] = await Promise.all([
     apiListMessages(activeChatId),
     apiListFeedback(activeChatId),
+    apiListEvalCheckpoints(activeChatId).catch(() => ({ checkpoints: [] })),
   ]);
   messageFeedbackById = new Map(
     (feedbackPayload.feedback || []).map((item) => [item.message_id, item]),
   );
+  const checkpoints = (checkpointsPayload.checkpoints || [])
+    .map(normalizeEvalCheckpointEntry)
+    .filter((entry) => entry !== null);
+  evalCheckpointsBySession.set(activeChatId, checkpoints);
   const baseMessages = (payload.messages ?? []).map((entry) => ({
     kind: entry.role === "assistant" ? "assistant" : "user",
     text: entry.content,
     messageId: entry.message_id || null,
     parentMessageId: entry.parent_message_id || null,
     feedback: messageFeedbackById.get(entry.message_id) || null,
+    createdAt: Number(entry.created_at || 0),
   }));
   const imageMessages = imageMessagesBySession.get(activeChatId) || [];
-  currentMessages = mergeMessagesWithImageMessages(baseMessages, imageMessages);
+  const checkpointMessages = buildEvalCheckpointMetaMessages(activeChatId);
+  currentMessages = [
+    ...mergeMessagesWithImageMessages(baseMessages, imageMessages),
+    ...checkpointMessages,
+  ];
   renderCurrentMessages();
 }
 
@@ -2265,13 +2444,20 @@ composerEl.addEventListener("submit", async (event) => {
   event.preventDefault();
   const messageText = messageEl.value.trim();
   const queuedAttachments = [...pendingAttachments];
+  let effectiveAttachments = queuedAttachments;
+  if (queuedAttachments.length === 0 && looksLikeOcrFollowupWithoutAttachment(messageText)) {
+    const latestBatch = latestImageBatchBeforeMostRecentUserMessage(currentMessages);
+    if (latestBatch.length > 0) {
+      effectiveAttachments = attachmentsFromImageBatch(latestBatch);
+    }
+  }
   const outboundMessage = messageText || DEFAULT_ATTACHMENT_PROMPT;
-  if ((!messageText && queuedAttachments.length === 0) || !activeChatId) {
+  if ((!messageText && effectiveAttachments.length === 0) || !activeChatId) {
     return;
   }
 
   const noteText = parsePreferenceNote(messageText);
-  if (noteText && queuedAttachments.length === 0) {
+  if (noteText && effectiveAttachments.length === 0) {
     try {
       await apiAddNote(activeChatId, noteText);
       messageEl.value = "";
@@ -2303,7 +2489,7 @@ composerEl.addEventListener("submit", async (event) => {
 
   try {
     const result = await sendMessage(outboundMessage, activeChatId, {
-      attachments: queuedAttachments.map((attachment) => ({
+      attachments: effectiveAttachments.map((attachment) => ({
         data_base64: attachment.data_base64,
         source_name: attachment.source_name,
         mime_type: attachment.mime_type,
