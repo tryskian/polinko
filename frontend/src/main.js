@@ -1374,6 +1374,34 @@ function latestImageBatchBeforeMostRecentUserMessage(messages) {
   return imageEntries.reverse();
 }
 
+function latestImageBatchFromEntries(entries) {
+  const normalized = (Array.isArray(entries) ? entries : [])
+    .filter((entry) => entry?.kind === "user_image" && String(entry?.imageSrc || "").trim())
+    .map((entry) => ({
+      ...entry,
+      createdAt: Number(entry?.createdAt || 0),
+      batchId: String(entry?.batchId || "").trim(),
+    }))
+    .sort((a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+  if (normalized.length === 0) {
+    return [];
+  }
+  const latest = normalized[normalized.length - 1];
+  if (!latest.batchId) {
+    return [latest];
+  }
+  return normalized.filter((entry) => entry.batchId === latest.batchId);
+}
+
+function latestImageBatchForFollowup({ sessionId, messages }) {
+  const persistedEntries = imageMessagesBySession.get(sessionId) || [];
+  const persistedBatch = latestImageBatchFromEntries(persistedEntries);
+  if (persistedBatch.length > 0) {
+    return persistedBatch;
+  }
+  return latestImageBatchFromEntries(latestImageBatchBeforeMostRecentUserMessage(messages));
+}
+
 function attachmentsFromImageBatch(imageEntries) {
   return imageEntries
     .map((entry) => {
@@ -2607,7 +2635,10 @@ composerEl.addEventListener("submit", async (event) => {
   const queuedAttachments = [...pendingAttachments];
   let effectiveAttachments = queuedAttachments;
   if (queuedAttachments.length === 0 && looksLikeOcrFollowupWithoutAttachment(messageText)) {
-    const latestBatch = latestImageBatchBeforeMostRecentUserMessage(currentMessages);
+    const latestBatch = latestImageBatchForFollowup({
+      sessionId: activeChatId,
+      messages: currentMessages,
+    });
     if (latestBatch.length > 0) {
       effectiveAttachments = attachmentsFromImageBatch(latestBatch);
     }

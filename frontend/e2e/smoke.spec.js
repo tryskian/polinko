@@ -285,7 +285,8 @@ test.beforeEach(async ({ page }) => {
           parent_message_id: sourceUserMessageId,
         });
       } else {
-        if (userText.trim().toLowerCase() === "try again") {
+        const normalizedUserText = userText.trim().toLowerCase();
+        if (normalizedUserText === "try again" || normalizedUserText === "again") {
           if (attachmentCount > 0) {
             responseText = "E2E OCR retry reused prior image";
           } else {
@@ -522,4 +523,8 @@ test("reuses the latest image batch on OCR follow-up turns without re-upload", a
   await page.getByPlaceholder("message bigbrain").fill("try again");
   await page.keyboard.press("Enter");
   await expect(page.getByText("E2E OCR retry reused prior image")).toBeVisible();
+
+  await page.getByPlaceholder("message bigbrain").fill("again");
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("E2E OCR retry reused prior image")).toHaveCount(2);
 });
