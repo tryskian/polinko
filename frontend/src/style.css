@@ -343,6 +343,14 @@ body {
 
 .chat-item {
   width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+}
+
+.chat-item-title {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -351,6 +359,26 @@ body {
 .chat-item.active {
   background: var(--accent-fill-strong);
   border-color: var(--focus-ring);
+}
+
+.chat-item.has-unreviewed {
+  border-color: color-mix(in srgb, var(--focus-ring) 45%, var(--line));
+}
+
+.chat-item-badge {
+  flex: 0 0 auto;
+  min-width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 999px;
+  border: 1px solid var(--focus-ring);
+  background: color-mix(in srgb, var(--focus-ring) 18%, transparent);
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0 0.34rem;
+  display: inline-grid;
+  place-items: center;
 }
 
 .new-chat {
@@ -804,6 +832,16 @@ body {
   color: var(--muted);
   margin: 0 auto;
   border: 0;
+}
+
+.msg.meta.eval-checkpoint {
+  color: var(--text-secondary);
+}
+
+.msg.meta.eval-checkpoint.checkpoint-target {
+  color: var(--text-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .msg.error {
