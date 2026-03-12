@@ -76,8 +76,9 @@
   (`source_user_message_id` flow), including variant navigation and duplicate
   user-row prevention assertions.
 - Frontend attachment flow now supports paste-to-attach, client-side
-  downsize/compression, and per-chat image persistence across chat switches and
-  reloads.
+  downsize/compression, per-chat image persistence across chat switches/reloads,
+  and OCR follow-up turns that reuse the latest persisted image batch when no
+  new image is attached.
 - Eval feedback submissions are append-logged for every outcome
   (`PASS`/`PARTIAL`/`FAIL`) to
   `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` with inbox monitor
