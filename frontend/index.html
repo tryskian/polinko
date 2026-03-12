@@ -93,6 +93,18 @@
           <p class="drawer-title">Chats</p>
         </div>
         <button id="new-chat" type="button" class="new-chat">New chat</button>
+        <div class="queue-controls" aria-label="Eval review queue controls">
+          <label for="chat-sort-select" class="visually-hidden">Sort chats</label>
+          <select id="chat-sort-select" class="queue-sort-select" aria-label="Sort chats">
+            <option value="recent">Sort: Recent</option>
+            <option value="unreviewed">Sort: Unreviewed</option>
+            <option value="fail_ratio">Sort: Fail ratio</option>
+          </select>
+          <label class="queue-filter-toggle">
+            <input id="chat-filter-unreviewed" type="checkbox" />
+            <span>Unreviewed only</span>
+          </label>
+        </div>
         <div id="chat-list" class="chat-list" role="listbox" aria-label="Chat threads"></div>
       </aside>
       <button id="drawer-backdrop" type="button" class="drawer-backdrop" aria-label="Close chats"></button>

@@ -5,6 +5,7 @@ const STORAGE_ACTIVE_CHAT_KEY = "polinko.active_chat_id.v2";
 const STORAGE_THEME_KEY = "polinko.theme.v1";
 const STORAGE_IMAGE_MESSAGES_KEY = "polinko.image_messages.v1";
 const STORAGE_CHECKPOINT_SEEN_KEY = "polinko.eval_checkpoint_seen_count.v1";
+const STORAGE_CHAT_QUEUE_PREFS_KEY = "polinko.chat_queue_prefs.v1";
 const THEME_LIGHT = "light";
 const THEME_DARK = "dark";
 
@@ -41,6 +42,8 @@ const drawerToggleEl = document.getElementById("drawer-toggle");
 const drawerEl = document.getElementById("chat-drawer");
 const drawerBackdropEl = document.getElementById("drawer-backdrop");
 const chatListEl = document.getElementById("chat-list");
+const chatSortSelectEl = document.getElementById("chat-sort-select");
+const chatFilterUnreviewedEl = document.getElementById("chat-filter-unreviewed");
 const RESPONSE_RENDER_DELAY_MS = 220;
 const ASSISTANT_TYPE_MIN_MS = 120;
 const ASSISTANT_TYPE_MAX_MS = 700;
@@ -132,6 +135,8 @@ let imageMessagesBySession = new Map();
 let evalCheckpointsBySession = new Map();
 let checkpointSeenCountBySession = new Map();
 let checkpointSummaryFetchedAtBySession = new Map();
+let chatSortMode = "recent";
+let chatFilterUnreviewedOnly = false;
 let activeFeedbackPipRelease = null;
 let appPipWindow = null;
 let appPipSourceParent = null;
@@ -415,6 +420,53 @@ function writeActiveChatId(value) {
     localStorage.setItem(STORAGE_ACTIVE_CHAT_KEY, value);
   } catch {
     // Ignore localStorage failures.
+  }
+}
+
+function normalizeChatSortMode(value) {
+  if (value === "unreviewed" || value === "fail_ratio") {
+    return value;
+  }
+  return "recent";
+}
+
+function loadChatQueuePrefs() {
+  try {
+    const raw = localStorage.getItem(STORAGE_CHAT_QUEUE_PREFS_KEY);
+    if (!raw) {
+      chatSortMode = "recent";
+      chatFilterUnreviewedOnly = false;
+      return;
+    }
+    const parsed = JSON.parse(raw);
+    chatSortMode = normalizeChatSortMode(parsed?.sort_mode);
+    chatFilterUnreviewedOnly = Boolean(parsed?.unreviewed_only);
+  } catch {
+    chatSortMode = "recent";
+    chatFilterUnreviewedOnly = false;
+  }
+}
+
+function persistChatQueuePrefs() {
+  try {
+    localStorage.setItem(
+      STORAGE_CHAT_QUEUE_PREFS_KEY,
+      JSON.stringify({
+        sort_mode: chatSortMode,
+        unreviewed_only: chatFilterUnreviewedOnly,
+      }),
+    );
+  } catch {
+    // Ignore localStorage failures.
+  }
+}
+
+function syncChatQueueControlsUi() {
+  if (chatSortSelectEl) {
+    chatSortSelectEl.value = normalizeChatSortMode(chatSortMode);
+  }
+  if (chatFilterUnreviewedEl) {
+    chatFilterUnreviewedEl.checked = Boolean(chatFilterUnreviewedOnly);
   }
 }
 
@@ -1235,6 +1287,19 @@ function checkpointCountForSession(sessionId) {
   return checkpoints.length;
 }
 
+function latestCheckpointForSession(sessionId) {
+  const checkpoints = evalCheckpointsBySession.get(sessionId) || [];
+  return checkpoints.length > 0 ? checkpoints[checkpoints.length - 1] : null;
+}
+
+function latestFailRatioForSession(sessionId) {
+  const latest = latestCheckpointForSession(sessionId);
+  if (!latest || Number(latest.total_count || 0) <= 0) {
+    return -1;
+  }
+  return Number(latest.fail_count || 0) / Number(latest.total_count || 1);
+}
+
 function unreviewedCheckpointCountForSession(sessionId) {
   const totalCount = checkpointCountForSession(sessionId);
   const seenCount = Math.max(0, Number(checkpointSeenCountBySession.get(sessionId) || 0));
@@ -1895,7 +1960,7 @@ async function submitEvalCheckpoint() {
   checkpointSummaryFetchedAtBySession.set(activeChatId, Date.now());
   markChatCheckpointsSeen(activeChatId);
   await loadActiveMessages();
-  renderChatList();
+  refreshChatListUi();
   syncCheckpointJumpControl();
 }
 
@@ -2254,8 +2319,45 @@ function renderMemorySearchResults(matches) {
   });
 }
 
-function sortChatsByRecent(nextChats) {
-  return [...nextChats].sort((a, b) => b.updated_at - a.updated_at || b.created_at - a.created_at);
+function compareChatsByRecent(a, b) {
+  return b.updated_at - a.updated_at || b.created_at - a.created_at;
+}
+
+function sortChats(nextChats) {
+  const ordered = [...nextChats];
+  ordered.sort((a, b) => {
+    if (chatSortMode === "unreviewed") {
+      const byUnreviewed =
+        unreviewedCheckpointCountForSession(b.session_id) - unreviewedCheckpointCountForSession(a.session_id);
+      if (byUnreviewed !== 0) {
+        return byUnreviewed;
+      }
+      const byFailRatio = latestFailRatioForSession(b.session_id) - latestFailRatioForSession(a.session_id);
+      if (byFailRatio !== 0) {
+        return byFailRatio;
+      }
+      return compareChatsByRecent(a, b);
+    }
+    if (chatSortMode === "fail_ratio") {
+      const byFailRatio = latestFailRatioForSession(b.session_id) - latestFailRatioForSession(a.session_id);
+      if (byFailRatio !== 0) {
+        return byFailRatio;
+      }
+      const byUnreviewed =
+        unreviewedCheckpointCountForSession(b.session_id) - unreviewedCheckpointCountForSession(a.session_id);
+      if (byUnreviewed !== 0) {
+        return byUnreviewed;
+      }
+      return compareChatsByRecent(a, b);
+    }
+    return compareChatsByRecent(a, b);
+  });
+  return ordered;
+}
+
+function refreshChatListUi() {
+  chats = sortChats(chats);
+  renderChatList();
 }
 
 function openDrawer() {
@@ -2286,7 +2388,20 @@ function toggleDrawer() {
 
 function renderChatList() {
   chatListEl.innerHTML = "";
-  chats.forEach((chat) => {
+  const visibleChats = chats.filter((chat) => {
+    if (!chatFilterUnreviewedOnly) {
+      return true;
+    }
+    return unreviewedCheckpointCountForSession(chat.session_id) > 0;
+  });
+  if (visibleChats.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "chat-list-empty";
+    empty.textContent = "No chats match this review filter.";
+    chatListEl.appendChild(empty);
+    return;
+  }
+  visibleChats.forEach((chat) => {
     const row = document.createElement("div");
     row.className = "chat-item-row";
 
@@ -2414,7 +2529,7 @@ function renderChatList() {
 }
 
 function applyChats(nextChats) {
-  chats = sortChatsByRecent(nextChats);
+  chats = sortChats(nextChats);
   renderChatList();
 }
 
@@ -2423,7 +2538,7 @@ async function refreshChats() {
   const nextChats = payload.chats ?? [];
   applyChats(nextChats);
   await refreshCheckpointSummaries(nextChats.map((chat) => chat.session_id));
-  renderChatList();
+  refreshChatListUi();
   syncCheckpointJumpControl();
   return chats;
 }
@@ -2473,11 +2588,11 @@ async function setActiveChat(sessionId) {
   activeChatId = sessionId;
   assistantVariantSelectionByParent = new Map();
   writeActiveChatId(activeChatId);
-  renderChatList();
+  refreshChatListUi();
   syncExportControls();
   await loadActiveMessages();
   markChatCheckpointsSeen(activeChatId);
-  renderChatList();
+  refreshChatListUi();
   await loadActivePersonalization(activeChatId);
 }
 
@@ -2530,6 +2645,18 @@ newChatEl.addEventListener("click", async () => {
   } catch (error) {
     appendMessage("error", String(error), { persist: false });
   }
+});
+
+chatSortSelectEl?.addEventListener("change", () => {
+  chatSortMode = normalizeChatSortMode(chatSortSelectEl.value);
+  persistChatQueuePrefs();
+  refreshChatListUi();
+});
+
+chatFilterUnreviewedEl?.addEventListener("change", () => {
+  chatFilterUnreviewedOnly = Boolean(chatFilterUnreviewedEl.checked);
+  persistChatQueuePrefs();
+  refreshChatListUi();
 });
 
 drawerToggleEl.addEventListener("click", () => {
@@ -2896,6 +3023,8 @@ messageEl.addEventListener("paste", async (event) => {
     applyCompactModeIfNeeded();
     loadImageMessagesStore();
     loadCheckpointSeenStore();
+    loadChatQueuePrefs();
+    syncChatQueueControlsUi();
     updateAppPipUi();
     syncExportControls();
     if (memorySearchAvailable) {

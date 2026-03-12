@@ -25,6 +25,7 @@ function createMockState() {
   const createdAt = nowMs();
   const sessionId = "e2e-seed-chat";
   const secondarySessionId = "e2e-checkpoint-chat";
+  const tertiarySessionId = "e2e-lowfail-chat";
   return {
     seq: 0,
     chats: [
@@ -40,10 +41,17 @@ function createMockState() {
         createdAt: createdAt - 1000,
         updatedAt: createdAt - 1000,
       }),
+      makeChat({
+        sessionId: tertiarySessionId,
+        title: "E2E Low Fail Chat",
+        createdAt: createdAt - 2000,
+        updatedAt: createdAt - 2000,
+      }),
     ],
     messagesBySession: {
       [sessionId]: [],
       [secondarySessionId]: [],
+      [tertiarySessionId]: [],
     },
     feedbackBySession: {
       [sessionId]: [
@@ -62,6 +70,22 @@ function createMockState() {
           updated_at: createdAt,
         },
       ],
+      [tertiarySessionId]: [
+        {
+          session_id: tertiarySessionId,
+          message_id: "lowfail-feedback-msg",
+          outcome: "pass",
+          positive_tags: ["accurate"],
+          negative_tags: [],
+          tags: ["accurate"],
+          note: null,
+          recommended_action: null,
+          action_taken: null,
+          status: "closed",
+          created_at: createdAt - 2000,
+          updated_at: createdAt - 2000,
+        },
+      ],
     },
     checkpointsBySession: {
       [sessionId]: [],
@@ -76,9 +100,30 @@ function createMockState() {
           created_at: createdAt - 500,
         },
       ],
+      [tertiarySessionId]: [
+        {
+          checkpoint_id: "eval_seed_tertiary_1",
+          session_id: tertiarySessionId,
+          total_count: 2,
+          pass_count: 2,
+          fail_count: 0,
+          other_count: 0,
+          created_at: createdAt - 1200,
+        },
+        {
+          checkpoint_id: "eval_seed_tertiary_2",
+          session_id: tertiarySessionId,
+          total_count: 2,
+          pass_count: 2,
+          fail_count: 0,
+          other_count: 0,
+          created_at: createdAt - 900,
+        },
+      ],
     },
     memoryScopeBySession: {
       [sessionId]: "global",
+      [tertiarySessionId]: "global",
     },
   };
 }
@@ -367,6 +412,25 @@ test("shows unreviewed checkpoint badge per chat and clears it when reviewed", a
   await page.getByRole("button", { name: "E2E Checkpoint Chat" }).click();
   await expect(page.getByText(/Eval checkpoint 1/i)).toBeVisible();
   await expect(checkpointRow.locator(".chat-item-badge")).toHaveCount(0);
+});
+
+test("supports eval review queue filtering and sorting", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByRole("button", { name: "E2E Seed Chat" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "E2E Checkpoint Chat" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "E2E Low Fail Chat" })).toBeVisible();
+
+  await page.getByRole("checkbox", { name: "Unreviewed only" }).check();
+  await expect(page.getByRole("button", { name: "E2E Seed Chat" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "E2E Checkpoint Chat" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "E2E Low Fail Chat" })).toBeVisible();
+
+  await page.getByLabel("Sort chats").selectOption("fail_ratio");
+  await expect(page.locator(".chat-item .chat-item-title").first()).toHaveText("E2E Checkpoint Chat");
+
+  await page.getByLabel("Sort chats").selectOption("unreviewed");
+  await expect(page.locator(".chat-item .chat-item-title").first()).toHaveText("E2E Low Fail Chat");
 });
 
 test("retries assistant response as a variant without duplicating the user message", async ({ page }) => {

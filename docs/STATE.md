@@ -29,6 +29,9 @@
 - Frontend now exposes per-chat personalization memory scope control in the header.
 - Frontend includes OCR upload wiring that posts to `/skills/ocr` and appends extracted text to the active chat.
 - Frontend image attachments now support paste-to-attach, client-side downsize/compression, per-chat persistence across chat switches/page reloads, and OCR follow-up turns that reuse the latest persisted image batch when no new image is attached.
+- Frontend chat drawer now includes eval review queue controls:
+  sort (`recent`, `unreviewed`, `fail_ratio`) plus `unreviewed only` filter for
+  faster checkpoint triage.
 - Frontend includes indexed search UI in composer (`Search` toggle with `Insert`/`Ask` actions).
 - Figma/UI parity work is intentionally paused; current execution focus is backend retrieval, OCR, and file-search reliability.
 - Quality gate is implemented and passing locally via `make quality-gate`:
