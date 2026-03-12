@@ -153,6 +153,9 @@
 - Frontend chat drawer now includes eval review queue controls:
   sort (`recent`, `unreviewed`, `fail_ratio`) plus `unreviewed only` filter for
   faster checkpoint triage.
+- Frontend now includes a quick triage snapshot panel (unreviewed totals,
+  chats-needing-review, high-fail count, priority list) and a header export
+  action for full checkpoint rollup JSON (`Download eval triage rollup`).
 - Eval feedback submissions are append-logged for binary outcomes
   (`PASS`/`FAIL`) to
   `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` with inbox monitor

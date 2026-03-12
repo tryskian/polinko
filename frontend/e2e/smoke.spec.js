@@ -7,6 +7,18 @@ function nowMs() {
   return Date.now();
 }
 
+async function readDownloadText(download) {
+  const stream = await download.createReadStream();
+  if (!stream) {
+    return "";
+  }
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+
 function makeChat({ sessionId, title, createdAt, updatedAt, messageCount = 0, status = "active" }) {
   return {
     session_id: sessionId,
@@ -431,6 +443,28 @@ test("supports eval review queue filtering and sorting", async ({ page }) => {
 
   await page.getByLabel("Sort chats").selectOption("unreviewed");
   await expect(page.locator(".chat-item .chat-item-title").first()).toHaveText("E2E Low Fail Chat");
+});
+
+test("renders triage snapshot and exports checkpoint rollup", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByText("Triage snapshot")).toBeVisible();
+  await expect(page.getByText("Unreviewed: 3")).toBeVisible();
+  await expect(page.getByText("Needs review: 2")).toBeVisible();
+  await expect(page.getByText("High fail: 1")).toBeVisible();
+
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download eval triage rollup" }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^eval-triage-.*\.json$/);
+
+  const payloadRaw = await readDownloadText(download);
+  const payload = JSON.parse(payloadRaw);
+  expect(payload.unreviewed_total).toBe(3);
+  expect(payload.chats_with_unreviewed).toBe(2);
+  expect(payload.high_fail_chats).toBe(1);
+  expect(payload.priority[0].title).toBe("E2E Low Fail Chat");
+  await expect(page.getByText(/Exported triage rollup/i)).toBeVisible();
 });
 
 test("retries assistant response as a variant without duplicating the user message", async ({ page }) => {

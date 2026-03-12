@@ -32,6 +32,9 @@
 - Frontend chat drawer now includes eval review queue controls:
   sort (`recent`, `unreviewed`, `fail_ratio`) plus `unreviewed only` filter for
   faster checkpoint triage.
+- Frontend now includes a quick triage snapshot panel (unreviewed totals,
+  chats-needing-review, high-fail count, priority list) and a header export
+  action for full checkpoint rollup JSON (`Download eval triage rollup`).
 - Frontend includes indexed search UI in composer (`Search` toggle with `Insert`/`Ask` actions).
 - OpenAI developer docs MCP server is now configured for Codex/VS Code usage:
   - endpoint: `https://developers.openai.com/mcp`
