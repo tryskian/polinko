@@ -94,6 +94,17 @@ class MessageFeedback:
     updated_at: int
 
 
+@dataclass(frozen=True)
+class EvalCheckpoint:
+    checkpoint_id: str
+    session_id: str
+    total_count: int
+    pass_count: int
+    fail_count: int
+    other_count: int
+    created_at: int
+
+
 def _now_ms() -> int:
     return int(time.time() * 1000)
 
@@ -295,6 +306,27 @@ class ChatHistoryStore:
                 """
                 CREATE INDEX IF NOT EXISTS idx_message_feedback_session_updated
                 ON message_feedback(session_id, updated_at DESC, id DESC);
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS eval_checkpoints (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  checkpoint_id TEXT UNIQUE NOT NULL,
+                  session_id TEXT NOT NULL,
+                  total_count INTEGER NOT NULL,
+                  pass_count INTEGER NOT NULL,
+                  fail_count INTEGER NOT NULL,
+                  other_count INTEGER NOT NULL,
+                  created_at INTEGER NOT NULL,
+                  FOREIGN KEY(session_id) REFERENCES chats(session_id) ON DELETE CASCADE
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE INDEX IF NOT EXISTS idx_eval_checkpoints_session_created
+                ON eval_checkpoints(session_id, created_at ASC, id ASC);
                 """
             )
 
@@ -790,6 +822,87 @@ class ChatHistoryStore:
                 (session_id,),
             ).fetchall()
         return [_message_feedback_from_row(row) for row in rows]
+
+    def record_eval_checkpoint(
+        self,
+        *,
+        checkpoint_id: str,
+        session_id: str,
+        total_count: int,
+        pass_count: int,
+        fail_count: int,
+        other_count: int,
+    ) -> EvalCheckpoint:
+        now = _now_ms()
+        with self._connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO eval_checkpoints(
+                  checkpoint_id,
+                  session_id,
+                  total_count,
+                  pass_count,
+                  fail_count,
+                  other_count,
+                  created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?);
+                """,
+                (
+                    checkpoint_id,
+                    session_id,
+                    int(total_count),
+                    int(pass_count),
+                    int(fail_count),
+                    int(other_count),
+                    now,
+                ),
+            )
+            conn.execute(
+                "UPDATE chats SET updated_at = ? WHERE session_id = ?;",
+                (now, session_id),
+            )
+        return EvalCheckpoint(
+            checkpoint_id=checkpoint_id,
+            session_id=session_id,
+            total_count=int(total_count),
+            pass_count=int(pass_count),
+            fail_count=int(fail_count),
+            other_count=int(other_count),
+            created_at=now,
+        )
+
+    def list_eval_checkpoints(self, session_id: str, limit: int = 200) -> list[EvalCheckpoint]:
+        with self._connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT
+                  checkpoint_id,
+                  session_id,
+                  total_count,
+                  pass_count,
+                  fail_count,
+                  other_count,
+                  created_at
+                FROM eval_checkpoints
+                WHERE session_id = ?
+                ORDER BY created_at ASC, id ASC
+                LIMIT ?;
+                """,
+                (session_id, limit),
+            ).fetchall()
+        return [
+            EvalCheckpoint(
+                checkpoint_id=str(row["checkpoint_id"]),
+                session_id=str(row["session_id"]),
+                total_count=int(row["total_count"]),
+                pass_count=int(row["pass_count"]),
+                fail_count=int(row["fail_count"]),
+                other_count=int(row["other_count"]),
+                created_at=int(row["created_at"]),
+            )
+            for row in rows
+        ]
 
     def record_ocr_run(
         self,
