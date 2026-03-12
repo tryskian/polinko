@@ -53,6 +53,9 @@
 - Devcontainer Docker connectivity is now stabilized (Docker-outside-of-Docker
   and Docker extension UI-side routing), resolving `Containers` pane connection
   mismatch in remote sessions.
+- Next-session setup reminder: start with a plain-language Docker MCP refresher
+  before config changes (`server` = capability provider, `client` = app allowed
+  to call it, profile `push` = optional sync/share action).
 - Host-side VS Code interpreter warnings were resolved by removing stale
   workspace interpreter pins to Linux container venv binaries; host sessions
   now rely on host interpreter auto-discovery/selection.
@@ -142,6 +145,8 @@
   merging isolated bump PRs.
 - Session policy constraint: keep-awake is opt-in and code-phrase triggered
   only (`hi! new day!`), with explicit stop at wrap (`pkill -f "caffeinate -d -i -m"`).
+- Terminology constraint: when Docker MCP wording is ambiguous, confirm intent
+  in-chat before applying config changes.
 
 ## Immediate Next Step
 
