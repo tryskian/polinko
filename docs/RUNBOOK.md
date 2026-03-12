@@ -112,6 +112,20 @@
      - `docker logs <container_id>`
 5. `.env` supports both `KEY=value` and quoted `KEY="value"` styles.
 
+## Docker MCP Terms (Plain Language)
+
+1. `Server` = capability provider (for example, Playwright or GitHub MCP).
+2. `Client` = app allowed to call those servers (for example, `Codex`,
+   `Visual Studio Code`).
+3. `Push profile` = optional Docker profile sync/share action; not required for
+   normal local project work.
+4. Recommended default:
+   - keep `Codex` + `Visual Studio Code` clients enabled if you use both apps.
+   - enable only the MCP servers needed for the current workflow.
+   - skip profile push unless you intentionally want cloud/shared profile sync.
+5. If wording is unclear in the UI, pause and confirm intent before changing
+   client/server mappings.
+
 ## Playwright E2E
 
 1. Install frontend deps (if needed):
