@@ -304,7 +304,7 @@ def main() -> int:
     judge_client = OpenAI(api_key=openai_api_key)
 
     run_id = args.run_id.strip() or str(int(time.time()))
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
+    api_key = os.getenv("NAUTORUS_SERVER_API_KEY") or os.getenv("POLINKO_SERVER_API_KEY")
     headers = _headers(api_key)
 
     print(f"Running style eval on {args.base_url}")

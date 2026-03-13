@@ -287,7 +287,7 @@ def main() -> int:
         raise SystemExit(f"Cases file not found: {cases_path}")
     cases = _load_cases(cases_path)
     run_id = args.run_id.strip() or str(int(time.time()))
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
+    api_key = os.getenv("NAUTORUS_SERVER_API_KEY") or os.getenv("POLINKO_SERVER_API_KEY")
     headers = _headers(api_key)
 
     print(f"Running OCR eval on {args.base_url}")

@@ -206,7 +206,7 @@ def main() -> int:
             f"No cases matched source types {sorted(include_types)} in {cases_path}."
         )
 
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
+    api_key = os.getenv("NAUTORUS_SERVER_API_KEY") or os.getenv("POLINKO_SERVER_API_KEY")
     headers = _headers(api_key)
     run_id = args.run_id.strip() or str(int(time.time()))
 

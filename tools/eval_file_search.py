@@ -374,7 +374,7 @@ def main() -> int:
 
     cases = _load_cases(cases_path)
     run_id = args.run_id.strip() or str(int(time.time()))
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
+    api_key = os.getenv("NAUTORUS_SERVER_API_KEY") or os.getenv("POLINKO_SERVER_API_KEY")
     headers = _headers(api_key)
 
     print(f"Running file_search eval on {args.base_url}")
@@ -385,8 +385,8 @@ def main() -> int:
         print(f"Preflight failed: {exc}")
         print("Checks:")
         print("  - Is `make server` running on the expected base URL?")
-        print("  - Is vector memory enabled on the running server (`POLINKO_VECTOR_ENABLED=true`)?")
-        print("  - Does `.env` contain a valid `POLINKO_SERVER_API_KEY` for this server?")
+        print("  - Is vector memory enabled on the running server (`NAUTORUS_VECTOR_ENABLED=true`)?")
+        print("  - Does `.env` contain a valid `NAUTORUS_SERVER_API_KEY` for this server?")
         return 1
 
     passes = 0

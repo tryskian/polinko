@@ -60,7 +60,7 @@ act-ci:
 	act -W .github/workflows/ci.yml
 
 k6-chat-smoke:
-	k6 run tests/perf/chat_smoke.js -e BASE_URL="$(K6_BASE_URL)" -e POLINKO_SERVER_API_KEY="$(K6_API_KEY)" -e VUS="$(K6_VUS)" -e DURATION="$(K6_DURATION)"
+	k6 run tests/perf/chat_smoke.js -e BASE_URL="$(K6_BASE_URL)" -e NAUTORUS_SERVER_API_KEY="$(K6_API_KEY)" -e POLINKO_SERVER_API_KEY="$(K6_API_KEY)" -e VUS="$(K6_VUS)" -e DURATION="$(K6_DURATION)"
 
 trivy-fs:
 	trivy fs --severity "$(TRIVY_SEVERITY)" --exit-code 1 .
@@ -169,9 +169,9 @@ hallucination-gate:
 	@set -eu; \
 	BASE_URL="$(GATE_BASE_URL)"; \
 	rm -f "$(GATE_SESSION_DB)" "$(GATE_VECTOR_DB)"; \
-	POLINKO_SESSION_DB_PATH="$(GATE_SESSION_DB)" \
-	POLINKO_VECTOR_DB_PATH="$(GATE_VECTOR_DB)" \
-	POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
+	NAUTORUS_MEMORY_DB_PATH="$(GATE_SESSION_DB)" \
+	NAUTORUS_VECTOR_DB_PATH="$(GATE_VECTOR_DB)" \
+	NAUTORUS_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
 	$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port $(GATE_PORT) >/tmp/polinko-hallucination-gate.log 2>&1 & \
 	SERVER_PID=$$!; \
 	trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
@@ -195,9 +195,9 @@ quality-gate:
 	@set -eu; \
 	BASE_URL="$(GATE_BASE_URL)"; \
 	rm -f "$(GATE_SESSION_DB)" "$(GATE_VECTOR_DB)"; \
-	POLINKO_SESSION_DB_PATH="$(GATE_SESSION_DB)" \
-	POLINKO_VECTOR_DB_PATH="$(GATE_VECTOR_DB)" \
-	POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
+	NAUTORUS_MEMORY_DB_PATH="$(GATE_SESSION_DB)" \
+	NAUTORUS_VECTOR_DB_PATH="$(GATE_VECTOR_DB)" \
+	NAUTORUS_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
 	$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port $(GATE_PORT) >/tmp/polinko-quality-gate.log 2>&1 & \
 	SERVER_PID=$$!; \
 	trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \

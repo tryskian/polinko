@@ -337,7 +337,7 @@ def main() -> int:
     if not cases_path.exists():
         raise SystemExit(f"Cases file not found: {cases_path}")
 
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
+    api_key = os.getenv("NAUTORUS_SERVER_API_KEY") or os.getenv("POLINKO_SERVER_API_KEY")
     headers = _headers(api_key)
     run_id = str(args.run_id or "").strip() or str(int(time.time()))
     cases = _load_cases(cases_path)
