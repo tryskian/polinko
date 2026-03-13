@@ -7,7 +7,7 @@ requests==2.32.5
 pypdf==6.7.5
 mypy==1.19.1
 pre-commit==4.5.1
-ruff==0.15.5
+ruff==0.15.6
 pytest==8.3.5
 types-PyYAML==6.0.12.20250915
 yamllint==1.38.0
