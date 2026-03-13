@@ -1,79 +1,24 @@
-# Secrets
-.env
-
-# OS/editor noise
-.DS_Store
-.history/
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Python caches
+# Python
 __pycache__/
 *.py[cod]
+*.so
+.venv/
+venv/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-.coverage
-.coverage.*
-htmlcov/
 
-# Local virtual environments (choose one runtime, keep all untracked)
-venv
-virtualenv_name
-polinko-repositioning-system
+# Local env/data
+.env
+*.db
+*.db-shm
+*.db-wal
 
-# Node (if added later)
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Frontend/node
 node_modules/
 dist/
-frontend/test-results/
-frontend/playwright-report/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Local tooling artifacts
-.act/
-.actrc
-.trivycache/
-.trivyignore.local
-
-# Legacy local helper file
-_virtualenv.py
-
-# Local runtime data
-.polinko_memory.db
-.polinko_memory.db-shm
-.polinko_memory.db-wal
-.polinko_history.db
-.polinko_history.db-shm
-.polinko_history.db-wal
-.polinko_vector.db
-.polinko_vector.db-shm
-.polinko_vector.db-wal
-.eval_inbox.cursor
-
-# Local planning sandbox docs
-docs/portfolio/
-
-# Local eval artifacts
-eval_reports/
-
-# Local transcript exports
-docs/transcripts/
-
-# Local VS Code workspace wrapper
-polinko.code-workspace
-
-# Local workstream planning doc
-docs/WORKSTREAMS.md
-docs/FIGMA_NODE_TRACKER.md
-
-# Local proprietary research/theory materials
-docs/research/
-docs/theory/
-
-# Local maintenance helper script
-tools/cleanup_eval_chats.py

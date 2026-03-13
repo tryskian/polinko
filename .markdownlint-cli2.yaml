@@ -1,7 +1,3 @@
-ignores:
-  - "docs/transcripts/**/*.md"
-  - "docs/portfolio/raw_evidence/**/*.md"
-
-config:
-  MD013: false
-  MD024: false
+globs:
+  - README.md
+  - docs/**/*.md

@@ -1,37 +1,13 @@
-# Project State (Reset Baseline)
+# Project State
 
 ## Current Status
 
-- Docs have been reset to a clean operational baseline.
-- Previous documentation lineage is archived at `docs/archive/2026-03-13-pre-reset/`.
-- Product-facing brand is now Nautorus (phase-1 rename rollout).
-- Runtime config now prefers `NAUTORUS_*` prefixes with backward-compatible fallback to `POLINKO_*`.
-- Core repo workflow is stable: feature branch -> PR -> checks -> merge.
-- Active implementation focus is eval operations (review queue, checkpoints, retry behavior).
+- `main` is a fresh Nautorus scaffold baseline.
+- Polinko-era build is archived in immutable snapshot refs.
+- CI is configured with required `markdownlint` and `test` checks.
 
-## Verified Workflow
+## Active Focus
 
-- `main` is protected and merged only through PR checks.
-- Validation stack in active use:
-  - backend tests
-  - frontend build
-  - Playwright smoke coverage
-  - eval commands/reports
-
-## Known Constraints
-
-- Cloud task threads and local IDE threads can diverge; use handoff docs as source-of-truth.
-- Braintrust settings are optional/scoped and should not be forced into default env.
-
-## Key Paths
-
-- Runtime/app: `api/`, `core/`, `frontend/`
-- Eval tools: `tools/`
-- Handoff docs: `docs/CHARTER.md`, `docs/STATE.md`, `docs/DECISIONS.md`, `docs/SESSION_HANDOFF.md`
-- Archive snapshot: `docs/archive/2026-03-13-pre-reset/`
-
-## Suggested Next Steps
-
-1. Continue eval operations stream with one scoped PR at a time.
-2. Keep evidence capture tied to each merge (tests + eval report artifact).
-3. Record any policy/process changes in the new decision ledger.
+1. Define first implementation slice on top of scaffold.
+2. Add only the minimum runtime pieces needed for that slice.
+3. Keep docs and evidence synchronized per PR.
