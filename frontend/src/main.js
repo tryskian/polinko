@@ -274,7 +274,7 @@ function openCompactPopupWindow() {
   url.searchParams.set("compact", "1");
   appCompactPopupWindow = window.open(
     url.toString(),
-    "polinko-mini",
+    "nautorus-mini",
     "popup=yes,width=520,height=760,resizable=yes,scrollbars=yes",
   );
   if (!appCompactPopupWindow) {
@@ -372,11 +372,14 @@ function initTheme() {
   themeToggleEl?.addEventListener("click", toggleTheme);
 
   // Expose simple hooks for upcoming theme controls.
-  window.polinkoTheme = {
+  const themeApi = {
     get: () => activeTheme,
     getResolved: () => activeTheme,
     set: setTheme,
   };
+  window.nautorusTheme = themeApi;
+  // Backward compatibility for existing local scripts/tooling integrations.
+  window.polinkoTheme = themeApi;
 }
 
 const exportUiState = createExportUiState({

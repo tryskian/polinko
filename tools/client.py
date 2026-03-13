@@ -136,8 +136,8 @@ def _run_search(
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Polinko API chat client")
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL")
+    parser = argparse.ArgumentParser(description="Nautorus API chat client")
+    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Nautorus API base URL")
     parser.add_argument("--session-id", default="local-dev", help="Conversation session ID")
     return parser
 

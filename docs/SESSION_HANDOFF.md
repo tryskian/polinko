@@ -8,26 +8,28 @@
 
 - Documentation control plane was archived and reset to a clean baseline.
 - Archive location: `docs/archive/2026-03-13-pre-reset/`.
-- Active stream remains engineering-first portfolio readiness (eval operations).
-- Decision transition is recorded in `docs/DECISIONS.md` and new decisions continue in `docs/DECISIONS_LEDGER.md`.
+- Product-facing brand is transitioning from Polinko to Nautorus (phase 1 complete in-progress branch).
+- Runtime/env compatibility lock remains in place: keep existing `POLINKO_*` prefixes until dedicated migration slice.
 
 ## Branch Context
 
-- Working branch: `codex/bigbrain/docs-archive-reset-baseline`
-- Base commit before docs reset edits: `488773d` (`docs: add plain-language Docker MCP handoff notes (#24)`)
-- Commit status: archive/reset changes are local and uncommitted
+- Baseline on `main`: `4dca042` (docs archive/reset merged).
+- Active task branch: `codex/bigbrain/rebrand-nautorus-phase1`.
+- Commit status: phase-1 rebrand edits in progress on task branch.
 
 ## Immediate Next Step
 
-1. Validate docs formatting.
-2. Commit archive/reset changes.
-3. Open PR with clear transition rationale and rollback note.
-4. After merge, continue eval-ops stream in small slices.
+1. Validate rebrand phase-1 changes (lint/tests/frontend build).
+2. Commit and open PR with compatibility note + rollback plan.
+3. Merge to `main` after checks pass.
+4. Plan phase-2 env/config alias migration (`NAUTORUS_*` with backward compatibility).
 
 ## Quick Validation
 
-- `npx markdownlint-cli2 docs/CHARTER.md docs/STATE.md docs/DECISIONS.md docs/DECISIONS_LEDGER.md docs/SESSION_HANDOFF.md docs/archive/2026-03-13-pre-reset/README.md`
+- `npx markdownlint-cli2 README.md docs/CHARTER.md docs/STATE.md docs/DECISIONS_LEDGER.md docs/SESSION_HANDOFF.md`
+- `make test`
+- `cd frontend && npm run build`
 
 ## Rehydrate Prompt
 
-Read `docs/CHARTER.md`, `docs/STATE.md`, `docs/DECISIONS.md`, `docs/DECISIONS_LEDGER.md`, and `docs/SESSION_HANDOFF.md`. Summarize in 5 bullets (state, risks, next milestone), then execute `Immediate Next Step` with minimal drift and full validation.
+Read `README.md`, `docs/CHARTER.md`, `docs/STATE.md`, `docs/DECISIONS_LEDGER.md`, and `docs/SESSION_HANDOFF.md`. Summarize current rebrand phase status in 5 bullets, then execute `Immediate Next Step` with minimal drift and full validation.

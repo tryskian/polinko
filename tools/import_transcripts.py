@@ -311,7 +311,7 @@ def _collect_turns(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Import transcript JSON files into Polinko vector memory for retrieval."
+        description="Import transcript JSON files into Nautorus vector memory for retrieval."
     )
     parser.add_argument(
         "--input",

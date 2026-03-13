@@ -8,7 +8,7 @@ from agents.memory import Session, SessionSettings, SQLiteSession
 from core.prompts import ACTIVE_PROMPT
 
 
-AGENT_NAME = "Polinko Repositioning System"
+AGENT_NAME = "Nautorus Repositioning System"
 MODEL_NAME = "gpt-5-chat-latest"
 
 

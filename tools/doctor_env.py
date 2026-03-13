@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Environment diagnostics for the Polinko repo."""
+"""Environment diagnostics for the Nautorus repo."""
 
 from __future__ import annotations
 
@@ -122,7 +122,7 @@ def _check_compaudit() -> int:
 
 
 def main() -> int:
-    print("Polinko environment doctor")
+    print("Nautorus environment doctor")
     print(f"Repo root: {ROOT}")
 
     issues = 0

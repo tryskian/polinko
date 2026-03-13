@@ -1,1 +1,1 @@
-"""Core runtime modules for the Polinko app."""
+"""Core runtime modules for the Nautorus app."""

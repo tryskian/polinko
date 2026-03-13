@@ -250,7 +250,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run style/tone eval over /chat outputs with an LLM judge.",
     )
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
+    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Nautorus API base URL.")
     parser.add_argument(
         "--cases",
         default="docs/style_eval_cases.json",

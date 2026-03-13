@@ -298,7 +298,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Run OCR ambiguity/recovery eval cases via /chat."
     )
     parser.add_argument(
-        "--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL."
+        "--base-url", default="http://127.0.0.1:8000", help="Nautorus API base URL."
     )
     parser.add_argument(
         "--cases",
