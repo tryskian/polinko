@@ -33,3 +33,16 @@
 - Why: Preserves disciplined merge hygiene while implementation is rebuilt incrementally.
 - Validation / Evidence links: `.github/workflows/ci.yml` and passing
   checks on scaffold PR.
+
+## L-003: Freeze Polinko frontend and rebuild UI in OpenAI ecosystem
+
+- Date: 2026-03-13
+- Category: architecture
+- Tags: frontend, archive, openai-ecosystem, reset
+- Decision: Keep the Polinko `frontend/` as archived history and do not
+  patch it further on Nautorus `main`.
+- Why: Prior integration attempts with the native OpenAI Agent app path
+  caused high patch churn; rebuilding cleanly in OpenAI-native workflows
+  reduces migration risk and complexity.
+- Validation / Evidence links: `archive/polinko-frontend-2026-03-13`,
+  `polinko-frontend-frozen-2026-03-13`, and this PR.
