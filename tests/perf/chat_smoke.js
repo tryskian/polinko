@@ -10,7 +10,7 @@ export const options = {
 };
 
 const baseUrl = (__ENV.BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
-const apiKey = __ENV.POLINKO_SERVER_API_KEY || "";
+const apiKey = __ENV.NAUTORUS_SERVER_API_KEY || __ENV.POLINKO_SERVER_API_KEY || "";
 
 export default function () {
   const payload = JSON.stringify({

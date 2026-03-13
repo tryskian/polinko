@@ -12,7 +12,8 @@ _DEFAULT_CURSOR = Path(".eval_inbox.cursor")
 
 def _default_log_path() -> Path:
     root = Path(
-        os.getenv("POLINKO_FEEDBACK_EVIDENCE_ROOT", "docs/portfolio/raw_evidence")
+        os.getenv("NAUTORUS_FEEDBACK_EVIDENCE_ROOT")
+        or os.getenv("POLINKO_FEEDBACK_EVIDENCE_ROOT", "docs/portfolio/raw_evidence")
     )
     return root / "INBOX" / "eval_submissions.jsonl"
 

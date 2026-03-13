@@ -9,7 +9,8 @@ Lightweight GPT agent project with:
 
 Compatibility note:
 
-- Runtime env/config prefixes remain `POLINKO_*` in this phase to avoid breaking existing local setups and CI gates.
+- Runtime/config now prefers `NAUTORUS_*` keys.
+- Legacy `POLINKO_*` keys are still supported as fallback for backward compatibility.
 
 ## Quickstart
 
@@ -55,45 +56,45 @@ API client extras (`python tools/client.py`):
 2. Install dependencies:
    `pip install -r requirements.txt`
 3. Copy `.env.example` to `.env` and fill real values.
-   Optional: configure a key ring with `POLINKO_SERVER_API_KEYS_JSON` for
+   Optional: configure a key ring with `NAUTORUS_SERVER_API_KEYS_JSON` for
    per-principal API keys.
    Use unquoted values when possible (`KEY=value`). Quoted values
    (`KEY="value"`) are also accepted by runtime config parsing.
    Note: current local UI does not provide an x-api-key input field. For local
-   development, keep `POLINKO_SERVER_API_KEY` unset unless your proxy injects
+   development, keep `NAUTORUS_SERVER_API_KEY` unset unless your proxy injects
    auth headers.
 4. Optional: use pinned dependencies with
    `pip install -r requirements.lock`.
 5. Optional OCR mode:
-   - `POLINKO_OCR_PROVIDER=scaffold` (default, no model OCR call)
-   - `POLINKO_OCR_PROVIDER=openai` (uses `POLINKO_OCR_MODEL` for image OCR)
-   - `POLINKO_OCR_UNCERTAINTY_SAFE=true` (default, converts speculative
+   - `NAUTORUS_OCR_PROVIDER=scaffold` (default, no model OCR call)
+   - `NAUTORUS_OCR_PROVIDER=openai` (uses `NAUTORUS_OCR_MODEL` for image OCR)
+   - `NAUTORUS_OCR_UNCERTAINTY_SAFE=true` (default, converts speculative
      alternatives to `[?]`)
 6. Optional visual context extraction for image retrieval memory:
-   - `POLINKO_IMAGE_CONTEXT_ENABLED=true`
-   - `POLINKO_IMAGE_CONTEXT_MODEL=gpt-4.1-mini`
-   - optional: `POLINKO_IMAGE_CONTEXT_PROMPT=...`
+   - `NAUTORUS_IMAGE_CONTEXT_ENABLED=true`
+   - `NAUTORUS_IMAGE_CONTEXT_MODEL=gpt-4.1-mini`
+   - optional: `NAUTORUS_IMAGE_CONTEXT_PROMPT=...`
 7. Optional vector memory mode (cross-chat retrieval while tuning):
-   - `POLINKO_VECTOR_ENABLED=true`
-   - tune retrieval with `POLINKO_VECTOR_TOP_K`, `POLINKO_VECTOR_MIN_SIMILARITY`,
-     `POLINKO_VECTOR_TOP_K_GLOBAL`, `POLINKO_VECTOR_TOP_K_SESSION`,
-     `POLINKO_VECTOR_MIN_SIMILARITY_GLOBAL`, `POLINKO_VECTOR_MIN_SIMILARITY_SESSION`,
-     `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION`, and
-     `POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK`
+   - `NAUTORUS_VECTOR_ENABLED=true`
+   - tune retrieval with `NAUTORUS_VECTOR_TOP_K`, `NAUTORUS_VECTOR_MIN_SIMILARITY`,
+     `NAUTORUS_VECTOR_TOP_K_GLOBAL`, `NAUTORUS_VECTOR_TOP_K_SESSION`,
+     `NAUTORUS_VECTOR_MIN_SIMILARITY_GLOBAL`, `NAUTORUS_VECTOR_MIN_SIMILARITY_SESSION`,
+     `NAUTORUS_VECTOR_EXCLUDE_CURRENT_SESSION`, and
+     `NAUTORUS_VECTOR_LOCAL_EMBEDDING_FALLBACK`
 8. Optional Responses orchestration mode (feature-flagged, RAG via OpenAI file search tool):
-   - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED=true`
-   - `POLINKO_RESPONSES_VECTOR_STORE_ID=vs_...`
-   - optional: `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH=true`
-   - optional: `POLINKO_RESPONSES_HISTORY_TURN_LIMIT=12`
-   - optional: `POLINKO_RESPONSES_PDF_INGEST_ENABLED=true` (best-effort PDF upload into same vector store)
+   - `NAUTORUS_RESPONSES_ORCHESTRATION_ENABLED=true`
+   - `NAUTORUS_RESPONSES_VECTOR_STORE_ID=vs_...`
+   - optional: `NAUTORUS_RESPONSES_INCLUDE_WEB_SEARCH=true`
+   - optional: `NAUTORUS_RESPONSES_HISTORY_TURN_LIMIT=12`
+   - optional: `NAUTORUS_RESPONSES_PDF_INGEST_ENABLED=true` (best-effort PDF upload into same vector store)
 9. Optional governance / hallucination guardrails:
-   - `POLINKO_GOVERNANCE_ENABLED=true`
-   - `POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH=false`
-   - `POLINKO_GOVERNANCE_LOG_ONLY=false`
-   - `POLINKO_HALLUCINATION_GUARDRAILS_ENABLED=true`
+   - `NAUTORUS_GOVERNANCE_ENABLED=true`
+   - `NAUTORUS_GOVERNANCE_ALLOW_WEB_SEARCH=false`
+   - `NAUTORUS_GOVERNANCE_LOG_ONLY=false`
+   - `NAUTORUS_HALLUCINATION_GUARDRAILS_ENABLED=true`
 10. Optional structured extraction enrichment for OCR/PDF responses:
-    - `POLINKO_EXTRACTION_STRUCTURED_ENABLED=true`
-    - `POLINKO_EXTRACTION_STRUCTURED_MODEL=gpt-4.1-mini`
+    - `NAUTORUS_EXTRACTION_STRUCTURED_ENABLED=true`
+    - `NAUTORUS_EXTRACTION_STRUCTURED_MODEL=gpt-4.1-mini`
 
 ## Environment Doctor
 
@@ -185,43 +186,43 @@ The web UI now stores chat threads server-side (SQLite) instead of in browser lo
 
 Config:
 
-- `POLINKO_HISTORY_DB_PATH` (default: `.polinko_history.db`)
-- `POLINKO_DEPRECATE_ON_RESET` (default: `true`)
-- `POLINKO_IMAGE_CONTEXT_ENABLED` (default: `false`)
-- `POLINKO_IMAGE_CONTEXT_MODEL` (default: `gpt-4.1-mini`)
-- `POLINKO_IMAGE_CONTEXT_PROMPT` (default: concise visual-scene retrieval summary prompt)
-- `POLINKO_VECTOR_ENABLED` (default: `false`)
-- `POLINKO_VECTOR_DB_PATH` (default: `.polinko_vector.db`)
-- `POLINKO_VECTOR_EMBEDDING_MODEL` (default: `text-embedding-3-small`)
-- `POLINKO_VECTOR_TOP_K` (default: `2`)
-- `POLINKO_VECTOR_TOP_K_GLOBAL` (default: inherits `POLINKO_VECTOR_TOP_K`)
-- `POLINKO_VECTOR_TOP_K_SESSION` (default: inherits `POLINKO_VECTOR_TOP_K`)
-- `POLINKO_VECTOR_MIN_SIMILARITY` (default: `0.40`)
-- `POLINKO_VECTOR_MIN_SIMILARITY_GLOBAL` (default: inherits `POLINKO_VECTOR_MIN_SIMILARITY`)
-- `POLINKO_VECTOR_MIN_SIMILARITY_SESSION` (default: inherits `POLINKO_VECTOR_MIN_SIMILARITY`)
-- `POLINKO_VECTOR_MAX_CHARS` (default: `220`)
-- `POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION` (default: `true`)
-- `POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK` (default: `false`; allows local deterministic fallback on transient embedding API connectivity/5xx failures)
-- `POLINKO_OCR_UNCERTAINTY_SAFE` (default: `true`)
-- `POLINKO_RESPONSES_ORCHESTRATION_ENABLED` (default: `false`)
-- `POLINKO_RESPONSES_MODEL` (default: `gpt-5-chat-latest`)
-- `POLINKO_RESPONSES_VECTOR_STORE_ID` (required when orchestration is enabled)
-- `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH` (default: `false`)
-- `POLINKO_RESPONSES_HISTORY_TURN_LIMIT` (default: `12`)
-- `POLINKO_RESPONSES_PDF_INGEST_ENABLED` (default: `false`, requires `POLINKO_RESPONSES_VECTOR_STORE_ID`)
-- `POLINKO_EXTRACTION_STRUCTURED_ENABLED` (default: `false`)
-- `POLINKO_EXTRACTION_STRUCTURED_MODEL` (default: `gpt-4.1-mini`)
-- `POLINKO_GOVERNANCE_ENABLED` (default: `true`)
-- `POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH` (default: `false`)
-- `POLINKO_GOVERNANCE_LOG_ONLY` (default: `false`)
-- `POLINKO_HALLUCINATION_GUARDRAILS_ENABLED` (default: `true`)
-- `POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE` (default: `global`, values: `session|global`)
+- `NAUTORUS_HISTORY_DB_PATH` (default: `.polinko_history.db`)
+- `NAUTORUS_DEPRECATE_ON_RESET` (default: `true`)
+- `NAUTORUS_IMAGE_CONTEXT_ENABLED` (default: `false`)
+- `NAUTORUS_IMAGE_CONTEXT_MODEL` (default: `gpt-4.1-mini`)
+- `NAUTORUS_IMAGE_CONTEXT_PROMPT` (default: concise visual-scene retrieval summary prompt)
+- `NAUTORUS_VECTOR_ENABLED` (default: `false`)
+- `NAUTORUS_VECTOR_DB_PATH` (default: `.polinko_vector.db`)
+- `NAUTORUS_VECTOR_EMBEDDING_MODEL` (default: `text-embedding-3-small`)
+- `NAUTORUS_VECTOR_TOP_K` (default: `2`)
+- `NAUTORUS_VECTOR_TOP_K_GLOBAL` (default: inherits `NAUTORUS_VECTOR_TOP_K`)
+- `NAUTORUS_VECTOR_TOP_K_SESSION` (default: inherits `NAUTORUS_VECTOR_TOP_K`)
+- `NAUTORUS_VECTOR_MIN_SIMILARITY` (default: `0.40`)
+- `NAUTORUS_VECTOR_MIN_SIMILARITY_GLOBAL` (default: inherits `NAUTORUS_VECTOR_MIN_SIMILARITY`)
+- `NAUTORUS_VECTOR_MIN_SIMILARITY_SESSION` (default: inherits `NAUTORUS_VECTOR_MIN_SIMILARITY`)
+- `NAUTORUS_VECTOR_MAX_CHARS` (default: `220`)
+- `NAUTORUS_VECTOR_EXCLUDE_CURRENT_SESSION` (default: `true`)
+- `NAUTORUS_VECTOR_LOCAL_EMBEDDING_FALLBACK` (default: `false`; allows local deterministic fallback on transient embedding API connectivity/5xx failures)
+- `NAUTORUS_OCR_UNCERTAINTY_SAFE` (default: `true`)
+- `NAUTORUS_RESPONSES_ORCHESTRATION_ENABLED` (default: `false`)
+- `NAUTORUS_RESPONSES_MODEL` (default: `gpt-5-chat-latest`)
+- `NAUTORUS_RESPONSES_VECTOR_STORE_ID` (required when orchestration is enabled)
+- `NAUTORUS_RESPONSES_INCLUDE_WEB_SEARCH` (default: `false`)
+- `NAUTORUS_RESPONSES_HISTORY_TURN_LIMIT` (default: `12`)
+- `NAUTORUS_RESPONSES_PDF_INGEST_ENABLED` (default: `false`, requires `NAUTORUS_RESPONSES_VECTOR_STORE_ID`)
+- `NAUTORUS_EXTRACTION_STRUCTURED_ENABLED` (default: `false`)
+- `NAUTORUS_EXTRACTION_STRUCTURED_MODEL` (default: `gpt-4.1-mini`)
+- `NAUTORUS_GOVERNANCE_ENABLED` (default: `true`)
+- `NAUTORUS_GOVERNANCE_ALLOW_WEB_SEARCH` (default: `false`)
+- `NAUTORUS_GOVERNANCE_LOG_ONLY` (default: `false`)
+- `NAUTORUS_HALLUCINATION_GUARDRAILS_ENABLED` (default: `true`)
+- `NAUTORUS_PERSONALIZATION_DEFAULT_MEMORY_SCOPE` (default: `global`, values: `session|global`)
 
 ## UI Behavior
 
 - Drawer-based chat list with `New chat`
 - Per-chat thread loading from server history
-- Session reset follows `POLINKO_DEPRECATE_ON_RESET`:
+- Session reset follows `NAUTORUS_DEPRECATE_ON_RESET`:
   - `true`: deprecate active chat and open a fresh one
   - `false`: clear active chat in-place
 - Markdown + code block rendering for both user and assistant messages
@@ -394,4 +395,4 @@ Details:
 - Starts a temporary local API server on `127.0.0.1:8066`
 - Uses `GATE_BASE_URL`/`GATE_PORT` if overridden
 - Requires `OPENAI_API_KEY` for hallucination judge scoring
-- Sets `POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true` for the gate process to reduce transient embedding connectivity flakes
+- Sets `NAUTORUS_VECTOR_LOCAL_EMBEDDING_FALLBACK=true` for the gate process to reduce transient embedding connectivity flakes

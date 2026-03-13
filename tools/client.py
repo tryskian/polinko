@@ -146,7 +146,7 @@ def main() -> int:
     load_dotenv(dotenv_path=".env")
     args = build_parser().parse_args()
 
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
+    api_key = os.getenv("NAUTORUS_SERVER_API_KEY") or os.getenv("POLINKO_SERVER_API_KEY")
     headers = {"Content-Type": "application/json"}
     if api_key:
         headers["x-api-key"] = api_key

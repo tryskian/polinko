@@ -4,6 +4,9 @@ import os
 
 from dotenv import load_dotenv
 
+_ACTIVE_ENV_PREFIX = "NAUTORUS_"
+_LEGACY_ENV_PREFIX = "POLINKO_"
+
 
 @dataclass(frozen=True)
 class AppConfig:
@@ -76,8 +79,19 @@ def _normalize_quoted_env_value(value: str | None) -> str | None:
     return normalized
 
 
+def _legacy_env_name(name: str) -> str | None:
+    if not name.startswith(_ACTIVE_ENV_PREFIX):
+        return None
+    suffix = name[len(_ACTIVE_ENV_PREFIX) :]
+    return f"{_LEGACY_ENV_PREFIX}{suffix}"
+
+
 def _read_env(name: str, default: str | None = None) -> str | None:
     raw_value = os.getenv(name)
+    if raw_value is None:
+        legacy_name = _legacy_env_name(name)
+        if legacy_name:
+            raw_value = os.getenv(legacy_name)
     if raw_value is None:
         raw_value = default
     return _normalize_quoted_env_value(raw_value)
@@ -99,21 +113,21 @@ def _validate_openai_api_key(openai_api_key: str | None) -> str:
     return normalized_key
 
 
-def _validate_server_api_key(server_api_key: str | None) -> str | None:
+def _validate_server_api_key(server_api_key: str | None, *, key_name: str = "NAUTORUS_SERVER_API_KEY") -> str | None:
     normalized_key = _normalize_quoted_env_value(server_api_key)
     if not normalized_key:
         return None
     if len(normalized_key) < 12:
-        raise RuntimeError("POLINKO_SERVER_API_KEY is too short; use at least 12 characters.")
+        raise RuntimeError(f"{key_name} is too short; use at least 12 characters.")
     if _looks_like_placeholder(normalized_key):
-        raise RuntimeError("POLINKO_SERVER_API_KEY is a placeholder value; set a real key.")
+        raise RuntimeError(f"{key_name} is a placeholder value; set a real key.")
     return normalized_key
 
 
 def _validate_principal(principal: str) -> str:
     value = principal.strip()
     if not value:
-        raise RuntimeError("POLINKO_SERVER_API_KEYS_JSON contains an empty principal name.")
+        raise RuntimeError("NAUTORUS_SERVER_API_KEYS_JSON contains an empty principal name.")
     return value
 
 
@@ -122,7 +136,7 @@ def _load_server_api_key_principals(single_server_api_key: str | None) -> dict[s
     if single_server_api_key:
         principals[single_server_api_key] = "default"
 
-    raw_json = (_read_env("POLINKO_SERVER_API_KEYS_JSON", "") or "").strip()
+    raw_json = (_read_env("NAUTORUS_SERVER_API_KEYS_JSON", "") or "").strip()
     if not raw_json:
         return principals
 
@@ -130,17 +144,17 @@ def _load_server_api_key_principals(single_server_api_key: str | None) -> dict[s
         parsed = json.loads(raw_json)
     except json.JSONDecodeError as exc:
         raise RuntimeError(
-            "POLINKO_SERVER_API_KEYS_JSON must be valid JSON object: "
+            "NAUTORUS_SERVER_API_KEYS_JSON (or POLINKO_SERVER_API_KEYS_JSON) must be valid JSON object: "
             '{"principal":"api-key","principal2":"api-key-2"}'
         ) from exc
 
     if not isinstance(parsed, dict):
-        raise RuntimeError("POLINKO_SERVER_API_KEYS_JSON must be a JSON object.")
+        raise RuntimeError("NAUTORUS_SERVER_API_KEYS_JSON must be a JSON object.")
 
     for raw_principal, raw_key in parsed.items():
         if not isinstance(raw_principal, str) or not isinstance(raw_key, str):
             raise RuntimeError(
-                "POLINKO_SERVER_API_KEYS_JSON values must be string pairs: "
+                "NAUTORUS_SERVER_API_KEYS_JSON values must be string pairs: "
                 '{"principal":"api-key"}'
             )
         principal = _validate_principal(raw_principal)
@@ -151,7 +165,7 @@ def _load_server_api_key_principals(single_server_api_key: str | None) -> dict[s
         if existing_principal and existing_principal != principal:
             raise RuntimeError(
                 "Duplicate API key mapped to different principals in "
-                "POLINKO_SERVER_API_KEYS_JSON."
+                "NAUTORUS_SERVER_API_KEYS_JSON."
             )
         principals[key] = principal
 
@@ -204,41 +218,41 @@ def _validate_ocr_provider(value: str | None) -> str:
     normalized = (value or "scaffold").strip().lower()
     if normalized in {"scaffold", "openai"}:
         return normalized
-    raise RuntimeError("POLINKO_OCR_PROVIDER must be one of: scaffold, openai.")
+    raise RuntimeError("NAUTORUS_OCR_PROVIDER must be one of: scaffold, openai.")
 
 
 def _validate_personalization_memory_scope(value: str | None) -> str:
     normalized = (value or "global").strip().lower()
     if normalized in {"session", "global"}:
         return normalized
-    raise RuntimeError("POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE must be one of: session, global.")
+    raise RuntimeError("NAUTORUS_PERSONALIZATION_DEFAULT_MEMORY_SCOPE must be one of: session, global.")
 
 
 def load_config(dotenv_path: str = ".env") -> AppConfig:
     load_dotenv(dotenv_path=dotenv_path)
 
     openai_api_key = _validate_openai_api_key(_read_env("OPENAI_API_KEY"))
-    server_api_key = _validate_server_api_key(_read_env("POLINKO_SERVER_API_KEY"))
+    server_api_key = _validate_server_api_key(_read_env("NAUTORUS_SERVER_API_KEY"))
     server_api_key_principals = _load_server_api_key_principals(server_api_key)
-    log_level = (_read_env("POLINKO_LOG_LEVEL", "INFO") or "INFO").upper()
-    default_session_id = _read_env("POLINKO_DEFAULT_SESSION_ID", "default") or "default"
-    session_db_path = _read_env("POLINKO_MEMORY_DB_PATH", ".polinko_memory.db") or ".polinko_memory.db"
-    history_db_path = _read_env("POLINKO_HISTORY_DB_PATH", ".polinko_history.db") or ".polinko_history.db"
+    log_level = (_read_env("NAUTORUS_LOG_LEVEL", "INFO") or "INFO").upper()
+    default_session_id = _read_env("NAUTORUS_DEFAULT_SESSION_ID", "default") or "default"
+    session_db_path = _read_env("NAUTORUS_MEMORY_DB_PATH", ".polinko_memory.db") or ".polinko_memory.db"
+    history_db_path = _read_env("NAUTORUS_HISTORY_DB_PATH", ".polinko_history.db") or ".polinko_history.db"
 
-    raw_rate_limit = _read_env("POLINKO_RATE_LIMIT_PER_MINUTE", "30") or "30"
+    raw_rate_limit = _read_env("NAUTORUS_RATE_LIMIT_PER_MINUTE", "30") or "30"
     try:
         rate_limit_per_minute = int(raw_rate_limit)
     except ValueError as exc:
         raise RuntimeError(
-            "POLINKO_RATE_LIMIT_PER_MINUTE must be an integer."
+            "NAUTORUS_RATE_LIMIT_PER_MINUTE must be an integer."
         ) from exc
-    deprecate_on_reset = _parse_bool_env("POLINKO_DEPRECATE_ON_RESET", True)
-    ocr_provider = _validate_ocr_provider(_read_env("POLINKO_OCR_PROVIDER"))
-    ocr_model = (_read_env("POLINKO_OCR_MODEL", "gpt-4.1-mini") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
+    deprecate_on_reset = _parse_bool_env("NAUTORUS_DEPRECATE_ON_RESET", True)
+    ocr_provider = _validate_ocr_provider(_read_env("NAUTORUS_OCR_PROVIDER"))
+    ocr_model = (_read_env("NAUTORUS_OCR_MODEL", "gpt-4.1-mini") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
     ocr_prompt = (
         (
             _read_env(
-                "POLINKO_OCR_PROMPT",
+                "NAUTORUS_OCR_PROMPT",
                 "Extract all readable text from this image. Preserve line breaks and symbols exactly. "
                 "Do not invent letters or words; if uncertain, output [?].",
             )
@@ -248,85 +262,85 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         or "Extract all readable text from this image. Preserve line breaks and symbols exactly. "
         "Do not invent letters or words; if uncertain, output [?]."
     )
-    ocr_uncertainty_safe = _parse_bool_env("POLINKO_OCR_UNCERTAINTY_SAFE", True)
-    image_context_enabled = _parse_bool_env("POLINKO_IMAGE_CONTEXT_ENABLED", False)
+    ocr_uncertainty_safe = _parse_bool_env("NAUTORUS_OCR_UNCERTAINTY_SAFE", True)
+    image_context_enabled = _parse_bool_env("NAUTORUS_IMAGE_CONTEXT_ENABLED", False)
     image_context_model = (
-        _read_env("POLINKO_IMAGE_CONTEXT_MODEL", "gpt-4.1-mini") or "gpt-4.1-mini"
+        _read_env("NAUTORUS_IMAGE_CONTEXT_MODEL", "gpt-4.1-mini") or "gpt-4.1-mini"
     ).strip() or "gpt-4.1-mini"
     image_context_prompt = (
         (
             _read_env(
-                "POLINKO_IMAGE_CONTEXT_PROMPT",
+                "NAUTORUS_IMAGE_CONTEXT_PROMPT",
                 "Summarize the visual scene for retrieval: key entities, visible text cues, layout, and notable attributes. Keep it concise, factual, and grounded in what is visible.",
             )
             or "Summarize the visual scene for retrieval: key entities, visible text cues, layout, and notable attributes. Keep it concise, factual, and grounded in what is visible."
         ).strip()
         or "Summarize the visual scene for retrieval: key entities, visible text cues, layout, and notable attributes. Keep it concise, factual, and grounded in what is visible."
     )
-    vector_enabled = _parse_bool_env("POLINKO_VECTOR_ENABLED", False)
-    vector_db_path = _read_env("POLINKO_VECTOR_DB_PATH", ".polinko_vector.db") or ".polinko_vector.db"
+    vector_enabled = _parse_bool_env("NAUTORUS_VECTOR_ENABLED", False)
+    vector_db_path = _read_env("NAUTORUS_VECTOR_DB_PATH", ".polinko_vector.db") or ".polinko_vector.db"
     vector_embedding_model = (
-        (_read_env("POLINKO_VECTOR_EMBEDDING_MODEL", "text-embedding-3-small") or "text-embedding-3-small").strip()
+        (_read_env("NAUTORUS_VECTOR_EMBEDDING_MODEL", "text-embedding-3-small") or "text-embedding-3-small").strip()
         or "text-embedding-3-small"
     )
-    vector_top_k = _parse_int_env("POLINKO_VECTOR_TOP_K", 2, minimum=1)
-    vector_top_k_global = _parse_int_env("POLINKO_VECTOR_TOP_K_GLOBAL", vector_top_k, minimum=1)
-    vector_top_k_session = _parse_int_env("POLINKO_VECTOR_TOP_K_SESSION", vector_top_k, minimum=1)
-    vector_min_similarity = _parse_float_env("POLINKO_VECTOR_MIN_SIMILARITY", 0.40, minimum=0.0, maximum=1.0)
+    vector_top_k = _parse_int_env("NAUTORUS_VECTOR_TOP_K", 2, minimum=1)
+    vector_top_k_global = _parse_int_env("NAUTORUS_VECTOR_TOP_K_GLOBAL", vector_top_k, minimum=1)
+    vector_top_k_session = _parse_int_env("NAUTORUS_VECTOR_TOP_K_SESSION", vector_top_k, minimum=1)
+    vector_min_similarity = _parse_float_env("NAUTORUS_VECTOR_MIN_SIMILARITY", 0.40, minimum=0.0, maximum=1.0)
     vector_min_similarity_global = _parse_float_env(
-        "POLINKO_VECTOR_MIN_SIMILARITY_GLOBAL",
+        "NAUTORUS_VECTOR_MIN_SIMILARITY_GLOBAL",
         vector_min_similarity,
         minimum=0.0,
         maximum=1.0,
     )
     vector_min_similarity_session = _parse_float_env(
-        "POLINKO_VECTOR_MIN_SIMILARITY_SESSION",
+        "NAUTORUS_VECTOR_MIN_SIMILARITY_SESSION",
         vector_min_similarity,
         minimum=0.0,
         maximum=1.0,
     )
-    vector_max_chars = _parse_int_env("POLINKO_VECTOR_MAX_CHARS", 220, minimum=80)
-    vector_exclude_current_session = _parse_bool_env("POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION", True)
+    vector_max_chars = _parse_int_env("NAUTORUS_VECTOR_MAX_CHARS", 220, minimum=80)
+    vector_exclude_current_session = _parse_bool_env("NAUTORUS_VECTOR_EXCLUDE_CURRENT_SESSION", True)
     vector_local_embedding_fallback = _parse_bool_env(
-        "POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK",
+        "NAUTORUS_VECTOR_LOCAL_EMBEDDING_FALLBACK",
         False,
     )
-    responses_orchestration_enabled = _parse_bool_env("POLINKO_RESPONSES_ORCHESTRATION_ENABLED", False)
+    responses_orchestration_enabled = _parse_bool_env("NAUTORUS_RESPONSES_ORCHESTRATION_ENABLED", False)
     responses_orchestration_model = (
-        (_read_env("POLINKO_RESPONSES_MODEL", "gpt-5-chat-latest") or "gpt-5-chat-latest").strip()
+        (_read_env("NAUTORUS_RESPONSES_MODEL", "gpt-5-chat-latest") or "gpt-5-chat-latest").strip()
         or "gpt-5-chat-latest"
     )
-    raw_responses_vector_store_id = _read_env("POLINKO_RESPONSES_VECTOR_STORE_ID")
+    raw_responses_vector_store_id = _read_env("NAUTORUS_RESPONSES_VECTOR_STORE_ID")
     responses_vector_store_id = (
         raw_responses_vector_store_id.strip()
         if raw_responses_vector_store_id and raw_responses_vector_store_id.strip()
         else None
     )
-    responses_include_web_search = _parse_bool_env("POLINKO_RESPONSES_INCLUDE_WEB_SEARCH", False)
-    responses_history_turn_limit = _parse_int_env("POLINKO_RESPONSES_HISTORY_TURN_LIMIT", 12, minimum=1)
-    responses_pdf_ingest_enabled = _parse_bool_env("POLINKO_RESPONSES_PDF_INGEST_ENABLED", False)
-    extraction_structured_enabled = _parse_bool_env("POLINKO_EXTRACTION_STRUCTURED_ENABLED", False)
+    responses_include_web_search = _parse_bool_env("NAUTORUS_RESPONSES_INCLUDE_WEB_SEARCH", False)
+    responses_history_turn_limit = _parse_int_env("NAUTORUS_RESPONSES_HISTORY_TURN_LIMIT", 12, minimum=1)
+    responses_pdf_ingest_enabled = _parse_bool_env("NAUTORUS_RESPONSES_PDF_INGEST_ENABLED", False)
+    extraction_structured_enabled = _parse_bool_env("NAUTORUS_EXTRACTION_STRUCTURED_ENABLED", False)
     extraction_structured_model = (
-        (_read_env("POLINKO_EXTRACTION_STRUCTURED_MODEL", "gpt-4.1-mini") or "gpt-4.1-mini").strip()
+        (_read_env("NAUTORUS_EXTRACTION_STRUCTURED_MODEL", "gpt-4.1-mini") or "gpt-4.1-mini").strip()
         or "gpt-4.1-mini"
     )
-    governance_enabled = _parse_bool_env("POLINKO_GOVERNANCE_ENABLED", True)
-    governance_allow_web_search = _parse_bool_env("POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH", False)
-    governance_log_only = _parse_bool_env("POLINKO_GOVERNANCE_LOG_ONLY", False)
-    hallucination_guardrails_enabled = _parse_bool_env("POLINKO_HALLUCINATION_GUARDRAILS_ENABLED", True)
+    governance_enabled = _parse_bool_env("NAUTORUS_GOVERNANCE_ENABLED", True)
+    governance_allow_web_search = _parse_bool_env("NAUTORUS_GOVERNANCE_ALLOW_WEB_SEARCH", False)
+    governance_log_only = _parse_bool_env("NAUTORUS_GOVERNANCE_LOG_ONLY", False)
+    hallucination_guardrails_enabled = _parse_bool_env("NAUTORUS_HALLUCINATION_GUARDRAILS_ENABLED", True)
     personalization_default_memory_scope = _validate_personalization_memory_scope(
-        _read_env("POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE", "global")
+        _read_env("NAUTORUS_PERSONALIZATION_DEFAULT_MEMORY_SCOPE", "global")
     )
 
     if responses_orchestration_enabled and not responses_vector_store_id:
         raise RuntimeError(
-            "POLINKO_RESPONSES_VECTOR_STORE_ID is required when "
-            "POLINKO_RESPONSES_ORCHESTRATION_ENABLED=true."
+            "NAUTORUS_RESPONSES_VECTOR_STORE_ID is required when "
+            "NAUTORUS_RESPONSES_ORCHESTRATION_ENABLED=true."
         )
     if responses_pdf_ingest_enabled and not responses_vector_store_id:
         raise RuntimeError(
-            "POLINKO_RESPONSES_VECTOR_STORE_ID is required when "
-            "POLINKO_RESPONSES_PDF_INGEST_ENABLED=true."
+            "NAUTORUS_RESPONSES_VECTOR_STORE_ID is required when "
+            "NAUTORUS_RESPONSES_PDF_INGEST_ENABLED=true."
         )
 
     return AppConfig(

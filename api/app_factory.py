@@ -187,7 +187,8 @@ _FEEDBACK_NEGATIVE_TAGS = {
     "needs_retry",
 }
 _DEFAULT_FEEDBACK_EVIDENCE_ROOT = Path(
-    os.getenv("POLINKO_FEEDBACK_EVIDENCE_ROOT", "docs/portfolio/raw_evidence")
+    os.getenv("NAUTORUS_FEEDBACK_EVIDENCE_ROOT")
+    or os.getenv("POLINKO_FEEDBACK_EVIDENCE_ROOT", "docs/portfolio/raw_evidence")
 )
 
 
@@ -2851,7 +2852,7 @@ def _resolve_responses_tools(
     principal: str | None,
 ) -> list[dict[str, Any]]:
     if not deps.responses_vector_store_id:
-        raise RuntimeError("Responses orchestration requires POLINKO_RESPONSES_VECTOR_STORE_ID.")
+        raise RuntimeError("Responses orchestration requires NAUTORUS_RESPONSES_VECTOR_STORE_ID.")
     tools: list[dict[str, Any]] = [
         {
             "type": "file_search",

@@ -20,14 +20,18 @@ From repo root:
 Set in `.env`:
 
 - `OPENAI_API_KEY`
-- `POLINKO_MEMORY_DB_PATH` (optional)
-- `POLINKO_HISTORY_DB_PATH` (optional)
-- `POLINKO_DEPRECATE_ON_RESET` (optional, default `true`)
+- `NAUTORUS_MEMORY_DB_PATH` (optional)
+- `NAUTORUS_HISTORY_DB_PATH` (optional)
+- `NAUTORUS_DEPRECATE_ON_RESET` (optional, default `true`)
 
 Optional:
 
-- `POLINKO_SERVER_API_KEY`
-- `POLINKO_SERVER_API_KEYS_JSON`
+- `NAUTORUS_SERVER_API_KEY`
+- `NAUTORUS_SERVER_API_KEYS_JSON`
+
+Legacy compatibility:
+
+- `POLINKO_*` env keys remain supported as fallback.
 
 Note:
 
@@ -40,7 +44,7 @@ Note:
 - Server-side chat history (`/chats` endpoints)
 - Drawer chat list and `New chat`
 - Per-chat restore on load
-- Reset button starts a fresh chat; deprecate-vs-clear behavior is controlled by `POLINKO_DEPRECATE_ON_RESET`
+- Reset button starts a fresh chat; deprecate-vs-clear behavior is controlled by `NAUTORUS_DEPRECATE_ON_RESET`
 - Markdown + code rendering for both user/assistant
 - Thinking animation before responses render
 - Silent preference notes with `/note your guidance here`

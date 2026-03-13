@@ -8,21 +8,21 @@
 
 - Documentation control plane was archived and reset to a clean baseline.
 - Archive location: `docs/archive/2026-03-13-pre-reset/`.
-- Product-facing brand is transitioning from Polinko to Nautorus (phase 1 complete in-progress branch).
-- Runtime/env compatibility lock remains in place: keep existing `POLINKO_*` prefixes until dedicated migration slice.
+- Product-facing brand is Nautorus (phase 1 completed).
+- Runtime/env migration is in phase 2: prefer `NAUTORUS_*` keys with fallback support for legacy `POLINKO_*`.
 
 ## Branch Context
 
-- Baseline on `main`: `4dca042` (docs archive/reset merged).
-- Active task branch: `codex/bigbrain/rebrand-nautorus-phase1`.
-- Commit status: phase-1 rebrand edits in progress on task branch.
+- Baseline on `main`: `dd1aeb7` (phase-1 Nautorus rebrand merged).
+- Active task branch: `codex/bigbrain/rebrand-nautorus-phase2-env-aliases`.
+- Commit status: phase-2 env alias migration in progress on task branch.
 
 ## Immediate Next Step
 
-1. Validate rebrand phase-1 changes (lint/tests/frontend build).
-2. Commit and open PR with compatibility note + rollback plan.
+1. Validate phase-2 alias changes (lint/tests/frontend build).
+2. Commit and open PR with precedence + compatibility note.
 3. Merge to `main` after checks pass.
-4. Plan phase-2 env/config alias migration (`NAUTORUS_*` with backward compatibility).
+4. Plan phase-3 full legacy-prefix retirement timeline (non-breaking deprecation notice first).
 
 ## Quick Validation
 

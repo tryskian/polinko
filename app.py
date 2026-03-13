@@ -45,7 +45,11 @@ from core.prompts import ACTIVE_PROMPT_VERSION  # noqa: E402
 config = load_config(dotenv_path=".env")
 agent = create_agent()
 run_config = create_run_config(store=True)
-current_session_id = os.getenv("POLINKO_CLI_SESSION_ID", config.default_session_id)
+current_session_id = (
+    os.getenv("NAUTORUS_CLI_SESSION_ID")
+    or os.getenv("POLINKO_CLI_SESSION_ID")
+    or config.default_session_id
+)
 session = create_session(
     session_id=current_session_id,
     db_path=config.session_db_path,
