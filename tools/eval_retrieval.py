@@ -227,7 +227,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--base-url",
         default="http://127.0.0.1:8000",
-        help="Polinko API base URL.",
+        help="Nautorus API base URL.",
     )
     parser.add_argument(
         "--cases",

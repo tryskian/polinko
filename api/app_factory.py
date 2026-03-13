@@ -2963,7 +2963,7 @@ def create_app(config: AppConfig) -> FastAPI:
     logging.basicConfig(level=getattr(logging, config.log_level, logging.INFO), format="%(message)s")
 
     shared_openai_client = OpenAI(api_key=config.openai_api_key)
-    app = FastAPI(title="Polinko Agent API", version="0.1.0")
+    app = FastAPI(title="Nautorus Agent API", version="0.1.0")
     app.state.runtime_deps = RuntimeDeps(
         openai_api_key=config.openai_api_key,
         session_db_path=config.session_db_path,

@@ -1,4 +1,4 @@
-# Polinko
+# Nautorus
 
 Lightweight GPT agent project with:
 
@@ -6,6 +6,10 @@ Lightweight GPT agent project with:
 - FastAPI backend
 - Server-side multi-chat history for the web UI
 - Vite chat UI with drawer-based chat switching
+
+Compatibility note:
+
+- Runtime env/config prefixes remain `POLINKO_*` in this phase to avoid breaking existing local setups and CI gates.
 
 ## Quickstart
 
@@ -119,7 +123,7 @@ Build and run the API container locally:
 
 Defaults:
 
-- image tag: `polinko:dev`
+- image tag: `nautorus:dev`
 - host port: `8000` (`DOCKER_PORT` override supported)
 - env file: `.env` (`ENV_FILE` override supported)
 

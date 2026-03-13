@@ -4,6 +4,8 @@
 
 - Docs have been reset to a clean operational baseline.
 - Previous documentation lineage is archived at `docs/archive/2026-03-13-pre-reset/`.
+- Product-facing brand is now Nautorus (phase-1 rename rollout).
+- Runtime compatibility prefixes remain `POLINKO_*` in this phase to avoid env/config breakage.
 - Core repo workflow is stable: feature branch -> PR -> checks -> merge.
 - Active implementation focus is eval operations (review queue, checkpoints, retry behavior).
 

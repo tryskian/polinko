@@ -259,7 +259,7 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run OCR eval cases against /skills/ocr.")
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
+    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Nautorus API base URL.")
     parser.add_argument(
         "--cases",
         default="docs/ocr_eval_cases.json",

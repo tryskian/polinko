@@ -1,4 +1,4 @@
-# Polinko Charter (Reset Baseline)
+# Nautorus Charter (Reset Baseline)
 
 ## Mission
 

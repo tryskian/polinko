@@ -8,7 +8,7 @@ PYTHON ?= $(shell \
 	fi)
 NPM ?= npm
 DOCKER ?= docker
-DOCKER_IMAGE ?= polinko:dev
+DOCKER_IMAGE ?= nautorus:dev
 DOCKER_PORT ?= 8000
 DEV_HOST ?= 127.0.0.1
 DEV_BACKEND_PORT ?= 8000
