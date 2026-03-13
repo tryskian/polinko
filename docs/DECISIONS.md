@@ -354,7 +354,7 @@
 ## D-040: Define explicit CLIP A/B escalation criterion before integration
 
 - Date: 2026-03-10
-- Category: `evaluation`
+- Category: `eval_quality`
 - Tags: `clip_ab`, `go_no_go`, `multimodal`, `integration_gate`
 - Decision: Promote CLIP from scaffold/proxy phase only when two consecutive
   CLIP A/B report runs (`cases_count >= 4`) meet all of:

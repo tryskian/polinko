@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-11
+- 2026-03-13
 
 ## Current Snapshot
 
@@ -110,9 +110,8 @@
 
 ## Latest Local Commit
 
-- `7bfd1b1` on `main` (local branch currently ahead of `origin/main` by 4
-  commits)
-- Summary: docs: track interpersonal motive-guess hallucination case in state
+- `488773d` on `main` (local branch synced with `origin/main` at handoff update time)
+- Summary: docs: add plain-language Docker MCP handoff notes
 
 ## Key Files To Read First
 
@@ -150,10 +149,10 @@
 
 ## Immediate Next Step
 
-- Add automated criterion check for CLIP escalation readiness:
-  - implement a small script/target to compare latest two CLIP A/B reports
-  - return explicit `GO`/`NO-GO` based on D-040 thresholds
-  - run full validation (`tests + make eval-clip-ab-report`) and capture output
+- Run CLIP readiness validation and record the result:
+  - generate two fresh artifacts via `make eval-clip-ab-report` (twice)
+  - run `make eval-clip-ab-readiness` and capture `GO`/`NO-GO`
+  - update `docs/STATE.md` snapshot line with run IDs and readiness outcome
 
 ## Copy/Paste Rehydrate Prompt
 
