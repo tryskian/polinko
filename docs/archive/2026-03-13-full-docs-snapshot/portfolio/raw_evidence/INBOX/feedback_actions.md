@@ -1,0 +1,342 @@
+- [1772752463989] session=chat-0292a6d6-5a17-42f1-b63c-7cd355148d64 message=msg_a18a500139e865f4a7ba5420
+  - positive_tags: accurate
+  - negative_tags: ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772752478959] session=chat-0292a6d6-5a17-42f1-b63c-7cd355148d64 message=msg_a18a500139e865f4a7ba5420
+  - positive_tags: accurate
+  - negative_tags: ocr_miss, needs_retry
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772752501543] session=chat-0292a6d6-5a17-42f1-b63c-7cd355148d64 message=msg_a18a500139e865f4a7ba5420
+  - positive_tags: accurate
+  - negative_tags: ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772752572226] session=chat-0292a6d6-5a17-42f1-b63c-7cd355148d64 message=msg_a18a500139e865f4a7ba5420
+  - positive_tags: accurate
+  - negative_tags: ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772753101813] session=chat-0292a6d6-5a17-42f1-b63c-7cd355148d64 message=msg_a18a500139e865f4a7ba5420
+  - positive_tags: accurate
+  - negative_tags: ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772753223142] session=dbg3-target-nimbus message=msg_c72ae6657f8778f22972bdd6
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772754985609] session=dbg2-target-nimbus_grid message=msg_7c4f5570a52f74a380615fad
+  - positive_tags: accurate
+  - negative_tags: ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772755034280] session=dbg2-target-quill_matrix message=msg_3f2a00904fa759220794efff
+  - positive_tags: accurate
+  - negative_tags: ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772755049517] session=dbg2-target-opal_trace message=msg_3adb6c13011ac5a7ea249c24
+  - positive_tags: accurate
+  - negative_tags: ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772755229755] session=dbg2-target-quill_matrix message=msg_3f2a00904fa759220794efff
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772755242788] session=dbg2-target-opal_trace message=msg_3adb6c13011ac5a7ea249c24
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772755251998] session=dbg2-target-nimbus_grid message=msg_7c4f5570a52f74a380615fad
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772755428528] session=retrieval-debug-dbg1772503598-target-quill_matrix message=msg_881858e42a74fdb9e6db6182
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772755438430] session=retrieval-debug-dbg1772503598-target-opal_trace message=msg_10d12c0511877d881a51dc72
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772755450158] session=retrieval-debug-dbg1772503598-target-nimbus_grid message=msg_80b692f9746f2c282637e013
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772755573029] session=retrieval-debug-dbg1772503598-target-aurora_lattice message=msg_9ed49564c4a4983a80d11a8b
+  - positive_tags: accurate, grounded, useful
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772755596245] session=retrieval-debug-dbg1772503598-target-willow_guard message=msg_8c328facb984687132931b14
+  - positive_tags: accurate, grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772755605152] session=retrieval-debug-dbg1772503598-target-vector_orchard message=msg_87af2d764af5aedfc3ca4a7d
+  - positive_tags: accurate, grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772755619313] session=retrieval-debug-dbg1772503598-target-umbra_ledger message=msg_0813dc93173033588cad33b7
+  - positive_tags: accurate, grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772755631711] session=retrieval-debug-dbg1772503598-target-tide_kernel message=msg_12505000366e39c293aecf06
+  - positive_tags: accurate, grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772755641129] session=retrieval-debug-dbg1772503598-target-solstice_map message=msg_777e730e67baa8917c88cf48
+  - positive_tags: accurate, grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772755712048] session=retrieval-debug-dbg1772503598-target-willow_guard message=msg_8c328facb984687132931b14
+  - positive_tags: accurate, grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772755765134] session=retrieval-debug-dbg1772503598-target-aurora_lattice message=msg_9ed49564c4a4983a80d11a8b
+  - positive_tags: accurate, grounded, useful
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772755779456] session=target-case message=msg_9de0d9cd59b0027e41a7ae5a
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772755830217] session=chat-352dac38-e869-4ad2-9c71-33a18d57d0bd message=msg_f7c535113fddfdbd6aeb4d9d
+  - positive_tags: complete
+  - negative_tags: ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+  - note: UM should be LLM
+- [1772755846197] session=chat-352dac38-e869-4ad2-9c71-33a18d57d0bd message=msg_f7c535113fddfdbd6aeb4d9d
+  - positive_tags: complete
+  - negative_tags: ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+  - note: UM should be LLM
+- [1772756794899] session=retrieval-debug-dbg1772503598-target-raven_bridge message=msg_7e19c2495ddad4ce51fb7aaa
+  - positive_tags: accurate, grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772756860398] session=chat-352dac38-e869-4ad2-9c71-33a18d57d0bd message=msg_f7c535113fddfdbd6aeb4d9d
+  - positive_tags: grounded
+  - negative_tags: ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+  - note: UM should be LLM
+- [1772756923548] session=chat-5f204d81-fdaa-402e-8948-ad2f8bfaf9bd message=msg_29f2c6c560bf6964f01c4de8
+  - positive_tags: none
+  - negative_tags: hallucination_risk, grounding_gap
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+- [1772756990263] session=chat-5f204d81-fdaa-402e-8948-ad2f8bfaf9bd message=msg_900e4e75f909f816ae487fef
+  - positive_tags: none
+  - negative_tags: hallucination_risk, style_mismatch
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+- [1772757087507] session=chat-0292a6d6-5a17-42f1-b63c-7cd355148d64 message=msg_1093e77f81c786fd80b70cd5
+  - positive_tags: grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772757142371] session=chat-0292a6d6-5a17-42f1-b63c-7cd355148d64 message=msg_3ba87b2a041f063f8ee3f8ce
+  - positive_tags: grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772757156869] session=chat-0292a6d6-5a17-42f1-b63c-7cd355148d64 message=msg_8a20ed459f5b4709ee7a44ec
+  - positive_tags: grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772757179854] session=chat-0292a6d6-5a17-42f1-b63c-7cd355148d64 message=msg_a18a500139e865f4a7ba5420
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1772757237799] session=chat-a566939e-12f0-4ffb-b2f6-6ae0b10eb710 message=msg_02926888bab070b261fbeaba
+  - positive_tags: none
+  - negative_tags: hallucination_risk, needs_retry
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+  - note: ”wobble” should be ”wubble”
+- [1772757285233] session=chat-e6f3acd0-4ee1-4825-9234-427813059a6b message=msg_52016f0654b67eda7c3f796c
+  - positive_tags: none
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772757523197] session=chat-9e65ea8d-a25b-41ad-9f00-9de06b484c01 message=msg_20904fe5158655de96e087f8
+  - positive_tags: style
+  - negative_tags: hallucination_risk
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+  - note: did not understand ”chongo pongo” but pretended to
+- [1772757587967] session=chat-9e65ea8d-a25b-41ad-9f00-9de06b484c01 message=msg_34807bed7b0b477739f14350
+  - positive_tags: style
+  - negative_tags: hallucination_risk
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+  - note: did not understand ”chongo pongo” but pretended to
+- [1772758888237] session=chat-9e65ea8d-a25b-41ad-9f00-9de06b484c01 message=msg_34807bed7b0b477739f14350
+  - positive_tags: style, high_value
+  - negative_tags: hallucination_risk
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+  - note: did not understand ”chongo pongo” but pretended to
+- [1772759473255] session=retrieval-debug-dbg1772503598-target-willow_guard message=msg_8c328facb984687132931b14
+  - positive_tags: accurate, grounded, medium_value
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772759525843] session=retrieval-debug-dbg1772503598-target-raven_bridge message=msg_7e19c2495ddad4ce51fb7aaa
+  - positive_tags: accurate, grounded, low_value
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772759575705] session=retrieval-debug-dbg1772503598-target-aurora_lattice message=msg_9ed49564c4a4983a80d11a8b
+  - positive_tags: accurate, grounded, medium_value
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772759604374] session=chat-352dac38-e869-4ad2-9c71-33a18d57d0bd message=msg_f7c535113fddfdbd6aeb4d9d
+  - positive_tags: grounded, high_value
+  - negative_tags: ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+  - note: UM should be LLM
+- [1772759720201] session=chat-0292a6d6-5a17-42f1-b63c-7cd355148d64 message=msg_8a20ed459f5b4709ee7a44ec
+  - positive_tags: grounded, medium_value
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772759793105] session=chat-0292a6d6-5a17-42f1-b63c-7cd355148d64 message=msg_1093e77f81c786fd80b70cd5
+  - positive_tags: grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772901170740] session=chat-c05f3e9c-b0ed-43ae-bf52-9e5565ccd569 message=msg_f2458aa41f84f5cb7825947e
+  - positive_tags: style, low_value, grounded
+  - negative_tags: hallucination_risk
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+  - note: answer is technically correct but doesn’t match the whimsy of the subject. it’s delivered as if it were a fact.
+- [1772901723040] session=chat-9e65ea8d-a25b-41ad-9f00-9de06b484c01 message=msg_e466933182efe70ba2895652
+  - positive_tags: accurate, grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+  - note: reclass test
+- [1772919447966] session=chat-b3c9d507-de4a-4f83-964f-e5973c83b79c message=msg_ed02d837b3dbd786d8405cd3
+  - positive_tags: high_value, style
+  - negative_tags: hallucination_risk
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+- [1772919568603] session=chat-b3c9d507-de4a-4f83-964f-e5973c83b79c message=msg_9faec18e59bf8fc39c90098b
+  - positive_tags: none
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772919713969] session=chat-b3c9d507-de4a-4f83-964f-e5973c83b79c message=msg_097a4368ebe2e7acc9be9e5f
+  - positive_tags: none
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772919729766] session=chat-b3c9d507-de4a-4f83-964f-e5973c83b79c message=msg_097a4368ebe2e7acc9be9e5f
+  - positive_tags: accurate, low_value
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1772919740541] session=chat-b3c9d507-de4a-4f83-964f-e5973c83b79c message=msg_9faec18e59bf8fc39c90098b
+  - positive_tags: accurate, low_value
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1773103243425] session=chat-b3c9d507-de4a-4f83-964f-e5973c83b79c message=msg_205ece900ce1f2ef4de53a69
+  - positive_tags: none
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1773162324237] session=chat-0853a016-1ce2-4a4a-84b8-5fb03101199e message=msg_d5fc52f44f58aa986a4fd015
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773162348336] session=chat-0853a016-1ce2-4a4a-84b8-5fb03101199e message=msg_d5fc52f44f58aa986a4fd015
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773162442542] session=chat-7728e323-a7b7-4650-a789-f135a2cccde9 message=msg_f248236826b2d4fe2ef0993f
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk, needs_retry
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773164212421] session=chat-a0defea7-8c78-4f38-b499-11b4ef62e286 message=msg_980f15634962e1fec58a7a97
+  - positive_tags: useful, grounded, style, high_value
+  - negative_tags: hallucination_risk, ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+  - note: hallucination risk: claiming ¿ after being told that it’s not
+- [1773164261207] session=chat-a0defea7-8c78-4f38-b499-11b4ef62e286 message=msg_b9cecf6cfadfaa8e3003a964
+  - positive_tags: none
+  - negative_tags: grounding_gap, hallucination_risk, ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+  - note: complete loss of context
+- [1773164343303] session=chat-a0defea7-8c78-4f38-b499-11b4ef62e286 message=msg_2e13858d142c614f2050a4eb
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+  - note: there is no loop in tau, but there’s clearly a loop in the raw reference image
+- [1773164388628] session=chat-a0defea7-8c78-4f38-b499-11b4ef62e286 message=msg_c0e205ae0ae659f59f0cb921
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap, hallucination_risk
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773164433406] session=chat-a0defea7-8c78-4f38-b499-11b4ef62e286 message=msg_eab29713d6e7a1c1806bf7ee
+  - positive_tags: style, grounded
+  - negative_tags: hallucination_risk, ocr_miss
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773164464977] session=chat-a0defea7-8c78-4f38-b499-11b4ef62e286 message=msg_c2552337425f6df6a1d05ad7
+  - positive_tags: none
+  - negative_tags: ocr_miss, style_mismatch, hallucination_risk
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773164482041] session=chat-a0defea7-8c78-4f38-b499-11b4ef62e286 message=msg_27258cd7ee248632ea0b6a08
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773164503182] session=chat-a0defea7-8c78-4f38-b499-11b4ef62e286 message=msg_ce6192f6283a582a6188bff4
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773164617850] session=chat-a0defea7-8c78-4f38-b499-11b4ef62e286 message=msg_50afb180e71c92436d9e1c61
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+  - note: without the overlay, it still defaults to tau
+- [1773177387019] session=chat-6c42bd58-8987-4730-82c8-5eadd040a51e message=msg_d9fef0d58fdac9eace3be8f6
+  - positive_tags: none
+  - negative_tags: grounding_gap, hallucination_risk
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+- [1773330766289] session=chat-b90e6288-ef18-4fdd-add2-2dbff46007ca message=msg_20378c87e447a8bdd7283995
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773330923575] session=chat-b90e6288-ef18-4fdd-add2-2dbff46007ca message=msg_61bf64a6f72658885a6ffe36
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773331013140] session=chat-b90e6288-ef18-4fdd-add2-2dbff46007ca message=msg_c766066c832220dc2b52d1bb
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap, hallucination_risk
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773331324805] session=chat-b90e6288-ef18-4fdd-add2-2dbff46007ca message=msg_11b302ce5cb77828e677efb9
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773331644804] session=chat-b90e6288-ef18-4fdd-add2-2dbff46007ca message=msg_4475a002f67c3f7cd0058fde
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773331745812] session=chat-b90e6288-ef18-4fdd-add2-2dbff46007ca message=msg_4475a002f67c3f7cd0058fde
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773332000348] session=chat-b90e6288-ef18-4fdd-add2-2dbff46007ca message=msg_302fadc8081fbbe29c39fa68
+  - positive_tags: none
+  - negative_tags: ocr_miss, grounding_gap, hallucination_risk
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+  - note: every response returns a different letter except for phi. the wrong OCR should at least be consistent
+- [1773332097480] session=chat-6c1a6dca-5b8f-435f-a1dd-28f965aa4e4f message=msg_34e1c3d581d1e160341ba54a
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773332120742] session=chat-6c1a6dca-5b8f-435f-a1dd-28f965aa4e4f message=msg_34e1c3d581d1e160341ba54a
+  - positive_tags: none
+  - negative_tags: ocr_miss, hallucination_risk, grounding_gap
+  - recommended_action: Retry OCR with a tighter crop and attach fresh image evidence for comparison.
+- [1773332441461] session=chat-b3c9d507-de4a-4f83-964f-e5973c83b79c message=msg_097a4368ebe2e7acc9be9e5f
+  - positive_tags: accurate, low_value, grounded
+  - negative_tags: style_mismatch
+  - recommended_action: Adjust style notes and add this sample to style eval regression cases.
+- [1773332516713] session=chat-b3c9d507-de4a-4f83-964f-e5973c83b79c message=msg_205ece900ce1f2ef4de53a69
+  - positive_tags: low_value, accurate
+  - negative_tags: style_mismatch, grounding_gap
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+- [1773332757867] session=chat-b3c9d507-de4a-4f83-964f-e5973c83b79c message=msg_b3bc94b5610306a6398e9aac
+  - positive_tags: style, high_value
+  - negative_tags: grounding_gap
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+  - note: great tone, no context
+- [1773333064022] session=chat-b3c9d507-de4a-4f83-964f-e5973c83b79c message=msg_cc1ab7b0dda5546a01cb804f
+  - positive_tags: accurate, style
+  - negative_tags: style_mismatch, grounding_gap
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+  - note: ☹︎ style: "don’t show up as any official thing I can confirm" 
+grounding_gap: fysics was confirmed in this chat
+☺︎ style: "gleeful gibberish: cartoon jungle energy, maybe a catch‑all for noisy, chaotic creatures that swing before they think."
+- [1773333082284] session=chat-b3c9d507-de4a-4f83-964f-e5973c83b79c message=msg_cc1ab7b0dda5546a01cb804f
+  - positive_tags: accurate, style
+  - negative_tags: style_mismatch, grounding_gap
+  - recommended_action: Re-run with explicit grounding constraints and verify response against source evidence.
+  - note: ☹︎ style: "don’t show up as any official thing I can confirm" 
+grounding_gap: fysics was confirmed in this chat
+☺︎ style: "gleeful gibberish: cartoon jungle energy, maybe a catch‑all for noisy, chaotic creatures that swing before they think."

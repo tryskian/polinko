@@ -1,0 +1,56 @@
+{
+  "session_id": "chat-352dac38-e869-4ad2-9c71-33a18d57d0bd",
+  "title": "Transcribe visible text from the attached...",
+  "status": "active",
+  "memory_scope": "global",
+  "prompt_version": "v1",
+  "exported_at": 1772416114979,
+  "message_count": 2,
+  "transcript_sha256": "3d8bb4d32ba4cf8c61fe5318c8ef064e0b853b4bd3bce984a5e558f21f18e1a5",
+  "messages": [
+    {
+      "message_id": "msg_8ceaea00d37b1b5d00066418",
+      "parent_message_id": null,
+      "role": "user",
+      "content": "Transcribe visible text from the attached image(s) verbatim. Do not interpret.",
+      "content_sha256": "abe6f9c5a30287548431b3cd71921e44dcda847f5f6f40b55d5b3b60837c11fd",
+      "created_at": 1772416080942
+    },
+    {
+      "message_id": "msg_f7c535113fddfdbd6aeb4d9d",
+      "parent_message_id": "msg_8ceaea00d37b1b5d00066418",
+      "role": "assistant",
+      "content": "This not only creates a model  \nthat reasons through its own  \nreasoning but also requires  \nthe user to adjust + transform  \ntheir own output so  \nthat the UM can understand  \nhuman semiotics + lexeme.",
+      "content_sha256": "85a0d18825c83da8bd1ab44dc56f12ab4a0dd391de5b7218563b0cf805ce372a",
+      "created_at": 1772416080943
+    }
+  ],
+  "ocr_runs": [
+    {
+      "run_id": "ocr-66c5f02aa662",
+      "session_id": "chat-352dac38-e869-4ad2-9c71-33a18d57d0bd",
+      "source_name": "Screenshot 2026-03-01 at 20.47.14.png",
+      "mime_type": "image/png",
+      "source_message_id": null,
+      "result_message_id": null,
+      "status": "ok",
+      "extracted_text": "This not only creates a model\nthat reasons through its own\nreasoning but also requires\nthe user to adjust + transform\ntheir own output so\nthat the UM can understand\nhuman semiotics + lexeme.",
+      "visual_context": null,
+      "structured": {
+        "schema_version": "v1",
+        "source_type": "ocr",
+        "source_name": "Screenshot 2026-03-01 at 20.47.14.png",
+        "mime_type": "image/png",
+        "text_sha256": "303e86a0ef6ed0360c70e01c3376ef4b15e92b70e02d82a9fcf4ab4cde470bc4",
+        "char_count": 190,
+        "word_count": 34,
+        "line_count": 7,
+        "preview": "This not only creates a model that reasons through its own reasoning but also requires the user to adjust + transform their own output so that the UM can understand human semiotics + lexeme.",
+        "enrichment_status": "baseline",
+        "fallback_reason": null
+      },
+      "created_at": 1772416079392
+    }
+  ],
+  "markdown": null
+}

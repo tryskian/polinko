@@ -1,0 +1,9 @@
+{
+  "files": {
+    "example-fail-artifact-chat-00000000-0000-4000-8000-000000000000-20260304-120000Z.md": {
+      "action_taken": "Adjusted OCR follow-up trigger and added regression coverage.",
+      "status": "OPEN",
+      "notes": "Awaiting rerun on next quality-gate cycle."
+    }
+  }
+}

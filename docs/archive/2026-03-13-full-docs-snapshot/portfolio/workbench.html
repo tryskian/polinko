@@ -1,0 +1,1046 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Polinko Portfolio Workbench</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #15161d;
+        --panel: #1d1f28;
+        --panel-2: #232532;
+        --text: #e9eaf0;
+        --muted: #a9adbd;
+        --border: #34374a;
+        --accent: #6d8dff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+        background: linear-gradient(180deg, #12131a 0%, #171822 100%);
+        color: var(--text);
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        min-height: 100vh;
+      }
+      .sidebar {
+        border-right: 1px solid var(--border);
+        background: var(--panel);
+        padding: 18px 14px;
+      }
+      .title {
+        font-weight: 700;
+        margin: 2px 0 4px;
+      }
+      .subtitle {
+        color: var(--muted);
+        font-size: 13px;
+        margin-bottom: 16px;
+      }
+      .nav {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .nav-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .nav button {
+        width: 100%;
+        text-align: left;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 10px 12px;
+        cursor: pointer;
+      }
+      .nav button:hover {
+        border-color: #4a4f69;
+      }
+      .nav button.active {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 45%, transparent);
+      }
+      .nested-nav {
+        margin-left: 12px;
+        padding-left: 10px;
+        border-left: 1px dashed #3a3f55;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .nested-nav button {
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+      .hint {
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+      .gallery {
+        margin-top: 12px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--panel);
+      }
+      .gallery summary {
+        cursor: pointer;
+        padding: 10px 12px;
+        color: var(--muted);
+        font-size: 13px;
+        user-select: none;
+      }
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 10px;
+        padding: 0 12px 12px;
+      }
+      .gallery-item {
+        border: 1px solid var(--border);
+        background: var(--panel-2);
+        border-radius: 10px;
+        padding: 8px;
+      }
+      .gallery-item img {
+        width: 100%;
+        height: 110px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #3a3f55;
+        display: block;
+      }
+      .gallery-item .label {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .gallery-empty {
+        color: var(--muted);
+        font-size: 12px;
+        padding: 0 12px 12px;
+      }
+      .main {
+        padding: 18px 22px;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .toolbar a,
+      .toolbar button,
+      .toolbar select {
+        display: inline-block;
+        text-decoration: none;
+        color: var(--text);
+        border: 1px solid var(--border);
+        background: var(--panel);
+        border-radius: 10px;
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+      .toolbar button,
+      .toolbar select {
+        cursor: pointer;
+      }
+      .toolbar button.active {
+        border-color: var(--accent);
+      }
+      .status {
+        margin: 0 0 10px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .doc {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--panel);
+        padding: 22px;
+        max-width: 980px;
+        line-height: 1.7;
+      }
+      .doc h1,
+      .doc h2,
+      .doc h3 {
+        line-height: 1.3;
+        margin: 0.7em 0 0.35em;
+      }
+      .doc h1 {
+        margin-top: 0;
+        font-size: 28px;
+      }
+      .doc h2 {
+        font-size: 21px;
+      }
+      .doc h3 {
+        font-size: 17px;
+      }
+      .doc p {
+        margin: 0.4em 0;
+      }
+      .doc ul,
+      .doc ol {
+        margin: 0.35em 0 0.7em 1.35em;
+        padding: 0;
+      }
+      .doc li {
+        margin: 0.2em 0;
+      }
+      .doc code {
+        background: #2b2f41;
+        border: 1px solid #40455f;
+        border-radius: 6px;
+        padding: 1px 5px;
+        font-size: 0.94em;
+      }
+      .doc pre {
+        background: #171923;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px;
+        overflow-x: auto;
+        white-space: pre-wrap;
+      }
+      .doc blockquote {
+        margin: 0.5em 0;
+        padding: 0.3em 0.9em;
+        border-left: 3px solid #5f80ff;
+        background: #181b27;
+        border-radius: 0 10px 10px 0;
+      }
+      .doc hr {
+        border: 0;
+        border-top: 1px solid var(--border);
+        margin: 1em 0;
+      }
+      .doc img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        margin: 10px 0;
+      }
+      .doc a {
+        color: #9ab0ff;
+      }
+      .editor {
+        width: 100%;
+        min-height: 72vh;
+        resize: vertical;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: #191b24;
+        color: var(--text);
+        padding: 16px;
+        line-height: 1.6;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+        font-size: 14px;
+      }
+      .error {
+        color: #ff9a9a;
+      }
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        .sidebar {
+          border-right: 0;
+          border-bottom: 1px solid var(--border);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="title">Portfolio Workbench</div>
+        <div class="subtitle">Draft + iterate quickly</div>
+        <nav class="nav" id="nav"></nav>
+        <div class="hint">
+          Tip: keep this practical.<br />
+          Work first, evidence second,<br />
+          theory as end-notes.
+        </div>
+      </aside>
+      <main class="main">
+        <div class="toolbar">
+          <button id="modePreview" class="active" type="button">Preview</button>
+          <button id="modeEdit" type="button">Edit</button>
+          <button id="renameSection" type="button">Rename section</button>
+          <select id="notebookPageSelect" hidden></select>
+          <button id="newNotebookPage" type="button" hidden>New note</button>
+          <button id="renameNotebookPage" type="button" hidden>Rename note</button>
+          <button id="deleteNotebookPage" type="button" hidden>Delete note</button>
+          <button id="saveLocal" type="button">Save local draft</button>
+          <button id="discardLocal" type="button">Discard local draft</button>
+          <button id="copyMd" type="button">Copy markdown</button>
+          <button id="insertImage" type="button">Insert image</button>
+          <button id="downloadMd" type="button">Download markdown</button>
+          <a id="openRaw" href="#" target="_blank" rel="noreferrer">Open raw markdown</a>
+        </div>
+        <p class="status" id="status">Loading…</p>
+        <article class="doc" id="doc">Loading…</article>
+        <textarea class="editor" id="editor" hidden></textarea>
+        <input id="imagePicker" type="file" accept="image/*" hidden />
+        <details class="gallery" id="imageGalleryWrap">
+          <summary>Image gallery</summary>
+          <div class="gallery-grid" id="imageGallery"></div>
+          <div class="gallery-empty" id="imageGalleryEmpty">No images in this section yet.</div>
+        </details>
+      </main>
+    </div>
+    <script>
+      const docs = [
+        { id: "__notebook__", path: null, label: "notebook", notebook: true },
+        { id: "01_positioning_narrative.md", path: "01_positioning_narrative.md", label: "positioning narrative" },
+        { id: "02_case_studies.md", path: "02_case_studies.md", label: "case studies" },
+        { id: "03_evidence_log.md", path: "03_evidence_log.md", label: "evidence log" },
+        { id: "04_story_bank.md", path: "04_story_bank.md", label: "story bank" },
+        { id: "05_resume_linkedin_bullets.md", path: "05_resume_linkedin_bullets.md", label: "resume linkedin bullets" },
+        { id: "06_demo_script.md", path: "06_demo_script.md", label: "demo script" },
+      ];
+
+      const DRAFT_KEY_PREFIX = "polinko.workbench.draft.";
+      const NOTEBOOK_PAGES_KEY = "polinko.workbench.notebook.pages.v1";
+      const SECTION_NOTES_KEY = "polinko.workbench.section.notes.v1";
+      const ACTIVE_NOTES_KEY = "polinko.workbench.active.notes.v1";
+      const SECTION_LABELS_KEY = "polinko.workbench.section.labels.v1";
+      const IMAGE_STORE_KEY = "polinko.workbench.images.v1";
+      const IMAGE_REF_PREFIX = "workbench-image://";
+      const NOTE_TEMPLATE = [
+        "# Note",
+        "",
+        "- Working notes",
+        "- Fragments",
+        "- Draft language",
+      ].join("\n");
+      const DEFAULT_NOTEBOOK_PAGES = [{ id: "note-1", title: "Scratchpad", markdown: NOTE_TEMPLATE }];
+
+      const navEl = document.getElementById("nav");
+      const docEl = document.getElementById("doc");
+      const editorEl = document.getElementById("editor");
+      const statusEl = document.getElementById("status");
+      const openRawEl = document.getElementById("openRaw");
+      const modePreviewEl = document.getElementById("modePreview");
+      const modeEditEl = document.getElementById("modeEdit");
+      const renameSectionEl = document.getElementById("renameSection");
+      const notebookPageSelectEl = document.getElementById("notebookPageSelect");
+      const newNotebookPageEl = document.getElementById("newNotebookPage");
+      const renameNotebookPageEl = document.getElementById("renameNotebookPage");
+      const deleteNotebookPageEl = document.getElementById("deleteNotebookPage");
+      const saveLocalEl = document.getElementById("saveLocal");
+      const discardLocalEl = document.getElementById("discardLocal");
+      const copyMdEl = document.getElementById("copyMd");
+      const insertImageEl = document.getElementById("insertImage");
+      const downloadMdEl = document.getElementById("downloadMd");
+      const imagePickerEl = document.getElementById("imagePicker");
+      const imageGalleryEl = document.getElementById("imageGallery");
+      const imageGalleryEmptyEl = document.getElementById("imageGalleryEmpty");
+
+      let currentDoc = docs[0];
+      let currentMarkdown = "";
+      let sourceMarkdown = "";
+      let isEditMode = true;
+      let autosaveTimer = null;
+      let sectionNotesByDoc = {};
+      let activeNoteByDoc = {};
+      let currentNoteId = "";
+      let sectionLabels = {};
+      let imageStore = {};
+
+      const escapeHtml = (s) =>
+        s
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+      const escapeAttr = (s) =>
+        String(s)
+          .replaceAll("&", "&amp;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
+
+      function resolveImageSrc(markdownSrc) {
+        if (!markdownSrc.startsWith(IMAGE_REF_PREFIX)) return markdownSrc;
+        const imageId = markdownSrc.slice(IMAGE_REF_PREFIX.length);
+        return imageStore[imageId] || "";
+      }
+
+      function inlineMarkdown(text) {
+        let out = escapeHtml(text);
+        out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt, src) => {
+          const resolved = resolveImageSrc(src);
+          if (!resolved) {
+            return `<span class="error">[missing image: ${escapeHtml(alt || "image")}]</span>`;
+          }
+          return `<img src="${escapeAttr(resolved)}" alt="${escapeAttr(alt)}" loading="lazy" />`;
+        });
+        out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, label, href) => {
+          return `<a href="${escapeAttr(href)}" target="_blank" rel="noreferrer">${label}</a>`;
+        });
+        out = out.replace(/`([^`]+)`/g, "<code>$1</code>");
+        out = out.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        out = out.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+        out = out.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+        return out;
+      }
+
+      function mdToHtml(md) {
+        const lines = md.split(/\r?\n/);
+        const html = [];
+        let inUl = false;
+        let inOl = false;
+        let inCodeBlock = false;
+        let inBlockquote = false;
+
+        const closeLists = () => {
+          if (inUl) {
+            html.push("</ul>");
+            inUl = false;
+          }
+          if (inOl) {
+            html.push("</ol>");
+            inOl = false;
+          }
+          if (inBlockquote) {
+            html.push("</blockquote>");
+            inBlockquote = false;
+          }
+        };
+
+        for (const rawLine of lines) {
+          const line = rawLine.trimEnd();
+          const trimmed = line.trim();
+
+          if (trimmed.startsWith("```")) {
+            closeLists();
+            if (inCodeBlock) {
+              html.push("</code></pre>");
+              inCodeBlock = false;
+            } else {
+              html.push("<pre><code>");
+              inCodeBlock = true;
+            }
+            continue;
+          }
+          if (inCodeBlock) {
+            html.push(escapeHtml(rawLine));
+            continue;
+          }
+
+          if (!trimmed) {
+            closeLists();
+            continue;
+          }
+
+          if (trimmed === "---") {
+            closeLists();
+            html.push("<hr />");
+            continue;
+          }
+
+          const blockquoteMatch = rawLine.match(/^\s*>\s?(.*)$/);
+          if (blockquoteMatch) {
+            closeLists();
+            if (!inBlockquote) {
+              html.push("<blockquote>");
+              inBlockquote = true;
+            }
+            html.push(`<p>${inlineMarkdown(blockquoteMatch[1])}</p>`);
+            continue;
+          }
+
+          const hMatch = trimmed.match(/^(#{1,3})\s+(.+)$/);
+          if (hMatch) {
+            closeLists();
+            const level = hMatch[1].length;
+            html.push(`<h${level}>${inlineMarkdown(hMatch[2])}</h${level}>`);
+            continue;
+          }
+
+          const ulMatch = trimmed.match(/^- (.+)$/);
+          if (ulMatch) {
+            if (!inUl) {
+              closeLists();
+              html.push("<ul>");
+              inUl = true;
+            }
+            html.push(`<li>${inlineMarkdown(ulMatch[1])}</li>`);
+            continue;
+          }
+
+          const olMatch = trimmed.match(/^\d+\. (.+)$/);
+          if (olMatch) {
+            if (!inOl) {
+              closeLists();
+              html.push("<ol>");
+              inOl = true;
+            }
+            html.push(`<li>${inlineMarkdown(olMatch[1])}</li>`);
+            continue;
+          }
+
+          closeLists();
+          html.push(`<p>${inlineMarkdown(trimmed)}</p>`);
+        }
+
+        closeLists();
+        if (inCodeBlock) {
+          html.push("</code></pre>");
+        }
+        return html.join("\n");
+      }
+
+      function renderPreview() {
+        docEl.innerHTML = mdToHtml(currentMarkdown);
+      }
+
+      function storageKey(doc) {
+        return `${DRAFT_KEY_PREFIX}${doc.id}`;
+      }
+
+      function normalizeNotes(rawNotes) {
+        const list = Array.isArray(rawNotes) ? rawNotes : [];
+        const cleaned = list
+          .map((item, idx) => ({
+            id: typeof item?.id === "string" && item.id ? item.id : `note-${idx + 1}`,
+            title: typeof item?.title === "string" && item.title.trim() ? item.title.trim() : `Note ${idx + 1}`,
+            markdown: typeof item?.markdown === "string" ? item.markdown : "",
+          }))
+          .filter((item) => item.id);
+        return cleaned;
+      }
+
+      function readSectionNotes() {
+        try {
+          const raw = localStorage.getItem(SECTION_NOTES_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === "object") {
+              const out = {};
+              for (const doc of docs) {
+                const notes = normalizeNotes(parsed[doc.id]);
+                if (notes.length) {
+                  out[doc.id] = notes;
+                }
+              }
+              return out;
+            }
+          }
+        } catch {
+          // fall through to migration/default
+        }
+
+        // Migration path from legacy notebook-only storage.
+        try {
+          const rawLegacy = localStorage.getItem(NOTEBOOK_PAGES_KEY);
+          if (rawLegacy) {
+            const parsedLegacy = JSON.parse(rawLegacy);
+            const migrated = normalizeNotes(parsedLegacy);
+            if (migrated.length) {
+              return { __notebook__: migrated };
+            }
+          }
+        } catch {
+          // ignore
+        }
+
+        return { __notebook__: [...DEFAULT_NOTEBOOK_PAGES] };
+      }
+
+      function persistSectionNotes() {
+        localStorage.setItem(SECTION_NOTES_KEY, JSON.stringify(sectionNotesByDoc));
+      }
+
+      function readActiveNotes() {
+        try {
+          const raw = localStorage.getItem(ACTIVE_NOTES_KEY);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === "object" ? parsed : {};
+        } catch {
+          return {};
+        }
+      }
+
+      function persistActiveNotes() {
+        localStorage.setItem(ACTIVE_NOTES_KEY, JSON.stringify(activeNoteByDoc));
+      }
+
+      function readImageStore() {
+        try {
+          const raw = localStorage.getItem(IMAGE_STORE_KEY);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === "object" ? parsed : {};
+        } catch {
+          return {};
+        }
+      }
+
+      function persistImageStore() {
+        localStorage.setItem(IMAGE_STORE_KEY, JSON.stringify(imageStore));
+      }
+
+      function readSectionLabels() {
+        try {
+          const raw = localStorage.getItem(SECTION_LABELS_KEY);
+          if (!raw) return {};
+          const parsed = JSON.parse(raw);
+          return parsed && typeof parsed === "object" ? parsed : {};
+        } catch {
+          return {};
+        }
+      }
+
+      function persistSectionLabels() {
+        localStorage.setItem(SECTION_LABELS_KEY, JSON.stringify(sectionLabels));
+      }
+
+      function labelForDoc(doc) {
+        const custom = sectionLabels[doc.id];
+        return typeof custom === "string" && custom.trim() ? custom.trim() : doc.label;
+      }
+
+      function currentDocLabel() {
+        return labelForDoc(currentDoc);
+      }
+
+      function getNotesForDoc(docId) {
+        if (!sectionNotesByDoc[docId]) {
+          sectionNotesByDoc[docId] = [];
+        }
+        return sectionNotesByDoc[docId];
+      }
+
+      function currentSectionNote() {
+        const notes = getNotesForDoc(currentDoc.id);
+        if (!notes.length) return null;
+        const activeId = currentNoteId || activeNoteByDoc[currentDoc.id];
+        if (!activeId) return null;
+        return notes.find((item) => item.id === activeId) || null;
+      }
+
+      function renderNoteControls() {
+        // Kept in DOM for layout compatibility, but not used.
+        notebookPageSelectEl.hidden = true;
+        newNotebookPageEl.hidden = false;
+        renameNotebookPageEl.hidden = !Boolean(currentNoteId);
+        deleteNotebookPageEl.hidden = !Boolean(currentNoteId);
+        saveLocalEl.textContent = currentNoteId ? "Save note" : "Save local draft";
+        discardLocalEl.textContent = currentNoteId ? "Revert note" : "Discard local draft";
+      }
+
+      function renderImageGallery() {
+        const matches = [...currentMarkdown.matchAll(/!\[([^\]]*)\]\(([^)]+)\)/g)];
+        imageGalleryEl.innerHTML = "";
+        if (!matches.length) {
+          imageGalleryEmptyEl.hidden = false;
+          return;
+        }
+        imageGalleryEmptyEl.hidden = true;
+        matches.forEach((match, index) => {
+          const alt = match[1] || `image-${index + 1}`;
+          const src = resolveImageSrc(match[2]);
+          const item = document.createElement("div");
+          item.className = "gallery-item";
+          if (src) {
+            const img = document.createElement("img");
+            img.src = src;
+            img.alt = alt;
+            item.appendChild(img);
+          }
+          const label = document.createElement("div");
+          label.className = "label";
+          label.textContent = alt;
+          item.appendChild(label);
+          imageGalleryEl.appendChild(item);
+        });
+      }
+
+      function renderNav() {
+        navEl.innerHTML = "";
+        docs.forEach((doc) => {
+          const group = document.createElement("div");
+          group.className = "nav-group";
+
+          const sectionButton = document.createElement("button");
+          sectionButton.textContent = labelForDoc(doc);
+          sectionButton.classList.toggle("active", currentDoc.id === doc.id);
+          sectionButton.addEventListener("click", () => {
+            void loadDoc(doc);
+          });
+          group.appendChild(sectionButton);
+
+          const notes = getNotesForDoc(doc.id);
+          if (notes.length) {
+            const nested = document.createElement("div");
+            nested.className = "nested-nav";
+            notes.forEach((page) => {
+              const pageButton = document.createElement("button");
+              pageButton.textContent = page.title;
+              pageButton.classList.toggle(
+                "active",
+                currentDoc.id === doc.id && page.id === currentNoteId
+              );
+              pageButton.addEventListener("click", () => {
+                void loadDoc(doc, { noteId: page.id });
+              });
+              nested.appendChild(pageButton);
+            });
+            group.appendChild(nested);
+          }
+
+          navEl.appendChild(group);
+        });
+      }
+
+      function getDraft(doc) {
+        return localStorage.getItem(storageKey(doc));
+      }
+
+      function saveDraft(doc, text) {
+        localStorage.setItem(storageKey(doc), text);
+      }
+
+      function clearDraft(doc) {
+        localStorage.removeItem(storageKey(doc));
+      }
+
+      function setStatus(text) {
+        statusEl.textContent = text;
+      }
+
+      function setMode(editMode) {
+        isEditMode = editMode;
+        modePreviewEl.classList.toggle("active", !editMode);
+        modeEditEl.classList.toggle("active", editMode);
+        docEl.hidden = editMode;
+        editorEl.hidden = !editMode;
+        if (editMode) {
+          editorEl.value = currentMarkdown;
+          editorEl.focus();
+          setStatus(
+            currentNoteId
+              ? `${currentDocLabel()}: editing note`
+              : `${currentDocLabel()}: editing local draft`
+          );
+        } else {
+          renderPreview();
+          const hasDraft = getDraft(currentDoc) !== null;
+          const scope = currentNoteId ? "section note" : hasDraft ? "local draft loaded" : "source file";
+          setStatus(`${currentDocLabel()}: preview (${scope})`);
+        }
+        renderImageGallery();
+      }
+
+      function scheduleAutosave() {
+        if (!isEditMode) return;
+        if (autosaveTimer !== null) {
+          clearTimeout(autosaveTimer);
+        }
+        autosaveTimer = setTimeout(() => {
+          if (currentNoteId) {
+            const page = currentSectionNote();
+            if (page) {
+              page.markdown = currentMarkdown;
+              persistSectionNotes();
+            }
+            setStatus(`${currentDocLabel()}: note autosaved`);
+          } else {
+            saveDraft(currentDoc, currentMarkdown);
+            setStatus(`${currentDocLabel()}: autosaved`);
+          }
+        }, 250);
+      }
+
+      function updateEditorValue(nextValue) {
+        editorEl.value = nextValue;
+        currentMarkdown = nextValue;
+      }
+
+      function insertAtCursor(insertText) {
+        const start = editorEl.selectionStart ?? editorEl.value.length;
+        const end = editorEl.selectionEnd ?? editorEl.value.length;
+        const before = editorEl.value.slice(0, start);
+        const after = editorEl.value.slice(end);
+        const nextValue = `${before}${insertText}${after}`;
+        updateEditorValue(nextValue);
+        const cursor = start + insertText.length;
+        editorEl.setSelectionRange(cursor, cursor);
+        renderImageGallery();
+      }
+
+      function downloadMarkdown() {
+        const blob = new Blob([currentMarkdown], { type: "text/markdown;charset=utf-8" });
+        const link = document.createElement("a");
+        const note = currentSectionNote();
+        const fileName = note ? `${note.title}.md` : currentDoc.path || "notebook.md";
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      }
+
+      async function loadDoc(doc, options = {}) {
+        currentDoc = doc;
+        sourceMarkdown = "";
+
+        const notes = getNotesForDoc(doc.id);
+        const requestedNoteId = typeof options?.noteId === "string" ? options.noteId : "";
+        let nextNoteId = "";
+        if (requestedNoteId && notes.some((item) => item.id === requestedNoteId)) {
+          nextNoteId = requestedNoteId;
+        } else if (notes.length) {
+          const remembered = activeNoteByDoc[doc.id];
+          if (remembered && notes.some((item) => item.id === remembered)) {
+            nextNoteId = remembered;
+          } else {
+            nextNoteId = notes[0].id;
+          }
+        }
+        currentNoteId = nextNoteId;
+        if (currentNoteId) {
+          activeNoteByDoc[doc.id] = currentNoteId;
+          persistActiveNotes();
+          const note = notes.find((item) => item.id === currentNoteId) || null;
+          sourceMarkdown = note?.markdown || NOTE_TEMPLATE;
+          currentMarkdown = sourceMarkdown;
+          openRawEl.style.display = "none";
+        } else if (doc.path) {
+          openRawEl.style.display = "";
+          openRawEl.href = doc.path;
+          try {
+            const res = await fetch(doc.path, { cache: "no-store" });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            sourceMarkdown = await res.text();
+            currentMarkdown = getDraft(doc) ?? sourceMarkdown;
+          } catch (err) {
+            sourceMarkdown = "";
+            currentMarkdown = "";
+            docEl.innerHTML = `<p class="error">Could not load ${doc.path}: ${String(err)}</p>`;
+            setStatus(`${labelForDoc(doc)}: load error`);
+            return;
+          }
+        } else {
+          openRawEl.style.display = "none";
+          sourceMarkdown = NOTE_TEMPLATE;
+          currentMarkdown = getDraft(doc) ?? sourceMarkdown;
+        }
+
+        renderNoteControls();
+        renderNav();
+        setMode(isEditMode);
+      }
+
+      modePreviewEl.addEventListener("click", () => setMode(false));
+      modeEditEl.addEventListener("click", () => setMode(true));
+      renameSectionEl.addEventListener("click", () => {
+        const currentLabel = currentDocLabel();
+        const next = prompt("Rename section (leave empty to reset)", currentLabel);
+        if (next === null) return;
+        const normalized = next.trim();
+        if (!normalized || normalized === currentDoc.label) {
+          delete sectionLabels[currentDoc.id];
+        } else {
+          sectionLabels[currentDoc.id] = normalized;
+        }
+        persistSectionLabels();
+        renderNav();
+        setStatus(`${currentDocLabel()}: section name updated`);
+      });
+
+      newNotebookPageEl.addEventListener("click", () => {
+        const notes = getNotesForDoc(currentDoc.id);
+        const nextIndex = notes.length + 1;
+        const nextId = `note-${Date.now()}`;
+        notes.push({ id: nextId, title: `Note ${nextIndex}`, markdown: NOTE_TEMPLATE });
+        currentNoteId = nextId;
+        activeNoteByDoc[currentDoc.id] = nextId;
+        persistActiveNotes();
+        persistSectionNotes();
+        renderNoteControls();
+        renderNav();
+        const page = notes.find((item) => item.id === nextId);
+        sourceMarkdown = page?.markdown || NOTE_TEMPLATE;
+        currentMarkdown = sourceMarkdown;
+        setMode(true);
+        setStatus(`${currentDocLabel()}: created "${page?.title || "note"}"`);
+      });
+
+      renameNotebookPageEl.addEventListener("click", () => {
+        const page = currentSectionNote();
+        if (!page) return;
+        const nextTitle = prompt("Rename note", page.title);
+        if (!nextTitle) return;
+        page.title = nextTitle.trim() || page.title;
+        persistSectionNotes();
+        renderNoteControls();
+        renderNav();
+        setStatus(`${currentDocLabel()}: renamed to "${page.title}"`);
+      });
+
+      deleteNotebookPageEl.addEventListener("click", () => {
+        const notes = getNotesForDoc(currentDoc.id);
+        const page = currentSectionNote();
+        if (!page) return;
+        sectionNotesByDoc[currentDoc.id] = notes.filter((item) => item.id !== page.id);
+        const remaining = getNotesForDoc(currentDoc.id);
+        currentNoteId = remaining[0]?.id || "";
+        if (currentNoteId) {
+          activeNoteByDoc[currentDoc.id] = currentNoteId;
+        } else {
+          delete activeNoteByDoc[currentDoc.id];
+        }
+        persistActiveNotes();
+        persistSectionNotes();
+        renderNoteControls();
+        renderNav();
+        if (!currentNoteId) {
+          void loadDoc(currentDoc);
+          return;
+        }
+        const next = currentSectionNote();
+        sourceMarkdown = next?.markdown || NOTE_TEMPLATE;
+        currentMarkdown = sourceMarkdown;
+        setMode(isEditMode);
+        setStatus(`${currentDocLabel()}: deleted "${page.title}"`);
+      });
+
+      saveLocalEl.addEventListener("click", () => {
+        if (currentNoteId) {
+          const page = currentSectionNote();
+          if (page) {
+            page.markdown = currentMarkdown;
+            persistSectionNotes();
+          }
+          setStatus(`${currentDocLabel()}: note saved`);
+        } else {
+          saveDraft(currentDoc, currentMarkdown);
+          setStatus(`${currentDocLabel()}: local draft saved`);
+        }
+      });
+
+      discardLocalEl.addEventListener("click", () => {
+        if (currentNoteId) {
+          const page = currentSectionNote();
+          sourceMarkdown = page?.markdown || NOTE_TEMPLATE;
+          currentMarkdown = sourceMarkdown;
+        } else {
+          clearDraft(currentDoc);
+          currentMarkdown = sourceMarkdown;
+        }
+        if (isEditMode) {
+          editorEl.value = currentMarkdown;
+        } else {
+          renderPreview();
+        }
+        setStatus(currentNoteId ? `${currentDocLabel()}: reverted to saved note` : `${currentDocLabel()}: local draft discarded`);
+      });
+
+      copyMdEl.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(currentMarkdown);
+          setStatus(`${currentDocLabel()}: markdown copied`);
+        } catch {
+          setStatus(`${currentDocLabel()}: clipboard unavailable`);
+        }
+      });
+
+      insertImageEl.addEventListener("click", () => {
+        if (!isEditMode) {
+          setMode(true);
+        }
+        imagePickerEl.click();
+      });
+
+      imagePickerEl.addEventListener("change", async (event) => {
+        const input = event.currentTarget;
+        const file = input.files && input.files[0];
+        if (!file) return;
+        try {
+          const dataUrl = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ""));
+            reader.onerror = () => reject(new Error("Could not read image file."));
+            reader.readAsDataURL(file);
+          });
+          const safeAlt = file.name.replace(/[\[\]\(\)]/g, "").trim() || "image";
+          const imageId = `img-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+          imageStore[imageId] = dataUrl;
+          persistImageStore();
+          const snippet = `\n![${safeAlt}](${IMAGE_REF_PREFIX}${imageId})\n`;
+          insertAtCursor(snippet);
+          if (currentNoteId) {
+            const page = currentSectionNote();
+            if (page) {
+              page.markdown = currentMarkdown;
+              persistSectionNotes();
+            }
+            setStatus(`${currentDocLabel()}: image embedded in note`);
+          } else {
+            saveDraft(currentDoc, currentMarkdown);
+            setStatus(`${currentDocLabel()}: image embedded in local draft`);
+          }
+        } catch (error) {
+          setStatus(`${currentDocLabel()}: image insert failed (${String(error)})`);
+        } finally {
+          input.value = "";
+        }
+      });
+
+      downloadMdEl.addEventListener("click", downloadMarkdown);
+
+      editorEl.addEventListener("input", () => {
+        currentMarkdown = editorEl.value;
+        renderImageGallery();
+        scheduleAutosave();
+      });
+
+      window.addEventListener("keydown", (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+          event.preventDefault();
+          if (currentNoteId) {
+            const page = currentSectionNote();
+            if (page) {
+              page.markdown = currentMarkdown;
+              persistSectionNotes();
+            }
+            setStatus(`${currentDocLabel()}: note saved`);
+          } else {
+            saveDraft(currentDoc, currentMarkdown);
+            setStatus(`${currentDocLabel()}: local draft saved`);
+          }
+        }
+      });
+
+      sectionLabels = readSectionLabels();
+      sectionNotesByDoc = readSectionNotes();
+      activeNoteByDoc = readActiveNotes();
+      imageStore = readImageStore();
+      renderNoteControls();
+      renderNav();
+      void loadDoc(docs[0]);
+    </script>
+  </body>
+</html>

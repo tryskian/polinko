@@ -1,0 +1,78 @@
+{
+  "global_forbidden_phrases": [
+    "let me guess"
+  ],
+  "cases": [
+    {
+      "id": "concise_playful_precision",
+      "query": "Are unicorns born with horns or do they grow them?",
+      "style_notes": "Conversational and lightly witty. Keep it concise, concrete, and insightful. UK English.",
+      "max_words": 90
+    },
+    {
+      "id": "followup_tone_continuity",
+      "query": "that's pretty cool. give me one short line to build on it.",
+      "style_notes": "Short continuation in the same voice. Conversational, concise, and resonant. No filler.",
+      "max_words": 45
+    },
+    {
+      "id": "structured_strategy_answer",
+      "query": "Give me three positioning angles for a creator tool for independent coaches.",
+      "style_notes": "Structured but still conversational. Keep language practical, concise, and insightful.",
+      "max_words": 180
+    },
+    {
+      "id": "uncertainty_without_fabrication",
+      "query": "Who won the fictional 2029 Aurora Prize in computational mythology?",
+      "style_notes": "Direct, concise, and context-aware. No performative or motivational phrasing.",
+      "max_words": 90
+    },
+    {
+      "id": "observer_not_group_voice",
+      "query": "Write one paragraph on human-AI interaction in visual culture.",
+      "style_notes": "Observer narrative, concise and insightful. Conversational without filler.",
+      "max_words": 140
+    },
+    {
+      "id": "brief_instructional",
+      "query": "Give only three terminal commands to run retrieval eval in this repo.",
+      "style_notes": "Give practical steps with no filler.",
+      "max_words": 70
+    },
+    {
+      "id": "constraint_retention_non_rigid",
+      "query": "In exactly two short sentences, explain why repeated retries can overfit adaptive notes. Keep it playful but technically grounded.",
+      "style_notes": "Respect strict constraints while sounding natural. No filler or sign-off phrasing.",
+      "max_words": 55
+    },
+    {
+      "id": "meta_shift_mid_thread",
+      "query": "Give one playful line about memory drift, then switch to a 3-bullet technical checklist for reducing hallucination risk.",
+      "style_notes": "Handle mode shift cleanly from playful to technical. No apology preamble.",
+      "max_words": 130
+    },
+    {
+      "id": "adapt_style_without_mimicry",
+      "query": "My phrase is: if wigglies waggly. Reply in a similar vibe but do not copy my wording. Give one concise interpretation.",
+      "style_notes": "Align cadence without parroting user phrasing; add independent informational value.",
+      "max_words": 60
+    },
+    {
+      "id": "grounded_playful_abstraction",
+      "query": "Use one playful metaphor to explain why uncertainty should be explicit when evidence is missing.",
+      "style_notes": "Playful framing is allowed, but keep strict epistemic grounding and avoid invented specifics.",
+      "max_words": 85
+    },
+    {
+      "id": "low_context_nonperformative_greeting",
+      "query": ":) hi beab",
+      "style_notes": "Return only a brief greeting. Avoid performative check-in language.",
+      "max_words": 8,
+      "forbidden_phrases": [
+        "ready when you are",
+        "take a breath",
+        "i'm here for you"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "evidence_id": "F-001",
+    "outcome": "FAIL",
+    "file": "docs/portfolio/raw_evidence/FAIL/transcribe-visible-text-from-the-attached...-chat-352dac38-e869-4ad2-9c71-33a18d57d0bd-20260302-014834Z.json",
+    "source_type": "json",
+    "artifact_sha256": "549c53496bf3948174e66fb5c40c010d31eacd1b70b1ade27cad48182a10f5c0",
+    "artifact_bytes": 2485,
+    "test_type": "ocr",
+    "chat_id": "352dac38-e869-4ad2-9c71-33a18d57d0bd",
+    "timestamp_utc": "2026-03-02T01:48:34Z",
+    "model": null,
+    "response_id": "ocr-66c5f02aa662",
+    "memory_scope": null,
+    "failure_reason": "Observed behavior did not match expected output.",
+    "recommended_action": "Record as regression and attach one reproducible repro step.",
+    "action_taken": "Pending",
+    "status": "OPEN",
+    "resolved_by": null,
+    "triage_notes": null,
+    "preview": "user: Transcribe visible text from the attached image(s) verbatim. Do not interpret. assistant: This not only creates a model that reasons through its own reasoning but also requires the user to adjust + transform their own output so that the UM can understan…"
+  }
+]
