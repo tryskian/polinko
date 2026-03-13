@@ -15,8 +15,13 @@ The legacy build is intentionally frozen and retained for reference:
 - In this repo:
   - branch: `archive/polinko-full-build-2026-03-13`
   - tag: `polinko-build-frozen-2026-03-13`
+  - frontend branch: `archive/polinko-frontend-2026-03-13`
+  - frontend tag: `polinko-frontend-frozen-2026-03-13`
 - Separate snapshot repo:
   - `https://github.com/tryskian/polinko-build-snapshot`
+
+Frontend work from Polinko is frozen for historical reference. New UI
+work should be rebuilt in OpenAI-native ecosystem flows.
 
 ## Quickstart
 
