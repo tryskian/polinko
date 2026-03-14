@@ -384,3 +384,16 @@
 - Why: Keeps type/lint signals consistent between CLI and IDE, reduces false
   positives from non-product scaffolding, and preserves focus on actionable
   runtime issues.
+
+## D-043: Minimal CLIP proxy integration behind explicit file-search profile flag
+
+- Category: `runtime_engineering`
+- Tags: `clip_proxy`, `file_search`, `feature_flag`, `rollback`
+- Decision: Add `retrieval_profile=clip_proxy_image_only` to
+  `POST /skills/file_search`, gated by
+  `POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED` (default `false`), where enabled
+  profile requests force image-only retrieval while default behavior remains
+  unchanged.
+- Why: Enables controlled CLIP-proxy rollout with an explicit rollback toggle,
+  minimal behavior drift, and deterministic API-level validation before deeper
+  retrieval-path integration.

@@ -318,9 +318,14 @@ Hash fields in responses:
    - optional: `session_id` to scope results to one chat
    - optional: `limit` (default `5`, max `20`)
    - optional: `source_types` (`["ocr"]`, `["chat"]`, or both)
+   - optional: `retrieval_profile` (`default` or `clip_proxy_image_only`)
 4. Results include backend/fallback metadata plus similarity, keyword score,
    combined score, snippet, and source metadata.
 5. `source_types` now supports `ocr`, `chat`, `pdf`, and `image`.
+6. CLIP proxy profile rollout toggle:
+   - `POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED=false` (default)
+   - when `false`, `retrieval_profile=clip_proxy_image_only` returns `409`
+   - when `true`, `clip_proxy_image_only` forces image-only retrieval.
 
 ## PDF Ingest (Vector Index)
 

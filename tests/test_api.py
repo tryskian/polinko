@@ -79,6 +79,7 @@ class PolinkoApiTests(unittest.TestCase):
         deps.governance_log_only = False
         deps.hallucination_guardrails_enabled = True
         deps.personalization_default_memory_scope = "global"
+        deps.clip_proxy_file_search_enabled = False
         deps.session_db_path = os.path.join(self.tmpdir.name, "test-memory.db")
         deps.history_store = ChatHistoryStore(os.path.join(self.tmpdir.name, "test-history.db"))
         deps.metrics = create_runtime_metrics()
@@ -3040,6 +3041,81 @@ class PolinkoApiTests(unittest.TestCase):
         )
         self.assertEqual(resp.status_code, 422)
         self.assertIn("Unsupported source_types", resp.json()["detail"])
+
+    def test_file_search_rejects_clip_proxy_profile_when_disabled(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-search-clip-disabled.db"))
+        deps.embedding_client = SimpleNamespace(
+            embeddings=SimpleNamespace(create=lambda **_: SimpleNamespace(data=[SimpleNamespace(embedding=[0.1, 0.2])]))
+        )
+        deps.clip_proxy_file_search_enabled = False
+
+        resp = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "query": "awning",
+                "retrieval_profile": "clip_proxy_image_only",
+            },
+        )
+        self.assertEqual(resp.status_code, 409)
+        self.assertIn("clip_proxy_image_only is disabled", resp.json()["detail"])
+
+    def test_file_search_clip_proxy_profile_forces_image_only_retrieval(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(os.path.join(self.tmpdir.name, "test-vectors-search-clip-enabled.db"))
+        deps.clip_proxy_file_search_enabled = True
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "invoice" in lowered else 0.0,
+                    1.0 if "awning" in lowered else 0.0,
+                    1.0 if "target" in lowered else 0.0,
+                    float(len(lowered) % 31) / 31.0,
+                ]
+
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+
+        ingest = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-search-clip-enabled",
+                "source_name": "clip-slice.png",
+                "mime_type": "image/png",
+                "text_hint": "target invoice text only",
+                "visual_context_hint": "target storefront under blue awning",
+                "attach_to_chat": False,
+            },
+        )
+        self.assertEqual(ingest.status_code, 200)
+
+        resp = self.client.post(
+            "/skills/file_search",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "query": "awning target",
+                "session_id": "s-search-clip-enabled",
+                "source_types": ["ocr"],
+                "retrieval_profile": "clip_proxy_image_only",
+                "limit": 5,
+            },
+        )
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertGreater(len(payload["matches"]), 0)
+        self.assertTrue(all(match["source_type"] == "image" for match in payload["matches"]))
 
     def test_create_chat_and_reset_clears_messages(self) -> None:
         created = self.client.post("/chats", headers={"x-api-key": "test-server-key"}, json={})

@@ -341,6 +341,7 @@ class RuntimeDeps:
     governance_log_only: bool
     hallucination_guardrails_enabled: bool
     personalization_default_memory_scope: str
+    clip_proxy_file_search_enabled: bool
     metrics: RuntimeMetrics
     run_config: RunConfig
     agent: Agent[Any]
@@ -610,6 +611,7 @@ class FileSearchRequest(BaseModel):
     session_id: str | None = Field(default=None, min_length=1)
     limit: int = Field(default=5, ge=1, le=20)
     source_types: list[str] | None = None
+    retrieval_profile: Literal["default", "clip_proxy_image_only"] = "default"
 
 
 class FileSearchMatchResponse(BaseModel):
@@ -2463,6 +2465,26 @@ def _normalize_file_search_source_types(source_types: list[str] | None) -> tuple
     return tuple(deduped)
 
 
+def _resolve_file_search_source_types(
+    *,
+    deps: RuntimeDeps,
+    source_types: list[str] | None,
+    retrieval_profile: Literal["default", "clip_proxy_image_only"],
+) -> tuple[str, ...]:
+    if retrieval_profile == "clip_proxy_image_only":
+        if not deps.clip_proxy_file_search_enabled:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    "retrieval_profile=clip_proxy_image_only is disabled. "
+                    "Set POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED=true to enable it."
+                ),
+            )
+        # Minimal integration slice: proxy profile uses image-only retrieval.
+        return ("image",)
+    return _normalize_file_search_source_types(source_types)
+
+
 def _tokenize_file_search_text(text: str) -> list[str]:
     lowered = text.lower()
     return _FILE_SEARCH_TOKEN_RE.findall(lowered)
@@ -3016,6 +3038,7 @@ def create_app(config: AppConfig) -> FastAPI:
         governance_log_only=config.governance_log_only,
         hallucination_guardrails_enabled=config.hallucination_guardrails_enabled,
         personalization_default_memory_scope=config.personalization_default_memory_scope,
+        clip_proxy_file_search_enabled=config.clip_proxy_file_search_enabled,
         metrics=create_runtime_metrics(),
         run_config=create_run_config(store=True),
         agent=create_agent(),
@@ -3615,7 +3638,11 @@ def create_app(config: AppConfig) -> FastAPI:
         session_filter = req.session_id.strip() if req.session_id else None
         if req.session_id is not None and not session_filter:
             raise HTTPException(status_code=422, detail="session_id cannot be blank.")
-        source_types = _normalize_file_search_source_types(req.source_types)
+        source_types = _resolve_file_search_source_types(
+            deps=deps,
+            source_types=req.source_types,
+            retrieval_profile=req.retrieval_profile,
+        )
         search_min_similarity = max(
             _FILE_SEARCH_MIN_SIMILARITY_FLOOR,
             deps.vector_min_similarity - 0.15,
@@ -3643,6 +3670,7 @@ def create_app(config: AppConfig) -> FastAPI:
                         request_id=request_id,
                         principal=principal,
                         session_id=req.session_id,
+                        retrieval_profile=req.retrieval_profile,
                         source_types=list(source_types),
                         query_chars=len(query),
                         candidate_count=responses_candidates,
@@ -3664,6 +3692,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     request_id=request_id,
                     principal=principal,
                     session_id=req.session_id,
+                    retrieval_profile=req.retrieval_profile,
                     reason="authentication_error",
                     error_type=type(exc).__name__,
                 )
@@ -3674,6 +3703,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     request_id=request_id,
                     principal=principal,
                     session_id=req.session_id,
+                    retrieval_profile=req.retrieval_profile,
                     reason="rate_limited",
                     error_type=type(exc).__name__,
                 )
@@ -3684,6 +3714,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     request_id=request_id,
                     principal=principal,
                     session_id=req.session_id,
+                    retrieval_profile=req.retrieval_profile,
                     reason="connection_error",
                     error_type=type(exc).__name__,
                 )
@@ -3694,6 +3725,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     request_id=request_id,
                     principal=principal,
                     session_id=req.session_id,
+                    retrieval_profile=req.retrieval_profile,
                     reason=f"api_status_{exc.status_code}",
                     error_type=type(exc).__name__,
                 )
@@ -3704,6 +3736,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     request_id=request_id,
                     principal=principal,
                     session_id=req.session_id,
+                    retrieval_profile=req.retrieval_profile,
                     reason="unexpected_error",
                     error_type=type(exc).__name__,
                 )
@@ -3760,6 +3793,7 @@ def create_app(config: AppConfig) -> FastAPI:
             request_id=request_id,
             principal=principal,
             session_id=req.session_id,
+            retrieval_profile=req.retrieval_profile,
             source_types=list(source_types),
             query_chars=len(query),
             candidate_count=len(candidates),
