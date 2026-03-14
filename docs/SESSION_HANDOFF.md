@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-11
+- 2026-03-14
 
 ## Current Snapshot
 
@@ -110,9 +110,8 @@
 
 ## Latest Local Commit
 
-- `7bfd1b1` on `main` (local branch currently ahead of `origin/main` by 4
-  commits)
-- Summary: docs: track interpersonal motive-guess hallucination case in state
+- `488773d` on `main` (local branch synced with `origin/main`)
+- Summary: docs: add plain-language Docker MCP handoff notes
 
 ## Key Files To Read First
 
@@ -150,10 +149,23 @@
 
 ## Immediate Next Step
 
-- Add automated criterion check for CLIP escalation readiness:
-  - implement a small script/target to compare latest two CLIP A/B reports
-  - return explicit `GO`/`NO-GO` based on D-040 thresholds
-  - run full validation (`tests + make eval-clip-ab-report`) and capture output
+- Run CLIP readiness validation and capture the result:
+  - run `make eval-clip-ab-report` twice to create fresh consecutive artifacts
+  - run `make eval-clip-ab-readiness` and record explicit `GO`/`NO-GO`
+  - update `docs/STATE.md` with run IDs + readiness outcome
+
+## Next Session Focus (Lean Agenda)
+
+1. Confirm environment baseline:
+   canonical repo path, host vs devcontainer mode, active branch.
+2. Merge/sync hygiene:
+   ensure docs PR state is settled, then `main` is clean and up to date.
+3. Execute CLIP readiness loop:
+   produce artifacts + readiness decision and store evidence.
+4. Decide hybrid OpenAI tooling scope (no runtime migration yet):
+   evals/tracing/optimizer adoption plan with zero behavior drift.
+5. Document only material decisions:
+   update `STATE` + `DECISIONS` + `SESSION_HANDOFF` with concise diffs.
 
 ## Copy/Paste Rehydrate Prompt
 
