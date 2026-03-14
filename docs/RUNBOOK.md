@@ -93,11 +93,13 @@
 2. Start keep-awake only on explicit session code phrase:
    - `hi! new day!`
 3. Start command:
-   - `nohup caffeinate -d -i -m >/tmp/polinko-caffeinate.log 2>&1 &`
-4. Stop command at wrap:
-   - `pkill -f "caffeinate -d -i -m"`
-5. `decaffeinated` is workflow shorthand only (not a built-in shell command).
-   Use the explicit stop command above.
+   - `make caffeinate-on`
+4. Verify status:
+   - `make caffeinate-status`
+5. Stop command at wrap:
+   - `make caffeinate-off`
+6. `decaffeinated` remains workflow shorthand. The explicit command is
+   `make caffeinate-off`.
 
 ## Docker Build/Run Smoke
 

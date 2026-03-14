@@ -32,8 +32,11 @@ BRAINTRUST_OPENAI_BASE_URL ?=
 HALLUCINATION_JUDGE_BASE_URL ?=
 HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
 CLIP_AB_SOURCE_TYPES ?= image
+CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
+CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
+CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 
-.PHONY: chat server test doctor-env precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
+.PHONY: chat server test doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
@@ -46,6 +49,82 @@ test:
 
 doctor-env:
 	$(PYTHON) tools/doctor_env.py
+
+caffeinate-on:
+	@set -eu; \
+	if [ "$$(uname -s)" != "Darwin" ]; then \
+		echo "caffeinate is macOS-only; skipping."; \
+		exit 0; \
+	fi; \
+	if [ -f "$(CAFFEINATE_PID_FILE)" ]; then \
+		PID=$$(cat "$(CAFFEINATE_PID_FILE)" 2>/dev/null || true); \
+		if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
+			echo "caffeinate already running (PID $$PID)."; \
+			exit 0; \
+		fi; \
+		rm -f "$(CAFFEINATE_PID_FILE)"; \
+	fi; \
+	EXISTING_PID=$$(pgrep -f "^/usr/bin/caffeinate -d -i -m( |$$)" | head -n 1 || true); \
+	if [ -n "$$EXISTING_PID" ]; then \
+		echo "$$EXISTING_PID" >"$(CAFFEINATE_PID_FILE)"; \
+		echo "caffeinate already active; adopted PID $$EXISTING_PID."; \
+		exit 0; \
+	fi; \
+	nohup $(CAFFEINATE_CMD) >"$(CAFFEINATE_LOG)" 2>&1 & \
+	PID=$$!; \
+	echo "$$PID" >"$(CAFFEINATE_PID_FILE)"; \
+	sleep 0.1; \
+	if kill -0 "$$PID" 2>/dev/null; then \
+		echo "caffeinate started (PID $$PID)."; \
+	else \
+		rm -f "$(CAFFEINATE_PID_FILE)"; \
+		echo "Failed to start caffeinate."; \
+		exit 1; \
+	fi
+
+caffeinate-off:
+	@set -eu; \
+	if [ "$$(uname -s)" != "Darwin" ]; then \
+		echo "caffeinate is macOS-only; skipping."; \
+		exit 0; \
+	fi; \
+	if [ ! -f "$(CAFFEINATE_PID_FILE)" ]; then \
+		echo "No managed caffeinate PID file found."; \
+		exit 0; \
+	fi; \
+	PID=$$(cat "$(CAFFEINATE_PID_FILE)" 2>/dev/null || true); \
+	if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
+		kill "$$PID"; \
+		sleep 0.1; \
+		echo "caffeinate stopped (PID $$PID)."; \
+	else \
+		echo "Stale PID file found; cleaning up."; \
+	fi; \
+	rm -f "$(CAFFEINATE_PID_FILE)"
+
+caffeinate-status:
+	@set -eu; \
+	if [ "$$(uname -s)" != "Darwin" ]; then \
+		echo "caffeinate status is only available on macOS."; \
+		exit 0; \
+	fi; \
+	if [ -f "$(CAFFEINATE_PID_FILE)" ]; then \
+		PID=$$(cat "$(CAFFEINATE_PID_FILE)" 2>/dev/null || true); \
+		if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
+			echo "Managed caffeinate: RUNNING (PID $$PID)."; \
+		else \
+			echo "Managed caffeinate: STALE PID file."; \
+		fi; \
+	else \
+		echo "Managed caffeinate: OFF."; \
+		EXISTING_PID=$$(pgrep -f "^/usr/bin/caffeinate -d -i -m( |$$)" | head -n 1 || true); \
+		if [ -n "$$EXISTING_PID" ]; then \
+			echo "Unmanaged caffeinate detected (PID $$EXISTING_PID); run 'make caffeinate-on' to adopt it."; \
+		fi; \
+	fi; \
+	/usr/bin/pmset -g assertions | rg -n "PreventUserIdleDisplaySleep|PreventUserIdleSystemSleep|PreventDiskIdle|caffeinate" || true
+
+decaffeinate: caffeinate-off
 
 precommit-install:
 	$(PYTHON) -m pip install pre-commit
@@ -247,6 +326,9 @@ evidence-refresh:
 
 portfolio-metadata-audit:
 	$(PYTHON) tools/audit_portfolio_metadata.py --strict
+
+human-reference-db:
+	$(PYTHON) tools/build_human_reference_db.py
 
 ui-dev:
 	cd frontend && $(NPM) run dev
