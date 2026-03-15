@@ -54,6 +54,9 @@ _virtualenv.py
 .polinko_vector.db-shm
 .polinko_vector.db-wal
 .eval_inbox.cursor
+.human_reference.db
+.human_reference.db-shm
+.human_reference.db-wal
 
 # Local planning sandbox docs
 docs/portfolio/
@@ -70,6 +73,7 @@ polinko.code-workspace
 # Local workstream planning doc
 docs/WORKSTREAMS.md
 docs/FIGMA_NODE_TRACKER.md
+docs/PEANUT_TOOLING_REF.md
 
 # Local proprietary research/theory materials
 docs/research/

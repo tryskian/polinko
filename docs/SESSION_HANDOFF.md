@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-13
+- 2026-03-14
 
 ## Current Snapshot
 
@@ -42,9 +42,23 @@
 - Latest CLIP A/B expanded report (`20260310-125230`) shows positive proxy
   uplift across 4 image-context cases
   (`any_rate_delta_proxy_minus_baseline=+1.0`, `errors=0`, `skipped=0`).
+- Latest CLIP readiness pair (2026-03-14) passed and returned explicit `GO`:
+  - `clip-ab-20260314-155802.json`
+  - `clip-ab-20260314-155911.json`
+  - readiness command: `make eval-clip-ab-readiness`
 - CLIP integration go/no-go criterion is now defined and documented
   (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
   delta `>= 0.50`, zero errors/skips).
+- Minimal CLIP integration slice is now live behind explicit feature flag:
+  - `POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED` (default `false`)
+  - `/skills/file_search` accepts
+    `retrieval_profile=clip_proxy_image_only`
+  - disabled profile requests fail fast with `409` for explicit rollback-safe
+    control.
+- Profile behavior is API-tested:
+  - disabled flag -> `409` on `clip_proxy_image_only`
+  - enabled flag -> profile forces image-only retrieval even when request
+    `source_types` includes only `ocr`.
 - Dedicated strict hallucination gate target is available: `make hallucination-gate`.
 - CI includes optional Braintrust hallucination gate wiring when
   `BRAINTRUST_OPENAI_BASE_URL` (repo var) and `BRAINTRUST_API_KEY`
@@ -110,7 +124,7 @@
 
 ## Latest Local Commit
 
-- `488773d` on `main` (local branch synced with `origin/main` at handoff update time)
+- `488773d` on `main` (local branch synced with `origin/main`)
 - Summary: docs: add plain-language Docker MCP handoff notes
 
 ## Key Files To Read First
@@ -143,16 +157,45 @@
   resolver-coupled pins land out of order; verify transitive constraints before
   merging isolated bump PRs.
 - Session policy constraint: keep-awake is opt-in and code-phrase triggered
-  only (`hi! new day!`), with explicit stop at wrap (`pkill -f "caffeinate -d -i -m"`).
+  only (`hi! new day!`), managed with `make caffeinate-on`, checked with
+  `make caffeinate-status`, and explicitly stopped at wrap via
+  `make caffeinate-off`.
 - Terminology constraint: when Docker MCP wording is ambiguous, confirm intent
   in-chat before applying config changes.
 
 ## Immediate Next Step
 
-- Run CLIP readiness validation and record the result:
-  - generate two fresh artifacts via `make eval-clip-ab-report` (twice)
-  - run `make eval-clip-ab-readiness` and capture `GO`/`NO-GO`
-  - update `docs/STATE.md` snapshot line with run IDs and readiness outcome
+- Stabilize CLIP proxy rollout validation at gate level:
+  - keep current API/profile implementation unchanged
+  - run CLIP readiness + targeted file-search profile checks and capture
+    artifacts
+  - investigate and isolate style-eval strict drift from runtime-regression
+    signals before treating quality-gate failures as build blockers
+
+## Peanut Pin (Tomorrow Start)
+
+- Merge watch first:
+  - check PR status + CI on `#38` (CLIP proxy file-search slice)
+- If you want fast human-reference lookup without SQL editor:
+  - `make human-reference-latest`
+  - `make human-reference-transcripts`
+  - `make human-reference-changes`
+- Keep startup lightweight:
+  - confirm repo path + branch + host/devcontainer mode
+  - then continue with the Immediate Next Step above
+
+## Next Session Focus (Lean Agenda)
+
+1. Confirm environment baseline:
+   canonical repo path, host vs devcontainer mode, active branch.
+2. Merge/sync hygiene:
+   ensure docs PR state is settled, then `main` is clean and up to date.
+3. Execute CLIP readiness loop:
+   produce artifacts + readiness decision and store evidence.
+4. Decide hybrid OpenAI tooling scope (no runtime migration yet):
+   evals/tracing/optimizer adoption plan with zero behavior drift.
+5. Document only material decisions:
+   update `STATE` + `DECISIONS` + `SESSION_HANDOFF` with concise diffs.
 
 ## Copy/Paste Rehydrate Prompt
 

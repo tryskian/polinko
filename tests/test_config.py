@@ -98,6 +98,7 @@ class ConfigTests(unittest.TestCase):
         self.assertFalse(cfg.governance_log_only)
         self.assertTrue(cfg.hallucination_guardrails_enabled)
         self.assertEqual(cfg.personalization_default_memory_scope, "global")
+        self.assertFalse(cfg.clip_proxy_file_search_enabled)
         self.assertFalse(cfg.image_context_enabled)
         self.assertEqual(cfg.image_context_model, "gpt-4.1-mini")
         self.assertIn("visual scene", cfg.image_context_prompt.lower())
@@ -192,6 +193,15 @@ class ConfigTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             with self.assertRaises(RuntimeError):
                 load_config(dotenv_path="__missing__.env")
+
+    def test_clip_proxy_file_search_flag_from_env(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED": "true",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            cfg = load_config(dotenv_path="__missing__.env")
+        self.assertTrue(cfg.clip_proxy_file_search_enabled)
 
 
 if __name__ == "__main__":

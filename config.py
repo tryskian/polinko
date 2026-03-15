@@ -48,6 +48,7 @@ class AppConfig:
     governance_log_only: bool
     hallucination_guardrails_enabled: bool
     personalization_default_memory_scope: str
+    clip_proxy_file_search_enabled: bool
 
 
 def _looks_like_placeholder(value: str) -> bool:
@@ -317,6 +318,7 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     personalization_default_memory_scope = _validate_personalization_memory_scope(
         _read_env("POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE", "global")
     )
+    clip_proxy_file_search_enabled = _parse_bool_env("POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED", False)
 
     if responses_orchestration_enabled and not responses_vector_store_id:
         raise RuntimeError(
@@ -371,4 +373,5 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         governance_log_only=governance_log_only,
         hallucination_guardrails_enabled=hallucination_guardrails_enabled,
         personalization_default_memory_scope=personalization_default_memory_scope,
+        clip_proxy_file_search_enabled=clip_proxy_file_search_enabled,
     )

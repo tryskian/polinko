@@ -93,11 +93,13 @@
 2. Start keep-awake only on explicit session code phrase:
    - `hi! new day!`
 3. Start command:
-   - `nohup caffeinate -d -i -m >/tmp/polinko-caffeinate.log 2>&1 &`
-4. Stop command at wrap:
-   - `pkill -f "caffeinate -d -i -m"`
-5. `decaffeinated` is workflow shorthand only (not a built-in shell command).
-   Use the explicit stop command above.
+   - `make caffeinate-on`
+4. Verify status:
+   - `make caffeinate-status`
+5. Stop command at wrap:
+   - `make caffeinate-off`
+6. `decaffeinated` remains workflow shorthand. The explicit command is
+   `make caffeinate-off`.
 
 ## Docker Build/Run Smoke
 
@@ -316,9 +318,14 @@ Hash fields in responses:
    - optional: `session_id` to scope results to one chat
    - optional: `limit` (default `5`, max `20`)
    - optional: `source_types` (`["ocr"]`, `["chat"]`, or both)
+   - optional: `retrieval_profile` (`default` or `clip_proxy_image_only`)
 4. Results include backend/fallback metadata plus similarity, keyword score,
    combined score, snippet, and source metadata.
 5. `source_types` now supports `ocr`, `chat`, `pdf`, and `image`.
+6. CLIP proxy profile rollout toggle:
+   - `POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED=false` (default)
+   - when `false`, `retrieval_profile=clip_proxy_image_only` returns `409`
+   - when `true`, `clip_proxy_image_only` forces image-only retrieval.
 
 ## PDF Ingest (Vector Index)
 
@@ -664,6 +671,20 @@ Hash fields in responses:
    - writes:
      - `docs/portfolio/raw_evidence/metadata_audit.json`
      - `docs/portfolio/raw_evidence/metadata_audit.md`
+
+## Human Reference DB (One-Click Queries)
+
+1. Rebuild local human reference DB:
+   - `make human-reference-db`
+2. Run latest-docs query:
+   - `make human-reference-latest`
+3. Run transcript/key-points feed:
+   - `make human-reference-transcripts`
+4. Run recent-changes feed (default last 24h):
+   - `make human-reference-changes`
+5. Optional query tuning:
+   - `make human-reference-latest HUMAN_REFERENCE_LIMIT=50`
+   - `make human-reference-changes HUMAN_REFERENCE_SINCE_HOURS=72`
 
 ## UI Feedback Tagging (OCR + Grounding)
 
