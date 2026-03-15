@@ -172,6 +172,18 @@
   - investigate and isolate style-eval strict drift from runtime-regression
     signals before treating quality-gate failures as build blockers
 
+## Peanut Pin (Tomorrow Start)
+
+- Merge watch first:
+  - check PR status + CI on `#38` (CLIP proxy file-search slice)
+- If you want fast human-reference lookup without SQL editor:
+  - `make human-reference-latest`
+  - `make human-reference-transcripts`
+  - `make human-reference-changes`
+- Keep startup lightweight:
+  - confirm repo path + branch + host/devcontainer mode
+  - then continue with the Immediate Next Step above
+
 ## Next Session Focus (Lean Agenda)
 
 1. Confirm environment baseline:

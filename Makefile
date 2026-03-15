@@ -35,8 +35,11 @@ CLIP_AB_SOURCE_TYPES ?= image
 CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
 CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
 CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
+HUMAN_REFERENCE_DB ?= .human_reference.db
+HUMAN_REFERENCE_LIMIT ?= 25
+HUMAN_REFERENCE_SINCE_HOURS ?= 24
 
-.PHONY: chat server test doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
+.PHONY: chat server test doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
@@ -329,6 +332,15 @@ portfolio-metadata-audit:
 
 human-reference-db:
 	$(PYTHON) tools/build_human_reference_db.py
+
+human-reference-latest:
+	$(PYTHON) tools/query_human_reference.py latest --db "$(HUMAN_REFERENCE_DB)" --limit "$(HUMAN_REFERENCE_LIMIT)"
+
+human-reference-transcripts:
+	$(PYTHON) tools/query_human_reference.py transcripts --db "$(HUMAN_REFERENCE_DB)" --limit "$(HUMAN_REFERENCE_LIMIT)"
+
+human-reference-changes:
+	$(PYTHON) tools/query_human_reference.py changes --db "$(HUMAN_REFERENCE_DB)" --limit "$(HUMAN_REFERENCE_LIMIT)" --since-hours "$(HUMAN_REFERENCE_SINCE_HOURS)"
 
 ui-dev:
 	cd frontend && $(NPM) run dev
