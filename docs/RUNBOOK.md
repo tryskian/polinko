@@ -672,6 +672,20 @@ Hash fields in responses:
      - `docs/portfolio/raw_evidence/metadata_audit.json`
      - `docs/portfolio/raw_evidence/metadata_audit.md`
 
+## Human Reference DB (One-Click Queries)
+
+1. Rebuild local human reference DB:
+   - `make human-reference-db`
+2. Run latest-docs query:
+   - `make human-reference-latest`
+3. Run transcript/key-points feed:
+   - `make human-reference-transcripts`
+4. Run recent-changes feed (default last 24h):
+   - `make human-reference-changes`
+5. Optional query tuning:
+   - `make human-reference-latest HUMAN_REFERENCE_LIMIT=50`
+   - `make human-reference-changes HUMAN_REFERENCE_SINCE_HOURS=72`
+
 ## UI Feedback Tagging (OCR + Grounding)
 
 1. For each assistant response, open the UI feedback card:
