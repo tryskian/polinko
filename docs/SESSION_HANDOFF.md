@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-14
+- 2026-03-15
 
 ## Current Snapshot
 
@@ -43,9 +43,20 @@
   uplift across 4 image-context cases
   (`any_rate_delta_proxy_minus_baseline=+1.0`, `errors=0`, `skipped=0`).
 - Latest CLIP readiness pair (2026-03-14) passed and returned explicit `GO`:
-  - `clip-ab-20260314-155802.json`
-  - `clip-ab-20260314-155911.json`
+  - `clip-ab-20260315-143219.json`
+  - `clip-ab-20260315-180942.json`
   - readiness command: `make eval-clip-ab-readiness`
+- Latest targeted CLIP/file-search validation cycle (2026-03-15):
+  - strict style eval: `style-strict-20260315-180637.json` (`11/11` PASS)
+  - file-search report: `file-search-20260315-181109.json` (`5/5` PASS)
+  - targeted API profile checks:
+    `./venv/bin/python -m pytest tests/test_api.py -k "clip_proxy_profile" -q`
+    -> `2 passed`
+  - runtime regression baseline:
+    `make test` -> `154 passed`
+  - drift isolation result:
+    no strict-style drift reproduced in this cycle; treat style drift as a
+    monitored quality signal unless corroborated by runtime/API regressions.
 - CLIP integration go/no-go criterion is now defined and documented
   (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
   delta `>= 0.50`, zero errors/skips).
@@ -124,8 +135,8 @@
 
 ## Latest Local Commit
 
-- `488773d` on `main` (local branch synced with `origin/main`)
-- Summary: docs: add plain-language Docker MCP handoff notes
+- `72be97c` on `main` (local branch synced with `origin/main`)
+- Summary: Merge pull request #35 from tryskian/codex/bigbrain/docs-audit-sync
 
 ## Key Files To Read First
 
@@ -165,12 +176,11 @@
 
 ## Immediate Next Step
 
-- Stabilize CLIP proxy rollout validation at gate level:
-  - keep current API/profile implementation unchanged
-  - run CLIP readiness + targeted file-search profile checks and capture
-    artifacts
-  - investigate and isolate style-eval strict drift from runtime-regression
-    signals before treating quality-gate failures as build blockers
+- Prepare hybrid OpenAI tooling adoption plan (no runtime migration yet):
+  - keep current runtime/API behavior unchanged
+  - define smallest no-risk adoption slice (evals/tracing first)
+  - map expected artifacts (reports/traces) and gate criteria before
+    implementation
 
 ## Peanut Pin (Tomorrow Start)
 
