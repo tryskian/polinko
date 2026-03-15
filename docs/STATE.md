@@ -71,9 +71,22 @@
   - image-priority proxy any-hit: `1.0`
   - delta (`proxy - baseline`): `+1.0`
   - errors/skipped: `0/0` in both arms
+- Latest CLIP readiness pair (2026-03-14) is green:
+  - `20260314-155802`: PASS (`cases=4`, `proxy_any_rate=1.000`,
+    `delta=+1.000`, `errors=0`, `skipped=0`)
+  - `20260314-155911`: PASS (`cases=4`, `proxy_any_rate=1.000`,
+    `delta=+1.000`, `errors=0`, `skipped=0`)
+- Latest readiness decision (2026-03-14): `GO`.
 - CLIP go/no-go criterion is now explicit (two consecutive runs with
   `cases_count >= 4`, proxy `any_rate >= 0.90`, delta `>= 0.50`, zero
   errors/skips) before integration escalation.
+- Minimal CLIP proxy integration slice is now implemented behind feature flag:
+  - `POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED` (default `false`)
+  - `POST /skills/file_search` now accepts
+    `retrieval_profile=clip_proxy_image_only`
+  - disabled profile requests return `409` (explicit, reversible rollout)
+  - enabled profile forces image-only retrieval path without changing default
+    mixed-source behavior.
 - Automated CLIP readiness gate is available via
   `make eval-clip-ab-readiness`; it inspects the latest two report artifacts
   and returns explicit `GO`/`NO-GO` against the D-040 threshold.
@@ -164,6 +177,9 @@
   work resumes.
 - Dependabot PR `#13` (`openai-agents==0.11.1`) is blocked until OpenAI SDK pin
   is raised first (`openai>=2.26.0` via PR `#5`); merge order matters.
+- Style eval strict gate is currently sensitive to model-output drift on low
+  context greeting/mimicry rubric cases; quality gate can fail even when
+  runtime/API regressions are absent.
 
 ## Resume Prompt (For New Chats)
 

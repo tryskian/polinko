@@ -42,9 +42,23 @@
 - Latest CLIP A/B expanded report (`20260310-125230`) shows positive proxy
   uplift across 4 image-context cases
   (`any_rate_delta_proxy_minus_baseline=+1.0`, `errors=0`, `skipped=0`).
+- Latest CLIP readiness pair (2026-03-14) passed and returned explicit `GO`:
+  - `clip-ab-20260314-155802.json`
+  - `clip-ab-20260314-155911.json`
+  - readiness command: `make eval-clip-ab-readiness`
 - CLIP integration go/no-go criterion is now defined and documented
   (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
   delta `>= 0.50`, zero errors/skips).
+- Minimal CLIP integration slice is now live behind explicit feature flag:
+  - `POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED` (default `false`)
+  - `/skills/file_search` accepts
+    `retrieval_profile=clip_proxy_image_only`
+  - disabled profile requests fail fast with `409` for explicit rollback-safe
+    control.
+- Profile behavior is API-tested:
+  - disabled flag -> `409` on `clip_proxy_image_only`
+  - enabled flag -> profile forces image-only retrieval even when request
+    `source_types` includes only `ocr`.
 - Dedicated strict hallucination gate target is available: `make hallucination-gate`.
 - CI includes optional Braintrust hallucination gate wiring when
   `BRAINTRUST_OPENAI_BASE_URL` (repo var) and `BRAINTRUST_API_KEY`
@@ -151,10 +165,12 @@
 
 ## Immediate Next Step
 
-- Run CLIP readiness validation and capture the result:
-  - run `make eval-clip-ab-report` twice to create fresh consecutive artifacts
-  - run `make eval-clip-ab-readiness` and record explicit `GO`/`NO-GO`
-  - update `docs/STATE.md` with run IDs + readiness outcome
+- Stabilize CLIP proxy rollout validation at gate level:
+  - keep current API/profile implementation unchanged
+  - run CLIP readiness + targeted file-search profile checks and capture
+    artifacts
+  - investigate and isolate style-eval strict drift from runtime-regression
+    signals before treating quality-gate failures as build blockers
 
 ## Next Session Focus (Lean Agenda)
 
