@@ -38,14 +38,87 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 HUMAN_REFERENCE_DB ?= .human_reference.db
 HUMAN_REFERENCE_LIMIT ?= 25
 HUMAN_REFERENCE_SINCE_HOURS ?= 24
+SERVER_PID_FILE ?= /tmp/polinko-server.pid
+SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server test doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
+.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
 
 server:
 	$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload
+
+server-daemon:
+	@set -eu; \
+	if [ -f "$(SERVER_PID_FILE)" ]; then \
+		PID=$$(cat "$(SERVER_PID_FILE)" 2>/dev/null || true); \
+		if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
+			echo "server-daemon already running (PID $$PID)."; \
+			exit 0; \
+		fi; \
+		rm -f "$(SERVER_PID_FILE)"; \
+	fi; \
+	if command -v lsof >/dev/null 2>&1; then \
+		EXISTING_PID=$$(lsof -nP -iTCP:"$(DEV_BACKEND_PORT)" -sTCP:LISTEN -t 2>/dev/null | head -n 1 || true); \
+		if [ -n "$$EXISTING_PID" ]; then \
+			EXISTING_CMD=$$(ps -o command= -p "$$EXISTING_PID" 2>/dev/null || true); \
+			if echo "$$EXISTING_CMD" | grep -q "uvicorn server:app"; then \
+				echo "$$EXISTING_PID" >"$(SERVER_PID_FILE)"; \
+				echo "server-daemon already active on port $(DEV_BACKEND_PORT); adopted PID $$EXISTING_PID."; \
+				exit 0; \
+			fi; \
+			echo "Port $(DEV_BACKEND_PORT) is in use by a non-polinko process."; \
+			echo "PID $$EXISTING_PID: $$EXISTING_CMD"; \
+			exit 1; \
+		fi; \
+	fi; \
+	nohup $(PYTHON) -m uvicorn server:app --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" --reload >"$(SERVER_LOG)" 2>&1 & \
+	PID=$$!; \
+	echo "$$PID" >"$(SERVER_PID_FILE)"; \
+	sleep 0.2; \
+	if kill -0 "$$PID" 2>/dev/null; then \
+		echo "server-daemon started (PID $$PID, log: $(SERVER_LOG))."; \
+	else \
+		rm -f "$(SERVER_PID_FILE)"; \
+		echo "Failed to start server-daemon. Check $(SERVER_LOG)."; \
+		exit 1; \
+	fi
+
+server-daemon-stop:
+	@set -eu; \
+	if [ ! -f "$(SERVER_PID_FILE)" ]; then \
+		echo "No server-daemon PID file found."; \
+		exit 0; \
+	fi; \
+	PID=$$(cat "$(SERVER_PID_FILE)" 2>/dev/null || true); \
+	if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
+		kill "$$PID"; \
+		echo "server-daemon stopped (PID $$PID)."; \
+	else \
+		echo "Stale server-daemon PID file; cleaning up."; \
+	fi; \
+	rm -f "$(SERVER_PID_FILE)"
+
+server-daemon-status:
+	@set -eu; \
+	if [ -f "$(SERVER_PID_FILE)" ]; then \
+		PID=$$(cat "$(SERVER_PID_FILE)" 2>/dev/null || true); \
+		if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
+			echo "server-daemon: RUNNING (PID $$PID)."; \
+			exit 0; \
+		fi; \
+		echo "server-daemon: STALE PID file."; \
+		exit 1; \
+	fi; \
+	echo "server-daemon: OFF."
+
+session-status:
+	@echo "== Server =="
+	@$(MAKE) --no-print-directory server-daemon-status || true
+	@echo ""
+	@echo "== Keep-awake =="
+	@$(MAKE) --no-print-directory caffeinate-status || true
 
 test:
 	$(PYTHON) -m unittest discover -s tests -p "test_*.py"
@@ -125,7 +198,11 @@ caffeinate-status:
 			echo "Unmanaged caffeinate detected (PID $$EXISTING_PID); run 'make caffeinate-on' to adopt it."; \
 		fi; \
 	fi; \
-	/usr/bin/pmset -g assertions | rg -n "PreventUserIdleDisplaySleep|PreventUserIdleSystemSleep|PreventDiskIdle|caffeinate" || true
+	if command -v rg >/dev/null 2>&1; then \
+		/usr/bin/pmset -g assertions | rg -n "PreventUserIdleDisplaySleep|PreventUserIdleSystemSleep|PreventDiskIdle|caffeinate" || true; \
+	else \
+		/usr/bin/pmset -g assertions | grep -nE "PreventUserIdleDisplaySleep|PreventUserIdleSystemSleep|PreventDiskIdle|caffeinate" || true; \
+	fi
 
 decaffeinate: caffeinate-off
 
@@ -321,9 +398,15 @@ evidence-refresh:
 	$(MAKE) portfolio-metadata-audit; \
 	INDEX_JSON="docs/portfolio/raw_evidence/index.json"; \
 	if [ -f "$$INDEX_JSON" ]; then \
-		TOTAL=$$(rg -o '"evidence_id"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
-		OPEN=$$(rg -o '"status": "OPEN"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
-		CLOSED=$$(rg -o '"status": "CLOSED"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
+		if command -v rg >/dev/null 2>&1; then \
+			TOTAL=$$(rg -o '"evidence_id"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
+			OPEN=$$(rg -o '"status": "OPEN"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
+			CLOSED=$$(rg -o '"status": "CLOSED"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
+		else \
+			TOTAL=$$(grep -o '"evidence_id"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
+			OPEN=$$(grep -o '"status": "OPEN"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
+			CLOSED=$$(grep -o '"status": "CLOSED"' "$$INDEX_JSON" | wc -l | tr -d ' '); \
+		fi; \
 		echo "Evidence refresh summary: total=$$TOTAL open=$$OPEN closed=$$CLOSED"; \
 	fi
 
