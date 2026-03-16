@@ -118,6 +118,16 @@
   - opt-in mode: set `HYBRID_OPENAI_PILOT_ENABLED=true`
   - output preview JSONL:
     `docs/portfolio/raw_evidence/INBOX/openai_trace_bridge_preview.jsonl`
+- Phase 3 trace-source backfill and preview quality check are now implemented:
+  - backfill tool: `tools/backfill_eval_trace_artifacts.py`
+  - preview check tool: `tools/check_hybrid_openai_bridge_preview.py`
+  - one-command cycle: `make hybrid-openai-pilot-cycle`
+  - latest local cycle (2026-03-16):
+    - backfill source rows: `17`
+    - trace rows written: `17` (then idempotent rerun wrote `0`)
+    - bridge transform rows per run: `17`
+    - preview artifact rows (append-only): `34`
+    - preview check: `OK`
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.

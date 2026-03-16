@@ -55,7 +55,7 @@
   - no `/chat` behavior changes
   - no runtime path migration
 
-## Phase 3 (Planned): OpenAI-Native Tooling Pilot (No Runtime Migration)
+## Phase 3 (Implemented Scaffold): OpenAI-Native Tooling Pilot (No Runtime Migration)
 
 - Pilot scope v1 (planned):
   - offline metadata bridge from local eval trace artifacts to
@@ -86,11 +86,21 @@
   - documented rollback path (`unset flag` + disable pilot tooling command)
 - Scaffold status (implemented):
   - dry-run bridge tool: `tools/hybrid_openai_trace_bridge.py`
+  - backfill tool: `tools/backfill_eval_trace_artifacts.py`
+  - preview checker: `tools/check_hybrid_openai_bridge_preview.py`
   - command:
     `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true`
+  - validation command:
+    `make hybrid-openai-pilot-check`
+  - one-command cycle:
+    `make hybrid-openai-pilot-cycle`
   - default remains disabled (`HYBRID_OPENAI_PILOT_ENABLED=false`)
   - output (append-only preview):
     `docs/portfolio/raw_evidence/INBOX/openai_trace_bridge_preview.jsonl`
+  - latest local validation (2026-03-16):
+    - backfill source rows: `17`
+    - transformed rows per bridge run: `17`
+    - preview checker: `OK`
 
 ## Promotion Rule
 

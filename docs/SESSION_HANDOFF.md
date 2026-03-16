@@ -77,6 +77,13 @@
   - default: flag-off skip (`HYBRID_OPENAI_PILOT_ENABLED=false`)
   - output preview:
     `docs/portfolio/raw_evidence/INBOX/openai_trace_bridge_preview.jsonl`
+- Hybrid OpenAI Phase 3 now includes trace-source backfill and preview quality checks:
+  - backfill: `make backfill-eval-traces`
+  - preview check: `make hybrid-openai-pilot-check`
+  - full cycle: `make hybrid-openai-pilot-cycle`
+  - latest local result (2026-03-16): `17` source submissions ->
+    `17` trace rows -> `17` transformed preview rows per run
+    (`34` rows in append-only preview artifact, `OK` check)
 - CLIP integration go/no-go criterion is now defined and documented
   (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
   delta `>= 0.50`, zero errors/skips).
@@ -196,12 +203,11 @@
 
 ## Immediate Next Step
 
-- Execute Phase 3 dry-run bridge validation cycle (no runtime migration):
+- Execute the one-command Phase 3 pilot cycle (no runtime migration):
   - keep current runtime/API behavior unchanged
-  - run
-    `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true`
-  - inspect preview artifact shape and document any required metadata mapping
-    refinements for provider-side pilot readiness
+  - run `make hybrid-openai-pilot-cycle`
+  - inspect latest preview payload shape and capture any metadata-field
+    refinement decisions needed before provider-side pilot wiring
 
 ## Peanut Pin (Tomorrow Start)
 
