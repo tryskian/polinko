@@ -111,6 +111,13 @@
 - Hybrid OpenAI adoption Phase 3 pilot scope is now explicitly constrained to
   offline tooling bridge work only (trace/grader metadata mapping), with
   runtime `/chat` path and prompt behavior intentionally unchanged.
+- Phase 3 dry-run scaffold is now implemented:
+  - tool: `tools/hybrid_openai_trace_bridge.py`
+  - command: `make hybrid-openai-pilot-dry-run`
+  - default mode: rollback-safe skip (flag-off)
+  - opt-in mode: set `HYBRID_OPENAI_PILOT_ENABLED=true`
+  - output preview JSONL:
+    `docs/portfolio/raw_evidence/INBOX/openai_trace_bridge_preview.jsonl`
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.
@@ -190,6 +197,7 @@
 - CLIP A/B eval harness: `tools/eval_clip_ab.py`
 - Hybrid readiness gate checker: `tools/check_hybrid_openai_readiness.py`
 - Eval trace schema/writer: `tools/eval_trace_artifacts.py`
+- Phase 3 dry-run bridge tool: `tools/hybrid_openai_trace_bridge.py`
 
 ## Known Constraints
 
@@ -218,8 +226,8 @@ Use this in a new chat:
 4. Add ELT-style batch extraction pipeline (OCR alternative path) for large archive ingestion.
 5. Resume Figma/UI parity after backend retrieval/OCR/file-search milestones are stable.
 6. Add model-graders evaluation loop after retrieval quality and schema stability are locked.
-7. Execute hybrid adoption Phase 3 planning/pilot scope from
-   `docs/HYBRID_OPENAI_ADOPTION_PLAN.md` without runtime migration drift.
+7. Run/inspect hybrid Phase 3 dry-run bridge output and define any required
+   metadata-shape refinements before provider-side pilot integration.
 
 ## Cookbook Roadmap (Prioritized)
 

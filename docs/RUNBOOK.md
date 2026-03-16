@@ -548,6 +548,26 @@ Hash fields in responses:
    - disable trace append for one run:
      `python tools/check_hybrid_openai_readiness.py --trace-jsonl ""`
 
+## Run Hybrid OpenAI Phase 3 Dry-Run Bridge (Tooling-Only)
+
+1. Keep runtime unchanged (this command does not call `/chat`).
+2. Run with default rollback-safe flag-off:
+   - `make hybrid-openai-pilot-dry-run`
+   - expected output: `SKIPPED`
+3. Run pilot dry-run transform explicitly:
+   - `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true`
+4. Optional limit to latest N trace rows:
+   - `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true HYBRID_OPENAI_PILOT_LIMIT=20`
+5. Output artifact:
+   - append-only preview JSONL:
+     `docs/portfolio/raw_evidence/INBOX/openai_trace_bridge_preview.jsonl`
+6. Source artifact:
+   - `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`
+7. If source trace artifact is missing or empty:
+   - `make backfill-eval-traces`
+   - rerun:
+     `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true`
+
 ## Run OCR Eval
 
 1. Ensure API is running locally (`make server`).

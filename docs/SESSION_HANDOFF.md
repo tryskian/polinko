@@ -71,6 +71,12 @@
 - Hybrid OpenAI adoption Phase 3 scope is now documented as tooling-only:
   offline trace/grader metadata bridge only, with runtime `/chat` and prompt
   behavior explicitly out of scope.
+- Hybrid OpenAI Phase 3 dry-run scaffold is now implemented:
+  - tool: `tools/hybrid_openai_trace_bridge.py`
+  - command: `make hybrid-openai-pilot-dry-run`
+  - default: flag-off skip (`HYBRID_OPENAI_PILOT_ENABLED=false`)
+  - output preview:
+    `docs/portfolio/raw_evidence/INBOX/openai_trace_bridge_preview.jsonl`
 - CLIP integration go/no-go criterion is now defined and documented
   (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
   delta `>= 0.50`, zero errors/skips).
@@ -190,12 +196,12 @@
 
 ## Immediate Next Step
 
-- Implement Phase 3 pilot scaffold (no runtime migration):
+- Execute Phase 3 dry-run bridge validation cycle (no runtime migration):
   - keep current runtime/API behavior unchanged
-  - add dry-run transformer from local trace JSONL to OpenAI-compatible
-    trace/grader metadata payload shape
-  - add deterministic unit tests for mapping stability + rollback-safe
-    flag-off behavior
+  - run
+    `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true`
+  - inspect preview artifact shape and document any required metadata mapping
+    refinements for provider-side pilot readiness
 
 ## Peanut Pin (Tomorrow Start)
 
