@@ -10,6 +10,15 @@ import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 
+try:
+    from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
+    from tools.eval_trace_artifacts import append_eval_trace
+    from tools.eval_trace_artifacts import build_eval_trace
+except ModuleNotFoundError:
+    from eval_trace_artifacts import DEFAULT_TRACE_JSONL
+    from eval_trace_artifacts import append_eval_trace
+    from eval_trace_artifacts import build_eval_trace
+
 
 _JUDGE_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -445,6 +454,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Optional path to write a JSON run report artifact.",
     )
+    parser.add_argument(
+        "--trace-jsonl",
+        default=str(DEFAULT_TRACE_JSONL),
+        help="Append-only JSONL trace artifact path (set empty string to disable).",
+    )
     return parser
 
 
@@ -650,33 +664,70 @@ def main() -> int:
     if report_path:
         output_path = Path(report_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        report_payload = {
+            "run_id": run_id,
+            "base_url": args.base_url,
+            "judge_model": args.judge_model,
+            "judge_api_key_env": args.judge_api_key_env,
+            "judge_base_url": args.judge_base_url or None,
+            "min_acceptable_score": args.min_acceptable_score,
+            "requested_evaluation_mode": requested_mode,
+            "effective_evaluation_mode": effective_mode,
+            "strict": bool(args.strict),
+            "total_cases": len(cases),
+            "passed": passes,
+            "failed": len(failures),
+            "risk_counts": risk_counts,
+            "cases": case_results,
+            "summary_lines": failures,
+            "timestamp_unix": int(time.time()),
+        }
         output_path.write_text(
-            json.dumps(
-                {
-                    "run_id": run_id,
-                    "base_url": args.base_url,
-                    "judge_model": args.judge_model,
-                    "judge_api_key_env": args.judge_api_key_env,
-                    "judge_base_url": args.judge_base_url or None,
-                    "min_acceptable_score": args.min_acceptable_score,
-                    "requested_evaluation_mode": requested_mode,
-                    "effective_evaluation_mode": effective_mode,
-                    "strict": bool(args.strict),
-                    "total_cases": len(cases),
-                    "passed": passes,
-                    "failed": len(failures),
-                    "risk_counts": risk_counts,
-                    "cases": case_results,
-                    "summary_lines": failures,
-                    "timestamp_unix": int(time.time()),
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
-            + "\n",
+            json.dumps(report_payload, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
         print(f"Report written: {output_path}")
+        trace_jsonl = str(args.trace_jsonl or "").strip()
+        if trace_jsonl:
+            trace_payload = build_eval_trace(
+                run_id=run_id,
+                tool_name="tools/eval_hallucination.py",
+                source_artifacts={
+                    "report_json": str(output_path),
+                    "cases_path": str(Path(args.cases)),
+                },
+                gate_outcomes=[
+                    {
+                        "name": "hallucination_eval",
+                        "passed": len(failures) == 0,
+                        "detail": (
+                            f"passed={passes}/{len(cases)}, failed={len(failures)}, "
+                            f"risk_high={risk_counts.get('high', 0)}"
+                        ),
+                    }
+                ],
+                summary={
+                    "total": len(cases),
+                    "passed": passes,
+                    "failed": len(failures),
+                    "risk_counts": risk_counts,
+                },
+                model_metadata={
+                    "judge_model": args.judge_model,
+                    "requested_evaluation_mode": requested_mode,
+                    "effective_evaluation_mode": effective_mode,
+                },
+                metadata={
+                    "base_url": args.base_url,
+                    "strict": bool(args.strict),
+                    "min_acceptable_score": args.min_acceptable_score,
+                },
+            )
+            trace_path = append_eval_trace(
+                trace_payload=trace_payload,
+                trace_jsonl_path=Path(trace_jsonl),
+            )
+            print(f"Trace written: {trace_path}")
 
     if args.strict and failures:
         return 1

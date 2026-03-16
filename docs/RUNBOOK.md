@@ -525,6 +525,29 @@ Hash fields in responses:
    - uses the latest two `eval_reports/clip-ab-*.json` artifacts
    - exits `0` on `GO`, `1` on `NO-GO`
 
+## Run Hybrid OpenAI Readiness Check (No Runtime Migration)
+
+1. Ensure report artifacts exist (recommended):
+   - `make eval-clip-ab-report`
+   - `make eval-file-search-report`
+   - `python tools/eval_style.py --strict --report-json eval_reports/style-strict-latest.json`
+2. Run:
+   - `make hybrid-openai-readiness`
+3. Gate behavior:
+   - checks latest strict style report (`style-strict-*.json`) is all-pass
+   - checks latest file-search report (`file-search-*.json`) is all-pass with
+     zero errors/skips
+   - checks latest two CLIP A/B reports (`clip-ab-*.json`) meet D-040
+     thresholds
+4. Exit codes:
+   - `0`: `READY`
+   - `1`: `NOT_READY` (prints failing gate detail)
+5. Trace artifact behavior:
+   - appends readiness trace to:
+     `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`
+   - disable trace append for one run:
+     `python tools/check_hybrid_openai_readiness.py --trace-jsonl ""`
+
 ## Run OCR Eval
 
 1. Ensure API is running locally (`make server`).

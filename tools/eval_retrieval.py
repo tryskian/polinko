@@ -8,6 +8,15 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+try:
+    from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
+    from tools.eval_trace_artifacts import append_eval_trace
+    from tools.eval_trace_artifacts import build_eval_trace
+except ModuleNotFoundError:
+    from eval_trace_artifacts import DEFAULT_TRACE_JSONL
+    from eval_trace_artifacts import append_eval_trace
+    from eval_trace_artifacts import build_eval_trace
+
 
 def _headers(api_key: str | None) -> dict[str, str]:
     headers = {"Content-Type": "application/json"}
@@ -260,6 +269,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Optional path to write a JSON run report artifact.",
     )
+    parser.add_argument(
+        "--trace-jsonl",
+        default=str(DEFAULT_TRACE_JSONL),
+        help="Append-only JSONL trace artifact path (set empty string to disable).",
+    )
     return parser
 
 
@@ -432,30 +446,56 @@ def main() -> int:
     if report_json:
         output_path = Path(report_json)
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        report_payload = {
+            "run_id": run_id,
+            "base_url": args.base_url,
+            "cases_path": str(cases_path),
+            "summary": {
+                "total": len(cases),
+                "passed": passes,
+                "failed": len(failures),
+                "global_miss": global_miss_count,
+                "leak": leak_count,
+                "errors": error_count,
+            },
+            "failures": failures,
+            "cases": case_results,
+            "generated_at": int(time.time()),
+        }
         output_path.write_text(
-            json.dumps(
-                {
-                    "run_id": run_id,
-                    "base_url": args.base_url,
-                    "cases_path": str(cases_path),
-                    "summary": {
-                        "total": len(cases),
-                        "passed": passes,
-                        "failed": len(failures),
-                        "global_miss": global_miss_count,
-                        "leak": leak_count,
-                        "errors": error_count,
-                    },
-                    "failures": failures,
-                    "cases": case_results,
-                    "generated_at": int(time.time()),
-                },
-                ensure_ascii=False,
-                indent=2,
-            ),
+            json.dumps(report_payload, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
         print(f"  Report: {output_path}")
+        trace_jsonl = str(args.trace_jsonl or "").strip()
+        if trace_jsonl:
+            trace_payload = build_eval_trace(
+                run_id=run_id,
+                tool_name="tools/eval_retrieval.py",
+                source_artifacts={
+                    "report_json": str(output_path),
+                    "cases_path": str(cases_path),
+                },
+                gate_outcomes=[
+                    {
+                        "name": "retrieval_eval",
+                        "passed": len(failures) == 0,
+                        "detail": (
+                            f"passed={passes}/{len(cases)}, failed={len(failures)}, "
+                            f"global_miss={global_miss_count}, leak={leak_count}, errors={error_count}"
+                        ),
+                    }
+                ],
+                summary=report_payload["summary"],
+                metadata={
+                    "base_url": args.base_url,
+                },
+            )
+            trace_path = append_eval_trace(
+                trace_payload=trace_payload,
+                trace_jsonl_path=Path(trace_jsonl),
+            )
+            print(f"  Trace: {trace_path}")
     if failures:
         for failure in failures:
             print(f"  - {failure}")

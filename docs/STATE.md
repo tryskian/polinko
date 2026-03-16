@@ -97,6 +97,20 @@
 - Automated CLIP readiness gate is available via
   `make eval-clip-ab-readiness`; it inspects the latest two report artifacts
   and returns explicit `GO`/`NO-GO` against the D-040 threshold.
+- Hybrid OpenAI adoption now has a report-level readiness gate:
+  `make hybrid-openai-readiness` (strict style + file-search + two-report CLIP
+  readiness) with no runtime/API behavior changes.
+- Hybrid OpenAI adoption Phase 2 is implemented in tooling (no runtime
+  migration):
+  - shared trace contract: `tools/eval_trace_artifacts.py`
+  - schema: `polinko.eval_trace.v1`
+  - append-only trace path:
+    `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`
+  - report-oriented eval tools and hybrid gate checker now append trace
+    artifacts for auditability/promotion checks.
+- Hybrid OpenAI adoption Phase 3 pilot scope is now explicitly constrained to
+  offline tooling bridge work only (trace/grader metadata mapping), with
+  runtime `/chat` path and prompt behavior intentionally unchanged.
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.
@@ -174,6 +188,8 @@
 - Portfolio metadata auditor: `tools/audit_portfolio_metadata.py`
 - Hallucination threshold calibrator: `tools/calibrate_hallucination_threshold.py`
 - CLIP A/B eval harness: `tools/eval_clip_ab.py`
+- Hybrid readiness gate checker: `tools/check_hybrid_openai_readiness.py`
+- Eval trace schema/writer: `tools/eval_trace_artifacts.py`
 
 ## Known Constraints
 
@@ -202,6 +218,8 @@ Use this in a new chat:
 4. Add ELT-style batch extraction pipeline (OCR alternative path) for large archive ingestion.
 5. Resume Figma/UI parity after backend retrieval/OCR/file-search milestones are stable.
 6. Add model-graders evaluation loop after retrieval quality and schema stability are locked.
+7. Execute hybrid adoption Phase 3 planning/pilot scope from
+   `docs/HYBRID_OPENAI_ADOPTION_PLAN.md` without runtime migration drift.
 
 ## Cookbook Roadmap (Prioritized)
 

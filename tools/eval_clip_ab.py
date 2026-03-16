@@ -15,6 +15,15 @@ try:
 except ModuleNotFoundError:
     _eval_file_search = importlib.import_module("eval_file_search")
 
+try:
+    from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
+    from tools.eval_trace_artifacts import append_eval_trace
+    from tools.eval_trace_artifacts import build_eval_trace
+except ModuleNotFoundError:
+    from eval_trace_artifacts import DEFAULT_TRACE_JSONL
+    from eval_trace_artifacts import append_eval_trace
+    from eval_trace_artifacts import build_eval_trace
+
 _create_chat = _eval_file_search._create_chat
 _delete_chat = _eval_file_search._delete_chat
 _file_search = _eval_file_search._file_search
@@ -185,6 +194,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Optional path to write JSON report artifact.",
     )
+    parser.add_argument(
+        "--trace-jsonl",
+        default=str(DEFAULT_TRACE_JSONL),
+        help="Append-only JSONL trace artifact path (set empty string to disable).",
+    )
     return parser
 
 
@@ -317,26 +331,58 @@ def main() -> int:
     if report_path:
         out_path = Path(report_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)
+        report_payload = {
+            "run_id": run_id,
+            "base_url": args.base_url,
+            "source_types": sorted(include_types),
+            "cases_count": len(cases),
+            "arms": [arm[0] for arm in arms],
+            "summary": summary,
+            "any_rate_delta_proxy_minus_baseline": proxy_any - baseline_any,
+            "cases": records,
+            "timestamp_unix": int(time.time()),
+        }
         out_path.write_text(
-            json.dumps(
-                {
-                    "run_id": run_id,
-                    "base_url": args.base_url,
-                    "source_types": sorted(include_types),
-                    "cases_count": len(cases),
-                    "arms": [arm[0] for arm in arms],
-                    "summary": summary,
-                    "any_rate_delta_proxy_minus_baseline": proxy_any - baseline_any,
-                    "cases": records,
-                    "timestamp_unix": int(time.time()),
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
-            + "\n",
+            json.dumps(report_payload, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8",
         )
         print(f"Report written: {out_path}")
+        trace_jsonl = str(args.trace_jsonl or "").strip()
+        if trace_jsonl:
+            trace_payload = build_eval_trace(
+                run_id=run_id,
+                tool_name="tools/eval_clip_ab.py",
+                source_artifacts={
+                    "report_json": str(out_path),
+                    "cases_path": str(cases_path),
+                },
+                gate_outcomes=[
+                    {
+                        "name": "clip_proxy_readiness",
+                        "passed": proxy_any >= baseline_any,
+                        "detail": (
+                            f"proxy_any_rate={proxy_any:.3f}, baseline_any_rate={baseline_any:.3f}, "
+                            f"delta={proxy_any - baseline_any:+.3f}"
+                        ),
+                    }
+                ],
+                summary={
+                    "cases_count": len(cases),
+                    "proxy_any_rate": proxy_any,
+                    "baseline_any_rate": baseline_any,
+                    "any_rate_delta_proxy_minus_baseline": proxy_any - baseline_any,
+                },
+                metadata={
+                    "base_url": args.base_url,
+                    "source_types": sorted(include_types),
+                    "strict": bool(args.strict),
+                },
+            )
+            trace_path = append_eval_trace(
+                trace_payload=trace_payload,
+                trace_jsonl_path=Path(trace_jsonl),
+            )
+            print(f"Trace written: {trace_path}")
 
     if args.strict and proxy_any < baseline_any:
         return 1
