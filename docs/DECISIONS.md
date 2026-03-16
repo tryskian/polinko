@@ -443,3 +443,16 @@
   provider upload or runtime path changes.
 - Why: Starts Phase 3 execution with deterministic, testable, low-risk tooling
   progress while preserving strict rollback and runtime parity guarantees.
+
+## D-048: Add idempotent trace backfill and schema check for Phase 3 preview quality
+
+- Category: `evidence_governance`
+- Tags: `hybrid_openai`, `phase3`, `trace_backfill`, `schema_validation`
+- Decision: Add `tools/backfill_eval_trace_artifacts.py` to convert existing
+  UI eval submissions into `polinko.eval_trace.v1` artifacts (idempotent by
+  `submission_key`) and add
+  `tools/check_hybrid_openai_bridge_preview.py` to enforce minimum-row and
+  required-field validation on dry-run bridge preview output.
+- Why: Removes manual inspection as the only quality gate for Phase 3 pilot
+  artifacts, allows deterministic replay from existing eval history, and keeps
+  tooling adoption measurable without runtime `/chat` migration risk.

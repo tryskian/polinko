@@ -43,7 +43,7 @@ HUMAN_REFERENCE_SINCE_HOURS ?= 24
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hybrid-openai-readiness backfill-eval-traces hybrid-openai-pilot-dry-run hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
+.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hybrid-openai-readiness backfill-eval-traces hybrid-openai-pilot-dry-run hybrid-openai-pilot-check hybrid-openai-pilot-cycle hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
@@ -325,6 +325,14 @@ hybrid-openai-pilot-dry-run:
 		LIMIT_ARG="--limit $(HYBRID_OPENAI_PILOT_LIMIT)"; \
 	fi; \
 	$(PYTHON) tools/hybrid_openai_trace_bridge.py --enabled "$(HYBRID_OPENAI_PILOT_ENABLED)" $$LIMIT_ARG
+
+hybrid-openai-pilot-check:
+	$(PYTHON) tools/check_hybrid_openai_bridge_preview.py
+
+hybrid-openai-pilot-cycle:
+	@$(MAKE) backfill-eval-traces
+	@$(MAKE) hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true
+	@$(MAKE) hybrid-openai-pilot-check
 
 eval-inbox:
 	$(PYTHON) tools/eval_inbox.py --new --limit 30

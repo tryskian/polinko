@@ -567,6 +567,12 @@ Hash fields in responses:
    - `make backfill-eval-traces`
    - rerun:
      `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true`
+8. Validate preview artifact quality:
+   - `make hybrid-openai-pilot-check`
+   - expected output: `OK` with non-zero preview row count
+   - note: preview file is append-only; row count grows across repeated runs
+9. Run the full pilot cycle in one command:
+   - `make hybrid-openai-pilot-cycle`
 
 ## Run OCR Eval
 
