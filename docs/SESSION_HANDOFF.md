@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-15
+- 2026-03-16
 
 ## Current Snapshot
 
@@ -57,6 +57,20 @@
   - drift isolation result:
     no strict-style drift reproduced in this cycle; treat style drift as a
     monitored quality signal unless corroborated by runtime/API regressions.
+- Hybrid OpenAI adoption planning now has a no-risk gate command:
+  - `make hybrid-openai-readiness`
+  - checker source: `tools/check_hybrid_openai_readiness.py`
+  - plan doc: `docs/HYBRID_OPENAI_ADOPTION_PLAN.md`
+- Hybrid OpenAI adoption Phase 2 (trace artifact contract) is now implemented:
+  - shared trace module: `tools/eval_trace_artifacts.py`
+  - schema: `polinko.eval_trace.v1`
+  - append-only evidence path:
+    `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`
+  - report-oriented eval tooling and hybrid readiness checker now append trace
+    artifacts without `/chat` runtime behavior changes.
+- Hybrid OpenAI adoption Phase 3 scope is now documented as tooling-only:
+  offline trace/grader metadata bridge only, with runtime `/chat` and prompt
+  behavior explicitly out of scope.
 - CLIP integration go/no-go criterion is now defined and documented
   (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
   delta `>= 0.50`, zero errors/skips).
@@ -135,8 +149,8 @@
 
 ## Latest Local Commit
 
-- `72be97c` on `main` (local branch synced with `origin/main`)
-- Summary: Merge pull request #35 from tryskian/codex/bigbrain/docs-audit-sync
+- `481b5bb` on `main` (local branch synced with `origin/main`)
+- Summary: Merge pull request #42 from tryskian/docs/clip-validation-20260315
 
 ## Key Files To Read First
 
@@ -176,11 +190,12 @@
 
 ## Immediate Next Step
 
-- Prepare hybrid OpenAI tooling adoption plan (no runtime migration yet):
+- Implement Phase 3 pilot scaffold (no runtime migration):
   - keep current runtime/API behavior unchanged
-  - define smallest no-risk adoption slice (evals/tracing first)
-  - map expected artifacts (reports/traces) and gate criteria before
-    implementation
+  - add dry-run transformer from local trace JSONL to OpenAI-compatible
+    trace/grader metadata payload shape
+  - add deterministic unit tests for mapping stability + rollback-safe
+    flag-off behavior
 
 ## Peanut Pin (Tomorrow Start)
 

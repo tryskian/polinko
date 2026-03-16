@@ -397,3 +397,37 @@
 - Why: Enables controlled CLIP-proxy rollout with an explicit rollback toggle,
   minimal behavior drift, and deterministic API-level validation before deeper
   retrieval-path integration.
+
+## D-044: Add report-level hybrid OpenAI readiness gate before tooling migration
+
+- Category: `eval_quality`
+- Tags: `hybrid_openai`, `readiness_gate`, `no_runtime_drift`, `adoption_plan`
+- Decision: Add `make hybrid-openai-readiness` (reports-only checker) and keep
+  hybrid OpenAI adoption gated by strict style + file-search + two-report CLIP
+  readiness outcomes before any runtime/tooling migration.
+- Why: Creates an explicit low-risk promotion contract for OpenAI-native
+  adoption while preserving current runtime behavior and rollback simplicity.
+
+## D-045: Add append-only eval trace artifact contract in tooling layer
+
+- Category: `evidence_governance`
+- Tags: `trace_artifacts`, `hybrid_openai`, `eval_reports`, `no_runtime_drift`
+- Decision: Add a shared trace schema/writer
+  (`tools/eval_trace_artifacts.py`, schema `polinko.eval_trace.v1`) and wire
+  report-producing eval tooling + hybrid readiness checker to append JSONL
+  traces to
+  `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`.
+- Why: Creates a stable evidence contract for hybrid OpenAI adoption phases
+  without changing runtime `/chat` behavior, while improving auditability and
+  promotion confidence for future OpenAI-native tooling pilots.
+
+## D-046: Constrain Phase 3 hybrid pilot to offline tooling bridge only
+
+- Category: `runtime_engineering`
+- Tags: `hybrid_openai`, `pilot_scope`, `rollback_safe`, `no_runtime_drift`
+- Decision: Define Phase 3 hybrid adoption pilot as a tooling-only bridge from
+  local trace artifacts to OpenAI-compatible trace/grader metadata shape, with
+  strict out-of-scope exclusion for runtime `/chat` migration, prompt behavior
+  changes, and default-on flags.
+- Why: Preserves current stable runtime contract while still creating concrete
+  migration evidence toward OpenAI-native tooling integration.

@@ -11,6 +11,15 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+try:
+    from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
+    from tools.eval_trace_artifacts import append_eval_trace
+    from tools.eval_trace_artifacts import build_eval_trace
+except ModuleNotFoundError:
+    from eval_trace_artifacts import DEFAULT_TRACE_JSONL
+    from eval_trace_artifacts import append_eval_trace
+    from eval_trace_artifacts import build_eval_trace
+
 _ONE_BY_ONE_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+qW6QAAAAASUVORK5CYII="
 
 
@@ -326,6 +335,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--report-json", default="", help="Optional JSON report output path."
     )
+    parser.add_argument(
+        "--trace-jsonl",
+        default=str(DEFAULT_TRACE_JSONL),
+        help="Append-only JSONL trace artifact path (set empty string to disable).",
+    )
     return parser
 
 
@@ -477,27 +491,54 @@ def main() -> int:
     if report_path:
         output_path = Path(report_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
+        report_payload = {
+            "run_id": run_id,
+            "base_url": args.base_url,
+            "cases_path": str(cases_path),
+            "summary": {
+                "total": len(cases),
+                "passed": passed,
+                "failed": total_failures,
+                "errors": total_errors,
+            },
+            "cases": case_reports,
+            "generated_at": int(time.time()),
+        }
         output_path.write_text(
-            json.dumps(
-                {
-                    "run_id": run_id,
-                    "base_url": args.base_url,
-                    "cases_path": str(cases_path),
-                    "summary": {
-                        "total": len(cases),
-                        "passed": passed,
-                        "failed": total_failures,
-                        "errors": total_errors,
-                    },
-                    "cases": case_reports,
-                    "generated_at": int(time.time()),
-                },
-                ensure_ascii=False,
-                indent=2,
-            ),
+            json.dumps(report_payload, ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
         print(f"  Report: {output_path}")
+        trace_jsonl = str(args.trace_jsonl or "").strip()
+        if trace_jsonl:
+            trace_payload = build_eval_trace(
+                run_id=run_id,
+                tool_name="tools/eval_ocr_recovery.py",
+                source_artifacts={
+                    "report_json": str(output_path),
+                    "cases_path": str(cases_path),
+                },
+                gate_outcomes=[
+                    {
+                        "name": "ocr_recovery_eval",
+                        "passed": total_failures == 0,
+                        "detail": (
+                            f"passed={passed}/{len(cases)}, "
+                            f"failed={total_failures}, errors={total_errors}"
+                        ),
+                    }
+                ],
+                summary=report_payload["summary"],
+                metadata={
+                    "base_url": args.base_url,
+                    "strict": bool(args.strict),
+                },
+            )
+            trace_path = append_eval_trace(
+                trace_payload=trace_payload,
+                trace_jsonl_path=Path(trace_jsonl),
+            )
+            print(f"  Trace: {trace_path}")
 
     if total_failures > 0 and args.strict:
         return 1

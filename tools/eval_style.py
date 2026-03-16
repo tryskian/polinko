@@ -10,6 +10,15 @@ import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 
+try:
+    from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
+    from tools.eval_trace_artifacts import append_eval_trace
+    from tools.eval_trace_artifacts import build_eval_trace
+except ModuleNotFoundError:
+    from eval_trace_artifacts import DEFAULT_TRACE_JSONL
+    from eval_trace_artifacts import append_eval_trace
+    from eval_trace_artifacts import build_eval_trace
+
 
 _JUDGE_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -287,6 +296,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Optional path to write a JSON report.",
     )
+    parser.add_argument(
+        "--trace-jsonl",
+        default=str(DEFAULT_TRACE_JSONL),
+        help="Append-only JSONL trace artifact path (set empty string to disable).",
+    )
     return parser
 
 
@@ -447,6 +461,34 @@ def main() -> int:
         }
         report_path.write_text(json.dumps(report_payload, ensure_ascii=False, indent=2), encoding="utf-8")
         print(f"  Report: {report_path}")
+        trace_jsonl = str(args.trace_jsonl or "").strip()
+        if trace_jsonl:
+            trace_payload = build_eval_trace(
+                run_id=run_id,
+                tool_name="tools/eval_style.py",
+                source_artifacts={
+                    "report_json": str(report_path),
+                    "cases_path": str(cases_path),
+                },
+                gate_outcomes=[
+                    {
+                        "name": "style_eval",
+                        "passed": failures == 0,
+                        "detail": f"passed={passed}/{len(cases)}, failed={failures}",
+                    }
+                ],
+                summary=report_payload["summary"],
+                model_metadata={"judge_model": args.judge_model},
+                metadata={
+                    "base_url": args.base_url,
+                    "strict": bool(args.strict),
+                },
+            )
+            trace_path = append_eval_trace(
+                trace_payload=trace_payload,
+                trace_jsonl_path=Path(trace_jsonl),
+            )
+            print(f"  Trace: {trace_path}")
 
     if failures > 0 and args.strict:
         return 1
