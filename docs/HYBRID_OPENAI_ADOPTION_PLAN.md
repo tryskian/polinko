@@ -12,7 +12,7 @@
 
 - Phase 1: implemented.
 - Phase 2: implemented.
-- Phase 3: planned.
+- Phase 3: scaffold implemented (pilot dry-run path only).
 
 ## Phase 1 (Implemented): Report-Level Readiness Gate
 
@@ -84,6 +84,13 @@
   - zero changes to `make test` behavior/results
   - unchanged `/chat` request/response contract
   - documented rollback path (`unset flag` + disable pilot tooling command)
+- Scaffold status (implemented):
+  - dry-run bridge tool: `tools/hybrid_openai_trace_bridge.py`
+  - command:
+    `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true`
+  - default remains disabled (`HYBRID_OPENAI_PILOT_ENABLED=false`)
+  - output (append-only preview):
+    `docs/portfolio/raw_evidence/INBOX/openai_trace_bridge_preview.jsonl`
 
 ## Promotion Rule
 

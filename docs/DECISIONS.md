@@ -431,3 +431,15 @@
   changes, and default-on flags.
 - Why: Preserves current stable runtime contract while still creating concrete
   migration evidence toward OpenAI-native tooling integration.
+
+## D-047: Implement rollback-safe Phase 3 dry-run bridge scaffold
+
+- Category: `runtime_engineering`
+- Tags: `hybrid_openai`, `phase3`, `dry_run`, `rollback_safe`, `tooling_only`
+- Decision: Implement `tools/hybrid_openai_trace_bridge.py` and
+  `make hybrid-openai-pilot-dry-run` with flag-off default
+  (`HYBRID_OPENAI_PILOT_ENABLED=false`) to transform local eval trace JSONL
+  into OpenAI-compatible trace/grader metadata preview artifacts without
+  provider upload or runtime path changes.
+- Why: Starts Phase 3 execution with deterministic, testable, low-risk tooling
+  progress while preserving strict rollback and runtime parity guarantees.
