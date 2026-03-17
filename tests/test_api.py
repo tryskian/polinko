@@ -189,7 +189,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(entries[0]["outcome"], "pass")
         self.assertEqual(entries[0]["status"], "closed")
 
-    def test_submit_partial_feedback_with_em_dash_style_penalty(self) -> None:
+    def test_submit_fail_feedback_with_em_dash_style_penalty(self) -> None:
         with self._stub_runner("Style candidate"):
             chat_resp = self.client.post(
                 "/chat",
@@ -205,16 +205,15 @@ class PolinkoApiTests(unittest.TestCase):
             headers={"x-api-key": "test-server-key"},
             json={
                 "message_id": assistant_message_id,
-                "outcome": "partial",
-                "positive_tags": ["high_value"],
+                "outcome": "fail",
                 "negative_tags": ["em_dash_style"],
                 "note": "Great answer, but avoid em-dashes.",
             },
         )
         self.assertEqual(submit_resp.status_code, 200)
         payload = submit_resp.json()
-        self.assertEqual(payload["outcome"], "partial")
-        self.assertEqual(payload["positive_tags"], ["high_value"])
+        self.assertEqual(payload["outcome"], "fail")
+        self.assertEqual(payload["positive_tags"], [])
         self.assertEqual(payload["negative_tags"], ["em_dash_style"])
         self.assertEqual(payload["status"], "open")
         self.assertIn("style", str(payload["recommended_action"]).lower())
@@ -238,15 +237,6 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(second_resp.status_code, 200)
         second_assistant_id = second_resp.json()["assistant_message_id"]
 
-        with self._stub_runner("Checkpoint candidate three"):
-            third_resp = self.client.post(
-                "/chat",
-                headers={"x-api-key": "test-server-key"},
-                json={"message": "third prompt", "session_id": "s-feedback-checkpoint"},
-            )
-        self.assertEqual(third_resp.status_code, 200)
-        third_assistant_id = third_resp.json()["assistant_message_id"]
-
         pass_submit = self.client.post(
             "/chats/s-feedback-checkpoint/feedback",
             headers={"x-api-key": "test-server-key"},
@@ -269,18 +259,6 @@ class PolinkoApiTests(unittest.TestCase):
         )
         self.assertEqual(fail_submit.status_code, 200)
 
-        partial_submit = self.client.post(
-            "/chats/s-feedback-checkpoint/feedback",
-            headers={"x-api-key": "test-server-key"},
-            json={
-                "message_id": third_assistant_id,
-                "outcome": "partial",
-                "positive_tags": ["grounded"],
-                "negative_tags": ["needs_retry"],
-            },
-        )
-        self.assertEqual(partial_submit.status_code, 200)
-
         checkpoint_submit = self.client.post(
             "/chats/s-feedback-checkpoint/feedback/checkpoints",
             headers={"x-api-key": "test-server-key"},
@@ -289,10 +267,10 @@ class PolinkoApiTests(unittest.TestCase):
         checkpoint_payload = checkpoint_submit.json()
         self.assertTrue(checkpoint_payload["checkpoint_id"].startswith("eval-"))
         self.assertEqual(checkpoint_payload["session_id"], "s-feedback-checkpoint")
-        self.assertEqual(checkpoint_payload["total_count"], 3)
+        self.assertEqual(checkpoint_payload["total_count"], 2)
         self.assertEqual(checkpoint_payload["pass_count"], 1)
         self.assertEqual(checkpoint_payload["fail_count"], 1)
-        self.assertEqual(checkpoint_payload["other_count"], 1)
+        self.assertEqual(checkpoint_payload["other_count"], 0)
 
         listed = self.client.get(
             "/chats/s-feedback-checkpoint/feedback/checkpoints",
@@ -302,7 +280,7 @@ class PolinkoApiTests(unittest.TestCase):
         checkpoints = listed.json()["checkpoints"]
         self.assertEqual(len(checkpoints), 1)
         self.assertEqual(checkpoints[0]["checkpoint_id"], checkpoint_payload["checkpoint_id"])
-        self.assertEqual(checkpoints[0]["total_count"], 3)
+        self.assertEqual(checkpoints[0]["total_count"], 2)
 
         checkpoints_log = Path(self.tmpdir.name) / "raw_evidence" / "INBOX" / "eval_checkpoints.jsonl"
         self.assertTrue(checkpoints_log.exists())
@@ -314,7 +292,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertGreaterEqual(len(entries), 1)
         self.assertEqual(entries[-1]["session_id"], "s-feedback-checkpoint")
         self.assertEqual(entries[-1]["checkpoint_id"], checkpoint_payload["checkpoint_id"])
-        self.assertEqual(entries[-1]["total_count"], 3)
+        self.assertEqual(entries[-1]["total_count"], 2)
 
     def test_submit_eval_checkpoint_requires_existing_feedback(self) -> None:
         with self._stub_runner("No eval yet"):
@@ -429,44 +407,42 @@ class PolinkoApiTests(unittest.TestCase):
         )
         self.assertEqual(fail_with_positive_resp.status_code, 400)
 
-        partial_missing_side_resp = self.client.post(
+        partial_outcome_resp = self.client.post(
             "/chats/s-feedback-tags/feedback",
             headers={"x-api-key": "test-server-key"},
             json={
                 "message_id": assistant_message_id,
                 "outcome": "partial",
                 "positive_tags": ["accurate"],
-                "negative_tags": [],
             },
         )
-        self.assertEqual(partial_missing_side_resp.status_code, 400)
+        self.assertEqual(partial_outcome_resp.status_code, 400)
 
-    def test_partial_feedback_keeps_status_open_and_logs_action(self) -> None:
+    def test_fail_feedback_keeps_status_open_and_logs_action(self) -> None:
         with self._stub_runner("Candidate with mixed quality"):
             chat_resp = self.client.post(
                 "/chat",
                 headers={"x-api-key": "test-server-key"},
-                json={"message": "run OCR", "session_id": "s-feedback-partial"},
+                json={"message": "run OCR", "session_id": "s-feedback-fail-tags"},
             )
         self.assertEqual(chat_resp.status_code, 200)
         assistant_message_id = chat_resp.json()["assistant_message_id"]
 
         submit_resp = self.client.post(
-            "/chats/s-feedback-partial/feedback",
+            "/chats/s-feedback-fail-tags/feedback",
             headers={"x-api-key": "test-server-key"},
             json={
                 "message_id": assistant_message_id,
-                "outcome": "partial",
-                "positive_tags": ["grounded"],
+                "outcome": "fail",
                 "negative_tags": ["ocr_miss"],
                 "note": "Grounded framing but token decode failed.",
             },
         )
         self.assertEqual(submit_resp.status_code, 200)
         payload = submit_resp.json()
-        self.assertEqual(payload["outcome"], "partial")
+        self.assertEqual(payload["outcome"], "fail")
         self.assertEqual(payload["status"], "open")
-        self.assertEqual(payload["positive_tags"], ["grounded"])
+        self.assertEqual(payload["positive_tags"], [])
         self.assertEqual(payload["negative_tags"], ["ocr_miss"])
         self.assertIn("Retry OCR", payload["recommended_action"])
 
@@ -3326,8 +3302,7 @@ class PolinkoApiTests(unittest.TestCase):
             headers={"x-api-key": "test-server-key"},
             json={
                 "message_id": first_message_id,
-                "outcome": "partial",
-                "positive_tags": ["style", "grounded"],
+                "outcome": "fail",
                 "negative_tags": ["hallucination_risk"],
                 "note": "Good style, but a risky specific claim.",
             },
@@ -3413,7 +3388,7 @@ class PolinkoApiTests(unittest.TestCase):
             MessageFeedback(
                 session_id="s-style-cap",
                 message_id="msg_risk",
-                outcome="PARTIAL",
+                outcome="FAIL",
                 positive_tags=["style", "grounded"],
                 negative_tags=["hallucination_risk"],
                 tags=["style", "grounded", "hallucination_risk"],

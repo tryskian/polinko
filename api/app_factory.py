@@ -778,8 +778,8 @@ def _eval_checkpoint_response(entry: EvalCheckpoint) -> EvalCheckpointResponse:
 
 def _normalize_feedback_outcome(value: str) -> str:
     normalized = value.strip().lower()
-    if normalized not in {"pass", "partial", "fail"}:
-        raise HTTPException(status_code=400, detail="outcome must be 'pass', 'partial', or 'fail'.")
+    if normalized not in {"pass", "fail"}:
+        raise HTTPException(status_code=400, detail="outcome must be 'pass' or 'fail'.")
     return normalized
 
 
@@ -815,23 +815,8 @@ def _normalize_feedback_tags(
     if not normalized_positive and not normalized_negative and normalized_legacy:
         if outcome == "pass":
             normalized_positive = normalized_legacy
-        elif outcome == "fail":
-            normalized_negative = normalized_legacy
         else:
-            normalized_positive = [tag for tag in normalized_legacy if tag in _FEEDBACK_POSITIVE_TAGS]
-            normalized_negative = [tag for tag in normalized_legacy if tag in _FEEDBACK_NEGATIVE_TAGS]
-            invalid_legacy = [
-                tag
-                for tag in normalized_legacy
-                if tag not in _FEEDBACK_POSITIVE_TAGS and tag not in _FEEDBACK_NEGATIVE_TAGS
-            ]
-            if invalid_legacy:
-                invalid_text = ", ".join(invalid_legacy)
-                allowed_text = ", ".join(sorted(_FEEDBACK_POSITIVE_TAGS | _FEEDBACK_NEGATIVE_TAGS))
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Unsupported reason tag(s): {invalid_text}. Allowed: {allowed_text}.",
-                )
+            normalized_negative = normalized_legacy
 
     invalid_positive = [tag for tag in normalized_positive if tag not in _FEEDBACK_POSITIVE_TAGS]
     if invalid_positive:
@@ -855,17 +840,11 @@ def _normalize_feedback_tags(
             raise HTTPException(status_code=400, detail="Pass requires at least one positive reason tag.")
         if normalized_negative:
             raise HTTPException(status_code=400, detail="Pass cannot include negative reason tags.")
-    elif outcome == "fail":
+    else:
         if not normalized_negative:
             raise HTTPException(status_code=400, detail="Fail requires at least one negative reason tag.")
         if normalized_positive:
             raise HTTPException(status_code=400, detail="Fail cannot include positive reason tags.")
-    else:
-        if not normalized_positive or not normalized_negative:
-            raise HTTPException(
-                status_code=400,
-                detail="Partial requires at least one positive and one negative reason tag.",
-            )
 
     normalized_tags = list(dict.fromkeys(normalized_positive + normalized_negative))
     return normalized_positive, normalized_negative, normalized_tags

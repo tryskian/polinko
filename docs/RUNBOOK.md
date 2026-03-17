@@ -737,10 +737,9 @@ Hash fields in responses:
 ## UI Feedback Tagging (OCR + Grounding)
 
 1. For each assistant response, open the UI feedback card:
-   - click `Pass`, `Partial`, or `Fail`
-   - `Pass`: select at least one pass-reason chip
-   - `Fail`: select at least one fail-reason chip
-   - `Partial`: select at least one chip in both pass and fail groups
+   - click `Pass` or `Fail`
+   - `Pass`: select at least one pass-side rubric signal
+   - `Fail`: select at least one fail-side rubric signal
    - optional note
    - save
 2. Use this OCR classification mapping:
@@ -752,9 +751,10 @@ Hash fields in responses:
      `PASS` + `accurate` + `grounded`
 3. For FAIL entries, add a short note describing expected vs actual behavior to
    speed up remediation.
-4. Use `Partial` when a response has grounded/accurate portions but still
-   needs remediation (for example: correct guardrail intent with OCR token miss).
-5. Eval submissions are auto-logged on every save (PASS/PARTIAL/FAIL):
+4. Use binary outcome only:
+   - `PASS` when no fail-side signals are selected
+   - `FAIL` when any fail-side signal is selected
+5. Eval submissions are auto-logged on every save (PASS/FAIL):
    - `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl`
    - each line includes session id, title, outcome, tags, note, and timestamp.
 6. Quick "what's new" inbox command:
@@ -772,7 +772,6 @@ Hash fields in responses:
    - grounding under playful abstraction
 3. Tagging baseline:
    - `PASS`: include pass-side rubric signals only
-   - `PARTIAL`: include at least one pass tag and one fail tag
    - `FAIL`: use root-cause fail tags (`grounding_gap`, `hallucination_risk`,
      `style_mismatch`, `em_dash_style`, `needs_retry`)
 4. Notes template (recommended):

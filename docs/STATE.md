@@ -172,8 +172,8 @@
   near-duplicate suppression, and a max of two active notes, with note-change
   events logged as `adaptive_style_notes_updated` to prevent prompt/input
   over-indexing.
-- Eval feedback submissions are now append-logged for all outcomes
-  (`PASS`/`PARTIAL`/`FAIL`) to
+- Eval feedback submissions are now append-logged for binary outcomes
+  (`PASS`/`FAIL`) to
   `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl`, with quick
   latest-view command: `make eval-inbox`.
 - Hallucination eval cases now include an interpersonal motive-guess regression

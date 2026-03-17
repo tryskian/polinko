@@ -368,7 +368,7 @@
 
 - Category: `evidence_governance`
 - Tags: `eval_inbox`, `feedback_logging`, `triage_visibility`, `workflow_speed`
-- Decision: Append every UI eval submission (`PASS`, `PARTIAL`, `FAIL`) to
+- Decision: Append every UI eval submission (`PASS`, `FAIL`) to
   `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` and add
   `make eval-inbox` to show new entries since the last local cursor checkpoint.
 - Why: Makes new eval activity immediately discoverable, improves remediation
