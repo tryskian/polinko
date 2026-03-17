@@ -137,8 +137,8 @@
 - Frontend chat drawer now includes eval review queue controls:
   sort (`recent`, `unreviewed`, `fail_ratio`) plus `unreviewed only` filter for
   faster checkpoint triage.
-- Eval feedback submissions are append-logged for every outcome
-  (`PASS`/`PARTIAL`/`FAIL`) to
+- Eval feedback submissions are append-logged for binary outcomes
+  (`PASS`/`FAIL`) to
   `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` with inbox monitor
   command `make eval-inbox`.
 - Hallucination eval corpus now includes interpersonal motive-guess regression

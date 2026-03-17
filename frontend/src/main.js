@@ -112,8 +112,8 @@ const FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS = [
 ];
 const FEEDBACK_OUTCOME_UI = {
   pass: "🟢 PASS",
-  partial: "🟠 PARTIAL",
   fail: "🔴 FAIL",
+  partial: "🟠 PARTIAL",
 };
 const FEEDBACK_RUBRIC_DIMENSIONS = [
   {
@@ -921,13 +921,6 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   failButton.setAttribute("aria-label", "Fail");
   failButton.title = "Fail";
 
-  const partialButton = document.createElement("button");
-  partialButton.type = "button";
-  partialButton.className = "msg-feedback-toggle";
-  partialButton.textContent = "🟠";
-  partialButton.setAttribute("aria-label", "Partial");
-  partialButton.title = "Partial";
-
   const status = document.createElement("p");
   status.className = "msg-feedback-status";
 
@@ -1021,7 +1014,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   actions.append(saveButton, cancelButton);
 
   card.append(cardHead, rubricBlock, optionalStyleFlagBlock, noteLabel, noteEl, actionHint, actions);
-  buttons.append(passButton, partialButton, failButton);
+  buttons.append(passButton, failButton);
   root.append(buttons, summaryRow, card);
 
   let current = feedback ? { ...feedback } : null;
@@ -1139,7 +1132,6 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   function renderToggleState() {
     const isEditing = !card.hidden;
     passButton.classList.toggle("active", isEditing && selectedOutcome === "pass");
-    partialButton.classList.toggle("active", isEditing && selectedOutcome === "partial");
     failButton.classList.toggle("active", isEditing && selectedOutcome === "fail");
   }
 
@@ -1153,7 +1145,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   }
 
   function openCard(outcome) {
-    selectedOutcome = ["pass", "partial", "fail"].includes(outcome) ? outcome : "pass";
+    selectedOutcome = ["pass", "fail"].includes(outcome) ? outcome : "pass";
     if (!current) {
       rubricSelections = {
         style: null,
@@ -1168,8 +1160,6 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
     }
     if (selectedOutcome === "pass") {
       cardTitle.textContent = "🟢 Pass rubric";
-    } else if (selectedOutcome === "partial") {
-      cardTitle.textContent = "🟠 Partial rubric";
     } else {
       cardTitle.textContent = "🔴 Fail rubric";
     }
@@ -1191,9 +1181,11 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   }
 
   passButton.addEventListener("click", () => openCard("pass"));
-  partialButton.addEventListener("click", () => openCard("partial"));
   failButton.addEventListener("click", () => openCard("fail"));
-  editButton.addEventListener("click", () => openCard((current?.outcome || "pass").toLowerCase()));
+  editButton.addEventListener("click", () => {
+    const currentOutcome = (current?.outcome || "pass").toLowerCase();
+    openCard(currentOutcome === "fail" ? "fail" : "pass");
+  });
   retryButton.addEventListener("click", async () => {
     retryButton.disabled = true;
     try {
@@ -1222,17 +1214,12 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
       return;
     }
     if (selectedOutcome === "pass" && negativeTags.length > 0) {
-      status.textContent = "Pass cannot include fail signals. Clear penalties or use Partial.";
+      status.textContent = "Pass cannot include fail signals. Clear penalties or set outcome to Fail.";
       status.hidden = false;
       return;
     }
     if (selectedOutcome === "fail" && negativeTags.length === 0) {
       status.textContent = "Set at least one rubric level that yields a fail signal.";
-      status.hidden = false;
-      return;
-    }
-    if (selectedOutcome === "partial" && (positiveTags.length === 0 || negativeTags.length === 0)) {
-      status.textContent = "Partial needs at least one pass signal and one fail signal from rubric levels.";
       status.hidden = false;
       return;
     }
