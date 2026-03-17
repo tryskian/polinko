@@ -183,6 +183,7 @@ _FEEDBACK_NEGATIVE_TAGS = {
     "ocr_miss",
     "grounding_gap",
     "style_mismatch",
+    "em_dash_style",
     "hallucination_risk",
     "needs_retry",
 }

@@ -98,16 +98,127 @@ const FEEDBACK_POSITIVE_TAG_OPTIONS = [
   "ocr_accurate",
   "grounded",
   "style",
-  "complete",
-  "useful",
 ];
 const FEEDBACK_NEGATIVE_TAG_OPTIONS = [
   "ocr_miss",
   "grounding_gap",
   "style_mismatch",
+  "em_dash_style",
   "hallucination_risk",
   "needs_retry",
 ];
+const FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS = [
+  { key: "em_dash_style", label: "em-dash style" },
+];
+const FEEDBACK_OUTCOME_UI = {
+  pass: "🟢 PASS",
+  partial: "🟠 PARTIAL",
+  fail: "🔴 FAIL",
+};
+const FEEDBACK_RUBRIC_DIMENSIONS = [
+  {
+    key: "style",
+    label: "Style",
+    levels: [
+      { key: "high", label: "high", positiveTags: ["style", "high_value"], negativeTags: [] },
+      { key: "medium", label: "medium", positiveTags: ["style", "medium_value"], negativeTags: [] },
+      { key: "low", label: "low", positiveTags: ["low_value"], negativeTags: ["style_mismatch"] },
+    ],
+  },
+  {
+    key: "ocr",
+    label: "OCR",
+    levels: [
+      { key: "high", label: "high", positiveTags: ["accurate", "ocr_accurate"], negativeTags: [] },
+      { key: "medium", label: "medium", positiveTags: ["accurate"], negativeTags: [] },
+      { key: "low", label: "low", positiveTags: [], negativeTags: ["ocr_miss"] },
+    ],
+  },
+  {
+    key: "risk",
+    label: "Risk",
+    levels: [
+      { key: "high", label: "high", positiveTags: [], negativeTags: ["hallucination_risk", "grounding_gap"] },
+      { key: "medium", label: "medium", positiveTags: [], negativeTags: ["needs_retry"] },
+      { key: "low", label: "low", positiveTags: ["grounded"], negativeTags: [] },
+    ],
+  },
+];
+
+function inferRubricSelectionsFromFeedback(entry) {
+  const positive = new Set(Array.isArray(entry?.positive_tags) ? entry.positive_tags : []);
+  const negative = new Set(Array.isArray(entry?.negative_tags) ? entry.negative_tags : []);
+  const legacyTags = Array.isArray(entry?.tags) ? entry.tags : [];
+  for (const tag of legacyTags) {
+    if (FEEDBACK_POSITIVE_TAG_OPTIONS.includes(tag)) {
+      positive.add(tag);
+    }
+    if (FEEDBACK_NEGATIVE_TAG_OPTIONS.includes(tag)) {
+      negative.add(tag);
+    }
+  }
+  const selection = {
+    style: null,
+    ocr: null,
+    risk: null,
+  };
+
+  if (negative.has("style_mismatch")) {
+    selection.style = "low";
+  } else if (positive.has("high_value")) {
+    selection.style = "high";
+  } else if (positive.has("style") || positive.has("medium_value")) {
+    selection.style = "medium";
+  } else if (positive.has("low_value")) {
+    selection.style = "low";
+  }
+
+  if (negative.has("ocr_miss")) {
+    selection.ocr = "low";
+  } else if (positive.has("ocr_accurate")) {
+    selection.ocr = "high";
+  } else if (positive.has("accurate")) {
+    selection.ocr = "medium";
+  }
+
+  if (negative.has("hallucination_risk") || negative.has("grounding_gap")) {
+    selection.risk = "high";
+  } else if (negative.has("needs_retry")) {
+    selection.risk = "medium";
+  } else if (positive.has("grounded")) {
+    selection.risk = "low";
+  }
+  return selection;
+}
+
+function deriveTagsFromRubricSelections(selection) {
+  const positive = new Set();
+  const negative = new Set();
+  FEEDBACK_RUBRIC_DIMENSIONS.forEach((dimension) => {
+    const levelKey = selection?.[dimension.key];
+    if (!levelKey) {
+      return;
+    }
+    const level = dimension.levels.find((entry) => entry.key === levelKey);
+    if (!level) {
+      return;
+    }
+    level.positiveTags.forEach((tag) => positive.add(tag));
+    level.negativeTags.forEach((tag) => negative.add(tag));
+  });
+  return {
+    positiveTags: [...positive],
+    negativeTags: [...negative],
+  };
+}
+
+function inferOptionalStyleNegativeTagsFromFeedback(entry) {
+  const negative = new Set(Array.isArray(entry?.negative_tags) ? entry.negative_tags : []);
+  const selected = FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS.filter((option) =>
+    negative.has(option.key),
+  ).map((option) => option.key);
+  return new Set(selected);
+}
 const memorySearchAvailable =
   MEMORY_SEARCH_ENABLED &&
   Boolean(
@@ -689,7 +800,7 @@ function formatFeedbackStatusText(feedback) {
     return "";
   }
   const outcome = (feedback.outcome || "").toLowerCase();
-  const parts = [outcome.toUpperCase()];
+  const parts = [FEEDBACK_OUTCOME_UI[outcome] || outcome.toUpperCase()];
   const positiveTags = Array.isArray(feedback.positive_tags) ? feedback.positive_tags : [];
   const negativeTags = Array.isArray(feedback.negative_tags) ? feedback.negative_tags : [];
   if (outcome === "pass" && positiveTags.length > 0) {
@@ -771,7 +882,10 @@ async function retryAssistantVariant({ assistantMessageId, parentMessageId, stat
     if (activeChatId !== sessionId) {
       return;
     }
-    await loadActiveMessages();
+    await loadActiveMessages({
+      scrollToBottom: false,
+      focusMessageId: latestVariantId || assistantMessageId,
+    });
     await refreshChats();
   } catch (error) {
     if (statusEl) {
@@ -796,17 +910,23 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   const passButton = document.createElement("button");
   passButton.type = "button";
   passButton.className = "msg-feedback-toggle";
-  passButton.textContent = "Pass";
+  passButton.textContent = "🟢";
+  passButton.setAttribute("aria-label", "Pass");
+  passButton.title = "Pass";
 
   const failButton = document.createElement("button");
   failButton.type = "button";
   failButton.className = "msg-feedback-toggle";
-  failButton.textContent = "Fail";
+  failButton.textContent = "🔴";
+  failButton.setAttribute("aria-label", "Fail");
+  failButton.title = "Fail";
 
   const partialButton = document.createElement("button");
   partialButton.type = "button";
   partialButton.className = "msg-feedback-toggle";
-  partialButton.textContent = "Partial";
+  partialButton.textContent = "🟠";
+  partialButton.setAttribute("aria-label", "Partial");
+  partialButton.title = "Partial";
 
   const status = document.createElement("p");
   status.className = "msg-feedback-status";
@@ -855,23 +975,23 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   cardHead.className = "msg-feedback-head";
   cardHead.append(cardTitle, cardHeadActions);
 
-  const positiveBlock = document.createElement("div");
-  positiveBlock.className = "msg-feedback-reason-block";
-  const positiveLabel = document.createElement("p");
-  positiveLabel.className = "msg-feedback-label";
-  positiveLabel.textContent = "Pass reasons";
-  const positiveTagsWrap = document.createElement("div");
-  positiveTagsWrap.className = "msg-feedback-tags";
-  positiveBlock.append(positiveLabel, positiveTagsWrap);
+  const rubricBlock = document.createElement("div");
+  rubricBlock.className = "msg-feedback-reason-block";
+  const rubricLabel = document.createElement("p");
+  rubricLabel.className = "msg-feedback-label";
+  rubricLabel.textContent = "Rubric (Style / OCR / Risk)";
+  const rubricRowsWrap = document.createElement("div");
+  rubricRowsWrap.className = "msg-feedback-rubric";
+  rubricBlock.append(rubricLabel, rubricRowsWrap);
 
-  const negativeBlock = document.createElement("div");
-  negativeBlock.className = "msg-feedback-reason-block";
-  const negativeLabel = document.createElement("p");
-  negativeLabel.className = "msg-feedback-label";
-  negativeLabel.textContent = "Fail reasons";
-  const negativeTagsWrap = document.createElement("div");
-  negativeTagsWrap.className = "msg-feedback-tags";
-  negativeBlock.append(negativeLabel, negativeTagsWrap);
+  const optionalStyleFlagBlock = document.createElement("div");
+  optionalStyleFlagBlock.className = "msg-feedback-reason-block";
+  const optionalStyleFlagLabel = document.createElement("p");
+  optionalStyleFlagLabel.className = "msg-feedback-label";
+  optionalStyleFlagLabel.textContent = "Optional style penalties";
+  const optionalStyleFlagWrap = document.createElement("div");
+  optionalStyleFlagWrap.className = "msg-feedback-tags";
+  optionalStyleFlagBlock.append(optionalStyleFlagLabel, optionalStyleFlagWrap);
 
   const noteLabel = document.createElement("label");
   noteLabel.className = "msg-feedback-label";
@@ -900,14 +1020,18 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   actions.className = "msg-feedback-actions";
   actions.append(saveButton, cancelButton);
 
-  card.append(cardHead, positiveBlock, negativeBlock, noteLabel, noteEl, actionHint, actions);
+  card.append(cardHead, rubricBlock, optionalStyleFlagBlock, noteLabel, noteEl, actionHint, actions);
   buttons.append(passButton, partialButton, failButton);
   root.append(buttons, summaryRow, card);
 
   let current = feedback ? { ...feedback } : null;
   let selectedOutcome = null;
-  let selectedPositiveTags = new Set();
-  let selectedNegativeTags = new Set();
+  let rubricSelections = {
+    style: null,
+    ocr: null,
+    risk: null,
+  };
+  let optionalStyleNegativeTags = new Set();
   let isPip = false;
 
   function setPipMode(enabled) {
@@ -928,52 +1052,68 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   }
 
   function setSelectionsFromFeedback(entry) {
-    const outcome = (entry?.outcome || "").toLowerCase();
-    const positive = Array.isArray(entry?.positive_tags) ? entry.positive_tags : [];
-    const negative = Array.isArray(entry?.negative_tags) ? entry.negative_tags : [];
-    if (positive.length > 0 || negative.length > 0) {
-      selectedPositiveTags = new Set(positive);
-      selectedNegativeTags = new Set(negative);
-      return;
-    }
-    const legacyTags = Array.isArray(entry?.tags) ? entry.tags : [];
-    if (outcome === "fail") {
-      selectedPositiveTags = new Set();
-      selectedNegativeTags = new Set(legacyTags);
-      return;
-    }
-    if (outcome === "partial") {
-      const positiveSet = new Set(FEEDBACK_POSITIVE_TAG_OPTIONS);
-      const negativeSet = new Set(FEEDBACK_NEGATIVE_TAG_OPTIONS);
-      selectedPositiveTags = new Set(legacyTags.filter((tag) => positiveSet.has(tag)));
-      selectedNegativeTags = new Set(legacyTags.filter((tag) => negativeSet.has(tag)));
-      return;
-    }
-    selectedPositiveTags = new Set(legacyTags);
-    selectedNegativeTags = new Set();
+    rubricSelections = inferRubricSelectionsFromFeedback(entry || {});
+    optionalStyleNegativeTags = inferOptionalStyleNegativeTagsFromFeedback(entry || {});
   }
 
   setSelectionsFromFeedback(current);
 
-  function renderTagChips(targetWrap, options, selectedTags) {
-    targetWrap.innerHTML = "";
-    options.forEach((tag) => {
+  function renderRubricRows() {
+    rubricRowsWrap.innerHTML = "";
+    FEEDBACK_RUBRIC_DIMENSIONS.forEach((dimension) => {
+      const row = document.createElement("div");
+      row.className = "msg-feedback-rubric-row";
+
+      const rowLabel = document.createElement("p");
+      rowLabel.className = "msg-feedback-label";
+      rowLabel.textContent = dimension.label;
+
+      const rowLevels = document.createElement("div");
+      rowLevels.className = "msg-feedback-tags";
+      dimension.levels.forEach((level) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "msg-feedback-chip";
+        chip.textContent = level.label;
+        chip.setAttribute("aria-label", `${dimension.label} ${level.label}`);
+        if (rubricSelections[dimension.key] === level.key) {
+          chip.classList.add("active");
+        }
+        chip.addEventListener("click", () => {
+          const nextLevelKey = rubricSelections[dimension.key] === level.key ? null : level.key;
+          rubricSelections = {
+            ...rubricSelections,
+            [dimension.key]: nextLevelKey,
+          };
+          renderRubricRows();
+        });
+        rowLevels.appendChild(chip);
+      });
+      row.append(rowLabel, rowLevels);
+      rubricRowsWrap.appendChild(row);
+    });
+  }
+
+  function renderOptionalStylePenaltyRows() {
+    optionalStyleFlagWrap.innerHTML = "";
+    FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS.forEach((option) => {
       const chip = document.createElement("button");
       chip.type = "button";
       chip.className = "msg-feedback-chip";
-      chip.textContent = tag;
-      if (selectedTags.has(tag)) {
+      chip.textContent = option.label;
+      chip.setAttribute("aria-label", option.label);
+      if (optionalStyleNegativeTags.has(option.key)) {
         chip.classList.add("active");
       }
       chip.addEventListener("click", () => {
-        if (selectedTags.has(tag)) {
-          selectedTags.delete(tag);
+        if (optionalStyleNegativeTags.has(option.key)) {
+          optionalStyleNegativeTags.delete(option.key);
         } else {
-          selectedTags.add(tag);
+          optionalStyleNegativeTags.add(option.key);
         }
-        renderTagChips(targetWrap, options, selectedTags);
+        renderOptionalStylePenaltyRows();
       });
-      targetWrap.appendChild(chip);
+      optionalStyleFlagWrap.appendChild(chip);
     });
   }
 
@@ -1003,13 +1143,6 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
     failButton.classList.toggle("active", isEditing && selectedOutcome === "fail");
   }
 
-  function renderOutcomeSections() {
-    positiveBlock.hidden = selectedOutcome === "fail";
-    negativeBlock.hidden = selectedOutcome === "pass";
-    renderTagChips(positiveTagsWrap, FEEDBACK_POSITIVE_TAG_OPTIONS, selectedPositiveTags);
-    renderTagChips(negativeTagsWrap, FEEDBACK_NEGATIVE_TAG_OPTIONS, selectedNegativeTags);
-  }
-
   function renderReadState() {
     const isEditing = !card.hidden;
     const hasSaved = Boolean(current);
@@ -1022,27 +1155,27 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   function openCard(outcome) {
     selectedOutcome = ["pass", "partial", "fail"].includes(outcome) ? outcome : "pass";
     if (!current) {
-      selectedPositiveTags = new Set();
-      selectedNegativeTags = new Set();
+      rubricSelections = {
+        style: null,
+        ocr: null,
+        risk: null,
+      };
+      optionalStyleNegativeTags = new Set();
       noteEl.value = "";
     } else {
       setSelectionsFromFeedback(current);
       noteEl.value = current?.note || "";
-      if (selectedOutcome === "pass") {
-        selectedNegativeTags = new Set();
-      } else if (selectedOutcome === "fail") {
-        selectedPositiveTags = new Set();
-      }
     }
     if (selectedOutcome === "pass") {
-      cardTitle.textContent = "Pass reasons";
+      cardTitle.textContent = "🟢 Pass rubric";
     } else if (selectedOutcome === "partial") {
-      cardTitle.textContent = "Partial reasons";
+      cardTitle.textContent = "🟠 Partial rubric";
     } else {
-      cardTitle.textContent = "Fail reasons";
+      cardTitle.textContent = "🔴 Fail rubric";
     }
     card.hidden = false;
-    renderOutcomeSections();
+    renderRubricRows();
+    renderOptionalStylePenaltyRows();
     renderToggleState();
     renderActionHint();
     renderReadState();
@@ -1077,20 +1210,29 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   cardClose.addEventListener("click", closeCard);
   cancelButton.addEventListener("click", closeCard);
   saveButton.addEventListener("click", async () => {
-    const positiveTags = [...selectedPositiveTags];
-    const negativeTags = [...selectedNegativeTags];
+    const { positiveTags, negativeTags: rubricNegativeTags } = deriveTagsFromRubricSelections(
+      rubricSelections,
+    );
+    const negativeTags = [
+      ...new Set([...rubricNegativeTags, ...Array.from(optionalStyleNegativeTags)]),
+    ];
     if (selectedOutcome === "pass" && positiveTags.length === 0) {
-      status.textContent = "Pass requires at least one pass reason.";
+      status.textContent = "Set at least one rubric level that yields a pass signal.";
+      status.hidden = false;
+      return;
+    }
+    if (selectedOutcome === "pass" && negativeTags.length > 0) {
+      status.textContent = "Pass cannot include fail signals. Clear penalties or use Partial.";
       status.hidden = false;
       return;
     }
     if (selectedOutcome === "fail" && negativeTags.length === 0) {
-      status.textContent = "Fail requires at least one fail reason.";
+      status.textContent = "Set at least one rubric level that yields a fail signal.";
       status.hidden = false;
       return;
     }
     if (selectedOutcome === "partial" && (positiveTags.length === 0 || negativeTags.length === 0)) {
-      status.textContent = "Partial requires at least one pass reason and one fail reason.";
+      status.textContent = "Partial needs at least one pass signal and one fail signal from rubric levels.";
       status.hidden = false;
       return;
     }
@@ -1142,6 +1284,9 @@ function appendMessage(
 ) {
   const node = document.createElement("article");
   node.className = `msg ${kind}`;
+  if (messageId) {
+    node.dataset.messageId = String(messageId);
+  }
   if (kind === "assistant" || kind === "user") {
     node.innerHTML = renderMarkdown(text);
   } else {
@@ -1169,6 +1314,19 @@ function appendMessage(
   if (scroll) {
     chatEl.scrollTop = chatEl.scrollHeight;
   }
+}
+
+function focusMessageNode(messageId, { behavior = "smooth" } = {}) {
+  const id = String(messageId || "").trim();
+  if (!id) {
+    return false;
+  }
+  const target = chatEl.querySelector(`.msg[data-message-id="${CSS.escape(id)}"]`);
+  if (!target) {
+    return false;
+  }
+  target.scrollIntoView({ behavior, block: "center" });
+  return true;
 }
 
 function createUserPromptControls(promptText) {
@@ -1225,7 +1383,7 @@ function createAssistantVariantControls(variantMeta) {
       return;
     }
     assistantVariantSelectionByParent.set(parentMessageId, targetId);
-    renderCurrentMessages();
+    renderCurrentMessages({ scrollToBottom: false, focusMessageId: targetId });
   });
 
   nextButton.addEventListener("click", () => {
@@ -1234,7 +1392,7 @@ function createAssistantVariantControls(variantMeta) {
       return;
     }
     assistantVariantSelectionByParent.set(parentMessageId, targetId);
-    renderCurrentMessages();
+    renderCurrentMessages({ scrollToBottom: false, focusMessageId: targetId });
   });
 
   wrap.append(label, prevButton, nextButton);
@@ -1742,7 +1900,7 @@ function buildRenderableMessages(messages) {
   return rendered;
 }
 
-function renderCurrentMessages() {
+function renderCurrentMessages({ scrollToBottom = true, focusMessageId = "" } = {}) {
   clearActiveFeedbackPip();
   chatEl.querySelectorAll(".msg").forEach((node) => node.remove());
   const renderableMessages = buildRenderableMessages(currentMessages);
@@ -1763,7 +1921,12 @@ function renderCurrentMessages() {
     });
   });
   syncEmptyState();
-  chatEl.scrollTop = chatEl.scrollHeight;
+  const focused = focusMessageNode(focusMessageId, {
+    behavior: scrollToBottom ? "auto" : "smooth",
+  });
+  if (!focused && scrollToBottom) {
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
 }
 
 function headers() {
@@ -2543,11 +2706,11 @@ async function refreshChats() {
   return chats;
 }
 
-async function loadActiveMessages() {
+async function loadActiveMessages({ scrollToBottom = true, focusMessageId = "" } = {}) {
   if (!activeChatId) {
     currentMessages = [];
     messageFeedbackById = new Map();
-    renderCurrentMessages();
+    renderCurrentMessages({ scrollToBottom, focusMessageId });
     syncCheckpointJumpControl();
     return;
   }
@@ -2579,7 +2742,7 @@ async function loadActiveMessages() {
     ...mergeMessagesWithImageMessages(baseMessages, imageMessages),
     ...checkpointMessages,
   ];
-  renderCurrentMessages();
+  renderCurrentMessages({ scrollToBottom, focusMessageId });
   syncCheckpointJumpControl();
 }
 

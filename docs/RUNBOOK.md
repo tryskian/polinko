@@ -90,8 +90,7 @@
 ## Optional Keep-Awake Session Policy
 
 1. Default state is off (do not run `caffeinate` unless requested).
-2. Start keep-awake only on explicit session code phrase:
-   - `hi! new day!`
+2. Start keep-awake only when explicitly requested in-session.
 3. Start command:
    - `make caffeinate-on`
 4. Verify status:
@@ -772,11 +771,10 @@ Hash fields in responses:
    - style adaptation without mimicry collapse
    - grounding under playful abstraction
 3. Tagging baseline:
-   - `PASS`: include `grounded` + `style` and one value tag (`high_value` or
-     `medium_value`)
+   - `PASS`: include pass-side rubric signals only
    - `PARTIAL`: include at least one pass tag and one fail tag
    - `FAIL`: use root-cause fail tags (`grounding_gap`, `hallucination_risk`,
-     `style_mismatch`, `needs_retry`)
+     `style_mismatch`, `em_dash_style`, `needs_retry`)
 4. Notes template (recommended):
    - `constraint_state=...`
    - `shift_handling=...`

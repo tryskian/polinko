@@ -189,6 +189,36 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(entries[0]["outcome"], "pass")
         self.assertEqual(entries[0]["status"], "closed")
 
+    def test_submit_partial_feedback_with_em_dash_style_penalty(self) -> None:
+        with self._stub_runner("Style candidate"):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "style prompt", "session_id": "s-feedback-emdash"},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+        assistant_message_id = chat_resp.json()["assistant_message_id"]
+        self.assertTrue(assistant_message_id)
+
+        submit_resp = self.client.post(
+            "/chats/s-feedback-emdash/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": assistant_message_id,
+                "outcome": "partial",
+                "positive_tags": ["high_value"],
+                "negative_tags": ["em_dash_style"],
+                "note": "Great answer, but avoid em-dashes.",
+            },
+        )
+        self.assertEqual(submit_resp.status_code, 200)
+        payload = submit_resp.json()
+        self.assertEqual(payload["outcome"], "partial")
+        self.assertEqual(payload["positive_tags"], ["high_value"])
+        self.assertEqual(payload["negative_tags"], ["em_dash_style"])
+        self.assertEqual(payload["status"], "open")
+        self.assertIn("style", str(payload["recommended_action"]).lower())
+
     def test_submit_and_list_eval_feedback_checkpoints(self) -> None:
         with self._stub_runner("Checkpoint candidate one"):
             first_resp = self.client.post(
