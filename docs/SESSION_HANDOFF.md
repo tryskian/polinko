@@ -194,9 +194,9 @@
 - Dependency-management constraint: open Dependabot updates can fail CI when
   resolver-coupled pins land out of order; verify transitive constraints before
   merging isolated bump PRs.
-- Session policy constraint: keep-awake is opt-in and code-phrase triggered
-  only (`hi! new day!`), managed with `make caffeinate-on`, checked with
-  `make caffeinate-status`, and explicitly stopped at wrap via
+- Session policy constraint: keep-awake is opt-in and request-triggered,
+  managed with `make caffeinate-on`, checked with `make caffeinate-status`,
+  and explicitly stopped at wrap via
   `make caffeinate-off`.
 - Terminology constraint: when Docker MCP wording is ambiguous, confirm intent
   in-chat before applying config changes.
