@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal, cast
 
-from agents import Agent, ModelSettings, Runner, RunConfig
+from agents import Agent, Runner, RunConfig
 from agents.memory import Session
 from fastapi import FastAPI, HTTPException, Request
 from openai import (
@@ -115,8 +115,6 @@ _FACTUAL_QUERY_HINTS = (
     "law",
     "policy",
 )
-_FACTUAL_GROUNDED_TEMPERATURE = 0.25
-_FACTUAL_LOW_EVIDENCE_TEMPERATURE = 0.15
 _FICTIONAL_QUERY_HINTS = (
     "fictional",
     "fictitious",
@@ -2723,22 +2721,8 @@ def _factual_run_config(
     query_text: str,
     evidence_count: int,
 ) -> RunConfig:
-    if not _looks_like_factual_query(query_text):
-        return deps.run_config
-    temperature = (
-        _FACTUAL_GROUNDED_TEMPERATURE if evidence_count > 0 else _FACTUAL_LOW_EVIDENCE_TEMPERATURE
-    )
-    store = True
-    base_settings = getattr(deps.run_config, "model_settings", None)
-    if base_settings is not None and getattr(base_settings, "store", None) is not None:
-        store = bool(base_settings.store)
-    return RunConfig(
-        model_settings=ModelSettings(
-            temperature=temperature,
-            top_p=1.0,
-            store=store,
-        )
-    )
+    del query_text, evidence_count
+    return deps.run_config
 
 
 def _low_evidence_factual_reply(query_text: str, evidence_count: int) -> str | None:
