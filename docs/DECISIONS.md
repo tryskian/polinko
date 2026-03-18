@@ -497,3 +497,15 @@
 - Why: Moves Phase 3 from artifact-only export into controlled provider-side
   validation while keeping the default workflow manual-first and preserving
   rollback safety.
+
+## D-052: Worktree-first implementation with parallel eval orchestration and single director merge control
+
+- Category: `collaboration_method`
+- Tags: `worktree_first`, `multi_agent`, `parallel_eval`, `single_decider`
+- Decision: Standardize on worktrees for concurrent code tracks, use multi-agent
+  delegation only for bounded parallel analysis tasks, and add a parallel eval
+  orchestrator command (`make eval-reports-parallel`) while keeping final
+  PASS/FAIL promotion decisions centralized in one director thread.
+- Why: Increases throughput without merge chaos, preserves deterministic
+  decision authority, and keeps parallel computation observable via per-suite
+  reports/logs plus one consolidated artifact.
