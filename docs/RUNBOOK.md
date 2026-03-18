@@ -573,6 +573,30 @@ Hash fields in responses:
 9. Run the full pilot cycle in one command:
    - `make hybrid-openai-pilot-cycle`
 
+## Export OpenAI Custom-Eval Dataset (Tooling-Only)
+
+1. Ensure local trace artifacts exist:
+   - `make backfill-eval-traces`
+2. Export OpenAI custom eval dataset JSONL + `item_schema` JSON:
+   - `make hybrid-openai-export-dataset`
+3. Optional latest-N export:
+   - `make hybrid-openai-export-dataset HYBRID_OPENAI_PILOT_LIMIT=50`
+4. Optional tool filter (comma-separated `tool_name` values):
+   - `make hybrid-openai-export-dataset HYBRID_OPENAI_EXPORT_TOOLS=tools/eval_style.py,tools/eval_file_search.py`
+5. Validate exported artifacts:
+   - `make hybrid-openai-export-check`
+6. One-command export cycle:
+   - `make hybrid-openai-export-cycle`
+7. Output artifacts:
+   - dataset JSONL:
+     `docs/portfolio/raw_evidence/INBOX/openai_eval_dataset.jsonl`
+   - `item_schema` JSON:
+     `docs/portfolio/raw_evidence/INBOX/openai_eval_item_schema.json`
+8. Intended OpenAI Eval API usage:
+   - upload dataset JSONL through Files API
+   - use exported `item_schema` as `data_source_config.item_schema`
+   - keep runtime `/chat` path unchanged (tooling-only integration)
+
 ## Run OCR Eval
 
 1. Ensure API is running locally (`make server`).
