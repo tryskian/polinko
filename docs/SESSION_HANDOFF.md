@@ -157,6 +157,17 @@
   (`PASS`/`FAIL`) to
   `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` with inbox monitor
   command `make eval-inbox`.
+- Parallel eval report orchestration is now available:
+  - command: `make eval-reports-parallel`
+  - tool: `tools/eval_parallel_orchestrator.py`
+  - output: per-suite reports/logs + consolidated
+    `eval_reports/parallel-<run_id>.json`
+- OpenAI developer docs MCP is now configured for local workflows:
+  - endpoint: `https://developers.openai.com/mcp`
+  - workspace config: `.vscode/mcp.json`
+- Packaging direction is explicit:
+  - use Agent Builder as the product workflow shell
+  - keep local runtime/eval repo as canonical source of truth
 - Hallucination eval corpus now includes interpersonal motive-guess regression
   case `cautious_no_relationship_motive_guess` to catch speculative
   relationship-attribution claims.

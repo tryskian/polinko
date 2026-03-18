@@ -143,6 +143,19 @@
 5. If wording is unclear in the UI, pause and confirm intent before changing
    client/server mappings.
 
+## OpenAI MCP + Agent Builder Packaging
+
+1. OpenAI docs MCP endpoint:
+   - `https://developers.openai.com/mcp`
+2. Local wiring targets:
+   - user-level Codex config (`~/.codex/config.toml`)
+   - workspace config (`.vscode/mcp.json`)
+3. Packaging rule:
+   - use Agent Builder to package/publish workflow logic
+   - keep local repo runtime/eval stack as implementation source of truth
+4. Promotion rule:
+   - run side-by-side eval parity checks before switching primary runtime path.
+
 ## Playwright E2E
 
 1. Install frontend deps (if needed):

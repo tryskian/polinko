@@ -509,3 +509,15 @@
 - Why: Increases throughput without merge chaos, preserves deterministic
   decision authority, and keeps parallel computation observable via per-suite
   reports/logs plus one consolidated artifact.
+
+## D-050: Package product workflow in Agent Builder while keeping repo runtime canonical
+
+- Category: `workflow_environment`
+- Tags: `agent_builder`, `packaging`, `openai_native`, `source_of_truth`
+- Decision: Use OpenAI Agent Builder as the product packaging/orchestration
+  layer (workflow publishing + deployment integration) while keeping this repo's
+  backend/eval stack as the canonical implementation and regression source of
+  truth.
+- Why: Improves product packaging speed and deployment clarity without losing
+  engineering control, traceability, or rollback safety from the existing local
+  runtime and eval pipeline.
