@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-16
+- 2026-03-17
 
 ## Current Snapshot
 
@@ -57,6 +57,11 @@
   - drift isolation result:
     no strict-style drift reproduced in this cycle; treat style drift as a
     monitored quality signal unless corroborated by runtime/API regressions.
+- Status checkpoint (2026-03-17):
+  - project is in late build-hardening phase (not early scaffold phase)
+  - core runtime + binary eval flow are stable and merged on `main`
+  - remaining work is concentrated in backlog triage, hybrid pilot cycle
+    completion, and final portfolio evidence packaging
 - Hybrid OpenAI adoption planning now has a no-risk gate command:
   - `make hybrid-openai-readiness`
   - checker source: `tools/check_hybrid_openai_readiness.py`
