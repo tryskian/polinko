@@ -1,0 +1,12 @@
+{
+  "name": "polinko-dev-tools",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Repo-root tooling for docs/dev checks",
+  "scripts": {
+    "lint:docs": "markdownlint-cli2 docs/**/*.md"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "0.21.0"
+  }
+}

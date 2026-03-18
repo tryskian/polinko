@@ -54,6 +54,11 @@
   - CLIP readiness: `GO` on latest pair
     (`clip-ab-20260315-143219.json`, `clip-ab-20260315-180942.json`)
   - runtime regression signal: `make test` (`154` tests PASS)
+- Status checkpoint (March 17, 2026):
+  - project is in late build-hardening phase (not early scaffold phase)
+  - core runtime + binary eval flow are stable and merged on `main`
+  - remaining work is concentrated in backlog triage, hybrid pilot cycle
+    completion, and final portfolio evidence packaging
 - Eval runs no longer produce ambiguous generic `New chat` helper rows in the
   UI; generated eval chats now use deterministic session-id titles when
   retained.
