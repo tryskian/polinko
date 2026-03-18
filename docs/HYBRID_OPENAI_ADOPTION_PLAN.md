@@ -88,15 +88,28 @@
   - dry-run bridge tool: `tools/hybrid_openai_trace_bridge.py`
   - backfill tool: `tools/backfill_eval_trace_artifacts.py`
   - preview checker: `tools/check_hybrid_openai_bridge_preview.py`
+  - OpenAI custom-eval exporter:
+    `tools/export_openai_eval_dataset.py`
+  - OpenAI custom-eval export checker:
+    `tools/check_openai_eval_dataset_export.py`
   - command:
     `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true`
   - validation command:
     `make hybrid-openai-pilot-check`
+  - OpenAI custom-eval export command:
+    `make hybrid-openai-export-dataset`
+  - OpenAI custom-eval export validation:
+    `make hybrid-openai-export-check`
+  - OpenAI custom-eval one-command cycle:
+    `make hybrid-openai-export-cycle`
   - one-command cycle:
     `make hybrid-openai-pilot-cycle`
   - default remains disabled (`HYBRID_OPENAI_PILOT_ENABLED=false`)
   - output (append-only preview):
     `docs/portfolio/raw_evidence/INBOX/openai_trace_bridge_preview.jsonl`
+  - output (overwrite-per-run export):
+    - `docs/portfolio/raw_evidence/INBOX/openai_eval_dataset.jsonl`
+    - `docs/portfolio/raw_evidence/INBOX/openai_eval_item_schema.json`
   - latest local validation (2026-03-16):
     - backfill source rows: `17`
     - transformed rows per bridge run: `17`

@@ -456,3 +456,30 @@
 - Why: Removes manual inspection as the only quality gate for Phase 3 pilot
   artifacts, allows deterministic replay from existing eval history, and keeps
   tooling adoption measurable without runtime `/chat` migration risk.
+
+## D-049: Binary eval outcome is the release-grade signal; tags remain diagnostic
+
+- Category: `eval_quality`
+- Tags: `binary_first`, `pass_fail`, `determinism`, `human_machine_bridge`
+- Decision: Treat binary eval outcome (`PASS`/`FAIL`) as the primary gate
+  signal across runtime-quality loops. Keep tags/notes as secondary metadata
+  for diagnosis and remediation planning.
+- Why: This aligns evaluation output with deterministic implementation actions
+  (ship/hold/fix), while preserving high-context human reasoning in transcripts
+  and notes. In practice: nuanced interpretation informs the diagnosis, binary
+  outcome informs the decision.
+
+## D-050: Add OpenAI custom-eval dataset export contract from local trace artifacts
+
+- Category: `evidence_governance`
+- Tags: `hybrid_openai`, `custom_eval`, `jsonl_export`, `item_schema`
+- Decision: Add deterministic tooling export from
+  `polinko.eval_trace.v1` artifacts to OpenAI custom-eval dataset rows
+  (`tools/export_openai_eval_dataset.py`) plus an artifact checker
+  (`tools/check_openai_eval_dataset_export.py`), wired via
+  `make hybrid-openai-export-dataset`, `make hybrid-openai-export-check`, and
+  `make hybrid-openai-export-cycle`.
+- Why: Provides a direct bridge into OpenAI Eval API inputs
+  (dataset JSONL + `data_source_config.item_schema`) while keeping runtime
+  `/chat` behavior unchanged and preserving rollback-safe, tooling-only
+  adoption.

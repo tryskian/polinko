@@ -34,6 +34,7 @@ HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
 CLIP_AB_SOURCE_TYPES ?= image
 HYBRID_OPENAI_PILOT_ENABLED ?= false
 HYBRID_OPENAI_PILOT_LIMIT ?=
+HYBRID_OPENAI_EXPORT_TOOLS ?=
 CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
 CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
 CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
@@ -43,7 +44,7 @@ HUMAN_REFERENCE_SINCE_HOURS ?= 24
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test lint-docs doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hybrid-openai-readiness backfill-eval-traces hybrid-openai-pilot-dry-run hybrid-openai-pilot-check hybrid-openai-pilot-cycle hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
+.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test lint-docs doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hybrid-openai-readiness backfill-eval-traces hybrid-openai-pilot-dry-run hybrid-openai-pilot-check hybrid-openai-pilot-cycle hybrid-openai-export-dataset hybrid-openai-export-check hybrid-openai-export-cycle hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
@@ -336,6 +337,26 @@ hybrid-openai-pilot-cycle:
 	@$(MAKE) backfill-eval-traces
 	@$(MAKE) hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true
 	@$(MAKE) hybrid-openai-pilot-check
+
+hybrid-openai-export-dataset:
+	@set -eu; \
+	LIMIT_ARG=""; \
+	TOOLS_ARG=""; \
+	if [ -n "$(HYBRID_OPENAI_PILOT_LIMIT)" ]; then \
+		LIMIT_ARG="--limit $(HYBRID_OPENAI_PILOT_LIMIT)"; \
+	fi; \
+	if [ -n "$(HYBRID_OPENAI_EXPORT_TOOLS)" ]; then \
+		TOOLS_ARG="--include-tools $(HYBRID_OPENAI_EXPORT_TOOLS)"; \
+	fi; \
+	$(PYTHON) tools/export_openai_eval_dataset.py $$LIMIT_ARG $$TOOLS_ARG
+
+hybrid-openai-export-check:
+	$(PYTHON) tools/check_openai_eval_dataset_export.py
+
+hybrid-openai-export-cycle:
+	@$(MAKE) backfill-eval-traces
+	@$(MAKE) hybrid-openai-export-dataset
+	@$(MAKE) hybrid-openai-export-check
 
 eval-inbox:
 	$(PYTHON) tools/eval_inbox.py --new --limit 30
