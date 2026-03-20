@@ -135,7 +135,7 @@ lint-docs:
 	npm run lint:docs
 
 doctor-env:
-	$(PYTHON) tools/doctor_env.py
+	$(PYTHON) -m tools.doctor_env
 
 caffeinate-on:
 	@set -eu; \
@@ -239,26 +239,26 @@ trivy-image:
 	$(DOCKER) build -t $(DOCKER_IMAGE) . && trivy image --severity "$(TRIVY_SEVERITY)" --exit-code 1 $(DOCKER_IMAGE)
 
 eval-retrieval:
-	$(PYTHON) tools/eval_retrieval.py
+	$(PYTHON) -m tools.eval_retrieval
 
 eval-retrieval-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) tools/eval_retrieval.py --run-id $$RUN_ID --report-json "eval_reports/retrieval-$$RUN_ID.json"
+	$(PYTHON) -m tools.eval_retrieval --run-id $$RUN_ID --report-json "eval_reports/retrieval-$$RUN_ID.json"
 
 eval-file-search:
-	$(PYTHON) tools/eval_file_search.py
+	$(PYTHON) -m tools.eval_file_search
 
 eval-file-search-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) tools/eval_file_search.py --run-id $$RUN_ID --report-json "eval_reports/file-search-$$RUN_ID.json"
+	$(PYTHON) -m tools.eval_file_search --run-id $$RUN_ID --report-json "eval_reports/file-search-$$RUN_ID.json"
 
 eval-hallucination:
-	$(PYTHON) tools/eval_hallucination.py --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
+	$(PYTHON) -m tools.eval_hallucination --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 eval-hallucination-deterministic:
-	$(PYTHON) tools/eval_hallucination.py --evaluation-mode deterministic --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
+	$(PYTHON) -m tools.eval_hallucination --evaluation-mode deterministic --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 eval-hallucination-braintrust:
 	@set -eu; \
@@ -276,56 +276,56 @@ eval-hallucination-braintrust:
 		echo "Missing BRAINTRUST_API_KEY in environment."; \
 		exit 2; \
 	fi; \
-	$(PYTHON) tools/eval_hallucination.py --evaluation-mode judge --judge-api-key-env BRAINTRUST_API_KEY --judge-base-url "$$BASE_URL" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
+	$(PYTHON) -m tools.eval_hallucination --evaluation-mode judge --judge-api-key-env BRAINTRUST_API_KEY --judge-base-url "$$BASE_URL" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 eval-hallucination-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) tools/eval_hallucination.py --run-id $$RUN_ID --report-json "eval_reports/hallucination-$$RUN_ID.json" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
+	$(PYTHON) -m tools.eval_hallucination --run-id $$RUN_ID --report-json "eval_reports/hallucination-$$RUN_ID.json" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 calibrate-hallucination-threshold:
-	$(PYTHON) tools/calibrate_hallucination_threshold.py
+	$(PYTHON) -m tools.calibrate_hallucination_threshold
 
 eval-style:
-	$(PYTHON) tools/eval_style.py
+	$(PYTHON) -m tools.eval_style
 
 eval-style-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) tools/eval_style.py --run-id $$RUN_ID --report-json "eval_reports/style-$$RUN_ID.json"
+	$(PYTHON) -m tools.eval_style --run-id $$RUN_ID --report-json "eval_reports/style-$$RUN_ID.json"
 
 eval-ocr:
-	$(PYTHON) tools/eval_ocr.py
+	$(PYTHON) -m tools.eval_ocr
 
 eval-ocr-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) tools/eval_ocr.py --run-id $$RUN_ID --report-json "eval_reports/ocr-$$RUN_ID.json"
+	$(PYTHON) -m tools.eval_ocr --run-id $$RUN_ID --report-json "eval_reports/ocr-$$RUN_ID.json"
 
 eval-ocr-recovery:
-	$(PYTHON) tools/eval_ocr_recovery.py
+	$(PYTHON) -m tools.eval_ocr_recovery
 
 eval-ocr-recovery-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) tools/eval_ocr_recovery.py --run-id $$RUN_ID --report-json "eval_reports/ocr-recovery-$$RUN_ID.json"
+	$(PYTHON) -m tools.eval_ocr_recovery --run-id $$RUN_ID --report-json "eval_reports/ocr-recovery-$$RUN_ID.json"
 
 eval-clip-ab:
-	$(PYTHON) tools/eval_clip_ab.py --source-types "$(CLIP_AB_SOURCE_TYPES)"
+	$(PYTHON) -m tools.eval_clip_ab --source-types "$(CLIP_AB_SOURCE_TYPES)"
 
 eval-clip-ab-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) tools/eval_clip_ab.py --source-types "$(CLIP_AB_SOURCE_TYPES)" --run-id $$RUN_ID --report-json "eval_reports/clip-ab-$$RUN_ID.json"
+	$(PYTHON) -m tools.eval_clip_ab --source-types "$(CLIP_AB_SOURCE_TYPES)" --run-id $$RUN_ID --report-json "eval_reports/clip-ab-$$RUN_ID.json"
 
 eval-clip-ab-readiness:
-	$(PYTHON) tools/eval_clip_ab_readiness.py
+	$(PYTHON) -m tools.eval_clip_ab_readiness
 
 hybrid-openai-readiness:
-	$(PYTHON) tools/check_hybrid_openai_readiness.py
+	$(PYTHON) -m tools.check_hybrid_openai_readiness
 
 backfill-eval-traces:
-	$(PYTHON) tools/backfill_eval_trace_artifacts.py
+	$(PYTHON) -m tools.backfill_eval_trace_artifacts
 
 hybrid-openai-pilot-dry-run:
 	@set -eu; \
@@ -333,10 +333,10 @@ hybrid-openai-pilot-dry-run:
 	if [ -n "$(HYBRID_OPENAI_PILOT_LIMIT)" ]; then \
 		LIMIT_ARG="--limit $(HYBRID_OPENAI_PILOT_LIMIT)"; \
 	fi; \
-	$(PYTHON) tools/hybrid_openai_trace_bridge.py --enabled "$(HYBRID_OPENAI_PILOT_ENABLED)" $$LIMIT_ARG
+	$(PYTHON) -m tools.hybrid_openai_trace_bridge --enabled "$(HYBRID_OPENAI_PILOT_ENABLED)" $$LIMIT_ARG
 
 hybrid-openai-pilot-check:
-	$(PYTHON) tools/check_hybrid_openai_bridge_preview.py
+	$(PYTHON) -m tools.check_hybrid_openai_bridge_preview
 
 hybrid-openai-pilot-cycle:
 	@$(MAKE) backfill-eval-traces
@@ -353,10 +353,10 @@ hybrid-openai-export-dataset:
 	if [ -n "$(HYBRID_OPENAI_EXPORT_TOOLS)" ]; then \
 		TOOLS_ARG="--include-tools $(HYBRID_OPENAI_EXPORT_TOOLS)"; \
 	fi; \
-	$(PYTHON) tools/export_openai_eval_dataset.py $$LIMIT_ARG $$TOOLS_ARG
+	$(PYTHON) -m tools.export_openai_eval_dataset $$LIMIT_ARG $$TOOLS_ARG
 
 hybrid-openai-export-check:
-	$(PYTHON) tools/check_openai_eval_dataset_export.py
+	$(PYTHON) -m tools.check_openai_eval_dataset_export
 
 hybrid-openai-export-cycle:
 	@$(MAKE) backfill-eval-traces
@@ -366,7 +366,7 @@ hybrid-openai-export-cycle:
 hybrid-openai-prepare-pilot-payloads:
 	@set -eu; \
 	$(MAKE) hybrid-openai-export-cycle; \
-	$(PYTHON) tools/prepare_openai_eval_pilot.py --model "$(HYBRID_OPENAI_PILOT_MODEL)" --file-id "$(HYBRID_OPENAI_PILOT_FILE_ID)" --eval-id "$(HYBRID_OPENAI_PILOT_EVAL_ID)" --api-key-env "$(HYBRID_OPENAI_API_KEY_ENV)" --base-url "$(HYBRID_OPENAI_BASE_URL)"
+	$(PYTHON) -m tools.prepare_openai_eval_pilot --model "$(HYBRID_OPENAI_PILOT_MODEL)" --file-id "$(HYBRID_OPENAI_PILOT_FILE_ID)" --eval-id "$(HYBRID_OPENAI_PILOT_EVAL_ID)" --api-key-env "$(HYBRID_OPENAI_API_KEY_ENV)" --base-url "$(HYBRID_OPENAI_BASE_URL)"
 
 hybrid-openai-execute-pilot:
 	@set -eu; \
@@ -375,13 +375,13 @@ hybrid-openai-execute-pilot:
 		UPLOAD_ARG="--upload-dataset"; \
 	fi; \
 	$(MAKE) hybrid-openai-export-cycle; \
-	$(PYTHON) tools/prepare_openai_eval_pilot.py --execute $$UPLOAD_ARG --model "$(HYBRID_OPENAI_PILOT_MODEL)" --file-id "$(HYBRID_OPENAI_PILOT_FILE_ID)" --eval-id "$(HYBRID_OPENAI_PILOT_EVAL_ID)" --api-key-env "$(HYBRID_OPENAI_API_KEY_ENV)" --base-url "$(HYBRID_OPENAI_BASE_URL)"
+	$(PYTHON) -m tools.prepare_openai_eval_pilot --execute $$UPLOAD_ARG --model "$(HYBRID_OPENAI_PILOT_MODEL)" --file-id "$(HYBRID_OPENAI_PILOT_FILE_ID)" --eval-id "$(HYBRID_OPENAI_PILOT_EVAL_ID)" --api-key-env "$(HYBRID_OPENAI_API_KEY_ENV)" --base-url "$(HYBRID_OPENAI_BASE_URL)"
 
 eval-inbox:
-	$(PYTHON) tools/eval_inbox.py --new --limit 30
+	$(PYTHON) -m tools.eval_inbox --new --limit 30
 
 eval-cleanup:
-	$(PYTHON) tools/cleanup_eval_chats.py
+	$(PYTHON) -m tools.cleanup_eval_chats
 
 eval-reports:
 	@$(MAKE) eval-retrieval-report
@@ -392,7 +392,7 @@ eval-reports:
 
 eval-reports-parallel:
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) tools/eval_parallel_orchestrator.py --base-url "$${BASE_URL:-http://127.0.0.1:8000}" --run-id $$RUN_ID --hallucination-mode "$(HALLUCINATION_EVAL_MODE)" --hallucination-min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
+	$(PYTHON) -m tools.eval_parallel_orchestrator --base-url "$${BASE_URL:-http://127.0.0.1:8000}" --run-id $$RUN_ID --hallucination-mode "$(HALLUCINATION_EVAL_MODE)" --hallucination-min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 hallucination-gate:
 	@echo "Running hallucination gate..."
@@ -417,7 +417,7 @@ hallucination-gate:
 		echo "Server failed to start. See /tmp/polinko-hallucination-gate.log"; \
 		exit 1; \
 	fi; \
-	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"; \
+	$(PYTHON) -m tools.eval_hallucination --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"; \
 	echo "Hallucination gate passed."
 
 quality-gate:
@@ -444,18 +444,18 @@ quality-gate:
 		exit 1; \
 	fi; \
 	$(PYTHON) -m unittest discover -s tests -p "test_*.py"; \
-	$(PYTHON) tools/eval_retrieval.py --base-url "$$BASE_URL"; \
-	$(PYTHON) tools/eval_file_search.py --base-url "$$BASE_URL"; \
-	$(PYTHON) tools/eval_ocr.py --base-url "$$BASE_URL" --strict; \
-	$(PYTHON) tools/eval_style.py --base-url "$$BASE_URL" --strict; \
-	$(PYTHON) tools/eval_hallucination.py --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"; \
+	$(PYTHON) -m tools.eval_retrieval --base-url "$$BASE_URL"; \
+	$(PYTHON) -m tools.eval_file_search --base-url "$$BASE_URL"; \
+	$(PYTHON) -m tools.eval_ocr --base-url "$$BASE_URL" --strict; \
+	$(PYTHON) -m tools.eval_style --base-url "$$BASE_URL" --strict; \
+	$(PYTHON) -m tools.eval_hallucination --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"; \
 	echo "Quality gate passed."
 
 quality-gate-deterministic:
 	@$(MAKE) quality-gate HALLUCINATION_EVAL_MODE=deterministic
 
 evidence-index:
-	$(PYTHON) tools/build_evidence_index.py
+	$(PYTHON) -m tools.build_evidence_index
 
 evidence-refresh:
 	@set -eu; \
@@ -482,19 +482,19 @@ evidence-refresh:
 	fi
 
 portfolio-metadata-audit:
-	$(PYTHON) tools/audit_portfolio_metadata.py --strict
+	$(PYTHON) -m tools.audit_portfolio_metadata --strict
 
 human-reference-db:
-	$(PYTHON) tools/build_human_reference_db.py
+	$(PYTHON) -m tools.build_human_reference_db
 
 human-reference-latest:
-	$(PYTHON) tools/query_human_reference.py latest --db "$(HUMAN_REFERENCE_DB)" --limit "$(HUMAN_REFERENCE_LIMIT)"
+	$(PYTHON) -m tools.query_human_reference latest --db "$(HUMAN_REFERENCE_DB)" --limit "$(HUMAN_REFERENCE_LIMIT)"
 
 human-reference-transcripts:
-	$(PYTHON) tools/query_human_reference.py transcripts --db "$(HUMAN_REFERENCE_DB)" --limit "$(HUMAN_REFERENCE_LIMIT)"
+	$(PYTHON) -m tools.query_human_reference transcripts --db "$(HUMAN_REFERENCE_DB)" --limit "$(HUMAN_REFERENCE_LIMIT)"
 
 human-reference-changes:
-	$(PYTHON) tools/query_human_reference.py changes --db "$(HUMAN_REFERENCE_DB)" --limit "$(HUMAN_REFERENCE_LIMIT)" --since-hours "$(HUMAN_REFERENCE_SINCE_HOURS)"
+	$(PYTHON) -m tools.query_human_reference changes --db "$(HUMAN_REFERENCE_DB)" --limit "$(HUMAN_REFERENCE_LIMIT)" --since-hours "$(HUMAN_REFERENCE_SINCE_HOURS)"
 
 ui-dev:
 	cd frontend && $(NPM) run dev
@@ -519,7 +519,7 @@ dev-stop:
 
 workbench:
 	@echo "Starting portfolio workbench on http://127.0.0.1:$(WORKBENCH_PORT)/workbench.html"
-	$(PYTHON) tools/workbench_server.py --port $(WORKBENCH_PORT)
+	$(PYTHON) -m tools.workbench_server --port $(WORKBENCH_PORT)
 
 docker-build:
 	$(DOCKER) build -t $(DOCKER_IMAGE) .
