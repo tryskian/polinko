@@ -35,6 +35,11 @@ CLIP_AB_SOURCE_TYPES ?= image
 HYBRID_OPENAI_PILOT_ENABLED ?= false
 HYBRID_OPENAI_PILOT_LIMIT ?=
 HYBRID_OPENAI_EXPORT_TOOLS ?=
+HYBRID_OPENAI_PILOT_MODEL ?= gpt-4.1-mini
+HYBRID_OPENAI_PILOT_FILE_ID ?=
+HYBRID_OPENAI_PILOT_EVAL_ID ?=
+HYBRID_OPENAI_API_KEY_ENV ?= OPENAI_API_KEY
+HYBRID_OPENAI_BASE_URL ?= https://api.openai.com/v1
 CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
 CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
 CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
@@ -44,7 +49,7 @@ HUMAN_REFERENCE_SINCE_HOURS ?= 24
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test lint-docs doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hybrid-openai-readiness backfill-eval-traces hybrid-openai-pilot-dry-run hybrid-openai-pilot-check hybrid-openai-pilot-cycle hybrid-openai-export-dataset hybrid-openai-export-check hybrid-openai-export-cycle hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
+.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test lint-docs doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports calibrate-hallucination-threshold hybrid-openai-readiness backfill-eval-traces hybrid-openai-pilot-dry-run hybrid-openai-pilot-check hybrid-openai-pilot-cycle hybrid-openai-export-dataset hybrid-openai-export-check hybrid-openai-export-cycle hybrid-openai-prepare-pilot-payloads hybrid-openai-execute-pilot hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
@@ -357,6 +362,20 @@ hybrid-openai-export-cycle:
 	@$(MAKE) backfill-eval-traces
 	@$(MAKE) hybrid-openai-export-dataset
 	@$(MAKE) hybrid-openai-export-check
+
+hybrid-openai-prepare-pilot-payloads:
+	@set -eu; \
+	$(MAKE) hybrid-openai-export-cycle; \
+	$(PYTHON) tools/prepare_openai_eval_pilot.py --model "$(HYBRID_OPENAI_PILOT_MODEL)" --file-id "$(HYBRID_OPENAI_PILOT_FILE_ID)" --eval-id "$(HYBRID_OPENAI_PILOT_EVAL_ID)" --api-key-env "$(HYBRID_OPENAI_API_KEY_ENV)" --base-url "$(HYBRID_OPENAI_BASE_URL)"
+
+hybrid-openai-execute-pilot:
+	@set -eu; \
+	UPLOAD_ARG=""; \
+	if [ -z "$(HYBRID_OPENAI_PILOT_FILE_ID)" ]; then \
+		UPLOAD_ARG="--upload-dataset"; \
+	fi; \
+	$(MAKE) hybrid-openai-export-cycle; \
+	$(PYTHON) tools/prepare_openai_eval_pilot.py --execute $$UPLOAD_ARG --model "$(HYBRID_OPENAI_PILOT_MODEL)" --file-id "$(HYBRID_OPENAI_PILOT_FILE_ID)" --eval-id "$(HYBRID_OPENAI_PILOT_EVAL_ID)" --api-key-env "$(HYBRID_OPENAI_API_KEY_ENV)" --base-url "$(HYBRID_OPENAI_BASE_URL)"
 
 eval-inbox:
 	$(PYTHON) tools/eval_inbox.py --new --limit 30

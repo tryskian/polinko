@@ -127,12 +127,20 @@
   - backfill tool: `tools/backfill_eval_trace_artifacts.py`
   - preview check tool: `tools/check_hybrid_openai_bridge_preview.py`
   - one-command cycle: `make hybrid-openai-pilot-cycle`
-  - latest local cycle (2026-03-16):
-    - backfill source rows: `17`
-    - trace rows written: `17` (then idempotent rerun wrote `0`)
-    - bridge transform rows per run: `17`
-    - preview artifact rows (append-only): `34`
+  - latest local cycle (2026-03-20):
+    - backfill source rows: `79`
+    - trace rows written: `0` (`79` existing rows were idempotently skipped)
+    - bridge transform rows per run: `84`
+    - preview artifact rows (append-only): `135`
     - preview check: `OK`
+    - payload-shape review: no metadata-field refinement needed
+- Phase 3 provider-side pilot helper is now implemented (still tooling-only):
+  - helper tool: `tools/prepare_openai_eval_pilot.py`
+  - manual-first payload prep:
+    `make hybrid-openai-prepare-pilot-payloads`
+  - optional API execution:
+    `make hybrid-openai-execute-pilot`
+  - runtime `/chat` path remains unchanged
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.
@@ -213,6 +221,7 @@
 - Hybrid readiness gate checker: `tools/check_hybrid_openai_readiness.py`
 - Eval trace schema/writer: `tools/eval_trace_artifacts.py`
 - Phase 3 dry-run bridge tool: `tools/hybrid_openai_trace_bridge.py`
+- Provider-side pilot helper: `tools/prepare_openai_eval_pilot.py`
 
 ## Known Constraints
 
@@ -241,8 +250,9 @@ Use this in a new chat:
 4. Add ELT-style batch extraction pipeline (OCR alternative path) for large archive ingestion.
 5. Resume Figma/UI parity after backend retrieval/OCR/file-search milestones are stable.
 6. Add model-graders evaluation loop after retrieval quality and schema stability are locked.
-7. Run/inspect hybrid Phase 3 dry-run bridge output and define any required
-   metadata-shape refinements before provider-side pilot integration.
+7. Run provider-side pilot helper in prepare-only mode, then execute one
+   OpenAI eval run via API helper and record returned `eval_id`, `run_id`,
+   and `report_url` as promotion evidence.
 
 ## Cookbook Roadmap (Prioritized)
 

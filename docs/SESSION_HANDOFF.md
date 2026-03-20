@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-17
+- 2026-03-20
 
 ## Current Snapshot
 
@@ -86,9 +86,20 @@
   - backfill: `make backfill-eval-traces`
   - preview check: `make hybrid-openai-pilot-check`
   - full cycle: `make hybrid-openai-pilot-cycle`
-  - latest local result (2026-03-16): `17` source submissions ->
-    `17` trace rows -> `17` transformed preview rows per run
-    (`34` rows in append-only preview artifact, `OK` check)
+  - latest local result (2026-03-20): `79` source submissions ->
+    `79` trace rows -> `84` transformed preview rows per run
+    (`135` rows in append-only preview artifact, `OK` check)
+  - payload-shape check outcome (2026-03-20):
+    no metadata-field refinements required before provider-side pilot wiring
+- Hybrid OpenAI Phase 3 provider-side pilot helper is now implemented (still tooling-only):
+  - helper: `tools/prepare_openai_eval_pilot.py`
+  - prepare-only command:
+    `make hybrid-openai-prepare-pilot-payloads`
+  - optional execute command:
+    `make hybrid-openai-execute-pilot`
+  - latest local result (2026-03-20):
+    - export dataset rows: `85`
+    - payload prep: `OK` (manual-first, no API calls)
 - CLIP integration go/no-go criterion is now defined and documented
   (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
   delta `>= 0.50`, zero errors/skips).
@@ -167,8 +178,9 @@
 
 ## Latest Local Commit
 
-- `481b5bb` on `main` (local branch synced with `origin/main`)
-- Summary: Merge pull request #42 from tryskian/docs/clip-validation-20260315
+- `5557809` on `main` (local branch synced with `origin/main`)
+- Summary: Merge pull request #51 from
+  tryskian/codex/bigbrain/openai-evals-exporter
 
 ## Key Files To Read First
 
@@ -208,11 +220,12 @@
 
 ## Immediate Next Step
 
-- Execute the one-command Phase 3 pilot cycle (no runtime migration):
+- Execute one provider-side pilot pass (no runtime migration):
   - keep current runtime/API behavior unchanged
-  - run `make hybrid-openai-pilot-cycle`
-  - inspect latest preview payload shape and capture any metadata-field
-    refinement decisions needed before provider-side pilot wiring
+  - run `make hybrid-openai-prepare-pilot-payloads`
+  - run `make hybrid-openai-execute-pilot` (or provide
+    `HYBRID_OPENAI_PILOT_FILE_ID=<file_id>` to skip upload)
+  - capture returned `eval_id`, `run_id`, and `report_url` in evidence docs
 
 ## Peanut Pin (Tomorrow Start)
 

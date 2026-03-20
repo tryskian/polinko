@@ -102,6 +102,11 @@
     `make hybrid-openai-export-check`
   - OpenAI custom-eval one-command cycle:
     `make hybrid-openai-export-cycle`
+  - provider-side pilot helper:
+    `tools/prepare_openai_eval_pilot.py`
+  - provider-side pilot make targets:
+    - `make hybrid-openai-prepare-pilot-payloads`
+    - `make hybrid-openai-execute-pilot`
   - one-command cycle:
     `make hybrid-openai-pilot-cycle`
   - default remains disabled (`HYBRID_OPENAI_PILOT_ENABLED=false`)
@@ -110,10 +115,14 @@
   - output (overwrite-per-run export):
     - `docs/portfolio/raw_evidence/INBOX/openai_eval_dataset.jsonl`
     - `docs/portfolio/raw_evidence/INBOX/openai_eval_item_schema.json`
-  - latest local validation (2026-03-16):
-    - backfill source rows: `17`
-    - transformed rows per bridge run: `17`
+  - latest local validation (2026-03-20):
+    - backfill source rows: `79`
+    - transformed rows per bridge run: `84`
+    - preview artifact rows (append-only): `135`
     - preview checker: `OK`
+    - export dataset rows: `85`
+    - provider payload prep: `OK` (manual-first, no API calls)
+    - payload-shape review: no metadata-field refinement needed
 
 ## Promotion Rule
 

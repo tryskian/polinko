@@ -483,3 +483,17 @@
   (dataset JSONL + `data_source_config.item_schema`) while keeping runtime
   `/chat` behavior unchanged and preserving rollback-safe, tooling-only
   adoption.
+
+## D-051: Add manual-first provider execution helper for OpenAI eval pilot
+
+- Category: `runtime_engineering`
+- Tags: `hybrid_openai`, `manual_first`, `provider_pilot`, `no_runtime_drift`
+- Decision: Add `tools/prepare_openai_eval_pilot.py` plus Make targets
+  `hybrid-openai-prepare-pilot-payloads` and `hybrid-openai-execute-pilot` so
+  pilot execution is explicit and reversible:
+  - prepare mode writes create-eval and create-run payloads only
+  - execute mode can upload dataset, create eval, and start run when requested
+  - runtime `/chat` path remains unchanged
+- Why: Moves Phase 3 from artifact-only export into controlled provider-side
+  validation while keeping the default workflow manual-first and preserving
+  rollback safety.
