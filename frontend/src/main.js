@@ -117,7 +117,6 @@ const FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS = [
 const FEEDBACK_OUTCOME_UI = {
   pass: "🟢 PASS",
   fail: "🔴 FAIL",
-  partial: "🟠 PARTIAL",
 };
 const FEEDBACK_RUBRIC_DIMENSIONS = [
   {
@@ -806,25 +805,39 @@ function formatFeedbackStatusText(feedback) {
   if (!feedback) {
     return "";
   }
-  const outcome = (feedback.outcome || "").toLowerCase();
-  const parts = [FEEDBACK_OUTCOME_UI[outcome] || outcome.toUpperCase()];
+  const outcome = normalizeFeedbackOutcome(feedback);
+  const rawOutcome = String(feedback.outcome || "").toLowerCase();
+  const outcomeLabel = FEEDBACK_OUTCOME_UI[outcome] || rawOutcome.toUpperCase();
+  const parts = [outcomeLabel];
   const positiveTags = Array.isArray(feedback.positive_tags) ? feedback.positive_tags : [];
   const negativeTags = Array.isArray(feedback.negative_tags) ? feedback.negative_tags : [];
   if (outcome === "pass" && positiveTags.length > 0) {
     parts.push(positiveTags.join(", "));
   } else if (outcome === "fail" && negativeTags.length > 0) {
     parts.push(negativeTags.join(", "));
-  } else if (outcome === "partial") {
-    if (positiveTags.length > 0) {
-      parts.push(`+ ${positiveTags.join(", ")}`);
-    }
-    if (negativeTags.length > 0) {
-      parts.push(`- ${negativeTags.join(", ")}`);
-    }
   } else if (Array.isArray(feedback.tags) && feedback.tags.length > 0) {
     parts.push(feedback.tags.join(", "));
   }
   return parts.filter(Boolean).join(" • ");
+}
+
+function normalizeFeedbackOutcome(feedback) {
+  const rawOutcome = String(feedback?.outcome || "").toLowerCase();
+  if (rawOutcome === "pass" || rawOutcome === "fail") {
+    return rawOutcome;
+  }
+  const positiveTags = Array.isArray(feedback?.positive_tags) ? feedback.positive_tags : [];
+  const negativeTags = Array.isArray(feedback?.negative_tags) ? feedback.negative_tags : [];
+  if (rawOutcome === "partial") {
+    if (negativeTags.length > 0) {
+      return "fail";
+    }
+    if (positiveTags.length > 0) {
+      return "pass";
+    }
+    return "fail";
+  }
+  return "";
 }
 
 function resolveRetryContextForAssistant({ assistantMessageId, parentMessageId }) {
@@ -879,7 +892,7 @@ async function retryAssistantVariant({ assistantMessageId, parentMessageId, stat
   }
 
   const sessionId = activeChatId;
-  const thinkingNode = appendThinkingIndicator();
+  const thinkingNode = appendThinkingIndicator({ scroll: false });
   try {
     const result = await sendMessage(prompt, sessionId, { sourceUserMessageId });
     const latestVariantId = String(result?.assistant_message_id || "").trim();
@@ -889,9 +902,10 @@ async function retryAssistantVariant({ assistantMessageId, parentMessageId, stat
     if (activeChatId !== sessionId) {
       return;
     }
+    const focusMessageId = latestVariantId || sourceUserMessageId || assistantMessageId;
     await loadActiveMessages({
       scrollToBottom: false,
-      focusMessageId: latestVariantId || assistantMessageId,
+      focusMessageId,
     });
     await refreshChats();
   } catch (error) {
@@ -1126,7 +1140,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
 
   function renderActionHint() {
     const isEditing = !card.hidden;
-    const currentOutcome = (current?.outcome || "").toLowerCase();
+    const currentOutcome = normalizeFeedbackOutcome(current);
     const shouldShow =
       isEditing &&
       Boolean(current?.recommended_action) &&
@@ -1190,7 +1204,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   passButton.addEventListener("click", () => openCard("pass"));
   failButton.addEventListener("click", () => openCard("fail"));
   editButton.addEventListener("click", () => {
-    const currentOutcome = (current?.outcome || "pass").toLowerCase();
+    const currentOutcome = normalizeFeedbackOutcome(current);
     openCard(currentOutcome === "fail" ? "fail" : "pass");
   });
   retryButton.addEventListener("click", async () => {
@@ -2312,7 +2326,7 @@ async function startFreshChat({ deprecateCurrent = false } = {}) {
   messageEl.focus();
 }
 
-function appendThinkingIndicator() {
+function appendThinkingIndicator({ scroll = true } = {}) {
   const node = document.createElement("article");
   node.className = "msg assistant thinking";
   node.innerHTML = `
@@ -2322,7 +2336,9 @@ function appendThinkingIndicator() {
   `;
   chatEl.appendChild(node);
   syncEmptyState();
-  chatEl.scrollTop = chatEl.scrollHeight;
+  if (scroll) {
+    chatEl.scrollTop = chatEl.scrollHeight;
+  }
   return node;
 }
 
