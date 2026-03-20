@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-17
+- 2026-03-20
 
 ## Current Snapshot
 
@@ -91,6 +91,15 @@
     (`135` rows in append-only preview artifact, `OK` check)
   - payload-shape check outcome (2026-03-20):
     no metadata-field refinements required before provider-side pilot wiring
+- Hybrid OpenAI Phase 3 provider-side pilot helper is now implemented (still tooling-only):
+  - helper: `tools/prepare_openai_eval_pilot.py`
+  - prepare-only command:
+    `make hybrid-openai-prepare-pilot-payloads`
+  - optional execute command:
+    `make hybrid-openai-execute-pilot`
+  - latest local result (2026-03-20):
+    - export dataset rows: `85`
+    - payload prep: `OK` (manual-first, no API calls)
 - CLIP integration go/no-go criterion is now defined and documented
   (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
   delta `>= 0.50`, zero errors/skips).
@@ -211,11 +220,12 @@
 
 ## Immediate Next Step
 
-- Execute the one-command OpenAI custom-eval export cycle (no runtime migration):
+- Execute one provider-side pilot pass (no runtime migration):
   - keep current runtime/API behavior unchanged
-  - run `make hybrid-openai-export-cycle`
-  - inspect dataset + `item_schema` artifacts and capture any field-mapping
-    refinement decisions needed before provider-side pilot wiring
+  - run `make hybrid-openai-prepare-pilot-payloads`
+  - run `make hybrid-openai-execute-pilot` (or provide
+    `HYBRID_OPENAI_PILOT_FILE_ID=<file_id>` to skip upload)
+  - capture returned `eval_id`, `run_id`, and `report_url` in evidence docs
 
 ## Peanut Pin (Tomorrow Start)
 

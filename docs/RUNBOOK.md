@@ -597,6 +597,29 @@ Hash fields in responses:
    - use exported `item_schema` as `data_source_config.item_schema`
    - keep runtime `/chat` path unchanged (tooling-only integration)
 
+## Prepare/Execute OpenAI Eval Pilot (Manual-First)
+
+1. Prepare payload artifacts without API execution:
+   - `make hybrid-openai-prepare-pilot-payloads`
+2. Prepared outputs:
+   - `docs/portfolio/raw_evidence/INBOX/openai_eval_create_payload.json`
+   - `docs/portfolio/raw_evidence/INBOX/openai_eval_run_payload.json`
+3. Optional variables for prep:
+   - `HYBRID_OPENAI_PILOT_MODEL` (default `gpt-4.1-mini`)
+   - `HYBRID_OPENAI_PILOT_FILE_ID` (reuse uploaded dataset file id)
+   - `HYBRID_OPENAI_PILOT_EVAL_ID` (reuse existing eval id)
+4. Execute provider-side API calls from local tooling:
+   - `make hybrid-openai-execute-pilot`
+5. Execute behavior:
+   - if `HYBRID_OPENAI_PILOT_FILE_ID` is empty, dataset is uploaded first
+     (`purpose=evals`) and the returned file id is used automatically
+   - if `HYBRID_OPENAI_PILOT_EVAL_ID` is empty, eval is created before run
+   - otherwise run is created against the provided ids
+6. Required env for execute:
+   - `OPENAI_API_KEY` (or set `HYBRID_OPENAI_API_KEY_ENV` to another env var name)
+7. Optional API endpoint override:
+   - `HYBRID_OPENAI_BASE_URL` (default `https://api.openai.com/v1`)
+
 ## Run OCR Eval
 
 1. Ensure API is running locally (`make server`).
