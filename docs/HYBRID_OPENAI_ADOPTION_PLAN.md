@@ -110,10 +110,12 @@
   - output (overwrite-per-run export):
     - `docs/portfolio/raw_evidence/INBOX/openai_eval_dataset.jsonl`
     - `docs/portfolio/raw_evidence/INBOX/openai_eval_item_schema.json`
-  - latest local validation (2026-03-16):
-    - backfill source rows: `17`
-    - transformed rows per bridge run: `17`
+  - latest local validation (2026-03-20):
+    - backfill source rows: `79`
+    - transformed rows per bridge run: `84`
+    - preview artifact rows (append-only): `135`
     - preview checker: `OK`
+    - payload-shape review: no metadata-field refinement needed
 
 ## Promotion Rule
 

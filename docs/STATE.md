@@ -127,12 +127,13 @@
   - backfill tool: `tools/backfill_eval_trace_artifacts.py`
   - preview check tool: `tools/check_hybrid_openai_bridge_preview.py`
   - one-command cycle: `make hybrid-openai-pilot-cycle`
-  - latest local cycle (2026-03-16):
-    - backfill source rows: `17`
-    - trace rows written: `17` (then idempotent rerun wrote `0`)
-    - bridge transform rows per run: `17`
-    - preview artifact rows (append-only): `34`
+  - latest local cycle (2026-03-20):
+    - backfill source rows: `79`
+    - trace rows written: `0` (`79` existing rows were idempotently skipped)
+    - bridge transform rows per run: `84`
+    - preview artifact rows (append-only): `135`
     - preview check: `OK`
+    - payload-shape review: no metadata-field refinement needed
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.
