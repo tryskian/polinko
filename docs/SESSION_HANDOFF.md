@@ -100,8 +100,11 @@
   - current policy (2026-03-20): keep execution local-only until ship readiness;
     do not run provider-side execute during normal development cycles
   - latest local result (2026-03-20):
-    - export dataset rows: `85`
+    - export dataset rows: `86`
     - payload prep: `OK` (manual-first, no API calls)
+    - payload paths:
+      - `docs/portfolio/raw_evidence/INBOX/openai_eval_create_payload.json`
+      - `docs/portfolio/raw_evidence/INBOX/openai_eval_run_payload.json`
 - CLIP integration go/no-go criterion is now defined and documented
   (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
   delta `>= 0.50`, zero errors/skips).
@@ -202,9 +205,9 @@
 
 ## Latest Local Commit
 
-- `7c26b1f` on `main` (local branch synced with `origin/main`)
-- Summary: Merge pull request #53 from
-  tryskian/codex/bigbrain/local-only-pilot-deferral
+- `6add849` on `main` (local branch synced with `origin/main`)
+- Summary: Merge pull request #55 from
+  tryskian/codex/bigbrain/hybrid-loop-and-eval-ui-cleanup
 
 ## Key Files To Read First
 

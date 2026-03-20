@@ -160,6 +160,12 @@
     `make hybrid-openai-execute-pilot`
   - current policy (2026-03-20): execution is deferred; run local-only prep and
     export cycles until ship readiness
+  - latest local prep/export result (2026-03-20):
+    - export dataset rows: `86`
+    - payload prep: `OK` (manual-first, no API calls)
+    - payload paths:
+      - `docs/portfolio/raw_evidence/INBOX/openai_eval_create_payload.json`
+      - `docs/portfolio/raw_evidence/INBOX/openai_eval_run_payload.json`
   - runtime `/chat` path remains unchanged
 - Packaging direction is now explicit: use Agent Builder as product workflow
   shell while preserving local runtime/eval code as canonical source of truth.
