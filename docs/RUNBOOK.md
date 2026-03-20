@@ -651,6 +651,8 @@ Hash fields in responses:
    - `HYBRID_OPENAI_PILOT_EVAL_ID` (reuse existing eval id)
 4. Execute provider-side API calls from local tooling:
    - `make hybrid-openai-execute-pilot`
+   - policy note: keep this deferred during normal development; run only after
+     explicit ship-readiness approval
 5. Execute behavior:
    - if `HYBRID_OPENAI_PILOT_FILE_ID` is empty, dataset is uploaded first
      (`purpose=evals`) and the returned file id is used automatically

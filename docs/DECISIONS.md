@@ -510,7 +510,7 @@
   decision authority, and keeps parallel computation observable via per-suite
   reports/logs plus one consolidated artifact.
 
-## D-050: Package product workflow in Agent Builder while keeping repo runtime canonical
+## D-053: Package product workflow in Agent Builder while keeping repo runtime canonical
 
 - Category: `workflow_environment`
 - Tags: `agent_builder`, `packaging`, `openai_native`, `source_of_truth`
@@ -521,3 +521,15 @@
 - Why: Improves product packaging speed and deployment clarity without losing
   engineering control, traceability, or rollback safety from the existing local
   runtime and eval pipeline.
+
+## D-054: Defer provider-side eval execution until explicit ship-readiness
+
+- Category: `runtime_engineering`
+- Tags: `hybrid_openai`, `local_first`, `execution_policy`, `ship_readiness`
+- Decision: Keep OpenAI provider-side pilot execution
+  (`make hybrid-openai-execute-pilot`) deferred during normal development;
+  continue local export + payload preparation cycles and only execute provider
+  runs after explicit ship-readiness approval.
+- Why: Preserves local determinism and reduces rollout risk while the runtime
+  and eval contracts continue hardening; avoids premature coupling to external
+  provider execution before release intent.
