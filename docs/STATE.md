@@ -33,6 +33,9 @@
   sort (`recent`, `unreviewed`, `fail_ratio`) plus `unreviewed only` filter for
   faster checkpoint triage.
 - Frontend includes indexed search UI in composer (`Search` toggle with `Insert`/`Ask` actions).
+- OpenAI developer docs MCP server is now configured for Codex/VS Code usage:
+  - endpoint: `https://developers.openai.com/mcp`
+  - workspace wiring: `.vscode/mcp.json`
 - Figma/UI parity work is intentionally paused; current execution focus is backend retrieval, OCR, and file-search reliability.
 - Quality gate is implemented and passing locally via `make quality-gate`:
   - unit tests (`134`)
@@ -62,6 +65,10 @@
 - Eval runs no longer produce ambiguous generic `New chat` helper rows in the
   UI; generated eval chats now use deterministic session-id titles when
   retained.
+- Parallel eval report orchestration is now available:
+  - command: `make eval-reports-parallel`
+  - tool: `tools/eval_parallel_orchestrator.py`
+  - artifact: `eval_reports/parallel-<run_id>.json` plus per-suite logs/reports
 - Playwright smoke E2E now validates retry-variant lineage behavior end-to-end
   (assistant variant creation, `Variant X of Y` controls, and no duplicate user
   prompt rows in the rendered thread).
@@ -141,6 +148,8 @@
   - optional API execution:
     `make hybrid-openai-execute-pilot`
   - runtime `/chat` path remains unchanged
+- Packaging direction is now explicit: use Agent Builder as product workflow
+  shell while preserving local runtime/eval code as canonical source of truth.
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.
@@ -222,6 +231,7 @@
 - Eval trace schema/writer: `tools/eval_trace_artifacts.py`
 - Phase 3 dry-run bridge tool: `tools/hybrid_openai_trace_bridge.py`
 - Provider-side pilot helper: `tools/prepare_openai_eval_pilot.py`
+- Parallel eval orchestrator: `tools/eval_parallel_orchestrator.py`
 
 ## Known Constraints
 

@@ -14,6 +14,22 @@
    - `git worktree add /Users/tryskian/Github/polinko-<task> -b codex/bigbrain/<task> main`
 5. Keep one logical task per branch; merge or close before starting the next.
 
+## Worktrees vs Multi-Agents (Operating Rule)
+
+1. Worktree-first for code changes:
+   - use a separate worktree/branch when two implementation tracks can conflict.
+   - keep each worktree scoped to one logical change set.
+2. Multi-agent is for parallel analysis, not blind merge:
+   - good for eval triage, log scanning, and draft synthesis.
+   - route all final merge decisions through one director thread.
+3. Practical split:
+   - implementation parallelism => `git worktree`
+   - analysis parallelism => multi-agent delegation
+4. Peanut version:
+   - `worktree` = separate desk with its own files/branch
+   - `multi-agent` = extra hands doing bounded subtasks
+   - `director` = one final decider before merge
+
 ## Protected Main PR Flow
 
 1. Do not push directly to `main` (protected branch rules require PR + checks).
@@ -127,6 +143,19 @@
 5. If wording is unclear in the UI, pause and confirm intent before changing
    client/server mappings.
 
+## OpenAI MCP + Agent Builder Packaging
+
+1. OpenAI docs MCP endpoint:
+   - `https://developers.openai.com/mcp`
+2. Local wiring targets:
+   - user-level Codex config (`~/.codex/config.toml`)
+   - workspace config (`.vscode/mcp.json`)
+3. Packaging rule:
+   - use Agent Builder to package/publish workflow logic
+   - keep local repo runtime/eval stack as implementation source of truth
+4. Promotion rule:
+   - run side-by-side eval parity checks before switching primary runtime path.
+
 ## Playwright E2E
 
 1. Install frontend deps (if needed):
@@ -163,6 +192,18 @@
 6. Run Trivy security scans:
    - filesystem dependencies/secrets/misconfig: `make trivy-fs`
    - built image: `make trivy-image`
+
+## Parallel Eval Orchestration
+
+1. Run report eval suites in parallel:
+   - `make eval-reports-parallel`
+2. Output artifacts:
+   - per-suite reports in `eval_reports/`
+   - per-suite logs in `eval_reports/`
+   - consolidated summary in `eval_reports/parallel-<run_id>.json`
+3. This command parallelizes compute only:
+   - it does not auto-promote decisions.
+   - use one director review step before acting on results.
 
 ## Devcontainer Troubleshooting
 
