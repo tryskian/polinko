@@ -427,6 +427,70 @@ body {
   accent-color: var(--accent-blue);
 }
 
+.queue-summary {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-elev-1);
+  padding: 0.52rem 0.58rem;
+  display: grid;
+  gap: 0.42rem;
+}
+
+.queue-summary-title {
+  margin: 0;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.queue-summary-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.28rem;
+}
+
+.queue-summary-pill {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-elev-2);
+  color: var(--text-primary);
+  font-size: 0.68rem;
+  line-height: 1;
+  padding: 0.24rem 0.42rem;
+}
+
+.queue-summary-list {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.queue-summary-item {
+  display: grid;
+  gap: 0.08rem;
+  min-width: 0;
+}
+
+.queue-summary-item-title {
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-summary-item-stats {
+  color: var(--text-secondary);
+  font-size: 0.66rem;
+}
+
+.queue-summary-empty {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+}
+
 .chat-item-actions {
   display: flex;
   align-items: center;

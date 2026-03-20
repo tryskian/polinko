@@ -32,6 +32,7 @@ const memoryScopeSelectEl = document.getElementById("memory-scope-select");
 const exportMarkdownEl = document.getElementById("export-markdown");
 const exportJsonEl = document.getElementById("export-json");
 const exportOcrEl = document.getElementById("export-ocr");
+const exportTriageEl = document.getElementById("export-triage");
 const evalSubmitEl = document.getElementById("eval-submit");
 const checkpointJumpEl = document.getElementById("checkpoint-jump");
 const appPipEl = document.getElementById("app-pip");
@@ -42,6 +43,7 @@ const drawerToggleEl = document.getElementById("drawer-toggle");
 const drawerEl = document.getElementById("chat-drawer");
 const drawerBackdropEl = document.getElementById("drawer-backdrop");
 const chatListEl = document.getElementById("chat-list");
+const queueSummaryEl = document.getElementById("queue-summary");
 const chatSortSelectEl = document.getElementById("chat-sort-select");
 const chatFilterUnreviewedEl = document.getElementById("chat-filter-unreviewed");
 const RESPONSE_RENDER_DELAY_MS = 220;
@@ -55,6 +57,8 @@ const IMAGE_MESSAGE_MAX_PER_CHAT = 20;
 const IMAGE_MESSAGE_MAX_TOTAL = 80;
 const IMAGE_MESSAGE_STORAGE_MAX_CHARS = 3_200_000;
 const CHECKPOINT_SUMMARY_REFRESH_TTL_MS = 15_000;
+const TRIAGE_HIGH_FAIL_RATIO_THRESHOLD = 0.5;
+const TRIAGE_PRIORITY_LIMIT = 5;
 const DEFAULT_ATTACHMENT_PROMPT =
   "Transcribe visible text from the attached image(s) verbatim. Do not interpret.";
 const OCR_REQUEST_HINTS = [
@@ -496,6 +500,9 @@ const exportUiState = createExportUiState({
     exportMarkdownEl.disabled = disabled;
     exportJsonEl.disabled = disabled;
     exportOcrEl.disabled = disabled;
+    if (exportTriageEl) {
+      exportTriageEl.disabled = disabled;
+    }
   },
 });
 
@@ -1445,6 +1452,140 @@ function latestFailRatioForSession(sessionId) {
   return Number(latest.fail_count || 0) / Number(latest.total_count || 1);
 }
 
+function formatPercent(value) {
+  if (!Number.isFinite(value) || value < 0) {
+    return "n/a";
+  }
+  return `${Math.round(value * 100)}%`;
+}
+
+function triageRowForChat(chat) {
+  const latest = latestCheckpointForSession(chat.session_id);
+  const failRatio = latestFailRatioForSession(chat.session_id);
+  const checkpointCount = checkpointCountForSession(chat.session_id);
+  const unreviewedCount = unreviewedCheckpointCountForSession(chat.session_id);
+  return {
+    session_id: chat.session_id,
+    title: chat.title,
+    updated_at: Number(chat.updated_at || 0),
+    checkpoint_count: checkpointCount,
+    unreviewed_count: unreviewedCount,
+    latest_fail_ratio: failRatio < 0 ? null : Number(failRatio.toFixed(4)),
+    latest_total_count: latest ? Number(latest.total_count || 0) : 0,
+    latest_pass_count: latest ? Number(latest.pass_count || 0) : 0,
+    latest_fail_count: latest ? Number(latest.fail_count || 0) : 0,
+    latest_other_count: latest ? Number(latest.other_count || 0) : 0,
+    last_checkpoint_at: latest ? Number(latest.created_at || 0) : null,
+  };
+}
+
+function compareTriagePriority(a, b) {
+  const byUnreviewed = Number(b.unreviewed_count || 0) - Number(a.unreviewed_count || 0);
+  if (byUnreviewed !== 0) {
+    return byUnreviewed;
+  }
+  const failA = Number(a.latest_fail_ratio ?? -1);
+  const failB = Number(b.latest_fail_ratio ?? -1);
+  if (failB !== failA) {
+    return failB - failA;
+  }
+  return Number(b.updated_at || 0) - Number(a.updated_at || 0);
+}
+
+function buildTriageReport() {
+  const rows = chats.map((chat) => triageRowForChat(chat));
+  const checkpointsTotal = rows.reduce((sum, row) => sum + Number(row.checkpoint_count || 0), 0);
+  const unreviewedTotal = rows.reduce((sum, row) => sum + Number(row.unreviewed_count || 0), 0);
+  const chatsWithCheckpoints = rows.filter((row) => Number(row.checkpoint_count || 0) > 0).length;
+  const chatsWithUnreviewed = rows.filter((row) => Number(row.unreviewed_count || 0) > 0).length;
+  const highFailChats = rows.filter(
+    (row) =>
+      Number.isFinite(Number(row.latest_fail_ratio)) &&
+      Number(row.latest_fail_ratio) >= TRIAGE_HIGH_FAIL_RATIO_THRESHOLD,
+  ).length;
+  const latestCheckpointAt = rows.reduce((latest, row) => {
+    const ts = Number(row.last_checkpoint_at || 0);
+    return ts > latest ? ts : latest;
+  }, 0);
+  const priority = [...rows]
+    .filter((row) => Number(row.unreviewed_count || 0) > 0 || Number(row.checkpoint_count || 0) > 0)
+    .sort(compareTriagePriority)
+    .slice(0, TRIAGE_PRIORITY_LIMIT);
+  return {
+    generated_at: Date.now(),
+    high_fail_ratio_threshold: TRIAGE_HIGH_FAIL_RATIO_THRESHOLD,
+    chats_total: rows.length,
+    chats_with_checkpoints: chatsWithCheckpoints,
+    checkpoints_total: checkpointsTotal,
+    unreviewed_total: unreviewedTotal,
+    chats_with_unreviewed: chatsWithUnreviewed,
+    high_fail_chats: highFailChats,
+    latest_checkpoint_at: latestCheckpointAt > 0 ? latestCheckpointAt : null,
+    priority,
+    rows,
+  };
+}
+
+function renderQueueSummary() {
+  if (!queueSummaryEl) {
+    return;
+  }
+  queueSummaryEl.innerHTML = "";
+  if (chats.length === 0) {
+    const empty = document.createElement("p");
+    empty.className = "queue-summary-empty";
+    empty.textContent = "No chat data yet.";
+    queueSummaryEl.appendChild(empty);
+    return;
+  }
+  const report = buildTriageReport();
+
+  const title = document.createElement("p");
+  title.className = "queue-summary-title";
+  title.textContent = "Triage snapshot";
+
+  const metrics = document.createElement("div");
+  metrics.className = "queue-summary-metrics";
+  const metricsData = [
+    `Unreviewed: ${report.unreviewed_total}`,
+    `Needs review: ${report.chats_with_unreviewed}`,
+    `High fail: ${report.high_fail_chats}`,
+  ];
+  metricsData.forEach((text) => {
+    const item = document.createElement("span");
+    item.className = "queue-summary-pill";
+    item.textContent = text;
+    metrics.appendChild(item);
+  });
+
+  queueSummaryEl.append(title, metrics);
+
+  if (report.priority.length === 0) {
+    const done = document.createElement("p");
+    done.className = "queue-summary-empty";
+    done.textContent = "No checkpoint backlog right now.";
+    queueSummaryEl.appendChild(done);
+    return;
+  }
+
+  const list = document.createElement("ol");
+  list.className = "queue-summary-list";
+  report.priority.forEach((row) => {
+    const item = document.createElement("li");
+    item.className = "queue-summary-item";
+    const name = document.createElement("span");
+    name.className = "queue-summary-item-title";
+    name.textContent = String(row.title || row.session_id);
+    const stats = document.createElement("span");
+    stats.className = "queue-summary-item-stats";
+    stats.textContent =
+      `unreviewed ${row.unreviewed_count} • fail ${formatPercent(Number(row.latest_fail_ratio ?? -1))}`;
+    item.append(name, stats);
+    list.appendChild(item);
+  });
+  queueSummaryEl.appendChild(list);
+}
+
 function unreviewedCheckpointCountForSession(sessionId) {
   const totalCount = checkpointCountForSession(sessionId);
   const seenCount = Math.max(0, Number(checkpointSeenCountBySession.get(sessionId) || 0));
@@ -2068,6 +2209,10 @@ function exportBaseName(payload) {
   return `${titlePart}-${sessionPart}-${stampPart}`;
 }
 
+function triageExportBaseName(timestampMs) {
+  return `eval-triage-${formatExportTimestamp(timestampMs)}`;
+}
+
 function triggerDownload(filename, content, contentType) {
   const blob = new Blob([content], { type: contentType });
   const url = URL.createObjectURL(blob);
@@ -2508,6 +2653,7 @@ function sortChats(nextChats) {
 function refreshChatListUi() {
   chats = sortChats(chats);
   renderChatList();
+  renderQueueSummary();
 }
 
 function openDrawer() {
@@ -3074,6 +3220,24 @@ exportOcrEl.addEventListener("click", async () => {
         ocr_run_count: Array.isArray(payload.ocr_runs) ? payload.ocr_runs.length : 0,
         ocr_runs: payload.ocr_runs || [],
       });
+    } catch (error) {
+      appendMessage("error", String(error), { persist: false });
+    }
+  });
+});
+
+exportTriageEl?.addEventListener("click", async () => {
+  await withExportLock(async () => {
+    try {
+      await refreshCheckpointSummaries(chats.map((chat) => chat.session_id));
+      refreshChatListUi();
+      const report = buildTriageReport();
+      downloadJson(`${triageExportBaseName(report.generated_at)}.json`, report);
+      appendMessage(
+        "meta",
+        `Exported triage rollup (${report.chats_total} chats, ${report.unreviewed_total} unreviewed checkpoints).`,
+        { persist: false },
+      );
     } catch (error) {
       appendMessage("error", String(error), { persist: false });
     }
