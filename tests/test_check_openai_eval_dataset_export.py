@@ -4,13 +4,14 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 
 from tools import check_openai_eval_dataset_export as checker
 from tools import export_openai_eval_dataset as exporter
 
 
-def _valid_row() -> dict[str, object]:
-    trace = {
+def _valid_row() -> dict[str, Any]:
+    trace: dict[str, Any] = {
         "schema_version": "polinko.eval_trace.v1",
         "trace_id": "trace-a",
         "trace_type": "eval_run",

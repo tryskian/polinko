@@ -15,10 +15,7 @@ from pathlib import Path
 from typing import Any
 from typing import Mapping
 
-try:
-    from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
-except ModuleNotFoundError:
-    from eval_trace_artifacts import DEFAULT_TRACE_JSONL
+from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 
 DEFAULT_OUTPUT_JSONL = Path(
     "docs/portfolio/raw_evidence/INBOX/openai_eval_dataset.jsonl"

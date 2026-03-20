@@ -15,14 +15,9 @@ try:
 except ModuleNotFoundError:
     _eval_file_search = importlib.import_module("eval_file_search")
 
-try:
-    from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
-    from tools.eval_trace_artifacts import append_eval_trace
-    from tools.eval_trace_artifacts import build_eval_trace
-except ModuleNotFoundError:
-    from eval_trace_artifacts import DEFAULT_TRACE_JSONL
-    from eval_trace_artifacts import append_eval_trace
-    from eval_trace_artifacts import build_eval_trace
+from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
+from tools.eval_trace_artifacts import append_eval_trace
+from tools.eval_trace_artifacts import build_eval_trace
 
 _create_chat = _eval_file_search._create_chat
 _delete_chat = _eval_file_search._delete_chat
