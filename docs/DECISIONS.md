@@ -533,3 +533,12 @@
 - Why: Preserves local determinism and reduces rollout risk while the runtime
   and eval contracts continue hardening; avoids premature coupling to external
   provider execution before release intent.
+
+## D-055: Canonicalize tooling imports for mypy stability
+
+- Category: `workflow_environment`
+- Tags: `mypy`, `import_hygiene`, `tooling_consistency`, `maintenance`
+- Decision: Remove dual-path fallback imports in eval/pilot tooling files and
+  standardize on canonical `from tools...` imports.
+- Why: Eliminates mypy `import-not-found`/`no-redef` noise from branchy import
+  patterns and keeps type-checking deterministic across local and CI runs.

@@ -16,14 +16,9 @@ from pathlib import Path
 from typing import Any
 from typing import Mapping
 
-try:
-    from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
-    from tools.eval_trace_artifacts import append_eval_trace
-    from tools.eval_trace_artifacts import build_eval_trace
-except ModuleNotFoundError:
-    from eval_trace_artifacts import DEFAULT_TRACE_JSONL
-    from eval_trace_artifacts import append_eval_trace
-    from eval_trace_artifacts import build_eval_trace
+from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
+from tools.eval_trace_artifacts import append_eval_trace
+from tools.eval_trace_artifacts import build_eval_trace
 
 DEFAULT_SUBMISSIONS_JSONL = Path(
     "docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl"

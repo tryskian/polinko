@@ -9,14 +9,9 @@ from pathlib import Path
 from typing import Any
 from typing import Mapping
 
-try:
-    from tools.export_openai_eval_dataset import DATASET_SCHEMA_VERSION
-    from tools.export_openai_eval_dataset import DEFAULT_ITEM_SCHEMA_JSON
-    from tools.export_openai_eval_dataset import DEFAULT_OUTPUT_JSONL
-except ModuleNotFoundError:
-    from export_openai_eval_dataset import DATASET_SCHEMA_VERSION
-    from export_openai_eval_dataset import DEFAULT_ITEM_SCHEMA_JSON
-    from export_openai_eval_dataset import DEFAULT_OUTPUT_JSONL
+from tools.export_openai_eval_dataset import DATASET_SCHEMA_VERSION
+from tools.export_openai_eval_dataset import DEFAULT_ITEM_SCHEMA_JSON
+from tools.export_openai_eval_dataset import DEFAULT_OUTPUT_JSONL
 
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:

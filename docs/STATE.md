@@ -65,6 +65,14 @@
   - core runtime + binary eval flow are stable and merged on `main`
   - remaining work is concentrated in backlog triage, hybrid pilot cycle
     completion, and final portfolio evidence packaging
+- Latest audit checkpoint (March 20, 2026):
+  - `make doctor-env`: healthy
+  - `make lint-docs`: pass
+  - `ruff check .`: pass
+  - `mypy .`: pass (`58` source files)
+  - `make test`: pass (`175` tests)
+  - tooling import fallback debt removed in eval/pilot helpers
+    (canonical `tools.*` imports only)
 - Eval runs no longer produce ambiguous generic `New chat` helper rows in the
   UI; generated eval chats now use deterministic session-id titles when
   retained.

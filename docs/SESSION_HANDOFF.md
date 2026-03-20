@@ -189,14 +189,22 @@
   `server.Runner` for test patch compatibility and resolving import placement.
 - Mypy housekeeping is now stable and repo-scoped via `mypy.ini`; workspace
   diagnostics are bound to `venv/bin/mypy` + `--config-file mypy.ini`.
+- Latest audit checkpoint (2026-03-20):
+  - `make doctor-env`: healthy
+  - `make lint-docs`: pass
+  - `ruff check .`: pass
+  - `mypy .`: pass (`58` source files)
+  - `make test`: pass (`175` tests)
+  - tooling import fallback debt removed in eval/pilot helpers
+    (canonical `tools.*` imports only)
 - Dependabot dependency-order note: `openai-agents==0.11.1` (PR `#13`) requires
   `openai>=2.26.0`; merge PR `#5` (`openai` bump) before retrying PR `#13`.
 
 ## Latest Local Commit
 
-- `5557809` on `main` (local branch synced with `origin/main`)
-- Summary: Merge pull request #51 from
-  tryskian/codex/bigbrain/openai-evals-exporter
+- `7c26b1f` on `main` (local branch synced with `origin/main`)
+- Summary: Merge pull request #53 from
+  tryskian/codex/bigbrain/local-only-pilot-deferral
 
 ## Key Files To Read First
 
@@ -247,7 +255,7 @@
 ## Peanut Pin (Tomorrow Start)
 
 - Merge watch first:
-  - check PR status + CI on `#38` (CLIP proxy file-search slice)
+  - check open PR/CI status and clear pending conflicts before new work
 - If you want fast human-reference lookup without SQL editor:
   - `make human-reference-latest`
   - `make human-reference-transcripts`

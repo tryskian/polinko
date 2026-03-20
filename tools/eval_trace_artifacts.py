@@ -6,6 +6,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 from typing import Mapping
+from typing import Sequence
 
 TRACE_SCHEMA_VERSION = "polinko.eval_trace.v1"
 DEFAULT_TRACE_JSONL = Path("docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl")
@@ -16,7 +17,7 @@ def build_eval_trace(
     run_id: str,
     tool_name: str,
     source_artifacts: Mapping[str, Any] | None,
-    gate_outcomes: list[Mapping[str, Any]],
+    gate_outcomes: Sequence[Mapping[str, Any]],
     summary: Mapping[str, Any],
     model_metadata: Mapping[str, Any] | None = None,
     metadata: Mapping[str, Any] | None = None,

@@ -17,12 +17,8 @@ from typing import Mapping
 
 import requests
 
-try:
-    from tools.export_openai_eval_dataset import DEFAULT_ITEM_SCHEMA_JSON
-    from tools.export_openai_eval_dataset import DEFAULT_OUTPUT_JSONL
-except ModuleNotFoundError:
-    from export_openai_eval_dataset import DEFAULT_ITEM_SCHEMA_JSON
-    from export_openai_eval_dataset import DEFAULT_OUTPUT_JSONL
+from tools.export_openai_eval_dataset import DEFAULT_ITEM_SCHEMA_JSON
+from tools.export_openai_eval_dataset import DEFAULT_OUTPUT_JSONL
 
 DEFAULT_EVAL_CREATE_PAYLOAD_JSON = Path(
     "docs/portfolio/raw_evidence/INBOX/openai_eval_create_payload.json"
@@ -396,4 +392,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

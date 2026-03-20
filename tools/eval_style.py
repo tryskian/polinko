@@ -10,14 +10,9 @@ import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 
-try:
-    from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
-    from tools.eval_trace_artifacts import append_eval_trace
-    from tools.eval_trace_artifacts import build_eval_trace
-except ModuleNotFoundError:
-    from eval_trace_artifacts import DEFAULT_TRACE_JSONL
-    from eval_trace_artifacts import append_eval_trace
-    from eval_trace_artifacts import build_eval_trace
+from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
+from tools.eval_trace_artifacts import append_eval_trace
+from tools.eval_trace_artifacts import build_eval_trace
 
 
 _JUDGE_SCHEMA: dict[str, Any] = {
