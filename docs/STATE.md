@@ -150,6 +150,8 @@
     `make hybrid-openai-prepare-pilot-payloads`
   - optional API execution:
     `make hybrid-openai-execute-pilot`
+  - current policy (2026-03-20): execution is deferred; run local-only prep and
+    export cycles until ship readiness
   - runtime `/chat` path remains unchanged
 - Packaging direction is now explicit: use Agent Builder as product workflow
   shell while preserving local runtime/eval code as canonical source of truth.
@@ -263,9 +265,10 @@ Use this in a new chat:
 4. Add ELT-style batch extraction pipeline (OCR alternative path) for large archive ingestion.
 5. Resume Figma/UI parity after backend retrieval/OCR/file-search milestones are stable.
 6. Add model-graders evaluation loop after retrieval quality and schema stability are locked.
-7. Run provider-side pilot helper in prepare-only mode, then execute one
-   OpenAI eval run via API helper and record returned `eval_id`, `run_id`,
-   and `report_url` as promotion evidence.
+7. Keep provider-side execute deferred until ship readiness; continue local
+   cycles (`make hybrid-openai-export-cycle` +
+   `make hybrid-openai-prepare-pilot-payloads`) and record local artifact
+   outputs as promotion evidence.
 
 ## Cookbook Roadmap (Prioritized)
 

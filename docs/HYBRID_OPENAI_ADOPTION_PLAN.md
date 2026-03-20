@@ -107,6 +107,9 @@
   - provider-side pilot make targets:
     - `make hybrid-openai-prepare-pilot-payloads`
     - `make hybrid-openai-execute-pilot`
+  - execution policy (2026-03-20): keep `hybrid-openai-execute-pilot`
+    deferred until ship-readiness decision; use prepare/export cycles in normal
+    development
   - one-command cycle:
     `make hybrid-openai-pilot-cycle`
   - default remains disabled (`HYBRID_OPENAI_PILOT_ENABLED=false`)
@@ -128,6 +131,7 @@
 
 - Promote to next phase only when:
   - readiness gate stays green for two consecutive validation cycles
+  - ship-readiness decision explicitly approves provider-side pilot execution
   - trace artifacts are generated consistently in report workflows
   - no runtime/API regression appears in `make test` and quality-gate family
   - decisions + state docs are updated with concrete artifact references

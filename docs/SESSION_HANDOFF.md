@@ -90,13 +90,15 @@
     `79` trace rows -> `84` transformed preview rows per run
     (`135` rows in append-only preview artifact, `OK` check)
   - payload-shape check outcome (2026-03-20):
-    no metadata-field refinements required before provider-side pilot wiring
+    no metadata-field refinements required before ship-readiness gate
 - Hybrid OpenAI Phase 3 provider-side pilot helper is now implemented (still tooling-only):
   - helper: `tools/prepare_openai_eval_pilot.py`
   - prepare-only command:
     `make hybrid-openai-prepare-pilot-payloads`
   - optional execute command:
     `make hybrid-openai-execute-pilot`
+  - current policy (2026-03-20): keep execution local-only until ship readiness;
+    do not run provider-side execute during normal development cycles
   - latest local result (2026-03-20):
     - export dataset rows: `85`
     - payload prep: `OK` (manual-first, no API calls)
@@ -234,12 +236,13 @@
 
 ## Immediate Next Step
 
-- Execute one provider-side pilot pass (no runtime migration):
+- Continue local-only hybrid readiness loop (no provider API execution):
   - keep current runtime/API behavior unchanged
+  - run `make hybrid-openai-export-cycle`
   - run `make hybrid-openai-prepare-pilot-payloads`
-  - run `make hybrid-openai-execute-pilot` (or provide
-    `HYBRID_OPENAI_PILOT_FILE_ID=<file_id>` to skip upload)
-  - capture returned `eval_id`, `run_id`, and `report_url` in evidence docs
+  - do **not** run `make hybrid-openai-execute-pilot` until ship-readiness
+    decision is explicitly approved
+  - capture updated local artifact counts + payload paths in evidence docs
 
 ## Peanut Pin (Tomorrow Start)
 
