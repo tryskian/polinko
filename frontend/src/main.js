@@ -111,7 +111,7 @@ const FEEDBACK_NEGATIVE_TAG_OPTIONS = [
   "hallucination_risk",
   "needs_retry",
 ];
-const FEEDBACK_PASS_SOFT_NEGATIVE_TAGS = ["em_dash_style"];
+const FEEDBACK_PASS_SOFT_NEGATIVE_TAGS = [];
 const FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET = new Set(FEEDBACK_PASS_SOFT_NEGATIVE_TAGS);
 const FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS = [
   { key: "em_dash_style", label: "em-dash style" },
@@ -1078,6 +1078,64 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
     optionalStyleNegativeTags = inferOptionalStyleNegativeTagsFromFeedback(entry || {});
   }
 
+  function deriveCurrentNegativeTags() {
+    const { negativeTags: rubricNegativeTags } = deriveTagsFromRubricSelections(rubricSelections);
+    return [...new Set([...rubricNegativeTags, ...Array.from(optionalStyleNegativeTags)])];
+  }
+
+  function deriveCurrentHardNegativeTags() {
+    return deriveCurrentNegativeTags().filter((tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag));
+  }
+
+  function clearHardNegativeSelectionsForPass() {
+    const nextSelections = { ...rubricSelections };
+    FEEDBACK_RUBRIC_DIMENSIONS.forEach((dimension) => {
+      const selectedLevelKey = nextSelections[dimension.key];
+      if (!selectedLevelKey) {
+        return;
+      }
+      const selectedLevel = dimension.levels.find((level) => level.key === selectedLevelKey);
+      const hasHardNegative = (selectedLevel?.negativeTags || []).some(
+        (tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag),
+      );
+      if (hasHardNegative) {
+        nextSelections[dimension.key] = null;
+      }
+    });
+    rubricSelections = nextSelections;
+
+    const nextOptional = new Set(optionalStyleNegativeTags);
+    for (const tag of nextOptional) {
+      if (!FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag)) {
+        nextOptional.delete(tag);
+      }
+    }
+    optionalStyleNegativeTags = nextOptional;
+  }
+
+  function renderCardTitle() {
+    if (selectedOutcome === "pass") {
+      cardTitle.textContent = "🟢 Pass rubric";
+    } else {
+      cardTitle.textContent = "🔴 Fail rubric";
+    }
+  }
+
+  function autoSwitchPassToFailIfNeeded() {
+    if (selectedOutcome !== "pass") {
+      return;
+    }
+    const hardNegativeTags = deriveCurrentHardNegativeTags();
+    if (hardNegativeTags.length === 0) {
+      return;
+    }
+    selectedOutcome = "fail";
+    status.textContent = `Switched to FAIL because hard fail signals were selected: ${hardNegativeTags.join(", ")}.`;
+    status.hidden = false;
+    renderCardTitle();
+    renderToggleState();
+  }
+
   setSelectionsFromFeedback(current);
 
   function renderRubricRows() {
@@ -1107,7 +1165,10 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
             ...rubricSelections,
             [dimension.key]: nextLevelKey,
           };
+          autoSwitchPassToFailIfNeeded();
           renderRubricRows();
+          renderOptionalStylePenaltyRows();
+          renderActionHint();
         });
         rowLevels.appendChild(chip);
       });
@@ -1133,7 +1194,10 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
         } else {
           optionalStyleNegativeTags.add(option.key);
         }
+        autoSwitchPassToFailIfNeeded();
+        renderRubricRows();
         renderOptionalStylePenaltyRows();
+        renderActionHint();
       });
       optionalStyleFlagWrap.appendChild(chip);
     });
@@ -1188,10 +1252,11 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
       noteEl.value = current?.note || "";
     }
     if (selectedOutcome === "pass") {
-      cardTitle.textContent = "🟢 Pass rubric";
-    } else {
-      cardTitle.textContent = "🔴 Fail rubric";
+      clearHardNegativeSelectionsForPass();
+      status.textContent = "";
+      status.hidden = true;
     }
+    renderCardTitle();
     card.hidden = false;
     renderRubricRows();
     renderOptionalStylePenaltyRows();
@@ -1237,9 +1302,6 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
     const negativeTags = [
       ...new Set([...rubricNegativeTags, ...Array.from(optionalStyleNegativeTags)]),
     ];
-    const passSoftNegativeTags = negativeTags.filter((tag) =>
-      FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag),
-    );
     const hardNegativeTags = negativeTags.filter((tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag));
     if (selectedOutcome === "pass" && positiveTags.length === 0) {
       status.textContent = "Set at least one rubric level that yields a pass signal.";
@@ -1247,7 +1309,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
       return;
     }
     if (selectedOutcome === "pass" && hardNegativeTags.length > 0) {
-      status.textContent = "Pass cannot include fail signals. Clear penalties or set outcome to Fail.";
+      status.textContent = `PASS blocked by: ${hardNegativeTags.join(", ")}.`;
       status.hidden = false;
       return;
     }
@@ -1263,7 +1325,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
         message_id: messageId,
         outcome: selectedOutcome,
         positive_tags: selectedOutcome === "fail" ? [] : positiveTags,
-        negative_tags: selectedOutcome === "pass" ? passSoftNegativeTags : negativeTags,
+        negative_tags: selectedOutcome === "pass" ? [] : negativeTags,
         note: noteEl.value.trim() || null,
       };
       const saved = await apiSubmitFeedback(sessionId, {

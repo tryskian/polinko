@@ -240,13 +240,9 @@ class PolinkoApiTests(unittest.TestCase):
                 "note": "High-value response; em-dash usage was over target.",
             },
         )
-        self.assertEqual(submit_resp.status_code, 200)
-        payload = submit_resp.json()
-        self.assertEqual(payload["outcome"], "pass")
-        self.assertEqual(payload["status"], "closed")
-        self.assertEqual(payload["positive_tags"], ["style", "high_value", "grounded"])
-        self.assertEqual(payload["negative_tags"], ["em_dash_style"])
-        self.assertIsNone(payload["recommended_action"])
+        self.assertEqual(submit_resp.status_code, 400)
+        self.assertIn("Pass cannot include negative reason tags", submit_resp.text)
+        self.assertIn("em_dash_style", submit_resp.text)
 
     def test_submit_and_list_eval_feedback_checkpoints(self) -> None:
         with self._stub_runner("Checkpoint candidate one"):
