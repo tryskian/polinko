@@ -49,7 +49,7 @@ HUMAN_REFERENCE_SINCE_HOURS ?= 24
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test lint-docs doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold hybrid-openai-readiness backfill-eval-traces hybrid-openai-pilot-dry-run hybrid-openai-pilot-check hybrid-openai-pilot-cycle hybrid-openai-export-dataset hybrid-openai-export-check hybrid-openai-export-cycle hybrid-openai-prepare-pilot-payloads hybrid-openai-execute-pilot hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
+.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test lint-docs doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold hybrid-openai-readiness backfill-eval-traces hybrid-openai-pilot-dry-run hybrid-openai-pilot-check hybrid-openai-pilot-cycle hybrid-openai-export-dataset hybrid-openai-export-check hybrid-openai-export-cycle hybrid-openai-prepare-pilot-payloads hybrid-openai-execute-pilot hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
@@ -216,6 +216,15 @@ caffeinate-status:
 	fi
 
 decaffeinate: caffeinate-off
+
+privacy-local-on:
+	bash tools/local_privacy_guard.sh apply
+
+privacy-local-status:
+	bash tools/local_privacy_guard.sh status
+
+privacy-local-off:
+	bash tools/local_privacy_guard.sh clear
 
 precommit-install:
 	$(PYTHON) -m pip install pre-commit
