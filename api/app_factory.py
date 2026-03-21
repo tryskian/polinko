@@ -185,6 +185,9 @@ _FEEDBACK_NEGATIVE_TAGS = {
     "hallucination_risk",
     "needs_retry",
 }
+_FEEDBACK_PASS_SOFT_NEGATIVE_TAGS = {
+    "em_dash_style",
+}
 _DEFAULT_FEEDBACK_EVIDENCE_ROOT = Path(
     os.getenv("POLINKO_FEEDBACK_EVIDENCE_ROOT", "docs/portfolio/raw_evidence")
 )
@@ -836,8 +839,17 @@ def _normalize_feedback_tags(
     if outcome == "pass":
         if not normalized_positive:
             raise HTTPException(status_code=400, detail="Pass requires at least one positive reason tag.")
-        if normalized_negative:
-            raise HTTPException(status_code=400, detail="Pass cannot include negative reason tags.")
+        disallowed_negative = [
+            tag for tag in normalized_negative if tag not in _FEEDBACK_PASS_SOFT_NEGATIVE_TAGS
+        ]
+        if disallowed_negative:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Pass cannot include negative reason tags "
+                    "(except soft style penalties such as em_dash_style)."
+                ),
+            )
     else:
         if not normalized_negative:
             raise HTTPException(status_code=400, detail="Fail requires at least one negative reason tag.")

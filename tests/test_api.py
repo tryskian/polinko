@@ -218,6 +218,36 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(payload["status"], "open")
         self.assertIn("style", str(payload["recommended_action"]).lower())
 
+    def test_submit_pass_feedback_with_em_dash_style_penalty(self) -> None:
+        with self._stub_runner("Style candidate pass"):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "style prompt", "session_id": "s-feedback-pass-emdash"},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+        assistant_message_id = chat_resp.json()["assistant_message_id"]
+        self.assertTrue(assistant_message_id)
+
+        submit_resp = self.client.post(
+            "/chats/s-feedback-pass-emdash/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": assistant_message_id,
+                "outcome": "pass",
+                "positive_tags": ["style", "high_value", "grounded"],
+                "negative_tags": ["em_dash_style"],
+                "note": "High-value response; em-dash usage was over target.",
+            },
+        )
+        self.assertEqual(submit_resp.status_code, 200)
+        payload = submit_resp.json()
+        self.assertEqual(payload["outcome"], "pass")
+        self.assertEqual(payload["status"], "closed")
+        self.assertEqual(payload["positive_tags"], ["style", "high_value", "grounded"])
+        self.assertEqual(payload["negative_tags"], ["em_dash_style"])
+        self.assertIsNone(payload["recommended_action"])
+
     def test_submit_and_list_eval_feedback_checkpoints(self) -> None:
         with self._stub_runner("Checkpoint candidate one"):
             first_resp = self.client.post(
@@ -394,6 +424,18 @@ class PolinkoApiTests(unittest.TestCase):
             },
         )
         self.assertEqual(invalid_tags_resp.status_code, 400)
+
+        pass_with_hard_negative_resp = self.client.post(
+            "/chats/s-feedback-tags/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": assistant_message_id,
+                "outcome": "pass",
+                "positive_tags": ["accurate"],
+                "negative_tags": ["ocr_miss"],
+            },
+        )
+        self.assertEqual(pass_with_hard_negative_resp.status_code, 400)
 
         fail_with_positive_resp = self.client.post(
             "/chats/s-feedback-tags/feedback",

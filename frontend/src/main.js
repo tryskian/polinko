@@ -111,6 +111,8 @@ const FEEDBACK_NEGATIVE_TAG_OPTIONS = [
   "hallucination_risk",
   "needs_retry",
 ];
+const FEEDBACK_PASS_SOFT_NEGATIVE_TAGS = ["em_dash_style"];
+const FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET = new Set(FEEDBACK_PASS_SOFT_NEGATIVE_TAGS);
 const FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS = [
   { key: "em_dash_style", label: "em-dash style" },
 ];
@@ -811,8 +813,14 @@ function formatFeedbackStatusText(feedback) {
   const parts = [outcomeLabel];
   const positiveTags = Array.isArray(feedback.positive_tags) ? feedback.positive_tags : [];
   const negativeTags = Array.isArray(feedback.negative_tags) ? feedback.negative_tags : [];
+  const passSoftNegativeTags = negativeTags.filter((tag) =>
+    FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag),
+  );
   if (outcome === "pass" && positiveTags.length > 0) {
     parts.push(positiveTags.join(", "));
+    if (passSoftNegativeTags.length > 0) {
+      parts.push(`penalty: ${passSoftNegativeTags.join(", ")}`);
+    }
   } else if (outcome === "fail" && negativeTags.length > 0) {
     parts.push(negativeTags.join(", "));
   } else if (Array.isArray(feedback.tags) && feedback.tags.length > 0) {
@@ -1229,12 +1237,16 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
     const negativeTags = [
       ...new Set([...rubricNegativeTags, ...Array.from(optionalStyleNegativeTags)]),
     ];
+    const passSoftNegativeTags = negativeTags.filter((tag) =>
+      FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag),
+    );
+    const hardNegativeTags = negativeTags.filter((tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag));
     if (selectedOutcome === "pass" && positiveTags.length === 0) {
       status.textContent = "Set at least one rubric level that yields a pass signal.";
       status.hidden = false;
       return;
     }
-    if (selectedOutcome === "pass" && negativeTags.length > 0) {
+    if (selectedOutcome === "pass" && hardNegativeTags.length > 0) {
       status.textContent = "Pass cannot include fail signals. Clear penalties or set outcome to Fail.";
       status.hidden = false;
       return;
@@ -1251,7 +1263,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
         message_id: messageId,
         outcome: selectedOutcome,
         positive_tags: selectedOutcome === "fail" ? [] : positiveTags,
-        negative_tags: selectedOutcome === "pass" ? [] : negativeTags,
+        negative_tags: selectedOutcome === "pass" ? passSoftNegativeTags : negativeTags,
         note: noteEl.value.trim() || null,
       };
       const saved = await apiSubmitFeedback(sessionId, {
