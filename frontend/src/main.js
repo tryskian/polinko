@@ -127,27 +127,16 @@ const FEEDBACK_RUBRIC_DIMENSIONS = [
     key: "style",
     label: "Style",
     levels: [
-      { key: "high", label: "high", positiveTags: ["style", "high_value"], negativeTags: [] },
-      { key: "medium", label: "medium", positiveTags: ["style", "medium_value"], negativeTags: [] },
-      { key: "low", label: "low", positiveTags: ["low_value"], negativeTags: ["style_mismatch"] },
+      { key: "pass", label: "pass", positiveTags: ["style"], negativeTags: [] },
+      { key: "fail", label: "fail", positiveTags: [], negativeTags: ["style_mismatch"] },
     ],
   },
   {
-    key: "ocr",
-    label: "OCR",
+    key: "hallucination_risk",
+    label: "Hallucination risk",
     levels: [
-      { key: "high", label: "high", positiveTags: ["accurate", "ocr_accurate"], negativeTags: [] },
-      { key: "medium", label: "medium", positiveTags: ["accurate"], negativeTags: [] },
-      { key: "low", label: "low", positiveTags: [], negativeTags: ["ocr_miss"] },
-    ],
-  },
-  {
-    key: "risk",
-    label: "Risk",
-    levels: [
-      { key: "high", label: "high", positiveTags: [], negativeTags: ["hallucination_risk", "grounding_gap"] },
-      { key: "medium", label: "medium", positiveTags: [], negativeTags: ["needs_retry"] },
-      { key: "low", label: "low", positiveTags: ["grounded"], negativeTags: [] },
+      { key: "pass", label: "pass", positiveTags: ["grounded"], negativeTags: [] },
+      { key: "fail", label: "fail", positiveTags: [], negativeTags: ["hallucination_risk"] },
     ],
   },
 ];
@@ -166,34 +155,29 @@ function inferRubricSelectionsFromFeedback(entry) {
   }
   const selection = {
     style: null,
-    ocr: null,
-    risk: null,
+    hallucination_risk: null,
   };
 
   if (negative.has("style_mismatch")) {
-    selection.style = "low";
-  } else if (positive.has("high_value")) {
-    selection.style = "high";
-  } else if (positive.has("style") || positive.has("medium_value")) {
-    selection.style = "medium";
-  } else if (positive.has("low_value")) {
-    selection.style = "low";
+    selection.style = "fail";
+  } else if (
+    positive.has("style") ||
+    positive.has("high_value") ||
+    positive.has("medium_value") ||
+    positive.has("low_value")
+  ) {
+    selection.style = "pass";
   }
 
-  if (negative.has("ocr_miss")) {
-    selection.ocr = "low";
-  } else if (positive.has("ocr_accurate")) {
-    selection.ocr = "high";
-  } else if (positive.has("accurate")) {
-    selection.ocr = "medium";
-  }
-
-  if (negative.has("hallucination_risk") || negative.has("grounding_gap")) {
-    selection.risk = "high";
-  } else if (negative.has("needs_retry")) {
-    selection.risk = "medium";
+  if (
+    negative.has("hallucination_risk") ||
+    negative.has("grounding_gap") ||
+    negative.has("needs_retry") ||
+    negative.has("ocr_miss")
+  ) {
+    selection.hallucination_risk = "fail";
   } else if (positive.has("grounded")) {
-    selection.risk = "low";
+    selection.hallucination_risk = "pass";
   }
   return selection;
 }
@@ -938,19 +922,12 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   const buttons = document.createElement("div");
   buttons.className = "msg-feedback-buttons";
 
-  const passButton = document.createElement("button");
-  passButton.type = "button";
-  passButton.className = "msg-feedback-toggle";
-  passButton.textContent = "🟢";
-  passButton.setAttribute("aria-label", "Pass");
-  passButton.title = "Pass";
-
-  const failButton = document.createElement("button");
-  failButton.type = "button";
-  failButton.className = "msg-feedback-toggle";
-  failButton.textContent = "🔴";
-  failButton.setAttribute("aria-label", "Fail");
-  failButton.title = "Fail";
+  const evaluateButton = document.createElement("button");
+  evaluateButton.type = "button";
+  evaluateButton.className = "msg-feedback-toggle";
+  evaluateButton.textContent = "Evaluate";
+  evaluateButton.setAttribute("aria-label", "Evaluate response");
+  evaluateButton.title = "Evaluate response";
 
   const status = document.createElement("p");
   status.className = "msg-feedback-status";
@@ -1003,7 +980,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   rubricBlock.className = "msg-feedback-reason-block";
   const rubricLabel = document.createElement("p");
   rubricLabel.className = "msg-feedback-label";
-  rubricLabel.textContent = "Rubric (Style / OCR / Risk)";
+  rubricLabel.textContent = "Rubric (Style / Hallucination risk)";
   const rubricRowsWrap = document.createElement("div");
   rubricRowsWrap.className = "msg-feedback-rubric";
   rubricBlock.append(rubricLabel, rubricRowsWrap);
@@ -1045,15 +1022,13 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   actions.append(saveButton, cancelButton);
 
   card.append(cardHead, rubricBlock, optionalStyleFlagBlock, noteLabel, noteEl, actionHint, actions);
-  buttons.append(passButton, failButton);
+  buttons.append(evaluateButton);
   root.append(buttons, summaryRow, card);
 
   let current = feedback ? { ...feedback } : null;
-  let selectedOutcome = null;
   let rubricSelections = {
     style: null,
-    ocr: null,
-    risk: null,
+    hallucination_risk: null,
   };
   let optionalStyleNegativeTags = new Set();
   let isPip = false;
@@ -1089,55 +1064,6 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
     return deriveCurrentNegativeTags().filter((tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag));
   }
 
-  function clearHardNegativeSelectionsForPass() {
-    const nextSelections = { ...rubricSelections };
-    FEEDBACK_RUBRIC_DIMENSIONS.forEach((dimension) => {
-      const selectedLevelKey = nextSelections[dimension.key];
-      if (!selectedLevelKey) {
-        return;
-      }
-      const selectedLevel = dimension.levels.find((level) => level.key === selectedLevelKey);
-      const hasHardNegative = (selectedLevel?.negativeTags || []).some(
-        (tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag),
-      );
-      if (hasHardNegative) {
-        nextSelections[dimension.key] = null;
-      }
-    });
-    rubricSelections = nextSelections;
-
-    const nextOptional = new Set(optionalStyleNegativeTags);
-    for (const tag of nextOptional) {
-      if (!FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag)) {
-        nextOptional.delete(tag);
-      }
-    }
-    optionalStyleNegativeTags = nextOptional;
-  }
-
-  function renderCardTitle() {
-    if (selectedOutcome === "pass") {
-      cardTitle.textContent = "🟢 Pass rubric";
-    } else {
-      cardTitle.textContent = "🔴 Fail rubric";
-    }
-  }
-
-  function autoSwitchPassToFailIfNeeded() {
-    if (selectedOutcome !== "pass") {
-      return;
-    }
-    const hardNegativeTags = deriveCurrentHardNegativeTags();
-    if (hardNegativeTags.length === 0) {
-      return;
-    }
-    selectedOutcome = "fail";
-    status.textContent = `Switched to FAIL because hard fail signals were selected: ${hardNegativeTags.join(", ")}.`;
-    status.hidden = false;
-    renderCardTitle();
-    renderToggleState();
-  }
-
   setSelectionsFromFeedback(current);
 
   function renderRubricRows() {
@@ -1167,7 +1093,6 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
             ...rubricSelections,
             [dimension.key]: nextLevelKey,
           };
-          autoSwitchPassToFailIfNeeded();
           renderRubricRows();
           renderOptionalStylePenaltyRows();
           renderActionHint();
@@ -1196,7 +1121,6 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
         } else {
           optionalStyleNegativeTags.add(option.key);
         }
-        autoSwitchPassToFailIfNeeded();
         renderRubricRows();
         renderOptionalStylePenaltyRows();
         renderActionHint();
@@ -1218,16 +1142,9 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
     const shouldShow =
       isEditing &&
       Boolean(current?.recommended_action) &&
-      selectedOutcome === currentOutcome &&
       currentOutcome !== "pass";
     actionHint.textContent = shouldShow ? String(current?.recommended_action || "") : "";
     actionHint.hidden = !shouldShow;
-  }
-
-  function renderToggleState() {
-    const isEditing = !card.hidden;
-    passButton.classList.toggle("active", isEditing && selectedOutcome === "pass");
-    failButton.classList.toggle("active", isEditing && selectedOutcome === "fail");
   }
 
   function renderReadState() {
@@ -1239,13 +1156,11 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
     root.classList.toggle("is-saved", showSavedState);
   }
 
-  function openCard(outcome) {
-    selectedOutcome = ["pass", "fail"].includes(outcome) ? outcome : "pass";
+  function openCard() {
     if (!current) {
       rubricSelections = {
         style: null,
-        ocr: null,
-        risk: null,
+        hallucination_risk: null,
       };
       optionalStyleNegativeTags = new Set();
       noteEl.value = "";
@@ -1253,16 +1168,12 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
       setSelectionsFromFeedback(current);
       noteEl.value = current?.note || "";
     }
-    if (selectedOutcome === "pass") {
-      clearHardNegativeSelectionsForPass();
-      status.textContent = "";
-      status.hidden = true;
-    }
-    renderCardTitle();
+    cardTitle.textContent = "Rubric";
+    status.textContent = "";
+    status.hidden = true;
     card.hidden = false;
     renderRubricRows();
     renderOptionalStylePenaltyRows();
-    renderToggleState();
     renderActionHint();
     renderReadState();
   }
@@ -1270,17 +1181,13 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   function closeCard() {
     setPipMode(false);
     card.hidden = true;
-    selectedOutcome = null;
-    renderToggleState();
     renderActionHint();
     renderReadState();
   }
 
-  passButton.addEventListener("click", () => openCard("pass"));
-  failButton.addEventListener("click", () => openCard("fail"));
+  evaluateButton.addEventListener("click", () => openCard());
   editButton.addEventListener("click", () => {
-    const currentOutcome = normalizeFeedbackOutcome(current);
-    openCard(currentOutcome === "fail" ? "fail" : "pass");
+    openCard();
   });
   retryButton.addEventListener("click", async () => {
     retryButton.disabled = true;
@@ -1308,17 +1215,13 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
       FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag),
     );
     const hardNegativeTags = negativeTags.filter((tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag));
-    if (selectedOutcome === "pass" && positiveTags.length === 0) {
+    const derivedOutcome = hardNegativeTags.length > 0 ? "fail" : "pass";
+    if (derivedOutcome === "pass" && positiveTags.length === 0) {
       status.textContent = "Set at least one rubric level that yields a pass signal.";
       status.hidden = false;
       return;
     }
-    if (selectedOutcome === "pass" && hardNegativeTags.length > 0) {
-      status.textContent = `PASS blocked by: ${hardNegativeTags.join(", ")}.`;
-      status.hidden = false;
-      return;
-    }
-    if (selectedOutcome === "fail" && negativeTags.length === 0) {
+    if (derivedOutcome === "fail" && negativeTags.length === 0) {
       status.textContent = "Set at least one rubric level that yields a fail signal.";
       status.hidden = false;
       return;
@@ -1328,9 +1231,9 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
     try {
       const payload = {
         message_id: messageId,
-        outcome: selectedOutcome,
-        positive_tags: selectedOutcome === "fail" ? [] : positiveTags,
-        negative_tags: selectedOutcome === "pass" ? passSoftNegativeTags : negativeTags,
+        outcome: derivedOutcome,
+        positive_tags: derivedOutcome === "fail" ? [] : positiveTags,
+        negative_tags: derivedOutcome === "pass" ? passSoftNegativeTags : negativeTags,
         note: noteEl.value.trim() || null,
       };
       const saved = await apiSubmitFeedback(sessionId, {
@@ -1349,7 +1252,6 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
     }
   });
 
-  renderToggleState();
   renderStatus();
   renderReadState();
   return root;
