@@ -107,13 +107,15 @@ const FEEDBACK_NEGATIVE_TAG_OPTIONS = [
   "ocr_miss",
   "grounding_gap",
   "style_mismatch",
+  "default_style",
   "em_dash_style",
   "hallucination_risk",
   "needs_retry",
 ];
-const FEEDBACK_PASS_SOFT_NEGATIVE_TAGS = [];
+const FEEDBACK_PASS_SOFT_NEGATIVE_TAGS = ["default_style"];
 const FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET = new Set(FEEDBACK_PASS_SOFT_NEGATIVE_TAGS);
 const FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS = [
+  { key: "default_style", label: "default/straight style" },
   { key: "em_dash_style", label: "em-dash style" },
 ];
 const FEEDBACK_OUTCOME_UI = {
@@ -1302,6 +1304,9 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
     const negativeTags = [
       ...new Set([...rubricNegativeTags, ...Array.from(optionalStyleNegativeTags)]),
     ];
+    const passSoftNegativeTags = negativeTags.filter((tag) =>
+      FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag),
+    );
     const hardNegativeTags = negativeTags.filter((tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag));
     if (selectedOutcome === "pass" && positiveTags.length === 0) {
       status.textContent = "Set at least one rubric level that yields a pass signal.";
@@ -1325,7 +1330,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
         message_id: messageId,
         outcome: selectedOutcome,
         positive_tags: selectedOutcome === "fail" ? [] : positiveTags,
-        negative_tags: selectedOutcome === "pass" ? [] : negativeTags,
+        negative_tags: selectedOutcome === "pass" ? passSoftNegativeTags : negativeTags,
         note: noteEl.value.trim() || null,
       };
       const saved = await apiSubmitFeedback(sessionId, {

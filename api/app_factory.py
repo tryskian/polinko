@@ -181,11 +181,14 @@ _FEEDBACK_NEGATIVE_TAGS = {
     "ocr_miss",
     "grounding_gap",
     "style_mismatch",
+    "default_style",
     "em_dash_style",
     "hallucination_risk",
     "needs_retry",
 }
-_FEEDBACK_PASS_SOFT_NEGATIVE_TAGS: set[str] = set()
+_FEEDBACK_PASS_SOFT_NEGATIVE_TAGS: set[str] = {
+    "default_style",
+}
 _DEFAULT_FEEDBACK_EVIDENCE_ROOT = Path(
     os.getenv("POLINKO_FEEDBACK_EVIDENCE_ROOT", "docs/portfolio/raw_evidence")
 )
