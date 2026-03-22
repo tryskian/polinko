@@ -69,6 +69,16 @@
   - gate logic remains strict `PASS`/`FAIL` for deterministic release decisions
   - `em_dash_style` is currently a hard-fail signal to set the style baseline
   - human nuance stays in notes/transcripts for diagnosis, not gate computation
+- Rubric simplification checkpoint (March 22, 2026):
+  - active UI rubric is now two explicit dimensions:
+    `style` and `hallucination_risk` (each `pass`/`fail`)
+  - optional style penalties are split:
+    - `default_style` = soft penalty
+    - `em_dash_style` = hard penalty
+  - response status remains stream-based (`pass: ...`, `fail: ...`,
+    `penalty: ...`) so nuanced signals persist without collapsing into one label
+  - operator gate remains binary: any hard fail signal is treated as a fail for
+    that response
 - Eval stream checkpoint (March 21, 2026):
   - feedback save now supports mixed stream checkpoints
     (simultaneous positive and negative rubric tags on one response)

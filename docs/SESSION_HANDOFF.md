@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-21
+- 2026-03-22
 
 ## Current Snapshot
 
@@ -233,11 +233,11 @@
 
 ## Immediate Next Step
 
-- Finalize eval-v2 reset cutover:
-  - archive current baseline checkpoint/feedback rows (for historical reference)
-  - reset active checkpoint/feedback tables for fresh v2 scoring cycle
-  - keep append-only evidence logs preserved
-  - validate with focused API tests + frontend build before merge
+- Start fresh eval cycle with the new reset flow:
+  - use reset to clear current UI checkpoint/feedback state and begin clean evals
+  - simplify header eval controls to a compact pill-style submit control while
+    keeping PiP
+  - add base eval prompt presets so manual warm-up prompt writing is optional
 
 ## Peanut Pin (Tomorrow Start)
 
