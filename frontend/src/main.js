@@ -46,6 +46,7 @@ const exportJsonEl = document.getElementById("export-json");
 const exportOcrEl = document.getElementById("export-ocr");
 const exportTriageEl = document.getElementById("export-triage");
 const evalSubmitEl = document.getElementById("eval-submit");
+const evalArchiveResetEl = document.getElementById("eval-archive-reset");
 const checkpointJumpEl = document.getElementById("checkpoint-jump");
 const appPipEl = document.getElementById("app-pip");
 const appPipIconEl = document.getElementById("app-pip-icon");
@@ -1672,6 +1673,33 @@ function mergeMessagesWithImageMessages(baseMessages, imageMessages) {
   return merged;
 }
 
+function mergeMessagesWithCheckpointMessages(messages, checkpointMessages) {
+  if (!Array.isArray(checkpointMessages) || checkpointMessages.length === 0) {
+    return messages;
+  }
+  const sortedCheckpoints = [...checkpointMessages].sort(
+    (a, b) => Number(a.createdAt || 0) - Number(b.createdAt || 0),
+  );
+  const merged = [];
+  let checkpointIdx = 0;
+  for (const message of messages) {
+    const messageCreatedAt = Number(message?.createdAt || 0);
+    while (
+      checkpointIdx < sortedCheckpoints.length &&
+      Number(sortedCheckpoints[checkpointIdx]?.createdAt || 0) <= messageCreatedAt
+    ) {
+      merged.push(sortedCheckpoints[checkpointIdx]);
+      checkpointIdx += 1;
+    }
+    merged.push(message);
+  }
+  while (checkpointIdx < sortedCheckpoints.length) {
+    merged.push(sortedCheckpoints[checkpointIdx]);
+    checkpointIdx += 1;
+  }
+  return merged;
+}
+
 function renderImageMessage(src, sourceName, { scroll = true } = {}) {
   const node = document.createElement("article");
   node.className = "msg user user-image";
@@ -1943,6 +1971,12 @@ async function apiSubmitEvalCheckpoint(sessionId) {
   });
 }
 
+async function apiArchiveResetEvalFeedback(sessionId) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback/archive-reset`, {
+    method: "POST",
+  });
+}
+
 async function apiSubmitFeedback(sessionId, payload) {
   return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback`, {
     method: "POST",
@@ -2092,6 +2126,29 @@ async function submitEvalCheckpoint() {
   await loadActiveMessages();
   refreshChatListUi();
   syncCheckpointJumpControl();
+}
+
+async function archiveAndResetEvalData() {
+  if (!activeChatId) {
+    throw new Error("No active chat selected.");
+  }
+  const result = await apiArchiveResetEvalFeedback(activeChatId);
+  evalCheckpointsBySession.set(activeChatId, []);
+  checkpointSummaryFetchedAtBySession.set(activeChatId, Date.now());
+  checkpointSeenCountBySession.set(activeChatId, 0);
+  persistCheckpointSeenStore();
+  await loadActiveMessages();
+  refreshChatListUi();
+  syncCheckpointJumpControl();
+  const feedbackCount = Number(result?.feedback_count || 0);
+  const checkpointCount = Number(result?.checkpoint_count || 0);
+  const archivedPath = String(result?.archived_path || "").trim();
+  const archiveSuffix = archivedPath ? ` Archived at ${archivedPath}.` : "";
+  appendMessage(
+    "meta",
+    `Archived and reset eval data (${feedbackCount} feedback, ${checkpointCount} checkpoints).${archiveSuffix}`,
+    { persist: false },
+  );
 }
 
 function jumpToLatestCheckpoint() {
@@ -2711,10 +2768,8 @@ async function loadActiveMessages({ scrollToBottom = true, focusMessageId = "" }
   }));
   const imageMessages = imageMessagesBySession.get(activeChatId) || [];
   const checkpointMessages = buildEvalCheckpointMetaMessages(activeChatId);
-  currentMessages = [
-    ...mergeMessagesWithImageMessages(baseMessages, imageMessages),
-    ...checkpointMessages,
-  ];
+  const mergedWithImages = mergeMessagesWithImageMessages(baseMessages, imageMessages);
+  currentMessages = mergeMessagesWithCheckpointMessages(mergedWithImages, checkpointMessages);
   renderCurrentMessages({ scrollToBottom, focusMessageId });
   syncCheckpointJumpControl();
 }
@@ -2997,6 +3052,26 @@ evalSubmitEl?.addEventListener("click", async () => {
     appendMessage("error", String(error), { persist: false });
   } finally {
     evalSubmitEl.disabled = false;
+  }
+});
+
+evalArchiveResetEl?.addEventListener("click", async () => {
+  if (!activeChatId || evalArchiveResetEl.disabled) {
+    return;
+  }
+  const confirmed = window.confirm(
+    "Archive and reset eval feedback/checkpoints for this chat? This clears current eval state from the active view.",
+  );
+  if (!confirmed) {
+    return;
+  }
+  evalArchiveResetEl.disabled = true;
+  try {
+    await archiveAndResetEvalData();
+  } catch (error) {
+    appendMessage("error", String(error), { persist: false });
+  } finally {
+    evalArchiveResetEl.disabled = false;
   }
 });
 

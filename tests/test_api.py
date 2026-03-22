@@ -400,6 +400,108 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(checkpoint_submit.status_code, 400)
         self.assertIn("No saved evals", checkpoint_submit.json()["detail"])
 
+    def test_archive_reset_eval_feedback_archives_and_clears_chat_state(self) -> None:
+        session_id = "s-feedback-archive-reset"
+        with self._stub_runner("Archive candidate one"):
+            first_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "first prompt", "session_id": session_id},
+            )
+        self.assertEqual(first_resp.status_code, 200)
+        first_assistant_id = first_resp.json()["assistant_message_id"]
+
+        with self._stub_runner("Archive candidate two"):
+            second_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "second prompt", "session_id": session_id},
+            )
+        self.assertEqual(second_resp.status_code, 200)
+        second_assistant_id = second_resp.json()["assistant_message_id"]
+
+        pass_submit = self.client.post(
+            f"/chats/{session_id}/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": first_assistant_id,
+                "outcome": "pass",
+                "positive_tags": ["style"],
+            },
+        )
+        self.assertEqual(pass_submit.status_code, 200)
+
+        fail_submit = self.client.post(
+            f"/chats/{session_id}/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": second_assistant_id,
+                "outcome": "fail",
+                "negative_tags": ["hallucination_risk"],
+            },
+        )
+        self.assertEqual(fail_submit.status_code, 200)
+
+        checkpoint_submit = self.client.post(
+            f"/chats/{session_id}/feedback/checkpoints",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(checkpoint_submit.status_code, 200)
+
+        archive_reset = self.client.post(
+            f"/chats/{session_id}/feedback/archive-reset",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(archive_reset.status_code, 200)
+        payload = archive_reset.json()
+        self.assertEqual(payload["session_id"], session_id)
+        self.assertEqual(payload["feedback_count"], 2)
+        self.assertEqual(payload["checkpoint_count"], 1)
+        self.assertTrue(payload["archived_path"])
+
+        archive_path = Path(self.tmpdir.name) / "raw_evidence" / payload["archived_path"]
+        self.assertTrue(archive_path.exists())
+        archived = json.loads(archive_path.read_text(encoding="utf-8"))
+        self.assertEqual(archived["session_id"], session_id)
+        self.assertEqual(archived["feedback_count"], 2)
+        self.assertEqual(archived["checkpoint_count"], 1)
+        self.assertEqual(len(archived["feedback"]), 2)
+        self.assertEqual(len(archived["checkpoints"]), 1)
+
+        listed_feedback = self.client.get(
+            f"/chats/{session_id}/feedback",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(listed_feedback.status_code, 200)
+        self.assertEqual(listed_feedback.json()["feedback"], [])
+
+        listed_checkpoints = self.client.get(
+            f"/chats/{session_id}/feedback/checkpoints",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(listed_checkpoints.status_code, 200)
+        self.assertEqual(listed_checkpoints.json()["checkpoints"], [])
+
+    def test_archive_reset_eval_feedback_returns_zero_counts_when_empty(self) -> None:
+        session_id = "s-feedback-archive-empty"
+        created = self.client.post(
+            "/chats",
+            headers={"x-api-key": "test-server-key"},
+            json={"session_id": session_id},
+        )
+        self.assertEqual(created.status_code, 200)
+
+        archive_reset = self.client.post(
+            f"/chats/{session_id}/feedback/archive-reset",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(archive_reset.status_code, 200)
+        payload = archive_reset.json()
+        self.assertEqual(payload["session_id"], session_id)
+        self.assertEqual(payload["feedback_count"], 0)
+        self.assertEqual(payload["checkpoint_count"], 0)
+        self.assertIsNone(payload["archived_path"])
+
     def test_fail_feedback_generates_recommended_action_and_logs_inbox(self) -> None:
         with self._stub_runner("Please inspect this OCR output."):
             chat_resp = self.client.post(

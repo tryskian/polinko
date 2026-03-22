@@ -165,6 +165,8 @@ _FEEDBACK_NOTE_LEN_MAX = 1200
 _FEEDBACK_ACTION_LOG_FILENAME = "feedback_actions.md"
 _FEEDBACK_SUBMISSIONS_LOG_FILENAME = "eval_submissions.jsonl"
 _FEEDBACK_CHECKPOINTS_LOG_FILENAME = "eval_checkpoints.jsonl"
+_FEEDBACK_ARCHIVE_DIRNAME = "ARCHIVE"
+_FEEDBACK_ARCHIVE_RESETS_DIRNAME = "eval_resets"
 _FEEDBACK_POSITIVE_TAGS = {
     "accurate",
     "high_value",
@@ -538,6 +540,14 @@ class EvalCheckpointResponse(BaseModel):
 class ChatEvalCheckpointsResponse(BaseModel):
     session_id: str
     checkpoints: list[EvalCheckpointResponse]
+
+
+class EvalArchiveResetResponse(BaseModel):
+    session_id: str
+    archived_at: int
+    archived_path: str | None
+    feedback_count: int
+    checkpoint_count: int
 
 
 class OcrRequest(BaseModel):
@@ -1092,6 +1102,40 @@ def _append_eval_checkpoint_log(
     }
     with target.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
+
+
+def _archive_eval_state_snapshot(
+    *,
+    session_id: str,
+    chat_title: str,
+    feedback_entries: list[MessageFeedback],
+    checkpoints: list[EvalCheckpoint],
+) -> tuple[int, str | None]:
+    archived_at = int(time.time() * 1000)
+    if not feedback_entries and not checkpoints:
+        return archived_at, None
+    root = _DEFAULT_FEEDBACK_EVIDENCE_ROOT
+    archive_dir = root / _FEEDBACK_ARCHIVE_DIRNAME / _FEEDBACK_ARCHIVE_RESETS_DIRNAME
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    safe_session_id = re.sub(r"[^A-Za-z0-9_.-]+", "-", session_id).strip("-") or "session"
+    target = archive_dir / f"{safe_session_id}-{archived_at}.json"
+    payload = {
+        "archived_at": archived_at,
+        "session_id": session_id,
+        "chat_title": chat_title,
+        "feedback_count": len(feedback_entries),
+        "checkpoint_count": len(checkpoints),
+        "feedback": [_message_feedback_response(item).model_dump() for item in feedback_entries],
+        "checkpoints": [_eval_checkpoint_response(item).model_dump() for item in checkpoints],
+    }
+    with target.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, ensure_ascii=False, indent=2)
+        handle.write("\n")
+    try:
+        relative_target = target.relative_to(root)
+        return archived_at, relative_target.as_posix()
+    except ValueError:
+        return archived_at, str(target)
 
 
 def _sha256_text(value: str) -> str:
@@ -3251,6 +3295,40 @@ def create_app(config: AppConfig) -> FastAPI:
             other_count=saved.other_count,
         )
         return _eval_checkpoint_response(saved)
+
+    @app.post("/chats/{session_id}/feedback/archive-reset", response_model=EvalArchiveResetResponse)
+    def archive_and_reset_eval_feedback(session_id: str, request: Request) -> EvalArchiveResetResponse:
+        principal = _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.get_chat(session_id=session_id)
+        if chat is None:
+            raise HTTPException(status_code=404, detail="Chat not found.")
+        feedback_entries = deps.history_store.list_message_feedback(session_id=session_id)
+        checkpoints = deps.history_store.list_eval_checkpoints(session_id=session_id)
+        archived_at, archived_path = _archive_eval_state_snapshot(
+            session_id=session_id,
+            chat_title=chat.title,
+            feedback_entries=feedback_entries,
+            checkpoints=checkpoints,
+        )
+        feedback_count, checkpoint_count = deps.history_store.clear_chat_eval_data(session_id=session_id)
+        _log_event(
+            "chat_eval_feedback_archive_reset",
+            request_id=getattr(request.state, "request_id", None),
+            session_id=session_id,
+            principal=principal,
+            archived_at=archived_at,
+            archived_path=archived_path,
+            feedback_count=feedback_count,
+            checkpoint_count=checkpoint_count,
+        )
+        return EvalArchiveResetResponse(
+            session_id=session_id,
+            archived_at=archived_at,
+            archived_path=archived_path,
+            feedback_count=feedback_count,
+            checkpoint_count=checkpoint_count,
+        )
 
     @app.get("/chats/{session_id}/export", response_model=ChatExportResponse)
     def export_chat(session_id: str, request: Request, include_markdown: bool = False) -> ChatExportResponse:
