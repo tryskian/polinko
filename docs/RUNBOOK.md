@@ -22,10 +22,14 @@
 2. Multi-agent is for parallel analysis, not blind merge:
    - good for eval triage, log scanning, and draft synthesis.
    - route all final merge decisions through one director thread.
-3. Practical split:
+3. Architecture-first gate:
+   - do not start multi-agent parallelization until architecture, acceptance
+     criteria, and rubric constraints are explicit.
+   - before that point, stay in intentional single-stream execution.
+4. Practical split:
    - implementation parallelism => `git worktree`
    - analysis parallelism => multi-agent delegation
-4. Peanut version:
+5. Peanut version:
    - `worktree` = separate desk with its own files/branch
    - `multi-agent` = extra hands doing bounded subtasks
    - `director` = one final decider before merge
@@ -73,6 +77,14 @@
    - `docs/STATE.md`
    - `docs/DECISIONS.md`
    - `docs/SESSION_HANDOFF.md`
+
+## Internal Docs Tracking Policy
+
+1. Internal planning docs are tracked normally in git.
+2. Do not use `skip-worktree` for routine workflow; it hides changes and causes
+   commit/merge ambiguity.
+3. If truly local-only notes are needed, keep them in gitignored paths (for
+   example local tracker/reference files), not in core handoff docs.
 
 ## Rotate API Keys
 
@@ -143,18 +155,16 @@
 5. If wording is unclear in the UI, pause and confirm intent before changing
    client/server mappings.
 
-## OpenAI MCP + Agent Builder Packaging
+## OpenAI MCP Setup (Active)
 
 1. OpenAI docs MCP endpoint:
    - `https://developers.openai.com/mcp`
 2. Local wiring targets:
    - user-level Codex config (`~/.codex/config.toml`)
    - workspace config (`.vscode/mcp.json`)
-3. Packaging rule:
-   - use Agent Builder to package/publish workflow logic
+3. Active rule:
+   - use OpenAI docs MCP for documentation lookup
    - keep local repo runtime/eval stack as implementation source of truth
-4. Promotion rule:
-   - run side-by-side eval parity checks before switching primary runtime path.
 
 ## Playwright E2E
 
@@ -565,103 +575,16 @@ Hash fields in responses:
    - uses the latest two `eval_reports/clip-ab-*.json` artifacts
    - exits `0` on `GO`, `1` on `NO-GO`
 
-## Run Hybrid OpenAI Readiness Check (No Runtime Migration)
+## Deprecated: Hybrid OpenAI Pilot Tooling
 
-1. Ensure report artifacts exist (recommended):
-   - `make eval-clip-ab-report`
-   - `make eval-file-search-report`
-   - `python tools/eval_style.py --strict --report-json eval_reports/style-strict-latest.json`
-2. Run:
-   - `make hybrid-openai-readiness`
-3. Gate behavior:
-   - checks latest strict style report (`style-strict-*.json`) is all-pass
-   - checks latest file-search report (`file-search-*.json`) is all-pass with
-     zero errors/skips
-   - checks latest two CLIP A/B reports (`clip-ab-*.json`) meet D-040
-     thresholds
-4. Exit codes:
-   - `0`: `READY`
-   - `1`: `NOT_READY` (prints failing gate detail)
-5. Trace artifact behavior:
-   - appends readiness trace to:
-     `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`
-   - disable trace append for one run:
-     `python tools/check_hybrid_openai_readiness.py --trace-jsonl ""`
+The hybrid pilot/readiness/bridge/export/execute commands are deprecated in the
+active workflow and are kept as historical reference only.
 
-## Run Hybrid OpenAI Phase 3 Dry-Run Bridge (Tooling-Only)
+Current policy:
 
-1. Keep runtime unchanged (this command does not call `/chat`).
-2. Run with default rollback-safe flag-off:
-   - `make hybrid-openai-pilot-dry-run`
-   - expected output: `SKIPPED`
-3. Run pilot dry-run transform explicitly:
-   - `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true`
-4. Optional limit to latest N trace rows:
-   - `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true HYBRID_OPENAI_PILOT_LIMIT=20`
-5. Output artifact:
-   - append-only preview JSONL:
-     `docs/portfolio/raw_evidence/INBOX/openai_trace_bridge_preview.jsonl`
-6. Source artifact:
-   - `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`
-7. If source trace artifact is missing or empty:
-   - `make backfill-eval-traces`
-   - rerun:
-     `make hybrid-openai-pilot-dry-run HYBRID_OPENAI_PILOT_ENABLED=true`
-8. Validate preview artifact quality:
-   - `make hybrid-openai-pilot-check`
-   - expected output: `OK` with non-zero preview row count
-   - note: preview file is append-only; row count grows across repeated runs
-9. Run the full pilot cycle in one command:
-   - `make hybrid-openai-pilot-cycle`
-
-## Export OpenAI Custom-Eval Dataset (Tooling-Only)
-
-1. Ensure local trace artifacts exist:
-   - `make backfill-eval-traces`
-2. Export OpenAI custom eval dataset JSONL + `item_schema` JSON:
-   - `make hybrid-openai-export-dataset`
-3. Optional latest-N export:
-   - `make hybrid-openai-export-dataset HYBRID_OPENAI_PILOT_LIMIT=50`
-4. Optional tool filter (comma-separated `tool_name` values):
-   - `make hybrid-openai-export-dataset HYBRID_OPENAI_EXPORT_TOOLS=tools/eval_style.py,tools/eval_file_search.py`
-5. Validate exported artifacts:
-   - `make hybrid-openai-export-check`
-6. One-command export cycle:
-   - `make hybrid-openai-export-cycle`
-7. Output artifacts:
-   - dataset JSONL:
-     `docs/portfolio/raw_evidence/INBOX/openai_eval_dataset.jsonl`
-   - `item_schema` JSON:
-     `docs/portfolio/raw_evidence/INBOX/openai_eval_item_schema.json`
-8. Intended OpenAI Eval API usage:
-   - upload dataset JSONL through Files API
-   - use exported `item_schema` as `data_source_config.item_schema`
-   - keep runtime `/chat` path unchanged (tooling-only integration)
-
-## Prepare/Execute OpenAI Eval Pilot (Manual-First)
-
-1. Prepare payload artifacts without API execution:
-   - `make hybrid-openai-prepare-pilot-payloads`
-2. Prepared outputs:
-   - `docs/portfolio/raw_evidence/INBOX/openai_eval_create_payload.json`
-   - `docs/portfolio/raw_evidence/INBOX/openai_eval_run_payload.json`
-3. Optional variables for prep:
-   - `HYBRID_OPENAI_PILOT_MODEL` (default `gpt-4.1-mini`)
-   - `HYBRID_OPENAI_PILOT_FILE_ID` (reuse uploaded dataset file id)
-   - `HYBRID_OPENAI_PILOT_EVAL_ID` (reuse existing eval id)
-4. Execute provider-side API calls from local tooling:
-   - `make hybrid-openai-execute-pilot`
-   - policy note: keep this deferred during normal development; run only after
-     explicit ship-readiness approval
-5. Execute behavior:
-   - if `HYBRID_OPENAI_PILOT_FILE_ID` is empty, dataset is uploaded first
-     (`purpose=evals`) and the returned file id is used automatically
-   - if `HYBRID_OPENAI_PILOT_EVAL_ID` is empty, eval is created before run
-   - otherwise run is created against the provided ids
-6. Required env for execute:
-   - `OPENAI_API_KEY` (or set `HYBRID_OPENAI_API_KEY_ENV` to another env var name)
-7. Optional API endpoint override:
-   - `HYBRID_OPENAI_BASE_URL` (default `https://api.openai.com/v1`)
+1. Do not run hybrid pilot commands in normal development cycles.
+2. Use local-first glue-code + manual eval loop as the canonical path.
+3. Keep this section archived for traceability, not as runbook execution.
 
 ## Run OCR Eval
 

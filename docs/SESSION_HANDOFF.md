@@ -158,10 +158,9 @@
   branches.
 - `docs/FIGMA_NODE_TRACKER.md` is now intentionally local-only and gitignored
   for proprietary/live node-tracking use.
-- Core internal planning docs are currently local-confidential via
-  `skip-worktree` (`docs/CHARTER.md`, `docs/STATE.md`, `docs/DECISIONS.md`,
-  `docs/SESSION_HANDOFF.md`, `docs/RUNBOOK.md`) and should be treated as
-  local guidance unless tracking is explicitly re-enabled.
+- Core internal planning docs are now tracked normally in git; local-only
+  material should stay in gitignored files/directories rather than
+  `skip-worktree` overlays.
 - Environment troubleshooting now follows a verification-first, no-guessing
   policy: verify repo path/mode/branch first, prefer repo-scoped config
   changes, and do not mutate `~/.zshrc` or global VS Code settings without

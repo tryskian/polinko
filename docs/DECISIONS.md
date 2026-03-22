@@ -398,6 +398,9 @@
   minimal behavior drift, and deterministic API-level validation before deeper
   retrieval-path integration.
 
+> Historical note (2026-03-21): D-044 through D-054 are retained for audit
+> trail only and are deprecated as active operating guidance.
+
 ## D-044: Add report-level hybrid OpenAI readiness gate before tooling migration
 
 - Category: `eval_quality`
@@ -510,7 +513,7 @@
   decision authority, and keeps parallel computation observable via per-suite
   reports/logs plus one consolidated artifact.
 
-## D-053: Package product workflow in Agent Builder while keeping repo runtime canonical
+## D-053: Package product workflow in Agent Builder while keeping repo runtime canonical (Historical)
 
 - Category: `workflow_environment`
 - Tags: `agent_builder`, `packaging`, `openai_native`, `source_of_truth`
@@ -518,11 +521,21 @@
   layer (workflow publishing + deployment integration) while keeping this repo's
   backend/eval stack as the canonical implementation and regression source of
   truth.
-- Why: Improves product packaging speed and deployment clarity without losing
-  engineering control, traceability, or rollback safety from the existing local
-  runtime and eval pipeline.
+- Status: superseded by D-058 (Agent Builder/hybrid pilot path deprecated as
+  active workflow).
 
-## D-054: Defer provider-side eval execution until explicit ship-readiness
+## D-054: Human-directed micro-constraints drive meaningful product quality
+
+- Category: `collaboration_method`
+- Tags: `human_ai_collaboration`, `micro_decisions`, `naming_contract`, `quality_signal`
+- Decision: Treat small human-directed adjustments (for example, consistent
+  naming like `hallucination_risk`) as first-class quality controls in the
+  product workflow.
+- Why: These micro-constraints encode intent and domain meaning that autonomous
+  generation does not reliably infer on its own, and they measurably improve
+  coherence, eval interpretability, and release readiness.
+
+## D-054b: Defer provider-side eval execution until explicit ship-readiness (Historical)
 
 - Category: `runtime_engineering`
 - Tags: `hybrid_openai`, `local_first`, `execution_policy`, `ship_readiness`
@@ -542,3 +555,51 @@
   standardize on canonical `from tools...` imports.
 - Why: Eliminates mypy `import-not-found`/`no-redef` noise from branchy import
   patterns and keeps type-checking deterministic across local and CI runs.
+
+## D-056: Keep gate logic binary; keep human nuance diagnostic
+
+- Category: `eval_quality`
+- Tags: `binary_gate`, `human_perception`, `determinism`, `style_baseline`
+- Decision: Keep eval gate outcomes strictly binary (`PASS`/`FAIL`) and set
+  `em_dash_style` as a hard-fail signal during style-baseline stabilization;
+  keep nuanced interpretation in notes/transcripts instead of gate semantics.
+- Why: Mapping human-perception nuance directly into gate logic introduces
+  ambiguity and drift; separating deterministic decisions from diagnostic
+  context preserves machine clarity while retaining high-context human insight.
+- Captured engineering response: Keep final scoring in strict binary
+  (`PASS`/`FAIL`), and keep human nuance in secondary layers (notes,
+  transcripts, recovery analysis) rather than in the decision gate itself.
+
+## D-057: Store eval checkpoints as dual streams when mixed signals exist
+
+- Category: `eval_quality`
+- Tags: `mixed_outcome`, `dual_stream`, `checkpoint_contract`, `ui_api_sync`
+- Decision: Allow checkpoint rows to persist simultaneous positive and negative
+  rubric signals as separate streams (`pass: ...` and `fail: ...`) rather than
+  forcing a single top-level summary label.
+- Why: This preserves diagnostic fidelity for responses that pass one dimension
+  and fail another (for example strong style with hallucination risk), while
+  keeping deterministic downstream counting via independent `pass_count` and
+  `fail_count` aggregation.
+
+## D-058: Deprecate hybrid/Agent Builder pilot workflow as active execution path
+
+- Category: `workflow_environment`
+- Tags: `deprecation`, `local_first`, `operating_mode`, `docs_cleanup`
+- Decision: Mark hybrid OpenAI pilot tooling and Agent Builder mirror planning
+  as archived/deprecated in active docs, and treat local glue-code + manual
+  eval loop as the only active execution path.
+- Why: Reduces operator drift and planning noise, keeps daily execution
+  deterministic, and aligns documentation with actual implementation behavior.
+
+## D-059: Human-judgment-first execution; agentic parallelism only after architecture lock
+
+- Category: `collaboration_method`
+- Tags: `human_ai_collaboration`, `architecture_first`, `execution_control`, `multi_agent`
+- Decision: Keep the active build loop human-judgment-first and director-led
+  until architecture, acceptance criteria, and evaluation rubric are explicit.
+  Use multi-agent/parallel workflows only after those constraints are locked,
+  and only for bounded tasks with deterministic validation.
+- Why: Agentic parallelism amplifies throughput but also amplifies ambiguity.
+  Establishing architecture first prevents interpretation drift, reduces
+  rework/tangle risk, and keeps outcomes reviewable against clear criteria.
