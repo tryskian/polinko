@@ -904,6 +904,31 @@ class ChatHistoryStore:
             for row in rows
         ]
 
+    def clear_chat_eval_data(self, session_id: str) -> tuple[int, int]:
+        """
+        Delete all eval feedback/checkpoints for a chat and return
+        (feedback_count_deleted, checkpoint_count_deleted).
+        """
+        now = _now_ms()
+        with self._connection() as conn:
+            feedback_row = conn.execute(
+                "SELECT COUNT(*) AS count FROM message_feedback WHERE session_id = ?;",
+                (session_id,),
+            ).fetchone()
+            checkpoint_row = conn.execute(
+                "SELECT COUNT(*) AS count FROM eval_checkpoints WHERE session_id = ?;",
+                (session_id,),
+            ).fetchone()
+            feedback_count = int(feedback_row["count"]) if feedback_row else 0
+            checkpoint_count = int(checkpoint_row["count"]) if checkpoint_row else 0
+            conn.execute("DELETE FROM message_feedback WHERE session_id = ?;", (session_id,))
+            conn.execute("DELETE FROM eval_checkpoints WHERE session_id = ?;", (session_id,))
+            conn.execute(
+                "UPDATE chats SET updated_at = ? WHERE session_id = ?;",
+                (now, session_id),
+            )
+        return feedback_count, checkpoint_count
+
     def record_ocr_run(
         self,
         *,
