@@ -133,6 +133,14 @@
     active runbook/state/handoff execution paths
   - archived docs are hidden from explorer/search for cleaner active workflow
   - `docs/PEANUT_TOOLING_REF.md` stays visible as the day-to-day tooling guide
+- Raw evidence cleanup checkpoint (2026-03-22):
+  - legacy hybrid/OpenAI eval artifacts were moved out of active
+    `docs/portfolio/raw_evidence` paths into
+    `docs/portfolio/archive/2026-03-22-raw-evidence-legacy`
+  - active evidence wiring remains limited to PASS/FAIL/MIXED/INBOX in
+    `docs/portfolio/raw_evidence`
+  - archive naming now follows date-prefixed convention
+    `docs/portfolio/archive/YYYY-MM-DD-...` for consistency and discoverability
 - Safety certainty checkpoint (2026-03-21):
   - transcript + peanut-reference note captured in
     `docs/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
