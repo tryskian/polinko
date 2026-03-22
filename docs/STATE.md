@@ -84,6 +84,14 @@
   - archived docs are hidden from explorer/search to reduce active-workflow
     clutter
   - `docs/PEANUT_TOOLING_REF.md` remains visible for day-to-day operator use
+- Raw evidence cleanup checkpoint (March 22, 2026):
+  - legacy hybrid/OpenAI eval artifacts were moved from active
+    `docs/portfolio/raw_evidence` paths to
+    `docs/portfolio/archive/2026-03-22-raw-evidence-legacy`
+  - active evidence flow remains PASS/FAIL/MIXED/INBOX under
+    `docs/portfolio/raw_evidence`
+  - archive naming now follows date-prefixed pattern
+    `docs/portfolio/archive/YYYY-MM-DD-...` for consistent cataloging
 - Safety certainty checkpoint (March 21, 2026):
   - captured transcript + peanut-reference framing in
     `docs/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`

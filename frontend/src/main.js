@@ -1,5 +1,17 @@
 import "./style.css";
 import { createExportUiState } from "./export-ui-state.js";
+import {
+  FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS,
+  FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET,
+  FEEDBACK_RUBRIC_DIMENSIONS,
+  coerceFeedbackEntry,
+  deriveOutcomeFromStreams,
+  deriveTagsFromRubricSelections,
+  formatFeedbackStatusText,
+  inferOptionalStyleNegativeTagsFromFeedback,
+  inferRubricSelectionsFromFeedback,
+  normalizeFeedbackOutcome,
+} from "./eval-rubric.js";
 
 const STORAGE_ACTIVE_CHAT_KEY = "polinko.active_chat_id.v2";
 const STORAGE_THEME_KEY = "polinko.theme.v1";
@@ -93,119 +105,6 @@ const OCR_EXPLICIT_RETRY_PATTERNS = [
   /\bretry ocr\b/i,
 ];
 const MEMORY_SEARCH_ENABLED = false;
-const FEEDBACK_POSITIVE_TAG_OPTIONS = [
-  "accurate",
-  "high_value",
-  "medium_value",
-  "low_value",
-  "recovered",
-  "ocr_accurate",
-  "grounded",
-  "style",
-];
-const FEEDBACK_NEGATIVE_TAG_OPTIONS = [
-  "ocr_miss",
-  "grounding_gap",
-  "style_mismatch",
-  "default_style",
-  "em_dash_style",
-  "hallucination_risk",
-  "needs_retry",
-];
-const FEEDBACK_PASS_SOFT_NEGATIVE_TAGS = ["default_style"];
-const FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET = new Set(FEEDBACK_PASS_SOFT_NEGATIVE_TAGS);
-const FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS = [
-  { key: "default_style", label: "default/straight style" },
-  { key: "em_dash_style", label: "em-dash style" },
-];
-const FEEDBACK_RUBRIC_DIMENSIONS = [
-  {
-    key: "style",
-    label: "Style",
-    levels: [
-      { key: "pass", label: "pass", positiveTags: ["style"], negativeTags: [] },
-      { key: "fail", label: "fail", positiveTags: [], negativeTags: ["style_mismatch"] },
-    ],
-  },
-  {
-    key: "hallucination_risk",
-    label: "Hallucination risk",
-    levels: [
-      { key: "pass", label: "pass", positiveTags: ["grounded"], negativeTags: [] },
-      { key: "fail", label: "fail", positiveTags: [], negativeTags: ["hallucination_risk"] },
-    ],
-  },
-];
-
-function inferRubricSelectionsFromFeedback(entry) {
-  const positive = new Set(Array.isArray(entry?.positive_tags) ? entry.positive_tags : []);
-  const negative = new Set(Array.isArray(entry?.negative_tags) ? entry.negative_tags : []);
-  const legacyTags = Array.isArray(entry?.tags) ? entry.tags : [];
-  for (const tag of legacyTags) {
-    if (FEEDBACK_POSITIVE_TAG_OPTIONS.includes(tag)) {
-      positive.add(tag);
-    }
-    if (FEEDBACK_NEGATIVE_TAG_OPTIONS.includes(tag)) {
-      negative.add(tag);
-    }
-  }
-  const selection = {
-    style: null,
-    hallucination_risk: null,
-  };
-
-  if (negative.has("style_mismatch")) {
-    selection.style = "fail";
-  } else if (
-    positive.has("style") ||
-    positive.has("high_value") ||
-    positive.has("medium_value") ||
-    positive.has("low_value")
-  ) {
-    selection.style = "pass";
-  }
-
-  if (
-    negative.has("hallucination_risk") ||
-    negative.has("grounding_gap") ||
-    negative.has("needs_retry") ||
-    negative.has("ocr_miss")
-  ) {
-    selection.hallucination_risk = "fail";
-  } else if (positive.has("grounded")) {
-    selection.hallucination_risk = "pass";
-  }
-  return selection;
-}
-
-function deriveTagsFromRubricSelections(selection) {
-  const positive = new Set();
-  const negative = new Set();
-  FEEDBACK_RUBRIC_DIMENSIONS.forEach((dimension) => {
-    const levelKey = selection?.[dimension.key];
-    if (!levelKey) {
-      return;
-    }
-    const level = dimension.levels.find((entry) => entry.key === levelKey);
-    if (!level) {
-      return;
-    }
-    level.positiveTags.forEach((tag) => positive.add(tag));
-    level.negativeTags.forEach((tag) => negative.add(tag));
-  });
-  return {
-    positiveTags: [...positive],
-    negativeTags: [...negative],
-  };
-}
-
-function inferOptionalStyleNegativeTagsFromFeedback(entry) {
-  const negative = new Set(Array.isArray(entry?.negative_tags) ? entry.negative_tags : []);
-  const selected = FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS.filter((option) =>
-    negative.has(option.key),
-  ).map((option) => option.key);
-  return new Set(selected);
-}
 const memorySearchAvailable =
   MEMORY_SEARCH_ENABLED &&
   Boolean(
@@ -785,57 +684,6 @@ function syncEmptyState() {
   emptyStateEl.style.display = hasMessages ? "none" : "";
 }
 
-function formatFeedbackStatusText(feedback) {
-  if (!feedback) {
-    return "";
-  }
-  const parts = [];
-  const positiveTags = Array.isArray(feedback.positive_tags) ? feedback.positive_tags : [];
-  const negativeTags = Array.isArray(feedback.negative_tags) ? feedback.negative_tags : [];
-  const passSoftNegativeTags = negativeTags.filter((tag) =>
-    FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag),
-  );
-  if (positiveTags.length > 0) {
-    parts.push(`pass: ${positiveTags.join(", ")}`);
-  }
-  if (negativeTags.length > 0) {
-    if (passSoftNegativeTags.length > 0 && negativeTags.length === passSoftNegativeTags.length) {
-      parts.push(`penalty: ${passSoftNegativeTags.join(", ")}`);
-    } else {
-      parts.push(`fail: ${negativeTags.join(", ")}`);
-    }
-  }
-  if (parts.length === 0 && Array.isArray(feedback.tags) && feedback.tags.length > 0) {
-    parts.push(feedback.tags.join(", "));
-  }
-  if (parts.length === 0) {
-    const rawOutcome = String(feedback.outcome || "").toLowerCase();
-    if (rawOutcome) {
-      parts.push(rawOutcome.toUpperCase());
-    }
-  }
-  return parts.filter(Boolean).join(" • ");
-}
-
-function normalizeFeedbackOutcome(feedback) {
-  const rawOutcome = String(feedback?.outcome || "").toLowerCase();
-  if (rawOutcome === "pass" || rawOutcome === "mixed" || rawOutcome === "fail") {
-    return rawOutcome;
-  }
-  const positiveTags = Array.isArray(feedback?.positive_tags) ? feedback.positive_tags : [];
-  const negativeTags = Array.isArray(feedback?.negative_tags) ? feedback.negative_tags : [];
-  if (rawOutcome === "partial") {
-    if (negativeTags.length > 0) {
-      return "fail";
-    }
-    if (positiveTags.length > 0) {
-      return "pass";
-    }
-    return "fail";
-  }
-  return "";
-}
-
 function resolveRetryContextForAssistant({ assistantMessageId, parentMessageId }) {
   let sourceUserMessageId = String(parentMessageId || "").trim();
   let prompt = "";
@@ -1027,7 +875,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   buttons.append(evaluateButton);
   root.append(buttons, summaryRow, card);
 
-  let current = feedback ? { ...feedback } : null;
+  let current = coerceFeedbackEntry(feedback) || null;
   let rubricSelections = {
     style: null,
     hallucination_risk: null,
@@ -1053,17 +901,9 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   }
 
   function setSelectionsFromFeedback(entry) {
-    rubricSelections = inferRubricSelectionsFromFeedback(entry || {});
-    optionalStyleNegativeTags = inferOptionalStyleNegativeTagsFromFeedback(entry || {});
-  }
-
-  function deriveCurrentNegativeTags() {
-    const { negativeTags: rubricNegativeTags } = deriveTagsFromRubricSelections(rubricSelections);
-    return [...new Set([...rubricNegativeTags, ...Array.from(optionalStyleNegativeTags)])];
-  }
-
-  function deriveCurrentHardNegativeTags() {
-    return deriveCurrentNegativeTags().filter((tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag));
+    const normalized = coerceFeedbackEntry(entry) || {};
+    rubricSelections = inferRubricSelectionsFromFeedback(normalized);
+    optionalStyleNegativeTags = inferOptionalStyleNegativeTagsFromFeedback(normalized);
   }
 
   setSelectionsFromFeedback(current);
@@ -1207,22 +1047,15 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
   cardClose.addEventListener("click", closeCard);
   cancelButton.addEventListener("click", closeCard);
   saveButton.addEventListener("click", async () => {
-    const { positiveTags, negativeTags: rubricNegativeTags } = deriveTagsFromRubricSelections(
-      rubricSelections,
-    );
+    const { positiveTags, negativeTags: rubricNegativeTags } =
+      deriveTagsFromRubricSelections(rubricSelections);
     const negativeTags = [
       ...new Set([...rubricNegativeTags, ...Array.from(optionalStyleNegativeTags)]),
     ];
     const passSoftNegativeTags = negativeTags.filter((tag) =>
       FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag),
     );
-    const hardNegativeTags = negativeTags.filter((tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag));
-    let derivedOutcome = "pass";
-    if (hardNegativeTags.length > 0 && positiveTags.length > 0) {
-      derivedOutcome = "mixed";
-    } else if (hardNegativeTags.length > 0) {
-      derivedOutcome = "fail";
-    }
+    const derivedOutcome = deriveOutcomeFromStreams(positiveTags, negativeTags);
     if (derivedOutcome === "pass" && positiveTags.length === 0) {
       status.textContent = "Set at least one rubric level that yields a pass signal.";
       status.hidden = false;
@@ -1246,8 +1079,8 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
       const saved = await apiSubmitFeedback(sessionId, {
         ...payload,
       });
-      current = saved;
-      messageFeedbackById.set(messageId, saved);
+      current = coerceFeedbackEntry(saved);
+      messageFeedbackById.set(messageId, current);
       renderStatus();
       closeCard();
     } catch (error) {
@@ -2858,7 +2691,10 @@ async function loadActiveMessages({ scrollToBottom = true, focusMessageId = "" }
     apiListEvalCheckpoints(activeChatId).catch(() => ({ checkpoints: [] })),
   ]);
   messageFeedbackById = new Map(
-    (feedbackPayload.feedback || []).map((item) => [item.message_id, item]),
+    (feedbackPayload.feedback || [])
+      .map((item) => coerceFeedbackEntry(item))
+      .filter((item) => item && item.message_id)
+      .map((item) => [item.message_id, item]),
   );
   const checkpoints = (checkpointsPayload.checkpoints || [])
     .map(normalizeEvalCheckpointEntry)
