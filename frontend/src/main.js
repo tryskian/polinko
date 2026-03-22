@@ -46,6 +46,7 @@ const exportJsonEl = document.getElementById("export-json");
 const exportOcrEl = document.getElementById("export-ocr");
 const exportTriageEl = document.getElementById("export-triage");
 const evalSubmitEl = document.getElementById("eval-submit");
+const evalResetEl = document.getElementById("eval-reset");
 const checkpointJumpEl = document.getElementById("checkpoint-jump");
 const appPipEl = document.getElementById("app-pip");
 const appPipIconEl = document.getElementById("app-pip-icon");
@@ -1672,6 +1673,60 @@ function mergeMessagesWithImageMessages(baseMessages, imageMessages) {
   return merged;
 }
 
+function mergeMessagesWithCheckpointMessages(baseMessages, checkpointMessages) {
+  if (!Array.isArray(checkpointMessages) || checkpointMessages.length === 0) {
+    return baseMessages;
+  }
+
+  const timestampFor = (entry) => {
+    const ts = Number(entry?.createdAt || 0);
+    return Number.isFinite(ts) && ts > 0 ? ts : null;
+  };
+
+  const sortedCheckpoints = [...checkpointMessages].sort((a, b) => {
+    const aTs = timestampFor(a);
+    const bTs = timestampFor(b);
+    if (aTs === null && bTs === null) {
+      return 0;
+    }
+    if (aTs === null) {
+      return 1;
+    }
+    if (bTs === null) {
+      return -1;
+    }
+    return aTs - bTs;
+  });
+
+  const merged = [];
+  let checkpointIndex = 0;
+
+  for (const message of baseMessages) {
+    const messageTs = timestampFor(message);
+    while (checkpointIndex < sortedCheckpoints.length) {
+      const checkpoint = sortedCheckpoints[checkpointIndex];
+      const checkpointTs = timestampFor(checkpoint);
+      if (checkpointTs === null) {
+        break;
+      }
+      if (messageTs === null || checkpointTs <= messageTs) {
+        merged.push(checkpoint);
+        checkpointIndex += 1;
+        continue;
+      }
+      break;
+    }
+    merged.push(message);
+  }
+
+  while (checkpointIndex < sortedCheckpoints.length) {
+    merged.push(sortedCheckpoints[checkpointIndex]);
+    checkpointIndex += 1;
+  }
+
+  return merged;
+}
+
 function renderImageMessage(src, sourceName, { scroll = true } = {}) {
   const node = document.createElement("article");
   node.className = "msg user user-image";
@@ -1943,6 +1998,12 @@ async function apiSubmitEvalCheckpoint(sessionId) {
   });
 }
 
+async function apiResetEvalArtifacts(sessionId) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback/reset`, {
+    method: "POST",
+  });
+}
+
 async function apiSubmitFeedback(sessionId, payload) {
   return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback`, {
     method: "POST",
@@ -2090,6 +2151,21 @@ async function submitEvalCheckpoint() {
   checkpointSummaryFetchedAtBySession.set(activeChatId, Date.now());
   markChatCheckpointsSeen(activeChatId);
   await loadActiveMessages();
+  refreshChatListUi();
+  syncCheckpointJumpControl();
+}
+
+async function resetEvalArtifacts() {
+  if (!activeChatId) {
+    throw new Error("No active chat selected.");
+  }
+  await apiResetEvalArtifacts(activeChatId);
+  messageFeedbackById = new Map();
+  evalCheckpointsBySession.set(activeChatId, []);
+  checkpointSummaryFetchedAtBySession.delete(activeChatId);
+  checkpointSeenCountBySession.set(activeChatId, 0);
+  persistCheckpointSeenStore();
+  await loadActiveMessages({ scrollToBottom: false });
   refreshChatListUi();
   syncCheckpointJumpControl();
 }
@@ -2711,10 +2787,10 @@ async function loadActiveMessages({ scrollToBottom = true, focusMessageId = "" }
   }));
   const imageMessages = imageMessagesBySession.get(activeChatId) || [];
   const checkpointMessages = buildEvalCheckpointMetaMessages(activeChatId);
-  currentMessages = [
-    ...mergeMessagesWithImageMessages(baseMessages, imageMessages),
-    ...checkpointMessages,
-  ];
+  currentMessages = mergeMessagesWithCheckpointMessages(
+    mergeMessagesWithImageMessages(baseMessages, imageMessages),
+    checkpointMessages,
+  );
   renderCurrentMessages({ scrollToBottom, focusMessageId });
   syncCheckpointJumpControl();
 }
@@ -2997,6 +3073,27 @@ evalSubmitEl?.addEventListener("click", async () => {
     appendMessage("error", String(error), { persist: false });
   } finally {
     evalSubmitEl.disabled = false;
+  }
+});
+
+evalResetEl?.addEventListener("click", async () => {
+  if (!activeChatId || evalResetEl.disabled) {
+    return;
+  }
+  const shouldReset = window.confirm(
+    "Reset all eval artifacts for this chat? Messages stay, evals/checkpoints are removed.",
+  );
+  if (!shouldReset) {
+    return;
+  }
+  evalResetEl.disabled = true;
+  try {
+    await resetEvalArtifacts();
+    appendMessage("meta", "Eval artifacts reset for this chat.", { persist: false });
+  } catch (error) {
+    appendMessage("error", String(error), { persist: false });
+  } finally {
+    evalResetEl.disabled = false;
   }
 });
 

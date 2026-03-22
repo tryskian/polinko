@@ -540,6 +540,11 @@ class ChatEvalCheckpointsResponse(BaseModel):
     checkpoints: list[EvalCheckpointResponse]
 
 
+class EvalArtifactsResetResponse(BaseModel):
+    session_id: str
+    status: str
+
+
 class OcrRequest(BaseModel):
     session_id: str | None = Field(default=None, min_length=1)
     source_name: str | None = Field(default=None, max_length=255)
@@ -3251,6 +3256,22 @@ def create_app(config: AppConfig) -> FastAPI:
             other_count=saved.other_count,
         )
         return _eval_checkpoint_response(saved)
+
+    @app.post("/chats/{session_id}/feedback/reset", response_model=EvalArtifactsResetResponse)
+    def reset_eval_artifacts(session_id: str, request: Request) -> EvalArtifactsResetResponse:
+        principal = _enforce_api_key(request)
+        deps = _runtime_deps(request.app)
+        chat = deps.history_store.get_chat(session_id=session_id)
+        if chat is None:
+            raise HTTPException(status_code=404, detail="Chat not found.")
+        deps.history_store.clear_eval_artifacts(session_id=session_id)
+        _log_event(
+            "chat_eval_artifacts_reset",
+            request_id=getattr(request.state, "request_id", None),
+            session_id=session_id,
+            principal=principal,
+        )
+        return EvalArtifactsResetResponse(session_id=session_id, status="ok")
 
     @app.get("/chats/{session_id}/export", response_model=ChatExportResponse)
     def export_chat(session_id: str, request: Request, include_markdown: bool = False) -> ChatExportResponse:
