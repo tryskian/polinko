@@ -1672,6 +1672,60 @@ function mergeMessagesWithImageMessages(baseMessages, imageMessages) {
   return merged;
 }
 
+function mergeMessagesWithCheckpointMessages(baseMessages, checkpointMessages) {
+  if (!Array.isArray(checkpointMessages) || checkpointMessages.length === 0) {
+    return baseMessages;
+  }
+
+  const timestampFor = (entry) => {
+    const ts = Number(entry?.createdAt || 0);
+    return Number.isFinite(ts) && ts > 0 ? ts : null;
+  };
+
+  const sortedCheckpoints = [...checkpointMessages].sort((a, b) => {
+    const aTs = timestampFor(a);
+    const bTs = timestampFor(b);
+    if (aTs === null && bTs === null) {
+      return 0;
+    }
+    if (aTs === null) {
+      return 1;
+    }
+    if (bTs === null) {
+      return -1;
+    }
+    return aTs - bTs;
+  });
+
+  const merged = [];
+  let checkpointIndex = 0;
+
+  for (const message of baseMessages) {
+    const messageTs = timestampFor(message);
+    while (checkpointIndex < sortedCheckpoints.length) {
+      const checkpoint = sortedCheckpoints[checkpointIndex];
+      const checkpointTs = timestampFor(checkpoint);
+      if (checkpointTs === null) {
+        break;
+      }
+      if (messageTs === null || checkpointTs <= messageTs) {
+        merged.push(checkpoint);
+        checkpointIndex += 1;
+        continue;
+      }
+      break;
+    }
+    merged.push(message);
+  }
+
+  while (checkpointIndex < sortedCheckpoints.length) {
+    merged.push(sortedCheckpoints[checkpointIndex]);
+    checkpointIndex += 1;
+  }
+
+  return merged;
+}
+
 function renderImageMessage(src, sourceName, { scroll = true } = {}) {
   const node = document.createElement("article");
   node.className = "msg user user-image";
@@ -2711,10 +2765,10 @@ async function loadActiveMessages({ scrollToBottom = true, focusMessageId = "" }
   }));
   const imageMessages = imageMessagesBySession.get(activeChatId) || [];
   const checkpointMessages = buildEvalCheckpointMetaMessages(activeChatId);
-  currentMessages = [
-    ...mergeMessagesWithImageMessages(baseMessages, imageMessages),
-    ...checkpointMessages,
-  ];
+  currentMessages = mergeMessagesWithCheckpointMessages(
+    mergeMessagesWithImageMessages(baseMessages, imageMessages),
+    checkpointMessages,
+  );
   renderCurrentMessages({ scrollToBottom, focusMessageId });
   syncCheckpointJumpControl();
 }
