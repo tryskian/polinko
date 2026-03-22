@@ -118,10 +118,6 @@ const FEEDBACK_OPTIONAL_STYLE_NEGATIVE_TAGS = [
   { key: "default_style", label: "default/straight style" },
   { key: "em_dash_style", label: "em-dash style" },
 ];
-const FEEDBACK_OUTCOME_UI = {
-  pass: "🟢 PASS",
-  fail: "🔴 FAIL",
-};
 const FEEDBACK_RUBRIC_DIMENSIONS = [
   {
     key: "style",
@@ -793,31 +789,37 @@ function formatFeedbackStatusText(feedback) {
   if (!feedback) {
     return "";
   }
-  const outcome = normalizeFeedbackOutcome(feedback);
-  const rawOutcome = String(feedback.outcome || "").toLowerCase();
-  const outcomeLabel = FEEDBACK_OUTCOME_UI[outcome] || rawOutcome.toUpperCase();
-  const parts = [outcomeLabel];
+  const parts = [];
   const positiveTags = Array.isArray(feedback.positive_tags) ? feedback.positive_tags : [];
   const negativeTags = Array.isArray(feedback.negative_tags) ? feedback.negative_tags : [];
   const passSoftNegativeTags = negativeTags.filter((tag) =>
     FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag),
   );
-  if (outcome === "pass" && positiveTags.length > 0) {
-    parts.push(positiveTags.join(", "));
-    if (passSoftNegativeTags.length > 0) {
+  if (positiveTags.length > 0) {
+    parts.push(`pass: ${positiveTags.join(", ")}`);
+  }
+  if (negativeTags.length > 0) {
+    if (passSoftNegativeTags.length > 0 && negativeTags.length === passSoftNegativeTags.length) {
       parts.push(`penalty: ${passSoftNegativeTags.join(", ")}`);
+    } else {
+      parts.push(`fail: ${negativeTags.join(", ")}`);
     }
-  } else if (outcome === "fail" && negativeTags.length > 0) {
-    parts.push(negativeTags.join(", "));
-  } else if (Array.isArray(feedback.tags) && feedback.tags.length > 0) {
+  }
+  if (parts.length === 0 && Array.isArray(feedback.tags) && feedback.tags.length > 0) {
     parts.push(feedback.tags.join(", "));
+  }
+  if (parts.length === 0) {
+    const rawOutcome = String(feedback.outcome || "").toLowerCase();
+    if (rawOutcome) {
+      parts.push(rawOutcome.toUpperCase());
+    }
   }
   return parts.filter(Boolean).join(" • ");
 }
 
 function normalizeFeedbackOutcome(feedback) {
   const rawOutcome = String(feedback?.outcome || "").toLowerCase();
-  if (rawOutcome === "pass" || rawOutcome === "fail") {
+  if (rawOutcome === "pass" || rawOutcome === "mixed" || rawOutcome === "fail") {
     return rawOutcome;
   }
   const positiveTags = Array.isArray(feedback?.positive_tags) ? feedback.positive_tags : [];
@@ -1215,7 +1217,12 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
       FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag),
     );
     const hardNegativeTags = negativeTags.filter((tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag));
-    const derivedOutcome = hardNegativeTags.length > 0 ? "fail" : "pass";
+    let derivedOutcome = "pass";
+    if (hardNegativeTags.length > 0 && positiveTags.length > 0) {
+      derivedOutcome = "mixed";
+    } else if (hardNegativeTags.length > 0) {
+      derivedOutcome = "fail";
+    }
     if (derivedOutcome === "pass" && positiveTags.length === 0) {
       status.textContent = "Set at least one rubric level that yields a pass signal.";
       status.hidden = false;
@@ -1232,7 +1239,7 @@ function createAssistantFeedbackControls({ sessionId, messageId, parentMessageId
       const payload = {
         message_id: messageId,
         outcome: derivedOutcome,
-        positive_tags: derivedOutcome === "fail" ? [] : positiveTags,
+        positive_tags: positiveTags,
         negative_tags: derivedOutcome === "pass" ? passSoftNegativeTags : negativeTags,
         note: noteEl.value.trim() || null,
       };

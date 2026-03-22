@@ -350,6 +350,40 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(entries[-1]["checkpoint_id"], checkpoint_payload["checkpoint_id"])
         self.assertEqual(entries[-1]["total_count"], 2)
 
+    def test_submit_eval_checkpoint_counts_dual_streams_for_mixed_feedback(self) -> None:
+        session_id = "s-feedback-checkpoint-streams"
+        with self._stub_runner("Checkpoint mixed candidate"):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "mixed prompt", "session_id": session_id},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+        assistant_message_id = chat_resp.json()["assistant_message_id"]
+
+        mixed_submit = self.client.post(
+            f"/chats/{session_id}/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": assistant_message_id,
+                "outcome": "mixed",
+                "positive_tags": ["style"],
+                "negative_tags": ["hallucination_risk"],
+            },
+        )
+        self.assertEqual(mixed_submit.status_code, 200)
+
+        checkpoint_submit = self.client.post(
+            f"/chats/{session_id}/feedback/checkpoints",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(checkpoint_submit.status_code, 200)
+        checkpoint_payload = checkpoint_submit.json()
+        self.assertEqual(checkpoint_payload["total_count"], 1)
+        self.assertEqual(checkpoint_payload["pass_count"], 1)
+        self.assertEqual(checkpoint_payload["fail_count"], 1)
+        self.assertEqual(checkpoint_payload["other_count"], 0)
+
     def test_submit_eval_checkpoint_requires_existing_feedback(self) -> None:
         with self._stub_runner("No eval yet"):
             chat_resp = self.client.post(
@@ -473,7 +507,31 @@ class PolinkoApiTests(unittest.TestCase):
                 "negative_tags": ["ocr_miss"],
             },
         )
-        self.assertEqual(fail_with_positive_resp.status_code, 400)
+        self.assertEqual(fail_with_positive_resp.status_code, 200)
+        fail_with_positive_payload = fail_with_positive_resp.json()
+        self.assertEqual(fail_with_positive_payload["outcome"], "fail")
+        self.assertEqual(fail_with_positive_payload["status"], "open")
+        self.assertEqual(fail_with_positive_payload["positive_tags"], ["accurate"])
+        self.assertEqual(fail_with_positive_payload["negative_tags"], ["ocr_miss"])
+        self.assertEqual(fail_with_positive_payload["tags"], ["accurate", "ocr_miss"])
+
+        mixed_outcome_resp = self.client.post(
+            "/chats/s-feedback-tags/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": assistant_message_id,
+                "outcome": "mixed",
+                "positive_tags": ["accurate"],
+                "negative_tags": ["ocr_miss"],
+            },
+        )
+        self.assertEqual(mixed_outcome_resp.status_code, 200)
+        mixed_outcome_payload = mixed_outcome_resp.json()
+        self.assertEqual(mixed_outcome_payload["outcome"], "mixed")
+        self.assertEqual(mixed_outcome_payload["status"], "open")
+        self.assertEqual(mixed_outcome_payload["positive_tags"], ["accurate"])
+        self.assertEqual(mixed_outcome_payload["negative_tags"], ["ocr_miss"])
+        self.assertEqual(mixed_outcome_payload["tags"], ["accurate", "ocr_miss"])
 
         partial_outcome_resp = self.client.post(
             "/chats/s-feedback-tags/feedback",
