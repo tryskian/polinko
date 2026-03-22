@@ -63,8 +63,31 @@
 - Status checkpoint (March 17, 2026):
   - project is in late build-hardening phase (not early scaffold phase)
   - core runtime + binary eval flow are stable and merged on `main`
-  - remaining work is concentrated in backlog triage, hybrid pilot cycle
-    completion, and final portfolio evidence packaging
+  - remaining work is concentrated in backlog triage, eval UX hardening, and
+    final portfolio evidence packaging
+- Binary eval policy checkpoint (March 21, 2026):
+  - gate logic remains strict `PASS`/`FAIL` for deterministic release decisions
+  - `em_dash_style` is currently a hard-fail signal to set the style baseline
+  - human nuance stays in notes/transcripts for diagnosis, not gate computation
+- Eval stream checkpoint (March 21, 2026):
+  - feedback save now supports mixed stream checkpoints
+    (simultaneous positive and negative rubric tags on one response)
+  - UI status line now renders separate streams (`pass: ...` and `fail: ...`)
+    instead of forcing a single top-level label
+  - checkpoint rollups now count `pass_count` and `fail_count` independently;
+    `other_count` only tracks rows with neither stream set
+  - API/frontend/tests were updated together to avoid state drift between
+    rubric UI and saved checkpoint payloads
+- Docs hygiene checkpoint (March 21, 2026):
+  - deprecated pilot/comms docs are archive-only and removed from active
+    runbook/state/handoff references
+  - archived docs are hidden from explorer/search to reduce active-workflow
+    clutter
+  - `docs/PEANUT_TOOLING_REF.md` remains visible for day-to-day operator use
+- Safety certainty checkpoint (March 21, 2026):
+  - captured transcript + peanut-reference framing in
+    `docs/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
+    (unsupported certainty = fail; uncertainty + grounded recovery = pass)
 - Latest audit checkpoint (March 20, 2026):
   - `make doctor-env`: healthy
   - `make lint-docs`: pass
@@ -120,55 +143,12 @@
 - Automated CLIP readiness gate is available via
   `make eval-clip-ab-readiness`; it inspects the latest two report artifacts
   and returns explicit `GO`/`NO-GO` against the D-040 threshold.
-- Hybrid OpenAI adoption now has a report-level readiness gate:
-  `make hybrid-openai-readiness` (strict style + file-search + two-report CLIP
-  readiness) with no runtime/API behavior changes.
-- Hybrid OpenAI adoption Phase 2 is implemented in tooling (no runtime
-  migration):
-  - shared trace contract: `tools/eval_trace_artifacts.py`
-  - schema: `polinko.eval_trace.v1`
-  - append-only trace path:
-    `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`
-  - report-oriented eval tools and hybrid gate checker now append trace
-    artifacts for auditability/promotion checks.
-- Hybrid OpenAI adoption Phase 3 pilot scope is now explicitly constrained to
-  offline tooling bridge work only (trace/grader metadata mapping), with
-  runtime `/chat` path and prompt behavior intentionally unchanged.
-- Phase 3 dry-run scaffold is now implemented:
-  - tool: `tools/hybrid_openai_trace_bridge.py`
-  - command: `make hybrid-openai-pilot-dry-run`
-  - default mode: rollback-safe skip (flag-off)
-  - opt-in mode: set `HYBRID_OPENAI_PILOT_ENABLED=true`
-  - output preview JSONL:
-    `docs/portfolio/raw_evidence/INBOX/openai_trace_bridge_preview.jsonl`
-- Phase 3 trace-source backfill and preview quality check are now implemented:
-  - backfill tool: `tools/backfill_eval_trace_artifacts.py`
-  - preview check tool: `tools/check_hybrid_openai_bridge_preview.py`
-  - one-command cycle: `make hybrid-openai-pilot-cycle`
-  - latest local cycle (2026-03-20):
-    - backfill source rows: `79`
-    - trace rows written: `0` (`79` existing rows were idempotently skipped)
-    - bridge transform rows per run: `84`
-    - preview artifact rows (append-only): `135`
-    - preview check: `OK`
-    - payload-shape review: no metadata-field refinement needed
-- Phase 3 provider-side pilot helper is now implemented (still tooling-only):
-  - helper tool: `tools/prepare_openai_eval_pilot.py`
-  - manual-first payload prep:
-    `make hybrid-openai-prepare-pilot-payloads`
-  - optional API execution:
-    `make hybrid-openai-execute-pilot`
-  - current policy (2026-03-20): execution is deferred; run local-only prep and
-    export cycles until ship readiness
-  - latest local prep/export result (2026-03-20):
-    - export dataset rows: `86`
-    - payload prep: `OK` (manual-first, no API calls)
-    - payload paths:
-      - `docs/portfolio/raw_evidence/INBOX/openai_eval_create_payload.json`
-      - `docs/portfolio/raw_evidence/INBOX/openai_eval_run_payload.json`
-  - runtime `/chat` path remains unchanged
-- Packaging direction is now explicit: use Agent Builder as product workflow
-  shell while preserving local runtime/eval code as canonical source of truth.
+- Active operating mode is local-first glue-code + manual eval workflow, with
+  runtime `/chat` behavior unchanged.
+- Collaboration policy checkpoint (March 21, 2026):
+  - human judgment sets architecture/rubric first
+  - multi-agent/parallel workflows are applied only after constraints are
+    explicit and validation remains deterministic
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.
@@ -246,10 +226,6 @@
 - Portfolio metadata auditor: `tools/audit_portfolio_metadata.py`
 - Hallucination threshold calibrator: `tools/calibrate_hallucination_threshold.py`
 - CLIP A/B eval harness: `tools/eval_clip_ab.py`
-- Hybrid readiness gate checker: `tools/check_hybrid_openai_readiness.py`
-- Eval trace schema/writer: `tools/eval_trace_artifacts.py`
-- Phase 3 dry-run bridge tool: `tools/hybrid_openai_trace_bridge.py`
-- Provider-side pilot helper: `tools/prepare_openai_eval_pilot.py`
 - Parallel eval orchestrator: `tools/eval_parallel_orchestrator.py`
 
 ## Known Constraints
@@ -279,10 +255,8 @@ Use this in a new chat:
 4. Add ELT-style batch extraction pipeline (OCR alternative path) for large archive ingestion.
 5. Resume Figma/UI parity after backend retrieval/OCR/file-search milestones are stable.
 6. Add model-graders evaluation loop after retrieval quality and schema stability are locked.
-7. Keep provider-side execute deferred until ship readiness; continue local
-   cycles (`make hybrid-openai-export-cycle` +
-   `make hybrid-openai-prepare-pilot-payloads`) and record local artifact
-   outputs as promotion evidence.
+7. Continue local-first eval hardening and checkpoint hygiene, with explicit
+   archive/reset cycles between rubric revisions.
 
 ## Cookbook Roadmap (Prioritized)
 
@@ -299,15 +273,16 @@ These are mapped from the OpenAI cookbook items and ordered for this project:
 5. Exploring Model Graders for Reinforcement Fine-Tuning
    - Most useful once eval criteria and production traces are mature.
 6. Custom LLM-as-Judge hallucination checks (Braintrust) [P1]
-   - Offline eval/CI scaffold is implemented; next calibrate thresholds and enable branch protections.
+   - Offline eval/CI scaffold is implemented; calibrate thresholds and keep
+     branch protections strict.
 7. Multimodal retrieval A/B with CLIP embeddings [P2]
    - Evaluate against current embeddings path after OCR/PDF retrieval baseline is stable.
 
 ## Final Action Plan (Current)
 
 1. Lock baseline and keep Runner path stable as default.
-2. Implement governance and hallucination guardrails (tool policy + groundedness guidance).
-3. Build Multi-Agent Portfolio Collaboration v1 with controlled role handoffs. (Completed)
-4. Expand context engineering for personalization (session-local vs global preference memory). (Completed v1)
-5. Add PDF RAG and structured extraction contracts (Structured Outputs first).
-6. Optimize with prompt caching and formal eval loops before fine-tuning data prep.
+2. Keep governance + hallucination guardrails hardened in local runtime.
+3. Maintain multi-agent collaboration API contract already implemented.
+4. Continue eval UX/rubric simplification with deterministic checkpoint output.
+5. Keep OCR/file-search/retrieval quality loops green before expansion work.
+6. Preserve local-first workflow and avoid deprecated hybrid pilot paths.

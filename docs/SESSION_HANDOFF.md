@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-20
+- 2026-03-21
 
 ## Current Snapshot
 
@@ -60,51 +60,8 @@
 - Status checkpoint (2026-03-17):
   - project is in late build-hardening phase (not early scaffold phase)
   - core runtime + binary eval flow are stable and merged on `main`
-  - remaining work is concentrated in backlog triage, hybrid pilot cycle
-    completion, and final portfolio evidence packaging
-- Hybrid OpenAI adoption planning now has a no-risk gate command:
-  - `make hybrid-openai-readiness`
-  - checker source: `tools/check_hybrid_openai_readiness.py`
-  - plan doc: `docs/HYBRID_OPENAI_ADOPTION_PLAN.md`
-- Hybrid OpenAI adoption Phase 2 (trace artifact contract) is now implemented:
-  - shared trace module: `tools/eval_trace_artifacts.py`
-  - schema: `polinko.eval_trace.v1`
-  - append-only evidence path:
-    `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`
-  - report-oriented eval tooling and hybrid readiness checker now append trace
-    artifacts without `/chat` runtime behavior changes.
-- Hybrid OpenAI adoption Phase 3 scope is now documented as tooling-only:
-  offline trace/grader metadata bridge only, with runtime `/chat` and prompt
-  behavior explicitly out of scope.
-- Hybrid OpenAI Phase 3 dry-run scaffold is now implemented:
-  - tool: `tools/hybrid_openai_trace_bridge.py`
-  - command: `make hybrid-openai-pilot-dry-run`
-  - default: flag-off skip (`HYBRID_OPENAI_PILOT_ENABLED=false`)
-  - output preview:
-    `docs/portfolio/raw_evidence/INBOX/openai_trace_bridge_preview.jsonl`
-- Hybrid OpenAI Phase 3 now includes trace-source backfill and preview quality checks:
-  - backfill: `make backfill-eval-traces`
-  - preview check: `make hybrid-openai-pilot-check`
-  - full cycle: `make hybrid-openai-pilot-cycle`
-  - latest local result (2026-03-20): `79` source submissions ->
-    `79` trace rows -> `84` transformed preview rows per run
-    (`135` rows in append-only preview artifact, `OK` check)
-  - payload-shape check outcome (2026-03-20):
-    no metadata-field refinements required before ship-readiness gate
-- Hybrid OpenAI Phase 3 provider-side pilot helper is now implemented (still tooling-only):
-  - helper: `tools/prepare_openai_eval_pilot.py`
-  - prepare-only command:
-    `make hybrid-openai-prepare-pilot-payloads`
-  - optional execute command:
-    `make hybrid-openai-execute-pilot`
-  - current policy (2026-03-20): keep execution local-only until ship readiness;
-    do not run provider-side execute during normal development cycles
-  - latest local result (2026-03-20):
-    - export dataset rows: `86`
-    - payload prep: `OK` (manual-first, no API calls)
-    - payload paths:
-      - `docs/portfolio/raw_evidence/INBOX/openai_eval_create_payload.json`
-      - `docs/portfolio/raw_evidence/INBOX/openai_eval_run_payload.json`
+  - remaining work is concentrated in backlog triage, eval UX hardening, and
+    final portfolio evidence packaging
 - CLIP integration go/no-go criterion is now defined and documented
   (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
   delta `>= 0.50`, zero errors/skips).
@@ -165,6 +122,26 @@
   (`PASS`/`FAIL`) to
   `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` with inbox monitor
   command `make eval-inbox`.
+- Eval checkpoint save contract now supports mixed stream persistence:
+  one checkpoint can include both positive and negative rubric streams.
+- Eval UI summary line now renders stream output directly
+  (`pass: ... • fail: ...`) instead of forcing one top-level label.
+- Eval checkpoint rollups now use independent stream counts:
+  `pass_count`, `fail_count`, and `other_count` (neither stream present).
+- Docs hygiene checkpoint (2026-03-21):
+  - deprecated pilot/comms docs are archive-only and no longer referenced in
+    active runbook/state/handoff execution paths
+  - archived docs are hidden from explorer/search for cleaner active workflow
+  - `docs/PEANUT_TOOLING_REF.md` stays visible as the day-to-day tooling guide
+- Safety certainty checkpoint (2026-03-21):
+  - transcript + peanut-reference note captured in
+    `docs/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
+    for certainty/inference guardrail framing in future eval review.
+- Collaboration policy checkpoint (2026-03-21):
+  - architecture + rubric constraints are set via human-directed decisions
+    before agentic parallelization
+  - multi-agent parallelism is used only for bounded tasks with deterministic
+    validation and director-led merge authority
 - Parallel eval report orchestration is now available:
   - command: `make eval-reports-parallel`
   - tool: `tools/eval_parallel_orchestrator.py`
@@ -173,9 +150,6 @@
 - OpenAI developer docs MCP is now configured for local workflows:
   - endpoint: `https://developers.openai.com/mcp`
   - workspace config: `.vscode/mcp.json`
-- Packaging direction is explicit:
-  - use Agent Builder as the product workflow shell
-  - keep local runtime/eval repo as canonical source of truth
 - Hallucination eval corpus now includes interpersonal motive-guess regression
   case `cautious_no_relationship_motive_guess` to catch speculative
   relationship-attribution claims.
@@ -184,6 +158,9 @@
   branches.
 - `docs/FIGMA_NODE_TRACKER.md` is now intentionally local-only and gitignored
   for proprietary/live node-tracking use.
+- Core internal planning docs are now tracked normally in git; local-only
+  material should stay in gitignored files/directories rather than
+  `skip-worktree` overlays.
 - Environment troubleshooting now follows a verification-first, no-guessing
   policy: verify repo path/mode/branch first, prefer repo-scoped config
   changes, and do not mutate `~/.zshrc` or global VS Code settings without
@@ -205,9 +182,10 @@
 
 ## Latest Local Commit
 
-- `6add849` on `main` (local branch synced with `origin/main`)
-- Summary: Merge pull request #55 from
-  tryskian/codex/bigbrain/hybrid-loop-and-eval-ui-cleanup
+- `347c015` on `codex/bigbrain/mixed-rubric-streams-20260321`
+- Summary: `feat(eval-ui): support mixed pass/fail rubric streams`
+- Note: direct push to `main` is blocked by branch protections; merge path is
+  PR + required checks.
 
 ## Key Files To Read First
 
@@ -247,13 +225,11 @@
 
 ## Immediate Next Step
 
-- Continue local-only hybrid readiness loop (no provider API execution):
-  - keep current runtime/API behavior unchanged
-  - run `make hybrid-openai-export-cycle`
-  - run `make hybrid-openai-prepare-pilot-payloads`
-  - do **not** run `make hybrid-openai-execute-pilot` until ship-readiness
-    decision is explicitly approved
-  - capture updated local artifact counts + payload paths in evidence docs
+- Finalize eval-v2 reset cutover:
+  - archive current baseline checkpoint/feedback rows (for historical reference)
+  - reset active checkpoint/feedback tables for fresh v2 scoring cycle
+  - keep append-only evidence logs preserved
+  - validate with focused API tests + frontend build before merge
 
 ## Peanut Pin (Tomorrow Start)
 
@@ -275,8 +251,7 @@
    ensure docs PR state is settled, then `main` is clean and up to date.
 3. Execute CLIP readiness loop:
    produce artifacts + readiness decision and store evidence.
-4. Decide hybrid OpenAI tooling scope (no runtime migration yet):
-   evals/tracing/optimizer adoption plan with zero behavior drift.
+4. Keep local-first runtime + eval execution path as canonical.
 5. Document only material decisions:
    update `STATE` + `DECISIONS` + `SESSION_HANDOFF` with concise diffs.
 
