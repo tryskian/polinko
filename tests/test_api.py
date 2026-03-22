@@ -400,6 +400,70 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(checkpoint_submit.status_code, 400)
         self.assertIn("No saved evals", checkpoint_submit.json()["detail"])
 
+    def test_reset_eval_artifacts_preserves_chat_messages(self) -> None:
+        session_id = "s-feedback-reset-artifacts"
+        with self._stub_runner("Reset candidate"):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "hello reset", "session_id": session_id},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+        assistant_message_id = chat_resp.json()["assistant_message_id"]
+
+        feedback_submit = self.client.post(
+            f"/chats/{session_id}/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": assistant_message_id,
+                "outcome": "pass",
+                "positive_tags": ["style"],
+            },
+        )
+        self.assertEqual(feedback_submit.status_code, 200)
+
+        checkpoint_submit = self.client.post(
+            f"/chats/{session_id}/feedback/checkpoints",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(checkpoint_submit.status_code, 200)
+
+        reset_resp = self.client.post(
+            f"/chats/{session_id}/feedback/reset",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(reset_resp.status_code, 200)
+        self.assertEqual(reset_resp.json()["status"], "ok")
+        self.assertEqual(reset_resp.json()["session_id"], session_id)
+
+        messages_resp = self.client.get(
+            f"/chats/{session_id}/messages",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(messages_resp.status_code, 200)
+        self.assertGreaterEqual(len(messages_resp.json()["messages"]), 2)
+
+        feedback_list = self.client.get(
+            f"/chats/{session_id}/feedback",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(feedback_list.status_code, 200)
+        self.assertEqual(feedback_list.json()["feedback"], [])
+
+        checkpoints_list = self.client.get(
+            f"/chats/{session_id}/feedback/checkpoints",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(checkpoints_list.status_code, 200)
+        self.assertEqual(checkpoints_list.json()["checkpoints"], [])
+
+        checkpoint_after_reset = self.client.post(
+            f"/chats/{session_id}/feedback/checkpoints",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(checkpoint_after_reset.status_code, 400)
+        self.assertIn("No saved evals", checkpoint_after_reset.json()["detail"])
+
     def test_fail_feedback_generates_recommended_action_and_logs_inbox(self) -> None:
         with self._stub_runner("Please inspect this OCR output."):
             chat_resp = self.client.post(

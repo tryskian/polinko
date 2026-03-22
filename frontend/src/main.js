@@ -46,6 +46,7 @@ const exportJsonEl = document.getElementById("export-json");
 const exportOcrEl = document.getElementById("export-ocr");
 const exportTriageEl = document.getElementById("export-triage");
 const evalSubmitEl = document.getElementById("eval-submit");
+const evalResetEl = document.getElementById("eval-reset");
 const checkpointJumpEl = document.getElementById("checkpoint-jump");
 const appPipEl = document.getElementById("app-pip");
 const appPipIconEl = document.getElementById("app-pip-icon");
@@ -1997,6 +1998,12 @@ async function apiSubmitEvalCheckpoint(sessionId) {
   });
 }
 
+async function apiResetEvalArtifacts(sessionId) {
+  return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback/reset`, {
+    method: "POST",
+  });
+}
+
 async function apiSubmitFeedback(sessionId, payload) {
   return requestJson(`/chats/${encodeURIComponent(sessionId)}/feedback`, {
     method: "POST",
@@ -2144,6 +2151,21 @@ async function submitEvalCheckpoint() {
   checkpointSummaryFetchedAtBySession.set(activeChatId, Date.now());
   markChatCheckpointsSeen(activeChatId);
   await loadActiveMessages();
+  refreshChatListUi();
+  syncCheckpointJumpControl();
+}
+
+async function resetEvalArtifacts() {
+  if (!activeChatId) {
+    throw new Error("No active chat selected.");
+  }
+  await apiResetEvalArtifacts(activeChatId);
+  messageFeedbackById = new Map();
+  evalCheckpointsBySession.set(activeChatId, []);
+  checkpointSummaryFetchedAtBySession.delete(activeChatId);
+  checkpointSeenCountBySession.set(activeChatId, 0);
+  persistCheckpointSeenStore();
+  await loadActiveMessages({ scrollToBottom: false });
   refreshChatListUi();
   syncCheckpointJumpControl();
 }
@@ -3051,6 +3073,27 @@ evalSubmitEl?.addEventListener("click", async () => {
     appendMessage("error", String(error), { persist: false });
   } finally {
     evalSubmitEl.disabled = false;
+  }
+});
+
+evalResetEl?.addEventListener("click", async () => {
+  if (!activeChatId || evalResetEl.disabled) {
+    return;
+  }
+  const shouldReset = window.confirm(
+    "Reset all eval artifacts for this chat? Messages stay, evals/checkpoints are removed.",
+  );
+  if (!shouldReset) {
+    return;
+  }
+  evalResetEl.disabled = true;
+  try {
+    await resetEvalArtifacts();
+    appendMessage("meta", "Eval artifacts reset for this chat.", { persist: false });
+  } catch (error) {
+    appendMessage("error", String(error), { persist: false });
+  } finally {
+    evalResetEl.disabled = false;
   }
 });
 

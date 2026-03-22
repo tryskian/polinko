@@ -904,6 +904,22 @@ class ChatHistoryStore:
             for row in rows
         ]
 
+    def clear_eval_artifacts(self, session_id: str) -> None:
+        now = _now_ms()
+        with self._connection() as conn:
+            conn.execute(
+                "DELETE FROM message_feedback WHERE session_id = ?;",
+                (session_id,),
+            )
+            conn.execute(
+                "DELETE FROM eval_checkpoints WHERE session_id = ?;",
+                (session_id,),
+            )
+            conn.execute(
+                "UPDATE chats SET updated_at = ? WHERE session_id = ?;",
+                (now, session_id),
+            )
+
     def record_ocr_run(
         self,
         *,
