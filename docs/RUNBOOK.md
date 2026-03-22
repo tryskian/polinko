@@ -747,54 +747,42 @@ Current policy:
    - `make human-reference-latest HUMAN_REFERENCE_LIMIT=50`
    - `make human-reference-changes HUMAN_REFERENCE_SINCE_HOURS=72`
 
-## UI Feedback Tagging (OCR + Grounding)
+## UI Feedback Rubric (Current)
 
-1. For each assistant response, open the UI feedback card:
-   - click `Pass` or `Fail`
-   - `Pass`: select at least one pass-side rubric signal
-   - `Fail`: select at least one fail-side rubric signal
-   - optional note
-   - save
-2. Use this OCR classification mapping:
-   - Wrong OCR guardrail/refusal path (for example, "no new image evidence"
-     triggered with no OCR context): `FAIL` + `ocr_miss` + `grounding_gap`
-   - Fabricated OCR text/guessing without visible evidence: `FAIL` +
-     `ocr_miss` + `hallucination_risk`
-   - Correct refusal after real OCR context with no new image attached:
-     `PASS` + `accurate` + `grounded`
-3. For FAIL entries, add a short note describing expected vs actual behavior to
-   speed up remediation.
-4. Use binary outcome only:
-   - `PASS` when no fail-side signals are selected
-   - `FAIL` when any fail-side signal is selected
-5. Eval submissions are auto-logged on every save (PASS/FAIL):
+1. For each assistant response, open `Evaluate`.
+2. Score two rubric dimensions:
+   - `Style`: `pass` or `fail`
+   - `Hallucination risk`: `pass` or `fail`
+3. Optional style penalties:
+   - `default/straight style` (`default_style`) is a soft penalty.
+   - `em-dash style` (`em_dash_style`) is a hard penalty.
+4. Save one checkpoint per reviewed response.
+5. Status line semantics:
+   - `pass: ...` for positive rubric signals
+   - `fail: ...` for hard fail signals
+   - `penalty: ...` for soft-only penalties
+6. Outcome derivation (system):
+   - `pass`: no hard fail signals
+   - `mixed`: both pass signals and hard fail signals
+   - `fail`: hard fail signals only
+7. Release gate usage (operator):
+   - treat any hard fail signal as a gate fail for that response
+   - soft penalties stay actionable quality debt, not hard blockers
+8. Eval submissions are auto-logged on every save:
    - `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl`
-   - each line includes session id, title, outcome, tags, note, and timestamp.
-6. Quick "what's new" inbox command:
+   - each line includes session id, title, outcome, tags, note, and timestamp
+9. Quick "what's new" inbox command:
    - `make eval-inbox`
-   - shows newly logged eval submissions since last cursor checkpoint.
+   - shows newly logged eval submissions since last cursor checkpoint
 
-## UI Feedback Tagging (Co-Reasoning Stress Cases)
+## Start Fresh Eval Cycle
 
-1. Use this section for interaction-heavy sessions where the user is
-   co-reasoning (not only Q&A retrieval).
-2. Evaluate against four dimensions:
-   - constraint retention without rigidity
-   - meta-level shift handling mid-thread
-   - style adaptation without mimicry collapse
-   - grounding under playful abstraction
-3. Tagging baseline:
-   - `PASS`: include pass-side rubric signals only
-   - `FAIL`: use root-cause fail tags (`grounding_gap`, `hallucination_risk`,
-     `style_mismatch`, `em_dash_style`, `needs_retry`)
-4. Notes template (recommended):
-   - `constraint_state=...`
-   - `shift_handling=...`
-   - `style_mode=...`
-   - `grounding_state=...`
-   - `action=...`
-5. Detailed scoring guidance:
-   - `docs/research/co_reasoning_eval_reference.md`
+1. Archive/clean generated eval chats:
+   - `make eval-cleanup`
+2. If needed, reset one chat session:
+   - `POST /session/reset` with `{"session_id":"<chat-id>"}`.
+3. Keep historical evidence artifacts; only clear active UI/checkpoint state for
+   the next clean eval pass.
 
 ## Export CLI Transcript
 
