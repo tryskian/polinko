@@ -145,6 +145,11 @@
   - transcript + peanut-reference note captured in
     `docs/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
     for certainty/inference guardrail framing in future eval review.
+- Anti-collaboration diagnostic checkpoint (2026-03-22):
+  - transcript + structured interpretation captured in
+    `docs/transcripts/anti_collaboration_diagnostic_method_2026-03-22.md`
+  - keeps the “pattern is strategy, not the other way around” framing attached
+    to active reasoning-behavior analysis.
 - Collaboration policy checkpoint (2026-03-21):
   - architecture + rubric constraints are set via human-directed decisions
     before agentic parallelization
