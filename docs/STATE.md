@@ -106,6 +106,11 @@
   - captured transcript + peanut-reference framing in
     `docs/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
     (unsupported certainty = fail; uncertainty + grounded recovery = pass)
+- Anti-collaboration diagnostic checkpoint (March 22, 2026):
+  - captured transcript + structured interpretation in
+    `docs/transcripts/anti_collaboration_diagnostic_method_2026-03-22.md`
+  - preserves the “pattern is strategy, not the other way around” framing for
+    future rubric and reasoning-behavior analysis
 - Latest audit checkpoint (March 20, 2026):
   - `make doctor-env`: healthy
   - `make lint-docs`: pass
