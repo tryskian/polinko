@@ -51,6 +51,11 @@ server:
 
 server-daemon:
 	@set -eu; \
+	EXPECTED_PY="$$( $(PYTHON) -c 'import os,sys; print(os.path.realpath(sys.executable))' 2>/dev/null || true )"; \
+	if [ -z "$$EXPECTED_PY" ]; then \
+		echo "Unable to resolve expected Python interpreter from $(PYTHON)."; \
+		exit 1; \
+	fi; \
 	if [ -f "$(SERVER_PID_FILE)" ]; then \
 		PID=$$(cat "$(SERVER_PID_FILE)" 2>/dev/null || true); \
 		if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
@@ -64,9 +69,19 @@ server-daemon:
 		if [ -n "$$EXISTING_PID" ]; then \
 			EXISTING_CMD=$$(ps -o command= -p "$$EXISTING_PID" 2>/dev/null || true); \
 			if echo "$$EXISTING_CMD" | grep -q "uvicorn server:app"; then \
-				echo "$$EXISTING_PID" >"$(SERVER_PID_FILE)"; \
-				echo "server-daemon already active on port $(DEV_BACKEND_PORT); adopted PID $$EXISTING_PID."; \
-				exit 0; \
+				EXISTING_PY=$$(printf '%s\n' "$$EXISTING_CMD" | awk '{print $$1}'); \
+				EXISTING_PY_REAL="$$( "$$EXISTING_PY" -c 'import os,sys; print(os.path.realpath(sys.executable))' 2>/dev/null || true )"; \
+				if [ "$$EXISTING_PY_REAL" = "$$EXPECTED_PY" ]; then \
+					echo "$$EXISTING_PID" >"$(SERVER_PID_FILE)"; \
+					echo "server-daemon already active on port $(DEV_BACKEND_PORT); adopted PID $$EXISTING_PID ($$EXISTING_PY_REAL)."; \
+					exit 0; \
+				fi; \
+				echo "server-daemon found polinko server on port $(DEV_BACKEND_PORT) with interpreter mismatch."; \
+				echo "expected: $$EXPECTED_PY"; \
+				echo "found:    $$EXISTING_PY_REAL"; \
+				echo "Restarting server-daemon with expected interpreter."; \
+				kill "$$EXISTING_PID"; \
+				sleep 0.2; \
 			fi; \
 			echo "Port $(DEV_BACKEND_PORT) is in use by a non-polinko process."; \
 			echo "PID $$EXISTING_PID: $$EXISTING_CMD"; \

@@ -244,6 +244,31 @@
     keeping PiP
   - add base eval prompt presets so manual warm-up prompt writing is optional
 
+## Review Transcript (2026-03-23, pol-3 diff audit)
+
+- Scope reviewed: uncommitted `main` edits in:
+  `api/app_factory.py`, `core/history_store.py`, `tests/test_api.py`,
+  `frontend/index.html`, `frontend/src/main.js`, `frontend/src/style.css`,
+  `frontend/e2e/smoke.spec.js`.
+- Primary finding (medium severity):
+  Playwright mock contract drift in `frontend/e2e/smoke.spec.js` where reset
+  deprecates by default (`payload.deprecate !== false`), which is stricter than
+  backend default request behavior (`deprecate: false` unless server
+  `deprecate_on_reset` is enabled).
+- Keep/fix/revert recommendation from audit:
+  - keep backend reset hardening (`clear_eval_cycle_state`) and associated tests
+  - keep frontend eval UX/preset additions
+  - fix e2e reset mock default to match backend contract (or model server
+    default explicitly in fixture state)
+  - no broad revert requested by audit itself
+- Targeted validation run in-session:
+  - `python3 -m unittest` on reset/deprecate API tests: pass
+  - `npm --prefix frontend run -s test:e2e -- -g "applies base eval prompt presets to the composer|reset starts a clean eval cycle with no prior checkpoint state"`:
+    pass
+- Operator decision at wrap:
+  preserve these findings in handoff, then rewind workspace to pre-commit clean
+  state before continuing new work.
+
 ## Peanut Pin (Tomorrow Start)
 
 - Merge watch first:
