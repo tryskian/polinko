@@ -102,6 +102,23 @@
     `docs/portfolio/raw_evidence`
   - archive naming now follows date-prefixed pattern
     `docs/portfolio/archive/YYYY-MM-DD-...` for consistent cataloging
+- Eval reset + fresh baseline checkpoint (March 24, 2026):
+  - pre-reset artifacts archived to
+    `docs/portfolio/raw_evidence/archive/eval-reset-20260324-103725`
+  - inbox streams reset, then repopulated from fresh runs only
+  - deterministic gate re-run passed end-to-end
+    (`162` tests + retrieval/file-search/OCR/style/hallucination suites)
+  - fresh host report cycle regenerated:
+    `retrieval-20260324-104006`, `file-search-20260324-104047`,
+    `ocr-20260324-104051`, `style-20260324-104054`,
+    `hallucination-20260324-104134`
+  - note: style report recorded one judge-case miss
+    (`adapt_style_without_mimicry`) while other suites passed
+- Branch/ruleset checkpoint (March 24, 2026):
+  - active refactor branch is `eval-rubric`
+  - branch-specific GitHub ruleset `eval-rubric` is active
+    (PR required + `test` required status check)
+  - default-branch (`main`) protections remain unchanged.
 - Safety certainty checkpoint (March 21, 2026):
   - captured transcript + peanut-reference framing in
     `docs/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
