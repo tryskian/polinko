@@ -49,6 +49,11 @@
    - `git pull --ff-only`
 6. If direct push returns `GH013`, treat it as expected branch protection
    behavior and continue via PR flow.
+7. For the eval rubric refactor track, use the dedicated branch and matching
+   ruleset:
+   - branch: `eval-rubric`
+   - protection baseline: PR required + `test` status check required
+   - remove temporary branch-specific ruleset after merge/close
 
 ## Repo vs Container Working Modes
 
@@ -777,11 +782,18 @@ Current policy:
 
 ## Start Fresh Eval Cycle
 
-1. Archive/clean generated eval chats:
+1. Optional pre-reset snapshot (when you need before/after comparability):
+   - copy current evidence tree to
+     `docs/portfolio/raw_evidence/archive/eval-reset-<YYYYMMDD-HHMMSS>`
+2. Archive/clean generated eval chats:
    - `make eval-cleanup`
-2. If needed, reset one chat session:
+3. If needed, reset one chat session:
    - `POST /session/reset` with `{"session_id":"<chat-id>"}`.
-3. Keep historical evidence artifacts; only clear active UI/checkpoint state for
+4. Re-run deterministic baseline gate:
+   - `make quality-gate-deterministic`
+5. Regenerate fresh eval report artifacts:
+   - `make eval-reports-parallel`
+6. Keep historical evidence artifacts; only clear active UI/checkpoint state for
    the next clean eval pass.
 
 ## Export CLI Transcript
