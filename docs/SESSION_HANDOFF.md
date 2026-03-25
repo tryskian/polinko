@@ -26,6 +26,10 @@
 - Active raw-evidence intake is binary-first:
   - keep `PASS`/`FAIL`/`INBOX` active
   - keep `MIXED` and trace-artifact intake as archive-only legacy
+- Docs confidentiality + legacy cleanup is merged on `main` (PR `#72`):
+  - local-only internal docs policy enforced in runbook + ignore rules
+  - legacy tracked transcript de-tracked and kept local
+  - end-of-day docs are aligned for clean next-session startup
 - OpenAI developer docs MCP is configured for local workflows:
   - endpoint: `https://developers.openai.com/mcp`
   - workspace config: `.vscode/mcp.json`
@@ -36,12 +40,12 @@
 
 ## Latest Local Commit
 
-- `a60bf15` (merge commit on `main`)
-- PR: `#71` (`codex/bigbrain/eval-human-reference-refresh`)
+- `2a6f575` (merge commit on `main`)
+- PR: `#72` (`codex/bigbrain/docs-confidentiality-legacy-cleanup-20260325`)
 - Core outcome:
-  - eval contract refresh (binary-first compatibility path)
-  - human-reference schema/query ergonomics refresh
-  - frontend + backend + tests synced in one merge
+  - docs + handoff/state/runbook are synced to current operating mode
+  - internal/non-build docs are local-only by default
+  - legacy portfolio/evidence wiring is archived out of active flow
 
 ## Key Files To Read First
 
