@@ -21,6 +21,11 @@
   - rebuild: `make human-reference-db`
   - query presets: `make human-reference-latest|transcripts|changes|relationships`
   - relationship semantics are FK-backed in `.human_reference.db`.
+- Legacy local portfolio docs were archived out of active root paths:
+  - `docs/portfolio/archive/2026-03-25-legacy-positioning-workbench`
+- Active raw-evidence intake is binary-first:
+  - keep `PASS`/`FAIL`/`INBOX` active
+  - keep `MIXED` and trace-artifact intake as archive-only legacy
 - OpenAI developer docs MCP is configured for local workflows:
   - endpoint: `https://developers.openai.com/mcp`
   - workspace config: `.vscode/mcp.json`

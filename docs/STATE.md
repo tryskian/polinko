@@ -112,6 +112,11 @@
     `docs/portfolio/raw_evidence`
   - archive naming now follows date-prefixed pattern
     `docs/portfolio/archive/YYYY-MM-DD-...` for consistent cataloguing
+- Legacy docs + evidence wiring cleanup checkpoint (March 25, 2026):
+  - early portfolio narrative/workbench docs were moved to
+    `docs/portfolio/archive/2026-03-25-legacy-positioning-workbench`
+  - active raw-evidence intake is now documented as `PASS`/`FAIL`/`INBOX` only
+  - legacy `MIXED` bucket and trace-artifact intake file are archive-only
 - Eval reset + fresh baseline checkpoint (March 24, 2026):
   - pre-reset artifacts archived to
     `docs/portfolio/raw_evidence/archive/eval-reset-20260324-103725`
