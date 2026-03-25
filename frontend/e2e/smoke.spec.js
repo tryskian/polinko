@@ -415,6 +415,31 @@ test("creates a fresh chat from sidebar", async ({ page }) => {
   await expect(page.getByLabel("Chat threads").getByRole("button", { name: "New chat" })).toBeVisible();
 });
 
+test("applies base eval prompt presets to the composer", async ({ page }) => {
+  await page.goto("/");
+
+  const composer = page.getByPlaceholder("message bigbrain");
+  const presetSelect = page.getByLabel("Apply base eval prompt preset");
+
+  await presetSelect.selectOption("binary_gate");
+  await expect(composer).toHaveValue(/binary gate only/i);
+
+  await presetSelect.selectOption("style_gate");
+  await expect(composer).toHaveValue(/style gate/i);
+});
+
+test("reset starts a clean eval cycle with no prior checkpoint state", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Submit eval checkpoint" }).click();
+  await expect(page.getByText(/Eval checkpoint 1/i)).toBeVisible();
+
+  await page.getByRole("button", { name: "Reset session" }).click();
+
+  await expect(page.locator("#chat")).not.toContainText(/Eval checkpoint 1/i);
+  await expect(page.getByRole("button", { name: "Jump to latest eval checkpoint" })).toBeDisabled();
+});
+
 test("shows unreviewed checkpoint badge per chat and clears it when reviewed", async ({ page }) => {
   await page.goto("/");
 

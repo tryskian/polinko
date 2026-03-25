@@ -68,24 +68,27 @@
           <button id="reset" type="button" class="reset" aria-label="Reset session" title="Reset session">
             <span class="material-symbols-outlined" aria-hidden="true">history</span>
           </button>
-          <button
-            id="eval-submit"
-            type="button"
-            class="header-icon"
-            aria-label="Submit eval checkpoint"
-            title="Submit eval checkpoint"
-          >
-            <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
-          </button>
-          <button
-            id="checkpoint-jump"
-            type="button"
-            class="header-icon"
-            aria-label="Jump to latest eval checkpoint"
-            title="Jump to latest eval checkpoint"
-          >
-            <span class="material-symbols-outlined" aria-hidden="true">flag</span>
-          </button>
+          <div class="eval-header-controls">
+            <button
+              id="eval-submit"
+              type="button"
+              class="header-pill"
+              aria-label="Submit eval checkpoint"
+              title="Submit eval checkpoint"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
+              <span class="header-pill-label">Checkpoint</span>
+            </button>
+            <button
+              id="checkpoint-jump"
+              type="button"
+              class="header-icon header-icon-compact"
+              aria-label="Jump to latest eval checkpoint"
+              title="Jump to latest eval checkpoint"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">flag</span>
+            </button>
+          </div>
           <button
             id="app-pip"
             type="button"
@@ -141,6 +144,18 @@
           ></textarea>
           <div class="composer-row">
             <div class="composer-actions">
+              <label for="eval-preset-select" class="visually-hidden">Apply base eval prompt preset</label>
+              <select
+                id="eval-preset-select"
+                class="composer-preset-select"
+                aria-label="Apply base eval prompt preset"
+                title="Apply base eval prompt preset"
+              >
+                <option value="">Eval preset</option>
+                <option value="binary_gate">Binary Gate</option>
+                <option value="grounding_gate">Grounding Gate</option>
+                <option value="style_gate">Style Gate</option>
+              </select>
               <button
                 id="memory-search-toggle"
                 type="button"

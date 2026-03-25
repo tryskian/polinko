@@ -24,7 +24,7 @@ test("deriveOutcomeFromStreams keeps pass when only soft negative style penalty 
   assert.equal(outcome, "pass");
 });
 
-test("formatFeedbackStatusText is stream-first for mixed signals", () => {
+test("formatFeedbackStatusText is stream-first for dual signals", () => {
   const text = formatFeedbackStatusText({
     outcome: "fail",
     positive_tags: ["style"],
@@ -33,12 +33,12 @@ test("formatFeedbackStatusText is stream-first for mixed signals", () => {
   assert.equal(text, "pass: style • fail: hallucination_risk, em_dash_style");
 });
 
-test("normalizeFeedbackOutcome infers mixed from stream data", () => {
+test("normalizeFeedbackOutcome infers fail from positive + hard-negative streams", () => {
   const outcome = normalizeFeedbackOutcome({
     positive_tags: ["style"],
     negative_tags: ["hallucination_risk"],
   });
-  assert.equal(outcome, "mixed");
+  assert.equal(outcome, "fail");
 });
 
 test("inferRubricSelectionsFromFeedback handles compatibility tags", () => {

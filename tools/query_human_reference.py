@@ -73,11 +73,32 @@ def _run_changes(
     return headers, cur.fetchall()
 
 
+def _run_relationships(conn: sqlite3.Connection, limit: int) -> tuple[list[str], list[tuple[object, ...]]]:
+    cur = conn.execute(
+        """
+        SELECT
+            s.title AS source_title,
+            t.title AS target_title,
+            l.source_path,
+            l.target_path,
+            l.relation
+        FROM links l
+        JOIN documents s ON s.path = l.source_path
+        JOIN documents t ON t.path = l.target_path
+        ORDER BY l.source_path ASC, l.target_path ASC
+        LIMIT ?
+        """,
+        (limit,),
+    )
+    headers = [d[0] for d in cur.description or []]
+    return headers, cur.fetchall()
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run one-click human-reference DB queries.")
     parser.add_argument(
         "query",
-        choices=("latest", "transcripts", "changes"),
+        choices=("latest", "transcripts", "changes", "relationships"),
         help="Query preset to run.",
     )
     parser.add_argument(
@@ -108,6 +129,9 @@ def main() -> None:
         elif args.query == "transcripts":
             headers, rows = _run_transcripts(conn, args.limit)
             label = f"transcripts+key_points (limit={args.limit})"
+        elif args.query == "relationships":
+            headers, rows = _run_relationships(conn, args.limit)
+            label = f"relationships (limit={args.limit})"
         else:
             headers, rows = _run_changes(conn, args.limit, args.since_hours)
             label = f"changes since {args.since_hours}h (limit={args.limit})"
@@ -121,4 +145,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

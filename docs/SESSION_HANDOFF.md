@@ -122,12 +122,16 @@
   (`PASS`/`FAIL`) to
   `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` with inbox monitor
   command `make eval-inbox`.
-- Eval checkpoint save contract now supports mixed stream persistence:
-  one checkpoint can include both positive and negative rubric streams.
+- Eval checkpoint save contract supports simultaneous positive and negative
+  rubric streams on one checkpoint row.
 - Eval UI summary line now renders stream output directly
   (`pass: ... • fail: ...`) instead of forcing one top-level label.
 - Eval checkpoint rollups now use independent stream counts:
   `pass_count`, `fail_count`, and `other_count` (neither stream present).
+- Binary migration checkpoint (2026-03-25):
+  - active feedback outcome contract accepts only `pass`/`fail`
+  - legacy dual-stream artifacts are kept for history only and normalized to binary
+    in active API/UI paths
 - Docs hygiene checkpoint (2026-03-21):
   - deprecated pilot/comms docs are archive-only and no longer referenced in
     active runbook/state/handoff execution paths
@@ -137,7 +141,7 @@
   - legacy hybrid/OpenAI eval artifacts were moved out of active
     `docs/portfolio/raw_evidence` paths into
     `docs/portfolio/archive/2026-03-22-raw-evidence-legacy`
-  - active evidence wiring remains limited to PASS/FAIL/MIXED/INBOX in
+  - active evidence wiring remains limited to PASS/FAIL/INBOX in
     `docs/portfolio/raw_evidence`
   - archive naming now follows date-prefixed convention
     `docs/portfolio/archive/YYYY-MM-DD-...` for consistency and discoverability
@@ -195,8 +199,8 @@
 
 ## Latest Local Commit
 
-- `347c015` on `codex/bigbrain/mixed-rubric-streams-20260321`
-- Summary: `feat(eval-ui): support mixed pass/fail rubric streams`
+- `347c015` on archived dual-stream rubric branch (historical)
+- Summary: `feat(eval-ui): support dual-stream rubric diagnostics`
 - Note: direct push to `main` is blocked by branch protections; merge path is
   PR + required checks.
 

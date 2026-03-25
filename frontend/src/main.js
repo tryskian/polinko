@@ -45,6 +45,7 @@ const exportMarkdownEl = document.getElementById("export-markdown");
 const exportJsonEl = document.getElementById("export-json");
 const exportOcrEl = document.getElementById("export-ocr");
 const exportTriageEl = document.getElementById("export-triage");
+const evalPresetSelectEl = document.getElementById("eval-preset-select");
 const evalSubmitEl = document.getElementById("eval-submit");
 const checkpointJumpEl = document.getElementById("checkpoint-jump");
 const appPipEl = document.getElementById("app-pip");
@@ -73,6 +74,23 @@ const TRIAGE_HIGH_FAIL_RATIO_THRESHOLD = 0.5;
 const TRIAGE_PRIORITY_LIMIT = 5;
 const DEFAULT_ATTACHMENT_PROMPT =
   "Transcribe visible text from the attached image(s) verbatim. Do not interpret.";
+const BASE_EVAL_PROMPT_PRESETS = Object.freeze([
+  {
+    key: "binary_gate",
+    prompt:
+      "Evaluate the latest assistant response with a binary gate only. Return PASS or FAIL and cite exact Style and Hallucination risk reasons.",
+  },
+  {
+    key: "grounding_gate",
+    prompt:
+      "Run a grounding gate on the latest response. Output PASS or FAIL, list any unsupported claims, and give one concrete remediation step.",
+  },
+  {
+    key: "style_gate",
+    prompt:
+      "Run a style gate on the latest response. Output PASS or FAIL and call out cadence/tone drift in one short bullet list.",
+  },
+]);
 const OCR_REQUEST_HINTS = [
   "ocr",
   "transcrib",
@@ -2130,6 +2148,23 @@ function normalizeMemoryScope(value) {
   return "global";
 }
 
+function applyEvalPromptPreset(presetKey) {
+  const key = String(presetKey || "").trim();
+  if (!key) {
+    return false;
+  }
+  const preset = BASE_EVAL_PROMPT_PRESETS.find((item) => item.key === key);
+  if (!preset) {
+    return false;
+  }
+  messageEl.value = preset.prompt;
+  autoSizeComposer();
+  messageEl.focus();
+  const cursorPos = messageEl.value.length;
+  messageEl.setSelectionRange(cursorPos, cursorPos);
+  return true;
+}
+
 async function resetSession(sessionId) {
   return requestJson("/session/reset", {
     method: "POST",
@@ -2973,6 +3008,15 @@ messageEl.addEventListener("keydown", (event) => {
     event.preventDefault();
     composerEl.requestSubmit();
   }
+});
+
+evalPresetSelectEl?.addEventListener("change", () => {
+  const key = String(evalPresetSelectEl.value || "");
+  if (!key) {
+    return;
+  }
+  applyEvalPromptPreset(key);
+  evalPresetSelectEl.value = "";
 });
 
 resetEl.addEventListener("click", async () => {

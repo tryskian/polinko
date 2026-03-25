@@ -753,7 +753,7 @@ def _message_feedback_response(entry: MessageFeedback) -> MessageFeedbackRespons
     return MessageFeedbackResponse(
         session_id=entry.session_id,
         message_id=entry.message_id,
-        outcome=entry.outcome.lower(),
+        outcome=_feedback_outcome_for_response(entry.outcome),
         positive_tags=list(entry.positive_tags),
         negative_tags=list(entry.negative_tags),
         tags=list(entry.tags),
@@ -780,13 +780,19 @@ def _eval_checkpoint_response(entry: EvalCheckpoint) -> EvalCheckpointResponse:
 
 def _normalize_feedback_outcome(value: str) -> str:
     normalized = value.strip().lower()
-    if normalized not in {"pass", "mixed", "fail"}:
-        raise HTTPException(status_code=400, detail="outcome must be 'pass', 'mixed', or 'fail'.")
+    if normalized not in {"pass", "fail"}:
+        raise HTTPException(status_code=400, detail="outcome must be 'pass' or 'fail'.")
     return normalized
+
+
+def _feedback_outcome_for_response(value: str) -> str:
+    normalized = value.strip().lower()
+    return "pass" if normalized == "pass" else "fail"
 
 
 def _normalize_feedback_tag_list(tags: list[str]) -> list[str]:
     normalized: list[str] = []
+    seen: set[str] = set()
     for raw in tags:
         tag = " ".join(raw.strip().lower().split())
         if not tag:
@@ -796,8 +802,9 @@ def _normalize_feedback_tag_list(tags: list[str]) -> list[str]:
             continue
         if len(tag) > _FEEDBACK_TAG_LEN_MAX:
             tag = tag[:_FEEDBACK_TAG_LEN_MAX].rstrip()
-        if tag not in normalized:
+        if tag not in seen:
             normalized.append(tag)
+            seen.add(tag)
         if len(normalized) >= _FEEDBACK_TAG_MAX:
             break
     return normalized
@@ -812,9 +819,9 @@ def _normalize_feedback_tags(
 ) -> tuple[list[str], list[str], list[str]]:
     normalized_positive = _normalize_feedback_tag_list(positive_tags)
     normalized_negative = _normalize_feedback_tag_list(negative_tags)
-    normalized_legacy = _normalize_feedback_tag_list(tags)
 
-    if not normalized_positive and not normalized_negative and normalized_legacy:
+    if not normalized_positive and not normalized_negative:
+        normalized_legacy = _normalize_feedback_tag_list(tags)
         if outcome == "pass":
             normalized_positive = normalized_legacy
         else:
@@ -852,12 +859,6 @@ def _normalize_feedback_tags(
     elif outcome == "fail":
         if not normalized_negative:
             raise HTTPException(status_code=400, detail="Fail requires at least one negative reason tag.")
-    else:
-        if not normalized_positive:
-            raise HTTPException(status_code=400, detail="Mixed requires at least one positive reason tag.")
-        if not normalized_negative:
-            raise HTTPException(status_code=400, detail="Mixed requires at least one negative reason tag.")
-
     normalized_tags = list(dict.fromkeys(normalized_positive + normalized_negative))
     return normalized_positive, normalized_negative, normalized_tags
 
@@ -888,6 +889,23 @@ def _suggest_feedback_action(
 
 def _feedback_status_for_outcome(outcome: str) -> str:
     return "closed" if outcome == "pass" else "open"
+
+
+def _summarize_feedback_streams(entries: list[MessageFeedback]) -> tuple[int, int, int, int]:
+    total_count = len(entries)
+    pass_count = 0
+    fail_count = 0
+    other_count = 0
+    for entry in entries:
+        has_positive = bool(entry.positive_tags)
+        has_negative = bool(entry.negative_tags)
+        if has_positive:
+            pass_count += 1
+        if has_negative:
+            fail_count += 1
+        if not has_positive and not has_negative:
+            other_count += 1
+    return total_count, pass_count, fail_count, other_count
 
 
 def _normalize_note_text(note: str) -> str:
@@ -3217,10 +3235,7 @@ def create_app(config: AppConfig) -> FastAPI:
         entries = deps.history_store.list_message_feedback(session_id=session_id)
         if not entries:
             raise HTTPException(status_code=400, detail="No saved evals in this chat yet.")
-        pass_count = sum(1 for entry in entries if entry.positive_tags)
-        fail_count = sum(1 for entry in entries if entry.negative_tags)
-        total_count = len(entries)
-        other_count = sum(1 for entry in entries if not entry.positive_tags and not entry.negative_tags)
+        total_count, pass_count, fail_count, other_count = _summarize_feedback_streams(entries)
         checkpoint_id = f"eval-{uuid.uuid4().hex[:12]}"
         saved = deps.history_store.record_eval_checkpoint(
             checkpoint_id=checkpoint_id,

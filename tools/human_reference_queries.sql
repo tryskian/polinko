@@ -37,3 +37,17 @@ SELECT source_path, target_path, relation
 FROM links
 ORDER BY source_path, target_path;
 
+-- 7) Relationship map with human-readable titles
+SELECT
+  s.title AS source_title,
+  s.path AS source_path,
+  t.title AS target_title,
+  t.path AS target_path,
+  l.relation
+FROM links l
+JOIN documents s ON s.path = l.source_path
+JOIN documents t ON t.path = l.target_path
+ORDER BY source_path, target_path;
+
+-- 8) Foreign key config (for ER viewer/debug)
+PRAGMA foreign_key_list('links');

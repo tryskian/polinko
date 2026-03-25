@@ -570,10 +570,10 @@
   (`PASS`/`FAIL`), and keep human nuance in secondary layers (notes,
   transcripts, recovery analysis) rather than in the decision gate itself.
 
-## D-057: Store eval checkpoints as dual streams when mixed signals exist
+## D-057: Store eval checkpoints as dual streams for cross-dimension signals
 
 - Category: `eval_quality`
-- Tags: `mixed_outcome`, `dual_stream`, `checkpoint_contract`, `ui_api_sync`
+- Tags: `dual_stream`, `checkpoint_contract`, `ui_api_sync`
 - Decision: Allow checkpoint rows to persist simultaneous positive and negative
   rubric signals as separate streams (`pass: ...` and `fail: ...`) rather than
   forcing a single top-level summary label.
@@ -581,6 +581,17 @@
   and fail another (for example strong style with hallucination risk), while
   keeping deterministic downstream counting via independent `pass_count` and
   `fail_count` aggregation.
+
+## D-060: Canonicalize eval outcome contract to binary while preserving legacy read compatibility
+
+- Category: `eval_quality`
+- Tags: `binary_contract`, `legacy_compat`, `pass_fail`, `api_ui_sync`
+- Decision: Treat `pass`/`fail` as the only accepted feedback outcomes at write
+  time, while preserving read compatibility for legacy stored outcomes by
+  normalizing non-pass values to `fail` in API/UI response paths.
+- Why: Removes deprecated outcome ambiguity from active workflows without
+  discarding historical evidence; keeps deterministic gating and migration-safe
+  legacy visibility.
 
 ## D-058: Deprecate hybrid/Agent Builder pilot workflow as active execution path
 
