@@ -117,6 +117,12 @@
     `docs/portfolio/archive/2026-03-25-legacy-positioning-workbench`
   - active raw-evidence intake is now documented as `PASS`/`FAIL`/`INBOX` only
   - legacy `MIXED` bucket and trace-artifact intake file are archive-only
+- EOD docs confidentiality merge checkpoint (March 25, 2026):
+  - PR `#72` merged to `main` (`2a6f575`)
+  - runbook + ignore policy now treats non-build internal docs as local-only
+    by default
+  - session handoff is aligned to the merged cleanup baseline for next-day
+    startup
 - Eval reset + fresh baseline checkpoint (March 24, 2026):
   - pre-reset artifacts archived to
     `docs/portfolio/raw_evidence/archive/eval-reset-20260324-103725`
