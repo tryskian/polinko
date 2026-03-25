@@ -1,48 +1,63 @@
 # Architecture
 
-## Folder Map
+## Top-Level Map
 
-- `app.py`  
-  CLI chat entrypoint.
-- `config.py`  
-  Environment loading + validation.
-- `server.py`  
-  API entrypoint (creates FastAPI app).
-- `api/`  
-  HTTP layer and app factory.
-- `core/`  
-  Agent runtime logic (prompt, session, rate limit helpers).
+- `app.py`
+  - CLI chat entrypoint.
+- `server.py`
+  - FastAPI API entrypoint (`create_app(...)`).
+- `config.py`
+  - Environment loading + validation.
+- `api/`
+  - HTTP layer, route contract, middleware, auth/rate-limit integration.
+- `core/`
+  - Runtime logic (prompting, session/history, personalization, retrieval helpers).
 - `frontend/`
-  Vite frontend chat UI.
-- `tools/`  
-  Local utility scripts (API client, env doctor, eval/report utilities).
-- `tests/`  
-  Automated tests.
-- `docs/`  
-  Project docs, state, decisions, handoff.
+  - Vite UI (chat, eval controls, checkpoint triage/export).
+- `tools/`
+  - Local automation/eval/reference utilities.
+- `tests/`
+  - API/runtime regression tests.
+- `docs/`
+  - Charter, state, decisions, runbook, handoff, and operator references.
 
 ## Runtime Flow
 
 1. `server.py` loads config from `config.py`.
-2. `server.py` calls `api.app_factory.create_app(...)`.
-3. `api/app_factory.py` wires routes, middleware, auth, rate limiting, and runtime deps.
-4. Runtime behavior comes from `core/` modules.
+2. `server.py` calls `api.app_factory.create_app(config)`.
+3. `api/app_factory.py` wires routes + middleware + runtime dependencies.
+4. Request execution delegates to `core/` runtime and persistence modules.
+5. UI (`frontend/`) calls API routes (`/chat`, `/skills/*`, `/chats/*`) over JSON.
+
+## Data Surfaces
+
+- Runtime chat/session state:
+  - SQLite stores (chat history + memory/vector artifacts).
+- Eval/operator evidence:
+  - `docs/portfolio/raw_evidence/*` (PASS/FAIL/INBOX + metadata/audit outputs).
+  - active feedback/checkpoint write contract is binary (`pass`/`fail`);
+    legacy rows are normalized on read for compatibility.
+- Human reference index:
+  - `.human_reference.db` built from `docs/transcripts`, `docs/research`, `docs/theory`.
+  - builder: `tools/build_human_reference_db.py`
+  - query presets: `tools/query_human_reference.py`
+  - SQL pack: `tools/human_reference_queries.sql`
+  - operator flow is offline/query-first (`make human-reference-*`).
 
 ## Placement Rules
 
-- New API endpoints or middleware: `api/`
-- New model/prompt/runtime behavior: `core/`
-- New frontend code: `frontend/`
-- New local scripts/one-off utilities: `tools/`
-- New status/process documentation: `docs/`
-- Keep root limited to entrypoints + top-level project files.
+- API endpoints/middleware/contracts: `api/`
+- Prompt/runtime behaviour and policy logic: `core/`
+- UI behaviour and interaction model: `frontend/`
+- Eval/report/reference scripts and one-off operators: `tools/`
+- Execution state/decisions/handoff documentation: `docs/`
 
-## Common Commands
+## Operational Commands
 
-- Environment doctor: `make doctor-env`
-- Tests: `make test`
-- Quality gate: `make quality-gate` (or `make quality-gate-deterministic`)
-- CLI chat: `make chat`
-- Local API server: `make server`
-- Frontend dev: `make ui-dev`
-- Docker smoke: `make docker-build` then `make docker-run`
+- Env sanity: `make doctor-env`
+- Backend tests: `make test`
+- Frontend tests: `npm --prefix frontend run -s test`
+- Frontend build: `npm --prefix frontend run -s build`
+- Local API: `make server` or `make server-daemon`
+- UI dev: `make ui-dev`
+- Human reference quick query: `make human-reference-relationships`

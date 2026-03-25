@@ -20,7 +20,7 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Preserve prompt continuity through minimal, explicit prompt instructions.
 - Fail fast on config/auth issues.
 - Prefer deterministic, testable backend changes.
-- Run `make doctor-env` when local environment behavior looks suspicious.
+- Run `make doctor-env` when local environment behaviour looks suspicious.
 - Run `make quality-gate` before push when backend/prompt/retrieval logic changes.
 
 ## Core Runtime

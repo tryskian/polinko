@@ -41,7 +41,7 @@
   - workspace wiring: `.vscode/mcp.json`
 - Figma/UI parity work is intentionally paused; current execution focus is backend retrieval, OCR, and file-search reliability.
 - Quality gate is implemented and passing locally via `make quality-gate`:
-  - unit tests (`134`)
+  - unit tests
   - retrieval eval (`12/12`)
   - file-search eval (`5/5`, including image-context smoke)
   - OCR eval strict (`6/6`)
@@ -92,6 +92,12 @@
   - canonical feedback outcome contract is strictly `pass`/`fail`
   - legacy dual-stream rows are read-compat only and normalized to binary in
     API/UX responses
+- Post-merge eval + reference checkpoint (March 25, 2026):
+  - PR `#71` merged to `main` (`a60bf15`) with backend/API/test/frontend sync
+  - checkpoint and feedback APIs preserve binary gate behaviour while keeping
+    legacy rows readable as normalized `pass`/`fail`
+  - human-reference indexing now stores explicit document-link relationships
+    with FK-backed queries for easier imagineer-facing lookup
 - Docs hygiene checkpoint (March 21, 2026):
   - deprecated pilot/comms docs are archive-only and removed from active
     runbook/state/handoff references
@@ -105,7 +111,12 @@
   - active evidence flow remains PASS/FAIL/INBOX under
     `docs/portfolio/raw_evidence`
   - archive naming now follows date-prefixed pattern
-    `docs/portfolio/archive/YYYY-MM-DD-...` for consistent cataloging
+    `docs/portfolio/archive/YYYY-MM-DD-...` for consistent cataloguing
+- Legacy docs + evidence wiring cleanup checkpoint (March 25, 2026):
+  - early portfolio narrative/workbench docs were moved to
+    `docs/portfolio/archive/2026-03-25-legacy-positioning-workbench`
+  - active raw-evidence intake is now documented as `PASS`/`FAIL`/`INBOX` only
+  - legacy `MIXED` bucket and trace-artifact intake file are archive-only
 - Eval reset + fresh baseline checkpoint (March 24, 2026):
   - pre-reset artifacts archived to
     `docs/portfolio/raw_evidence/archive/eval-reset-20260324-103725`
@@ -118,11 +129,10 @@
     `hallucination-20260324-104134`
   - note: style report recorded one judge-case miss
     (`adapt_style_without_mimicry`) while other suites passed
-- Branch/ruleset checkpoint (March 24, 2026):
-  - active refactor branch is `eval-rubric`
-  - branch-specific GitHub ruleset `eval-rubric` is active
-    (PR required + `test` required status check)
-  - default-branch (`main`) protections remain unchanged.
+- Branch protection checkpoint (March 25, 2026):
+  - `main` remains protected (PR + required checks)
+  - active implementation now runs through task branches merged back to `main`
+  - no special-purpose `eval-rubric` branch/ruleset is active
 - Safety certainty checkpoint (March 21, 2026):
   - captured transcript + peanut-reference framing in
     `docs/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
@@ -131,15 +141,13 @@
   - captured transcript + structured interpretation in
     `docs/transcripts/anti_collaboration_diagnostic_method_2026-03-22.md`
   - preserves the “pattern is strategy, not the other way around” framing for
-    future rubric and reasoning-behavior analysis
-- Latest audit checkpoint (March 20, 2026):
+    future rubric and reasoning-behaviour analysis
+- Latest audit checkpoint (March 25, 2026):
   - `make doctor-env`: healthy
   - `make lint-docs`: pass
-  - `ruff check .`: pass
-  - `mypy .`: pass (`58` source files)
-  - `make test`: pass (`175` tests)
-  - tooling import fallback debt removed in eval/pilot helpers
-    (canonical `tools.*` imports only)
+  - backend regression tests: `make test` pass (`162` tests)
+  - frontend unit tests: `npm --prefix frontend run -s test` pass
+  - frontend production build: `npm --prefix frontend run -s build` pass
 - Eval runs no longer produce ambiguous generic `New chat` helper rows in the
   UI; generated eval chats now use deterministic session-id titles when
   retained.
@@ -147,13 +155,13 @@
   - command: `make eval-reports-parallel`
   - tool: `tools/eval_parallel_orchestrator.py`
   - artifact: `eval_reports/parallel-<run_id>.json` plus per-suite logs/reports
-- Playwright smoke E2E now validates retry-variant lineage behavior end-to-end
+- Playwright smoke E2E now validates retry-variant lineage behaviour end-to-end
   (assistant variant creation, `Variant X of Y` controls, and no duplicate user
   prompt rows in the rendered thread).
 - Hallucination judge evaluation now supports configurable judge credentials and
   base URL (`--judge-api-key-env`, `--judge-base-url`) so OpenAI-compatible
   judge backends (including Braintrust gateways) can be wired without runtime
-  behavior changes.
+  behaviour changes.
 - Hallucination score gating now supports configurable minimum threshold via
   `HALLUCINATION_MIN_ACCEPTABLE_SCORE`; report-based calibration helper is
   available through `make calibrate-hallucination-threshold`.
@@ -183,12 +191,12 @@
     `retrieval_profile=clip_proxy_image_only`
   - disabled profile requests return `409` (explicit, reversible rollout)
   - enabled profile forces image-only retrieval path without changing default
-    hybrid-source behavior.
+    hybrid-source behaviour.
 - Automated CLIP readiness gate is available via
   `make eval-clip-ab-readiness`; it inspects the latest two report artifacts
   and returns explicit `GO`/`NO-GO` against the D-040 threshold.
 - Active operating mode is local-first glue-code + manual eval workflow, with
-  runtime `/chat` behavior unchanged.
+  runtime `/chat` behaviour unchanged.
 - Collaboration policy checkpoint (March 21, 2026):
   - human judgment sets architecture/rubric first
   - multi-agent/parallel workflows are applied only after constraints are
@@ -198,7 +206,7 @@
   wiring when repository vars/secrets are configured.
 - Docker smoke is validated locally (`make docker-build` + `make docker-run` +
   `/health` probe).
-- Devcontainer Docker connectivity is stabilized with Docker-outside-of-Docker
+- Devcontainer Docker connectivity is stabilised with Docker-outside-of-Docker
   support and UI-side Docker extension routing for reliable `Containers` view.
 - Local IDE interpreter-path drift is now documented and resolved:
   host workspaces should not pin Python to container-built Linux venv binaries;
@@ -289,18 +297,20 @@
 
 Use this in a new chat:
 
-`Read docs/CHARTER.md, docs/STATE.md, and docs/DECISIONS.md. Summarize current status in 5 bullets, list top risks, and execute the single highest-leverage next step. Preserve prompt behavior rules.`
+`Read docs/CHARTER.md, docs/STATE.md, and docs/DECISIONS.md. Summarise current status in 5 bullets, list top risks, and execute the single highest-leverage next step. Preserve prompt behaviour rules.`
 
 ## Suggested Next Steps
 
-1. Calibrate Braintrust hallucination judge gate thresholds and enable CI gate with production vars/secrets.
-2. Add Structured Outputs for OCR/file extraction payloads to increase reliability and testability.
-3. Add image-understanding-with-RAG flow for hybrid OCR + visual context retrieval.
-4. Add ELT-style batch extraction pipeline (OCR alternative path) for large archive ingestion.
-5. Resume Figma/UI parity after backend retrieval/OCR/file-search milestones are stable.
-6. Add model-graders evaluation loop after retrieval quality and schema stability are locked.
-7. Continue local-first eval hardening and checkpoint hygiene, with explicit
-   archive/reset cycles between rubric revisions.
+1. Define eval v2 data contract (binary-first, legacy read-compat) before any
+   additional UI reshaping.
+2. Refactor checkpoint aggregation and tagging paths for clearer PASS/FAIL
+   semantics and lower coupling across API/UI.
+3. Refresh eval prompts/case baselines from clean artifacts only, keeping
+   pre-refresh evidence in archive for traceability.
+4. Keep human-reference query flow lightweight (`make human-reference-*`) and
+   document any schema or relationship changes alongside runbook updates.
+5. Continue local-first deterministic validation (`make test`, frontend test,
+   frontend build) at each eval-contract milestone.
 
 ## Cookbook Roadmap (Prioritized)
 

@@ -163,8 +163,8 @@
 
 - Category: `runtime_engineering`
 - Tags: `retrieval_tuning`, `memory_scope`, `type_hints`
-- Decision: Refine retrieval behavior by memory scope and tighten API payload typing hints where dynamic dict/list payloads are used.
-- Why: Improve retrieval consistency and reduce editor/type-check noise without changing user-facing behavior.
+- Decision: Refine retrieval behaviour by memory scope and tighten API payload typing hints where dynamic dict/list payloads are used.
+- Why: Improve retrieval consistency and reduce editor/type-check noise without changing user-facing behaviour.
 
 ## D-022: Managed SQLite session cleanup for cross-thread handles
 
@@ -179,17 +179,17 @@
 - Tags: `file_search`, `api_contract`, `fallback_visibility`, `observability`
 - Decision: Extend `POST /skills/file_search` response with explicit `backend`,
   `fallback_reason`, and `candidate_count` fields.
-- Why: Makes retrieval-path behavior observable to clients and tests without
+- Why: Makes retrieval-path behaviour observable to clients and tests without
   relying only on server logs, improving debugging and deterministic contract
   validation.
 
-## D-024: Normalize quoted env values for runtime config parsing
+## D-024: Normalise quoted env values for runtime config parsing
 
 - Category: `workflow_environment`
 - Tags: `env_parsing`, `docker_env_file`, `startup_reliability`
-- Decision: Normalize wrapped quotes from env values (for example
+- Decision: Normalise wrapped quotes from env values (for example
   `"OPENAI_API_KEY=\"sk-...\""` style inputs) before config validation/parsing.
-- Why: Docker `--env-file` passes quoted values literally; without normalization
+- Why: Docker `--env-file` passes quoted values literally; without normalisation
   valid `.env` configurations could fail at startup in container runs.
 
 ## D-025: Parameterized hallucination judge endpoint + optional Braintrust CI gate scaffold
@@ -201,7 +201,7 @@
   CI step that runs strict hallucination gating against an OpenAI-compatible
   Braintrust endpoint when repo vars/secrets are present.
 - Why: Enables P1 judge-gate rollout without changing runtime assistant
-  behavior and avoids hard-coding a single judge provider path.
+  behaviour and avoids hard-coding a single judge provider path.
 
 ## D-026: Host/container interpreter separation for VS Code Python resolution
 
@@ -241,7 +241,7 @@
   `HALLUCINATION_MIN_ACCEPTABLE_SCORE` and add a report-based calibration helper
   (`make calibrate-hallucination-threshold`).
 - Why: Supports explicit Braintrust threshold tuning in CI while preserving
-  default behavior when calibration vars are not yet set.
+  default behaviour when calibration vars are not yet set.
 
 ## D-030: Start P2 multimodal retrieval A/B harness with CLIP-proxy arm
 
@@ -291,10 +291,10 @@
   feedback scoring, and a hard cap of two active adaptive notes, while logging
   note transitions per chat.
 - Why: Keeps runtime guidance subtle and stable so repeated feedback does not
-  stack into rigid behavior, and preserves natural recovery flow after
+  stack into rigid behaviour, and preserves natural recovery flow after
   uncertainty/grounding corrections.
 
-## D-035: Playwright smoke covers retry-variant lineage behavior
+## D-035: Playwright smoke covers retry-variant lineage behaviour
 
 - Category: `eval_quality`
 - Tags: `playwright`, `e2e`, `retry_variant`, `regression_guard`
@@ -325,7 +325,7 @@
   Code settings changes unless explicitly approved in-chat.
 - Why: Prevents recurring configuration drift from speculative fixes, limits
   blast radius during troubleshooting, and preserves reproducible startup
-  behavior across sessions and agents.
+  behaviour across sessions and agents.
 
 ## D-038: Co-reasoning interaction rubric for style/eval reliability
 
@@ -392,10 +392,10 @@
 - Decision: Add `retrieval_profile=clip_proxy_image_only` to
   `POST /skills/file_search`, gated by
   `POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED` (default `false`), where enabled
-  profile requests force image-only retrieval while default behavior remains
+  profile requests force image-only retrieval while default behaviour remains
   unchanged.
 - Why: Enables controlled CLIP-proxy rollout with an explicit rollback toggle,
-  minimal behavior drift, and deterministic API-level validation before deeper
+  minimal behaviour drift, and deterministic API-level validation before deeper
   retrieval-path integration.
 
 > Historical note (2026-03-21): D-044 through D-054 are retained for audit
@@ -409,7 +409,7 @@
   hybrid OpenAI adoption gated by strict style + file-search + two-report CLIP
   readiness outcomes before any runtime/tooling migration.
 - Why: Creates an explicit low-risk promotion contract for OpenAI-native
-  adoption while preserving current runtime behavior and rollback simplicity.
+  adoption while preserving current runtime behaviour and rollback simplicity.
 
 ## D-045: Add append-only eval trace artifact contract in tooling layer
 
@@ -421,7 +421,7 @@
   traces to
   `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`.
 - Why: Creates a stable evidence contract for hybrid OpenAI adoption phases
-  without changing runtime `/chat` behavior, while improving auditability and
+  without changing runtime `/chat` behaviour, while improving auditability and
   promotion confidence for future OpenAI-native tooling pilots.
 
 ## D-046: Constrain Phase 3 hybrid pilot to offline tooling bridge only
@@ -430,7 +430,7 @@
 - Tags: `hybrid_openai`, `pilot_scope`, `rollback_safe`, `no_runtime_drift`
 - Decision: Define Phase 3 hybrid adoption pilot as a tooling-only bridge from
   local trace artifacts to OpenAI-compatible trace/grader metadata shape, with
-  strict out-of-scope exclusion for runtime `/chat` migration, prompt behavior
+  strict out-of-scope exclusion for runtime `/chat` migration, prompt behaviour
   changes, and default-on flags.
 - Why: Preserves current stable runtime contract while still creating concrete
   migration evidence toward OpenAI-native tooling integration.
@@ -484,7 +484,7 @@
   `make hybrid-openai-export-cycle`.
 - Why: Provides a direct bridge into OpenAI Eval API inputs
   (dataset JSONL + `data_source_config.item_schema`) while keeping runtime
-  `/chat` behavior unchanged and preserving rollback-safe, tooling-only
+  `/chat` behaviour unchanged and preserving rollback-safe, tooling-only
   adoption.
 
 ## D-051: Add manual-first provider execution helper for OpenAI eval pilot
@@ -601,7 +601,7 @@
   as archived/deprecated in active docs, and treat local glue-code + manual
   eval loop as the only active execution path.
 - Why: Reduces operator drift and planning noise, keeps daily execution
-  deterministic, and aligns documentation with actual implementation behavior.
+  deterministic, and aligns documentation with actual implementation behaviour.
 
 ## D-059: Human-judgment-first execution; agentic parallelism only after architecture lock
 
@@ -614,3 +614,15 @@
 - Why: Agentic parallelism amplifies throughput but also amplifies ambiguity.
   Establishing architecture first prevents interpretation drift, reduces
   rework/tangle risk, and keeps outcomes reviewable against clear criteria.
+
+## D-061: Human-reference workflow is FK-backed and query-first
+
+- Category: `evidence_governance`
+- Tags: `human_reference`, `sqlite`, `foreign_keys`, `operator_simplicity`
+- Decision: Keep human-reference operations centred on `.human_reference.db`
+  rebuild + preset SQL/CLI queries (`make human-reference-*`), with explicit
+  FK links (`links.source_path`/`links.target_path` -> `documents.path`) for
+  reliable relationship traversal and DB-viewer ER rendering.
+- Why: This keeps the workflow easy to operate offline, avoids maintaining a
+  separate bespoke visualization surface, and preserves clear relationship
+  semantics for imagineer-facing exploration.
