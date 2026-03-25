@@ -48,12 +48,7 @@
    - `git switch main`
    - `git pull --ff-only`
 6. If direct push returns `GH013`, treat it as expected branch protection
-   behavior and continue via PR flow.
-7. For the eval rubric refactor track, use the dedicated branch and matching
-   ruleset:
-   - branch: `eval-rubric`
-   - protection baseline: PR required + `test` status check required
-   - remove temporary branch-specific ruleset after merge/close
+   behaviour and continue via PR flow.
 
 ## Repo vs Container Working Modes
 
@@ -71,25 +66,29 @@
    (host path + container clone + alternate workspace file), or thread opening
    and IDE handoff can become inconsistent.
 
-## Local-Only Tracker Docs
+## Local-Only Internal Docs Policy
 
-1. The following docs are intentionally local-only and ignored by git:
+1. Non-build internal docs are local-only by default and ignored by git.
+2. Use these local-only paths for confidential notes/material:
    - `docs/FIGMA_NODE_TRACKER.md`
    - `docs/WORKSTREAMS.md`
-2. Use them for live planning/tracking, but do not rely on them for repository
-   source-of-truth handoff.
-3. Canonical handoff artifacts remain:
+   - `docs/PEANUT_TOOLING_REF.md`
+   - `docs/internal/`
+   - `docs/research/`
+   - `docs/theory/`
+   - `docs/transcripts/`
+   - `docs/portfolio/`
+3. Build/source-of-truth docs stay tracked:
+   - `docs/CHARTER.md`
+   - `docs/ARCHITECTURE.md`
+   - `docs/RUNBOOK.md`
    - `docs/STATE.md`
    - `docs/DECISIONS.md`
    - `docs/SESSION_HANDOFF.md`
-
-## Internal Docs Tracking Policy
-
-1. Internal planning docs are tracked normally in git.
-2. Do not use `skip-worktree` for routine workflow; it hides changes and causes
-   commit/merge ambiguity.
-3. If truly local-only notes are needed, keep them in gitignored paths (for
-   example local tracker/reference files), not in core handoff docs.
+4. Do not use `skip-worktree` for routine workflow; use gitignored local-only
+   paths instead.
+5. Any exception to local-only confidentiality must be explicitly approved
+   in-chat before being committed.
 
 ## Rotate API Keys
 
@@ -431,7 +430,7 @@ Hash fields in responses:
    - `POLINKO_RESPONSES_PDF_INGEST_ENABLED` (`true`/`false`, requires vector
      store id)
 3. Restart API after changing orchestration settings.
-4. Default behavior remains unchanged when orchestration is disabled.
+4. Default behaviour remains unchanged when orchestration is disabled.
 
 ## Structured Extraction Enrichment
 
@@ -440,7 +439,7 @@ Hash fields in responses:
 2. Optional model override:
    - `POLINKO_EXTRACTION_STRUCTURED_MODEL=gpt-4.1-mini`
 3. Restart API after changing extraction settings.
-4. When enabled, OCR/PDF endpoints attempt a strict JSON-schema normalization
+4. When enabled, OCR/PDF endpoints attempt a strict JSON-schema normalisation
    pass for extraction metadata and gracefully fall back to deterministic local
    shaping if unavailable.
 
@@ -574,7 +573,7 @@ Hash fields in responses:
      - `any_rate_delta_proxy_minus_baseline >= 0.50`
      - `errors == 0` and `skipped == 0` for both arms
    - `NO-GO` otherwise; keep proxy/scaffold mode and add cases or fix retrieval
-     behavior before integration escalation.
+     behaviour before integration escalation.
 7. Automated readiness check:
    - `make eval-clip-ab-readiness`
    - uses the latest two `eval_reports/clip-ab-*.json` artifacts
@@ -656,7 +655,7 @@ Current policy:
    - write JSON report:
      `python tools/eval_hallucination.py --report-json eval_reports/hallucination-latest.json`
    - one-command report run: `make eval-hallucination-report`
-3. Eval isolation behavior:
+3. Eval isolation behaviour:
    - Each generated eval chat is set to `memory_scope=session` to reduce
      cross-chat retrieval noise.
 
@@ -673,7 +672,7 @@ Current policy:
    - write JSON report:
      `python tools/eval_style.py --report-json eval_reports/style-latest.json`
    - one-command report run: `make eval-style-report`
-6. Eval-only phrase fail rules (no runtime behavior changes):
+6. Eval-only phrase fail rules (no runtime behaviour changes):
    - `docs/style_eval_cases.json` root `global_forbidden_phrases` applies to all
      cases
    - per-case `forbidden_phrases` applies only to that case
@@ -755,6 +754,10 @@ Current policy:
 6. Optional query tuning:
    - `make human-reference-latest HUMAN_REFERENCE_LIMIT=50`
    - `make human-reference-changes HUMAN_REFERENCE_SINCE_HOURS=72`
+7. Visualization note:
+   - project default flow is query-first/offline (`make human-reference-*`)
+   - for visual ER exploration, open `.human_reference.db` in your preferred DB
+     viewer and load `docs/human_reference_erd.mmd` as the schema reference
 
 ## UI Feedback Rubric (Current)
 
@@ -838,7 +841,7 @@ Current policy:
 
 1. Start backend + frontend:
    - `make dev`
-2. Behavior:
+2. Behaviour:
    - preflights ports `8000` (backend) and `5173` (frontend)
    - stops stale listeners on those ports before launch
    - starts frontend with strict port binding (`5173`) to avoid drift
