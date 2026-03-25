@@ -350,28 +350,28 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(entries[-1]["checkpoint_id"], checkpoint_payload["checkpoint_id"])
         self.assertEqual(entries[-1]["total_count"], 2)
 
-    def test_submit_eval_checkpoint_counts_dual_streams_for_mixed_feedback(self) -> None:
+    def test_submit_eval_checkpoint_counts_dual_streams_for_fail_feedback_with_positive_tags(self) -> None:
         session_id = "s-feedback-checkpoint-streams"
-        with self._stub_runner("Checkpoint mixed candidate"):
+        with self._stub_runner("Checkpoint stream candidate"):
             chat_resp = self.client.post(
                 "/chat",
                 headers={"x-api-key": "test-server-key"},
-                json={"message": "mixed prompt", "session_id": session_id},
+                json={"message": "stream prompt", "session_id": session_id},
             )
         self.assertEqual(chat_resp.status_code, 200)
         assistant_message_id = chat_resp.json()["assistant_message_id"]
 
-        mixed_submit = self.client.post(
+        submit_resp = self.client.post(
             f"/chats/{session_id}/feedback",
             headers={"x-api-key": "test-server-key"},
             json={
                 "message_id": assistant_message_id,
-                "outcome": "mixed",
+                "outcome": "fail",
                 "positive_tags": ["style"],
                 "negative_tags": ["hallucination_risk"],
             },
         )
-        self.assertEqual(mixed_submit.status_code, 200)
+        self.assertEqual(submit_resp.status_code, 200)
 
         checkpoint_submit = self.client.post(
             f"/chats/{session_id}/feedback/checkpoints",
@@ -515,23 +515,18 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(fail_with_positive_payload["negative_tags"], ["ocr_miss"])
         self.assertEqual(fail_with_positive_payload["tags"], ["accurate", "ocr_miss"])
 
-        mixed_outcome_resp = self.client.post(
+        invalid_outcome_resp = self.client.post(
             "/chats/s-feedback-tags/feedback",
             headers={"x-api-key": "test-server-key"},
             json={
                 "message_id": assistant_message_id,
-                "outcome": "mixed",
+                "outcome": "unknown",
                 "positive_tags": ["accurate"],
                 "negative_tags": ["ocr_miss"],
             },
         )
-        self.assertEqual(mixed_outcome_resp.status_code, 200)
-        mixed_outcome_payload = mixed_outcome_resp.json()
-        self.assertEqual(mixed_outcome_payload["outcome"], "mixed")
-        self.assertEqual(mixed_outcome_payload["status"], "open")
-        self.assertEqual(mixed_outcome_payload["positive_tags"], ["accurate"])
-        self.assertEqual(mixed_outcome_payload["negative_tags"], ["ocr_miss"])
-        self.assertEqual(mixed_outcome_payload["tags"], ["accurate", "ocr_miss"])
+        self.assertEqual(invalid_outcome_resp.status_code, 400)
+        self.assertIn("outcome must be 'pass' or 'fail'", invalid_outcome_resp.json()["detail"])
 
         partial_outcome_resp = self.client.post(
             "/chats/s-feedback-tags/feedback",
@@ -545,7 +540,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(partial_outcome_resp.status_code, 400)
 
     def test_fail_feedback_keeps_status_open_and_logs_action(self) -> None:
-        with self._stub_runner("Candidate with mixed quality"):
+        with self._stub_runner("Candidate with uneven quality"):
             chat_resp = self.client.post(
                 "/chat",
                 headers={"x-api-key": "test-server-key"},

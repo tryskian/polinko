@@ -163,9 +163,6 @@ export function deriveOutcomeFromStreams(positiveTags, negativeTags) {
   const normalizedPositive = normalizeTagArray(positiveTags);
   const normalizedNegative = normalizeTagArray(negativeTags);
   const hardNegativeTags = normalizedNegative.filter((tag) => !FEEDBACK_PASS_SOFT_NEGATIVE_TAG_SET.has(tag));
-  if (hardNegativeTags.length > 0 && normalizedPositive.length > 0) {
-    return "mixed";
-  }
   if (hardNegativeTags.length > 0) {
     return "fail";
   }
@@ -175,11 +172,14 @@ export function deriveOutcomeFromStreams(positiveTags, negativeTags) {
 export function normalizeFeedbackOutcome(feedback) {
   const normalized = coerceFeedbackEntry(feedback) || {};
   const rawOutcome = String(normalized?.outcome || "").toLowerCase();
-  if (rawOutcome === "pass" || rawOutcome === "mixed" || rawOutcome === "fail") {
-    return rawOutcome;
-  }
   const positiveTags = Array.isArray(normalized?.positive_tags) ? normalized.positive_tags : [];
   const negativeTags = Array.isArray(normalized?.negative_tags) ? normalized.negative_tags : [];
+  if (rawOutcome === "pass" || rawOutcome === "fail") {
+    return rawOutcome;
+  }
+  if (rawOutcome === "mixed") {
+    return deriveOutcomeFromStreams(positiveTags, negativeTags);
+  }
   if (rawOutcome === "partial") {
     if (negativeTags.length > 0) {
       return "fail";

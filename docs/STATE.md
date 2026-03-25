@@ -80,14 +80,18 @@
   - operator gate remains binary: any hard fail signal is treated as a fail for
     that response
 - Eval stream checkpoint (March 21, 2026):
-  - feedback save now supports mixed stream checkpoints
-    (simultaneous positive and negative rubric tags on one response)
+  - feedback save supports simultaneous positive and negative rubric streams on
+    one response
   - UI status line now renders separate streams (`pass: ...` and `fail: ...`)
     instead of forcing a single top-level label
   - checkpoint rollups now count `pass_count` and `fail_count` independently;
     `other_count` only tracks rows with neither stream set
   - API/frontend/tests were updated together to avoid state drift between
     rubric UI and saved checkpoint payloads
+- Binary migration checkpoint (March 25, 2026):
+  - canonical feedback outcome contract is strictly `pass`/`fail`
+  - legacy dual-stream rows are read-compat only and normalized to binary in
+    API/UX responses
 - Docs hygiene checkpoint (March 21, 2026):
   - deprecated pilot/comms docs are archive-only and removed from active
     runbook/state/handoff references
@@ -98,7 +102,7 @@
   - legacy hybrid/OpenAI eval artifacts were moved from active
     `docs/portfolio/raw_evidence` paths to
     `docs/portfolio/archive/2026-03-22-raw-evidence-legacy`
-  - active evidence flow remains PASS/FAIL/MIXED/INBOX under
+  - active evidence flow remains PASS/FAIL/INBOX under
     `docs/portfolio/raw_evidence`
   - archive naming now follows date-prefixed pattern
     `docs/portfolio/archive/YYYY-MM-DD-...` for consistent cataloging
@@ -157,10 +161,10 @@
   candidates, preventing under-conservative recommendations from all-pass
   datasets.
 - P2 CLIP experiment scaffolding has started with
-  `make eval-clip-ab` (baseline mixed-source vs image-prioritized proxy arm).
+  `make eval-clip-ab` (baseline hybrid-source vs image-prioritized proxy arm).
 - Latest P2 expanded run (2026-03-10, run `20260310-125230`) used 4
   image-context cases and showed stable proxy uplift:
-  - baseline mixed any-hit: `0.0`
+  - baseline hybrid any-hit: `0.0`
   - image-priority proxy any-hit: `1.0`
   - delta (`proxy - baseline`): `+1.0`
   - errors/skipped: `0/0` in both arms
@@ -179,7 +183,7 @@
     `retrieval_profile=clip_proxy_image_only`
   - disabled profile requests return `409` (explicit, reversible rollout)
   - enabled profile forces image-only retrieval path without changing default
-    mixed-source behavior.
+    hybrid-source behavior.
 - Automated CLIP readiness gate is available via
   `make eval-clip-ab-readiness`; it inspects the latest two report artifacts
   and returns explicit `GO`/`NO-GO` against the D-040 threshold.
@@ -291,7 +295,7 @@ Use this in a new chat:
 
 1. Calibrate Braintrust hallucination judge gate thresholds and enable CI gate with production vars/secrets.
 2. Add Structured Outputs for OCR/file extraction payloads to increase reliability and testability.
-3. Add image-understanding-with-RAG flow for mixed OCR + visual context retrieval.
+3. Add image-understanding-with-RAG flow for hybrid OCR + visual context retrieval.
 4. Add ELT-style batch extraction pipeline (OCR alternative path) for large archive ingestion.
 5. Resume Figma/UI parity after backend retrieval/OCR/file-search milestones are stable.
 6. Add model-graders evaluation loop after retrieval quality and schema stability are locked.

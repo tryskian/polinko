@@ -12,15 +12,15 @@ from typing import Any
 DEFAULT_SUITES = ("retrieval", "file_search", "ocr", "style", "hallucination")
 
 
-def _suite_script(suite: str) -> str:
-    scripts = {
-        "retrieval": "tools/eval_retrieval.py",
-        "file_search": "tools/eval_file_search.py",
-        "ocr": "tools/eval_ocr.py",
-        "style": "tools/eval_style.py",
-        "hallucination": "tools/eval_hallucination.py",
+def _suite_module(suite: str) -> str:
+    modules = {
+        "retrieval": "tools.eval_retrieval",
+        "file_search": "tools.eval_file_search",
+        "ocr": "tools.eval_ocr",
+        "style": "tools.eval_style",
+        "hallucination": "tools.eval_hallucination",
     }
-    return scripts[suite]
+    return modules[suite]
 
 
 def _suite_report_path(suite: str, run_id: str) -> Path:
@@ -89,7 +89,8 @@ def _run_suite(
 
     cmd = [
         sys.executable,
-        _suite_script(suite),
+        "-m",
+        _suite_module(suite),
         "--base-url",
         base_url,
         "--run-id",

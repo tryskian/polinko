@@ -181,6 +181,8 @@ body {
   display: flex;
   align-items: center;
   gap: 0.3rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .memory-scope-select {
@@ -224,6 +226,56 @@ body {
   place-items: center;
   border-radius: 999px;
   cursor: pointer;
+}
+
+.eval-header-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.14rem;
+  border: 1px solid var(--interactive-border-secondary-default);
+  border-radius: 999px;
+  background: var(--interactive-bg-secondary-default);
+}
+
+.header-pill {
+  border: 0;
+  background: var(--interactive-bg-secondary-selected);
+  color: var(--interactive-label-secondary-default);
+  min-height: 2rem;
+  border-radius: 999px;
+  padding: 0.32rem 0.62rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.34rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.header-pill .material-symbols-outlined {
+  font-size: 1.08rem;
+}
+
+.header-pill:hover {
+  background: var(--interactive-bg-secondary-hover);
+  color: var(--interactive-label-secondary-hover);
+}
+
+.header-pill:active {
+  background: var(--interactive-bg-secondary-press);
+  color: var(--interactive-label-secondary-press);
+}
+
+.header-pill:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.header-icon-compact {
+  width: 2rem;
+  height: 2rem;
 }
 
 .reset:hover,
@@ -1125,6 +1177,29 @@ body {
   gap: 0.35rem;
 }
 
+.composer-preset-select {
+  min-width: 7.4rem;
+  min-height: 2.15rem;
+  border-radius: 999px;
+  border: 1px solid var(--interactive-border-secondary-default);
+  background: var(--interactive-bg-secondary-default);
+  color: var(--interactive-label-secondary-default);
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+}
+
+.composer-preset-select:hover {
+  border-color: var(--interactive-border-secondary-hover);
+  background: var(--interactive-bg-secondary-hover);
+  color: var(--interactive-label-secondary-hover);
+}
+
+.composer-preset-select:focus {
+  outline: none;
+  border-color: var(--focus-ring);
+}
+
 .icon-button {
   width: 2.2rem;
   height: 2.2rem;
@@ -1450,6 +1525,10 @@ button {
     padding-inline: 0.85rem;
   }
 
+  .bar-actions {
+    gap: 0.24rem;
+  }
+
   .composer {
     padding-inline: 0.6rem;
   }
@@ -1462,6 +1541,11 @@ button {
   .memory-search-form {
     grid-template-columns: 1fr;
     gap: 0.35rem;
+  }
+
+  .composer-preset-select {
+    min-width: 6.6rem;
+    font-size: 0.72rem;
   }
 
   #memory-search-source,

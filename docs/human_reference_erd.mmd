@@ -1,0 +1,36 @@
+erDiagram
+    DOCUMENTS {
+        INTEGER id PK
+        TEXT path UK
+        TEXT category
+        TEXT title
+        TEXT captured_on
+        TEXT modified_utc
+        TEXT indexed_utc
+    }
+
+    LINKS {
+        INTEGER id PK
+        TEXT source_path FK
+        TEXT target_path FK
+        TEXT relation
+        TEXT note
+    }
+
+    METADATA {
+        TEXT key PK
+        TEXT value
+    }
+
+    V_HUMAN_REFERENCE_LATEST {
+        TEXT category
+        TEXT title
+        TEXT path
+        TEXT captured_on
+        TEXT modified_utc
+        INTEGER word_count
+    }
+
+    DOCUMENTS ||--o{ LINKS : "source_path"
+    DOCUMENTS ||--o{ LINKS : "target_path"
+    DOCUMENTS ||--o{ V_HUMAN_REFERENCE_LATEST : "projects"

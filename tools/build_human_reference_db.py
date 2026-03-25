@@ -117,15 +117,6 @@ CREATE TABLE IF NOT EXISTS documents (
     indexed_utc TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS links (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    source_path TEXT NOT NULL,
-    target_path TEXT NOT NULL,
-    relation TEXT NOT NULL DEFAULT 'references',
-    note TEXT DEFAULT '',
-    UNIQUE(source_path, target_path, relation)
-);
-
 CREATE TABLE IF NOT EXISTS metadata (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
@@ -133,8 +124,6 @@ CREATE TABLE IF NOT EXISTS metadata (
 
 CREATE INDEX IF NOT EXISTS idx_documents_category ON documents(category);
 CREATE INDEX IF NOT EXISTS idx_documents_captured_on ON documents(captured_on);
-CREATE INDEX IF NOT EXISTS idx_links_source ON links(source_path);
-CREATE INDEX IF NOT EXISTS idx_links_target ON links(target_path);
 
 CREATE VIEW IF NOT EXISTS v_human_reference_latest AS
 SELECT
@@ -147,6 +136,29 @@ SELECT
 FROM documents
 ORDER BY COALESCE(captured_on, modified_utc) DESC, path ASC;
 """
+
+LINKS_SCHEMA_SQL = """
+DROP TABLE IF EXISTS links;
+
+CREATE TABLE links (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    source_path TEXT NOT NULL,
+    target_path TEXT NOT NULL,
+    relation TEXT NOT NULL DEFAULT 'references',
+    note TEXT DEFAULT '',
+    UNIQUE(source_path, target_path, relation),
+    FOREIGN KEY (source_path) REFERENCES documents(path) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (target_path) REFERENCES documents(path) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX idx_links_source ON links(source_path);
+CREATE INDEX idx_links_target ON links(target_path);
+"""
+
+
+def _reset_links_table(conn: sqlite3.Connection) -> None:
+    # Recreate links each build so ER tools can rely on explicit FK relationships.
+    conn.executescript(LINKS_SCHEMA_SQL)
 
 
 def _rebuild_links(conn: sqlite3.Connection, docs: list[HumanDoc]) -> None:
@@ -207,6 +219,7 @@ def build_db(repo_root: Path, output_db: Path, roots: list[str]) -> None:
     output_db.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(output_db) as conn:
         conn.executescript(SCHEMA_SQL)
+        _reset_links_table(conn)
         _upsert_docs(conn, docs)
         _rebuild_links(conn, docs)
         conn.execute(
@@ -253,4 +266,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

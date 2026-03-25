@@ -742,13 +742,17 @@ Current policy:
 
 1. Rebuild local human reference DB:
    - `make human-reference-db`
+   - Reference guide: `docs/HUMAN_REFERENCE_DB.md`
+   - ER diagram source: `docs/human_reference_erd.mmd`
 2. Run latest-docs query:
    - `make human-reference-latest`
 3. Run transcript/key-points feed:
    - `make human-reference-transcripts`
 4. Run recent-changes feed (default last 24h):
    - `make human-reference-changes`
-5. Optional query tuning:
+5. Run relationship-map feed:
+   - `make human-reference-relationships`
+6. Optional query tuning:
    - `make human-reference-latest HUMAN_REFERENCE_LIMIT=50`
    - `make human-reference-changes HUMAN_REFERENCE_SINCE_HOURS=72`
 
@@ -768,8 +772,7 @@ Current policy:
    - `penalty: ...` for soft-only penalties
 6. Outcome derivation (system):
    - `pass`: no hard fail signals
-   - `mixed`: both pass signals and hard fail signals
-   - `fail`: hard fail signals only
+   - `fail`: any hard fail signal present
 7. Release gate usage (operator):
    - treat any hard fail signal as a gate fail for that response
    - soft penalties stay actionable quality debt, not hard blockers
