@@ -99,13 +99,13 @@
 - Raw evidence cleanup checkpoint (March 22, 2026):
   - hybrid/OpenAI eval artifacts were moved from active
     `docs/portfolio/raw_evidence` paths to
-    `docs/portfolio/archive/2026-03-22-raw-evidence-legacy`
+    `docs/portfolio/raw_evidence/archive/baseline/history/portfolio-archive-20260326/2026-03-22-raw-evidence-legacy`
   - no active top-level raw-evidence intake is used for runtime gating
   - archive naming now follows date-prefixed pattern
-    `docs/portfolio/archive/YYYY-MM-DD-...` for consistent cataloguing
+    `docs/portfolio/raw_evidence/archive/baseline/history/portfolio-archive-20260326/YYYY-MM-DD-...` for consistent cataloguing
 - Legacy docs + evidence wiring cleanup checkpoint (March 25, 2026):
   - early portfolio narrative/workbench docs were moved to
-    `docs/portfolio/archive/2026-03-25-legacy-positioning-workbench`
+    `docs/portfolio/raw_evidence/archive/baseline/history/portfolio-archive-20260326/2026-03-25-legacy-positioning-workbench`
   - `raw_evidence` intake buckets and related wiring were marked for
     deprecation; archive paths are canonical
 - Eval intake archival checkpoint (March 26, 2026):
