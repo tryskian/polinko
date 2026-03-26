@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-25
+- 2026-03-26
 
 ## Current Snapshot
 
@@ -42,15 +42,20 @@
   - preserve legacy context (including MCP/server wiring) until explicit
     migration cutline
   - execute directed precision slices; avoid out-of-scope cleanup
+- Build block audit guardrail is now active (March 26, 2026):
+  - README refreshed to current build/API blocks
+  - `make build-audit` added for repeatable drift checks
+  - local markdown lint now matches CI scope (`README.md` + `docs/**/*.md`)
+  - `eval-cleanup` now degrades safely when local-only helper is absent
 
 ## Latest Local Commit
 
-- `2a6f575` (merge commit on `main`)
-- PR: `#72` (`codex/bigbrain/docs-confidentiality-legacy-cleanup-20260325`)
+- `031380e` (merge commit on `main`)
+- PR: `#74` (`codex/bigbrain/housekeeping-docs-local-tracking-20260326`)
 - Core outcome:
-  - docs + handoff/state/runbook are synced to current operating mode
-  - internal/non-build docs are local-only by default
-  - legacy portfolio/evidence wiring is archived out of active flow
+  - docs and local-only tracking policy are merged on `main`
+  - branch-protected PR flow remains the canonical merge path
+  - housekeeping baseline is clean for block-by-block audit execution
 
 ## Key Files To Read First
 
@@ -67,11 +72,12 @@
 
 1. `make doctor-env`
 2. `make lint-docs`
-3. `make test`
-4. `npm --prefix frontend run -s test`
-5. `npm --prefix frontend run -s build`
-6. `make human-reference-db`
-7. `make human-reference-relationships`
+3. `make build-audit`
+4. `make test`
+5. `npm --prefix frontend run -s test`
+6. `npm --prefix frontend run -s build`
+7. `make human-reference-db`
+8. `make human-reference-relationships`
 
 ## Known Constraints
 

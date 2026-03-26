@@ -636,3 +636,14 @@
   wiring) until an explicit migration cutline is directed.
 - Why: Prevents summary-first optimisation from removing meaningful context and
   keeps rebuild outputs coherent, reviewable, and usable.
+
+## D-063: Introduce build-block audit guardrail for fresh-path iteration
+
+- Category: `workflow_environment`
+- Tags: `build_audit`, `drift_control`, `readme_contract`, `local_ci_parity`
+- Decision: Add a deterministic preflight audit command (`make build-audit`)
+  that checks README-to-route parity, Makefile tool-module wiring, local lint
+  parity with CI scope, and local-only eval-cleanup guard behaviour.
+- Why: Supports step-by-step fresh-path execution without hard resets by
+  catching contract drift and local-only dependency leaks before wider refactor
+  moves.
