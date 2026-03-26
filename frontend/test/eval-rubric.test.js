@@ -8,11 +8,12 @@ import {
   normalizeFeedbackOutcome,
 } from "../src/eval-rubric.js";
 
-test("coerceFeedbackEntry maps legacy pass tags to positive stream", () => {
+test("coerceFeedbackEntry keeps explicit positive/negative streams", () => {
   const coerced = coerceFeedbackEntry({
     message_id: "msg-1",
     outcome: "pass",
-    tags: ["style", "grounded"],
+    positive_tags: ["style", "grounded"],
+    negative_tags: [],
   });
   assert.deepEqual(coerced?.positive_tags, ["style", "grounded"]);
   assert.deepEqual(coerced?.negative_tags, []);
@@ -41,10 +42,11 @@ test("normalizeFeedbackOutcome infers fail from positive + hard-negative streams
   assert.equal(outcome, "fail");
 });
 
-test("inferRubricSelectionsFromFeedback handles compatibility tags", () => {
+test("inferRubricSelectionsFromFeedback maps binary stream tags", () => {
   const selection = inferRubricSelectionsFromFeedback({
     outcome: "pass",
-    tags: ["style", "grounded"],
+    positive_tags: ["style", "grounded"],
+    negative_tags: [],
   });
   assert.equal(selection.style, "pass");
   assert.equal(selection.hallucination_risk, "pass");

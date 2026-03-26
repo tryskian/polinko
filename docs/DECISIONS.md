@@ -592,6 +592,8 @@
 - Why: Removes deprecated outcome ambiguity from active workflows without
   discarding historical evidence; keeps deterministic gating and migration-safe
   legacy visibility.
+- Status: Superseded by `D-067` hard-cut contract removal of compatibility
+  fallbacks.
 
 ## D-058: Deprecate hybrid/Agent Builder pilot workflow as active execution path
 
@@ -672,6 +674,7 @@
 - Why: Prevents silent ambiguity in release-gate artefacts, keeps checkpoint
   semantics deterministic, and provides an auditable migration path instead of
   implicit coercion at checkpoint time.
+- Status: Superseded by `D-067` (normalisation utility removed from active flow).
 
 ## D-066: Archive legacy eval intake structure from active evidence flow
 
@@ -681,3 +684,16 @@
   active evidence indexing/reporting scoped to `PASS`/`FAIL`/`INBOX` buckets.
 - Why: Prevents non-binary artefacts from re-entering daily eval operations and
   keeps evidence refresh outputs aligned with the current binary gate contract.
+
+## D-067: Hard-cut eval contract to strict binary with no compatibility fallbacks
+
+- Category: `eval_quality`
+- Tags: `binary_contract`, `hard_cutover`, `api_ui_sync`, `contract_simplification`
+- Decision: Remove legacy compatibility paths from active feedback/checkpoint
+  runtime:
+  - accept only `pass`/`fail` outcomes
+  - require explicit `positive_tags`/`negative_tags` streams (no `tags`-only fallback)
+  - expose checkpoint integrity via `non_binary_count` (no active `other_count` label)
+  - remove `eval-feedback-normalize` migration tooling from active operator flow
+- Why: Eliminates hidden coercion paths, keeps API/UI/test contracts explicit,
+  and prevents deprecated semantics from re-entering daily execution.

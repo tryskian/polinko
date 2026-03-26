@@ -116,6 +116,7 @@ Eval harness endpoints exercised:
 ## Current-Risk Hotspots
 
 1. Checkpoint arithmetic is ambiguous because one row can count as both pass and fail.
-2. Legacy evidence buckets (`PASS/MIXED/FAIL`) can conflict with binary API semantics.
+2. Evidence/log artifacts can drift from API contract if they are treated as
+   canonical instead of runtime SQLite state.
 3. Eval artefacts are split across SQLite and JSONL/Markdown logs without one canonical aggregation model.
 4. Gate runs depend on local server lifecycle/ports; concurrent runs can collide without explicit port isolation.

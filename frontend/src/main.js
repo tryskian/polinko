@@ -1257,7 +1257,7 @@ function normalizeEvalCheckpointEntry(entry) {
   if (!checkpointId) {
     return null;
   }
-  const nonBinaryCount = Math.max(0, Number((entry?.non_binary_count ?? entry?.other_count) || 0));
+  const nonBinaryCount = Math.max(0, Number(entry?.non_binary_count || 0));
   return {
     checkpoint_id: checkpointId,
     session_id: String(entry?.session_id || "").trim() || activeChatId,
@@ -2129,9 +2129,6 @@ async function submitEvalCheckpoint() {
 function formatEvalCheckpointSubmitError(error) {
   if (error instanceof ApiError) {
     const detail = String(error.detail || error.message || "");
-    if (error.status === 409 && detail.toLowerCase().includes("non-binary feedback outcome")) {
-      return `${detail} Run \`make eval-feedback-normalize\`, then submit checkpoint again.`;
-    }
     return error.message || detail || "Checkpoint request failed.";
   }
   return String(error);

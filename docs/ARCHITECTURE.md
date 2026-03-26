@@ -35,8 +35,8 @@
   - SQLite stores (chat history + memory/vector artifacts).
 - Eval/operator evidence:
   - `docs/portfolio/raw_evidence/*` (PASS/FAIL/INBOX + metadata/audit outputs).
-  - active feedback/checkpoint write contract is binary (`pass`/`fail`);
-    legacy rows are normalized on read for compatibility.
+  - active feedback/checkpoint contract is strict binary (`pass`/`fail`) with
+    `non_binary_count` reserved for integrity checks.
 - Human reference index:
   - `.human_reference.db` built from `docs/transcripts`, `docs/research`, `docs/theory`.
   - builder: `tools/build_human_reference_db.py`

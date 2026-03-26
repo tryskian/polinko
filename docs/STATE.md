@@ -4,7 +4,7 @@
 
 ## Current Status
 
-- Prompt/runtime is intentionally minimal and aligned with legacy `try.py` behaviour.
+- Prompt/runtime is intentionally minimal and aligned with the original `try.py` behaviour.
 - CLI agent loop works with persistent SQLite memory (`.polinko_memory.db`) and
   `/reset`.
 - Backend API is running with:
@@ -85,27 +85,17 @@
   - UI status line now renders separate streams (`pass: ...` and `fail: ...`)
     instead of forcing a single top-level label
   - checkpoint rollups now count `pass_count` and `fail_count` independently;
-    `other_count` only tracks rows with neither stream set
+    `non_binary_count` is expected to remain `0` and is treated as an integrity signal
   - API/frontend/tests were updated together to avoid state drift between
     rubric UI and saved checkpoint payloads
-- Binary migration checkpoint (March 25, 2026):
-  - canonical feedback outcome contract is strictly `pass`/`fail`
-  - legacy dual-stream rows are read-compat only and normalized to binary in
-    API/UX responses
-- Eval-v2 fail-closed checkpointing slice (March 26, 2026, branch pending merge):
-  - implementation branch:
-    `codex/bigbrain/eval-v2-backend-map-20260326` (`7a2af33`)
-  - checkpoint submission now blocks with `409` when non-binary outcomes are
-    detected
-  - explicit legacy normalisation utility was added:
-    `python -m tools.normalize_feedback_outcomes` / `make eval-feedback-normalize`
-  - validation from the implementation slice:
-    - targeted: `107` tests pass
-    - full suite: `167` tests pass
+- Binary contract hard-cut checkpoint (March 26, 2026):
+  - feedback outcomes are strict `pass`/`fail` at API and storage boundaries
+  - legacy `tags`-only feedback payload compatibility is removed
+  - checkpoint responses use `non_binary_count` (no active `other_count` label)
+  - no migration helper is part of active workflow; data outside contract is a repair task
 - Post-merge eval + reference checkpoint (March 25, 2026):
   - PR `#71` merged to `main` (`a60bf15`) with backend/API/test/frontend sync
-  - checkpoint and feedback APIs preserve binary gate behaviour while keeping
-    legacy rows readable as normalized `pass`/`fail`
+  - checkpoint and feedback APIs preserve binary gate behaviour
   - human-reference indexing now stores explicit document-link relationships
     with FK-backed queries for easier imagineer-facing lookup
 - Docs hygiene checkpoint (March 21, 2026):
@@ -130,10 +120,9 @@
 - Legacy eval intake archival checkpoint (March 26, 2026):
   - evidence index builder now scans active buckets only:
     `PASS`/`FAIL`/`INBOX`
-  - legacy `MIXED` structure remains archive-only and is no longer part of
+  - `MIXED` structure remains archive-only and is no longer part of
     active evidence refresh output
-  - UI checkpoint summaries now present `non_binary` explicitly; legacy
-    compatibility naming is not used in active operator-facing labels
+  - UI checkpoint summaries now present `non_binary` explicitly
 - EOD docs confidentiality merge checkpoint (March 25, 2026):
   - PR `#72` merged to `main` (`2a6f575`)
   - runbook + ignore policy now treats non-build internal docs as local-only
@@ -241,8 +230,7 @@
 - Inspect-first checkpoint (March 26, 2026):
   - when context is noisy/ambiguous, execution pauses for inspection before
     cleanup/refactor
-  - legacy context (including MCP/server wiring) is preserved until an explicit
-    migration cutline is directed
+  - deprecated context stays in archive paths and does not drive active contracts
   - directed precision mode is active for scoped changes to avoid unusable
     summary-first outputs
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
@@ -345,7 +333,7 @@ Use this in a new chat:
 
 ## Suggested Next Steps
 
-1. Define eval v2 data contract (binary-first, legacy read-compat) before any
+1. Define eval v2 data contract (strict binary, no compatibility fallbacks) before any
    additional UI reshaping.
 2. Refactor checkpoint aggregation and tagging paths for clearer PASS/FAIL
    semantics and lower coupling across API/UI.
