@@ -40,6 +40,12 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
     operations
   - engineer leads implementation, tooling/process decisions, validation, and
     execution recommendations
+- Human work-management authority is required in co-reasoning:
+  - human sets objective, scope boundaries, and acceptance criteria
+  - human resolves ambiguous meaning-level trade-offs where no deterministic
+    rule exists
+  - human controls go/no-go and next-slice prioritisation
+  - engineer executes proactively inside that control frame
 
 ## Core Runtime
 

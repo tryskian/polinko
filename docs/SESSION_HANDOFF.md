@@ -25,6 +25,9 @@
 - Engineer execution mode is proactive by default:
   - technical hygiene/drift control should be handled without reminder
   - user input is only needed for approvals or material trade-offs
+- Co-reasoning governance mode is human-managed:
+  - human controls objective/scope/acceptance and go/no-go decisions
+  - engineer executes proactively within that control frame
 
 ## Latest Branch Context
 
@@ -72,6 +75,8 @@
   - open PR from `codex/bigbrain/app-beta-refactor`
   - merge after checks pass
   - close with governance-surface sync when policy/flow changes
+  - ensure loop framing is explicit (objective/scope/acceptance) before each
+    new implementation slice
 
 ## Peanut Pin (Tomorrow Start)
 
@@ -81,4 +86,4 @@
 
 ## Copy/Paste Rehydrate Prompt
 
-`Read docs/CHARTER.md, docs/ARCHITECTURE.md, docs/RUNBOOK.md, docs/STATE.md, docs/DECISIONS.md, and docs/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, and confirm active git branch. Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Run in proactive engineer mode: execute obvious hygiene/cleanup/validation work without waiting for reminders, and ask only when approvals/trade-offs require it. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behaviour drift and full test/build validation.`
+`Read docs/CHARTER.md, docs/ARCHITECTURE.md, docs/RUNBOOK.md, docs/STATE.md, docs/DECISIONS.md, and docs/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, and confirm active git branch. Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Run in proactive engineer mode: execute obvious hygiene/cleanup/validation work without waiting for reminders, and ask only when approvals/trade-offs require it. Apply human-managed co-reasoning control: confirm objective/scope/acceptance and keep go/no-go decisions human-led. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behaviour drift and full test/build validation.`
