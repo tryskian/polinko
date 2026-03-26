@@ -897,13 +897,12 @@ def _summarize_feedback_streams(entries: list[MessageFeedback]) -> tuple[int, in
     fail_count = 0
     other_count = 0
     for entry in entries:
-        has_positive = bool(entry.positive_tags)
-        has_negative = bool(entry.negative_tags)
-        if has_positive:
+        outcome = entry.outcome.strip().lower()
+        if outcome == "pass":
             pass_count += 1
-        if has_negative:
+        elif outcome == "fail":
             fail_count += 1
-        if not has_positive and not has_negative:
+        else:
             other_count += 1
     return total_count, pass_count, fail_count, other_count
 
