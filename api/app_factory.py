@@ -9,7 +9,6 @@ import re
 import time
 import uuid
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, Literal, cast
 
 from agents import Agent, Runner, RunConfig
@@ -162,9 +161,6 @@ _OCR_STRICT_NO_NEW_IMAGE_REPLY = (
 _FEEDBACK_TAG_MAX = 8
 _FEEDBACK_TAG_LEN_MAX = 36
 _FEEDBACK_NOTE_LEN_MAX = 1200
-_FEEDBACK_ACTION_LOG_FILENAME = "feedback_actions.md"
-_FEEDBACK_SUBMISSIONS_LOG_FILENAME = "eval_submissions.jsonl"
-_FEEDBACK_CHECKPOINTS_LOG_FILENAME = "eval_checkpoints.jsonl"
 _EVAL_CHECKPOINT_SCHEMA_VERSION = "polinko.eval_checkpoint.v2"
 _FEEDBACK_POSITIVE_TAGS = {
     "accurate",
@@ -190,9 +186,6 @@ _FEEDBACK_NEGATIVE_TAGS = {
 _FEEDBACK_PASS_SOFT_NEGATIVE_TAGS: set[str] = {
     "default_style",
 }
-_DEFAULT_FEEDBACK_EVIDENCE_ROOT = Path(
-    os.getenv("POLINKO_FEEDBACK_EVIDENCE_ROOT", "docs/portfolio/raw_evidence")
-)
 
 
 def _default_latency_buckets() -> dict[str, int]:
@@ -1013,100 +1006,6 @@ def _derive_adaptive_style_notes(feedback_entries: list[MessageFeedback]) -> lis
         if _append_unique_note(selected, note) and len(selected) >= _ADAPTIVE_STYLE_MAX_ACTIVE_NOTES:
             break
     return selected
-
-
-def _append_feedback_action_log(
-    *,
-    session_id: str,
-    message_id: str,
-    positive_tags: list[str],
-    negative_tags: list[str],
-    note: str | None,
-    recommended_action: str | None,
-) -> None:
-    if not recommended_action:
-        return
-    root = _DEFAULT_FEEDBACK_EVIDENCE_ROOT
-    inbox_dir = root / "INBOX"
-    inbox_dir.mkdir(parents=True, exist_ok=True)
-    target = inbox_dir / _FEEDBACK_ACTION_LOG_FILENAME
-    timestamp = int(time.time() * 1000)
-    positive_text = ", ".join(positive_tags) if positive_tags else "none"
-    negative_text = ", ".join(negative_tags) if negative_tags else "none"
-    lines = [
-        f"- [{timestamp}] session={session_id} message={message_id}",
-        f"  - positive_tags: {positive_text}",
-        f"  - negative_tags: {negative_text}",
-        f"  - recommended_action: {recommended_action}",
-    ]
-    if note:
-        lines.append(f"  - note: {note.strip()}")
-    with target.open("a", encoding="utf-8") as handle:
-        handle.write("\n".join(lines) + "\n")
-
-
-def _append_feedback_submission_log(
-    *,
-    session_id: str,
-    chat_title: str,
-    message_id: str,
-    outcome: str,
-    positive_tags: list[str],
-    negative_tags: list[str],
-    status: str,
-    note: str | None,
-    recommended_action: str | None,
-    action_taken: str | None,
-) -> None:
-    root = _DEFAULT_FEEDBACK_EVIDENCE_ROOT
-    inbox_dir = root / "INBOX"
-    inbox_dir.mkdir(parents=True, exist_ok=True)
-    target = inbox_dir / _FEEDBACK_SUBMISSIONS_LOG_FILENAME
-    timestamp = int(time.time() * 1000)
-    payload = {
-        "timestamp_ms": timestamp,
-        "session_id": session_id,
-        "chat_title": chat_title,
-        "message_id": message_id,
-        "outcome": outcome,
-        "positive_tags": positive_tags,
-        "negative_tags": negative_tags,
-        "status": status,
-        "note": note,
-        "recommended_action": recommended_action,
-        "action_taken": action_taken,
-    }
-    with target.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
-
-
-def _append_eval_checkpoint_log(
-    *,
-    checkpoint_id: str,
-    session_id: str,
-    chat_title: str,
-    total_count: int,
-    pass_count: int,
-    fail_count: int,
-    non_binary_count: int,
-) -> None:
-    root = _DEFAULT_FEEDBACK_EVIDENCE_ROOT
-    inbox_dir = root / "INBOX"
-    inbox_dir.mkdir(parents=True, exist_ok=True)
-    target = inbox_dir / _FEEDBACK_CHECKPOINTS_LOG_FILENAME
-    payload = {
-        "timestamp_ms": int(time.time() * 1000),
-        "checkpoint_id": checkpoint_id,
-        "session_id": session_id,
-        "chat_title": chat_title,
-        "total_count": int(total_count),
-        "pass_count": int(pass_count),
-        "fail_count": int(fail_count),
-        "non_binary_count": int(non_binary_count),
-        "schema_version": _EVAL_CHECKPOINT_SCHEMA_VERSION,
-    }
-    with target.open("a", encoding="utf-8") as handle:
-        handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
 
 
 def _sha256_text(value: str) -> str:
@@ -3172,27 +3071,6 @@ def create_app(config: AppConfig) -> FastAPI:
             action_taken=action_taken,
             status=status,
         )
-        _append_feedback_submission_log(
-            session_id=session_id,
-            chat_title=chat.title,
-            message_id=req.message_id,
-            outcome=outcome,
-            positive_tags=positive_tags,
-            negative_tags=negative_tags,
-            status=status,
-            note=note,
-            recommended_action=recommended_action,
-            action_taken=action_taken,
-        )
-        if negative_tags:
-            _append_feedback_action_log(
-                session_id=session_id,
-                message_id=req.message_id,
-                positive_tags=positive_tags,
-                negative_tags=negative_tags,
-                note=note,
-                recommended_action=recommended_action,
-            )
         _log_event(
             "chat_feedback_submitted",
             request_id=getattr(request.state, "request_id", None),
@@ -3247,15 +3125,6 @@ def create_app(config: AppConfig) -> FastAPI:
             pass_count=pass_count,
             fail_count=fail_count,
             non_binary_count=non_binary_count,
-        )
-        _append_eval_checkpoint_log(
-            checkpoint_id=saved.checkpoint_id,
-            session_id=session_id,
-            chat_title=chat.title,
-            total_count=saved.total_count,
-            pass_count=saved.pass_count,
-            fail_count=saved.fail_count,
-            non_binary_count=saved.non_binary_count,
         )
         _log_event(
             "chat_eval_checkpoint_submitted",

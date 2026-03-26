@@ -5,7 +5,6 @@ import os
 import tempfile
 import unittest
 import httpx
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import patch
@@ -39,7 +38,6 @@ class PolinkoApiTests(unittest.TestCase):
 
     def setUp(self) -> None:
         self.tmpdir = tempfile.TemporaryDirectory()
-        app_factory._DEFAULT_FEEDBACK_EVIDENCE_ROOT = Path(self.tmpdir.name) / "raw_evidence"
         deps = server.get_runtime_deps()
         deps.server_api_key = "test-server-key"
         deps.server_api_key_principals = {"test-server-key": "default"}
@@ -176,18 +174,6 @@ class PolinkoApiTests(unittest.TestCase):
         listed = list_resp.json()["feedback"]
         self.assertEqual(len(listed), 1)
         self.assertEqual(listed[0]["message_id"], assistant_message_id)
-        submissions_log = Path(self.tmpdir.name) / "raw_evidence" / "INBOX" / "eval_submissions.jsonl"
-        self.assertTrue(submissions_log.exists())
-        entries = [
-            json.loads(line)
-            for line in submissions_log.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
-        self.assertEqual(len(entries), 1)
-        self.assertEqual(entries[0]["session_id"], "s-feedback")
-        self.assertEqual(entries[0]["message_id"], assistant_message_id)
-        self.assertEqual(entries[0]["outcome"], "pass")
-        self.assertEqual(entries[0]["status"], "closed")
 
     def test_submit_fail_feedback_with_em_dash_style_penalty(self) -> None:
         with self._stub_runner("Style candidate"):
@@ -340,19 +326,6 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(checkpoints[0]["total_count"], 2)
         self.assertEqual(checkpoints[0]["schema_version"], "polinko.eval_checkpoint.v2")
 
-        checkpoints_log = Path(self.tmpdir.name) / "raw_evidence" / "INBOX" / "eval_checkpoints.jsonl"
-        self.assertTrue(checkpoints_log.exists())
-        entries = [
-            json.loads(line)
-            for line in checkpoints_log.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
-        self.assertGreaterEqual(len(entries), 1)
-        self.assertEqual(entries[-1]["session_id"], "s-feedback-checkpoint")
-        self.assertEqual(entries[-1]["checkpoint_id"], checkpoint_payload["checkpoint_id"])
-        self.assertEqual(entries[-1]["total_count"], 2)
-        self.assertEqual(entries[-1]["schema_version"], "polinko.eval_checkpoint.v2")
-
     def test_submit_eval_checkpoint_counts_by_outcome_for_fail_feedback_with_positive_tags(self) -> None:
         session_id = "s-feedback-checkpoint-streams"
         with self._stub_runner("Checkpoint stream candidate"):
@@ -479,22 +452,6 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(payload["negative_tags"], ["ocr_miss"])
         self.assertIn("Retry OCR", payload["recommended_action"])
 
-        action_log = Path(self.tmpdir.name) / "raw_evidence" / "INBOX" / "feedback_actions.md"
-        self.assertTrue(action_log.exists())
-        content = action_log.read_text(encoding="utf-8")
-        self.assertIn("recommended_action", content)
-        submissions_log = Path(self.tmpdir.name) / "raw_evidence" / "INBOX" / "eval_submissions.jsonl"
-        self.assertTrue(submissions_log.exists())
-        entries = [
-            json.loads(line)
-            for line in submissions_log.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        ]
-        self.assertEqual(entries[-1]["session_id"], "s-feedback-fail")
-        self.assertEqual(entries[-1]["message_id"], assistant_message_id)
-        self.assertEqual(entries[-1]["outcome"], "fail")
-        self.assertEqual(entries[-1]["status"], "open")
-
     def test_feedback_rejects_missing_or_invalid_reason_tags(self) -> None:
         with self._stub_runner("Feedback candidate"):
             chat_resp = self.client.post(
@@ -604,12 +561,6 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(payload["positive_tags"], [])
         self.assertEqual(payload["negative_tags"], ["ocr_miss"])
         self.assertIn("Retry OCR", payload["recommended_action"])
-
-        action_log = Path(self.tmpdir.name) / "raw_evidence" / "INBOX" / "feedback_actions.md"
-        self.assertTrue(action_log.exists())
-        content = action_log.read_text(encoding="utf-8")
-        self.assertIn("positive_tags", content)
-        self.assertIn("negative_tags", content)
 
     def test_chat_attachment_indexes_global_memory_lane(self) -> None:
         deps = server.get_runtime_deps()

@@ -9,7 +9,9 @@ from typing import Mapping
 from typing import Sequence
 
 TRACE_SCHEMA_VERSION = "polinko.eval_trace.v1"
-DEFAULT_TRACE_JSONL = Path("docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl")
+DEFAULT_TRACE_JSONL = Path(
+    "docs/portfolio/raw_evidence/archive/eval-trace-records/eval_trace_artifacts.jsonl"
+)
 
 
 def build_eval_trace(

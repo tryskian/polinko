@@ -22,6 +22,7 @@ Primary sources:
 3. `core/history_store.py` persists chat, feedback, and checkpoint records in SQLite.
 4. `core/vector_store.py` persists retrieval memory vectors in SQLite.
 5. `tools/eval_*.py` executes harnesses against API endpoints and writes reports/traces.
+6. Web UI is deprecated for active eval operations; backend + CLI are canonical.
 
 ## API Surface (Current)
 
@@ -61,31 +62,33 @@ SQLite (`core/history_store.py`):
 - `eval_checkpoints`
   - stores `checkpoint_id`, `session_id`, and summary counts
 
-File-based evidence logs (`api/app_factory.py`):
+File-based evidence logs:
 
-- `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl`
-- `docs/portfolio/raw_evidence/INBOX/eval_checkpoints.jsonl`
-- `docs/portfolio/raw_evidence/INBOX/feedback_actions.md`
+- runtime no longer writes eval feedback/checkpoint logs to `raw_evidence`
+  top-level intake folders.
+- archived trace artifacts remain available for audit/history:
+  `docs/portfolio/raw_evidence/archive/eval-trace-records/eval_trace_artifacts.jsonl`
 
 Trace artifacts (`tools/eval_trace_artifacts.py`):
 
-- default path: `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`
+- default path:
+  `docs/portfolio/raw_evidence/archive/eval-trace-records/eval_trace_artifacts.jsonl`
 - schema version: `polinko.eval_trace.v1`
 
 ## Current Feedback Logic (Important)
 
-Current API validation is already binary for outcome values:
+Current API validation is binary for outcome values:
 
 - accepted: `pass`, `fail`
 - rejected: everything else
 
-Current checkpoint counting uses dual-stream tag arithmetic:
+Current checkpoint counting is outcome-driven:
 
-- `pass_count` increments when `positive_tags` exist
-- `fail_count` increments when `negative_tags` exist
-- one entry can increment both counts
+- `pass_count = count(outcome == "pass")`
+- `fail_count = count(outcome == "fail")`
+- `non_binary_count` is an integrity signal and expected to remain `0`
 
-This is the main behaviour to normalise in Eval V2.
+Dual-stream tags remain diagnostic only and do not drive gate arithmetic.
 
 ## Eval Harness Surface
 
@@ -98,7 +101,6 @@ Entry points (Makefile):
 - `eval-style` -> `tools.eval_style`
 - `eval-hallucination` -> `tools.eval_hallucination`
 - `eval-clip-ab` -> `tools.eval_clip_ab`
-- `eval-inbox` -> `tools.eval_inbox`
 - `eval-reports`, `eval-reports-parallel`
 - `quality-gate`, `quality-gate-deterministic`, `backend-gate`
 
@@ -115,8 +117,11 @@ Eval harness endpoints exercised:
 
 ## Current-Risk Hotspots
 
-1. Checkpoint arithmetic is ambiguous because one row can count as both pass and fail.
-2. Evidence/log artifacts can drift from API contract if they are treated as
+1. Stored rows outside binary contract (for example corrupted outcomes or
+   malformed tag payload shape) can hard-fail read paths until repaired.
+2. Evidence/log artefacts can drift from API contract if they are treated as
    canonical instead of runtime SQLite state.
-3. Eval artefacts are split across SQLite and JSONL/Markdown logs without one canonical aggregation model.
-4. Gate runs depend on local server lifecycle/ports; concurrent runs can collide without explicit port isolation.
+3. Eval artefacts are split across SQLite and JSONL/Markdown logs without one
+   canonical aggregation model.
+4. Gate runs depend on local server lifecycle/ports; concurrent runs can
+   collide without explicit port isolation.

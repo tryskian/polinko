@@ -741,41 +741,16 @@ Current policy:
    - if multiple thresholds have equal metrics, the calibrator picks the
      strictest (highest) threshold among the ties.
 
-## Evidence Triage Lifecycle (FAIL -> PASS)
+## Evidence Lifecycle (Archive-Only)
 
-1. Store evidence artifacts under:
-   - `docs/portfolio/raw_evidence/FAIL`
-   - `docs/portfolio/raw_evidence/PASS`
-   - `docs/portfolio/raw_evidence/INBOX`
-2. Legacy intake wiring is archive-only:
-   - `MIXED` is removed from active flow.
-   - `eval_trace_artifacts.jsonl` is historical/archive-only for prior pilot traces.
-   - `make evidence-index` scans only active buckets (`PASS`/`FAIL`/`INBOX`).
-3. Run one-command refresh (recommended):
-   - `make evidence-refresh`
-   - runs `make evidence-index` + `make portfolio-metadata-audit`
-   - bootstraps `docs/portfolio/raw_evidence/triage_overrides.json` from
-     template when missing
-4. Run index builder directly (manual mode):
-   - `make evidence-index`
-5. FAIL entries now carry lifecycle fields in generated index:
-   - `failure_reason`
-   - `recommended_action`
-   - `action_taken`
-   - `status` (`OPEN`/`CLOSED`)
-   - optional `resolved_by` PASS artifact reference
-6. To record human triage updates, create:
-   - `docs/portfolio/raw_evidence/triage_overrides.json`
-   - Example:
-     - `{"files":{"<artifact-filename>":{"action_taken":"...", "status":"OPEN", "notes":"..."}}}`
-7. Closure rule:
-   - FAIL remains `OPEN` until a later PASS artifact exists for the same
-     `chat_id`; then it auto-closes and links `resolved_by`.
-8. Audit metadata completeness (strict):
-   - `make portfolio-metadata-audit`
-   - writes:
-     - `docs/portfolio/raw_evidence/metadata_audit.json`
-     - `docs/portfolio/raw_evidence/metadata_audit.md`
+1. Treat `docs/portfolio/raw_evidence` top-level entries as deprecated intake.
+2. Keep only archive snapshots under:
+   - `docs/portfolio/raw_evidence/archive/*`
+3. Eval trace artifacts default to archive-only path:
+   - `docs/portfolio/raw_evidence/archive/eval-trace-records/eval_trace_artifacts.jsonl`
+4. If older intake folders/files reappear (`PASS`/`FAIL`/`MIXED`/`INBOX`,
+   `triage_overrides*`, generated index/metadata files), archive them with:
+   - `make eval-reset-baseline`
 
 ## Human Reference DB (One-Click Queries)
 
@@ -799,38 +774,39 @@ Current policy:
    - for visual ER exploration, open `.human_reference.db` in your preferred DB
      viewer and load `docs/human_reference_erd.mmd` as the schema reference
 
-## UI Feedback Rubric (Current)
+## UI Feedback Rubric (Deprecated Surface)
 
-1. For each assistant response, open `Evaluate`.
-2. Score two rubric dimensions:
+1. Use only for archive-maintenance checks while backend/CLI eval tooling is canonical.
+2. For each assistant response, open `Evaluate`.
+3. Score two rubric dimensions:
    - `Style`: `pass` or `fail`
    - `Hallucination risk`: `pass` or `fail`
-3. Optional style penalties:
+4. Optional style penalties:
    - `default/straight style` (`default_style`) is a soft penalty.
    - `em-dash style` (`em_dash_style`) is a hard penalty.
-4. Save one checkpoint per reviewed response.
-5. Status line semantics:
+5. Save one checkpoint per reviewed response.
+6. Status line semantics:
    - `pass: ...` for positive rubric signals
    - `fail: ...` for hard fail signals
    - `penalty: ...` for soft-only penalties
-6. Outcome derivation (system):
+7. Outcome derivation (system):
    - `pass`: no hard fail signals
    - `fail`: any hard fail signal present
-7. Release gate usage (operator):
+8. Release gate usage (operator):
    - treat any hard fail signal as a gate fail for that response
    - soft penalties stay actionable quality debt, not hard blockers
-8. Eval submissions are auto-logged on every save:
-   - `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl`
-   - each line includes session id, title, outcome, tags, note, and timestamp
-9. Quick "what's new" inbox command:
-   - `make eval-inbox`
-   - shows newly logged eval submissions since last cursor checkpoint
+9. Runtime checkpoint/feedback truth is SQLite (`.polinko_history.db`), not
+   raw-evidence file logs.
 
 ## Start Fresh Eval Cycle
 
-1. Optional pre-reset snapshot (when you need before/after comparability):
-   - copy current evidence tree to
-     `docs/portfolio/raw_evidence/archive/eval-reset-<YYYYMMDD-HHMMSS>`
+1. Archive deprecated eval artefacts/evidence/records to a timestamped snapshot:
+   - `make eval-reset-baseline`
+   - archives all top-level entries under `docs/portfolio/raw_evidence` except
+     `archive/*` into
+     `docs/portfolio/raw_evidence/archive/baseline-reset-<YYYYMMDD-HHMMSS>`
+   - archives active top-level report files into
+     `eval_reports/archive/baseline-reset-<YYYYMMDD-HHMMSS>`
 2. Archive/clean generated eval chats:
    - `make eval-cleanup`
    - note: this is local-only helper behaviour; if the local script is absent,
@@ -839,9 +815,9 @@ Current policy:
    - `POST /session/reset` with `{"session_id":"<chat-id>"}`.
 4. Re-run deterministic baseline gate:
    - `make quality-gate-deterministic`
-5. Regenerate fresh eval report artifacts:
+5. Regenerate fresh eval report artefacts:
    - `make eval-reports-parallel`
-6. Keep historical evidence artifacts; only clear active UI/checkpoint state for
+6. Keep historical evidence artefacts; only clear active checkpoint state for
    the next clean eval pass.
 
 ## Export CLI Transcript
@@ -871,27 +847,25 @@ Current policy:
    - `/search-chat your query`
    - `/export`
 
-## Export From UI
+## Export From UI (Deprecated Surface)
 
-1. Open a chat in the web UI.
-2. Use header controls to download:
+1. Use only when maintaining archived UI behaviour.
+2. Open a chat in the web UI.
+3. Use header controls to download:
    - transcript markdown (`.md`)
    - transcript json (`.json`)
    - OCR run history json (`.ocr-runs.json`)
 
 ## Dev Startup (Auto Port Hygiene)
 
-1. Start backend + frontend:
+1. Start backend-only canonical surface:
+   - `make server-daemon`
+2. Stop backend daemon:
+   - `make server-daemon-stop`
+3. Optional archive-maintenance startup (backend + frontend):
    - `make dev`
-2. Behaviour:
-   - preflights ports `8000` (backend) and `5173` (frontend)
-   - stops stale listeners on those ports before launch
-   - starts frontend with strict port binding (`5173`) to avoid drift
-3. Stop listeners only:
+4. Optional archive-maintenance stop:
    - `make dev-stop`
-4. Optional overrides:
-   - `DEV_AUTOKILL=0 make dev` (fail on non-dev port owners instead of stopping)
-   - `DEV_BACKEND_PORT=9000 DEV_FRONTEND_PORT=5175 make dev`
 
 ## Common Connection Error
 
