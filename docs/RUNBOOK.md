@@ -296,6 +296,24 @@
 4. When this rule changes execution, record it in `docs/DECISIONS.md` and
    checkpoint it in `docs/STATE.md`.
 
+## Proactive Engineering Ownership
+
+1. Treat technical hygiene as engineer-owned by default; do not wait for
+   reminders to handle obvious drift, cleanup, or policy propagation work.
+2. Before and after each implementation slice, run lightweight checks:
+   - `git status`
+   - target validations (`make test`, `make lint-docs`, or scoped tests as appropriate)
+   - docs alignment across governance surfaces when policy/flow changes
+3. If a gremlin-risk surface is discovered (deprecated paths, hidden state
+   coupling, stale automation), open a bounded fix slice immediately.
+4. Ask for user input only when:
+   - approval is explicitly required
+   - scope trade-offs affect roadmap priorities
+   - conflicting directives cannot be resolved safely
+5. Keep execution action-first:
+   - implement and validate
+   - then report outcomes and remaining risks briefly
+
 ## Policy Propagation Checklist
 
 1. For any collaboration/execution policy change, update all governance surfaces

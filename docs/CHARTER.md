@@ -31,6 +31,10 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Human-directed precision takes priority over agent-side summarisation/cleanup.
 - Archive deprecated workflow context; keep active docs and runtime contracts
   binary-only.
+- Engineer owns proactive technical hygiene:
+  - identify drift/gremlin-risk paths early
+  - execute cleanup/validation/doc alignment without waiting for reminders
+  - escalate only when trade-offs or approvals are genuinely required
 - Collaboration model is `Reasoning Loops`:
   - imagineer leads hypotheses/theory framing, visual culture shape, and eval
     operations

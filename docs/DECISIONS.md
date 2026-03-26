@@ -725,3 +725,15 @@
 - Why: Reduces hidden state vectors and interaction drift, keeps runtime
   behaviour deterministic, and simplifies auditability while the binary eval
   baseline is being hardened.
+
+## D-070: Engineer-led proactive hygiene is default execution mode
+
+- Category: `collaboration_method`
+- Tags: `proactive_hygiene`, `ownership`, `drift_control`, `execution_mode`
+- Decision: Make proactive technical hygiene the default engineering mode:
+  - detect and address drift/gremlin-risk paths before they become blockers
+  - run required cleanup/validation/doc propagation without waiting for prompts
+  - ask for input only when approvals or high-impact trade-offs are needed
+- Why: Reduces coordination overhead, keeps `main` clean continuously, and
+  preserves imagineer focus on hypotheses/theory while engineering handles
+  technical control surfaces end-to-end.
