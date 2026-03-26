@@ -35,6 +35,11 @@
 - Active raw-evidence intake is binary-first:
   - keep `PASS`/`FAIL`/`INBOX` active
   - keep `MIXED` and trace-artifact intake as archive-only legacy
+- Legacy eval intake structure is archived from active tooling (March 26, 2026):
+  - `make evidence-index` now reads active buckets only
+    (`PASS`/`FAIL`/`INBOX`)
+  - operator-facing checkpoint copy uses `non_binary` language for blocked
+    rows; no active UI label uses legacy `other` naming
 - Docs confidentiality + legacy cleanup is merged on `main` (PR `#72`):
   - local-only internal docs policy enforced in runbook + ignore rules
   - legacy tracked transcript de-tracked and kept local

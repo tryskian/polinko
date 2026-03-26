@@ -12,6 +12,7 @@ from typing import Any
 CHAT_ID_RE = re.compile(r"chat-([0-9a-fA-F-]{36})")
 STAMP_RE = re.compile(r"-(\d{8}-\d{6}Z)(?:\.|$)")
 MEMORY_SCOPE_RE = re.compile(r'"memory_scope"\s*:\s*"(global|session)"', re.IGNORECASE)
+ACTIVE_EVIDENCE_BUCKETS = ("PASS", "FAIL", "INBOX")
 
 
 def _now_iso() -> str:
@@ -207,15 +208,15 @@ def _infer_reason_and_action(outcome: str, text: str) -> tuple[str, str]:
             "Record as regression and attach one reproducible repro step.",
         )
     return (
-        "Mixed signal: partial success with notable deviation.",
-        "Split into one PASS control and one FAIL repro artifact.",
+        "Untriaged evidence awaiting binary classification.",
+        "Classify into PASS or FAIL and attach one clear remediation note if needed.",
     )
 
 
 def _default_status(outcome: str) -> str:
     if outcome == "PASS":
         return "CLOSED"
-    if outcome in {"FAIL", "MIXED", "INBOX"}:
+    if outcome in {"FAIL", "INBOX"}:
         return "OPEN"
     return "OPEN"
 
@@ -225,8 +226,6 @@ def _default_action_taken(outcome: str) -> str:
         return "Not required (pass control)."
     if outcome == "FAIL":
         return "Pending"
-    if outcome == "MIXED":
-        return "Pending split into PASS/FAIL artifacts."
     return "Pending triage."
 
 
@@ -430,7 +429,7 @@ def _auto_close_failures(records: list[EvidenceRecord]) -> None:
 
 
 def _render_markdown(records: list[EvidenceRecord]) -> str:
-    totals = {"PASS": 0, "FAIL": 0, "MIXED": 0, "INBOX": 0}
+    totals = {"PASS": 0, "FAIL": 0, "INBOX": 0}
     for record in records:
         totals[record.outcome] = totals.get(record.outcome, 0) + 1
 
@@ -443,11 +442,10 @@ def _render_markdown(records: list[EvidenceRecord]) -> str:
     lines.append("")
     lines.append(f"- PASS: {totals['PASS']}")
     lines.append(f"- FAIL: {totals['FAIL']}")
-    lines.append(f"- MIXED: {totals['MIXED']}")
     lines.append(f"- INBOX: {totals['INBOX']}")
     lines.append("")
 
-    for bucket in ("FAIL", "MIXED", "PASS", "INBOX"):
+    for bucket in ("FAIL", "PASS", "INBOX"):
         group = [r for r in records if r.outcome == bucket]
         if not group:
             continue
@@ -491,7 +489,7 @@ def main() -> int:
     parser.add_argument(
         "--root",
         default="docs/portfolio/raw_evidence",
-        help="Root folder containing PASS/FAIL/MIXED/INBOX buckets.",
+        help="Root folder containing PASS/FAIL/INBOX buckets.",
     )
     parser.add_argument(
         "--out-md",
@@ -517,7 +515,7 @@ def main() -> int:
     )
 
     records: list[EvidenceRecord] = []
-    for bucket in ("PASS", "FAIL", "MIXED", "INBOX"):
+    for bucket in ACTIVE_EVIDENCE_BUCKETS:
         bucket_dir = root / bucket
         bucket_dir.mkdir(parents=True, exist_ok=True)
         records.extend(_scan_bucket(bucket_dir, bucket))
