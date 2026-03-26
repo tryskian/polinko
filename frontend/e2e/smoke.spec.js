@@ -108,7 +108,7 @@ function createMockState() {
           total_count: 2,
           pass_count: 1,
           fail_count: 1,
-          other_count: 0,
+          non_binary_count: 0,
           created_at: createdAt - 500,
         },
       ],
@@ -119,7 +119,7 @@ function createMockState() {
           total_count: 2,
           pass_count: 2,
           fail_count: 0,
-          other_count: 0,
+          non_binary_count: 0,
           created_at: createdAt - 1200,
         },
         {
@@ -128,7 +128,7 @@ function createMockState() {
           total_count: 2,
           pass_count: 2,
           fail_count: 0,
-          other_count: 0,
+          non_binary_count: 0,
           created_at: createdAt - 900,
         },
       ],
@@ -255,14 +255,14 @@ test.beforeEach(async ({ page }) => {
       const passCount = feedback.filter((entry) => String(entry.outcome || "").toLowerCase() === "pass").length;
       const failCount = feedback.filter((entry) => String(entry.outcome || "").toLowerCase() === "fail").length;
       const totalCount = feedback.length;
-      const otherCount = Math.max(0, totalCount - passCount - failCount);
+      const nonBinaryCount = Math.max(0, totalCount - passCount - failCount);
       const checkpoint = {
         checkpoint_id: `eval_e2e_${nowMs()}_${(state.checkpointsBySession[sessionId] || []).length + 1}`,
         session_id: sessionId,
         total_count: totalCount,
         pass_count: passCount,
         fail_count: failCount,
-        other_count: otherCount,
+        non_binary_count: nonBinaryCount,
         created_at: nowMs(),
       };
       const existing = state.checkpointsBySession[sessionId] || [];

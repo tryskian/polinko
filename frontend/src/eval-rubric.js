@@ -66,27 +66,9 @@ export function coerceFeedbackEntry(entry) {
   }
 
   const normalized = { ...entry };
-  let positiveTags = normalizeTagArray(entry.positive_tags);
-  let negativeTags = normalizeTagArray(entry.negative_tags);
-  const legacyTags = normalizeTagArray(entry.tags);
+  const positiveTags = normalizeTagArray(entry.positive_tags);
+  const negativeTags = normalizeTagArray(entry.negative_tags);
   const rawOutcome = String(entry.outcome || "").trim().toLowerCase();
-
-  if (positiveTags.length === 0 && negativeTags.length === 0 && legacyTags.length > 0) {
-    for (const tag of legacyTags) {
-      if (FEEDBACK_POSITIVE_TAG_OPTIONS.includes(tag)) {
-        positiveTags.push(tag);
-      } else if (FEEDBACK_NEGATIVE_TAG_OPTIONS.includes(tag)) {
-        negativeTags.push(tag);
-      }
-    }
-    if (positiveTags.length === 0 && negativeTags.length === 0) {
-      if (rawOutcome === "pass") {
-        positiveTags = [...legacyTags];
-      } else if (rawOutcome === "fail") {
-        negativeTags = [...legacyTags];
-      }
-    }
-  }
 
   normalized.positive_tags = [...new Set(positiveTags)];
   normalized.negative_tags = [...new Set(negativeTags)];
@@ -176,18 +158,6 @@ export function normalizeFeedbackOutcome(feedback) {
   const negativeTags = Array.isArray(normalized?.negative_tags) ? normalized.negative_tags : [];
   if (rawOutcome === "pass" || rawOutcome === "fail") {
     return rawOutcome;
-  }
-  if (rawOutcome === "mixed") {
-    return deriveOutcomeFromStreams(positiveTags, negativeTags);
-  }
-  if (rawOutcome === "partial") {
-    if (negativeTags.length > 0) {
-      return "fail";
-    }
-    if (positiveTags.length > 0) {
-      return "pass";
-    }
-    return "fail";
   }
   return deriveOutcomeFromStreams(positiveTags, negativeTags);
 }

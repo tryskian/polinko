@@ -31,7 +31,6 @@ class BuildEvidenceIndexTests(unittest.TestCase):
             fail_dir = root / "FAIL"
             fail_dir.mkdir(parents=True)
             (root / "PASS").mkdir()
-            (root / "MIXED").mkdir()
             (root / "INBOX").mkdir()
 
             fail_file = (
@@ -59,7 +58,6 @@ class BuildEvidenceIndexTests(unittest.TestCase):
             fail_dir = root / "FAIL"
             pass_dir.mkdir(parents=True)
             fail_dir.mkdir(parents=True)
-            (root / "MIXED").mkdir()
             (root / "INBOX").mkdir()
 
             fail_file = (
@@ -91,7 +89,6 @@ class BuildEvidenceIndexTests(unittest.TestCase):
             fail_dir = root / "FAIL"
             fail_dir.mkdir(parents=True)
             (root / "PASS").mkdir()
-            (root / "MIXED").mkdir()
             (root / "INBOX").mkdir()
 
             fail_file = (

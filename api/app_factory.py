@@ -499,7 +499,6 @@ class PersonalizationRequest(BaseModel):
 class MessageFeedbackRequest(BaseModel):
     message_id: str = Field(..., min_length=1, max_length=120)
     outcome: str = Field(..., min_length=1, max_length=12)
-    tags: list[str] = Field(default_factory=list)
     positive_tags: list[str] = Field(default_factory=list)
     negative_tags: list[str] = Field(default_factory=list)
     note: str | None = Field(default=None, max_length=_FEEDBACK_NOTE_LEN_MAX)
@@ -532,7 +531,7 @@ class EvalCheckpointResponse(BaseModel):
     total_count: int
     pass_count: int
     fail_count: int
-    other_count: int
+    non_binary_count: int
     schema_version: str
     created_at: int
 
@@ -775,7 +774,7 @@ def _eval_checkpoint_response(entry: EvalCheckpoint) -> EvalCheckpointResponse:
         total_count=entry.total_count,
         pass_count=entry.pass_count,
         fail_count=entry.fail_count,
-        other_count=entry.other_count,
+        non_binary_count=entry.non_binary_count,
         schema_version=_EVAL_CHECKPOINT_SCHEMA_VERSION,
         created_at=entry.created_at,
     )
@@ -790,7 +789,9 @@ def _normalize_feedback_outcome(value: str) -> str:
 
 def _feedback_outcome_for_response(value: str) -> str:
     normalized = value.strip().lower()
-    return "pass" if normalized == "pass" else "fail"
+    if normalized not in {"pass", "fail"}:
+        raise ValueError("Stored feedback outcome must be pass or fail.")
+    return normalized
 
 
 def _normalize_feedback_tag_list(tags: list[str]) -> list[str]:
@@ -816,19 +817,11 @@ def _normalize_feedback_tag_list(tags: list[str]) -> list[str]:
 def _normalize_feedback_tags(
     *,
     outcome: str,
-    tags: list[str],
     positive_tags: list[str],
     negative_tags: list[str],
 ) -> tuple[list[str], list[str], list[str]]:
     normalized_positive = _normalize_feedback_tag_list(positive_tags)
     normalized_negative = _normalize_feedback_tag_list(negative_tags)
-
-    if not normalized_positive and not normalized_negative:
-        normalized_legacy = _normalize_feedback_tag_list(tags)
-        if outcome == "pass":
-            normalized_positive = normalized_legacy
-        else:
-            normalized_negative = normalized_legacy
 
     invalid_positive = [tag for tag in normalized_positive if tag not in _FEEDBACK_POSITIVE_TAGS]
     if invalid_positive:
@@ -898,7 +891,7 @@ def _summarize_feedback_streams(entries: list[MessageFeedback]) -> tuple[int, in
     total_count = len(entries)
     pass_count = 0
     fail_count = 0
-    other_count = 0
+    non_binary_count = 0
     for entry in entries:
         outcome = entry.outcome.strip().lower()
         if outcome == "pass":
@@ -906,8 +899,8 @@ def _summarize_feedback_streams(entries: list[MessageFeedback]) -> tuple[int, in
         elif outcome == "fail":
             fail_count += 1
         else:
-            other_count += 1
-    return total_count, pass_count, fail_count, other_count
+            non_binary_count += 1
+    return total_count, pass_count, fail_count, non_binary_count
 
 
 def _normalize_note_text(note: str) -> str:
@@ -1095,7 +1088,7 @@ def _append_eval_checkpoint_log(
     total_count: int,
     pass_count: int,
     fail_count: int,
-    other_count: int,
+    non_binary_count: int,
 ) -> None:
     root = _DEFAULT_FEEDBACK_EVIDENCE_ROOT
     inbox_dir = root / "INBOX"
@@ -1109,7 +1102,7 @@ def _append_eval_checkpoint_log(
         "total_count": int(total_count),
         "pass_count": int(pass_count),
         "fail_count": int(fail_count),
-        "other_count": int(other_count),
+        "non_binary_count": int(non_binary_count),
         "schema_version": _EVAL_CHECKPOINT_SCHEMA_VERSION,
     }
     with target.open("a", encoding="utf-8") as handle:
@@ -3156,7 +3149,6 @@ def create_app(config: AppConfig) -> FastAPI:
         outcome = _normalize_feedback_outcome(req.outcome)
         positive_tags, negative_tags, tags = _normalize_feedback_tags(
             outcome=outcome,
-            tags=req.tags,
             positive_tags=req.positive_tags,
             negative_tags=req.negative_tags,
         )
@@ -3175,7 +3167,6 @@ def create_app(config: AppConfig) -> FastAPI:
             outcome=outcome,
             positive_tags=positive_tags,
             negative_tags=negative_tags,
-            tags=tags,
             note=note,
             recommended_action=recommended_action,
             action_taken=action_taken,
@@ -3239,23 +3230,13 @@ def create_app(config: AppConfig) -> FastAPI:
         entries = deps.history_store.list_message_feedback(session_id=session_id)
         if not entries:
             raise HTTPException(status_code=400, detail="No saved evals in this chat yet.")
-        total_count, pass_count, fail_count, other_count = _summarize_feedback_streams(entries)
-        if other_count > 0:
-            _log_event(
-                "chat_eval_checkpoint_blocked_non_binary",
-                request_id=getattr(request.state, "request_id", None),
-                session_id=session_id,
-                principal=principal,
-                total_count=total_count,
-                pass_count=pass_count,
-                fail_count=fail_count,
-                other_count=other_count,
-            )
+        total_count, pass_count, fail_count, non_binary_count = _summarize_feedback_streams(entries)
+        if non_binary_count > 0:
             raise HTTPException(
-                status_code=409,
+                status_code=500,
                 detail=(
-                    f"Checkpoint blocked: found {other_count} non-binary feedback outcome(s). "
-                    "Run feedback normalisation before checkpointing."
+                    "Stored feedback contains non-binary outcomes; expected pass/fail only. "
+                    "Repair data before checkpointing."
                 ),
             )
         checkpoint_id = f"eval-{uuid.uuid4().hex[:12]}"
@@ -3265,7 +3246,7 @@ def create_app(config: AppConfig) -> FastAPI:
             total_count=total_count,
             pass_count=pass_count,
             fail_count=fail_count,
-            other_count=other_count,
+            non_binary_count=non_binary_count,
         )
         _append_eval_checkpoint_log(
             checkpoint_id=saved.checkpoint_id,
@@ -3274,7 +3255,7 @@ def create_app(config: AppConfig) -> FastAPI:
             total_count=saved.total_count,
             pass_count=saved.pass_count,
             fail_count=saved.fail_count,
-            other_count=saved.other_count,
+            non_binary_count=saved.non_binary_count,
         )
         _log_event(
             "chat_eval_checkpoint_submitted",
@@ -3285,7 +3266,7 @@ def create_app(config: AppConfig) -> FastAPI:
             total_count=saved.total_count,
             pass_count=saved.pass_count,
             fail_count=saved.fail_count,
-            other_count=saved.other_count,
+            non_binary_count=saved.non_binary_count,
             schema_version=_EVAL_CHECKPOINT_SCHEMA_VERSION,
         )
         return _eval_checkpoint_response(saved)

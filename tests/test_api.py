@@ -326,7 +326,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(checkpoint_payload["total_count"], 2)
         self.assertEqual(checkpoint_payload["pass_count"], 1)
         self.assertEqual(checkpoint_payload["fail_count"], 1)
-        self.assertEqual(checkpoint_payload["other_count"], 0)
+        self.assertEqual(checkpoint_payload["non_binary_count"], 0)
         self.assertEqual(checkpoint_payload["schema_version"], "polinko.eval_checkpoint.v2")
 
         listed = self.client.get(
@@ -385,7 +385,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(checkpoint_payload["total_count"], 1)
         self.assertEqual(checkpoint_payload["pass_count"], 0)
         self.assertEqual(checkpoint_payload["fail_count"], 1)
-        self.assertEqual(checkpoint_payload["other_count"], 0)
+        self.assertEqual(checkpoint_payload["non_binary_count"], 0)
         self.assertEqual(checkpoint_payload["schema_version"], "polinko.eval_checkpoint.v2")
 
     def test_submit_eval_checkpoint_requires_existing_feedback(self) -> None:
@@ -404,7 +404,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(checkpoint_submit.status_code, 400)
         self.assertIn("No saved evals", checkpoint_submit.json()["detail"])
 
-    def test_submit_eval_checkpoint_blocks_non_binary_feedback_rows(self) -> None:
+    def test_submit_eval_checkpoint_errors_on_non_binary_feedback_rows(self) -> None:
         session_id = "s-feedback-nonbinary-block"
         with self._stub_runner("checkpoint candidate"):
             chat_resp = self.client.post(
@@ -435,57 +435,8 @@ class PolinkoApiTests(unittest.TestCase):
                 f"/chats/{session_id}/feedback/checkpoints",
                 headers={"x-api-key": "test-server-key"},
             )
-        self.assertEqual(checkpoint_submit.status_code, 409)
-        self.assertIn("non-binary feedback outcome", checkpoint_submit.json()["detail"])
-
-    def test_legacy_mixed_feedback_is_mapped_to_fail_for_checkpoints(self) -> None:
-        session_id = "s-feedback-legacy-mixed"
-        with self._stub_runner("Legacy mixed candidate"):
-            chat_resp = self.client.post(
-                "/chat",
-                headers={"x-api-key": "test-server-key"},
-                json={"message": "legacy prompt", "session_id": session_id},
-            )
-        self.assertEqual(chat_resp.status_code, 200)
-        assistant_message_id = chat_resp.json()["assistant_message_id"]
-
-        deps = server.get_runtime_deps()
-        saved = deps.history_store.upsert_message_feedback(
-            session_id=session_id,
-            message_id=assistant_message_id,
-            outcome="MIXED",
-            tags=["style"],
-            note="legacy mixed row",
-            recommended_action=None,
-            action_taken=None,
-            status="open",
-        )
-        self.assertEqual(saved.outcome, "fail")
-        self.assertIn("style", saved.negative_tags)
-        self.assertIn("needs_retry", saved.negative_tags)
-
-        listed_feedback = self.client.get(
-            f"/chats/{session_id}/feedback",
-            headers={"x-api-key": "test-server-key"},
-        )
-        self.assertEqual(listed_feedback.status_code, 200)
-        feedback_rows = listed_feedback.json()["feedback"]
-        self.assertEqual(len(feedback_rows), 1)
-        self.assertEqual(feedback_rows[0]["outcome"], "fail")
-        self.assertIn("style", feedback_rows[0]["negative_tags"])
-        self.assertIn("needs_retry", feedback_rows[0]["negative_tags"])
-
-        checkpoint_submit = self.client.post(
-            f"/chats/{session_id}/feedback/checkpoints",
-            headers={"x-api-key": "test-server-key"},
-        )
-        self.assertEqual(checkpoint_submit.status_code, 200)
-        checkpoint_payload = checkpoint_submit.json()
-        self.assertEqual(checkpoint_payload["total_count"], 1)
-        self.assertEqual(checkpoint_payload["pass_count"], 0)
-        self.assertEqual(checkpoint_payload["fail_count"], 1)
-        self.assertEqual(checkpoint_payload["other_count"], 0)
-        self.assertEqual(checkpoint_payload["schema_version"], "polinko.eval_checkpoint.v2")
+        self.assertEqual(checkpoint_submit.status_code, 500)
+        self.assertIn("non-binary outcomes", checkpoint_submit.json()["detail"])
 
     def test_fail_feedback_generates_recommended_action_and_logs_inbox(self) -> None:
         with self._stub_runner("Please inspect this OCR output."):
@@ -659,42 +610,6 @@ class PolinkoApiTests(unittest.TestCase):
         content = action_log.read_text(encoding="utf-8")
         self.assertIn("positive_tags", content)
         self.assertIn("negative_tags", content)
-
-    def test_feedback_legacy_tags_payload_is_still_supported(self) -> None:
-        with self._stub_runner("Legacy payload compatibility"):
-            chat_resp = self.client.post(
-                "/chat",
-                headers={"x-api-key": "test-server-key"},
-                json={"message": "legacy feedback", "session_id": "s-feedback-legacy"},
-            )
-        self.assertEqual(chat_resp.status_code, 200)
-        assistant_message_id = chat_resp.json()["assistant_message_id"]
-
-        pass_resp = self.client.post(
-            "/chats/s-feedback-legacy/feedback",
-            headers={"x-api-key": "test-server-key"},
-            json={
-                "message_id": assistant_message_id,
-                "outcome": "pass",
-                "tags": ["accurate"],
-            },
-        )
-        self.assertEqual(pass_resp.status_code, 200)
-        self.assertEqual(pass_resp.json()["positive_tags"], ["accurate"])
-        self.assertEqual(pass_resp.json()["negative_tags"], [])
-
-        fail_resp = self.client.post(
-            "/chats/s-feedback-legacy/feedback",
-            headers={"x-api-key": "test-server-key"},
-            json={
-                "message_id": assistant_message_id,
-                "outcome": "fail",
-                "tags": ["ocr_miss"],
-            },
-        )
-        self.assertEqual(fail_resp.status_code, 200)
-        self.assertEqual(fail_resp.json()["positive_tags"], [])
-        self.assertEqual(fail_resp.json()["negative_tags"], ["ocr_miss"])
 
     def test_chat_attachment_indexes_global_memory_lane(self) -> None:
         deps = server.get_runtime_deps()

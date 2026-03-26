@@ -289,8 +289,8 @@
 
 1. If system state appears noisy/contradictory, stop and inspect before trying
    to summarise, simplify, or refactor.
-2. Preserve legacy context by default (including legacy MCP/server wiring)
-   until an explicit migration cutline is given in-chat.
+2. Keep active runtime/doc contracts current; archive deprecated context rather
+   than carrying compatibility paths in active flow.
 3. In human-directed precision mode, execute only the requested slice and avoid
    opportunistic cleanup outside scope.
 4. When this rule changes execution, record it in `docs/DECISIONS.md` and
@@ -748,7 +748,7 @@ Current policy:
    - `docs/portfolio/raw_evidence/PASS`
    - `docs/portfolio/raw_evidence/INBOX`
 2. Legacy intake wiring is archive-only:
-   - `MIXED` is deprecated from active flow.
+   - `MIXED` is removed from active flow.
    - `eval_trace_artifacts.jsonl` is historical/archive-only for prior pilot traces.
    - `make evidence-index` scans only active buckets (`PASS`/`FAIL`/`INBOX`).
 3. Run one-command refresh (recommended):
