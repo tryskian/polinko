@@ -10,7 +10,7 @@ from typing import Sequence
 
 TRACE_SCHEMA_VERSION = "polinko.eval_trace.v1"
 DEFAULT_TRACE_JSONL = Path(
-    "docs/portfolio/raw_evidence/archive/eval-trace-records/eval_trace_artifacts.jsonl"
+    "docs/portfolio/raw_evidence/archive/baseline/eval-trace-records/eval_trace_artifacts.jsonl"
 )
 
 

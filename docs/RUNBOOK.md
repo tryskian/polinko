@@ -747,7 +747,7 @@ Current policy:
 2. Keep only archive snapshots under:
    - `docs/portfolio/raw_evidence/archive/*`
 3. Eval trace artifacts default to archive-only path:
-   - `docs/portfolio/raw_evidence/archive/eval-trace-records/eval_trace_artifacts.jsonl`
+   - `docs/portfolio/raw_evidence/archive/baseline/eval-trace-records/eval_trace_artifacts.jsonl`
 4. If older intake folders/files reappear (`PASS`/`FAIL`/`MIXED`/`INBOX`,
    `triage_overrides*`, generated index/metadata files), archive them with:
    - `make eval-reset-baseline`
@@ -803,10 +803,12 @@ Current policy:
 1. Archive deprecated eval artefacts/evidence/records to a timestamped snapshot:
    - `make eval-reset-baseline`
    - archives all top-level entries under `docs/portfolio/raw_evidence` except
-     `archive/*` into
-     `docs/portfolio/raw_evidence/archive/baseline-reset-<YYYYMMDD-HHMMSS>`
+     `archive/*` into rolling path
+     `docs/portfolio/raw_evidence/archive/baseline/latest`
+   - prior `latest` snapshot is rotated into
+     `docs/portfolio/raw_evidence/archive/baseline/history/*`
    - archives active top-level report files into
-     `eval_reports/archive/baseline-reset-<YYYYMMDD-HHMMSS>`
+     `eval_reports/archive/baseline/latest`
 2. Archive/clean generated eval chats:
    - `make eval-cleanup`
    - note: this is local-only helper behaviour; if the local script is absent,

@@ -82,7 +82,7 @@ Required row fields (logical spec):
 
 These remain append-only archive evidence, not primary runtime truth:
 
-- `docs/portfolio/raw_evidence/archive/eval-trace-records/eval_trace_artifacts.jsonl`
+- `docs/portfolio/raw_evidence/archive/baseline/eval-trace-records/eval_trace_artifacts.jsonl`
 - optional archived submission/checkpoint JSONL snapshots under
   `docs/portfolio/raw_evidence/archive/*`
 

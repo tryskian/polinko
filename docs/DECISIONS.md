@@ -426,7 +426,7 @@
   without changing runtime `/chat` behaviour, while improving auditability and
   promotion confidence for future OpenAI-native tooling pilots.
 - Status: Superseded by `D-068` (trace default path is archive-only under
-  `docs/portfolio/raw_evidence/archive/eval-trace-records/`).
+  `docs/portfolio/raw_evidence/archive/baseline/eval-trace-records/`).
 
 ## D-046: Constrain Phase 3 hybrid pilot to offline tooling bridge only
 

@@ -40,8 +40,8 @@
   - active gate logic is binary-only (`pass`/`fail`); `non_binary_count` is an
     integrity signal only.
 - Eval artefacts (non-authoritative):
-  - `docs/portfolio/raw_evidence/archive/*` is the only active file-based eval
-    artefact surface.
+  - `docs/portfolio/raw_evidence/archive/baseline/*` is the only active
+    file-based eval artefact surface.
   - `docs/portfolio/raw_evidence` top-level intake folders/files are
     deprecated and must be archived before new eval cycles.
   - no file-log-driven eval wiring exists in runtime gate decisions.

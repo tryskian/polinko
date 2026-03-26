@@ -111,8 +111,10 @@
 - Eval intake archival checkpoint (March 26, 2026):
   - top-level `raw_evidence` entries are deprecated and moved by
     `make eval-reset-baseline`
-  - archive snapshot path is
-    `docs/portfolio/raw_evidence/archive/baseline-reset-<run_id>`
+  - archive snapshot path is rolling:
+    `docs/portfolio/raw_evidence/archive/baseline/latest`
+  - previous snapshots are rotated to:
+    `docs/portfolio/raw_evidence/archive/baseline/history/*`
   - UI checkpoint summaries now present `non_binary` explicitly
 - EOD docs confidentiality merge checkpoint (March 25, 2026):
   - PR `#72` merged to `main` (`2a6f575`)
@@ -135,11 +137,14 @@
 - Baseline archive reset command checkpoint (March 26, 2026):
   - one-command archive flow: `make eval-reset-baseline`
   - command archives deprecated eval evidence + generated report files into:
-    - `docs/portfolio/raw_evidence/archive/baseline-reset-<run_id>`
-    - `eval_reports/archive/baseline-reset-<run_id>`
+    - `docs/portfolio/raw_evidence/archive/baseline/latest`
+    - `eval_reports/archive/baseline/latest`
   - active eval decisions remain database-backed, not intake-folder-backed
-  - latest local run archived top-level `raw_evidence` entries to:
-    `docs/portfolio/raw_evidence/archive/baseline-reset-20260326-212848`
+  - existing top-level archive folders were consolidated into:
+    `docs/portfolio/raw_evidence/archive/baseline/history/*`
+  - latest consolidation run (`20260326-214343`) moved:
+    - raw archive entries: `5`
+    - eval report archive entries: `4`
 - Branch protection checkpoint (March 25, 2026):
   - `main` remains protected (PR + required checks)
   - active implementation now runs through task branches merged back to `main`
