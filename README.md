@@ -69,6 +69,7 @@ Checks:
 ```bash
 make test
 make lint-docs
+make backend-gate
 make quality-gate
 make quality-gate-deterministic
 ```
