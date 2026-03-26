@@ -626,3 +626,13 @@
 - Why: This keeps the workflow easy to operate offline, avoids maintaining a
   separate bespoke visualization surface, and preserves clear relationship
   semantics for imagineer-facing exploration.
+
+## D-062: Inspect-first execution and explicit legacy cutlines
+
+- Category: `collaboration_method`
+- Tags: `inspect_first`, `human_directed`, `legacy_context`, `cutline_control`
+- Decision: When context appears noisy or ambiguous, pause and inspect before
+  cleanup/refactor, and keep legacy infrastructure/context (including MCP
+  wiring) until an explicit migration cutline is directed.
+- Why: Prevents summary-first optimisation from removing meaningful context and
+  keeps rebuild outputs coherent, reviewable, and usable.
