@@ -11,6 +11,9 @@ from typing import Any
 
 
 DEFAULT_CHAT_TITLE = "New chat"
+_CANONICAL_FEEDBACK_OUTCOMES = {"pass", "fail"}
+_LEGACY_MIXED_OUTCOME = "mixed"
+_LEGACY_MIXED_REMEDIATION_TAG = "needs_retry"
 
 
 @dataclass(frozen=True)
@@ -107,6 +110,15 @@ class EvalCheckpoint:
 
 def _now_ms() -> int:
     return int(time.time() * 1000)
+
+
+def _normalize_feedback_outcome(outcome: str) -> tuple[str, bool]:
+    normalized = outcome.strip().lower()
+    if normalized in _CANONICAL_FEEDBACK_OUTCOMES:
+        return normalized, False
+    if normalized == _LEGACY_MIXED_OUTCOME:
+        return "fail", True
+    raise ValueError("feedback outcome must be pass, fail, or legacy mixed")
 
 
 def _build_message_id(
@@ -704,7 +716,7 @@ class ChatHistoryStore:
         action_taken: str | None,
         status: str,
     ) -> MessageFeedback:
-        normalized_outcome = outcome.strip().upper()
+        normalized_outcome, mixed_legacy_mapped = _normalize_feedback_outcome(outcome)
         normalized_positive_tags = [
             tag.strip() for tag in (positive_tags or []) if tag.strip()
         ]
@@ -714,12 +726,12 @@ class ChatHistoryStore:
         # Backward compatibility with legacy callers that only send `tags`.
         if not normalized_positive_tags and not normalized_negative_tags and tags:
             legacy_tags = [tag.strip() for tag in tags if tag.strip()]
-            if normalized_outcome == "PASS":
+            if normalized_outcome == "pass":
                 normalized_positive_tags = legacy_tags
-            elif normalized_outcome == "FAIL":
-                normalized_negative_tags = legacy_tags
             else:
-                normalized_positive_tags = legacy_tags
+                normalized_negative_tags = legacy_tags
+        if mixed_legacy_mapped and _LEGACY_MIXED_REMEDIATION_TAG not in normalized_negative_tags:
+            normalized_negative_tags.append(_LEGACY_MIXED_REMEDIATION_TAG)
         normalized_tags = list(dict.fromkeys(normalized_positive_tags + normalized_negative_tags))
         normalized_note = note.strip() if note is not None and note.strip() else None
         normalized_recommended_action = (
@@ -1350,6 +1362,7 @@ class ChatHistoryStore:
 
 
 def _message_feedback_from_row(row: sqlite3.Row) -> MessageFeedback:
+    normalized_outcome, mixed_legacy_mapped = _normalize_feedback_outcome(str(row["outcome"]))
     parsed_positive_tags: list[str] = []
     parsed_negative_tags: list[str] = []
     parsed_tags: list[str] = []
@@ -1371,19 +1384,20 @@ def _message_feedback_from_row(row: sqlite3.Row) -> MessageFeedback:
                 parsed_tags = [str(item).strip() for item in raw_all if str(item).strip()]
         if isinstance(decoded, list):
             parsed_tags = [str(item).strip() for item in decoded if str(item).strip()]
-            outcome = str(row["outcome"]).strip().upper()
-            if outcome == "FAIL":
+            if normalized_outcome == "fail":
                 parsed_negative_tags = parsed_tags
             else:
                 parsed_positive_tags = parsed_tags
     parsed_positive_tags = list(dict.fromkeys(parsed_positive_tags))
     parsed_negative_tags = list(dict.fromkeys(parsed_negative_tags))
+    if mixed_legacy_mapped and _LEGACY_MIXED_REMEDIATION_TAG not in parsed_negative_tags:
+        parsed_negative_tags.append(_LEGACY_MIXED_REMEDIATION_TAG)
     if not parsed_tags:
         parsed_tags = list(dict.fromkeys(parsed_positive_tags + parsed_negative_tags))
     return MessageFeedback(
         session_id=str(row["session_id"]),
         message_id=str(row["message_id"]),
-        outcome=str(row["outcome"]),
+        outcome=normalized_outcome,
         positive_tags=parsed_positive_tags,
         negative_tags=parsed_negative_tags,
         tags=parsed_tags,

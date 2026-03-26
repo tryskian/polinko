@@ -165,6 +165,7 @@ _FEEDBACK_NOTE_LEN_MAX = 1200
 _FEEDBACK_ACTION_LOG_FILENAME = "feedback_actions.md"
 _FEEDBACK_SUBMISSIONS_LOG_FILENAME = "eval_submissions.jsonl"
 _FEEDBACK_CHECKPOINTS_LOG_FILENAME = "eval_checkpoints.jsonl"
+_EVAL_CHECKPOINT_SCHEMA_VERSION = "polinko.eval_checkpoint.v2"
 _FEEDBACK_POSITIVE_TAGS = {
     "accurate",
     "high_value",
@@ -532,6 +533,7 @@ class EvalCheckpointResponse(BaseModel):
     pass_count: int
     fail_count: int
     other_count: int
+    schema_version: str
     created_at: int
 
 
@@ -774,6 +776,7 @@ def _eval_checkpoint_response(entry: EvalCheckpoint) -> EvalCheckpointResponse:
         pass_count=entry.pass_count,
         fail_count=entry.fail_count,
         other_count=entry.other_count,
+        schema_version=_EVAL_CHECKPOINT_SCHEMA_VERSION,
         created_at=entry.created_at,
     )
 
@@ -897,13 +900,12 @@ def _summarize_feedback_streams(entries: list[MessageFeedback]) -> tuple[int, in
     fail_count = 0
     other_count = 0
     for entry in entries:
-        has_positive = bool(entry.positive_tags)
-        has_negative = bool(entry.negative_tags)
-        if has_positive:
+        outcome = entry.outcome.strip().lower()
+        if outcome == "pass":
             pass_count += 1
-        if has_negative:
+        elif outcome == "fail":
             fail_count += 1
-        if not has_positive and not has_negative:
+        else:
             other_count += 1
     return total_count, pass_count, fail_count, other_count
 
@@ -962,8 +964,9 @@ def _derive_adaptive_style_notes(feedback_entries: list[MessageFeedback]) -> lis
 
     for idx, entry in enumerate(style_entries):
         weight = _ADAPTIVE_STYLE_DECAY**idx
+        outcome = entry.outcome.strip().lower()
         is_clean_grounded_pass = (
-            entry.outcome == "PASS"
+            outcome == "pass"
             and "grounded" in entry.positive_tags
             and "hallucination_risk" not in entry.negative_tags
             and "grounding_gap" not in entry.negative_tags
@@ -971,7 +974,7 @@ def _derive_adaptive_style_notes(feedback_entries: list[MessageFeedback]) -> lis
         if is_clean_grounded_pass:
             grounded_weight += weight
         if (
-            entry.outcome == "PASS"
+            outcome == "pass"
             and "high_value" in entry.positive_tags
             and "hallucination_risk" not in entry.negative_tags
         ):
@@ -1107,6 +1110,7 @@ def _append_eval_checkpoint_log(
         "pass_count": int(pass_count),
         "fail_count": int(fail_count),
         "other_count": int(other_count),
+        "schema_version": _EVAL_CHECKPOINT_SCHEMA_VERSION,
     }
     with target.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
@@ -3236,6 +3240,24 @@ def create_app(config: AppConfig) -> FastAPI:
         if not entries:
             raise HTTPException(status_code=400, detail="No saved evals in this chat yet.")
         total_count, pass_count, fail_count, other_count = _summarize_feedback_streams(entries)
+        if other_count > 0:
+            _log_event(
+                "chat_eval_checkpoint_blocked_non_binary",
+                request_id=getattr(request.state, "request_id", None),
+                session_id=session_id,
+                principal=principal,
+                total_count=total_count,
+                pass_count=pass_count,
+                fail_count=fail_count,
+                other_count=other_count,
+            )
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"Checkpoint blocked: found {other_count} non-binary feedback outcome(s). "
+                    "Run feedback normalisation before checkpointing."
+                ),
+            )
         checkpoint_id = f"eval-{uuid.uuid4().hex[:12]}"
         saved = deps.history_store.record_eval_checkpoint(
             checkpoint_id=checkpoint_id,
@@ -3264,6 +3286,7 @@ def create_app(config: AppConfig) -> FastAPI:
             pass_count=saved.pass_count,
             fail_count=saved.fail_count,
             other_count=saved.other_count,
+            schema_version=_EVAL_CHECKPOINT_SCHEMA_VERSION,
         )
         return _eval_checkpoint_response(saved)
 
