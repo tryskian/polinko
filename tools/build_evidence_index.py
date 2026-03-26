@@ -208,8 +208,8 @@ def _infer_reason_and_action(outcome: str, text: str) -> tuple[str, str]:
             "Record as regression and attach one reproducible repro step.",
         )
     return (
-        "Mixed signal: partial success with notable deviation.",
-        "Split into one PASS control and one FAIL repro artifact.",
+        "Untriaged evidence awaiting binary classification.",
+        "Classify into PASS or FAIL and attach one clear remediation note if needed.",
     )
 
 
