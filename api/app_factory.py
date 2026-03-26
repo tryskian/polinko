@@ -964,8 +964,9 @@ def _derive_adaptive_style_notes(feedback_entries: list[MessageFeedback]) -> lis
 
     for idx, entry in enumerate(style_entries):
         weight = _ADAPTIVE_STYLE_DECAY**idx
+        outcome = entry.outcome.strip().lower()
         is_clean_grounded_pass = (
-            entry.outcome == "PASS"
+            outcome == "pass"
             and "grounded" in entry.positive_tags
             and "hallucination_risk" not in entry.negative_tags
             and "grounding_gap" not in entry.negative_tags
@@ -973,7 +974,7 @@ def _derive_adaptive_style_notes(feedback_entries: list[MessageFeedback]) -> lis
         if is_clean_grounded_pass:
             grounded_weight += weight
         if (
-            entry.outcome == "PASS"
+            outcome == "pass"
             and "high_value" in entry.positive_tags
             and "hallucination_risk" not in entry.negative_tags
         ):
