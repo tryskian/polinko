@@ -154,6 +154,16 @@
   - backend regression tests: `make test` pass (`162` tests)
   - frontend unit tests: `npm --prefix frontend run -s test` pass
   - frontend production build: `npm --prefix frontend run -s build` pass
+- Build block audit checkpoint (March 26, 2026):
+  - README was refreshed to current build blocks and live API surface
+  - local lint now matches CI scope (`README.md` + `docs/**/*.md`)
+  - new guard command is available: `make build-audit`
+  - `eval-cleanup` now skips cleanly when local-only helper script is absent
+  - full deterministic gate cycle passed: `make quality-gate-deterministic`
+  - evidence and reference pipelines passed:
+    `make evidence-refresh`, `make human-reference-db`, `make human-reference-latest`
+  - Docker smoke passed:
+    `make docker-build` + container `/health` probe
 - Eval runs no longer produce ambiguous generic `New chat` helper rows in the
   UI; generated eval chats now use deterministic session-id titles when
   retained.

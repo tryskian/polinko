@@ -107,6 +107,17 @@
 3. Resolve actionable issues (missing imports, interpreter mismatch, or
    `compaudit` findings) before running evals.
 
+## Build Block Audit (Fresh-Path Guard)
+
+1. Run `make build-audit`.
+2. Current automated checks:
+   - README route parity vs live FastAPI routes
+   - Makefile tool-module existence
+   - local lint parity with CI (`README.md` + `docs/**/*.md`)
+   - `eval-cleanup` local-only guard presence
+3. Use this before wider refactors to catch drift early without resetting the
+   repo.
+
 ## Python Diagnostics (Ruff + Mypy)
 
 1. Use repo-local tools for deterministic output:
@@ -821,6 +832,8 @@ Current policy:
      `docs/portfolio/raw_evidence/archive/eval-reset-<YYYYMMDD-HHMMSS>`
 2. Archive/clean generated eval chats:
    - `make eval-cleanup`
+   - note: this is local-only helper behaviour; if the local script is absent,
+     the target exits cleanly and skips cleanup.
 3. If needed, reset one chat session:
    - `POST /session/reset` with `{"session_id":"<chat-id>"}`.
 4. Re-run deterministic baseline gate:
