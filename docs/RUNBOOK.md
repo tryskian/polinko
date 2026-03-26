@@ -314,6 +314,27 @@
    - implement and validate
    - then report outcomes and remaining risks briefly
 
+## Human-Managed Co-Reasoning Control Loop
+
+1. Human sets the loop frame before implementation:
+   - objective/hypothesis under test
+   - scope boundary (in-scope vs out-of-scope)
+   - acceptance and fail conditions
+2. Engineer translates that frame into bounded execution slices and runs them
+   proactively.
+3. Human remains decision authority for:
+   - ambiguity trade-offs (meaning/positioning interpretation)
+   - go/no-go calls
+   - re-prioritisation of next slice
+4. Engineer owns technical control surfaces inside the approved frame:
+   - implementation
+   - validation
+   - drift/gremlin-risk cleanup
+   - doc propagation
+5. Why this rule exists:
+   - model completion can over-optimise local targets
+   - human governance keeps work aligned to intent and usable product outcomes
+
 ## Policy Propagation Checklist
 
 1. For any collaboration/execution policy change, update all governance surfaces

@@ -66,6 +66,8 @@
 ## Governance Flow
 
 - Collaboration/execution policy is anchored in `docs/CHARTER.md`.
+- Co-reasoning control rights are human-led for objective/scope/acceptance and
+  go/no-go decisions.
 - Formal decision records are appended in `docs/DECISIONS.md`.
 - Operator procedure lives in `docs/RUNBOOK.md`.
 - Current-state checkpoints live in `docs/STATE.md`.

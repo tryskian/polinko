@@ -181,6 +181,10 @@
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder
   - user prompts are reserved for approvals and material trade-offs
+- Human-managed co-reasoning checkpoint (March 26, 2026):
+  - human remains work-management authority in reasoning loops
+  - human controls objective/scope/acceptance + go/no-go cutlines
+  - engineer executes proactive implementation/hygiene within that frame
 - Eval runs no longer produce ambiguous generic `New chat` helper rows in the
   UI; generated eval chats now use deterministic session-id titles when
   retained.

@@ -737,3 +737,16 @@
 - Why: Reduces coordination overhead, keeps `main` clean continuously, and
   preserves imagineer focus on hypotheses/theory while engineering handles
   technical control surfaces end-to-end.
+
+## D-071: Human-managed work control is mandatory in co-reasoning loops
+
+- Category: `collaboration_method`
+- Tags: `reasoning_loops`, `human_governance`, `scope_control`, `decision_rights`
+- Decision: In human-AI co-reasoning, work-management control remains human-led:
+  - human owns objective function, scope boundaries, and acceptance criteria
+  - human decides ambiguity trade-offs and go/no-go cutlines
+  - engineer executes implementation/proactive hygiene within that frame
+- Why: Model behaviour optimises local completion patterns and can drift toward
+  summary-first or over-targeted execution without full product-context
+  accountability; human governance keeps outputs aligned to intent, meaning, and
+  usable end-state quality.
