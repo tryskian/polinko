@@ -80,16 +80,6 @@ const BASE_EVAL_PROMPT_PRESETS = Object.freeze([
     prompt:
       "Evaluate the latest assistant response with a binary gate only. Return PASS or FAIL and cite exact Style and Hallucination risk reasons.",
   },
-  {
-    key: "grounding_gate",
-    prompt:
-      "Run a grounding gate on the latest response. Output PASS or FAIL, list any unsupported claims, and give one concrete remediation step.",
-  },
-  {
-    key: "style_gate",
-    prompt:
-      "Run a style gate on the latest response. Output PASS or FAIL and call out cadence/tone drift in one short bullet list.",
-  },
 ]);
 const OCR_REQUEST_HINTS = [
   "ocr",
