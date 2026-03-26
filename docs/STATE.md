@@ -177,6 +177,10 @@
 - UI deprecation checkpoint (March 26, 2026):
   - web UI is deprecated for active build/eval operations
   - canonical surfaces are API + CLI + deterministic eval tooling
+- Proactive ownership checkpoint (March 26, 2026):
+  - engineer execution mode is action-first and proactive by default
+  - technical hygiene/drift-control slices are executed without reminder
+  - user prompts are reserved for approvals and material trade-offs
 - Eval runs no longer produce ambiguous generic `New chat` helper rows in the
   UI; generated eval chats now use deterministic session-id titles when
   retained.
