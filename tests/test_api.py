@@ -404,6 +404,40 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(checkpoint_submit.status_code, 400)
         self.assertIn("No saved evals", checkpoint_submit.json()["detail"])
 
+    def test_submit_eval_checkpoint_blocks_non_binary_feedback_rows(self) -> None:
+        session_id = "s-feedback-nonbinary-block"
+        with self._stub_runner("checkpoint candidate"):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "checkpoint prompt", "session_id": session_id},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+        assistant_message_id = chat_resp.json()["assistant_message_id"]
+
+        deps = server.get_runtime_deps()
+        bad_entry = MessageFeedback(
+            session_id=session_id,
+            message_id=assistant_message_id,
+            outcome="partial",
+            positive_tags=["style"],
+            negative_tags=[],
+            tags=["style"],
+            note=None,
+            recommended_action=None,
+            action_taken=None,
+            status="open",
+            created_at=1773000200000,
+            updated_at=1773000200000,
+        )
+        with patch.object(deps.history_store, "list_message_feedback", return_value=[bad_entry]):
+            checkpoint_submit = self.client.post(
+                f"/chats/{session_id}/feedback/checkpoints",
+                headers={"x-api-key": "test-server-key"},
+            )
+        self.assertEqual(checkpoint_submit.status_code, 409)
+        self.assertIn("non-binary feedback outcome", checkpoint_submit.json()["detail"])
+
     def test_legacy_mixed_feedback_is_mapped_to_fail_for_checkpoints(self) -> None:
         session_id = "s-feedback-legacy-mixed"
         with self._stub_runner("Legacy mixed candidate"):

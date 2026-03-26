@@ -3240,6 +3240,24 @@ def create_app(config: AppConfig) -> FastAPI:
         if not entries:
             raise HTTPException(status_code=400, detail="No saved evals in this chat yet.")
         total_count, pass_count, fail_count, other_count = _summarize_feedback_streams(entries)
+        if other_count > 0:
+            _log_event(
+                "chat_eval_checkpoint_blocked_non_binary",
+                request_id=getattr(request.state, "request_id", None),
+                session_id=session_id,
+                principal=principal,
+                total_count=total_count,
+                pass_count=pass_count,
+                fail_count=fail_count,
+                other_count=other_count,
+            )
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"Checkpoint blocked: found {other_count} non-binary feedback outcome(s). "
+                    "Run feedback normalisation before checkpointing."
+                ),
+            )
         checkpoint_id = f"eval-{uuid.uuid4().hex[:12]}"
         saved = deps.history_store.record_eval_checkpoint(
             checkpoint_id=checkpoint_id,
