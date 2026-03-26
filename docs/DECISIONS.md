@@ -672,3 +672,12 @@
 - Why: Prevents silent ambiguity in release-gate artefacts, keeps checkpoint
   semantics deterministic, and provides an auditable migration path instead of
   implicit coercion at checkpoint time.
+
+## D-066: Archive legacy eval intake structure from active evidence flow
+
+- Category: `evidence_governance`
+- Tags: `legacy_archive`, `binary_flow`, `evidence_index`, `active_buckets`
+- Decision: Treat legacy `MIXED` intake structure as archive-only and keep
+  active evidence indexing/reporting scoped to `PASS`/`FAIL`/`INBOX` buckets.
+- Why: Prevents non-binary artefacts from re-entering daily eval operations and
+  keeps evidence refresh outputs aligned with the current binary gate contract.

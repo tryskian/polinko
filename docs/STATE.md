@@ -127,6 +127,13 @@
     `docs/portfolio/archive/2026-03-25-legacy-positioning-workbench`
   - active raw-evidence intake is now documented as `PASS`/`FAIL`/`INBOX` only
   - legacy `MIXED` bucket and trace-artifact intake file are archive-only
+- Legacy eval intake archival checkpoint (March 26, 2026):
+  - evidence index builder now scans active buckets only:
+    `PASS`/`FAIL`/`INBOX`
+  - legacy `MIXED` structure remains archive-only and is no longer part of
+    active evidence refresh output
+  - UI checkpoint summaries now present `non_binary` explicitly; legacy
+    compatibility naming is not used in active operator-facing labels
 - EOD docs confidentiality merge checkpoint (March 25, 2026):
   - PR `#72` merged to `main` (`2a6f575`)
   - runbook + ignore policy now treats non-build internal docs as local-only

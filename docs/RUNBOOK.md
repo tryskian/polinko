@@ -750,6 +750,7 @@ Current policy:
 2. Legacy intake wiring is archive-only:
    - `MIXED` is deprecated from active flow.
    - `eval_trace_artifacts.jsonl` is historical/archive-only for prior pilot traces.
+   - `make evidence-index` scans only active buckets (`PASS`/`FAIL`/`INBOX`).
 3. Run one-command refresh (recommended):
    - `make evidence-refresh`
    - runs `make evidence-index` + `make portfolio-metadata-audit`

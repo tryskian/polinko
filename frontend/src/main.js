@@ -1264,7 +1264,6 @@ function normalizeEvalCheckpointEntry(entry) {
     total_count: Math.max(0, Number(entry?.total_count || 0)),
     pass_count: Math.max(0, Number(entry?.pass_count || 0)),
     fail_count: Math.max(0, Number(entry?.fail_count || 0)),
-    other_count: nonBinaryCount,
     non_binary_count: nonBinaryCount,
     created_at: Math.max(0, Number(entry?.created_at || 0)),
   };
@@ -1273,7 +1272,7 @@ function normalizeEvalCheckpointEntry(entry) {
 function checkpointSummaryText(entry, index) {
   const createdAt = Number(entry?.created_at || 0);
   const timestamp = createdAt > 0 ? new Date(createdAt).toLocaleString() : "unknown time";
-  const nonBinaryCount = Number((entry?.non_binary_count ?? entry?.other_count) || 0);
+  const nonBinaryCount = Number(entry?.non_binary_count || 0);
   return (
     `Eval checkpoint ${index} • ${timestamp} • total=${entry.total_count}, ` +
     `pass=${entry.pass_count}, fail=${entry.fail_count}, non_binary=${nonBinaryCount}.`
@@ -1320,7 +1319,7 @@ function triageRowForChat(chat) {
   const failRatio = latestFailRatioForSession(chat.session_id);
   const checkpointCount = checkpointCountForSession(chat.session_id);
   const unreviewedCount = unreviewedCheckpointCountForSession(chat.session_id);
-  const latestNonBinaryCount = latest ? Number((latest.non_binary_count ?? latest.other_count) || 0) : 0;
+  const latestNonBinaryCount = latest ? Number(latest.non_binary_count || 0) : 0;
   return {
     session_id: chat.session_id,
     title: chat.title,
@@ -1331,7 +1330,6 @@ function triageRowForChat(chat) {
     latest_total_count: latest ? Number(latest.total_count || 0) : 0,
     latest_pass_count: latest ? Number(latest.pass_count || 0) : 0,
     latest_fail_count: latest ? Number(latest.fail_count || 0) : 0,
-    latest_other_count: latestNonBinaryCount,
     latest_non_binary_count: latestNonBinaryCount,
     last_checkpoint_at: latest ? Number(latest.created_at || 0) : null,
   };
