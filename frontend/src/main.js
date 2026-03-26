@@ -1257,13 +1257,15 @@ function normalizeEvalCheckpointEntry(entry) {
   if (!checkpointId) {
     return null;
   }
+  const nonBinaryCount = Math.max(0, Number((entry?.non_binary_count ?? entry?.other_count) || 0));
   return {
     checkpoint_id: checkpointId,
     session_id: String(entry?.session_id || "").trim() || activeChatId,
     total_count: Math.max(0, Number(entry?.total_count || 0)),
     pass_count: Math.max(0, Number(entry?.pass_count || 0)),
     fail_count: Math.max(0, Number(entry?.fail_count || 0)),
-    other_count: Math.max(0, Number(entry?.other_count || 0)),
+    other_count: nonBinaryCount,
+    non_binary_count: nonBinaryCount,
     created_at: Math.max(0, Number(entry?.created_at || 0)),
   };
 }
@@ -1271,9 +1273,10 @@ function normalizeEvalCheckpointEntry(entry) {
 function checkpointSummaryText(entry, index) {
   const createdAt = Number(entry?.created_at || 0);
   const timestamp = createdAt > 0 ? new Date(createdAt).toLocaleString() : "unknown time";
+  const nonBinaryCount = Number((entry?.non_binary_count ?? entry?.other_count) || 0);
   return (
     `Eval checkpoint ${index} • ${timestamp} • total=${entry.total_count}, ` +
-    `pass=${entry.pass_count}, fail=${entry.fail_count}, other=${entry.other_count}.`
+    `pass=${entry.pass_count}, fail=${entry.fail_count}, non_binary=${nonBinaryCount}.`
   );
 }
 
@@ -1317,6 +1320,7 @@ function triageRowForChat(chat) {
   const failRatio = latestFailRatioForSession(chat.session_id);
   const checkpointCount = checkpointCountForSession(chat.session_id);
   const unreviewedCount = unreviewedCheckpointCountForSession(chat.session_id);
+  const latestNonBinaryCount = latest ? Number((latest.non_binary_count ?? latest.other_count) || 0) : 0;
   return {
     session_id: chat.session_id,
     title: chat.title,
@@ -1327,7 +1331,8 @@ function triageRowForChat(chat) {
     latest_total_count: latest ? Number(latest.total_count || 0) : 0,
     latest_pass_count: latest ? Number(latest.pass_count || 0) : 0,
     latest_fail_count: latest ? Number(latest.fail_count || 0) : 0,
-    latest_other_count: latest ? Number(latest.other_count || 0) : 0,
+    latest_other_count: latestNonBinaryCount,
+    latest_non_binary_count: latestNonBinaryCount,
     last_checkpoint_at: latest ? Number(latest.created_at || 0) : null,
   };
 }
@@ -1916,6 +1921,17 @@ function headers() {
   };
 }
 
+class ApiError extends Error {
+  constructor({ status, detail, retryAfter = null }) {
+    const message = retryAfter ? `${detail} (retry in ~${retryAfter}s)` : detail;
+    super(message);
+    this.name = "ApiError";
+    this.status = Number(status || 0);
+    this.detail = String(detail || "");
+    this.retryAfter = retryAfter === null ? null : String(retryAfter);
+  }
+}
+
 async function requestJson(path, options = {}) {
   const resp = await fetch(path, {
     headers: headers(),
@@ -1926,7 +1942,7 @@ async function requestJson(path, options = {}) {
     const body = await resp.json().catch(() => ({}));
     const retryAfter = resp.headers.get("Retry-After");
     const detail = body.detail || `HTTP ${resp.status}`;
-    throw new Error(retryAfter ? `${detail} (retry in ~${retryAfter}s)` : detail);
+    throw new ApiError({ status: resp.status, detail, retryAfter });
   }
 
   return resp.json();
@@ -2110,6 +2126,17 @@ async function submitEvalCheckpoint() {
   await loadActiveMessages();
   refreshChatListUi();
   syncCheckpointJumpControl();
+}
+
+function formatEvalCheckpointSubmitError(error) {
+  if (error instanceof ApiError) {
+    const detail = String(error.detail || error.message || "");
+    if (error.status === 409 && detail.toLowerCase().includes("non-binary feedback outcome")) {
+      return `${detail} Run \`make eval-feedback-normalize\`, then submit checkpoint again.`;
+    }
+    return error.message || detail || "Checkpoint request failed.";
+  }
+  return String(error);
 }
 
 function jumpToLatestCheckpoint() {
@@ -3038,7 +3065,7 @@ evalSubmitEl?.addEventListener("click", async () => {
   try {
     await submitEvalCheckpoint();
   } catch (error) {
-    appendMessage("error", String(error), { persist: false });
+    appendMessage("error", formatEvalCheckpointSubmitError(error), { persist: false });
   } finally {
     evalSubmitEl.disabled = false;
   }
