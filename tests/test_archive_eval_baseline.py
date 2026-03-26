@@ -39,6 +39,8 @@ class ArchiveEvalBaselineTests(unittest.TestCase):
 
             self.assertEqual(result.moved_raw_count, 8)
             self.assertEqual(result.moved_report_count, 2)
+            self.assertEqual(result.consolidated_raw_archive_count, 0)
+            self.assertEqual(result.consolidated_report_archive_count, 1)
 
             self.assertFalse((raw_root / "PASS" / "evidence-pass.md").exists())
             self.assertFalse((raw_root / "FAIL" / "legacy.json").exists())
@@ -49,7 +51,7 @@ class ArchiveEvalBaselineTests(unittest.TestCase):
             self.assertFalse((raw_root / "triage_overrides.json").exists())
             self.assertFalse((raw_root / "triage_overrides.example.json").exists())
 
-            archived_raw = raw_root / "archive" / "baseline-reset-20260326-170000"
+            archived_raw = raw_root / "archive" / "baseline" / "latest"
             self.assertTrue((archived_raw / "PASS" / "evidence-pass.md").exists())
             self.assertTrue((archived_raw / "FAIL" / "legacy.json").exists())
             self.assertTrue((archived_raw / "index.json").exists())
@@ -63,10 +65,11 @@ class ArchiveEvalBaselineTests(unittest.TestCase):
 
             self.assertFalse((reports_root / "retrieval-1.json").exists())
             self.assertFalse((reports_root / "retrieval-1.log").exists())
-            self.assertTrue((reports_root / "archive" / "keep.txt").exists())
-            archived_reports = reports_root / "archive" / "baseline-reset-20260326-170000"
+            self.assertFalse((reports_root / "archive" / "keep.txt").exists())
+            archived_reports = reports_root / "archive" / "baseline" / "latest"
             self.assertTrue((archived_reports / "retrieval-1.json").exists())
             self.assertTrue((archived_reports / "retrieval-1.log").exists())
+            self.assertTrue((reports_root / "archive" / "baseline" / "history" / "keep.txt").exists())
 
     def test_noop_when_nothing_to_move(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -86,8 +89,39 @@ class ArchiveEvalBaselineTests(unittest.TestCase):
 
             self.assertEqual(result.moved_raw_count, 0)
             self.assertEqual(result.moved_report_count, 0)
-            self.assertFalse((raw_root / "archive" / "baseline-reset-20260326-170001").exists())
-            self.assertFalse((reports_root / "archive" / "baseline-reset-20260326-170001").exists())
+            self.assertEqual(result.consolidated_raw_archive_count, 0)
+            self.assertEqual(result.consolidated_report_archive_count, 0)
+            self.assertFalse((raw_root / "archive" / "baseline" / "latest").exists())
+            self.assertFalse((reports_root / "archive" / "baseline" / "latest").exists())
+
+    def test_consolidates_existing_archive_top_level_entries(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            raw_root = root / "docs" / "portfolio" / "raw_evidence"
+            reports_root = root / "eval_reports"
+            raw_archive = raw_root / "archive"
+            reports_archive = reports_root / "archive"
+            (raw_archive / "legacy-reset-1").mkdir(parents=True, exist_ok=True)
+            (raw_archive / "legacy-reset-1" / "marker.txt").write_text("raw\n", encoding="utf-8")
+            (reports_archive / "legacy-reset-2").mkdir(parents=True, exist_ok=True)
+            (reports_archive / "legacy-reset-2" / "marker.txt").write_text("reports\n", encoding="utf-8")
+
+            result = archive_eval_baseline(
+                raw_evidence_root=raw_root,
+                eval_reports_root=reports_root,
+                run_id="20260326-170002",
+            )
+
+            self.assertEqual(result.moved_raw_count, 0)
+            self.assertEqual(result.moved_report_count, 0)
+            self.assertEqual(result.consolidated_raw_archive_count, 1)
+            self.assertEqual(result.consolidated_report_archive_count, 1)
+            self.assertTrue(
+                (raw_archive / "baseline" / "history" / "legacy-reset-1" / "marker.txt").exists()
+            )
+            self.assertTrue(
+                (reports_archive / "baseline" / "history" / "legacy-reset-2" / "marker.txt").exists()
+            )
 
 
 if __name__ == "__main__":

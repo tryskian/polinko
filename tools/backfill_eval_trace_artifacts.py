@@ -21,7 +21,7 @@ from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
 
 DEFAULT_SUBMISSIONS_JSONL = Path(
-    "docs/portfolio/raw_evidence/archive/eval-trace-records/eval_submissions.jsonl"
+    "docs/portfolio/raw_evidence/archive/baseline/eval-trace-records/eval_submissions.jsonl"
 )
 
 
