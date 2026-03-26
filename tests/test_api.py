@@ -327,6 +327,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(checkpoint_payload["pass_count"], 1)
         self.assertEqual(checkpoint_payload["fail_count"], 1)
         self.assertEqual(checkpoint_payload["other_count"], 0)
+        self.assertEqual(checkpoint_payload["schema_version"], "polinko.eval_checkpoint.v2")
 
         listed = self.client.get(
             "/chats/s-feedback-checkpoint/feedback/checkpoints",
@@ -337,6 +338,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(len(checkpoints), 1)
         self.assertEqual(checkpoints[0]["checkpoint_id"], checkpoint_payload["checkpoint_id"])
         self.assertEqual(checkpoints[0]["total_count"], 2)
+        self.assertEqual(checkpoints[0]["schema_version"], "polinko.eval_checkpoint.v2")
 
         checkpoints_log = Path(self.tmpdir.name) / "raw_evidence" / "INBOX" / "eval_checkpoints.jsonl"
         self.assertTrue(checkpoints_log.exists())
@@ -349,6 +351,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(entries[-1]["session_id"], "s-feedback-checkpoint")
         self.assertEqual(entries[-1]["checkpoint_id"], checkpoint_payload["checkpoint_id"])
         self.assertEqual(entries[-1]["total_count"], 2)
+        self.assertEqual(entries[-1]["schema_version"], "polinko.eval_checkpoint.v2")
 
     def test_submit_eval_checkpoint_counts_by_outcome_for_fail_feedback_with_positive_tags(self) -> None:
         session_id = "s-feedback-checkpoint-streams"
@@ -383,6 +386,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(checkpoint_payload["pass_count"], 0)
         self.assertEqual(checkpoint_payload["fail_count"], 1)
         self.assertEqual(checkpoint_payload["other_count"], 0)
+        self.assertEqual(checkpoint_payload["schema_version"], "polinko.eval_checkpoint.v2")
 
     def test_submit_eval_checkpoint_requires_existing_feedback(self) -> None:
         with self._stub_runner("No eval yet"):

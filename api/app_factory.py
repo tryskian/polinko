@@ -165,6 +165,7 @@ _FEEDBACK_NOTE_LEN_MAX = 1200
 _FEEDBACK_ACTION_LOG_FILENAME = "feedback_actions.md"
 _FEEDBACK_SUBMISSIONS_LOG_FILENAME = "eval_submissions.jsonl"
 _FEEDBACK_CHECKPOINTS_LOG_FILENAME = "eval_checkpoints.jsonl"
+_EVAL_CHECKPOINT_SCHEMA_VERSION = "polinko.eval_checkpoint.v2"
 _FEEDBACK_POSITIVE_TAGS = {
     "accurate",
     "high_value",
@@ -532,6 +533,7 @@ class EvalCheckpointResponse(BaseModel):
     pass_count: int
     fail_count: int
     other_count: int
+    schema_version: str
     created_at: int
 
 
@@ -774,6 +776,7 @@ def _eval_checkpoint_response(entry: EvalCheckpoint) -> EvalCheckpointResponse:
         pass_count=entry.pass_count,
         fail_count=entry.fail_count,
         other_count=entry.other_count,
+        schema_version=_EVAL_CHECKPOINT_SCHEMA_VERSION,
         created_at=entry.created_at,
     )
 
@@ -1106,6 +1109,7 @@ def _append_eval_checkpoint_log(
         "pass_count": int(pass_count),
         "fail_count": int(fail_count),
         "other_count": int(other_count),
+        "schema_version": _EVAL_CHECKPOINT_SCHEMA_VERSION,
     }
     with target.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(payload, ensure_ascii=False, separators=(",", ":")) + "\n")
@@ -3263,6 +3267,7 @@ def create_app(config: AppConfig) -> FastAPI:
             pass_count=saved.pass_count,
             fail_count=saved.fail_count,
             other_count=saved.other_count,
+            schema_version=_EVAL_CHECKPOINT_SCHEMA_VERSION,
         )
         return _eval_checkpoint_response(saved)
 
