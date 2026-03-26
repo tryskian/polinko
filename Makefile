@@ -41,7 +41,7 @@ HUMAN_REFERENCE_SINCE_HOURS ?= 24
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes human-reference-relationships ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
+.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reset-baseline eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes human-reference-relationships ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
@@ -350,9 +350,6 @@ eval-clip-ab-readiness:
 backfill-eval-traces:
 	$(PYTHON) -m tools.backfill_eval_trace_artifacts
 
-eval-inbox:
-	$(PYTHON) -m tools.eval_inbox --new --limit 30
-
 eval-cleanup:
 	@set -eu; \
 	if [ ! -f "tools/cleanup_eval_chats.py" ]; then \
@@ -361,6 +358,9 @@ eval-cleanup:
 		exit 0; \
 	fi; \
 	$(PYTHON) -m tools.cleanup_eval_chats
+
+eval-reset-baseline:
+	$(PYTHON) -m tools.archive_eval_baseline
 
 eval-reports:
 	@$(MAKE) eval-retrieval-report
@@ -438,12 +438,6 @@ evidence-index:
 
 evidence-refresh:
 	@set -eu; \
-	OVERRIDES="docs/portfolio/raw_evidence/triage_overrides.json"; \
-	TEMPLATE="docs/portfolio/raw_evidence/triage_overrides.example.json"; \
-	if [ ! -f "$$OVERRIDES" ] && [ -f "$$TEMPLATE" ]; then \
-		cp "$$TEMPLATE" "$$OVERRIDES"; \
-		echo "Initialized $$OVERRIDES from template."; \
-	fi; \
 	$(MAKE) evidence-index; \
 	$(MAKE) portfolio-metadata-audit; \
 	INDEX_JSON="docs/portfolio/raw_evidence/index.json"; \
@@ -479,18 +473,23 @@ human-reference-relationships:
 	$(PYTHON) -m tools.query_human_reference relationships --db "$(HUMAN_REFERENCE_DB)" --limit "$(HUMAN_REFERENCE_LIMIT)"
 
 ui-dev:
+	@echo "UI is deprecated for active operations; running archive-maintenance dev server."
 	cd frontend && $(NPM) run dev
 
 ui-install:
+	@echo "UI dependencies are archive-maintenance only."
 	cd frontend && $(NPM) install
 
 ui-build:
+	@echo "UI build is archive-maintenance only."
 	cd frontend && $(NPM) run build
 
 ui-e2e-install:
+	@echo "UI E2E tooling is archive-maintenance only."
 	cd frontend && npx playwright install
 
 ui-e2e:
+	@echo "UI E2E runs are archive-maintenance only."
 	cd frontend && $(NPM) run test:e2e
 
 dev:

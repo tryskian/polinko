@@ -373,6 +373,8 @@
   `make eval-inbox` to show new entries since the last local cursor checkpoint.
 - Why: Makes new eval activity immediately discoverable, improves remediation
   triage speed, and preserves a complete chronological submission trail.
+- Status: Superseded by `D-068`/`D-069` (runtime now uses SQLite state only;
+  `raw_evidence` intake folders are deprecated and archived).
 
 ## D-042: Repo-scoped mypy configuration and workspace diagnostics
 
@@ -423,6 +425,8 @@
 - Why: Creates a stable evidence contract for hybrid OpenAI adoption phases
   without changing runtime `/chat` behaviour, while improving auditability and
   promotion confidence for future OpenAI-native tooling pilots.
+- Status: Superseded by `D-068` (trace default path is archive-only under
+  `docs/portfolio/raw_evidence/archive/eval-trace-records/`).
 
 ## D-046: Constrain Phase 3 hybrid pilot to offline tooling bridge only
 
@@ -684,6 +688,8 @@
   active evidence indexing/reporting scoped to `PASS`/`FAIL`/`INBOX` buckets.
 - Why: Prevents non-binary artefacts from re-entering daily eval operations and
   keeps evidence refresh outputs aligned with the current binary gate contract.
+- Status: Superseded by `D-068` (top-level `raw_evidence` intake folders/files
+  are deprecated; archive snapshots only).
 
 ## D-067: Hard-cut eval contract to strict binary with no compatibility fallbacks
 
@@ -697,3 +703,25 @@
   - remove `eval-feedback-normalize` migration tooling from active operator flow
 - Why: Eliminates hidden coercion paths, keeps API/UI/test contracts explicit,
   and prevents deprecated semantics from re-entering daily execution.
+
+## D-068: Add one-command baseline archive reset before new binary cycles
+
+- Category: `evidence_governance`
+- Tags: `archive_reset`, `binary_only`, `eval_hygiene`, `fresh_baseline`
+- Decision: Add `make eval-reset-baseline` (tool:
+  `tools/archive_eval_baseline.py`) to move deprecated eval intake
+  artefacts/evidence records into timestamped archive snapshots before starting
+  a fresh binary eval cycle.
+- Why: Keeps active eval surfaces clean, prevents stale evidence from steering
+  new binary decisions, and preserves full historical traceability in archive
+  paths.
+
+## D-069: Deprecate UI from active eval/runtime operations
+
+- Category: `workflow_environment`
+- Tags: `ui_deprecation`, `backend_first`, `cli_first`, `runtime_control`
+- Decision: Treat the web UI as deprecated for active build and eval
+  operations; backend API + CLI are the canonical execution surfaces.
+- Why: Reduces hidden state vectors and interaction drift, keeps runtime
+  behaviour deterministic, and simplifies auditability while the binary eval
+  baseline is being hardened.

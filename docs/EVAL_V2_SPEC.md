@@ -8,7 +8,7 @@ Binary means:
 
 - one eval record resolves to exactly one outcome (`pass` or `fail`)
 - checkpoint aggregates are mutually exclusive and deterministic
-- active evidence intake remains `PASS`/`FAIL`/`INBOX`
+- active file artefacts are archive-only snapshots
 
 ## Non-Goals
 
@@ -80,11 +80,11 @@ Required row fields (logical spec):
 
 ### File artefacts (append-only evidence)
 
-These remain append-only operational evidence, not primary runtime truth:
+These remain append-only archive evidence, not primary runtime truth:
 
-- `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl`
-- `docs/portfolio/raw_evidence/INBOX/eval_checkpoints.jsonl`
-- `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`
+- `docs/portfolio/raw_evidence/archive/eval-trace-records/eval_trace_artifacts.jsonl`
+- optional archived submission/checkpoint JSONL snapshots under
+  `docs/portfolio/raw_evidence/archive/*`
 
 ## API Spec Impact
 

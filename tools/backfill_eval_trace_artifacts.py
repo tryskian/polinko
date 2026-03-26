@@ -1,7 +1,7 @@
-"""Backfill eval trace artifacts from UI eval submissions JSONL.
+"""Backfill eval trace artifacts from archived eval submissions JSONL.
 
 This is tooling-only and safe to re-run:
-- reads submission rows from append-only inbox log
+- reads submission rows from an archive JSONL source
 - writes trace rows compatible with polinko.eval_trace.v1
 - skips submissions already written (idempotent via submission_key)
 """
@@ -21,7 +21,7 @@ from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
 
 DEFAULT_SUBMISSIONS_JSONL = Path(
-    "docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl"
+    "docs/portfolio/raw_evidence/archive/eval-trace-records/eval_submissions.jsonl"
 )
 
 

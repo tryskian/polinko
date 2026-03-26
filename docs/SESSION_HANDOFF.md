@@ -8,16 +8,17 @@
 
 ## Current Snapshot
 
-- Runtime is local-first: FastAPI backend + Vite frontend + CLI runner.
+- Runtime is local-first: FastAPI backend + CLI runner are canonical; web UI is deprecated for active operations.
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Eval contract is strict binary end-to-end:
   - feedback outcomes: `pass` or `fail` only
   - checkpoint schema field: `non_binary_count` (integrity signal, expected `0`)
-  - legacy `tags`-only feedback payload compatibility removed
-- Legacy normalisation tooling was removed from active flow:
+  - previous `tags`-only feedback payload compatibility removed
+- Previous normalisation tooling was removed from active flow:
   - deleted `tools/normalize_feedback_outcomes.py`
   - removed `make eval-feedback-normalize`
-- Active evidence intake remains `PASS` / `FAIL` / `INBOX`; archive-only structures do not drive runtime gates.
+- `docs/portfolio/raw_evidence` top-level intake folders/files are deprecated;
+  archive snapshots only (`docs/portfolio/raw_evidence/archive/*`) are kept.
 - Human-reference flow remains offline/query-first:
   - rebuild: `make human-reference-db`
   - queries: `make human-reference-latest|transcripts|changes|relationships`
@@ -25,7 +26,7 @@
 ## Latest Branch Context
 
 - Active implementation branch:
-  - `codex/bigbrain/eval-binary-hard-cutover-20260326`
+  - `codex/bigbrain/app-beta-refactor`
 - Canonical repo path:
   - `/Users/tryskian/Github/polinko`
 
@@ -38,7 +39,6 @@
 - `docs/RUNBOOK.md`
 - `api/app_factory.py`
 - `core/history_store.py`
-- `frontend/src/eval-rubric.js`
 - `tests/test_api.py`
 
 ## Quick Validation (Local)
@@ -46,8 +46,10 @@
 1. `make doctor-env`
 2. `make lint-docs`
 3. `make test`
-4. `npm --prefix frontend run -s test`
-5. `npm --prefix frontend run -s build`
+4. `make quality-gate-deterministic`
+5. optional archive-maintenance checks only:
+   - `npm --prefix frontend run -s test`
+   - `npm --prefix frontend run -s build`
 
 ## Known Constraints
 
@@ -62,8 +64,9 @@
 ## Immediate Next Step
 
 - Finish binary hard-cutover validation and merge flow:
-  - run full backend/frontend validation
-  - open PR from `codex/bigbrain/eval-binary-hard-cutover-20260326`
+  - run `make eval-reset-baseline` to snapshot/clear deprecated eval artefacts
+  - run full backend validation
+  - open PR from `codex/bigbrain/app-beta-refactor`
   - merge after checks pass
 
 ## Peanut Pin (Tomorrow Start)

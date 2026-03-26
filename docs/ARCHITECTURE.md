@@ -13,7 +13,7 @@
 - `core/`
   - Runtime logic (prompting, session/history, personalization, retrieval helpers).
 - `frontend/`
-  - Vite UI (chat, eval controls, checkpoint triage/export).
+  - Vite UI (deprecated for active operations; retained for archive maintenance).
 - `tools/`
   - Local automation/eval/reference utilities.
 - `tests/`
@@ -27,16 +27,27 @@
 2. `server.py` calls `api.app_factory.create_app(config)`.
 3. `api/app_factory.py` wires routes + middleware + runtime dependencies.
 4. Request execution delegates to `core/` runtime and persistence modules.
-5. UI (`frontend/`) calls API routes (`/chat`, `/skills/*`, `/chats/*`) over JSON.
+5. CLI/API surfaces are canonical; `frontend/` remains archive-maintenance only.
 
 ## Data Surfaces
 
 - Runtime chat/session state:
   - SQLite stores (chat history + memory/vector artifacts).
-- Eval/operator evidence:
-  - `docs/portfolio/raw_evidence/*` (PASS/FAIL/INBOX + metadata/audit outputs).
-  - active feedback/checkpoint contract is strict binary (`pass`/`fail`) with
-    `non_binary_count` reserved for integrity checks.
+- Eval runtime state (authoritative):
+  - `.polinko_history.db` via `core/history_store.py`
+    - `message_feedback` (binary `pass`/`fail` + tags/notes/status)
+    - `eval_checkpoints` (`pass_count`, `fail_count`, `non_binary_count`)
+  - active gate logic is binary-only (`pass`/`fail`); `non_binary_count` is an
+    integrity signal only.
+- Eval artefacts (non-authoritative):
+  - `docs/portfolio/raw_evidence/archive/*` is the only active file-based eval
+    artefact surface.
+  - `docs/portfolio/raw_evidence` top-level intake folders/files are
+    deprecated and must be archived before new eval cycles.
+  - no file-log-driven eval wiring exists in runtime gate decisions.
+  - archive/reset utility:
+    - `tools/archive_eval_baseline.py`
+    - command: `make eval-reset-baseline`
 - Human reference index:
   - `.human_reference.db` built from `docs/transcripts`, `docs/research`, `docs/theory`.
   - builder: `tools/build_human_reference_db.py`
@@ -48,7 +59,7 @@
 
 - API endpoints/middleware/contracts: `api/`
 - Prompt/runtime behaviour and policy logic: `core/`
-- UI behaviour and interaction model: `frontend/`
+- Deprecated UI maintenance only: `frontend/`
 - Eval/report/reference scripts and one-off operators: `tools/`
 - Execution state/decisions/handoff documentation: `docs/`
 
@@ -65,8 +76,9 @@
 
 - Env sanity: `make doctor-env`
 - Backend tests: `make test`
-- Frontend tests: `npm --prefix frontend run -s test`
-- Frontend build: `npm --prefix frontend run -s build`
 - Local API: `make server` or `make server-daemon`
-- UI dev: `make ui-dev`
+- Optional UI archive-maintenance checks:
+  - `npm --prefix frontend run -s test`
+  - `npm --prefix frontend run -s build`
+- Baseline eval archive/reset: `make eval-reset-baseline`
 - Human reference quick query: `make human-reference-relationships`

@@ -26,20 +26,12 @@
   - periodic stale bucket cleanup in the in-memory limiter
   - per-chat personalization memory scope (`session` vs `global`)
   - `/chat` retrieval citations via `memory_used` when vector memory contributes context
-- Frontend now exposes per-chat personalization memory scope control in the header.
-- Frontend includes OCR upload wiring that posts to `/skills/ocr` and appends extracted text to the active chat.
-- Frontend image attachments now support paste-to-attach, client-side downsize/compression, per-chat persistence across chat switches/page reloads, and OCR follow-up turns that reuse the latest persisted image batch when no new image is attached.
-- Frontend chat drawer now includes eval review queue controls:
-  sort (`recent`, `unreviewed`, `fail_ratio`) plus `unreviewed only` filter for
-  faster checkpoint triage.
-- Frontend now includes a quick triage snapshot panel (unreviewed totals,
-  chats-needing-review, high-fail count, priority list) and a header export
-  action for full checkpoint rollup JSON (`Download eval triage rollup`).
-- Frontend includes indexed search UI in composer (`Search` toggle with `Insert`/`Ask` actions).
+- Frontend remains in-repo for archive/maintenance context, but active
+  execution is backend + CLI only.
 - OpenAI developer docs MCP server is now configured for Codex/VS Code usage:
   - endpoint: `https://developers.openai.com/mcp`
   - workspace wiring: `.vscode/mcp.json`
-- Figma/UI parity work is intentionally paused; current execution focus is backend retrieval, OCR, and file-search reliability.
+- Figma/UI parity work is deprecated for current cycle; execution focus is backend retrieval, OCR, and file-search reliability.
 - Quality gate is implemented and passing locally via `make quality-gate`:
   - unit tests
   - retrieval eval (`12/12`)
@@ -105,23 +97,22 @@
     clutter
   - `docs/PEANUT_TOOLING_REF.md` remains visible for day-to-day operator use
 - Raw evidence cleanup checkpoint (March 22, 2026):
-  - legacy hybrid/OpenAI eval artifacts were moved from active
+  - hybrid/OpenAI eval artifacts were moved from active
     `docs/portfolio/raw_evidence` paths to
     `docs/portfolio/archive/2026-03-22-raw-evidence-legacy`
-  - active evidence flow remains PASS/FAIL/INBOX under
-    `docs/portfolio/raw_evidence`
+  - no active top-level raw-evidence intake is used for runtime gating
   - archive naming now follows date-prefixed pattern
     `docs/portfolio/archive/YYYY-MM-DD-...` for consistent cataloguing
 - Legacy docs + evidence wiring cleanup checkpoint (March 25, 2026):
   - early portfolio narrative/workbench docs were moved to
     `docs/portfolio/archive/2026-03-25-legacy-positioning-workbench`
-  - active raw-evidence intake is now documented as `PASS`/`FAIL`/`INBOX` only
-  - legacy `MIXED` bucket and trace-artifact intake file are archive-only
-- Legacy eval intake archival checkpoint (March 26, 2026):
-  - evidence index builder now scans active buckets only:
-    `PASS`/`FAIL`/`INBOX`
-  - `MIXED` structure remains archive-only and is no longer part of
-    active evidence refresh output
+  - `raw_evidence` intake buckets and related wiring were marked for
+    deprecation; archive paths are canonical
+- Eval intake archival checkpoint (March 26, 2026):
+  - top-level `raw_evidence` entries are deprecated and moved by
+    `make eval-reset-baseline`
+  - archive snapshot path is
+    `docs/portfolio/raw_evidence/archive/baseline-reset-<run_id>`
   - UI checkpoint summaries now present `non_binary` explicitly
 - EOD docs confidentiality merge checkpoint (March 25, 2026):
   - PR `#72` merged to `main` (`2a6f575`)
@@ -141,6 +132,14 @@
     `hallucination-20260324-104134`
   - note: style report recorded one judge-case miss
     (`adapt_style_without_mimicry`) while other suites passed
+- Baseline archive reset command checkpoint (March 26, 2026):
+  - one-command archive flow: `make eval-reset-baseline`
+  - command archives deprecated eval evidence + generated report files into:
+    - `docs/portfolio/raw_evidence/archive/baseline-reset-<run_id>`
+    - `eval_reports/archive/baseline-reset-<run_id>`
+  - active eval decisions remain database-backed, not intake-folder-backed
+  - latest local run archived top-level `raw_evidence` entries to:
+    `docs/portfolio/raw_evidence/archive/baseline-reset-20260326-212848`
 - Branch protection checkpoint (March 25, 2026):
   - `main` remains protected (PR + required checks)
   - active implementation now runs through task branches merged back to `main`
@@ -170,6 +169,9 @@
     `make evidence-refresh`, `make human-reference-db`, `make human-reference-latest`
   - Docker smoke passed:
     `make docker-build` + container `/health` probe
+- UI deprecation checkpoint (March 26, 2026):
+  - web UI is deprecated for active build/eval operations
+  - canonical surfaces are API + CLI + deterministic eval tooling
 - Eval runs no longer produce ambiguous generic `New chat` helper rows in the
   UI; generated eval chats now use deterministic session-id titles when
   retained.
@@ -277,10 +279,8 @@
   near-duplicate suppression, and a max of two active notes, with note-change
   events logged as `adaptive_style_notes_updated` to prevent prompt/input
   over-indexing.
-- Eval feedback submissions are now append-logged for binary outcomes
-  (`PASS`/`FAIL`) to
-  `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl`, with quick
-  latest-view command: `make eval-inbox`.
+- Eval feedback/checkpoint state is persisted in SQLite only; no active
+  `raw_evidence` intake file logging remains in runtime.
 - Hallucination eval cases now include an interpersonal motive-guess regression
   guard (`cautious_no_relationship_motive_guess`) to catch speculative
   relationship attribution and enforce uncertainty-forward responses.

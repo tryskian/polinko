@@ -16,11 +16,11 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 
 ## Engineering Principles
 
-- Keep behaviour stable before adding UI complexity.
+- Keep behaviour stable and backend-first; web UI is deprecated for active operations.
 - Preserve prompt continuity through minimal, explicit prompt instructions.
 - Fail fast on config/auth issues.
 - Prefer deterministic, testable backend changes.
-- Keep eval gate semantics strictly binary (`pass`/`fail`) across API, UI, and
+- Keep eval gate semantics strictly binary (`pass`/`fail`) across API, CLI, and
   tooling.
 - Run `make doctor-env` when local environment behaviour looks suspicious.
 - Run `make quality-gate` before push when backend/prompt/retrieval logic changes.
@@ -44,6 +44,7 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - API implementation: `api/app_factory.py`
 - Prompt versions: `core/prompts.py`
 - API tests: `tests/test_api.py`
+- Web UI code (`frontend/`) is archive-maintenance only.
 
 ## Security / Ops Baseline
 
@@ -58,5 +59,5 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 
 - In scope: local development, API hardening, test coverage.
 - In scope: retrieval/OCR/file-search reliability and eval hardening.
-- Paused: Figma-first UI parity while backend retrieval milestones are being finalized.
+- Deprecated: web UI as an active execution surface; retained only for archive maintenance.
 - Paused: cloud deployment automation (removed from repo for now; Azure is the preferred target when resumed).
