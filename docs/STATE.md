@@ -92,6 +92,16 @@
   - canonical feedback outcome contract is strictly `pass`/`fail`
   - legacy dual-stream rows are read-compat only and normalized to binary in
     API/UX responses
+- Eval-v2 fail-closed checkpointing slice (March 26, 2026, branch pending merge):
+  - implementation branch:
+    `codex/bigbrain/eval-v2-backend-map-20260326` (`7a2af33`)
+  - checkpoint submission now blocks with `409` when non-binary outcomes are
+    detected
+  - explicit legacy normalisation utility was added:
+    `python -m tools.normalize_feedback_outcomes` / `make eval-feedback-normalize`
+  - validation from the implementation slice:
+    - targeted: `107` tests pass
+    - full suite: `167` tests pass
 - Post-merge eval + reference checkpoint (March 25, 2026):
   - PR `#71` merged to `main` (`a60bf15`) with backend/API/test/frontend sync
   - checkpoint and feedback APIs preserve binary gate behaviour while keeping
@@ -217,6 +227,10 @@
   - human judgment sets architecture/rubric first
   - multi-agent/parallel workflows are applied only after constraints are
     explicit and validation remains deterministic
+- Reasoning Loops collaboration checkpoint (March 26, 2026):
+  - `Reasoning Loops` is the canonical human-AI collaboration model term
+  - imagineer leads hypotheses/theory framing + eval operation
+  - engineer leads implementation/tooling/validation + execution recommendations
 - Inspect-first checkpoint (March 26, 2026):
   - when context is noisy/ambiguous, execution pauses for inspection before
     cleanup/refactor

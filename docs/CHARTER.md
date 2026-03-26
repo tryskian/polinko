@@ -20,6 +20,8 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Preserve prompt continuity through minimal, explicit prompt instructions.
 - Fail fast on config/auth issues.
 - Prefer deterministic, testable backend changes.
+- Keep eval gate semantics binary-first (`pass`/`fail`) and treat non-binary
+  legacy outcomes as migration input, not active gate logic.
 - Run `make doctor-env` when local environment behaviour looks suspicious.
 - Run `make quality-gate` before push when backend/prompt/retrieval logic changes.
 
@@ -28,6 +30,11 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Inspect before optimise when system intent or provenance is unclear.
 - Human-directed precision takes priority over agent-side summarisation/cleanup.
 - Preserve legacy context until an explicit migration cutline is approved.
+- Collaboration model is `Reasoning Loops`:
+  - imagineer leads hypotheses/theory framing, visual culture shape, and eval
+    operations
+  - engineer leads implementation, tooling/process decisions, validation, and
+    execution recommendations
 
 ## Core Runtime
 

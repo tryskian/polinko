@@ -647,3 +647,28 @@
 - Why: Supports step-by-step fresh-path execution without hard resets by
   catching contract drift and local-only dependency leaks before wider refactor
   moves.
+
+## D-064: Standardise Reasoning Loops as the human-AI collaboration model
+
+- Category: `collaboration_method`
+- Tags: `reasoning_loops`, `human_ai_collaboration`, `role_clarity`, `hypothesis_driven`
+- Decision: Use `Reasoning Loops` as the canonical term for the active
+  collaboration mode, with explicit split of responsibilities:
+  - imagineer leads hypotheses/theory framing, visual culture direction, and
+    live eval operation
+  - engineer leads implementation, tooling/process decisions, validation, and
+    execution recommendations
+- Why: Shared language and role clarity reduce collaboration drift, preserve
+  voice authenticity, and make decisions easier to audit in transcripts and
+  evidence.
+
+## D-065: Fail-closed eval checkpointing with explicit legacy outcome normalisation
+
+- Category: `eval_quality`
+- Tags: `binary_contract`, `fail_closed`, `checkpoint_guard`, `legacy_normalisation`
+- Decision: Enforce fail-closed checkpoint submission when non-binary feedback
+  outcomes are present, and pair it with an explicit normalisation utility path
+  to migrate legacy outcome rows into binary `pass`/`fail`.
+- Why: Prevents silent ambiguity in release-gate artefacts, keeps checkpoint
+  semantics deterministic, and provides an auditable migration path instead of
+  implicit coercion at checkpoint time.

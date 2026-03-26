@@ -12,6 +12,15 @@
 - Prompt/runtime behaviour is intentionally minimal and aligned to legacy `try.py` style.
 - Eval feedback/checkpoint write contract is now binary-first (`pass`/`fail`).
 - Legacy stored outcomes are still readable; API/UI normalise non-`pass` values to `fail`.
+- Eval-v2 backend hardening slice is implemented on a branch and pending merge:
+  - branch: `codex/bigbrain/eval-v2-backend-map-20260326`
+  - commit: `7a2af33`
+  - outcome:
+    - checkpoint submit now fail-closes (`409`) when non-binary outcomes exist
+    - explicit legacy normalisation utility added
+      (`python -m tools.normalize_feedback_outcomes` /
+      `make eval-feedback-normalize`)
+    - validation passed on the slice (`107` targeted tests, `167` full-suite tests)
 - Backend eval paths were refreshed on `main` (PR `#71`) and include:
   - stricter outcome normalisation (`pass`/`fail` only on write)
   - stream-summary checkpoint aggregation helper
@@ -42,6 +51,10 @@
   - preserve legacy context (including MCP/server wiring) until explicit
     migration cutline
   - execute directed precision slices; avoid out-of-scope cleanup
+- Reasoning Loops collaboration model is now explicit (March 26, 2026):
+  - this is the canonical term for human-AI collaboration in this project
+  - imagineer leads hypothesis/theory framing + eval operation
+  - engineer leads implementation/tooling/validation + execution recommendations
 - Build block audit guardrail is now active (March 26, 2026):
   - README refreshed to current build/API blocks
   - `make build-audit` added for repeatable drift checks
@@ -50,12 +63,13 @@
 
 ## Latest Local Commit
 
-- `031380e` (merge commit on `main`)
-- PR: `#74` (`codex/bigbrain/housekeeping-docs-local-tracking-20260326`)
+- `63c713c` on `main` (local docs baseline at session start)
+- Active implementation branch pending merge:
+  - `codex/bigbrain/eval-v2-backend-map-20260326` @ `7a2af33`
 - Core outcome:
-  - docs and local-only tracking policy are merged on `main`
-  - branch-protected PR flow remains the canonical merge path
-  - housekeeping baseline is clean for block-by-block audit execution
+  - docs + operating policy remain aligned on `main`
+  - eval-v2 fail-closed checkpointing + legacy normalisation tooling are ready
+    in branch for PR/merge
 
 ## Key Files To Read First
 
@@ -93,25 +107,25 @@
 
 ## Immediate Next Step
 
-- Start eval-v2 refactor planning with a no-artifact baseline:
-  - define the target binary eval data contract and aggregation semantics
-  - preserve legacy rows as read-only compatibility input
-  - map minimal API/UI changes needed for the first v2 slice
-  - run full local validation after the first implementation slice
+- Merge the completed eval-v2 backend hardening slice, then run one post-merge
+  validation cycle:
+  - merge branch `codex/bigbrain/eval-v2-backend-map-20260326` (`7a2af33`)
+  - run `make test`
+  - run `make quality-gate`
+  - if legacy non-binary rows exist, run `make eval-feedback-normalize`
 
 ## Peanut Pin (Tomorrow Start)
 
-- First, lock the eval-v2 shape in plain terms:
-  - one clear pass/fail outcome
-  - legacy rows still readable, but not driving new behaviour
-- Then ship one small backend slice for that contract (no big-bang rewrite).
-- Then align the UI to that slice and run full local checks before moving on.
+- First, merge the ready backend slice that enforces fail-closed binary
+  checkpointing.
+- Then run one clean validation pass on `main`.
+- Then continue backend map block-by-block (next smallest deterministic slice).
 
 ## Next Session Focus (Lean Agenda)
 
-1. Lock eval-v2 contract and migration boundaries (binary-first, legacy-read compatible).
-2. Implement one backend slice with minimal behaviour drift.
-3. Align frontend eval UI/state with the new backend slice.
+1. Merge eval-v2 fail-closed backend slice and verify on `main`.
+2. Confirm legacy outcome migration path with `eval-feedback-normalize` where needed.
+3. Continue backend mapping with one additional small deterministic slice.
 4. Re-run local validation gates and archive fresh evidence.
 5. Update `STATE` + `DECISIONS` + `SESSION_HANDOFF` with only material deltas.
 
