@@ -52,6 +52,15 @@
 - Eval/report/reference scripts and one-off operators: `tools/`
 - Execution state/decisions/handoff documentation: `docs/`
 
+## Governance Flow
+
+- Collaboration/execution policy is anchored in `docs/CHARTER.md`.
+- Formal decision records are appended in `docs/DECISIONS.md`.
+- Operator procedure lives in `docs/RUNBOOK.md`.
+- Current-state checkpoints live in `docs/STATE.md`.
+- Next-session carryover constraints live in `docs/SESSION_HANDOFF.md`.
+- Policy updates are complete only when all relevant surfaces above are aligned.
+
 ## Operational Commands
 
 - Env sanity: `make doctor-env`

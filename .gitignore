@@ -80,5 +80,12 @@ docs/internal/
 docs/research/
 docs/theory/
 
+# Local legacy planning docs (archived/deprecated)
+docs/AGENT_BUILDER_MIRROR.md
+docs/HYBRID_OPENAI_ADOPTION_PLAN.md
+
 # Local maintenance helper script
 tools/cleanup_eval_chats.py
+
+# Local transcript import helper
+tools/import_transcripts.py

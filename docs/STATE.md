@@ -143,9 +143,9 @@
   - captured transcript + peanut-reference framing in
     `docs/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
     (unsupported certainty = fail; uncertainty + grounded recovery = pass)
-- Anti-collaboration diagnostic checkpoint (March 22, 2026):
-  - captured transcript + structured interpretation in
-    `docs/transcripts/anti_collaboration_diagnostic_method_2026-03-22.md`
+- Reasoning Loops diagnostic checkpoint (March 22, 2026):
+  - captured transcript + structured interpretation in the March 22 diagnostic
+    transcript under `docs/transcripts/`
   - preserves the “pattern is strategy, not the other way around” framing for
     future rubric and reasoning-behaviour analysis
 - Latest audit checkpoint (March 25, 2026):
@@ -207,6 +207,13 @@
   - human judgment sets architecture/rubric first
   - multi-agent/parallel workflows are applied only after constraints are
     explicit and validation remains deterministic
+- Inspect-first checkpoint (March 26, 2026):
+  - when context is noisy/ambiguous, execution pauses for inspection before
+    cleanup/refactor
+  - legacy context (including MCP/server wiring) is preserved until an explicit
+    migration cutline is directed
+  - directed precision mode is active for scoped changes to avoid unusable
+    summary-first outputs
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
   run with managed local server startup; CI includes optional Braintrust gate
   wiring when repository vars/secrets are configured.

@@ -23,6 +23,12 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Run `make doctor-env` when local environment behaviour looks suspicious.
 - Run `make quality-gate` before push when backend/prompt/retrieval logic changes.
 
+## Workflow
+
+- Inspect before optimise when system intent or provenance is unclear.
+- Human-directed precision takes priority over agent-side summarisation/cleanup.
+- Preserve legacy context until an explicit migration cutline is approved.
+
 ## Core Runtime
 
 - CLI runner: `app.py`

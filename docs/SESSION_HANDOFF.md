@@ -37,6 +37,11 @@
   - implementation in repo
   - validation via local test/build gates
   - docs as the handoff source of truth
+- Inspect-first collaboration mode is active (March 26, 2026):
+  - pause and inspect when context is noisy/ambiguous
+  - preserve legacy context (including MCP/server wiring) until explicit
+    migration cutline
+  - execute directed precision slices; avoid out-of-scope cleanup
 
 ## Latest Local Commit
 
@@ -77,6 +82,8 @@
   - prefer repo-scoped edits
   - do not modify `~/.zshrc` or global VS Code settings without explicit in-chat approval
 - Keep-awake (`caffeinate`) remains opt-in/request-triggered.
+- Legacy context is not auto-pruned:
+  - do not remove legacy MCP/server wiring unless explicitly directed in-chat.
 
 ## Immediate Next Step
 
@@ -104,4 +111,4 @@
 
 ## Copy/Paste Rehydrate Prompt
 
-`Read docs/CHARTER.md, docs/STATE.md, docs/DECISIONS.md, and docs/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, and confirm active git branch. Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behaviour drift and full test/build validation.`
+`Read docs/CHARTER.md, docs/ARCHITECTURE.md, docs/RUNBOOK.md, docs/STATE.md, docs/DECISIONS.md, and docs/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, and confirm active git branch. Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behaviour drift and full test/build validation.`

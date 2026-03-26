@@ -274,6 +274,31 @@
 6. Treat unknown binary/corrupt artifact files as suspect; do not "repair" by
    guessing content. Remove/replace only after provenance is confirmed.
 
+## Inspect-First Rule (Directed Mode)
+
+1. If system state appears noisy/contradictory, stop and inspect before trying
+   to summarise, simplify, or refactor.
+2. Preserve legacy context by default (including legacy MCP/server wiring)
+   until an explicit migration cutline is given in-chat.
+3. In human-directed precision mode, execute only the requested slice and avoid
+   opportunistic cleanup outside scope.
+4. When this rule changes execution, record it in `docs/DECISIONS.md` and
+   checkpoint it in `docs/STATE.md`.
+
+## Policy Propagation Checklist
+
+1. For any collaboration/execution policy change, update all governance surfaces
+   in the same change set:
+   - `docs/CHARTER.md`
+   - `docs/DECISIONS.md`
+   - `docs/RUNBOOK.md`
+   - `docs/STATE.md`
+   - `docs/SESSION_HANDOFF.md`
+   - `docs/ARCHITECTURE.md` (if operating flow/ownership changes)
+2. Do not treat any single doc as sufficient for policy updates.
+3. End-of-day handoff must include any new policy/cutline so next-session
+   startup does not drift.
+
 ## Reset Local Session Memory
 
 1. Stop running processes.
