@@ -11,16 +11,19 @@ Validate the hypothesis that minimal configuration produces better product outco
 ## Comparison Phases
 
 1. Baseline A: Minimal-config CLI benchmark
-- Scope: early CLI behaviour with low configuration complexity.
-- Purpose: establish reference behaviour and workflow simplicity.
 
-2. Baseline B: Traditional eval benchmark
-- Scope: pre-binary eval structure and legacy gate complexity.
-- Purpose: measure cost/benefit of richer but heavier eval wiring.
+   - Scope: early CLI behaviour with low configuration complexity.
+   - Purpose: establish reference behaviour and workflow simplicity.
 
-3. Baseline C: Binary eval benchmark (current)
-- Scope: fail-closed pass/fail gate with policy-dominant logic.
-- Purpose: measure clarity and execution efficiency after simplification.
+1. Baseline B: Traditional eval benchmark
+
+   - Scope: pre-binary eval structure and legacy gate complexity.
+   - Purpose: measure cost/benefit of richer but heavier eval wiring.
+
+1. Baseline C: Binary eval benchmark (current)
+
+   - Scope: fail-closed pass/fail gate with policy-dominant logic.
+   - Purpose: measure clarity and execution efficiency after simplification.
 
 ## Controlled Variables
 
@@ -32,20 +35,24 @@ Validate the hypothesis that minimal configuration produces better product outco
 ## Evaluation Dimensions
 
 1. Quality outcomes
-- Gate pass rate on matched cases.
-- Failure type distribution.
 
-2. Decision clarity
-- Ambiguity in release decision path.
-- Time to determine go/no-go.
+   - Gate pass rate on matched cases.
+   - Failure type distribution.
 
-3. Iteration speed
-- Time from issue detection to validated fix.
-- Number of steps/tools required per cycle.
+1. Decision clarity
 
-4. Maintenance overhead
-- Active surface area (scripts/docs/paths to maintain).
-- Frequency of artifact/gremlin cleanup.
+   - Ambiguity in release decision path.
+   - Time to determine go/no-go.
+
+1. Iteration speed
+
+   - Time from issue detection to validated fix.
+   - Number of steps/tools required per cycle.
+
+1. Maintenance overhead
+
+   - Active surface area (scripts/docs/paths to maintain).
+   - Frequency of artifact/gremlin cleanup.
 
 ## Evidence Mapping
 
@@ -68,6 +75,7 @@ Validate the hypothesis that minimal configuration produces better product outco
 ## Output Contract
 
 For each benchmark phase, produce:
+
 - one experiment record
 - linked artifact paths
 - pass/fail interpretation against `H-001`
@@ -82,6 +90,7 @@ For each benchmark phase, produce:
 ## Exit Criteria
 
 This benchmark is complete when:
+
 - all three phases are documented with comparable evidence,
 - confounders are declared,
 - and `H-001` has a clear provisional verdict with next steps.
