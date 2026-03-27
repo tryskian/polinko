@@ -123,6 +123,9 @@ Each harness output should resolve to:
 - `failed_cases`
 - `summary`
 
+Case fixtures for active suites must stay strict and binary. Deprecated
+legacy fields (for example, `optional` in file-search cases) are invalid.
+
 Case-level report rows should include:
 
 - `status` (suite-local execution status)

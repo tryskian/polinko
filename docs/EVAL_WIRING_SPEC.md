@@ -45,6 +45,9 @@ Active case files must encode only release-relevant checks. Canonical fields:
 No legacy labels are allowed in active contract paths (`mixed`, `partial`,
 `grounding_gap`, and similar legacy terms).
 
+File-search case fixtures are strict schema inputs: deprecated legacy fields
+such as `optional` are rejected at load time.
+
 ### 2) Feedback Contract
 
 Feedback is binary and outcome-owned:
