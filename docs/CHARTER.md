@@ -31,8 +31,12 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Human-directed precision takes priority over agent-side summarisation/cleanup.
 - Keep deprecated workflow context in `docs/live_archive/`; keep active docs and
   runtime contracts binary-only.
-- During eval wiring lock, keep runtime DB provisioning paused until contract
-  sign-off (`docs/EVAL_WIRING_SPEC.md` is canonical in this phase).
+- During eval wiring lock, avoid DB init/refresh flows; allow only archive/reset
+  maintenance commands until contract sign-off
+  (`docs/EVAL_WIRING_SPEC.md` is canonical in this phase).
+- Keep benchmarking product-supportive:
+  - hypothesis benchmarking informs build decisions but does not replace product delivery
+  - use one canonical benchmark spec to control sequencing and confounders
 - Engineer owns proactive technical hygiene:
   - identify drift/gremlin-risk paths early
   - execute cleanup/validation/doc alignment without waiting for reminders

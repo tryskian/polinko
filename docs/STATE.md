@@ -155,8 +155,21 @@
   - SQLite human-reference DB/query workflow moved to archive-only status
   - canonical visual surface is markdown-native `make reference-graph`
 - Runtime DB lifecycle checkpoint (March 27, 2026):
-  - local runtime DB scripts/targets retired during wiring lock
-  - DB files remain archived only; no local DB commands in active surface
+  - runtime DB defaults moved to `.local/runtime_dbs/active/`
+  - active maintenance commands are reduced to:
+    - `make db-reset`
+    - `make db-archive`
+    - `make db-visuals`
+  - no root-level `.polinko_*.db` files are part of the active surface
+- Minimal-config benchmark checkpoint (March 27, 2026):
+  - canonical benchmark spec added:
+    - `docs/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
+  - benchmark compares three phases:
+    - minimal-config CLI baseline
+    - traditional eval stack
+    - binary eval stack
+  - evaluation axes are fixed to quality, decision clarity, iteration speed,
+    and maintenance overhead
 - Wiring lock checkpoint (March 27, 2026):
   - runtime DB provisioning is intentionally paused until eval wiring sign-off
   - no fresh `.polinko_*.db` or `.human_reference.db` files are active in
