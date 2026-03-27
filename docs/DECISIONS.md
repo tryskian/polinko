@@ -360,7 +360,7 @@
   CLIP A/B report runs (`cases_count >= 4`) meet all of:
   - proxy any-hit rate `>= 0.90`
   - any-hit delta (`proxy - baseline`) `>= 0.50`
-  - zero errors and zero skipped cases in both arms
+  - zero errors in both arms
 - Why: Keeps escalation objective and repeatable, and prevents integrating on a
   single favorable run or under-powered sample.
 

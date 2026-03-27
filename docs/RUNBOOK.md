@@ -634,8 +634,8 @@ Hash fields in responses:
 4. Cases:
    - uses `docs/file_search_eval_cases.json` (OCR + PDF + optional image-context
      smoke test)
-   - image-context case is skipped automatically when
-     `POLINKO_IMAGE_CONTEXT_ENABLED=false`
+   - image-context case requires `POLINKO_IMAGE_CONTEXT_ENABLED=true` and will
+     fail-closed if image context is disabled
 
 ## Run CLIP A/B Scaffold Eval
 
@@ -656,7 +656,7 @@ Hash fields in responses:
    - `GO` when two consecutive report runs with `cases_count >= 4` satisfy:
      - `clip_proxy_image_only.any_rate >= 0.90`
      - `any_rate_delta_proxy_minus_baseline >= 0.50`
-     - `errors == 0` and `skipped == 0` for both arms
+     - `errors == 0` for both arms
    - `NO-GO` otherwise; keep proxy/scaffold mode and add cases or fix retrieval
      behaviour before integration escalation.
 7. Automated readiness check:

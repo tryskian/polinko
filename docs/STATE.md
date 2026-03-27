@@ -202,16 +202,16 @@
   - baseline hybrid any-hit: `0.0`
   - image-priority proxy any-hit: `1.0`
   - delta (`proxy - baseline`): `+1.0`
-  - errors/skipped: `0/0` in both arms
+  - errors: `0` in both arms
 - Latest CLIP readiness pair (2026-03-15) is green:
   - `20260315-143219`: PASS (`cases=4`, `proxy_any_rate=1.000`,
-    `delta=+1.000`, `errors=0`, `skipped=0`)
+    `delta=+1.000`, `errors=0`)
   - `20260315-180942`: PASS (`cases=4`, `proxy_any_rate=1.000`,
-    `delta=+1.000`, `errors=0`, `skipped=0`)
+    `delta=+1.000`, `errors=0`)
 - Latest readiness decision (2026-03-15): `GO`.
 - CLIP go/no-go criterion is now explicit (two consecutive runs with
-  `cases_count >= 4`, proxy `any_rate >= 0.90`, delta `>= 0.50`, zero
-  errors/skips) before integration escalation.
+  `cases_count >= 4`, proxy `any_rate >= 0.90`, delta `>= 0.50`, zero errors)
+  before integration escalation.
 - Minimal CLIP proxy integration slice is now implemented behind feature flag:
   - `POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED` (default `false`)
   - `POST /skills/file_search` now accepts
