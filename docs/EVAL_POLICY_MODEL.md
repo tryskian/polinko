@@ -113,4 +113,3 @@ erDiagram
       string final_decision
     }
 ```
-
