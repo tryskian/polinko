@@ -425,8 +425,9 @@
 - Why: Creates a stable evidence contract for hybrid OpenAI adoption phases
   without changing runtime `/chat` behaviour, while improving auditability and
   promotion confidence for future OpenAI-native tooling pilots.
-- Status: Superseded by `D-068` (trace default path is archive-only under
-  `docs/portfolio/raw_evidence/archive/baseline/eval-trace-records/`).
+- Status: Superseded by `D-073` (trace default path is local operational output
+  under `eval_reports/eval_trace_artifacts.jsonl`; Git history is canonical
+  retention for tracked state).
 
 ## D-046: Constrain Phase 3 hybrid pilot to offline tooling bridge only
 
@@ -767,3 +768,18 @@
   preserving rich diagnostics outside the binary gate output.
 - Implementation note: Concept model and ER mapping are documented in
   `docs/EVAL_POLICY_MODEL.md`.
+
+## D-073: Remove archive-folder workflow; use Git-native retention
+
+- Date: `2026-03-27`
+- Category: `evidence_governance`
+- Tags: `git_native`, `archive_removal`, `workflow_simplification`, `binary_hygiene`
+- Decision:
+  - remove active archive/reset operator flow (`make eval-reset-baseline`)
+  - remove archive-reset utility module (`tools/archive_eval_baseline.py`)
+  - set eval trace default output to `eval_reports/eval_trace_artifacts.jsonl`
+  - treat Git history as the canonical archive for tracked docs/code
+- Why: The archive-folder layer duplicated Git semantics, added operator
+  overhead, and introduced path complexity without improving release decision
+  quality.
+- Supersedes: `D-068` for active operations.

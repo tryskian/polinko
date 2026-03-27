@@ -66,13 +66,13 @@ File-based evidence logs:
 
 - runtime no longer writes eval feedback/checkpoint logs to `raw_evidence`
   top-level intake folders.
-- archived trace artifacts remain available for audit/history:
-  `docs/portfolio/raw_evidence/archive/baseline/eval-trace-records/eval_trace_artifacts.jsonl`
+- local trace artifacts remain available for audit/history:
+  `eval_reports/eval_trace_artifacts.jsonl`
 
 Trace artifacts (`tools/eval_trace_artifacts.py`):
 
 - default path:
-  `docs/portfolio/raw_evidence/archive/baseline/eval-trace-records/eval_trace_artifacts.jsonl`
+  `eval_reports/eval_trace_artifacts.jsonl`
 - schema version: `polinko.eval_trace.v1`
 
 ## Current Feedback Logic (Important)

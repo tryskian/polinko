@@ -797,16 +797,14 @@ Current policy:
    - if multiple thresholds have equal metrics, the calibrator picks the
      strictest (highest) threshold among the ties.
 
-## Evidence Lifecycle (Archive-Only)
+## Evidence Lifecycle (Git-Native)
 
-1. Treat `docs/portfolio/raw_evidence` top-level entries as deprecated intake.
-2. Keep only archive snapshots under:
-   - `docs/portfolio/raw_evidence/archive/*`
-3. Eval trace artifacts default to archive-only path:
-   - `docs/portfolio/raw_evidence/archive/baseline/eval-trace-records/eval_trace_artifacts.jsonl`
-4. If older intake folders/files reappear (`PASS`/`FAIL`/`MIXED`/`INBOX`,
-   `triage_overrides*`, generated index/metadata files), archive them with:
-   - `make eval-reset-baseline`
+1. Use Git history as the canonical archive for tracked docs/code.
+2. Keep local eval artefacts in `eval_reports/` only (ignored operational output).
+3. Eval trace artifacts default to:
+   - `eval_reports/eval_trace_artifacts.jsonl`
+4. If stale local artefacts reappear and you want a clean cycle:
+   - remove local outputs (`rm -rf eval_reports/*`) before the next run.
 
 ## Human Reference DB (One-Click Queries)
 
@@ -856,26 +854,17 @@ Current policy:
 
 ## Start Fresh Eval Cycle
 
-1. Archive deprecated eval artefacts/evidence/records to a timestamped snapshot:
-   - `make eval-reset-baseline`
-   - archives all top-level entries under `docs/portfolio/raw_evidence` except
-     `archive/*` into rolling path
-     `docs/portfolio/raw_evidence/archive/baseline/latest`
-   - prior `latest` snapshot is rotated into
-     `docs/portfolio/raw_evidence/archive/baseline/history/*`
-   - archives active top-level report files into
-     `eval_reports/archive/baseline/latest`
-2. Archive/clean generated eval chats:
+1. Clean generated eval chats:
    - `make eval-cleanup`
    - note: this is local-only helper behaviour; if the local script is absent,
      the target exits cleanly and skips cleanup.
-3. If needed, reset one chat session:
+2. If needed, reset one chat session:
    - `POST /session/reset` with `{"session_id":"<chat-id>"}`.
-4. Re-run deterministic baseline gate:
+3. Re-run deterministic baseline gate:
    - `make quality-gate-deterministic`
-5. Regenerate fresh eval report artefacts:
+4. Regenerate fresh eval report artefacts:
    - `make eval-reports-parallel`
-6. Keep historical evidence artefacts; only clear active checkpoint state for
+5. Keep historical context in Git history; only clear active checkpoint state for
    the next clean eval pass.
 
 ## Export CLI Transcript

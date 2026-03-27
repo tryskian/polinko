@@ -1,4 +1,4 @@
-"""Backfill eval trace artifacts from archived eval submissions JSONL.
+"""Backfill eval trace artifacts from local eval submissions JSONL.
 
 This is tooling-only and safe to re-run:
 - reads submission rows from an archive JSONL source
@@ -21,7 +21,7 @@ from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
 
 DEFAULT_SUBMISSIONS_JSONL = Path(
-    "docs/portfolio/raw_evidence/archive/baseline/eval-trace-records/eval_submissions.jsonl"
+    "eval_reports/eval_submissions.jsonl"
 )
 
 

@@ -42,14 +42,10 @@
   - canonical policy/reward semantics and conceptual ER model:
     `docs/EVAL_POLICY_MODEL.md`
 - Eval artefacts (non-authoritative):
-  - `docs/portfolio/raw_evidence/archive/baseline/*` is the only active
-    file-based eval artefact surface.
-  - `docs/portfolio/raw_evidence` top-level intake folders/files are
-    deprecated and must be archived before new eval cycles.
+  - Git history is the canonical retention mechanism for tracked project state.
+  - local eval artefacts are operational outputs (default under `eval_reports/`)
+    and are non-authoritative for runtime gate decisions.
   - no file-log-driven eval wiring exists in runtime gate decisions.
-  - archive/reset utility:
-    - `tools/archive_eval_baseline.py`
-    - command: `make eval-reset-baseline`
 - Human reference index:
   - `.human_reference.db` built from `docs/transcripts`, `docs/research`, `docs/theory`.
   - builder: `tools/build_human_reference_db.py`
@@ -84,5 +80,5 @@
 - Optional UI archive-maintenance checks:
   - `npm --prefix frontend run -s test`
   - `npm --prefix frontend run -s build`
-- Baseline eval archive/reset: `make eval-reset-baseline`
+- Local eval trace backfill (optional): `make backfill-eval-traces`
 - Human reference quick query: `make human-reference-relationships`

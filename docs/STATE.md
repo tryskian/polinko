@@ -96,55 +96,19 @@
   - archived docs are hidden from explorer/search to reduce active-workflow
     clutter
   - `docs/PEANUT_TOOLING_REF.md` remains visible for day-to-day operator use
-- Raw evidence cleanup checkpoint (March 22, 2026):
-  - hybrid/OpenAI eval artifacts were moved from active
-    `docs/portfolio/raw_evidence` paths to
-    `docs/portfolio/raw_evidence/archive/baseline/history/portfolio-archive-20260326/2026-03-22-raw-evidence-legacy`
-  - no active top-level raw-evidence intake is used for runtime gating
-  - archive naming now follows date-prefixed pattern
-    `docs/portfolio/raw_evidence/archive/baseline/history/portfolio-archive-20260326/YYYY-MM-DD-...` for consistent cataloguing
-- Legacy docs + evidence wiring cleanup checkpoint (March 25, 2026):
-  - early portfolio narrative/workbench docs were moved to
-    `docs/portfolio/raw_evidence/archive/baseline/history/portfolio-archive-20260326/2026-03-25-legacy-positioning-workbench`
-  - `raw_evidence` intake buckets and related wiring were marked for
-    deprecation; archive paths are canonical
-- Eval intake archival checkpoint (March 26, 2026):
-  - top-level `raw_evidence` entries are deprecated and moved by
-    `make eval-reset-baseline`
-  - archive snapshot path is rolling:
-    `docs/portfolio/raw_evidence/archive/baseline/latest`
-  - previous snapshots are rotated to:
-    `docs/portfolio/raw_evidence/archive/baseline/history/*`
-  - UI checkpoint summaries now present `non_binary` explicitly
+- Git-native retention checkpoint (March 27, 2026):
+  - archive-folder workflow removed from active operations
+    (`make eval-reset-baseline` removed)
+  - eval trace default output moved to
+    `eval_reports/eval_trace_artifacts.jsonl`
+  - tracked-state retention is now explicitly Git-native
+    (no additional archive folder layer required)
 - EOD docs confidentiality merge checkpoint (March 25, 2026):
   - PR `#72` merged to `main` (`2a6f575`)
   - runbook + ignore policy now treats non-build internal docs as local-only
     by default
   - session handoff is aligned to the merged cleanup baseline for next-day
     startup
-- Eval reset + fresh baseline checkpoint (March 24, 2026):
-  - pre-reset artifacts archived to
-    `docs/portfolio/raw_evidence/archive/eval-reset-20260324-103725`
-  - inbox streams reset, then repopulated from fresh runs only
-  - deterministic gate re-run passed end-to-end
-    (`162` tests + retrieval/file-search/OCR/style/hallucination suites)
-  - fresh host report cycle regenerated:
-    `retrieval-20260324-104006`, `file-search-20260324-104047`,
-    `ocr-20260324-104051`, `style-20260324-104054`,
-    `hallucination-20260324-104134`
-  - note: style report recorded one judge-case miss
-    (`adapt_style_without_mimicry`) while other suites passed
-- Baseline archive reset command checkpoint (March 26, 2026):
-  - one-command archive flow: `make eval-reset-baseline`
-  - command archives deprecated eval evidence + generated report files into:
-    - `docs/portfolio/raw_evidence/archive/baseline/latest`
-    - `eval_reports/archive/baseline/latest`
-  - active eval decisions remain database-backed, not intake-folder-backed
-  - existing top-level archive folders were consolidated into:
-    `docs/portfolio/raw_evidence/archive/baseline/history/*`
-  - latest consolidation run (`20260326-214343`) moved:
-    - raw archive entries: `5`
-    - eval report archive entries: `4`
 - Branch protection checkpoint (March 25, 2026):
   - `main` remains protected (PR + required checks)
   - active implementation now runs through task branches merged back to `main`
