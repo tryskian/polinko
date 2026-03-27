@@ -48,6 +48,28 @@ def _extract_make_tools_modules(text: str) -> list[str]:
     return sorted(modules)
 
 
+def check_legacy_targets_removed() -> CheckResult:
+    text = _read_text(MAKEFILE_PATH)
+    legacy_targets = [
+        "db-init",
+        "db-refresh",
+        "workbench",
+        "human-reference-db",
+        "human-reference-latest",
+        "human-reference-transcripts",
+        "human-reference-changes",
+        "human-reference-relationships",
+    ]
+    present = [t for t in legacy_targets if re.search(rf"^\s*{t}:", text, flags=re.MULTILINE)]
+    if present:
+        return CheckResult(
+            name="legacy_targets_removed",
+            ok=False,
+            details=f"remove stale make targets: {_format_missing(present)}",
+        )
+    return CheckResult(name="legacy_targets_removed", ok=True, details="legacy targets absent")
+
+
 def _load_package_scripts() -> dict[str, str]:
     payload = json.loads(_read_text(PACKAGE_JSON_PATH))
     scripts = payload.get("scripts", {})
@@ -202,6 +224,7 @@ def run_checks() -> list[CheckResult]:
     return [
         check_readme_route_parity(),
         check_make_tool_module_existence(),
+        check_legacy_targets_removed(),
         check_lint_docs_parity(),
         check_eval_cleanup_guard(),
         check_eval_case_schema_legacy_fields(),

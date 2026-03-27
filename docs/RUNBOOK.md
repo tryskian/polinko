@@ -132,18 +132,15 @@
 
 ## Wiring-First DB Freeze
 
-1. Before eval wiring sign-off, keep runtime DB provisioning paused:
-   - do not run `make db-init`
-   - do not run `make db-refresh`
-2. Keep archived DB evidence under `.local_archive/` as reference only.
-3. During wiring phase, use:
-   - docs contract surfaces (`docs/EVAL_WIRING_SPEC.md`,
-     `docs/EVAL_SPEC.md`, `docs/EVAL_BACKEND_MAP.md`)
-   - tests/eval harness validation (`make test`,
-     `make quality-gate-deterministic`)
-4. Only after wiring sign-off:
-   - initialise fresh DBs once
-   - regenerate DB visuals and continue persistence implementation
+1. Runtime DBs live under `.local/runtime_dbs/active/` by default.
+2. Allowed commands during wiring:
+   - `make db-reset` (clears active runtime DBs only)
+   - `make db-archive` (moves active DB families into `.local/runtime_dbs/archive/`)
+3. Disallowed/removed: `db-init`, `db-refresh` (no automatic recreation of DBs).
+4. During wiring phase, use docs/tests as the contract:
+   - `docs/EVAL_WIRING_SPEC.md`, `docs/EVAL_SPEC.md`, `docs/EVAL_BACKEND_MAP.md`
+   - `make test`, `make quality-gate-deterministic`
+5. Post-wiring persistence work must be explicitly planned; do not reintroduce auto-init.
 
 ## Python Diagnostics (Ruff + Mypy)
 
@@ -363,15 +360,9 @@
 
 1. Stop running processes.
 2. Remove local DB files:
-   - `.polinko_memory.db`
-   - `.polinko_memory.db-shm` (if present)
-   - `.polinko_memory.db-wal` (if present)
-   - `.polinko_history.db`
-   - `.polinko_history.db-shm` (if present)
-   - `.polinko_history.db-wal` (if present)
-   - `.polinko_vector.db` (if present)
-   - `.polinko_vector.db-shm` (if present)
-   - `.polinko_vector.db-wal` (if present)
+   - `.local/runtime_dbs/active/memory.db` (+ `-shm`/`-wal`)
+   - `.local/runtime_dbs/active/history.db` (+ `-shm`/`-wal`)
+   - `.local/runtime_dbs/active/vector.db` (+ `-shm`/`-wal`)
 3. Start app again (`make chat` or `make server`).
 
 ## Reset One Chat Session (API)
@@ -385,9 +376,9 @@
 4. Deprecated chats are hidden from default `GET /chats`.
 5. To include them for review: `GET /chats?include_deprecated=true`.
 6. A non-deprecating reset clears both:
-   - conversation memory in `.polinko_memory.db`
-   - persisted chat messages in `.polinko_history.db`
-   - vector memories for that session in `.polinko_vector.db` (when enabled)
+   - conversation memory in `.local/runtime_dbs/active/memory.db`
+   - persisted chat messages in `.local/runtime_dbs/active/history.db`
+   - vector memories for that session in `.local/runtime_dbs/active/vector.db` (when enabled)
 7. Deprecation/reset is chat lifecycle state management, not model-weights
    training or a direct runtime penalty signal.
 
@@ -491,7 +482,7 @@ Hash fields in responses:
 1. In `.env`, set:
    - `POLINKO_VECTOR_ENABLED=true` to enable retrieval memory
 2. Optional vector settings:
-   - `POLINKO_VECTOR_DB_PATH` (default `.polinko_vector.db`)
+   - `POLINKO_VECTOR_DB_PATH` (default `.local/runtime_dbs/active/vector.db`)
    - `POLINKO_VECTOR_EMBEDDING_MODEL` (default `text-embedding-3-small`)
    - `POLINKO_VECTOR_TOP_K` (default `2`)
    - `POLINKO_VECTOR_MIN_SIMILARITY` (default `0.40`)
@@ -827,12 +818,10 @@ Current policy:
 4. Runtime DB visuals (history/vector/memory):
    - `make db-visuals`
    - output: `docs/RUNTIME_DB_VISUALS.md`
-5. Runtime DB archive/init commands are post-wiring only:
-   - wiring phase: keep DB provisioning paused
-   - post sign-off:
-     - archive current DB evidence: `make db-archive`
-     - create fresh DB schema files: `make db-init`
-     - one-command archive + init: `make db-refresh`
+5. Runtime DB maintenance:
+   - archive current DB evidence: `make db-archive`
+   - clear active runtime DBs: `make db-reset`
+   - DB recreation/init is intentionally removed during wiring lock.
 
 ## Start Fresh Eval Cycle
 

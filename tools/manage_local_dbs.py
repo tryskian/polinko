@@ -7,9 +7,9 @@ from pathlib import Path
 
 from dotenv import dotenv_values
 
-from core.history_store import ChatHistoryStore
-from core.runtime import create_session
-from core.vector_store import VectorStore
+
+DEFAULT_RUNTIME_BASE = Path(".local/runtime_dbs/active")
+DEFAULT_ARCHIVE_BASE = Path(".local/runtime_dbs/archive")
 
 
 def _normalize_env_value(value: str | None, default: str) -> str:
@@ -21,15 +21,24 @@ def _normalize_env_value(value: str | None, default: str) -> str:
     return raw or default
 
 
+def _default_runtime_path(filename: str) -> Path:
+    return DEFAULT_RUNTIME_BASE / filename
+
+
 def _resolve_db_paths(dotenv_path: Path) -> dict[str, Path]:
     env = dotenv_values(dotenv_path)
-    memory = _normalize_env_value(env.get("POLINKO_MEMORY_DB_PATH"), ".polinko_memory.db")
-    history = _normalize_env_value(env.get("POLINKO_HISTORY_DB_PATH"), ".polinko_history.db")
-    vector = _normalize_env_value(env.get("POLINKO_VECTOR_DB_PATH"), ".polinko_vector.db")
+
+    def _path(key: str, default_name: str) -> Path:
+        raw = _normalize_env_value(env.get(key), default_name)
+        candidate = Path(raw)
+        if not candidate.is_absolute():
+            return _default_runtime_path(raw)
+        return candidate
+
     return {
-        "memory": Path(memory),
-        "history": Path(history),
-        "vector": Path(vector),
+        "memory": _path("POLINKO_MEMORY_DB_PATH", "memory.db"),
+        "history": _path("POLINKO_HISTORY_DB_PATH", "history.db"),
+        "vector": _path("POLINKO_VECTOR_DB_PATH", "vector.db"),
     }
 
 
@@ -59,21 +68,6 @@ def reset_dbs(paths: dict[str, Path]) -> None:
             print(f"{name}: removed {', '.join(str(item) for item in removed)}")
         else:
             print(f"{name}: already clean ({path})")
-
-
-def init_dbs(paths: dict[str, Path]) -> None:
-    history_path = _ensure_parent(paths["history"])
-    vector_path = _ensure_parent(paths["vector"])
-    memory_path = _ensure_parent(paths["memory"])
-
-    ChatHistoryStore(str(history_path))
-    VectorStore(str(vector_path))
-    session = create_session(session_id="db-init", db_path=str(memory_path), limit=1)
-    session.close()
-
-    print(f"history: initialised {history_path}")
-    print(f"vector: initialised {vector_path}")
-    print(f"memory: initialised {memory_path}")
 
 
 def archive_dbs(paths: dict[str, Path], archive_dir: Path) -> Path:
@@ -111,7 +105,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Manage local Polinko SQLite DB baselines.")
     parser.add_argument(
         "action",
-        choices=["reset", "init", "refresh", "archive", "archive-refresh"],
+        choices=["reset", "archive"],
         help="Operation to run.",
     )
     parser.add_argument(
@@ -121,7 +115,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--archive-dir",
-        default=".local_archive/runtime_dbs",
+        default=str(DEFAULT_ARCHIVE_BASE),
         help="Directory where DB archive snapshots are stored.",
     )
     return parser
@@ -134,16 +128,8 @@ def main() -> int:
 
     if args.action == "reset":
         reset_dbs(paths)
-    elif args.action == "init":
-        init_dbs(paths)
-    elif args.action == "refresh":
-        reset_dbs(paths)
-        init_dbs(paths)
     elif args.action == "archive":
         archive_dbs(paths, archive_dir=archive_dir)
-    else:
-        archive_dbs(paths, archive_dir=archive_dir)
-        init_dbs(paths)
 
     return 0
 

@@ -15,8 +15,8 @@ traceability only.
 
 - `HUMAN_REFERENCE_DB.md`
 - previous helper scripts:
-  - `tools/build_human_reference_db.py`
-  - `tools/query_human_reference.py`
+  - `docs/live_archive/legacy_human_reference/build_human_reference_db.py`
+  - `docs/live_archive/legacy_human_reference/query_human_reference.py`
 
 ## Rule
 

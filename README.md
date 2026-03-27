@@ -163,7 +163,6 @@ make eval-reports-parallel
 Auxiliary eval tooling:
 
 ```bash
-make eval-inbox
 make backfill-eval-traces
 make calibrate-hallucination-threshold
 ```
@@ -195,16 +194,14 @@ Runtime DB lifecycle:
 
 ```bash
 make db-reset
-make db-init
 make db-archive
-make db-refresh
 make db-visuals
 ```
 
-Note:
+Notes:
 
-- during the current eval wiring-lock phase, keep DB provisioning paused
-  (`db-init`/`db-refresh`), and use docs/tests as canonical contract checks.
+- Runtime DBs live under `.local/runtime_dbs/active/`; archives under `.local/runtime_dbs/archive/`.
+- Provisioning/init commands are intentionally removed during wiring lock (archive/reset only).
 
 ## Docker Smoke Test
 

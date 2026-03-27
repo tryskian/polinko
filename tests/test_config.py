@@ -74,7 +74,7 @@ class ConfigTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             cfg = load_config(dotenv_path="__missing__.env")
         self.assertFalse(cfg.vector_enabled)
-        self.assertEqual(cfg.vector_db_path, ".polinko_vector.db")
+        self.assertEqual(cfg.vector_db_path, ".local/runtime_dbs/active/vector.db")
         self.assertEqual(cfg.vector_embedding_model, "text-embedding-3-small")
         self.assertEqual(cfg.vector_top_k, 2)
         self.assertEqual(cfg.vector_top_k_global, 2)

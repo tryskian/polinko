@@ -97,7 +97,7 @@ def _render_db_section(db_name: str, db_path: Path) -> str:
     try:
         tables = _load_tables(conn)
         lines.append("")
-        lines.append(f"- status: present")
+        lines.append("- status: present")
         lines.append(f"- tables: {len(tables)}")
         lines.append("")
 

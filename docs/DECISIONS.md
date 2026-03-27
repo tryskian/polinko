@@ -366,15 +366,8 @@
 
 ## D-041: Persist all eval submissions and add a cursor-based inbox monitor
 
-- Category: `evidence_governance`
-- Tags: `eval_inbox`, `feedback_logging`, `triage_visibility`, `workflow_speed`
-- Decision: Append every UI eval submission (`PASS`, `FAIL`) to
-  `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` and add
-  `make eval-inbox` to show new entries since the last local cursor checkpoint.
-- Why: Makes new eval activity immediately discoverable, improves remediation
-  triage speed, and preserves a complete chronological submission trail.
-- Status: Superseded by `D-068`/`D-069` (runtime now uses SQLite state only;
-  `raw_evidence` intake folders are deprecated and archived).
+- Status: Superseded by `D-068`/`D-069` (runtime now uses SQLite state only; `raw_evidence` intake folders are archived)
+- Note: Legacy inbox helper (`make eval-inbox`, `tools/eval_inbox.py`) removed from active surface.
 
 ## D-042: Repo-scoped mypy configuration and workspace diagnostics
 
@@ -851,9 +844,8 @@
 - Tags: `db_lifecycle`, `archive_first`, `runtime_state`, `evidence_retention`
 - Decision:
   - add runtime DB lifecycle tooling:
-    - `make db-archive` (snapshot old DB families to `.local_archive/runtime_dbs`)
-    - `make db-init` (initialise fresh history/vector/memory DBs)
-    - `make db-refresh` (archive + init)
+    - `make db-archive` (snapshot old DB families to `.local/runtime_dbs/archive/`)
+    - `make db-reset` (clear active history/vector/memory DBs in `.local/runtime_dbs/active/`)
     - `make db-visuals` (generate `docs/RUNTIME_DB_VISUALS.md`)
 - Why: Preserves old runtime evidence for traceability while ensuring new logic
   starts from clean database baselines.
@@ -864,10 +856,21 @@
 - Category: `workflow_environment`
 - Tags: `wiring_first`, `db_freeze`, `contract_lock`, `binary_eval`
 - Decision:
-  - during the eval wiring phase, keep runtime DB provisioning paused
-    (`db-init`/`db-refresh` are deferred)
-  - keep existing DB families archived under `.local_archive/`
+  - during the eval wiring phase, keep runtime DB provisioning paused; no init
+    or refresh commands are available
+  - keep existing DB families archived under `.local/runtime_dbs/archive/`
   - treat `docs/EVAL_WIRING_SPEC.md` + tests as canonical until persistence
     design begins
 - Why: Prevents persistence artefacts from masking contract drift and keeps the
   binary gate model deterministic before schema/migration work starts.
+
+## D-080: Tooling audit and legacy cleanup
+
+- Date: `2026-03-27`
+- Category: `workflow_environment`
+- Tags: `artifact_cleanup`, `legacy_tools`, `runtime_db_paths`, `archive_only`
+- Decision:
+  - Archived human-reference helpers and SQL into `docs/live_archive/legacy_human_reference/`.
+  - Removed legacy workbench server/target and eval inbox helper (`make eval-inbox`, `tools/eval_inbox.py`).
+  - Locked runtime DB defaults to `.local/runtime_dbs/active/` and removed init/refresh targets; `manage_local_dbs` supports `archive|reset` only.
+- Why: Reduce hidden gremlins and keep the active execution surface minimal and aligned with current binary eval contracts.

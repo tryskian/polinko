@@ -33,10 +33,10 @@
 
 - Runtime chat/session state:
   - SQLite stores (chat history + memory/vector artifacts).
-  - During current wiring lock, fresh DB provisioning is intentionally paused.
-    Legacy DB artifacts remain archived under `.local_archive/`.
+  - Runtime DBs live under `.local/runtime_dbs/active/`; archives under
+    `.local/runtime_dbs/archive/`.
 - Eval runtime state (authoritative):
-  - `.polinko_history.db` via `core/history_store.py`
+  - `.local/runtime_dbs/active/history.db` via `core/history_store.py`
     - `message_feedback` (binary `pass`/`fail` + tags/notes/status)
     - `eval_checkpoints` (`pass_count`, `fail_count`, `non_binary_count`)
   - active gate logic is binary-only (`pass`/`fail`); `non_binary_count` is an
@@ -82,6 +82,6 @@
 - Backend tests: `make test`
 - Local API: `make server` or `make server-daemon`
 - Wiring visual contract: `docs/EVAL_WIRING_SPEC.md`
-- Runtime DB refresh (post wiring sign-off only): `make db-refresh`
+- Runtime DB maintenance: `make db-archive`, `make db-reset`, `make db-visuals`
 - Local eval trace backfill (optional): `make backfill-eval-traces`
 - Docs relationship graph: `make reference-graph`

@@ -5,7 +5,7 @@
 ## Current Status
 
 - Prompt/runtime is intentionally minimal and aligned with the original `try.py` behaviour.
-- CLI agent loop works with persistent SQLite memory (`.polinko_memory.db`) and
+- CLI agent loop works with persistent SQLite memory (`.local/runtime_dbs/active/memory.db`) and
   `/reset`.
 - Backend API is running with:
   - `GET /health`
@@ -155,11 +155,11 @@
   - SQLite human-reference DB/query workflow moved to archive-only status
   - canonical visual surface is markdown-native `make reference-graph`
 - Runtime DB lifecycle checkpoint (March 27, 2026):
-  - added archive-first runtime DB flow:
-    - `make db-archive` (snapshot old history/memory/vector DB files)
-    - `make db-init` (create fresh DB schema files)
-    - `make db-refresh` (archive + init)
-  - added runtime DB schema visualisation:
+  - runtime DBs relocated under `.local/runtime_dbs/active/`
+  - archive-first flow only:
+    - `make db-archive` snapshots to `.local/runtime_dbs/archive/`
+    - `make db-reset` clears active runtime DB files
+  - runtime DB schema visualisation:
     - `make db-visuals` -> `docs/RUNTIME_DB_VISUALS.md`
 - Wiring lock checkpoint (March 27, 2026):
   - runtime DB provisioning is intentionally paused until eval wiring sign-off

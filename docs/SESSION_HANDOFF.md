@@ -34,11 +34,10 @@
   - output: `docs/REFERENCE_GRAPH.md`
 - Runtime DB lifecycle is archive-first:
   - archive old DB evidence: `make db-archive`
-  - init fresh DBs (post sign-off): `make db-init`
-  - one-command refresh (post sign-off): `make db-refresh`
+  - clear active runtime DBs: `make db-reset`
   - ER visual: `make db-visuals` -> `docs/RUNTIME_DB_VISUALS.md`
 - Wiring lock is active:
-  - do not initialise fresh runtime DB files until wiring sign-off
+  - no runtime DB init/refresh commands during wiring lock
   - keep DB state archived during contract-finalisation phase
   - canonical wiring contract source: `docs/EVAL_WIRING_SPEC.md`
 - Engineer execution mode is proactive by default:

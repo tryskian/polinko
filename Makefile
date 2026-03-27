@@ -33,13 +33,10 @@ CLIP_AB_SOURCE_TYPES ?= image
 CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
 CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
 CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
-HUMAN_REFERENCE_DB ?= .human_reference.db
-HUMAN_REFERENCE_LIMIT ?= 25
-HUMAN_REFERENCE_SINCE_HOURS ?= 24
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph db-visuals db-reset db-init db-archive db-refresh human-reference-db human-reference-latest human-reference-transcripts human-reference-changes human-reference-relationships docker-build docker-run dev dev-stop workbench
+.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph db-visuals db-reset db-archive docker-build docker-run dev dev-stop
 
 chat:
 	$(PYTHON) app.py
@@ -461,45 +458,14 @@ db-visuals:
 db-reset:
 	$(PYTHON) -m tools.manage_local_dbs reset
 
-db-init:
-	$(PYTHON) -m tools.manage_local_dbs init
-
 db-archive:
 	$(PYTHON) -m tools.manage_local_dbs archive
-
-db-refresh:
-	@$(MAKE) db-archive
-	@$(MAKE) db-init
-
-human-reference-latest:
-	@echo "Human reference DB workflow is archived."
-	@echo "Use: make reference-graph"
-
-human-reference-transcripts:
-	@echo "Human reference DB workflow is archived."
-	@echo "Use: make reference-graph"
-
-human-reference-changes:
-	@echo "Human reference DB workflow is archived."
-	@echo "Use: make reference-graph"
-
-human-reference-relationships:
-	@echo "Human reference DB workflow is archived."
-	@echo "Use: make reference-graph"
-
-human-reference-db:
-	@echo "Human reference DB workflow is archived."
-	@echo "Use: make reference-graph"
 
 dev:
 	@PYTHON_BIN="$(PYTHON)" DEV_HOST="$(DEV_HOST)" DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" bash tools/dev_run.sh
 
 dev-stop:
 	@DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" DEV_STOP_ONLY=1 bash tools/dev_run.sh
-
-workbench:
-	@echo "Starting portfolio workbench on http://127.0.0.1:$(WORKBENCH_PORT)/workbench.html"
-	$(PYTHON) -m tools.workbench_server --port $(WORKBENCH_PORT)
 
 docker-build:
 	$(DOCKER) build -t $(DOCKER_IMAGE) .

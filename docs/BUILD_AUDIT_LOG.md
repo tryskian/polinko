@@ -1,133 +1,30 @@
-# Build Audit Log
+# Build Audit Log (2026-03-27)
 
-Purpose: inspect the existing build block-by-block in execution order, fix concrete drift, and keep a fresh-path baseline without a hard reset.
+Purpose: confirm active build surfaces are clean, artifact-free, and matched to current docs/contracts.
 
-## Block 1: README (entry surface)
+## Scope
 
-Status: complete
+- Runtime DB lifecycle
+- Legacy human-reference + workbench artifacts
+- Make targets vs tools
+- Root/hidden noise (DB files, caches)
 
-Actions:
+## Findings & Remediations
 
-- Rewrote `README.md` into current-state build blocks.
-- Removed duplicated/stale eval narrative sections.
-- Aligned command lists with live `Makefile` targets and API routes.
+- Runtime DB defaults now live under `.local/runtime_dbs/active/{memory,history,vector}.db`; archives under `.local/runtime_dbs/archive/`.
+- Removed legacy DB-init/refresh flow: Makefile targets dropped; `tools/manage_local_dbs.py` limited to `archive|reset`.
+- Deleted lingering root DB artifacts (`.polinko_history.db`, `.polinko_vector.db`); none remain in repo.
+- Pruned workbench legacy: removed `tools/workbench_server.py` and Make target.
+- Archived human-reference tooling: moved `build_human_reference_db.py`, `query_human_reference.py`, `human_reference_queries.sql` to `docs/live_archive/legacy_human_reference/` and updated references.
+- Updated ignores: `.local/runtime_dbs/` is the only runtime path ignored in `.gitignore`/`.dockerignore` for DBs.
+- `tools/audit_build_blocks.py` now checks removal of legacy targets; `python -m tools.audit_build_blocks` passes.
 
-Validation:
+## Validation
 
-- `npx markdownlint-cli2 README.md` pass.
+- `python -m tools.audit_build_blocks` (pass)
+- `python -m unittest tests/test_config.py` (pass)
+- `ruff check tools/manage_local_dbs.py config.py tests/test_config.py` (pass)
 
-## Block 2: Makefile target wiring
+## Outstanding
 
-Status: complete
-
-Actions:
-
-- Audited all `$(PYTHON) -m tools.*` modules referenced by `Makefile`.
-- Found a fresh-clone gremlin: `eval-cleanup` depended on local-only script.
-- Patched `eval-cleanup` to skip gracefully when `tools/cleanup_eval_chats.py` is missing.
-
-Validation:
-
-- `make eval-cleanup` pass.
-
-## Block 3: Local lint parity with CI
-
-Status: complete
-
-Actions:
-
-- Found drift: local `make lint-docs` did not lint `README.md`, while CI does.
-- Updated root `package.json`:
-  - `lint:docs` from `markdownlint-cli2 docs/**/*.md`
-  - to `markdownlint-cli2 README.md docs/**/*.md`
-
-Validation:
-
-- `make lint-docs` pass.
-
-## Block 4: Runtime sanity checks
-
-Status: complete
-
-Validation:
-
-- `make doctor-env` pass.
-- `make test` pass (`162` tests).
-- `make ui-build` pass.
-
-## Block 5: API contract surface audit
-
-Status: complete
-
-Actions:
-
-- Diffed live FastAPI routes in `api/app_factory.py` against README endpoint documentation.
-- Confirmed route coverage parity for health, chat/session, feedback/checkpoints,
-  skills, and collaboration endpoints.
-
-Validation:
-
-- route-diff check: no contract mismatch after method normalisation.
-
-## Block 6: Eval harness contract audit
-
-Status: complete
-
-Actions:
-
-- Verified CLI surfaces for eval modules (`--help` checks).
-- Documented non-zero semantics in `README.md`.
-- Added automated guard checks via `tools/audit_build_blocks.py`
-  and `make build-audit`.
-
-Validation:
-
-- `make quality-gate-deterministic` pass (tests + retrieval + file-search + OCR
-  strict + style strict + hallucination strict deterministic).
-
-## Block 7: Evidence pipeline audit
-
-Status: complete
-
-Actions:
-
-- Executed full evidence refresh flow (`index` + metadata strict audit).
-- Confirmed summary reporting and triage override handling run without failures.
-
-Validation:
-
-- `make evidence-refresh` pass (`errors=0`, `warnings=1`, summary emitted).
-
-## Block 8: Human reference pipeline audit
-
-Status: complete
-
-Actions:
-
-- Rebuilt local human reference database from current local corpus.
-- Queried latest entries to confirm query/read path and category mapping.
-
-Validation:
-
-- `make human-reference-db` pass.
-- `make human-reference-latest` pass.
-
-## Block 9: CI and Docker audit
-
-Status: complete
-
-Actions:
-
-- Confirmed local markdown lint now matches CI scope (`README.md` + `docs/**/*.md`).
-- Built production image and ran live `/health` smoke against container runtime.
-
-Validation:
-
-- `make lint-docs` pass.
-- `make docker-build` pass.
-- container smoke check pass (`GET /health` -> `{\"status\":\"ok\"}`).
-
-## Next Blocks (in order)
-
-1. Docs propagation:
-   update `RUNBOOK`, `STATE`, `SESSION_HANDOFF`, `DECISIONS` only for material deltas from the completed blocks.
+- None identified; working tree holds unstaged cleanup changes ready to commit.
