@@ -38,7 +38,7 @@ class EvalFileSearchCaseContractTests(unittest.TestCase):
         self.assertEqual(cases[0]["id"], "c1")
         self.assertNotIn("optional", cases[0])
 
-    def test_load_cases_rejects_optional_true(self) -> None:
+    def test_load_cases_rejects_optional_field(self) -> None:
         path = self._write_cases(
             {
                 "cases": [
@@ -50,7 +50,7 @@ class EvalFileSearchCaseContractTests(unittest.TestCase):
                         "seed_text": "signal chain anchor",
                         "query": "what anchors the chain?",
                         "must_include": ["signal chain"],
-                        "optional": True,
+                        "optional": False,
                     }
                 ]
             }
@@ -58,7 +58,7 @@ class EvalFileSearchCaseContractTests(unittest.TestCase):
         self.addCleanup(path.unlink)
         with self.assertRaises(RuntimeError) as ctx:
             _load_cases(path)
-        self.assertIn("deprecated field 'optional=true'", str(ctx.exception))
+        self.assertIn("uses deprecated field 'optional'", str(ctx.exception))
 
 
 if __name__ == "__main__":

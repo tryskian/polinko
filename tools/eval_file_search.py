@@ -92,9 +92,9 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
             raise RuntimeError(
                 f"Case #{index} is missing required fields ('id', 'seed_text', 'query')."
             )
-        if case.get("optional", False):
+        if "optional" in case:
             raise RuntimeError(
-                f"Case #{index} ({case_id}) sets deprecated field 'optional=true'. "
+                f"Case #{index} ({case_id}) uses deprecated field 'optional'. "
                 "Active gate suites are strict binary and fail-closed."
             )
         if seed_method not in {"ocr", "pdf", "image_context"}:
