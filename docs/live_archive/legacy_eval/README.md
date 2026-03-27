@@ -7,6 +7,8 @@ This lane stores legacy eval context for inspection only.
 - Deprecated eval-record structures that are not part of active release gates.
 - Historical notes about previous non-binary logic/wiring.
 - Legacy operator flows preserved only for traceability.
+- Legacy helper scripts (archived, not run):
+  - `docs/live_archive/legacy_eval/cleanup_eval_chats.py`
 
 ## What does not belong here
 
