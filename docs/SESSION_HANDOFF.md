@@ -34,9 +34,13 @@
   - output: `docs/REFERENCE_GRAPH.md`
 - Runtime DB lifecycle is archive-first:
   - archive old DB evidence: `make db-archive`
-  - init fresh DBs: `make db-init`
-  - one-command refresh: `make db-refresh`
+  - init fresh DBs (post sign-off): `make db-init`
+  - one-command refresh (post sign-off): `make db-refresh`
   - ER visual: `make db-visuals` -> `docs/RUNTIME_DB_VISUALS.md`
+- Wiring lock is active:
+  - do not initialise fresh runtime DB files until wiring sign-off
+  - keep DB state archived during contract-finalisation phase
+  - canonical wiring contract source: `docs/EVAL_WIRING_SPEC.md`
 - Engineer execution mode is proactive by default:
   - technical hygiene/drift control should be handled without reminder
   - user input is only needed for approvals or material trade-offs
@@ -47,7 +51,7 @@
 ## Latest Branch Context
 
 - Active implementation branch:
-  - `main`
+  - `codex/bigbrain/eval-wiring-spec`
 - Canonical repo path:
   - `/Users/tryskian/Github/polinko`
 
@@ -59,6 +63,7 @@
 - `docs/ARCHITECTURE.md`
 - `docs/RUNBOOK.md`
 - `docs/EVAL_POLICY_MODEL.md`
+- `docs/EVAL_WIRING_SPEC.md`
 - `docs/EVAL_SPEC.md`
 - `docs/EVAL_BACKEND_MAP.md`
 - `docs/live_archive/README.md`
@@ -72,8 +77,8 @@
 2. `make lint-docs`
 3. `make test`
 4. `make quality-gate-deterministic`
-5. refresh local runtime DB baseline:
-   - `make db-refresh`
+5. confirm DB freeze posture:
+   - no active `.polinko_*.db` / `.human_reference.db` files in repo root
 
 ## Known Constraints
 
@@ -87,12 +92,11 @@
 
 ## Immediate Next Step
 
-- Continue binary eval hard-cut cleanup while preparing new UI integration:
-  - remove legacy eval criteria terms from active case files/tooling
+- Finalise eval wiring contract before persistence activation:
+  - lock binary gate topology and case/feedback/checkpoint contracts
+  - align docs + tests to `docs/EVAL_WIRING_SPEC.md`
   - keep deprecated eval/frontend context in `docs/live_archive/`
-  - run validation and merge with governance-surface sync
-  - keep loop framing explicit (objective/scope/acceptance) before each new
-    implementation slice
+  - defer DB initialisation until wiring sign-off is explicit
 
 ## Peanut Pin (Tomorrow Start)
 

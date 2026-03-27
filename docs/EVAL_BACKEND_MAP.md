@@ -1,10 +1,15 @@
-# Eval V2 Backend Map
+# Eval Backend Map
 
 ## Scope
 
 This map is derived from the current repository implementation on 26 March 2026.
 It is intentionally code-first and excludes deprecated narrative docs as a source
 of truth.
+
+Wiring-phase note:
+
+- persistence provisioning is currently deferred until wiring sign-off
+- see `docs/EVAL_WIRING_SPEC.md` for phase policy and gate topology
 
 Primary sources:
 

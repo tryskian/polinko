@@ -201,6 +201,11 @@ make db-refresh
 make db-visuals
 ```
 
+Note:
+
+- during the current eval wiring-lock phase, keep DB provisioning paused
+  (`db-init`/`db-refresh`), and use docs/tests as canonical contract checks.
+
 ## Docker Smoke Test
 
 ```bash

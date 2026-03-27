@@ -857,3 +857,17 @@
     - `make db-visuals` (generate `docs/RUNTIME_DB_VISUALS.md`)
 - Why: Preserves old runtime evidence for traceability while ensuring new logic
   starts from clean database baselines.
+
+## D-079: Freeze runtime DB provisioning until eval wiring sign-off
+
+- Date: `2026-03-27`
+- Category: `workflow_environment`
+- Tags: `wiring_first`, `db_freeze`, `contract_lock`, `binary_eval`
+- Decision:
+  - during the eval wiring phase, keep runtime DB provisioning paused
+    (`db-init`/`db-refresh` are deferred)
+  - keep existing DB families archived under `.local_archive/`
+  - treat `docs/EVAL_WIRING_SPEC.md` + tests as canonical until persistence
+    design begins
+- Why: Prevents persistence artefacts from masking contract drift and keeps the
+  binary gate model deterministic before schema/migration work starts.

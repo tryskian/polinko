@@ -1,8 +1,12 @@
-# Eval V2 Spec (Draft)
+# Eval Spec
 
 ## Objective
 
 Define one unambiguous binary eval spec for backend, tooling, and reports.
+
+Wiring-phase source-of-truth:
+
+- `docs/EVAL_WIRING_SPEC.md` (gate topology and phase policy)
 
 Binary means:
 
@@ -15,6 +19,7 @@ Binary means:
 - redesigning model prompts
 - changing product UX in this draft
 - deleting historical evidence artefacts
+- provisioning fresh runtime DB files before wiring sign-off
 
 ## Canonical Outcome Model
 
@@ -118,15 +123,15 @@ Each harness output should resolve to:
 - `failed_cases`
 - `summary`
 
-## Acceptance Criteria For Eval V2
+## Acceptance Criteria
 
 1. No runtime path accepts or produces `mixed` as an outcome.
 2. Checkpoint arithmetic satisfies invariant for all test fixtures.
 3. Existing feedback endpoints reject non-binary payloads at write time.
 4. `make backend-gate` passes with deterministic quality gate.
-5. Archived artefacts never drive active v2 gate decisions.
+5. Archived artefacts never drive active gate decisions.
 
 ## Open Decisions (Need Peanut + Beab Sign-Off)
 
 1. Whether to add an explicit `spec_version` column to `message_feedback` now or in a follow-up migration.
-2. Whether `clip-ab` readiness is informational or release-blocking in v2.
+2. Whether `clip-ab` readiness is informational or release-blocking.

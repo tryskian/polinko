@@ -33,6 +33,8 @@
 
 - Runtime chat/session state:
   - SQLite stores (chat history + memory/vector artifacts).
+  - During current wiring lock, fresh DB provisioning is intentionally paused.
+    Legacy DB artifacts remain archived under `.local_archive/`.
 - Eval runtime state (authoritative):
   - `.polinko_history.db` via `core/history_store.py`
     - `message_feedback` (binary `pass`/`fail` + tags/notes/status)
@@ -41,6 +43,8 @@
     integrity signal only.
   - canonical policy/reward semantics and conceptual ER model:
     `docs/EVAL_POLICY_MODEL.md`
+  - canonical gate wiring contract and phase policy:
+    `docs/EVAL_WIRING_SPEC.md`
 - Eval artefacts (non-authoritative):
   - Git history is the canonical retention mechanism for tracked project state.
   - local eval artefacts are operational outputs (default under `eval_reports/`)
@@ -77,6 +81,7 @@
 - Env sanity: `make doctor-env`
 - Backend tests: `make test`
 - Local API: `make server` or `make server-daemon`
-- Runtime DB refresh: `make db-refresh`
+- Wiring visual contract: `docs/EVAL_WIRING_SPEC.md`
+- Runtime DB refresh (post wiring sign-off only): `make db-refresh`
 - Local eval trace backfill (optional): `make backfill-eval-traces`
 - Docs relationship graph: `make reference-graph`

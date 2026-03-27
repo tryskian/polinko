@@ -130,6 +130,21 @@
    - do not wire it into active runtime/eval gate paths.
    - keep binary runtime contracts sourced from active docs/code.
 
+## Wiring-First DB Freeze
+
+1. Before eval wiring sign-off, keep runtime DB provisioning paused:
+   - do not run `make db-init`
+   - do not run `make db-refresh`
+2. Keep archived DB evidence under `.local_archive/` as reference only.
+3. During wiring phase, use:
+   - docs contract surfaces (`docs/EVAL_WIRING_SPEC.md`,
+     `docs/EVAL_SPEC.md`, `docs/EVAL_BACKEND_MAP.md`)
+   - tests/eval harness validation (`make test`,
+     `make quality-gate-deterministic`)
+4. Only after wiring sign-off:
+   - initialise fresh DBs once
+   - regenerate DB visuals and continue persistence implementation
+
 ## Python Diagnostics (Ruff + Mypy)
 
 1. Use repo-local tools for deterministic output:
@@ -812,10 +827,12 @@ Current policy:
 4. Runtime DB visuals (history/vector/memory):
    - `make db-visuals`
    - output: `docs/RUNTIME_DB_VISUALS.md`
-5. Runtime DB archive-first refresh cycle:
-   - archive current DB evidence: `make db-archive`
-   - create fresh DB schema files: `make db-init`
-   - one-command archive + init: `make db-refresh`
+5. Runtime DB archive/init commands are post-wiring only:
+   - wiring phase: keep DB provisioning paused
+   - post sign-off:
+     - archive current DB evidence: `make db-archive`
+     - create fresh DB schema files: `make db-init`
+     - one-command archive + init: `make db-refresh`
 
 ## Start Fresh Eval Cycle
 

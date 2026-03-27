@@ -161,6 +161,12 @@
     - `make db-refresh` (archive + init)
   - added runtime DB schema visualisation:
     - `make db-visuals` -> `docs/RUNTIME_DB_VISUALS.md`
+- Wiring lock checkpoint (March 27, 2026):
+  - runtime DB provisioning is intentionally paused until eval wiring sign-off
+  - no fresh `.polinko_*.db` or `.human_reference.db` files are active in
+    repository root during this phase
+  - canonical wiring source is `docs/EVAL_WIRING_SPEC.md` and associated
+    contract docs/tests
 - Proactive ownership checkpoint (March 26, 2026):
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder
