@@ -8,7 +8,7 @@ Binary means:
 
 - one eval record resolves to exactly one outcome (`pass` or `fail`)
 - checkpoint aggregates are mutually exclusive and deterministic
-- active file artefacts are archive-only snapshots
+- active file artefacts are local operational outputs; retention is Git-native
 
 ## Non-Goals
 
@@ -80,11 +80,10 @@ Required row fields (logical spec):
 
 ### File artefacts (append-only evidence)
 
-These remain append-only archive evidence, not primary runtime truth:
+These remain append-only local evidence outputs, not primary runtime truth:
 
-- `docs/portfolio/raw_evidence/archive/baseline/eval-trace-records/eval_trace_artifacts.jsonl`
-- optional archived submission/checkpoint JSONL snapshots under
-  `docs/portfolio/raw_evidence/archive/*`
+- `eval_reports/eval_trace_artifacts.jsonl`
+- optional local submission/checkpoint JSONL snapshots under `eval_reports/*`
 
 ## API Spec Impact
 

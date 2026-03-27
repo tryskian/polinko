@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-26
+- 2026-03-27
 
 ## Current Snapshot
 
@@ -17,8 +17,8 @@
 - Previous normalisation tooling was removed from active flow:
   - deleted `tools/normalize_feedback_outcomes.py`
   - removed `make eval-feedback-normalize`
-- `docs/portfolio/raw_evidence` top-level intake folders/files are deprecated;
-  archive snapshots only (`docs/portfolio/raw_evidence/archive/*`) are kept.
+- Git history is the canonical archive for tracked docs/code; local eval artefact
+  folders are operational outputs only and are not part of release truth.
 - Human-reference flow remains offline/query-first:
   - rebuild: `make human-reference-db`
   - queries: `make human-reference-latest|transcripts|changes|relationships`
@@ -32,7 +32,7 @@
 ## Latest Branch Context
 
 - Active implementation branch:
-  - `codex/bigbrain/app-beta-refactor`
+  - `main`
 - Canonical repo path:
   - `/Users/tryskian/Github/polinko`
 
@@ -70,7 +70,6 @@
 ## Immediate Next Step
 
 - Finish binary hard-cutover validation and merge flow:
-  - run `make eval-reset-baseline` to snapshot/clear deprecated eval artefacts
   - run full backend validation
   - open PR from `codex/bigbrain/app-beta-refactor`
   - merge after checks pass
