@@ -813,7 +813,6 @@ Current policy:
 1. Rebuild local human reference DB:
    - `make human-reference-db`
    - Reference guide: `docs/HUMAN_REFERENCE_DB.md`
-   - ER diagram source: `docs/human_reference_erd.mmd`
 2. Run latest-docs query:
    - `make human-reference-latest`
 3. Run transcript/key-points feed:
@@ -828,7 +827,8 @@ Current policy:
 7. Visualization note:
    - project default flow is query-first/offline (`make human-reference-*`)
    - for visual ER exploration, open `.human_reference.db` in your preferred DB
-     viewer and load `docs/human_reference_erd.mmd` as the schema reference
+     viewer and use the ER diagram embedded in `docs/HUMAN_REFERENCE_DB.md` as
+     the schema reference
 
 ## UI Feedback Rubric (Deprecated Surface)
 
