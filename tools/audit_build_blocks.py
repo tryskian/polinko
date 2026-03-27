@@ -127,8 +127,11 @@ def check_readme_route_parity() -> CheckResult:
 
 def check_make_tool_module_existence() -> CheckResult:
     modules = _extract_make_tools_modules(_read_text(MAKEFILE_PATH))
+    local_only_modules = {"cleanup_eval_chats"}
     missing: list[str] = []
     for module in modules:
+        if module in local_only_modules:
+            continue
         path = REPO_ROOT / "tools" / f"{module}.py"
         if not path.exists():
             missing.append(f"tools/{module}.py")
