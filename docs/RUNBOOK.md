@@ -118,6 +118,18 @@
 3. Use this before wider refactors to catch drift early without resetting the
    repo.
 
+## Live Archive Reference
+
+1. Use `docs/live_archive/` as the single active reference location for
+   deprecated implementation context.
+2. Legacy eval context belongs in:
+   - `docs/live_archive/legacy_eval/`
+3. Legacy frontend context belongs in:
+   - `docs/live_archive/legacy_frontend/`
+4. Archive content is reference-only:
+   - do not wire it into active runtime/eval gate paths.
+   - keep binary runtime contracts sourced from active docs/code.
+
 ## Python Diagnostics (Ruff + Mypy)
 
 1. Use repo-local tools for deterministic output:
@@ -181,22 +193,6 @@
    - use OpenAI docs MCP for documentation lookup
    - keep local repo runtime/eval stack as implementation source of truth
 
-## Playwright E2E
-
-1. Install frontend deps (if needed):
-   - `make ui-install`
-2. Install Playwright browsers once per machine/container:
-   - `make ui-e2e-install`
-3. Run E2E suite:
-   - `make ui-e2e`
-4. Run in headed mode (direct npm):
-   - `cd frontend && npm run test:e2e:headed`
-5. Current E2E tests use mocked API responses so they run without starting
-   the backend server.
-6. Retry-variant regression coverage is in:
-   - `frontend/e2e/smoke.spec.js`
-   - run targeted: `cd frontend && npx playwright test e2e/smoke.spec.js`
-
 ## Tooling Baseline
 
 1. Install local CLIs (macOS/Homebrew):
@@ -204,7 +200,6 @@
 2. `Dependabot` is configured in `.github/dependabot.yml` for:
    - GitHub Actions (`/`)
    - Python (`/`)
-   - npm (`/frontend`)
 3. Install and run `pre-commit`:
    - `make precommit-install`
    - `make precommit-run`
@@ -806,51 +801,21 @@ Current policy:
 4. If stale local artefacts reappear and you want a clean cycle:
    - remove local outputs (`rm -rf eval_reports/*`) before the next run.
 
-## Human Reference DB (One-Click Queries)
+## Reference Graph Visualisation
 
-1. Rebuild local human reference DB:
-   - `make human-reference-db`
-   - Reference guide: `docs/HUMAN_REFERENCE_DB.md`
-2. Run latest-docs query:
-   - `make human-reference-latest`
-3. Run transcript/key-points feed:
-   - `make human-reference-transcripts`
-4. Run recent-changes feed (default last 24h):
-   - `make human-reference-changes`
-5. Run relationship-map feed:
-   - `make human-reference-relationships`
-6. Optional query tuning:
-   - `make human-reference-latest HUMAN_REFERENCE_LIMIT=50`
-   - `make human-reference-changes HUMAN_REFERENCE_SINCE_HOURS=72`
-7. Visualization note:
-   - project default flow is query-first/offline (`make human-reference-*`)
-   - for visual ER exploration, open `.human_reference.db` in your preferred DB
-     viewer and use the ER diagram embedded in `docs/HUMAN_REFERENCE_DB.md` as
-     the schema reference
-
-## UI Feedback Rubric (Deprecated Surface)
-
-1. Use only for archive-maintenance checks while backend/CLI eval tooling is canonical.
-2. For each assistant response, open `Evaluate`.
-3. Score two rubric dimensions:
-   - `Style`: `pass` or `fail`
-   - `Hallucination risk`: `pass` or `fail`
-4. Optional style penalties:
-   - `default/straight style` (`default_style`) is a soft penalty.
-   - `em-dash style` (`em_dash_style`) is a hard penalty.
-5. Save one checkpoint per reviewed response.
-6. Status line semantics:
-   - `pass: ...` for positive rubric signals
-   - `fail: ...` for hard fail signals
-   - `penalty: ...` for soft-only penalties
-7. Outcome derivation (system):
-   - `pass`: no hard fail signals
-   - `fail`: any hard fail signal present
-8. Release gate usage (operator):
-   - treat any hard fail signal as a gate fail for that response
-   - soft penalties stay actionable quality debt, not hard blockers
-9. Runtime checkpoint/feedback truth is SQLite (`.polinko_history.db`), not
-   raw-evidence file logs.
+1. Build docs relationship graph:
+   - `make reference-graph`
+2. Open generated visual:
+   - `docs/REFERENCE_GRAPH.md`
+3. Archived human-reference DB workflow is retained only for traceability:
+   - `docs/live_archive/legacy_human_reference/`
+4. Runtime DB visuals (history/vector/memory):
+   - `make db-visuals`
+   - output: `docs/RUNTIME_DB_VISUALS.md`
+5. Runtime DB archive-first refresh cycle:
+   - archive current DB evidence: `make db-archive`
+   - create fresh DB schema files: `make db-init`
+   - one-command archive + init: `make db-refresh`
 
 ## Start Fresh Eval Cycle
 
@@ -894,24 +859,15 @@ Current policy:
    - `/search-chat your query`
    - `/export`
 
-## Export From UI (Deprecated Surface)
-
-1. Use only when maintaining archived UI behaviour.
-2. Open a chat in the web UI.
-3. Use header controls to download:
-   - transcript markdown (`.md`)
-   - transcript json (`.json`)
-   - OCR run history json (`.ocr-runs.json`)
-
 ## Dev Startup (Auto Port Hygiene)
 
 1. Start backend-only canonical surface:
    - `make server-daemon`
 2. Stop backend daemon:
    - `make server-daemon-stop`
-3. Optional archive-maintenance startup (backend + frontend):
+3. Optional foreground backend run:
    - `make dev`
-4. Optional archive-maintenance stop:
+4. Optional foreground stop:
    - `make dev-stop`
 
 ## Common Connection Error

@@ -5,14 +5,14 @@
       "labeling_guidance": {
         "outcome": "partial",
         "pass_tags": [
-          "grounded",
-          "style",
-          "high_value"
+          "policy_pass",
+          "high_value_alignment",
+          "evidence_complete"
         ],
         "fail_tags": [
-          "ocr_miss",
-          "grounding_gap",
-          "needs_retry"
+          "policy_fail",
+          "high_value_miss",
+          "evidence_incomplete"
         ],
         "note": "High recovery quality after ambiguity; unstable initial OCR-to-claim mapping."
       },

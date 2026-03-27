@@ -633,6 +633,8 @@
 - Why: This keeps the workflow easy to operate offline, avoids maintaining a
   separate bespoke visualization surface, and preserves clear relationship
   semantics for imagineer-facing exploration.
+- Status: Superseded by `D-076` (human-reference SQLite workflow is archive-only;
+  active visual surface is `make reference-graph`).
 
 ## D-062: Inspect-first execution and explicit legacy cutlines
 
@@ -783,3 +785,75 @@
   overhead, and introduced path complexity without improving release decision
   quality.
 - Supersedes: `D-068` for active operations.
+
+## D-074: Introduce a tracked live archive lane for deprecated eval/frontend context
+
+- Date: `2026-03-27`
+- Category: `evidence_governance`
+- Tags: `live_archive`, `legacy_reference`, `frontend_deprecation`, `binary_hygiene`
+- Decision:
+  - create `docs/live_archive/` as the single tracked reference surface for
+    deprecated implementation context
+  - split lanes by concern:
+    - `docs/live_archive/legacy_eval/`
+    - `docs/live_archive/legacy_frontend/`
+  - keep archive lane read-only for reference; active runtime contracts remain
+    sourced from canonical docs/code
+- Why: Preserves inspectability/traceability of deprecated context without
+  reintroducing legacy wiring into active runtime and eval decisions.
+
+## D-075: Remove legacy hallucination-mode labels from active eval case contract
+
+- Date: `2026-03-27`
+- Category: `eval_quality`
+- Tags: `binary_contract`, `criteria_cleanup`, `policy_profile`, `hallucination_eval`
+- Decision:
+  - replace active hallucination case label `expected_mode` with
+    `policy_profile`
+  - use only:
+    - `evidence_required`
+    - `uncertainty_required`
+  - remove deprecated criteria tags from OCR recovery case guidance
+    (`grounding_gap` and related legacy labels)
+- Why: Drops legacy criteria vocabulary from active eval wiring so new UI and
+  backend flows align to policy-profile semantics without ambiguity.
+
+## D-076: Archive SQLite human-reference workflow; replace with markdown-native graph visualisation
+
+- Date: `2026-03-27`
+- Category: `evidence_governance`
+- Tags: `human_reference`, `archive_only`, `markdown_graph`, `visualisation`
+- Decision:
+  - move SQLite human-reference workflow to archive-only status in
+    `docs/live_archive/legacy_human_reference/`
+  - make `reference-graph` the canonical docs relationship visualisation flow
+    (`tools/build_reference_graph.py` -> `docs/REFERENCE_GRAPH.md`)
+  - leave legacy human-reference make targets as archive notices
+- Why: Reduces operator complexity and produces a more imagineer-readable visual
+  surface without keeping an active DB/query workflow in the critical path.
+
+## D-077: Remove frontend codebase from active repository surface
+
+- Date: `2026-03-27`
+- Category: `workflow_environment`
+- Tags: `frontend_removal`, `backend_cli_only`, `surface_reduction`, `drift_control`
+- Decision:
+  - remove `frontend/` from active repository contents
+  - remove active UI make targets/wiring and update dev flow to backend-only
+  - retain legacy frontend context through live-archive docs + Git history
+- Why: Eliminates hidden UI state/wiring vectors while preparing a clean-slate
+  UI rebuild and keeps active execution surfaces deterministic.
+
+## D-078: Adopt archive-first runtime DB lifecycle for history/memory/vector
+
+- Date: `2026-03-27`
+- Category: `workflow_environment`
+- Tags: `db_lifecycle`, `archive_first`, `runtime_state`, `evidence_retention`
+- Decision:
+  - add runtime DB lifecycle tooling:
+    - `make db-archive` (snapshot old DB families to `.local_archive/runtime_dbs`)
+    - `make db-init` (initialise fresh history/vector/memory DBs)
+    - `make db-refresh` (archive + init)
+    - `make db-visuals` (generate `docs/RUNTIME_DB_VISUALS.md`)
+- Why: Preserves old runtime evidence for traceability while ensuring new logic
+  starts from clean database baselines.

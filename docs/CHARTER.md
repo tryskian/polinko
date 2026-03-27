@@ -16,7 +16,7 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 
 ## Engineering Principles
 
-- Keep behaviour stable and backend-first; web UI is deprecated for active operations.
+- Keep behaviour stable and backend-first; web UI is archived from active operations.
 - Preserve prompt continuity through minimal, explicit prompt instructions.
 - Fail fast on config/auth issues.
 - Prefer deterministic, testable backend changes.
@@ -29,8 +29,8 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 
 - Inspect before optimise when system intent or provenance is unclear.
 - Human-directed precision takes priority over agent-side summarisation/cleanup.
-- Archive deprecated workflow context; keep active docs and runtime contracts
-  binary-only.
+- Keep deprecated workflow context in `docs/live_archive/`; keep active docs and
+  runtime contracts binary-only.
 - Engineer owns proactive technical hygiene:
   - identify drift/gremlin-risk paths early
   - execute cleanup/validation/doc alignment without waiting for reminders
@@ -54,7 +54,8 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - API implementation: `api/app_factory.py`
 - Prompt versions: `core/prompts.py`
 - API tests: `tests/test_api.py`
-- Web UI code (`frontend/`) is archive-maintenance only.
+- Archived web UI context is documented under
+  `docs/live_archive/legacy_frontend/`.
 
 ## Security / Ops Baseline
 
@@ -69,5 +70,6 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 
 - In scope: local development, API hardening, test coverage.
 - In scope: retrieval/OCR/file-search reliability and eval hardening.
-- Deprecated: web UI as an active execution surface; retained only for archive maintenance.
+- Archived: web UI as an active execution surface; retained only in
+  live-archive references.
 - Paused: cloud deployment automation (removed from repo for now; Azure is the preferred target when resumed).

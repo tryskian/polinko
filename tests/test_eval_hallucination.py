@@ -56,7 +56,7 @@ class HallucinationEvalGateTests(unittest.TestCase):
 
     def test_deterministic_gate_passes_clean_case(self) -> None:
         reasons = _apply_deterministic_gate(
-            case={"expected_mode": "grounded", "must_not_contain": ["let me guess"]},
+            case={"policy_profile": "evidence_required", "must_not_contain": ["let me guess"]},
             answer="Answer grounded in available evidence.",
             score=_MIN_ACCEPTABLE_SCORE,
             risk="low",
@@ -67,7 +67,7 @@ class HallucinationEvalGateTests(unittest.TestCase):
 
     def test_deterministic_gate_fails_forbidden_phrase(self) -> None:
         reasons = _apply_deterministic_gate(
-            case={"expected_mode": "cautious", "must_not_contain": ["let me guess"]},
+            case={"policy_profile": "uncertainty_required", "must_not_contain": ["let me guess"]},
             answer="Let me guess, maybe this happened.",
             score=9,
             risk="low",
@@ -78,7 +78,7 @@ class HallucinationEvalGateTests(unittest.TestCase):
 
     def test_deterministic_gate_fails_high_risk(self) -> None:
         reasons = _apply_deterministic_gate(
-            case={"expected_mode": "cautious", "must_not_contain": []},
+            case={"policy_profile": "uncertainty_required", "must_not_contain": []},
             answer="Uncertain answer.",
             score=9,
             risk="high",
@@ -89,7 +89,7 @@ class HallucinationEvalGateTests(unittest.TestCase):
 
     def test_deterministic_gate_fails_low_score(self) -> None:
         reasons = _apply_deterministic_gate(
-            case={"expected_mode": "cautious", "must_not_contain": []},
+            case={"policy_profile": "uncertainty_required", "must_not_contain": []},
             answer="Uncertain answer.",
             score=_MIN_ACCEPTABLE_SCORE - 1,
             risk="low",
@@ -98,20 +98,20 @@ class HallucinationEvalGateTests(unittest.TestCase):
         )
         self.assertTrue(any("score below minimum threshold" in reason for reason in reasons))
 
-    def test_deterministic_gate_fails_grounded_mode_when_not_grounded(self) -> None:
+    def test_deterministic_gate_fails_evidence_required_profile_when_not_grounded(self) -> None:
         reasons = _apply_deterministic_gate(
-            case={"expected_mode": "grounded", "must_not_contain": []},
+            case={"policy_profile": "evidence_required", "must_not_contain": []},
             answer="Maybe true.",
             score=9,
             risk="low",
             grounding="partially_grounded",
             min_acceptable_score=_MIN_ACCEPTABLE_SCORE,
         )
-        self.assertIn("grounded case returned grounding='partially_grounded'", reasons)
+        self.assertIn("evidence-required case returned grounding='partially_grounded'", reasons)
 
     def test_deterministic_gate_respects_custom_threshold(self) -> None:
         reasons = _apply_deterministic_gate(
-            case={"expected_mode": "cautious", "must_not_contain": []},
+            case={"policy_profile": "uncertainty_required", "must_not_contain": []},
             answer="Concise grounded answer.",
             score=65,
             risk="low",
@@ -120,9 +120,9 @@ class HallucinationEvalGateTests(unittest.TestCase):
         )
         self.assertIn("score below minimum threshold (65 < 70)", reasons)
 
-    def test_deterministic_assessment_grounded_requires_memory(self) -> None:
+    def test_deterministic_assessment_evidence_required_needs_memory(self) -> None:
         result = _deterministic_assessment(
-            case={"expected_mode": "grounded", "must_not_contain": []},
+            case={"policy_profile": "evidence_required", "must_not_contain": []},
             answer="Answer without citations.",
             memory_used=[],
         )
@@ -130,9 +130,9 @@ class HallucinationEvalGateTests(unittest.TestCase):
         self.assertEqual(result["risk"], "high")
         self.assertEqual(result["grounding"], "partially_grounded")
 
-    def test_deterministic_assessment_cautious_passes_without_memory(self) -> None:
+    def test_deterministic_assessment_uncertainty_required_passes_without_memory(self) -> None:
         result = _deterministic_assessment(
-            case={"expected_mode": "cautious", "must_not_contain": []},
+            case={"policy_profile": "uncertainty_required", "must_not_contain": []},
             answer="I cannot verify this claim from available evidence.",
             memory_used=[],
         )
@@ -142,7 +142,7 @@ class HallucinationEvalGateTests(unittest.TestCase):
 
     def test_deterministic_assessment_flags_forbidden_phrase(self) -> None:
         result = _deterministic_assessment(
-            case={"expected_mode": "cautious", "must_not_contain": ["let me guess"]},
+            case={"policy_profile": "uncertainty_required", "must_not_contain": ["let me guess"]},
             answer="Let me guess, this happened in 2029.",
             memory_used=[],
         )

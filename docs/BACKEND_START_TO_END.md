@@ -57,8 +57,8 @@ Use these after `backend-gate` when needed:
 
 ```bash
 make evidence-refresh
-make human-reference-db
-make human-reference-latest
+make reference-graph
+make db-visuals
 make docker-build
 ```
 

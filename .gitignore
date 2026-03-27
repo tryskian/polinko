@@ -57,6 +57,7 @@ _virtualenv.py
 .human_reference.db
 .human_reference.db-shm
 .human_reference.db-wal
+.local_archive/
 
 # Local planning sandbox docs
 docs/portfolio/
