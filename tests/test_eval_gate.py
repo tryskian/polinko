@@ -1,6 +1,7 @@
 import unittest
 
 from tools.eval_gate import resolve_binary_gate
+from tools.eval_gate import resolve_fail_closed_status
 
 
 class EvalGateTests(unittest.TestCase):
@@ -57,6 +58,17 @@ class EvalGateTests(unittest.TestCase):
             decision.reasons,
             ("policy denied", "alignment denied", "evidence denied"),
         )
+
+    def test_fail_closed_status_maps_pass_to_pass(self) -> None:
+        decision = resolve_fail_closed_status(status="PASS")
+        self.assertTrue(decision.passed)
+        self.assertEqual(decision.outcome, "pass")
+
+    def test_fail_closed_status_maps_error_to_fail(self) -> None:
+        decision = resolve_fail_closed_status(status="ERROR", detail="timeout")
+        self.assertFalse(decision.passed)
+        self.assertEqual(decision.outcome, "fail")
+        self.assertIn("case status=error (timeout)", decision.reasons)
 
 
 if __name__ == "__main__":

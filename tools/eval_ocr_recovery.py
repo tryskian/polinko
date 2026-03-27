@@ -11,6 +11,7 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+from tools.eval_gate import resolve_fail_closed_status
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
@@ -458,12 +459,18 @@ def main() -> int:
             if step["status"] != "PASS":
                 print(f"    - {step['step_id']}: {'; '.join(step['reasons'])}")
 
+        gate_decision = resolve_fail_closed_status(
+            status=case_status,
+            detail=case_error,
+        )
         case_reports.append(
             {
                 "id": case_id,
                 "session_id": session_id,
                 "status": case_status,
                 "error": case_error,
+                "gate_outcome": gate_decision.outcome,
+                "gate_reasons": list(gate_decision.reasons),
                 "labeling_guidance": case.get("labeling_guidance"),
                 "steps": step_reports,
             }
@@ -484,6 +491,8 @@ def main() -> int:
 
     report_path = str(args.report_json or "").strip()
     if report_path:
+        gate_passed = sum(1 for item in case_reports if item.get("gate_outcome") == "pass")
+        gate_failed = len(case_reports) - gate_passed
         output_path = Path(report_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         report_payload = {
@@ -495,6 +504,8 @@ def main() -> int:
                 "passed": passed,
                 "failed": total_failures,
                 "errors": total_errors,
+                "gate_passed": gate_passed,
+                "gate_failed": gate_failed,
             },
             "cases": case_reports,
             "generated_at": int(time.time()),
@@ -516,10 +527,11 @@ def main() -> int:
                 gate_outcomes=[
                     {
                         "name": "ocr_recovery_eval",
-                        "passed": total_failures == 0,
+                        "passed": gate_failed == 0,
                         "detail": (
                             f"passed={passed}/{len(cases)}, "
-                            f"failed={total_failures}, errors={total_errors}"
+                            f"failed={total_failures}, errors={total_errors}, "
+                            f"gate_failed={gate_failed}"
                         ),
                     }
                 ],

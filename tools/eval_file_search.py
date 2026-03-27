@@ -9,6 +9,7 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+from tools.eval_gate import resolve_fail_closed_status
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
@@ -570,6 +571,10 @@ def main() -> int:
                 failures.append(f"{case_id}: error - {exc}")
                 print(f"  ERROR: {exc}")
         finally:
+            gate_decision = resolve_fail_closed_status(
+                status=case_status,
+                detail=detail,
+            )
             case_results.append(
                 {
                     "id": case_id,
@@ -583,6 +588,8 @@ def main() -> int:
                     "status": case_status,
                     "detail": detail,
                     "error": case_error,
+                    "gate_outcome": gate_decision.outcome,
+                    "gate_reasons": list(gate_decision.reasons),
                     "scoped_hit_found": scoped_hit_found,
                     "global_hit_found": global_hit_found,
                     "scoped_leak_detected": scoped_leak_detected,
@@ -608,6 +615,8 @@ def main() -> int:
     )
     report_json = str(args.report_json or "").strip()
     if report_json:
+        gate_passed = sum(1 for item in case_results if item.get("gate_outcome") == "pass")
+        gate_failed = len(case_results) - gate_passed
         output_path = Path(report_json)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         report_payload = {
@@ -623,6 +632,8 @@ def main() -> int:
                 "global_miss": global_failures,
                 "scoped_leak": leak_failures,
                 "errors": error_failures,
+                "gate_passed": gate_passed,
+                "gate_failed": gate_failed,
             },
             "failures": failures,
             "skipped_entries": skipped,
@@ -646,10 +657,11 @@ def main() -> int:
                 gate_outcomes=[
                     {
                         "name": "file_search_report",
-                        "passed": len(failures) == 0 and len(skipped) == 0,
+                        "passed": gate_failed == 0,
                         "detail": (
                             f"passed={passes}/{len(cases)}, failed={len(failures)}, "
-                            f"skipped={len(skipped)}, errors={error_failures}"
+                            f"skipped={len(skipped)}, errors={error_failures}, "
+                            f"gate_failed={gate_failed}"
                         ),
                     }
                 ],

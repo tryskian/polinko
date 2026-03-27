@@ -49,3 +49,31 @@ def resolve_binary_gate(
         evidence_complete=evidence_complete,
         reasons=tuple(reasons),
     )
+
+
+def resolve_fail_closed_status(
+    *,
+    status: str,
+    detail: str = "",
+) -> BinaryGateDecision:
+    """Map case status to a binary fail-closed gate decision.
+
+    Only `PASS` maps to pass; all other statuses map to fail.
+    """
+
+    normalized = status.strip().lower()
+    if normalized == "pass":
+        return resolve_binary_gate(
+            policy_pass=True,
+            high_value_alignment_pass=True,
+            evidence_complete=True,
+        )
+    reason = f"case status={normalized or 'unknown'}"
+    if detail.strip():
+        reason = f"{reason} ({detail.strip()})"
+    return resolve_binary_gate(
+        policy_pass=False,
+        high_value_alignment_pass=True,
+        evidence_complete=True,
+        reason_overrides={"policy_pass": reason},
+    )
