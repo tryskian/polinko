@@ -40,8 +40,6 @@ This means ER tools can now infer the link-table relationships directly from for
 
 ## ER Diagram
 
-Source file: `docs/human_reference_erd.mmd`
-
 ```mermaid
 erDiagram
     DOCUMENTS {

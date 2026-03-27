@@ -765,6 +765,23 @@ Current policy:
 3. Run `make eval-reports`.
 4. Reports are written under `eval_reports/` with timestamped filenames.
 
+## Eval Gate Semantics (Canonical)
+
+1. Use `docs/EVAL_POLICY_MODEL.md` as the source of truth for eval gate
+   semantics.
+2. Symbol convention for policy docs:
+   - `⊨` semantic entailment / satisfies
+   - `⊭` does not semantically entail
+3. Canonical semantics:
+   - `reward ⊨ alignment`
+   - `reward ⊭ adjustment`
+   - `reward ⊭ intensity`
+4. Canonical binary gate:
+   - `PASS ⇔ policy_pass ∧ high_value_alignment_pass ∧ evidence_complete`
+   - otherwise `FAIL`
+5. Keep release output strictly binary; diagnostic detail may be rich, but it
+   must not introduce non-binary gate states.
+
 ## Calibrate Hallucination Threshold
 
 1. Generate one or more hallucination report artifacts:
@@ -796,7 +813,6 @@ Current policy:
 1. Rebuild local human reference DB:
    - `make human-reference-db`
    - Reference guide: `docs/HUMAN_REFERENCE_DB.md`
-   - ER diagram source: `docs/human_reference_erd.mmd`
 2. Run latest-docs query:
    - `make human-reference-latest`
 3. Run transcript/key-points feed:
@@ -811,7 +827,8 @@ Current policy:
 7. Visualization note:
    - project default flow is query-first/offline (`make human-reference-*`)
    - for visual ER exploration, open `.human_reference.db` in your preferred DB
-     viewer and load `docs/human_reference_erd.mmd` as the schema reference
+     viewer and use the ER diagram embedded in `docs/HUMAN_REFERENCE_DB.md` as
+     the schema reference
 
 ## UI Feedback Rubric (Deprecated Surface)
 

@@ -39,6 +39,8 @@
     - `eval_checkpoints` (`pass_count`, `fail_count`, `non_binary_count`)
   - active gate logic is binary-only (`pass`/`fail`); `non_binary_count` is an
     integrity signal only.
+  - canonical policy/reward semantics and conceptual ER model:
+    `docs/EVAL_POLICY_MODEL.md`
 - Eval artefacts (non-authoritative):
   - `docs/portfolio/raw_evidence/archive/baseline/*` is the only active
     file-based eval artefact surface.
