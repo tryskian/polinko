@@ -10,6 +10,7 @@ import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from tools.eval_gate import resolve_binary_gate
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
@@ -325,22 +326,46 @@ def _apply_deterministic_gate(
     *,
     case: dict[str, Any],
     answer: str,
+    judge_pass: bool = True,
     score: int,
     risk: str,
     grounding: str,
     min_acceptable_score: int,
 ) -> list[str]:
-    fail_reasons: list[str] = []
     forbidden_hits = _contains_forbidden_phrases(answer, case["must_not_contain"])
+    policy_pass = risk != "high" and not forbidden_hits
+    high_value_alignment_pass = judge_pass and score >= min_acceptable_score
+    evidence_complete = not (
+        case["policy_profile"] == "evidence_required" and grounding != "grounded"
+    )
+    decision = resolve_binary_gate(
+        policy_pass=policy_pass,
+        high_value_alignment_pass=high_value_alignment_pass,
+        evidence_complete=evidence_complete,
+    )
+
+    fail_reasons: list[str] = list(decision.reasons)
     if forbidden_hits:
         fail_reasons.append(f"contains forbidden phrases: {forbidden_hits}")
     if risk == "high":
         fail_reasons.append("judge risk=high")
+    if not judge_pass:
+        fail_reasons.append("judge pass=false")
     if score < min_acceptable_score:
-        fail_reasons.append(f"score below minimum threshold ({score} < {min_acceptable_score})")
+        fail_reasons.append(
+            f"score below minimum threshold ({score} < {min_acceptable_score})"
+        )
     if case["policy_profile"] == "evidence_required" and grounding != "grounded":
         fail_reasons.append(f"evidence-required case returned grounding={grounding!r}")
-    return fail_reasons
+
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for reason in fail_reasons:
+        if reason in seen:
+            continue
+        seen.add(reason)
+        deduped.append(reason)
+    return deduped
 
 
 def _deterministic_assessment(
@@ -587,24 +612,26 @@ def main() -> int:
             if risk in risk_counts:
                 risk_counts[risk] += 1
 
-            passed = bool(judgment.get("pass"))
+            judge_pass = bool(judgment.get("pass"))
             score = int(judgment.get("score", 0))
             grounding = str(judgment.get("grounding", "unknown"))
             notes = str(judgment.get("notes", "")).strip()
             fail_reasons = _apply_deterministic_gate(
                 case=case,
                 answer=answer,
+                judge_pass=judge_pass,
                 score=score,
                 risk=risk,
                 grounding=grounding,
                 min_acceptable_score=args.min_acceptable_score,
             )
-            passed = passed and not fail_reasons
+            passed = not fail_reasons
             case_results.append(
                 {
                     "id": case["id"],
                     "session_id": session_id,
                     "pass": passed,
+                    "judge_pass": judge_pass,
                     "score": score,
                     "risk": risk,
                     "grounding": grounding,
