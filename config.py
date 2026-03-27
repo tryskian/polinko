@@ -223,8 +223,14 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     server_api_key_principals = _load_server_api_key_principals(server_api_key)
     log_level = (_read_env("POLINKO_LOG_LEVEL", "INFO") or "INFO").upper()
     default_session_id = _read_env("POLINKO_DEFAULT_SESSION_ID", "default") or "default"
-    session_db_path = _read_env("POLINKO_MEMORY_DB_PATH", ".polinko_memory.db") or ".polinko_memory.db"
-    history_db_path = _read_env("POLINKO_HISTORY_DB_PATH", ".polinko_history.db") or ".polinko_history.db"
+    session_db_path = (
+        _read_env("POLINKO_MEMORY_DB_PATH", ".local/runtime_dbs/active/memory.db")
+        or ".local/runtime_dbs/active/memory.db"
+    )
+    history_db_path = (
+        _read_env("POLINKO_HISTORY_DB_PATH", ".local/runtime_dbs/active/history.db")
+        or ".local/runtime_dbs/active/history.db"
+    )
 
     raw_rate_limit = _read_env("POLINKO_RATE_LIMIT_PER_MINUTE", "30") or "30"
     try:
@@ -265,7 +271,10 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         or "Summarize the visual scene for retrieval: key entities, visible text cues, layout, and notable attributes. Keep it concise, factual, and grounded in what is visible."
     )
     vector_enabled = _parse_bool_env("POLINKO_VECTOR_ENABLED", False)
-    vector_db_path = _read_env("POLINKO_VECTOR_DB_PATH", ".polinko_vector.db") or ".polinko_vector.db"
+    vector_db_path = (
+        _read_env("POLINKO_VECTOR_DB_PATH", ".local/runtime_dbs/active/vector.db")
+        or ".local/runtime_dbs/active/vector.db"
+    )
     vector_embedding_model = (
         (_read_env("POLINKO_VECTOR_EMBEDDING_MODEL", "text-embedding-3-small") or "text-embedding-3-small").strip()
         or "text-embedding-3-small"

@@ -44,19 +44,8 @@ yarn-error.log*
 _virtualenv.py
 
 # Local runtime data
-.polinko_memory.db
-.polinko_memory.db-shm
-.polinko_memory.db-wal
-.polinko_history.db
-.polinko_history.db-shm
-.polinko_history.db-wal
-.polinko_vector.db
-.polinko_vector.db-shm
-.polinko_vector.db-wal
-.eval_inbox.cursor
-.human_reference.db
-.human_reference.db-shm
-.human_reference.db-wal
+.local/runtime_dbs/
+.local_archive/
 
 # Local planning sandbox docs
 docs/portfolio/

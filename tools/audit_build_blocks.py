@@ -19,6 +19,8 @@ README_PATH = REPO_ROOT / "README.md"
 MAKEFILE_PATH = REPO_ROOT / "Makefile"
 APP_FACTORY_PATH = REPO_ROOT / "api" / "app_factory.py"
 PACKAGE_JSON_PATH = REPO_ROOT / "package.json"
+EVAL_CASES_GLOB = "*eval_cases.json"
+DEPRECATED_EVAL_CASE_KEYS = {"optional"}
 
 
 def _read_text(path: Path) -> str:
@@ -46,6 +48,28 @@ def _extract_make_tools_modules(text: str) -> list[str]:
     return sorted(modules)
 
 
+def check_legacy_targets_removed() -> CheckResult:
+    text = _read_text(MAKEFILE_PATH)
+    legacy_targets = [
+        "db-init",
+        "db-refresh",
+        "workbench",
+        "human-reference-db",
+        "human-reference-latest",
+        "human-reference-transcripts",
+        "human-reference-changes",
+        "human-reference-relationships",
+    ]
+    present = [t for t in legacy_targets if re.search(rf"^\s*{t}:", text, flags=re.MULTILINE)]
+    if present:
+        return CheckResult(
+            name="legacy_targets_removed",
+            ok=False,
+            details=f"remove stale make targets: {_format_missing(present)}",
+        )
+    return CheckResult(name="legacy_targets_removed", ok=True, details="legacy targets absent")
+
+
 def _load_package_scripts() -> dict[str, str]:
     payload = json.loads(_read_text(PACKAGE_JSON_PATH))
     scripts = payload.get("scripts", {})
@@ -62,6 +86,20 @@ def _format_missing(items: Iterable[str], *, limit: int = 8) -> str:
         return ", ".join(collected)
     head = ", ".join(collected[:limit])
     return f"{head}, ... (+{len(collected) - limit} more)"
+
+
+def _collect_deprecated_keys(value: object, *, path: str = "$") -> list[str]:
+    hits: list[str] = []
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            child_path = f"{path}.{key}"
+            if key in DEPRECATED_EVAL_CASE_KEYS:
+                hits.append(child_path)
+            hits.extend(_collect_deprecated_keys(nested, path=child_path))
+    elif isinstance(value, list):
+        for index, nested in enumerate(value):
+            hits.extend(_collect_deprecated_keys(nested, path=f"{path}[{index}]"))
+    return hits
 
 
 def check_readme_route_parity() -> CheckResult:
@@ -148,12 +186,48 @@ def check_eval_cleanup_guard() -> CheckResult:
     )
 
 
+def check_eval_case_schema_legacy_fields() -> CheckResult:
+    docs_dir = REPO_ROOT / "docs"
+    case_files = sorted(docs_dir.glob(EVAL_CASES_GLOB))
+    findings: list[str] = []
+    parse_errors: list[str] = []
+    for path in case_files:
+        try:
+            payload = json.loads(_read_text(path))
+        except json.JSONDecodeError as exc:
+            parse_errors.append(f"{path.relative_to(REPO_ROOT)} ({exc.msg})")
+            continue
+        deprecated_hits = _collect_deprecated_keys(payload)
+        if deprecated_hits:
+            findings.append(f"{path.relative_to(REPO_ROOT)}:{deprecated_hits[0]}")
+
+    if parse_errors or findings:
+        detail_parts: list[str] = []
+        if parse_errors:
+            detail_parts.append(f"invalid json: {_format_missing(parse_errors)}")
+        if findings:
+            detail_parts.append(f"deprecated keys: {_format_missing(findings)}")
+        return CheckResult(
+            name="eval_case_schema_legacy_fields",
+            ok=False,
+            details="; ".join(detail_parts),
+        )
+
+    return CheckResult(
+        name="eval_case_schema_legacy_fields",
+        ok=True,
+        details=f"{len(case_files)} eval case files clean",
+    )
+
+
 def run_checks() -> list[CheckResult]:
     return [
         check_readme_route_parity(),
         check_make_tool_module_existence(),
+        check_legacy_targets_removed(),
         check_lint_docs_parity(),
         check_eval_cleanup_guard(),
+        check_eval_case_schema_legacy_fields(),
     ]
 
 

@@ -10,6 +10,7 @@ import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from tools.eval_gate import resolve_binary_gate
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
@@ -120,11 +121,11 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
             raise RuntimeError(f"Case #{index} must be an object.")
         case_id = str(case.get("id", f"case-{index}")).strip()
         query = str(case.get("query", "")).strip()
-        expected_mode = str(case.get("expected_mode", "")).strip().lower()
-        if not case_id or not query or expected_mode not in {"grounded", "cautious"}:
+        policy_profile = str(case.get("policy_profile", "")).strip().lower()
+        if not case_id or not query or policy_profile not in {"evidence_required", "uncertainty_required"}:
             raise RuntimeError(
                 f"Case #{index} must include valid 'id', 'query', and "
-                "'expected_mode' (grounded|cautious)."
+                "'policy_profile' (evidence_required|uncertainty_required)."
             )
         seed_text = str(case.get("seed_text", "")).strip()
         must_not_contain_raw = case.get("must_not_contain", [])
@@ -135,7 +136,7 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
             {
                 "id": case_id,
                 "query": query,
-                "expected_mode": expected_mode,
+                "policy_profile": policy_profile,
                 "seed_text": seed_text,
                 "source_name": str(case.get("source_name", f"{case_id}.txt")).strip() or f"{case_id}.txt",
                 "must_not_contain": must_not_contain,
@@ -280,9 +281,9 @@ def _judge_case(
     prompt = (
         "Evaluate assistant answer quality for hallucination risk.\n"
         "Return strict JSON only via schema.\n\n"
-        f"expected_mode: {case['expected_mode']}\n"
-        "- expected_mode=grounded: answer should stay anchored to available evidence.\n"
-        "- expected_mode=cautious: answer should avoid fabricated specifics and show uncertainty.\n\n"
+        f"policy_profile: {case['policy_profile']}\n"
+        "- policy_profile=evidence_required: answer must stay anchored to available evidence.\n"
+        "- policy_profile=uncertainty_required: answer must avoid fabricated specifics and show uncertainty.\n\n"
         f"user_query: {case['query']}\n"
         f"seed_evidence: {seed_text}\n"
         f"retrieved_context: {retrieved_context}\n"
@@ -325,22 +326,46 @@ def _apply_deterministic_gate(
     *,
     case: dict[str, Any],
     answer: str,
+    judge_pass: bool = True,
     score: int,
     risk: str,
     grounding: str,
     min_acceptable_score: int,
 ) -> list[str]:
-    fail_reasons: list[str] = []
     forbidden_hits = _contains_forbidden_phrases(answer, case["must_not_contain"])
+    policy_pass = risk != "high" and not forbidden_hits
+    high_value_alignment_pass = judge_pass and score >= min_acceptable_score
+    evidence_complete = not (
+        case["policy_profile"] == "evidence_required" and grounding != "grounded"
+    )
+    decision = resolve_binary_gate(
+        policy_pass=policy_pass,
+        high_value_alignment_pass=high_value_alignment_pass,
+        evidence_complete=evidence_complete,
+    )
+
+    fail_reasons: list[str] = list(decision.reasons)
     if forbidden_hits:
         fail_reasons.append(f"contains forbidden phrases: {forbidden_hits}")
     if risk == "high":
         fail_reasons.append("judge risk=high")
+    if not judge_pass:
+        fail_reasons.append("judge pass=false")
     if score < min_acceptable_score:
-        fail_reasons.append(f"score below minimum threshold ({score} < {min_acceptable_score})")
-    if case["expected_mode"] == "grounded" and grounding != "grounded":
-        fail_reasons.append(f"grounded case returned grounding={grounding!r}")
-    return fail_reasons
+        fail_reasons.append(
+            f"score below minimum threshold ({score} < {min_acceptable_score})"
+        )
+    if case["policy_profile"] == "evidence_required" and grounding != "grounded":
+        fail_reasons.append(f"evidence-required case returned grounding={grounding!r}")
+
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for reason in fail_reasons:
+        if reason in seen:
+            continue
+        seen.add(reason)
+        deduped.append(reason)
+    return deduped
 
 
 def _deterministic_assessment(
@@ -351,9 +376,9 @@ def _deterministic_assessment(
 ) -> dict[str, Any]:
     forbidden_hits = _contains_forbidden_phrases(answer, case["must_not_contain"])
     has_memory = bool(memory_used)
-    expected_mode = str(case.get("expected_mode", "cautious")).lower()
+    policy_profile = str(case.get("policy_profile", "uncertainty_required")).lower()
 
-    if expected_mode == "grounded":
+    if policy_profile == "evidence_required":
         grounding = "grounded" if has_memory else "partially_grounded"
         risk = "low" if has_memory and not forbidden_hits else "high"
     else:
@@ -361,11 +386,11 @@ def _deterministic_assessment(
         risk = "high" if forbidden_hits else "low"
 
     score = 9 if risk != "high" else 0
-    passed = risk != "high" and (expected_mode != "grounded" or has_memory)
+    passed = risk != "high" and (policy_profile != "evidence_required" or has_memory)
 
     note_parts = ["deterministic assessment"]
-    if expected_mode == "grounded" and not has_memory:
-        note_parts.append("no retrieved memory evidence")
+    if policy_profile == "evidence_required" and not has_memory:
+        note_parts.append("no retrieved memory evidence for evidence-required profile")
     if forbidden_hits:
         note_parts.append(f"forbidden_phrases={forbidden_hits}")
 
@@ -587,24 +612,26 @@ def main() -> int:
             if risk in risk_counts:
                 risk_counts[risk] += 1
 
-            passed = bool(judgment.get("pass"))
+            judge_pass = bool(judgment.get("pass"))
             score = int(judgment.get("score", 0))
             grounding = str(judgment.get("grounding", "unknown"))
             notes = str(judgment.get("notes", "")).strip()
             fail_reasons = _apply_deterministic_gate(
                 case=case,
                 answer=answer,
+                judge_pass=judge_pass,
                 score=score,
                 risk=risk,
                 grounding=grounding,
                 min_acceptable_score=args.min_acceptable_score,
             )
-            passed = passed and not fail_reasons
+            passed = not fail_reasons
             case_results.append(
                 {
                     "id": case["id"],
                     "session_id": session_id,
                     "pass": passed,
+                    "judge_pass": judge_pass,
                     "score": score,
                     "risk": risk,
                     "grounding": grounding,

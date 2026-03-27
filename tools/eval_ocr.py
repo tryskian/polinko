@@ -11,6 +11,8 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+from tools.eval_gate import gate_counts_from_case_results
+from tools.eval_gate import resolve_fail_closed_status
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
@@ -368,12 +370,18 @@ def main() -> int:
             failures += 1
             print(f"[ERROR] {case_id}: {exc}")
         finally:
+            gate_decision = resolve_fail_closed_status(
+                status=status,
+                detail=error_text or "; ".join(reasons),
+            )
             case_results.append(
                 {
                     "id": case_id,
                     "session_id": session_id,
                     "status": status,
                     "error": error_text,
+                    "gate_outcome": gate_decision.outcome,
+                    "gate_reasons": list(gate_decision.reasons),
                     "image_path": str(image_path) if image_path is not None else None,
                     "source_name": case["source_name"],
                     "mime_type": mime_type or case["mime_type"],
@@ -409,6 +417,7 @@ def main() -> int:
     print(f"  Errors: {errors}")
     report_json = str(args.report_json or "").strip()
     if report_json:
+        gate_passed, gate_failed = gate_counts_from_case_results(case_results)
         output_path = Path(report_json)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         report_payload = {
@@ -421,6 +430,8 @@ def main() -> int:
                 "passed": passed_count,
                 "failed": failures,
                 "errors": errors,
+                "gate_passed": gate_passed,
+                "gate_failed": gate_failed,
             },
             "cases": case_results,
             "generated_at": int(time.time()),
@@ -442,10 +453,10 @@ def main() -> int:
                 gate_outcomes=[
                     {
                         "name": "ocr_eval",
-                        "passed": failures == 0,
+                        "passed": gate_failed == 0,
                         "detail": (
                             f"passed={passed_count}/{len(cases)}, "
-                            f"failed={failures}, errors={errors}"
+                            f"failed={failures}, errors={errors}, gate_failed={gate_failed}"
                         ),
                     }
                 ],

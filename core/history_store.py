@@ -4,6 +4,7 @@ import hashlib
 import json
 import sqlite3
 import time
+from pathlib import Path
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -142,6 +143,7 @@ def derive_chat_title(text: str, max_len: int = 42) -> str:
 class ChatHistoryStore:
     def __init__(self, db_path: str) -> None:
         self.db_path = db_path
+        Path(self.db_path).expanduser().parent.mkdir(parents=True, exist_ok=True)
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:

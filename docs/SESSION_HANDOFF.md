@@ -8,7 +8,8 @@
 
 ## Current Snapshot
 
-- Runtime is local-first: FastAPI backend + CLI runner are canonical; web UI is deprecated for active operations.
+- Runtime is local-first: FastAPI backend + CLI runner are canonical; web UI is
+  archived from the active repository surface.
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Eval contract is strict binary end-to-end:
   - feedback outcomes: `pass` or `fail` only
@@ -19,9 +20,22 @@
   - removed `make eval-feedback-normalize`
 - Git history is the canonical archive for tracked docs/code; local eval artefact
   folders are operational outputs only and are not part of release truth.
-- Human-reference flow remains offline/query-first:
-  - rebuild: `make human-reference-db`
-  - queries: `make human-reference-latest|transcripts|changes|relationships`
+- Live archive lane is now explicit for deprecated references:
+  - `docs/live_archive/legacy_eval/`
+  - `docs/live_archive/legacy_frontend/`
+  - `docs/live_archive/legacy_human_reference/`
+  - archive lane is non-authoritative for active runtime gate decisions
+- Eval docs were canonicalized from `v2` naming:
+  - `docs/EVAL_SPEC.md`
+  - `docs/EVAL_BACKEND_MAP.md`
+  - binary semantics summary: `docs/BINARY_EVAL_LOGIC_REFINEMENT.md`
+- Docs relationship visualisation is markdown-native:
+  - build: `make reference-graph`
+  - output: `docs/REFERENCE_GRAPH.md`
+- Runtime DB scripts are retired during wiring lock; no local DB commands in the active surface.
+- Wiring lock is active:
+  - keep DB state archived during contract-finalisation phase
+  - canonical wiring contract source: `docs/EVAL_WIRING_SPEC.md`
 - Engineer execution mode is proactive by default:
   - technical hygiene/drift control should be handled without reminder
   - user input is only needed for approvals or material trade-offs
@@ -32,7 +46,7 @@
 ## Latest Branch Context
 
 - Active implementation branch:
-  - `main`
+  - `codex/bigbrain/eval-wiring-spec`
 - Canonical repo path:
   - `/Users/tryskian/Github/polinko`
 
@@ -43,6 +57,11 @@
 - `docs/DECISIONS.md`
 - `docs/ARCHITECTURE.md`
 - `docs/RUNBOOK.md`
+- `docs/EVAL_POLICY_MODEL.md`
+- `docs/EVAL_WIRING_SPEC.md`
+- `docs/EVAL_SPEC.md`
+- `docs/EVAL_BACKEND_MAP.md`
+- `docs/live_archive/README.md`
 - `api/app_factory.py`
 - `core/history_store.py`
 - `tests/test_api.py`
@@ -53,9 +72,8 @@
 2. `make lint-docs`
 3. `make test`
 4. `make quality-gate-deterministic`
-5. optional archive-maintenance checks only:
-   - `npm --prefix frontend run -s test`
-   - `npm --prefix frontend run -s build`
+5. confirm DB freeze posture:
+   - no active `.polinko_*.db` / `.human_reference.db` files in repo root
 
 ## Known Constraints
 
@@ -69,13 +87,11 @@
 
 ## Immediate Next Step
 
-- Finish binary hard-cutover validation and merge flow:
-  - run full backend validation
-  - open PR from `codex/bigbrain/app-beta-refactor`
-  - merge after checks pass
-  - close with governance-surface sync when policy/flow changes
-  - ensure loop framing is explicit (objective/scope/acceptance) before each
-    new implementation slice
+- Finalise eval wiring contract before persistence activation:
+  - lock binary gate topology and case/feedback/checkpoint contracts
+  - align docs + tests to `docs/EVAL_WIRING_SPEC.md`
+  - keep deprecated eval/frontend context in `docs/live_archive/`
+  - defer DB initialisation until wiring sign-off is explicit
 
 ## Peanut Pin (Tomorrow Start)
 

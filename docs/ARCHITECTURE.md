@@ -12,14 +12,13 @@
   - HTTP layer, route contract, middleware, auth/rate-limit integration.
 - `core/`
   - Runtime logic (prompting, session/history, personalization, retrieval helpers).
-- `frontend/`
-  - Vite UI (deprecated for active operations; retained for archive maintenance).
 - `tools/`
   - Local automation/eval/reference utilities.
 - `tests/`
   - API/runtime regression tests.
 - `docs/`
-  - Charter, state, decisions, runbook, handoff, and operator references.
+  - Charter, state, decisions, runbook, handoff, operator references, and
+    live archive lanes.
 
 ## Runtime Flow
 
@@ -27,39 +26,44 @@
 2. `server.py` calls `api.app_factory.create_app(config)`.
 3. `api/app_factory.py` wires routes + middleware + runtime dependencies.
 4. Request execution delegates to `core/` runtime and persistence modules.
-5. CLI/API surfaces are canonical; `frontend/` remains archive-maintenance only.
+5. CLI/API surfaces are canonical; archived frontend context is tracked only in
+   `docs/live_archive/legacy_frontend/`.
 
 ## Data Surfaces
 
 - Runtime chat/session state:
   - SQLite stores (chat history + memory/vector artifacts).
+  - Runtime DBs live under `.local/runtime_dbs/active/`; archives under
+    `.local/runtime_dbs/archive/`.
 - Eval runtime state (authoritative):
-  - `.polinko_history.db` via `core/history_store.py`
+  - `.local/runtime_dbs/active/history.db` via `core/history_store.py`
     - `message_feedback` (binary `pass`/`fail` + tags/notes/status)
     - `eval_checkpoints` (`pass_count`, `fail_count`, `non_binary_count`)
   - active gate logic is binary-only (`pass`/`fail`); `non_binary_count` is an
     integrity signal only.
   - canonical policy/reward semantics and conceptual ER model:
     `docs/EVAL_POLICY_MODEL.md`
+  - canonical gate wiring contract and phase policy:
+    `docs/EVAL_WIRING_SPEC.md`
 - Eval artefacts (non-authoritative):
   - Git history is the canonical retention mechanism for tracked project state.
   - local eval artefacts are operational outputs (default under `eval_reports/`)
     and are non-authoritative for runtime gate decisions.
   - no file-log-driven eval wiring exists in runtime gate decisions.
-- Human reference index:
-  - `.human_reference.db` built from `docs/transcripts`, `docs/research`, `docs/theory`.
-  - builder: `tools/build_human_reference_db.py`
-  - query presets: `tools/query_human_reference.py`
-  - SQL pack: `tools/human_reference_queries.sql`
-  - operator flow is offline/query-first (`make human-reference-*`).
+  - deprecated eval/frontend context is reference-only under `docs/live_archive/`
+    and cannot drive active gate decisions.
+- Reference visualisation:
+  - markdown-native relationship graph generated from docs links.
+  - builder: `tools/build_reference_graph.py`
+  - operator flow: `make reference-graph` -> `docs/REFERENCE_GRAPH.md`.
 
 ## Placement Rules
 
 - API endpoints/middleware/contracts: `api/`
 - Prompt/runtime behaviour and policy logic: `core/`
-- Deprecated UI maintenance only: `frontend/`
 - Eval/report/reference scripts and one-off operators: `tools/`
 - Execution state/decisions/handoff documentation: `docs/`
+- Deprecated implementation references: `docs/live_archive/`
 
 ## Governance Flow
 
@@ -77,8 +81,7 @@
 - Env sanity: `make doctor-env`
 - Backend tests: `make test`
 - Local API: `make server` or `make server-daemon`
-- Optional UI archive-maintenance checks:
-  - `npm --prefix frontend run -s test`
-  - `npm --prefix frontend run -s build`
+- Wiring visual contract: `docs/EVAL_WIRING_SPEC.md`
+- Runtime DB maintenance: `make db-archive`, `make db-reset`, `make db-visuals`
 - Local eval trace backfill (optional): `make backfill-eval-traces`
-- Human reference quick query: `make human-reference-relationships`
+- Docs relationship graph: `make reference-graph`
