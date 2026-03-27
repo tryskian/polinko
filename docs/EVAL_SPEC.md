@@ -123,6 +123,17 @@ Each harness output should resolve to:
 - `failed_cases`
 - `summary`
 
+Case-level report rows should include:
+
+- `status` (suite-local execution status)
+- `gate_outcome` (`pass` or `fail`, fail-closed)
+- `gate_reasons[]` (gate diagnostics)
+
+Summary payloads should include:
+
+- `gate_passed`
+- `gate_failed`
+
 ## Acceptance Criteria
 
 1. No runtime path accepts or produces `mixed` as an outcome.

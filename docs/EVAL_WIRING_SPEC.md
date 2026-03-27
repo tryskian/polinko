@@ -71,6 +71,17 @@ Wiring requirements:
 - reject legacy `tags`-only payload shape
 - produce deterministic checkpoint counts from `outcome`
 
+## Eval Report Wiring Constraints
+
+- suite reports must expose binary gate resolution explicitly per case:
+  - `gate_outcome` (`pass`/`fail`)
+  - `gate_reasons[]`
+- suite summaries must expose:
+  - `gate_passed`
+  - `gate_failed`
+- non-pass execution statuses (`fail`, `error`, `skip`) are treated as
+  fail-closed in gate counts.
+
 ## Pre-DB Phase Rules
 
 During wiring lock:

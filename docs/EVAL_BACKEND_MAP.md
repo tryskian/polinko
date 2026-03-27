@@ -17,6 +17,7 @@ Primary sources:
 - `core/history_store.py`
 - `core/vector_store.py`
 - `Makefile`
+- `tools/eval_gate.py`
 - `tools/eval_*.py`
 - `tools/eval_trace_artifacts.py`
 
@@ -27,7 +28,9 @@ Primary sources:
 3. `core/history_store.py` persists chat, feedback, and checkpoint records in SQLite.
 4. `core/vector_store.py` persists retrieval memory vectors in SQLite.
 5. `tools/eval_*.py` executes harnesses against API endpoints and writes reports/traces.
-6. Web UI is deprecated for active eval operations; backend + CLI are canonical.
+6. `tools/eval_gate.py` provides canonical fail-closed binary gate resolution
+   (`pass`/`fail`) used by eval tooling.
+7. Web UI is deprecated for active eval operations; backend + CLI are canonical.
 
 ## API Surface (Current)
 
@@ -119,6 +122,17 @@ Eval harness endpoints exercised:
 - `/skills/ocr`
 - `/skills/pdf_ingest`
 - `/skills/file_search`
+
+## Eval Report Gate Contract
+
+- Case rows include:
+  - `status` (execution status)
+  - `gate_outcome` (`pass`/`fail`, fail-closed)
+  - `gate_reasons` (diagnostic list)
+- Summary blocks include:
+  - `gate_passed`
+  - `gate_failed`
+- Gate trace outcome uses fail-closed gate counts (`gate_failed == 0`).
 
 ## Current-Risk Hotspots
 
