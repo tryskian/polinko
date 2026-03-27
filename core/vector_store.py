@@ -5,6 +5,7 @@ import math
 import sqlite3
 import time
 import uuid
+from pathlib import Path
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -47,6 +48,7 @@ class VectorMatch:
 class VectorStore:
     def __init__(self, db_path: str) -> None:
         self.db_path = db_path
+        Path(self.db_path).expanduser().parent.mkdir(parents=True, exist_ok=True)
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:

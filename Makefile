@@ -452,15 +452,6 @@ portfolio-metadata-audit:
 reference-graph:
 	$(PYTHON) -m tools.build_reference_graph
 
-db-visuals:
-	$(PYTHON) -m tools.build_runtime_db_visuals
-
-db-reset:
-	$(PYTHON) -m tools.manage_local_dbs reset
-
-db-archive:
-	$(PYTHON) -m tools.manage_local_dbs archive
-
 dev:
 	@PYTHON_BIN="$(PYTHON)" DEV_HOST="$(DEV_HOST)" DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" bash tools/dev_run.sh
 

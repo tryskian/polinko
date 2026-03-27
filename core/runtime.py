@@ -1,5 +1,6 @@
 import sqlite3
 import threading
+from pathlib import Path
 from typing import cast
 
 from agents import Agent, ModelSettings, RunConfig
@@ -74,6 +75,7 @@ def create_run_config(*, store: bool) -> RunConfig:
 
 
 def create_session(*, session_id: str, db_path: str, limit: int = 80) -> Session:
+    Path(db_path).expanduser().parent.mkdir(parents=True, exist_ok=True)
     return cast(
         Session,
         ManagedSQLiteSession(

@@ -32,12 +32,8 @@
 - Docs relationship visualisation is markdown-native:
   - build: `make reference-graph`
   - output: `docs/REFERENCE_GRAPH.md`
-- Runtime DB lifecycle is archive-first:
-  - archive old DB evidence: `make db-archive`
-  - clear active runtime DBs: `make db-reset`
-  - ER visual: `make db-visuals` -> `docs/RUNTIME_DB_VISUALS.md`
+- Runtime DB scripts are retired during wiring lock; no local DB commands in the active surface.
 - Wiring lock is active:
-  - no runtime DB init/refresh commands during wiring lock
   - keep DB state archived during contract-finalisation phase
   - canonical wiring contract source: `docs/EVAL_WIRING_SPEC.md`
 - Engineer execution mode is proactive by default:

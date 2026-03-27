@@ -190,19 +190,6 @@ Reference graph:
 make reference-graph
 ```
 
-Runtime DB lifecycle:
-
-```bash
-make db-reset
-make db-archive
-make db-visuals
-```
-
-Notes:
-
-- Runtime DBs live under `.local/runtime_dbs/active/`; archives under `.local/runtime_dbs/archive/`.
-- Provisioning/init commands are intentionally removed during wiring lock (archive/reset only).
-
 ## Docker Smoke Test
 
 ```bash

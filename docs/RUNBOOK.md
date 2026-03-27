@@ -132,15 +132,7 @@
 
 ## Wiring-First DB Freeze
 
-1. Runtime DBs live under `.local/runtime_dbs/active/` by default.
-2. Allowed commands during wiring:
-   - `make db-reset` (clears active runtime DBs only)
-   - `make db-archive` (moves active DB families into `.local/runtime_dbs/archive/`)
-3. Disallowed/removed: `db-init`, `db-refresh` (no automatic recreation of DBs).
-4. During wiring phase, use docs/tests as the contract:
-   - `docs/EVAL_WIRING_SPEC.md`, `docs/EVAL_SPEC.md`, `docs/EVAL_BACKEND_MAP.md`
-   - `make test`, `make quality-gate-deterministic`
-5. Post-wiring persistence work must be explicitly planned; do not reintroduce auto-init.
+Local runtime DB commands are retired during wiring lock; treat docs/tests as the contract (`docs/EVAL_WIRING_SPEC.md`, `docs/EVAL_SPEC.md`, `docs/EVAL_BACKEND_MAP.md`, `make test`, `make quality-gate-deterministic`). No local DB lifecycle commands remain.
 
 ## Python Diagnostics (Ruff + Mypy)
 
@@ -818,10 +810,7 @@ Current policy:
 4. Runtime DB visuals (history/vector/memory):
    - `make db-visuals`
    - output: `docs/RUNTIME_DB_VISUALS.md`
-5. Runtime DB maintenance:
-   - archive current DB evidence: `make db-archive`
-   - clear active runtime DBs: `make db-reset`
-   - DB recreation/init is intentionally removed during wiring lock.
+5. Runtime DB maintenance: retired during wiring lock (no local DB commands).
 
 ## Start Fresh Eval Cycle
 

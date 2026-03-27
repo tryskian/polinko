@@ -155,12 +155,8 @@
   - SQLite human-reference DB/query workflow moved to archive-only status
   - canonical visual surface is markdown-native `make reference-graph`
 - Runtime DB lifecycle checkpoint (March 27, 2026):
-  - runtime DBs relocated under `.local/runtime_dbs/active/`
-  - archive-first flow only:
-    - `make db-archive` snapshots to `.local/runtime_dbs/archive/`
-    - `make db-reset` clears active runtime DB files
-  - runtime DB schema visualisation:
-    - `make db-visuals` -> `docs/RUNTIME_DB_VISUALS.md`
+  - local runtime DB scripts/targets retired during wiring lock
+  - DB files remain archived only; no local DB commands in active surface
 - Wiring lock checkpoint (March 27, 2026):
   - runtime DB provisioning is intentionally paused until eval wiring sign-off
   - no fresh `.polinko_*.db` or `.human_reference.db` files are active in

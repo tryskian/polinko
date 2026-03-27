@@ -837,33 +837,6 @@
 - Why: Eliminates hidden UI state/wiring vectors while preparing a clean-slate
   UI rebuild and keeps active execution surfaces deterministic.
 
-## D-078: Adopt archive-first runtime DB lifecycle for history/memory/vector
-
-- Date: `2026-03-27`
-- Category: `workflow_environment`
-- Tags: `db_lifecycle`, `archive_first`, `runtime_state`, `evidence_retention`
-- Decision:
-  - add runtime DB lifecycle tooling:
-    - `make db-archive` (snapshot old DB families to `.local/runtime_dbs/archive/`)
-    - `make db-reset` (clear active history/vector/memory DBs in `.local/runtime_dbs/active/`)
-    - `make db-visuals` (generate `docs/RUNTIME_DB_VISUALS.md`)
-- Why: Preserves old runtime evidence for traceability while ensuring new logic
-  starts from clean database baselines.
-
-## D-079: Freeze runtime DB provisioning until eval wiring sign-off
-
-- Date: `2026-03-27`
-- Category: `workflow_environment`
-- Tags: `wiring_first`, `db_freeze`, `contract_lock`, `binary_eval`
-- Decision:
-  - during the eval wiring phase, keep runtime DB provisioning paused; no init
-    or refresh commands are available
-  - keep existing DB families archived under `.local/runtime_dbs/archive/`
-  - treat `docs/EVAL_WIRING_SPEC.md` + tests as canonical until persistence
-    design begins
-- Why: Prevents persistence artefacts from masking contract drift and keeps the
-  binary gate model deterministic before schema/migration work starts.
-
 ## D-080: Tooling audit and legacy cleanup
 
 - Date: `2026-03-27`
@@ -872,5 +845,5 @@
 - Decision:
   - Archived human-reference helpers and SQL into `docs/live_archive/legacy_human_reference/`.
   - Removed legacy workbench server/target and eval inbox helper (`make eval-inbox`, `tools/eval_inbox.py`).
-  - Locked runtime DB defaults to `.local/runtime_dbs/active/` and removed init/refresh targets; `manage_local_dbs` supports `archive|reset` only.
+  - Retired local runtime DB scripts/targets during wiring lock; no local DB lifecycle commands remain.
 - Why: Reduce hidden gremlins and keep the active execution surface minimal and aligned with current binary eval contracts.
