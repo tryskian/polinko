@@ -10,6 +10,7 @@ import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 
+from tools.eval_gate import resolve_binary_gate
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
@@ -366,30 +367,37 @@ def main() -> int:
             fit = result.get("fit")
             case_pass = bool(result.get("pass", False))
             judge_pass = case_pass
-            case_failed = False
             notes = str(result.get("notes", "")).strip()
 
             max_words = case["max_words"]
+            forbidden_hits = [
+                phrase for phrase in case.get("forbidden_phrases", []) if phrase in answer_lower
+            ]
+            word_count_ok = not (isinstance(max_words, int) and wc > max_words)
+            decision = resolve_binary_gate(
+                policy_pass=not forbidden_hits,
+                high_value_alignment_pass=case_pass,
+                evidence_complete=word_count_ok,
+            )
+            case_failed = not decision.passed
+
             if isinstance(max_words, int) and wc > max_words:
-                case_failed = True
                 if notes:
                     notes = f"{notes} | Word count {wc} exceeds limit {max_words}."
                 else:
                     notes = f"Word count {wc} exceeds limit {max_words}."
-
-            if not case_pass:
-                case_failed = True
-
-            forbidden_hits = [
-                phrase for phrase in case.get("forbidden_phrases", []) if phrase in answer_lower
-            ]
             if forbidden_hits:
-                case_failed = True
                 forbidden_text = ", ".join(forbidden_hits)
                 if notes:
                     notes = f"{notes} | Contains forbidden phrase(s): {forbidden_text}."
                 else:
                     notes = f"Contains forbidden phrase(s): {forbidden_text}."
+            if decision.reasons:
+                reasons_text = "; ".join(decision.reasons)
+                if notes:
+                    notes = f"{notes} | Gate: {reasons_text}."
+                else:
+                    notes = f"Gate: {reasons_text}."
 
             status_text = "PASS" if not case_failed else "FAIL"
             print(f"[{status_text}] {case['id']} score={score} fit={fit} words={wc}")

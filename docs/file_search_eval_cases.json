@@ -43,8 +43,7 @@
       "source_name": "image-context-smoke.png",
       "seed_text": "Storefront sign reads Nimbus Clinic under a blue awning.",
       "query": "What does the indexed storefront sign say?",
-      "must_include": ["nimbus clinic"],
-      "optional": false
+      "must_include": ["nimbus clinic"]
     }
   ]
 }

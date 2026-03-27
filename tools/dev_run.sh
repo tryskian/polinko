@@ -2,10 +2,8 @@
 set -euo pipefail
 
 PYTHON_BIN="${PYTHON_BIN:-python3}"
-NPM_BIN="${NPM_BIN:-npm}"
 DEV_HOST="${DEV_HOST:-127.0.0.1}"
 DEV_BACKEND_PORT="${DEV_BACKEND_PORT:-8000}"
-DEV_FRONTEND_PORT="${DEV_FRONTEND_PORT:-5173}"
 DEV_AUTOKILL="${DEV_AUTOKILL:-1}"
 DEV_STOP_ONLY="${DEV_STOP_ONLY:-0}"
 
@@ -25,7 +23,7 @@ kill_port_listeners() {
       continue
     fi
 
-    if [[ "${cmd}" == *"uvicorn"* || "${cmd}" == *"vite"* || "${cmd}" == *"server:app"* ]]; then
+    if [[ "${cmd}" == *"uvicorn"* || "${cmd}" == *"server:app"* ]]; then
       echo "  stopping dev-like process ${pid}: ${cmd}"
       kill "${pid}" >/dev/null 2>&1 || true
       continue
@@ -57,26 +55,20 @@ if ! command -v lsof >/dev/null 2>&1; then
 fi
 
 kill_port_listeners "${DEV_BACKEND_PORT}"
-kill_port_listeners "${DEV_FRONTEND_PORT}"
 
 if [[ "${DEV_STOP_ONLY}" == "1" ]]; then
-  echo "Stopped listeners on ${DEV_BACKEND_PORT} and ${DEV_FRONTEND_PORT}."
+  echo "Stopped listeners on ${DEV_BACKEND_PORT}."
   exit 0
 fi
 
-echo "Starting backend (${DEV_BACKEND_PORT}) and frontend (${DEV_FRONTEND_PORT}). Press Ctrl+C to stop both."
+echo "Starting backend (${DEV_BACKEND_PORT}). Press Ctrl+C to stop."
 "${PYTHON_BIN}" -m uvicorn server:app --host "${DEV_HOST}" --port "${DEV_BACKEND_PORT}" --reload &
 SERVER_PID=$!
-(
-  cd frontend
-  "${NPM_BIN}" run dev -- --host "${DEV_HOST}" --port "${DEV_FRONTEND_PORT}" --strictPort
-) &
-UI_PID=$!
 
 cleanup() {
-  kill "${SERVER_PID}" "${UI_PID}" >/dev/null 2>&1 || true
-  wait "${SERVER_PID}" "${UI_PID}" >/dev/null 2>&1 || true
+  kill "${SERVER_PID}" >/dev/null 2>&1 || true
+  wait "${SERVER_PID}" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT INT TERM
 
-wait "${SERVER_PID}" "${UI_PID}"
+wait "${SERVER_PID}"

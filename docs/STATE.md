@@ -5,7 +5,7 @@
 ## Current Status
 
 - Prompt/runtime is intentionally minimal and aligned with the original `try.py` behaviour.
-- CLI agent loop works with persistent SQLite memory (`.polinko_memory.db`) and
+- CLI agent loop works with persistent SQLite memory (`.local/runtime_dbs/active/memory.db`) and
   `/reset`.
 - Backend API is running with:
   - `GET /health`
@@ -26,8 +26,8 @@
   - periodic stale bucket cleanup in the in-memory limiter
   - per-chat personalization memory scope (`session` vs `global`)
   - `/chat` retrieval citations via `memory_used` when vector memory contributes context
-- Frontend remains in-repo for archive/maintenance context, but active
-  execution is backend + CLI only.
+- Frontend is archived from the active repository surface; active execution is
+  backend + CLI only.
 - OpenAI developer docs MCP server is now configured for Codex/VS Code usage:
   - endpoint: `https://developers.openai.com/mcp`
   - workspace wiring: `.vscode/mcp.json`
@@ -78,18 +78,17 @@
     instead of forcing a single top-level label
   - checkpoint rollups now count `pass_count` and `fail_count` independently;
     `non_binary_count` is expected to remain `0` and is treated as an integrity signal
-  - API/frontend/tests were updated together to avoid state drift between
-    rubric UI and saved checkpoint payloads
+  - API/tests were updated together to avoid state drift between rubric
+    semantics and saved checkpoint payloads
 - Binary contract hard-cut checkpoint (March 26, 2026):
   - feedback outcomes are strict `pass`/`fail` at API and storage boundaries
   - legacy `tags`-only feedback payload compatibility is removed
   - checkpoint responses use `non_binary_count` (no active `other_count` label)
   - no migration helper is part of active workflow; data outside contract is a repair task
 - Post-merge eval + reference checkpoint (March 25, 2026):
-  - PR `#71` merged to `main` (`a60bf15`) with backend/API/test/frontend sync
+  - PR `#71` merged to `main` (`a60bf15`) with backend/API/test sync
   - checkpoint and feedback APIs preserve binary gate behaviour
-  - human-reference indexing now stores explicit document-link relationships
-    with FK-backed queries for easier imagineer-facing lookup
+  - document-link relationship indexing model was established for reference flow
 - Docs hygiene checkpoint (March 21, 2026):
   - deprecated pilot/comms docs are archive-only and removed from active
     runbook/state/handoff references
@@ -103,6 +102,19 @@
     `eval_reports/eval_trace_artifacts.jsonl`
   - tracked-state retention is now explicitly Git-native
     (no additional archive folder layer required)
+- Live archive checkpoint (March 27, 2026):
+  - added tracked live archive lane: `docs/live_archive/`
+  - lane split is explicit:
+    - `docs/live_archive/legacy_eval/`
+    - `docs/live_archive/legacy_frontend/`
+    - `docs/live_archive/legacy_human_reference/`
+  - archive lane is reference-only and non-authoritative for active runtime
+    gate decisions
+- Eval docs canonical naming checkpoint (March 27, 2026):
+  - renamed `docs/EVAL_V2_SPEC.md` -> `docs/EVAL_SPEC.md`
+  - renamed `docs/EVAL_V2_BACKEND_MAP.md` -> `docs/EVAL_BACKEND_MAP.md`
+  - binary policy semantics are documented in
+    `docs/BINARY_EVAL_LOGIC_REFINEMENT.md`
 - EOD docs confidentiality merge checkpoint (March 25, 2026):
   - PR `#72` merged to `main` (`2a6f575`)
   - runbook + ignore policy now treats non-build internal docs as local-only
@@ -126,21 +138,35 @@
   - `make doctor-env`: healthy
   - `make lint-docs`: pass
   - backend regression tests: `make test` pass (`162` tests)
-  - frontend unit tests: `npm --prefix frontend run -s test` pass
-  - frontend production build: `npm --prefix frontend run -s build` pass
 - Build block audit checkpoint (March 26, 2026):
   - README was refreshed to current build blocks and live API surface
   - local lint now matches CI scope (`README.md` + `docs/**/*.md`)
   - new guard command is available: `make build-audit`
   - `eval-cleanup` now skips cleanly when local-only helper script is absent
   - full deterministic gate cycle passed: `make quality-gate-deterministic`
-  - evidence and reference pipelines passed:
-    `make evidence-refresh`, `make human-reference-db`, `make human-reference-latest`
+  - evidence pipeline passed: `make evidence-refresh`
   - Docker smoke passed:
     `make docker-build` + container `/health` probe
-- UI deprecation checkpoint (March 26, 2026):
-  - web UI is deprecated for active build/eval operations
+- UI archive checkpoint (March 27, 2026):
+  - legacy `frontend/` folder removed from active repository surface
   - canonical surfaces are API + CLI + deterministic eval tooling
+  - historical UI context is retained via live archive docs + Git history
+- Human-reference archive checkpoint (March 27, 2026):
+  - SQLite human-reference DB/query workflow moved to archive-only status
+  - canonical visual surface is markdown-native `make reference-graph`
+- Runtime DB lifecycle checkpoint (March 27, 2026):
+  - runtime DBs relocated under `.local/runtime_dbs/active/`
+  - archive-first flow only:
+    - `make db-archive` snapshots to `.local/runtime_dbs/archive/`
+    - `make db-reset` clears active runtime DB files
+  - runtime DB schema visualisation:
+    - `make db-visuals` -> `docs/RUNTIME_DB_VISUALS.md`
+- Wiring lock checkpoint (March 27, 2026):
+  - runtime DB provisioning is intentionally paused until eval wiring sign-off
+  - no fresh `.polinko_*.db` or `.human_reference.db` files are active in
+    repository root during this phase
+  - canonical wiring source is `docs/EVAL_WIRING_SPEC.md` and associated
+    contract docs/tests
 - Proactive ownership checkpoint (March 26, 2026):
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder
@@ -176,16 +202,16 @@
   - baseline hybrid any-hit: `0.0`
   - image-priority proxy any-hit: `1.0`
   - delta (`proxy - baseline`): `+1.0`
-  - errors/skipped: `0/0` in both arms
+  - errors: `0` in both arms
 - Latest CLIP readiness pair (2026-03-15) is green:
   - `20260315-143219`: PASS (`cases=4`, `proxy_any_rate=1.000`,
-    `delta=+1.000`, `errors=0`, `skipped=0`)
+    `delta=+1.000`, `errors=0`)
   - `20260315-180942`: PASS (`cases=4`, `proxy_any_rate=1.000`,
-    `delta=+1.000`, `errors=0`, `skipped=0`)
+    `delta=+1.000`, `errors=0`)
 - Latest readiness decision (2026-03-15): `GO`.
 - CLIP go/no-go criterion is now explicit (two consecutive runs with
-  `cases_count >= 4`, proxy `any_rate >= 0.90`, delta `>= 0.50`, zero
-  errors/skips) before integration escalation.
+  `cases_count >= 4`, proxy `any_rate >= 0.90`, delta `>= 0.50`, zero errors)
+  before integration escalation.
 - Minimal CLIP proxy integration slice is now implemented behind feature flag:
   - `POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED` (default `false`)
   - `POST /skills/file_search` now accepts
@@ -259,7 +285,7 @@
 - Eval feedback/checkpoint state is persisted in SQLite only; no active
   `raw_evidence` intake file logging remains in runtime.
 - Hallucination eval cases now include an interpersonal motive-guess regression
-  guard (`cautious_no_relationship_motive_guess`) to catch speculative
+  guard (`uncertainty_required_no_relationship_motive_guess`) to catch speculative
   relationship attribution and enforce uncertainty-forward responses.
 - Co-reasoning interaction guidance is now documented with a dedicated eval
   reference and PASS/FAIL mapping:
@@ -278,7 +304,6 @@
 - CLI chat runner: `app.py`
 - Backend entrypoint: `server.py`
 - API app factory + routes: `api/app_factory.py`
-- Frontend app: `frontend/`
 - Architecture guide: `docs/ARCHITECTURE.md`
 - API tests: `tests/test_api.py`
 - Local API client: `tools/client.py`
@@ -310,16 +335,16 @@ Use this in a new chat:
 
 ## Suggested Next Steps
 
-1. Define eval v2 data contract (strict binary, no compatibility fallbacks) before any
-   additional UI reshaping.
-2. Refactor checkpoint aggregation and tagging paths for clearer PASS/FAIL
+1. Define eval data contract (strict binary, no compatibility fallbacks) before
+   any additional UI rebuild slices.
+2. Refactor checkpoint aggregation and tagging paths for clearer `PASS`/`FAIL`
    semantics and lower coupling across API/UI.
 3. Refresh eval prompts/case baselines from clean artifacts only, keeping
    pre-refresh evidence in archive for traceability.
-4. Keep human-reference query flow lightweight (`make human-reference-*`) and
-   document any schema or relationship changes alongside runbook updates.
-5. Continue local-first deterministic validation (`make test`, frontend test,
-   frontend build) at each eval-contract milestone.
+4. Keep runtime DB snapshots before resets (`make db-archive`) so transitions
+   remain auditable.
+5. Continue local-first deterministic validation (`make test`,
+   `make quality-gate-deterministic`) at each eval-contract milestone.
 
 ## Cookbook Roadmap (Prioritized)
 

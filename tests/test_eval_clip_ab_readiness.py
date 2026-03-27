@@ -16,9 +16,7 @@ def _report_payload(
     proxy_any_rate: float,
     delta: float,
     baseline_errors: int = 0,
-    baseline_skipped: int = 0,
     proxy_errors: int = 0,
-    proxy_skipped: int = 0,
 ) -> dict[str, object]:
     baseline_any_rate = proxy_any_rate - delta
     return {
@@ -28,12 +26,10 @@ def _report_payload(
         "summary": {
             "baseline_mixed": {
                 "errors": baseline_errors,
-                "skipped": baseline_skipped,
                 "any_rate": baseline_any_rate,
             },
             "clip_proxy_image_only": {
                 "errors": proxy_errors,
-                "skipped": proxy_skipped,
                 "any_rate": proxy_any_rate,
             },
         },
@@ -69,7 +65,6 @@ class ClipABReadinessTests(unittest.TestCase):
                 cases_count=3,
                 proxy_any_rate=0.6,
                 delta=0.2,
-                proxy_skipped=1,
             ),
             min_cases=4,
             min_proxy_any_rate=0.9,
@@ -80,7 +75,6 @@ class ClipABReadinessTests(unittest.TestCase):
         self.assertIn("cases_count 3 < 4", evaluation.reasons)
         self.assertIn("proxy any_rate 0.600 < 0.900", evaluation.reasons)
         self.assertIn("delta +0.200 < +0.500", evaluation.reasons)
-        self.assertIn("clip_proxy_image_only skipped 1 != 0", evaluation.reasons)
 
     def test_load_evaluations_sorts_by_report_timestamp(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

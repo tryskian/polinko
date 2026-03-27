@@ -9,6 +9,8 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+from tools.eval_gate import gate_counts_from_case_results
+from tools.eval_gate import resolve_fail_closed_status
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
@@ -85,11 +87,15 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
         seed_method = str(case.get("seed_method", "ocr")).strip().lower() or "ocr"
         source_type = str(case.get("source_type", "ocr")).strip().lower() or "ocr"
         must_include = _normalize_terms(case.get("must_include"))
-        optional = bool(case.get("optional", False))
         source_name = str(case.get("source_name", f"{case_id}.txt")).strip() or f"{case_id}.txt"
         if not case_id or not seed_text or not query:
             raise RuntimeError(
                 f"Case #{index} is missing required fields ('id', 'seed_text', 'query')."
+            )
+        if "optional" in case:
+            raise RuntimeError(
+                f"Case #{index} ({case_id}) uses deprecated field 'optional'. "
+                "Active gate suites are strict binary and fail-closed."
             )
         if seed_method not in {"ocr", "pdf", "image_context"}:
             raise RuntimeError(
@@ -104,7 +110,6 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
                 "seed_method": seed_method,
                 "source_type": source_type,
                 "must_include": must_include,
-                "optional": optional,
                 "source_name": source_name,
             }
         )
@@ -400,7 +405,6 @@ def main() -> int:
 
     passes = 0
     failures: list[str] = []
-    skipped: list[str] = []
     scoped_failures = 0
     global_failures = 0
     leak_failures = 0
@@ -414,7 +418,6 @@ def main() -> int:
         source_type = case["source_type"]
         must_include = case["must_include"]
         source_name = case["source_name"]
-        optional = bool(case["optional"])
 
         print(f"\n[{index}/{len(cases)}] {case_id}")
         case_status = "PASS"
@@ -483,17 +486,11 @@ def main() -> int:
                 terms=must_include,
             )
             if scoped_hit is None:
-                if optional:
-                    case_status = "SKIP"
-                    detail = "optional scoped miss"
-                    skipped.append(f"{case_id}: optional scoped miss")
-                    print("  SKIP optional: scoped hit not found.")
-                else:
-                    case_status = "FAIL"
-                    detail = "scoped search miss"
-                    scoped_failures += 1
-                    failures.append(f"{case_id}: scoped search miss")
-                    print("  FAIL scoped: expected seeded snippet not found.")
+                case_status = "FAIL"
+                detail = "scoped search miss"
+                scoped_failures += 1
+                failures.append(f"{case_id}: scoped search miss")
+                print("  FAIL scoped: expected seeded snippet not found.")
             else:
                 scoped_hit_found = True
                 print(
@@ -507,17 +504,11 @@ def main() -> int:
             )
             if leaked:
                 scoped_leak_detected = True
-                if optional:
-                    case_status = "SKIP"
-                    detail = "optional scoped leak"
-                    skipped.append(f"{case_id}: optional scoped leak")
-                    print("  SKIP optional: scoped results leaked across sessions.")
-                else:
-                    case_status = "FAIL"
-                    detail = "scoped search leak"
-                    leak_failures += 1
-                    failures.append(f"{case_id}: scoped search leak")
-                    print("  FAIL scoped: returned results from outside session filter.")
+                case_status = "FAIL"
+                detail = "scoped search leak"
+                leak_failures += 1
+                failures.append(f"{case_id}: scoped search leak")
+                print("  FAIL scoped: returned results from outside session filter.")
 
             global_matches = _file_search(
                 base_url=args.base_url,
@@ -534,17 +525,11 @@ def main() -> int:
                 terms=must_include,
             )
             if global_hit is None:
-                if optional:
-                    case_status = "SKIP"
-                    detail = "optional global miss"
-                    skipped.append(f"{case_id}: optional global miss")
-                    print("  SKIP optional: global hit not found.")
-                else:
-                    case_status = "FAIL"
-                    detail = "global search miss"
-                    global_failures += 1
-                    failures.append(f"{case_id}: global search miss")
-                    print("  FAIL global: expected seeded snippet not found.")
+                case_status = "FAIL"
+                detail = "global search miss"
+                global_failures += 1
+                failures.append(f"{case_id}: global search miss")
+                print("  FAIL global: expected seeded snippet not found.")
             else:
                 global_hit_found = True
                 print(
@@ -557,19 +542,17 @@ def main() -> int:
                 case_status = "PASS"
                 detail = "scoped+global pass"
         except Exception as exc:
-            if optional:
-                case_status = "SKIP"
-                detail = f"optional error - {exc}"
-                skipped.append(f"{case_id}: optional error - {exc}")
-                print(f"  SKIP optional error: {exc}")
-            else:
-                case_status = "ERROR"
-                case_error = str(exc)
-                detail = case_error
-                error_failures += 1
-                failures.append(f"{case_id}: error - {exc}")
-                print(f"  ERROR: {exc}")
+            case_status = "ERROR"
+            case_error = str(exc)
+            detail = case_error
+            error_failures += 1
+            failures.append(f"{case_id}: error - {exc}")
+            print(f"  ERROR: {exc}")
         finally:
+            gate_decision = resolve_fail_closed_status(
+                status=case_status,
+                detail=detail,
+            )
             case_results.append(
                 {
                     "id": case_id,
@@ -577,12 +560,13 @@ def main() -> int:
                     "distractor_session": distractor_session,
                     "seed_method": seed_method,
                     "source_type": source_type,
-                    "optional": optional,
                     "query": case["query"],
                     "must_include": must_include,
                     "status": case_status,
                     "detail": detail,
                     "error": case_error,
+                    "gate_outcome": gate_decision.outcome,
+                    "gate_reasons": list(gate_decision.reasons),
                     "scoped_hit_found": scoped_hit_found,
                     "global_hit_found": global_hit_found,
                     "scoped_leak_detected": scoped_leak_detected,
@@ -598,7 +582,6 @@ def main() -> int:
     print("\nSummary")
     print(f"  Passed: {passes}/{len(cases)}")
     print(f"  Failed: {len(failures)}")
-    print(f"  Skipped: {len(skipped)}")
     print(
         "  Breakdown:"
         f" scoped_miss={scoped_failures}"
@@ -608,6 +591,7 @@ def main() -> int:
     )
     report_json = str(args.report_json or "").strip()
     if report_json:
+        gate_passed, gate_failed = gate_counts_from_case_results(case_results)
         output_path = Path(report_json)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         report_payload = {
@@ -618,14 +602,14 @@ def main() -> int:
                 "total": len(cases),
                 "passed": passes,
                 "failed": len(failures),
-                "skipped": len(skipped),
                 "scoped_miss": scoped_failures,
                 "global_miss": global_failures,
                 "scoped_leak": leak_failures,
                 "errors": error_failures,
+                "gate_passed": gate_passed,
+                "gate_failed": gate_failed,
             },
             "failures": failures,
-            "skipped_entries": skipped,
             "cases": case_results,
             "generated_at": int(time.time()),
         }
@@ -646,10 +630,11 @@ def main() -> int:
                 gate_outcomes=[
                     {
                         "name": "file_search_report",
-                        "passed": len(failures) == 0 and len(skipped) == 0,
+                        "passed": gate_failed == 0,
                         "detail": (
                             f"passed={passes}/{len(cases)}, failed={len(failures)}, "
-                            f"skipped={len(skipped)}, errors={error_failures}"
+                            f"errors={error_failures}, "
+                            f"gate_failed={gate_failed}"
                         ),
                     }
                 ],
@@ -666,8 +651,6 @@ def main() -> int:
             print(f"  Trace: {trace_path}")
     for entry in failures:
         print(f"  - {entry}")
-    for entry in skipped:
-        print(f"  - SKIP {entry}")
 
     return 0 if not failures else 1
 

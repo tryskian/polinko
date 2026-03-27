@@ -360,21 +360,14 @@
   CLIP A/B report runs (`cases_count >= 4`) meet all of:
   - proxy any-hit rate `>= 0.90`
   - any-hit delta (`proxy - baseline`) `>= 0.50`
-  - zero errors and zero skipped cases in both arms
+  - zero errors in both arms
 - Why: Keeps escalation objective and repeatable, and prevents integrating on a
   single favorable run or under-powered sample.
 
 ## D-041: Persist all eval submissions and add a cursor-based inbox monitor
 
-- Category: `evidence_governance`
-- Tags: `eval_inbox`, `feedback_logging`, `triage_visibility`, `workflow_speed`
-- Decision: Append every UI eval submission (`PASS`, `FAIL`) to
-  `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` and add
-  `make eval-inbox` to show new entries since the last local cursor checkpoint.
-- Why: Makes new eval activity immediately discoverable, improves remediation
-  triage speed, and preserves a complete chronological submission trail.
-- Status: Superseded by `D-068`/`D-069` (runtime now uses SQLite state only;
-  `raw_evidence` intake folders are deprecated and archived).
+- Status: Superseded by `D-068`/`D-069` (runtime now uses SQLite state only; `raw_evidence` intake folders are archived)
+- Note: Legacy inbox helper (`make eval-inbox`, `tools/eval_inbox.py`) removed from active surface.
 
 ## D-042: Repo-scoped mypy configuration and workspace diagnostics
 
@@ -633,6 +626,8 @@
 - Why: This keeps the workflow easy to operate offline, avoids maintaining a
   separate bespoke visualization surface, and preserves clear relationship
   semantics for imagineer-facing exploration.
+- Status: Superseded by `D-076` (human-reference SQLite workflow is archive-only;
+  active visual surface is `make reference-graph`).
 
 ## D-062: Inspect-first execution and explicit legacy cutlines
 
@@ -783,3 +778,99 @@
   overhead, and introduced path complexity without improving release decision
   quality.
 - Supersedes: `D-068` for active operations.
+
+## D-074: Introduce a tracked live archive lane for deprecated eval/frontend context
+
+- Date: `2026-03-27`
+- Category: `evidence_governance`
+- Tags: `live_archive`, `legacy_reference`, `frontend_deprecation`, `binary_hygiene`
+- Decision:
+  - create `docs/live_archive/` as the single tracked reference surface for
+    deprecated implementation context
+  - split lanes by concern:
+    - `docs/live_archive/legacy_eval/`
+    - `docs/live_archive/legacy_frontend/`
+  - keep archive lane read-only for reference; active runtime contracts remain
+    sourced from canonical docs/code
+- Why: Preserves inspectability/traceability of deprecated context without
+  reintroducing legacy wiring into active runtime and eval decisions.
+
+## D-075: Remove legacy hallucination-mode labels from active eval case contract
+
+- Date: `2026-03-27`
+- Category: `eval_quality`
+- Tags: `binary_contract`, `criteria_cleanup`, `policy_profile`, `hallucination_eval`
+- Decision:
+  - replace active hallucination case label `expected_mode` with
+    `policy_profile`
+  - use only:
+    - `evidence_required`
+    - `uncertainty_required`
+  - remove deprecated criteria tags from OCR recovery case guidance
+    (`grounding_gap` and related legacy labels)
+- Why: Drops legacy criteria vocabulary from active eval wiring so new UI and
+  backend flows align to policy-profile semantics without ambiguity.
+
+## D-076: Archive SQLite human-reference workflow; replace with markdown-native graph visualisation
+
+- Date: `2026-03-27`
+- Category: `evidence_governance`
+- Tags: `human_reference`, `archive_only`, `markdown_graph`, `visualisation`
+- Decision:
+  - move SQLite human-reference workflow to archive-only status in
+    `docs/live_archive/legacy_human_reference/`
+  - make `reference-graph` the canonical docs relationship visualisation flow
+    (`tools/build_reference_graph.py` -> `docs/REFERENCE_GRAPH.md`)
+  - leave legacy human-reference make targets as archive notices
+- Why: Reduces operator complexity and produces a more imagineer-readable visual
+  surface without keeping an active DB/query workflow in the critical path.
+
+## D-077: Remove frontend codebase from active repository surface
+
+- Date: `2026-03-27`
+- Category: `workflow_environment`
+- Tags: `frontend_removal`, `backend_cli_only`, `surface_reduction`, `drift_control`
+- Decision:
+  - remove `frontend/` from active repository contents
+  - remove active UI make targets/wiring and update dev flow to backend-only
+  - retain legacy frontend context through live-archive docs + Git history
+- Why: Eliminates hidden UI state/wiring vectors while preparing a clean-slate
+  UI rebuild and keeps active execution surfaces deterministic.
+
+## D-078: Adopt archive-first runtime DB lifecycle for history/memory/vector
+
+- Date: `2026-03-27`
+- Category: `workflow_environment`
+- Tags: `db_lifecycle`, `archive_first`, `runtime_state`, `evidence_retention`
+- Decision:
+  - add runtime DB lifecycle tooling:
+    - `make db-archive` (snapshot old DB families to `.local/runtime_dbs/archive/`)
+    - `make db-reset` (clear active history/vector/memory DBs in `.local/runtime_dbs/active/`)
+    - `make db-visuals` (generate `docs/RUNTIME_DB_VISUALS.md`)
+- Why: Preserves old runtime evidence for traceability while ensuring new logic
+  starts from clean database baselines.
+
+## D-079: Freeze runtime DB provisioning until eval wiring sign-off
+
+- Date: `2026-03-27`
+- Category: `workflow_environment`
+- Tags: `wiring_first`, `db_freeze`, `contract_lock`, `binary_eval`
+- Decision:
+  - during the eval wiring phase, keep runtime DB provisioning paused; no init
+    or refresh commands are available
+  - keep existing DB families archived under `.local/runtime_dbs/archive/`
+  - treat `docs/EVAL_WIRING_SPEC.md` + tests as canonical until persistence
+    design begins
+- Why: Prevents persistence artefacts from masking contract drift and keeps the
+  binary gate model deterministic before schema/migration work starts.
+
+## D-080: Tooling audit and legacy cleanup
+
+- Date: `2026-03-27`
+- Category: `workflow_environment`
+- Tags: `artifact_cleanup`, `legacy_tools`, `runtime_db_paths`, `archive_only`
+- Decision:
+  - Archived human-reference helpers and SQL into `docs/live_archive/legacy_human_reference/`.
+  - Removed legacy workbench server/target and eval inbox helper (`make eval-inbox`, `tools/eval_inbox.py`).
+  - Locked runtime DB defaults to `.local/runtime_dbs/active/` and removed init/refresh targets; `manage_local_dbs` supports `archive|reset` only.
+- Why: Reduce hidden gremlins and keep the active execution surface minimal and aligned with current binary eval contracts.

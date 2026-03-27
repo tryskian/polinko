@@ -11,13 +11,5 @@ __pycache__
 venv
 virtualenv_name
 polinko-repositioning-system
-.polinko_memory.db
-.polinko_memory.db-shm
-.polinko_memory.db-wal
-.polinko_history.db
-.polinko_history.db-shm
-.polinko_history.db-wal
-.polinko_vector.db
-.polinko_vector.db-shm
-.polinko_vector.db-wal
+.local/runtime_dbs/
 eval_reports/

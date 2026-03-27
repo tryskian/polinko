@@ -99,7 +99,7 @@ Optional tuning:
 
 ## SQL Viewer Pack
 
-Use `tools/human_reference_queries.sql` in your DB viewer for:
+Use `docs/live_archive/legacy_human_reference/human_reference_queries.sql` in your DB viewer for:
 
 - latest docs
 - category totals

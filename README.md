@@ -1,6 +1,6 @@
 # Polinko
 
-Polinko is a local-first GPT assistant app with a FastAPI backend, Vite frontend,
+Polinko is a local-first GPT assistant app with a FastAPI backend, CLI workflow,
 and deterministic eval gates.
 
 ## Build Blocks
@@ -9,14 +9,14 @@ and deterministic eval gates.
   required key validation (`OPENAI_API_KEY`).
 - API backend: FastAPI app for chat, OCR/PDF ingest, retrieval search,
   feedback, and checkpoints, backed by SQLite persistence.
-- Frontend: Vite web UI for chat, chat switching, eval capture, and export,
-  with server-side chat history.
+- Frontend is archived from the active repository surface; legacy UI context is
+  retained in `docs/live_archive/legacy_frontend/`.
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
 - Evidence and remediation: evidence indexing and metadata audit tooling with
   open/closed remediation tracking.
-- Human reference database: local SQLite reference graph + query tooling for
-  latest docs, transcript slices, and relationships.
+- Reference graph visualisation: markdown-native Mermaid graph generated from
+  docs links (`make reference-graph`).
 
 ## Quick Start
 
@@ -24,20 +24,12 @@ Run from repo root:
 
 ```bash
 make doctor-env
-make ui-install
-make dev
+make server
 ```
 
 Open:
 
-- `http://127.0.0.1:5173` (frontend)
 - `http://127.0.0.1:8000/docs` (backend OpenAPI)
-
-Stop dev processes:
-
-```bash
-make dev-stop
-```
 
 ## Setup
 
@@ -56,12 +48,10 @@ Notes:
 
 ## Core Commands
 
-Backend and frontend:
+Backend (canonical):
 
 ```bash
 make server
-make ui-dev
-make ui-build
 ```
 
 Checks:
@@ -173,7 +163,6 @@ make eval-reports-parallel
 Auxiliary eval tooling:
 
 ```bash
-make eval-inbox
 make backfill-eval-traces
 make calibrate-hallucination-threshold
 ```
@@ -195,15 +184,24 @@ make evidence-refresh
 make portfolio-metadata-audit
 ```
 
-Human reference DB:
+Reference graph:
 
 ```bash
-make human-reference-db
-make human-reference-latest
-make human-reference-transcripts
-make human-reference-changes
-make human-reference-relationships
+make reference-graph
 ```
+
+Runtime DB lifecycle:
+
+```bash
+make db-reset
+make db-archive
+make db-visuals
+```
+
+Notes:
+
+- Runtime DBs live under `.local/runtime_dbs/active/`; archives under `.local/runtime_dbs/archive/`.
+- Provisioning/init commands are intentionally removed during wiring lock (archive/reset only).
 
 ## Docker Smoke Test
 
@@ -224,10 +222,10 @@ Defaults:
 - `server.py` API entrypoint
 - `api/` API implementation
 - `core/` runtime logic
-- `frontend/` web UI
 - `tools/` operational and eval scripts
 - `tests/` unit and integration tests
 - `docs/` architecture, runbook, decisions, state
+- `docs/live_archive/` live archive for legacy eval/frontend references
 
 ## CI
 

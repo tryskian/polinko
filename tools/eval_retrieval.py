@@ -8,6 +8,8 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+from tools.eval_gate import gate_counts_from_case_results
+from tools.eval_gate import resolve_fail_closed_status
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
@@ -405,6 +407,10 @@ def main() -> int:
             failures.append(f"{case_id}: error - {exc}")
             print(f"  ERROR {exc}")
         finally:
+            gate_decision = resolve_fail_closed_status(
+                status=case_status,
+                detail=detail,
+            )
             case_results.append(
                 {
                     "id": case_id,
@@ -416,6 +422,8 @@ def main() -> int:
                     "status": case_status,
                     "detail": detail,
                     "error": case_error,
+                    "gate_outcome": gate_decision.outcome,
+                    "gate_reasons": list(gate_decision.reasons),
                     "global_citation_found": global_found,
                     "session_scope_leak": session_leak,
                     "global_memory_count": global_memory_count,
@@ -439,6 +447,7 @@ def main() -> int:
     print(f"  Breakdown: global_miss={global_miss_count} leak={leak_count} errors={error_count}")
     report_json = str(args.report_json or "").strip()
     if report_json:
+        gate_passed, gate_failed = gate_counts_from_case_results(case_results)
         output_path = Path(report_json)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         report_payload = {
@@ -452,6 +461,8 @@ def main() -> int:
                 "global_miss": global_miss_count,
                 "leak": leak_count,
                 "errors": error_count,
+                "gate_passed": gate_passed,
+                "gate_failed": gate_failed,
             },
             "failures": failures,
             "cases": case_results,
@@ -474,10 +485,11 @@ def main() -> int:
                 gate_outcomes=[
                     {
                         "name": "retrieval_eval",
-                        "passed": len(failures) == 0,
+                        "passed": gate_failed == 0,
                         "detail": (
                             f"passed={passes}/{len(cases)}, failed={len(failures)}, "
-                            f"global_miss={global_miss_count}, leak={leak_count}, errors={error_count}"
+                            f"global_miss={global_miss_count}, leak={leak_count}, "
+                            f"errors={error_count}, gate_failed={gate_failed}"
                         ),
                     }
                 ],
