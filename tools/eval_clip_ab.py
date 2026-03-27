@@ -119,14 +119,11 @@ def _aggregate_arm_results(records: list[dict[str, Any]]) -> dict[str, Any]:
     for record in records:
         arm = str(record.get("arm", "unknown"))
         arm_stats = summary.setdefault(
-            arm, {"cases": 0, "top1_hits": 0, "any_hits": 0, "errors": 0, "skipped": 0}
+            arm, {"cases": 0, "top1_hits": 0, "any_hits": 0, "errors": 0}
         )
         arm_stats["cases"] += 1
         if record.get("error"):
             arm_stats["errors"] += 1
-            continue
-        if record.get("skipped"):
-            arm_stats["skipped"] += 1
             continue
         if bool(record.get("top1_hit")):
             arm_stats["top1_hits"] += 1
@@ -135,7 +132,7 @@ def _aggregate_arm_results(records: list[dict[str, Any]]) -> dict[str, Any]:
 
     out: dict[str, Any] = {}
     for arm, arm_stats in summary.items():
-        evaluated = max(1, arm_stats["cases"] - arm_stats["errors"] - arm_stats["skipped"])
+        evaluated = max(1, arm_stats["cases"] - arm_stats["errors"])
         out[arm] = {
             **arm_stats,
             "top1_rate": arm_stats["top1_hits"] / evaluated,
@@ -318,7 +315,7 @@ def main() -> int:
         print(
             f"  {arm_name}: top1_rate={arm_stats['top1_rate']:.3f} "
             f"any_rate={arm_stats['any_rate']:.3f} "
-            f"errors={arm_stats['errors']} skipped={arm_stats['skipped']}"
+            f"errors={arm_stats['errors']}"
         )
     print(f"  any_rate_delta(proxy-baseline)={proxy_any - baseline_any:+.3f}")
 

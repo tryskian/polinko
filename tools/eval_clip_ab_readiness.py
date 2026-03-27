@@ -20,9 +20,7 @@ class ClipReadinessEvaluation:
     proxy_any_rate: float
     delta: float
     baseline_errors: int
-    baseline_skipped: int
     proxy_errors: int
-    proxy_skipped: int
     passed: bool
     reasons: tuple[str, ...]
 
@@ -66,9 +64,7 @@ def _evaluate_report(
             proxy_any_rate=0.0,
             delta=0.0,
             baseline_errors=0,
-            baseline_skipped=0,
             proxy_errors=0,
-            proxy_skipped=0,
             passed=False,
             reasons=("invalid JSON payload",),
         )
@@ -99,9 +95,7 @@ def _evaluate_report(
         proxy_any_rate - baseline_any_rate,
     )
     baseline_errors = _int_value(baseline.get("errors"), 0)
-    baseline_skipped = _int_value(baseline.get("skipped"), 0)
     proxy_errors = _int_value(proxy.get("errors"), 0)
-    proxy_skipped = _int_value(proxy.get("skipped"), 0)
 
     if cases_count < min_cases:
         reasons.append(f"cases_count {cases_count} < {min_cases}")
@@ -111,12 +105,8 @@ def _evaluate_report(
         reasons.append(f"delta {delta:+.3f} < {min_delta:+.3f}")
     if baseline_errors != 0:
         reasons.append(f"{_BASELINE_ARM} errors {baseline_errors} != 0")
-    if baseline_skipped != 0:
-        reasons.append(f"{_BASELINE_ARM} skipped {baseline_skipped} != 0")
     if proxy_errors != 0:
         reasons.append(f"{_PROXY_ARM} errors {proxy_errors} != 0")
-    if proxy_skipped != 0:
-        reasons.append(f"{_PROXY_ARM} skipped {proxy_skipped} != 0")
 
     return ClipReadinessEvaluation(
         path=path,
@@ -126,9 +116,7 @@ def _evaluate_report(
         proxy_any_rate=proxy_any_rate,
         delta=delta,
         baseline_errors=baseline_errors,
-        baseline_skipped=baseline_skipped,
         proxy_errors=proxy_errors,
-        proxy_skipped=proxy_skipped,
         passed=not reasons,
         reasons=tuple(reasons),
     )
@@ -163,8 +151,7 @@ def _format_evaluation(item: ClipReadinessEvaluation) -> str:
         f"{item.path.name}: {status} run_id={item.run_id} "
         f"cases={item.cases_count} proxy_any_rate={item.proxy_any_rate:.3f} "
         f"delta={item.delta:+.3f} "
-        f"baseline_errors={item.baseline_errors} baseline_skipped={item.baseline_skipped} "
-        f"proxy_errors={item.proxy_errors} proxy_skipped={item.proxy_skipped}"
+        f"baseline_errors={item.baseline_errors} proxy_errors={item.proxy_errors}"
     )
 
 
@@ -233,7 +220,7 @@ def main() -> int:
         f"cases_count>={args.min_cases}, "
         f"proxy any_rate>={args.min_proxy_any_rate:.2f}, "
         f"delta>={args.min_delta:.2f}, "
-        "zero errors/skips in both arms."
+        "zero errors in both arms."
     )
     for item in latest:
         print(_format_evaluation(item))
