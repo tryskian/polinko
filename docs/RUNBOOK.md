@@ -765,6 +765,23 @@ Current policy:
 3. Run `make eval-reports`.
 4. Reports are written under `eval_reports/` with timestamped filenames.
 
+## Eval Gate Semantics (Canonical)
+
+1. Use `docs/EVAL_POLICY_MODEL.md` as the source of truth for eval gate
+   semantics.
+2. Symbol convention for policy docs:
+   - `⊨` semantic entailment / satisfies
+   - `⊭` does not semantically entail
+3. Canonical semantics:
+   - `reward ⊨ alignment`
+   - `reward ⊭ adjustment`
+   - `reward ⊭ intensity`
+4. Canonical binary gate:
+   - `PASS ⇔ policy_pass ∧ high_value_alignment_pass ∧ evidence_complete`
+   - otherwise `FAIL`
+5. Keep release output strictly binary; diagnostic detail may be rich, but it
+   must not introduce non-binary gate states.
+
 ## Calibrate Hallucination Threshold
 
 1. Generate one or more hallucination report artifacts:

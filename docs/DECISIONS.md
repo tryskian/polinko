@@ -750,3 +750,20 @@
   summary-first or over-targeted execution without full product-context
   accountability; human governance keeps outputs aligned to intent, meaning, and
   usable end-state quality.
+
+## D-072: Canonical eval policy model is fail-closed, high-value-only, and policy-dominant
+
+- Date: `2026-03-27`
+- Category: `eval_quality`
+- Tags: `binary_gate`, `fail_closed`, `policy_guardrails`, `high_value_evals`
+- Decision: Standardise eval decision semantics as:
+  - `reward ⊨ alignment`
+  - `reward ⊭ adjustment`
+  - `reward ⊭ intensity`
+  - `PASS ⇔ policy_pass ∧ high_value_alignment_pass ∧ evidence_complete`
+  - otherwise `FAIL`
+- Why: Keeps release decisions deterministic, blocks reward-only optimisation
+  drift, and ensures policy constraints remain the hard control surface while
+  preserving rich diagnostics outside the binary gate output.
+- Implementation note: Concept model and ER mapping are documented in
+  `docs/EVAL_POLICY_MODEL.md`.
