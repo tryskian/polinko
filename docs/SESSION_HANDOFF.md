@@ -32,10 +32,16 @@
 - Docs relationship visualisation is markdown-native:
   - build: `make reference-graph`
   - output: `docs/REFERENCE_GRAPH.md`
-- Runtime DB scripts are retired during wiring lock; no local DB commands in the active surface.
+- Runtime DB maintenance is archive/reset-only:
+  - `make db-reset`
+  - `make db-archive`
+  - `make db-visuals`
 - Wiring lock is active:
   - keep DB state archived during contract-finalisation phase
   - canonical wiring contract source: `docs/EVAL_WIRING_SPEC.md`
+- Minimal-config benchmark sequencing is now explicit:
+  - canonical spec: `docs/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
+  - objective: compare baseline A/B/C with fixed evaluation dimensions
 - Engineer execution mode is proactive by default:
   - technical hygiene/drift control should be handled without reminder
   - user input is only needed for approvals or material trade-offs
@@ -46,7 +52,7 @@
 ## Latest Branch Context
 
 - Active implementation branch:
-  - `codex/bigbrain/eval-wiring-spec`
+  - `main` (latest merged baseline)
 - Canonical repo path:
   - `/Users/tryskian/Github/polinko`
 
@@ -87,11 +93,10 @@
 
 ## Immediate Next Step
 
-- Finalise eval wiring contract before persistence activation:
-  - lock binary gate topology and case/feedback/checkpoint contracts
-  - align docs + tests to `docs/EVAL_WIRING_SPEC.md`
-  - keep deprecated eval/frontend context in `docs/live_archive/`
-  - defer DB initialisation until wiring sign-off is explicit
+- Execute benchmark evidence mapping while maintaining product-first delivery:
+  - populate benchmark A/B/C experiment records with linked artifacts/results
+  - document confounders for each benchmark phase
+  - use benchmark outcomes to drive one deterministic backend priority slice
 
 ## Peanut Pin (Tomorrow Start)
 

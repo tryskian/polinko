@@ -89,8 +89,8 @@ Wiring requirements:
 
 During wiring lock:
 
-- keep legacy DBs archived under `.local_archive/`
-- do not run `make db-init` or `make db-refresh`
+- keep runtime DB archives under `.local/runtime_dbs/archive/`
+- do not use DB init/refresh flows (removed from active Make targets)
 - validate behaviour through unit tests, API tests, and eval harnesses
 
 Persistence work starts only after wiring sign-off and contract stability.
@@ -100,11 +100,11 @@ Persistence work starts only after wiring sign-off and contract stability.
 1. Wiring lock (this phase)
    - contract docs aligned
    - tests aligned to binary-only semantics
-   - no DB provisioning
+   - no DB auto-provisioning
 2. Persistence design
    - finalise schema/migration plan against locked contracts
 3. Persistence activation
-   - initialise fresh DBs once
+   - explicitly provision runtime DBs as part of persistence rollout
    - run full deterministic validation (`make test`, `make quality-gate-deterministic`)
 
 ## Acceptance Criteria
