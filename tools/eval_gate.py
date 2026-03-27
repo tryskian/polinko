@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
+from typing import Iterable
 from typing import Mapping
 
 
@@ -77,3 +79,17 @@ def resolve_fail_closed_status(
         evidence_complete=True,
         reason_overrides={"policy_pass": reason},
     )
+
+
+def gate_counts_from_case_results(
+    case_results: Iterable[Mapping[str, Any]],
+) -> tuple[int, int]:
+    gate_passed = 0
+    gate_failed = 0
+    for item in case_results:
+        outcome = str(item.get("gate_outcome", "")).strip().lower()
+        if outcome == "pass":
+            gate_passed += 1
+        else:
+            gate_failed += 1
+    return gate_passed, gate_failed

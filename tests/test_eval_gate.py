@@ -1,5 +1,6 @@
 import unittest
 
+from tools.eval_gate import gate_counts_from_case_results
 from tools.eval_gate import resolve_binary_gate
 from tools.eval_gate import resolve_fail_closed_status
 
@@ -69,6 +70,18 @@ class EvalGateTests(unittest.TestCase):
         self.assertFalse(decision.passed)
         self.assertEqual(decision.outcome, "fail")
         self.assertIn("case status=error (timeout)", decision.reasons)
+
+    def test_gate_counts_from_case_results_counts_non_pass_as_fail(self) -> None:
+        gate_passed, gate_failed = gate_counts_from_case_results(
+            [
+                {"gate_outcome": "pass"},
+                {"gate_outcome": "fail"},
+                {"gate_outcome": "skip"},
+                {"gate_outcome": ""},
+            ]
+        )
+        self.assertEqual(gate_passed, 1)
+        self.assertEqual(gate_failed, 3)
 
 
 if __name__ == "__main__":

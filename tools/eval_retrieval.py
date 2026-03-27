@@ -8,6 +8,7 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+from tools.eval_gate import gate_counts_from_case_results
 from tools.eval_gate import resolve_fail_closed_status
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
@@ -446,8 +447,7 @@ def main() -> int:
     print(f"  Breakdown: global_miss={global_miss_count} leak={leak_count} errors={error_count}")
     report_json = str(args.report_json or "").strip()
     if report_json:
-        gate_passed = sum(1 for item in case_results if item.get("gate_outcome") == "pass")
-        gate_failed = len(case_results) - gate_passed
+        gate_passed, gate_failed = gate_counts_from_case_results(case_results)
         output_path = Path(report_json)
         output_path.parent.mkdir(parents=True, exist_ok=True)
         report_payload = {
