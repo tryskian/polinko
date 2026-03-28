@@ -340,33 +340,39 @@ def _render_session_graph(
     pass_feedback_nodes: list[str] = []
     fail_feedback_nodes: list[str] = []
     tag_nodes: dict[str, str] = {}
-    for index, item in enumerate(feedback):
+    for index, feedback_row in enumerate(feedback):
         feedback_node = f"f{index}"
-        label = _escape_mermaid(f"{item.outcome}:{_short(item.message_id, 12)}")
+        label = _escape_mermaid(f"{feedback_row.outcome}:{_short(feedback_row.message_id, 12)}")
         lines.append(f'  {feedback_node}["{label}"]')
-        if item.outcome == "pass":
+        if feedback_row.outcome == "pass":
             pass_feedback_nodes.append(feedback_node)
         else:
             fail_feedback_nodes.append(feedback_node)
 
-        if item.message_id in message_nodes:
-            lines.append(f"  {message_nodes[item.message_id]} --> {feedback_node}")
+        if feedback_row.message_id in message_nodes:
+            lines.append(f"  {message_nodes[feedback_row.message_id]} --> {feedback_node}")
         else:
             lines.append(f"  sess --> {feedback_node}")
 
-        for tag in item.all_tags:
+        for tag in feedback_row.all_tags:
             if tag not in tag_nodes:
                 tag_nodes[tag] = f"t{len(tag_nodes)}"
                 lines.append(f'  {tag_nodes[tag]}["tag:{_escape_mermaid(tag)}"]')
             lines.append(f"  {feedback_node} --> {tag_nodes[tag]}")
 
     checkpoint_nodes: list[str] = []
-    for index, item in enumerate(checkpoints):
+    for index, checkpoint_row in enumerate(checkpoints):
         node_id = f"c{index}"
         checkpoint_nodes.append(node_id)
-        gate = "pass" if item.total_count > 0 and item.fail_count == 0 and item.non_binary_count == 0 else "fail"
+        gate = (
+            "pass"
+            if checkpoint_row.total_count > 0
+            and checkpoint_row.fail_count == 0
+            and checkpoint_row.non_binary_count == 0
+            else "fail"
+        )
         label = _escape_mermaid(
-            f"cp:{_short(item.checkpoint_id, 12)} {gate}\\nP:{item.pass_count} F:{item.fail_count} N:{item.non_binary_count}"
+            f"cp:{_short(checkpoint_row.checkpoint_id, 12)} {gate}\\nP:{checkpoint_row.pass_count} F:{checkpoint_row.fail_count} N:{checkpoint_row.non_binary_count}"
         )
         lines.append(f'  {node_id}["{label}"]')
         lines.append(f"  sess --> {node_id}")
@@ -415,23 +421,23 @@ def build_eval_relationship_markdown(
         checkpoints = _load_checkpoints(conn, session_ids)
 
     messages_by_session: dict[str, list[MessageRow]] = {}
-    for item in messages:
-        messages_by_session.setdefault(item.session_id, []).append(item)
+    for message_row in messages:
+        messages_by_session.setdefault(message_row.session_id, []).append(message_row)
 
     feedback_by_session: dict[str, list[FeedbackRow]] = {}
-    for item in feedback:
-        feedback_by_session.setdefault(item.session_id, []).append(item)
+    for feedback_row in feedback:
+        feedback_by_session.setdefault(feedback_row.session_id, []).append(feedback_row)
 
     checkpoints_by_session: dict[str, list[CheckpointRow]] = {}
-    for item in checkpoints:
-        checkpoints_by_session.setdefault(item.session_id, []).append(item)
+    for checkpoint_row in checkpoints:
+        checkpoints_by_session.setdefault(checkpoint_row.session_id, []).append(checkpoint_row)
 
-    total_pass = sum(1 for item in feedback if item.outcome == "pass")
-    total_fail = sum(1 for item in feedback if item.outcome != "pass")
+    total_pass = sum(1 for feedback_row in feedback if feedback_row.outcome == "pass")
+    total_fail = sum(1 for feedback_row in feedback if feedback_row.outcome != "pass")
 
     tag_counts: dict[str, int] = {}
-    for item in feedback:
-        for tag in item.all_tags:
+    for feedback_row in feedback:
+        for tag in feedback_row.all_tags:
             tag_counts[tag] = tag_counts.get(tag, 0) + 1
 
     lines: list[str] = []
@@ -536,13 +542,13 @@ def build_eval_relationship_markdown(
         lines.append("| message_id | role | parent_message_id | created_utc |")
         lines.append("| --- | --- | --- | --- |")
         if sess_messages:
-            for item in sess_messages:
+            for message_row in sess_messages:
                 lines.append(
                     "| "
-                    f"`{_escape_md_cell(item.message_id)}` | "
-                    f"{_escape_md_cell(item.role)} | "
-                    f"`{_escape_md_cell(item.parent_message_id or '-')}` | "
-                    f"{_to_utc(item.created_at)} |"
+                    f"`{_escape_md_cell(message_row.message_id)}` | "
+                    f"{_escape_md_cell(message_row.role)} | "
+                    f"`{_escape_md_cell(message_row.parent_message_id or '-')}` | "
+                    f"{_to_utc(message_row.created_at)} |"
                 )
         else:
             lines.append("| _none_ | _none_ | _none_ | _none_ |")
@@ -552,15 +558,15 @@ def build_eval_relationship_markdown(
         lines.append("| message_id | outcome | positive_tags | negative_tags | status | updated_utc |")
         lines.append("| --- | --- | --- | --- | --- | --- |")
         if sess_feedback:
-            for item in sess_feedback:
+            for feedback_row in sess_feedback:
                 lines.append(
                     "| "
-                    f"`{_escape_md_cell(item.message_id)}` | "
-                    f"{_escape_md_cell(item.outcome)} | "
-                    f"{_escape_md_cell(', '.join(item.positive_tags) or '-')} | "
-                    f"{_escape_md_cell(', '.join(item.negative_tags) or '-')} | "
-                    f"{_escape_md_cell(item.status)} | "
-                    f"{_to_utc(item.updated_at)} |"
+                    f"`{_escape_md_cell(feedback_row.message_id)}` | "
+                    f"{_escape_md_cell(feedback_row.outcome)} | "
+                    f"{_escape_md_cell(', '.join(feedback_row.positive_tags) or '-')} | "
+                    f"{_escape_md_cell(', '.join(feedback_row.negative_tags) or '-')} | "
+                    f"{_escape_md_cell(feedback_row.status)} | "
+                    f"{_to_utc(feedback_row.updated_at)} |"
                 )
         else:
             lines.append("| _none_ | _none_ | _none_ | _none_ | _none_ | _none_ |")
@@ -570,17 +576,23 @@ def build_eval_relationship_markdown(
         lines.append("| checkpoint_id | total | pass | fail | non_binary | gate_outcome | created_utc |")
         lines.append("| --- | ---: | ---: | ---: | ---: | --- | --- |")
         if sess_checkpoints:
-            for item in sess_checkpoints:
-                gate = "pass" if item.total_count > 0 and item.fail_count == 0 and item.non_binary_count == 0 else "fail"
+            for checkpoint_row in sess_checkpoints:
+                gate = (
+                    "pass"
+                    if checkpoint_row.total_count > 0
+                    and checkpoint_row.fail_count == 0
+                    and checkpoint_row.non_binary_count == 0
+                    else "fail"
+                )
                 lines.append(
                     "| "
-                    f"`{_escape_md_cell(item.checkpoint_id)}` | "
-                    f"{item.total_count} | "
-                    f"{item.pass_count} | "
-                    f"{item.fail_count} | "
-                    f"{item.non_binary_count} | "
+                    f"`{_escape_md_cell(checkpoint_row.checkpoint_id)}` | "
+                    f"{checkpoint_row.total_count} | "
+                    f"{checkpoint_row.pass_count} | "
+                    f"{checkpoint_row.fail_count} | "
+                    f"{checkpoint_row.non_binary_count} | "
                     f"{gate} | "
-                    f"{_to_utc(item.created_at)} |"
+                    f"{_to_utc(checkpoint_row.created_at)} |"
                 )
         else:
             lines.append("| _none_ | 0 | 0 | 0 | 0 | none | _none_ |")
