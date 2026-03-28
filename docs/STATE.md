@@ -195,6 +195,16 @@
     (`db-reset`, `db-archive`, `db-visuals`)
   - `make build-audit` now fails on reintroduction of those command tokens in
     active docs
+- Eval relationship visual checkpoint (March 28, 2026):
+  - local eval data visualisation now has a canonical navigation-first report:
+    - command: `make eval-viz`
+    - builder: `tools/build_eval_relationship_graph.py`
+    - output: `.local/visuals/eval_relationship_graph.md` (local-only)
+  - report includes:
+    - schema ER diagram
+    - session topology graph
+    - linked session directory + per-session relationship maps
+    - per-session message/feedback/checkpoint tables + tag frequency
 - Proactive ownership checkpoint (March 26, 2026):
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder

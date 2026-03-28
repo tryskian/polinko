@@ -924,3 +924,23 @@
     implementation parity
 - Why: Removes UI/backend ambiguity and gives a single deterministic contract for
   integrating eval functionality into the new frontend.
+
+## D-086: Standardise eval relationship visualisation as local Mermaid report
+
+- Date: `2026-03-28`
+- Category: `eval_quality`
+- Tags: `visualisation`, `operator_experience`, `runtime_history`, `local_only`
+- Decision:
+  - add canonical eval relationship visual builder:
+    - `tools/build_eval_relationship_graph.py`
+  - add one-command operator entrypoint:
+    - `make eval-viz` (alias for `make eval-relationship-graph`)
+  - default output to local-only path:
+    - `.local/visuals/eval_relationship_graph.md`
+  - report structure is navigation-first:
+    - overview + schema ER
+    - session topology
+    - linked session directory
+    - per-session relationship maps and summary tables
+- Why: Gives a readable, low-friction way to inspect eval relationships without
+  reintroducing legacy DB tooling or tracking internal runtime data in repo docs.

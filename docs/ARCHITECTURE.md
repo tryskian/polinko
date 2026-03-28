@@ -62,6 +62,11 @@
   - markdown-native relationship graph generated from docs links.
   - builder: `tools/build_reference_graph.py`
   - operator flow: `make reference-graph` -> `docs/REFERENCE_GRAPH.md`.
+- Eval relationship visualisation:
+  - markdown-native relationship report generated from runtime history DB.
+  - builder: `tools/build_eval_relationship_graph.py`
+  - operator flow: `make eval-viz` ->
+    `.local/visuals/eval_relationship_graph.md` (local-only output).
 
 ## Placement Rules
 
@@ -92,3 +97,4 @@
   (see `docs/RUNBOOK.md`).
 - Local eval trace backfill (optional): `make backfill-eval-traces`
 - Docs relationship graph: `make reference-graph`
+- Eval relationship graph: `make eval-viz`

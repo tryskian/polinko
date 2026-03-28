@@ -21,6 +21,8 @@ and deterministic eval gates.
   open/closed remediation tracking.
 - Reference graph visualisation: markdown-native Mermaid graph generated from
   docs links (`make reference-graph`).
+- Eval relationship visualisation: markdown-native Mermaid report generated
+  from runtime eval data (`make eval-viz`).
 
 ## Quick Start
 
@@ -201,6 +203,16 @@ Reference graph:
 ```bash
 make reference-graph
 ```
+
+Eval relationship graph (local runtime data):
+
+```bash
+make eval-viz
+```
+
+Default output path:
+
+- `.local/visuals/eval_relationship_graph.md`
 
 ## Docker Smoke Test
 
