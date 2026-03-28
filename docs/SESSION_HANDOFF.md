@@ -45,6 +45,10 @@
   - build: `make eval-viz`
   - output: `.local/visuals/eval_relationship_graph.md`
   - source: `tools/build_eval_relationship_graph.py`
+- Interactive visualisation roadmap pin:
+  - D3.js is a deferred track (post-baseline), not active in current
+    runtime/docs gate workflows
+  - Mermaid remains the canonical visual surface in active operations
 - Runtime DB lifecycle commands are retired during wiring lock:
   - no local DB maintenance commands are active in this phase
 - Wiring lock is active:

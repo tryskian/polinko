@@ -67,6 +67,8 @@
   - builder: `tools/build_eval_relationship_graph.py`
   - operator flow: `make eval-viz` ->
     `.local/visuals/eval_relationship_graph.md` (local-only output).
+  - D3.js interactive graphing is a deferred roadmap track, not part of the
+    active gate path.
 
 ## Placement Rules
 
