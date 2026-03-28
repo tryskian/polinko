@@ -18,6 +18,11 @@
 - Canonical UI eval adapter contract is published:
   - `docs/UI_EVAL_ADAPTER_CONTRACT.md`
   - includes TypeScript request/response shapes + chat/eval/checkpoint flow
+- Local UI shell is now active:
+  - route: `GET /ui`
+  - file: `ui/index.html`
+  - scope: chat thread + binary eval submit + checkpoint render/create
+  - fixture mode controls are available for deterministic UI smoke
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Eval contract is strict binary end-to-end:
   - feedback outcomes: `pass` or `fail` only
@@ -112,11 +117,12 @@
 
 ## Immediate Next Step
 
-- Execute benchmark-derived backend slice `D.3` with minimal behaviour drift:
-  - implement minimal new-UI shell against
-    `docs/UI_EVAL_ADAPTER_CONTRACT.md`
-  - include thread view + binary eval submit + checkpoint render path
-  - keep eval gate semantics backend-owned (`pass`/`fail`, fail-closed)
+- Run one full eval cycle through `/ui` and capture contract gaps before
+  deeper visual work:
+  - exercise `live` and `fixture` harness modes
+  - submit pass/fail evals on multiple assistant messages
+  - create checkpoint and verify fail-closed gate rendering
+  - patch only contract-level gaps (no visual framework expansion yet)
   - validate with `make build-audit`, `make lint-docs`, `make test`,
     `make quality-gate-deterministic`
 

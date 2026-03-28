@@ -13,8 +13,9 @@ and deterministic eval gates.
   testing without model calls (`harness_mode=fixture`).
 - UI eval adapter contract is documented in
   `docs/UI_EVAL_ADAPTER_CONTRACT.md` (TypeScript types + endpoint flow).
-- Frontend is archived from the active repository surface; legacy UI context is
-  retained in `docs/live_archive/legacy_frontend/`.
+- Local UI shell is available at `/ui` for thread + binary eval workflows
+  against the live backend.
+- Legacy frontend context remains in `docs/live_archive/legacy_frontend/`.
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
 - Evidence and remediation: evidence indexing and metadata audit tooling with
@@ -36,6 +37,7 @@ make server
 Open:
 
 - `http://127.0.0.1:8000/docs` (backend OpenAPI)
+- `http://127.0.0.1:8000/ui` (local UI shell)
 
 ## Setup
 
@@ -77,6 +79,7 @@ make quality-gate-deterministic
 
 Health and metrics:
 
+- `GET /ui`
 - `GET /health`
 - `GET /metrics`
 

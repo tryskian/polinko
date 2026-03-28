@@ -16,6 +16,8 @@
   - Local automation/eval/reference utilities.
 - `tests/`
   - API/runtime regression tests.
+- `ui/`
+  - Local UI shell (`/ui`) for thread + binary eval operations.
 - `docs/`
   - Charter, state, decisions, runbook, handoff, operator references, and
     live archive lanes.
@@ -28,7 +30,9 @@
 4. Request execution delegates to `core/` runtime and persistence modules.
 5. `POST /chat` supports harness override (`harness_mode=fixture`) for
    deterministic UI smoke without model calls; default remains `live`.
-6. CLI/API surfaces are canonical; archived frontend context is tracked only in
+6. `/ui` serves the local shell for message/eval/checkpoint operations against
+   the backend API contract.
+7. CLI/API surfaces remain canonical; archived legacy frontend context stays in
    `docs/live_archive/legacy_frontend/`.
 
 ## Data Surfaces
