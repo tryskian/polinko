@@ -170,6 +170,14 @@
     - binary eval stack
   - evaluation axes are fixed to quality, decision clarity, iteration speed,
     and maintenance overhead
+- Benchmark verdict checkpoint (March 28, 2026):
+  - A/B/C moved from provisional to decision-ready status:
+    - A: `PASS` (baseline anchor)
+    - B: `FAIL` (traditional complexity underperformed)
+    - C: `PASS` (binary current target)
+  - `H-001` is currently supported for product direction
+  - next benchmark-derived backend priority is operation-binding diagnostics
+    (`benchmark D`) as deterministic implementation slices
 - Wiring lock checkpoint (March 27, 2026):
   - runtime DB provisioning is intentionally paused until eval wiring sign-off
   - no fresh `.polinko_*.db` or `.human_reference.db` files are active in
@@ -349,16 +357,17 @@ Use this in a new chat:
 
 ## Suggested Next Steps
 
-1. Define eval data contract (strict binary, no compatibility fallbacks) before
-   any additional UI rebuild slices.
-2. Refactor checkpoint aggregation and tagging paths for clearer `PASS`/`FAIL`
-   semantics and lower coupling across API/UI.
-3. Refresh eval prompts/case baselines from clean artifacts only, keeping
-   pre-refresh evidence in archive for traceability.
-4. Keep runtime DB state archive-first and contract-driven during wiring lock;
-   avoid local DB lifecycle command paths.
-5. Continue local-first deterministic validation (`make test`,
-   `make quality-gate-deterministic`) at each eval-contract milestone.
+1. Execute benchmark `D` (operation-binding diagnostics) and map outcomes to one
+   deterministic backend slice.
+2. Keep binary gate semantics strict (`pass`/`fail`) and keep diagnostic richness
+   outside gate arithmetic.
+3. Maintain archive-first runtime DB posture during wiring lock (no local DB
+   lifecycle command paths).
+4. Continue local-first deterministic validation (`make build-audit`,
+   `make lint-docs`, `make test`, `make quality-gate-deterministic`) at each
+   milestone.
+5. Keep benchmark outputs product-supportive by converting findings into
+   explicit implementation priorities.
 
 ## Cookbook Roadmap (Prioritized)
 

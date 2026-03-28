@@ -80,9 +80,9 @@ Validate the hypothesis that minimal configuration produces better product outco
 
 | Benchmark | Experiment Record | Core Evidence | Status |
 | --- | --- | --- | --- |
-| A: Minimal-config CLI | `docs/research/experiment_R-A_minimal_config_cli_2026-03-27.md` | CLI baseline transcripts + early eval artifacts | Provisional `PASS` |
-| B: Traditional eval stack | `docs/research/experiment_R-B_traditional_eval_stack_2026-03-27.md` | Legacy/traditional eval reports and decision records | Provisional `FAIL` |
-| C: Binary eval stack | `docs/research/experiment_R-C_binary_eval_stack_2026-03-27.md` | Current binary eval reports + deterministic gate checks | Provisional `PASS` |
+| A: Minimal-config CLI | `docs/research/experiment_R-A_minimal_config_cli_2026-03-27.md` | CLI baseline transcripts + early eval artifacts | `PASS` (decision-ready baseline anchor) |
+| B: Traditional eval stack | `docs/research/experiment_R-B_traditional_eval_stack_2026-03-27.md` | Legacy/traditional eval reports and decision records | `FAIL` (decision-ready) |
+| C: Binary eval stack | `docs/research/experiment_R-C_binary_eval_stack_2026-03-27.md` | Current binary eval reports + deterministic gate checks | `PASS` (decision-ready current target) |
 | D: Operator burden shift diagnostic | `docs/research/experiment_R-D_operator_burden_shift_2026-03-28.md` | Prompt-to-operation drift cases (task binding vs commentary) | Planned |
 
 ## Immediate Next Step Execution (2026-03-28)
@@ -94,6 +94,30 @@ Validate the hypothesis that minimal configuration produces better product outco
   - add explicit checkpoint `gate_outcome` (`pass`/`fail`) in API responses
   - keep gate resolution fail-closed and count-derived
   - update API tests + backend/spec docs in the same slice
+
+## Decision-Ready Synthesis (2026-03-28)
+
+### Dimension Comparison (A/B/C)
+
+| Dimension | A: Minimal-config CLI | B: Traditional eval stack | C: Binary eval stack |
+| --- | --- | --- | --- |
+| Quality outcomes | Baseline-good (limited harness depth) | Mixed/variable (legacy criteria drift) | Stable pass/fail gate with deterministic validation |
+| Decision clarity | High | Lower (compatibility and interpretation overhead) | High (fail-closed binary semantics) |
+| Iteration speed | High | Slower (heavier wiring and cleanup loops) | High (single-command deterministic quality gate) |
+| Maintenance overhead | Low | High | Low-to-moderate (guarded, contract-driven) |
+
+### Verdict
+
+- `H-001` is **supported** for current product direction.
+- Decision: keep minimal control surfaces + strict binary gate semantics as the
+  active operating model.
+- Constraint: retain rich diagnostics as secondary artefacts, not gate logic.
+
+### Next Backend Priority (from benchmark verdict)
+
+- Reduce operator inference overhead further by formalising operation-binding
+  diagnostics (benchmark `D`) and converting its pass/fail checks into one
+  deterministic backend implementation slice.
 
 ## Output Contract
 
@@ -117,3 +141,6 @@ This benchmark is complete when:
 - all three phases are documented with comparable evidence,
 - confounders are declared,
 - and `H-001` has a clear provisional verdict with next steps.
+
+Current status: **A/B/C complete (decision-ready)**. `D` remains the next
+extension benchmark.

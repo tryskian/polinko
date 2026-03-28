@@ -873,3 +873,20 @@
     `retired_runtime_db_command_refs` check
 - Why: Prevents documentation drift from reintroducing deprecated local DB
   lifecycle flows during wiring lock.
+
+## D-083: Mark benchmark A/B/C as decision-ready and use it to drive backend priority
+
+- Date: `2026-03-28`
+- Category: `research_experiment`
+- Tags: `benchmark`, `minimal_config`, `binary_gate`, `priority_derivation`
+- Decision:
+  - mark benchmark phases A/B/C as decision-ready with verdict:
+    - A=`PASS` (baseline anchor)
+    - B=`FAIL` (traditional complexity underperforms)
+    - C=`PASS` (binary current target)
+  - derive next backend work from this verdict by prioritising
+    operation-binding diagnostics (`benchmark D`) into deterministic
+    implementation slices.
+- Why: Keeps research sequencing product-supportive and converts benchmark
+  output into explicit engineering prioritisation instead of open-ended
+  interpretation.
