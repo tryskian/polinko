@@ -136,7 +136,9 @@ lint-docs:
 	npm run lint:docs
 
 doctor-env:
-	$(PYTHON) -m tools.doctor_env
+	@set -eu; \
+	ACTIVE_VENV="$$(dirname "$(PYTHON)")/.."; \
+	VIRTUAL_ENV="$$ACTIVE_VENV" PATH="$$ACTIVE_VENV/bin:$$PATH" "$(PYTHON)" -m tools.doctor_env
 
 build-audit:
 	$(PYTHON) -m tools.audit_build_blocks
