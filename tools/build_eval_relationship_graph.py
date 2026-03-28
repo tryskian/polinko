@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sqlite3
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -50,6 +51,22 @@ class CheckpointRow:
     created_at: int
 
 
+@dataclass(frozen=True)
+class EvalReportSnapshot:
+    suite: str
+    run_id: str
+    total: int
+    passed: int
+    failed: int
+    mode: str | None
+    high_risk: int | None
+    file_path: Path
+    generated_utc: str
+
+
+_REPORT_NAME_PATTERN = re.compile(r"^(?P<suite>.+)-(?P<run_id>\d{8}-\d{6})\.json$")
+
+
 def _escape_mermaid(value: str) -> str:
     return value.replace('"', '\\"')
 
@@ -81,10 +98,160 @@ def _to_utc(ms: int) -> str:
     return datetime.fromtimestamp(ms / 1000, tz=UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _to_utc_seconds(seconds: float) -> str:
+    if seconds <= 0:
+        return "-"
+    return datetime.fromtimestamp(seconds, tz=UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _connect(db_path: Path) -> sqlite3.Connection:
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def _coerce_int(value: object) -> int | None:
+    if isinstance(value, bool):
+        return int(value)
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        return int(value)
+    if isinstance(value, str):
+        text = value.strip()
+        if text.isdigit():
+            return int(text)
+    return None
+
+
+def _extract_eval_counts(payload: dict[str, object]) -> tuple[int | None, int | None, int | None]:
+    total: int | None = None
+    passed: int | None = None
+    failed: int | None = None
+
+    summary = payload.get("summary")
+    if isinstance(summary, dict):
+        summary_total = _coerce_int(summary.get("total"))
+        summary_passed = _coerce_int(summary.get("passed"))
+        summary_failed = _coerce_int(summary.get("failed"))
+        if summary_total is not None:
+            total = summary_total
+        if summary_passed is not None:
+            passed = summary_passed
+        if summary_failed is not None:
+            failed = summary_failed
+
+    if total is None:
+        total = _coerce_int(payload.get("total_cases"))
+    if passed is None:
+        passed = _coerce_int(payload.get("passed"))
+    if failed is None:
+        failed = _coerce_int(payload.get("failed"))
+
+    if passed is None or failed is None:
+        cases = payload.get("cases")
+        if isinstance(cases, list):
+            case_passed = 0
+            case_failed = 0
+            for case in cases:
+                if not isinstance(case, dict):
+                    continue
+                pass_field = case.get("pass")
+                if isinstance(pass_field, bool):
+                    if pass_field:
+                        case_passed += 1
+                    else:
+                        case_failed += 1
+                    continue
+                status_field = case.get("status")
+                if isinstance(status_field, str):
+                    normalized = status_field.strip().lower()
+                    if normalized == "pass":
+                        case_passed += 1
+                    elif normalized == "fail":
+                        case_failed += 1
+            if passed is None:
+                passed = case_passed
+            if failed is None:
+                failed = case_failed
+            if total is None:
+                total = case_passed + case_failed
+
+    if total is None and passed is not None and failed is not None:
+        total = passed + failed
+    return total, passed, failed
+
+
+def _extract_eval_mode(payload: dict[str, object]) -> str | None:
+    for key in ("effective_evaluation_mode", "requested_evaluation_mode", "evaluation_mode"):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def _suite_label_from_slug(slug: str) -> str:
+    words = [word for word in slug.replace("_", "-").split("-") if word]
+    return " ".join(word.capitalize() for word in words) if words else slug
+
+
+def _load_latest_eval_snapshots(report_dir: Path | None) -> list[EvalReportSnapshot]:
+    if report_dir is None or not report_dir.exists():
+        return []
+
+    latest_by_suite: dict[str, Path] = {}
+    for report_path in sorted(report_dir.glob("*.json")):
+        match = _REPORT_NAME_PATTERN.match(report_path.name)
+        if match is None:
+            continue
+        suite_slug = match.group("suite")
+        run_id = match.group("run_id")
+        previous = latest_by_suite.get(suite_slug)
+        if previous is None:
+            latest_by_suite[suite_slug] = report_path
+            continue
+        previous_match = _REPORT_NAME_PATTERN.match(previous.name)
+        if previous_match is None:
+            latest_by_suite[suite_slug] = report_path
+            continue
+        previous_run_id = previous_match.group("run_id")
+        if run_id > previous_run_id:
+            latest_by_suite[suite_slug] = report_path
+
+    snapshots: list[EvalReportSnapshot] = []
+    for suite_slug, report_path in sorted(latest_by_suite.items()):
+        try:
+            raw_payload = json.loads(report_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if not isinstance(raw_payload, dict):
+            continue
+
+        total, passed, failed = _extract_eval_counts(raw_payload)
+        if total is None or passed is None or failed is None:
+            continue
+
+        risk_counts = raw_payload.get("risk_counts")
+        high_risk: int | None = None
+        if isinstance(risk_counts, dict):
+            high_risk = _coerce_int(risk_counts.get("high"))
+
+        run_match = _REPORT_NAME_PATTERN.match(report_path.name)
+        run_id = run_match.group("run_id") if run_match is not None else "-"
+        snapshots.append(
+            EvalReportSnapshot(
+                suite=_suite_label_from_slug(suite_slug),
+                run_id=run_id,
+                total=total,
+                passed=passed,
+                failed=failed,
+                mode=_extract_eval_mode(raw_payload),
+                high_risk=high_risk,
+                file_path=report_path,
+                generated_utc=_to_utc_seconds(report_path.stat().st_mtime),
+            )
+        )
+    return snapshots
 
 
 def _table_exists(conn: sqlite3.Connection, table_name: str) -> bool:
@@ -406,6 +573,7 @@ def _render_session_graph(
 def build_eval_relationship_markdown(
     *,
     db_path: Path,
+    report_dir: Path | None = None,
     session_filter: set[str] | None = None,
 ) -> str:
     if not db_path.exists():
@@ -434,6 +602,7 @@ def build_eval_relationship_markdown(
 
     total_pass = sum(1 for feedback_row in feedback if feedback_row.outcome == "pass")
     total_fail = sum(1 for feedback_row in feedback if feedback_row.outcome != "pass")
+    eval_snapshots = _load_latest_eval_snapshots(report_dir)
 
     tag_counts: dict[str, int] = {}
     for feedback_row in feedback:
@@ -448,6 +617,7 @@ def build_eval_relationship_markdown(
     lines.append("## Quick Navigation")
     lines.append("")
     lines.append("- [Overview](#overview)")
+    lines.append("- [Eval Report Snapshot](#eval-report-snapshot)")
     lines.append("- [Schema ER](#schema-er)")
     lines.append("- [Session Topology](#session-topology)")
     lines.append("- [Session Directory](#session-directory)")
@@ -464,6 +634,34 @@ def build_eval_relationship_markdown(
     lines.append(f"| messages | {len(messages)} |")
     lines.append(f"| feedback | {len(feedback)} (pass={total_pass}, fail={total_fail}) |")
     lines.append(f"| checkpoints | {len(checkpoints)} |")
+    lines.append(f"| latest_eval_reports | {len(eval_snapshots)} suite snapshots |")
+    lines.append("")
+    lines.append("## Eval Report Snapshot")
+    lines.append("")
+    lines.append("Latest report artifact per suite from `eval_reports/`.")
+    lines.append("")
+    lines.append("| suite | run_id | total | pass | fail | pass_rate | mode | high_risk | generated_utc | report_file |")
+    lines.append("| --- | --- | ---: | ---: | ---: | ---: | --- | ---: | --- | --- |")
+    if eval_snapshots:
+        for snapshot in eval_snapshots:
+            pass_rate = (snapshot.passed / snapshot.total * 100.0) if snapshot.total > 0 else 0.0
+            mode = snapshot.mode or "-"
+            high_risk = str(snapshot.high_risk) if snapshot.high_risk is not None else "-"
+            lines.append(
+                "| "
+                f"{_escape_md_cell(snapshot.suite)} | "
+                f"`{snapshot.run_id}` | "
+                f"{snapshot.total} | "
+                f"{snapshot.passed} | "
+                f"{snapshot.failed} | "
+                f"{pass_rate:.1f}% | "
+                f"{_escape_md_cell(mode)} | "
+                f"{high_risk} | "
+                f"{snapshot.generated_utc} | "
+                f"`{_escape_md_cell(str(snapshot.file_path))}` |"
+            )
+    else:
+        lines.append("| _none_ | - | 0 | 0 | 0 | 0.0% | - | - | - | - |")
     lines.append("")
     lines.append("## Schema ER")
     lines.append("")
@@ -623,10 +821,12 @@ def build_eval_relationship_graph(
     *,
     db_path: Path,
     output: Path,
+    report_dir: Path | None = None,
     session_filter: set[str] | None = None,
 ) -> None:
     markdown = build_eval_relationship_markdown(
         db_path=db_path,
+        report_dir=report_dir,
         session_filter=session_filter,
     )
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -648,6 +848,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output markdown path (local-only by default).",
     )
     parser.add_argument(
+        "--report-dir",
+        default="eval_reports",
+        help="Directory containing eval report JSON artifacts to snapshot.",
+    )
+    parser.add_argument(
         "--session-id",
         action="append",
         default=[],
@@ -662,10 +867,14 @@ def main() -> int:
     output = Path(args.output).expanduser()
     if not output.is_absolute():
         output = (Path.cwd() / output).resolve()
+    report_dir = Path(args.report_dir).expanduser()
+    if not report_dir.is_absolute():
+        report_dir = (Path.cwd() / report_dir).resolve()
     session_filter = {item.strip() for item in args.session_id if item.strip()}
     build_eval_relationship_graph(
         db_path=db_path,
         output=output,
+        report_dir=report_dir,
         session_filter=session_filter if session_filter else None,
     )
     print(f"Eval relationship graph written: {output}")

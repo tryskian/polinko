@@ -67,7 +67,8 @@
   - builder: `tools/build_reference_graph.py`
   - operator flow: `make reference-graph` -> `docs/REFERENCE_GRAPH.md`.
 - Eval relationship visualisation:
-  - markdown-native relationship report generated from runtime history DB.
+  - markdown-native relationship report generated from runtime history DB,
+    augmented with latest per-suite snapshots from local `eval_reports/*.json`.
   - builder: `tools/build_eval_relationship_graph.py`
   - operator flow: `make eval-viz` ->
     `.local/visuals/eval_relationship_graph.md` (local-only output).

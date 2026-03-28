@@ -126,8 +126,9 @@
    - `.local/visuals/eval_relationship_graph.md`
 3. To customise output path or filter sessions:
    - `python -m tools.build_eval_relationship_graph --output <path> --session-id <id>`
+   - `python -m tools.build_eval_relationship_graph --report-dir <eval_reports_path>`
 4. Report layout is navigation-first:
-   - overview + schema ER
+   - overview + latest eval report snapshot + schema ER
    - session topology
    - session directory with direct links
    - per-session relationship maps and tables
