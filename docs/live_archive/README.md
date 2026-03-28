@@ -12,6 +12,8 @@ This is the active reference surface for deprecated implementation context.
 
 - `legacy_eval/`: previous eval records/logic patterns that are no longer authoritative.
 - `legacy_frontend/`: archived UI context retained only for reference.
+- `legacy_human_reference/`: archived reference-DB workflow retained for inspection only.
+- `legacy_coordination/`: archived multi-instance coordination docs retained as historical context.
 
 ## Usage Rules
 

@@ -983,3 +983,17 @@
 - Why: Provides a durable non-CLI operator surface for day-to-day eval work
   with minimal implementation overhead and no behaviour drift in backend gate
   semantics.
+
+## D-089: Archive deprecated coordination docs and keep top-level docs operational
+
+- Date: `2026-03-28`
+- Category: `workflow_environment`
+- Tags: `docs_hygiene`, `live_archive`, `operator_clarity`, `straggler_cleanup`
+- Decision:
+  - move deprecated coordination docs from top-level `docs/` into:
+    - `docs/live_archive/legacy_coordination/`
+  - keep `docs/WORKSTREAMS.md` active and refresh it for current
+    imagineer/engineer `Reasoning Loops` collaboration semantics
+  - remove `.DS_Store` files from `docs/` surfaces
+- Why: Reduces operator clutter in active docs while preserving historical
+  context in one predictable archive lane.

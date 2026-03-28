@@ -121,6 +121,11 @@
     - `docs/live_archive/legacy_human_reference/`
   - archive lane is reference-only and non-authoritative for active runtime
     gate decisions
+- Docs straggler cleanup checkpoint (March 28, 2026):
+  - deprecated top-level coordination docs moved into:
+    - `docs/live_archive/legacy_coordination/`
+  - active top-level docs now stay focused on current runtime/eval operations
+    and research workflow
 - Eval docs canonical naming checkpoint (March 27, 2026):
   - renamed `docs/EVAL_V2_SPEC.md` -> `docs/EVAL_SPEC.md`
   - renamed `docs/EVAL_V2_BACKEND_MAP.md` -> `docs/EVAL_BACKEND_MAP.md`
