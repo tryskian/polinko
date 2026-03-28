@@ -150,7 +150,7 @@
 
 Local runtime DB commands are retired during wiring lock; treat docs/tests as the contract (`docs/EVAL_WIRING_SPEC.md`, `docs/EVAL_SPEC.md`, `docs/EVAL_BACKEND_MAP.md`, `make test`, `make quality-gate-deterministic`). No local DB lifecycle commands remain.
 
-## Chat Harness Mode (Deterministic Smoke Without Model Calls)
+## Chat Harness Mode (UI Smoke Without Model Calls)
 
 1. Default mode is `live` (normal backend/model execution).
 2. For deterministic UI smoke, use fixture mode in `POST /chat`:
@@ -162,14 +162,24 @@ Local runtime DB commands are retired during wiring lock; treat docs/tests as th
    - keep eval/gate logic server-side and binary
    - do not use fixture mode outputs for quality gate decisions
 
-## UI Surface
+## Local UI Shell
 
-1. Built-in local UI shell has been retired from active runtime.
-2. Active operator surfaces are:
-   - backend OpenAPI docs (`make docs`)
-   - CLI (`make chat`, `python tools/client.py ...`)
-3. Legacy UI context remains reference-only under:
-   - `docs/live_archive/legacy_frontend/`
+1. Start backend:
+   - `make server`
+2. Open UI shell:
+   - `http://127.0.0.1:8000/ui`
+3. Configure in sidebar:
+   - base URL
+   - API key (`x-api-key`)
+   - session ID
+4. Core UI flow:
+   - send message (`POST /chat`)
+   - click assistant message
+   - submit binary eval (`POST /chats/{session_id}/feedback`)
+   - create checkpoint (`POST /chats/{session_id}/feedback/checkpoints`)
+5. Fixture mode remains optional for deterministic UI smoke:
+   - `harness_mode=fixture`
+   - optional `fixture_output`
 
 ## Python Diagnostics (Ruff + Mypy)
 

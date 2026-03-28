@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -167,7 +168,7 @@ def _parse_tags(raw: str | None) -> tuple[list[str], list[str], list[str]]:
     if not isinstance(combined, list):
         combined = []
 
-    def _clean(items: list[object]) -> list[str]:
+    def _clean(items: Sequence[object]) -> list[str]:
         seen: dict[str, None] = {}
         for item in items:
             text = str(item).strip()

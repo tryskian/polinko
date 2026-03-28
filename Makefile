@@ -13,6 +13,7 @@ DEV_HOST ?= 127.0.0.1
 DEV_BACKEND_PORT ?= 8000
 DEV_AUTOKILL ?= 1
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
+DEV_UI_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/ui
 ENV_FILE ?= .env
 K6_BASE_URL ?= http://127.0.0.1:8000
 K6_API_KEY ?= test-server-key
@@ -36,7 +37,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph eval-relationship-graph eval-viz db-visuals db-reset db-archive docker-build docker-run dev dev-stop
+.PHONY: chat server server-daemon server-daemon-stop server-daemon-status docs ui open-api-docs open-ui session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph eval-relationship-graph eval-viz db-visuals db-reset db-archive docker-build docker-run dev dev-stop
 
 chat:
 	$(PYTHON) app.py
@@ -136,8 +137,24 @@ open-api-docs:
 	fi; \
 	echo "API docs URL: $$URL"
 
+open-ui:
+	@set -eu; \
+	$(MAKE) --no-print-directory server-daemon; \
+	URL="$(DEV_UI_URL)"; \
+	if command -v open >/dev/null 2>&1; then \
+		open "$$URL"; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open "$$URL" >/dev/null 2>&1 || true; \
+	else \
+		echo "Open this URL in your browser: $$URL"; \
+	fi; \
+	echo "UI URL: $$URL"
+
 docs:
 	@$(MAKE) --no-print-directory open-api-docs
+
+ui:
+	@$(MAKE) --no-print-directory open-ui
 
 session-status:
 	@echo "== Server =="
