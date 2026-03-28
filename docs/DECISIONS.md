@@ -944,3 +944,20 @@
     - per-session relationship maps and summary tables
 - Why: Gives a readable, low-friction way to inspect eval relationships without
   reintroducing legacy DB tooling or tracking internal runtime data in repo docs.
+
+## D-087: Pin D3.js interactive visualisation as a deferred track
+
+- Date: `2026-03-28`
+- Category: `workflow_environment`
+- Tags: `visualisation`, `d3js`, `deferred_track`, `operator_experience`
+- Decision:
+  - keep Mermaid markdown visuals as the canonical current path:
+    - `make eval-viz`
+    - `make reference-graph`
+  - pin D3.js interactive graphing as a deferred enhancement track
+    (post-baseline), not part of the current runtime/docs gate path
+  - only promote D3 when UI shell + adapter flow are stable and the extra
+    interaction surface is worth the added engineering complexity
+- Why: Preserves deterministic, low-friction operator visuals now while keeping
+  a clear future path for richer interaction without introducing premature UI
+  complexity.

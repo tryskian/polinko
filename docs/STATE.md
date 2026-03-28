@@ -205,6 +205,11 @@
     - session topology graph
     - linked session directory + per-session relationship maps
     - per-session message/feedback/checkpoint tables + tag frequency
+- Visual tooling track checkpoint (March 28, 2026):
+  - Mermaid remains canonical for active operator visuals and docs-native
+    versioning
+  - D3.js interactive visualisation is pinned as a deferred track for later UI
+    iteration (not active in current runtime/docs gate path)
 - Proactive ownership checkpoint (March 26, 2026):
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder
