@@ -338,6 +338,7 @@ class RuntimeDeps:
     hallucination_guardrails_enabled: bool
     personalization_default_memory_scope: str
     clip_proxy_file_search_enabled: bool
+    chat_harness_default_mode: Literal["live", "fixture"]
     metrics: RuntimeMetrics
     run_config: RunConfig
     agent: Agent[Any]
@@ -363,6 +364,15 @@ class ChatRequest(BaseModel):
         min_length=1,
         max_length=120,
         description="Existing user message id to branch assistant variants from (retry flow).",
+    )
+    harness_mode: Literal["live", "fixture"] | None = Field(
+        default=None,
+        description="Optional chat harness mode override. fixture returns deterministic local output.",
+    )
+    fixture_output: str | None = Field(
+        default=None,
+        max_length=6000,
+        description="Optional deterministic output used when harness_mode=fixture.",
     )
 
 
@@ -715,6 +725,14 @@ def _resolve_chat_memory_scope(*, deps: RuntimeDeps, session_id: str) -> str:
 def _context_scope_from_memory_scope(memory_scope: str) -> str:
     normalized_scope = _normalize_memory_scope(memory_scope, default="global")
     return "local" if normalized_scope == "session" else "global"
+
+
+def _build_fixture_chat_output(*, message: str, fixture_output: str | None) -> str:
+    override = (fixture_output or "").strip()
+    if override:
+        return override
+    prompt = message.strip() or "<empty>"
+    return f"[fixture] deterministic response for: {prompt}"
 
 
 def _chat_summary_response(summary: ChatSummary, *, deps: RuntimeDeps) -> ChatSummaryResponse:
@@ -2946,6 +2964,7 @@ def create_app(config: AppConfig) -> FastAPI:
         hallucination_guardrails_enabled=config.hallucination_guardrails_enabled,
         personalization_default_memory_scope=config.personalization_default_memory_scope,
         clip_proxy_file_search_enabled=config.clip_proxy_file_search_enabled,
+        chat_harness_default_mode=config.chat_harness_default_mode,
         metrics=create_runtime_metrics(),
         run_config=create_run_config(store=True),
         agent=create_agent(),
@@ -3915,8 +3934,15 @@ def create_app(config: AppConfig) -> FastAPI:
             attachment_evidence_count = 0
             attachment_ocr_texts: list[tuple[str, str]] = []
             guardrail_note: str | None = None
+            harness_mode = req.harness_mode or deps.chat_harness_default_mode
             try:
-                if req.attachments:
+                if harness_mode == "fixture":
+                    pipeline = "fixture"
+                    output_text = _build_fixture_chat_output(
+                        message=req.message,
+                        fixture_output=req.fixture_output,
+                    )
+                elif req.attachments:
                     for idx, attachment in enumerate(req.attachments, start=1):
                         ocr_req = OcrRequest(
                             session_id=session_id,
@@ -4046,73 +4072,74 @@ def create_app(config: AppConfig) -> FastAPI:
                             dedup_hit=dedup_hit,
                         )
 
-                has_recent_ocr = _has_recent_ocr_activity(deps=deps, session_id=session_id)
-                if req.attachments and _looks_like_ocr_request(req.message):
-                    output_text = _build_attachment_literal_reply(attachment_ocr_texts)
-                elif not req.attachments and _looks_like_ocr_followup_without_new_image(req.message):
-                    output_text = _OCR_STRICT_NO_NEW_IMAGE_REPLY
-                elif (
-                    not req.attachments
-                    and has_recent_ocr
-                    and _looks_like_ocr_correction_without_new_image(req.message)
-                ):
-                    output_text = _OCR_STRICT_NO_NEW_IMAGE_REPLY
-                elif deps.responses_orchestration_enabled:
-                    pipeline = "responses"
-                    guardrail_note = _build_hallucination_guardrail_note(
-                        deps=deps,
-                        query_text=req.message,
-                        evidence_count=attachment_evidence_count,
-                    )
-                    output_text, orchestration_tools = _chat_with_responses_orchestration(
-                        deps=deps,
-                        request_id=request_id,
-                        principal=principal,
-                        session_id=session_id,
-                        user_message=req.message,
-                        notes=notes,
-                        attachment_context_blocks=attachment_context_blocks,
-                        guardrail_note=guardrail_note,
-                        collaboration_note=collaboration_note,
-                    )
-                else:
-                    retrieved_memory = _retrieve_memory(
-                        deps=deps,
-                        session_id=session_id,
-                        query_text=req.message,
-                        memory_scope=memory_scope,
-                    )
-                    guardrail_note = _build_hallucination_guardrail_note(
-                        deps=deps,
-                        query_text=req.message,
-                        evidence_count=len(retrieved_memory) + attachment_evidence_count,
-                    )
-                    model_input = _compose_model_input(
-                        user_message=req.message,
-                        notes=notes,
-                        retrieved_memory=retrieved_memory,
-                        max_memory_chars=deps.vector_max_chars,
-                        attachment_context_blocks=attachment_context_blocks,
-                        guardrail_note=guardrail_note,
-                        collaboration_note=collaboration_note,
-                    )
-                    low_evidence_reply = _low_evidence_factual_reply(
-                        req.message, len(retrieved_memory) + attachment_evidence_count
-                    )
-                    if low_evidence_reply is not None:
-                        output_text = low_evidence_reply
-                    else:
-                        result = await Runner.run(
-                            deps.agent,
-                            model_input,
-                            run_config=_factual_run_config(
-                                deps=deps,
-                                query_text=req.message,
-                                evidence_count=len(retrieved_memory),
-                            ),
-                            session=session,
+                if harness_mode != "fixture":
+                    has_recent_ocr = _has_recent_ocr_activity(deps=deps, session_id=session_id)
+                    if req.attachments and _looks_like_ocr_request(req.message):
+                        output_text = _build_attachment_literal_reply(attachment_ocr_texts)
+                    elif not req.attachments and _looks_like_ocr_followup_without_new_image(req.message):
+                        output_text = _OCR_STRICT_NO_NEW_IMAGE_REPLY
+                    elif (
+                        not req.attachments
+                        and has_recent_ocr
+                        and _looks_like_ocr_correction_without_new_image(req.message)
+                    ):
+                        output_text = _OCR_STRICT_NO_NEW_IMAGE_REPLY
+                    elif deps.responses_orchestration_enabled:
+                        pipeline = "responses"
+                        guardrail_note = _build_hallucination_guardrail_note(
+                            deps=deps,
+                            query_text=req.message,
+                            evidence_count=attachment_evidence_count,
                         )
-                        output_text = str(result.final_output)
+                        output_text, orchestration_tools = _chat_with_responses_orchestration(
+                            deps=deps,
+                            request_id=request_id,
+                            principal=principal,
+                            session_id=session_id,
+                            user_message=req.message,
+                            notes=notes,
+                            attachment_context_blocks=attachment_context_blocks,
+                            guardrail_note=guardrail_note,
+                            collaboration_note=collaboration_note,
+                        )
+                    else:
+                        retrieved_memory = _retrieve_memory(
+                            deps=deps,
+                            session_id=session_id,
+                            query_text=req.message,
+                            memory_scope=memory_scope,
+                        )
+                        guardrail_note = _build_hallucination_guardrail_note(
+                            deps=deps,
+                            query_text=req.message,
+                            evidence_count=len(retrieved_memory) + attachment_evidence_count,
+                        )
+                        model_input = _compose_model_input(
+                            user_message=req.message,
+                            notes=notes,
+                            retrieved_memory=retrieved_memory,
+                            max_memory_chars=deps.vector_max_chars,
+                            attachment_context_blocks=attachment_context_blocks,
+                            guardrail_note=guardrail_note,
+                            collaboration_note=collaboration_note,
+                        )
+                        low_evidence_reply = _low_evidence_factual_reply(
+                            req.message, len(retrieved_memory) + attachment_evidence_count
+                        )
+                        if low_evidence_reply is not None:
+                            output_text = low_evidence_reply
+                        else:
+                            result = await Runner.run(
+                                deps.agent,
+                                model_input,
+                                run_config=_factual_run_config(
+                                    deps=deps,
+                                    query_text=req.message,
+                                    evidence_count=len(retrieved_memory),
+                                ),
+                                session=session,
+                            )
+                            output_text = str(result.final_output)
             except AuthenticationError as exc:
                 _log_event(
                     "chat_error",

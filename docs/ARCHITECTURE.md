@@ -26,7 +26,9 @@
 2. `server.py` calls `api.app_factory.create_app(config)`.
 3. `api/app_factory.py` wires routes + middleware + runtime dependencies.
 4. Request execution delegates to `core/` runtime and persistence modules.
-5. CLI/API surfaces are canonical; archived frontend context is tracked only in
+5. `POST /chat` supports harness override (`harness_mode=fixture`) for
+   deterministic UI smoke without model calls; default remains `live`.
+6. CLI/API surfaces are canonical; archived frontend context is tracked only in
    `docs/live_archive/legacy_frontend/`.
 
 ## Data Surfaces

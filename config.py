@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import json
 import os
+from typing import Literal
 
 from dotenv import load_dotenv
 
@@ -49,6 +50,7 @@ class AppConfig:
     hallucination_guardrails_enabled: bool
     personalization_default_memory_scope: str
     clip_proxy_file_search_enabled: bool
+    chat_harness_default_mode: Literal["live", "fixture"]
 
 
 def _looks_like_placeholder(value: str) -> bool:
@@ -215,6 +217,13 @@ def _validate_personalization_memory_scope(value: str | None) -> str:
     raise RuntimeError("POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE must be one of: session, global.")
 
 
+def _validate_chat_harness_mode(value: str | None) -> Literal["live", "fixture"]:
+    normalized = (value or "live").strip().lower()
+    if normalized in {"live", "fixture"}:
+        return normalized
+    raise RuntimeError("POLINKO_CHAT_HARNESS_DEFAULT_MODE must be one of: live, fixture.")
+
+
 def load_config(dotenv_path: str = ".env") -> AppConfig:
     load_dotenv(dotenv_path=dotenv_path)
 
@@ -328,6 +337,9 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         _read_env("POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE", "global")
     )
     clip_proxy_file_search_enabled = _parse_bool_env("POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED", False)
+    chat_harness_default_mode = _validate_chat_harness_mode(
+        _read_env("POLINKO_CHAT_HARNESS_DEFAULT_MODE", "live")
+    )
 
     if responses_orchestration_enabled and not responses_vector_store_id:
         raise RuntimeError(
@@ -383,4 +395,5 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         hallucination_guardrails_enabled=hallucination_guardrails_enabled,
         personalization_default_memory_scope=personalization_default_memory_scope,
         clip_proxy_file_search_enabled=clip_proxy_file_search_enabled,
+        chat_harness_default_mode=chat_harness_default_mode,
     )
