@@ -15,6 +15,9 @@
   - optional fixed output: `fixture_output`
   - env default: `POLINKO_CHAT_HARNESS_DEFAULT_MODE=live|fixture`
   - default remains `live` (no behaviour drift for normal runtime)
+- Canonical UI eval adapter contract is published:
+  - `docs/UI_EVAL_ADAPTER_CONTRACT.md`
+  - includes TypeScript request/response shapes + chat/eval/checkpoint flow
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Eval contract is strict binary end-to-end:
   - feedback outcomes: `pass` or `fail` only
@@ -101,11 +104,11 @@
 
 ## Immediate Next Step
 
-- Execute benchmark-derived backend slice `D.2` with minimal behaviour drift:
-  - formalise operation-binding diagnostics (`reference_binding`,
-    `operation_fidelity`, `decision_clarity`) as deterministic checks in tooling
-  - map those diagnostics to one explicit backend/runtime change that further
-    reduces operator inference overhead
+- Execute benchmark-derived backend slice `D.3` with minimal behaviour drift:
+  - implement minimal new-UI shell against
+    `docs/UI_EVAL_ADAPTER_CONTRACT.md`
+  - include thread view + binary eval submit + checkpoint render path
+  - keep eval gate semantics backend-owned (`pass`/`fail`, fail-closed)
   - validate with `make build-audit`, `make lint-docs`, `make test`,
     `make quality-gate-deterministic`
 

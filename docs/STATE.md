@@ -30,6 +30,8 @@
     `harness_mode=fixture` (+ optional `fixture_output`)
   - env-level harness default:
     `POLINKO_CHAT_HARNESS_DEFAULT_MODE=live|fixture`
+  - canonical UI eval adapter contract:
+    `docs/UI_EVAL_ADAPTER_CONTRACT.md`
 - Frontend is archived from the active repository surface; active execution is
   backend + CLI only.
 - OpenAI developer docs MCP server is now configured for Codex/VS Code usage:
