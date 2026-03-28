@@ -42,6 +42,8 @@ Open:
 Or open them via `make` targets:
 
 ```bash
+make docs
+make ui
 make open-api-docs
 make open-ui
 ```
