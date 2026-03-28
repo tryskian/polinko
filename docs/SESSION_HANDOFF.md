@@ -33,10 +33,8 @@
 - Docs relationship visualisation is markdown-native:
   - build: `make reference-graph`
   - output: `docs/REFERENCE_GRAPH.md`
-- Runtime DB maintenance is archive/reset-only:
-  - `make db-reset`
-  - `make db-archive`
-  - `make db-visuals`
+- Runtime DB lifecycle commands are retired during wiring lock:
+  - no local DB maintenance commands are active in this phase
 - Wiring lock is active:
   - keep DB state archived during contract-finalisation phase
   - canonical wiring contract source: `docs/EVAL_WIRING_SPEC.md`

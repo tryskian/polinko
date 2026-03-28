@@ -158,10 +158,8 @@
   - canonical visual surface is markdown-native `make reference-graph`
 - Runtime DB lifecycle checkpoint (March 27, 2026):
   - runtime DB defaults moved to `.local/runtime_dbs/active/`
-  - active maintenance commands are reduced to:
-    - `make db-reset`
-    - `make db-archive`
-    - `make db-visuals`
+  - local DB lifecycle commands are retired during wiring lock
+    (docs/tests remain the active contract surface)
   - no root-level `.polinko_*.db` files are part of the active surface
 - Minimal-config benchmark checkpoint (March 27, 2026):
   - canonical benchmark spec added:
@@ -178,6 +176,11 @@
     repository root during this phase
   - canonical wiring source is `docs/EVAL_WIRING_SPEC.md` and associated
     contract docs/tests
+- Runtime DB doc-contract checkpoint (March 28, 2026):
+  - active docs no longer reference retired local DB commands
+    (`db-reset`, `db-archive`, `db-visuals`)
+  - `make build-audit` now fails on reintroduction of those command tokens in
+    active docs
 - Proactive ownership checkpoint (March 26, 2026):
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder
@@ -352,8 +355,8 @@ Use this in a new chat:
    semantics and lower coupling across API/UI.
 3. Refresh eval prompts/case baselines from clean artifacts only, keeping
    pre-refresh evidence in archive for traceability.
-4. Keep runtime DB snapshots before resets (`make db-archive`) so transitions
-   remain auditable.
+4. Keep runtime DB state archive-first and contract-driven during wiring lock;
+   avoid local DB lifecycle command paths.
 5. Continue local-first deterministic validation (`make test`,
    `make quality-gate-deterministic`) at each eval-contract milestone.
 

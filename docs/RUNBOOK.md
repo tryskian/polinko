@@ -807,10 +807,7 @@ Current policy:
    - `docs/REFERENCE_GRAPH.md`
 3. Archived human-reference DB workflow is retained only for traceability:
    - `docs/live_archive/legacy_human_reference/`
-4. Runtime DB visuals (history/vector/memory):
-   - `make db-visuals`
-   - output: `docs/RUNTIME_DB_VISUALS.md`
-5. Runtime DB maintenance: retired during wiring lock (no local DB commands).
+4. Runtime DB maintenance: retired during wiring lock (no local DB commands).
 
 ## Start Fresh Eval Cycle
 
