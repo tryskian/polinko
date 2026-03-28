@@ -13,8 +13,9 @@ and deterministic eval gates.
   testing without model calls (`harness_mode=fixture`).
 - UI eval adapter contract is documented in
   `docs/UI_EVAL_ADAPTER_CONTRACT.md` (TypeScript types + endpoint flow).
-- Local UI shell is available at `/ui` for thread + binary eval workflows
-  against the live backend.
+- Local UI shell is available at `/ui` for thread + binary PASS/FAIL eval
+  workflows, with OCR image attachments (upload + paste) against the live
+  backend.
 - Legacy frontend context remains in `docs/live_archive/legacy_frontend/`.
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.

@@ -206,6 +206,63 @@
         justify-content: flex-end;
       }
 
+      .attachment-panel {
+        margin-top: 10px;
+        border: 1px solid #2d4b74;
+        border-radius: 10px;
+        padding: 10px;
+        background: rgba(8, 23, 43, 0.65);
+      }
+
+      .attachment-panel h3 {
+        margin: 0 0 8px;
+        font-size: 0.9rem;
+        color: #c7dbff;
+      }
+
+      .attachment-toolbar {
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .attachment-list {
+        margin-top: 10px;
+        display: grid;
+        gap: 7px;
+        max-height: 160px;
+        overflow: auto;
+      }
+
+      .attachment-item {
+        border: 1px solid #355781;
+        border-radius: 8px;
+        padding: 7px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 0.8rem;
+        background: #0a1f3e;
+      }
+
+      .attachment-meta {
+        color: var(--muted);
+        font-size: 0.75rem;
+      }
+
+      .attachment-empty {
+        color: var(--muted);
+        font-size: 0.78rem;
+      }
+
+      button.danger {
+        border-color: #8b4a4a;
+        background: #4c1f1f;
+      }
+
       .main-grid {
         display: grid;
         grid-template-columns: 1.2fr 1fr;
@@ -434,6 +491,7 @@
             <span class="pill" id="metaSession">session: -</span>
             <span class="pill" id="metaMessages">messages: 0</span>
             <span class="pill" id="metaFeedback">feedback: 0</span>
+            <span class="pill" id="metaAttachments">attachments: 0</span>
           </div>
         </section>
 
@@ -442,6 +500,46 @@
             Message
             <textarea id="chatMessage" rows="3" placeholder="Type message for /chat"></textarea>
           </label>
+          <section class="attachment-panel">
+            <h3>OCR Attachments</h3>
+            <label>
+              Add image files
+              <input id="attachmentInput" type="file" accept="image/*" multiple />
+            </label>
+            <div class="row">
+              <label>
+                Transcription mode
+                <select id="transcriptionMode">
+                  <option value="verbatim">verbatim</option>
+                  <option value="normalized">normalized</option>
+                </select>
+              </label>
+              <label>
+                Memory scope
+                <select id="attachmentMemoryScope">
+                  <option value="global">global</option>
+                  <option value="session">session</option>
+                </select>
+              </label>
+            </div>
+            <label>
+              Text hint (optional)
+              <input id="attachmentTextHint" type="text" placeholder="Target text or region hint" />
+            </label>
+            <label>
+              Visual context hint (optional)
+              <input id="attachmentVisualHint" type="text" placeholder="Context to help interpretation" />
+            </label>
+            <div class="attachment-toolbar">
+              <button id="clearAttachmentsBtn" class="danger" type="button">Clear Attachments</button>
+              <span id="attachmentHint" class="hint">
+                No attachments queued. Tip: paste images directly into Message.
+              </span>
+            </div>
+            <div id="attachmentList" class="attachment-list">
+              <div class="attachment-empty">No attachments queued.</div>
+            </div>
+          </section>
           <div class="composer-actions">
             <button id="sendBtn" class="primary">Send</button>
           </div>
@@ -465,20 +563,10 @@
               <label>
                 Outcome
                 <select id="outcome">
-                  <option value="pass">pass</option>
-                  <option value="fail">fail</option>
+                  <option value="pass">PASS</option>
+                  <option value="fail">FAIL</option>
                 </select>
               </label>
-              <div class="tag-grid">
-                <div class="tag-group">
-                  <h4>Positive tags</h4>
-                  <div id="positiveTags" class="tag-list"></div>
-                </div>
-                <div class="tag-group">
-                  <h4>Negative tags</h4>
-                  <div id="negativeTags" class="tag-list"></div>
-                </div>
-              </div>
               <label style="margin-top: 10px">
                 Note
                 <textarea id="note" rows="3" placeholder="Optional note"></textarea>
@@ -492,7 +580,7 @@
                 <button id="resetEvalBtn">Reset Form</button>
               </div>
               <p class="hint">
-                Binary rules: pass needs >=1 positive tag; fail needs >=1 negative tag.
+                Binary gate only. No reason tags are sent from this UI flow.
               </p>
               <div id="feedbackInfo" class="status">No feedback loaded.</div>
 
@@ -520,34 +608,13 @@
     </div>
 
     <script>
-      const POSITIVE_TAGS = [
-        "accurate",
-        "high_value",
-        "medium_value",
-        "low_value",
-        "recovered",
-        "ocr_accurate",
-        "grounded",
-        "style",
-        "complete",
-        "useful",
-      ];
-      const NEGATIVE_TAGS = [
-        "ocr_miss",
-        "grounding_gap",
-        "style_mismatch",
-        "default_style",
-        "em_dash_style",
-        "hallucination_risk",
-        "needs_retry",
-      ];
-      const PASS_SOFT_NEGATIVE = new Set(["default_style"]);
-
       const state = {
         messages: [],
         feedbackByMessageId: new Map(),
         checkpoints: [],
         selectedAssistantId: null,
+        pendingAttachments: [],
+        pasteAttachmentCounter: 0,
       };
 
       const els = {
@@ -557,6 +624,14 @@
         harnessMode: document.getElementById("harnessMode"),
         fixtureOutput: document.getElementById("fixtureOutput"),
         chatMessage: document.getElementById("chatMessage"),
+        attachmentInput: document.getElementById("attachmentInput"),
+        transcriptionMode: document.getElementById("transcriptionMode"),
+        attachmentMemoryScope: document.getElementById("attachmentMemoryScope"),
+        attachmentTextHint: document.getElementById("attachmentTextHint"),
+        attachmentVisualHint: document.getElementById("attachmentVisualHint"),
+        clearAttachmentsBtn: document.getElementById("clearAttachmentsBtn"),
+        attachmentHint: document.getElementById("attachmentHint"),
+        attachmentList: document.getElementById("attachmentList"),
         thread: document.getElementById("thread"),
         threadHint: document.getElementById("threadHint"),
         selectedHint: document.getElementById("selectedHint"),
@@ -569,8 +644,7 @@
         metaSession: document.getElementById("metaSession"),
         metaMessages: document.getElementById("metaMessages"),
         metaFeedback: document.getElementById("metaFeedback"),
-        positiveTags: document.getElementById("positiveTags"),
-        negativeTags: document.getElementById("negativeTags"),
+        metaAttachments: document.getElementById("metaAttachments"),
       };
 
       function nowSessionId() {
@@ -582,6 +656,112 @@
       function toIso(ms) {
         if (!ms || Number.isNaN(ms)) return "-";
         return new Date(ms).toISOString();
+      }
+
+      function formatBytes(bytes) {
+        const size = Number(bytes);
+        if (!Number.isFinite(size) || size <= 0) return "0 B";
+        const units = ["B", "KB", "MB", "GB"];
+        let value = size;
+        let idx = 0;
+        while (value >= 1024 && idx < units.length - 1) {
+          value /= 1024;
+          idx += 1;
+        }
+        return `${value.toFixed(idx === 0 ? 0 : 1)} ${units[idx]}`;
+      }
+
+      function attachmentId() {
+        return `att-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+      }
+
+      function sanitizeAttachmentName(rawName, fallbackName) {
+        const base = (rawName || "").split("?")[0].split("#")[0].trim();
+        const name = base || fallbackName;
+        if (name.length <= 72) return name;
+        const dot = name.lastIndexOf(".");
+        if (dot <= 0 || dot >= name.length - 1) {
+          return `${name.slice(0, 68)}...`;
+        }
+        const ext = name.slice(dot);
+        const stem = name.slice(0, Math.max(1, 68 - ext.length));
+        return `${stem}...${ext}`;
+      }
+
+      function fileToDataUrl(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            if (typeof reader.result !== "string" || !reader.result) {
+              reject(new Error("Failed to read attachment."));
+              return;
+            }
+            resolve(reader.result);
+          };
+          reader.onerror = () => reject(new Error("Failed to read attachment."));
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function renderAttachments() {
+        if (state.pendingAttachments.length === 0) {
+          els.attachmentList.innerHTML = "<div class='attachment-empty'>No attachments queued.</div>";
+          els.attachmentHint.textContent =
+            "No attachments queued. Tip: paste images directly into Message.";
+          return;
+        }
+        els.attachmentHint.textContent = `${state.pendingAttachments.length} attachment(s) queued for next send.`;
+        els.attachmentList.innerHTML = "";
+        for (const att of state.pendingAttachments) {
+          const row = document.createElement("div");
+          row.className = "attachment-item";
+          row.innerHTML = `
+            <div>
+              <div>${att.source_name || att.id}</div>
+              <div class="attachment-meta">${att.mime_type || "image/*"} | ${formatBytes(att.size_bytes)}</div>
+            </div>
+            <button type="button" class="danger" data-attachment-remove="${att.id}">Remove</button>
+          `;
+          els.attachmentList.appendChild(row);
+        }
+      }
+
+      async function queueImageFiles(files, source = "upload") {
+        const incoming = Array.from(files || []);
+        const imageFiles = incoming.filter(
+          (file) => file && typeof file.type === "string" && file.type.startsWith("image/")
+        );
+        if (imageFiles.length === 0) {
+          if (incoming.length > 0) {
+            setStatus("Only image files are supported for OCR attachments.", "error");
+          }
+          return;
+        }
+        for (let i = 0; i < imageFiles.length; i += 1) {
+          const file = imageFiles[i];
+          const dataUrl = await fileToDataUrl(file);
+          state.pasteAttachmentCounter += 1;
+          const fallbackName =
+            source === "paste"
+              ? `pasted-image-${String(state.pasteAttachmentCounter).padStart(2, "0")}.png`
+              : `upload-image-${String(i + 1).padStart(2, "0")}.png`;
+          state.pendingAttachments.push({
+            id: attachmentId(),
+            source_name: sanitizeAttachmentName(file.name, fallbackName),
+            mime_type: file.type || "image/png",
+            data_base64: dataUrl,
+            size_bytes: file.size || 0,
+          });
+        }
+        renderAttachments();
+        updateMeta();
+      }
+
+      function clearQueuedAttachments() {
+        state.pendingAttachments = [];
+        els.attachmentInput.value = "";
+        renderAttachments();
+        updateMeta();
       }
 
       function setStatus(msg, kind = "info") {
@@ -626,61 +806,10 @@
         return res.json();
       }
 
-      function renderTagOptions(container, tags, group) {
-        container.innerHTML = "";
-        for (const tag of tags) {
-          const id = `${group}-${tag}`;
-          const wrapper = document.createElement("label");
-          wrapper.className = "tag-option";
-          const input = document.createElement("input");
-          input.type = "checkbox";
-          input.dataset.group = group;
-          input.value = tag;
-          input.id = id;
-          const span = document.createElement("span");
-          span.textContent = tag;
-          wrapper.appendChild(input);
-          wrapper.appendChild(span);
-          container.appendChild(wrapper);
-        }
-      }
-
-      function selectedTags(group) {
-        const boxes = document.querySelectorAll(`input[data-group='${group}']:checked`);
-        return Array.from(boxes).map((box) => box.value);
-      }
-
-      function setTagSelection(group, values) {
-        const wanted = new Set(values || []);
-        const boxes = document.querySelectorAll(`input[data-group='${group}']`);
-        boxes.forEach((box) => {
-          box.checked = wanted.has(box.value);
-        });
-      }
-
-      function updateNegativeTagAvailability() {
-        const outcome = els.outcome.value;
-        const boxes = document.querySelectorAll("input[data-group='negative']");
-        boxes.forEach((box) => {
-          const allowed = outcome === "fail" || PASS_SOFT_NEGATIVE.has(box.value);
-          box.disabled = !allowed;
-          if (!allowed) box.checked = false;
-        });
-      }
-
       function validateEvalPayload(payload) {
         if (!payload.message_id) return "Select an assistant message first.";
-        if (payload.outcome === "pass") {
-          if (payload.positive_tags.length === 0) {
-            return "Pass requires at least one positive tag.";
-          }
-          const disallowed = payload.negative_tags.filter((tag) => !PASS_SOFT_NEGATIVE.has(tag));
-          if (disallowed.length > 0) {
-            return `Pass cannot include negative tags: ${disallowed.join(", ")}`;
-          }
-        }
-        if (payload.outcome === "fail" && payload.negative_tags.length === 0) {
-          return "Fail requires at least one negative tag.";
+        if (payload.outcome !== "pass" && payload.outcome !== "fail") {
+          return "Outcome must be pass or fail.";
         }
         return null;
       }
@@ -754,6 +883,7 @@
         els.metaSession.textContent = `session: ${currentSessionId() || "-"}`;
         els.metaMessages.textContent = `messages: ${state.messages.length}`;
         els.metaFeedback.textContent = `feedback: ${state.feedbackByMessageId.size}`;
+        els.metaAttachments.textContent = `attachments: ${state.pendingAttachments.length}`;
       }
 
       function selectAssistantMessage(messageId) {
@@ -761,21 +891,16 @@
         const existing = state.feedbackByMessageId.get(messageId);
         if (existing) {
           els.outcome.value = existing.outcome;
-          setTagSelection("positive", existing.positive_tags);
-          setTagSelection("negative", existing.negative_tags);
           els.note.value = existing.note || "";
           els.actionTaken.value = existing.action_taken || "";
           els.feedbackInfo.textContent = `Existing feedback: ${existing.outcome} (${existing.status})`;
         } else {
           els.outcome.value = "pass";
-          setTagSelection("positive", []);
-          setTagSelection("negative", []);
           els.note.value = "";
           els.actionTaken.value = "";
           els.feedbackInfo.textContent = "No saved feedback for this message.";
         }
         els.selectedHint.textContent = `selected: ${messageId}`;
-        updateNegativeTagAvailability();
         renderThread();
       }
 
@@ -847,7 +972,7 @@
         const message = els.chatMessage.value.trim();
         const sessionId = currentSessionId();
         if (!message) {
-          setStatus("Message is required.", "error");
+          setStatus("Message is required (for OCR: try 'transcribe attachment verbatim').", "error");
           return;
         }
         if (!sessionId) {
@@ -860,6 +985,19 @@
           session_id: sessionId,
           harness_mode: harnessMode,
         };
+        const textHint = (els.attachmentTextHint.value || "").trim();
+        const visualContextHint = (els.attachmentVisualHint.value || "").trim();
+        if (state.pendingAttachments.length > 0) {
+          payload.attachments = state.pendingAttachments.map((att) => ({
+            data_base64: att.data_base64,
+            source_name: att.source_name,
+            mime_type: att.mime_type,
+            transcription_mode: els.transcriptionMode.value,
+            memory_scope: els.attachmentMemoryScope.value,
+            text_hint: textHint || undefined,
+            visual_context_hint: visualContextHint || undefined,
+          }));
+        }
         const fixtureOutput = els.fixtureOutput.value.trim();
         if (harnessMode === "fixture" && fixtureOutput) {
           payload.fixture_output = fixtureOutput;
@@ -870,6 +1008,7 @@
             body: JSON.stringify(payload),
           });
           els.chatMessage.value = "";
+          clearQueuedAttachments();
           await loadMessages();
           await loadFeedback();
           renderThread();
@@ -877,7 +1016,7 @@
           if (response.assistant_message_id) {
             selectAssistantMessage(response.assistant_message_id);
           }
-          setStatus(`Chat sent via ${harnessMode}.`, "ok");
+          setStatus(`Chat sent via ${harnessMode}${payload.attachments ? " with attachments" : ""}.`, "ok");
         } catch (err) {
           setStatus(err.message, "error");
         }
@@ -889,11 +1028,12 @@
           setStatus("Session ID is required.", "error");
           return;
         }
+        const outcome = (els.outcome.value || "pass").toLowerCase();
         const payload = {
           message_id: state.selectedAssistantId,
-          outcome: els.outcome.value,
-          positive_tags: selectedTags("positive"),
-          negative_tags: selectedTags("negative"),
+          outcome,
+          positive_tags: [],
+          negative_tags: [],
           note: (els.note.value || "").trim() || null,
           action_taken: (els.actionTaken.value || "").trim() || null,
         };
@@ -937,12 +1077,9 @@
       }
 
       function resetEvalForm() {
-        setTagSelection("positive", []);
-        setTagSelection("negative", []);
         els.note.value = "";
         els.actionTaken.value = "";
         els.outcome.value = "pass";
-        updateNegativeTagAvailability();
         els.feedbackInfo.textContent = "Form reset.";
       }
 
@@ -977,13 +1114,59 @@
           state.feedbackByMessageId = new Map();
           state.checkpoints = [];
           state.selectedAssistantId = null;
+          clearQueuedAttachments();
           renderThread();
           renderCheckpoints();
           updateMeta();
           resetEvalForm();
           setStatus("New session id generated.", "ok");
         });
-        els.outcome.addEventListener("change", updateNegativeTagAvailability);
+        els.attachmentInput.addEventListener("change", async () => {
+          try {
+            await queueImageFiles(els.attachmentInput.files, "upload");
+            els.attachmentInput.value = "";
+            setStatus("Attachment(s) queued.", "ok");
+          } catch (err) {
+            setStatus(err.message, "error");
+          }
+        });
+        els.clearAttachmentsBtn.addEventListener("click", () => {
+          clearQueuedAttachments();
+          setStatus("Queued attachments cleared.", "ok");
+        });
+        els.attachmentList.addEventListener("click", (event) => {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) return;
+          const removeId = target.dataset.attachmentRemove;
+          if (!removeId) return;
+          state.pendingAttachments = state.pendingAttachments.filter((att) => att.id !== removeId);
+          renderAttachments();
+          updateMeta();
+        });
+        els.chatMessage.addEventListener("paste", async (event) => {
+          const clipboard = event.clipboardData;
+          if (!clipboard || !clipboard.items) return;
+          const imageFiles = [];
+          const hasPlainText = Array.from(clipboard.items).some(
+            (item) => item.kind === "string" && item.type === "text/plain"
+          );
+          for (const item of Array.from(clipboard.items)) {
+            if (item.kind === "file" && item.type.startsWith("image/")) {
+              const file = item.getAsFile();
+              if (file) imageFiles.push(file);
+            }
+          }
+          if (imageFiles.length === 0) return;
+          if (!hasPlainText) {
+            event.preventDefault();
+          }
+          try {
+            await queueImageFiles(imageFiles, "paste");
+            setStatus("Pasted image queued as attachment.", "ok");
+          } catch (err) {
+            setStatus(err.message, "error");
+          }
+        });
       }
 
       function hydrateFromStorage() {
@@ -1002,11 +1185,9 @@
       }
 
       function init() {
-        renderTagOptions(els.positiveTags, POSITIVE_TAGS, "positive");
-        renderTagOptions(els.negativeTags, NEGATIVE_TAGS, "negative");
         hydrateFromStorage();
         bindEvents();
-        updateNegativeTagAvailability();
+        renderAttachments();
         updateMeta();
         setStatus("UI shell ready.", "ok");
         [els.baseUrl, els.apiKey, els.sessionId].forEach((el) => {

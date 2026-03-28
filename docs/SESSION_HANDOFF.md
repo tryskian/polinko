@@ -8,8 +8,8 @@
 
 ## Current Snapshot
 
-- Runtime is local-first: FastAPI backend + CLI runner are canonical; web UI is
-  archived from the active repository surface.
+- Runtime is local-first: FastAPI backend + CLI runner are canonical; local UI
+  shell is active at `/ui`.
 - `POST /chat` now supports deterministic harness testing for UI smoke:
   - request override: `harness_mode=fixture`
   - optional fixed output: `fixture_output`
@@ -22,10 +22,16 @@
   - route: `GET /ui`
   - file: `ui/index.html`
   - scope: chat thread + binary eval submit + checkpoint render/create
+  - OCR attachments supported in composer:
+    - upload image files
+    - paste images directly into prompt input
+    - attachment filenames are normalised for readable operator labels
   - fixture mode controls are available for deterministic UI smoke
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Eval contract is strict binary end-to-end:
   - feedback outcomes: `pass` or `fail` only
+  - UI flow submits binary outcome without reason tags
+  - backend accepts empty tag arrays for binary submissions
   - checkpoint schema field: `non_binary_count` (integrity signal, expected `0`)
   - checkpoint response field: `gate_outcome` (`pass`/`fail`, fail-closed from counts)
   - previous `tags`-only feedback payload compatibility removed
@@ -117,12 +123,10 @@
 
 ## Immediate Next Step
 
-- Run one full eval cycle through `/ui` and capture contract gaps before
-  deeper visual work:
-  - exercise `live` and `fixture` harness modes
-  - submit pass/fail evals on multiple assistant messages
+- Run one manual OCR-eval smoke through `/ui` under the binary-only contract:
+  - attach image via file upload and via clipboard paste
+  - submit `PASS` and `FAIL` evals without reason tags
   - create checkpoint and verify fail-closed gate rendering
-  - patch only contract-level gaps (no visual framework expansion yet)
   - validate with `make build-audit`, `make lint-docs`, `make test`,
     `make quality-gate-deterministic`
 

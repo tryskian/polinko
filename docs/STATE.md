@@ -221,6 +221,20 @@
     - checkpoint creation/history
       (`POST/GET /chats/{session_id}/feedback/checkpoints`)
   - fixture mode is exposed for deterministic smoke (`harness_mode=fixture`)
+- Binary outcome-only eval checkpoint (March 28, 2026):
+  - UI eval flow is now strict `PASS`/`FAIL` without reason-tag selection
+  - backend accepts binary feedback writes with empty tag arrays
+    (legacy tag fields remain optional compatibility metadata)
+  - checkpoint gate behaviour remains outcome-driven and fail-closed
+- OCR attachment UI checkpoint (March 28, 2026):
+  - local UI shell composer supports OCR attachments via:
+    - image upload
+    - clipboard image paste into prompt input
+  - attachment metadata wiring exposed in UI:
+    - transcription mode
+    - memory scope
+    - optional text/context hints
+  - attachment labels are normalised to readable filenames in operator view
 - Proactive ownership checkpoint (March 26, 2026):
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder

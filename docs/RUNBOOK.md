@@ -174,8 +174,12 @@ Local runtime DB commands are retired during wiring lock; treat docs/tests as th
    - session ID
 4. Core UI flow:
    - send message (`POST /chat`)
+   - optional OCR attachment input:
+     - upload image file(s), or
+     - paste image directly into message box
    - click assistant message
-   - submit binary eval (`POST /chats/{session_id}/feedback`)
+   - submit binary PASS/FAIL eval (`POST /chats/{session_id}/feedback`)
+     (no reason tags required from UI)
    - create checkpoint (`POST /chats/{session_id}/feedback/checkpoints`)
 5. Fixture mode remains optional for deterministic UI smoke:
    - `harness_mode=fixture`

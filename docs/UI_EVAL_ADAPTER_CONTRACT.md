@@ -23,9 +23,20 @@ export type HarnessMode = "live" | "fixture";
 export type EvalOutcome = "pass" | "fail";
 export type GateOutcome = "pass" | "fail";
 
+export interface ChatAttachment {
+  data_base64: string;
+  source_name?: string;
+  mime_type?: string;
+  text_hint?: string;
+  visual_context_hint?: string;
+  transcription_mode?: "verbatim" | "normalized";
+  memory_scope?: "global" | "session";
+}
+
 export interface ChatRequest {
   message: string;
   session_id?: string;
+  attachments?: ChatAttachment[];
   source_user_message_id?: string;
   harness_mode?: HarnessMode;
   fixture_output?: string;
@@ -54,8 +65,8 @@ export interface ChatResponse {
 export interface MessageFeedbackRequest {
   message_id: string;
   outcome: EvalOutcome;
-  positive_tags: string[];
-  negative_tags: string[];
+  positive_tags?: string[]; // optional legacy diagnostics
+  negative_tags?: string[]; // optional legacy diagnostics
   note?: string;
   action_taken?: string;
 }
@@ -192,37 +203,11 @@ flowchart LR
   G --> H["Render gate_outcome (pass/fail) + checkpoint history"]
 ```
 
-## Eval Tag Rules (UI Validation)
+## Binary Eval Rules
 
-Positive tags allowed:
-
-- `accurate`
-- `high_value`
-- `medium_value`
-- `low_value`
-- `recovered`
-- `ocr_accurate`
-- `grounded`
-- `style`
-- `complete`
-- `useful`
-
-Negative tags allowed:
-
-- `ocr_miss`
-- `grounding_gap`
-- `style_mismatch`
-- `default_style`
-- `em_dash_style`
-- `hallucination_risk`
-- `needs_retry`
-
-Binary rules:
-
-1. `pass` requires at least one positive tag.
-2. `pass` only allows `default_style` as negative tag (soft penalty).
-3. `fail` requires at least one negative tag.
-4. Tags are diagnostic only; checkpoint gate uses `outcome` only.
+1. `outcome` is required and must be `pass` or `fail`.
+2. Tags are optional legacy diagnostics; UI shell submits binary outcome without tags.
+3. Checkpoint gate uses `outcome` only.
 
 ## Harness Rules for UI Testing
 
@@ -247,7 +232,7 @@ Binary rules:
 ## Acceptance Checklist (UI)
 
 1. Thread render always keeps `assistant_message_id` for eval actions.
-2. Eval submit path supports only `pass`/`fail`.
+2. Eval submit path supports only `pass`/`fail` and can omit reason tags.
 3. Feedback panel reflects `recommended_action` and `status`.
 4. Checkpoint panel renders `gate_outcome` as explicit pass/fail.
 5. Fixture mode is clearly labelled as test-only in the UI.

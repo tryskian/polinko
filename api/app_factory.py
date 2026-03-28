@@ -860,8 +860,6 @@ def _normalize_feedback_tags(
         )
 
     if outcome == "pass":
-        if not normalized_positive:
-            raise HTTPException(status_code=400, detail="Pass requires at least one positive reason tag.")
         disallowed_negative = [
             tag for tag in normalized_negative if tag not in _FEEDBACK_PASS_SOFT_NEGATIVE_TAGS
         ]
@@ -871,9 +869,6 @@ def _normalize_feedback_tags(
                 status_code=400,
                 detail=f"Pass cannot include negative reason tags: {disallowed_text}.",
             )
-    elif outcome == "fail":
-        if not normalized_negative:
-            raise HTTPException(status_code=400, detail="Fail requires at least one negative reason tag.")
     normalized_tags = list(dict.fromkeys(normalized_positive + normalized_negative))
     return normalized_positive, normalized_negative, normalized_tags
 

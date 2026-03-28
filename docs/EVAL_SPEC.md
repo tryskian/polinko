@@ -31,25 +31,14 @@ Binary means:
 ### Outcome ownership
 
 - `outcome` is canonical and final for checkpoint arithmetic
-- reason tags provide diagnostics only
+- reason tags are optional legacy diagnostics only
 - reason tags must not override or duplicate outcome counting
 
-### Reason tags
+### Reason tags (optional)
 
-Positive reason tags:
-
-- quality/execution strengths (`accurate`, `grounded`, `high_value`, etc.)
-
-Negative reason tags:
-
-- defect/risk reasons (`ocr_miss`, `hallucination_risk`, etc.)
-
-Rules:
-
-1. `pass` requires at least one positive reason tag.
-2. `fail` requires at least one negative reason tag.
-3. `fail` may include positive reason tags for partial quality signal.
-4. checkpoint pass/fail counts are derived from `outcome` only.
+- tags are optional and can be empty for both `pass` and `fail`
+- if provided, tags remain diagnostic-only metadata
+- checkpoint pass/fail counts are derived from `outcome` only
 
 ## Canonical Checkpoint Arithmetic
 
@@ -80,8 +69,8 @@ Required row fields (logical spec):
 - `session_id`
 - `message_id`
 - `outcome` (`pass`|`fail`)
-- `positive_tags[]`
-- `negative_tags[]`
+- optional `positive_tags[]`
+- optional `negative_tags[]`
 - `status` (`closed` for pass, `open` for fail)
 - timestamps
 
@@ -102,10 +91,10 @@ Existing endpoints can remain stable:
 Required behaviour updates in implementation phase:
 
 1. enforce outcome-driven checkpoint counting
-2. maintain current tag validation constraints
+2. accept binary payloads with empty tag arrays; validate tags only when present
 3. expose schema/version marker in checkpoint responses for auditability
 4. expose explicit checkpoint `gate_outcome` (`pass`/`fail`) in responses
-5. do not accept legacy `tags`-only payloads; require `positive_tags`/`negative_tags`
+5. do not accept legacy `tags`-only payloads; use `positive_tags`/`negative_tags` when tags are supplied
 
 ## Eval Harness Spec
 

@@ -545,7 +545,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(payload["negative_tags"], ["ocr_miss"])
         self.assertIn("Retry OCR", payload["recommended_action"])
 
-    def test_feedback_rejects_missing_or_invalid_reason_tags(self) -> None:
+    def test_feedback_accepts_binary_without_tags_and_rejects_invalid_reason_tags(self) -> None:
         with self._stub_runner("Feedback candidate"):
             chat_resp = self.client.post(
                 "/chat",
@@ -560,7 +560,22 @@ class PolinkoApiTests(unittest.TestCase):
             headers={"x-api-key": "test-server-key"},
             json={"message_id": assistant_message_id, "outcome": "pass", "positive_tags": []},
         )
-        self.assertEqual(missing_tags_resp.status_code, 400)
+        self.assertEqual(missing_tags_resp.status_code, 200)
+        missing_tags_payload = missing_tags_resp.json()
+        self.assertEqual(missing_tags_payload["outcome"], "pass")
+        self.assertEqual(missing_tags_payload["positive_tags"], [])
+        self.assertEqual(missing_tags_payload["negative_tags"], [])
+
+        fail_missing_tags_resp = self.client.post(
+            "/chats/s-feedback-tags/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={"message_id": assistant_message_id, "outcome": "fail", "negative_tags": []},
+        )
+        self.assertEqual(fail_missing_tags_resp.status_code, 200)
+        fail_missing_tags_payload = fail_missing_tags_resp.json()
+        self.assertEqual(fail_missing_tags_payload["outcome"], "fail")
+        self.assertEqual(fail_missing_tags_payload["positive_tags"], [])
+        self.assertEqual(fail_missing_tags_payload["negative_tags"], [])
 
         invalid_tags_resp = self.client.post(
             "/chats/s-feedback-tags/feedback",

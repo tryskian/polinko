@@ -983,3 +983,34 @@
 - Why: Provides a durable non-CLI operator surface for day-to-day eval work
   with minimal implementation overhead and no behaviour drift in backend gate
   semantics.
+
+## D-089: Shift UI eval flow to strict binary outcome-only submissions
+
+- Date: `2026-03-28`
+- Category: `eval_quality`
+- Tags: `binary_only`, `pass_fail`, `legacy_tag_retirement`, `minimal_signal`
+- Decision:
+  - UI eval submission flow now captures only `PASS`/`FAIL` outcome and omits
+    reason-tag selection controls
+  - backend feedback endpoint accepts binary submissions with empty tag arrays
+    while preserving optional tag fields for legacy/API compatibility
+  - checkpoint gate semantics remain unchanged and outcome-driven
+- Why: Removes legacy rubric noise from active operator flow and keeps learning
+  signal focused on binary reward alignment patterns.
+
+## D-090: Add OCR attachment operator flow to local UI shell
+
+- Date: `2026-03-28`
+- Category: `workflow_environment`
+- Tags: `ocr`, `attachments`, `clipboard`, `operator_experience`
+- Decision:
+  - extend `/ui` composer with OCR attachment support:
+    - image file upload
+    - clipboard image paste into prompt input
+  - include attachment options wired to `/chat.attachments`:
+    - `transcription_mode`
+    - `memory_scope`
+    - optional text/context hints
+  - normalise attachment display names to readable filenames for operator use
+- Why: Enables OCR eval work directly from the local UI shell without CLI-only
+  attachment handling, and removes friction during high-frequency eval loops.
