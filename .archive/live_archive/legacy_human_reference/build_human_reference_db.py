@@ -58,13 +58,13 @@ class HumanDoc:
 
 def _category_for(path: Path) -> str:
     p = path.as_posix()
-    if p.startswith("docs/transcripts/"):
+    if p.startswith("docs/peanut/transcripts/"):
         if "key_points" in path.name:
             return "key_points"
         return "transcripts"
-    if p.startswith("docs/theory/"):
+    if p.startswith("docs/peanut/theory/"):
         return "theory_notes"
-    if p.startswith("docs/research/"):
+    if p.startswith("docs/peanut/research/"):
         return "research_notes"
     return "other_notes"
 

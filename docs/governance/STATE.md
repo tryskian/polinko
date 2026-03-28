@@ -8,7 +8,6 @@
 - CLI agent loop works with persistent SQLite memory (`.local/runtime_dbs/active/memory.db`) and
   `/reset`.
 - Backend API is running with:
-  - `GET /ui`
   - `GET /health`
   - `GET /metrics`
   - `POST /chat`
@@ -27,16 +26,14 @@
   - periodic stale bucket cleanup in the in-memory limiter
   - per-chat personalization memory scope (`session` vs `global`)
   - `/chat` retrieval citations via `memory_used` when vector memory contributes context
-  - deterministic harness override for UI smoke:
+  - deterministic harness override for smoke tests:
     `harness_mode=fixture` (+ optional `fixture_output`)
   - env-level harness default:
     `POLINKO_CHAT_HARNESS_DEFAULT_MODE=live|fixture`
   - canonical UI eval adapter contract:
-    `docs/UI_EVAL_ADAPTER_CONTRACT.md`
-- Local UI shell is now active at `/ui` for thread + binary eval operations
-  against the canonical backend contract.
+    `docs/eval/UI_EVAL_ADAPTER_CONTRACT.md`
 - Legacy frontend implementation remains archived in
-  `docs/live_archive/legacy_frontend/`.
+  `.archive/live_archive/legacy_frontend/`.
 - OpenAI developer docs MCP server is now configured for Codex/VS Code usage:
   - endpoint: `https://developers.openai.com/mcp`
   - workspace wiring: `.vscode/mcp.json`
@@ -105,7 +102,8 @@
     runbook/state/handoff references
   - archived docs are hidden from explorer/search to reduce active-workflow
     clutter
-  - `docs/PEANUT_TOOLING_REF.md` remains visible for day-to-day operator use
+  - `docs/peanut/refs/PEANUT_TOOLING_REF.md` remains visible for day-to-day
+    operator use
 - Git-native retention checkpoint (March 27, 2026):
   - archive-folder workflow removed from active operations
     (`make eval-reset-baseline` removed)
@@ -114,23 +112,23 @@
   - tracked-state retention is now explicitly Git-native
     (no additional archive folder layer required)
 - Live archive checkpoint (March 27, 2026):
-  - added tracked live archive lane: `docs/live_archive/`
+  - added tracked live archive lane: `.archive/live_archive/`
   - lane split is explicit:
-    - `docs/live_archive/legacy_eval/`
-    - `docs/live_archive/legacy_frontend/`
-    - `docs/live_archive/legacy_human_reference/`
+    - `.archive/live_archive/legacy_eval/`
+    - `.archive/live_archive/legacy_frontend/`
+    - `.archive/live_archive/legacy_human_reference/`
   - archive lane is reference-only and non-authoritative for active runtime
     gate decisions
 - Docs straggler cleanup checkpoint (March 28, 2026):
   - deprecated top-level coordination docs moved into:
-    - `docs/live_archive/legacy_coordination/`
+    - `.archive/live_archive/legacy_coordination/`
   - active top-level docs now stay focused on current runtime/eval operations
     and research workflow
 - Eval docs canonical naming checkpoint (March 27, 2026):
-  - renamed `docs/EVAL_V2_SPEC.md` -> `docs/EVAL_SPEC.md`
-  - renamed `docs/EVAL_V2_BACKEND_MAP.md` -> `docs/EVAL_BACKEND_MAP.md`
+  - renamed `docs/EVAL_V2_SPEC.md` -> `docs/eval/EVAL_SPEC.md`
+  - renamed `docs/EVAL_V2_BACKEND_MAP.md` -> `docs/eval/EVAL_BACKEND_MAP.md`
   - binary policy semantics are documented in
-    `docs/BINARY_EVAL_LOGIC_REFINEMENT.md`
+    `docs/eval/BINARY_EVAL_LOGIC_REFINEMENT.md`
 - EOD docs confidentiality merge checkpoint (March 25, 2026):
   - PR `#72` merged to `main` (`2a6f575`)
   - runbook + ignore policy now treats non-build internal docs as local-only
@@ -143,11 +141,11 @@
   - no special-purpose `eval-rubric` branch/ruleset is active
 - Safety certainty checkpoint (March 21, 2026):
   - captured transcript + peanut-reference framing in
-    `docs/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
+    `docs/peanut/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
     (unsupported certainty = fail; uncertainty + grounded recovery = pass)
 - Reasoning Loops diagnostic checkpoint (March 22, 2026):
   - captured transcript + structured interpretation in the March 22 diagnostic
-    transcript under `docs/transcripts/`
+    transcript under `docs/peanut/transcripts/`
   - preserves the “pattern is strategy, not the other way around” framing for
     future rubric and reasoning-behaviour analysis
 - Latest audit checkpoint (March 25, 2026):
@@ -177,7 +175,7 @@
   - no root-level `.polinko_*.db` files are part of the active surface
 - Minimal-config benchmark checkpoint (March 27, 2026):
   - canonical benchmark spec added:
-    - `docs/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
+    - `docs/benchmarks/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
   - benchmark compares three phases:
     - minimal-config CLI baseline
     - traditional eval stack
@@ -196,7 +194,7 @@
   - runtime DB provisioning is intentionally paused until eval wiring sign-off
   - no fresh `.polinko_*.db` or `.human_reference.db` files are active in
     repository root during this phase
-  - canonical wiring source is `docs/EVAL_WIRING_SPEC.md` and associated
+  - canonical wiring source is `docs/eval/EVAL_WIRING_SPEC.md` and associated
     contract docs/tests
 - Runtime DB doc-contract checkpoint (March 28, 2026):
   - active docs no longer reference retired local DB commands
@@ -218,14 +216,10 @@
     versioning
   - D3.js interactive visualisation is pinned as a deferred track for later UI
     iteration (not active in current runtime/docs gate path)
-- UI shell checkpoint (March 28, 2026):
-  - `/ui` route now serves a local-first operator shell from `ui/index.html`
-  - shell includes:
-    - thread rendering (`GET /chats/{session_id}/messages`)
-    - binary eval submit (`POST /chats/{session_id}/feedback`)
-    - checkpoint creation/history
-      (`POST/GET /chats/{session_id}/feedback/checkpoints`)
-  - fixture mode is exposed for deterministic smoke (`harness_mode=fixture`)
+- UI shell retirement checkpoint (March 28, 2026):
+  - active `ui/` folder and `/ui` route are removed from runtime surface
+  - canonical active surfaces are backend API + CLI
+  - historical frontend context remains in `.archive/live_archive/legacy_frontend/`
 - Proactive ownership checkpoint (March 26, 2026):
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder
@@ -333,7 +327,7 @@
   (hallucination, style, retrieval, file-search, OCR).
 - OCR ambiguity/recovery eval harness is available via
   `make eval-ocr-recovery` with case template
-  `docs/ocr_recovery_eval_cases.json`.
+  `docs/eval/cases/ocr_recovery_eval_cases.json`.
 - Evidence indexing now tracks FAIL remediation lifecycle with
   `recommended_action`, `action_taken`, `status`, and optional PASS-linked
   closure metadata.
@@ -348,7 +342,7 @@
   relationship attribution and enforce uncertainty-forward responses.
 - Co-reasoning interaction guidance is now documented with a dedicated eval
   reference and PASS/FAIL mapping:
-  - `docs/research/co_reasoning_eval_reference.md`
+  - `docs/peanut/research/co_reasoning_eval_reference.md`
 - Style eval cases now include co-reasoning stress scenarios for
   constraint-retention, meta-shift handling, anti-mimicry adaptation, and
   grounding-under-abstraction checks.
@@ -363,7 +357,7 @@
 - CLI chat runner: `app.py`
 - Backend entrypoint: `server.py`
 - API app factory + routes: `api/app_factory.py`
-- Architecture guide: `docs/ARCHITECTURE.md`
+- Architecture guide: `docs/runtime/ARCHITECTURE.md`
 - API tests: `tests/test_api.py`
 - Local API client: `tools/client.py`
 - Environment doctor: `tools/doctor_env.py`
@@ -390,7 +384,7 @@
 
 Use this in a new chat:
 
-`Read docs/CHARTER.md, docs/STATE.md, and docs/DECISIONS.md. Summarise current status in 5 bullets, list top risks, and execute the single highest-leverage next step. Preserve prompt behaviour rules.`
+`Read docs/governance/CHARTER.md, docs/governance/STATE.md, and docs/governance/DECISIONS.md. Summarise current status in 5 bullets, list top risks, and execute the single highest-leverage next step. Preserve prompt behaviour rules.`
 
 ## Suggested Next Steps
 

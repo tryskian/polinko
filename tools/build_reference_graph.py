@@ -17,11 +17,11 @@ class DocNode:
 
 
 def _category_for(path: str) -> str:
-    if path.startswith("docs/transcripts/"):
+    if path.startswith("docs/peanut/transcripts/"):
         return "transcript"
-    if path.startswith("docs/research/"):
+    if path.startswith("docs/peanut/research/"):
         return "research"
-    if path.startswith("docs/theory/"):
+    if path.startswith("docs/peanut/theory/"):
         return "theory"
     return "other"
 
@@ -133,7 +133,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--output",
-        default="docs/REFERENCE_GRAPH.md",
+        default="docs/visuals/REFERENCE_GRAPH.md",
         help="Output markdown file path.",
     )
     return parser

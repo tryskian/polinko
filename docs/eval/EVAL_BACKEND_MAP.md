@@ -9,7 +9,7 @@ of truth.
 Wiring-phase note:
 
 - persistence provisioning is currently deferred until wiring sign-off
-- see `docs/EVAL_WIRING_SPEC.md` for phase policy and gate topology
+- see `docs/eval/EVAL_WIRING_SPEC.md` for phase policy and gate topology
 
 Primary sources:
 

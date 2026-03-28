@@ -16,13 +16,12 @@
   - env default: `POLINKO_CHAT_HARNESS_DEFAULT_MODE=live|fixture`
   - default remains `live` (no behaviour drift for normal runtime)
 - Canonical UI eval adapter contract is published:
-  - `docs/UI_EVAL_ADAPTER_CONTRACT.md`
+  - `docs/eval/UI_EVAL_ADAPTER_CONTRACT.md`
   - includes TypeScript request/response shapes + chat/eval/checkpoint flow
-- Local UI shell is now active:
-  - route: `GET /ui`
-  - file: `ui/index.html`
-  - scope: chat thread + binary eval submit + checkpoint render/create
-  - fixture mode controls are available for deterministic UI smoke
+- Local UI shell is retired from active runtime surface:
+  - no `GET /ui` route
+  - no active `ui/index.html` file
+  - fixture controls remain available through `POST /chat` request fields
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Eval contract is strict binary end-to-end:
   - feedback outcomes: `pass` or `fail` only
@@ -35,17 +34,17 @@
 - Git history is the canonical archive for tracked docs/code; local eval artefact
   folders are operational outputs only and are not part of release truth.
 - Live archive lane is now explicit for deprecated references:
-  - `docs/live_archive/legacy_eval/`
-  - `docs/live_archive/legacy_frontend/`
-  - `docs/live_archive/legacy_human_reference/`
+  - `.archive/live_archive/legacy_eval/`
+  - `.archive/live_archive/legacy_frontend/`
+  - `.archive/live_archive/legacy_human_reference/`
   - archive lane is non-authoritative for active runtime gate decisions
 - Eval docs were canonicalized from `v2` naming:
-  - `docs/EVAL_SPEC.md`
-  - `docs/EVAL_BACKEND_MAP.md`
-  - binary semantics summary: `docs/BINARY_EVAL_LOGIC_REFINEMENT.md`
+  - `docs/eval/EVAL_SPEC.md`
+  - `docs/eval/EVAL_BACKEND_MAP.md`
+  - binary semantics summary: `docs/eval/BINARY_EVAL_LOGIC_REFINEMENT.md`
 - Docs relationship visualisation is markdown-native:
   - build: `make reference-graph`
-  - output: `docs/REFERENCE_GRAPH.md`
+  - output: `docs/visuals/REFERENCE_GRAPH.md`
 - Eval relationship visualisation is markdown-native and local-first:
   - build: `make eval-viz`
   - output: `.local/visuals/eval_relationship_graph.md`
@@ -58,9 +57,9 @@
   - no local DB maintenance commands are active in this phase
 - Wiring lock is active:
   - keep DB state archived during contract-finalisation phase
-  - canonical wiring contract source: `docs/EVAL_WIRING_SPEC.md`
+  - canonical wiring contract source: `docs/eval/EVAL_WIRING_SPEC.md`
 - Minimal-config benchmark sequencing is now explicit:
-  - canonical spec: `docs/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
+  - canonical spec: `docs/benchmarks/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
   - objective: compare baseline A/B/C with fixed evaluation dimensions
   - A/B/C are now decision-ready:
     - A=`PASS` (baseline anchor)
@@ -82,16 +81,16 @@
 
 ## Key Files To Read First
 
-- `docs/CHARTER.md`
-- `docs/STATE.md`
-- `docs/DECISIONS.md`
-- `docs/ARCHITECTURE.md`
-- `docs/RUNBOOK.md`
-- `docs/EVAL_POLICY_MODEL.md`
-- `docs/EVAL_WIRING_SPEC.md`
-- `docs/EVAL_SPEC.md`
-- `docs/EVAL_BACKEND_MAP.md`
-- `docs/live_archive/README.md`
+- `docs/governance/CHARTER.md`
+- `docs/governance/STATE.md`
+- `docs/governance/DECISIONS.md`
+- `docs/runtime/ARCHITECTURE.md`
+- `docs/runtime/RUNBOOK.md`
+- `docs/eval/EVAL_POLICY_MODEL.md`
+- `docs/eval/EVAL_WIRING_SPEC.md`
+- `docs/eval/EVAL_SPEC.md`
+- `docs/eval/EVAL_BACKEND_MAP.md`
+- `.archive/live_archive/README.md`
 - `api/app_factory.py`
 - `core/history_store.py`
 - `tests/test_api.py`
@@ -117,11 +116,13 @@
 
 ## Immediate Next Step
 
-- Run one full eval cycle through `/ui` and capture contract gaps before
-  deeper visual work:
-  - exercise `live` and `fixture` harness modes
+- Run one full backend eval cycle through canonical API routes and capture
+  contract gaps:
+  - exercise `live` and `fixture` harness modes on `POST /chat`
   - submit pass/fail evals on multiple assistant messages
+    (`POST /chats/{session_id}/feedback`)
   - create checkpoint and verify fail-closed gate rendering
+    (`POST /chats/{session_id}/feedback/checkpoints`)
   - patch only contract-level gaps (no visual framework expansion yet)
   - validate with `make build-audit`, `make lint-docs`, `make test`,
     `make quality-gate-deterministic`
@@ -134,4 +135,4 @@
 
 ## Copy/Paste Rehydrate Prompt
 
-`Read docs/CHARTER.md, docs/ARCHITECTURE.md, docs/RUNBOOK.md, docs/STATE.md, docs/DECISIONS.md, and docs/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, and confirm active git branch. Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Run in proactive engineer mode: execute obvious hygiene/cleanup/validation work without waiting for reminders, and ask only when approvals/trade-offs require it. Apply human-managed co-reasoning control: confirm objective/scope/acceptance and keep go/no-go decisions human-led. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behaviour drift and full test/build validation.`
+`Read docs/governance/CHARTER.md, docs/runtime/ARCHITECTURE.md, docs/runtime/RUNBOOK.md, docs/governance/STATE.md, docs/governance/DECISIONS.md, and docs/governance/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, and confirm active git branch. Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Run in proactive engineer mode: execute obvious hygiene/cleanup/validation work without waiting for reminders, and ask only when approvals/trade-offs require it. Apply human-managed co-reasoning control: confirm objective/scope/acceptance and keep go/no-go decisions human-led. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behaviour drift and full test/build validation.`

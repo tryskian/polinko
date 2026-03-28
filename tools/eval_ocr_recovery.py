@@ -308,7 +308,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--cases",
-        default="docs/ocr_recovery_eval_cases.json",
+        default="docs/eval/cases/ocr_recovery_eval_cases.json",
         help="Path to OCR recovery eval cases JSON file.",
     )
     parser.add_argument(

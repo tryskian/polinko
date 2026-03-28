@@ -14,7 +14,6 @@ from typing import Any, Literal, cast
 from agents import Agent, Runner, RunConfig
 from agents.memory import Session
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse
 from openai import (
     APIConnectionError,
     APIStatusError,
@@ -43,7 +42,6 @@ from core.vector_store import VectorMatch, VectorStore
 
 
 logger = logging.getLogger("polinko.api")
-_UI_INDEX_PATH = Path(__file__).resolve().parent.parent / "ui" / "index.html"
 
 
 _LATENCY_BUCKET_EDGES_MS = (10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2000.0)
@@ -3007,12 +3005,6 @@ def create_app(config: AppConfig) -> FastAPI:
             duration_ms=duration_ms,
         )
         return response
-
-    @app.get("/ui", include_in_schema=False)
-    def ui_shell() -> FileResponse:
-        if not _UI_INDEX_PATH.exists():
-            raise HTTPException(status_code=404, detail="UI shell not found.")
-        return FileResponse(str(_UI_INDEX_PATH), media_type="text/html")
 
     @app.get("/health")
     def health() -> dict[str, str]:

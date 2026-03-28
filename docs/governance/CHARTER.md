@@ -29,11 +29,11 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 
 - Inspect before optimise when system intent or provenance is unclear.
 - Human-directed precision takes priority over agent-side summarisation/cleanup.
-- Keep deprecated workflow context in `docs/live_archive/`; keep active docs and
+- Keep deprecated workflow context in `.archive/live_archive/`; keep active docs and
   runtime contracts binary-only.
 - During eval wiring lock, avoid DB init/refresh flows; allow only archive/reset
   maintenance commands until contract sign-off
-  (`docs/EVAL_WIRING_SPEC.md` is canonical in this phase).
+  (`docs/eval/EVAL_WIRING_SPEC.md` is canonical in this phase).
 - Keep benchmarking product-supportive:
   - hypothesis benchmarking informs build decisions but does not replace product delivery
   - use one canonical benchmark spec to control sequencing and confounders
@@ -61,7 +61,7 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Prompt versions: `core/prompts.py`
 - API tests: `tests/test_api.py`
 - Archived web UI context is documented under
-  `docs/live_archive/legacy_frontend/`.
+  `.archive/live_archive/legacy_frontend/`.
 
 ## Security / Ops Baseline
 

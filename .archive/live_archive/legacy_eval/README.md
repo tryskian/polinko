@@ -8,7 +8,7 @@ This lane stores legacy eval context for inspection only.
 - Historical notes about previous non-binary logic/wiring.
 - Legacy operator flows preserved only for traceability.
 - Legacy helper scripts (archived, not run):
-  - `docs/live_archive/legacy_eval/cleanup_eval_chats.py`
+  - `.archive/live_archive/legacy_eval/cleanup_eval_chats.py`
 
 ## What does not belong here
 
@@ -21,6 +21,6 @@ This lane stores legacy eval context for inspection only.
 - Binary outcomes only: `pass` or `fail`.
 - Policy and high-value alignment drive gate outcomes.
 - Active implementation/docs:
-  - `docs/EVAL_POLICY_MODEL.md`
-  - `docs/EVAL_SPEC.md`
-  - `docs/EVAL_BACKEND_MAP.md`
+  - `docs/eval/EVAL_POLICY_MODEL.md`
+  - `docs/eval/EVAL_SPEC.md`
+  - `docs/eval/EVAL_BACKEND_MAP.md`

@@ -16,12 +16,12 @@
 
 ## Canonical Policy Docs
 
-- `docs/EVAL_POLICY_MODEL.md`
-- `docs/EVAL_SPEC.md`
-- `docs/EVAL_BACKEND_MAP.md`
+- `docs/eval/EVAL_POLICY_MODEL.md`
+- `docs/eval/EVAL_SPEC.md`
+- `docs/eval/EVAL_BACKEND_MAP.md`
 
 ## Live Archive Boundary
 
 - Deprecated eval/frontend context is retained for reference in
-  `docs/live_archive/`.
+  `.archive/live_archive/`.
 - Archive content is non-authoritative for active runtime gate decisions.
