@@ -388,6 +388,10 @@ Local runtime DB commands are retired during wiring lock; treat docs/tests as th
 
 ## Chat History API
 
+UI adapter reference:
+
+- `docs/UI_EVAL_ADAPTER_CONTRACT.md` (chat + eval TypeScript contract)
+
 - `GET /chats` list chats
 - `POST /chats` create chat
 - `GET /chats/{session_id}/messages` load chat messages

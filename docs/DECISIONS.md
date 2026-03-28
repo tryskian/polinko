@@ -906,3 +906,21 @@
   - add API/config tests to lock live-vs-fixture contract behaviour
 - Why: Allows UI testing outside CLI without backend breakage or model-call
   dependency while preserving canonical live path for production behaviour.
+
+## D-085: Publish canonical UI eval adapter contract for new frontend
+
+- Date: `2026-03-28`
+- Category: `workflow_environment`
+- Tags: `ui_adapter`, `chat_contract`, `binary_eval`, `integration`
+- Decision:
+  - add canonical UI adapter spec:
+    - `docs/UI_EVAL_ADAPTER_CONTRACT.md`
+  - define copy-ready TypeScript request/response shapes for:
+    - `POST /chat`
+    - feedback + checkpoint endpoints
+  - define one explicit UI interaction flow for message -> eval -> checkpoint
+    rendering
+  - document binary tag/outcome validation and error handling matrix for UI
+    implementation parity
+- Why: Removes UI/backend ambiguity and gives a single deterministic contract for
+  integrating eval functionality into the new frontend.

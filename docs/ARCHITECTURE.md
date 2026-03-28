@@ -49,6 +49,8 @@
     `docs/EVAL_POLICY_MODEL.md`
   - canonical gate wiring contract and phase policy:
     `docs/EVAL_WIRING_SPEC.md`
+  - canonical UI integration contract:
+    `docs/UI_EVAL_ADAPTER_CONTRACT.md`
 - Eval artefacts (non-authoritative):
   - Git history is the canonical retention mechanism for tracked project state.
   - local eval artefacts are operational outputs (default under `eval_reports/`)
