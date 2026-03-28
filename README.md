@@ -9,6 +9,8 @@ and deterministic eval gates.
   required key validation (`OPENAI_API_KEY`).
 - API backend: FastAPI app for chat, OCR/PDF ingest, retrieval search,
   feedback, and checkpoints, backed by SQLite persistence.
+- Chat harness mode: optional deterministic fixture responses for UI smoke
+  testing without model calls (`harness_mode=fixture`).
 - Frontend is archived from the active repository surface; legacy UI context is
   retained in `docs/live_archive/legacy_frontend/`.
 - Eval and quality: deterministic and judge-based eval harnesses under
@@ -38,6 +40,9 @@ Open:
 1. Install Python deps: `pip install -r requirements.txt`.
 1. Copy env file: `cp .env.example .env`.
 1. Set `OPENAI_API_KEY` in `.env`.
+1. Optional for UI harness smoke: set
+   `POLINKO_CHAT_HARNESS_DEFAULT_MODE=fixture` to default chat requests to
+   deterministic fixture mode.
 
 Notes:
 
@@ -97,6 +102,11 @@ Memory and collaboration:
 - `GET /chats/{session_id}/personalization`
 - `GET /chats/{session_id}/collaboration`
 - `POST /chats/{session_id}/collaboration/handoff`
+
+`POST /chat` optional harness fields:
+
+- `harness_mode`: `live` (default) or `fixture`
+- `fixture_output`: explicit output used only when `harness_mode=fixture`
 
 Skills:
 

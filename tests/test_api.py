@@ -78,6 +78,7 @@ class PolinkoApiTests(unittest.TestCase):
         deps.hallucination_guardrails_enabled = True
         deps.personalization_default_memory_scope = "global"
         deps.clip_proxy_file_search_enabled = False
+        deps.chat_harness_default_mode = "live"
         deps.session_db_path = os.path.join(self.tmpdir.name, "test-memory.db")
         deps.history_store = ChatHistoryStore(os.path.join(self.tmpdir.name, "test-history.db"))
         deps.metrics = create_runtime_metrics()
@@ -135,6 +136,55 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(body["context_scope"], "global")
         self.assertEqual(body["memory_used"], [])
         self.assertTrue(body["assistant_message_id"])
+
+    def test_chat_fixture_mode_returns_deterministic_output_without_runner(self) -> None:
+        async def _runner_should_not_be_called(*args: object, **kwargs: Any) -> SimpleNamespace:
+            raise AssertionError("Runner should not execute in fixture mode.")
+
+        with patch.object(server.Runner, "run", new=_runner_should_not_be_called):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "hello", "session_id": "s-chat-fixture", "harness_mode": "fixture"},
+            )
+        self.assertEqual(resp.status_code, 200)
+        body = resp.json()
+        self.assertEqual(body["session_id"], "s-chat-fixture")
+        self.assertEqual(body["output"], "[fixture] deterministic response for: hello")
+        self.assertTrue(body["assistant_message_id"])
+
+    def test_chat_fixture_mode_accepts_explicit_fixture_output(self) -> None:
+        resp = self.client.post(
+            "/chat",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message": "ignored by override",
+                "session_id": "s-chat-fixture-override",
+                "harness_mode": "fixture",
+                "fixture_output": "fixture override text",
+            },
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.json()["output"], "fixture override text")
+
+    def test_chat_harness_default_mode_uses_fixture_when_configured(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.chat_harness_default_mode = "fixture"
+
+        async def _runner_should_not_be_called(*args: object, **kwargs: Any) -> SimpleNamespace:
+            raise AssertionError("Runner should not execute when fixture default is active.")
+
+        with patch.object(server.Runner, "run", new=_runner_should_not_be_called):
+            resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "default fixture path", "session_id": "s-chat-fixture-default"},
+            )
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(
+            resp.json()["output"],
+            "[fixture] deterministic response for: default fixture path",
+        )
 
     def test_submit_and_list_message_feedback(self) -> None:
         with self._stub_runner("Feedback candidate"):

@@ -99,6 +99,7 @@ class ConfigTests(unittest.TestCase):
         self.assertTrue(cfg.hallucination_guardrails_enabled)
         self.assertEqual(cfg.personalization_default_memory_scope, "global")
         self.assertFalse(cfg.clip_proxy_file_search_enabled)
+        self.assertEqual(cfg.chat_harness_default_mode, "live")
         self.assertFalse(cfg.image_context_enabled)
         self.assertEqual(cfg.image_context_model, "gpt-4.1-mini")
         self.assertIn("visual scene", cfg.image_context_prompt.lower())
@@ -202,6 +203,24 @@ class ConfigTests(unittest.TestCase):
         with patch.dict(os.environ, env, clear=True):
             cfg = load_config(dotenv_path="__missing__.env")
         self.assertTrue(cfg.clip_proxy_file_search_enabled)
+
+    def test_chat_harness_default_mode_from_env(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_CHAT_HARNESS_DEFAULT_MODE": "fixture",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            cfg = load_config(dotenv_path="__missing__.env")
+        self.assertEqual(cfg.chat_harness_default_mode, "fixture")
+
+    def test_rejects_invalid_chat_harness_default_mode(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_CHAT_HARNESS_DEFAULT_MODE": "sandbox",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(RuntimeError):
+                load_config(dotenv_path="__missing__.env")
 
 
 if __name__ == "__main__":

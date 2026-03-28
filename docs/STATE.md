@@ -26,6 +26,10 @@
   - periodic stale bucket cleanup in the in-memory limiter
   - per-chat personalization memory scope (`session` vs `global`)
   - `/chat` retrieval citations via `memory_used` when vector memory contributes context
+  - deterministic harness override for UI smoke:
+    `harness_mode=fixture` (+ optional `fixture_output`)
+  - env-level harness default:
+    `POLINKO_CHAT_HARNESS_DEFAULT_MODE=live|fixture`
 - Frontend is archived from the active repository surface; active execution is
   backend + CLI only.
 - OpenAI developer docs MCP server is now configured for Codex/VS Code usage:
@@ -358,7 +362,7 @@ Use this in a new chat:
 ## Suggested Next Steps
 
 1. Execute benchmark `D` (operation-binding diagnostics) and map outcomes to one
-   deterministic backend slice.
+   deterministic backend slice (next slice after harness mode is diagnostics telemetry).
 2. Keep binary gate semantics strict (`pass`/`fail`) and keep diagnostic richness
    outside gate arithmetic.
 3. Maintain archive-first runtime DB posture during wiring lock (no local DB

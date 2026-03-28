@@ -10,6 +10,11 @@
 
 - Runtime is local-first: FastAPI backend + CLI runner are canonical; web UI is
   archived from the active repository surface.
+- `POST /chat` now supports deterministic harness testing for UI smoke:
+  - request override: `harness_mode=fixture`
+  - optional fixed output: `fixture_output`
+  - env default: `POLINKO_CHAT_HARNESS_DEFAULT_MODE=live|fixture`
+  - default remains `live` (no behaviour drift for normal runtime)
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Eval contract is strict binary end-to-end:
   - feedback outcomes: `pass` or `fail` only
@@ -96,11 +101,11 @@
 
 ## Immediate Next Step
 
-- Execute benchmark-derived backend slice `D` with minimal behaviour drift:
+- Execute benchmark-derived backend slice `D.2` with minimal behaviour drift:
   - formalise operation-binding diagnostics (`reference_binding`,
-    `operation_fidelity`, `decision_clarity`) as deterministic pass/fail checks
-  - convert diagnostic output into one explicit backend implementation change
-    that reduces operator inference overhead
+    `operation_fidelity`, `decision_clarity`) as deterministic checks in tooling
+  - map those diagnostics to one explicit backend/runtime change that further
+    reduces operator inference overhead
   - validate with `make build-audit`, `make lint-docs`, `make test`,
     `make quality-gate-deterministic`
 

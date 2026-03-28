@@ -134,6 +134,18 @@
 
 Local runtime DB commands are retired during wiring lock; treat docs/tests as the contract (`docs/EVAL_WIRING_SPEC.md`, `docs/EVAL_SPEC.md`, `docs/EVAL_BACKEND_MAP.md`, `make test`, `make quality-gate-deterministic`). No local DB lifecycle commands remain.
 
+## Chat Harness Mode (UI Smoke Without Model Calls)
+
+1. Default mode is `live` (normal backend/model execution).
+2. For deterministic UI smoke, use fixture mode in `POST /chat`:
+   - request field `harness_mode=fixture`
+   - optional `fixture_output` to pin exact response text
+3. Optional env default:
+   - `POLINKO_CHAT_HARNESS_DEFAULT_MODE=fixture`
+4. Fixture mode is test harness only:
+   - keep eval/gate logic server-side and binary
+   - do not use fixture mode outputs for quality gate decisions
+
 ## Python Diagnostics (Ruff + Mypy)
 
 1. Use repo-local tools for deterministic output:

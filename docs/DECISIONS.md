@@ -890,3 +890,19 @@
 - Why: Keeps research sequencing product-supportive and converts benchmark
   output into explicit engineering prioritisation instead of open-ended
   interpretation.
+
+## D-084: Add deterministic chat harness mode for UI smoke outside CLI
+
+- Date: `2026-03-28`
+- Category: `workflow_environment`
+- Tags: `chat_harness`, `fixture_mode`, `deterministic_testing`, `minimal_drift`
+- Decision:
+  - add optional `POST /chat` harness fields:
+    - `harness_mode` (`live`|`fixture`)
+    - `fixture_output` (explicit deterministic fixture response)
+  - keep default runtime behaviour unchanged (`live`)
+  - add env default override:
+    - `POLINKO_CHAT_HARNESS_DEFAULT_MODE` (`live`|`fixture`)
+  - add API/config tests to lock live-vs-fixture contract behaviour
+- Why: Allows UI testing outside CLI without backend breakage or model-call
+  dependency while preserving canonical live path for production behaviour.
