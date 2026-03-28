@@ -118,6 +118,22 @@
 3. Use this before wider refactors to catch drift early without resetting the
    repo.
 
+## Eval Relationship Visual (Local)
+
+1. Build local eval relationship visual report:
+   - `make eval-viz`
+2. Default output is local-only:
+   - `.local/visuals/eval_relationship_graph.md`
+3. To customise output path or filter sessions:
+   - `python -m tools.build_eval_relationship_graph --output <path> --session-id <id>`
+4. Report layout is navigation-first:
+   - overview + schema ER
+   - session topology
+   - session directory with direct links
+   - per-session relationship maps and tables
+5. This is an operator visual aid only:
+   - runtime gate semantics remain backend-owned and binary.
+
 ## Live Archive Reference
 
 1. Use `docs/live_archive/` as the single active reference location for

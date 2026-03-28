@@ -41,6 +41,10 @@
 - Docs relationship visualisation is markdown-native:
   - build: `make reference-graph`
   - output: `docs/REFERENCE_GRAPH.md`
+- Eval relationship visualisation is markdown-native and local-first:
+  - build: `make eval-viz`
+  - output: `.local/visuals/eval_relationship_graph.md`
+  - source: `tools/build_eval_relationship_graph.py`
 - Runtime DB lifecycle commands are retired during wiring lock:
   - no local DB maintenance commands are active in this phase
 - Wiring lock is active:
