@@ -80,10 +80,20 @@ Validate the hypothesis that minimal configuration produces better product outco
 
 | Benchmark | Experiment Record | Core Evidence | Status |
 | --- | --- | --- | --- |
-| A: Minimal-config CLI | `docs/research/experiment_R-A_minimal_config_cli_2026-03-27.md` | CLI baseline transcripts + early eval artifacts | Planned |
-| B: Traditional eval stack | `docs/research/experiment_R-B_traditional_eval_stack_2026-03-27.md` | Legacy/traditional eval reports and decision records | Planned |
-| C: Binary eval stack | `docs/research/experiment_R-C_binary_eval_stack_2026-03-27.md` | Current binary eval reports + deterministic gate checks | Planned |
+| A: Minimal-config CLI | `docs/research/experiment_R-A_minimal_config_cli_2026-03-27.md` | CLI baseline transcripts + early eval artifacts | Provisional `PASS` |
+| B: Traditional eval stack | `docs/research/experiment_R-B_traditional_eval_stack_2026-03-27.md` | Legacy/traditional eval reports and decision records | Provisional `FAIL` |
+| C: Binary eval stack | `docs/research/experiment_R-C_binary_eval_stack_2026-03-27.md` | Current binary eval reports + deterministic gate checks | Provisional `PASS` |
 | D: Operator burden shift diagnostic | `docs/research/experiment_R-D_operator_burden_shift_2026-03-28.md` | Prompt-to-operation drift cases (task binding vs commentary) | Planned |
+
+## Immediate Next Step Execution (2026-03-28)
+
+- Benchmark A/B/C records are populated with:
+  - linked artefacts/results
+  - explicit per-phase confounders
+- Deterministic backend priority slice completed from benchmark outcome:
+  - add explicit checkpoint `gate_outcome` (`pass`/`fail`) in API responses
+  - keep gate resolution fail-closed and count-derived
+  - update API tests + backend/spec docs in the same slice
 
 ## Output Contract
 

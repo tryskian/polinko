@@ -14,6 +14,7 @@
 - Eval contract is strict binary end-to-end:
   - feedback outcomes: `pass` or `fail` only
   - checkpoint schema field: `non_binary_count` (integrity signal, expected `0`)
+  - checkpoint response field: `gate_outcome` (`pass`/`fail`, fail-closed from counts)
   - previous `tags`-only feedback payload compatibility removed
 - Previous normalisation tooling was removed from active flow:
   - deleted `tools/normalize_feedback_outcomes.py`

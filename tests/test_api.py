@@ -313,6 +313,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(checkpoint_payload["pass_count"], 1)
         self.assertEqual(checkpoint_payload["fail_count"], 1)
         self.assertEqual(checkpoint_payload["non_binary_count"], 0)
+        self.assertEqual(checkpoint_payload["gate_outcome"], "fail")
         self.assertEqual(checkpoint_payload["schema_version"], "polinko.eval_checkpoint.v2")
 
         listed = self.client.get(
@@ -324,6 +325,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(len(checkpoints), 1)
         self.assertEqual(checkpoints[0]["checkpoint_id"], checkpoint_payload["checkpoint_id"])
         self.assertEqual(checkpoints[0]["total_count"], 2)
+        self.assertEqual(checkpoints[0]["gate_outcome"], "fail")
         self.assertEqual(checkpoints[0]["schema_version"], "polinko.eval_checkpoint.v2")
 
     def test_submit_eval_checkpoint_counts_by_outcome_for_fail_feedback_with_positive_tags(self) -> None:
@@ -359,7 +361,42 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(checkpoint_payload["pass_count"], 0)
         self.assertEqual(checkpoint_payload["fail_count"], 1)
         self.assertEqual(checkpoint_payload["non_binary_count"], 0)
+        self.assertEqual(checkpoint_payload["gate_outcome"], "fail")
         self.assertEqual(checkpoint_payload["schema_version"], "polinko.eval_checkpoint.v2")
+
+    def test_submit_eval_checkpoint_reports_pass_gate_outcome_when_all_feedback_is_pass(self) -> None:
+        session_id = "s-feedback-checkpoint-pass-only"
+        with self._stub_runner("Checkpoint pass candidate"):
+            chat_resp = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={"message": "pass stream prompt", "session_id": session_id},
+            )
+        self.assertEqual(chat_resp.status_code, 200)
+        assistant_message_id = chat_resp.json()["assistant_message_id"]
+
+        submit_resp = self.client.post(
+            f"/chats/{session_id}/feedback",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "message_id": assistant_message_id,
+                "outcome": "pass",
+                "positive_tags": ["accurate"],
+            },
+        )
+        self.assertEqual(submit_resp.status_code, 200)
+
+        checkpoint_submit = self.client.post(
+            f"/chats/{session_id}/feedback/checkpoints",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(checkpoint_submit.status_code, 200)
+        checkpoint_payload = checkpoint_submit.json()
+        self.assertEqual(checkpoint_payload["total_count"], 1)
+        self.assertEqual(checkpoint_payload["pass_count"], 1)
+        self.assertEqual(checkpoint_payload["fail_count"], 0)
+        self.assertEqual(checkpoint_payload["non_binary_count"], 0)
+        self.assertEqual(checkpoint_payload["gate_outcome"], "pass")
 
     def test_submit_eval_checkpoint_requires_existing_feedback(self) -> None:
         with self._stub_runner("No eval yet"):

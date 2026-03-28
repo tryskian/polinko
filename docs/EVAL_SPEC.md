@@ -59,10 +59,12 @@ Given `N` feedback entries in scope:
 - `pass_count = count(outcome == "pass")`
 - `fail_count = count(outcome == "fail")`
 - `non_binary_count = 0` for valid datasets (non-zero is a data-integrity violation)
+- `gate_outcome = "pass"` iff `N > 0` and `fail_count == 0` and `non_binary_count == 0`; otherwise `"fail"` (fail-closed)
 
 Invariant:
 
 - `pass_count + fail_count + non_binary_count == total_count`
+- `gate_outcome` is derived from checkpoint counts only and never from diagnostic tags
 
 This replaces v1 dual-stream tag counting.
 
@@ -102,7 +104,8 @@ Required behaviour updates in implementation phase:
 1. enforce outcome-driven checkpoint counting
 2. maintain current tag validation constraints
 3. expose schema/version marker in checkpoint responses for auditability
-4. do not accept legacy `tags`-only payloads; require `positive_tags`/`negative_tags`
+4. expose explicit checkpoint `gate_outcome` (`pass`/`fail`) in responses
+5. do not accept legacy `tags`-only payloads; require `positive_tags`/`negative_tags`
 
 ## Eval Harness Spec
 

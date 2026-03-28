@@ -847,3 +847,16 @@
   - Removed legacy workbench server/target and eval inbox helper (`make eval-inbox`, `tools/eval_inbox.py`).
   - Retired local runtime DB scripts/targets during wiring lock; no local DB lifecycle commands remain.
 - Why: Reduce hidden gremlins and keep the active execution surface minimal and aligned with current binary eval contracts.
+
+## D-081: Expose fail-closed checkpoint gate outcome in API responses
+
+- Date: `2026-03-28`
+- Category: `eval_quality`
+- Tags: `binary_gate`, `checkpoint_contract`, `decision_clarity`, `api_sync`
+- Decision:
+  - add explicit `gate_outcome` (`pass`/`fail`) to checkpoint response payloads
+  - derive `gate_outcome` fail-closed from checkpoint counts:
+    - `pass` iff `total_count > 0`, `fail_count == 0`, and `non_binary_count == 0`
+    - `fail` otherwise
+- Why: Removes operator inference overhead on go/no-go decisions while keeping
+  gate semantics deterministic and count-driven.

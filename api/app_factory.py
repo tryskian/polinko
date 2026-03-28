@@ -524,6 +524,7 @@ class EvalCheckpointResponse(BaseModel):
     pass_count: int
     fail_count: int
     non_binary_count: int
+    gate_outcome: Literal["pass", "fail"]
     schema_version: str
     created_at: int
 
@@ -767,6 +768,11 @@ def _eval_checkpoint_response(entry: EvalCheckpoint) -> EvalCheckpointResponse:
         pass_count=entry.pass_count,
         fail_count=entry.fail_count,
         non_binary_count=entry.non_binary_count,
+        gate_outcome=_checkpoint_gate_outcome(
+            total_count=entry.total_count,
+            fail_count=entry.fail_count,
+            non_binary_count=entry.non_binary_count,
+        ),
         schema_version=_EVAL_CHECKPOINT_SCHEMA_VERSION,
         created_at=entry.created_at,
     )
@@ -893,6 +899,16 @@ def _summarize_feedback_streams(entries: list[MessageFeedback]) -> tuple[int, in
         else:
             non_binary_count += 1
     return total_count, pass_count, fail_count, non_binary_count
+
+
+def _checkpoint_gate_outcome(
+    *, total_count: int, fail_count: int, non_binary_count: int
+) -> Literal["pass", "fail"]:
+    if total_count <= 0:
+        return "fail"
+    if fail_count > 0 or non_binary_count > 0:
+        return "fail"
+    return "pass"
 
 
 def _normalize_note_text(note: str) -> str:
