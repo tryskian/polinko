@@ -1014,3 +1014,21 @@
   - normalise attachment display names to readable filenames for operator use
 - Why: Enables OCR eval work directly from the local UI shell without CLI-only
   attachment handling, and removes friction during high-frequency eval loops.
+
+## D-091: Retire built-in local UI shell from active runtime surface
+
+- Date: `2026-03-28`
+- Category: `workflow_environment`
+- Tags: `ui_retirement`, `surface_reduction`, `backend_cli_canonical`, `drift_control`
+- Decision:
+  - remove built-in local UI shell from active runtime:
+    - remove `GET /ui` route
+    - remove `ui/index.html`
+    - remove `make ui` / `make open-ui` targets
+  - keep backend OpenAPI + CLI as canonical active operator surfaces
+  - keep legacy frontend context reference-only under:
+    - `docs/live_archive/legacy_frontend/`
+  - mark D-088 and D-090 as historical context (superseded by runtime surface reduction)
+- Why: Current shell iteration introduced repeated layout/operator friction; removing
+  it now keeps active runtime simple and stable while preserving ability to use an
+  external legacy wrapper path in future sessions.

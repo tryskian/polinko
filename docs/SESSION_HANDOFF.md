@@ -8,9 +8,8 @@
 
 ## Current Snapshot
 
-- Runtime is local-first: FastAPI backend + CLI runner are canonical; local UI
-  shell is active at `/ui`.
-- `POST /chat` now supports deterministic harness testing for UI smoke:
+- Runtime is local-first: FastAPI backend + CLI runner are canonical.
+- `POST /chat` now supports deterministic harness testing for smoke:
   - request override: `harness_mode=fixture`
   - optional fixed output: `fixture_output`
   - env default: `POLINKO_CHAT_HARNESS_DEFAULT_MODE=live|fixture`
@@ -18,15 +17,10 @@
 - Canonical UI eval adapter contract is published:
   - `docs/UI_EVAL_ADAPTER_CONTRACT.md`
   - includes TypeScript request/response shapes + chat/eval/checkpoint flow
-- Local UI shell is now active:
-  - route: `GET /ui`
-  - file: `ui/index.html`
-  - scope: chat thread + binary eval submit + checkpoint render/create
-  - OCR attachments supported in composer:
-    - upload image files
-    - paste images directly into prompt input
-    - attachment filenames are normalised for readable operator labels
-  - fixture mode controls are available for deterministic UI smoke
+- Built-in local UI shell is retired from active runtime:
+  - removed route: `GET /ui`
+  - removed file: `ui/index.html`
+  - active operator surfaces are backend OpenAPI + CLI
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Eval contract is strict binary end-to-end:
   - feedback outcomes: `pass` or `fail` only
@@ -123,8 +117,8 @@
 
 ## Immediate Next Step
 
-- Run one manual OCR-eval smoke through `/ui` under the binary-only contract:
-  - attach image via file upload and via clipboard paste
+- Run one manual OCR-eval smoke through API/CLI under the binary-only contract:
+  - submit OCR input with attachment through API or CLI
   - submit `PASS` and `FAIL` evals without reason tags
   - create checkpoint and verify fail-closed gate rendering
   - validate with `make build-audit`, `make lint-docs`, `make test`,

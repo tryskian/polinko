@@ -9,13 +9,12 @@ and deterministic eval gates.
   required key validation (`OPENAI_API_KEY`).
 - API backend: FastAPI app for chat, OCR/PDF ingest, retrieval search,
   feedback, and checkpoints, backed by SQLite persistence.
-- Chat harness mode: optional deterministic fixture responses for UI smoke
+- Chat harness mode: optional deterministic fixture responses for smoke
   testing without model calls (`harness_mode=fixture`).
 - UI eval adapter contract is documented in
   `docs/UI_EVAL_ADAPTER_CONTRACT.md` (TypeScript types + endpoint flow).
-- Local UI shell is available at `/ui` for thread + binary PASS/FAIL eval
-  workflows, with OCR image attachments (upload + paste) against the live
-  backend.
+- Built-in local UI shell has been retired from active runtime. Use backend API
+  docs + CLI for active operations.
 - Legacy frontend context remains in `docs/live_archive/legacy_frontend/`.
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
@@ -38,15 +37,12 @@ make server
 Open:
 
 - `http://127.0.0.1:8000/docs` (backend OpenAPI)
-- `http://127.0.0.1:8000/ui` (local UI shell)
 
 Or open them via `make` targets:
 
 ```bash
 make docs
-make ui
 make open-api-docs
-make open-ui
 ```
 
 ## Setup
@@ -89,7 +85,6 @@ make quality-gate-deterministic
 
 Health and metrics:
 
-- `GET /ui`
 - `GET /health`
 - `GET /metrics`
 

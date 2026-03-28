@@ -95,11 +95,9 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(body["status"], "ok")
         self.assertIn("prompt_version", body)
 
-    def test_ui_shell_route_serves_html(self) -> None:
+    def test_ui_route_not_available(self) -> None:
         resp = self.client.get("/ui")
-        self.assertEqual(resp.status_code, 200)
-        self.assertIn("text/html", resp.headers.get("content-type", ""))
-        self.assertIn("Polinko UI Shell", resp.text)
+        self.assertEqual(resp.status_code, 404)
 
     def test_auth_required_for_chat_and_reset(self) -> None:
         chat_resp = self.client.post("/chat", json={"message": "hello", "session_id": "s1"})
