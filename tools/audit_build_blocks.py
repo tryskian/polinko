@@ -23,11 +23,11 @@ EVAL_CASES_GLOB = "*eval_cases.json"
 DEPRECATED_EVAL_CASE_KEYS = {"optional"}
 ACTIVE_DOCS_WITHOUT_DB_COMMANDS = (
     README_PATH,
-    REPO_ROOT / "docs" / "ARCHITECTURE.md",
-    REPO_ROOT / "docs" / "RUNBOOK.md",
-    REPO_ROOT / "docs" / "STATE.md",
-    REPO_ROOT / "docs" / "SESSION_HANDOFF.md",
-    REPO_ROOT / "docs" / "BACKEND_START_TO_END.md",
+    REPO_ROOT / "docs" / "runtime" / "ARCHITECTURE.md",
+    REPO_ROOT / "docs" / "runtime" / "RUNBOOK.md",
+    REPO_ROOT / "docs" / "governance" / "STATE.md",
+    REPO_ROOT / "docs" / "governance" / "SESSION_HANDOFF.md",
+    REPO_ROOT / "docs" / "runtime" / "BACKEND_START_TO_END.md",
 )
 RETIRED_DB_COMMAND_TOKENS = (
     "make db-reset",
@@ -203,8 +203,8 @@ def check_eval_cleanup_guard() -> CheckResult:
 
 
 def check_eval_case_schema_legacy_fields() -> CheckResult:
-    docs_dir = REPO_ROOT / "docs"
-    case_files = sorted(docs_dir.glob(EVAL_CASES_GLOB))
+    cases_dir = REPO_ROOT / "docs" / "eval" / "cases"
+    case_files = sorted(cases_dir.glob(EVAL_CASES_GLOB))
     findings: list[str] = []
     parse_errors: list[str] = []
     for path in case_files:

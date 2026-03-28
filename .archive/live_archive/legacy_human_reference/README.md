@@ -9,14 +9,14 @@ traceability only.
 - Non-authoritative for runtime or eval gate decisions.
 - Replaced by markdown-native graph visualisation:
   - `make reference-graph`
-  - output: `docs/REFERENCE_GRAPH.md`
+  - output: `docs/visuals/REFERENCE_GRAPH.md`
 
 ## Archived Materials
 
 - `HUMAN_REFERENCE_DB.md`
 - previous helper scripts:
-  - `docs/live_archive/legacy_human_reference/build_human_reference_db.py`
-  - `docs/live_archive/legacy_human_reference/query_human_reference.py`
+  - `.archive/live_archive/legacy_human_reference/build_human_reference_db.py`
+  - `.archive/live_archive/legacy_human_reference/query_human_reference.py`
 
 ## Rule
 

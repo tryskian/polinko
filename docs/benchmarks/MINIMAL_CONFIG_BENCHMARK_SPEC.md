@@ -72,18 +72,18 @@ Validate the hypothesis that minimal configuration produces better product outco
 - D: Operator burden diagnostic cases (mapping tasks where execution drift is
   visible).
 - Canonical binary docs:
-  - `docs/EVAL_POLICY_MODEL.md`
-  - `docs/EVAL_SPEC.md`
-  - `docs/EVAL_BACKEND_MAP.md`
+  - `docs/eval/EVAL_POLICY_MODEL.md`
+  - `docs/eval/EVAL_SPEC.md`
+  - `docs/eval/EVAL_BACKEND_MAP.md`
 
 ## Evidence Matrix
 
 | Benchmark | Experiment Record | Core Evidence | Status |
 | --- | --- | --- | --- |
-| A: Minimal-config CLI | `docs/research/experiment_R-A_minimal_config_cli_2026-03-27.md` | CLI baseline transcripts + early eval artifacts | `PASS` (decision-ready baseline anchor) |
-| B: Traditional eval stack | `docs/research/experiment_R-B_traditional_eval_stack_2026-03-27.md` | Legacy/traditional eval reports and decision records | `FAIL` (decision-ready) |
-| C: Binary eval stack | `docs/research/experiment_R-C_binary_eval_stack_2026-03-27.md` | Current binary eval reports + deterministic gate checks | `PASS` (decision-ready current target) |
-| D: Operator burden shift diagnostic | `docs/research/experiment_R-D_operator_burden_shift_2026-03-28.md` | Prompt-to-operation drift cases (task binding vs commentary) | Planned |
+| A: Minimal-config CLI | `docs/peanut/research/experiment_R-A_minimal_config_cli_2026-03-27.md` | CLI baseline transcripts + early eval artifacts | `PASS` (decision-ready baseline anchor) |
+| B: Traditional eval stack | `docs/peanut/research/experiment_R-B_traditional_eval_stack_2026-03-27.md` | Legacy/traditional eval reports and decision records | `FAIL` (decision-ready) |
+| C: Binary eval stack | `docs/peanut/research/experiment_R-C_binary_eval_stack_2026-03-27.md` | Current binary eval reports + deterministic gate checks | `PASS` (decision-ready current target) |
+| D: Operator burden shift diagnostic | `docs/peanut/research/experiment_R-D_operator_burden_shift_2026-03-28.md` | Prompt-to-operation drift cases (task binding vs commentary) | Planned |
 
 ## Immediate Next Step Execution (2026-03-28)
 

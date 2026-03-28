@@ -32,9 +32,9 @@ Think of it as a searchable library index for `docs/transcripts`, `docs/research
 - `links.target_path` references `documents.path`.
 - Both references are `ON DELETE CASCADE` and `ON UPDATE CASCADE`.
 - The link extractor currently indexes markdown links matching:
-  - `` `docs/transcripts/<name>.md` ``
-  - `` `docs/research/<name>.md` ``
-  - `` `docs/theory/<name>.md` ``
+  - `` `docs/peanut/transcripts/<name>.md` ``
+  - `` `docs/peanut/research/<name>.md` ``
+  - `` `docs/peanut/theory/<name>.md` ``
 
 This means ER tools can now infer the link-table relationships directly from foreign keys.
 
@@ -99,7 +99,7 @@ Optional tuning:
 
 ## SQL Viewer Pack
 
-Use `docs/live_archive/legacy_human_reference/human_reference_queries.sql` in your DB viewer for:
+Use `.archive/live_archive/legacy_human_reference/human_reference_queries.sql` in your DB viewer for:
 
 - latest docs
 - category totals

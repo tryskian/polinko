@@ -268,7 +268,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
     parser.add_argument(
         "--cases",
-        default="docs/ocr_eval_cases.json",
+        default="docs/eval/cases/ocr_eval_cases.json",
         help="Path to OCR eval cases JSON file.",
     )
     parser.add_argument("--session-prefix", default="ocr-eval", help="Session id prefix for generated eval chats.")

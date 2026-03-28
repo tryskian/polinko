@@ -219,8 +219,10 @@ def _validate_personalization_memory_scope(value: str | None) -> str:
 
 def _validate_chat_harness_mode(value: str | None) -> Literal["live", "fixture"]:
     normalized = (value or "live").strip().lower()
-    if normalized in {"live", "fixture"}:
-        return normalized
+    if normalized == "live":
+        return "live"
+    if normalized == "fixture":
+        return "fixture"
     raise RuntimeError("POLINKO_CHAT_HARNESS_DEFAULT_MODE must be one of: live, fixture.")
 
 

@@ -6,7 +6,7 @@ Define one unambiguous binary eval spec for backend, tooling, and reports.
 
 Wiring-phase source-of-truth:
 
-- `docs/EVAL_WIRING_SPEC.md` (gate topology and phase policy)
+- `docs/eval/EVAL_WIRING_SPEC.md` (gate topology and phase policy)
 
 Binary means:
 

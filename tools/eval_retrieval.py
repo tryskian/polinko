@@ -237,7 +237,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--cases",
-        default="docs/retrieval_eval_cases.json",
+        default="docs/eval/cases/retrieval_eval_cases.json",
         help="Path to retrieval eval cases JSON file.",
     )
     parser.add_argument(

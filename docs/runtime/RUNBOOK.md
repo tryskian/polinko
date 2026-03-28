@@ -70,21 +70,19 @@
 
 1. Non-build internal docs are local-only by default and ignored by git.
 2. Use these local-only paths for confidential notes/material:
-   - `docs/FIGMA_NODE_TRACKER.md`
-   - `docs/WORKSTREAMS.md`
-   - `docs/PEANUT_TOOLING_REF.md`
+   - `docs/peanut/refs/FIGMA_NODE_TRACKER.md`
+   - `docs/peanut/refs/WORKSTREAMS.md`
+   - `docs/peanut/refs/PEANUT_TOOLING_REF.md`
    - `docs/internal/`
-   - `docs/research/`
-   - `docs/theory/`
-   - `docs/transcripts/`
+   - `docs/peanut/`
    - `docs/portfolio/`
 3. Build/source-of-truth docs stay tracked:
-   - `docs/CHARTER.md`
-   - `docs/ARCHITECTURE.md`
-   - `docs/RUNBOOK.md`
-   - `docs/STATE.md`
-   - `docs/DECISIONS.md`
-   - `docs/SESSION_HANDOFF.md`
+   - `docs/governance/CHARTER.md`
+   - `docs/runtime/ARCHITECTURE.md`
+   - `docs/runtime/RUNBOOK.md`
+   - `docs/governance/STATE.md`
+   - `docs/governance/DECISIONS.md`
+   - `docs/governance/SESSION_HANDOFF.md`
 4. Do not use `skip-worktree` for routine workflow; use gitignored local-only
    paths instead.
 5. Any exception to local-only confidentiality must be explicitly approved
@@ -126,8 +124,9 @@
    - `.local/visuals/eval_relationship_graph.md`
 3. To customise output path or filter sessions:
    - `python -m tools.build_eval_relationship_graph --output <path> --session-id <id>`
+   - `python -m tools.build_eval_relationship_graph --report-dir <eval_reports_path>`
 4. Report layout is navigation-first:
-   - overview + schema ER
+   - overview + latest eval report snapshot + schema ER
    - session topology
    - session directory with direct links
    - per-session relationship maps and tables
@@ -136,24 +135,24 @@
 
 ## Live Archive Reference
 
-1. Use `docs/live_archive/` as the single active reference location for
+1. Use `.archive/live_archive/` as the single active reference location for
    deprecated implementation context.
 2. Legacy eval context belongs in:
-   - `docs/live_archive/legacy_eval/`
+   - `.archive/live_archive/legacy_eval/`
 3. Legacy frontend context belongs in:
-   - `docs/live_archive/legacy_frontend/`
+   - `.archive/live_archive/legacy_frontend/`
 4. Archive content is reference-only:
    - do not wire it into active runtime/eval gate paths.
    - keep binary runtime contracts sourced from active docs/code.
 
 ## Wiring-First DB Freeze
 
-Local runtime DB commands are retired during wiring lock; treat docs/tests as the contract (`docs/EVAL_WIRING_SPEC.md`, `docs/EVAL_SPEC.md`, `docs/EVAL_BACKEND_MAP.md`, `make test`, `make quality-gate-deterministic`). No local DB lifecycle commands remain.
+Local runtime DB commands are retired during wiring lock; treat docs/tests as the contract (`docs/eval/EVAL_WIRING_SPEC.md`, `docs/eval/EVAL_SPEC.md`, `docs/eval/EVAL_BACKEND_MAP.md`, `make test`, `make quality-gate-deterministic`). No local DB lifecycle commands remain.
 
-## Chat Harness Mode (UI Smoke Without Model Calls)
+## Chat Harness Mode (Deterministic Smoke Without Model Calls)
 
 1. Default mode is `live` (normal backend/model execution).
-2. For deterministic UI smoke, use fixture mode in `POST /chat`:
+2. For deterministic smoke, use fixture mode in `POST /chat`:
    - request field `harness_mode=fixture`
    - optional `fixture_output` to pin exact response text
 3. Optional env default:
@@ -161,25 +160,6 @@ Local runtime DB commands are retired during wiring lock; treat docs/tests as th
 4. Fixture mode is test harness only:
    - keep eval/gate logic server-side and binary
    - do not use fixture mode outputs for quality gate decisions
-
-## Local UI Shell
-
-1. Start backend:
-   - `make server`
-2. Open UI shell:
-   - `http://127.0.0.1:8000/ui`
-3. Configure in sidebar:
-   - base URL
-   - API key (`x-api-key`)
-   - session ID
-4. Core UI flow:
-   - send message (`POST /chat`)
-   - click assistant message
-   - submit binary eval (`POST /chats/{session_id}/feedback`)
-   - create checkpoint (`POST /chats/{session_id}/feedback/checkpoints`)
-5. Fixture mode remains optional for deterministic UI smoke:
-   - `harness_mode=fixture`
-   - optional `fixture_output`
 
 ## Python Diagnostics (Ruff + Mypy)
 
@@ -339,8 +319,8 @@ Local runtime DB commands are retired during wiring lock; treat docs/tests as th
    than carrying compatibility paths in active flow.
 3. In human-directed precision mode, execute only the requested slice and avoid
    opportunistic cleanup outside scope.
-4. When this rule changes execution, record it in `docs/DECISIONS.md` and
-   checkpoint it in `docs/STATE.md`.
+4. When this rule changes execution, record it in `docs/governance/DECISIONS.md` and
+   checkpoint it in `docs/governance/STATE.md`.
 
 ## Proactive Engineering Ownership
 
@@ -385,12 +365,12 @@ Local runtime DB commands are retired during wiring lock; treat docs/tests as th
 
 1. For any collaboration/execution policy change, update all governance surfaces
    in the same change set:
-   - `docs/CHARTER.md`
-   - `docs/DECISIONS.md`
-   - `docs/RUNBOOK.md`
-   - `docs/STATE.md`
-   - `docs/SESSION_HANDOFF.md`
-   - `docs/ARCHITECTURE.md` (if operating flow/ownership changes)
+   - `docs/governance/CHARTER.md`
+   - `docs/governance/DECISIONS.md`
+   - `docs/runtime/RUNBOOK.md`
+   - `docs/governance/STATE.md`
+   - `docs/governance/SESSION_HANDOFF.md`
+   - `docs/runtime/ARCHITECTURE.md` (if operating flow/ownership changes)
 2. Do not treat any single doc as sufficient for policy updates.
 3. End-of-day handoff must include any new policy/cutline so next-session
    startup does not drift.
@@ -425,7 +405,7 @@ Local runtime DB commands are retired during wiring lock; treat docs/tests as th
 
 UI adapter reference:
 
-- `docs/UI_EVAL_ADAPTER_CONTRACT.md` (chat + eval TypeScript contract)
+- `docs/eval/UI_EVAL_ADAPTER_CONTRACT.md` (chat + eval TypeScript contract)
 
 - `GET /chats` list chats
 - `POST /chats` create chat
@@ -666,7 +646,7 @@ Hash fields in responses:
      `python tools/eval_file_search.py --report-json eval_reports/file-search-latest.json`
    - one-command report run: `make eval-file-search-report`
 4. Cases:
-   - uses `docs/file_search_eval_cases.json` (OCR + PDF + optional image-context
+   - uses `docs/eval/cases/file_search_eval_cases.json` (OCR + PDF + optional image-context
      smoke test)
    - image-context case requires `POLINKO_IMAGE_CONTEXT_ENABLED=true` and will
      fail-closed if image context is disabled
@@ -682,7 +662,7 @@ Hash fields in responses:
    - write JSON report artifact:
      `make eval-clip-ab-report`
 4. Cases:
-   - default CLIP A/B case file: `docs/clip_ab_eval_cases.json`
+   - default CLIP A/B case file: `docs/eval/cases/clip_ab_eval_cases.json`
    - current baseline set: 4 image-context retrieval cases with distractors
 5. Current B arm is an image-prioritized proxy (`source_types=["image"]`) used
    to establish experiment wiring ahead of full CLIP embedding integration.
@@ -723,7 +703,7 @@ Current policy:
      `python tools/eval_ocr.py --report-json eval_reports/ocr-latest.json`
    - one-command report run: `make eval-ocr-report`
 4. Cases:
-   - default cases file: `docs/ocr_eval_cases.json`
+   - default cases file: `docs/eval/cases/ocr_eval_cases.json`
    - supports image cases (`image_path`) and deterministic text-hint cases
      (`text_hint`)
    - optional per-case controls:
@@ -747,7 +727,7 @@ Current policy:
      `python tools/eval_ocr_recovery.py --report-json eval_reports/ocr-recovery-latest.json`
    - one-command report run: `make eval-ocr-recovery-report`
 4. Cases:
-   - default case file: `docs/ocr_recovery_eval_cases.json`
+   - default case file: `docs/eval/cases/ocr_recovery_eval_cases.json`
    - each case runs a seeded OCR prompt with attachment, then one or more
      follow-up user turns in the same chat
    - designed for ambiguity stress + correction/recovery traces with
@@ -792,11 +772,11 @@ Current policy:
      `python tools/eval_style.py --report-json eval_reports/style-latest.json`
    - one-command report run: `make eval-style-report`
 6. Eval-only phrase fail rules (no runtime behaviour changes):
-   - `docs/style_eval_cases.json` root `global_forbidden_phrases` applies to all
+   - `docs/eval/cases/style_eval_cases.json` root `global_forbidden_phrases` applies to all
      cases
    - per-case `forbidden_phrases` applies only to that case
    - phrase checks are case-insensitive
-7. Co-reasoning stress cases are included in `docs/style_eval_cases.json` for:
+7. Co-reasoning stress cases are included in `docs/eval/cases/style_eval_cases.json` for:
    - constraint retention without rigidity
    - meta-level shift handling
    - anti-mimicry style adaptation
@@ -811,7 +791,7 @@ Current policy:
 
 ## Eval Gate Semantics (Canonical)
 
-1. Use `docs/EVAL_POLICY_MODEL.md` as the source of truth for eval gate
+1. Use `docs/eval/EVAL_POLICY_MODEL.md` as the source of truth for eval gate
    semantics.
 2. Symbol convention for policy docs:
    - `⊨` semantic entailment / satisfies
@@ -855,9 +835,9 @@ Current policy:
 1. Build docs relationship graph:
    - `make reference-graph`
 2. Open generated visual:
-   - `docs/REFERENCE_GRAPH.md`
+   - `docs/visuals/REFERENCE_GRAPH.md`
 3. Archived human-reference DB workflow is retained only for traceability:
-   - `docs/live_archive/legacy_human_reference/`
+   - `.archive/live_archive/legacy_human_reference/`
 4. Runtime DB maintenance: retired during wiring lock (no local DB commands).
 
 ## Start Fresh Eval Cycle

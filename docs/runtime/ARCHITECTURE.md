@@ -16,8 +16,6 @@
   - Local automation/eval/reference utilities.
 - `tests/`
   - API/runtime regression tests.
-- `ui/`
-  - Local UI shell (`/ui`) for thread + binary eval operations.
 - `docs/`
   - Charter, state, decisions, runbook, handoff, operator references, and
     live archive lanes.
@@ -29,11 +27,9 @@
 3. `api/app_factory.py` wires routes + middleware + runtime dependencies.
 4. Request execution delegates to `core/` runtime and persistence modules.
 5. `POST /chat` supports harness override (`harness_mode=fixture`) for
-   deterministic UI smoke without model calls; default remains `live`.
-6. `/ui` serves the local shell for message/eval/checkpoint operations against
-   the backend API contract.
-7. CLI/API surfaces remain canonical; archived legacy frontend context stays in
-   `docs/live_archive/legacy_frontend/`.
+   deterministic smoke without model calls; default remains `live`.
+6. CLI/API surfaces remain canonical; archived legacy frontend context stays in
+   `.archive/live_archive/legacy_frontend/`.
 
 ## Data Surfaces
 
@@ -50,24 +46,25 @@
   - checkpoint API responses include explicit fail-closed `gate_outcome`
     (`pass`/`fail`) derived from counts.
   - canonical policy/reward semantics and conceptual ER model:
-    `docs/EVAL_POLICY_MODEL.md`
+    `docs/eval/EVAL_POLICY_MODEL.md`
   - canonical gate wiring contract and phase policy:
-    `docs/EVAL_WIRING_SPEC.md`
+    `docs/eval/EVAL_WIRING_SPEC.md`
   - canonical UI integration contract:
-    `docs/UI_EVAL_ADAPTER_CONTRACT.md`
+    `docs/eval/UI_EVAL_ADAPTER_CONTRACT.md`
 - Eval artefacts (non-authoritative):
   - Git history is the canonical retention mechanism for tracked project state.
   - local eval artefacts are operational outputs (default under `eval_reports/`)
     and are non-authoritative for runtime gate decisions.
   - no file-log-driven eval wiring exists in runtime gate decisions.
-  - deprecated eval/frontend context is reference-only under `docs/live_archive/`
+  - deprecated eval/frontend context is reference-only under `.archive/live_archive/`
     and cannot drive active gate decisions.
 - Reference visualisation:
   - markdown-native relationship graph generated from docs links.
   - builder: `tools/build_reference_graph.py`
-  - operator flow: `make reference-graph` -> `docs/REFERENCE_GRAPH.md`.
+  - operator flow: `make reference-graph` -> `docs/visuals/REFERENCE_GRAPH.md`.
 - Eval relationship visualisation:
-  - markdown-native relationship report generated from runtime history DB.
+  - markdown-native relationship report generated from runtime history DB,
+    augmented with latest per-suite snapshots from local `eval_reports/*.json`.
   - builder: `tools/build_eval_relationship_graph.py`
   - operator flow: `make eval-viz` ->
     `.local/visuals/eval_relationship_graph.md` (local-only output).
@@ -80,17 +77,17 @@
 - Prompt/runtime behaviour and policy logic: `core/`
 - Eval/report/reference scripts and one-off operators: `tools/`
 - Execution state/decisions/handoff documentation: `docs/`
-- Deprecated implementation references: `docs/live_archive/`
+- Deprecated implementation references: `.archive/live_archive/`
 
 ## Governance Flow
 
-- Collaboration/execution policy is anchored in `docs/CHARTER.md`.
+- Collaboration/execution policy is anchored in `docs/governance/CHARTER.md`.
 - Co-reasoning control rights are human-led for objective/scope/acceptance and
   go/no-go decisions.
-- Formal decision records are appended in `docs/DECISIONS.md`.
-- Operator procedure lives in `docs/RUNBOOK.md`.
-- Current-state checkpoints live in `docs/STATE.md`.
-- Next-session carryover constraints live in `docs/SESSION_HANDOFF.md`.
+- Formal decision records are appended in `docs/governance/DECISIONS.md`.
+- Operator procedure lives in `docs/runtime/RUNBOOK.md`.
+- Current-state checkpoints live in `docs/governance/STATE.md`.
+- Next-session carryover constraints live in `docs/governance/SESSION_HANDOFF.md`.
 - Policy updates are complete only when all relevant surfaces above are aligned.
 
 ## Operational Commands
@@ -98,9 +95,9 @@
 - Env sanity: `make doctor-env`
 - Backend tests: `make test`
 - Local API: `make server` or `make server-daemon`
-- Wiring visual contract: `docs/EVAL_WIRING_SPEC.md`
+- Wiring visual contract: `docs/eval/EVAL_WIRING_SPEC.md`
 - Runtime DB lifecycle commands are retired during wiring lock
-  (see `docs/RUNBOOK.md`).
+  (see `docs/runtime/RUNBOOK.md`).
 - Local eval trace backfill (optional): `make backfill-eval-traces`
 - Docs relationship graph: `make reference-graph`
 - Eval relationship graph: `make eval-viz`

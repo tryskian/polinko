@@ -72,7 +72,7 @@
 
 - Category: `workflow_environment`
 - Tags: `ci`, `dependency_lock`, `runbook`, `reproducibility`
-- Decision: Add GitHub Actions CI (`test`), `requirements.lock`, and `docs/RUNBOOK.md`.
+- Decision: Add GitHub Actions CI (`test`), `requirements.lock`, and `docs/runtime/RUNBOOK.md`.
 - Why: Improve release safety, reproducibility, and operational troubleshooting.
 
 ## D-009: Data leverage and light retrieval
@@ -762,7 +762,7 @@
   drift, and ensures policy constraints remain the hard control surface while
   preserving rich diagnostics outside the binary gate output.
 - Implementation note: Concept model and ER mapping are documented in
-  `docs/EVAL_POLICY_MODEL.md`.
+  `docs/eval/EVAL_POLICY_MODEL.md`.
 
 ## D-073: Remove archive-folder workflow; use Git-native retention
 
@@ -785,11 +785,11 @@
 - Category: `evidence_governance`
 - Tags: `live_archive`, `legacy_reference`, `frontend_deprecation`, `binary_hygiene`
 - Decision:
-  - create `docs/live_archive/` as the single tracked reference surface for
+  - create `.archive/live_archive/` as the single tracked reference surface for
     deprecated implementation context
   - split lanes by concern:
-    - `docs/live_archive/legacy_eval/`
-    - `docs/live_archive/legacy_frontend/`
+    - `.archive/live_archive/legacy_eval/`
+    - `.archive/live_archive/legacy_frontend/`
   - keep archive lane read-only for reference; active runtime contracts remain
     sourced from canonical docs/code
 - Why: Preserves inspectability/traceability of deprecated context without
@@ -818,9 +818,9 @@
 - Tags: `human_reference`, `archive_only`, `markdown_graph`, `visualisation`
 - Decision:
   - move SQLite human-reference workflow to archive-only status in
-    `docs/live_archive/legacy_human_reference/`
+    `.archive/live_archive/legacy_human_reference/`
   - make `reference-graph` the canonical docs relationship visualisation flow
-    (`tools/build_reference_graph.py` -> `docs/REFERENCE_GRAPH.md`)
+    (`tools/build_reference_graph.py` -> `docs/visuals/REFERENCE_GRAPH.md`)
   - leave legacy human-reference make targets as archive notices
 - Why: Reduces operator complexity and produces a more imagineer-readable visual
   surface without keeping an active DB/query workflow in the critical path.
@@ -843,7 +843,7 @@
 - Category: `workflow_environment`
 - Tags: `artifact_cleanup`, `legacy_tools`, `runtime_db_paths`, `archive_only`
 - Decision:
-  - Archived human-reference helpers and SQL into `docs/live_archive/legacy_human_reference/`.
+  - Archived human-reference helpers and SQL into `.archive/live_archive/legacy_human_reference/`.
   - Removed legacy workbench server/target and eval inbox helper (`make eval-inbox`, `tools/eval_inbox.py`).
   - Retired local runtime DB scripts/targets during wiring lock; no local DB lifecycle commands remain.
 - Why: Reduce hidden gremlins and keep the active execution surface minimal and aligned with current binary eval contracts.
@@ -914,7 +914,7 @@
 - Tags: `ui_adapter`, `chat_contract`, `binary_eval`, `integration`
 - Decision:
   - add canonical UI adapter spec:
-    - `docs/UI_EVAL_ADAPTER_CONTRACT.md`
+    - `docs/eval/UI_EVAL_ADAPTER_CONTRACT.md`
   - define copy-ready TypeScript request/response shapes for:
     - `POST /chat`
     - feedback + checkpoint endpoints
@@ -956,7 +956,7 @@
     - `make reference-graph`
   - pin D3.js interactive graphing as a deferred enhancement track
     (post-baseline), not part of the current runtime/docs gate path
-  - only promote D3 when UI shell + adapter flow are stable and the extra
+  - only promote D3 when adapter flow and operator surfaces are stable and the extra
     interaction surface is worth the added engineering complexity
 - Why: Preserves deterministic, low-friction operator visuals now while keeping
   a clear future path for richer interaction without introducing premature UI
@@ -983,3 +983,35 @@
 - Why: Provides a durable non-CLI operator surface for day-to-day eval work
   with minimal implementation overhead and no behaviour drift in backend gate
   semantics.
+
+## D-089: Archive deprecated coordination docs and keep top-level docs operational
+
+- Date: `2026-03-28`
+- Category: `workflow_environment`
+- Tags: `docs_hygiene`, `live_archive`, `operator_clarity`, `straggler_cleanup`
+- Decision:
+  - move deprecated coordination docs from top-level `docs/` into:
+    - `.archive/live_archive/legacy_coordination/`
+  - keep `docs/peanut/refs/WORKSTREAMS.md` active and refresh it for current
+    imagineer/engineer `Reasoning Loops` collaboration semantics
+  - remove `.DS_Store` files from `docs/` surfaces
+- Why: Reduces operator clutter in active docs while preserving historical
+  context in one predictable archive lane.
+
+## D-090: Retire active UI shell surface and remove `ui/` from runtime path
+
+- Date: `2026-03-28`
+- Category: `workflow_environment`
+- Tags: `ui_retirement`, `surface_reduction`, `api_cli_canonical`, `drift_control`
+- Decision:
+  - remove active local UI shell assets:
+    - delete `ui/index.html`
+  - remove active API UI shell route:
+    - delete `GET /ui`
+  - remove UI-open helper targets from `Makefile`:
+    - `open-ui`
+    - `ui`
+  - keep frontend history/reference in live archive only:
+    - `.archive/live_archive/legacy_frontend/`
+- Why: Reduces active-surface complexity and keeps the canonical operator path
+  constrained to backend API + CLI during binary-contract hardening.

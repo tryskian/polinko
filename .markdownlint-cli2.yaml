@@ -1,5 +1,5 @@
 ignores:
-  - "docs/transcripts/**/*.md"
+  - "docs/peanut/transcripts/**/*.md"
   - "docs/portfolio/raw_evidence/**/*.md"
 
 config:

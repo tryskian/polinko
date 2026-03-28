@@ -54,25 +54,15 @@ docs/portfolio/
 # Local eval artifacts
 eval_reports/
 
-# Local transcript exports
-docs/transcripts/
-
 # Local VS Code workspace wrapper
 polinko.code-workspace
 
-# Local workstream planning doc
-docs/WORKSTREAMS.md
-docs/FIGMA_NODE_TRACKER.md
-docs/PEANUT_TOOLING_REF.md
+# Local peanut knowledge lane (confidential/local-only)
+docs/peanut/
 docs/internal/
 
-# Local proprietary research/theory materials
-docs/research/
-docs/theory/
-
-# Local legacy planning docs (archived/deprecated)
-docs/AGENT_BUILDER_MIRROR.md
-docs/HYBRID_OPENAI_ADOPTION_PLAN.md
+# Local legacy coordination/planning docs (archived/deprecated)
+.archive/live_archive/legacy_coordination/
 
 # Local maintenance helper script
 tools/cleanup_eval_chats.py
