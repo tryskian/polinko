@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-27
+- 2026-03-28
 
 ## Current Snapshot
 
@@ -41,6 +41,10 @@
 - Minimal-config benchmark sequencing is now explicit:
   - canonical spec: `docs/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
   - objective: compare baseline A/B/C with fixed evaluation dimensions
+  - A/B/C are now decision-ready:
+    - A=`PASS` (baseline anchor)
+    - B=`FAIL` (traditional complexity underperformed)
+    - C=`PASS` (binary current target)
 - Engineer execution mode is proactive by default:
   - technical hygiene/drift control should be handled without reminder
   - user input is only needed for approvals or material trade-offs
@@ -92,10 +96,13 @@
 
 ## Immediate Next Step
 
-- Execute benchmark evidence mapping while maintaining product-first delivery:
-  - populate benchmark A/B/C experiment records with linked artifacts/results
-  - document confounders for each benchmark phase
-  - use benchmark outcomes to drive one deterministic backend priority slice
+- Execute benchmark-derived backend slice `D` with minimal behaviour drift:
+  - formalise operation-binding diagnostics (`reference_binding`,
+    `operation_fidelity`, `decision_clarity`) as deterministic pass/fail checks
+  - convert diagnostic output into one explicit backend implementation change
+    that reduces operator inference overhead
+  - validate with `make build-audit`, `make lint-docs`, `make test`,
+    `make quality-gate-deterministic`
 
 ## Peanut Pin (Tomorrow Start)
 
