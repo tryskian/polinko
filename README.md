@@ -39,6 +39,13 @@ Open:
 - `http://127.0.0.1:8000/docs` (backend OpenAPI)
 - `http://127.0.0.1:8000/ui` (local UI shell)
 
+Or open them via `make` targets:
+
+```bash
+make open-api-docs
+make open-ui
+```
+
 ## Setup
 
 1. Use a local virtual environment (`./venv` or
