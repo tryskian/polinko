@@ -41,6 +41,8 @@
     - `eval_checkpoints` (`pass_count`, `fail_count`, `non_binary_count`)
   - active gate logic is binary-only (`pass`/`fail`); `non_binary_count` is an
     integrity signal only.
+  - checkpoint API responses include explicit fail-closed `gate_outcome`
+    (`pass`/`fail`) derived from counts.
   - canonical policy/reward semantics and conceptual ER model:
     `docs/EVAL_POLICY_MODEL.md`
   - canonical gate wiring contract and phase policy:

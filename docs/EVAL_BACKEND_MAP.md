@@ -95,6 +95,10 @@ Current checkpoint counting is outcome-driven:
 - `pass_count = count(outcome == "pass")`
 - `fail_count = count(outcome == "fail")`
 - `non_binary_count` is an integrity signal and expected to remain `0`
+- checkpoint responses expose `gate_outcome` (`pass`/`fail`) derived
+  fail-closed from counts:
+  - `pass` iff `total_count > 0` and `fail_count == 0` and `non_binary_count == 0`
+  - `fail` otherwise
 
 Dual-stream tags remain diagnostic only and do not drive gate arithmetic.
 

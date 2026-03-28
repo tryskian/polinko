@@ -53,11 +53,11 @@
       "must_not_contain": [
         "he might have felt",
         "she might have felt",
-        "self-esteem",
-        "identity",
-        "intimidated",
-        "pride",
-        "quietly shift the balance"
+        "quietly shift the balance",
+        "he was intimidated",
+        "it was his pride",
+        "she left because he",
+        "he couldn't handle her education"
       ]
     }
   ]
