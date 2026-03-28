@@ -21,6 +21,19 @@ APP_FACTORY_PATH = REPO_ROOT / "api" / "app_factory.py"
 PACKAGE_JSON_PATH = REPO_ROOT / "package.json"
 EVAL_CASES_GLOB = "*eval_cases.json"
 DEPRECATED_EVAL_CASE_KEYS = {"optional"}
+ACTIVE_DOCS_WITHOUT_DB_COMMANDS = (
+    README_PATH,
+    REPO_ROOT / "docs" / "ARCHITECTURE.md",
+    REPO_ROOT / "docs" / "RUNBOOK.md",
+    REPO_ROOT / "docs" / "STATE.md",
+    REPO_ROOT / "docs" / "SESSION_HANDOFF.md",
+    REPO_ROOT / "docs" / "BACKEND_START_TO_END.md",
+)
+RETIRED_DB_COMMAND_TOKENS = (
+    "make db-reset",
+    "make db-archive",
+    "make db-visuals",
+)
 
 
 def _read_text(path: Path) -> str:
@@ -223,11 +236,36 @@ def check_eval_case_schema_legacy_fields() -> CheckResult:
     )
 
 
+def check_retired_runtime_db_command_refs() -> CheckResult:
+    findings: list[str] = []
+    for path in ACTIVE_DOCS_WITHOUT_DB_COMMANDS:
+        if not path.exists():
+            continue
+        rel = path.relative_to(REPO_ROOT)
+        for line_no, line in enumerate(_read_text(path).splitlines(), start=1):
+            lower_line = line.lower()
+            for token in RETIRED_DB_COMMAND_TOKENS:
+                if token in lower_line:
+                    findings.append(f"{rel}:{line_no} ({token})")
+    if findings:
+        return CheckResult(
+            name="retired_runtime_db_command_refs",
+            ok=False,
+            details=f"remove retired DB command references: {_format_missing(findings)}",
+        )
+    return CheckResult(
+        name="retired_runtime_db_command_refs",
+        ok=True,
+        details="active docs are clear of retired DB command references",
+    )
+
+
 def run_checks() -> list[CheckResult]:
     return [
         check_readme_route_parity(),
         check_make_tool_module_existence(),
         check_legacy_targets_removed(),
+        check_retired_runtime_db_command_refs(),
         check_lint_docs_parity(),
         check_eval_cleanup_guard(),
         check_eval_case_schema_legacy_fields(),

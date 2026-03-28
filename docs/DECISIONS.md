@@ -860,3 +860,16 @@
     - `fail` otherwise
 - Why: Removes operator inference overhead on go/no-go decisions while keeping
   gate semantics deterministic and count-driven.
+
+## D-082: Block retired runtime DB command references in active docs
+
+- Date: `2026-03-28`
+- Category: `workflow_environment`
+- Tags: `build_audit`, `doc_contract`, `wiring_lock`, `drift_control`
+- Decision:
+  - remove retired runtime DB command references (`make db-reset`,
+    `make db-archive`, `make db-visuals`) from active docs
+  - enforce with `make build-audit` via
+    `retired_runtime_db_command_refs` check
+- Why: Prevents documentation drift from reintroducing deprecated local DB
+  lifecycle flows during wiring lock.

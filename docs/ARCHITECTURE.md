@@ -84,6 +84,7 @@
 - Backend tests: `make test`
 - Local API: `make server` or `make server-daemon`
 - Wiring visual contract: `docs/EVAL_WIRING_SPEC.md`
-- Runtime DB maintenance: `make db-archive`, `make db-reset`, `make db-visuals`
+- Runtime DB lifecycle commands are retired during wiring lock
+  (see `docs/RUNBOOK.md`).
 - Local eval trace backfill (optional): `make backfill-eval-traces`
 - Docs relationship graph: `make reference-graph`
