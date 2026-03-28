@@ -8,6 +8,7 @@
 - CLI agent loop works with persistent SQLite memory (`.local/runtime_dbs/active/memory.db`) and
   `/reset`.
 - Backend API is running with:
+  - `GET /ui`
   - `GET /health`
   - `GET /metrics`
   - `POST /chat`
@@ -32,8 +33,10 @@
     `POLINKO_CHAT_HARNESS_DEFAULT_MODE=live|fixture`
   - canonical UI eval adapter contract:
     `docs/UI_EVAL_ADAPTER_CONTRACT.md`
-- Frontend is archived from the active repository surface; active execution is
-  backend + CLI only.
+- Local UI shell is now active at `/ui` for thread + binary eval operations
+  against the canonical backend contract.
+- Legacy frontend implementation remains archived in
+  `docs/live_archive/legacy_frontend/`.
 - OpenAI developer docs MCP server is now configured for Codex/VS Code usage:
   - endpoint: `https://developers.openai.com/mcp`
   - workspace wiring: `.vscode/mcp.json`
@@ -210,6 +213,14 @@
     versioning
   - D3.js interactive visualisation is pinned as a deferred track for later UI
     iteration (not active in current runtime/docs gate path)
+- UI shell checkpoint (March 28, 2026):
+  - `/ui` route now serves a local-first operator shell from `ui/index.html`
+  - shell includes:
+    - thread rendering (`GET /chats/{session_id}/messages`)
+    - binary eval submit (`POST /chats/{session_id}/feedback`)
+    - checkpoint creation/history
+      (`POST/GET /chats/{session_id}/feedback/checkpoints`)
+  - fixture mode is exposed for deterministic smoke (`harness_mode=fixture`)
 - Proactive ownership checkpoint (March 26, 2026):
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder

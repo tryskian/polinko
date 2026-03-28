@@ -961,3 +961,25 @@
 - Why: Preserves deterministic, low-friction operator visuals now while keeping
   a clear future path for richer interaction without introducing premature UI
   complexity.
+
+## D-088: Deliver local-first UI shell for chat and binary eval operations
+
+- Date: `2026-03-28`
+- Category: `workflow_environment`
+- Tags: `ui_shell`, `binary_eval`, `operator_surface`, `minimal_drift`
+- Decision:
+  - add a lightweight local UI shell served at:
+    - `GET /ui`
+  - implement shell as repo-local static file:
+    - `ui/index.html`
+  - scope shell functionality to canonical adapter flow:
+    - send message (`POST /chat`)
+    - render thread (`GET /chats/{session_id}/messages`)
+    - submit binary eval (`POST /chats/{session_id}/feedback`)
+    - render/create checkpoints
+      (`GET/POST /chats/{session_id}/feedback/checkpoints`)
+  - include fixture-mode controls for deterministic smoke only
+    (`harness_mode=fixture`)
+- Why: Provides a durable non-CLI operator surface for day-to-day eval work
+  with minimal implementation overhead and no behaviour drift in backend gate
+  semantics.

@@ -162,6 +162,25 @@ Local runtime DB commands are retired during wiring lock; treat docs/tests as th
    - keep eval/gate logic server-side and binary
    - do not use fixture mode outputs for quality gate decisions
 
+## Local UI Shell
+
+1. Start backend:
+   - `make server`
+2. Open UI shell:
+   - `http://127.0.0.1:8000/ui`
+3. Configure in sidebar:
+   - base URL
+   - API key (`x-api-key`)
+   - session ID
+4. Core UI flow:
+   - send message (`POST /chat`)
+   - click assistant message
+   - submit binary eval (`POST /chats/{session_id}/feedback`)
+   - create checkpoint (`POST /chats/{session_id}/feedback/checkpoints`)
+5. Fixture mode remains optional for deterministic UI smoke:
+   - `harness_mode=fixture`
+   - optional `fixture_output`
+
 ## Python Diagnostics (Ruff + Mypy)
 
 1. Use repo-local tools for deterministic output:
