@@ -45,7 +45,6 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Automation lane policy:
   - default mode is `paused` (single manual lane).
   - re-enable only with explicit human go/no-go.
-  - canonical automation contract is `docs/governance/AUTOMATION_SPEC.md`.
 - Collaboration model is `Reasoning Loops`:
   - imagineer leads hypotheses/theory framing, visual culture shape, and eval
     operations
@@ -86,4 +85,3 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Archived: web UI as an active execution surface; retained only in
   live-archive references.
 - Paused: cloud deployment automation (removed from repo for now; Azure is the preferred target when resumed).
-- Paused: scheduled implementation automation (manual/autonomous engineer lane is canonical until explicit re-enable).
