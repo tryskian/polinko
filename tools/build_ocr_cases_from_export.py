@@ -19,13 +19,15 @@ HANDWRITING_HINT_RX = re.compile(
     re.IGNORECASE,
 )
 TYPED_HINT_RX = re.compile(
-    r"\btyped\b|printed|font|ui|screen ?shot|terminal|code|document|pdf",
+    r"\btyped\b|\bprinted\b|\bfont\b|\bui\b|screen ?shot|\bterminal\b|\bcode\b|\bdocument\b|\bpdf\b",
     re.IGNORECASE,
 )
 ILLUSTRATION_HINT_RX = re.compile(
     r"illustration|diagram|flow ?chart|flowchart|graph|node|edge|arrow|whiteboard|sketch|drawing|doodle|wireframe|figure|geometry|shape",
     re.IGNORECASE,
 )
+CAMERA_IMAGE_NAME_RX = re.compile(r"(?:^|[-_])(img|dsc)[_-]\d{3,}", re.IGNORECASE)
+SCREENSHOT_NAME_RX = re.compile(r"(?:^|[-_])screenshot(?:[-_]|$)", re.IGNORECASE)
 ANCHOR_STOPWORDS = {
     "the",
     "and",
@@ -342,9 +344,9 @@ def _classify_lane(
     source_name = Path(image_path).name.lower()
     if any(marker in source_name for marker in ("diagram", "sketch", "drawing", "doodle", "flowchart", "graph")):
         return "illustration"
-    if source_name.startswith("img_") or source_name.startswith("dsc_"):
+    if CAMERA_IMAGE_NAME_RX.search(source_name):
         return "handwriting"
-    if "screenshot" in source_name:
+    if SCREENSHOT_NAME_RX.search(source_name):
         return "typed"
     return "typed"
 

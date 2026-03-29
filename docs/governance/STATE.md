@@ -240,16 +240,24 @@
     - typed lane: `2/2` PASS
     - illustration lane: `1/1` PASS
 - OCR lane balance checkpoint (March 29, 2026):
-  - transcript miner now recovers illustration cases without reintroducing
-    conversational false positives
+  - transcript miner now improves handwriting lane recovery while preserving
+    illustration coverage and strict pass rates
   - latest local miner output:
     - combined cases: `12`
-    - handwriting: `2`
-    - typed: `8`
+    - handwriting: `4`
+    - typed: `6`
     - illustration: `2`
   - latest strict lane validation:
     - all lane: `12/12` PASS
+    - handwriting lane: `4/4` PASS
+    - typed lane: `6/6` PASS
     - illustration lane: `2/2` PASS
+- OCR lane classifier hardening checkpoint (March 29, 2026):
+  - lane classification now detects embedded camera-style filenames
+    (for example `file-...-IMG_6821.jpeg`) as handwriting
+  - typed lane hint matching now uses bounded token matching (`ui` as a
+    standalone word) to avoid accidental typed classification from substrings
+    like `quick`
 - Eval relationship visual checkpoint (March 28, 2026):
   - local eval data visualisation now has a canonical navigation-first report:
     - command: `make eval-viz`

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from tools.build_ocr_cases_from_export import (
     ASK_RX,
+    _classify_lane,
     _expand_anchor_variants,
     _extract_candidate_phrases,
     _extract_transcribed_lines,
@@ -28,6 +29,24 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertIn("archiv", anchors)
         self.assertIn("tumble", anchors)
         self.assertIn("float", anchors)
+
+    def test_classify_lane_detects_embedded_camera_filename(self) -> None:
+        lane = _classify_lane(
+            ask_text="can you read this?",
+            title="quick ocr check",
+            image_path="/tmp/file-abcde-IMG_6821.jpeg",
+            followups=[],
+        )
+        self.assertEqual(lane, "handwriting")
+
+    def test_classify_lane_detects_embedded_screenshot_filename(self) -> None:
+        lane = _classify_lane(
+            ask_text="what does this screenshot say?",
+            title="ui ocr",
+            image_path="/tmp/file-xyz-Screenshot_2026-03-29.png",
+            followups=[],
+        )
+        self.assertEqual(lane, "typed")
 
     def test_extract_candidate_phrases_from_quotes_and_emphasis(self) -> None:
         text = 'correction: "Only Alpha Spiral Field" and *Beta Grid*'
