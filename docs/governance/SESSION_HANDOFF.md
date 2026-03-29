@@ -135,6 +135,8 @@
    - confirm whether this thread is running in canonical repo root
      (`/Users/tryskian/Github/polinko`) or a dedicated worktree path
    - if automation is active, confirm it is using a separate worktree
+   - command ownership stays engineer-side (imagineer does not run terminal/Git commands)
+   - execution-first default stays active (agent executes requested work directly)
 2. `make doctor-env`
 3. `make lint-docs`
 4. `make test`

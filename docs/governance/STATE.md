@@ -267,6 +267,11 @@
     (canonical root vs dedicated worktree)
   - branch + worktree isolation is required when automation and manual work run
     in parallel
+- Execution ownership checkpoint (March 29, 2026):
+  - terminal/Git command execution is engineer-owned by default
+  - imagineer remains objective/scope/acceptance/go-no-go owner
+  - execution-first policy is active: requested actions are performed directly,
+    not handed back as "run this/read this" instructions
 - Human-managed co-reasoning checkpoint (March 26, 2026):
   - human remains work-management authority in reasoning loops
   - human controls objective/scope/acceptance + go/no-go cutlines
