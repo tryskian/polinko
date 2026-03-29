@@ -190,6 +190,12 @@
   - `H-001` is currently supported for product direction
   - next benchmark-derived backend priority is operation-binding diagnostics
     (`benchmark D`) as deterministic implementation slices
+- Primary-source grounding checkpoint (March 29, 2026):
+  - benchmark spec now includes a scoped case-study grounding addendum:
+    - method + 1-2 mapped examples only in current phase
+  - transcript-backed OCR mining lane provides one mapped handwriting example
+    under strict binary gate validation (`1/1` PASS)
+  - full corpus ingestion/tooling remains deferred until post-milestone
 - Wiring lock checkpoint (March 27, 2026):
   - runtime DB provisioning is intentionally paused until eval wiring sign-off
   - no fresh `.polinko_*.db` or `.human_reference.db` files are active in

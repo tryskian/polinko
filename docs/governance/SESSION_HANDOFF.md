@@ -80,6 +80,11 @@
     - `make ocr-cases-from-export`
     - `make eval-ocr-transcript-cases`
   - generated transcript OCR cases stay local-only in `.local/eval_cases/`
+- Case-study grounding method is now explicit in benchmark docs:
+  - lightweight primary-source addendum in
+    `docs/benchmarks/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
+  - current phase scope is method + 1-2 mapped examples only
+  - full corpus ingestion/tooling remains deferred until post-milestone
 - Portfolio timeline checkpoint (March 28, 2026):
   - engineering build: `65-75%`
   - portfolio package: `40-50%`
