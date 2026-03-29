@@ -1246,3 +1246,16 @@
     quality, decision clarity, iteration speed, and maintenance overhead
 - Why: Maintains durable, implementation-relevant evidence framing without
   coupling the case study to transient model/version naming.
+
+## D-105: Expand OCR framing detection to include transcript wording
+
+- Date: `2026-03-29`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `framing_detection`, `precision_safe`, `coverage`
+- Decision:
+  - expand transcript miner framing detection from `transcrib*` only to
+    `transcrib*` + `transcript*` lexical forms
+  - keep existing anchor quality gates (`>=3` anchor terms) and strict binary
+    eval validation unchanged
+- Why: Recovers missed literal OCR episodes phrased as
+  “here’s the transcription” without widening low-signal conversational noise.

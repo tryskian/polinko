@@ -916,6 +916,7 @@ Current policy:
    - RAG on PDFs with File Search
    - Structured Outputs
    - Image Understanding with RAG
+   - Vision fine-tuning on GPT-4o for visual question answering
    - ELT extraction/transformation pattern
    - model graders for reinforcement fine-tuning
 4. Deferred cookbook queue:

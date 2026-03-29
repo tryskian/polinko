@@ -147,7 +147,7 @@ OCR_LITERAL_INTENT_RX = re.compile(
     re.IGNORECASE,
 )
 OCR_FRAMING_RX = re.compile(
-    r"\bit (?:reads?|says)\b|\bhere(?:'s| is)\s+the\s+ocr\b|\btranscrib\w*|\bocr\b",
+    r"\bit (?:reads?|says)\b|\bhere(?:'s| is)\s+the\s+ocr\b|\btranscri(?:b\w*|pt\w*)\b|\bocr\b",
     re.IGNORECASE,
 )
 
