@@ -10,10 +10,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-ASK_RX = re.compile(
-    r"what does (this|it) say|read (this|it)|\btranscrib\w*|\bocr\b|handwriting|cursive|binareyes",
-    re.IGNORECASE,
+OCR_INTENT_PATTERN = (
+    r"what does (this|it) say|what(?:'s| is) written|can you read|read (this|it)|\btranscrib\w*|\bocr\b|\bbinareyes\b"
 )
+ASK_RX = re.compile(OCR_INTENT_PATTERN, re.IGNORECASE)
 HANDWRITING_HINT_RX = re.compile(
     r"handwrit|cursive|script|notebook|sketchbook|journal|ink|pen|manifold",
     re.IGNORECASE,
@@ -84,6 +84,14 @@ CORRECTION_RX = re.compile(
     r"should be|it says|correction|you read|you wrote|wrong|not right|typo|only",
     re.IGNORECASE,
 )
+OCR_INTENT_RX = re.compile(
+    OCR_INTENT_PATTERN,
+    re.IGNORECASE,
+)
+OCR_FRAMING_RX = re.compile(
+    r"\bit (?:reads?|says)\b|\bhere(?:'s| is)\s+the\s+ocr\b|\btranscrib\w*|\bocr\b",
+    re.IGNORECASE,
+)
 
 ASSET_TOKEN_RE = re.compile(r"^(file[_-][^-]+)", re.IGNORECASE)
 CODE_BLOCK_RX = re.compile(r"```(?:[^\n`]*)\n?(.*?)```", re.DOTALL)
@@ -92,6 +100,12 @@ AFTER_COLON_RX = re.compile(
     re.IGNORECASE,
 )
 ARROW_RX = re.compile(r"(?:->|→|=>)\s*([^\n]{2,120})")
+QUOTED_PHRASE_RX = re.compile(r"[\"“”'`]\s*([^\"“”'`\n]{3,160}?)\s*[\"“”'`]")
+EMPHASIS_PHRASE_RX = re.compile(r"\*\*([^*\n]{3,160})\*\*|\*([^*\n]{3,160})\*")
+FRAMED_TRANSCRIPTION_RX = re.compile(
+    r"\bit (?:reads?|says)\b[,:-]?\s*([^\n]{3,120})",
+    re.IGNORECASE,
+)
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 
@@ -183,13 +197,35 @@ def _to_msg(message: dict[str, Any]) -> Msg:
     )
 
 
+def _normalize_phrase_candidate(text: str) -> str:
+    value = html.unescape(" ".join(text.split())).strip(" -•\t`'\"“”")
+    if value.lower().startswith("only "):
+        value = value[5:].lstrip(" :;-")
+    return value.strip()
+
+
+def _extract_inline_highlight_phrases(text: str) -> list[str]:
+    phrases: list[str] = []
+    for raw in QUOTED_PHRASE_RX.findall(text):
+        value = _normalize_phrase_candidate(str(raw))
+        if 3 <= len(value) <= 180:
+            phrases.append(value)
+    for match in EMPHASIS_PHRASE_RX.findall(text):
+        raw = match[0] or match[1]
+        value = _normalize_phrase_candidate(str(raw))
+        if 3 <= len(value) <= 180:
+            phrases.append(value)
+    return phrases
+
+
 def _extract_candidate_phrases(text: str) -> list[str]:
     phrases: list[str] = []
     for pattern in (AFTER_COLON_RX, ARROW_RX):
         for match in pattern.findall(text):
-            value = html.unescape(" ".join(str(match).split()))
+            value = _normalize_phrase_candidate(str(match))
             if 3 <= len(value) <= 180:
                 phrases.append(value)
+    phrases.extend(_extract_inline_highlight_phrases(text))
     dedup: list[str] = []
     seen: set[str] = set()
     for p in phrases:
@@ -203,17 +239,22 @@ def _extract_candidate_phrases(text: str) -> list[str]:
 
 def _extract_transcribed_lines(assistant_text: str) -> tuple[list[str], bool]:
     candidates: list[str] = []
+    candidates.extend(_extract_inline_highlight_phrases(assistant_text))
+    for match in FRAMED_TRANSCRIPTION_RX.findall(assistant_text):
+        value = _normalize_phrase_candidate(str(match))
+        if 6 <= len(value) <= 120 and any(ch.isalpha() for ch in value):
+            candidates.append(value)
     blocks = CODE_BLOCK_RX.findall(assistant_text)
     had_code_block = bool(blocks)
     for block in blocks:
         for line in str(block).splitlines():
-            value = " ".join(line.split()).strip(" -•\t")
+            value = _normalize_phrase_candidate(line)
             if len(value) >= 4 and any(ch.isalpha() for ch in value):
                 candidates.append(value)
     if not candidates:
         # Fallback: split by sentence-like punctuation for short line candidates.
         for chunk in re.split(r"[;\n]+", assistant_text):
-            value = " ".join(chunk.split()).strip(" -•\t")
+            value = _normalize_phrase_candidate(chunk)
             if 6 <= len(value) <= 120 and any(ch.isalpha() for ch in value):
                 candidates.append(value)
     dedup: list[str] = []
@@ -246,6 +287,7 @@ def _is_ocr_like_phrase(text: str) -> bool:
         "from your page",
         "no interpretation",
         "basically found",
+        "meta",
     )
     if any(marker in lowered for marker in noisy_markers):
         return False
@@ -258,6 +300,12 @@ def _is_ocr_like_phrase(text: str) -> bool:
         return False
     alpha_words = [re.sub(r"[^a-z]", "", w.lower()) for w in words]
     alpha_words = [w for w in alpha_words if w]
+    if len(alpha_words) == 1:
+        token = alpha_words[0]
+        if len(token) < 4 or token in ANCHOR_STOPWORDS or token in ANCHOR_META_WORDS:
+            return False
+    if len(alpha_words) == 2 and all(token in ANCHOR_STOPWORDS for token in alpha_words):
+        return False
     if len(alpha_words) >= 5:
         stopword_ratio = sum(1 for word in alpha_words if word in ANCHOR_STOPWORDS) / len(alpha_words)
         if stopword_ratio > 0.55:
@@ -355,20 +403,6 @@ def _anchor_terms_for_phrases(phrases: list[str]) -> list[str]:
                 continue
             seen.add(token)
             anchors.append(token)
-    return anchors
-
-
-def _anchor_terms_from_assistant_text(text: str) -> list[str]:
-    anchors: list[str] = []
-    seen: set[str] = set()
-    for token in re.findall(r"[A-Za-z]{5,}", text):
-        lowered = token.lower()
-        if lowered in ANCHOR_STOPWORDS or lowered in ANCHOR_META_WORDS:
-            continue
-        if lowered in seen:
-            continue
-        seen.add(lowered)
-        anchors.append(lowered)
     return anchors
 
 
@@ -471,16 +505,27 @@ def build_from_export(
                 image_path=image_path,
                 followups=followups,
             )
+            ocr_intent_signal = bool(
+                OCR_INTENT_RX.search("\n".join([msg.text, *followups]))
+            )
+            ocr_framing_signal = bool(OCR_FRAMING_RX.search(assistant_text))
 
             confidence = "low"
             chosen_phrases: list[str] = []
             correction_phrases = [p for p in correction_phrases if _is_ocr_like_phrase(p)]
             transcription_phrases = [p for p in transcription_phrases if _is_ocr_like_phrase(p)]
-
             if correction_signal and correction_phrases:
                 confidence = "high"
                 chosen_phrases = correction_phrases[:5]
-            elif positive_signal and transcription_phrases:
+            elif (
+                ocr_intent_signal
+                and transcription_phrases
+                and (
+                    ocr_framing_signal
+                    or correction_signal
+                    or had_code_block
+                )
+            ):
                 confidence = "medium"
                 chosen_phrases = transcription_phrases[:5]
 
@@ -495,6 +540,8 @@ def build_from_export(
                     "followup_user_messages": followups[:5],
                     "positive_signal": positive_signal,
                     "correction_signal": correction_signal,
+                    "ocr_intent_signal": ocr_intent_signal,
+                    "ocr_framing_signal": ocr_framing_signal,
                     "correction_phrases": correction_phrases,
                     "transcription_phrases": transcription_phrases,
                     "chosen_phrases": chosen_phrases,
@@ -509,12 +556,6 @@ def build_from_export(
                 continue
             case_id = f"tx-{conversation_id[:8]}-{len(cases)+1:03d}"
             anchor_terms = _anchor_terms_for_phrases(chosen_phrases)[:4]
-            for token in _anchor_terms_from_assistant_text(assistant_text):
-                if token in anchor_terms:
-                    continue
-                anchor_terms.append(token)
-                if len(anchor_terms) >= 8:
-                    break
             if len(anchor_terms) < 2:
                 continue
             cases.append(
@@ -600,8 +641,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-review",
-        default=".local/eval_cases/ocr_handwriting_from_transcripts_review.json",
-        help="Output JSON path for mined episode review data.",
+        default=".local/eval_cases/ocr_transcript_cases_review.json",
+        help="Output JSON path for mined episode review data (all lanes).",
     )
     parser.add_argument(
         "--max-cases",
