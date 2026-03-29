@@ -30,8 +30,8 @@
     `harness_mode=fixture` (+ optional `fixture_output`)
   - env-level harness default:
     `POLINKO_CHAT_HARNESS_DEFAULT_MODE=live|fixture`
-  - canonical UI eval adapter contract:
-    `docs/eval/UI_EVAL_ADAPTER_CONTRACT.md`
+  - canonical UI eval adapter spec:
+    `docs/runtime/RUNBOOK.md`
 - Legacy frontend implementation remains archived in
   `.archive/live_archive/legacy_frontend/`.
 - OpenAI developer docs MCP server is now configured for Codex/VS Code usage:
@@ -88,11 +88,11 @@
     (`pass`/`fail`) derived from checkpoint counts
   - API/tests were updated together to avoid state drift between rubric
     semantics and saved checkpoint payloads
-- Binary contract hard-cut checkpoint (March 26, 2026):
+- Binary spec hard-cut checkpoint (March 26, 2026):
   - feedback outcomes are strict `pass`/`fail` at API and storage boundaries
   - legacy `tags`-only feedback payload compatibility is removed
   - checkpoint responses use `non_binary_count` (no active `other_count` label)
-  - no migration helper is part of active workflow; data outside contract is a repair task
+  - no migration helper is part of active workflow; data outside spec is a repair task
 - Post-merge eval + reference checkpoint (March 25, 2026):
   - PR `#71` merged to `main` (`a60bf15`) with backend/API/test sync
   - checkpoint and feedback APIs preserve binary gate behaviour
@@ -130,11 +130,12 @@
     - `.archive/live_archive/legacy_coordination/`
   - active top-level docs now stay focused on current runtime/eval operations
     and research workflow
-- Eval docs canonical naming checkpoint (March 27, 2026):
-  - renamed `docs/EVAL_V2_SPEC.md` -> `docs/eval/EVAL_SPEC.md`
-  - renamed `docs/EVAL_V2_BACKEND_MAP.md` -> `docs/eval/EVAL_BACKEND_MAP.md`
-  - binary policy semantics are documented in
-    `docs/eval/BINARY_EVAL_LOGIC_REFINEMENT.md`
+- Docs consolidation checkpoint (March 29, 2026):
+  - active spec content is consolidated into six canonical docs:
+    - `CHARTER`, `DECISIONS`, `SESSION_HANDOFF`, `STATE`,
+      `ARCHITECTURE`, `RUNBOOK`
+  - benchmark/eval spec details are now maintained directly in
+    `docs/runtime/RUNBOOK.md`
 - EOD docs confidentiality merge checkpoint (March 25, 2026):
   - PR `#72` merged to `main` (`2a6f575`)
   - runbook + ignore policy now treats non-build internal docs as local-only
@@ -177,11 +178,11 @@
 - Runtime DB lifecycle checkpoint (March 27, 2026):
   - runtime DB defaults moved to `.local/runtime_dbs/active/`
   - local DB lifecycle commands are retired during wiring lock
-    (docs/tests remain the active contract surface)
+    (docs/tests remain the active spec surface)
   - no root-level `.polinko_*.db` files are part of the active surface
 - Minimal-config benchmark checkpoint (March 27, 2026):
   - canonical benchmark spec added:
-    - `docs/benchmarks/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
+    - `docs/runtime/RUNBOOK.md`
   - benchmark compares three phases:
     - minimal-config CLI baseline
     - traditional eval stack
@@ -206,9 +207,9 @@
   - runtime DB provisioning is intentionally paused until eval wiring sign-off
   - no fresh `.polinko_*.db` or `.human_reference.db` files are active in
     repository root during this phase
-  - canonical wiring source is `docs/eval/EVAL_WIRING_SPEC.md` and associated
-    contract docs/tests
-- Runtime DB doc-contract checkpoint (March 28, 2026):
+  - canonical wiring source is `docs/runtime/RUNBOOK.md` and associated
+    spec docs/tests
+- Runtime DB doc-spec checkpoint (March 28, 2026):
   - active docs no longer reference retired local DB commands
     (`db-reset`, `db-archive`, `db-visuals`)
   - `make build-audit` now fails on reintroduction of those command tokens in
@@ -358,7 +359,7 @@
 - Inspect-first checkpoint (March 26, 2026):
   - when context is noisy/ambiguous, execution pauses for inspection before
     cleanup/refactor
-  - deprecated context stays in archive paths and does not drive active contracts
+  - deprecated context stays in archive paths and does not drive active specs
   - directed precision mode is active for scoped changes to avoid unusable
     summary-first outputs
 - `make hallucination-gate` now provides a dedicated strict hallucination gate
@@ -481,32 +482,9 @@ Use this in a new chat:
 5. Keep benchmark outputs product-supportive by converting findings into
    explicit implementation priorities.
 
-## Cookbook Roadmap (Prioritized)
+## Planning Pointers
 
-These are mapped from the OpenAI cookbook items and ordered for this project:
-
-1. Doing RAG on PDFs using File Search in the Responses API
-   - Best immediate fit with current vector + file search architecture.
-2. Structured Outputs
-   - Highest leverage for stable extraction/indexing contracts.
-3. Image Understanding with RAG
-   - Extends OCR and supports richer multimodal retrieval.
-   - Intake spec: `docs/benchmarks/COOKBOOK_IMAGE_RAG_INTAKE.md`.
-4. Data Extraction and Transformation in ELT Workflows (GPT-4o OCR alternative)
-   - Best when moving from single-chat flows to batch ingestion jobs.
-5. Exploring Model Graders for Reinforcement Fine-Tuning
-   - Most useful once eval criteria and production traces are mature.
-6. Custom LLM-as-Judge hallucination checks (Braintrust) [P1]
-   - Offline eval/CI scaffold is implemented; calibrate thresholds and keep
-     branch protections strict.
-7. Multimodal retrieval A/B with CLIP embeddings [P2]
-   - Evaluate against current embeddings path after OCR/PDF retrieval baseline is stable.
-
-## Final Action Plan (Current)
-
-1. Lock baseline and keep Runner path stable as default.
-2. Keep governance + hallucination guardrails hardened in local runtime.
-3. Maintain multi-agent collaboration API contract already implemented.
-4. Continue eval UX/rubric simplification with deterministic checkpoint output.
-5. Keep OCR/file-search/retrieval quality loops green before expansion work.
-6. Preserve local-first workflow and avoid deprecated hybrid pilot paths.
+- Cookbook adoption planning is maintained in:
+  - `docs/runtime/RUNBOOK.md`
+- Immediate execution plan is maintained in:
+  - `docs/governance/SESSION_HANDOFF.md` (`Immediate Next Step`)

@@ -9,7 +9,7 @@
 - `config.py`
   - Environment loading + validation.
 - `api/`
-  - HTTP layer, route contract, middleware, auth/rate-limit integration.
+  - HTTP layer, route spec, middleware, auth/rate-limit integration.
 - `core/`
   - Runtime logic (prompting, session/history, personalization, retrieval helpers).
 - `tools/`
@@ -45,12 +45,7 @@
     integrity signal only.
   - checkpoint API responses include explicit fail-closed `gate_outcome`
     (`pass`/`fail`) derived from counts.
-  - canonical policy/reward semantics and conceptual ER model:
-    `docs/eval/EVAL_POLICY_MODEL.md`
-  - canonical gate wiring contract and phase policy:
-    `docs/eval/EVAL_WIRING_SPEC.md`
-  - canonical UI integration contract:
-    `docs/eval/UI_EVAL_ADAPTER_CONTRACT.md`
+  - canonical policy/gate/ui specs are maintained in `docs/runtime/RUNBOOK.md`.
 - Eval artefacts (non-authoritative):
   - Git history is the canonical retention mechanism for tracked project state.
   - local eval artefacts are operational outputs (default under `eval_reports/`)
@@ -73,7 +68,7 @@
 
 ## Placement Rules
 
-- API endpoints/middleware/contracts: `api/`
+- API endpoints/middleware/specs: `api/`
 - Prompt/runtime behaviour and policy logic: `core/`
 - Eval/report/reference scripts and one-off operators: `tools/`
 - Execution state/decisions/handoff documentation: `docs/`
@@ -95,7 +90,7 @@
 - Env sanity: `make doctor-env`
 - Backend tests: `make test`
 - Local API: `make server` or `make server-daemon`
-- Wiring visual contract: `docs/eval/EVAL_WIRING_SPEC.md`
+- Wiring spec: `docs/runtime/RUNBOOK.md`
 - Runtime DB lifecycle commands are retired during wiring lock
   (see `docs/runtime/RUNBOOK.md`).
 - Local eval trace backfill (optional): `make backfill-eval-traces`

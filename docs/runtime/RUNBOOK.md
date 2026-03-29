@@ -167,11 +167,13 @@
    - `.archive/live_archive/legacy_frontend/`
 4. Archive content is reference-only:
    - do not wire it into active runtime/eval gate paths.
-   - keep binary runtime contracts sourced from active docs/code.
+   - keep binary runtime specs sourced from active docs/code.
 
 ## Wiring-First DB Freeze
 
-Local runtime DB commands are retired during wiring lock; treat docs/tests as the contract (`docs/eval/EVAL_WIRING_SPEC.md`, `docs/eval/EVAL_SPEC.md`, `docs/eval/EVAL_BACKEND_MAP.md`, `make test`, `make quality-gate-deterministic`). No local DB lifecycle commands remain.
+Local runtime DB commands are retired during wiring lock; treat this runbook
+plus tests as the active spec surface (`make test`,
+`make quality-gate-deterministic`). No local DB lifecycle commands remain.
 
 ## Chat Harness Mode (Deterministic Smoke Without Model Calls)
 
@@ -339,7 +341,7 @@ Local runtime DB commands are retired during wiring lock; treat docs/tests as th
 
 1. If system state appears noisy/contradictory, stop and inspect before trying
    to summarise, simplify, or refactor.
-2. Keep active runtime/doc contracts current; archive deprecated context rather
+2. Keep active runtime/doc specs current; archive deprecated context rather
    than carrying compatibility paths in active flow.
 3. In human-directed precision mode, execute only the requested slice and avoid
    opportunistic cleanup outside scope.
@@ -427,9 +429,7 @@ Local runtime DB commands are retired during wiring lock; treat docs/tests as th
 
 ## Chat History API
 
-UI adapter reference:
-
-- `docs/eval/UI_EVAL_ADAPTER_CONTRACT.md` (chat + eval TypeScript contract)
+UI adapter spec is maintained in this runbook section (chat + eval API shape).
 
 - `GET /chats` list chats
 - `POST /chats` create chat
@@ -880,11 +880,12 @@ Current policy:
 3. Run `make eval-reports`.
 4. Reports are written under `eval_reports/` with timestamped filenames.
 
-## Eval Gate Semantics (Canonical)
+## Eval Gate Spec (Canonical)
 
-1. Use `docs/eval/EVAL_POLICY_MODEL.md` as the source of truth for eval gate
-   semantics.
-2. Symbol convention for policy docs:
+1. Binary outcome model:
+   - allowed outcomes: `pass` and `fail` only
+   - tags are diagnostic only; outcome drives gate arithmetic
+2. Symbol convention:
    - `⊨` semantic entailment / satisfies
    - `⊭` does not semantically entail
 3. Canonical semantics:
@@ -894,8 +895,35 @@ Current policy:
 4. Canonical binary gate:
    - `PASS ⇔ policy_pass ∧ high_value_alignment_pass ∧ evidence_complete`
    - otherwise `FAIL`
-5. Keep release output strictly binary; diagnostic detail may be rich, but it
+5. Checkpoint arithmetic:
+   - `total_count = pass_count + fail_count + non_binary_count`
+   - `non_binary_count` is an integrity signal and should remain `0`
+   - `gate_outcome = pass` iff `total_count > 0 ∧ fail_count = 0 ∧ non_binary_count = 0`
+6. Keep release output strictly binary; diagnostic detail may be rich, but it
    must not introduce non-binary gate states.
+
+## Benchmark + Cookbook Spec
+
+1. Primary benchmark hypothesis:
+   - minimal configuration outperforms configuration-heavy flows on quality,
+     clarity, iteration speed, and maintenance overhead
+2. Current benchmark phases:
+   - A: minimal-config CLI baseline
+   - B: traditional eval stack
+   - C: binary eval stack
+   - D: operator burden shift diagnostic
+3. Cookbook queue (prioritised now):
+   - RAG on PDFs with File Search
+   - Structured Outputs
+   - Image Understanding with RAG
+   - ELT extraction/transformation pattern
+   - model graders for reinforcement fine-tuning
+4. Deferred cookbook queue:
+   - Prompt Caching 101/201
+   - Realtime eval guide
+   - Realtime out-of-band transcription
+   - RAG with graph DB
+   - search reranking with cross-encoders
 
 ## Calibrate Hallucination Threshold
 
