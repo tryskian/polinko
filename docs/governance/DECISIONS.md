@@ -1166,3 +1166,19 @@
 - Why: Restores missed handwriting cases without widening conversational noise,
   keeps illustration coverage intact, and removes a deterministic false-typed
   path from lane hint matching.
+
+## D-100: Promote ask-level OCR corrections via transcription anchors, not correction-word anchors
+
+- Date: `2026-03-29`
+- Category: `eval_quality`
+- Tags: `ocr_lanes`, `ask_correction`, `anchor_stability`, `strict_binary`
+- Decision:
+  - treat ask-message correction signals as medium-confidence promotion only
+    when OCR intent + transcription anchors are present
+  - keep high-confidence correction classification reserved for follow-up
+    correction phrases
+  - continue recording ask-level correction phrases in review diagnostics, but
+    do not use them directly as eval case anchor requirements
+- Why: Prevents brittle failures from correction-word anchors (for example
+  `insight`/`weight`) while still recovering additional handwriting cases under
+  strict binary pass/fail gates.

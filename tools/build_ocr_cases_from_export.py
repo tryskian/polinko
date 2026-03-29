@@ -83,7 +83,7 @@ POSITIVE_RX = re.compile(
     re.IGNORECASE,
 )
 CORRECTION_RX = re.compile(
-    r"should be|it says|correction|you read|you wrote|wrong|not right|typo|only",
+    r"should be|it says|correction|you read (?:it|this) as|you wrote|wrong|not right|typo|only|first word is|reads? as",
     re.IGNORECASE,
 )
 OCR_INTENT_RX = re.compile(
@@ -236,6 +236,18 @@ def _extract_candidate_phrases(text: str) -> list[str]:
             continue
         seen.add(key)
         dedup.append(p)
+    return dedup
+
+
+def _dedupe_phrases(phrases: list[str]) -> list[str]:
+    dedup: list[str] = []
+    seen: set[str] = set()
+    for phrase in phrases:
+        key = phrase.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        dedup.append(phrase)
     return dedup
 
 
@@ -492,9 +504,11 @@ def build_from_export(
 
             assistant_text = ""
             followups: list[str] = []
-            correction_phrases: list[str] = []
+            followup_correction_phrases: list[str] = []
             positive_signal = False
-            correction_signal = False
+            followup_correction_signal = False
+            ask_correction_signal = bool(CORRECTION_RX.search(msg.text))
+            ask_correction_phrases = _extract_candidate_phrases(msg.text)
 
             for j in range(idx + 1, min(idx + 10, len(seq))):
                 probe = seq[j]
@@ -508,8 +522,8 @@ def build_from_export(
                 if POSITIVE_RX.search(probe.text):
                     positive_signal = True
                 if CORRECTION_RX.search(probe.text):
-                    correction_signal = True
-                    correction_phrases.extend(_extract_candidate_phrases(probe.text))
+                    followup_correction_signal = True
+                    followup_correction_phrases.extend(_extract_candidate_phrases(probe.text))
 
             if not assistant_text:
                 continue
@@ -546,15 +560,20 @@ def build_from_export(
 
             confidence = "low"
             chosen_phrases: list[str] = []
-            correction_phrases = [p for p in correction_phrases if _is_ocr_like_phrase(p)]
+            followup_correction_phrases = [p for p in followup_correction_phrases if _is_ocr_like_phrase(p)]
+            followup_correction_phrases = _dedupe_phrases(followup_correction_phrases)
+            ask_correction_phrases = [p for p in ask_correction_phrases if _is_ocr_like_phrase(p)]
+            ask_correction_phrases = _dedupe_phrases(ask_correction_phrases)
+            correction_phrases = _dedupe_phrases(followup_correction_phrases + ask_correction_phrases)
+            correction_signal = followup_correction_signal or ask_correction_signal
             transcription_phrases = [p for p in transcription_phrases if _is_ocr_like_phrase(p)]
             strong_illustration_phrase_signal = (
                 lane == "illustration"
                 and len(_anchor_terms_for_phrases(transcription_phrases[:5])) >= 2
             )
-            if correction_signal and correction_phrases:
+            if followup_correction_signal and followup_correction_phrases:
                 confidence = "high"
-                chosen_phrases = correction_phrases[:5]
+                chosen_phrases = followup_correction_phrases[:5]
             elif (
                 ocr_intent_signal
                 and transcription_phrases

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from tools.build_ocr_cases_from_export import (
     ASK_RX,
+    CORRECTION_RX,
     _classify_lane,
     _expand_anchor_variants,
     _extract_candidate_phrases,
@@ -18,6 +19,10 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
     def test_ask_regex_does_not_match_recursive_text(self) -> None:
         text = "I am getting trapped in recursive analysis of our prompt dynamics."
         self.assertIsNone(ASK_RX.search(text))
+
+    def test_correction_regex_does_not_match_generic_read_request(self) -> None:
+        text = "can you read this?"
+        self.assertIsNone(CORRECTION_RX.search(text))
 
     def test_phrase_filter_rejects_stopword_singletons(self) -> None:
         self.assertFalse(_is_ocr_like_phrase("and"))
@@ -318,6 +323,71 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["illustration_cases_written"], 1)
             case = json.loads(output_cases.read_text(encoding="utf-8"))["cases"][0]
             self.assertEqual(case["lane"], "illustration")
+
+    def test_build_promotes_medium_from_ask_level_correction_signal(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "img_010.jpg").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-ask-correction",
+                "title": "Ask correction",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {
+                                "parts": [
+                                    'one update: first word is "insight". you read it as "weight". can you transcribe this image again?'
+                                ]
+                            },
+                            "metadata": {"attachments": [{"name": "img_010.jpg", "id": "file_ask"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ['it reads: "insight — abacus method"']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-5.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["high_confidence"], 0)
+            self.assertEqual(summary["medium_confidence"], 1)
+            self.assertEqual(summary["handwriting_cases_written"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["confidence"], "medium")
+            self.assertIn("insight", [p.lower() for p in review["correction_phrases"]])
+            self.assertIn("abacus method", " ".join(review["chosen_phrases"]).lower())
 
 
 if __name__ == "__main__":
