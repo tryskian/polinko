@@ -565,7 +565,8 @@ def build_from_export(
             ask_correction_phrases = [p for p in ask_correction_phrases if _is_ocr_like_phrase(p)]
             ask_correction_phrases = _dedupe_phrases(ask_correction_phrases)
             correction_phrases = _dedupe_phrases(followup_correction_phrases + ask_correction_phrases)
-            correction_signal = followup_correction_signal or ask_correction_signal
+            # Treat correction as meaningful only when we extracted OCR-like phrase content.
+            correction_signal = bool(correction_phrases)
             transcription_phrases = [p for p in transcription_phrases if _is_ocr_like_phrase(p)]
             strong_illustration_phrase_signal = (
                 lane == "illustration"
