@@ -37,6 +37,8 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Keep benchmarking product-supportive:
   - hypothesis benchmarking informs build decisions but does not replace product delivery
   - use one canonical benchmark spec to control sequencing and confounders
+  - keep benchmark/case-study framing stack-scoped (baseline/advanced/binary),
+    not model-name scoped
 - Engineer owns proactive technical hygiene:
   - identify drift/gremlin-risk paths early
   - execute cleanup/validation/doc alignment without waiting for reminders

@@ -75,6 +75,12 @@ Includes:
 Output:
 
 - Demonstrated capability with reproducible references.
+- Canonical case-study spine:
+  - baseline stack (minimal control surfaces, usable operation)
+  - advanced stack regression (higher correction-loop overhead, lower
+    completion reliability)
+  - binary stack recovery (lean controls + strict pass/fail gates restore
+    decision clarity)
 
 Primary source inputs (in-repo):
 
