@@ -45,10 +45,42 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph eval-relationship-graph eval-viz cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-illustration db-visuals db-reset db-archive docker-build docker-run dev dev-stop
+.PHONY: chat venv env ocrindex ocrmine ocrall ocrhand ocrtype ocrillu viz gate server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph eval-relationship-graph eval-viz cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-illustration db-visuals db-reset db-archive docker-build docker-run dev dev-stop
 
 chat:
 	$(PYTHON) app.py
+
+venv env:
+	@set -eu; \
+	if [ -f ./venv/bin/activate ]; then \
+		ACTIVATE_PATH="./venv/bin/activate"; \
+	elif [ -f ./polinko-repositioning-system/bin/activate ]; then \
+		ACTIVATE_PATH="./polinko-repositioning-system/bin/activate"; \
+	else \
+		echo "No local activation script found (checked ./venv/bin/activate and ./polinko-repositioning-system/bin/activate)."; \
+		exit 1; \
+	fi; \
+	echo "Opening shell with virtual environment: $$ACTIVATE_PATH"; \
+	. "$$ACTIVATE_PATH"; \
+	echo "VIRTUAL_ENV=$$VIRTUAL_ENV"; \
+	exec "$$SHELL" -i
+
+# Short aliases for frequent long-chain commands.
+ocrindex: cgpt-export-index
+
+ocrmine: ocr-cases-from-export
+
+ocrall: eval-ocr-transcript-cases
+
+ocrhand: eval-ocr-transcript-cases-handwriting
+
+ocrtype: eval-ocr-transcript-cases-typed
+
+ocrillu: eval-ocr-transcript-cases-illustration
+
+viz: eval-viz
+
+gate: quality-gate-deterministic
 
 server:
 	$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload
