@@ -35,6 +35,21 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertIn("archiv", anchors)
         self.assertIn("tumble", anchors)
         self.assertIn("float", anchors)
+        self.assertNotIn("tumbl", anchors)
+
+    def test_expand_anchor_variants_avoids_overstemming_core_words(self) -> None:
+        anchors = _expand_anchor_variants(["focus", "abacus", "process", "analysis", "classes", "sparks"])
+        self.assertIn("focus", anchors)
+        self.assertIn("abacus", anchors)
+        self.assertIn("process", anchors)
+        self.assertIn("analysis", anchors)
+        self.assertIn("class", anchors)
+        self.assertIn("spark", anchors)
+        self.assertNotIn("focu", anchors)
+        self.assertNotIn("abacu", anchors)
+        self.assertNotIn("proces", anchors)
+        self.assertNotIn("analysi", anchors)
+        self.assertNotIn("classe", anchors)
 
     def test_classify_lane_detects_embedded_camera_filename(self) -> None:
         lane = _classify_lane(

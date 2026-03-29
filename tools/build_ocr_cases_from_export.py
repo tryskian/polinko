@@ -473,10 +473,14 @@ def _expand_anchor_variants(anchors: list[str]) -> list[str]:
             variants.append(token[:-3])
         if token.endswith("al") and len(token) > 5:
             variants.append(token[:-2])
-        if token.endswith("es") and len(token) > 5:
-            variants.append(token[:-2])
-            variants.append(token[:-1])
-        elif token.endswith("s") and len(token) > 4:
+        if token.endswith("ies") and len(token) > 6:
+            variants.append(token[:-3] + "y")
+        elif token.endswith("es") and len(token) > 5:
+            if token.endswith(("ses", "xes", "zes", "ches", "shes")):
+                variants.append(token[:-2])
+            else:
+                variants.append(token[:-1])
+        elif token.endswith("s") and len(token) > 3 and not token.endswith(("us", "ss", "is")):
             variants.append(token[:-1])
         for variant in variants:
             value = variant.strip()
