@@ -64,6 +64,33 @@ Validate the hypothesis that minimal configuration produces better product outco
      - `operation_fidelity` (`pass`/`fail`)
      - `decision_clarity` (`pass`/`fail`)
 
+## Case-Study Scope Addendum (Primary-Source Grounding)
+
+This benchmark also carries a lightweight case-study method slice:
+
+- Use primary-source material (theory notebooks/sketchbooks) as the anchor for
+  meaning-preserving transcription quality checks.
+- Keep scope intentionally small in the current product phase:
+  - method note + 1-2 mapped examples only
+  - no full corpus ingestion/tooling in this slice
+- Keep the gate binary (`pass`/`fail`) and keep nuance in notes/transcripts.
+- Promote full corpus tooling only after core product milestones remain stable.
+
+## Grounding Micro-Examples (Current)
+
+1. Transcript-backed handwriting/cursive case
+
+   - Source lane: local ChatGPT export transcript mining
+   - Case artifact: `.local/eval_cases/ocr_handwriting_from_transcripts.json`
+   - Validation command: `make eval-ocr-transcript-cases`
+   - Latest result: `1/1 PASS` (strict OCR gating)
+
+1. Canonical OCR strict baseline
+
+   - Case artifact: `docs/eval/cases/ocr_eval_cases.json`
+   - Validation command: `make eval-ocr`
+   - Latest baseline result: `6/6 PASS`
+
 ## Evidence Mapping
 
 - A: CLI/minimal-config artifacts and transcript evidence.

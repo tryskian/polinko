@@ -1035,3 +1035,18 @@
 - Why: Enables reproducible OCR benchmarking against real transcript-backed
   handwriting/cursive signals while preserving local confidentiality and binary
   eval discipline.
+
+## D-092: Add lightweight primary-source grounding method to case-study benchmark
+
+- Date: `2026-03-29`
+- Category: `research_experiment`
+- Tags: `primary_source_grounding`, `case_study`, `scope_control`, `binary_gate`
+- Decision:
+  - add a lightweight primary-source grounding addendum to:
+    - `docs/benchmarks/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
+  - constrain this phase to:
+    - method definition + 1-2 mapped examples
+    - no full corpus ingestion/tooling in active runtime scope
+  - keep gate outcomes binary (`pass`/`fail`) and store nuance in notes/transcripts
+- Why: Preserves case-study relevance and research rigor now without derailing
+  product delivery into premature corpus infrastructure work.
