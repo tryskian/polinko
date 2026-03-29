@@ -1230,3 +1230,19 @@
     - non-promotion for single-token variant lists
 - Why: Recovers valid transcript OCR cases under strict binary gates while
   blocking noisy promotions that degrade pass-rate precision.
+
+## D-104: Keep case-study comparisons stack-scoped (no model naming)
+
+- Date: `2026-03-29`
+- Category: `research_method`
+- Tags: `case_study`, `benchmarking`, `stack_comparison`, `evidence_framing`
+- Decision:
+  - express benchmark and portfolio comparisons in stack terms only:
+    - baseline stack
+    - advanced stack
+    - binary stack
+  - avoid model-specific naming in the core narrative framing
+  - map claims to measurable outcomes:
+    quality, decision clarity, iteration speed, and maintenance overhead
+- Why: Maintains durable, implementation-relevant evidence framing without
+  coupling the case study to transient model/version naming.

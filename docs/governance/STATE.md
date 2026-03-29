@@ -197,6 +197,15 @@
   - `H-001` is currently supported for product direction
   - next benchmark-derived backend priority is operation-binding diagnostics
     (`benchmark D`) as deterministic implementation slices
+- Case-study stack narrative checkpoint (March 29, 2026):
+  - canonical evidence story is locked to stack comparison (not model naming):
+    - baseline stack: usable minimal-control operation
+    - advanced stack: regression via correction-loop overhead and reduced
+      completion reliability
+    - binary stack: reliability recovery via lean controls + strict binary
+      gates
+  - portfolio claims should map to this stack sequence with transcript/eval
+    evidence links
 - Primary-source grounding checkpoint (March 29, 2026):
   - benchmark spec now includes a scoped case-study grounding addendum:
     - method + 1-2 mapped examples only in current phase
