@@ -1182,20 +1182,3 @@
 - Why: Prevents brittle failures from correction-word anchors (for example
   `insight`/`weight`) while still recovering additional handwriting cases under
   strict binary pass/fail gates.
-
-## D-101: Pause scheduled implementation automation and standardise one canonical automation spec
-
-- Date: `2026-03-29`
-- Category: `workflow_environment`
-- Tags: `automation_pause`, `single_lane_execution`, `worktree_isolation`, `drift_control`
-- Decision:
-  - set scheduled implementation automation mode to `paused` by default
-  - keep manual/autonomous engineer execution as the single active lane
-  - publish one canonical automation contract at:
-    - `docs/governance/AUTOMATION_SPEC.md`
-  - require explicit human go/no-go before any automation re-enable
-  - require separate worktree isolation when automation and manual lanes run
-    concurrently
-- Why: Prevents strategy drift between automation and manual execution and keeps
-  deterministic backend progress in one coherent lane until automation prompts
-  and controls are fully standardised.

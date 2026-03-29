@@ -118,7 +118,6 @@
 - `docs/governance/CHARTER.md`
 - `docs/governance/STATE.md`
 - `docs/governance/DECISIONS.md`
-- `docs/governance/AUTOMATION_SPEC.md`
 - `docs/runtime/ARCHITECTURE.md`
 - `docs/runtime/RUNBOOK.md`
 - `docs/eval/EVAL_POLICY_MODEL.md`
@@ -135,9 +134,7 @@
 1. Morning worktree confirmation:
    - confirm whether this thread is running in canonical repo root
      (`/Users/tryskian/Github/polinko`) or a dedicated worktree path
-   - confirm automation mode from `docs/governance/AUTOMATION_SPEC.md`
-     (`paused` by default)
-   - if automation is active, confirm it is using a separate worktree
+   - if parallel tracks are active, confirm each uses a separate worktree
    - command ownership stays engineer-side (imagineer does not run terminal/Git commands)
    - execution-first default stays active (agent executes requested work directly)
 2. `make doctor-env`
@@ -150,9 +147,7 @@
 ## Known Constraints
 
 - Network-dependent model calls can fail in restricted environments.
-- Cloud deployment automation remains paused; local-first execution is canonical.
-- Scheduled implementation automation remains paused; manual/autonomous engineer
-  execution is canonical until explicit re-enable.
+- Cloud deployment remains paused; local-first execution is canonical.
 - Environment mutation policy:
   - verify repo path + mode + branch before changes
   - prefer repo-scoped edits
@@ -188,4 +183,4 @@
 
 ## Copy/Paste Rehydrate Prompt
 
-`Read docs/governance/CHARTER.md, docs/runtime/ARCHITECTURE.md, docs/runtime/RUNBOOK.md, docs/governance/STATE.md, docs/governance/DECISIONS.md, and docs/governance/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, confirm active git branch, and confirm whether this thread should run in canonical root or a dedicated worktree (especially if automation is active). Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Run in proactive engineer mode: execute obvious hygiene/cleanup/validation work without waiting for reminders, and ask only when approvals/trade-offs require it. Apply human-managed co-reasoning control: confirm objective/scope/acceptance and keep go/no-go decisions human-led. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behaviour drift and full test/build validation.`
+`Read docs/governance/CHARTER.md, docs/runtime/ARCHITECTURE.md, docs/runtime/RUNBOOK.md, docs/governance/STATE.md, docs/governance/DECISIONS.md, and docs/governance/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, confirm active git branch, and confirm whether this thread should run in canonical root or a dedicated worktree. Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Run in proactive engineer mode: execute obvious hygiene/cleanup/validation work without waiting for reminders, and ask only when approvals/trade-offs require it. Apply human-managed co-reasoning control: confirm objective/scope/acceptance and keep go/no-go decisions human-led. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behaviour drift and full test/build validation.`

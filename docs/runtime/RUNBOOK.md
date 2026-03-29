@@ -40,25 +40,10 @@
    - canonical root (`/Users/tryskian/Github/polinko`) or dedicated worktree.
 2. Confirm active branch in this thread:
    - `git branch --show-current`
-3. Confirm automation mode from spec:
-   - `docs/governance/AUTOMATION_SPEC.md` is canonical.
-   - default mode is `paused` (manual lane only).
-4. If automation is active:
-   - keep it on a separate worktree from manual work.
-5. Only after 1-4:
+3. If running parallel tracks, keep each track in its own dedicated worktree.
+4. Only after 1-3:
    - run `make doctor-env`
    - continue with normal startup (`make server-daemon`, `make session-status`)
-
-## Automation Mode Control
-
-1. Default is `paused`:
-   - scheduled automation should not run by default.
-   - manual/autonomous engineer execution is the canonical lane.
-2. Re-enable only with explicit in-chat go/no-go.
-3. If re-enabled, automation must follow `docs/governance/AUTOMATION_SPEC.md`.
-4. If automation and manual work conflict:
-   - pause automation
-   - continue in one lane until drift is resolved.
 
 ## Command Ownership Rule (Reasoning Loops)
 
@@ -370,7 +355,7 @@ Local runtime DB commands are retired during wiring lock; treat docs/tests as th
    - target validations (`make test`, `make lint-docs`, or scoped tests as appropriate)
    - docs alignment across governance surfaces when policy/flow changes
 3. If a gremlin-risk surface is discovered (deprecated paths, hidden state
-   coupling, stale automation), open a bounded fix slice immediately.
+   coupling, stale orchestration), open a bounded fix slice immediately.
 4. Ask for user input only when:
    - approval is explicitly required
    - scope trade-offs affect roadmap priorities
