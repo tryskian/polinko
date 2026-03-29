@@ -1015,3 +1015,23 @@
     - `.archive/live_archive/legacy_frontend/`
 - Why: Reduces active-surface complexity and keeps the canonical operator path
   constrained to backend API + CLI during binary-contract hardening.
+
+## D-091: Add transcript-backed OCR eval case mining from ChatGPT export
+
+- Date: `2026-03-29`
+- Category: `eval_quality`
+- Tags: `ocr`, `transcript_mining`, `local_only_artifacts`, `precision_first`
+- Decision:
+  - add export indexing and transcript mining tools:
+    - `tools/index_cgpt_export.py`
+    - `tools/build_ocr_cases_from_export.py`
+  - add make entrypoints for operator flow:
+    - `make cgpt-export-index`
+    - `make ocr-cases-from-export`
+    - `make eval-ocr-transcript-cases`
+  - keep generated export/index/case artifacts local-only under `.local/`
+  - keep strict OCR gating on mined cases (`pass`/`fail`) without introducing
+    legacy tag taxonomies into gate semantics
+- Why: Enables reproducible OCR benchmarking against real transcript-backed
+  handwriting/cursive signals while preserving local confidentiality and binary
+  eval discipline.

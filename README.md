@@ -158,6 +158,7 @@ Single eval targets:
 make eval-retrieval
 make eval-file-search
 make eval-ocr
+make eval-ocr-handwriting
 make eval-ocr-recovery
 make eval-style
 make eval-hallucination
@@ -172,6 +173,7 @@ Report-generating variants:
 make eval-retrieval-report
 make eval-file-search-report
 make eval-ocr-report
+make eval-ocr-handwriting-report
 make eval-ocr-recovery-report
 make eval-style-report
 make eval-hallucination-report
@@ -185,6 +187,9 @@ Auxiliary eval tooling:
 ```bash
 make backfill-eval-traces
 make calibrate-hallucination-threshold
+make cgpt-export-index
+make ocr-cases-from-export
+make eval-ocr-transcript-cases
 ```
 
 Exit-code semantics:
@@ -193,6 +198,24 @@ Exit-code semantics:
 - `eval-ocr`, `eval-ocr-recovery`, `eval-style`, `eval-hallucination`, and
   `eval-clip-ab` support strict failure mode (`--strict`) for non-zero gating.
 - `make quality-gate` runs strict gating where applicable.
+- handwriting lane:
+  - expects a local cases file at `.local/eval_cases/ocr_handwriting_eval_cases.json`
+    (override via `OCR_HANDWRITING_CASES=<path>`).
+  - cases should use real `image_path` entries (no `text_hint`).
+  - requires `POLINKO_OCR_PROVIDER=openai` for true image OCR behaviour.
+
+Transcript-backed OCR mining lane:
+
+- index a local ChatGPT export (local-only artifacts):
+  - `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+- mine transcript-backed OCR cases from correction/confirmation turns:
+  - `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+- run OCR eval against mined transcript cases:
+  - `make eval-ocr-transcript-cases`
+- default local outputs:
+  - `.local/eval_cases/cgpt_export_attachment_index.json`
+  - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
+  - `.local/eval_cases/ocr_handwriting_from_transcripts_review.json`
 
 ## Evidence and Reference Tooling
 

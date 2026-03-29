@@ -714,6 +714,61 @@ Current policy:
      - `must_match_regex`, `must_not_match_regex` (pattern assertions)
      - `min_chars`, `max_chars`, `case_sensitive`
 
+## Run Handwriting/Cursive OCR Eval
+
+1. Ensure true image OCR is enabled in `.env`:
+   - `POLINKO_OCR_PROVIDER=openai`
+2. Create a local cases file (kept untracked) at:
+   - `.local/eval_cases/ocr_handwriting_eval_cases.json`
+3. Case requirements:
+   - use real `image_path` entries
+   - avoid `text_hint` so this remains image-driven
+4. Run:
+   - `make eval-ocr-handwriting`
+5. Run with report artifact:
+   - `make eval-ocr-handwriting-report`
+6. Optional custom cases path:
+   - `make eval-ocr-handwriting OCR_HANDWRITING_CASES=/abs/path/to/cases.json`
+7. Minimal case example:
+
+```json
+{
+  "cases": [
+    {
+      "id": "handwriting_sample_1",
+      "image_path": "/absolute/path/to/handwriting_sample.png",
+      "transcription_mode": "verbatim",
+      "must_contain_any": ["target phrase"],
+      "must_not_contain_words": ["likely", "probably", "guess"],
+      "min_chars": 5
+    }
+  ]
+}
+```
+
+## Build Transcript-Backed OCR Cases from ChatGPT Export
+
+1. Keep ChatGPT export data outside the repo (for example in Dropbox), and make
+   it locally available offline.
+2. Build attachment/conversation index artifacts (local-only):
+   - `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+3. Mine OCR eval cases from transcript correction/confirmation signals:
+   - `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+4. Run OCR eval against mined transcript-backed cases:
+   - `make eval-ocr-transcript-cases`
+5. Optional paths:
+   - index output directory:
+     `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/export CGPT_EXPORT_OUTPUT_DIR=/abs/path/to/output`
+   - override generated cases file path:
+     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_CASES=/abs/path/to/cases.json`
+   - override generated review file path:
+     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_REVIEW=/abs/path/to/review.json`
+6. Default local artifacts:
+   - `.local/eval_cases/cgpt_export_attachment_index.json`
+   - `.local/eval_cases/cgpt_export_behaviour_eval_ocr_ready.json`
+   - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
+   - `.local/eval_cases/ocr_handwriting_from_transcripts_review.json`
+
 ## Run OCR Ambiguity/Recovery Eval
 
 1. Ensure API is running locally (`make server`).
