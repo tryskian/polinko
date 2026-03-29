@@ -40,11 +40,25 @@
    - canonical root (`/Users/tryskian/Github/polinko`) or dedicated worktree.
 2. Confirm active branch in this thread:
    - `git branch --show-current`
-3. Confirm automation isolation:
-   - if automation is running, keep it on a separate worktree from manual work.
-4. Only after 1-3:
+3. Confirm automation mode from spec:
+   - `docs/governance/AUTOMATION_SPEC.md` is canonical.
+   - default mode is `paused` (manual lane only).
+4. If automation is active:
+   - keep it on a separate worktree from manual work.
+5. Only after 1-4:
    - run `make doctor-env`
    - continue with normal startup (`make server-daemon`, `make session-status`)
+
+## Automation Mode Control
+
+1. Default is `paused`:
+   - scheduled automation should not run by default.
+   - manual/autonomous engineer execution is the canonical lane.
+2. Re-enable only with explicit in-chat go/no-go.
+3. If re-enabled, automation must follow `docs/governance/AUTOMATION_SPEC.md`.
+4. If automation and manual work conflict:
+   - pause automation
+   - continue in one lane until drift is resolved.
 
 ## Command Ownership Rule (Reasoning Loops)
 
