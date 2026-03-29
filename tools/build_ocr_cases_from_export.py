@@ -78,6 +78,27 @@ ANCHOR_META_WORDS = {
     "binareyes",
     "fysics",
 }
+ANCHOR_WEAK_WORDS = {
+    "there",
+    "seems",
+    "something",
+    "without",
+    "inside",
+    "note",
+    "real",
+    "reads",
+    "read",
+}
+ANCHOR_FILETYPE_WORDS = {
+    "jpeg",
+    "jpg",
+    "png",
+    "webp",
+    "gif",
+    "tiff",
+    "heic",
+    "pdf",
+}
 POSITIVE_RX = re.compile(
     r"exactly right|that'?s exactly right|incredible|good job|perfect|correct",
     re.IGNORECASE,
@@ -419,6 +440,10 @@ def _anchor_terms_for_phrases(phrases: list[str]) -> list[str]:
             if token in ANCHOR_STOPWORDS:
                 continue
             if token in ANCHOR_META_WORDS:
+                continue
+            if token in ANCHOR_WEAK_WORDS:
+                continue
+            if token in ANCHOR_FILETYPE_WORDS:
                 continue
             if token in seen:
                 continue
