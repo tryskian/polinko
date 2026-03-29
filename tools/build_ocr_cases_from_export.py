@@ -99,6 +99,29 @@ ANCHOR_FILETYPE_WORDS = {
     "heic",
     "pdf",
 }
+ANCHOR_GENERIC_WORDS = {
+    "high",
+    "activity",
+    "phase",
+    "entire",
+    "control",
+    "variable",
+    "advanced",
+    "inherited",
+    "existing",
+    "allows",
+    "allow",
+    "clearly",
+    "first",
+    "image",
+    "also",
+    "still",
+    "connection",
+    "margin",
+    "draft",
+    "rule",
+    "form",
+}
 POSITIVE_RX = re.compile(
     r"exactly right|that'?s exactly right|incredible|good job|perfect|correct",
     re.IGNORECASE,
@@ -489,6 +512,8 @@ def _anchor_terms_for_phrases(phrases: list[str]) -> list[str]:
                 continue
             if token in ANCHOR_FILETYPE_WORDS:
                 continue
+            if token in ANCHOR_GENERIC_WORDS:
+                continue
             if token in seen:
                 continue
             seen.add(token)
@@ -501,10 +526,6 @@ def _expand_anchor_variants(anchors: list[str]) -> list[str]:
     seen: set[str] = set()
     for token in anchors:
         variants = [token]
-        if token.endswith("ing") and len(token) > 6:
-            variants.append(token[:-3])
-        if token.endswith("al") and len(token) > 5:
-            variants.append(token[:-2])
         if token.endswith("ies") and len(token) > 6:
             variants.append(token[:-3] + "y")
         elif token.endswith("es") and len(token) > 5:
@@ -512,7 +533,7 @@ def _expand_anchor_variants(anchors: list[str]) -> list[str]:
                 variants.append(token[:-2])
             else:
                 variants.append(token[:-1])
-        elif token.endswith("s") and len(token) > 3 and not token.endswith(("us", "ss", "is")):
+        elif token.endswith("s") and len(token) > 3 and not token.endswith(("us", "ss", "is", "ics")):
             variants.append(token[:-1])
         for variant in variants:
             value = variant.strip()

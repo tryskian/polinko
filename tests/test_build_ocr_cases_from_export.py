@@ -39,9 +39,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
     def test_expand_anchor_variants_adds_stems(self) -> None:
         anchors = _expand_anchor_variants(["archival", "tumbles", "floating"])
-        self.assertIn("archiv", anchors)
         self.assertIn("tumble", anchors)
-        self.assertIn("float", anchors)
+        self.assertIn("archival", anchors)
+        self.assertIn("floating", anchors)
         self.assertNotIn("tumbl", anchors)
 
     def test_expand_anchor_variants_avoids_overstemming_core_words(self) -> None:
@@ -57,6 +57,13 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertNotIn("proces", anchors)
         self.assertNotIn("analysi", anchors)
         self.assertNotIn("classe", anchors)
+
+    def test_expand_anchor_variants_preserves_ics_suffix(self) -> None:
+        anchors = _expand_anchor_variants(["physics", "mechanics"])
+        self.assertIn("physics", anchors)
+        self.assertIn("mechanics", anchors)
+        self.assertNotIn("physic", anchors)
+        self.assertNotIn("mechanic", anchors)
 
     def test_classify_lane_detects_embedded_camera_filename(self) -> None:
         lane = _classify_lane(
