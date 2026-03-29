@@ -72,9 +72,10 @@
   - human controls objective/scope/acceptance and go/no-go decisions
   - engineer executes proactively within that control frame
 - Transcript-backed OCR mining kernel is merged on `main`:
-  - PR: `#110`
+  - PRs: `#110`, `#132`, `#133`, `#134`
   - indexer: `tools/index_cgpt_export.py`
   - miner: `tools/build_ocr_cases_from_export.py`
+  - stability replay: `tools/eval_ocr_stability.py`
   - new make commands:
     - `make cgpt-export-index`
     - `make ocr-cases-from-export`
@@ -82,6 +83,7 @@
     - `make eval-ocr-transcript-cases-handwriting`
     - `make eval-ocr-transcript-cases-typed`
     - `make eval-ocr-transcript-cases-illustration`
+    - `make eval-ocr-transcript-stability`
   - generated transcript OCR cases stay local-only in `.local/eval_cases/`
   - lane artifacts:
     - `.local/eval_cases/ocr_transcript_cases_all.json`
@@ -89,10 +91,13 @@
     - `.local/eval_cases/ocr_typed_from_transcripts.json`
     - `.local/eval_cases/ocr_illustration_from_transcripts.json`
   - latest lane validations are green:
-    - all: `13/13` PASS
+    - all: `9/9` PASS
     - handwriting: `5/5` PASS
-    - typed: `6/6` PASS
+    - typed: `2/2` PASS
     - illustration: `2/2` PASS
+  - latest stability replay is green:
+    - runs: `5/5`
+    - decision stability: `9` stable, `0` flaky
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`
@@ -148,7 +153,7 @@
 ## Immediate Next Step
 
 - Hold transcript OCR lane baseline at
-  (`handwriting=5`, `typed=6`, `illustration=2`) while preserving strict pass rates:
+  (`handwriting=5`, `typed=2`, `illustration=2`) while preserving strict pass rates:
   - run transcript pipeline on local export root:
     - `make cgpt-export-index`
     - `make ocr-cases-from-export`
@@ -156,8 +161,9 @@
     - `make eval-ocr-transcript-cases-handwriting`
     - `make eval-ocr-transcript-cases-typed`
     - `make eval-ocr-transcript-cases-illustration`
-  - prioritize precision-safe reduction of remaining low-confidence handwriting
-    episode(s) without reintroducing conversational/noisy anchors
+    - `make eval-ocr-transcript-stability OCR_STABILITY_RUNS=5`
+  - prioritise precision-safe promotion of medium-confidence transcript episodes
+    without reintroducing malformed anchors or conversational/noisy terms
   - hold illustration coverage at `>=2` cases and keep all-lane strict pass
     green
   - validate with:

@@ -215,55 +215,47 @@
   - `make build-audit` now fails on reintroduction of those command tokens in
     active docs
 - Transcript-backed OCR mining checkpoint (March 29, 2026):
-  - merged PR `#110` adds export indexing + transcript OCR case mining:
+  - merged PRs `#110`, `#132`, `#133`, and `#134` establish transcript OCR
+    mining + hardening:
     - `tools/index_cgpt_export.py`
     - `tools/build_ocr_cases_from_export.py`
+    - `tools/eval_ocr_stability.py`
   - canonical local commands:
     - `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
     - `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
     - `make eval-ocr-transcript-cases`
+    - `make eval-ocr-transcript-stability OCR_STABILITY_RUNS=5`
   - local outputs are untracked under `.local/eval_cases/`
-  - latest transcript-case run is green (`1/1` PASS) with strict OCR gating
-- OCR lane split checkpoint (March 29, 2026):
-  - transcript miner now emits four local case sets:
+  - transcript miner emits four local case sets:
     - combined: `.local/eval_cases/ocr_transcript_cases_all.json`
     - handwriting: `.local/eval_cases/ocr_handwriting_from_transcripts.json`
     - typed: `.local/eval_cases/ocr_typed_from_transcripts.json`
     - illustration: `.local/eval_cases/ocr_illustration_from_transcripts.json`
-  - lane commands are now explicit:
-    - `make eval-ocr-transcript-cases`
-    - `make eval-ocr-transcript-cases-handwriting`
-    - `make eval-ocr-transcript-cases-typed`
-    - `make eval-ocr-transcript-cases-illustration`
-  - latest local validation after anchor-hardening:
-    - all lane: `4/4` PASS
-    - handwriting lane: `1/1` PASS
-    - typed lane: `2/2` PASS
-    - illustration lane: `1/1` PASS
-- OCR lane balance checkpoint (March 29, 2026):
-  - transcript miner now improves handwriting lane recovery with stable strict
-    pass rates across all lanes
   - latest local miner output:
-    - combined cases: `13`
+    - combined cases: `9`
     - handwriting: `5`
-    - typed: `6`
+    - typed: `2`
     - illustration: `2`
+- OCR lane quality hardening checkpoint (March 29, 2026):
+  - ask-level correction promotion remains anchor-driven (not correction-word
+    driven) for medium-confidence recovery
+  - mined case emission now requires `>=3` anchor terms
+  - anchor variant expansion now blocks malformed over-stems
+    (for example `focus -> focu`, `abacus -> abacu`)
   - latest strict lane validation:
-    - all lane: `13/13` PASS
+    - all lane: `9/9` PASS
     - handwriting lane: `5/5` PASS
-    - typed lane: `6/6` PASS
+    - typed lane: `2/2` PASS
     - illustration lane: `2/2` PASS
+  - latest stability replay:
+    - runs: `5/5` successful
+    - decision stability: `9` stable, `0` flaky
 - OCR lane classifier hardening checkpoint (March 29, 2026):
   - lane classification now detects embedded camera-style filenames
     (for example `file-...-IMG_6821.jpeg`) as handwriting
   - typed lane hint matching now uses bounded token matching (`ui` as a
     standalone word) to avoid accidental typed classification from substrings
     like `quick`
-- OCR ask-correction promotion checkpoint (March 29, 2026):
-  - ask-level correction signals now promote medium confidence using assistant
-    transcription anchors (not correction-word anchors) to preserve eval
-    stability
-  - high-confidence correction path remains follow-up-driven only
 - Eval relationship visual checkpoint (March 28, 2026):
   - local eval data visualisation now has a canonical navigation-first report:
     - command: `make eval-viz`
