@@ -491,6 +491,7 @@ These are mapped from the OpenAI cookbook items and ordered for this project:
    - Highest leverage for stable extraction/indexing contracts.
 3. Image Understanding with RAG
    - Extends OCR and supports richer multimodal retrieval.
+   - Intake spec: `docs/benchmarks/COOKBOOK_IMAGE_RAG_INTAKE.md`.
 4. Data Extraction and Transformation in ELT Workflows (GPT-4o OCR alternative)
    - Best when moving from single-chat flows to batch ingestion jobs.
 5. Exploring Model Graders for Reinforcement Fine-Tuning
