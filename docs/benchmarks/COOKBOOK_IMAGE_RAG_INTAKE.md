@@ -5,6 +5,26 @@
 - OpenAI cookbook example:
   `https://developers.openai.com/cookbook/examples/multimodal/image_understanding_with_rag`
 
+## Cookbook Queue Context
+
+Prioritized now:
+
+1. Doing RAG on PDFs using File Search in the Responses API
+2. Structured Outputs
+3. Image Understanding with RAG (this intake)
+4. Data Extraction and Transformation in ELT Workflows (GPT-4o OCR alternative)
+5. Exploring Model Graders for Reinforcement Fine-Tuning
+6. Custom LLM-as-Judge hallucination checks (Braintrust) [P1]
+7. Multimodal retrieval A/B with CLIP embeddings [P2]
+
+Deferred include-later track:
+
+1. Prompt Caching 101/201
+2. Realtime eval guide
+3. Realtime out-of-band transcription
+4. RAG with graph DB
+5. Search reranking with cross-encoders
+
 ## Objective
 
 Adopt the cookbook pattern as a bounded Polinko kernel to improve multimodal

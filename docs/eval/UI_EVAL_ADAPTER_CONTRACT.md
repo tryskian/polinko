@@ -3,7 +3,8 @@
 ## Purpose
 
 Define one stable UI-to-backend contract for chat plus binary eval operations.
-This is the canonical integration surface for the new UI.
+The active runtime surface remains backend + CLI; this document is retained as
+the canonical reference contract for future UI reactivation.
 
 ## Backend Endpoints
 

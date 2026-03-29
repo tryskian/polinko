@@ -481,32 +481,9 @@ Use this in a new chat:
 5. Keep benchmark outputs product-supportive by converting findings into
    explicit implementation priorities.
 
-## Cookbook Roadmap (Prioritized)
+## Planning Pointers
 
-These are mapped from the OpenAI cookbook items and ordered for this project:
-
-1. Doing RAG on PDFs using File Search in the Responses API
-   - Best immediate fit with current vector + file search architecture.
-2. Structured Outputs
-   - Highest leverage for stable extraction/indexing contracts.
-3. Image Understanding with RAG
-   - Extends OCR and supports richer multimodal retrieval.
-   - Intake spec: `docs/benchmarks/COOKBOOK_IMAGE_RAG_INTAKE.md`.
-4. Data Extraction and Transformation in ELT Workflows (GPT-4o OCR alternative)
-   - Best when moving from single-chat flows to batch ingestion jobs.
-5. Exploring Model Graders for Reinforcement Fine-Tuning
-   - Most useful once eval criteria and production traces are mature.
-6. Custom LLM-as-Judge hallucination checks (Braintrust) [P1]
-   - Offline eval/CI scaffold is implemented; calibrate thresholds and keep
-     branch protections strict.
-7. Multimodal retrieval A/B with CLIP embeddings [P2]
-   - Evaluate against current embeddings path after OCR/PDF retrieval baseline is stable.
-
-## Final Action Plan (Current)
-
-1. Lock baseline and keep Runner path stable as default.
-2. Keep governance + hallucination guardrails hardened in local runtime.
-3. Maintain multi-agent collaboration API contract already implemented.
-4. Continue eval UX/rubric simplification with deterministic checkpoint output.
-5. Keep OCR/file-search/retrieval quality loops green before expansion work.
-6. Preserve local-first workflow and avoid deprecated hybrid pilot paths.
+- Cookbook adoption planning is maintained in:
+  - `docs/benchmarks/COOKBOOK_IMAGE_RAG_INTAKE.md`
+- Immediate execution plan is maintained in:
+  - `docs/governance/SESSION_HANDOFF.md` (`Immediate Next Step`)

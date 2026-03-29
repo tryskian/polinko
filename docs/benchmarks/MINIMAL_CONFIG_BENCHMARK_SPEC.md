@@ -112,39 +112,14 @@ This benchmark also carries a lightweight case-study method slice:
 | C: Binary eval stack | `docs/peanut/research/experiment_R-C_binary_eval_stack_2026-03-27.md` | Current binary eval reports + deterministic gate checks | `PASS` (decision-ready current target) |
 | D: Operator burden shift diagnostic | `docs/peanut/research/experiment_R-D_operator_burden_shift_2026-03-28.md` | Prompt-to-operation drift cases (task binding vs commentary) | Planned |
 
-## Immediate Next Step Execution (2026-03-28)
+## Results and Status Tracking
 
-- Benchmark A/B/C records are populated with:
-  - linked artefacts/results
-  - explicit per-phase confounders
-- Deterministic backend priority slice completed from benchmark outcome:
-  - add explicit checkpoint `gate_outcome` (`pass`/`fail`) in API responses
-  - keep gate resolution fail-closed and count-derived
-  - update API tests + backend/spec docs in the same slice
-
-## Decision-Ready Synthesis (2026-03-28)
-
-### Dimension Comparison (A/B/C)
-
-| Dimension | A: Minimal-config CLI | B: Traditional eval stack | C: Binary eval stack |
-| --- | --- | --- | --- |
-| Quality outcomes | Baseline-good (limited harness depth) | Mixed/variable (legacy criteria drift) | Stable pass/fail gate with deterministic validation |
-| Decision clarity | High | Lower (compatibility and interpretation overhead) | High (fail-closed binary semantics) |
-| Iteration speed | High | Slower (heavier wiring and cleanup loops) | High (single-command deterministic quality gate) |
-| Maintenance overhead | Low | High | Low-to-moderate (guarded, contract-driven) |
-
-### Verdict
-
-- `H-001` is **supported** for current product direction.
-- Decision: keep minimal control surfaces + strict binary gate semantics as the
-  active operating model.
-- Constraint: retain rich diagnostics as secondary artefacts, not gate logic.
-
-### Next Backend Priority (from benchmark verdict)
-
-- Reduce operator inference overhead further by formalising operation-binding
-  diagnostics (benchmark `D`) and converting its pass/fail checks into one
-  deterministic backend implementation slice.
+- Keep this file method-focused (hypothesis, controls, metrics, and exit
+  criteria).
+- Track run outcomes and date-stamped status in:
+  - `docs/governance/STATE.md`
+  - `docs/governance/DECISIONS.md`
+  - `docs/governance/SESSION_HANDOFF.md`
 
 ## Output Contract
 
@@ -169,5 +144,4 @@ This benchmark is complete when:
 - confounders are declared,
 - and `H-001` has a clear provisional verdict with next steps.
 
-Current status: **A/B/C complete (decision-ready)**. `D` remains the next
-extension benchmark.
+Current benchmark method is stable; runtime status is tracked in governance docs.

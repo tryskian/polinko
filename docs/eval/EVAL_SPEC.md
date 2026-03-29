@@ -116,7 +116,6 @@ All eval tools must emit report payloads that can be reduced to binary gate outc
 - OCR
 - style
 - hallucination
-- clip-ab readiness (if used as gate)
 
 Each harness output should resolve to:
 
@@ -148,7 +147,9 @@ Summary payloads should include:
 4. `make backend-gate` passes with deterministic quality gate.
 5. Archived artefacts never drive active gate decisions.
 
-## Open Decisions (Need Peanut + Beab Sign-Off)
+## Decision Handling
 
-1. Whether to add an explicit `spec_version` column to `message_feedback` now or in a follow-up migration.
-2. Whether `clip-ab` readiness is informational or release-blocking.
+- Keep this file as the canonical eval contract.
+- Record unresolved or newly introduced trade-offs in:
+  - `docs/governance/DECISIONS.md`
+  - `docs/governance/SESSION_HANDOFF.md` (`Immediate Next Step`)
