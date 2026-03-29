@@ -15,15 +15,15 @@
   - optional fixed output: `fixture_output`
   - env default: `POLINKO_CHAT_HARNESS_DEFAULT_MODE=live|fixture`
   - default remains `live` (no behaviour drift for normal runtime)
-- Canonical UI eval adapter contract is published:
-  - `docs/eval/UI_EVAL_ADAPTER_CONTRACT.md`
+- Canonical UI eval adapter spec is published:
+  - `docs/runtime/RUNBOOK.md`
   - includes TypeScript request/response shapes + chat/eval/checkpoint flow
 - Local UI shell is retired from active runtime surface:
   - no `GET /ui` route
   - no active `ui/index.html` file
   - fixture controls remain available through `POST /chat` request fields
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
-- Eval contract is strict binary end-to-end:
+- Eval spec is strict binary end-to-end:
   - feedback outcomes: `pass` or `fail` only
   - checkpoint schema field: `non_binary_count` (integrity signal, expected `0`)
   - checkpoint response field: `gate_outcome` (`pass`/`fail`, fail-closed from counts)
@@ -40,10 +40,8 @@
   - archive lane is non-authoritative for active runtime gate decisions
   - confidentiality update: `legacy_eval` and `legacy_human_reference` lanes
     are now local-only (gitignored) in the current tree
-- Eval docs were canonicalized from `v2` naming:
-  - `docs/eval/EVAL_SPEC.md`
-  - `docs/eval/EVAL_BACKEND_MAP.md`
-  - binary semantics summary: `docs/eval/BINARY_EVAL_LOGIC_REFINEMENT.md`
+- Eval and benchmark specs are consolidated in:
+  - `docs/runtime/RUNBOOK.md`
 - Docs relationship visualisation is markdown-native:
   - build: `make reference-graph`
   - output: `docs/visuals/REFERENCE_GRAPH.md`
@@ -58,10 +56,10 @@
 - Runtime DB lifecycle commands are retired during wiring lock:
   - no local DB maintenance commands are active in this phase
 - Wiring lock is active:
-  - keep DB state archived during contract-finalisation phase
-  - canonical wiring contract source: `docs/eval/EVAL_WIRING_SPEC.md`
+  - keep DB state archived during spec-finalisation phase
+  - canonical wiring spec source: `docs/runtime/RUNBOOK.md`
 - Minimal-config benchmark sequencing is now explicit:
-  - canonical spec: `docs/benchmarks/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
+  - canonical spec: `docs/runtime/RUNBOOK.md`
   - objective: compare baseline A/B/C with fixed evaluation dimensions
   - A/B/C are now decision-ready:
     - A=`PASS` (baseline anchor)
@@ -97,7 +95,7 @@
     - illustration: `2/2` PASS
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
-    `docs/benchmarks/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
+    `docs/runtime/RUNBOOK.md`
   - current phase scope is method + 1-2 mapped examples only
   - full corpus ingestion/tooling remains deferred until post-milestone
 - Portfolio timeline checkpoint (March 28, 2026):
@@ -120,14 +118,6 @@
 - `docs/governance/DECISIONS.md`
 - `docs/runtime/ARCHITECTURE.md`
 - `docs/runtime/RUNBOOK.md`
-- `docs/eval/EVAL_POLICY_MODEL.md`
-- `docs/eval/EVAL_WIRING_SPEC.md`
-- `docs/eval/EVAL_SPEC.md`
-- `docs/eval/EVAL_BACKEND_MAP.md`
-- `.archive/live_archive/README.md`
-- `api/app_factory.py`
-- `core/history_store.py`
-- `tests/test_api.py`
 
 ## Quick Validation (Local)
 
@@ -177,7 +167,7 @@
 
 ## Peanut Pin (Tomorrow Start)
 
-- Start from strict binary contract as baseline (`pass`/`fail` only).
+- Start from strict binary spec as baseline (`pass`/`fail` only).
 - Review latest eval outputs and prioritise one deterministic backend slice.
 - Update `STATE` + `DECISIONS` + `SESSION_HANDOFF` only with material deltas.
 

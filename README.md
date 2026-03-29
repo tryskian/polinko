@@ -11,8 +11,8 @@ and deterministic eval gates.
   feedback, and checkpoints, backed by SQLite persistence.
 - Chat harness mode: optional deterministic fixture responses for smoke testing
   without model calls (`harness_mode=fixture`).
-- UI eval adapter contract is documented in
-  `docs/eval/UI_EVAL_ADAPTER_CONTRACT.md` (TypeScript types + endpoint flow).
+- UI eval adapter spec is documented in
+  `docs/runtime/RUNBOOK.md` (TypeScript types + endpoint flow).
 - Legacy frontend context remains in `.archive/live_archive/legacy_frontend/`.
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.

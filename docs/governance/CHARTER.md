@@ -30,10 +30,10 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Inspect before optimise when system intent or provenance is unclear.
 - Human-directed precision takes priority over agent-side summarisation/cleanup.
 - Keep deprecated workflow context in `.archive/live_archive/`; keep active docs and
-  runtime contracts binary-only.
+  runtime specs binary-only.
 - During eval wiring lock, avoid DB init/refresh flows; allow only archive/reset
-  maintenance commands until contract sign-off
-  (`docs/eval/EVAL_WIRING_SPEC.md` is canonical in this phase).
+  maintenance commands until spec sign-off
+  (`docs/runtime/RUNBOOK.md` is canonical in this phase).
 - Keep benchmarking product-supportive:
   - hypothesis benchmarking informs build decisions but does not replace product delivery
   - use one canonical benchmark spec to control sequencing and confounders
@@ -86,4 +86,4 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
   live-archive references.
 - Paused: cloud deployment automation (removed from repo for now; Azure is the preferred target when resumed).
 - Include later (deferred cookbook track):
-  - see `docs/benchmarks/COOKBOOK_IMAGE_RAG_INTAKE.md` (`Cookbook Queue Context`)
+  - see `docs/runtime/RUNBOOK.md` (`Cookbook Queue`)

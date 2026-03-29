@@ -176,11 +176,11 @@
 ## D-023: File search backend/fallback classification in API responses
 
 - Category: `runtime_engineering`
-- Tags: `file_search`, `api_contract`, `fallback_visibility`, `observability`
+- Tags: `file_search`, `api_spec`, `fallback_visibility`, `observability`
 - Decision: Extend `POST /skills/file_search` response with explicit `backend`,
   `fallback_reason`, and `candidate_count` fields.
 - Why: Makes retrieval-path behaviour observable to clients and tests without
-  relying only on server logs, improving debugging and deterministic contract
+  relying only on server logs, improving debugging and deterministic spec
   validation.
 
 ## D-024: Normalise quoted env values for runtime config parsing
@@ -251,7 +251,7 @@
   compares baseline mixed-source retrieval vs an image-prioritized proxy arm on
   image-context cases.
 - Why: Establishes measurable A/B scaffolding now, so full CLIP embedding
-  integration can be validated against a stable experiment contract later.
+  integration can be validated against a stable experiment spec later.
 
 ## D-031: Human-AI collaboration feedback pipeline beyond engineering evals
 
@@ -403,10 +403,10 @@
 - Decision: Add `make hybrid-openai-readiness` (reports-only checker) and keep
   hybrid OpenAI adoption gated by strict style + file-search + two-report CLIP
   readiness outcomes before any runtime/tooling migration.
-- Why: Creates an explicit low-risk promotion contract for OpenAI-native
+- Why: Creates an explicit low-risk promotion spec for OpenAI-native
   adoption while preserving current runtime behaviour and rollback simplicity.
 
-## D-045: Add append-only eval trace artifact contract in tooling layer
+## D-045: Add append-only eval trace artifact spec in tooling layer
 
 - Category: `evidence_governance`
 - Tags: `trace_artifacts`, `hybrid_openai`, `eval_reports`, `no_runtime_drift`
@@ -415,7 +415,7 @@
   report-producing eval tooling + hybrid readiness checker to append JSONL
   traces to
   `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`.
-- Why: Creates a stable evidence contract for hybrid OpenAI adoption phases
+- Why: Creates a stable evidence spec for hybrid OpenAI adoption phases
   without changing runtime `/chat` behaviour, while improving auditability and
   promotion confidence for future OpenAI-native tooling pilots.
 - Status: Superseded by `D-073` (trace default path is local operational output
@@ -430,7 +430,7 @@
   local trace artifacts to OpenAI-compatible trace/grader metadata shape, with
   strict out-of-scope exclusion for runtime `/chat` migration, prompt behaviour
   changes, and default-on flags.
-- Why: Preserves current stable runtime contract while still creating concrete
+- Why: Preserves current stable runtime spec while still creating concrete
   migration evidence toward OpenAI-native tooling integration.
 
 ## D-047: Implement rollback-safe Phase 3 dry-run bridge scaffold
@@ -470,7 +470,7 @@
   and notes. In practice: nuanced interpretation informs the diagnosis, binary
   outcome informs the decision.
 
-## D-050: Add OpenAI custom-eval dataset export contract from local trace artifacts
+## D-050: Add OpenAI custom-eval dataset export spec from local trace artifacts
 
 - Category: `evidence_governance`
 - Tags: `hybrid_openai`, `custom_eval`, `jsonl_export`, `item_schema`
@@ -525,7 +525,7 @@
 ## D-054: Human-directed micro-constraints drive meaningful product quality
 
 - Category: `collaboration_method`
-- Tags: `human_ai_collaboration`, `micro_decisions`, `naming_contract`, `quality_signal`
+- Tags: `human_ai_collaboration`, `micro_decisions`, `naming_spec`, `quality_signal`
 - Decision: Treat small human-directed adjustments (for example, consistent
   naming like `hallucination_risk`) as first-class quality controls in the
   product workflow.
@@ -542,7 +542,7 @@
   continue local export + payload preparation cycles and only execute provider
   runs after explicit ship-readiness approval.
 - Why: Preserves local determinism and reduces rollout risk while the runtime
-  and eval contracts continue hardening; avoids premature coupling to external
+  and eval specs continue hardening; avoids premature coupling to external
   provider execution before release intent.
 
 ## D-055: Canonicalize tooling imports for mypy stability
@@ -571,7 +571,7 @@
 ## D-057: Store eval checkpoints as dual streams for cross-dimension signals
 
 - Category: `eval_quality`
-- Tags: `dual_stream`, `checkpoint_contract`, `ui_api_sync`
+- Tags: `dual_stream`, `checkpoint_spec`, `ui_api_sync`
 - Decision: Allow checkpoint rows to persist simultaneous positive and negative
   rubric signals as separate streams (`pass: ...` and `fail: ...`) rather than
   forcing a single top-level summary label.
@@ -580,17 +580,17 @@
   keeping deterministic downstream counting via independent `pass_count` and
   `fail_count` aggregation.
 
-## D-060: Canonicalize eval outcome contract to binary while preserving legacy read compatibility
+## D-060: Canonicalize eval outcome spec to binary while preserving legacy read compatibility
 
 - Category: `eval_quality`
-- Tags: `binary_contract`, `legacy_compat`, `pass_fail`, `api_ui_sync`
+- Tags: `binary_spec`, `legacy_compat`, `pass_fail`, `api_ui_sync`
 - Decision: Treat `pass`/`fail` as the only accepted feedback outcomes at write
   time, while preserving read compatibility for legacy stored outcomes by
   normalizing non-pass values to `fail` in API/UI response paths.
 - Why: Removes deprecated outcome ambiguity from active workflows without
   discarding historical evidence; keeps deterministic gating and migration-safe
   legacy visibility.
-- Status: Superseded by `D-067` hard-cut contract removal of compatibility
+- Status: Superseded by `D-067` hard-cut spec removal of compatibility
   fallbacks.
 
 ## D-058: Deprecate hybrid/Agent Builder pilot workflow as active execution path
@@ -642,12 +642,12 @@
 ## D-063: Introduce build-block audit guardrail for fresh-path iteration
 
 - Category: `workflow_environment`
-- Tags: `build_audit`, `drift_control`, `readme_contract`, `local_ci_parity`
+- Tags: `build_audit`, `drift_control`, `readme_spec`, `local_ci_parity`
 - Decision: Add a deterministic preflight audit command (`make build-audit`)
   that checks README-to-route parity, Makefile tool-module wiring, local lint
   parity with CI scope, and local-only eval-cleanup guard behaviour.
 - Why: Supports step-by-step fresh-path execution without hard resets by
-  catching contract drift and local-only dependency leaks before wider refactor
+  catching spec drift and local-only dependency leaks before wider refactor
   moves.
 
 ## D-064: Standardise Reasoning Loops as the human-AI collaboration model
@@ -667,7 +667,7 @@
 ## D-065: Fail-closed eval checkpointing with explicit legacy outcome normalisation
 
 - Category: `eval_quality`
-- Tags: `binary_contract`, `fail_closed`, `checkpoint_guard`, `legacy_normalisation`
+- Tags: `binary_spec`, `fail_closed`, `checkpoint_guard`, `legacy_normalisation`
 - Decision: Enforce fail-closed checkpoint submission when non-binary feedback
   outcomes are present, and pair it with an explicit normalisation utility path
   to migrate legacy outcome rows into binary `pass`/`fail`.
@@ -683,21 +683,21 @@
 - Decision: Treat legacy `MIXED` intake structure as archive-only and keep
   active evidence indexing/reporting scoped to `PASS`/`FAIL`/`INBOX` buckets.
 - Why: Prevents non-binary artefacts from re-entering daily eval operations and
-  keeps evidence refresh outputs aligned with the current binary gate contract.
+  keeps evidence refresh outputs aligned with the current binary gate spec.
 - Status: Superseded by `D-068` (top-level `raw_evidence` intake folders/files
   are deprecated; archive snapshots only).
 
-## D-067: Hard-cut eval contract to strict binary with no compatibility fallbacks
+## D-067: Hard-cut eval spec to strict binary with no compatibility fallbacks
 
 - Category: `eval_quality`
-- Tags: `binary_contract`, `hard_cutover`, `api_ui_sync`, `contract_simplification`
+- Tags: `binary_spec`, `hard_cutover`, `api_ui_sync`, `spec_simplification`
 - Decision: Remove legacy compatibility paths from active feedback/checkpoint
   runtime:
   - accept only `pass`/`fail` outcomes
   - require explicit `positive_tags`/`negative_tags` streams (no `tags`-only fallback)
   - expose checkpoint integrity via `non_binary_count` (no active `other_count` label)
   - remove `eval-feedback-normalize` migration tooling from active operator flow
-- Why: Eliminates hidden coercion paths, keeps API/UI/test contracts explicit,
+- Why: Eliminates hidden coercion paths, keeps API/UI/test specs explicit,
   and prevents deprecated semantics from re-entering daily execution.
 
 ## D-068: Add one-command baseline archive reset before new binary cycles
@@ -762,7 +762,7 @@
   drift, and ensures policy constraints remain the hard control surface while
   preserving rich diagnostics outside the binary gate output.
 - Implementation note: Concept model and ER mapping are documented in
-  `docs/eval/EVAL_POLICY_MODEL.md`.
+  `docs/runtime/RUNBOOK.md`.
 
 ## D-073: Remove archive-folder workflow; use Git-native retention
 
@@ -790,16 +790,16 @@
   - split lanes by concern:
     - `.archive/live_archive/legacy_eval/`
     - `.archive/live_archive/legacy_frontend/`
-  - keep archive lane read-only for reference; active runtime contracts remain
+  - keep archive lane read-only for reference; active runtime specs remain
     sourced from canonical docs/code
 - Why: Preserves inspectability/traceability of deprecated context without
   reintroducing legacy wiring into active runtime and eval decisions.
 
-## D-075: Remove legacy hallucination-mode labels from active eval case contract
+## D-075: Remove legacy hallucination-mode labels from active eval case spec
 
 - Date: `2026-03-27`
 - Category: `eval_quality`
-- Tags: `binary_contract`, `criteria_cleanup`, `policy_profile`, `hallucination_eval`
+- Tags: `binary_spec`, `criteria_cleanup`, `policy_profile`, `hallucination_eval`
 - Decision:
   - replace active hallucination case label `expected_mode` with
     `policy_profile`
@@ -846,13 +846,13 @@
   - Archived human-reference helpers and SQL into `.archive/live_archive/legacy_human_reference/`.
   - Removed legacy workbench server/target and eval inbox helper (`make eval-inbox`, `tools/eval_inbox.py`).
   - Retired local runtime DB scripts/targets during wiring lock; no local DB lifecycle commands remain.
-- Why: Reduce hidden gremlins and keep the active execution surface minimal and aligned with current binary eval contracts.
+- Why: Reduce hidden gremlins and keep the active execution surface minimal and aligned with current binary eval specs.
 
 ## D-081: Expose fail-closed checkpoint gate outcome in API responses
 
 - Date: `2026-03-28`
 - Category: `eval_quality`
-- Tags: `binary_gate`, `checkpoint_contract`, `decision_clarity`, `api_sync`
+- Tags: `binary_gate`, `checkpoint_spec`, `decision_clarity`, `api_sync`
 - Decision:
   - add explicit `gate_outcome` (`pass`/`fail`) to checkpoint response payloads
   - derive `gate_outcome` fail-closed from checkpoint counts:
@@ -865,7 +865,7 @@
 
 - Date: `2026-03-28`
 - Category: `workflow_environment`
-- Tags: `build_audit`, `doc_contract`, `wiring_lock`, `drift_control`
+- Tags: `build_audit`, `doc_spec`, `wiring_lock`, `drift_control`
 - Decision:
   - remove retired runtime DB command references (`make db-reset`,
     `make db-archive`, `make db-visuals`) from active docs
@@ -903,18 +903,18 @@
   - keep default runtime behaviour unchanged (`live`)
   - add env default override:
     - `POLINKO_CHAT_HARNESS_DEFAULT_MODE` (`live`|`fixture`)
-  - add API/config tests to lock live-vs-fixture contract behaviour
+  - add API/config tests to lock live-vs-fixture spec behaviour
 - Why: Allows UI testing outside CLI without backend breakage or model-call
   dependency while preserving canonical live path for production behaviour.
 
-## D-085: Publish canonical UI eval adapter contract for new frontend
+## D-085: Publish canonical UI eval adapter spec for new frontend
 
 - Date: `2026-03-28`
 - Category: `workflow_environment`
-- Tags: `ui_adapter`, `chat_contract`, `binary_eval`, `integration`
+- Tags: `ui_adapter`, `chat_spec`, `binary_eval`, `integration`
 - Decision:
   - add canonical UI adapter spec:
-    - `docs/eval/UI_EVAL_ADAPTER_CONTRACT.md`
+    - `docs/runtime/RUNBOOK.md`
   - define copy-ready TypeScript request/response shapes for:
     - `POST /chat`
     - feedback + checkpoint endpoints
@@ -922,7 +922,7 @@
     rendering
   - document binary tag/outcome validation and error handling matrix for UI
     implementation parity
-- Why: Removes UI/backend ambiguity and gives a single deterministic contract for
+- Why: Removes UI/backend ambiguity and gives a single deterministic spec for
   integrating eval functionality into the new frontend.
 
 ## D-086: Standardise eval relationship visualisation as local Mermaid report
@@ -1014,7 +1014,7 @@
   - keep frontend history/reference in live archive only:
     - `.archive/live_archive/legacy_frontend/`
 - Why: Reduces active-surface complexity and keeps the canonical operator path
-  constrained to backend API + CLI during binary-contract hardening.
+  constrained to backend API + CLI during binary-spec hardening.
 
 ## D-091: Add transcript-backed OCR eval case mining from ChatGPT export
 
@@ -1043,7 +1043,7 @@
 - Tags: `primary_source_grounding`, `case_study`, `scope_control`, `binary_gate`
 - Decision:
   - add a lightweight primary-source grounding addendum to:
-    - `docs/benchmarks/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
+    - `docs/runtime/RUNBOOK.md`
   - constrain this phase to:
     - method definition + 1-2 mapped examples
     - no full corpus ingestion/tooling in active runtime scope
