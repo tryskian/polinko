@@ -502,6 +502,26 @@ These are mapped from the OpenAI cookbook items and ordered for this project:
 7. Multimodal retrieval A/B with CLIP embeddings [P2]
    - Evaluate against current embeddings path after OCR/PDF retrieval baseline is stable.
 
+## Cookbook Includes Later (Pinned)
+
+These are intentionally deferred so current OCR + retrieval hardening stays
+stable and deterministic:
+
+1. Prompt Caching 101/201
+   - Include later when request shape is stable enough to benchmark cache-hit
+     impact cleanly.
+2. Realtime eval guide
+   - Include later after non-realtime eval lanes are fully saturated and stable.
+3. Realtime out-of-band transcription
+   - Include later only if live audio ingestion becomes an in-scope product
+     requirement.
+4. RAG with graph DB
+   - Include later when relationship-heavy retrieval is needed beyond current
+     file-search + vector path.
+5. Search reranking with cross-encoders
+   - Include later if retrieval precision plateaus after current image-RAG
+     intake is evaluated.
+
 ## Final Action Plan (Current)
 
 1. Lock baseline and keep Runner path stable as default.
