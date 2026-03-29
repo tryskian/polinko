@@ -251,6 +251,11 @@ def _extract_transcribed_lines(assistant_text: str) -> tuple[list[str], bool]:
             value = _normalize_phrase_candidate(line)
             if len(value) >= 4 and any(ch.isalpha() for ch in value):
                 candidates.append(value)
+    # Also inspect raw assistant lines for OCR-style bullet/label text.
+    for raw_line in assistant_text.splitlines():
+        value = _normalize_phrase_candidate(raw_line.lstrip("-*•> "))
+        if 4 <= len(value) <= 120 and any(ch.isalpha() for ch in value):
+            candidates.append(value)
     if not candidates:
         # Fallback: split by sentence-like punctuation for short line candidates.
         for chunk in re.split(r"[;\n]+", assistant_text):
@@ -393,6 +398,8 @@ def _anchor_terms_for_phrases(phrases: list[str]) -> list[str]:
     for phrase in phrases:
         tokens = [token.lower() for token in _phrase_tokens(phrase)]
         for token in tokens:
+            if not any(ch.isalpha() for ch in token):
+                continue
             if len(token) < 4:
                 continue
             if token in ANCHOR_STOPWORDS:
@@ -404,6 +411,31 @@ def _anchor_terms_for_phrases(phrases: list[str]) -> list[str]:
             seen.add(token)
             anchors.append(token)
     return anchors
+
+
+def _expand_anchor_variants(anchors: list[str]) -> list[str]:
+    expanded: list[str] = []
+    seen: set[str] = set()
+    for token in anchors:
+        variants = [token]
+        if token.endswith("ing") and len(token) > 6:
+            variants.append(token[:-3])
+        if token.endswith("al") and len(token) > 5:
+            variants.append(token[:-2])
+        if token.endswith("es") and len(token) > 5:
+            variants.append(token[:-2])
+            variants.append(token[:-1])
+        elif token.endswith("s") and len(token) > 4:
+            variants.append(token[:-1])
+        for variant in variants:
+            value = variant.strip()
+            if len(value) < 4:
+                continue
+            if value in seen:
+                continue
+            seen.add(value)
+            expanded.append(value)
+    return expanded
 
 
 def build_from_export(
@@ -514,6 +546,10 @@ def build_from_export(
             chosen_phrases: list[str] = []
             correction_phrases = [p for p in correction_phrases if _is_ocr_like_phrase(p)]
             transcription_phrases = [p for p in transcription_phrases if _is_ocr_like_phrase(p)]
+            strong_illustration_phrase_signal = (
+                lane == "illustration"
+                and len(_anchor_terms_for_phrases(transcription_phrases[:5])) >= 2
+            )
             if correction_signal and correction_phrases:
                 confidence = "high"
                 chosen_phrases = correction_phrases[:5]
@@ -524,6 +560,7 @@ def build_from_export(
                     ocr_framing_signal
                     or correction_signal
                     or had_code_block
+                    or strong_illustration_phrase_signal
                 )
             ):
                 confidence = "medium"
@@ -555,7 +592,8 @@ def build_from_export(
             if image_path in seen_case_paths:
                 continue
             case_id = f"tx-{conversation_id[:8]}-{len(cases)+1:03d}"
-            anchor_terms = _anchor_terms_for_phrases(chosen_phrases)[:4]
+            anchor_terms = _anchor_terms_for_phrases(chosen_phrases)[:8]
+            anchor_terms = _expand_anchor_variants(anchor_terms)
             if len(anchor_terms) < 2:
                 continue
             cases.append(

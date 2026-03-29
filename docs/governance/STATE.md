@@ -239,6 +239,17 @@
     - handwriting lane: `1/1` PASS
     - typed lane: `2/2` PASS
     - illustration lane: `1/1` PASS
+- OCR lane balance checkpoint (March 29, 2026):
+  - transcript miner now recovers illustration cases without reintroducing
+    conversational false positives
+  - latest local miner output:
+    - combined cases: `12`
+    - handwriting: `2`
+    - typed: `8`
+    - illustration: `2`
+  - latest strict lane validation:
+    - all lane: `12/12` PASS
+    - illustration lane: `2/2` PASS
 - Eval relationship visual checkpoint (March 28, 2026):
   - local eval data visualisation now has a canonical navigation-first report:
     - command: `make eval-viz`
