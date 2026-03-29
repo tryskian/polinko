@@ -131,11 +131,15 @@
 
 ## Quick Validation (Local)
 
-1. `make doctor-env`
-2. `make lint-docs`
-3. `make test`
-4. `make quality-gate-deterministic`
-5. confirm DB freeze posture:
+1. Morning worktree confirmation:
+   - confirm whether this thread is running in canonical repo root
+     (`/Users/tryskian/Github/polinko`) or a dedicated worktree path
+   - if automation is active, confirm it is using a separate worktree
+2. `make doctor-env`
+3. `make lint-docs`
+4. `make test`
+5. `make quality-gate-deterministic`
+6. confirm DB freeze posture:
    - no active `.polinko_*.db` / `.human_reference.db` files in repo root
 
 ## Known Constraints
@@ -174,4 +178,4 @@
 
 ## Copy/Paste Rehydrate Prompt
 
-`Read docs/governance/CHARTER.md, docs/runtime/ARCHITECTURE.md, docs/runtime/RUNBOOK.md, docs/governance/STATE.md, docs/governance/DECISIONS.md, and docs/governance/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, and confirm active git branch. Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Run in proactive engineer mode: execute obvious hygiene/cleanup/validation work without waiting for reminders, and ask only when approvals/trade-offs require it. Apply human-managed co-reasoning control: confirm objective/scope/acceptance and keep go/no-go decisions human-led. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behaviour drift and full test/build validation.`
+`Read docs/governance/CHARTER.md, docs/runtime/ARCHITECTURE.md, docs/runtime/RUNBOOK.md, docs/governance/STATE.md, docs/governance/DECISIONS.md, and docs/governance/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, confirm active git branch, and confirm whether this thread should run in canonical root or a dedicated worktree (especially if automation is active). Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Run in proactive engineer mode: execute obvious hygiene/cleanup/validation work without waiting for reminders, and ask only when approvals/trade-offs require it. Apply human-managed co-reasoning control: confirm objective/scope/acceptance and keep go/no-go decisions human-led. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behaviour drift and full test/build validation.`

@@ -262,6 +262,11 @@
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder
   - user prompts are reserved for approvals and material trade-offs
+- Morning startup guard checkpoint (March 29, 2026):
+  - session startup now explicitly confirms worktree context
+    (canonical root vs dedicated worktree)
+  - branch + worktree isolation is required when automation and manual work run
+    in parallel
 - Human-managed co-reasoning checkpoint (March 26, 2026):
   - human remains work-management authority in reasoning loops
   - human controls objective/scope/acceptance + go/no-go cutlines

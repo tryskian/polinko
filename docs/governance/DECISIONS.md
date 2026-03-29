@@ -1104,3 +1104,21 @@
 - Why: Keeps deprecated/internal material confidential in the new tree and
   reduces startup fragility by centralising environment selection in Makefile
   logic.
+
+## D-096: Add mandatory morning worktree confirmation to startup routine
+
+- Date: `2026-03-29`
+- Category: `workflow_environment`
+- Tags: `worktree_policy`, `startup_guard`, `parallel_execution`, `drift_control`
+- Decision:
+  - add a fixed morning check before implementation:
+    - confirm canonical repo vs dedicated worktree path
+    - confirm active branch
+    - confirm automation is isolated to a separate worktree when running
+  - codify this in:
+    - `docs/runtime/RUNBOOK.md`
+    - `docs/governance/SESSION_HANDOFF.md`
+  - include worktree confirmation in the copy/paste rehydrate prompt
+- Why: Human and automation both run parallel tracks; explicit startup
+  worktree confirmation prevents cross-lane edits and reduces branch/workspace
+  conflicts at the start of each session.

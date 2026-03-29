@@ -34,6 +34,18 @@
    - `multi-agent` = extra hands doing bounded subtasks
    - `director` = one final decider before merge
 
+## Morning Startup Check (Codexbeab)
+
+1. Confirm execution location:
+   - canonical root (`/Users/tryskian/Github/polinko`) or dedicated worktree.
+2. Confirm active branch in this thread:
+   - `git branch --show-current`
+3. Confirm automation isolation:
+   - if automation is running, keep it on a separate worktree from manual work.
+4. Only after 1-3:
+   - run `make doctor-env`
+   - continue with normal startup (`make server-daemon`, `make session-status`)
+
 ## Protected Main PR Flow
 
 1. Do not push directly to `main` (protected branch rules require PR + checks).
