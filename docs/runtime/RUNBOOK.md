@@ -90,7 +90,6 @@
 1. Non-build internal docs are local-only by default and ignored by git.
 2. Use these local-only paths for confidential notes/material:
    - `docs/peanut/refs/FIGMA_NODE_TRACKER.md`
-   - `docs/peanut/refs/WORKSTREAMS.md`
    - `docs/peanut/refs/PEANUT_TOOLING_REF.md`
    - `docs/internal/`
    - `docs/peanut/`
@@ -99,6 +98,7 @@
    - `.archive/live_archive/legacy_human_reference/`
 3. Build/source-of-truth docs stay tracked:
    - `docs/governance/CHARTER.md`
+   - `docs/governance/WORKSTREAMS.md`
    - `docs/runtime/ARCHITECTURE.md`
    - `docs/runtime/RUNBOOK.md`
    - `docs/governance/STATE.md`
@@ -954,7 +954,7 @@ Current policy:
 1. Build docs relationship graph:
    - `make reference-graph`
 2. Open generated visual:
-   - `docs/visuals/REFERENCE_GRAPH.md`
+   - `docs/peanut/visuals/REFERENCE_GRAPH.md`
 3. Archived human-reference DB workflow is retained only for traceability:
    - `.archive/live_archive/legacy_human_reference/`
 4. Runtime DB maintenance: retired during wiring lock (no local DB commands).

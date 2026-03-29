@@ -26,6 +26,7 @@ ACTIVE_DOCS_WITHOUT_DB_COMMANDS = (
     REPO_ROOT / "docs" / "runtime" / "ARCHITECTURE.md",
     REPO_ROOT / "docs" / "runtime" / "RUNBOOK.md",
     REPO_ROOT / "docs" / "governance" / "CHARTER.md",
+    REPO_ROOT / "docs" / "governance" / "WORKSTREAMS.md",
     REPO_ROOT / "docs" / "governance" / "STATE.md",
     REPO_ROOT / "docs" / "governance" / "SESSION_HANDOFF.md",
 )

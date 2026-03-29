@@ -56,7 +56,7 @@
 - Reference visualisation:
   - markdown-native relationship graph generated from docs links.
   - builder: `tools/build_reference_graph.py`
-  - operator flow: `make reference-graph` -> `docs/visuals/REFERENCE_GRAPH.md`.
+  - operator flow: `make reference-graph` -> `docs/peanut/visuals/REFERENCE_GRAPH.md`.
 - Eval relationship visualisation:
   - markdown-native relationship report generated from runtime history DB,
     augmented with latest per-suite snapshots from local `eval_reports/*.json`.

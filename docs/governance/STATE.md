@@ -131,8 +131,8 @@
   - active top-level docs now stay focused on current runtime/eval operations
     and research workflow
 - Docs consolidation checkpoint (March 29, 2026):
-  - active spec content is consolidated into six canonical docs:
-    - `CHARTER`, `DECISIONS`, `SESSION_HANDOFF`, `STATE`,
+  - active spec content is consolidated into seven canonical docs:
+    - `CHARTER`, `WORKSTREAMS`, `DECISIONS`, `SESSION_HANDOFF`, `STATE`,
       `ARCHITECTURE`, `RUNBOOK`
   - benchmark/eval spec details are now maintained directly in
     `docs/runtime/RUNBOOK.md`
@@ -148,7 +148,7 @@
   - no special-purpose `eval-rubric` branch/ruleset is active
 - Safety certainty checkpoint (March 21, 2026):
   - captured transcript + peanut-reference framing in
-    `docs/peanut/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
+    `docs/peanut/transcripts/safety/safety_certainty_and_inference_notes_2026-03-21.md`
     (unsupported certainty = fail; uncertainty + grounded recovery = pass)
 - Reasoning Loops diagnostic checkpoint (March 22, 2026):
   - captured transcript + structured interpretation in the March 22 diagnostic
@@ -413,7 +413,7 @@
   relationship attribution and enforce uncertainty-forward responses.
 - Co-reasoning interaction guidance is now documented with a dedicated eval
   reference and PASS/FAIL mapping:
-  - `docs/peanut/research/co_reasoning_eval_reference.md`
+  - `docs/peanut/research/experiment_co_reasoning_eval_reference.md`
 - Style eval cases now include co-reasoning stress scenarios for
   constraint-retention, meta-shift handling, anti-mimicry adaptation, and
   grounding-under-abstraction checks.

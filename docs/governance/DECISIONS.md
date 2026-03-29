@@ -820,7 +820,7 @@
   - move SQLite human-reference workflow to archive-only status in
     `.archive/live_archive/legacy_human_reference/`
   - make `reference-graph` the canonical docs relationship visualisation flow
-    (`tools/build_reference_graph.py` -> `docs/visuals/REFERENCE_GRAPH.md`)
+    (`tools/build_reference_graph.py` -> `docs/peanut/visuals/REFERENCE_GRAPH.md`)
   - leave legacy human-reference make targets as archive notices
 - Why: Reduces operator complexity and produces a more imagineer-readable visual
   surface without keeping an active DB/query workflow in the critical path.
@@ -992,7 +992,7 @@
 - Decision:
   - move deprecated coordination docs from top-level `docs/` into:
     - `.archive/live_archive/legacy_coordination/`
-  - keep `docs/peanut/refs/WORKSTREAMS.md` active and refresh it for current
+  - keep `docs/governance/WORKSTREAMS.md` active and refresh it for current
     imagineer/engineer `Reasoning Loops` collaboration semantics
   - remove `.DS_Store` files from `docs/` surfaces
 - Why: Reduces operator clutter in active docs while preserving historical

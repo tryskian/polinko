@@ -133,7 +133,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--output",
-        default="docs/visuals/REFERENCE_GRAPH.md",
+        default="docs/peanut/visuals/REFERENCE_GRAPH.md",
         help="Output markdown file path.",
     )
     return parser
