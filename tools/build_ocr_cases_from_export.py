@@ -660,7 +660,7 @@ def build_from_export(
             case_id = f"tx-{conversation_id[:8]}-{len(cases)+1:03d}"
             anchor_terms = _anchor_terms_for_phrases(chosen_phrases)[:8]
             anchor_terms = _expand_anchor_variants(anchor_terms)
-            if len(anchor_terms) < 2:
+            if len(anchor_terms) < 3:
                 continue
             cases.append(
                 {
@@ -670,7 +670,7 @@ def build_from_export(
                     "lane": lane,
                     "transcription_mode": "verbatim",
                     "must_contain_any": anchor_terms,
-                    "must_not_contain_words": ["likely", "probably", "maybe", "guess"],
+                    "must_not_contain_words": ["likely", "maybe", "guess"],
                     "min_chars": 3,
                 }
             )
