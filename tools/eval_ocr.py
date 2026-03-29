@@ -17,6 +17,8 @@ from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
 
+SPACED_LETTER_WORD_RX = re.compile(r"\b(?:[A-Za-z]\s+){2,}[A-Za-z]\b")
+
 
 def _headers(api_key: str | None) -> dict[str, str]:
     headers = {"Content-Type": "application/json"}
@@ -58,6 +60,15 @@ def _request_json(
     except ValueError:
         return {}
     return body if isinstance(body, dict) else {}
+
+
+def _collapse_spaced_letter_words(text: str) -> str:
+    """Normalize OCR outputs like 'C H A T T I E S T' -> 'CHATTIEST' for matching."""
+
+    def _join_letters(match: re.Match[str]) -> str:
+        return re.sub(r"\s+", "", match.group(0))
+
+    return SPACED_LETTER_WORD_RX.sub(_join_letters, text)
 
 
 def _load_cases(path: Path) -> list[dict[str, Any]]:
@@ -199,15 +210,16 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
     reasons: list[str] = []
     case_sensitive = bool(case["case_sensitive"])
     haystack = extracted_text if case_sensitive else extracted_text.lower()
+    haystack_spaced_normalized = _collapse_spaced_letter_words(haystack)
 
     def contains(needle: str) -> bool:
         probe = needle if case_sensitive else needle.lower()
-        return probe in haystack
+        return probe in haystack or probe in haystack_spaced_normalized
 
     def contains_word(word: str) -> bool:
         probe = word if case_sensitive else word.lower()
         pattern = re.compile(rf"(?<!\w){re.escape(probe)}(?!\w)")
-        return bool(pattern.search(haystack))
+        return bool(pattern.search(haystack)) or bool(pattern.search(haystack_spaced_normalized))
 
     for phrase in case["must_contain"]:
         if not contains(phrase):
