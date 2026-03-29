@@ -559,6 +559,62 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertEqual(review["confidence"], "low")
 
+    def test_build_skips_cases_with_only_single_anchor_concept(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "tiny_001.png").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-single-anchor",
+                "title": "single concept",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can u see with your binareyes?"]},
+                            "metadata": {"attachments": [{"name": "tiny_001.png", "id": "file_tiny"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ['it reads: "stirring"']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-8.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["medium_confidence"], 1)
+            self.assertEqual(summary["cases_written"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
