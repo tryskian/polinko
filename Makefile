@@ -33,7 +33,11 @@ CLIP_AB_SOURCE_TYPES ?= image
 OCR_HANDWRITING_CASES ?= .local/eval_cases/ocr_handwriting_eval_cases.json
 CGPT_EXPORT_ROOT ?=
 CGPT_EXPORT_OUTPUT_DIR ?= .local/eval_cases
-OCR_TRANSCRIPT_CASES ?= .local/eval_cases/ocr_handwriting_from_transcripts.json
+OCR_TRANSCRIPT_CASES_ALL ?= .local/eval_cases/ocr_transcript_cases_all.json
+OCR_TRANSCRIPT_CASES_HANDWRITING ?= .local/eval_cases/ocr_handwriting_from_transcripts.json
+OCR_TRANSCRIPT_CASES_TYPED ?= .local/eval_cases/ocr_typed_from_transcripts.json
+OCR_TRANSCRIPT_CASES_ILLUSTRATION ?= .local/eval_cases/ocr_illustration_from_transcripts.json
+OCR_TRANSCRIPT_CASES ?= $(OCR_TRANSCRIPT_CASES_ALL)
 OCR_TRANSCRIPT_REVIEW ?= .local/eval_cases/ocr_handwriting_from_transcripts_review.json
 CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
 CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
@@ -41,7 +45,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph eval-relationship-graph eval-viz cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases db-visuals db-reset db-archive docker-build docker-run dev dev-stop
+.PHONY: chat server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph eval-relationship-graph eval-viz cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-illustration db-visuals db-reset db-archive docker-build docker-run dev dev-stop
 
 chat:
 	$(PYTHON) app.py
@@ -518,7 +522,10 @@ ocr-cases-from-export:
 	fi; \
 	$(PYTHON) -m tools.build_ocr_cases_from_export \
 		--export-root "$(CGPT_EXPORT_ROOT)" \
-		--output-cases "$(OCR_TRANSCRIPT_CASES)" \
+		--output-cases "$(OCR_TRANSCRIPT_CASES_ALL)" \
+		--output-cases-handwriting "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" \
+		--output-cases-typed "$(OCR_TRANSCRIPT_CASES_TYPED)" \
+		--output-cases-illustration "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" \
 		--output-review "$(OCR_TRANSCRIPT_REVIEW)"
 
 eval-ocr-transcript-cases:
@@ -529,6 +536,48 @@ eval-ocr-transcript-cases:
 		exit 1; \
 	fi; \
 	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES)" --strict --show-text
+
+eval-ocr-transcript-cases-handwriting:
+	@set -eu; \
+	if [ ! -f "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" ]; then \
+		echo "Transcript handwriting OCR cases not found: $(OCR_TRANSCRIPT_CASES_HANDWRITING)"; \
+		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
+		exit 1; \
+	fi; \
+	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_HANDWRITING)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	if [ "$$CASE_COUNT" -eq 0 ]; then \
+		echo "No transcript handwriting OCR cases available yet; skipping eval."; \
+		exit 0; \
+	fi; \
+	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" --strict --show-text
+
+eval-ocr-transcript-cases-typed:
+	@set -eu; \
+	if [ ! -f "$(OCR_TRANSCRIPT_CASES_TYPED)" ]; then \
+		echo "Transcript typed OCR cases not found: $(OCR_TRANSCRIPT_CASES_TYPED)"; \
+		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
+		exit 1; \
+	fi; \
+	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_TYPED)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	if [ "$$CASE_COUNT" -eq 0 ]; then \
+		echo "No transcript typed OCR cases available yet; skipping eval."; \
+		exit 0; \
+	fi; \
+	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_TYPED)" --strict --show-text
+
+eval-ocr-transcript-cases-illustration:
+	@set -eu; \
+	if [ ! -f "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" ]; then \
+		echo "Transcript illustration OCR cases not found: $(OCR_TRANSCRIPT_CASES_ILLUSTRATION)"; \
+		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
+		exit 1; \
+	fi; \
+	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	if [ "$$CASE_COUNT" -eq 0 ]; then \
+		echo "No transcript illustration OCR cases available yet; skipping eval."; \
+		exit 0; \
+	fi; \
+	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" --strict --show-text
 
 dev:
 	@PYTHON_BIN="$(PYTHON)" DEV_HOST="$(DEV_HOST)" DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" bash tools/dev_run.sh

@@ -79,7 +79,20 @@
     - `make cgpt-export-index`
     - `make ocr-cases-from-export`
     - `make eval-ocr-transcript-cases`
+    - `make eval-ocr-transcript-cases-handwriting`
+    - `make eval-ocr-transcript-cases-typed`
+    - `make eval-ocr-transcript-cases-illustration`
   - generated transcript OCR cases stay local-only in `.local/eval_cases/`
+  - lane artifacts:
+    - `.local/eval_cases/ocr_transcript_cases_all.json`
+    - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
+    - `.local/eval_cases/ocr_typed_from_transcripts.json`
+    - `.local/eval_cases/ocr_illustration_from_transcripts.json`
+  - latest lane validations are green:
+    - all: `4/4` PASS
+    - handwriting: `1/1` PASS
+    - typed: `2/2` PASS
+    - illustration: `1/1` PASS
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/benchmarks/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
@@ -140,6 +153,9 @@
     - `make cgpt-export-index`
     - `make ocr-cases-from-export`
     - `make eval-ocr-transcript-cases`
+    - `make eval-ocr-transcript-cases-handwriting`
+    - `make eval-ocr-transcript-cases-typed`
+    - `make eval-ocr-transcript-cases-illustration`
   - improve extraction heuristics to increase medium/high-confidence
     handwriting cases without introducing noisy phrase artifacts
   - validate with:

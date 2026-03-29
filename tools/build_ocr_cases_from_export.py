@@ -14,6 +14,68 @@ ASK_RX = re.compile(
     r"what does (this|it) say|read (this|it)|\btranscrib\w*|\bocr\b|handwriting|cursive|binareyes",
     re.IGNORECASE,
 )
+HANDWRITING_HINT_RX = re.compile(
+    r"handwrit|cursive|script|notebook|sketchbook|journal|ink|pen|manifold",
+    re.IGNORECASE,
+)
+TYPED_HINT_RX = re.compile(
+    r"\btyped\b|printed|font|ui|screen ?shot|terminal|code|document|pdf",
+    re.IGNORECASE,
+)
+ILLUSTRATION_HINT_RX = re.compile(
+    r"illustration|diagram|flow ?chart|flowchart|graph|node|edge|arrow|whiteboard|sketch|drawing|doodle|wireframe|figure|geometry|shape",
+    re.IGNORECASE,
+)
+ANCHOR_STOPWORDS = {
+    "the",
+    "and",
+    "from",
+    "your",
+    "with",
+    "that",
+    "this",
+    "here",
+    "just",
+    "basically",
+    "you",
+    "ive",
+    "we",
+    "is",
+    "are",
+    "was",
+    "were",
+    "of",
+    "its",
+    "it",
+    "as",
+    "not",
+}
+ANCHOR_META_WORDS = {
+    "transcription",
+    "overlay",
+    "interpretation",
+    "binaric",
+    "exposure",
+    "peanut",
+    "locked",
+    "render",
+    "preserving",
+    "rhythm",
+    "logic",
+    "here",
+    "just",
+    "central",
+    "glyph",
+    "circle",
+    "grid",
+    "wave",
+    "square",
+    "frame",
+    "clarity",
+    "perfect",
+    "binareyes",
+    "fysics",
+}
 POSITIVE_RX = re.compile(
     r"exactly right|that'?s exactly right|incredible|good job|perfect|correct",
     re.IGNORECASE,
@@ -26,10 +88,10 @@ CORRECTION_RX = re.compile(
 ASSET_TOKEN_RE = re.compile(r"^(file[_-][^-]+)", re.IGNORECASE)
 CODE_BLOCK_RX = re.compile(r"```(?:[^\n`]*)\n?(.*?)```", re.DOTALL)
 AFTER_COLON_RX = re.compile(
-    r"(?:it says|should be|record|field notes|correction)\s*:\s*([^\n]{3,180})",
+    r"(?:it says|should be|correction|reads?|line)\s*:\s*([^\n]{3,120})",
     re.IGNORECASE,
 )
-ARROW_RX = re.compile(r"(?:->|→|=>)\s*([^\n]{2,180})")
+ARROW_RX = re.compile(r"(?:->|→|=>)\s*([^\n]{2,120})")
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 
@@ -180,14 +242,26 @@ def _is_ocr_like_phrase(text: str) -> bool:
         "queries",
         "http://",
         "https://",
+        "here's the ocr",
+        "from your page",
+        "no interpretation",
+        "basically found",
     )
     if any(marker in lowered for marker in noisy_markers):
         return False
     if lowered.startswith("only "):
         return False
-    words = [w for w in re.split(r"\s+", value) if w]
-    if len(words) > 10:
+    if lowered.startswith(("here ", "here's ", "you ", "this ", "that ")):
         return False
+    words = [w for w in re.split(r"\s+", value) if w]
+    if len(words) > 8:
+        return False
+    alpha_words = [re.sub(r"[^a-z]", "", w.lower()) for w in words]
+    alpha_words = [w for w in alpha_words if w]
+    if len(alpha_words) >= 5:
+        stopword_ratio = sum(1 for word in alpha_words if word in ANCHOR_STOPWORDS) / len(alpha_words)
+        if stopword_ratio > 0.55:
+            return False
     alnum = sum(ch.isalnum() for ch in value)
     printable = sum(ch.isprintable() and not ch.isspace() for ch in value)
     if printable == 0:
@@ -197,10 +271,114 @@ def _is_ocr_like_phrase(text: str) -> bool:
     return True
 
 
+def _classify_lane(
+    *,
+    ask_text: str,
+    title: str,
+    image_path: str,
+    followups: list[str],
+) -> str:
+    haystack = "\n".join([ask_text, title, *followups])
+    if ILLUSTRATION_HINT_RX.search(haystack):
+        return "illustration"
+    if HANDWRITING_HINT_RX.search(haystack):
+        return "handwriting"
+    if TYPED_HINT_RX.search(haystack):
+        return "typed"
+
+    source_name = Path(image_path).name.lower()
+    if any(marker in source_name for marker in ("diagram", "sketch", "drawing", "doodle", "flowchart", "graph")):
+        return "illustration"
+    if source_name.startswith("img_") or source_name.startswith("dsc_"):
+        return "handwriting"
+    if "screenshot" in source_name:
+        return "typed"
+    return "typed"
+
+
+def _phrase_tokens(phrase: str) -> list[str]:
+    return [token for token in re.findall(r"[A-Za-z0-9]+", phrase) if token]
+
+
+def _merge_short_adjacent_tokens(tokens: list[str]) -> list[str]:
+    merged: list[str] = []
+    idx = 0
+    while idx < len(tokens):
+        if (
+            idx + 1 < len(tokens)
+            and tokens[idx].isalpha()
+            and tokens[idx + 1].isalpha()
+            and len(tokens[idx]) <= 3
+            and len(tokens[idx + 1]) <= 3
+        ):
+            merged.append(tokens[idx] + tokens[idx + 1])
+            idx += 2
+            continue
+        merged.append(tokens[idx])
+        idx += 1
+    return merged
+
+
+def _regex_patterns_for_phrases(phrases: list[str]) -> list[str]:
+    patterns: list[str] = []
+    seen: set[str] = set()
+    for phrase in phrases:
+        tokens = _phrase_tokens(phrase)
+        if len(tokens) < 2:
+            continue
+        token_patterns = [tokens]
+        merged_tokens = _merge_short_adjacent_tokens(tokens)
+        if merged_tokens != tokens and len(merged_tokens) >= 2:
+            token_patterns.append(merged_tokens)
+        for token_list in token_patterns:
+            pattern = r"\b" + r"\W*".join(re.escape(token) for token in token_list) + r"\b"
+            if pattern in seen:
+                continue
+            seen.add(pattern)
+            patterns.append(pattern)
+    return patterns
+
+
+def _anchor_terms_for_phrases(phrases: list[str]) -> list[str]:
+    anchors: list[str] = []
+    seen: set[str] = set()
+    for phrase in phrases:
+        tokens = [token.lower() for token in _phrase_tokens(phrase)]
+        for token in tokens:
+            if len(token) < 4:
+                continue
+            if token in ANCHOR_STOPWORDS:
+                continue
+            if token in ANCHOR_META_WORDS:
+                continue
+            if token in seen:
+                continue
+            seen.add(token)
+            anchors.append(token)
+    return anchors
+
+
+def _anchor_terms_from_assistant_text(text: str) -> list[str]:
+    anchors: list[str] = []
+    seen: set[str] = set()
+    for token in re.findall(r"[A-Za-z]{5,}", text):
+        lowered = token.lower()
+        if lowered in ANCHOR_STOPWORDS or lowered in ANCHOR_META_WORDS:
+            continue
+        if lowered in seen:
+            continue
+        seen.add(lowered)
+        anchors.append(lowered)
+    return anchors
+
+
 def build_from_export(
     export_root: Path,
     *,
     output_cases: Path,
+    output_cases_handwriting: Path,
+    output_cases_typed: Path,
+    output_cases_illustration: Path,
     output_review: Path,
     max_cases: int,
 ) -> dict[str, int]:
@@ -287,6 +465,12 @@ def build_from_export(
                     continue
             except OSError:
                 continue
+            lane = _classify_lane(
+                ask_text=msg.text,
+                title=title,
+                image_path=image_path,
+                followups=followups,
+            )
 
             confidence = "low"
             chosen_phrases: list[str] = []
@@ -296,7 +480,7 @@ def build_from_export(
             if correction_signal and correction_phrases:
                 confidence = "high"
                 chosen_phrases = correction_phrases[:5]
-            elif positive_signal and had_code_block and transcription_phrases:
+            elif positive_signal and transcription_phrases:
                 confidence = "medium"
                 chosen_phrases = transcription_phrases[:5]
 
@@ -315,6 +499,7 @@ def build_from_export(
                     "transcription_phrases": transcription_phrases,
                     "chosen_phrases": chosen_phrases,
                     "confidence": confidence,
+                    "lane": lane,
                 }
             )
 
@@ -323,13 +508,24 @@ def build_from_export(
             if image_path in seen_case_paths:
                 continue
             case_id = f"tx-{conversation_id[:8]}-{len(cases)+1:03d}"
+            anchor_terms = _anchor_terms_for_phrases(chosen_phrases)[:4]
+            for token in _anchor_terms_from_assistant_text(assistant_text):
+                if token in anchor_terms:
+                    continue
+                anchor_terms.append(token)
+                if len(anchor_terms) >= 8:
+                    break
+            if len(anchor_terms) < 2:
+                continue
             cases.append(
                 {
                     "id": case_id,
                     "image_path": image_path,
                     "source_name": Path(image_path).name,
+                    "lane": lane,
                     "transcription_mode": "verbatim",
-                    "must_contain_any": chosen_phrases[:5],
+                    "must_contain_any": anchor_terms,
+                    "must_not_contain_words": ["likely", "probably", "maybe", "guess"],
                     "min_chars": 3,
                 }
             )
@@ -347,8 +543,14 @@ def build_from_export(
         )
     )
 
+    handwriting_cases = [case for case in cases if case.get("lane") == "handwriting"]
+    typed_cases = [case for case in cases if case.get("lane") == "typed"]
+    illustration_cases = [case for case in cases if case.get("lane") == "illustration"]
     output_cases.parent.mkdir(parents=True, exist_ok=True)
     _write_json(output_cases, {"cases": cases})
+    _write_json(output_cases_handwriting, {"cases": handwriting_cases})
+    _write_json(output_cases_typed, {"cases": typed_cases})
+    _write_json(output_cases_illustration, {"cases": illustration_cases})
     _write_json(output_review, {"episodes": review_rows})
 
     high = sum(1 for row in review_rows if row["confidence"] == "high")
@@ -361,6 +563,9 @@ def build_from_export(
         "medium_confidence": medium,
         "low_confidence": low,
         "cases_written": len(cases),
+        "handwriting_cases_written": len(handwriting_cases),
+        "typed_cases_written": len(typed_cases),
+        "illustration_cases_written": len(illustration_cases),
     }
 
 
@@ -375,8 +580,23 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-cases",
+        default=".local/eval_cases/ocr_transcript_cases_all.json",
+        help="Output JSON path for runnable OCR cases (combined).",
+    )
+    parser.add_argument(
+        "--output-cases-handwriting",
         default=".local/eval_cases/ocr_handwriting_from_transcripts.json",
-        help="Output JSON path for runnable OCR cases.",
+        help="Output JSON path for handwriting/cursive OCR cases.",
+    )
+    parser.add_argument(
+        "--output-cases-typed",
+        default=".local/eval_cases/ocr_typed_from_transcripts.json",
+        help="Output JSON path for typed OCR cases.",
+    )
+    parser.add_argument(
+        "--output-cases-illustration",
+        default=".local/eval_cases/ocr_illustration_from_transcripts.json",
+        help="Output JSON path for illustration/diagram OCR cases.",
     )
     parser.add_argument(
         "--output-review",
@@ -397,6 +617,9 @@ def main() -> int:
     summary = build_from_export(
         Path(args.export_root).expanduser().resolve(),
         output_cases=Path(args.output_cases).expanduser().resolve(),
+        output_cases_handwriting=Path(args.output_cases_handwriting).expanduser().resolve(),
+        output_cases_typed=Path(args.output_cases_typed).expanduser().resolve(),
+        output_cases_illustration=Path(args.output_cases_illustration).expanduser().resolve(),
         output_review=Path(args.output_review).expanduser().resolve(),
         max_cases=int(args.max_cases),
     )
@@ -407,6 +630,9 @@ def main() -> int:
         "medium_confidence",
         "low_confidence",
         "cases_written",
+        "handwriting_cases_written",
+        "typed_cases_written",
+        "illustration_cases_written",
     ):
         print(f"{key}={summary[key]}")
     return 0
