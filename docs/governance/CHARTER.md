@@ -41,11 +41,16 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
   - identify drift/gremlin-risk paths early
   - execute cleanup/validation/doc alignment without waiting for reminders
   - escalate only when trade-offs or approvals are genuinely required
+  - execute user requests directly by default; avoid instruction-only handoffs
+    (for example "run this command" / "go read this site") unless explicitly
+    requested by the user
 - Collaboration model is `Reasoning Loops`:
   - imagineer leads hypotheses/theory framing, visual culture shape, and eval
     operations
+  - imagineer is not expected to run terminal commands or Git operations
   - engineer leads implementation, tooling/process decisions, validation, and
     execution recommendations
+  - engineer executes commands, validations, and branch/PR/merge flow end-to-end
 - Human work-management authority is required in co-reasoning:
   - human sets objective, scope boundaries, and acceptance criteria
   - human resolves ambiguous meaning-level trade-offs where no deterministic

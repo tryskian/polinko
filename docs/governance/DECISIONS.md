@@ -1104,3 +1104,51 @@
 - Why: Keeps deprecated/internal material confidential in the new tree and
   reduces startup fragility by centralising environment selection in Makefile
   logic.
+
+## D-096: Add mandatory morning worktree confirmation to startup routine
+
+- Date: `2026-03-29`
+- Category: `workflow_environment`
+- Tags: `worktree_policy`, `startup_guard`, `parallel_execution`, `drift_control`
+- Decision:
+  - add a fixed morning check before implementation:
+    - confirm canonical repo vs dedicated worktree path
+    - confirm active branch
+    - confirm automation is isolated to a separate worktree when running
+  - codify this in:
+    - `docs/runtime/RUNBOOK.md`
+    - `docs/governance/SESSION_HANDOFF.md`
+  - include worktree confirmation in the copy/paste rehydrate prompt
+- Why: Human and automation both run parallel tracks; explicit startup
+  worktree confirmation prevents cross-lane edits and reduces branch/workspace
+  conflicts at the start of each session.
+
+## D-097: Make command execution ownership explicit in Reasoning Loops
+
+- Date: `2026-03-29`
+- Category: `collaboration_method`
+- Tags: `reasoning_loops`, `execution_ownership`, `operator_clarity`, `workflow`
+- Decision:
+  - codify command/Git execution ownership as engineer-side by default
+  - codify imagineer role as objective/scope/acceptance/go-no-go control, not
+    terminal operation
+  - reflect this in:
+    - `docs/governance/CHARTER.md`
+    - `docs/runtime/RUNBOOK.md`
+    - `docs/governance/SESSION_HANDOFF.md`
+- Why: Prevents ineffective handoffs where the model asks the human to run
+  routine engineering commands, keeps workflow consistent with role boundaries,
+  and reduces operational friction.
+
+## D-098: Adopt execution-first response policy for engineer actions
+
+- Date: `2026-03-29`
+- Category: `collaboration_method`
+- Tags: `execution_first`, `operator_experience`, `no_handoff_drift`, `workflow`
+- Decision:
+  - when the user requests action, engineer executes directly by default
+  - avoid "go run this command/read this file or website" responses unless the
+    user explicitly asks for references or self-run instructions
+  - keep human role focused on objective/scope/acceptance/go-no-go decisions
+- Why: Reduces friction and ambiguity in human-AI collaboration and aligns
+  behaviour with the agreed imagineer/engineer split.
