@@ -1182,3 +1182,33 @@
 - Why: Prevents brittle failures from correction-word anchors (for example
   `insight`/`weight`) while still recovering additional handwriting cases under
   strict binary pass/fail gates.
+
+## D-101: Tighten transcript case emission to anchor-rich OCR phrases
+
+- Date: `2026-03-29`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `anchor_threshold`, `precision_guard`, `strict_binary`
+- Decision:
+  - require at least `3` anchor terms before emitting a mined transcript OCR
+    case
+  - remove `probably` from forbidden-word checks to avoid false negatives on
+    valid OCR outputs that include probability language
+  - add regression coverage for single-anchor episodes to ensure they remain
+    review-only and are not emitted as eval cases
+- Why: Keeps transcript-derived cases focused on high-information OCR phrases
+  and prevents brittle over-filtering from conversational wording.
+
+## D-102: Prevent over-stemming in OCR anchor variant expansion
+
+- Date: `2026-03-29`
+- Category: `eval_quality`
+- Tags: `anchor_normalization`, `ocr_transcripts`, `precision_guard`, `stability`
+- Decision:
+  - refine anchor variant expansion rules so plural stemming does not generate
+    malformed forms (for example `focus -> focu`, `abacus -> abacu`)
+  - preserve useful inflection handling (`tumbles -> tumble`,
+    `floating -> float`, `classes -> class`)
+  - add explicit regression tests for allowed stems and blocked malformed forms
+- Why: Cleaner anchors improve transcript OCR case readability and reduce
+  avoidable noise in strict eval requirements without changing binary gate
+  semantics.
