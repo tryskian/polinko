@@ -76,6 +76,8 @@
    - `docs/internal/`
    - `docs/peanut/`
    - `docs/portfolio/`
+   - `.archive/live_archive/legacy_eval/`
+   - `.archive/live_archive/legacy_human_reference/`
 3. Build/source-of-truth docs stay tracked:
    - `docs/governance/CHARTER.md`
    - `docs/runtime/ARCHITECTURE.md`
@@ -104,6 +106,9 @@
      available.
 3. Resolve actionable issues (missing imports, interpreter mismatch, or
    `compaudit` findings) before running evals.
+4. VS Code task startup is now venv-automatic through `make` interpreter
+   discovery; manual `source .../activate` chaining is not required for
+   `make server` / `make caffeinate-on`.
 
 ## Build Block Audit (Fresh-Path Guard)
 

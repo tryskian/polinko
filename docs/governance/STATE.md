@@ -119,6 +119,12 @@
     - `.archive/live_archive/legacy_human_reference/`
   - archive lane is reference-only and non-authoritative for active runtime
     gate decisions
+- Local-only confidentiality checkpoint (March 29, 2026):
+  - `.archive/live_archive/legacy_eval/` and
+    `.archive/live_archive/legacy_human_reference/` are local-only in the new
+    tree and ignored by git
+  - docs under those lanes are retained locally but removed from tracked
+    repository history going forward
 - Docs straggler cleanup checkpoint (March 28, 2026):
   - deprecated top-level coordination docs moved into:
     - `.archive/live_archive/legacy_coordination/`
