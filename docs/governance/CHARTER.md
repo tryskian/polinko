@@ -85,3 +85,9 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Archived: web UI as an active execution surface; retained only in
   live-archive references.
 - Paused: cloud deployment automation (removed from repo for now; Azure is the preferred target when resumed).
+- Include later (deferred cookbook track):
+  - Prompt Caching 101/201
+  - Realtime eval guide
+  - Realtime out-of-band transcription
+  - RAG with graph DB
+  - Search reranking with cross-encoders
