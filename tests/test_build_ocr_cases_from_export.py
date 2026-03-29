@@ -6,6 +6,7 @@ from pathlib import Path
 from tools.build_ocr_cases_from_export import (
     ASK_RX,
     CORRECTION_RX,
+    _anchor_terms_for_phrases,
     _classify_lane,
     _expand_anchor_variants,
     _extract_candidate_phrases,
@@ -70,6 +71,19 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         phrases, _ = _extract_transcribed_lines(assistant_text)
         self.assertIn("field notes", phrases)
         self.assertIn("record wow.", phrases)
+
+    def test_anchor_terms_filter_weak_and_filetype_tokens(self) -> None:
+        anchors = _anchor_terms_for_phrases(
+            [
+                "IMG_6821.jpeg",
+                "There seems to be something stirring.",
+            ]
+        )
+        self.assertIn("stirring", anchors)
+        self.assertNotIn("jpeg", anchors)
+        self.assertNotIn("there", anchors)
+        self.assertNotIn("seems", anchors)
+        self.assertNotIn("something", anchors)
 
     def test_build_promotes_medium_with_framing_signal(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
