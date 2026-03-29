@@ -201,6 +201,16 @@
     (`db-reset`, `db-archive`, `db-visuals`)
   - `make build-audit` now fails on reintroduction of those command tokens in
     active docs
+- Transcript-backed OCR mining checkpoint (March 29, 2026):
+  - merged PR `#110` adds export indexing + transcript OCR case mining:
+    - `tools/index_cgpt_export.py`
+    - `tools/build_ocr_cases_from_export.py`
+  - canonical local commands:
+    - `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+    - `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+    - `make eval-ocr-transcript-cases`
+  - local outputs are untracked under `.local/eval_cases/`
+  - latest transcript-case run is green (`1/1` PASS) with strict OCR gating
 - Eval relationship visual checkpoint (March 28, 2026):
   - local eval data visualisation now has a canonical navigation-first report:
     - command: `make eval-viz`
@@ -350,6 +360,17 @@
   and validates evidence-index + evidence-log metadata completeness.
 - Integration tests exist and pass locally (`tests/test_api.py`).
 - Collaboration v1 supports explicit agent-role handoffs per chat with audit history.
+
+## Portfolio Timeline Snapshot (March 28, 2026)
+
+- Engineering build completion estimate: `65-75%`
+- Portfolio package completion estimate: `40-50%`
+- Overall project completion estimate (apply-ready target): `55-65%`
+- Remaining horizon at current pace: `3-5 weeks`
+- Milestone sequence:
+  - `1-2 weeks`: backend hardening + eval flow stability + minimal operator surface
+  - `1-2 weeks`: benchmark cycles + evidence tables/figures + findings lock
+  - `~1 week`: final case-study/research-paper assembly for portfolio handoff
 
 ## Key Files
 

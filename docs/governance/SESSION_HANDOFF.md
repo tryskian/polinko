@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-28
+- 2026-03-29
 
 ## Current Snapshot
 
@@ -71,6 +71,20 @@
 - Co-reasoning governance mode is human-managed:
   - human controls objective/scope/acceptance and go/no-go decisions
   - engineer executes proactively within that control frame
+- Transcript-backed OCR mining kernel is merged on `main`:
+  - PR: `#110`
+  - indexer: `tools/index_cgpt_export.py`
+  - miner: `tools/build_ocr_cases_from_export.py`
+  - new make commands:
+    - `make cgpt-export-index`
+    - `make ocr-cases-from-export`
+    - `make eval-ocr-transcript-cases`
+  - generated transcript OCR cases stay local-only in `.local/eval_cases/`
+- Portfolio timeline checkpoint (March 28, 2026):
+  - engineering build: `65-75%`
+  - portfolio package: `40-50%`
+  - overall apply-ready target: `55-65%`
+  - expected horizon at current pace: `3-5 weeks`
 
 ## Latest Branch Context
 
@@ -116,16 +130,18 @@
 
 ## Immediate Next Step
 
-- Run one full backend eval cycle through canonical API routes and capture
-  contract gaps:
-  - exercise `live` and `fixture` harness modes on `POST /chat`
-  - submit pass/fail evals on multiple assistant messages
-    (`POST /chats/{session_id}/feedback`)
-  - create checkpoint and verify fail-closed gate rendering
-    (`POST /chats/{session_id}/feedback/checkpoints`)
-  - patch only contract-level gaps (no visual framework expansion yet)
-  - validate with `make build-audit`, `make lint-docs`, `make test`,
-    `make quality-gate-deterministic`
+- Expand transcript OCR mining yield while preserving strict precision:
+  - run transcript pipeline on local export root:
+    - `make cgpt-export-index`
+    - `make ocr-cases-from-export`
+    - `make eval-ocr-transcript-cases`
+  - improve extraction heuristics to increase medium/high-confidence
+    handwriting cases without introducing noisy phrase artifacts
+  - validate with:
+    - `make build-audit`
+    - `make lint-docs`
+    - `make test`
+    - `make quality-gate-deterministic`
 
 ## Peanut Pin (Tomorrow Start)
 
