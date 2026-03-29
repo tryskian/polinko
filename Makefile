@@ -30,13 +30,18 @@ BRAINTRUST_OPENAI_BASE_URL ?=
 HALLUCINATION_JUDGE_BASE_URL ?=
 HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
 CLIP_AB_SOURCE_TYPES ?= image
+OCR_HANDWRITING_CASES ?= .local/eval_cases/ocr_handwriting_eval_cases.json
+CGPT_EXPORT_ROOT ?=
+CGPT_EXPORT_OUTPUT_DIR ?= .local/eval_cases
+OCR_TRANSCRIPT_CASES ?= .local/eval_cases/ocr_handwriting_from_transcripts.json
+OCR_TRANSCRIPT_REVIEW ?= .local/eval_cases/ocr_handwriting_from_transcripts_review.json
 CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
 CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
 CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph eval-relationship-graph eval-viz db-visuals db-reset db-archive docker-build docker-run dev dev-stop
+.PHONY: chat server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph eval-relationship-graph eval-viz cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases db-visuals db-reset db-archive docker-build docker-run dev dev-stop
 
 chat:
 	$(PYTHON) app.py
@@ -341,6 +346,26 @@ eval-ocr-report:
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
 	$(PYTHON) -m tools.eval_ocr --run-id $$RUN_ID --report-json "eval_reports/ocr-$$RUN_ID.json"
 
+eval-ocr-handwriting:
+	@set -eu; \
+	if [ ! -f "$(OCR_HANDWRITING_CASES)" ]; then \
+		echo "Handwriting cases file not found: $(OCR_HANDWRITING_CASES)"; \
+		echo "Create it with image_path entries (see docs/runtime/RUNBOOK.md)."; \
+		exit 1; \
+	fi; \
+	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_HANDWRITING_CASES)" --strict --show-text
+
+eval-ocr-handwriting-report:
+	@set -eu; \
+	if [ ! -f "$(OCR_HANDWRITING_CASES)" ]; then \
+		echo "Handwriting cases file not found: $(OCR_HANDWRITING_CASES)"; \
+		echo "Create it with image_path entries (see docs/runtime/RUNBOOK.md)."; \
+		exit 1; \
+	fi; \
+	mkdir -p eval_reports; \
+	RUN_ID=$$(date +%Y%m%d-%H%M%S); \
+	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_HANDWRITING_CASES)" --strict --show-text --run-id $$RUN_ID --report-json "eval_reports/ocr-handwriting-$$RUN_ID.json"
+
 eval-ocr-recovery:
 	$(PYTHON) -m tools.eval_ocr_recovery
 
@@ -474,6 +499,36 @@ eval-relationship-graph:
 	$(PYTHON) -m tools.build_eval_relationship_graph
 
 eval-viz: eval-relationship-graph
+
+cgpt-export-index:
+	@set -eu; \
+	if [ -z "$(CGPT_EXPORT_ROOT)" ]; then \
+		echo "Set CGPT_EXPORT_ROOT to your export root path."; \
+		echo "Example: make cgpt-export-index CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT"; \
+		exit 2; \
+	fi; \
+	$(PYTHON) -m tools.index_cgpt_export --export-root "$(CGPT_EXPORT_ROOT)" --output-dir "$(CGPT_EXPORT_OUTPUT_DIR)"
+
+ocr-cases-from-export:
+	@set -eu; \
+	if [ -z "$(CGPT_EXPORT_ROOT)" ]; then \
+		echo "Set CGPT_EXPORT_ROOT to your export root path."; \
+		echo "Example: make ocr-cases-from-export CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT"; \
+		exit 2; \
+	fi; \
+	$(PYTHON) -m tools.build_ocr_cases_from_export \
+		--export-root "$(CGPT_EXPORT_ROOT)" \
+		--output-cases "$(OCR_TRANSCRIPT_CASES)" \
+		--output-review "$(OCR_TRANSCRIPT_REVIEW)"
+
+eval-ocr-transcript-cases:
+	@set -eu; \
+	if [ ! -f "$(OCR_TRANSCRIPT_CASES)" ]; then \
+		echo "Transcript OCR cases not found: $(OCR_TRANSCRIPT_CASES)"; \
+		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
+		exit 1; \
+	fi; \
+	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES)" --strict --show-text
 
 dev:
 	@PYTHON_BIN="$(PYTHON)" DEV_HOST="$(DEV_HOST)" DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" bash tools/dev_run.sh

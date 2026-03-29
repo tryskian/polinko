@@ -1,0 +1,416 @@
+"""Mine OCR eval cases from ChatGPT export transcripts with correction signals."""
+
+from __future__ import annotations
+
+import argparse
+import html
+import json
+import re
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+ASK_RX = re.compile(
+    r"what does (this|it) say|read (this|it)|\btranscrib\w*|\bocr\b|handwriting|cursive|binareyes",
+    re.IGNORECASE,
+)
+POSITIVE_RX = re.compile(
+    r"exactly right|that'?s exactly right|incredible|good job|perfect|correct",
+    re.IGNORECASE,
+)
+CORRECTION_RX = re.compile(
+    r"should be|it says|correction|you read|you wrote|wrong|not right|typo|only",
+    re.IGNORECASE,
+)
+
+ASSET_TOKEN_RE = re.compile(r"^(file[_-][^-]+)", re.IGNORECASE)
+CODE_BLOCK_RX = re.compile(r"```(?:[^\n`]*)\n?(.*?)```", re.DOTALL)
+AFTER_COLON_RX = re.compile(
+    r"(?:it says|should be|record|field notes|correction)\s*:\s*([^\n]{3,180})",
+    re.IGNORECASE,
+)
+ARROW_RX = re.compile(r"(?:->|→|=>)\s*([^\n]{2,180})")
+MAX_IMAGE_BYTES = 5 * 1024 * 1024
+
+
+@dataclass
+class Msg:
+    create_time: float
+    role: str
+    text: str
+    attachments: list[dict[str, Any]]
+
+
+def _load_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _write_json(path: Path, payload: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _asset_indexes(assets_root: Path) -> tuple[dict[str, Path], dict[str, list[Path]]]:
+    by_name: dict[str, Path] = {}
+    by_token: dict[str, list[Path]] = {}
+    for path in sorted(assets_root.iterdir()):
+        if not path.is_file():
+            continue
+        by_name[path.name.lower()] = path
+        match = ASSET_TOKEN_RE.match(path.name)
+        if not match:
+            continue
+        key = match.group(1).lower()
+        by_token.setdefault(key, []).append(path)
+    return by_name, by_token
+
+
+def _asset_id_variants(asset_id: str) -> list[str]:
+    value = asset_id.strip().lower()
+    if not value:
+        return []
+    variants = {value}
+    if value.startswith("file-"):
+        variants.add("file_" + value[5:])
+    if value.startswith("file_"):
+        variants.add("file-" + value[5:])
+    return sorted(variants)
+
+
+def _resolve_asset_paths(
+    attachment: dict[str, Any],
+    *,
+    by_name: dict[str, Path],
+    by_token: dict[str, list[Path]],
+) -> list[str]:
+    asset_name = str(attachment.get("name", "")).strip()
+    asset_id = str(attachment.get("id", "")).strip()
+    out: list[str] = []
+    if asset_name:
+        found = by_name.get(asset_name.lower())
+        if found is not None:
+            out.append(str(found))
+    for variant in _asset_id_variants(asset_id):
+        for p in by_token.get(variant, []):
+            out.append(str(p))
+    seen: set[str] = set()
+    dedup: list[str] = []
+    for item in out:
+        if item in seen:
+            continue
+        seen.add(item)
+        dedup.append(item)
+    return dedup
+
+
+def _to_msg(message: dict[str, Any]) -> Msg:
+    role = str((message.get("author") or {}).get("role") or "")
+    content = message.get("content")
+    parts = content.get("parts") if isinstance(content, dict) else []
+    if not isinstance(parts, list):
+        parts = []
+    text = " ".join(part for part in parts if isinstance(part, str)).strip()
+    attachments = ((message.get("metadata") or {}).get("attachments") or [])
+    if not isinstance(attachments, list):
+        attachments = []
+    return Msg(
+        create_time=float(message.get("create_time") or 0),
+        role=role,
+        text=text,
+        attachments=[a for a in attachments if isinstance(a, dict)],
+    )
+
+
+def _extract_candidate_phrases(text: str) -> list[str]:
+    phrases: list[str] = []
+    for pattern in (AFTER_COLON_RX, ARROW_RX):
+        for match in pattern.findall(text):
+            value = html.unescape(" ".join(str(match).split()))
+            if 3 <= len(value) <= 180:
+                phrases.append(value)
+    dedup: list[str] = []
+    seen: set[str] = set()
+    for p in phrases:
+        key = p.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        dedup.append(p)
+    return dedup
+
+
+def _extract_transcribed_lines(assistant_text: str) -> tuple[list[str], bool]:
+    candidates: list[str] = []
+    blocks = CODE_BLOCK_RX.findall(assistant_text)
+    had_code_block = bool(blocks)
+    for block in blocks:
+        for line in str(block).splitlines():
+            value = " ".join(line.split()).strip(" -•\t")
+            if len(value) >= 4 and any(ch.isalpha() for ch in value):
+                candidates.append(value)
+    if not candidates:
+        # Fallback: split by sentence-like punctuation for short line candidates.
+        for chunk in re.split(r"[;\n]+", assistant_text):
+            value = " ".join(chunk.split()).strip(" -•\t")
+            if 6 <= len(value) <= 120 and any(ch.isalpha() for ch in value):
+                candidates.append(value)
+    dedup: list[str] = []
+    seen: set[str] = set()
+    for p in candidates:
+        key = p.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        dedup.append(p)
+    return dedup[:8], had_code_block
+
+
+def _is_ocr_like_phrase(text: str) -> bool:
+    value = html.unescape(" ".join(text.split())).strip(" -•\t")
+    if len(value) < 2 or len(value) > 80:
+        return False
+    lowered = value.lower()
+    noisy_markers = (
+        "confirmed",
+        "transcription",
+        "binareyes",
+        "theory",
+        "return theory",
+        "json",
+        "queries",
+        "http://",
+        "https://",
+    )
+    if any(marker in lowered for marker in noisy_markers):
+        return False
+    if lowered.startswith("only "):
+        return False
+    words = [w for w in re.split(r"\s+", value) if w]
+    if len(words) > 10:
+        return False
+    alnum = sum(ch.isalnum() for ch in value)
+    printable = sum(ch.isprintable() and not ch.isspace() for ch in value)
+    if printable == 0:
+        return False
+    if alnum / printable < 0.45:
+        return False
+    return True
+
+
+def build_from_export(
+    export_root: Path,
+    *,
+    output_cases: Path,
+    output_review: Path,
+    max_cases: int,
+) -> dict[str, int]:
+    conversations_dir = export_root / "conversations"
+    assets_dir = export_root / "assets"
+    if not conversations_dir.is_dir():
+        raise RuntimeError(f"Missing conversations directory: {conversations_dir}")
+    if not assets_dir.is_dir():
+        raise RuntimeError(f"Missing assets directory: {assets_dir}")
+
+    by_name, by_token = _asset_indexes(assets_dir)
+
+    review_rows: list[dict[str, Any]] = []
+    cases: list[dict[str, Any]] = []
+    seen_case_paths: set[str] = set()
+
+    conversation_files = sorted(conversations_dir.glob("*.json"))
+    for conversation_path in conversation_files:
+        convo = _load_json(conversation_path)
+        conversation_id = str(convo.get("conversation_id", "")).strip() or conversation_path.stem
+        title = str(convo.get("title", "")).strip()
+        mapping = convo.get("mapping") or {}
+        if not isinstance(mapping, dict):
+            continue
+
+        seq: list[Msg] = []
+        for node in mapping.values():
+            if not isinstance(node, dict):
+                continue
+            message = node.get("message")
+            if not isinstance(message, dict):
+                continue
+            seq.append(_to_msg(message))
+        seq.sort(key=lambda m: m.create_time)
+        if not seq:
+            continue
+
+        for idx, msg in enumerate(seq):
+            if msg.role != "user" or not msg.attachments:
+                continue
+            if not ASK_RX.search(msg.text):
+                continue
+
+            assistant_text = ""
+            followups: list[str] = []
+            correction_phrases: list[str] = []
+            positive_signal = False
+            correction_signal = False
+
+            for j in range(idx + 1, min(idx + 10, len(seq))):
+                probe = seq[j]
+                if not assistant_text and probe.role == "assistant" and probe.text:
+                    assistant_text = probe.text
+                    continue
+                if probe.role != "user":
+                    continue
+                if probe.text:
+                    followups.append(probe.text)
+                if POSITIVE_RX.search(probe.text):
+                    positive_signal = True
+                if CORRECTION_RX.search(probe.text):
+                    correction_signal = True
+                    correction_phrases.extend(_extract_candidate_phrases(probe.text))
+
+            if not assistant_text:
+                continue
+
+            transcription_phrases, had_code_block = _extract_transcribed_lines(assistant_text)
+            resolved_paths: list[str] = []
+            for attachment in msg.attachments:
+                resolved_paths.extend(
+                    _resolve_asset_paths(
+                        attachment,
+                        by_name=by_name,
+                        by_token=by_token,
+                    )
+                )
+            resolved_paths = list(dict.fromkeys(resolved_paths))
+            image_path = resolved_paths[0] if resolved_paths else ""
+            if not image_path:
+                continue
+            try:
+                if Path(image_path).stat().st_size > MAX_IMAGE_BYTES:
+                    continue
+            except OSError:
+                continue
+
+            confidence = "low"
+            chosen_phrases: list[str] = []
+            correction_phrases = [p for p in correction_phrases if _is_ocr_like_phrase(p)]
+            transcription_phrases = [p for p in transcription_phrases if _is_ocr_like_phrase(p)]
+
+            if correction_signal and correction_phrases:
+                confidence = "high"
+                chosen_phrases = correction_phrases[:5]
+            elif positive_signal and had_code_block and transcription_phrases:
+                confidence = "medium"
+                chosen_phrases = transcription_phrases[:5]
+
+            review_rows.append(
+                {
+                    "conversation_id": conversation_id,
+                    "conversation_title": title,
+                    "conversation_json": str(conversation_path),
+                    "image_path": image_path,
+                    "ask_text": msg.text,
+                    "assistant_text": assistant_text,
+                    "followup_user_messages": followups[:5],
+                    "positive_signal": positive_signal,
+                    "correction_signal": correction_signal,
+                    "correction_phrases": correction_phrases,
+                    "transcription_phrases": transcription_phrases,
+                    "chosen_phrases": chosen_phrases,
+                    "confidence": confidence,
+                }
+            )
+
+            if confidence == "low":
+                continue
+            if image_path in seen_case_paths:
+                continue
+            case_id = f"tx-{conversation_id[:8]}-{len(cases)+1:03d}"
+            cases.append(
+                {
+                    "id": case_id,
+                    "image_path": image_path,
+                    "source_name": Path(image_path).name,
+                    "transcription_mode": "verbatim",
+                    "must_contain_any": chosen_phrases[:5],
+                    "min_chars": 3,
+                }
+            )
+            seen_case_paths.add(image_path)
+            if len(cases) >= max_cases:
+                break
+        if len(cases) >= max_cases:
+            break
+
+    review_rows.sort(
+        key=lambda row: (
+            0 if row["confidence"] == "high" else 1 if row["confidence"] == "medium" else 2,
+            row["conversation_title"].lower(),
+            row["image_path"],
+        )
+    )
+
+    output_cases.parent.mkdir(parents=True, exist_ok=True)
+    _write_json(output_cases, {"cases": cases})
+    _write_json(output_review, {"episodes": review_rows})
+
+    high = sum(1 for row in review_rows if row["confidence"] == "high")
+    medium = sum(1 for row in review_rows if row["confidence"] == "medium")
+    low = sum(1 for row in review_rows if row["confidence"] == "low")
+    return {
+        "conversation_files": len(conversation_files),
+        "episodes": len(review_rows),
+        "high_confidence": high,
+        "medium_confidence": medium,
+        "low_confidence": low,
+        "cases_written": len(cases),
+    }
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Build OCR eval cases from transcript correction signals in ChatGPT export conversations."
+    )
+    parser.add_argument(
+        "--export-root",
+        required=True,
+        help="Path to export root containing conversations/ and assets/.",
+    )
+    parser.add_argument(
+        "--output-cases",
+        default=".local/eval_cases/ocr_handwriting_from_transcripts.json",
+        help="Output JSON path for runnable OCR cases.",
+    )
+    parser.add_argument(
+        "--output-review",
+        default=".local/eval_cases/ocr_handwriting_from_transcripts_review.json",
+        help="Output JSON path for mined episode review data.",
+    )
+    parser.add_argument(
+        "--max-cases",
+        type=int,
+        default=200,
+        help="Maximum number of runnable cases to emit.",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    summary = build_from_export(
+        Path(args.export_root).expanduser().resolve(),
+        output_cases=Path(args.output_cases).expanduser().resolve(),
+        output_review=Path(args.output_review).expanduser().resolve(),
+        max_cases=int(args.max_cases),
+    )
+    for key in (
+        "conversation_files",
+        "episodes",
+        "high_confidence",
+        "medium_confidence",
+        "low_confidence",
+        "cases_written",
+    ):
+        print(f"{key}={summary[key]}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
