@@ -218,18 +218,21 @@
   - local outputs are untracked under `.local/eval_cases/`
   - latest transcript-case run is green (`1/1` PASS) with strict OCR gating
 - OCR lane split checkpoint (March 29, 2026):
-  - transcript miner now emits three local case sets:
+  - transcript miner now emits four local case sets:
     - combined: `.local/eval_cases/ocr_transcript_cases_all.json`
     - handwriting: `.local/eval_cases/ocr_handwriting_from_transcripts.json`
     - typed: `.local/eval_cases/ocr_typed_from_transcripts.json`
+    - illustration: `.local/eval_cases/ocr_illustration_from_transcripts.json`
   - lane commands are now explicit:
     - `make eval-ocr-transcript-cases`
     - `make eval-ocr-transcript-cases-handwriting`
     - `make eval-ocr-transcript-cases-typed`
+    - `make eval-ocr-transcript-cases-illustration`
   - latest local validation after anchor-hardening:
     - all lane: `4/4` PASS
     - handwriting lane: `1/1` PASS
-    - typed lane: `3/3` PASS
+    - typed lane: `2/2` PASS
+    - illustration lane: `1/1` PASS
 - Eval relationship visual checkpoint (March 28, 2026):
   - local eval data visualisation now has a canonical navigation-first report:
     - command: `make eval-viz`

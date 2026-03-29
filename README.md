@@ -192,6 +192,7 @@ make ocr-cases-from-export
 make eval-ocr-transcript-cases
 make eval-ocr-transcript-cases-handwriting
 make eval-ocr-transcript-cases-typed
+make eval-ocr-transcript-cases-illustration
 ```
 
 Exit-code semantics:
@@ -216,11 +217,13 @@ Transcript-backed OCR mining lane:
   - `make eval-ocr-transcript-cases`
   - `make eval-ocr-transcript-cases-handwriting`
   - `make eval-ocr-transcript-cases-typed`
+  - `make eval-ocr-transcript-cases-illustration`
 - default local outputs:
   - `.local/eval_cases/cgpt_export_attachment_index.json`
   - `.local/eval_cases/ocr_transcript_cases_all.json`
   - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
   - `.local/eval_cases/ocr_typed_from_transcripts.json`
+  - `.local/eval_cases/ocr_illustration_from_transcripts.json`
   - `.local/eval_cases/ocr_handwriting_from_transcripts_review.json`
 
 ## Evidence and Reference Tooling

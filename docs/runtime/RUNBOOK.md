@@ -758,6 +758,7 @@ Current policy:
    - `make eval-ocr-transcript-cases`
    - `make eval-ocr-transcript-cases-handwriting`
    - `make eval-ocr-transcript-cases-typed`
+   - `make eval-ocr-transcript-cases-illustration`
 5. Optional paths:
    - index output directory:
      `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/export CGPT_EXPORT_OUTPUT_DIR=/abs/path/to/output`
@@ -767,6 +768,8 @@ Current policy:
      `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_CASES_HANDWRITING=/abs/path/to/handwriting-cases.json`
    - override typed lane cases path:
      `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_CASES_TYPED=/abs/path/to/typed-cases.json`
+   - override illustration lane cases path:
+     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_CASES_ILLUSTRATION=/abs/path/to/illustration-cases.json`
    - override generated review file path:
      `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_REVIEW=/abs/path/to/review.json`
 6. Default local artifacts:
@@ -775,6 +778,7 @@ Current policy:
    - `.local/eval_cases/ocr_transcript_cases_all.json`
    - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
    - `.local/eval_cases/ocr_typed_from_transcripts.json`
+   - `.local/eval_cases/ocr_illustration_from_transcripts.json`
    - `.local/eval_cases/ocr_handwriting_from_transcripts_review.json`
 
 ## Run OCR Ambiguity/Recovery Eval

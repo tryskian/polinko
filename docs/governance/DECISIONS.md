@@ -1069,3 +1069,21 @@
 - Why: Preserves strict pass/fail gating while reducing false negatives from
   conversational wording noise and makes typed-vs-handwriting performance
   visible as separate quality lanes.
+
+## D-094: Add illustration as a first-class transcript OCR lane
+
+- Date: `2026-03-29`
+- Category: `eval_quality`
+- Tags: `ocr_lanes`, `illustration_lane`, `multimodal_coverage`, `strict_binary`
+- Decision:
+  - extend transcript OCR lane classification to include `illustration`
+    alongside `typed` and `handwriting`
+  - add dedicated local output artifact:
+    - `ocr_illustration_from_transcripts.json`
+  - add lane-specific eval entrypoint:
+    - `make eval-ocr-transcript-cases-illustration`
+  - keep lane semantics binary (`pass`/`fail`) and preserve existing strict OCR
+    eval gate behaviour
+- Why: Illustration-heavy OCR (diagrams/sketches with embedded text) has
+  different failure modes than plain typed or handwriting samples, so it needs
+  a distinct quality lane to keep benchmark signals interpretable.

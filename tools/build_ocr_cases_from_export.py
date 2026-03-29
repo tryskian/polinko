@@ -22,6 +22,10 @@ TYPED_HINT_RX = re.compile(
     r"\btyped\b|printed|font|ui|screen ?shot|terminal|code|document|pdf",
     re.IGNORECASE,
 )
+ILLUSTRATION_HINT_RX = re.compile(
+    r"illustration|diagram|flow ?chart|flowchart|graph|node|edge|arrow|whiteboard|sketch|drawing|doodle|wireframe|figure|geometry|shape",
+    re.IGNORECASE,
+)
 ANCHOR_STOPWORDS = {
     "the",
     "and",
@@ -275,12 +279,16 @@ def _classify_lane(
     followups: list[str],
 ) -> str:
     haystack = "\n".join([ask_text, title, *followups])
+    if ILLUSTRATION_HINT_RX.search(haystack):
+        return "illustration"
     if HANDWRITING_HINT_RX.search(haystack):
         return "handwriting"
     if TYPED_HINT_RX.search(haystack):
         return "typed"
 
     source_name = Path(image_path).name.lower()
+    if any(marker in source_name for marker in ("diagram", "sketch", "drawing", "doodle", "flowchart", "graph")):
+        return "illustration"
     if source_name.startswith("img_") or source_name.startswith("dsc_"):
         return "handwriting"
     if "screenshot" in source_name:
@@ -370,6 +378,7 @@ def build_from_export(
     output_cases: Path,
     output_cases_handwriting: Path,
     output_cases_typed: Path,
+    output_cases_illustration: Path,
     output_review: Path,
     max_cases: int,
 ) -> dict[str, int]:
@@ -536,10 +545,12 @@ def build_from_export(
 
     handwriting_cases = [case for case in cases if case.get("lane") == "handwriting"]
     typed_cases = [case for case in cases if case.get("lane") == "typed"]
+    illustration_cases = [case for case in cases if case.get("lane") == "illustration"]
     output_cases.parent.mkdir(parents=True, exist_ok=True)
     _write_json(output_cases, {"cases": cases})
     _write_json(output_cases_handwriting, {"cases": handwriting_cases})
     _write_json(output_cases_typed, {"cases": typed_cases})
+    _write_json(output_cases_illustration, {"cases": illustration_cases})
     _write_json(output_review, {"episodes": review_rows})
 
     high = sum(1 for row in review_rows if row["confidence"] == "high")
@@ -554,6 +565,7 @@ def build_from_export(
         "cases_written": len(cases),
         "handwriting_cases_written": len(handwriting_cases),
         "typed_cases_written": len(typed_cases),
+        "illustration_cases_written": len(illustration_cases),
     }
 
 
@@ -582,6 +594,11 @@ def parse_args() -> argparse.Namespace:
         help="Output JSON path for typed OCR cases.",
     )
     parser.add_argument(
+        "--output-cases-illustration",
+        default=".local/eval_cases/ocr_illustration_from_transcripts.json",
+        help="Output JSON path for illustration/diagram OCR cases.",
+    )
+    parser.add_argument(
         "--output-review",
         default=".local/eval_cases/ocr_handwriting_from_transcripts_review.json",
         help="Output JSON path for mined episode review data.",
@@ -602,6 +619,7 @@ def main() -> int:
         output_cases=Path(args.output_cases).expanduser().resolve(),
         output_cases_handwriting=Path(args.output_cases_handwriting).expanduser().resolve(),
         output_cases_typed=Path(args.output_cases_typed).expanduser().resolve(),
+        output_cases_illustration=Path(args.output_cases_illustration).expanduser().resolve(),
         output_review=Path(args.output_review).expanduser().resolve(),
         max_cases=int(args.max_cases),
     )
@@ -614,6 +632,7 @@ def main() -> int:
         "cases_written",
         "handwriting_cases_written",
         "typed_cases_written",
+        "illustration_cases_written",
     ):
         print(f"{key}={summary[key]}")
     return 0
