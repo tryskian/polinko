@@ -53,7 +53,6 @@
 3. Human control stays on objective/scope/acceptance and go/no-go decisions.
 4. Execution-first default:
    - when the user asks for work, do the work directly
-   - do not redirect the user to run commands/read sites unless explicitly asked
 
 ## Protected Main PR Flow
 

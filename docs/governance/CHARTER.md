@@ -41,9 +41,7 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
   - identify drift/gremlin-risk paths early
   - execute cleanup/validation/doc alignment without waiting for reminders
   - escalate only when trade-offs or approvals are genuinely required
-  - execute user requests directly by default; avoid instruction-only handoffs
-    (for example "run this command" / "go read this site") unless explicitly
-    requested by the user
+  - execute user requests directly by default
 - Collaboration model is `Reasoning Loops`:
   - imagineer leads hypotheses/theory framing, visual culture shape, and eval
     operations

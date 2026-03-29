@@ -1140,15 +1140,13 @@
   routine engineering commands, keeps workflow consistent with role boundaries,
   and reduces operational friction.
 
-## D-098: Adopt execution-first response policy for engineer actions
+## D-098: Adopt execution-first policy for engineer actions
 
 - Date: `2026-03-29`
 - Category: `collaboration_method`
 - Tags: `execution_first`, `operator_experience`, `no_handoff_drift`, `workflow`
 - Decision:
   - when the user requests action, engineer executes directly by default
-  - avoid "go run this command/read this file or website" responses unless the
-    user explicitly asks for references or self-run instructions
   - keep human role focused on objective/scope/acceptance/go-no-go decisions
 - Why: Reduces friction and ambiguity in human-AI collaboration and aligns
   behaviour with the agreed imagineer/engineer split.
