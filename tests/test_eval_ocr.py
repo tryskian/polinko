@@ -75,6 +75,20 @@ class OcrEvalRuleTests(unittest.TestCase):
         self.assertFalse(passed_long)
         self.assertTrue(any("text too long" in reason for reason in reasons_long))
 
+    def test_must_contain_any_matches_spaced_letter_tokens(self) -> None:
+        case = self._base_case()
+        case["must_contain_any"] = ["chattiest"]
+        passed, reasons = _check_case(case, "C H A T T I E S T day in 2025")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
+    def test_forbidden_word_matches_spaced_letter_tokens(self) -> None:
+        case = self._base_case()
+        case["must_not_contain_words"] = ["guess"]
+        passed, reasons = _check_case(case, "G U E S S it says matrix")
+        self.assertFalse(passed)
+        self.assertTrue(any("forbidden whole word" in reason for reason in reasons))
+
 
 if __name__ == "__main__":
     unittest.main()
