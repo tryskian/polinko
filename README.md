@@ -62,7 +62,7 @@ Notes:
   `make venv` (alias: `make env`)
 - short aliases for long-chain commands:
   `make ocrindex`, `make ocrmine`, `make ocrall`, `make ocrhand`,
-  `make ocrtype`, `make ocrillu`, `make viz`, `make gate`
+  `make ocrtype`, `make ocrillu`, `make ocrstable`, `make viz`, `make gate`
 - API key auth is optional for local dev (`POLINKO_SERVER_API_KEY`,
   `POLINKO_SERVER_API_KEYS_JSON`).
 
@@ -198,6 +198,7 @@ make eval-ocr-transcript-cases
 make eval-ocr-transcript-cases-handwriting
 make eval-ocr-transcript-cases-typed
 make eval-ocr-transcript-cases-illustration
+make eval-ocr-transcript-stability
 ```
 
 Exit-code semantics:
@@ -223,6 +224,8 @@ Transcript-backed OCR mining lane:
   - `make eval-ocr-transcript-cases-handwriting`
   - `make eval-ocr-transcript-cases-typed`
   - `make eval-ocr-transcript-cases-illustration`
+- run OCR decision-stability replay on mined transcript cases:
+  - `make eval-ocr-transcript-stability OCR_STABILITY_RUNS=3`
 - default local outputs:
   - `.local/eval_cases/cgpt_export_attachment_index.json`
   - `.local/eval_cases/ocr_transcript_cases_all.json`
@@ -230,6 +233,8 @@ Transcript-backed OCR mining lane:
   - `.local/eval_cases/ocr_typed_from_transcripts.json`
   - `.local/eval_cases/ocr_illustration_from_transcripts.json`
   - `.local/eval_cases/ocr_transcript_cases_review.json`
+  - `.local/eval_reports/ocr_transcript_stability.json`
+  - `.local/eval_reports/ocr_stability_runs/`
 
 ## Evidence and Reference Tooling
 

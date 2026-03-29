@@ -480,6 +480,85 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(review["correction_phrases"], [])
             self.assertFalse(review["correction_signal"])
 
+    def test_build_does_not_promote_binareyes_without_literal_ocr_intent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "dropdown_001.png").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-binareyes-no-literal-intent",
+                "title": "Org switcher",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {
+                                "parts": [
+                                    "lol beab. ur binaries aren't talking to ur binareyes but that's ok!"
+                                ]
+                            },
+                            "metadata": {"attachments": [{"name": "dropdown_001.png", "id": "file_dropdown"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {
+                                "parts": [
+                                    "From the live page context: BigBrain, personal, Personal. Reply: I’m inside lowercase personal."
+                                ]
+                            },
+                            "metadata": {},
+                        }
+                    },
+                    "3": {
+                        "message": {
+                            "create_time": 3,
+                            "author": {"role": "user"},
+                            "content": {
+                                "parts": [
+                                    "the personal org is safe to delete"
+                                ]
+                            },
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-7.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["cases_written"], 0)
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertTrue(review["ocr_intent_signal"])
+            self.assertFalse(review["ocr_literal_intent_signal"])
+            self.assertEqual(review["confidence"], "low")
+
 
 if __name__ == "__main__":
     unittest.main()

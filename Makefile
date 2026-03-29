@@ -39,13 +39,16 @@ OCR_TRANSCRIPT_CASES_TYPED ?= .local/eval_cases/ocr_typed_from_transcripts.json
 OCR_TRANSCRIPT_CASES_ILLUSTRATION ?= .local/eval_cases/ocr_illustration_from_transcripts.json
 OCR_TRANSCRIPT_CASES ?= $(OCR_TRANSCRIPT_CASES_ALL)
 OCR_TRANSCRIPT_REVIEW ?= .local/eval_cases/ocr_transcript_cases_review.json
+OCR_STABILITY_RUNS ?= 5
+OCR_STABILITY_OUTPUT ?= .local/eval_reports/ocr_transcript_stability.json
+OCR_STABILITY_REPORT_DIR ?= .local/eval_reports/ocr_stability_runs
 CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
 CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
 CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env ocrindex ocrmine ocrall ocrhand ocrtype ocrillu viz gate server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph eval-relationship-graph eval-viz cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-illustration docker-build docker-run dev dev-stop
+.PHONY: chat venv env ocrindex ocrmine ocrall ocrhand ocrtype ocrillu ocrstable viz gate server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph eval-relationship-graph eval-viz cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-illustration eval-ocr-transcript-stability docker-build docker-run dev dev-stop
 
 chat:
 	$(PYTHON) app.py
@@ -77,6 +80,8 @@ ocrhand: eval-ocr-transcript-cases-handwriting
 ocrtype: eval-ocr-transcript-cases-typed
 
 ocrillu: eval-ocr-transcript-cases-illustration
+
+ocrstable: eval-ocr-transcript-stability
 
 viz: eval-viz
 
@@ -634,6 +639,21 @@ eval-ocr-transcript-cases-illustration:
 		exit 0; \
 	fi; \
 	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" --strict --show-text
+
+eval-ocr-transcript-stability:
+	@set -eu; \
+	if [ ! -f "$(OCR_TRANSCRIPT_CASES)" ]; then \
+		echo "Transcript OCR cases not found: $(OCR_TRANSCRIPT_CASES)"; \
+		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
+		exit 1; \
+	fi; \
+	$(PYTHON) -m tools.eval_ocr_stability \
+		--base-url "http://127.0.0.1:8000" \
+		--cases "$(OCR_TRANSCRIPT_CASES)" \
+		--runs "$(OCR_STABILITY_RUNS)" \
+		--strict \
+		--report-dir "$(OCR_STABILITY_REPORT_DIR)" \
+		--output-json "$(OCR_STABILITY_OUTPUT)"
 
 dev:
 	@PYTHON_BIN="$(PYTHON)" DEV_HOST="$(DEV_HOST)" DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" bash tools/dev_run.sh
