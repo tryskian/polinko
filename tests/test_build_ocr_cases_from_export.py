@@ -162,6 +162,189 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertTrue(review["ocr_framing_signal"])
             self.assertIn("Alpha spiral field", review["chosen_phrases"])
 
+    def test_build_promotes_medium_with_literal_intent_and_strong_anchor_phrases(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "img_010.jpg").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-strong-anchor",
+                "title": "Literal OCR ask",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this exactly?"]},
+                            "metadata": {"attachments": [{"name": "img_010.jpg", "id": "file_strong"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["- alpha spiral field\n- tensor matrix ledger\n- delta mapping"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-strong-anchor.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["medium_confidence"], 1)
+            self.assertEqual(summary["cases_written"], 1)
+
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["confidence"], "medium")
+            self.assertTrue(review["ocr_literal_intent_signal"])
+            self.assertFalse(review["ocr_framing_signal"])
+
+    def test_build_does_not_promote_literal_intent_without_strong_anchors(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "img_011.jpg").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-weak-anchor",
+                "title": "Literal OCR ask weak",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this exactly?"]},
+                            "metadata": {"attachments": [{"name": "img_011.jpg", "id": "file_weak"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["- alpha"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-weak-anchor.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["medium_confidence"], 0)
+            self.assertEqual(summary["cases_written"], 0)
+
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["confidence"], "low")
+            self.assertTrue(review["ocr_literal_intent_signal"])
+            self.assertFalse(review["ocr_framing_signal"])
+
+    def test_build_does_not_promote_literal_intent_single_token_lists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "img_012.jpg").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-single-token-list",
+                "title": "Literal OCR ask token list",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this?"]},
+                            "metadata": {"attachments": [{"name": "img_012.jpg", "id": "file_token_list"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["- certex\n- vertex\n- cortex\n- vortices"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-single-token-list.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["medium_confidence"], 0)
+            self.assertEqual(summary["cases_written"], 0)
+
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["confidence"], "low")
+            self.assertTrue(review["ocr_literal_intent_signal"])
+            self.assertFalse(review["ocr_framing_signal"])
+
     def test_build_does_not_promote_on_positive_only_signal(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
