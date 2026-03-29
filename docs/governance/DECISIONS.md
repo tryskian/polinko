@@ -1212,3 +1212,21 @@
 - Why: Cleaner anchors improve transcript OCR case readability and reduce
   avoidable noise in strict eval requirements without changing binary gate
   semantics.
+
+## D-103: Promote literal-intent transcript episodes with guarded phrase quality
+
+- Date: `2026-03-29`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `confidence_gating`, `precision_guard`, `strict_binary`
+- Decision:
+  - add a medium-confidence promotion path for literal OCR-intent episodes when
+    transcription phrases are strong (`>=3` anchors), multi-token, and not
+    positive-only followup confirmations
+  - keep correction/framing paths unchanged, including follow-up correction as
+    the high-confidence path
+  - add regression tests for:
+    - safe literal-intent promotion without explicit framing
+    - non-promotion for weak-anchor literal asks
+    - non-promotion for single-token variant lists
+- Why: Recovers valid transcript OCR cases under strict binary gates while
+  blocking noisy promotions that degrade pass-rate precision.

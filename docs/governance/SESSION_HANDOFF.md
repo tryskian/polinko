@@ -91,13 +91,13 @@
     - `.local/eval_cases/ocr_typed_from_transcripts.json`
     - `.local/eval_cases/ocr_illustration_from_transcripts.json`
   - latest lane validations are green:
-    - all: `9/9` PASS
+    - all: `13/13` PASS
     - handwriting: `5/5` PASS
-    - typed: `2/2` PASS
+    - typed: `6/6` PASS
     - illustration: `2/2` PASS
   - latest stability replay is green:
     - runs: `5/5`
-    - decision stability: `9` stable, `0` flaky
+    - decision stability: `13` stable, `0` flaky
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`
@@ -153,7 +153,7 @@
 ## Immediate Next Step
 
 - Hold transcript OCR lane baseline at
-  (`handwriting=5`, `typed=2`, `illustration=2`) while preserving strict pass rates:
+  (`handwriting=5`, `typed=6`, `illustration=2`) while preserving strict pass rates:
   - run transcript pipeline on local export root:
     - `make cgpt-export-index`
     - `make ocr-cases-from-export`
@@ -162,8 +162,9 @@
     - `make eval-ocr-transcript-cases-typed`
     - `make eval-ocr-transcript-cases-illustration`
     - `make eval-ocr-transcript-stability OCR_STABILITY_RUNS=5`
-  - prioritise precision-safe promotion of medium-confidence transcript episodes
-    without reintroducing malformed anchors or conversational/noisy terms
+  - prioritise precision-safe promotion of remaining medium-confidence
+    transcript episodes without reintroducing malformed anchors, single-token
+    variant lists, or conversational/noisy terms
   - hold illustration coverage at `>=2` cases and keep all-lane strict pass
     green
   - validate with:
