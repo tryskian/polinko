@@ -756,17 +756,25 @@ Current policy:
    - `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 4. Run OCR eval against mined transcript-backed cases:
    - `make eval-ocr-transcript-cases`
+   - `make eval-ocr-transcript-cases-handwriting`
+   - `make eval-ocr-transcript-cases-typed`
 5. Optional paths:
    - index output directory:
      `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/export CGPT_EXPORT_OUTPUT_DIR=/abs/path/to/output`
-   - override generated cases file path:
-     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_CASES=/abs/path/to/cases.json`
+   - override generated combined cases path:
+     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_CASES_ALL=/abs/path/to/cases.json`
+   - override handwriting lane cases path:
+     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_CASES_HANDWRITING=/abs/path/to/handwriting-cases.json`
+   - override typed lane cases path:
+     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_CASES_TYPED=/abs/path/to/typed-cases.json`
    - override generated review file path:
      `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_REVIEW=/abs/path/to/review.json`
 6. Default local artifacts:
    - `.local/eval_cases/cgpt_export_attachment_index.json`
    - `.local/eval_cases/cgpt_export_behaviour_eval_ocr_ready.json`
+   - `.local/eval_cases/ocr_transcript_cases_all.json`
    - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
+   - `.local/eval_cases/ocr_typed_from_transcripts.json`
    - `.local/eval_cases/ocr_handwriting_from_transcripts_review.json`
 
 ## Run OCR Ambiguity/Recovery Eval

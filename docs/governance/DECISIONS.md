@@ -1050,3 +1050,22 @@
   - keep gate outcomes binary (`pass`/`fail`) and store nuance in notes/transcripts
 - Why: Preserves case-study relevance and research rigor now without derailing
   product delivery into premature corpus infrastructure work.
+
+## D-093: Split transcript OCR mining into typed and handwriting lanes with anchor-hardening
+
+- Date: `2026-03-29`
+- Category: `eval_quality`
+- Tags: `ocr_lanes`, `typed_handwriting_split`, `anchor_hardening`, `strict_binary`
+- Decision:
+  - extend transcript OCR mining outputs to three local case sets:
+    - combined (`ocr_transcript_cases_all.json`)
+    - handwriting (`ocr_handwriting_from_transcripts.json`)
+    - typed (`ocr_typed_from_transcripts.json`)
+  - add lane-specific eval entrypoints:
+    - `make eval-ocr-transcript-cases-handwriting`
+    - `make eval-ocr-transcript-cases-typed`
+  - harden generated assertions to use OCR-anchor terms (`must_contain_any`)
+    rather than brittle narrative phrase regex chains
+- Why: Preserves strict pass/fail gating while reducing false negatives from
+  conversational wording noise and makes typed-vs-handwriting performance
+  visible as separate quality lanes.
