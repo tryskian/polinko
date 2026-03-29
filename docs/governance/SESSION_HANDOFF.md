@@ -91,10 +91,10 @@
     - `.local/eval_cases/ocr_typed_from_transcripts.json`
     - `.local/eval_cases/ocr_illustration_from_transcripts.json`
   - latest lane validations are green:
-    - all: `4/4` PASS
-    - handwriting: `1/1` PASS
-    - typed: `2/2` PASS
-    - illustration: `1/1` PASS
+    - all: `12/12` PASS
+    - handwriting: `4/4` PASS
+    - typed: `6/6` PASS
+    - illustration: `2/2` PASS
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/benchmarks/MINIMAL_CONFIG_BENCHMARK_SPEC.md`
@@ -156,8 +156,8 @@
 
 ## Immediate Next Step
 
-- Improve transcript OCR lane balance from current baseline
-  (`handwriting=2`, `typed=8`, `illustration=2`) while preserving strict pass rates:
+- Hold transcript OCR lane baseline at
+  (`handwriting=4`, `typed=6`, `illustration=2`) while preserving strict pass rates:
   - run transcript pipeline on local export root:
     - `make cgpt-export-index`
     - `make ocr-cases-from-export`
@@ -165,8 +165,9 @@
     - `make eval-ocr-transcript-cases-handwriting`
     - `make eval-ocr-transcript-cases-typed`
     - `make eval-ocr-transcript-cases-illustration`
-  - prioritize stable handwriting-case recovery (increase handwriting coverage
-    without reintroducing conversational/noisy anchors)
+  - prioritize precision-safe handwriting uplift from correction-focused episodes
+    (especially where correction appears in the ask message) without
+    reintroducing conversational/noisy anchors
   - hold illustration coverage at `>=2` cases and keep all-lane strict pass
     green
   - validate with:

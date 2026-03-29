@@ -1150,3 +1150,19 @@
   - keep human role focused on objective/scope/acceptance/go-no-go decisions
 - Why: Reduces friction and ambiguity in human-AI collaboration and aligns
   behaviour with the agreed imagineer/engineer split.
+
+## D-099: Harden OCR lane classification with embedded camera filenames and bounded typed hints
+
+- Date: `2026-03-29`
+- Category: `eval_quality`
+- Tags: `ocr_lanes`, `lane_classification`, `handwriting_recovery`, `precision_guard`
+- Decision:
+  - classify embedded camera-style names (for example
+    `file-...-IMG_6821.jpeg`, `file-...-DSC_####`) as `handwriting`
+  - keep screenshot-name matching explicit for `typed` classification
+  - bound typed hint token matching (notably `ui`) to standalone tokens to
+    prevent substring false matches (for example `quick`)
+  - preserve strict binary pass/fail gates and existing lane eval entrypoints
+- Why: Restores missed handwriting cases without widening conversational noise,
+  keeps illustration coverage intact, and removes a deterministic false-typed
+  path from lane hint matching.
