@@ -69,27 +69,51 @@ server-daemon:
 		rm -f "$(SERVER_PID_FILE)"; \
 	fi; \
 	if command -v lsof >/dev/null 2>&1; then \
-		EXISTING_PID=$$(lsof -nP -iTCP:"$(DEV_BACKEND_PORT)" -sTCP:LISTEN -t 2>/dev/null | head -n 1 || true); \
-		if [ -n "$$EXISTING_PID" ]; then \
-			EXISTING_CMD=$$(ps -o command= -p "$$EXISTING_PID" 2>/dev/null || true); \
-			if echo "$$EXISTING_CMD" | grep -q "uvicorn server:app"; then \
-				EXISTING_PY=$$(printf '%s\n' "$$EXISTING_CMD" | awk '{print $$1}'); \
+		EXISTING_PIDS=$$(lsof -nP -iTCP:"$(DEV_BACKEND_PORT)" -sTCP:LISTEN -t 2>/dev/null | tr '\n' ' ' || true); \
+		if [ -n "$$EXISTING_PIDS" ]; then \
+			POLINKO_PID=""; \
+			POLINKO_CMD=""; \
+			for CANDIDATE_PID in $$EXISTING_PIDS; do \
+				CANDIDATE_CMD=$$(ps -o command= -p "$$CANDIDATE_PID" 2>/dev/null || true); \
+				CHECK_PID="$$CANDIDATE_PID"; \
+				CHECK_CMD="$$CANDIDATE_CMD"; \
+				if ! echo "$$CHECK_CMD" | grep -q "uvicorn server:app"; then \
+					PARENT_PID=$$(ps -o ppid= -p "$$CANDIDATE_PID" 2>/dev/null | tr -d ' ' || true); \
+					if [ -n "$$PARENT_PID" ]; then \
+						PARENT_CMD=$$(ps -o command= -p "$$PARENT_PID" 2>/dev/null || true); \
+						if echo "$$PARENT_CMD" | grep -q "uvicorn server:app"; then \
+							CHECK_PID="$$PARENT_PID"; \
+							CHECK_CMD="$$PARENT_CMD"; \
+						fi; \
+					fi; \
+				fi; \
+				if echo "$$CHECK_CMD" | grep -q "uvicorn server:app"; then \
+					POLINKO_PID="$$CHECK_PID"; \
+					POLINKO_CMD="$$CHECK_CMD"; \
+					break; \
+				fi; \
+			done; \
+			if [ -n "$$POLINKO_PID" ]; then \
+				EXISTING_PY=$$(printf '%s\n' "$$POLINKO_CMD" | awk '{print $$1}'); \
 				EXISTING_PY_REAL="$$( "$$EXISTING_PY" -c 'import os,sys; print(os.path.realpath(sys.executable))' 2>/dev/null || true )"; \
 				if [ "$$EXISTING_PY_REAL" = "$$EXPECTED_PY" ]; then \
-					echo "$$EXISTING_PID" >"$(SERVER_PID_FILE)"; \
-					echo "server-daemon already active on port $(DEV_BACKEND_PORT); adopted PID $$EXISTING_PID ($$EXISTING_PY_REAL)."; \
+					echo "$$POLINKO_PID" >"$(SERVER_PID_FILE)"; \
+					echo "server-daemon already active on port $(DEV_BACKEND_PORT); adopted PID $$POLINKO_PID ($$EXISTING_PY_REAL)."; \
 					exit 0; \
 				fi; \
 				echo "server-daemon found polinko server on port $(DEV_BACKEND_PORT) with interpreter mismatch."; \
 				echo "expected: $$EXPECTED_PY"; \
 				echo "found:    $$EXISTING_PY_REAL"; \
 				echo "Restarting server-daemon with expected interpreter."; \
-				kill "$$EXISTING_PID"; \
+				kill "$$POLINKO_PID"; \
 				sleep 0.2; \
+			else \
+				FIRST_PID=$$(printf '%s\n' "$$EXISTING_PIDS" | awk '{print $$1}'); \
+				FIRST_CMD=$$(ps -o command= -p "$$FIRST_PID" 2>/dev/null || true); \
+				echo "Port $(DEV_BACKEND_PORT) is in use by a non-polinko process."; \
+				echo "PID $$FIRST_PID: $$FIRST_CMD"; \
+				exit 1; \
 			fi; \
-			echo "Port $(DEV_BACKEND_PORT) is in use by a non-polinko process."; \
-			echo "PID $$EXISTING_PID: $$EXISTING_CMD"; \
-			exit 1; \
 		fi; \
 	fi; \
 	nohup $(PYTHON) -m uvicorn server:app --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" --reload >"$(SERVER_LOG)" 2>&1 & \
