@@ -156,7 +156,8 @@
 
 ## Immediate Next Step
 
-- Expand transcript OCR mining yield while preserving strict precision:
+- Improve transcript OCR lane balance from current baseline
+  (`handwriting=2`, `typed=8`, `illustration=2`) while preserving strict pass rates:
   - run transcript pipeline on local export root:
     - `make cgpt-export-index`
     - `make ocr-cases-from-export`
@@ -164,8 +165,10 @@
     - `make eval-ocr-transcript-cases-handwriting`
     - `make eval-ocr-transcript-cases-typed`
     - `make eval-ocr-transcript-cases-illustration`
-  - improve extraction heuristics to increase medium/high-confidence
-    handwriting cases without introducing noisy phrase artifacts
+  - prioritize stable handwriting-case recovery (increase handwriting coverage
+    without reintroducing conversational/noisy anchors)
+  - hold illustration coverage at `>=2` cases and keep all-lane strict pass
+    green
   - validate with:
     - `make build-audit`
     - `make lint-docs`

@@ -5,6 +5,7 @@ from pathlib import Path
 
 from tools.build_ocr_cases_from_export import (
     ASK_RX,
+    _expand_anchor_variants,
     _extract_candidate_phrases,
     _extract_transcribed_lines,
     _is_ocr_like_phrase,
@@ -22,6 +23,12 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertFalse(_is_ocr_like_phrase("see"))
         self.assertTrue(_is_ocr_like_phrase("spiral"))
 
+    def test_expand_anchor_variants_adds_stems(self) -> None:
+        anchors = _expand_anchor_variants(["archival", "tumbles", "floating"])
+        self.assertIn("archiv", anchors)
+        self.assertIn("tumble", anchors)
+        self.assertIn("float", anchors)
+
     def test_extract_candidate_phrases_from_quotes_and_emphasis(self) -> None:
         text = 'correction: "Only Alpha Spiral Field" and *Beta Grid*'
         phrases = _extract_candidate_phrases(text)
@@ -33,6 +40,12 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         phrases, had_code_block = _extract_transcribed_lines(assistant_text)
         self.assertFalse(had_code_block)
         self.assertIn("There seems to be something stirring.", phrases)
+
+    def test_extract_transcribed_lines_from_ocr_bullet_lines(self) -> None:
+        assistant_text = "Here’s the OCR from your page:\n- field notes\n- record wow."
+        phrases, _ = _extract_transcribed_lines(assistant_text)
+        self.assertIn("field notes", phrases)
+        self.assertIn("record wow.", phrases)
 
     def test_build_promotes_medium_with_framing_signal(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -228,6 +241,64 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["episodes"], 0)
             self.assertEqual(summary["cases_written"], 0)
+
+    def test_build_promotes_illustration_with_strong_transcription_signal(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "diagram_001.png").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-901",
+                "title": "Geometry notes",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can ur binareyes read this diagram text?"]},
+                            "metadata": {"attachments": [{"name": "diagram_001.png", "id": "file_jkl"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ['**graph paper maps x, y** and **physics maps x, y, z**']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-4.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["medium_confidence"], 1)
+            self.assertEqual(summary["illustration_cases_written"], 1)
+            case = json.loads(output_cases.read_text(encoding="utf-8"))["cases"][0]
+            self.assertEqual(case["lane"], "illustration")
 
 
 if __name__ == "__main__":
