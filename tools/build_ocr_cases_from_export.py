@@ -612,6 +612,16 @@ def build_from_export(
             # Treat correction as meaningful only when we extracted OCR-like phrase content.
             correction_signal = bool(correction_phrases)
             transcription_phrases = [p for p in transcription_phrases if _is_ocr_like_phrase(p)]
+            has_multi_token_transcription = any(
+                len(_phrase_tokens(phrase)) >= 2 for phrase in transcription_phrases[:5]
+            )
+            strong_transcription_phrase_signal = (
+                ocr_literal_intent_signal
+                and lane in {"handwriting", "typed"}
+                and not positive_signal
+                and has_multi_token_transcription
+                and len(_anchor_terms_for_phrases(transcription_phrases[:5])) >= 3
+            )
             strong_illustration_phrase_signal = (
                 lane == "illustration"
                 and len(_anchor_terms_for_phrases(transcription_phrases[:5])) >= 2
@@ -629,6 +639,7 @@ def build_from_export(
                     ocr_framing_signal
                     or correction_signal
                     or had_code_block
+                    or strong_transcription_phrase_signal
                     or strong_illustration_phrase_signal
                 )
             ):
