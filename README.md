@@ -58,6 +58,11 @@ Notes:
 
 - `make` auto-selects interpreter in this order:
   `./polinko-repositioning-system/bin/python`, `./venv/bin/python`, `python3`.
+- activate a local virtual environment shell with:
+  `make venv` (alias: `make env`)
+- short aliases for long-chain commands:
+  `make ocrindex`, `make ocrmine`, `make ocrall`, `make ocrhand`,
+  `make ocrtype`, `make ocrillu`, `make viz`, `make gate`
 - API key auth is optional for local dev (`POLINKO_SERVER_API_KEY`,
   `POLINKO_SERVER_API_KEYS_JSON`).
 

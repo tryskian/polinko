@@ -38,6 +38,8 @@
   - `.archive/live_archive/legacy_frontend/`
   - `.archive/live_archive/legacy_human_reference/`
   - archive lane is non-authoritative for active runtime gate decisions
+  - confidentiality update: `legacy_eval` and `legacy_human_reference` lanes
+    are now local-only (gitignored) in the current tree
 - Eval docs were canonicalized from `v2` naming:
   - `docs/eval/EVAL_SPEC.md`
   - `docs/eval/EVAL_BACKEND_MAP.md`

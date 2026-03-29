@@ -330,10 +330,10 @@ def build_indexes(export_root: Path, output_dir: Path) -> dict[str, int]:
     ocr_ready_dedup: list[dict[str, Any]] = []
     seen_paths: set[str] = set()
     for row in ocr_ready:
-        image_path = str(row.get("image_path", ""))
-        if image_path in seen_paths:
+        image_path_str = str(row.get("image_path", ""))
+        if image_path_str in seen_paths:
             continue
-        seen_paths.add(image_path)
+        seen_paths.add(image_path_str)
         ocr_ready_dedup.append(row)
 
     output_dir.mkdir(parents=True, exist_ok=True)

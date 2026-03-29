@@ -1087,3 +1087,20 @@
 - Why: Illustration-heavy OCR (diagrams/sketches with embedded text) has
   different failure modes than plain typed or handwriting samples, so it needs
   a distinct quality lane to keep benchmark signals interpretable.
+
+## D-095: Mark selected live-archive lanes local-only and automate venv startup tasks
+
+- Date: `2026-03-29`
+- Category: `workflow_environment`
+- Tags: `confidentiality`, `local_only_docs`, `vscode_tasks`, `venv_automation`
+- Decision:
+  - mark these archive lanes local-only via `.gitignore`:
+    - `.archive/live_archive/legacy_eval/`
+    - `.archive/live_archive/legacy_human_reference/`
+  - remove those files from git tracking while retaining them locally
+  - simplify VS Code startup task commands to rely on `make` interpreter
+    auto-discovery instead of inline `source .../activate` chains
+  - include `make doctor-env` in `workspace bootstrap` task dependencies
+- Why: Keeps deprecated/internal material confidential in the new tree and
+  reduces startup fragility by centralising environment selection in Makefile
+  logic.
