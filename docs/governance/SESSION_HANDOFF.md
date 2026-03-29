@@ -118,6 +118,7 @@
 - `docs/governance/CHARTER.md`
 - `docs/governance/STATE.md`
 - `docs/governance/DECISIONS.md`
+- `docs/governance/AUTOMATION_SPEC.md`
 - `docs/runtime/ARCHITECTURE.md`
 - `docs/runtime/RUNBOOK.md`
 - `docs/eval/EVAL_POLICY_MODEL.md`
@@ -134,6 +135,8 @@
 1. Morning worktree confirmation:
    - confirm whether this thread is running in canonical repo root
      (`/Users/tryskian/Github/polinko`) or a dedicated worktree path
+   - confirm automation mode from `docs/governance/AUTOMATION_SPEC.md`
+     (`paused` by default)
    - if automation is active, confirm it is using a separate worktree
    - command ownership stays engineer-side (imagineer does not run terminal/Git commands)
    - execution-first default stays active (agent executes requested work directly)
@@ -148,6 +151,8 @@
 
 - Network-dependent model calls can fail in restricted environments.
 - Cloud deployment automation remains paused; local-first execution is canonical.
+- Scheduled implementation automation remains paused; manual/autonomous engineer
+  execution is canonical until explicit re-enable.
 - Environment mutation policy:
   - verify repo path + mode + branch before changes
   - prefer repo-scoped edits

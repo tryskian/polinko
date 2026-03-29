@@ -291,6 +291,12 @@
     (canonical root vs dedicated worktree)
   - branch + worktree isolation is required when automation and manual work run
     in parallel
+- Automation lane-control checkpoint (March 29, 2026):
+  - scheduled implementation automation is now intentionally paused by default
+  - manual/autonomous engineer execution is the single canonical lane
+  - canonical policy source is `docs/governance/AUTOMATION_SPEC.md`
+  - automation re-enable requires explicit human go/no-go and worktree
+    isolation confirmation
 - Execution ownership checkpoint (March 29, 2026):
   - terminal/Git command execution is engineer-owned by default
   - imagineer remains objective/scope/acceptance/go-no-go owner
