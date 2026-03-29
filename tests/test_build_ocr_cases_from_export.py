@@ -389,6 +389,83 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertIn("insight", [p.lower() for p in review["correction_phrases"]])
             self.assertIn("abacus method", " ".join(review["chosen_phrases"]).lower())
 
+    def test_build_does_not_promote_from_phrase_less_correction_wording(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "screenshot_001.png").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-noise-correction",
+                "title": "Noisy correction wording",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you OCR this screenshot?"]},
+                            "metadata": {"attachments": [{"name": "screenshot_001.png", "id": "file_noise"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {
+                                "parts": [
+                                    "top one percent. forty-thousand messages. chattiest day in 2025."
+                                ]
+                            },
+                            "metadata": {},
+                        }
+                    },
+                    "3": {
+                        "message": {
+                            "create_time": 3,
+                            "author": {"role": "user"},
+                            "content": {
+                                "parts": [
+                                    "this phrase is only used in the context of beabs shading each other"
+                                ]
+                            },
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-6.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["medium_confidence"], 0)
+            self.assertEqual(summary["cases_written"], 0)
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["confidence"], "low")
+            self.assertFalse(review["ocr_framing_signal"])
+            self.assertEqual(review["correction_phrases"], [])
+            self.assertFalse(review["correction_signal"])
+
 
 if __name__ == "__main__":
     unittest.main()
