@@ -141,6 +141,26 @@ FRAMED_TRANSCRIPTION_RX = re.compile(
     r"\bit (?:reads?|says)\b[,:-]?\s*([^\n]{3,120})",
     re.IGNORECASE,
 )
+ROOT_PATH_RX = re.compile(
+    r"(?:^|[\s(])/(?:mnt|tmp|var|home|users?|data)/[^\s]+",
+    re.IGNORECASE,
+)
+WINDOWS_PATH_RX = re.compile(
+    r"(?:^|[\s(])[a-z]:\\(?:[^\\\s]+\\)+[^\\\s]+",
+    re.IGNORECASE,
+)
+ASSET_PATH_FRAGMENT_RX = re.compile(
+    r"\b(?:assets?|images?|conversations?|downloads?)/[^\s]+",
+    re.IGNORECASE,
+)
+PATH_FILE_EXT_RX = re.compile(
+    r"[\\/][^\s]{1,120}\.(?:png|jpe?g|webp|gif|tiff?|heic|pdf|json|md|txt)\b",
+    re.IGNORECASE,
+)
+CONTROL_TOKEN_RX = re.compile(
+    r"\b(?:imagegenview|imagegen|sandbox:|mnt/data|tool_call|assistant_response)\b",
+    re.IGNORECASE,
+)
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 
@@ -325,6 +345,18 @@ def _is_ocr_like_phrase(text: str) -> bool:
     if len(value) < 2 or len(value) > 80:
         return False
     lowered = value.lower()
+    if "![" in value and "](" in value:
+        return False
+    if ROOT_PATH_RX.search(value):
+        return False
+    if WINDOWS_PATH_RX.search(value):
+        return False
+    if ASSET_PATH_FRAGMENT_RX.search(value):
+        return False
+    if PATH_FILE_EXT_RX.search(value):
+        return False
+    if CONTROL_TOKEN_RX.search(value):
+        return False
     noisy_markers = (
         "confirmed",
         "transcription",

@@ -30,6 +30,13 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertFalse(_is_ocr_like_phrase("see"))
         self.assertTrue(_is_ocr_like_phrase("spiral"))
 
+    def test_phrase_filter_rejects_control_and_path_artifacts(self) -> None:
+        self.assertFalse(_is_ocr_like_phrase("imagegenview"))
+        self.assertFalse(_is_ocr_like_phrase("/mnt/data/file-abc123-IMG_7750.jpeg"))
+        self.assertFalse(_is_ocr_like_phrase("assets/file-abc123/Screenshot_2026-03-29.png"))
+        self.assertFalse(_is_ocr_like_phrase(r"C:\Users\me\Downloads\ocr_note.png"))
+        self.assertTrue(_is_ocr_like_phrase("there seems to be something stirring"))
+
     def test_expand_anchor_variants_adds_stems(self) -> None:
         anchors = _expand_anchor_variants(["archival", "tumbles", "floating"])
         self.assertIn("archiv", anchors)
