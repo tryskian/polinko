@@ -804,7 +804,7 @@ Current policy:
    - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
    - `.local/eval_cases/ocr_typed_from_transcripts.json`
    - `.local/eval_cases/ocr_illustration_from_transcripts.json`
-   - `.local/eval_cases/ocr_handwriting_from_transcripts_review.json`
+   - `.local/eval_cases/ocr_transcript_cases_review.json`
 
 ## Run OCR Ambiguity/Recovery Eval
 
