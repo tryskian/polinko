@@ -111,6 +111,18 @@ OCR_INTENT_RX = re.compile(
     OCR_INTENT_PATTERN,
     re.IGNORECASE,
 )
+OCR_LITERAL_INTENT_RX = re.compile(
+    (
+        r"what does (this|it) say|"
+        r"what(?:'s| is) written|"
+        r"can\s+(?:you|u|ur)\s+(?:read|see|ocr|transcrib\w*)|"
+        r"read (this|it)|"
+        r"\btranscrib\w*|"
+        r"\bocr\b|"
+        r"\bocrable\b"
+    ),
+    re.IGNORECASE,
+)
 OCR_FRAMING_RX = re.compile(
     r"\bit (?:reads?|says)\b|\bhere(?:'s| is)\s+the\s+ocr\b|\btranscrib\w*|\bocr\b",
     re.IGNORECASE,
@@ -581,6 +593,9 @@ def build_from_export(
             ocr_intent_signal = bool(
                 OCR_INTENT_RX.search("\n".join([msg.text, *followups]))
             )
+            ocr_literal_intent_signal = bool(
+                OCR_LITERAL_INTENT_RX.search("\n".join([msg.text, *followups]))
+            )
             ocr_framing_signal = bool(OCR_FRAMING_RX.search(assistant_text))
 
             confidence = "low"
@@ -597,11 +612,14 @@ def build_from_export(
                 lane == "illustration"
                 and len(_anchor_terms_for_phrases(transcription_phrases[:5])) >= 2
             )
+            medium_intent_signal = ocr_literal_intent_signal or (
+                ocr_intent_signal and strong_illustration_phrase_signal
+            )
             if followup_correction_signal and followup_correction_phrases:
                 confidence = "high"
                 chosen_phrases = followup_correction_phrases[:5]
             elif (
-                ocr_intent_signal
+                medium_intent_signal
                 and transcription_phrases
                 and (
                     ocr_framing_signal
@@ -625,6 +643,7 @@ def build_from_export(
                     "positive_signal": positive_signal,
                     "correction_signal": correction_signal,
                     "ocr_intent_signal": ocr_intent_signal,
+                    "ocr_literal_intent_signal": ocr_literal_intent_signal,
                     "ocr_framing_signal": ocr_framing_signal,
                     "correction_phrases": correction_phrases,
                     "transcription_phrases": transcription_phrases,
