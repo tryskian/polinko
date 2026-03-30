@@ -89,3 +89,6 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Paused: cloud deployment automation (removed from repo for now; Azure is the preferred target when resumed).
 - Include later (deferred cookbook track):
   - see `docs/runtime/RUNBOOK.md` (`Cookbook Queue`)
+- Cookbook priority pin (next integration kernel):
+  - `Vision Fine-tuning on GPT-4o for Visual Question Answering` is first in
+    the cookbook integration sequence.
