@@ -18,6 +18,7 @@ from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
 
 SPACED_LETTER_WORD_RX = re.compile(r"\b(?:[A-Za-z]\s+){2,}[A-Za-z]\b")
+OCR_WORD_TOKEN_RX = re.compile(r"\b[a-z0-9-]+\b")
 
 
 def _contains_optional_letter_spacing(*, haystack: str, probe: str, whole_word: bool) -> bool:
@@ -31,6 +32,53 @@ def _contains_optional_letter_spacing(*, haystack: str, probe: str, whole_word: 
     if whole_word:
         spaced_pattern = rf"(?<!\w){spaced_pattern}(?!\w)"
     return re.search(spaced_pattern, haystack) is not None
+
+
+def _edit_distance_at_most_one(lhs: str, rhs: str) -> bool:
+    if lhs == rhs:
+        return True
+    lhs_len = len(lhs)
+    rhs_len = len(rhs)
+    if abs(lhs_len - rhs_len) > 1:
+        return False
+    if lhs_len == rhs_len:
+        mismatches = sum(1 for index in range(lhs_len) if lhs[index] != rhs[index])
+        return mismatches <= 1
+    if lhs_len > rhs_len:
+        lhs, rhs = rhs, lhs
+        lhs_len, rhs_len = rhs_len, lhs_len
+    # rhs is exactly one char longer than lhs.
+    lhs_index = 0
+    rhs_index = 0
+    edits = 0
+    while lhs_index < lhs_len and rhs_index < rhs_len:
+        if lhs[lhs_index] == rhs[rhs_index]:
+            lhs_index += 1
+            rhs_index += 1
+            continue
+        edits += 1
+        if edits > 1:
+            return False
+        rhs_index += 1
+    if rhs_index < rhs_len or lhs_index < lhs_len:
+        edits += 1
+    return edits <= 1
+
+
+def _contains_near_single_token(*, tokens: list[str], probe: str) -> bool:
+    # Allow one-character OCR drift on longer single-token anchors only.
+    if not re.fullmatch(r"[a-z0-9-]{6,}", probe):
+        return False
+    for token in tokens:
+        if abs(len(token) - len(probe)) > 1:
+            continue
+        if token[:1] != probe[:1]:
+            continue
+        if len(probe) >= 5 and token[-1:] != probe[-1:]:
+            continue
+        if _edit_distance_at_most_one(token, probe):
+            return True
+    return False
 
 
 def _headers(api_key: str | None) -> dict[str, str]:
@@ -224,6 +272,7 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
     case_sensitive = bool(case["case_sensitive"])
     haystack = extracted_text if case_sensitive else extracted_text.lower()
     haystack_spaced_normalized = _collapse_spaced_letter_words(haystack)
+    haystack_word_tokens = OCR_WORD_TOKEN_RX.findall(haystack_spaced_normalized)
 
     def contains(needle: str) -> bool:
         probe = needle if case_sensitive else needle.lower()
@@ -232,6 +281,10 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
             or probe in haystack_spaced_normalized
             or _contains_optional_letter_spacing(haystack=haystack, probe=probe, whole_word=False)
         )
+
+    def contains_required(needle: str) -> bool:
+        probe = needle if case_sensitive else needle.lower()
+        return contains(needle) or _contains_near_single_token(tokens=haystack_word_tokens, probe=probe)
 
     def contains_word(word: str) -> bool:
         probe = word if case_sensitive else word.lower()
@@ -243,11 +296,11 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
         )
 
     for phrase in case["must_contain"]:
-        if not contains(phrase):
+        if not contains_required(phrase):
             reasons.append(f"missing required phrase: {phrase!r}")
 
     if case["must_contain_any"]:
-        if not any(contains(phrase) for phrase in case["must_contain_any"]):
+        if not any(contains_required(phrase) for phrase in case["must_contain_any"]):
             reasons.append(f"missing one-of required phrases: {case['must_contain_any']}")
 
     for phrase in case["must_not_contain"]:

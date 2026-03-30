@@ -251,6 +251,11 @@
   - OCR required/forbidden anchor matching now tolerates mixed split-letter
     artefacts (for example `CHAT T IEST`, `GU ESS`) to prevent deterministic
     false failures
+  - required-anchor matching now tolerates one-character OCR drift on longer
+    single-token anchors (for example `CHATTIEST` vs `CHATTEST`) while keeping
+    forbidden-phrase checks exact
+  - `make eval-ocr-transcript-stability` now self-starts `server-daemon` so
+    localhost preflight does not silently fail when the backend is not already up
   - latest strict lane validation:
     - all lane: `15/15` PASS
     - handwriting lane: `5/5` PASS

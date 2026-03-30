@@ -89,6 +89,13 @@ class OcrEvalRuleTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(reasons, [])
 
+    def test_must_contain_any_allows_single_char_ocr_drift(self) -> None:
+        case = self._base_case()
+        case["must_contain_any"] = ["chattiest"]
+        passed, reasons = _check_case(case, "CHATTEST day in 2025")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
     def test_forbidden_word_matches_spaced_letter_tokens(self) -> None:
         case = self._base_case()
         case["must_not_contain_words"] = ["guess"]
@@ -102,6 +109,13 @@ class OcrEvalRuleTests(unittest.TestCase):
         passed, reasons = _check_case(case, "GU ESS it says matrix")
         self.assertFalse(passed)
         self.assertTrue(any("forbidden whole word" in reason for reason in reasons))
+
+    def test_forbidden_phrase_does_not_use_near_match(self) -> None:
+        case = self._base_case()
+        case["must_not_contain"] = ["chattiest"]
+        passed, reasons = _check_case(case, "CHATTEST day in 2025")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
 
 
 if __name__ == "__main__":
