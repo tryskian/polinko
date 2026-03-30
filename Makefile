@@ -41,18 +41,13 @@ OCR_TRANSCRIPT_REVIEW ?= .local/eval_cases/ocr_transcript_cases_review.json
 OCR_STABILITY_RUNS ?= 5
 OCR_STABILITY_OUTPUT ?= .local/eval_reports/ocr_transcript_stability.json
 OCR_STABILITY_REPORT_DIR ?= .local/eval_reports/ocr_stability_runs
-DASHBOARD_OUTPUT ?= .local/dashboard/eval_dashboard.html
-DASHBOARD_REPORT_DIR ?= eval_reports
-DASHBOARD_HISTORY_DB ?= .local/runtime_dbs/active/history.db
-VIZ_HOST ?= 127.0.0.1
-VIZ_PORT ?= 8010
 CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
 CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
 CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env ocrindex ocrmine ocrall ocrhand ocrtype ocrillu ocrstable gate eod localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs viz viz-open session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-illustration eval-ocr-transcript-stability docker-build docker-run
+.PHONY: chat venv env ocrindex ocrmine ocrall ocrhand ocrtype ocrillu ocrstable gate eod localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-illustration eval-ocr-transcript-stability docker-build docker-run
 
 chat:
 	$(PYTHON) app.py
@@ -213,31 +208,6 @@ open-api-docs:
 
 docs:
 	@$(MAKE) --no-print-directory open-api-docs
-
-viz:
-	@set -eu; \
-	$(PYTHON) -m tools.build_eval_dashboard --report-dir "$(DASHBOARD_REPORT_DIR)" --history-db "$(DASHBOARD_HISTORY_DB)" --output "$(DASHBOARD_OUTPUT)"; \
-	DASH_DIR="$$(dirname "$(DASHBOARD_OUTPUT)")"; \
-	DASH_FILE="$$(basename "$(DASHBOARD_OUTPUT)")"; \
-	URL="http://$(VIZ_HOST):$(VIZ_PORT)/$$DASH_FILE"; \
-	echo "Serving eval dashboard at $$URL (Ctrl+C to stop)."; \
-	$(PYTHON) -m http.server "$(VIZ_PORT)" --bind "$(VIZ_HOST)" --directory "$$DASH_DIR"
-
-viz-open:
-	@set -eu; \
-	$(PYTHON) -m tools.build_eval_dashboard --report-dir "$(DASHBOARD_REPORT_DIR)" --history-db "$(DASHBOARD_HISTORY_DB)" --output "$(DASHBOARD_OUTPUT)"; \
-	DASH_DIR="$$(dirname "$(DASHBOARD_OUTPUT)")"; \
-	DASH_FILE="$$(basename "$(DASHBOARD_OUTPUT)")"; \
-	URL="http://$(VIZ_HOST):$(VIZ_PORT)/$$DASH_FILE"; \
-	if command -v open >/dev/null 2>&1; then \
-		open "$$URL"; \
-	elif command -v xdg-open >/dev/null 2>&1; then \
-		xdg-open "$$URL" >/dev/null 2>&1 || true; \
-	else \
-		echo "Open this URL in your browser: $$URL"; \
-	fi; \
-	echo "Serving eval dashboard at $$URL (Ctrl+C to stop)."; \
-	$(PYTHON) -m http.server "$(VIZ_PORT)" --bind "$(VIZ_HOST)" --directory "$$DASH_DIR"
 
 session-status:
 	@echo "== Server =="
