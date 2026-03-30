@@ -1331,3 +1331,23 @@
     remains stable across session handoffs
 - Why: Aligns cookbook execution order with current OCR/visual-grounding
   priorities and reduces drift from ad-hoc integration sequencing.
+
+## D-111: Add transcript auto-fix/check tooling and end-of-day routine script
+
+- Date: `2026-03-30`
+- Category: `workflow_environment`
+- Tags: `transcripts`, `format_consistency`, `daily_routine`, `deterministic_checks`
+- Decision:
+  - add curated transcript tooling:
+    - `make transcript-fix` (`tools/fix_transcripts.py`)
+    - `make transcript-check` (`tools/validate_transcripts.py`)
+  - add one-command day-close routine:
+    - `make eod` (`tools/end_of_day_routine.sh`)
+  - day-close routine order is deterministic:
+    1) transcript-fix
+    2) transcript-check
+    3) build-audit
+    4) lint-docs
+    5) test
+- Why: Keeps local transcript records consistently structured without manual
+  drift, and standardises day-close validation into one repeatable command.
