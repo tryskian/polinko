@@ -405,6 +405,8 @@ def build_dashboard_dataset(
             tested_value = _build_tested_value(suite_key, raw_case)
             outcome_summary = _build_outcome_summary(raw_case)
             references = _collect_references(raw_case)
+            image_path = str(raw_case.get("image_path", "")).strip()
+            source_name = str(raw_case.get("source_name", "")).strip()
             cases.append(
                 {
                     "suite": suite_key,
@@ -414,6 +416,8 @@ def build_dashboard_dataset(
                     "tested_value": tested_value,
                     "outcome_summary": outcome_summary,
                     "references": references,
+                    "image_path": image_path,
+                    "source_name": source_name,
                     "run_id": run_id,
                     "report_path": str(report_path),
                     "report_generated_at": generated_at,
@@ -650,6 +654,26 @@ def _render_dashboard_html(dataset: dict[str, Any]) -> str:
       padding: 10px;
       background: #0c1629;
     }}
+    .cli-summary {{
+      margin: 0;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #081122;
+      color: #d7e6ff;
+      white-space: pre-wrap;
+      line-height: 1.45;
+      font-size: 0.9rem;
+    }}
+    a.path-link {{
+      color: #9cd1ff;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      word-break: break-all;
+    }}
+    a.path-link:hover {{
+      color: #c6e5ff;
+    }}
   </style>
 </head>
 <body>
@@ -667,6 +691,11 @@ def _render_dashboard_html(dataset: dict[str, Any]) -> str:
     <section class="panel stack">
       <h2>Overview</h2>
       <div class="cards" id="overviewCards"></div>
+    </section>
+
+    <section class="panel stack">
+      <h2>CLI Snapshot</h2>
+      <pre id="cliSummary" class="cli-summary"></pre>
     </section>
 
     <section class="panel stack">
@@ -698,6 +727,7 @@ def _render_dashboard_html(dataset: dict[str, Any]) -> str:
               <th>Suite</th>
               <th>Status</th>
               <th>Case</th>
+              <th>Image path</th>
               <th>Tested value</th>
               <th>Outcome summary</th>
               <th>References</th>
@@ -734,6 +764,39 @@ def _render_dashboard_html(dataset: dict[str, Any]) -> str:
         .replace(/'/g, "&#39;");
     }}
 
+    function toFileHref(path) {{
+      const raw = String(path || "").trim();
+      if (!raw) return "";
+      const normalized = raw.replace(/\\\\/g, "/");
+      if (/^[A-Za-z]:\\//.test(normalized)) {{
+        return `file:///${{encodeURI(normalized).replace(/#/g, "%23")}}`;
+      }}
+      if (normalized.startsWith("/")) {{
+        return `file://${{encodeURI(normalized).replace(/#/g, "%23")}}`;
+      }}
+      return "";
+    }}
+
+    function renderPathLink(path, label) {{
+      const href = toFileHref(path);
+      const text = label || path || "n/a";
+      if (!href) return `<span class="small">${{esc(text)}}</span>`;
+      return `<a class="path-link mono" href="${{href}}" target="_blank" rel="noopener noreferrer">${{esc(text)}}</a>`;
+    }}
+
+    function renderReference(ref) {{
+      const value = String(ref || "").trim();
+      if (!value) return "";
+      if (value.startsWith("session:") || value.startsWith("source:")) {{
+        return `<code>${{esc(value)}}</code>`;
+      }}
+      const href = toFileHref(value);
+      if (href) {{
+        return `<a class="path-link mono" href="${{href}}" target="_blank" rel="noopener noreferrer">${{esc(value)}}</a>`;
+      }}
+      return `<code>${{esc(value)}}</code>`;
+    }}
+
     function renderOverview() {{
       document.getElementById("generatedAt").textContent = DATA.generated_at || "n/a";
       document.getElementById("reportDir").textContent = DATA.report_dir || "n/a";
@@ -754,6 +817,23 @@ def _render_dashboard_html(dataset: dict[str, Any]) -> str:
       document.getElementById("overviewCards").innerHTML = cards
         .map(([key, value]) => `<div class="card"><div class="k">${{esc(key)}}</div><div class="v">${{esc(value)}}</div></div>`)
         .join("");
+    }}
+
+    function renderCliSummary() {{
+      const suites = (DATA.suites || []);
+      const overview = DATA.overview || {{}};
+      const statusCounts = overview.status_counts || {{}};
+      const lines = [
+        `generated: ${{DATA.generated_at || "n/a"}}`,
+        `suites: ${{overview.suite_count ?? 0}} | cases: ${{overview.case_count ?? 0}} | pass: ${{statusCounts.PASS || 0}} | fail: ${{statusCounts.FAIL || 0}} | error: ${{statusCounts.ERROR || 0}}`,
+      ];
+      for (const item of suites) {{
+        const summary = item.summary || {{}};
+        lines.push(
+          `[${{item.suite || "unknown"}}] ${{item.status || "UNKNOWN"}} total=${{summary.total ?? 0}} pass=${{summary.passed ?? 0}} fail=${{summary.failed ?? 0}} err=${{summary.errors ?? 0}} run=${{item.run_id || "n/a"}}`
+        );
+      }}
+      document.getElementById("cliSummary").textContent = lines.join("\\n");
     }}
 
     function renderSuites() {{
@@ -843,18 +923,22 @@ def _render_dashboard_html(dataset: dict[str, Any]) -> str:
       document.getElementById("caseCount").textContent = String(filtered.length);
       const body = document.getElementById("caseTableBody");
       if (!filtered.length) {{
-        body.innerHTML = `<tr><td colspan="6" class="small">No matching cases.</td></tr>`;
+        body.innerHTML = `<tr><td colspan="7" class="small">No matching cases.</td></tr>`;
         return;
       }}
       body.innerHTML = filtered.map(item => {{
         const refs = item.references && item.references.length
-          ? item.references.map(ref => `<code>${{esc(ref)}}</code>`).join("<br />")
+          ? item.references.map(ref => renderReference(ref)).join("<br />")
+          : "<span class='small'>n/a</span>";
+        const imageCell = item.image_path
+          ? renderPathLink(item.image_path, item.source_name || item.image_path)
           : "<span class='small'>n/a</span>";
         return `
           <tr>
             <td>${{esc(item.suite_label || item.suite)}}</td>
             <td><span class="${{statusClass(item.status)}}">${{esc(item.status)}}</span></td>
             <td><div>${{esc(item.case_id)}}</div><div class="small mono">${{esc(item.run_id || "")}}</div></td>
+            <td>${{imageCell}}</td>
             <td>${{esc(item.tested_value || "n/a")}}</td>
             <td>${{esc(item.outcome_summary || "n/a")}}</td>
             <td>${{refs}}</td>
@@ -864,6 +948,7 @@ def _render_dashboard_html(dataset: dict[str, Any]) -> str:
     }}
 
     renderOverview();
+    renderCliSummary();
     renderSuites();
     renderFilters();
     renderCases();
