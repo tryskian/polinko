@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-29
+- 2026-03-30
 
 ## Current Snapshot
 
@@ -89,6 +89,13 @@
     - counters: `emitted_cases`, `skipped_low_confidence`,
       `skipped_duplicate_image_path`, `skipped_insufficient_anchor_terms`
     - review fields: `emit_status`, `anchor_terms`, `anchor_terms_count`
+    - review summary block:
+      `confidence_counts`, `lane_counts`, `emit_status_counts`,
+      `lane_emit_status_counts`
+  - OCR eval matcher now hardens mixed split-letter anchor variants:
+    - required one-of matching handles forms like `CHAT T IEST`
+    - forbidden whole-word matching handles forms like `GU ESS`
+    - stability replay is back to `15 stable / 0 flaky`
   - lane artifacts:
     - `.local/eval_cases/ocr_transcript_cases_all.json`
     - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
@@ -116,7 +123,7 @@
 ## Latest Branch Context
 
 - Active implementation branch:
-  - `codex/bigbrain/ocr-next-kernel-3`
+  - `codex/bigbrain/ocr-next-kernel-4`
 - Canonical repo path:
   - `/Users/tryskian/Github/polinko`
 
@@ -156,21 +163,18 @@
 
 ## Immediate Next Step
 
-- Hold transcript OCR lane baseline at
-  (`handwriting=5`, `typed=7`, `illustration=3`) while preserving strict pass rates:
-  - run transcript pipeline on local export root:
-    - `make cgpt-export-index`
+- Keep transcript OCR baseline locked at
+  (`handwriting=5`, `typed=7`, `illustration=3`) with strict green gates:
+  - rerun:
     - `make ocr-cases-from-export`
     - `make eval-ocr-transcript-cases`
     - `make eval-ocr-transcript-cases-handwriting`
     - `make eval-ocr-transcript-cases-typed`
     - `make eval-ocr-transcript-cases-illustration`
     - `make eval-ocr-transcript-stability OCR_STABILITY_RUNS=5`
-  - prioritise precision-safe promotion of remaining medium-confidence
-    transcript episodes without reintroducing malformed anchors, single-token
-    variant lists, or conversational/noisy terms
-  - hold illustration coverage at `>=3` cases and keep all-lane strict pass
-    green
+  - use review `summary` + `episodes` diagnostics to prioritise exactly one
+    precision-safe medium-confidence promotion kernel
+  - preserve malformed-anchor/single-token/conversational-noise guards
   - validate with:
     - `make build-audit`
     - `make lint-docs`

@@ -20,6 +20,19 @@ from tools.eval_trace_artifacts import build_eval_trace
 SPACED_LETTER_WORD_RX = re.compile(r"\b(?:[A-Za-z]\s+){2,}[A-Za-z]\b")
 
 
+def _contains_optional_letter_spacing(*, haystack: str, probe: str, whole_word: bool) -> bool:
+    """Match probes when OCR inserts spaces inside a single word token."""
+    if not probe or re.search(r"\s", probe):
+        return False
+    if not re.fullmatch(r"[\w-]+", probe):
+        return False
+    pieces = [re.escape(char) for char in probe]
+    spaced_pattern = r"\s*".join(pieces)
+    if whole_word:
+        spaced_pattern = rf"(?<!\w){spaced_pattern}(?!\w)"
+    return re.search(spaced_pattern, haystack) is not None
+
+
 def _headers(api_key: str | None) -> dict[str, str]:
     headers = {"Content-Type": "application/json"}
     if api_key:
@@ -214,12 +227,20 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
 
     def contains(needle: str) -> bool:
         probe = needle if case_sensitive else needle.lower()
-        return probe in haystack or probe in haystack_spaced_normalized
+        return (
+            probe in haystack
+            or probe in haystack_spaced_normalized
+            or _contains_optional_letter_spacing(haystack=haystack, probe=probe, whole_word=False)
+        )
 
     def contains_word(word: str) -> bool:
         probe = word if case_sensitive else word.lower()
         pattern = re.compile(rf"(?<!\w){re.escape(probe)}(?!\w)")
-        return bool(pattern.search(haystack)) or bool(pattern.search(haystack_spaced_normalized))
+        return (
+            bool(pattern.search(haystack))
+            or bool(pattern.search(haystack_spaced_normalized))
+            or _contains_optional_letter_spacing(haystack=haystack, probe=probe, whole_word=True)
+        )
 
     for phrase in case["must_contain"]:
         if not contains(phrase):

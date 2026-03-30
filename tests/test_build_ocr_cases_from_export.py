@@ -836,7 +836,16 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["medium_confidence"], 1)
             self.assertEqual(summary["cases_written"], 0)
             self.assertEqual(summary["skipped_insufficient_anchor_terms"], 1)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review_payload = json.loads(output_review.read_text(encoding="utf-8"))
+            self.assertEqual(review_payload["summary"]["episodes"], 1)
+            self.assertEqual(review_payload["summary"]["emit_status_counts"]["skipped_insufficient_anchor_terms"], 1)
+            review = review_payload["episodes"][0]
+            self.assertEqual(
+                review_payload["summary"]["lane_emit_status_counts"][review["lane"]][
+                    "skipped_insufficient_anchor_terms"
+                ],
+                1,
+            )
             self.assertEqual(review["emit_status"], "skipped_insufficient_anchor_terms")
             self.assertEqual(review["anchor_terms_count"], 1)
             self.assertEqual(review["anchor_terms"], ["stirring"])

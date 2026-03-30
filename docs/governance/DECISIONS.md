@@ -1289,3 +1289,32 @@
 - Why: Correctly routes geometry-sketch transcript episodes that were being
   typed-labeled, lifting illustration coverage without broadening low-signal
   promotions.
+
+## D-108: Add review-summary aggregates to transcript OCR mining output
+
+- Date: `2026-03-30`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `review_schema`, `operator_visibility`, `precision_guard`
+- Decision:
+  - add a top-level `summary` block in
+    `.local/eval_cases/ocr_transcript_cases_review.json` with:
+    - `conversation_files`, `episodes`
+    - `confidence_counts`, `lane_counts`
+    - `emit_status_counts`, `lane_emit_status_counts`
+  - keep per-episode review rows unchanged under `episodes`
+  - keep confidence thresholds and case emission rules unchanged
+- Why: Enables rapid lane-level triage and promotion decisions without manual
+  aggregation over full review payloads.
+
+## D-109: Harden OCR anchor matching for mixed split-letter tokens
+
+- Date: `2026-03-30`
+- Category: `eval_quality`
+- Tags: `ocr_eval`, `anchor_matching`, `stability`, `strict_binary`
+- Decision:
+  - extend OCR rule matching so single-word anchors and forbidden words also
+    match mixed split-letter outputs (for example `CHAT T IEST`, `GU ESS`)
+  - preserve existing strict binary gate semantics and phrase-level constraints
+  - add regression tests for mixed split required/forbidden matching
+- Why: Removes deterministic false failures from OCR spacing artefacts while
+  keeping gate strictness unchanged.
