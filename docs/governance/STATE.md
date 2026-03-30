@@ -273,13 +273,17 @@
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder
   - user prompts are reserved for approvals and material trade-offs
+- Streamline-first command policy checkpoint (March 30, 2026):
+  - command surfaces are consolidation-first (single canonical make target)
+  - superseded aliases are removed in the same change to reduce stale-path drift
+  - runtime/tooling edits close only after clean validation runs
 - Transcript workflow automation checkpoint (March 30, 2026):
   - transcript format consistency now has dedicated tooling:
     - `make transcript-fix` (auto-normalise curated transcript records)
     - `make transcript-check` (validate canonical rich-format structure)
   - deterministic day-close routine is now available:
     - `make eod`
-    - sequence: transcript-fix -> transcript-check -> build-audit ->
+    - sequence: transcript-fix -> transcript-check -> doctor-env ->
       lint-docs -> test
 - Morning startup guard checkpoint (March 29, 2026):
   - session startup now explicitly confirms worktree context

@@ -1305,8 +1305,25 @@
   - day-close routine order is deterministic:
     1) transcript-fix
     2) transcript-check
-    3) build-audit
+    3) doctor-env
     4) lint-docs
     5) test
 - Why: Keeps local transcript records consistently structured without manual
   drift, and standardises day-close validation into one repeatable command.
+
+## D-112: Enforce streamline-first command surfaces with clean-run closure
+
+- Date: `2026-03-30`
+- Category: `workflow_environment`
+- Tags: `operator_surface`, `command_hygiene`, `validation`, `drift_control`
+- Decision:
+  - keep one canonical make target per operator action
+  - when command surfaces change, remove superseded aliases in the same change
+  - avoid patch-layer compatibility additions unless explicitly approved
+  - close runtime/tooling surface edits with clean runs:
+    - `make doctor-env`
+    - `make lint-docs`
+    - `make test`
+    - `make quality-gate-deterministic` when runtime/eval behaviour changed
+- Why: Reduces stale-artifact drift, lowers operator ambiguity, and keeps
+  runtime changes auditable through deterministic validation closure.
