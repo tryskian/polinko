@@ -89,6 +89,16 @@ ANCHOR_WEAK_WORDS = {
     "reads",
     "read",
 }
+ORDERED_FALLBACK_SKIP_WORDS = {
+    "there",
+    "seems",
+    "without",
+    "inside",
+    "note",
+    "real",
+    "reads",
+    "read",
+}
 ANCHOR_FILETYPE_WORDS = {
     "jpeg",
     "jpg",
@@ -521,6 +531,33 @@ def _anchor_terms_for_phrases(phrases: list[str]) -> list[str]:
     return anchors
 
 
+def _ordered_terms_for_phrases(phrases: list[str]) -> list[str]:
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for phrase in phrases:
+        tokens = [token.lower() for token in _phrase_tokens(phrase)]
+        for token in tokens:
+            if not any(ch.isalpha() for ch in token):
+                continue
+            if len(token) < 4:
+                continue
+            if token in ANCHOR_STOPWORDS:
+                continue
+            if token in ANCHOR_META_WORDS:
+                continue
+            if token in ORDERED_FALLBACK_SKIP_WORDS:
+                continue
+            if token in ANCHOR_FILETYPE_WORDS:
+                continue
+            if token in ANCHOR_GENERIC_WORDS:
+                continue
+            if token in seen:
+                continue
+            seen.add(token)
+            ordered.append(token)
+    return ordered
+
+
 def _expand_anchor_variants(anchors: list[str]) -> list[str]:
     expanded: list[str] = []
     seen: set[str] = set()
@@ -626,7 +663,7 @@ def build_from_export(
             if not assistant_text:
                 continue
 
-            transcription_phrases, had_code_block = _extract_transcribed_lines(assistant_text)
+            transcription_phrases_raw, had_code_block = _extract_transcribed_lines(assistant_text)
             resolved_paths: list[str] = []
             for attachment in msg.attachments:
                 resolved_paths.extend(
@@ -668,7 +705,7 @@ def build_from_export(
             correction_phrases = _dedupe_phrases(followup_correction_phrases + ask_correction_phrases)
             # Treat correction as meaningful only when we extracted OCR-like phrase content.
             correction_signal = bool(correction_phrases)
-            transcription_phrases = [p for p in transcription_phrases if _is_ocr_like_phrase(p)]
+            transcription_phrases = [p for p in transcription_phrases_raw if _is_ocr_like_phrase(p)]
             has_multi_token_transcription = any(
                 len(_phrase_tokens(phrase)) >= 2 for phrase in transcription_phrases[:5]
             )
@@ -703,11 +740,13 @@ def build_from_export(
                 confidence = "medium"
                 chosen_phrases = transcription_phrases[:5]
             anchor_terms = _expand_anchor_variants(_anchor_terms_for_phrases(chosen_phrases)[:8])
+            ordered_terms = _ordered_terms_for_phrases(transcription_phrases_raw[:1])[:4]
+            ordered_phrase_fallback = ordered_terms if len(anchor_terms) < 3 else []
             if confidence == "low":
                 emit_status = "skipped_low_confidence"
             elif image_path in seen_case_paths:
                 emit_status = "skipped_duplicate_image_path"
-            elif len(anchor_terms) < 3:
+            elif len(anchor_terms) < 3 and len(ordered_phrase_fallback) < 2:
                 emit_status = "skipped_insufficient_anchor_terms"
             else:
                 emit_status = "emitted"
@@ -755,6 +794,7 @@ def build_from_export(
                     "lane": lane,
                     "transcription_mode": "verbatim",
                     "must_contain_any": anchor_terms,
+                    "must_appear_in_order": ordered_phrase_fallback,
                     "must_not_contain_words": ["likely", "maybe", "guess"],
                     "min_chars": 3,
                 }

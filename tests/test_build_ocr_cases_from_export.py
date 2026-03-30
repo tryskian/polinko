@@ -780,7 +780,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertEqual(review["confidence"], "low")
 
-    def test_build_skips_cases_with_only_single_anchor_concept(self) -> None:
+    def test_build_emits_single_anchor_case_with_ordered_token_fallback(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -806,7 +806,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ['it reads: "stirring"']},
+                            "content": {"parts": ['it reads: "There seems to be something - stirring."']},
                             "metadata": {},
                         }
                     },
@@ -834,21 +834,19 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             )
 
             self.assertEqual(summary["medium_confidence"], 1)
-            self.assertEqual(summary["cases_written"], 0)
-            self.assertEqual(summary["skipped_insufficient_anchor_terms"], 1)
+            self.assertEqual(summary["cases_written"], 1)
+            self.assertEqual(summary["skipped_insufficient_anchor_terms"], 0)
             review_payload = json.loads(output_review.read_text(encoding="utf-8"))
             self.assertEqual(review_payload["summary"]["episodes"], 1)
-            self.assertEqual(review_payload["summary"]["emit_status_counts"]["skipped_insufficient_anchor_terms"], 1)
+            self.assertEqual(review_payload["summary"]["emit_status_counts"]["emitted"], 1)
             review = review_payload["episodes"][0]
-            self.assertEqual(
-                review_payload["summary"]["lane_emit_status_counts"][review["lane"]][
-                    "skipped_insufficient_anchor_terms"
-                ],
-                1,
-            )
-            self.assertEqual(review["emit_status"], "skipped_insufficient_anchor_terms")
+            self.assertEqual(review_payload["summary"]["lane_emit_status_counts"][review["lane"]]["emitted"], 1)
+            self.assertEqual(review["emit_status"], "emitted")
             self.assertEqual(review["anchor_terms_count"], 1)
             self.assertEqual(review["anchor_terms"], ["stirring"])
+            case = json.loads(output_cases.read_text(encoding="utf-8"))["cases"][0]
+            self.assertEqual(case["must_contain_any"], ["stirring"])
+            self.assertEqual(case["must_appear_in_order"], ["something", "stirring"])
 
 
 if __name__ == "__main__":
