@@ -45,6 +45,21 @@
    - run `make doctor-env`
    - continue with normal startup (`make server-daemon`, `make session-status`)
 
+## End-of-Day Routine (Codexbeab)
+
+1. Run the end-of-day script:
+   - `make eod`
+2. Script sequence (deterministic):
+   - `make transcript-fix`
+   - `make transcript-check`
+   - `make build-audit`
+   - `make lint-docs`
+   - `make test`
+3. Purpose:
+   - keep local transcript records in consistent rich format
+   - catch build/docs drift before day-close
+   - hand off a clean validation state for next startup
+
 ## Command Ownership Rule (Reasoning Loops)
 
 1. Imagineer does not run terminal commands as part of normal workflow.

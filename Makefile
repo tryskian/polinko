@@ -48,7 +48,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env ocrindex ocrmine ocrall ocrhand ocrtype ocrillu ocrstable gate server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-illustration eval-ocr-transcript-stability docker-build docker-run dev dev-stop
+.PHONY: chat venv env ocrindex ocrmine ocrall ocrhand ocrtype ocrillu ocrstable gate eod server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-illustration eval-ocr-transcript-stability docker-build docker-run dev dev-stop
 
 chat:
 	$(PYTHON) app.py
@@ -84,6 +84,9 @@ ocrillu: eval-ocr-transcript-cases-illustration
 ocrstable: eval-ocr-transcript-stability
 
 gate: quality-gate-deterministic
+
+eod:
+	./tools/end_of_day_routine.sh
 
 server:
 	$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port 8000 --reload
@@ -219,6 +222,12 @@ test:
 
 lint-docs:
 	npm run lint:docs
+
+transcript-fix:
+	$(PYTHON) -m tools.fix_transcripts
+
+transcript-check:
+	$(PYTHON) -m tools.validate_transcripts
 
 doctor-env:
 	@set -eu; \

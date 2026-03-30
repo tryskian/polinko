@@ -60,6 +60,11 @@
 - Co-reasoning governance mode is human-managed:
   - human controls objective/scope/acceptance and go/no-go decisions
   - engineer executes proactively within that control frame
+- Transcript format workflow is tooling-backed:
+  - `make transcript-fix` auto-normalises curated transcript records
+  - `make transcript-check` enforces canonical rich-format structure
+  - `make eod` now runs deterministic day-close sequence:
+    `transcript-fix -> transcript-check -> build-audit -> lint-docs -> test`
 - Transcript-backed OCR mining kernel is merged on `main`:
   - PRs: `#110`, `#132`, `#133`, `#134`
   - indexer: `tools/index_cgpt_export.py`
@@ -112,7 +117,7 @@
 ## Latest Branch Context
 
 - Active implementation branch:
-  - `codex/bigbrain/ocr-next-kernel-4`
+  - `main` (canonical baseline as of latest update)
 - Canonical repo path:
   - `/Users/tryskian/Github/polinko`
 
@@ -139,6 +144,17 @@
 5. `make quality-gate-deterministic`
 6. confirm DB freeze posture:
    - no active `.polinko_*.db` / `.human_reference.db` files in repo root
+
+## Day-Close Routine (Local)
+
+1. Run deterministic end-of-day routine:
+   - `make eod`
+2. Included checks:
+   - `make transcript-fix`
+   - `make transcript-check`
+   - `make build-audit`
+   - `make lint-docs`
+   - `make test`
 
 ## Known Constraints
 
