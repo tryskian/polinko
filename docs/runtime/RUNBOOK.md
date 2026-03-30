@@ -894,20 +894,6 @@ Current policy:
 3. Run `make eval-reports`.
 4. Reports are written under `eval_reports/` with timestamped filenames.
 
-## Build Eval Dashboard
-
-1. Generate at least one eval report in `eval_reports/` (for example `make eval-reports`).
-2. Run dashboard web app:
-   - `make viz` (serve localhost web app)
-   - `make viz-open` (serve + auto-open in browser)
-3. Output defaults to:
-   - `.local/dashboard/eval_dashboard.html`
-4. Dashboard surface includes:
-   - latest run summary per eval suite
-   - case-level tested values + outcome summaries
-   - case references (session IDs, image paths, source names when available)
-   - high-level runtime counters from `.local/runtime_dbs/active/history.db` when present
-
 ## Eval Gate Spec (Canonical)
 
 1. Binary outcome model:
