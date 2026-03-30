@@ -45,6 +45,17 @@
    - run `make doctor-env`
    - continue with normal startup (`make server-daemon`, `make session-status`)
 
+## Command Surface Simplification Rule
+
+1. Prefer one canonical make target per operator action.
+2. When replacing a command surface, remove superseded aliases in the same change.
+3. Do not layer patch-style compatibility targets unless explicitly approved in-chat.
+4. Close command-surface edits with clean runs:
+   - `make doctor-env`
+   - `make lint-docs`
+   - `make test`
+   - `make quality-gate-deterministic` when runtime/eval execution behaviour changed
+
 ## End-of-Day Routine (Codexbeab)
 
 1. Run the end-of-day script:
@@ -52,7 +63,7 @@
 2. Script sequence (deterministic):
    - `make transcript-fix`
    - `make transcript-check`
-   - `make build-audit`
+   - `make doctor-env`
    - `make lint-docs`
    - `make test`
 3. Purpose:
@@ -886,9 +897,9 @@ Current policy:
 ## Build Eval Dashboard
 
 1. Generate at least one eval report in `eval_reports/` (for example `make eval-reports`).
-2. Build dashboard HTML:
-   - `make dashboard` (alias: `make dash`)
-   - optional auto-open: `make dashboard-open`
+2. Run dashboard web app:
+   - `make viz` (serve localhost web app)
+   - `make viz-open` (serve + auto-open in browser)
 3. Output defaults to:
    - `.local/dashboard/eval_dashboard.html`
 4. Dashboard surface includes:
@@ -1009,16 +1020,14 @@ Current policy:
    - `/search-chat your query`
    - `/export`
 
-## Dev Startup (Auto Port Hygiene)
+## Localhost Startup (Auto Port Hygiene)
 
 1. Start backend-only canonical surface:
    - `make server-daemon`
 2. Stop backend daemon:
    - `make server-daemon-stop`
-3. Optional foreground backend run:
-   - `make dev`
-4. Optional foreground stop:
-   - `make dev-stop`
+3. Optional foreground backend run on localhost:
+   - `make localhost`
 
 ## Common Connection Error
 

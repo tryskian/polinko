@@ -54,6 +54,10 @@
     - A=`PASS` (baseline anchor)
     - B=`FAIL` (traditional complexity underperformed)
     - C=`PASS` (binary current target)
+- Streamline-first command surface policy is active:
+  - prefer one canonical make target per operator action
+  - remove superseded aliases in the same change (no patch layering)
+  - require clean-run closure for runtime/tooling edits
 - Engineer execution mode is proactive by default:
   - technical hygiene/drift control should be handled without reminder
   - user input is only needed for approvals or material trade-offs
@@ -64,7 +68,7 @@
   - `make transcript-fix` auto-normalises curated transcript records
   - `make transcript-check` enforces canonical rich-format structure
   - `make eod` now runs deterministic day-close sequence:
-    `transcript-fix -> transcript-check -> build-audit -> lint-docs -> test`
+    `transcript-fix -> transcript-check -> doctor-env -> lint-docs -> test`
 - Transcript-backed OCR mining kernel is merged on `main`:
   - PRs: `#110`, `#132`, `#133`, `#134`
   - indexer: `tools/index_cgpt_export.py`
@@ -152,7 +156,7 @@
 2. Included checks:
    - `make transcript-fix`
    - `make transcript-check`
-   - `make build-audit`
+   - `make doctor-env`
    - `make lint-docs`
    - `make test`
 

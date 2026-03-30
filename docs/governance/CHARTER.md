@@ -24,6 +24,8 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
   tooling.
 - Run `make doctor-env` when local environment behaviour looks suspicious.
 - Run `make quality-gate` before push when backend/prompt/retrieval logic changes.
+- Streamline-first operator rule: keep one canonical make target per workflow action
+  and remove superseded aliases in the same change.
 
 ## Workflow
 

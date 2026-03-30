@@ -11,8 +11,8 @@ make --no-print-directory transcript-fix
 echo "[eod] 2/5 transcript-check"
 make --no-print-directory transcript-check
 
-echo "[eod] 3/5 build-audit"
-make --no-print-directory build-audit
+echo "[eod] 3/5 doctor-env"
+make --no-print-directory doctor-env
 
 echo "[eod] 4/5 lint-docs"
 make --no-print-directory lint-docs

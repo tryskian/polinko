@@ -80,8 +80,10 @@ make lint-docs
 make backend-gate
 make quality-gate
 make quality-gate-deterministic
-make dashboard
-# alias: make dash
+make viz
+# serve dashboard web app on localhost
+make viz-open
+# serve + auto-open in browser
 ```
 
 ## API Surface
@@ -192,7 +194,7 @@ Auxiliary eval tooling:
 ```bash
 make backfill-eval-traces
 make calibrate-hallucination-threshold
-make dashboard
+make viz
 make cgpt-export-index
 make ocr-cases-from-export
 make eval-ocr-transcript-cases
