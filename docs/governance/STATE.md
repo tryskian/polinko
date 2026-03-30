@@ -256,6 +256,8 @@
     (for example `focus -> focu`, `abacus -> abacu`)
   - OCR framing detection now recognises transcript-style wording
     (`transcription`/`transcript`) to avoid missing literal OCR episodes
+  - miner diagnostics now expose explicit emit/skip reasons for each reviewed
+    episode (`emit_status`, `anchor_terms`, and skip counters in command output)
   - latest strict lane validation:
     - all lane: `14/14` PASS
     - handwriting lane: `5/5` PASS

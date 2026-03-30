@@ -85,6 +85,10 @@
     - `make eval-ocr-transcript-cases-illustration`
     - `make eval-ocr-transcript-stability`
   - generated transcript OCR cases stay local-only in `.local/eval_cases/`
+  - miner diagnostics are now explicit in command output and review records:
+    - counters: `emitted_cases`, `skipped_low_confidence`,
+      `skipped_duplicate_image_path`, `skipped_insufficient_anchor_terms`
+    - review fields: `emit_status`, `anchor_terms`, `anchor_terms_count`
   - lane artifacts:
     - `.local/eval_cases/ocr_transcript_cases_all.json`
     - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
