@@ -300,6 +300,14 @@
   - engineer execution mode is action-first and proactive by default
   - technical hygiene/drift-control slices are executed without reminder
   - user prompts are reserved for approvals and material trade-offs
+- Transcript workflow automation checkpoint (March 30, 2026):
+  - transcript format consistency now has dedicated tooling:
+    - `make transcript-fix` (auto-normalise curated transcript records)
+    - `make transcript-check` (validate canonical rich-format structure)
+  - deterministic day-close routine is now available:
+    - `make eod`
+    - sequence: transcript-fix -> transcript-check -> build-audit ->
+      lint-docs -> test
 - Morning startup guard checkpoint (March 29, 2026):
   - session startup now explicitly confirms worktree context
     (canonical root vs dedicated worktree)
