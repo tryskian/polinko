@@ -94,6 +94,11 @@
     - required one-of matching handles forms like `CHAT T IEST`
     - forbidden whole-word matching handles forms like `GU ESS`
     - stability replay is back to `15 stable / 0 flaky`
+  - OCR matcher now also hardens one-character token drift on required
+    long-form anchors (example: `CHATTIEST` vs `CHATTEST`) without
+    loosening forbidden-phrase checks.
+  - `make eval-ocr-transcript-stability` now self-starts `server-daemon`
+    to avoid localhost preflight drift.
   - lane artifacts:
     - `.local/eval_cases/ocr_transcript_cases_all.json`
     - `.local/eval_cases/ocr_handwriting_from_transcripts.json`

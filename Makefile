@@ -670,6 +670,7 @@ eval-ocr-transcript-stability:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
+	$(MAKE) --no-print-directory server-daemon; \
 	$(PYTHON) -m tools.eval_ocr_stability \
 		--base-url "http://127.0.0.1:8000" \
 		--cases "$(OCR_TRANSCRIPT_CASES)" \
