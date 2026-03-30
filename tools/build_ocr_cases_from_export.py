@@ -147,7 +147,7 @@ OCR_LITERAL_INTENT_RX = re.compile(
     re.IGNORECASE,
 )
 OCR_FRAMING_RX = re.compile(
-    r"\bit (?:reads?|says)\b|\bhere(?:'s| is)\s+the\s+ocr\b|\btranscrib\w*|\bocr\b",
+    r"\bit (?:reads?|says)\b|\bhere(?:'s| is)\s+the\s+ocr\b|\btranscri(?:b\w*|pt\w*)\b|\bocr\b",
     re.IGNORECASE,
 )
 
@@ -568,6 +568,10 @@ def build_from_export(
     review_rows: list[dict[str, Any]] = []
     cases: list[dict[str, Any]] = []
     seen_case_paths: set[str] = set()
+    skipped_low_confidence = 0
+    skipped_duplicate_image_path = 0
+    skipped_insufficient_anchor_terms = 0
+    emitted_cases = 0
 
     conversation_files = sorted(conversations_dir.glob("*.json"))
     for conversation_path in conversation_files:
@@ -698,6 +702,15 @@ def build_from_export(
             ):
                 confidence = "medium"
                 chosen_phrases = transcription_phrases[:5]
+            anchor_terms = _expand_anchor_variants(_anchor_terms_for_phrases(chosen_phrases)[:8])
+            if confidence == "low":
+                emit_status = "skipped_low_confidence"
+            elif image_path in seen_case_paths:
+                emit_status = "skipped_duplicate_image_path"
+            elif len(anchor_terms) < 3:
+                emit_status = "skipped_insufficient_anchor_terms"
+            else:
+                emit_status = "emitted"
 
             review_rows.append(
                 {
@@ -716,19 +729,23 @@ def build_from_export(
                     "correction_phrases": correction_phrases,
                     "transcription_phrases": transcription_phrases,
                     "chosen_phrases": chosen_phrases,
+                    "anchor_terms": anchor_terms,
+                    "anchor_terms_count": len(anchor_terms),
+                    "emit_status": emit_status,
                     "confidence": confidence,
                     "lane": lane,
                 }
             )
 
-            if confidence == "low":
+            if emit_status == "skipped_low_confidence":
+                skipped_low_confidence += 1
                 continue
-            if image_path in seen_case_paths:
+            if emit_status == "skipped_duplicate_image_path":
+                skipped_duplicate_image_path += 1
                 continue
             case_id = f"tx-{conversation_id[:8]}-{len(cases)+1:03d}"
-            anchor_terms = _anchor_terms_for_phrases(chosen_phrases)[:8]
-            anchor_terms = _expand_anchor_variants(anchor_terms)
-            if len(anchor_terms) < 3:
+            if emit_status == "skipped_insufficient_anchor_terms":
+                skipped_insufficient_anchor_terms += 1
                 continue
             cases.append(
                 {
@@ -743,6 +760,7 @@ def build_from_export(
                 }
             )
             seen_case_paths.add(image_path)
+            emitted_cases += 1
             if len(cases) >= max_cases:
                 break
         if len(cases) >= max_cases:
@@ -779,6 +797,10 @@ def build_from_export(
         "handwriting_cases_written": len(handwriting_cases),
         "typed_cases_written": len(typed_cases),
         "illustration_cases_written": len(illustration_cases),
+        "emitted_cases": emitted_cases,
+        "skipped_low_confidence": skipped_low_confidence,
+        "skipped_duplicate_image_path": skipped_duplicate_image_path,
+        "skipped_insufficient_anchor_terms": skipped_insufficient_anchor_terms,
     }
 
 
@@ -846,6 +868,10 @@ def main() -> int:
         "handwriting_cases_written",
         "typed_cases_written",
         "illustration_cases_written",
+        "emitted_cases",
+        "skipped_low_confidence",
+        "skipped_duplicate_image_path",
+        "skipped_insufficient_anchor_terms",
     ):
         print(f"{key}={summary[key]}")
     return 0

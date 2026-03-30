@@ -778,6 +778,9 @@ Current policy:
    - `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 3. Mine OCR eval cases from transcript correction/confirmation signals:
    - `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+   - command output includes emit diagnostics:
+     `emitted_cases`, `skipped_low_confidence`,
+     `skipped_duplicate_image_path`, `skipped_insufficient_anchor_terms`
 4. Run OCR eval against mined transcript-backed cases:
    - `make eval-ocr-transcript-cases`
    - `make eval-ocr-transcript-cases-handwriting`
@@ -804,6 +807,11 @@ Current policy:
    - `.local/eval_cases/ocr_typed_from_transcripts.json`
    - `.local/eval_cases/ocr_illustration_from_transcripts.json`
    - `.local/eval_cases/ocr_transcript_cases_review.json`
+7. Review diagnostics:
+   - each review episode now includes:
+     - `emit_status` (`emitted`, `skipped_low_confidence`,
+       `skipped_duplicate_image_path`, `skipped_insufficient_anchor_terms`)
+     - `anchor_terms` and `anchor_terms_count`
 
 ## Run OCR Ambiguity/Recovery Eval
 
@@ -916,6 +924,7 @@ Current policy:
    - RAG on PDFs with File Search
    - Structured Outputs
    - Image Understanding with RAG
+   - Vision fine-tuning on GPT-4o for visual question answering
    - ELT extraction/transformation pattern
    - model graders for reinforcement fine-tuning
 4. Deferred cookbook queue:

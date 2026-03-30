@@ -1246,3 +1246,31 @@
     quality, decision clarity, iteration speed, and maintenance overhead
 - Why: Maintains durable, implementation-relevant evidence framing without
   coupling the case study to transient model/version naming.
+
+## D-105: Expand OCR framing detection to include transcript wording
+
+- Date: `2026-03-29`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `framing_detection`, `precision_safe`, `coverage`
+- Decision:
+  - expand transcript miner framing detection from `transcrib*` only to
+    `transcrib*` + `transcript*` lexical forms
+  - keep existing anchor quality gates (`>=3` anchor terms) and strict binary
+    eval validation unchanged
+- Why: Recovers missed literal OCR episodes phrased as
+  “here’s the transcription” without widening low-signal conversational noise.
+
+## D-106: Add explicit transcript miner emit/skip diagnostics
+
+- Date: `2026-03-29`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `diagnostics`, `operator_visibility`, `precision_guard`
+- Decision:
+  - add explicit per-episode review diagnostics to transcript OCR mining:
+    `emit_status`, `anchor_terms`, `anchor_terms_count`
+  - add command-summary counters:
+    `emitted_cases`, `skipped_low_confidence`,
+    `skipped_duplicate_image_path`, `skipped_insufficient_anchor_terms`
+  - keep existing confidence and binary gate semantics unchanged
+- Why: Makes precision tuning measurable without manual JSON forensics and
+  reduces ambiguity when deciding the next safe promotion kernel.
