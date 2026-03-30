@@ -241,10 +241,10 @@
     - typed: `.local/eval_cases/ocr_typed_from_transcripts.json`
     - illustration: `.local/eval_cases/ocr_illustration_from_transcripts.json`
   - latest local miner output:
-    - combined cases: `14`
+    - combined cases: `15`
     - handwriting: `5`
     - typed: `7`
-    - illustration: `2`
+    - illustration: `3`
 - OCR lane quality hardening checkpoint (March 29, 2026):
   - ask-level correction promotion remains anchor-driven (not correction-word
     driven) for medium-confidence recovery
@@ -259,13 +259,13 @@
   - miner diagnostics now expose explicit emit/skip reasons for each reviewed
     episode (`emit_status`, `anchor_terms`, and skip counters in command output)
   - latest strict lane validation:
-    - all lane: `14/14` PASS
+    - all lane: `15/15` PASS
     - handwriting lane: `5/5` PASS
     - typed lane: `7/7` PASS
-    - illustration lane: `2/2` PASS
+    - illustration lane: `3/3` PASS
   - latest stability replay:
     - runs: `5/5` successful
-    - decision stability: `14` stable, `0` flaky
+    - decision stability: `15` stable, `0` flaky
 - OCR lane classifier hardening checkpoint (March 29, 2026):
   - lane classification now detects embedded camera-style filenames
     (for example `file-...-IMG_6821.jpeg`) as handwriting

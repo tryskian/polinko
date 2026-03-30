@@ -95,13 +95,13 @@
     - `.local/eval_cases/ocr_typed_from_transcripts.json`
     - `.local/eval_cases/ocr_illustration_from_transcripts.json`
   - latest lane validations are green:
-    - all: `14/14` PASS
+    - all: `15/15` PASS
     - handwriting: `5/5` PASS
     - typed: `7/7` PASS
-    - illustration: `2/2` PASS
+    - illustration: `3/3` PASS
   - latest stability replay is green:
     - runs: `5/5`
-    - decision stability: `14` stable, `0` flaky
+    - decision stability: `15` stable, `0` flaky
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`
@@ -116,7 +116,7 @@
 ## Latest Branch Context
 
 - Active implementation branch:
-  - `codex/bigbrain/case-study-story-lock`
+  - `codex/bigbrain/ocr-next-kernel-3`
 - Canonical repo path:
   - `/Users/tryskian/Github/polinko`
 
@@ -157,7 +157,7 @@
 ## Immediate Next Step
 
 - Hold transcript OCR lane baseline at
-  (`handwriting=5`, `typed=7`, `illustration=2`) while preserving strict pass rates:
+  (`handwriting=5`, `typed=7`, `illustration=3`) while preserving strict pass rates:
   - run transcript pipeline on local export root:
     - `make cgpt-export-index`
     - `make ocr-cases-from-export`
@@ -169,7 +169,7 @@
   - prioritise precision-safe promotion of remaining medium-confidence
     transcript episodes without reintroducing malformed anchors, single-token
     variant lists, or conversational/noisy terms
-  - hold illustration coverage at `>=2` cases and keep all-lane strict pass
+  - hold illustration coverage at `>=3` cases and keep all-lane strict pass
     green
   - validate with:
     - `make build-audit`

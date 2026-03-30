@@ -83,6 +83,15 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         )
         self.assertEqual(lane, "typed")
 
+    def test_classify_lane_detects_topology_illustration_hint(self) -> None:
+        lane = _classify_lane(
+            ask_text="today's drop starts with topological impossibles",
+            title="shape notes",
+            image_path="/tmp/file-xyz-note.png",
+            followups=[],
+        )
+        self.assertEqual(lane, "illustration")
+
     def test_extract_candidate_phrases_from_quotes_and_emphasis(self) -> None:
         text = 'correction: "Only Alpha Spiral Field" and *Beta Grid*'
         phrases = _extract_candidate_phrases(text)

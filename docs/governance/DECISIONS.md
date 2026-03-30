@@ -1274,3 +1274,18 @@
   - keep existing confidence and binary gate semantics unchanged
 - Why: Makes precision tuning measurable without manual JSON forensics and
   reduces ambiguity when deciding the next safe promotion kernel.
+
+## D-107: Expand illustration-lane hint vocabulary for topology sketch episodes
+
+- Date: `2026-03-30`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `lane_classification`, `illustration_coverage`, `precision_safe`
+- Decision:
+  - extend illustration hint matching with topology/sketch vocabulary:
+    `topolog*`, `trapezi*`, `prism`
+  - keep existing confidence/anchor gates unchanged
+  - require full strict lane + stability validation before accepting promoted
+    cases
+- Why: Correctly routes geometry-sketch transcript episodes that were being
+  typed-labeled, lifting illustration coverage without broadening low-signal
+  promotions.
