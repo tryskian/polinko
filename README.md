@@ -16,6 +16,8 @@ and deterministic eval gates.
 - Legacy frontend context remains in `.archive/live_archive/legacy_frontend/`.
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
+- Eval dashboard: local HTML dashboard built from latest `eval_reports/*.json`
+  and runtime DB counters.
 - Evidence and remediation: evidence indexing and metadata audit tooling with
   open/closed remediation tracking.
 
@@ -78,6 +80,8 @@ make lint-docs
 make backend-gate
 make quality-gate
 make quality-gate-deterministic
+make dashboard
+# alias: make dash
 ```
 
 ## API Surface
@@ -188,6 +192,7 @@ Auxiliary eval tooling:
 ```bash
 make backfill-eval-traces
 make calibrate-hallucination-threshold
+make dashboard
 make cgpt-export-index
 make ocr-cases-from-export
 make eval-ocr-transcript-cases

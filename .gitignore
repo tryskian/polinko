@@ -46,6 +46,7 @@ _virtualenv.py
 # Local runtime data
 .local/runtime_dbs/
 .local/visuals/
+.local/dashboard/
 .local/eval_cases/
 .local_archive/
 
