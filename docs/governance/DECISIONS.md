@@ -1318,3 +1318,16 @@
   - add regression tests for mixed split required/forbidden matching
 - Why: Removes deterministic false failures from OCR spacing artefacts while
   keeping gate strictness unchanged.
+
+## D-110: Prioritise GPT-4o vision fine-tuning as first cookbook integration kernel
+
+- Date: `2026-03-30`
+- Category: `workflow_environment`
+- Tags: `cookbook_queue`, `priority_pin`, `vqa`, `integration_order`
+- Decision:
+  - pin `Vision Fine-tuning on GPT-4o for Visual Question Answering` as the
+    first item in the active cookbook integration queue
+  - mirror the same priority pin in `CHARTER` and `RUNBOOK` so sequencing
+    remains stable across session handoffs
+- Why: Aligns cookbook execution order with current OCR/visual-grounding
+  priorities and reduces drift from ad-hoc integration sequencing.
