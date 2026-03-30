@@ -929,10 +929,10 @@ Current policy:
    - C: binary eval stack
    - D: operator burden shift diagnostic
 3. Cookbook queue (prioritised now):
+   - Vision fine-tuning on GPT-4o for visual question answering
    - RAG on PDFs with File Search
    - Structured Outputs
    - Image Understanding with RAG
-   - Vision fine-tuning on GPT-4o for visual question answering
    - ELT extraction/transformation pattern
    - model graders for reinforcement fine-tuning
 4. Deferred cookbook queue:
