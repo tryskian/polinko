@@ -159,22 +159,12 @@
   - `make doctor-env`: healthy
   - `make lint-docs`: pass
   - backend regression tests: `make test` pass (`162` tests)
-- Build block audit checkpoint (March 26, 2026):
-  - README was refreshed to current build blocks and live API surface
-  - local lint now matches CI scope (`README.md` + `docs/**/*.md`)
-  - new guard command is available: `make build-audit`
-  - `eval-cleanup` now skips cleanly when local-only helper script is absent
-  - full deterministic gate cycle passed: `make quality-gate-deterministic`
-  - evidence pipeline passed: `make evidence-refresh`
-  - Docker smoke passed:
-    `make docker-build` + container `/health` probe
 - UI archive checkpoint (March 27, 2026):
   - legacy `frontend/` folder removed from active repository surface
   - canonical surfaces are API + CLI + deterministic eval tooling
   - historical UI context is retained via live archive docs + Git history
 - Human-reference archive checkpoint (March 27, 2026):
   - SQLite human-reference DB/query workflow moved to archive-only status
-  - canonical visual surface is markdown-native `make reference-graph`
 - Runtime DB lifecycle checkpoint (March 27, 2026):
   - runtime DB defaults moved to `.local/runtime_dbs/active/`
   - local DB lifecycle commands are retired during wiring lock
@@ -221,8 +211,6 @@
 - Runtime DB doc-spec checkpoint (March 28, 2026):
   - active docs no longer reference retired local DB commands
     (`db-reset`, `db-archive`, `db-visuals`)
-  - `make build-audit` now fails on reintroduction of those command tokens in
-    active docs
 - Transcript-backed OCR mining checkpoint (March 29, 2026):
   - merged PRs `#110`, `#132`, `#133`, and `#134` establish transcript OCR
     mining + hardening:
@@ -277,21 +265,6 @@
   - typed lane hint matching now uses bounded token matching (`ui` as a
     standalone word) to avoid accidental typed classification from substrings
     like `quick`
-- Eval relationship visual checkpoint (March 28, 2026):
-  - local eval data visualisation now has a canonical navigation-first report:
-    - command: `make eval-viz`
-    - builder: `tools/build_eval_relationship_graph.py`
-    - output: `.local/visuals/eval_relationship_graph.md` (local-only)
-  - report includes:
-    - schema ER diagram
-    - session topology graph
-    - linked session directory + per-session relationship maps
-    - per-session message/feedback/checkpoint tables + tag frequency
-- Visual tooling track checkpoint (March 28, 2026):
-  - Mermaid remains canonical for active operator visuals and docs-native
-    versioning
-  - D3.js interactive visualisation is pinned as a deferred track for later UI
-    iteration (not active in current runtime/docs gate path)
 - UI shell retirement checkpoint (March 28, 2026):
   - active `ui/` folder and `/ui` route are removed from runtime surface
   - canonical active surfaces are backend API + CLI
@@ -497,8 +470,8 @@ Use this in a new chat:
    outside gate arithmetic.
 3. Maintain archive-first runtime DB posture during wiring lock (no local DB
    lifecycle command paths).
-4. Continue local-first deterministic validation (`make build-audit`,
-   `make lint-docs`, `make test`, `make quality-gate-deterministic`) at each
+4. Continue local-first deterministic validation (`make lint-docs`, `make test`,
+   `make quality-gate-deterministic`) at each
    milestone.
 5. Keep benchmark outputs product-supportive by converting findings into
    explicit implementation priorities.

@@ -626,8 +626,7 @@
 - Why: This keeps the workflow easy to operate offline, avoids maintaining a
   separate bespoke visualization surface, and preserves clear relationship
   semantics for imagineer-facing exploration.
-- Status: Superseded by `D-076` (human-reference SQLite workflow is archive-only;
-  active visual surface is `make reference-graph`).
+- Status: Superseded by `D-076` (human-reference SQLite workflow is archive-only).
 
 ## D-062: Inspect-first execution and explicit legacy cutlines
 
@@ -639,13 +638,13 @@
 - Why: Prevents summary-first optimisation from removing meaningful context and
   keeps rebuild outputs coherent, reviewable, and usable.
 
-## D-063: Introduce build-block audit guardrail for fresh-path iteration
+## D-063: Introduce build-block guardrail for fresh-path iteration
 
 - Category: `workflow_environment`
-- Tags: `build_audit`, `drift_control`, `readme_spec`, `local_ci_parity`
-- Decision: Add a deterministic preflight audit command (`make build-audit`)
-  that checks README-to-route parity, Makefile tool-module wiring, local lint
-  parity with CI scope, and local-only eval-cleanup guard behaviour.
+- Tags: `drift_control`, `readme_spec`, `local_ci_parity`
+- Decision: Add deterministic preflight guard checks for README-to-route parity,
+  Makefile tool-module wiring, local lint parity with CI scope, and local-only
+  eval-cleanup guard behaviour.
 - Why: Supports step-by-step fresh-path execution without hard resets by
   catching spec drift and local-only dependency leaks before wider refactor
   moves.
@@ -811,19 +810,17 @@
 - Why: Drops legacy criteria vocabulary from active eval wiring so new UI and
   backend flows align to policy-profile semantics without ambiguity.
 
-## D-076: Archive SQLite human-reference workflow; replace with markdown-native graph visualisation
+## D-076: Archive SQLite human-reference workflow
 
 - Date: `2026-03-27`
 - Category: `evidence_governance`
-- Tags: `human_reference`, `archive_only`, `markdown_graph`, `visualisation`
+- Tags: `human_reference`, `archive_only`
 - Decision:
   - move SQLite human-reference workflow to archive-only status in
     `.archive/live_archive/legacy_human_reference/`
-  - make `reference-graph` the canonical docs relationship visualisation flow
-    (`tools/build_reference_graph.py` -> `docs/peanut/visuals/REFERENCE_GRAPH.md`)
   - leave legacy human-reference make targets as archive notices
-- Why: Reduces operator complexity and produces a more imagineer-readable visual
-  surface without keeping an active DB/query workflow in the critical path.
+- Why: Reduces operator complexity without keeping an active DB/query workflow
+  in the critical path.
 
 ## D-077: Remove frontend codebase from active repository surface
 
@@ -865,12 +862,11 @@
 
 - Date: `2026-03-28`
 - Category: `workflow_environment`
-- Tags: `build_audit`, `doc_spec`, `wiring_lock`, `drift_control`
+- Tags: `doc_spec`, `wiring_lock`, `drift_control`
 - Decision:
   - remove retired runtime DB command references (`make db-reset`,
     `make db-archive`, `make db-visuals`) from active docs
-  - enforce with `make build-audit` via
-    `retired_runtime_db_command_refs` check
+  - enforce via deterministic doc guard checks in active validation
 - Why: Prevents documentation drift from reintroducing deprecated local DB
   lifecycle flows during wiring lock.
 
@@ -924,43 +920,6 @@
     implementation parity
 - Why: Removes UI/backend ambiguity and gives a single deterministic spec for
   integrating eval functionality into the new frontend.
-
-## D-086: Standardise eval relationship visualisation as local Mermaid report
-
-- Date: `2026-03-28`
-- Category: `eval_quality`
-- Tags: `visualisation`, `operator_experience`, `runtime_history`, `local_only`
-- Decision:
-  - add canonical eval relationship visual builder:
-    - `tools/build_eval_relationship_graph.py`
-  - add one-command operator entrypoint:
-    - `make eval-viz` (alias for `make eval-relationship-graph`)
-  - default output to local-only path:
-    - `.local/visuals/eval_relationship_graph.md`
-  - report structure is navigation-first:
-    - overview + schema ER
-    - session topology
-    - linked session directory
-    - per-session relationship maps and summary tables
-- Why: Gives a readable, low-friction way to inspect eval relationships without
-  reintroducing legacy DB tooling or tracking internal runtime data in repo docs.
-
-## D-087: Pin D3.js interactive visualisation as a deferred track
-
-- Date: `2026-03-28`
-- Category: `workflow_environment`
-- Tags: `visualisation`, `d3js`, `deferred_track`, `operator_experience`
-- Decision:
-  - keep Mermaid markdown visuals as the canonical current path:
-    - `make eval-viz`
-    - `make reference-graph`
-  - pin D3.js interactive graphing as a deferred enhancement track
-    (post-baseline), not part of the current runtime/docs gate path
-  - only promote D3 when adapter flow and operator surfaces are stable and the extra
-    interaction surface is worth the added engineering complexity
-- Why: Preserves deterministic, low-friction operator visuals now while keeping
-  a clear future path for richer interaction without introducing premature UI
-  complexity.
 
 ## D-088: Deliver local-first UI shell for chat and binary eval operations
 

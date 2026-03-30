@@ -42,17 +42,6 @@
     are now local-only (gitignored) in the current tree
 - Eval and benchmark specs are consolidated in:
   - `docs/runtime/RUNBOOK.md`
-- Docs relationship visualisation is markdown-native:
-  - build: `make reference-graph`
-  - output: `docs/peanut/visuals/REFERENCE_GRAPH.md`
-- Eval relationship visualisation is markdown-native and local-first:
-  - build: `make eval-viz`
-  - output: `.local/visuals/eval_relationship_graph.md`
-  - source: `tools/build_eval_relationship_graph.py`
-- Interactive visualisation roadmap pin:
-  - D3.js is a deferred track (post-baseline), not active in current
-    runtime/docs gate workflows
-  - Mermaid remains the canonical visual surface in active operations
 - Runtime DB lifecycle commands are retired during wiring lock:
   - no local DB maintenance commands are active in this phase
 - Wiring lock is active:
@@ -192,7 +181,6 @@
     precision-safe medium-confidence promotion kernel
   - preserve malformed-anchor/single-token/conversational-noise guards
   - validate with:
-    - `make build-audit`
     - `make lint-docs`
     - `make test`
     - `make quality-gate-deterministic`
