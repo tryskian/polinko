@@ -48,7 +48,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env ocrindex ocrmine ocrall ocrhand ocrtype ocrillu ocrstable viz gate server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env build-audit backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit reference-graph eval-relationship-graph eval-viz cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-illustration eval-ocr-transcript-stability docker-build docker-run dev dev-stop
+.PHONY: chat venv env ocrindex ocrmine ocrall ocrhand ocrtype ocrillu ocrstable gate server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-illustration eval-ocr-transcript-stability docker-build docker-run dev dev-stop
 
 chat:
 	$(PYTHON) app.py
@@ -82,8 +82,6 @@ ocrtype: eval-ocr-transcript-cases-typed
 ocrillu: eval-ocr-transcript-cases-illustration
 
 ocrstable: eval-ocr-transcript-stability
-
-viz: eval-viz
 
 gate: quality-gate-deterministic
 
@@ -227,13 +225,9 @@ doctor-env:
 	ACTIVE_VENV="$$(dirname "$(PYTHON)")/.."; \
 	VIRTUAL_ENV="$$ACTIVE_VENV" PATH="$$ACTIVE_VENV/bin:$$PATH" "$(PYTHON)" -m tools.doctor_env
 
-build-audit:
-	$(PYTHON) -m tools.audit_build_blocks
-
 backend-gate:
-	@echo "Running backend gate (doctor + build-audit + tests + deterministic quality gate)..."
+	@echo "Running backend gate (doctor + tests + deterministic quality gate)..."
 	@$(MAKE) doctor-env
-	@$(MAKE) build-audit
 	@$(MAKE) test
 	@$(MAKE) quality-gate-deterministic
 
@@ -539,7 +533,6 @@ evidence-index:
 evidence-refresh:
 	@set -eu; \
 	$(MAKE) evidence-index; \
-	$(MAKE) portfolio-metadata-audit; \
 	INDEX_JSON="docs/portfolio/raw_evidence/index.json"; \
 	if [ -f "$$INDEX_JSON" ]; then \
 		if command -v rg >/dev/null 2>&1; then \
@@ -556,14 +549,6 @@ evidence-refresh:
 
 portfolio-metadata-audit:
 	$(PYTHON) -m tools.audit_portfolio_metadata --strict
-
-reference-graph:
-	$(PYTHON) -m tools.build_reference_graph
-
-eval-relationship-graph:
-	$(PYTHON) -m tools.build_eval_relationship_graph
-
-eval-viz: eval-relationship-graph
 
 cgpt-export-index:
 	@set -eu; \

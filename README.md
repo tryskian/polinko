@@ -18,10 +18,6 @@ and deterministic eval gates.
   `tools/`, plus one-command quality gating.
 - Evidence and remediation: evidence indexing and metadata audit tooling with
   open/closed remediation tracking.
-- Reference graph visualisation: markdown-native Mermaid graph generated from
-  docs links (`make reference-graph`).
-- Eval relationship visualisation: markdown-native Mermaid report generated
-  from runtime eval data (`make eval-viz`).
 
 ## Quick Start
 
@@ -62,7 +58,7 @@ Notes:
   `make venv` (alias: `make env`)
 - short aliases for long-chain commands:
   `make ocrindex`, `make ocrmine`, `make ocrall`, `make ocrhand`,
-  `make ocrtype`, `make ocrillu`, `make ocrstable`, `make viz`, `make gate`
+  `make ocrtype`, `make ocrillu`, `make ocrstable`, `make gate`
 - API key auth is optional for local dev (`POLINKO_SERVER_API_KEY`,
   `POLINKO_SERVER_API_KEYS_JSON`).
 
@@ -236,7 +232,7 @@ Transcript-backed OCR mining lane:
   - `.local/eval_reports/ocr_transcript_stability.json`
   - `.local/eval_reports/ocr_stability_runs/`
 
-## Evidence and Reference Tooling
+## Evidence Tooling
 
 Evidence and metadata:
 
@@ -245,22 +241,6 @@ make evidence-index
 make evidence-refresh
 make portfolio-metadata-audit
 ```
-
-Reference graph:
-
-```bash
-make reference-graph
-```
-
-Eval relationship graph (local runtime data):
-
-```bash
-make eval-viz
-```
-
-Default output path:
-
-- `.local/visuals/eval_relationship_graph.md`
 
 ## Docker Smoke Test
 

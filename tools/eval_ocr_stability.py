@@ -220,7 +220,8 @@ def main() -> int:
             continue
 
         run_reports.append(payload)
-        summary = payload.get("summary") if isinstance(payload.get("summary"), dict) else {}
+        raw_summary = payload.get("summary")
+        summary: dict[str, Any] = raw_summary if isinstance(raw_summary, dict) else {}
         total = int(summary.get("total", 0) or 0)
         passed = int(summary.get("passed", 0) or 0)
         failed = int(summary.get("failed", 0) or 0)
