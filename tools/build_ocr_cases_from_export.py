@@ -23,7 +23,7 @@ TYPED_HINT_RX = re.compile(
     re.IGNORECASE,
 )
 ILLUSTRATION_HINT_RX = re.compile(
-    r"illustration|diagram|flow ?chart|flowchart|graph|node|edge|arrow|whiteboard|sketch|drawing|doodle|wireframe|figure|geometry|shape",
+    r"illustration|diagram|flow ?chart|flowchart|graph|node|edge|arrow|whiteboard|sketch|drawing|doodle|wireframe|figure|geometry|shape|topolog\w*|trapezi\w*|prism",
     re.IGNORECASE,
 )
 CAMERA_IMAGE_NAME_RX = re.compile(r"(?:^|[-_])(img|dsc)[_-]\d{3,}", re.IGNORECASE)
