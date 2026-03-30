@@ -774,6 +774,20 @@ def build_from_export(
         )
     )
 
+    confidence_counts: dict[str, int] = {"high": 0, "medium": 0, "low": 0}
+    lane_counts: dict[str, int] = {}
+    emit_status_counts: dict[str, int] = {}
+    lane_emit_status_counts: dict[str, dict[str, int]] = {}
+    for row in review_rows:
+        confidence = str(row.get("confidence", "low"))
+        lane = str(row.get("lane", "typed"))
+        emit_status = str(row.get("emit_status", "skipped_low_confidence"))
+        confidence_counts[confidence] = confidence_counts.get(confidence, 0) + 1
+        lane_counts[lane] = lane_counts.get(lane, 0) + 1
+        emit_status_counts[emit_status] = emit_status_counts.get(emit_status, 0) + 1
+        lane_bucket = lane_emit_status_counts.setdefault(lane, {})
+        lane_bucket[emit_status] = lane_bucket.get(emit_status, 0) + 1
+
     handwriting_cases = [case for case in cases if case.get("lane") == "handwriting"]
     typed_cases = [case for case in cases if case.get("lane") == "typed"]
     illustration_cases = [case for case in cases if case.get("lane") == "illustration"]
@@ -782,7 +796,20 @@ def build_from_export(
     _write_json(output_cases_handwriting, {"cases": handwriting_cases})
     _write_json(output_cases_typed, {"cases": typed_cases})
     _write_json(output_cases_illustration, {"cases": illustration_cases})
-    _write_json(output_review, {"episodes": review_rows})
+    _write_json(
+        output_review,
+        {
+            "summary": {
+                "conversation_files": len(conversation_files),
+                "episodes": len(review_rows),
+                "confidence_counts": confidence_counts,
+                "lane_counts": lane_counts,
+                "emit_status_counts": emit_status_counts,
+                "lane_emit_status_counts": lane_emit_status_counts,
+            },
+            "episodes": review_rows,
+        },
+    )
 
     high = sum(1 for row in review_rows if row["confidence"] == "high")
     medium = sum(1 for row in review_rows if row["confidence"] == "medium")

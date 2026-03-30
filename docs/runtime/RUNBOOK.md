@@ -737,6 +737,10 @@ Current policy:
      - `must_appear_in_order` (ordered phrase assertions)
      - `must_match_regex`, `must_not_match_regex` (pattern assertions)
      - `min_chars`, `max_chars`, `case_sensitive`
+   - matcher note:
+     - `must_contain_any` and `must_not_contain_words` handle OCR intra-word
+       spacing artefacts, including fully spaced (`C H A T T I E S T`) and
+       mixed split tokens (`CHAT T IEST`)
 
 ## Run Handwriting/Cursive OCR Eval
 
@@ -808,6 +812,10 @@ Current policy:
    - `.local/eval_cases/ocr_illustration_from_transcripts.json`
    - `.local/eval_cases/ocr_transcript_cases_review.json`
 7. Review diagnostics:
+   - review file now includes a top-level `summary`:
+     - `conversation_files`, `episodes`
+     - `confidence_counts`, `lane_counts`
+     - `emit_status_counts`, `lane_emit_status_counts`
    - each review episode now includes:
      - `emit_status` (`emitted`, `skipped_low_confidence`,
        `skipped_duplicate_image_path`, `skipped_insufficient_anchor_terms`)

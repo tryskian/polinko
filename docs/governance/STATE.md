@@ -258,6 +258,11 @@
     (`transcription`/`transcript`) to avoid missing literal OCR episodes
   - miner diagnostics now expose explicit emit/skip reasons for each reviewed
     episode (`emit_status`, `anchor_terms`, and skip counters in command output)
+  - review output now includes a summary aggregate block for faster lane-level
+    triage (`confidence_counts`, `lane_counts`, and per-lane emit-status counts)
+  - OCR required/forbidden anchor matching now tolerates mixed split-letter
+    artefacts (for example `CHAT T IEST`, `GU ESS`) to prevent deterministic
+    false failures
   - latest strict lane validation:
     - all lane: `15/15` PASS
     - handwriting lane: `5/5` PASS
