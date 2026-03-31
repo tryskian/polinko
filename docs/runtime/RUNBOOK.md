@@ -780,8 +780,9 @@ Current policy:
    - `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 3. Mine OCR eval cases from transcript correction/confirmation signals:
    - `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
-   - precision guard: askless handwriting episodes now require correction signal
-     before promotion to medium confidence (reduces conversational anchor noise)
+   - precision guard: askless handwriting episodes now require
+     correction-overlap signal before promotion to medium confidence
+     (reduces conversational anchor noise)
    - command output includes emit diagnostics:
      `emitted_cases`, `skipped_low_confidence`,
      `skipped_duplicate_image_path`, `skipped_insufficient_anchor_terms`

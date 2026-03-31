@@ -388,9 +388,9 @@
 - OCR supports optional `visual_context_hint` for deterministic image-context indexing
   (useful for eval seeding and controlled ingest).
 - Transcript OCR mining now runs in stricter precision mode:
-  - askless handwriting episodes require correction signal before medium
-    confidence promotion
-  - active mined baseline: `29` cases (`handwriting=14`, `typed=8`,
+  - askless handwriting episodes require correction-overlap signal before
+    medium confidence promotion
+  - active mined baseline: `25` cases (`handwriting=10`, `typed=8`,
     `illustration=7`)
   - previous `55`-case mined output is retained as legacy reference for
     comparison, not as active strict gate input

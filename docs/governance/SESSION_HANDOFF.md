@@ -125,11 +125,11 @@
     - `.local/eval_cases/ocr_illustration_benchmark_cases.json`
     - `.local/eval_cases/ocr_transcript_cases_delta.md`
   - active precision baseline:
-    - mined cases: `29` total
-      (`handwriting=14`, `typed=8`, `illustration=7`)
+    - mined cases: `25` total
+      (`handwriting=10`, `typed=8`, `illustration=7`)
     - previous `55`-case mined output is legacy reference only
   - latest lane validations:
-    - full transcript lane (diagnostic): `26/29` PASS (`3` fail)
+    - full transcript lane (diagnostic): `25/25` PASS (`0` fail)
     - handwriting benchmark: `6/6` PASS
     - typed benchmark: `3/3` PASS
     - illustration benchmark: `2/2` PASS
@@ -206,7 +206,7 @@
 ## Immediate Next Step
 
 - Keep transcript OCR precision baseline locked at
-  (`handwriting=14`, `typed=8`, `illustration=7`) and preserve legacy
+  (`handwriting=10`, `typed=8`, `illustration=7`) and preserve legacy
   `55`-case output as reference-only:
   - rerun:
     - `make ocr-cases-from-export`
@@ -218,8 +218,9 @@
     - `make eval-ocr-transcript-stability-typed-benchmark`
     - `make eval-ocr-transcript-stability-illustration-benchmark`
   - use review `summary` + `episodes` diagnostics to prioritise exactly one
-    precision-safe miner kernel to resolve the remaining `3` full-lane fails
-    without reintroducing framing-only conversational anchor noise
+    precision-safe miner kernel only if regression appears; keep correction-overlap
+    promotion guard active to avoid reintroducing framing-only conversational
+    anchor noise
   - preserve malformed-anchor/single-token/conversational-noise guards
   - validate with:
     - `make lint-docs`

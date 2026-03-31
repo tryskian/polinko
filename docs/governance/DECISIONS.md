@@ -1335,7 +1335,8 @@
 - Tags: `ocr_transcripts`, `precision_baseline`, `noise_reduction`, `strict_binary`
 - Decision:
   - tighten askless handwriting promotion so medium confidence requires
-    correction signal (not OCR framing alone)
+    correction-overlap signal (not OCR framing alone, and not correction text
+    that fails OCR anchor overlap)
   - set active transcript OCR baseline to precision-first output:
     `handwriting=14`, `typed=8`, `illustration=7` (`29` total)
   - keep previous `55`-case output as legacy reference for research comparison,
@@ -1343,3 +1344,18 @@
   - keep benchmark + stability lanes as strict binary gates
 - Why: Removes framing-only conversational anchor leakage while preserving
   deterministic benchmark gate quality.
+
+## D-114: Require correction-overlap for askless handwriting promotion
+
+- Date: `2026-03-31`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `precision_baseline`, `anchor_overlap`, `strict_binary`
+- Decision:
+  - tighten askless handwriting promotion again:
+    correction text must overlap transcription anchors (not just exist)
+  - set active transcript OCR baseline to:
+    `handwriting=10`, `typed=8`, `illustration=7` (`25` total)
+  - keep legacy `55` and intermediate `29` outputs as reference-only
+  - retain strict benchmark/stability lanes as release gates
+- Why: Removes residual non-overlapping correction noise and restores clean
+  full-lane diagnostic pass (`25/25`) without relaxing binary quality guards.
