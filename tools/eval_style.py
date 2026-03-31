@@ -273,6 +273,31 @@ def _should_stop_attempts(
     return needed_passes > remaining_attempts
 
 
+def _case_confidence_bucket(
+    *,
+    final_status: str,
+    attempt_statuses: list[str],
+    pass_attempts: int,
+    attempts_used: int,
+) -> str:
+    if final_status != "PASS":
+        return "low"
+    if attempts_used <= 0:
+        return "low"
+    if pass_attempts == attempts_used and all(status == "PASS" for status in attempt_statuses):
+        return "high"
+    return "medium"
+
+
+def _build_confidence_counts(case_results: list[dict[str, Any]]) -> dict[str, int]:
+    counts = {"high": 0, "medium": 0, "low": 0}
+    for case in case_results:
+        confidence = str(case.get("confidence", "low")).lower()
+        if confidence in counts:
+            counts[confidence] += 1
+    return counts
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run style/tone eval over /chat outputs with an LLM judge.",
@@ -500,6 +525,14 @@ def main() -> int:
             (row for row in attempt_results if row["status"] == "PASS"),
             attempt_results[-1],
         )
+        attempts_used = len(attempt_results)
+        confidence = _case_confidence_bucket(
+            final_status=final_status,
+            attempt_statuses=attempt_statuses,
+            pass_attempts=pass_attempts,
+            attempts_used=attempts_used,
+        )
+        pass_rate = round((pass_attempts / attempts_used) if attempts_used else 0.0, 4)
         max_words = case["max_words"]
         case_results.append(
             {
@@ -516,9 +549,11 @@ def main() -> int:
                 "forbidden_hits": list(final_attempt["forbidden_hits"]),
                 "query": case["query"],
                 "answer": final_attempt["answer"],
-                "attempts_used": len(attempt_results),
+                "attempts_used": attempts_used,
                 "attempts_required": args.min_pass_attempts,
                 "pass_attempts": pass_attempts,
+                "pass_rate": pass_rate,
+                "confidence": confidence,
                 "attempts": attempt_results,
             }
         )
@@ -531,9 +566,16 @@ def main() -> int:
                 print(f"  WARN cleanup failed for {session_id}: {exc}")
 
     passed = len(cases) - failures
+    confidence_counts = _build_confidence_counts(case_results)
     print("\nSummary")
     print(f"  Passed: {passed}/{len(cases)}")
     print(f"  Failed: {failures}")
+    print(
+        "  Confidence: "
+        f"high={confidence_counts['high']} "
+        f"medium={confidence_counts['medium']} "
+        f"low={confidence_counts['low']}"
+    )
 
     report_json = str(args.report_json or "").strip()
     if report_json:
@@ -552,6 +594,7 @@ def main() -> int:
                 "total": len(cases),
                 "passed": passed,
                 "failed": failures,
+                "confidence": confidence_counts,
             },
             "cases": case_results,
             "generated_at": int(time.time()),
