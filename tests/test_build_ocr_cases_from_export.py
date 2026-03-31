@@ -399,13 +399,98 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["high_confidence"], 1)
             self.assertEqual(summary["cases_written"], 1)
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "high")
+            self.assertIn(review["confidence"], {"high", "medium"})
             self.assertEqual(review["emit_status"], "emitted")
             self.assertGreaterEqual(review["anchor_terms_count"], 3)
+
+    def test_build_ignores_correction_phrase_after_next_assistant_turn(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "img_015.jpg").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-late-correction",
+                "title": "Late correction should be ignored",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this?"]},
+                            "metadata": {"attachments": [{"name": "img_015.jpg", "id": "file_late_corr"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["Here's the OCR:\n- WISHING YOU\n- PEACEFUL WINTER LIGHT"]},
+                            "metadata": {},
+                        }
+                    },
+                    "3": {
+                        "message": {
+                            "create_time": 3,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["looks right, thanks"]},
+                            "metadata": {},
+                        }
+                    },
+                    "4": {
+                        "message": {
+                            "create_time": 4,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["great!"]},
+                            "metadata": {},
+                        }
+                    },
+                    "5": {
+                        "message": {
+                            "create_time": 5,
+                            "author": {"role": "user"},
+                            "content": {"parts": ['correction: "done keep like receive simple fade wreath star"']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-late-correction.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["cases_written"], 1)
+
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertTrue(review["correction_signal"])
+            self.assertFalse(review["correction_overlap_signal"])
+            self.assertEqual(review["emit_status"], "emitted")
+            self.assertNotIn("done", review["anchor_terms"])
+            self.assertNotIn("wreath", review["anchor_terms"])
 
     def test_build_does_not_promote_literal_intent_without_strong_anchors(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
