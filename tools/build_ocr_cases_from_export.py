@@ -783,7 +783,7 @@ def build_from_export(
                 (not ask_signal)
                 and lane == "handwriting"
                 and ocr_framing_signal
-                and correction_signal
+                and correction_overlap_signal
                 and has_multi_token_transcription
                 and len(transcription_anchor_terms) >= 3
             )
