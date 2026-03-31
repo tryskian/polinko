@@ -734,6 +734,7 @@ def build_from_export(
             # Treat correction as meaningful only when we extracted OCR-like phrase content.
             correction_signal = bool(correction_phrases)
             transcription_phrases = [p for p in transcription_phrases_raw if _is_ocr_like_phrase(p)]
+            transcription_anchor_terms = _anchor_terms_for_phrases(transcription_phrases[:5])
             has_multi_token_transcription = any(
                 len(_phrase_tokens(phrase)) >= 2 for phrase in transcription_phrases[:5]
             )
@@ -742,11 +743,19 @@ def build_from_export(
                 and lane in {"handwriting", "typed"}
                 and not positive_signal
                 and has_multi_token_transcription
-                and len(_anchor_terms_for_phrases(transcription_phrases[:5])) >= 3
+                and len(transcription_anchor_terms) >= 3
             )
             strong_illustration_phrase_signal = (
                 lane == "illustration"
-                and len(_anchor_terms_for_phrases(transcription_phrases[:5])) >= 2
+                and len(transcription_anchor_terms) >= 2
+            )
+            strong_high_transcription_signal = (
+                ocr_literal_intent_signal
+                and ocr_framing_signal
+                and lane in {"handwriting", "typed"}
+                and not positive_signal
+                and len(transcription_phrases) >= 2
+                and len(transcription_anchor_terms) >= 4
             )
             medium_intent_signal = ocr_literal_intent_signal or (
                 ocr_intent_signal
@@ -758,6 +767,9 @@ def build_from_export(
             if followup_correction_signal and followup_correction_phrases:
                 confidence = "high"
                 chosen_phrases = followup_correction_phrases[:5]
+            elif strong_high_transcription_signal and transcription_phrases:
+                confidence = "high"
+                chosen_phrases = transcription_phrases[:5]
             elif (
                 medium_intent_signal
                 and transcription_phrases
