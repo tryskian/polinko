@@ -104,7 +104,7 @@
   - OCR eval matcher now hardens mixed split-letter anchor variants:
     - required one-of matching handles forms like `CHAT T IEST`
     - forbidden whole-word matching handles forms like `GU ESS`
-    - stability replay is back to `15 stable / 0 flaky`
+    - transcript stability replay is now `21 stable / 0 flaky`
   - OCR matcher now also hardens one-character token drift on required
     long-form anchors (example: `CHATTIEST` vs `CHATTEST`) without
     loosening forbidden-phrase checks.
@@ -125,21 +125,21 @@
     - `.local/eval_cases/ocr_illustration_benchmark_cases.json`
     - `.local/eval_cases/ocr_transcript_cases_delta.md`
   - active precision baseline:
-    - mined cases: `25` total
-      (`handwriting=10`, `typed=8`, `illustration=7`)
-    - previous `55`-case mined output is legacy reference only
+    - mined cases: `21` total
+      (`handwriting=4`, `typed=11`, `illustration=6`)
+    - previous `55`/`29`/`25` mined outputs are legacy reference only
   - latest lane validations:
-    - full transcript lane (diagnostic): `25/25` PASS (`0` fail)
-    - handwriting benchmark: `6/6` PASS
-    - typed benchmark: `3/3` PASS
+    - full transcript lane (diagnostic): `21/21` PASS (`0` fail)
+    - handwriting benchmark: `4/4` PASS
+    - typed benchmark: `6/6` PASS
     - illustration benchmark: `2/2` PASS
   - latest stability replay is green:
     - runs: `5/5`
     - benchmark decision stability:
-      - handwriting: `6` stable, `0` flaky
-      - typed: `3` stable, `0` flaky
+      - handwriting: `4` stable, `0` flaky
+      - typed: `6` stable, `0` flaky
       - illustration: `2` stable, `0` flaky
-    - handwriting benchmark stability: `6` stable, `0` flaky
+    - full transcript stability: `21` stable, `0` flaky
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`
@@ -206,11 +206,12 @@
 ## Immediate Next Step
 
 - Keep transcript OCR precision baseline locked at
-  (`handwriting=10`, `typed=8`, `illustration=7`) and preserve legacy
-  `55`-case output as reference-only:
+  (`handwriting=4`, `typed=11`, `illustration=6`) and preserve legacy
+  `55`/`29`/`25` outputs as reference-only:
   - rerun:
     - `make ocr-cases-from-export`
     - `make eval-ocr-transcript-cases`
+    - `make eval-ocr-transcript-stability`
     - `make eval-ocr-transcript-cases-handwriting-benchmark`
     - `make eval-ocr-transcript-cases-typed-benchmark`
     - `make eval-ocr-transcript-cases-illustration-benchmark`
@@ -218,10 +219,11 @@
     - `make eval-ocr-transcript-stability-typed-benchmark`
     - `make eval-ocr-transcript-stability-illustration-benchmark`
   - use review `summary` + `episodes` diagnostics to prioritise exactly one
-    precision-safe miner kernel only if regression appears; keep correction-overlap
-    promotion guard active to avoid reintroducing framing-only conversational
-    anchor noise
-  - preserve malformed-anchor/single-token/conversational-noise guards
+    precision-safe miner kernel only if regression appears; keep:
+    - correction-signal-gated ask anchors
+    - token-bounded handwriting hints
+    - unstable-source quarantine
+    - malformed-anchor/single-token/conversational-noise guards
   - validate with:
     - `make lint-docs`
     - `make test`

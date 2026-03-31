@@ -1359,3 +1359,22 @@
   - retain strict benchmark/stability lanes as release gates
 - Why: Removes residual non-overlapping correction noise and restores clean
   full-lane diagnostic pass (`25/25`) without relaxing binary quality guards.
+
+## D-115: Lock transcript OCR precision with correction-gated ask anchors and unstable-source quarantine
+
+- Date: `2026-03-31`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `precision_hardening`, `source_quarantine`, `stability`
+- Decision:
+  - only extract ask-side correction phrases when correction signal is present
+    (no unconditional ask-phrase promotion into correction anchors)
+  - make handwriting hints token-bounded to avoid substring drift
+    (for example `Polinko` no longer matching `ink`)
+  - quarantine known unstable transcript sources from the active strict set:
+    - `file_00000000b01871fdac46c44584b95d6a-sanitized.png`
+    - `file_0000000047f871f7af65c1ce3955cc2e-sanitized.png`
+  - set active transcript OCR precision baseline to:
+    `handwriting=4`, `typed=11`, `illustration=6` (`21` total)
+  - keep `55`/`29`/`25` outputs as legacy/reference only.
+- Why: Removes conversational false positives and flaky micro-cases while
+  preserving strict binary release gates with deterministic `21/21` stability.

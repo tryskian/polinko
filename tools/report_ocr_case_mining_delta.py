@@ -81,7 +81,13 @@ def _render_markdown(*, report: dict[str, Any]) -> str:
     lines.append("")
     lines.append("| metric | before | after | delta |")
     lines.append("|---|---:|---:|---:|")
-    for metric in ("episodes", "emitted_cases", "skipped_low_confidence", "skipped_duplicate_image_path"):
+    for metric in (
+        "episodes",
+        "emitted_cases",
+        "skipped_low_confidence",
+        "skipped_duplicate_image_path",
+        "skipped_unstable_source",
+    ):
         before = int(report["totals"]["before"].get(metric, 0))
         after = int(report["totals"]["after"].get(metric, 0))
         delta = after - before
@@ -143,12 +149,14 @@ def build_delta_report(
                 "emitted_cases": _emit_status_count(previous_payload, "emitted"),
                 "skipped_low_confidence": _emit_status_count(previous_payload, "skipped_low_confidence"),
                 "skipped_duplicate_image_path": _emit_status_count(previous_payload, "skipped_duplicate_image_path"),
+                "skipped_unstable_source": _emit_status_count(previous_payload, "skipped_unstable_source"),
             },
             "after": {
                 "episodes": _summary_metric(current_payload, "episodes"),
                 "emitted_cases": _emit_status_count(current_payload, "emitted"),
                 "skipped_low_confidence": _emit_status_count(current_payload, "skipped_low_confidence"),
                 "skipped_duplicate_image_path": _emit_status_count(current_payload, "skipped_duplicate_image_path"),
+                "skipped_unstable_source": _emit_status_count(current_payload, "skipped_unstable_source"),
             },
         },
         "confidence": {
