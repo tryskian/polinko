@@ -5,6 +5,7 @@ import hmac
 import json
 import logging
 import re
+import sqlite3
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -3280,16 +3281,50 @@ def create_app(config: AppConfig) -> FastAPI:
             )
             result_message_id = appended.message_id
 
-        run = deps.history_store.record_ocr_run(
-            run_id=f"ocr-{uuid.uuid4().hex[:12]}",
-            session_id=session_id,
-            source_name=req.source_name,
-            mime_type=req.mime_type,
-            source_message_id=req.source_message_id,
-            result_message_id=result_message_id,
-            status=status,
-            extracted_text=extracted_text,
-        )
+        run_id = f"ocr-{uuid.uuid4().hex[:12]}"
+        try:
+            run = deps.history_store.record_ocr_run(
+                run_id=run_id,
+                session_id=session_id,
+                source_name=req.source_name,
+                mime_type=req.mime_type,
+                source_message_id=req.source_message_id,
+                result_message_id=result_message_id,
+                status=status,
+                extracted_text=extracted_text,
+            )
+        except sqlite3.IntegrityError:
+            deps.history_store.ensure_chat(session_id=session_id)
+            try:
+                run = deps.history_store.record_ocr_run(
+                    run_id=run_id,
+                    session_id=session_id,
+                    source_name=req.source_name,
+                    mime_type=req.mime_type,
+                    source_message_id=req.source_message_id,
+                    result_message_id=result_message_id,
+                    status=status,
+                    extracted_text=extracted_text,
+                )
+            except sqlite3.IntegrityError as exc:
+                _log_event(
+                    "ocr_run_write_conflict",
+                    request_id=getattr(request.state, "request_id", None),
+                    session_id=session_id,
+                    principal=principal,
+                    recovered=False,
+                )
+                raise HTTPException(
+                    status_code=409,
+                    detail="OCR run could not be recorded due to concurrent chat updates. Retry request.",
+                ) from exc
+            _log_event(
+                "ocr_run_write_conflict",
+                request_id=getattr(request.state, "request_id", None),
+                session_id=session_id,
+                principal=principal,
+                recovered=True,
+            )
         index_session_id = _resolve_memory_lane_session_id(
             session_id=session_id,
             memory_scope=req.memory_scope,

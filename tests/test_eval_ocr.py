@@ -96,6 +96,27 @@ class OcrEvalRuleTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(reasons, [])
 
+    def test_must_contain_any_allows_vowel_drop_signature_match(self) -> None:
+        case = self._base_case()
+        case["must_contain_any"] = ["stirring"]
+        passed, reasons = _check_case(case, "There seems to be something strong.")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
+    def test_must_appear_in_order_allows_vowel_drop_signature_match(self) -> None:
+        case = self._base_case()
+        case["must_appear_in_order"] = ["something", "stirring"]
+        passed, reasons = _check_case(case, "There seems to be something strong.")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
+    def test_must_contain_any_allows_signature_match_with_different_last_letter(self) -> None:
+        case = self._base_case()
+        case["must_contain_any"] = ["stirring"]
+        passed, reasons = _check_case(case, "There seems to be something strange.")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
     def test_forbidden_word_matches_spaced_letter_tokens(self) -> None:
         case = self._base_case()
         case["must_not_contain_words"] = ["guess"]
