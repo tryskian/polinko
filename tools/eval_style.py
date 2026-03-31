@@ -251,6 +251,28 @@ def _judge_case(
     return payload
 
 
+def _resolve_case_status(*, attempt_statuses: list[str], pass_attempts: int, min_pass_attempts: int) -> str:
+    if pass_attempts >= min_pass_attempts:
+        return "PASS"
+    if any(status == "FAIL" for status in attempt_statuses):
+        return "FAIL"
+    return "ERROR"
+
+
+def _should_stop_attempts(
+    *,
+    pass_attempts: int,
+    attempts_done: int,
+    case_attempts: int,
+    min_pass_attempts: int,
+) -> bool:
+    if pass_attempts >= min_pass_attempts:
+        return True
+    remaining_attempts = case_attempts - attempts_done
+    needed_passes = min_pass_attempts - pass_attempts
+    return needed_passes > remaining_attempts
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run style/tone eval over /chat outputs with an LLM judge.",
@@ -278,6 +300,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="OpenAI model for style pass/fail scoring.",
     )
     parser.add_argument(
+        "--case-attempts",
+        type=int,
+        default=1,
+        help="Attempts per style case (for retry-majority hardening).",
+    )
+    parser.add_argument(
+        "--min-pass-attempts",
+        type=int,
+        default=1,
+        help="Minimum passing attempts required per case.",
+    )
+    parser.add_argument(
         "--strict",
         action="store_true",
         help="Exit non-zero if any case fails.",
@@ -303,6 +337,12 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     load_dotenv(dotenv_path=".env")
     args = build_parser().parse_args()
+    if args.case_attempts < 1:
+        raise SystemExit("--case-attempts must be >= 1.")
+    if args.min_pass_attempts < 1:
+        raise SystemExit("--min-pass-attempts must be >= 1.")
+    if args.min_pass_attempts > args.case_attempts:
+        raise SystemExit("--min-pass-attempts cannot exceed --case-attempts.")
     cases_path = Path(args.cases)
     if not cases_path.exists():
         raise SystemExit(f"Cases file not found: {cases_path}")
@@ -319,6 +359,10 @@ def main() -> int:
 
     print(f"Running style eval on {args.base_url}")
     print(f"Cases: {len(cases)} | run_id={run_id}")
+    print(
+        "Attempts per case: "
+        f"{args.case_attempts} | min passes required: {args.min_pass_attempts}"
+    )
     if global_forbidden_phrases:
         print(f"Global forbidden phrases: {', '.join(global_forbidden_phrases)}")
 
@@ -333,103 +377,151 @@ def main() -> int:
     case_results: list[dict[str, Any]] = []
 
     for index, case in enumerate(cases, start=1):
-        session_id = f"{args.session_prefix}-{run_id}-{index:02d}"
-        session_ids.append(session_id)
-        answer = ""
-        wc = 0
-        score: Any = None
-        fit: Any = None
-        judge_pass: bool | None = None
-        notes = ""
-        forbidden_hits: list[str] = []
-        error_text: str | None = None
-        status_text = "PASS"
-        try:
-            _create_chat(args.base_url, headers, session_id, args.timeout)
-            chat_payload = _chat(
-                base_url=args.base_url,
-                headers=headers,
-                session_id=session_id,
-                message=case["query"],
-                timeout=args.timeout,
+        session_base = f"{args.session_prefix}-{run_id}-{index:02d}"
+        attempt_results: list[dict[str, Any]] = []
+        attempt_statuses: list[str] = []
+        pass_attempts = 0
+
+        for attempt in range(1, args.case_attempts + 1):
+            session_id = (
+                session_base if args.case_attempts == 1 else f"{session_base}-a{attempt:02d}"
             )
-            answer = str(chat_payload.get("output", "")).strip()
-            answer_lower = answer.lower()
-            wc = _word_count(answer)
-            result = _judge_case(
-                judge_client=judge_client,
-                model=args.judge_model,
-                case=case,
-                answer=answer,
-                word_count=wc,
-            )
-            score = result.get("score")
-            fit = result.get("fit")
-            case_pass = bool(result.get("pass", False))
-            judge_pass = case_pass
-            notes = str(result.get("notes", "")).strip()
+            session_ids.append(session_id)
+            answer = ""
+            wc = 0
+            score: Any = None
+            fit: Any = None
+            judge_pass: bool | None = None
+            notes = ""
+            forbidden_hits: list[str] = []
+            error_text: str | None = None
+            status_text = "PASS"
+            try:
+                _create_chat(args.base_url, headers, session_id, args.timeout)
+                chat_payload = _chat(
+                    base_url=args.base_url,
+                    headers=headers,
+                    session_id=session_id,
+                    message=case["query"],
+                    timeout=args.timeout,
+                )
+                answer = str(chat_payload.get("output", "")).strip()
+                answer_lower = answer.lower()
+                wc = _word_count(answer)
+                result = _judge_case(
+                    judge_client=judge_client,
+                    model=args.judge_model,
+                    case=case,
+                    answer=answer,
+                    word_count=wc,
+                )
+                score = result.get("score")
+                fit = result.get("fit")
+                case_pass = bool(result.get("pass", False))
+                judge_pass = case_pass
+                notes = str(result.get("notes", "")).strip()
 
-            max_words = case["max_words"]
-            forbidden_hits = [
-                phrase for phrase in case.get("forbidden_phrases", []) if phrase in answer_lower
-            ]
-            word_count_ok = not (isinstance(max_words, int) and wc > max_words)
-            decision = resolve_binary_gate(
-                policy_pass=not forbidden_hits,
-                high_value_alignment_pass=case_pass,
-                evidence_complete=word_count_ok,
-            )
-            case_failed = not decision.passed
+                max_words = case["max_words"]
+                forbidden_hits = [
+                    phrase for phrase in case.get("forbidden_phrases", []) if phrase in answer_lower
+                ]
+                word_count_ok = not (isinstance(max_words, int) and wc > max_words)
+                decision = resolve_binary_gate(
+                    policy_pass=not forbidden_hits,
+                    high_value_alignment_pass=case_pass,
+                    evidence_complete=word_count_ok,
+                )
+                case_failed = not decision.passed
 
-            if isinstance(max_words, int) and wc > max_words:
+                if isinstance(max_words, int) and wc > max_words:
+                    if notes:
+                        notes = f"{notes} | Word count {wc} exceeds limit {max_words}."
+                    else:
+                        notes = f"Word count {wc} exceeds limit {max_words}."
+                if forbidden_hits:
+                    forbidden_text = ", ".join(forbidden_hits)
+                    if notes:
+                        notes = f"{notes} | Contains forbidden phrase(s): {forbidden_text}."
+                    else:
+                        notes = f"Contains forbidden phrase(s): {forbidden_text}."
+                if decision.reasons:
+                    reasons_text = "; ".join(decision.reasons)
+                    if notes:
+                        notes = f"{notes} | Gate: {reasons_text}."
+                    else:
+                        notes = f"Gate: {reasons_text}."
+
+                status_text = "PASS" if not case_failed else "FAIL"
+                if status_text == "PASS":
+                    pass_attempts += 1
+                print(
+                    f"[{status_text}] {case['id']} attempt={attempt}/{args.case_attempts} "
+                    f"score={score} fit={fit} words={wc}"
+                )
                 if notes:
-                    notes = f"{notes} | Word count {wc} exceeds limit {max_words}."
-                else:
-                    notes = f"Word count {wc} exceeds limit {max_words}."
-            if forbidden_hits:
-                forbidden_text = ", ".join(forbidden_hits)
-                if notes:
-                    notes = f"{notes} | Contains forbidden phrase(s): {forbidden_text}."
-                else:
-                    notes = f"Contains forbidden phrase(s): {forbidden_text}."
-            if decision.reasons:
-                reasons_text = "; ".join(decision.reasons)
-                if notes:
-                    notes = f"{notes} | Gate: {reasons_text}."
-                else:
-                    notes = f"Gate: {reasons_text}."
+                    print(f"  notes: {notes}")
+            except Exception as exc:
+                status_text = "ERROR"
+                error_text = str(exc)
+                print(f"[ERROR] {case['id']} attempt={attempt}/{args.case_attempts}: {exc}")
+            finally:
+                attempt_statuses.append(status_text)
+                attempt_results.append(
+                    {
+                        "session_id": session_id,
+                        "status": status_text,
+                        "judge_pass": judge_pass,
+                        "score": score,
+                        "fit": fit,
+                        "notes": notes,
+                        "error": error_text,
+                        "word_count": wc,
+                        "forbidden_hits": forbidden_hits,
+                        "answer": answer,
+                    }
+                )
 
-            status_text = "PASS" if not case_failed else "FAIL"
-            print(f"[{status_text}] {case['id']} score={score} fit={fit} words={wc}")
-            if notes:
-                print(f"  notes: {notes}")
+            if _should_stop_attempts(
+                pass_attempts=pass_attempts,
+                attempts_done=attempt,
+                case_attempts=args.case_attempts,
+                min_pass_attempts=args.min_pass_attempts,
+            ):
+                break
 
-            if case_failed:
-                failures += 1
-        except Exception as exc:
+        final_status = _resolve_case_status(
+            attempt_statuses=attempt_statuses,
+            pass_attempts=pass_attempts,
+            min_pass_attempts=args.min_pass_attempts,
+        )
+        if final_status != "PASS":
             failures += 1
-            status_text = "ERROR"
-            error_text = str(exc)
-            print(f"[ERROR] {case['id']}: {exc}")
-        finally:
-            max_words = case["max_words"]
-            case_results.append(
-                {
-                    "id": case["id"],
-                    "session_id": session_id,
-                    "status": status_text,
-                    "judge_pass": judge_pass,
-                    "score": score,
-                    "fit": fit,
-                    "notes": notes,
-                    "error": error_text,
-                    "word_count": wc,
-                    "max_words": max_words,
-                    "forbidden_hits": forbidden_hits,
-                    "query": case["query"],
-                    "answer": answer,
-                }
-            )
+        final_attempt = next(
+            (row for row in attempt_results if row["status"] == "PASS"),
+            attempt_results[-1],
+        )
+        max_words = case["max_words"]
+        case_results.append(
+            {
+                "id": case["id"],
+                "session_id": str(final_attempt["session_id"]),
+                "status": final_status,
+                "judge_pass": final_attempt["judge_pass"],
+                "score": final_attempt["score"],
+                "fit": final_attempt["fit"],
+                "notes": final_attempt["notes"],
+                "error": final_attempt["error"],
+                "word_count": final_attempt["word_count"],
+                "max_words": max_words,
+                "forbidden_hits": list(final_attempt["forbidden_hits"]),
+                "query": case["query"],
+                "answer": final_attempt["answer"],
+                "attempts_used": len(attempt_results),
+                "attempts_required": args.min_pass_attempts,
+                "pass_attempts": pass_attempts,
+                "attempts": attempt_results,
+            }
+        )
 
     if not args.keep_chats:
         for session_id in session_ids:
@@ -452,6 +544,8 @@ def main() -> int:
             "base_url": args.base_url,
             "cases_path": str(cases_path),
             "judge_model": args.judge_model,
+            "case_attempts": args.case_attempts,
+            "min_pass_attempts": args.min_pass_attempts,
             "strict": bool(args.strict),
             "global_forbidden_phrases": global_forbidden_phrases,
             "summary": {
