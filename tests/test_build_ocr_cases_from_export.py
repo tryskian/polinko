@@ -6,6 +6,7 @@ from pathlib import Path
 from tools.build_ocr_cases_from_export import (
     ASK_RX,
     CORRECTION_RX,
+    _has_correction_signal,
     _anchor_terms_for_phrases,
     _classify_lane,
     _expand_anchor_variants,
@@ -97,6 +98,28 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         phrases = _extract_candidate_phrases(text)
         self.assertIn("Alpha Spiral Field", phrases)
         self.assertIn("Beta Grid", phrases)
+
+    def test_extract_candidate_phrases_from_not_pair(self) -> None:
+        text = "binareyes: bully not bull-fly"
+        phrases = _extract_candidate_phrases(text)
+        self.assertIn("bully", phrases)
+
+    def test_extract_candidate_phrases_from_marker_without_colon(self) -> None:
+        text = "it says alpha spiral field."
+        phrases = _extract_candidate_phrases(text)
+        self.assertIn("alpha spiral field", [p.lower() for p in phrases])
+
+    def test_has_correction_signal_detects_not_pair(self) -> None:
+        text = "bully not bull-fly"
+        self.assertFalse(_has_correction_signal(text))
+
+    def test_has_correction_signal_detects_not_pair_with_ocr_context(self) -> None:
+        text = "word bully not bull-fly"
+        self.assertTrue(_has_correction_signal(text))
+
+    def test_has_correction_signal_rejects_non_ocr_not_pair(self) -> None:
+        text = "normal bigbrain, not all seriousberious"
+        self.assertFalse(_has_correction_signal(text))
 
     def test_extract_transcribed_lines_from_framed_quoted_text(self) -> None:
         assistant_text = 'yes — binareyes locked on. it reads, *"There seems to be something stirring."*'
@@ -779,6 +802,70 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertTrue(review["ocr_intent_signal"])
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertEqual(review["confidence"], "low")
+
+    def test_build_promotes_non_literal_intent_when_correction_phrase_present(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "img_900.jpg").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-nonliteral-correction",
+                "title": "Binareyes correction",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {
+                                "parts": [
+                                    "lol bully! not bull-fly! binareyes"
+                                ]
+                            },
+                            "metadata": {"attachments": [{"name": "img_900.jpg", "id": "file_900"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ['it reads: "word bully"']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-9.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["medium_confidence"], 1)
+            self.assertEqual(summary["cases_written"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["confidence"], "medium")
+            self.assertTrue(review["ocr_intent_signal"])
+            self.assertFalse(review["ocr_literal_intent_signal"])
 
     def test_build_emits_single_anchor_case_with_ordered_token_fallback(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
