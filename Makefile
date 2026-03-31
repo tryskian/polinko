@@ -28,6 +28,8 @@ HALLUCINATION_JUDGE_API_KEY_ENV ?= OPENAI_API_KEY
 BRAINTRUST_OPENAI_BASE_URL ?=
 HALLUCINATION_JUDGE_BASE_URL ?=
 HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
+STYLE_CASE_ATTEMPTS ?= 1
+STYLE_MIN_PASS_ATTEMPTS ?= 1
 CLIP_AB_SOURCE_TYPES ?= image
 OCR_HANDWRITING_CASES ?= .local/eval_cases/ocr_handwriting_eval_cases.json
 CGPT_EXPORT_ROOT ?=
@@ -398,12 +400,12 @@ calibrate-hallucination-threshold:
 	$(PYTHON) -m tools.calibrate_hallucination_threshold
 
 eval-style:
-	$(PYTHON) -m tools.eval_style
+	$(PYTHON) -m tools.eval_style --case-attempts "$(STYLE_CASE_ATTEMPTS)" --min-pass-attempts "$(STYLE_MIN_PASS_ATTEMPTS)"
 
 eval-style-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) -m tools.eval_style --run-id $$RUN_ID --report-json "eval_reports/style-$$RUN_ID.json"
+	$(PYTHON) -m tools.eval_style --run-id $$RUN_ID --report-json "eval_reports/style-$$RUN_ID.json" --case-attempts "$(STYLE_CASE_ATTEMPTS)" --min-pass-attempts "$(STYLE_MIN_PASS_ATTEMPTS)"
 
 eval-ocr:
 	$(PYTHON) -m tools.eval_ocr
@@ -528,12 +530,12 @@ quality-gate:
 	$(PYTHON) -m tools.eval_retrieval --base-url "$$BASE_URL"; \
 	$(PYTHON) -m tools.eval_file_search --base-url "$$BASE_URL"; \
 	$(PYTHON) -m tools.eval_ocr --base-url "$$BASE_URL" --strict; \
-	$(PYTHON) -m tools.eval_style --base-url "$$BASE_URL" --strict; \
+	$(PYTHON) -m tools.eval_style --base-url "$$BASE_URL" --strict --case-attempts "$(STYLE_CASE_ATTEMPTS)" --min-pass-attempts "$(STYLE_MIN_PASS_ATTEMPTS)"; \
 	$(PYTHON) -m tools.eval_hallucination --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"; \
 	echo "Quality gate passed."
 
 quality-gate-deterministic:
-	@$(MAKE) quality-gate HALLUCINATION_EVAL_MODE=deterministic
+	@$(MAKE) quality-gate HALLUCINATION_EVAL_MODE=deterministic STYLE_CASE_ATTEMPTS=3 STYLE_MIN_PASS_ATTEMPTS=2
 
 evidence-index:
 	$(PYTHON) -m tools.build_evidence_index
