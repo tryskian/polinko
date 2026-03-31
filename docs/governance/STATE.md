@@ -393,6 +393,13 @@
   - handwriting hint detection is token-bounded (prevents substring drift such
     as `Polinko` matching `ink`)
   - unstable transcript sources are quarantined from the active strict set
+  - low-confidence review episodes are retained only when OCR signal is present
+    (`ocr_literal_intent_signal`, `ocr_framing_signal`, `correction_signal`, or
+    `correction_overlap_signal`)
+  - OCR framing signal now excludes explicit negations
+    (`no ocr`, `not ocr`, `without ocr`, `no transcription`)
+  - review-summary baseline after rerun:
+    `episodes=172` (`high=7`, `medium=20`, `low=145`)
   - active mined baseline: `21` cases (`handwriting=4`, `typed=11`,
     `illustration=6`)
   - previous `55`/`29`/`25` mined outputs are retained as legacy reference for

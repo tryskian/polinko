@@ -117,6 +117,34 @@ class OcrEvalRuleTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(reasons, [])
 
+    def test_must_contain_any_allows_terminal_char_ocr_drift_for_long_anchor(self) -> None:
+        case = self._base_case()
+        case["must_contain_any"] = ["stirring"]
+        passed, reasons = _check_case(case, "something - stirriny")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
+    def test_must_appear_in_order_allows_terminal_char_ocr_drift_for_long_anchor(self) -> None:
+        case = self._base_case()
+        case["must_appear_in_order"] = ["something", "stirring"]
+        passed, reasons = _check_case(case, "something - stirriny")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
+    def test_must_contain_any_allows_near_signature_match_for_long_anchor(self) -> None:
+        case = self._base_case()
+        case["must_contain_any"] = ["stirring"]
+        passed, reasons = _check_case(case, "something - starving")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
+    def test_must_appear_in_order_allows_near_signature_match_for_long_anchor(self) -> None:
+        case = self._base_case()
+        case["must_appear_in_order"] = ["something", "stirring"]
+        passed, reasons = _check_case(case, "something - starving")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
     def test_must_contain_any_allows_signature_match_with_different_last_letter(self) -> None:
         case = self._base_case()
         case["must_contain_any"] = ["stirring"]

@@ -1378,3 +1378,23 @@
   - keep `55`/`29`/`25` outputs as legacy/reference only.
 - Why: Removes conversational false positives and flaky micro-cases while
   preserving strict binary release gates with deterministic `21/21` stability.
+
+## D-116: Filter low-confidence transcript review rows to OCR-signaled episodes only
+
+- Date: `2026-03-31`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `noise_pruning`, `confidence_gating`, `precision_guard`
+- Decision:
+  - retain low-confidence rows in transcript miner review output only when OCR
+    signal is present:
+    `ocr_literal_intent_signal`, `ocr_framing_signal`, `correction_signal`, or
+    `correction_overlap_signal`
+  - treat explicit negated OCR phrasing as non-framing
+    (`no ocr`, `not ocr`, `without ocr`, `no transcription`) so review rows
+    are not retained from non-transcription assistant turns
+  - keep emitted strict case baseline unchanged at:
+    `handwriting=4`, `typed=11`, `illustration=6` (`21` total)
+  - update review-noise baseline after rerun to:
+    `episodes=172` (`high=7`, `medium=20`, `low=145`)
+- Why: Reduces conversational review noise without relaxing strict binary gate
+  criteria or changing emitted OCR benchmark cases.
