@@ -70,18 +70,23 @@
   - `make eod` now runs deterministic day-close sequence:
     `transcript-fix -> transcript-check -> doctor-env -> lint-docs -> test`
 - Transcript-backed OCR mining kernel is merged on `main`:
-  - PRs: `#110`, `#132`, `#133`, `#134`
+  - PRs: `#110`, `#132`, `#133`, `#134`, `#155`, `#156`
   - indexer: `tools/index_cgpt_export.py`
   - miner: `tools/build_ocr_cases_from_export.py`
+  - handwriting benchmark builder: `tools/build_handwriting_benchmark_cases.py`
+  - miner delta reporter: `tools/report_ocr_case_mining_delta.py`
   - stability replay: `tools/eval_ocr_stability.py`
   - new make commands:
     - `make cgpt-export-index`
     - `make ocr-cases-from-export`
     - `make eval-ocr-transcript-cases`
     - `make eval-ocr-transcript-cases-handwriting`
+    - `make eval-ocr-transcript-cases-handwriting-benchmark`
     - `make eval-ocr-transcript-cases-typed`
     - `make eval-ocr-transcript-cases-illustration`
     - `make eval-ocr-transcript-stability`
+    - `make eval-ocr-transcript-stability-handwriting-benchmark`
+    - `make ocrdelta`
   - generated transcript OCR cases stay local-only in `.local/eval_cases/`
   - miner diagnostics are now explicit in command output and review records:
     - counters: `emitted_cases`, `skipped_low_confidence`,
@@ -102,16 +107,20 @@
   - lane artifacts:
     - `.local/eval_cases/ocr_transcript_cases_all.json`
     - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
+    - `.local/eval_cases/ocr_handwriting_benchmark_cases.json`
     - `.local/eval_cases/ocr_typed_from_transcripts.json`
     - `.local/eval_cases/ocr_illustration_from_transcripts.json`
+    - `.local/eval_cases/ocr_transcript_cases_delta.md`
   - latest lane validations are green:
-    - all: `15/15` PASS
-    - handwriting: `5/5` PASS
-    - typed: `7/7` PASS
-    - illustration: `3/3` PASS
+    - all: `18/18` PASS
+    - handwriting: `6/6` PASS
+    - handwriting benchmark: `6/6` PASS
+    - typed: `8/8` PASS
+    - illustration: `4/4` PASS
   - latest stability replay is green:
     - runs: `5/5`
-    - decision stability: `15` stable, `0` flaky
+    - all-lane decision stability: `18` stable, `0` flaky
+    - handwriting benchmark stability: `6` stable, `0` flaky
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`

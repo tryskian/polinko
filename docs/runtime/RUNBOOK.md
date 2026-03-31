@@ -783,12 +783,22 @@ Current policy:
    - command output includes emit diagnostics:
      `emitted_cases`, `skipped_low_confidence`,
      `skipped_duplicate_image_path`, `skipped_insufficient_anchor_terms`
+   - also generates:
+     - strict handwriting benchmark cases:
+       `.local/eval_cases/ocr_handwriting_benchmark_cases.json`
+     - before/after miner delta report:
+       `.local/eval_cases/ocr_transcript_cases_delta.md`
 4. Run OCR eval against mined transcript-backed cases:
    - `make eval-ocr-transcript-cases`
    - `make eval-ocr-transcript-cases-handwriting`
+   - `make eval-ocr-transcript-cases-handwriting-benchmark`
    - `make eval-ocr-transcript-cases-typed`
    - `make eval-ocr-transcript-cases-illustration`
-5. Optional paths:
+5. Track drift separately for strict handwriting benchmark:
+   - `make eval-ocr-transcript-stability-handwriting-benchmark`
+   - output JSON:
+     `.local/eval_reports/ocr_handwriting_benchmark_stability.json`
+6. Optional paths:
    - index output directory:
      `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/export CGPT_EXPORT_OUTPUT_DIR=/abs/path/to/output`
    - override generated combined cases path:
@@ -801,15 +811,19 @@ Current policy:
      `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_CASES_ILLUSTRATION=/abs/path/to/illustration-cases.json`
    - override generated review file path:
      `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_REVIEW=/abs/path/to/review.json`
-6. Default local artifacts:
+7. Default local artifacts:
    - `.local/eval_cases/cgpt_export_attachment_index.json`
    - `.local/eval_cases/cgpt_export_behaviour_eval_ocr_ready.json`
    - `.local/eval_cases/ocr_transcript_cases_all.json`
    - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
    - `.local/eval_cases/ocr_typed_from_transcripts.json`
    - `.local/eval_cases/ocr_illustration_from_transcripts.json`
+   - `.local/eval_cases/ocr_handwriting_benchmark_cases.json`
    - `.local/eval_cases/ocr_transcript_cases_review.json`
-7. Review diagnostics:
+   - `.local/eval_cases/ocr_transcript_cases_review_prev.json` (when available)
+   - `.local/eval_cases/ocr_transcript_cases_delta.md`
+   - `.local/eval_cases/ocr_transcript_cases_delta.json`
+8. Review diagnostics:
    - review file now includes a top-level `summary`:
      - `conversation_files`, `episodes`
      - `confidence_counts`, `lane_counts`
