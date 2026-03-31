@@ -166,6 +166,10 @@ OCR_FRAMING_RX = re.compile(
     r"\bit (?:reads?|says)\b|\bhere(?:'s| is)\s+the\s+ocr\b|\btranscri(?:b\w*|pt\w*)\b|\bocr\b",
     re.IGNORECASE,
 )
+NEGATED_OCR_FRAMING_RX = re.compile(
+    r"\bno\s+ocr\b|\bnot\s+ocr\b|\bwithout\s+ocr\b|\bno\s+transcri(?:ption|be\w*)\b",
+    re.IGNORECASE,
+)
 
 ASSET_TOKEN_RE = re.compile(r"^(file[_-][^-]+)", re.IGNORECASE)
 CODE_BLOCK_RX = re.compile(r"```(?:[^\n`]*)\n?(.*?)```", re.DOTALL)
@@ -760,7 +764,9 @@ def build_from_export(
             ocr_literal_intent_signal = bool(
                 OCR_LITERAL_INTENT_RX.search(ask_followup_text)
             )
-            ocr_framing_signal = bool(OCR_FRAMING_RX.search(assistant_text))
+            ocr_framing_signal = bool(OCR_FRAMING_RX.search(assistant_text)) and not bool(
+                NEGATED_OCR_FRAMING_RX.search(assistant_text)
+            )
 
             confidence = "low"
             chosen_phrases: list[str] = []
@@ -850,6 +856,15 @@ def build_from_export(
             anchor_terms = _expand_anchor_variants(_anchor_terms_for_phrases(anchor_source_phrases)[:8])
             ordered_terms = _ordered_terms_for_phrases(transcription_phrases_raw[:1])[:4]
             ordered_phrase_fallback = ordered_terms if len(anchor_terms) < 3 else []
+            low_confidence_has_ocr_signal = bool(
+                ocr_literal_intent_signal
+                or ocr_framing_signal
+                or correction_signal
+                or correction_overlap_signal
+            )
+            if confidence == "low" and not low_confidence_has_ocr_signal:
+                # Drop non-transcription chatter from review noise.
+                continue
             if confidence == "low":
                 emit_status = "skipped_low_confidence"
             elif Path(image_path).name in UNSTABLE_SOURCE_NAMES:

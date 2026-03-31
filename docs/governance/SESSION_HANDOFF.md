@@ -113,6 +113,11 @@
       with OCR transcription phrases
     - review diagnostics include `correction_overlap_signal`
     - off-topic/late correction phrases no longer pollute anchor terms
+  - low-confidence review rows are now filtered to OCR-signaled episodes only
+    (`ocr_literal_intent_signal`, `ocr_framing_signal`, `correction_signal`, or
+    `correction_overlap_signal`)
+  - OCR framing signal ignores explicit negated wording
+    (`no ocr`, `not ocr`, `without ocr`, `no transcription`)
   - `make eval-ocr-transcript-stability` now self-starts `server-daemon`
     to avoid localhost preflight drift.
   - lane artifacts:
@@ -127,6 +132,8 @@
   - active precision baseline:
     - mined cases: `21` total
       (`handwriting=4`, `typed=11`, `illustration=6`)
+    - review summary: `episodes=172`
+      (`high=7`, `medium=20`, `low=145`)
     - previous `55`/`29`/`25` mined outputs are legacy reference only
   - latest lane validations:
     - full transcript lane (diagnostic): `21/21` PASS (`0` fail)
@@ -207,7 +214,9 @@
 
 - Keep transcript OCR precision baseline locked at
   (`handwriting=4`, `typed=11`, `illustration=6`) and preserve legacy
-  `55`/`29`/`25` outputs as reference-only:
+  `55`/`29`/`25` outputs as reference-only.
+- Keep review-summary noise baseline locked at
+  `episodes=172` (`high=7`, `medium=20`, `low=145`):
   - rerun:
     - `make ocr-cases-from-export`
     - `make eval-ocr-transcript-cases`
@@ -219,7 +228,8 @@
     - `make eval-ocr-transcript-stability-typed-benchmark`
     - `make eval-ocr-transcript-stability-illustration-benchmark`
   - use review `summary` + `episodes` diagnostics to prioritise exactly one
-    precision-safe miner kernel only if regression appears; keep:
+    precision-safe miner kernel only if regression appears in pass/fail quality
+    or review-noise baseline; keep:
     - correction-signal-gated ask anchors
     - token-bounded handwriting hints
     - unstable-source quarantine

@@ -956,7 +956,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(review["correction_phrases"], [])
             self.assertFalse(review["correction_signal"])
 
-    def test_build_does_not_promote_binareyes_without_literal_ocr_intent(self) -> None:
+    def test_build_drops_binareyes_chatter_without_ocr_signals(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -1030,10 +1030,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             )
 
             self.assertEqual(summary["cases_written"], 0)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertTrue(review["ocr_intent_signal"])
-            self.assertFalse(review["ocr_literal_intent_signal"])
-            self.assertEqual(review["confidence"], "low")
+            self.assertEqual(summary["episodes"], 0)
 
     def test_build_promotes_non_literal_intent_when_correction_phrase_present(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1556,9 +1553,8 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             )
 
             self.assertEqual(summary["cases_written"], 0)
-            self.assertEqual(summary["skipped_low_confidence"], 1)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["emit_status"], "skipped_low_confidence")
+            self.assertEqual(summary["episodes"], 0)
+            self.assertEqual(summary["skipped_low_confidence"], 0)
 
 
 if __name__ == "__main__":

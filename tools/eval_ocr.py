@@ -96,7 +96,18 @@ def _contains_near_single_token(*, tokens: list[str], probe: str) -> bool:
             and abs(len(token) - len(probe)) <= 3
         ):
             return True
-        if len(probe) >= 5 and token[-1:] != probe[-1:]:
+        if (
+            probe_signature
+            and token_signature
+            and len(probe) >= 8
+            and abs(len(token) - len(probe)) <= 3
+            and abs(len(token_signature) - len(probe_signature)) <= 1
+            and _edit_distance_at_most_one(token_signature, probe_signature)
+        ):
+            return True
+        # Keep a strict final-character guard for shorter anchors, but allow
+        # terminal OCR drift on longer anchors (for example `stirring` -> `stirriny`).
+        if 5 <= len(probe) < 8 and token[-1:] != probe[-1:]:
             continue
         if abs(len(token) - len(probe)) > 1:
             continue
