@@ -804,6 +804,9 @@ Current policy:
    - `make eval-ocr-transcript-stability-handwriting-benchmark`
    - `make eval-ocr-transcript-stability-typed-benchmark`
    - `make eval-ocr-transcript-stability-illustration-benchmark`
+   - stability runner now streams child OCR progress live by default
+     (use `--capture-child-output` on `tools/eval_ocr_stability.py` only when
+     you explicitly need captured stdout/stderr tails)
    - output JSON:
      `.local/eval_reports/ocr_handwriting_benchmark_stability.json`
      `.local/eval_reports/ocr_typed_benchmark_stability.json`
