@@ -1090,7 +1090,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertTrue(review["ocr_intent_signal"])
             self.assertFalse(review["ocr_literal_intent_signal"])
 
-    def test_build_promotes_askless_handwriting_when_assistant_is_ocr_framed(self) -> None:
+    def test_build_keeps_askless_handwriting_low_without_correction_signal(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -1147,12 +1147,85 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 1)
-            self.assertEqual(summary["handwriting_cases_written"], 1)
+            self.assertEqual(summary["medium_confidence"], 0)
+            self.assertEqual(summary["handwriting_cases_written"], 0)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "medium")
+            self.assertEqual(review["confidence"], "low")
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
+            self.assertFalse(review["correction_signal"])
+
+    def test_build_promotes_askless_handwriting_with_followup_correction_signal(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "IMG_2002.jpg").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-askless-hand-correction",
+                "title": "Journal page",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["new notebook page from today"]},
+                            "metadata": {"attachments": [{"name": "IMG_2002.jpg", "id": "file_askless_hand_correction"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {
+                                "parts": [
+                                    "Here’s the OCR:\n- alpha spiral field\n- tensor mapping notes"
+                                ]
+                            },
+                            "metadata": {},
+                        }
+                    },
+                    "3": {
+                        "message": {
+                            "create_time": 3,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["correction: it says alpha spiral field"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-askless-hand-correction.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["high_confidence"], 1)
+            self.assertEqual(summary["handwriting_cases_written"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["confidence"], "high")
+            self.assertTrue(review["ocr_framing_signal"])
+            self.assertTrue(review["correction_signal"])
 
     def test_build_emits_single_anchor_case_with_ordered_token_fallback(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

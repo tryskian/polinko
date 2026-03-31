@@ -387,6 +387,18 @@
   - `POLINKO_OCR_PROVIDER=openai` (image OCR via OpenAI model)
 - OCR supports optional `visual_context_hint` for deterministic image-context indexing
   (useful for eval seeding and controlled ingest).
+- Transcript OCR mining now runs in stricter precision mode:
+  - askless handwriting episodes require correction signal before medium
+    confidence promotion
+  - active mined baseline: `29` cases (`handwriting=14`, `typed=8`,
+    `illustration=7`)
+  - previous `55`-case mined output is retained as legacy reference for
+    comparison, not as active strict gate input
+- Transcript OCR benchmark and stability gates remain strict and green under
+  the precision baseline:
+  - handwriting benchmark: `6/6` PASS, stability `6 stable / 0 flaky`
+  - typed benchmark: `3/3` PASS, stability `3 stable / 0 flaky`
+  - illustration benchmark: `2/2` PASS, stability `2 stable / 0 flaky`
 - Optional Responses API orchestration mode is implemented behind feature flags:
   - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED`
   - `POLINKO_RESPONSES_VECTOR_STORE_ID`
