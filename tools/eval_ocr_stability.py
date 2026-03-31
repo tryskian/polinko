@@ -156,6 +156,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Exit non-zero when any run fails to produce a readable report.",
     )
+    parser.add_argument(
+        "--capture-child-output",
+        action="store_true",
+        help="Capture child eval stdout/stderr instead of streaming live progress.",
+    )
     return parser
 
 
@@ -184,6 +189,7 @@ def main() -> int:
         run_report = report_dir / f"ocr-{run_tag}.json"
         cmd = [
             sys.executable,
+            "-u",
             "-m",
             "tools.eval_ocr",
             "--base-url",
@@ -202,7 +208,14 @@ def main() -> int:
         if args.strict:
             cmd.append("--strict")
 
-        proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
+        if args.capture_child_output:
+            proc = subprocess.run(cmd, check=False, capture_output=True, text=True)
+            stdout_tail = proc.stdout[-1000:]
+            stderr_tail = proc.stderr[-1000:]
+        else:
+            proc = subprocess.run(cmd, check=False, text=True)
+            stdout_tail = ""
+            stderr_tail = ""
         payload = _load_report(run_report)
         if payload is None:
             run_statuses.append(
@@ -212,8 +225,8 @@ def main() -> int:
                     "exit_code": proc.returncode,
                     "report_json": str(run_report),
                     "report_loaded": False,
-                    "stdout_tail": proc.stdout[-1000:],
-                    "stderr_tail": proc.stderr[-1000:],
+                    "stdout_tail": stdout_tail,
+                    "stderr_tail": stderr_tail,
                 }
             )
             print(f"[{index}/{args.runs}] run_id={run_tag} report load failed (exit={proc.returncode})")
