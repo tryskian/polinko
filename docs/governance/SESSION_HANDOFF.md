@@ -83,10 +83,16 @@
     - `make eval-ocr-transcript-cases-handwriting`
     - `make eval-ocr-transcript-cases-handwriting-benchmark`
     - `make eval-ocr-transcript-cases-typed`
+    - `make eval-ocr-transcript-cases-typed-benchmark`
     - `make eval-ocr-transcript-cases-illustration`
+    - `make eval-ocr-transcript-cases-illustration-benchmark`
     - `make eval-ocr-transcript-stability`
     - `make eval-ocr-transcript-stability-handwriting-benchmark`
+    - `make eval-ocr-transcript-stability-typed-benchmark`
+    - `make eval-ocr-transcript-stability-illustration-benchmark`
     - `make ocrdelta`
+    - aliases: `make ocrtypebench`, `make ocrillubench`,
+      `make ocrstabletype`, `make ocrstableillu`
   - generated transcript OCR cases stay local-only in `.local/eval_cases/`
   - miner diagnostics are now explicit in command output and review records:
     - counters: `emitted_cases`, `skipped_low_confidence`,
@@ -109,7 +115,9 @@
     - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
     - `.local/eval_cases/ocr_handwriting_benchmark_cases.json`
     - `.local/eval_cases/ocr_typed_from_transcripts.json`
+    - `.local/eval_cases/ocr_typed_benchmark_cases.json`
     - `.local/eval_cases/ocr_illustration_from_transcripts.json`
+    - `.local/eval_cases/ocr_illustration_benchmark_cases.json`
     - `.local/eval_cases/ocr_transcript_cases_delta.md`
   - latest lane validations are green:
     - all: `18/18` PASS

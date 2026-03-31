@@ -786,6 +786,10 @@ Current policy:
    - also generates:
      - strict handwriting benchmark cases:
        `.local/eval_cases/ocr_handwriting_benchmark_cases.json`
+     - strict typed benchmark cases:
+       `.local/eval_cases/ocr_typed_benchmark_cases.json`
+     - strict illustration benchmark cases:
+       `.local/eval_cases/ocr_illustration_benchmark_cases.json`
      - before/after miner delta report:
        `.local/eval_cases/ocr_transcript_cases_delta.md`
 4. Run OCR eval against mined transcript-backed cases:
@@ -793,11 +797,17 @@ Current policy:
    - `make eval-ocr-transcript-cases-handwriting`
    - `make eval-ocr-transcript-cases-handwriting-benchmark`
    - `make eval-ocr-transcript-cases-typed`
+   - `make eval-ocr-transcript-cases-typed-benchmark`
    - `make eval-ocr-transcript-cases-illustration`
-5. Track drift separately for strict handwriting benchmark:
+   - `make eval-ocr-transcript-cases-illustration-benchmark`
+5. Track drift separately for strict lane benchmarks:
    - `make eval-ocr-transcript-stability-handwriting-benchmark`
+   - `make eval-ocr-transcript-stability-typed-benchmark`
+   - `make eval-ocr-transcript-stability-illustration-benchmark`
    - output JSON:
      `.local/eval_reports/ocr_handwriting_benchmark_stability.json`
+     `.local/eval_reports/ocr_typed_benchmark_stability.json`
+     `.local/eval_reports/ocr_illustration_benchmark_stability.json`
 6. Optional paths:
    - index output directory:
      `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/export CGPT_EXPORT_OUTPUT_DIR=/abs/path/to/output`
@@ -819,6 +829,8 @@ Current policy:
    - `.local/eval_cases/ocr_typed_from_transcripts.json`
    - `.local/eval_cases/ocr_illustration_from_transcripts.json`
    - `.local/eval_cases/ocr_handwriting_benchmark_cases.json`
+   - `.local/eval_cases/ocr_typed_benchmark_cases.json`
+   - `.local/eval_cases/ocr_illustration_benchmark_cases.json`
    - `.local/eval_cases/ocr_transcript_cases_review.json`
    - `.local/eval_cases/ocr_transcript_cases_review_prev.json` (when available)
    - `.local/eval_cases/ocr_transcript_cases_delta.md`

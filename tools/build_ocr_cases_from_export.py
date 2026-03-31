@@ -662,8 +662,7 @@ def build_from_export(
         for idx, msg in enumerate(seq):
             if msg.role != "user" or not msg.attachments:
                 continue
-            if not ASK_RX.search(msg.text):
-                continue
+            ask_signal = bool(ASK_RX.search(msg.text))
 
             assistant_text = ""
             followups: list[str] = []
@@ -689,6 +688,12 @@ def build_from_export(
                     followup_correction_phrases.extend(_extract_candidate_phrases(probe.text))
 
             if not assistant_text:
+                continue
+            askless_candidate_signal = bool(
+                OCR_FRAMING_RX.search(assistant_text)
+                or OCR_INTENT_RX.search(assistant_text)
+            )
+            if not ask_signal and not askless_candidate_signal:
                 continue
 
             transcription_phrases_raw, had_code_block = _extract_transcribed_lines(assistant_text)
@@ -716,11 +721,12 @@ def build_from_export(
                 image_path=image_path,
                 followups=followups,
             )
-            ocr_intent_signal = bool(
-                OCR_INTENT_RX.search("\n".join([msg.text, *followups]))
+            ask_followup_text = "\n".join([msg.text, *followups])
+            ocr_intent_signal = ask_signal or bool(
+                OCR_INTENT_RX.search(ask_followup_text)
             )
             ocr_literal_intent_signal = bool(
-                OCR_LITERAL_INTENT_RX.search("\n".join([msg.text, *followups]))
+                OCR_LITERAL_INTENT_RX.search(ask_followup_text)
             )
             ocr_framing_signal = bool(OCR_FRAMING_RX.search(assistant_text))
 
@@ -749,6 +755,13 @@ def build_from_export(
                 lane == "illustration"
                 and len(transcription_anchor_terms) >= 2
             )
+            askless_handwriting_signal = (
+                (not ask_signal)
+                and lane == "handwriting"
+                and ocr_framing_signal
+                and has_multi_token_transcription
+                and len(transcription_anchor_terms) >= 3
+            )
             strong_high_transcription_signal = (
                 ocr_literal_intent_signal
                 and ocr_framing_signal
@@ -757,11 +770,12 @@ def build_from_export(
                 and len(transcription_phrases) >= 2
                 and len(transcription_anchor_terms) >= 4
             )
-            medium_intent_signal = ocr_literal_intent_signal or (
+            medium_intent_signal = ocr_literal_intent_signal or askless_handwriting_signal or (
                 ocr_intent_signal
                 and (
                     strong_illustration_phrase_signal
                     or correction_signal
+                    or askless_handwriting_signal
                 )
             )
             if followup_correction_signal and followup_correction_phrases:
@@ -783,7 +797,19 @@ def build_from_export(
             ):
                 confidence = "medium"
                 chosen_phrases = transcription_phrases[:5]
-            anchor_terms = _expand_anchor_variants(_anchor_terms_for_phrases(chosen_phrases)[:8])
+            anchor_source_phrases = chosen_phrases[:]
+            if (
+                confidence == "high"
+                and correction_signal
+                and len(_anchor_terms_for_phrases(anchor_source_phrases)) < 3
+                and transcription_phrases
+            ):
+                # Some high-confidence corrections are numeric-heavy (for example sequence fixes).
+                # Backfill anchors from transcription phrases so valid OCR rows are not dropped.
+                anchor_source_phrases = _dedupe_phrases(
+                    [*anchor_source_phrases[:5], *transcription_phrases[:3]]
+                )
+            anchor_terms = _expand_anchor_variants(_anchor_terms_for_phrases(anchor_source_phrases)[:8])
             ordered_terms = _ordered_terms_for_phrases(transcription_phrases_raw[:1])[:4]
             ordered_phrase_fallback = ordered_terms if len(anchor_terms) < 3 else []
             if confidence == "low":
