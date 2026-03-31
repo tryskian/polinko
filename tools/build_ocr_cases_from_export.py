@@ -358,6 +358,28 @@ def _dedupe_phrases(phrases: list[str]) -> list[str]:
     return dedup
 
 
+def _phrases_overlap(left: list[str], right: list[str]) -> bool:
+    if not left or not right:
+        return False
+    left_tokens: set[str] = set()
+    right_tokens: set[str] = set()
+    for phrase in left:
+        left_tokens.update(
+            token.lower()
+            for token in _phrase_tokens(phrase)
+            if len(token) >= 4 and token.lower() not in ANCHOR_STOPWORDS
+        )
+    for phrase in right:
+        right_tokens.update(
+            token.lower()
+            for token in _phrase_tokens(phrase)
+            if len(token) >= 4 and token.lower() not in ANCHOR_STOPWORDS
+        )
+    if not left_tokens or not right_tokens:
+        return False
+    return bool(left_tokens & right_tokens)
+
+
 def _has_correction_signal(text: str) -> bool:
     return bool(
         CORRECTION_RX.search(text)
@@ -674,8 +696,9 @@ def build_from_export(
 
             for j in range(idx + 1, min(idx + 10, len(seq))):
                 probe = seq[j]
-                if not assistant_text and probe.role == "assistant" and probe.text:
-                    assistant_text = probe.text
+                if not assistant_text:
+                    if probe.role == "assistant" and probe.text:
+                        assistant_text = probe.text
                     continue
                 if probe.role != "user":
                     continue
@@ -737,9 +760,10 @@ def build_from_export(
             ask_correction_phrases = [p for p in ask_correction_phrases if _is_ocr_like_phrase(p)]
             ask_correction_phrases = _dedupe_phrases(ask_correction_phrases)
             correction_phrases = _dedupe_phrases(followup_correction_phrases + ask_correction_phrases)
+            transcription_phrases = [p for p in transcription_phrases_raw if _is_ocr_like_phrase(p)]
+            correction_overlap_signal = _phrases_overlap(correction_phrases[:5], transcription_phrases[:5])
             # Treat correction as meaningful only when we extracted OCR-like phrase content.
             correction_signal = bool(correction_phrases)
-            transcription_phrases = [p for p in transcription_phrases_raw if _is_ocr_like_phrase(p)]
             transcription_anchor_terms = _anchor_terms_for_phrases(transcription_phrases[:5])
             has_multi_token_transcription = any(
                 len(_phrase_tokens(phrase)) >= 2 for phrase in transcription_phrases[:5]
@@ -778,7 +802,11 @@ def build_from_export(
                     or askless_handwriting_signal
                 )
             )
-            if followup_correction_signal and followup_correction_phrases:
+            if (
+                followup_correction_signal
+                and followup_correction_phrases
+                and correction_overlap_signal
+            ):
                 confidence = "high"
                 chosen_phrases = followup_correction_phrases[:5]
             elif strong_high_transcription_signal and transcription_phrases:
@@ -832,6 +860,7 @@ def build_from_export(
                     "followup_user_messages": followups[:5],
                     "positive_signal": positive_signal,
                     "correction_signal": correction_signal,
+                    "correction_overlap_signal": correction_overlap_signal,
                     "ocr_intent_signal": ocr_intent_signal,
                     "ocr_literal_intent_signal": ocr_literal_intent_signal,
                     "ocr_framing_signal": ocr_framing_signal,
