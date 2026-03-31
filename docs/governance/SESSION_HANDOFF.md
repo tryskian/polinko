@@ -70,7 +70,7 @@
   - `make eod` now runs deterministic day-close sequence:
     `transcript-fix -> transcript-check -> doctor-env -> lint-docs -> test`
 - Transcript-backed OCR mining kernel is merged on `main`:
-  - PRs: `#110`, `#132`, `#133`, `#134`, `#155`, `#156`, `#159`, `#160`
+  - PRs: `#110`, `#132`, `#133`, `#134`, `#155`, `#156`, `#159`, `#160`, `#162`
   - indexer: `tools/index_cgpt_export.py`
   - miner: `tools/build_ocr_cases_from_export.py`
   - handwriting benchmark builder: `tools/build_handwriting_benchmark_cases.py`
@@ -124,9 +124,12 @@
     - `.local/eval_cases/ocr_illustration_from_transcripts.json`
     - `.local/eval_cases/ocr_illustration_benchmark_cases.json`
     - `.local/eval_cases/ocr_transcript_cases_delta.md`
-  - latest lane validations are green:
-    - all: `55/55` PASS
-    - handwriting: `6/6` PASS
+  - active precision baseline:
+    - mined cases: `29` total
+      (`handwriting=14`, `typed=8`, `illustration=7`)
+    - previous `55`-case mined output is legacy reference only
+  - latest lane validations:
+    - full transcript lane (diagnostic): `26/29` PASS (`3` fail)
     - handwriting benchmark: `6/6` PASS
     - typed benchmark: `3/3` PASS
     - illustration benchmark: `2/2` PASS
@@ -202,8 +205,9 @@
 
 ## Immediate Next Step
 
-- Keep transcript OCR baseline locked at
-  (`handwriting=40`, `typed=8`, `illustration=7`) with strict green gates:
+- Keep transcript OCR precision baseline locked at
+  (`handwriting=14`, `typed=8`, `illustration=7`) and preserve legacy
+  `55`-case output as reference-only:
   - rerun:
     - `make ocr-cases-from-export`
     - `make eval-ocr-transcript-cases`
@@ -214,7 +218,8 @@
     - `make eval-ocr-transcript-stability-typed-benchmark`
     - `make eval-ocr-transcript-stability-illustration-benchmark`
   - use review `summary` + `episodes` diagnostics to prioritise exactly one
-    precision-safe miner kernel (no broad recall relaxations)
+    precision-safe miner kernel to resolve the remaining `3` full-lane fails
+    without reintroducing framing-only conversational anchor noise
   - preserve malformed-anchor/single-token/conversational-noise guards
   - validate with:
     - `make lint-docs`

@@ -1327,3 +1327,19 @@
     - `make quality-gate-deterministic` when runtime/eval behaviour changed
 - Why: Reduces stale-artifact drift, lowers operator ambiguity, and keeps
   runtime changes auditable through deterministic validation closure.
+
+## D-113: Adopt stricter precision baseline for transcript OCR mining
+
+- Date: `2026-03-31`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `precision_baseline`, `noise_reduction`, `strict_binary`
+- Decision:
+  - tighten askless handwriting promotion so medium confidence requires
+    correction signal (not OCR framing alone)
+  - set active transcript OCR baseline to precision-first output:
+    `handwriting=14`, `typed=8`, `illustration=7` (`29` total)
+  - keep previous `55`-case output as legacy reference for research comparison,
+    not as active strict gate input
+  - keep benchmark + stability lanes as strict binary gates
+- Why: Removes framing-only conversational anchor leakage while preserving
+  deterministic benchmark gate quality.
