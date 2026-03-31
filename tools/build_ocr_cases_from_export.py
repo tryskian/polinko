@@ -167,7 +167,19 @@ AFTER_COLON_RX = re.compile(
     r"(?:it says|should be|correction|reads?|line)\s*:\s*([^\n]{3,120})",
     re.IGNORECASE,
 )
+AFTER_MARKER_RX = re.compile(
+    r"(?:it says|should be|reads? as|first word is)\s+([^\n]{2,120})",
+    re.IGNORECASE,
+)
 ARROW_RX = re.compile(r"(?:->|→|=>)\s*([^\n]{2,120})")
+NOT_CORRECTION_PAIR_RX = re.compile(
+    r"\b([a-z0-9][a-z0-9'/-]{1,40})\s*[!,:;]?\s*not\s+([a-z0-9][a-z0-9'/-]{1,40})\b",
+    re.IGNORECASE,
+)
+NOT_CORRECTION_CONTEXT_RX = re.compile(
+    r"\b(?:word|read(?:s)?|say(?:s)?|wrote|spell(?:ed|ing)?|ocr|transcrib\w*|binareyes)\b",
+    re.IGNORECASE,
+)
 QUOTED_PHRASE_RX = re.compile(r"[\"“”'`]\s*([^\"“”'`\n]{3,160}?)\s*[\"“”'`]")
 EMPHASIS_PHRASE_RX = re.compile(r"\*\*([^*\n]{3,160})\*\*|\*([^*\n]{3,160})\*")
 FRAMED_TRANSCRIPTION_RX = re.compile(
@@ -308,10 +320,19 @@ def _extract_inline_highlight_phrases(text: str) -> list[str]:
 
 def _extract_candidate_phrases(text: str) -> list[str]:
     phrases: list[str] = []
-    for pattern in (AFTER_COLON_RX, ARROW_RX):
+    not_pair_context = bool(NOT_CORRECTION_CONTEXT_RX.search(text))
+    for pattern in (AFTER_COLON_RX, AFTER_MARKER_RX, ARROW_RX):
         for match in pattern.findall(text):
-            value = _normalize_phrase_candidate(str(match))
+            raw = str(match)
+            clipped = re.split(r"[.;!?]\s+", raw, maxsplit=1)[0]
+            clipped = clipped.rstrip(".,:;!?")
+            value = _normalize_phrase_candidate(clipped)
             if 3 <= len(value) <= 180:
+                phrases.append(value)
+    if not_pair_context:
+        for left, _right in NOT_CORRECTION_PAIR_RX.findall(text):
+            value = _normalize_phrase_candidate(str(left))
+            if 3 <= len(value) <= 80:
                 phrases.append(value)
     phrases.extend(_extract_inline_highlight_phrases(text))
     dedup: list[str] = []
@@ -335,6 +356,13 @@ def _dedupe_phrases(phrases: list[str]) -> list[str]:
         seen.add(key)
         dedup.append(phrase)
     return dedup
+
+
+def _has_correction_signal(text: str) -> bool:
+    return bool(
+        CORRECTION_RX.search(text)
+        or (NOT_CORRECTION_CONTEXT_RX.search(text) and NOT_CORRECTION_PAIR_RX.search(text))
+    )
 
 
 def _extract_transcribed_lines(assistant_text: str) -> tuple[list[str], bool]:
@@ -642,7 +670,7 @@ def build_from_export(
             followup_correction_phrases: list[str] = []
             positive_signal = False
             followup_correction_signal = False
-            ask_correction_signal = bool(CORRECTION_RX.search(msg.text))
+            ask_correction_signal = _has_correction_signal(msg.text)
             ask_correction_phrases = _extract_candidate_phrases(msg.text)
 
             for j in range(idx + 1, min(idx + 10, len(seq))):
@@ -656,7 +684,7 @@ def build_from_export(
                     followups.append(probe.text)
                 if POSITIVE_RX.search(probe.text):
                     positive_signal = True
-                if CORRECTION_RX.search(probe.text):
+                if _has_correction_signal(probe.text):
                     followup_correction_signal = True
                     followup_correction_phrases.extend(_extract_candidate_phrases(probe.text))
 
@@ -721,7 +749,11 @@ def build_from_export(
                 and len(_anchor_terms_for_phrases(transcription_phrases[:5])) >= 2
             )
             medium_intent_signal = ocr_literal_intent_signal or (
-                ocr_intent_signal and strong_illustration_phrase_signal
+                ocr_intent_signal
+                and (
+                    strong_illustration_phrase_signal
+                    or correction_signal
+                )
             )
             if followup_correction_signal and followup_correction_phrases:
                 confidence = "high"
