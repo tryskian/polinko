@@ -130,6 +130,7 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
                         "anchor_terms_count": 2,
                         "ask_text": "can you read this screenshot?",
                         "chosen_phrases": ["alpha", "beta"],
+                        "ocr_literal_intent_signal": True,
                     },
                     {
                         "lane": "handwriting",
@@ -141,6 +142,22 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
                         "anchor_terms": ["open", "fold", "within"],
                         "ask_text": "please transcribe this notebook page",
                         "chosen_phrases": ["open", "fold", "within"],
+                    },
+                    {
+                        "lane": "typed",
+                        "confidence": "low",
+                        "emit_status": "skipped_low_confidence",
+                        "conversation_title": "off-topic visual chat",
+                        "source_name": "file_c.png",
+                        "image_path": "/tmp/file_c.png",
+                        "anchor_terms_count": 0,
+                        "ask_text": "look at this little ASCII dude",
+                        "chosen_phrases": [],
+                        "ocr_literal_intent_signal": False,
+                        "ocr_framing_signal": False,
+                        "correction_signal": False,
+                        "correction_overlap_signal": False,
+                        "transcription_phrases": [],
                     },
                 ],
             }
@@ -160,9 +177,11 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
             self.assertEqual(len(backlog), 2)
             self.assertEqual(backlog[0]["emit_status"], "skipped_unstable_source")
             self.assertEqual(backlog[0]["image_path"], "/tmp/file_b.png")
+            self.assertEqual(backlog[1]["image_path"], "/tmp/file_a.png")
             markdown = out_md.read_text(encoding="utf-8")
             self.assertIn("## Actionable Skipped Episodes", markdown)
             self.assertIn("/tmp/file_b.png", markdown)
+            self.assertNotIn("/tmp/file_c.png", markdown)
 
 
 if __name__ == "__main__":

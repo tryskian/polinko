@@ -105,6 +105,16 @@ def _extract_actionable_backlog(payload: dict[str, Any], *, max_items: int) -> l
         emit_status = str(row.get("emit_status", "")).strip()
         if emit_status not in ACTIONABLE_EMIT_STATUSES:
             continue
+        if emit_status == "skipped_low_confidence":
+            has_ocr_signal = bool(
+                row.get("ocr_literal_intent_signal")
+                or row.get("ocr_framing_signal")
+                or row.get("correction_signal")
+                or row.get("correction_overlap_signal")
+                or row.get("transcription_phrases")
+            )
+            if not has_ocr_signal:
+                continue
         confidence = str(row.get("confidence", "low")).strip().lower()
         if confidence not in CONFIDENCE_LEVELS:
             confidence = "low"
