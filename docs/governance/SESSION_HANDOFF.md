@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-03-30
+- 2026-03-31
 
 ## Current Snapshot
 
@@ -70,7 +70,7 @@
   - `make eod` now runs deterministic day-close sequence:
     `transcript-fix -> transcript-check -> doctor-env -> lint-docs -> test`
 - Transcript-backed OCR mining kernel is merged on `main`:
-  - PRs: `#110`, `#132`, `#133`, `#134`, `#155`, `#156`
+  - PRs: `#110`, `#132`, `#133`, `#134`, `#155`, `#156`, `#159`, `#160`
   - indexer: `tools/index_cgpt_export.py`
   - miner: `tools/build_ocr_cases_from_export.py`
   - handwriting benchmark builder: `tools/build_handwriting_benchmark_cases.py`
@@ -108,6 +108,11 @@
   - OCR matcher now also hardens one-character token drift on required
     long-form anchors (example: `CHATTIEST` vs `CHATTEST`) without
     loosening forbidden-phrase checks.
+  - correction-anchor hardening is active:
+    - correction phrases only drive high-confidence anchors when they overlap
+      with OCR transcription phrases
+    - review diagnostics include `correction_overlap_signal`
+    - off-topic/late correction phrases no longer pollute anchor terms
   - `make eval-ocr-transcript-stability` now self-starts `server-daemon`
     to avoid localhost preflight drift.
   - lane artifacts:
@@ -120,14 +125,17 @@
     - `.local/eval_cases/ocr_illustration_benchmark_cases.json`
     - `.local/eval_cases/ocr_transcript_cases_delta.md`
   - latest lane validations are green:
-    - all: `18/18` PASS
+    - all: `55/55` PASS
     - handwriting: `6/6` PASS
     - handwriting benchmark: `6/6` PASS
-    - typed: `8/8` PASS
-    - illustration: `4/4` PASS
+    - typed benchmark: `3/3` PASS
+    - illustration benchmark: `2/2` PASS
   - latest stability replay is green:
     - runs: `5/5`
-    - all-lane decision stability: `18` stable, `0` flaky
+    - benchmark decision stability:
+      - handwriting: `6` stable, `0` flaky
+      - typed: `3` stable, `0` flaky
+      - illustration: `2` stable, `0` flaky
     - handwriting benchmark stability: `6` stable, `0` flaky
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
@@ -195,16 +203,18 @@
 ## Immediate Next Step
 
 - Keep transcript OCR baseline locked at
-  (`handwriting=5`, `typed=7`, `illustration=3`) with strict green gates:
+  (`handwriting=40`, `typed=8`, `illustration=7`) with strict green gates:
   - rerun:
     - `make ocr-cases-from-export`
     - `make eval-ocr-transcript-cases`
-    - `make eval-ocr-transcript-cases-handwriting`
-    - `make eval-ocr-transcript-cases-typed`
-    - `make eval-ocr-transcript-cases-illustration`
-    - `make eval-ocr-transcript-stability OCR_STABILITY_RUNS=5`
+    - `make eval-ocr-transcript-cases-handwriting-benchmark`
+    - `make eval-ocr-transcript-cases-typed-benchmark`
+    - `make eval-ocr-transcript-cases-illustration-benchmark`
+    - `make eval-ocr-transcript-stability-handwriting-benchmark`
+    - `make eval-ocr-transcript-stability-typed-benchmark`
+    - `make eval-ocr-transcript-stability-illustration-benchmark`
   - use review `summary` + `episodes` diagnostics to prioritise exactly one
-    precision-safe medium-confidence promotion kernel
+    precision-safe miner kernel (no broad recall relaxations)
   - preserve malformed-anchor/single-token/conversational-noise guards
   - validate with:
     - `make lint-docs`
