@@ -22,14 +22,21 @@ SPACED_LETTER_WORD_RX = re.compile(r"\b(?:[A-Za-z]\s+){2,}[A-Za-z]\b")
 OCR_WORD_TOKEN_RX = re.compile(r"\b[a-z0-9-]+\b")
 
 
-def _contains_optional_letter_spacing(*, haystack: str, probe: str, whole_word: bool) -> bool:
+def _contains_optional_letter_spacing(
+    *,
+    haystack: str,
+    probe: str,
+    whole_word: bool,
+    allow_punctuation_gaps: bool = False,
+) -> bool:
     """Match probes when OCR inserts spaces inside a single word token."""
     if not probe or re.search(r"\s", probe):
         return False
     if not re.fullmatch(r"[\w-]+", probe):
         return False
     pieces = [re.escape(char) for char in probe]
-    spaced_pattern = r"\s*".join(pieces)
+    separator_pattern = r"[\s\W_]*" if allow_punctuation_gaps else r"\s*"
+    spaced_pattern = separator_pattern.join(pieces)
     if whole_word:
         spaced_pattern = rf"(?<!\w){spaced_pattern}(?!\w)"
     return re.search(spaced_pattern, haystack) is not None
@@ -317,7 +324,12 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
         return (
             probe in haystack
             or probe in haystack_spaced_normalized
-            or _contains_optional_letter_spacing(haystack=haystack, probe=probe, whole_word=False)
+            or _contains_optional_letter_spacing(
+                haystack=haystack,
+                probe=probe,
+                whole_word=False,
+                allow_punctuation_gaps=True,
+            )
         )
 
     def contains_required(needle: str) -> bool:

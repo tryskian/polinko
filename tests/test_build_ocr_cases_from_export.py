@@ -93,6 +93,15 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         )
         self.assertEqual(lane, "illustration")
 
+    def test_classify_lane_does_not_match_ink_inside_polinko_token(self) -> None:
+        lane = _classify_lane(
+            ask_text='`beab init "Operation Polinko"`',
+            title="org cleanup",
+            image_path="/tmp/file-xyz-note.png",
+            followups=[],
+        )
+        self.assertEqual(lane, "typed")
+
     def test_extract_candidate_phrases_from_quotes_and_emphasis(self) -> None:
         text = 'correction: "Only Alpha Spiral Field" and *Beta Grid*'
         phrases = _extract_candidate_phrases(text)
@@ -1369,6 +1378,187 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             case = json.loads(output_cases.read_text(encoding="utf-8"))["cases"][0]
             self.assertEqual(case["must_contain_any"], ["stirring"])
             self.assertEqual(case["must_appear_in_order"], ["something", "stirring"])
+
+    def test_build_skips_known_unstable_handwriting_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            unstable_name = "file_00000000b01871fdac46c44584b95d6a-sanitized.png"
+            (assets / unstable_name).write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-unstable-source",
+                "title": "unstable source",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you read this handwritten notebook note?"]},
+                            "metadata": {"attachments": [{"name": unstable_name, "id": "file_unstable"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {
+                                "parts": [
+                                    "OCR:\n- SOH CAH TOAH\n- open / fold / within\n- moment the mnemonic became mythic."
+                                ]
+                            },
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-unstable-source.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["cases_written"], 0)
+            self.assertEqual(summary["skipped_unstable_source"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["emit_status"], "skipped_unstable_source")
+
+    def test_build_skips_known_unstable_typed_source(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            unstable_name = "file_0000000047f871f7af65c1ce3955cc2e-sanitized.png"
+            (assets / unstable_name).write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-unstable-typed-source",
+                "title": "unstable typed source",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you read this?"]},
+                            "metadata": {"attachments": [{"name": unstable_name, "id": "file_unstable_typed"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["it reads: word bully"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-unstable-typed-source.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["cases_written"], 0)
+            self.assertEqual(summary["skipped_unstable_source"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["emit_status"], "skipped_unstable_source")
+
+    def test_build_does_not_promote_ask_phrases_without_correction_signal(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            image_name = "file_ocrable_note.png"
+            (assets / image_name).write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-no-correction-ask-phrase",
+                "title": "org switcher crumbs",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ['`beab init "Operation Polinko"` with binareyes']},
+                            "metadata": {"attachments": [{"name": image_name, "id": "file_nocorr"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["No OCR output here; this is org settings guidance only."]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-no-correction-ask-phrase.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["cases_written"], 0)
+            self.assertEqual(summary["skipped_low_confidence"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["emit_status"], "skipped_low_confidence")
 
 
 if __name__ == "__main__":

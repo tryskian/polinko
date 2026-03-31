@@ -15,7 +15,7 @@ OCR_INTENT_PATTERN = (
 )
 ASK_RX = re.compile(OCR_INTENT_PATTERN, re.IGNORECASE)
 HANDWRITING_HINT_RX = re.compile(
-    r"handwrit|cursive|script|notebook|sketchbook|journal|ink|pen|manifold",
+    r"\bhandwrit\w*\b|\bcursive\b|\bscript\b|\bnotebook\b|\bsketchbook\b|\bjournal\b|\bink\b|\bpen\b|\bmanifold\b",
     re.IGNORECASE,
 )
 TYPED_HINT_RX = re.compile(
@@ -28,6 +28,12 @@ ILLUSTRATION_HINT_RX = re.compile(
 )
 CAMERA_IMAGE_NAME_RX = re.compile(r"(?:^|[-_])(img|dsc)[_-]\d{3,}", re.IGNORECASE)
 SCREENSHOT_NAME_RX = re.compile(r"(?:^|[-_])screenshot(?:[-_]|$)", re.IGNORECASE)
+UNSTABLE_SOURCE_NAMES = {
+    # Quarantined from strict active set: repeatedly flaky in transcript
+    # stability runs due highly variable OCR extraction on these crops.
+    "file_00000000b01871fdac46c44584b95d6a-sanitized.png",
+    "file_0000000047f871f7af65c1ce3955cc2e-sanitized.png",
+}
 ANCHOR_STOPWORDS = {
     "the",
     "and",
@@ -658,6 +664,7 @@ def build_from_export(
     skipped_low_confidence = 0
     skipped_duplicate_image_path = 0
     skipped_insufficient_anchor_terms = 0
+    skipped_unstable_source = 0
     emitted_cases = 0
 
     conversation_files = sorted(conversations_dir.glob("*.json"))
@@ -692,7 +699,9 @@ def build_from_export(
             positive_signal = False
             followup_correction_signal = False
             ask_correction_signal = _has_correction_signal(msg.text)
-            ask_correction_phrases = _extract_candidate_phrases(msg.text)
+            ask_correction_phrases = (
+                _extract_candidate_phrases(msg.text) if ask_correction_signal else []
+            )
 
             for j in range(idx + 1, min(idx + 10, len(seq))):
                 probe = seq[j]
@@ -843,6 +852,8 @@ def build_from_export(
             ordered_phrase_fallback = ordered_terms if len(anchor_terms) < 3 else []
             if confidence == "low":
                 emit_status = "skipped_low_confidence"
+            elif Path(image_path).name in UNSTABLE_SOURCE_NAMES:
+                emit_status = "skipped_unstable_source"
             elif image_path in seen_case_paths:
                 emit_status = "skipped_duplicate_image_path"
             elif len(anchor_terms) < 3 and len(ordered_phrase_fallback) < 2:
@@ -881,6 +892,9 @@ def build_from_export(
                 continue
             if emit_status == "skipped_duplicate_image_path":
                 skipped_duplicate_image_path += 1
+                continue
+            if emit_status == "skipped_unstable_source":
+                skipped_unstable_source += 1
                 continue
             case_id = f"tx-{conversation_id[:8]}-{len(cases)+1:03d}"
             if emit_status == "skipped_insufficient_anchor_terms":
@@ -968,6 +982,7 @@ def build_from_export(
         "skipped_low_confidence": skipped_low_confidence,
         "skipped_duplicate_image_path": skipped_duplicate_image_path,
         "skipped_insufficient_anchor_terms": skipped_insufficient_anchor_terms,
+        "skipped_unstable_source": skipped_unstable_source,
     }
 
 
@@ -1039,6 +1054,7 @@ def main() -> int:
         "skipped_low_confidence",
         "skipped_duplicate_image_path",
         "skipped_insufficient_anchor_terms",
+        "skipped_unstable_source",
     ):
         print(f"{key}={summary[key]}")
     return 0

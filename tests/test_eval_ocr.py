@@ -89,6 +89,13 @@ class OcrEvalRuleTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(reasons, [])
 
+    def test_must_contain_any_matches_punctuation_split_tokens(self) -> None:
+        case = self._base_case()
+        case["must_contain_any"] = ["toah"]
+        passed, reasons = _check_case(case, "Sotterrt To-AH")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
     def test_must_contain_any_allows_single_char_ocr_drift(self) -> None:
         case = self._base_case()
         case["must_contain_any"] = ["chattiest"]

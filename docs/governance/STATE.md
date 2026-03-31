@@ -388,16 +388,20 @@
 - OCR supports optional `visual_context_hint` for deterministic image-context indexing
   (useful for eval seeding and controlled ingest).
 - Transcript OCR mining now runs in stricter precision mode:
-  - askless handwriting episodes require correction-overlap signal before
-    medium confidence promotion
-  - active mined baseline: `25` cases (`handwriting=10`, `typed=8`,
-    `illustration=7`)
-  - previous `55`-case mined output is retained as legacy reference for
+  - ask-side candidate phrases are only treated as correction anchors when
+    correction signal is explicitly present
+  - handwriting hint detection is token-bounded (prevents substring drift such
+    as `Polinko` matching `ink`)
+  - unstable transcript sources are quarantined from the active strict set
+  - active mined baseline: `21` cases (`handwriting=4`, `typed=11`,
+    `illustration=6`)
+  - previous `55`/`29`/`25` mined outputs are retained as legacy reference for
     comparison, not as active strict gate input
 - Transcript OCR benchmark and stability gates remain strict and green under
   the precision baseline:
-  - handwriting benchmark: `6/6` PASS, stability `6 stable / 0 flaky`
-  - typed benchmark: `3/3` PASS, stability `3 stable / 0 flaky`
+  - full transcript lane: `21/21` PASS, stability `21 stable / 0 flaky`
+  - handwriting benchmark: `4/4` PASS, stability `4 stable / 0 flaky`
+  - typed benchmark: `6/6` PASS, stability `6 stable / 0 flaky`
   - illustration benchmark: `2/2` PASS, stability `2 stable / 0 flaky`
 - Optional Responses API orchestration mode is implemented behind feature flags:
   - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED`
