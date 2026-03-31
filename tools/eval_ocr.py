@@ -5,6 +5,7 @@ import mimetypes
 import os
 import re
 import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -32,6 +33,13 @@ def _contains_optional_letter_spacing(*, haystack: str, probe: str, whole_word: 
     if whole_word:
         spaced_pattern = rf"(?<!\w){spaced_pattern}(?!\w)"
     return re.search(spaced_pattern, haystack) is not None
+
+
+def _single_token_signature(value: str) -> str:
+    compact = re.sub(r"[^a-z0-9-]", "", value.lower())
+    compact = re.sub(r"(.)\1+", r"\1", compact)
+    compact = re.sub(r"[aeiouy]", "", compact)
+    return compact
 
 
 def _edit_distance_at_most_one(lhs: str, rhs: str) -> bool:
@@ -69,16 +77,46 @@ def _contains_near_single_token(*, tokens: list[str], probe: str) -> bool:
     # Allow one-character OCR drift on longer single-token anchors only.
     if not re.fullmatch(r"[a-z0-9-]{6,}", probe):
         return False
+    probe_signature = _single_token_signature(probe)
     for token in tokens:
-        if abs(len(token) - len(probe)) > 1:
-            continue
         if token[:1] != probe[:1]:
             continue
+        token_signature = _single_token_signature(token)
+        if (
+            probe_signature
+            and len(probe_signature) >= 4
+            and token_signature == probe_signature
+            and abs(len(token) - len(probe)) <= 3
+        ):
+            return True
         if len(probe) >= 5 and token[-1:] != probe[-1:]:
+            continue
+        if abs(len(token) - len(probe)) > 1:
             continue
         if _edit_distance_at_most_one(token, probe):
             return True
     return False
+
+
+def _find_ordered_phrase_index(
+    *,
+    haystack: str,
+    phrase: str,
+    cursor: int,
+    case_sensitive: bool,
+) -> tuple[int, int] | None:
+    probe = phrase if case_sensitive else phrase.lower()
+    direct_index = haystack.find(probe, cursor)
+    if direct_index >= 0:
+        return direct_index, len(probe)
+    if not re.fullmatch(r"[a-z0-9-]{6,}", probe):
+        return None
+    for match in OCR_WORD_TOKEN_RX.finditer(haystack[cursor:]):
+        token = match.group(0)
+        if _contains_near_single_token(tokens=[token], probe=probe):
+            start = cursor + match.start()
+            return start, len(token)
+    return None
 
 
 def _headers(api_key: str | None) -> dict[str, str]:
@@ -314,14 +352,19 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
     if case["must_appear_in_order"]:
         cursor = 0
         for phrase in case["must_appear_in_order"]:
-            probe = phrase if case_sensitive else phrase.lower()
-            index = haystack.find(probe, cursor)
-            if index < 0:
+            match = _find_ordered_phrase_index(
+                haystack=haystack_spaced_normalized,
+                phrase=phrase,
+                cursor=cursor,
+                case_sensitive=case_sensitive,
+            )
+            if match is None:
                 reasons.append(
                     f"missing ordered phrase: {phrase!r} after offset {cursor}"
                 )
                 break
-            cursor = index + len(probe)
+            index, length = match
+            cursor = index + length
 
     regex_flags = 0 if case_sensitive else re.IGNORECASE
     for pattern in case["must_match_regex"]:
@@ -383,7 +426,7 @@ def main() -> int:
     if not cases_path.exists():
         raise SystemExit(f"Cases file not found: {cases_path}")
     cases = _load_cases(cases_path)
-    run_id = args.run_id.strip() or str(int(time.time()))
+    run_id = args.run_id.strip() or f"{int(time.time() * 1000)}-{os.getpid()}-{uuid.uuid4().hex[:6]}"
     api_key = os.getenv("POLINKO_SERVER_API_KEY")
     headers = _headers(api_key)
 
