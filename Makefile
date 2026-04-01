@@ -68,6 +68,7 @@ OCR_STABILITY_TYPED_BENCHMARK_OUTPUT ?= .local/eval_reports/ocr_typed_benchmark_
 OCR_STABILITY_TYPED_BENCHMARK_REPORT_DIR ?= .local/eval_reports/ocr_typed_benchmark_runs
 OCR_STABILITY_ILLUSTRATION_BENCHMARK_OUTPUT ?= .local/eval_reports/ocr_illustration_benchmark_stability.json
 OCR_STABILITY_ILLUSTRATION_BENCHMARK_REPORT_DIR ?= .local/eval_reports/ocr_illustration_benchmark_runs
+NOTEBOOK_START_PATH ?= output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb
 CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
 CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
 CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
@@ -98,7 +99,11 @@ notebook-setup:
 	$(PYTHON) -m pip install -r requirements.notebook.txt
 
 notebook nb notes:
-	$(PYTHON) -m jupyter lab .
+	@if [ -f "$(NOTEBOOK_START_PATH)" ]; then \
+		$(PYTHON) -m jupyter lab "$(NOTEBOOK_START_PATH)"; \
+	else \
+		$(PYTHON) -m jupyter lab output/jupyter-notebook; \
+	fi
 
 # Short aliases for frequent long-chain commands.
 ocrindex: cgpt-export-index
