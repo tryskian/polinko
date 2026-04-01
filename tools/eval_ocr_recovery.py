@@ -2,7 +2,6 @@ import argparse
 import base64
 import json
 import mimetypes
-import os
 import re
 import time
 from pathlib import Path
@@ -20,11 +19,8 @@ from tools.eval_trace_artifacts import build_eval_trace
 _ONE_BY_ONE_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+qW6QAAAAASUVORK5CYII="
 
 
-def _headers(api_key: str | None) -> dict[str, str]:
-    headers = {"Content-Type": "application/json"}
-    if api_key:
-        headers["x-api-key"] = api_key
-    return headers
+def _headers() -> dict[str, str]:
+    return {"Content-Type": "application/json"}
 
 
 def _request_json(
@@ -348,8 +344,7 @@ def main() -> int:
     if not cases_path.exists():
         raise SystemExit(f"Cases file not found: {cases_path}")
 
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
-    headers = _headers(api_key)
+    headers = _headers()
     run_id = str(args.run_id or "").strip() or str(int(time.time()))
     cases = _load_cases(cases_path)
 

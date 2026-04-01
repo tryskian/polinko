@@ -1,6 +1,5 @@
 import argparse
 import json
-import os
 import time
 from pathlib import Path
 from typing import Any
@@ -15,11 +14,8 @@ from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
 
 
-def _headers(api_key: str | None) -> dict[str, str]:
-    headers = {"Content-Type": "application/json"}
-    if api_key:
-        headers["x-api-key"] = api_key
-    return headers
+def _headers() -> dict[str, str]:
+    return {"Content-Type": "application/json"}
 
 
 def _request_json(
@@ -283,8 +279,7 @@ def main() -> int:
 
     cases = _load_cases(cases_path)
     run_id = args.run_id.strip() or str(int(time.time()))
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
-    headers = _headers(api_key)
+    headers = _headers()
 
     print(f"Running retrieval eval on {args.base_url}")
     print(f"Cases: {len(cases)} | run_id={run_id}")
@@ -294,7 +289,6 @@ def main() -> int:
         print(f"Preflight failed: {exc}")
         print("Checks:")
         print("  - Is `make server` running on the expected base URL?")
-        print("  - Does `.env` contain a valid `POLINKO_SERVER_API_KEY` for this server?")
         print("  - Is `POLINKO_VECTOR_ENABLED=true` on the running server?")
         return 1
 

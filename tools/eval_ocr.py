@@ -137,11 +137,8 @@ def _find_ordered_phrase_index(
     return None
 
 
-def _headers(api_key: str | None) -> dict[str, str]:
-    headers = {"Content-Type": "application/json"}
-    if api_key:
-        headers["x-api-key"] = api_key
-    return headers
+def _headers() -> dict[str, str]:
+    return {"Content-Type": "application/json"}
 
 
 def _request_json(
@@ -450,8 +447,7 @@ def main() -> int:
         raise SystemExit(f"Cases file not found: {cases_path}")
     cases = _load_cases(cases_path)
     run_id = args.run_id.strip() or f"{int(time.time() * 1000)}-{os.getpid()}-{uuid.uuid4().hex[:6]}"
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
-    headers = _headers(api_key)
+    headers = _headers()
 
     print(f"Running OCR eval on {args.base_url}")
     print(f"Cases: {len(cases)} | run_id={run_id}")

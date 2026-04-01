@@ -20,7 +20,6 @@ from core.vector_store import VectorStore
 
 
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-key-123456789012345")
-os.environ.setdefault("POLINKO_SERVER_API_KEY", "test-server-key")
 
 import server  # noqa: E402
 
@@ -39,8 +38,6 @@ class PolinkoApiTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmpdir = tempfile.TemporaryDirectory()
         deps = server.get_runtime_deps()
-        deps.server_api_key = "test-server-key"
-        deps.server_api_key_principals = {"test-server-key": "default"}
         deps.rate_limit_per_minute = 30
         deps.rate_limiter.clear()
         deps.deprecate_on_reset = False
@@ -95,21 +92,23 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(body["status"], "ok")
         self.assertIn("prompt_version", body)
 
-    def test_auth_required_for_chat_and_reset(self) -> None:
-        chat_resp = self.client.post("/chat", json={"message": "hello", "session_id": "s1"})
-        self.assertEqual(chat_resp.status_code, 401)
-
+    def test_api_key_is_not_required_for_core_endpoints(self) -> None:
+        chat_resp = self.client.post(
+            "/chat",
+            json={"message": "hello", "session_id": "s1", "harness_mode": "fixture"},
+        )
+        self.assertEqual(chat_resp.status_code, 200)
         reset_resp = self.client.post("/session/reset", json={"session_id": "s1"})
-        self.assertEqual(reset_resp.status_code, 401)
+        self.assertEqual(reset_resp.status_code, 200)
 
         chats_resp = self.client.get("/chats")
-        self.assertEqual(chats_resp.status_code, 401)
+        self.assertEqual(chats_resp.status_code, 200)
 
         note_resp = self.client.post("/chats/s1/notes", json={"note": "test"})
-        self.assertEqual(note_resp.status_code, 401)
+        self.assertEqual(note_resp.status_code, 200)
 
         metrics_resp = self.client.get("/metrics")
-        self.assertEqual(metrics_resp.status_code, 401)
+        self.assertEqual(metrics_resp.status_code, 200)
 
     def test_reset_with_valid_api_key(self) -> None:
         resp = self.client.post(
@@ -3808,7 +3807,7 @@ class PolinkoApiTests(unittest.TestCase):
         payload = resp.json()
         self.assertEqual(payload["session_id"], "s-personal")
         self.assertEqual(payload["memory_scope"], "session")
-        self.assertEqual(payload["updated_by"], "default")
+        self.assertIsNone(payload["updated_by"])
 
     def test_personalization_get_returns_default_when_not_set(self) -> None:
         deps = server.get_runtime_deps()
@@ -3839,7 +3838,7 @@ class PolinkoApiTests(unittest.TestCase):
         payload = resp.json()
         self.assertEqual(payload["session_id"], "s-personal-get")
         self.assertEqual(payload["memory_scope"], "session")
-        self.assertEqual(payload["updated_by"], "default")
+        self.assertIsNone(payload["updated_by"])
 
     def test_chat_summary_and_export_include_personalization_scope(self) -> None:
         set_resp = self.client.post(
@@ -3986,19 +3985,13 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("RETRIEVED_MEMORY", captured["input"])
         self.assertIn("First assistant memory", captured["input"])
 
-    def test_chat_success_with_key_ring(self) -> None:
-        deps = server.get_runtime_deps()
-        deps.server_api_key_principals = {
-            "team-key-a": "team-a",
-            "team-key-b": "team-b",
-        }
+    def test_chat_accepts_optional_x_api_key_header(self) -> None:
         with self._stub_runner("Ring response"):
             resp = self.client.post(
                 "/chat",
                 headers={"x-api-key": "team-key-b"},
                 json={"message": "hello", "session_id": "s-chat-ring"},
             )
-        deps.server_api_key_principals = {"test-server-key": "default"}
 
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.json()["output"], "Ring response")

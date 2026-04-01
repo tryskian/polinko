@@ -2,7 +2,6 @@ import argparse
 import base64
 import json
 import mimetypes
-import os
 import shlex
 import sys
 from pathlib import Path
@@ -146,10 +145,7 @@ def main() -> int:
     load_dotenv(dotenv_path=".env")
     args = build_parser().parse_args()
 
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
     headers = {"Content-Type": "application/json"}
-    if api_key:
-        headers["x-api-key"] = api_key
 
     print(f"Connected to {args.base_url} (session_id={args.session_id})")
     print("Type '/help' for commands.")

@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import json
 import os
 from typing import Literal
 
@@ -13,8 +12,6 @@ class AppConfig:
     history_db_path: str
     default_session_id: str
     log_level: str
-    server_api_key: str | None
-    server_api_key_principals: dict[str, str]
     rate_limit_per_minute: int
     deprecate_on_reset: bool
     ocr_provider: str
@@ -102,65 +99,6 @@ def _validate_openai_api_key(openai_api_key: str | None) -> str:
     return normalized_key
 
 
-def _validate_server_api_key(server_api_key: str | None) -> str | None:
-    normalized_key = _normalize_quoted_env_value(server_api_key)
-    if not normalized_key:
-        return None
-    if len(normalized_key) < 12:
-        raise RuntimeError("POLINKO_SERVER_API_KEY is too short; use at least 12 characters.")
-    if _looks_like_placeholder(normalized_key):
-        raise RuntimeError("POLINKO_SERVER_API_KEY is a placeholder value; set a real key.")
-    return normalized_key
-
-
-def _validate_principal(principal: str) -> str:
-    value = principal.strip()
-    if not value:
-        raise RuntimeError("POLINKO_SERVER_API_KEYS_JSON contains an empty principal name.")
-    return value
-
-
-def _load_server_api_key_principals(single_server_api_key: str | None) -> dict[str, str]:
-    principals: dict[str, str] = {}
-    if single_server_api_key:
-        principals[single_server_api_key] = "default"
-
-    raw_json = (_read_env("POLINKO_SERVER_API_KEYS_JSON", "") or "").strip()
-    if not raw_json:
-        return principals
-
-    try:
-        parsed = json.loads(raw_json)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(
-            "POLINKO_SERVER_API_KEYS_JSON must be valid JSON object: "
-            '{"principal":"api-key","principal2":"api-key-2"}'
-        ) from exc
-
-    if not isinstance(parsed, dict):
-        raise RuntimeError("POLINKO_SERVER_API_KEYS_JSON must be a JSON object.")
-
-    for raw_principal, raw_key in parsed.items():
-        if not isinstance(raw_principal, str) or not isinstance(raw_key, str):
-            raise RuntimeError(
-                "POLINKO_SERVER_API_KEYS_JSON values must be string pairs: "
-                '{"principal":"api-key"}'
-            )
-        principal = _validate_principal(raw_principal)
-        key = _validate_server_api_key(raw_key)
-        if not key:
-            continue
-        existing_principal = principals.get(key)
-        if existing_principal and existing_principal != principal:
-            raise RuntimeError(
-                "Duplicate API key mapped to different principals in "
-                "POLINKO_SERVER_API_KEYS_JSON."
-            )
-        principals[key] = principal
-
-    return principals
-
-
 def _parse_bool_env(name: str, default: bool) -> bool:
     raw = _read_env(name)
     if raw is None:
@@ -230,8 +168,6 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     load_dotenv(dotenv_path=dotenv_path)
 
     openai_api_key = _validate_openai_api_key(_read_env("OPENAI_API_KEY"))
-    server_api_key = _validate_server_api_key(_read_env("POLINKO_SERVER_API_KEY"))
-    server_api_key_principals = _load_server_api_key_principals(server_api_key)
     log_level = (_read_env("POLINKO_LOG_LEVEL", "INFO") or "INFO").upper()
     default_session_id = _read_env("POLINKO_DEFAULT_SESSION_ID", "default") or "default"
     session_db_path = (
@@ -360,8 +296,6 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         history_db_path=history_db_path,
         default_session_id=default_session_id,
         log_level=log_level,
-        server_api_key=server_api_key,
-        server_api_key_principals=server_api_key_principals,
         rate_limit_per_minute=rate_limit_per_minute,
         deprecate_on_reset=deprecate_on_reset,
         ocr_provider=ocr_provider,

@@ -63,8 +63,6 @@ Notes:
   `make ocrtype`, `make ocrillu`, `make ocrstable`, `make gate`
 - notebook commands:
   `make notebook-setup`, `make notes` (aliases: `make notebook`, `make nb`)
-- API key auth is optional for local dev (`POLINKO_SERVER_API_KEY`,
-  `POLINKO_SERVER_API_KEYS_JSON`).
 
 ## Core Commands
 
