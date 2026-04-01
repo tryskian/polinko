@@ -135,6 +135,30 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--run-id", default="", help="Run id prefix (default: unix timestamp).")
     parser.add_argument("--session-prefix", default="ocr-stability")
     parser.add_argument("--timeout", type=int, default=90)
+    parser.add_argument(
+        "--offset",
+        type=int,
+        default=0,
+        help="Start index into the cases list (applies to each run).",
+    )
+    parser.add_argument(
+        "--max-cases",
+        type=int,
+        default=0,
+        help="Maximum number of cases to evaluate per run (0 = all).",
+    )
+    parser.add_argument(
+        "--ocr-retries",
+        type=int,
+        default=0,
+        help="Transient OCR retry count passed through to tools.eval_ocr.",
+    )
+    parser.add_argument(
+        "--ocr-retry-delay-ms",
+        type=int,
+        default=0,
+        help="Delay between transient OCR retries, in milliseconds.",
+    )
     parser.add_argument("--strict", action="store_true", help="Pass --strict to tools.eval_ocr.")
     parser.add_argument(
         "--report-dir",
@@ -169,6 +193,18 @@ def main() -> int:
     if args.runs < 1:
         print("runs must be >= 1")
         return 2
+    if args.offset < 0:
+        print("offset must be >= 0")
+        return 2
+    if args.max_cases < 0:
+        print("max-cases must be >= 0")
+        return 2
+    if args.ocr_retries < 0:
+        print("ocr-retries must be >= 0")
+        return 2
+    if args.ocr_retry_delay_ms < 0:
+        print("ocr-retry-delay-ms must be >= 0")
+        return 2
 
     run_id = args.run_id.strip() or str(int(time.time()))
     cases_path = Path(args.cases).expanduser()
@@ -202,6 +238,14 @@ def main() -> int:
             f"{args.session_prefix}-r{index:02d}",
             "--timeout",
             str(args.timeout),
+            "--offset",
+            str(args.offset),
+            "--max-cases",
+            str(args.max_cases),
+            "--ocr-retries",
+            str(args.ocr_retries),
+            "--ocr-retry-delay-ms",
+            str(args.ocr_retry_delay_ms),
             "--report-json",
             str(run_report),
         ]
@@ -269,6 +313,10 @@ def main() -> int:
         "run_id": run_id,
         "base_url": args.base_url,
         "cases_path": str(cases_path),
+        "offset": args.offset,
+        "max_cases": args.max_cases,
+        "ocr_retries": args.ocr_retries,
+        "ocr_retry_delay_ms": args.ocr_retry_delay_ms,
         "runs_requested": args.runs,
         "runs_with_report": len(run_reports),
         "run_error_count": run_error_count,
