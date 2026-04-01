@@ -960,8 +960,11 @@ def build_from_export(
                 "skipped_low_confidence",
             }
             if emit_status == "skipped_low_confidence":
+                # Keep low-confidence growth strict but broader than literal-only
+                # asks: include OCR-framed/correction-led examples so failure-heavy
+                # cohorts can be tracked without dropping to non-OCR chatter.
                 growth_emit_status = bool(
-                    ocr_literal_intent_signal
+                    (ocr_literal_intent_signal or ocr_framing_signal or correction_signal)
                     and transcription_phrases
                 )
             if emit_status in {"skipped_duplicate_image_path", "skipped_unstable_source"}:
