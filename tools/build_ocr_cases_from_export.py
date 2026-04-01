@@ -960,11 +960,51 @@ def build_from_export(
     handwriting_cases = [case for case in cases if case.get("lane") == "handwriting"]
     typed_cases = [case for case in cases if case.get("lane") == "typed"]
     illustration_cases = [case for case in cases if case.get("lane") == "illustration"]
+    cases_summary = {
+        "conversation_files": len(conversation_files),
+        "episodes": len(review_rows),
+        "cases_total": len(cases),
+        "lane_case_counts": {
+            "handwriting": len(handwriting_cases),
+            "typed": len(typed_cases),
+            "illustration": len(illustration_cases),
+        },
+        "confidence_counts": confidence_counts,
+        "lane_counts": lane_counts,
+        "emit_status_counts": emit_status_counts,
+    }
     output_cases.parent.mkdir(parents=True, exist_ok=True)
-    _write_json(output_cases, {"cases": cases})
-    _write_json(output_cases_handwriting, {"cases": handwriting_cases})
-    _write_json(output_cases_typed, {"cases": typed_cases})
-    _write_json(output_cases_illustration, {"cases": illustration_cases})
+    _write_json(output_cases, {"summary": cases_summary, "cases": cases})
+    _write_json(
+        output_cases_handwriting,
+        {
+            "summary": {
+                "lane": "handwriting",
+                "cases_total": len(handwriting_cases),
+            },
+            "cases": handwriting_cases,
+        },
+    )
+    _write_json(
+        output_cases_typed,
+        {
+            "summary": {
+                "lane": "typed",
+                "cases_total": len(typed_cases),
+            },
+            "cases": typed_cases,
+        },
+    )
+    _write_json(
+        output_cases_illustration,
+        {
+            "summary": {
+                "lane": "illustration",
+                "cases_total": len(illustration_cases),
+            },
+            "cases": illustration_cases,
+        },
+    )
     _write_json(
         output_review,
         {

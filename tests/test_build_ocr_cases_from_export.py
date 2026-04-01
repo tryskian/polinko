@@ -811,7 +811,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["medium_confidence"], 1)
             self.assertEqual(summary["illustration_cases_written"], 1)
-            case = json.loads(output_cases.read_text(encoding="utf-8"))["cases"][0]
+            cases_payload = json.loads(output_cases.read_text(encoding="utf-8"))
+            self.assertIn("summary", cases_payload)
+            self.assertEqual(cases_payload["summary"]["cases_total"], 1)
+            self.assertEqual(cases_payload["summary"]["lane_case_counts"]["illustration"], 1)
+            case = cases_payload["cases"][0]
             self.assertEqual(case["lane"], "illustration")
 
     def test_build_promotes_medium_from_ask_level_correction_signal(self) -> None:
