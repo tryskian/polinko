@@ -1430,3 +1430,19 @@
   - remove key/header assumptions from eval/client/perf tooling and runbook
 - Why: This auth path is unused in the current local-first operating model and
   adds avoidable configuration and maintenance noise.
+
+## D-119: Make OCR-forward split-lane model the primary eval design
+
+- Date: `2026-04-01`
+- Category: `eval_quality`
+- Tags: `ocr_forward`, `lockset_gate`, `growth_lane`, `pass_from_fail`
+- Decision:
+  - set OCR as the primary reliability lane for current build phase
+  - keep `lockset` as strict release gate (must remain green)
+  - keep `growth` as fail-tolerant lane for novel-case expansion and
+    pass-from-fail tracking
+  - keep lockset and growth reporting distinct to avoid gate noise
+  - add local notebook analysis starter as an operator aid:
+    `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+- Why: This preserves deterministic release quality while still extracting
+  useful learning signal from high-fail exploratory OCR cases.

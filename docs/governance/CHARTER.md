@@ -2,7 +2,8 @@
 
 ## Mission
 
-Build a reliable GPT-powered assistant with stable tone, persistent memory, and production-ready API foundations.
+Build a reliable GPT-powered assistant with stable tone, persistent memory,
+OCR-forward reliability loops, and production-ready API foundations.
 
 ## Product Behaviour Rules
 
@@ -22,6 +23,9 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Prefer deterministic, testable backend changes.
 - Keep eval gate semantics strictly binary (`pass`/`fail`) across API, CLI, and
   tooling.
+- Keep OCR as the primary reliability lane:
+  - lockset lane is release-gating and must remain green
+  - growth lane is fail-tolerant and used to measure pass-from-fail movement
 - Run `make doctor-env` when local environment behaviour looks suspicious.
 - Run `make quality-gate` before push when backend/prompt/retrieval logic changes.
 - Streamline-first operator rule: keep one canonical make target per workflow action
@@ -86,6 +90,9 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 
 - In scope: local development, API hardening, test coverage.
 - In scope: retrieval/OCR/file-search reliability and eval hardening.
+- In scope: OCR-forward eval operations (`lockset` + `growth`) with
+  transcript-backed case mining and stability replay.
+- In scope: local notebook visual analysis for OCR evals (`make notes`).
 - Archived: web UI as an active execution surface; retained only in
   live-archive references.
 - Paused: cloud deployment automation (removed from repo for now; Azure is the preferred target when resumed).

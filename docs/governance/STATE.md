@@ -19,7 +19,8 @@
   - `POST /chats/{session_id}/collaboration/handoff`
 - API includes:
   - startup config validation
-  - optional API key auth (single key or key ring principals)
+  - no backend API-key auth path in active runtime
+    (localhost boundary is trusted for local development)
   - structured request/chat logs
   - in-process request metrics (`requests_total`, status counts, latency buckets, 429 count)
   - rate limiting + `Retry-After` on 429
@@ -45,6 +46,16 @@
   - OCR eval strict (`6/6`)
   - style eval strict (`6/6`)
   - hallucination eval strict (`6/6`)
+- OCR-forward design checkpoint (April 1, 2026):
+  - active eval model is split into:
+    - `lockset` lane (strict release gate, must remain green)
+    - `growth` lane (fail-tolerant novel cases used for pass-from-fail tracking)
+  - latest lockset benchmark baseline (local):
+    - handwriting: `4/4` PASS
+    - typed: `6/6` PASS
+    - illustration: `2/2` PASS
+  - local visual analysis starter is available at:
+    - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS

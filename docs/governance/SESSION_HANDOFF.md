@@ -4,12 +4,15 @@
 
 ## Date
 
-- 2026-03-31
+- 2026-04-01
 
 ## Current Snapshot
 
 - Runtime is local-first: FastAPI backend + CLI runner are canonical; web UI is
   archived from the active repository surface.
+- OCR-forward model is active:
+  - `lockset` lane is release-gating (strict green requirement)
+  - `growth` lane is fail-tolerant for pass-from-fail measurement
 - `POST /chat` now supports deterministic harness testing for UI smoke:
   - request override: `harness_mode=fixture`
   - optional fixed output: `fixture_output`
@@ -23,6 +26,8 @@
   - no active `ui/index.html` file
   - fixture controls remain available through `POST /chat` request fields
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
+- Backend runtime no longer includes API-key auth config/enforcement
+  (`POLINKO_SERVER_API_KEY*` removed from active surface).
 - Eval spec is strict binary end-to-end:
   - feedback outcomes: `pass` or `fail` only
   - checkpoint schema field: `non_binary_count` (integrity signal, expected `0`)
@@ -140,6 +145,9 @@
     - handwriting benchmark: `4/4` PASS
     - typed benchmark: `6/6` PASS
     - illustration benchmark: `2/2` PASS
+  - notebook visual starter for fast local analysis:
+    - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+    - launch via: `make notes`
   - latest stability replay is green:
     - runs: `5/5`
     - benchmark decision stability:
@@ -212,32 +220,25 @@
 
 ## Immediate Next Step
 
-- Keep transcript OCR precision baseline locked at
-  (`handwriting=4`, `typed=11`, `illustration=6`) and preserve legacy
-  `55`/`29`/`25` outputs as reference-only.
-- Keep review-summary noise baseline locked at
-  `episodes=172` (`high=7`, `medium=20`, `low=145`):
-  - rerun:
-    - `make ocr-cases-from-export`
-    - `make eval-ocr-transcript-cases`
-    - `make eval-ocr-transcript-stability`
-    - `make eval-ocr-transcript-cases-handwriting-benchmark`
-    - `make eval-ocr-transcript-cases-typed-benchmark`
-    - `make eval-ocr-transcript-cases-illustration-benchmark`
-    - `make eval-ocr-transcript-stability-handwriting-benchmark`
-    - `make eval-ocr-transcript-stability-typed-benchmark`
-    - `make eval-ocr-transcript-stability-illustration-benchmark`
-  - use review `summary` + `episodes` diagnostics to prioritise exactly one
-    precision-safe miner kernel only if regression appears in pass/fail quality
-    or review-noise baseline; keep:
-    - correction-signal-gated ask anchors
-    - token-bounded handwriting hints
-    - unstable-source quarantine
-    - malformed-anchor/single-token/conversational-noise guards
-  - validate with:
-    - `make lint-docs`
-    - `make test`
-    - `make quality-gate-deterministic`
+- Keep OCR-forward split stable:
+  - lockset lane remains strict release gate
+  - growth lane remains fail-tolerant and tracked separately
+- Re-run lockset and stability sequence:
+  - `make ocrhandbench`
+  - `make ocrtypebench`
+  - `make ocrillubench`
+  - `make ocrstablehand`
+  - `make ocrstabletype`
+  - `make ocrstableillu`
+- If lockset regresses, apply one precision-safe miner/matcher kernel only,
+  then rerun full sequence before merge.
+- Use notebook starter for fast local triage when needed:
+  - `make notes`
+  - open `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+- Validate closure:
+  - `make lint-docs`
+  - `make test`
+  - `make quality-gate-deterministic`
 
 ## Peanut Pin (Tomorrow Start)
 
