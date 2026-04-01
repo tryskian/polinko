@@ -1398,3 +1398,18 @@
     `episodes=172` (`high=7`, `medium=20`, `low=145`)
 - Why: Reduces conversational review noise without relaxing strict binary gate
   criteria or changing emitted OCR benchmark cases.
+
+## D-117: Split OCR evaluation into frozen lockset gate and high-fail growth lane
+
+- Date: `2026-04-01`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `novel_case_growth`, `pass_from_fail`, `lockset_gate`
+- Decision:
+  - keep a frozen OCR lockset as the release gate (`must stay green`)
+  - add a novel-growth OCR lane where high fail rates are expected and allowed
+  - track pass-from-fail development metrics explicitly:
+    `first_pass_fail_rate`, `fail_to_pass_conversion_rate`,
+    `median_runs_to_pass`, and `unresolved_fail_age`
+  - promote cases from growth lane into lockset only after repeated stable pass
+- Why: Pass-only optimisation creates measurement noise; a split gate model
+  preserves comparability while using failures as development signal.
