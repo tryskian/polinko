@@ -1,6 +1,9 @@
 import unittest
+from unittest import mock
 
 from tools.eval_ocr import _check_case
+from tools.eval_ocr import _is_transient_ocr_error
+from tools.eval_ocr import _ocr_with_retries
 from tools.eval_ocr import _select_cases
 
 
@@ -194,6 +197,77 @@ class OcrEvalRuleTests(unittest.TestCase):
             _select_cases([{"id": "c1"}], offset=-1)
         with self.assertRaises(RuntimeError):
             _select_cases([{"id": "c1"}], max_cases=-1)
+
+    def test_is_transient_ocr_error_detects_timeout_signatures(self) -> None:
+        self.assertTrue(
+            _is_transient_ocr_error(
+                RuntimeError("POST /skills/ocr failed: connection error - Read timed out."),
+            )
+        )
+        self.assertTrue(
+            _is_transient_ocr_error(
+                RuntimeError("POST /skills/ocr failed: HTTP 503 - service unavailable"),
+            )
+        )
+        self.assertTrue(
+            _is_transient_ocr_error(
+                RuntimeError("POST /skills/ocr failed: HTTP 429 - too many requests"),
+            )
+        )
+        self.assertFalse(
+            _is_transient_ocr_error(
+                RuntimeError("POST /skills/ocr failed: HTTP 422 - validation error"),
+            )
+        )
+
+    def test_ocr_with_retries_retries_transient_then_succeeds(self) -> None:
+        side_effects = [
+            RuntimeError("POST /skills/ocr failed: connection error - Read timed out."),
+            {"run": {"extracted_text": "ok"}},
+        ]
+        with (
+            mock.patch("tools.eval_ocr._ocr", side_effect=side_effects) as mock_ocr,
+            mock.patch("tools.eval_ocr.time.sleep") as mock_sleep,
+        ):
+            payload = _ocr_with_retries(
+                base_url="http://127.0.0.1:8000",
+                headers={},
+                session_id="s-retry",
+                source_name="case.png",
+                mime_type="image/png",
+                data_base64="MA==",
+                text_hint=None,
+                visual_context_hint=None,
+                transcription_mode="verbatim",
+                timeout=90,
+                ocr_retries=2,
+                ocr_retry_delay_ms=1,
+            )
+        self.assertEqual(payload, {"run": {"extracted_text": "ok"}})
+        self.assertEqual(mock_ocr.call_count, 2)
+        mock_sleep.assert_called_once()
+
+    def test_ocr_with_retries_does_not_retry_non_transient(self) -> None:
+        with mock.patch(
+            "tools.eval_ocr._ocr",
+            side_effect=RuntimeError("POST /skills/ocr failed: HTTP 422 - validation error"),
+        ) as mock_ocr:
+            with self.assertRaises(RuntimeError):
+                _ocr_with_retries(
+                    base_url="http://127.0.0.1:8000",
+                    headers={},
+                    session_id="s-noretry",
+                    source_name="case.png",
+                    mime_type="image/png",
+                    data_base64="MA==",
+                    text_hint=None,
+                    visual_context_hint=None,
+                    transcription_mode="verbatim",
+                    timeout=90,
+                    ocr_retries=2,
+                    ocr_retry_delay_ms=1,
+                )
+        self.assertEqual(mock_ocr.call_count, 1)
 
 
 if __name__ == "__main__":

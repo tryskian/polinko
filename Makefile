@@ -67,6 +67,8 @@ OCR_GROWTH_LIMIT_RUNS ?= 0
 OCR_GROWTH_EVAL_OFFSET ?= 0
 OCR_GROWTH_EVAL_MAX_CASES ?= 0
 OCR_GROWTH_BATCH_SIZE ?= 40
+OCR_GROWTH_OCR_RETRIES ?= 2
+OCR_GROWTH_OCR_RETRY_DELAY_MS ?= 750
 OCR_GROWTH_BATCH_REPORT_DIR ?= .local/eval_reports/ocr_growth_batched_runs
 OCR_GROWTH_BATCH_SUMMARY_JSON ?= .local/eval_reports/ocr_growth_batched_summary.json
 OCR_GROWTH_BATCH_SUMMARY_MD ?= .local/eval_reports/ocr_growth_batched_summary.md
@@ -792,6 +794,8 @@ eval-ocr-transcript-cases-growth-batched:
 		--base-url "http://127.0.0.1:8000" \
 		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
 		--batch-size "$(OCR_GROWTH_BATCH_SIZE)" \
+		--ocr-retries "$(OCR_GROWTH_OCR_RETRIES)" \
+		--ocr-retry-delay-ms "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" \
 		--offset "$(OCR_GROWTH_EVAL_OFFSET)" \
 		--max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" \
 		--report-dir "$(OCR_GROWTH_BATCH_REPORT_DIR)" \

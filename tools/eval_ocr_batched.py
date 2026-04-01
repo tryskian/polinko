@@ -59,7 +59,9 @@ def _build_markdown_summary(payload: dict[str, Any]) -> str:
         (
             "- selected_window: "
             f"offset={payload.get('offset')} max_cases={payload.get('max_cases')} "
-            f"batch_size={payload.get('batch_size')}"
+            f"batch_size={payload.get('batch_size')} "
+            f"ocr_retries={payload.get('ocr_retries')} "
+            f"ocr_retry_delay_ms={payload.get('ocr_retry_delay_ms')}"
         ),
         "",
         "## Aggregate",
@@ -113,6 +115,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--session-prefix", default="ocr-growth-batch", help="Session prefix for eval_ocr.")
     parser.add_argument("--timeout", type=int, default=90, help="HTTP timeout passed to eval_ocr.")
+    parser.add_argument(
+        "--ocr-retries",
+        type=int,
+        default=2,
+        help="Transient OCR retry count passed to eval_ocr.",
+    )
+    parser.add_argument(
+        "--ocr-retry-delay-ms",
+        type=int,
+        default=750,
+        help="Delay between OCR retries passed to eval_ocr.",
+    )
     parser.add_argument("--show-text", action="store_true", help="Forward --show-text to eval_ocr.")
     parser.add_argument("--keep-chats", action="store_true", help="Forward --keep-chats to eval_ocr.")
     parser.add_argument("--strict", action="store_true", help="Exit non-zero when any case fails.")
@@ -126,6 +140,8 @@ def _run_batch(
     cases_path: Path,
     session_prefix: str,
     timeout: int,
+    ocr_retries: int,
+    ocr_retry_delay_ms: int,
     plan: BatchPlan,
     run_id: str,
     report_path: Path,
@@ -144,6 +160,10 @@ def _run_batch(
         session_prefix,
         "--timeout",
         str(timeout),
+        "--ocr-retries",
+        str(ocr_retries),
+        "--ocr-retry-delay-ms",
+        str(ocr_retry_delay_ms),
         "--offset",
         str(plan.offset),
         "--max-cases",
@@ -217,6 +237,8 @@ def main() -> int:
             cases_path=cases_path,
             session_prefix=str(args.session_prefix),
             timeout=int(args.timeout),
+            ocr_retries=int(args.ocr_retries),
+            ocr_retry_delay_ms=int(args.ocr_retry_delay_ms),
             plan=plan,
             run_id=run_id,
             report_path=report_path,
@@ -265,6 +287,8 @@ def main() -> int:
         "offset": int(args.offset),
         "max_cases": int(args.max_cases),
         "batch_size": int(args.batch_size),
+        "ocr_retries": int(args.ocr_retries),
+        "ocr_retry_delay_ms": int(args.ocr_retry_delay_ms),
         "summary": {
             "batches_total": len(batches),
             "batches_completed": completed_batches,

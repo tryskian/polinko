@@ -39,6 +39,8 @@ yarn-error.log*
 .actrc
 .trivycache/
 .trivyignore.local
+.ipynb_checkpoints/
+*.ipynb.layout
 
 # Legacy local helper file
 _virtualenv.py

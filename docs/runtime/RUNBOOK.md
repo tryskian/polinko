@@ -203,6 +203,8 @@ plus tests as the active spec surface (`make test`,
        - `make ocrwiden OCR_GROWTH_EVAL_OFFSET=0 OCR_GROWTH_EVAL_MAX_CASES=40`
      - optional chunked full-window run:
        - `make ocrwidenall OCR_GROWTH_BATCH_SIZE=40`
+     - retry-tuned chunked run (for transient OCR timeouts):
+       - `make ocrwidenall OCR_GROWTH_BATCH_SIZE=40 OCR_GROWTH_OCR_RETRIES=2 OCR_GROWTH_OCR_RETRY_DELAY_MS=750`
      - `make ocrstablegrowth`
    - run lockset lanes:
      - `make ocrhandbench`
