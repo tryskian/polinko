@@ -197,6 +197,9 @@ plus tests as the active spec surface (`make test`,
 3. Canonical command sequence:
    - mine/build cases:
      - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+   - run widened growth lane (fail-tolerant):
+     - `make ocrwiden`
+     - `make ocrstablegrowth`
    - run lockset lanes:
      - `make ocrhandbench`
      - `make ocrtypebench`
@@ -209,7 +212,9 @@ plus tests as the active spec surface (`make test`,
      - `make ocrgrowth`
 4. Local output surfaces:
    - case sets: `.local/eval_cases/`
+     - growth set: `.local/eval_cases/ocr_transcript_cases_growth.json`
    - run/stability reports: `.local/eval_reports/`
+     - growth stability: `.local/eval_reports/ocr_growth_stability.json`
    - growth metrics reports:
      - `.local/eval_reports/ocr_growth_metrics.json`
      - `.local/eval_reports/ocr_growth_metrics.md`

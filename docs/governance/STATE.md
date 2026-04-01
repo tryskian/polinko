@@ -51,8 +51,13 @@
     - `lockset` lane (strict release gate, must remain green)
     - `growth` lane (fail-tolerant novel cases used for pass-from-fail tracking)
   - growth metrics are executable via:
+    - growth eval/stability:
+      - `make ocrwiden`
+      - `make ocrstablegrowth`
     - `make ocrgrowth`
     - outputs:
+      - `.local/eval_cases/ocr_transcript_cases_growth.json`
+      - `.local/eval_reports/ocr_growth_stability.json`
       - `.local/eval_reports/ocr_growth_metrics.json`
       - `.local/eval_reports/ocr_growth_metrics.md`
   - latest lockset benchmark baseline (local):

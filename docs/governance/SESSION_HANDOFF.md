@@ -85,6 +85,7 @@
     - `make cgpt-export-index`
     - `make ocr-cases-from-export`
     - `make eval-ocr-transcript-cases`
+    - `make eval-ocr-transcript-cases-growth`
     - `make eval-ocr-transcript-cases-handwriting`
     - `make eval-ocr-transcript-cases-handwriting-benchmark`
     - `make eval-ocr-transcript-cases-typed`
@@ -92,12 +93,14 @@
     - `make eval-ocr-transcript-cases-illustration`
     - `make eval-ocr-transcript-cases-illustration-benchmark`
     - `make eval-ocr-transcript-stability`
+    - `make eval-ocr-transcript-stability-growth`
     - `make eval-ocr-transcript-growth`
     - `make eval-ocr-transcript-stability-handwriting-benchmark`
     - `make eval-ocr-transcript-stability-typed-benchmark`
     - `make eval-ocr-transcript-stability-illustration-benchmark`
     - `make ocrdelta`
-    - aliases: `make ocrtypebench`, `make ocrillubench`,
+    - aliases: `make ocrwiden`, `make ocrstablegrowth`,
+      `make ocrtypebench`, `make ocrillubench`,
       `make ocrstabletype`, `make ocrstableillu`
   - generated transcript OCR cases stay local-only in `.local/eval_cases/`
   - miner diagnostics are now explicit in command output and review records:
@@ -237,6 +240,8 @@
   - `make ocrstabletype`
   - `make ocrstableillu`
 - Recompute growth-lane pass-from-fail metrics:
+  - `make ocrwiden`
+  - `make ocrstablegrowth`
   - `make ocrgrowth`
 - If lockset regresses, apply one precision-safe miner/matcher kernel only,
   then rerun full sequence before merge.

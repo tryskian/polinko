@@ -62,7 +62,11 @@
   - growth lane: exploratory/novel subset where failures are expected signal
   - local case/report surfaces (untracked):
     - `.local/eval_cases/`
+      - includes widened growth set:
+        `.local/eval_cases/ocr_transcript_cases_growth.json`
     - `.local/eval_reports/`
+      - includes growth stability:
+        `.local/eval_reports/ocr_growth_stability.json`
     - growth metrics:
       - `.local/eval_reports/ocr_growth_metrics.json`
       - `.local/eval_reports/ocr_growth_metrics.md`

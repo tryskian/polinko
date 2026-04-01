@@ -1468,3 +1468,20 @@
     - `unresolved_fail_age`
 - Why: Growth-lane metrics were policy-only; this makes them executable and
   reviewable without manual report forensics.
+
+## D-121: Widen OCR growth lane with separate runnable case set and stability track
+
+- Date: `2026-04-01`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `growth_lane`, `dataset_widening`, `pass_from_fail`
+- Decision:
+  - extend transcript miner output with a dedicated growth case set:
+    - `.local/eval_cases/ocr_transcript_cases_growth.json`
+  - keep lockset emission criteria unchanged; growth widening only affects the
+    fail-tolerant lane
+  - add growth-lane execution targets:
+    - `make eval-ocr-transcript-cases-growth` (`make ocrwiden`)
+    - `make eval-ocr-transcript-stability-growth` (`make ocrstablegrowth`)
+  - route growth metrics to growth stability run history only
+- Why: We need broader novel-case exposure for pass-from-fail signal while
+  keeping release gate strict and stable.
