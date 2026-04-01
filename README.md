@@ -60,7 +60,8 @@ Notes:
   `make venv` (alias: `make env`)
 - short aliases for long-chain commands:
   `make ocrindex`, `make ocrmine`, `make ocrall`, `make ocrhand`,
-  `make ocrtype`, `make ocrillu`, `make ocrstable`, `make gate`
+  `make ocrtype`, `make ocrillu`, `make ocrstable`, `make ocrgrowth`,
+  `make gate`
 - notebook commands:
   `make notebook-setup`, `make notes` (aliases: `make notebook`, `make nb`)
 
@@ -214,6 +215,7 @@ make eval-ocr-transcript-cases-handwriting
 make eval-ocr-transcript-cases-typed
 make eval-ocr-transcript-cases-illustration
 make eval-ocr-transcript-stability
+make eval-ocr-transcript-growth
 ```
 
 Exit-code semantics:

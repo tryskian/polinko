@@ -63,6 +63,9 @@
   - local case/report surfaces (untracked):
     - `.local/eval_cases/`
     - `.local/eval_reports/`
+    - growth metrics:
+      - `.local/eval_reports/ocr_growth_metrics.json`
+      - `.local/eval_reports/ocr_growth_metrics.md`
   - local notebook exploration:
     - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
 
@@ -94,3 +97,4 @@
 - Runtime DB lifecycle commands are retired during wiring lock
   (see `docs/runtime/RUNBOOK.md`).
 - Local eval trace backfill (optional): `make backfill-eval-traces`
+- Growth-lane metrics report: `make ocrgrowth`
