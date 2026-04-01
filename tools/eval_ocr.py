@@ -492,6 +492,7 @@ def main() -> int:
         print(f"Preflight failed: {exc}")
         return 2
 
+    total_selected = len(selected_cases)
     failures = 0
     errors = 0
     session_ids: list[str] = []
@@ -592,9 +593,9 @@ def main() -> int:
             except Exception as exc:
                 print(f"  WARN cleanup failed for {session_id}: {exc}")
 
-    passed_count = len(cases) - failures
+    passed_count = total_selected - failures
     print("\nSummary")
-    print(f"  Passed: {passed_count}/{len(cases)}")
+    print(f"  Passed: {passed_count}/{total_selected}")
     print(f"  Failed: {failures}")
     print(f"  Errors: {errors}")
     report_json = str(args.report_json or "").strip()
@@ -608,12 +609,14 @@ def main() -> int:
             "cases_path": str(cases_path),
             "strict": bool(args.strict),
             "summary": {
-                "total": len(cases),
+                "total": total_selected,
                 "passed": passed_count,
                 "failed": failures,
                 "errors": errors,
                 "gate_passed": gate_passed,
                 "gate_failed": gate_failed,
+                "offset": int(args.offset),
+                "max_cases": int(args.max_cases),
             },
             "cases": case_results,
             "generated_at": int(time.time()),
@@ -637,7 +640,7 @@ def main() -> int:
                         "name": "ocr_eval",
                         "passed": gate_failed == 0,
                         "detail": (
-                            f"passed={passed_count}/{len(cases)}, "
+                            f"passed={passed_count}/{total_selected}, "
                             f"failed={failures}, errors={errors}, gate_failed={gate_failed}"
                         ),
                     }

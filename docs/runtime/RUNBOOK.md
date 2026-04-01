@@ -201,6 +201,8 @@ plus tests as the active spec surface (`make test`,
      - `make ocrwiden`
      - optional bounded batch run:
        - `make ocrwiden OCR_GROWTH_EVAL_OFFSET=0 OCR_GROWTH_EVAL_MAX_CASES=40`
+     - optional chunked full-window run:
+       - `make ocrwidenall OCR_GROWTH_BATCH_SIZE=40`
      - `make ocrstablegrowth`
    - run lockset lanes:
      - `make ocrhandbench`
@@ -220,6 +222,10 @@ plus tests as the active spec surface (`make test`,
      - growth fail cohort: `.local/eval_cases/ocr_growth_fail_cohort.json`
    - run/stability reports: `.local/eval_reports/`
      - growth stability: `.local/eval_reports/ocr_growth_stability.json`
+     - growth batch reports: `.local/eval_reports/ocr_growth_batched_runs/`
+     - growth batch summary:
+       - `.local/eval_reports/ocr_growth_batched_summary.json`
+       - `.local/eval_reports/ocr_growth_batched_summary.md`
    - growth metrics reports:
      - `.local/eval_reports/ocr_growth_metrics.json`
      - `.local/eval_reports/ocr_growth_metrics.md`
