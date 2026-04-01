@@ -320,6 +320,63 @@ def _ocr(
     )
 
 
+def _is_transient_ocr_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return (
+        "connection error" in message
+        or "timed out" in message
+        or "http 5" in message
+        or "http 429" in message
+    )
+
+
+def _ocr_with_retries(
+    *,
+    base_url: str,
+    headers: dict[str, str],
+    session_id: str,
+    source_name: str | None,
+    mime_type: str,
+    data_base64: str,
+    text_hint: str | None,
+    visual_context_hint: str | None,
+    transcription_mode: str,
+    timeout: int,
+    ocr_retries: int,
+    ocr_retry_delay_ms: int,
+) -> dict[str, Any]:
+    if ocr_retries < 0:
+        raise RuntimeError("ocr_retries must be >= 0.")
+    if ocr_retry_delay_ms < 0:
+        raise RuntimeError("ocr_retry_delay_ms must be >= 0.")
+
+    max_attempts = ocr_retries + 1
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return _ocr(
+                base_url=base_url,
+                headers=headers,
+                session_id=session_id,
+                source_name=source_name,
+                mime_type=mime_type,
+                data_base64=data_base64,
+                text_hint=text_hint,
+                visual_context_hint=visual_context_hint,
+                transcription_mode=transcription_mode,
+                timeout=timeout,
+            )
+        except Exception as exc:
+            if attempt >= max_attempts or not _is_transient_ocr_error(exc):
+                raise
+            print(
+                f"  WARN transient OCR error for {session_id} "
+                f"(attempt {attempt}/{max_attempts - 1} retries): {exc}"
+            )
+            if ocr_retry_delay_ms > 0:
+                time.sleep(ocr_retry_delay_ms / 1000)
+    raise RuntimeError("OCR call failed after retries.")
+
+
 def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[str]]:
     reasons: list[str] = []
     case_sensitive = bool(case["case_sensitive"])
@@ -439,6 +496,18 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--session-prefix", default="ocr-eval", help="Session id prefix for generated eval chats.")
     parser.add_argument("--run-id", default="", help="Optional run id suffix. Defaults to current epoch seconds.")
     parser.add_argument("--timeout", type=int, default=90, help="HTTP timeout in seconds.")
+    parser.add_argument(
+        "--ocr-retries",
+        type=int,
+        default=0,
+        help="Transient OCR retry count for timeout/connection/5xx/429 failures.",
+    )
+    parser.add_argument(
+        "--ocr-retry-delay-ms",
+        type=int,
+        default=750,
+        help="Delay between OCR retries in milliseconds.",
+    )
     parser.add_argument("--strict", action="store_true", help="Exit non-zero if any case fails.")
     parser.add_argument("--keep-chats", action="store_true", help="Keep generated eval chats.")
     parser.add_argument("--show-text", action="store_true", help="Print extracted text for each case.")
@@ -477,6 +546,10 @@ def main() -> int:
         raise SystemExit(
             f"No OCR eval cases selected from {cases_path} (total={len(cases)} offset={args.offset} max_cases={args.max_cases})."
         )
+    if int(args.ocr_retries) < 0:
+        raise SystemExit("--ocr-retries must be >= 0.")
+    if int(args.ocr_retry_delay_ms) < 0:
+        raise SystemExit("--ocr-retry-delay-ms must be >= 0.")
     run_id = args.run_id.strip() or f"{int(time.time() * 1000)}-{os.getpid()}-{uuid.uuid4().hex[:6]}"
     headers = _headers()
 
@@ -492,6 +565,7 @@ def main() -> int:
         print(f"Preflight failed: {exc}")
         return 2
 
+    total_selected = len(selected_cases)
     failures = 0
     errors = 0
     session_ids: list[str] = []
@@ -522,7 +596,7 @@ def main() -> int:
                 mimetypes.guess_type(str(image_path))[0] if image_path is not None else "application/octet-stream"
             )
             mime_type = str(inferred_mime or "application/octet-stream")
-            payload = _ocr(
+            payload = _ocr_with_retries(
                 base_url=args.base_url,
                 headers=headers,
                 session_id=session_id,
@@ -533,6 +607,8 @@ def main() -> int:
                 visual_context_hint=case["visual_context_hint"],
                 transcription_mode=case["transcription_mode"],
                 timeout=args.timeout,
+                ocr_retries=args.ocr_retries,
+                ocr_retry_delay_ms=args.ocr_retry_delay_ms,
             )
             extracted_text = str(payload.get("run", {}).get("extracted_text", "")).strip()
             passed, reasons = _check_case(case, extracted_text)
@@ -592,9 +668,9 @@ def main() -> int:
             except Exception as exc:
                 print(f"  WARN cleanup failed for {session_id}: {exc}")
 
-    passed_count = len(cases) - failures
+    passed_count = total_selected - failures
     print("\nSummary")
-    print(f"  Passed: {passed_count}/{len(cases)}")
+    print(f"  Passed: {passed_count}/{total_selected}")
     print(f"  Failed: {failures}")
     print(f"  Errors: {errors}")
     report_json = str(args.report_json or "").strip()
@@ -608,12 +684,14 @@ def main() -> int:
             "cases_path": str(cases_path),
             "strict": bool(args.strict),
             "summary": {
-                "total": len(cases),
+                "total": total_selected,
                 "passed": passed_count,
                 "failed": failures,
                 "errors": errors,
                 "gate_passed": gate_passed,
                 "gate_failed": gate_failed,
+                "offset": int(args.offset),
+                "max_cases": int(args.max_cases),
             },
             "cases": case_results,
             "generated_at": int(time.time()),
@@ -637,7 +715,7 @@ def main() -> int:
                         "name": "ocr_eval",
                         "passed": gate_failed == 0,
                         "detail": (
-                            f"passed={passed_count}/{len(cases)}, "
+                            f"passed={passed_count}/{total_selected}, "
                             f"failed={failures}, errors={errors}, gate_failed={gate_failed}"
                         ),
                     }
