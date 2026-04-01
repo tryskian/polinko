@@ -643,6 +643,24 @@ def _expand_anchor_variants(anchors: list[str]) -> list[str]:
     return expanded
 
 
+def _ordered_terms_supported_by_anchors(ordered_terms: list[str], anchors: list[str]) -> list[str]:
+    """Keep ordered terms only when they are backed by anchor constraints."""
+    if not ordered_terms or not anchors:
+        return []
+    anchor_set = {token.lower() for token in anchors}
+    filtered: list[str] = []
+    seen: set[str] = set()
+    for token in ordered_terms:
+        value = token.lower().strip()
+        if value not in anchor_set:
+            continue
+        if value in seen:
+            continue
+        seen.add(value)
+        filtered.append(value)
+    return filtered
+
+
 def build_from_export(
     export_root: Path,
     *,
@@ -915,6 +933,10 @@ def build_from_export(
                 )
             if not growth_ordered_terms:
                 growth_ordered_terms = _ordered_terms_for_phrases(transcription_phrases_raw[:1])[:4]
+            growth_ordered_terms = _ordered_terms_supported_by_anchors(
+                growth_ordered_terms,
+                growth_anchor_terms,
+            )
 
             growth_emit_status = emit_status in {
                 "emitted",

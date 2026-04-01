@@ -1444,6 +1444,71 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(case["must_contain_any"], ["stirring"])
             self.assertEqual(case["must_appear_in_order"], ["something", "stirring"])
 
+    def test_build_growth_lane_limits_ordered_terms_to_anchor_set(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "tiny_growth_001.png").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-growth-anchor-filter",
+                "title": "single concept growth",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can u see with your binareyes?"]},
+                            "metadata": {
+                                "attachments": [{"name": "tiny_growth_001.png", "id": "file_tiny_growth"}]
+                            },
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ['it reads: "There seems to be something - stirring."']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-growth-anchor-filter.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_growth = Path(tmp_dir) / "cases_growth.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_growth=output_growth,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                max_growth_cases=50,
+            )
+
+            self.assertEqual(summary["cases_written"], 1)
+            self.assertEqual(summary["growth_cases_written"], 1)
+            growth_case = json.loads(output_growth.read_text(encoding="utf-8"))["cases"][0]
+            self.assertEqual(growth_case["must_contain_any"], ["stirring"])
+            self.assertEqual(growth_case["must_appear_in_order"], ["stirring"])
+            self.assertNotIn("something", growth_case["must_appear_in_order"])
+
     def test_build_skips_known_unstable_handwriting_source(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
