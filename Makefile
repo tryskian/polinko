@@ -69,6 +69,8 @@ OCR_STABILITY_TYPED_BENCHMARK_REPORT_DIR ?= .local/eval_reports/ocr_typed_benchm
 OCR_STABILITY_ILLUSTRATION_BENCHMARK_OUTPUT ?= .local/eval_reports/ocr_illustration_benchmark_stability.json
 OCR_STABILITY_ILLUSTRATION_BENCHMARK_REPORT_DIR ?= .local/eval_reports/ocr_illustration_benchmark_runs
 NOTEBOOK_START_PATH ?= output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb
+NOTEBOOK_START_PATH_ABS := $(abspath $(NOTEBOOK_START_PATH))
+NOTEBOOK_DIR_ABS := $(abspath output/jupyter-notebook)
 CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
 CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
 CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
@@ -99,10 +101,10 @@ notebook-setup:
 	$(PYTHON) -m pip install -r requirements.notebook.txt
 
 notebook nb notes:
-	@if [ -f "$(NOTEBOOK_START_PATH)" ]; then \
-		$(PYTHON) -m jupyter lab "$(NOTEBOOK_START_PATH)"; \
+	@if [ -f "$(NOTEBOOK_START_PATH_ABS)" ]; then \
+		$(PYTHON) -m jupyter lab --notebook-dir="$(NOTEBOOK_DIR_ABS)" "$(NOTEBOOK_START_PATH_ABS)"; \
 	else \
-		$(PYTHON) -m jupyter lab output/jupyter-notebook; \
+		$(PYTHON) -m jupyter lab --notebook-dir="$(NOTEBOOK_DIR_ABS)" "$(NOTEBOOK_DIR_ABS)"; \
 	fi
 
 # Short aliases for frequent long-chain commands.
