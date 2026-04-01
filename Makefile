@@ -14,7 +14,6 @@ DEV_BACKEND_PORT ?= 8000
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
 ENV_FILE ?= .env
 K6_BASE_URL ?= http://127.0.0.1:8000
-K6_API_KEY ?= test-server-key
 K6_VUS ?= 3
 K6_DURATION ?= 10s
 TRIVY_SEVERITY ?= HIGH,CRITICAL
@@ -407,7 +406,7 @@ act-ci:
 	act -W .github/workflows/ci.yml
 
 k6-chat-smoke:
-	k6 run tests/perf/chat_smoke.js -e BASE_URL="$(K6_BASE_URL)" -e POLINKO_SERVER_API_KEY="$(K6_API_KEY)" -e VUS="$(K6_VUS)" -e DURATION="$(K6_DURATION)"
+	k6 run tests/perf/chat_smoke.js -e BASE_URL="$(K6_BASE_URL)" -e VUS="$(K6_VUS)" -e DURATION="$(K6_DURATION)"
 
 trivy-fs:
 	trivy fs --severity "$(TRIVY_SEVERITY)" --exit-code 1 .

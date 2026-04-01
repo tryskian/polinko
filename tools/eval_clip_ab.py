@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
-import os
 import time
 from pathlib import Path
 from typing import Any
@@ -212,8 +211,7 @@ def main() -> int:
             f"No cases matched source types {sorted(include_types)} in {cases_path}."
         )
 
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
-    headers = _headers(api_key)
+    headers = _headers()
     run_id = args.run_id.strip() or str(int(time.time()))
 
     print(f"Running CLIP A/B scaffold on {args.base_url}")

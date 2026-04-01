@@ -1417,3 +1417,16 @@
   - user hypothesis statement:
     "i think we need to allow for high fail rates. that starts tracking pass
     from fail"
+
+## D-118: Remove backend API-key auth surface from active runtime
+
+- Date: `2026-04-01`
+- Category: `runtime_engineering`
+- Tags: `auth_simplification`, `surface_reduction`, `tooling_hygiene`
+- Decision:
+  - remove `POLINKO_SERVER_API_KEY` and `POLINKO_SERVER_API_KEYS_JSON` from
+    active config/runtime
+  - remove API key enforcement from FastAPI endpoints
+  - remove key/header assumptions from eval/client/perf tooling and runbook
+- Why: This auth path is unused in the current local-first operating model and
+  adds avoidable configuration and maintenance noise.

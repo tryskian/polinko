@@ -10,7 +10,6 @@ export const options = {
 };
 
 const baseUrl = (__ENV.BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
-const apiKey = __ENV.POLINKO_SERVER_API_KEY || "";
 
 export default function () {
   const payload = JSON.stringify({
@@ -20,10 +19,6 @@ export default function () {
   const headers = {
     "Content-Type": "application/json",
   };
-  if (apiKey) {
-    headers["x-api-key"] = apiKey;
-  }
-
   const res = http.post(`${baseUrl}/chat`, payload, {
     headers,
     timeout: "30s",

@@ -42,11 +42,8 @@ _MIN_ACCEPTABLE_SCORE = 5
 EvaluationMode = Literal["judge", "deterministic", "auto"]
 
 
-def _headers(api_key: str | None) -> dict[str, str]:
-    headers = {"Content-Type": "application/json"}
-    if api_key:
-        headers["x-api-key"] = api_key
-    return headers
+def _headers() -> dict[str, str]:
+    return {"Content-Type": "application/json"}
 
 
 def _request_json(
@@ -521,8 +518,7 @@ def main() -> int:
         effective_mode = "deterministic"
 
     run_id = args.run_id.strip() or str(int(time.time()))
-    server_api_key = os.getenv("POLINKO_SERVER_API_KEY")
-    headers = _headers(server_api_key)
+    headers = _headers()
 
     print(f"Running hallucination eval on {args.base_url}")
     print(
@@ -537,7 +533,6 @@ def main() -> int:
         print(f"Preflight failed: {exc}")
         print("Checks:")
         print("  - Is `make server` running on the expected base URL?")
-        print("  - Does `.env` contain a valid `POLINKO_SERVER_API_KEY` for this server?")
         return 1
 
     passes = 0

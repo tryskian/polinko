@@ -77,8 +77,8 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 
 - `OPENAI_API_KEY` required at startup.
 - `.env` supports `KEY=value` and quoted `KEY="value"` formats.
-- Optional backend API key auth via `POLINKO_SERVER_API_KEY` or
-  `POLINKO_SERVER_API_KEYS_JSON`.
+- Backend endpoints do not require `x-api-key`; localhost runtime is the
+  trusted development boundary.
 - `/chat` rate limited (`POLINKO_RATE_LIMIT_PER_MINUTE`) with `Retry-After` header on 429.
 - Structured JSON logs with request IDs in `server.py`.
 

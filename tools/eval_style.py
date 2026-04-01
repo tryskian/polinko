@@ -29,11 +29,8 @@ _JUDGE_SCHEMA: dict[str, Any] = {
 }
 
 
-def _headers(api_key: str | None) -> dict[str, str]:
-    headers = {"Content-Type": "application/json"}
-    if api_key:
-        headers["x-api-key"] = api_key
-    return headers
+def _headers() -> dict[str, str]:
+    return {"Content-Type": "application/json"}
 
 
 def _request_json(
@@ -379,8 +376,7 @@ def main() -> int:
     judge_client = OpenAI(api_key=openai_api_key)
 
     run_id = args.run_id.strip() or str(int(time.time()))
-    api_key = os.getenv("POLINKO_SERVER_API_KEY")
-    headers = _headers(api_key)
+    headers = _headers()
 
     print(f"Running style eval on {args.base_url}")
     print(f"Cases: {len(cases)} | run_id={run_id}")

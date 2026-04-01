@@ -1,7 +1,6 @@
 import base64
 import binascii
 import hashlib
-import hmac
 import json
 import logging
 import re
@@ -9,7 +8,6 @@ import sqlite3
 import time
 import uuid
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, Literal, cast
 
 from agents import Agent, Runner, RunConfig
@@ -300,8 +298,6 @@ class RuntimeDeps:
     session_db_path: str
     history_store: ChatHistoryStore
     default_session_id: str
-    server_api_key: str | None
-    server_api_key_principals: dict[str, str]
     rate_limit_per_minute: int
     rate_limiter: SlidingWindowRateLimiter
     deprecate_on_reset: bool
@@ -676,21 +672,6 @@ def _client_identifier(request: Request, session_id: str, principal: str | None)
     client_ip = forwarded_for or (request.client.host if request.client else "unknown")
     subject = principal or "anonymous"
     return f"{subject}:{client_ip}:{session_id}"
-
-
-def _enforce_api_key(request: Request) -> str | None:
-    deps = _runtime_deps(request.app)
-    configured_api_keys = deps.server_api_key_principals
-    if not configured_api_keys:
-        return None
-
-    presented = request.headers.get("x-api-key")
-    if not presented:
-        raise HTTPException(status_code=401, detail="Invalid API key.")
-    for expected_key, principal in configured_api_keys.items():
-        if hmac.compare_digest(presented, expected_key):
-            return principal
-    raise HTTPException(status_code=401, detail="Invalid API key.")
 
 
 def _enforce_rate_limit(request: Request, identifier: str) -> None:
@@ -2920,8 +2901,6 @@ def create_app(config: AppConfig) -> FastAPI:
         session_db_path=config.session_db_path,
         history_store=ChatHistoryStore(config.history_db_path),
         default_session_id=config.default_session_id,
-        server_api_key=config.server_api_key,
-        server_api_key_principals=config.server_api_key_principals,
         rate_limit_per_minute=config.rate_limit_per_minute,
         rate_limiter=SlidingWindowRateLimiter(),
         deprecate_on_reset=config.deprecate_on_reset,
@@ -3018,13 +2997,11 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.get("/metrics", response_model=MetricsResponse)
     def metrics(request: Request) -> MetricsResponse:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         return _metrics_response(deps.metrics)
 
     @app.get("/chats", response_model=ChatsResponse)
     def list_chats(request: Request, include_deprecated: bool = False) -> ChatsResponse:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         summaries = [
             _chat_summary_response(summary, deps=deps)
@@ -3034,7 +3011,6 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/chats", response_model=ChatSummaryResponse)
     def create_chat(req: CreateChatRequest, request: Request) -> ChatSummaryResponse:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         session_id = req.session_id or f"chat-{uuid.uuid4()}"
         title = (req.title or DEFAULT_CHAT_TITLE).strip() or DEFAULT_CHAT_TITLE
@@ -3043,7 +3019,6 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.get("/chats/{session_id}/messages", response_model=ChatMessagesResponse)
     def list_chat_messages(session_id: str, request: Request) -> ChatMessagesResponse:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
@@ -3056,7 +3031,6 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.get("/chats/{session_id}/feedback", response_model=ChatFeedbackResponse)
     def list_chat_feedback(session_id: str, request: Request) -> ChatFeedbackResponse:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
@@ -3073,7 +3047,7 @@ def create_app(config: AppConfig) -> FastAPI:
         req: MessageFeedbackRequest,
         request: Request,
     ) -> MessageFeedbackResponse:
-        principal = _enforce_api_key(request)
+        principal = None
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
@@ -3125,7 +3099,6 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.get("/chats/{session_id}/feedback/checkpoints", response_model=ChatEvalCheckpointsResponse)
     def list_eval_checkpoints(session_id: str, request: Request) -> ChatEvalCheckpointsResponse:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
@@ -3138,7 +3111,7 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/chats/{session_id}/feedback/checkpoints", response_model=EvalCheckpointResponse)
     def submit_eval_checkpoint(session_id: str, request: Request) -> EvalCheckpointResponse:
-        principal = _enforce_api_key(request)
+        principal = None
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
@@ -3180,7 +3153,6 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.get("/chats/{session_id}/export", response_model=ChatExportResponse)
     def export_chat(session_id: str, request: Request, include_markdown: bool = False) -> ChatExportResponse:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
@@ -3209,7 +3181,7 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/skills/ocr", response_model=OcrResponse)
     def run_ocr(req: OcrRequest, request: Request) -> OcrResponse:
-        principal = _enforce_api_key(request)
+        principal = None
         deps = _runtime_deps(request.app)
         session_id = req.session_id or deps.default_session_id
         chat = deps.history_store.ensure_chat(session_id=session_id)
@@ -3391,7 +3363,7 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/skills/pdf_ingest", response_model=PdfIngestResponse)
     def pdf_ingest(req: PdfIngestRequest, request: Request) -> PdfIngestResponse:
-        principal = _enforce_api_key(request)
+        principal = None
         deps = _runtime_deps(request.app)
         if not deps.vector_enabled or deps.vector_store is None:
             raise HTTPException(status_code=503, detail="Vector memory is not enabled.")
@@ -3569,7 +3541,7 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/skills/file_search", response_model=FileSearchResponse)
     def file_search(req: FileSearchRequest, request: Request) -> FileSearchResponse:
-        principal = _enforce_api_key(request)
+        principal = None
         deps = _runtime_deps(request.app)
         if not deps.vector_enabled or deps.vector_store is None:
             raise HTTPException(status_code=503, detail="Vector memory is not enabled.")
@@ -3753,7 +3725,6 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.patch("/chats/{session_id}", response_model=ChatSummaryResponse)
     def rename_chat(session_id: str, req: RenameChatRequest, request: Request) -> ChatSummaryResponse:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         try:
             summary = deps.history_store.rename_chat(session_id=session_id, title=req.title)
@@ -3763,7 +3734,6 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.delete("/chats/{session_id}")
     async def delete_chat(session_id: str, request: Request) -> dict[str, str]:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         try:
             deps.history_store.delete_chat(session_id=session_id)
@@ -3780,7 +3750,6 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/chats/{session_id}/deprecate", response_model=ChatSummaryResponse)
     def deprecate_chat(session_id: str, request: Request) -> ChatSummaryResponse:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         try:
             summary = deps.history_store.deprecate_chat(session_id=session_id)
@@ -3792,7 +3761,6 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/chats/{session_id}/notes")
     def add_note(session_id: str, req: NoteRequest, request: Request) -> dict[str, str]:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         deps.history_store.ensure_chat(session_id=session_id)
         deps.history_store.append_message(session_id=session_id, role="note", content=req.note.strip())
@@ -3804,7 +3772,7 @@ def create_app(config: AppConfig) -> FastAPI:
         req: PersonalizationRequest,
         request: Request,
     ) -> PersonalizationResponse:
-        principal = _enforce_api_key(request)
+        principal = None
         deps = _runtime_deps(request.app)
         chat = deps.history_store.ensure_chat(session_id=session_id)
         if chat.status == "deprecated":
@@ -3828,7 +3796,6 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.get("/chats/{session_id}/personalization", response_model=PersonalizationResponse)
     def get_chat_personalization(session_id: str, request: Request) -> PersonalizationResponse:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
@@ -3846,7 +3813,6 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.get("/chats/{session_id}/collaboration", response_model=CollaborationResponse)
     def get_chat_collaboration(session_id: str, request: Request, limit: int = 20) -> CollaborationResponse:
-        _enforce_api_key(request)
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
@@ -3866,7 +3832,7 @@ def create_app(config: AppConfig) -> FastAPI:
         req: CollaborationHandoffRequest,
         request: Request,
     ) -> CollaborationResponse:
-        principal = _enforce_api_key(request)
+        principal = None
         deps = _runtime_deps(request.app)
         chat = deps.history_store.ensure_chat(session_id=session_id)
         if chat.status == "deprecated":
@@ -3897,7 +3863,7 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/chat", response_model=ChatResponse)
     async def chat(req: ChatRequest, request: Request) -> ChatResponse:
-        principal = _enforce_api_key(request)
+        principal = None
         deps = _runtime_deps(request.app)
         session_id = req.session_id or deps.default_session_id
         source_user_message_id = (
@@ -4293,7 +4259,7 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.post("/session/reset")
     async def reset_session(req: ResetRequest, request: Request) -> dict[str, str]:
-        principal = _enforce_api_key(request)
+        principal = None
         deps = _runtime_deps(request.app)
         session_id = req.session_id or deps.default_session_id
         deps.history_store.ensure_chat(session_id=session_id)

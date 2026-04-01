@@ -138,9 +138,7 @@
 ## Rotate API Keys
 
 1. Update `.env` with new `OPENAI_API_KEY`.
-2. If used, rotate `POLINKO_SERVER_API_KEY` and/or update
-   `POLINKO_SERVER_API_KEYS_JSON`.
-3. Restart running API/CLI processes.
+2. Restart running API/CLI processes.
 
 ## Environment Doctor
 
@@ -263,7 +261,7 @@ plus tests as the active spec surface (`make test`,
    - run CI workflow: `make act-ci`
 5. Run k6 chat smoke load test (requires local API server running):
    - default: `make k6-chat-smoke`
-   - custom: `make k6-chat-smoke K6_BASE_URL=http://127.0.0.1:8000 K6_API_KEY=<key> K6_VUS=5 K6_DURATION=30s`
+   - custom: `make k6-chat-smoke K6_BASE_URL=http://127.0.0.1:8000 K6_VUS=5 K6_DURATION=30s`
 6. Run Trivy security scans:
    - filesystem dependencies/secrets/misconfig: `make trivy-fs`
    - built image: `make trivy-image`
@@ -1057,10 +1055,7 @@ Checks:
 
 1. Confirm internet access and no firewall/VPN block.
 2. Confirm `OPENAI_API_KEY` is set in `.env`.
-3. If auth is enabled, confirm `POLINKO_SERVER_API_KEY` or
-   `POLINKO_SERVER_API_KEYS_JSON` is configured consistently with your
-   client/proxy.
-4. Retry command after a short wait.
+3. Retry command after a short wait.
 
 ## Figma MCP Design Fetch Troubleshooting
 
