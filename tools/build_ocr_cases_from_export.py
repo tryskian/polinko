@@ -414,13 +414,13 @@ def _extract_transcribed_lines(assistant_text: str) -> tuple[list[str], bool]:
     # Also inspect raw assistant lines for OCR-style bullet/label text.
     for raw_line in assistant_text.splitlines():
         value = _normalize_phrase_candidate(raw_line.lstrip("-*•> "))
-        if 4 <= len(value) <= 120 and any(ch.isalpha() for ch in value):
+        if 4 <= len(value) <= 120 and _is_ocr_like_phrase(value):
             candidates.append(value)
     if not candidates:
         # Fallback: split by sentence-like punctuation for short line candidates.
         for chunk in re.split(r"[;\n]+", assistant_text):
             value = _normalize_phrase_candidate(chunk)
-            if 6 <= len(value) <= 120 and any(ch.isalpha() for ch in value):
+            if 6 <= len(value) <= 120 and _is_ocr_like_phrase(value):
                 candidates.append(value)
     dedup: list[str] = []
     seen: set[str] = set()
