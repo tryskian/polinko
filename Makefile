@@ -35,6 +35,7 @@ CGPT_EXPORT_ROOT ?=
 CGPT_EXPORT_ROOT_DEFAULT ?= /Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT
 CGPT_EXPORT_OUTPUT_DIR ?= .local/eval_cases
 OCR_TRANSCRIPT_CASES_ALL ?= .local/eval_cases/ocr_transcript_cases_all.json
+OCR_TRANSCRIPT_CASES_GROWTH ?= .local/eval_cases/ocr_transcript_cases_growth.json
 OCR_TRANSCRIPT_CASES_HANDWRITING ?= .local/eval_cases/ocr_handwriting_from_transcripts.json
 OCR_TRANSCRIPT_CASES_TYPED ?= .local/eval_cases/ocr_typed_from_transcripts.json
 OCR_TRANSCRIPT_CASES_ILLUSTRATION ?= .local/eval_cases/ocr_illustration_from_transcripts.json
@@ -55,6 +56,9 @@ OCR_ILLUSTRATION_BENCHMARK_MIN_ANCHORS ?= 2
 OCR_STABILITY_RUNS ?= 5
 OCR_STABILITY_OUTPUT ?= .local/eval_reports/ocr_transcript_stability.json
 OCR_STABILITY_REPORT_DIR ?= .local/eval_reports/ocr_stability_runs
+OCR_GROWTH_MAX_CASES ?= 600
+OCR_GROWTH_STABILITY_OUTPUT ?= .local/eval_reports/ocr_growth_stability.json
+OCR_GROWTH_STABILITY_REPORT_DIR ?= .local/eval_reports/ocr_growth_stability_runs
 OCR_GROWTH_METRICS_OUTPUT ?= .local/eval_reports/ocr_growth_metrics.json
 OCR_GROWTH_METRICS_MARKDOWN ?= .local/eval_reports/ocr_growth_metrics.md
 OCR_GROWTH_LIMIT_RUNS ?= 0
@@ -70,7 +74,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env notebook-setup notebook nb notes ocrindex ocrmine ocrall ocrhand ocrtype ocrillu ocrstable ocrgrowth ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta ocr-data ocr-notebook-workflow gate eod localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env notebook-setup notebook nb notes ocrindex ocrmine ocrall ocrwiden ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta ocr-data ocr-notebook-workflow gate eod localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 
 chat:
 	$(PYTHON) app.py
@@ -103,6 +107,8 @@ ocrmine: ocr-cases-from-export
 
 ocrall: eval-ocr-transcript-cases
 
+ocrwiden: eval-ocr-transcript-cases-growth
+
 ocrhand: eval-ocr-transcript-cases-handwriting
 
 ocrtype: eval-ocr-transcript-cases-typed
@@ -110,6 +116,8 @@ ocrtype: eval-ocr-transcript-cases-typed
 ocrillu: eval-ocr-transcript-cases-illustration
 
 ocrstable: eval-ocr-transcript-stability
+
+ocrstablegrowth: eval-ocr-transcript-stability-growth
 
 ocrgrowth: eval-ocr-transcript-growth
 
@@ -650,14 +658,16 @@ ocr-cases-from-export:
 	$(PYTHON) -m tools.build_ocr_cases_from_export \
 		--export-root "$(CGPT_EXPORT_ROOT)" \
 		--output-cases "$(OCR_TRANSCRIPT_CASES_ALL)" \
+		--output-cases-growth "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
 		--output-cases-handwriting "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" \
 		--output-cases-typed "$(OCR_TRANSCRIPT_CASES_TYPED)" \
 		--output-cases-illustration "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" \
-		--output-review "$(OCR_TRANSCRIPT_REVIEW)"; \
-	$(MAKE) --no-print-directory ocr-handwriting-benchmark-cases; \
-	$(MAKE) --no-print-directory ocr-typed-benchmark-cases; \
-	$(MAKE) --no-print-directory ocr-illustration-benchmark-cases; \
-	$(MAKE) --no-print-directory ocr-transcript-delta
+		--output-review "$(OCR_TRANSCRIPT_REVIEW)" \
+		--max-growth-cases "$(OCR_GROWTH_MAX_CASES)"; \
+		$(MAKE) --no-print-directory ocr-handwriting-benchmark-cases; \
+		$(MAKE) --no-print-directory ocr-typed-benchmark-cases; \
+		$(MAKE) --no-print-directory ocr-illustration-benchmark-cases; \
+		$(MAKE) --no-print-directory ocr-transcript-delta
 
 ocr-handwriting-benchmark-cases:
 	@set -eu; \
@@ -730,6 +740,20 @@ eval-ocr-transcript-cases:
 		exit 1; \
 	fi; \
 	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES)" --strict --show-text
+
+eval-ocr-transcript-cases-growth:
+	@set -eu; \
+	if [ ! -f "$(OCR_TRANSCRIPT_CASES_GROWTH)" ]; then \
+		echo "Transcript OCR growth cases not found: $(OCR_TRANSCRIPT_CASES_GROWTH)"; \
+		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
+		exit 1; \
+	fi; \
+	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_GROWTH)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	if [ "$$CASE_COUNT" -eq 0 ]; then \
+		echo "No transcript OCR growth cases available yet; skipping eval."; \
+		exit 0; \
+	fi; \
+	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" --show-text
 
 eval-ocr-transcript-cases-handwriting:
 	@set -eu; \
@@ -833,22 +857,42 @@ eval-ocr-transcript-stability:
 
 eval-ocr-transcript-growth:
 	@set -eu; \
-	if [ ! -f "$(OCR_TRANSCRIPT_CASES_ALL)" ]; then \
-		echo "Transcript OCR growth cases not found: $(OCR_TRANSCRIPT_CASES_ALL)"; \
+	if [ ! -f "$(OCR_TRANSCRIPT_CASES_GROWTH)" ]; then \
+		echo "Transcript OCR growth cases not found: $(OCR_TRANSCRIPT_CASES_GROWTH)"; \
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	if [ ! -d "$(OCR_STABILITY_REPORT_DIR)" ]; then \
-		echo "OCR growth runs dir not found: $(OCR_STABILITY_REPORT_DIR)"; \
-		echo "Run: make ocrstable"; \
+	if [ ! -d "$(OCR_GROWTH_STABILITY_REPORT_DIR)" ]; then \
+		echo "OCR growth runs dir not found: $(OCR_GROWTH_STABILITY_REPORT_DIR)"; \
+		echo "Run: make ocrstablegrowth"; \
 		exit 1; \
 	fi; \
 	$(PYTHON) -m tools.eval_ocr_growth_metrics \
-		--cases "$(OCR_TRANSCRIPT_CASES_ALL)" \
-		--runs-dir "$(OCR_STABILITY_REPORT_DIR)" \
+		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
+		--runs-dir "$(OCR_GROWTH_STABILITY_REPORT_DIR)" \
 		--output-json "$(OCR_GROWTH_METRICS_OUTPUT)" \
 		--output-markdown "$(OCR_GROWTH_METRICS_MARKDOWN)" \
 		--limit-runs "$(OCR_GROWTH_LIMIT_RUNS)"
+
+eval-ocr-transcript-stability-growth:
+	@set -eu; \
+	if [ ! -f "$(OCR_TRANSCRIPT_CASES_GROWTH)" ]; then \
+		echo "Transcript OCR growth cases not found: $(OCR_TRANSCRIPT_CASES_GROWTH)"; \
+		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
+		exit 1; \
+	fi; \
+	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_GROWTH)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	if [ "$$CASE_COUNT" -eq 0 ]; then \
+		echo "No transcript OCR growth cases available yet; skipping stability run."; \
+		exit 0; \
+	fi; \
+	$(MAKE) --no-print-directory server-daemon; \
+	$(PYTHON) -m tools.eval_ocr_stability \
+		--base-url "http://127.0.0.1:8000" \
+		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
+		--runs "$(OCR_STABILITY_RUNS)" \
+		--report-dir "$(OCR_GROWTH_STABILITY_REPORT_DIR)" \
+		--output-json "$(OCR_GROWTH_STABILITY_OUTPUT)"
 
 eval-ocr-transcript-stability-handwriting-benchmark:
 	@set -eu; \

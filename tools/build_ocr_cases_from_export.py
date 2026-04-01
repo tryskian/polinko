@@ -647,11 +647,13 @@ def build_from_export(
     export_root: Path,
     *,
     output_cases: Path,
+    output_cases_growth: Path | None = None,
     output_cases_handwriting: Path,
     output_cases_typed: Path,
     output_cases_illustration: Path,
     output_review: Path,
     max_cases: int,
+    max_growth_cases: int = 600,
 ) -> dict[str, int]:
     conversations_dir = export_root / "conversations"
     assets_dir = export_root / "assets"
@@ -664,12 +666,15 @@ def build_from_export(
 
     review_rows: list[dict[str, Any]] = []
     cases: list[dict[str, Any]] = []
+    growth_cases: list[dict[str, Any]] = []
     seen_case_paths: set[str] = set()
+    seen_growth_case_paths: set[str] = set()
     skipped_low_confidence = 0
     skipped_duplicate_image_path = 0
     skipped_insufficient_anchor_terms = 0
     skipped_unstable_source = 0
     emitted_cases = 0
+    growth_cases_written = 0
 
     conversation_files = sorted(conversations_dir.glob("*.json"))
     for conversation_path in conversation_files:
@@ -902,6 +907,52 @@ def build_from_export(
                 }
             )
 
+            growth_anchor_terms = anchor_terms[:]
+            growth_ordered_terms = ordered_phrase_fallback[:]
+            if not growth_anchor_terms and transcription_phrases:
+                growth_anchor_terms = _expand_anchor_variants(
+                    _anchor_terms_for_phrases(transcription_phrases[:3])[:8]
+                )
+            if not growth_ordered_terms:
+                growth_ordered_terms = _ordered_terms_for_phrases(transcription_phrases_raw[:1])[:4]
+
+            growth_emit_status = emit_status in {
+                "emitted",
+                "skipped_insufficient_anchor_terms",
+                "skipped_low_confidence",
+            }
+            if emit_status == "skipped_low_confidence":
+                growth_emit_status = bool(
+                    ocr_literal_intent_signal
+                    and transcription_phrases
+                )
+            if emit_status in {"skipped_duplicate_image_path", "skipped_unstable_source"}:
+                growth_emit_status = False
+
+            has_growth_constraints = bool(growth_anchor_terms) or len(growth_ordered_terms) >= 2
+            if (
+                growth_emit_status
+                and has_growth_constraints
+                and image_path not in seen_growth_case_paths
+                and len(growth_cases) < max_growth_cases
+            ):
+                growth_case_id = f"gx-{conversation_id[:8]}-{len(growth_cases)+1:03d}"
+                growth_cases.append(
+                    {
+                        "id": growth_case_id,
+                        "image_path": image_path,
+                        "source_name": Path(image_path).name,
+                        "lane": lane,
+                        "transcription_mode": "verbatim",
+                        "must_contain_any": growth_anchor_terms[:8],
+                        "must_appear_in_order": growth_ordered_terms[:4],
+                        "must_not_contain_words": ["likely", "maybe", "guess"],
+                        "min_chars": 3,
+                    }
+                )
+                seen_growth_case_paths.add(image_path)
+                growth_cases_written += 1
+
             if emit_status == "skipped_low_confidence":
                 skipped_low_confidence += 1
                 continue
@@ -960,14 +1011,23 @@ def build_from_export(
     handwriting_cases = [case for case in cases if case.get("lane") == "handwriting"]
     typed_cases = [case for case in cases if case.get("lane") == "typed"]
     illustration_cases = [case for case in cases if case.get("lane") == "illustration"]
+    growth_handwriting_cases = [case for case in growth_cases if case.get("lane") == "handwriting"]
+    growth_typed_cases = [case for case in growth_cases if case.get("lane") == "typed"]
+    growth_illustration_cases = [case for case in growth_cases if case.get("lane") == "illustration"]
     cases_summary = {
         "conversation_files": len(conversation_files),
         "episodes": len(review_rows),
         "cases_total": len(cases),
+        "growth_cases_total": len(growth_cases),
         "lane_case_counts": {
             "handwriting": len(handwriting_cases),
             "typed": len(typed_cases),
             "illustration": len(illustration_cases),
+        },
+        "growth_lane_case_counts": {
+            "handwriting": len(growth_handwriting_cases),
+            "typed": len(growth_typed_cases),
+            "illustration": len(growth_illustration_cases),
         },
         "confidence_counts": confidence_counts,
         "lane_counts": lane_counts,
@@ -1005,6 +1065,22 @@ def build_from_export(
             "cases": illustration_cases,
         },
     )
+    if output_cases_growth is not None:
+        _write_json(
+            output_cases_growth,
+            {
+                "summary": {
+                    "lane": "growth",
+                    "cases_total": len(growth_cases),
+                    "lane_case_counts": {
+                        "handwriting": len(growth_handwriting_cases),
+                        "typed": len(growth_typed_cases),
+                        "illustration": len(growth_illustration_cases),
+                    },
+                },
+                "cases": growth_cases,
+            },
+        )
     _write_json(
         output_review,
         {
@@ -1030,10 +1106,15 @@ def build_from_export(
         "medium_confidence": medium,
         "low_confidence": low,
         "cases_written": len(cases),
+        "growth_cases_written": len(growth_cases),
         "handwriting_cases_written": len(handwriting_cases),
         "typed_cases_written": len(typed_cases),
         "illustration_cases_written": len(illustration_cases),
+        "growth_handwriting_cases_written": len(growth_handwriting_cases),
+        "growth_typed_cases_written": len(growth_typed_cases),
+        "growth_illustration_cases_written": len(growth_illustration_cases),
         "emitted_cases": emitted_cases,
+        "growth_emitted_cases": growth_cases_written,
         "skipped_low_confidence": skipped_low_confidence,
         "skipped_duplicate_image_path": skipped_duplicate_image_path,
         "skipped_insufficient_anchor_terms": skipped_insufficient_anchor_terms,
@@ -1054,6 +1135,11 @@ def parse_args() -> argparse.Namespace:
         "--output-cases",
         default=".local/eval_cases/ocr_transcript_cases_all.json",
         help="Output JSON path for runnable OCR cases (combined).",
+    )
+    parser.add_argument(
+        "--output-cases-growth",
+        default=".local/eval_cases/ocr_transcript_cases_growth.json",
+        help="Output JSON path for runnable OCR growth-lane cases.",
     )
     parser.add_argument(
         "--output-cases-handwriting",
@@ -1081,6 +1167,12 @@ def parse_args() -> argparse.Namespace:
         default=200,
         help="Maximum number of runnable cases to emit.",
     )
+    parser.add_argument(
+        "--max-growth-cases",
+        type=int,
+        default=600,
+        help="Maximum number of runnable growth-lane cases to emit.",
+    )
     return parser.parse_args()
 
 
@@ -1089,11 +1181,13 @@ def main() -> int:
     summary = build_from_export(
         Path(args.export_root).expanduser().resolve(),
         output_cases=Path(args.output_cases).expanduser().resolve(),
+        output_cases_growth=Path(args.output_cases_growth).expanduser().resolve(),
         output_cases_handwriting=Path(args.output_cases_handwriting).expanduser().resolve(),
         output_cases_typed=Path(args.output_cases_typed).expanduser().resolve(),
         output_cases_illustration=Path(args.output_cases_illustration).expanduser().resolve(),
         output_review=Path(args.output_review).expanduser().resolve(),
         max_cases=int(args.max_cases),
+        max_growth_cases=int(args.max_growth_cases),
     )
     for key in (
         "conversation_files",
@@ -1102,10 +1196,15 @@ def main() -> int:
         "medium_confidence",
         "low_confidence",
         "cases_written",
+        "growth_cases_written",
         "handwriting_cases_written",
         "typed_cases_written",
         "illustration_cases_written",
+        "growth_handwriting_cases_written",
+        "growth_typed_cases_written",
+        "growth_illustration_cases_written",
         "emitted_cases",
+        "growth_emitted_cases",
         "skipped_low_confidence",
         "skipped_duplicate_image_path",
         "skipped_insufficient_anchor_terms",
