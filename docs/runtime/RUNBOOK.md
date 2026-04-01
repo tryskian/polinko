@@ -205,9 +205,14 @@ plus tests as the active spec surface (`make test`,
      - `make ocrstablehand`
      - `make ocrstabletype`
      - `make ocrstableillu`
+   - compute growth-lane pass-from-fail metrics:
+     - `make ocrgrowth`
 4. Local output surfaces:
    - case sets: `.local/eval_cases/`
    - run/stability reports: `.local/eval_reports/`
+   - growth metrics reports:
+     - `.local/eval_reports/ocr_growth_metrics.json`
+     - `.local/eval_reports/ocr_growth_metrics.md`
 5. Notebook analysis surface:
    - `make notes`
    - starter template:

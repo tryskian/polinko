@@ -1446,3 +1446,25 @@
     `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
 - Why: This preserves deterministic release quality while still extracting
   useful learning signal from high-fail exploratory OCR cases.
+
+## D-120: Operationalise growth-lane pass-from-fail metrics with a dedicated report surface
+
+- Date: `2026-04-01`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `growth_lane`, `pass_from_fail`, `operator_surface`
+- Decision:
+  - add executable growth metrics tool:
+    - `tools/eval_ocr_growth_metrics.py`
+  - add canonical growth command + short alias:
+    - `make eval-ocr-transcript-growth`
+    - `make ocrgrowth`
+  - write local growth reports to:
+    - `.local/eval_reports/ocr_growth_metrics.json`
+    - `.local/eval_reports/ocr_growth_metrics.md`
+  - compute the D-117 metric set directly from run history:
+    - `first_pass_fail_rate`
+    - `fail_to_pass_conversion_rate`
+    - `median_runs_to_pass`
+    - `unresolved_fail_age`
+- Why: Growth-lane metrics were policy-only; this makes them executable and
+  reviewable without manual report forensics.

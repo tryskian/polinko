@@ -50,6 +50,11 @@
   - active eval model is split into:
     - `lockset` lane (strict release gate, must remain green)
     - `growth` lane (fail-tolerant novel cases used for pass-from-fail tracking)
+  - growth metrics are executable via:
+    - `make ocrgrowth`
+    - outputs:
+      - `.local/eval_reports/ocr_growth_metrics.json`
+      - `.local/eval_reports/ocr_growth_metrics.md`
   - latest lockset benchmark baseline (local):
     - handwriting: `4/4` PASS
     - typed: `6/6` PASS

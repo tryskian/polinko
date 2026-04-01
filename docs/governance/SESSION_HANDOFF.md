@@ -92,6 +92,7 @@
     - `make eval-ocr-transcript-cases-illustration`
     - `make eval-ocr-transcript-cases-illustration-benchmark`
     - `make eval-ocr-transcript-stability`
+    - `make eval-ocr-transcript-growth`
     - `make eval-ocr-transcript-stability-handwriting-benchmark`
     - `make eval-ocr-transcript-stability-typed-benchmark`
     - `make eval-ocr-transcript-stability-illustration-benchmark`
@@ -155,6 +156,11 @@
       - typed: `6` stable, `0` flaky
       - illustration: `2` stable, `0` flaky
     - full transcript stability: `21` stable, `0` flaky
+  - growth metrics command is active:
+    - `make ocrgrowth`
+    - outputs:
+      - `.local/eval_reports/ocr_growth_metrics.json`
+      - `.local/eval_reports/ocr_growth_metrics.md`
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`
@@ -230,6 +236,8 @@
   - `make ocrstablehand`
   - `make ocrstabletype`
   - `make ocrstableillu`
+- Recompute growth-lane pass-from-fail metrics:
+  - `make ocrgrowth`
 - If lockset regresses, apply one precision-safe miner/matcher kernel only,
   then rerun full sequence before merge.
 - Use notebook starter for fast local triage when needed:
