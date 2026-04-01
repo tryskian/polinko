@@ -412,6 +412,22 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
     return (len(reasons) == 0), reasons
 
 
+def _select_cases(
+    cases: list[dict[str, Any]],
+    *,
+    offset: int = 0,
+    max_cases: int = 0,
+) -> list[dict[str, Any]]:
+    if offset < 0:
+        raise RuntimeError("--offset must be >= 0.")
+    if max_cases < 0:
+        raise RuntimeError("--max-cases must be >= 0.")
+    selected = cases[offset:]
+    if max_cases > 0:
+        selected = selected[:max_cases]
+    return selected
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run OCR eval cases against /skills/ocr.")
     parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
@@ -426,6 +442,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--strict", action="store_true", help="Exit non-zero if any case fails.")
     parser.add_argument("--keep-chats", action="store_true", help="Keep generated eval chats.")
     parser.add_argument("--show-text", action="store_true", help="Print extracted text for each case.")
+    parser.add_argument("--offset", type=int, default=0, help="Skip first N cases before evaluation.")
+    parser.add_argument(
+        "--max-cases",
+        type=int,
+        default=0,
+        help="Evaluate at most N cases after offset (0 = all remaining).",
+    )
     parser.add_argument(
         "--report-json",
         default="",
@@ -446,11 +469,22 @@ def main() -> int:
     if not cases_path.exists():
         raise SystemExit(f"Cases file not found: {cases_path}")
     cases = _load_cases(cases_path)
+    try:
+        selected_cases = _select_cases(cases, offset=args.offset, max_cases=args.max_cases)
+    except RuntimeError as exc:
+        raise SystemExit(str(exc)) from exc
+    if not selected_cases:
+        raise SystemExit(
+            f"No OCR eval cases selected from {cases_path} (total={len(cases)} offset={args.offset} max_cases={args.max_cases})."
+        )
     run_id = args.run_id.strip() or f"{int(time.time() * 1000)}-{os.getpid()}-{uuid.uuid4().hex[:6]}"
     headers = _headers()
 
     print(f"Running OCR eval on {args.base_url}")
-    print(f"Cases: {len(cases)} | run_id={run_id}")
+    print(
+        f"Cases: {len(selected_cases)}/{len(cases)} "
+        f"(offset={args.offset} max_cases={args.max_cases}) | run_id={run_id}"
+    )
 
     try:
         _preflight(args.base_url, headers, args.timeout)
@@ -463,7 +497,7 @@ def main() -> int:
     session_ids: list[str] = []
     case_results: list[dict[str, Any]] = []
 
-    for index, case in enumerate(cases, start=1):
+    for index, case in enumerate(selected_cases, start=1):
         case_id = case["id"]
         session_id = f"{args.session_prefix}-{run_id}-{index:02d}"
         session_ids.append(session_id)

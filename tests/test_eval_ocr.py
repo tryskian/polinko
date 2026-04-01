@@ -1,6 +1,7 @@
 import unittest
 
 from tools.eval_ocr import _check_case
+from tools.eval_ocr import _select_cases
 
 
 class OcrEvalRuleTests(unittest.TestCase):
@@ -172,6 +173,27 @@ class OcrEvalRuleTests(unittest.TestCase):
         passed, reasons = _check_case(case, "CHATTEST day in 2025")
         self.assertTrue(passed)
         self.assertEqual(reasons, [])
+
+    def test_select_cases_returns_all_by_default(self) -> None:
+        cases = [{"id": "c1"}, {"id": "c2"}, {"id": "c3"}]
+        selected = _select_cases(cases)
+        self.assertEqual(selected, cases)
+
+    def test_select_cases_applies_offset_and_max(self) -> None:
+        cases = [{"id": "c1"}, {"id": "c2"}, {"id": "c3"}, {"id": "c4"}]
+        selected = _select_cases(cases, offset=1, max_cases=2)
+        self.assertEqual(selected, [{"id": "c2"}, {"id": "c3"}])
+
+    def test_select_cases_accepts_offset_beyond_end(self) -> None:
+        cases = [{"id": "c1"}]
+        selected = _select_cases(cases, offset=2, max_cases=0)
+        self.assertEqual(selected, [])
+
+    def test_select_cases_rejects_negative_values(self) -> None:
+        with self.assertRaises(RuntimeError):
+            _select_cases([{"id": "c1"}], offset=-1)
+        with self.assertRaises(RuntimeError):
+            _select_cases([{"id": "c1"}], max_cases=-1)
 
 
 if __name__ == "__main__":
