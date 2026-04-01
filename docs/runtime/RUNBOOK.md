@@ -199,6 +199,8 @@ plus tests as the active spec surface (`make test`,
      - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
    - run widened growth lane (fail-tolerant):
      - `make ocrwiden`
+     - optional bounded batch run:
+       - `make ocrwiden OCR_GROWTH_EVAL_OFFSET=0 OCR_GROWTH_EVAL_MAX_CASES=40`
      - `make ocrstablegrowth`
    - run lockset lanes:
      - `make ocrhandbench`
