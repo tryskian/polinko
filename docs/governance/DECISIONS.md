@@ -1413,3 +1413,7 @@
   - promote cases from growth lane into lockset only after repeated stable pass
 - Why: Pass-only optimisation creates measurement noise; a split gate model
   preserves comparability while using failures as development signal.
+- Authorship signal:
+  - user hypothesis statement:
+    "i think we need to allow for high fail rates. that starts tracking pass
+    from fail"
