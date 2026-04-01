@@ -46,6 +46,8 @@ make open-api-docs
 1. Install Python deps: `pip install -r requirements.txt`.
 1. Copy env file: `cp .env.example .env`.
 1. Set `OPENAI_API_KEY` in `.env`.
+1. Optional notebook/viz stack (local/private lane):
+   `make notebook-setup`.
 1. Optional for harness smoke: set
    `POLINKO_CHAT_HARNESS_DEFAULT_MODE=fixture` to default chat requests to
    deterministic fixture mode.
@@ -59,6 +61,8 @@ Notes:
 - short aliases for long-chain commands:
   `make ocrindex`, `make ocrmine`, `make ocrall`, `make ocrhand`,
   `make ocrtype`, `make ocrillu`, `make ocrstable`, `make gate`
+- notebook commands:
+  `make notebook-setup`, `make notes` (aliases: `make notebook`, `make nb`)
 - API key auth is optional for local dev (`POLINKO_SERVER_API_KEY`,
   `POLINKO_SERVER_API_KEYS_JSON`).
 
@@ -68,6 +72,13 @@ Backend (canonical):
 
 ```bash
 make server
+```
+
+Notebook viz (local/private):
+
+```bash
+make notebook-setup
+make notes
 ```
 
 Checks:
