@@ -958,6 +958,10 @@ eval-ocr-transcript-stability-growth:
 		--base-url "http://127.0.0.1:8000" \
 		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
 		--runs "$(OCR_STABILITY_RUNS)" \
+		--offset "$(OCR_GROWTH_EVAL_OFFSET)" \
+		--max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" \
+		--ocr-retries "$(OCR_GROWTH_OCR_RETRIES)" \
+		--ocr-retry-delay-ms "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" \
 		--report-dir "$(OCR_GROWTH_STABILITY_REPORT_DIR)" \
 		--output-json "$(OCR_GROWTH_STABILITY_OUTPUT)"
 
