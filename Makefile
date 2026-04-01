@@ -33,6 +33,7 @@ STYLE_MIN_PASS_ATTEMPTS ?= 1
 CLIP_AB_SOURCE_TYPES ?= image
 OCR_HANDWRITING_CASES ?= .local/eval_cases/ocr_handwriting_eval_cases.json
 CGPT_EXPORT_ROOT ?=
+CGPT_EXPORT_ROOT_DEFAULT ?= /Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT
 CGPT_EXPORT_OUTPUT_DIR ?= .local/eval_cases
 OCR_TRANSCRIPT_CASES_ALL ?= .local/eval_cases/ocr_transcript_cases_all.json
 OCR_TRANSCRIPT_CASES_HANDWRITING ?= .local/eval_cases/ocr_handwriting_from_transcripts.json
@@ -67,7 +68,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env ocrindex ocrmine ocrall ocrhand ocrtype ocrillu ocrstable ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta gate eod localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env ocrindex ocrmine ocrall ocrhand ocrtype ocrillu ocrstable ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta ocr-data ocr-notebook-workflow gate eod localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 
 chat:
 	$(PYTHON) app.py
@@ -115,6 +116,31 @@ ocrstabletype: eval-ocr-transcript-stability-typed-benchmark
 ocrstableillu: eval-ocr-transcript-stability-illustration-benchmark
 
 ocrdelta: ocr-transcript-delta
+
+ocr-data:
+	@set -eu; \
+	EXPORT_ROOT="$(CGPT_EXPORT_ROOT)"; \
+	if [ -z "$$EXPORT_ROOT" ]; then \
+		EXPORT_ROOT="$(CGPT_EXPORT_ROOT_DEFAULT)"; \
+	fi; \
+	if [ ! -d "$$EXPORT_ROOT" ]; then \
+		echo "CGPT export root not found: $$EXPORT_ROOT"; \
+		echo "Run: make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"; \
+		exit 1; \
+	fi; \
+	$(MAKE) --no-print-directory ocr-notebook-workflow CGPT_EXPORT_ROOT="$$EXPORT_ROOT"
+
+ocr-notebook-workflow:
+	@set -eu; \
+	if [ -z "$(CGPT_EXPORT_ROOT)" ]; then \
+		echo "CGPT_EXPORT_ROOT is required."; \
+		echo "Example: make ocr-notebook-workflow CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT"; \
+		exit 1; \
+	fi; \
+	$(MAKE) --no-print-directory doctor-env; \
+	$(MAKE) --no-print-directory ocrmine CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)"; \
+	$(MAKE) --no-print-directory ocrall; \
+	$(MAKE) --no-print-directory ocrstable
 
 gate: quality-gate-deterministic
 
