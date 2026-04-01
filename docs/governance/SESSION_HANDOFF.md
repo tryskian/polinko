@@ -243,6 +243,7 @@
   - `make ocrwiden`
   - `make ocrstablegrowth`
   - `make ocrgrowth`
+  - `make ocrfails`
 - If lockset regresses, apply one precision-safe miner/matcher kernel only,
   then rerun full sequence before merge.
 - Use notebook starter for fast local triage when needed:
