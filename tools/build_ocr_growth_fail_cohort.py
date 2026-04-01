@@ -44,6 +44,21 @@ def _normalise_reason(raw: str) -> str:
     return f"{cleaned[:137]}..."
 
 
+def _reason_pattern(reason: str) -> str:
+    lowered = reason.lower()
+    if "missing ordered phrase" in lowered:
+        return "ordered_phrase_missing"
+    if "missing one-of required phrase" in lowered:
+        return "anchor_any_missing"
+    if "missing one-of required phrases" in lowered:
+        return "anchor_any_missing"
+    if "missing required phrase" in lowered:
+        return "required_phrase_missing"
+    if "error" in lowered:
+        return "runtime_error"
+    return "other"
+
+
 def build_fail_cohort(
     *,
     stability_payload: dict[str, Any],
@@ -59,6 +74,7 @@ def build_fail_cohort(
     selected: list[dict[str, Any]] = []
     lane_counts: Counter[str] = Counter()
     reason_counts: Counter[str] = Counter()
+    reason_pattern_counts: Counter[str] = Counter()
 
     for row in raw_cases:
         if not isinstance(row, dict):
@@ -99,11 +115,19 @@ def build_fail_cohort(
             if isinstance(sample_reasons_raw, list)
             else []
         )
+        case_reason_patterns: Counter[str] = Counter()
 
         for reason in sample_reasons:
             reason_key = _normalise_reason(reason)
             if reason_key:
                 reason_counts[reason_key] += 1
+            pattern = _reason_pattern(reason)
+            case_reason_patterns[pattern] += 1
+            reason_pattern_counts[pattern] += 1
+
+        primary_failure_pattern = "unknown"
+        if case_reason_patterns:
+            primary_failure_pattern = case_reason_patterns.most_common(1)[0][0]
 
         selected_row = {
             "id": case_id,
@@ -119,6 +143,8 @@ def build_fail_cohort(
             "always_fail": always_fail,
             "statuses": row.get("statuses") if isinstance(row.get("statuses"), list) else [],
             "sample_reasons": sample_reasons,
+            "failure_patterns": sorted(case_reason_patterns.keys()),
+            "primary_failure_pattern": primary_failure_pattern,
             "text_variant_count": int(row.get("text_variant_count", 0) or 0),
             "char_count_span": int(row.get("char_count_span", 0) or 0),
             "must_contain_any": growth_case.get("must_contain_any", []),
@@ -146,6 +172,7 @@ def build_fail_cohort(
             {"reason": reason, "count": count}
             for reason, count in reason_counts.most_common(10)
         ],
+        "failure_pattern_counts": dict(sorted(reason_pattern_counts.items())),
     }
 
     return {
@@ -198,23 +225,34 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
             lines.append(f"| {reason} | {count} |")
         lines.append("")
 
+    failure_pattern_counts = summary.get("failure_pattern_counts")
+    if isinstance(failure_pattern_counts, dict) and failure_pattern_counts:
+        lines.append("## Failure Pattern Counts")
+        lines.append("")
+        lines.append("| pattern | count |")
+        lines.append("|---|---:|")
+        for pattern, count in failure_pattern_counts.items():
+            lines.append(f"| {pattern} | {int(count)} |")
+        lines.append("")
+
     if selected:
         lines.append("## Selected Cases")
         lines.append("")
         lines.append(
-            "| case_id | lane | fail_runs | observed_runs | age_hours | source_name | image_path |"
+            "| case_id | lane | pattern | fail_runs | observed_runs | age_hours | source_name | image_path |"
         )
-        lines.append("|---|---|---:|---:|---:|---|---|")
+        lines.append("|---|---|---|---:|---:|---:|---|---|")
         for row in selected:
             case_id = str(row.get("id", ""))
             lane = str(row.get("lane", ""))
+            pattern = str(row.get("primary_failure_pattern", ""))
             fail_runs = int(row.get("fail_runs", 0) or 0)
             observed = int(row.get("observed_runs", 0) or 0)
             age_hours = float(row.get("unresolved_fail_age_hours", 0.0) or 0.0)
             source_name = str(row.get("source_name", "")).replace("|", "\\|")
             image_path = str(row.get("image_path", "")).replace("|", "\\|")
             lines.append(
-                f"| {case_id} | {lane} | {fail_runs} | {observed} | {age_hours:.3f} | "
+                f"| {case_id} | {lane} | {pattern} | {fail_runs} | {observed} | {age_hours:.3f} | "
                 f"{source_name} | {image_path} |"
             )
         lines.append("")
