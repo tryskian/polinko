@@ -13,6 +13,8 @@ from tools.build_ocr_cases_from_export import (
     _extract_candidate_phrases,
     _extract_transcribed_lines,
     _is_ocr_like_phrase,
+    _ordered_terms_for_phrases,
+    _ordered_terms_supported_by_anchors,
     build_from_export,
 )
 
@@ -164,6 +166,14 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertNotIn("there", anchors)
         self.assertNotIn("seems", anchors)
         self.assertNotIn("something", anchors)
+
+    def test_ordered_terms_drop_leading_token_in_long_phrase(self) -> None:
+        ordered = _ordered_terms_for_phrases(["Restore Deleted Chat"])
+        self.assertEqual(ordered, ["deleted", "chat"])
+
+    def test_ordered_terms_supported_by_anchors_singularizes_plural_when_available(self) -> None:
+        ordered = _ordered_terms_supported_by_anchors(["folds", "within"], ["fold", "within"])
+        self.assertEqual(ordered, ["fold", "within"])
 
     def test_build_promotes_medium_with_framing_signal(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1516,7 +1526,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["growth_cases_written"], 1)
             growth_case = json.loads(output_growth.read_text(encoding="utf-8"))["cases"][0]
             self.assertEqual(growth_case["must_contain_any"], ["stirring"])
-            self.assertEqual(growth_case["must_appear_in_order"], ["stirring"])
+            self.assertEqual(growth_case["must_appear_in_order"], [])
             self.assertNotIn("something", growth_case["must_appear_in_order"])
 
     def test_build_skips_known_unstable_handwriting_source(self) -> None:
