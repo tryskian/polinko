@@ -61,7 +61,7 @@ Notes:
 - short aliases for long-chain commands:
   `make ocrindex`, `make ocrmine`, `make ocrall`, `make ocrhand`,
   `make ocrtype`, `make ocrillu`, `make ocrstable`, `make ocrwiden`,
-  `make ocrstablegrowth`, `make ocrgrowth`, `make gate`
+  `make ocrstablegrowth`, `make ocrgrowth`, `make ocrfails`, `make gate`
 - notebook commands:
   `make notebook-setup`, `make notes` (aliases: `make notebook`, `make nb`)
 

@@ -55,11 +55,14 @@
       - `make ocrwiden`
       - `make ocrstablegrowth`
     - `make ocrgrowth`
+    - `make ocrfails`
     - outputs:
       - `.local/eval_cases/ocr_transcript_cases_growth.json`
+      - `.local/eval_cases/ocr_growth_fail_cohort.json`
       - `.local/eval_reports/ocr_growth_stability.json`
       - `.local/eval_reports/ocr_growth_metrics.json`
       - `.local/eval_reports/ocr_growth_metrics.md`
+      - `.local/eval_reports/ocr_growth_fail_cohort.md`
   - latest lockset benchmark baseline (local):
     - handwriting: `4/4` PASS
     - typed: `6/6` PASS

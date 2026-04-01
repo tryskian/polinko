@@ -1485,3 +1485,23 @@
   - route growth metrics to growth stability run history only
 - Why: We need broader novel-case exposure for pass-from-fail signal while
   keeping release gate strict and stable.
+
+## D-122: Materialise stable growth FAIL cohort as a first-class remediation input
+
+- Date: `2026-04-01`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `growth_lane`, `fail_cohort`, `remediation_kernel`
+- Decision:
+  - add executable fail-cohort builder:
+    - `tools/build_ocr_growth_fail_cohort.py`
+  - add canonical command + short alias:
+    - `make eval-ocr-growth-fail-cohort`
+    - `make ocrfails`
+  - emit cohort artefacts to local surfaces:
+    - `.local/eval_cases/ocr_growth_fail_cohort.json`
+    - `.local/eval_reports/ocr_growth_fail_cohort.md`
+  - treat this cohort as the next-kernel input for precision-safe OCR hardening
+    while keeping lockset gate unchanged
+- Why: Growth widening increases failure signal volume; a deterministic fail
+  cohort keeps remediation focused, reproducible, and separate from release
+  gating.

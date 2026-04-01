@@ -64,12 +64,16 @@
     - `.local/eval_cases/`
       - includes widened growth set:
         `.local/eval_cases/ocr_transcript_cases_growth.json`
+      - includes growth fail cohort:
+        `.local/eval_cases/ocr_growth_fail_cohort.json`
     - `.local/eval_reports/`
       - includes growth stability:
         `.local/eval_reports/ocr_growth_stability.json`
     - growth metrics:
       - `.local/eval_reports/ocr_growth_metrics.json`
       - `.local/eval_reports/ocr_growth_metrics.md`
+    - growth fail cohort report:
+      - `.local/eval_reports/ocr_growth_fail_cohort.md`
   - local notebook exploration:
     - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
 
@@ -102,3 +106,4 @@
   (see `docs/runtime/RUNBOOK.md`).
 - Local eval trace backfill (optional): `make backfill-eval-traces`
 - Growth-lane metrics report: `make ocrgrowth`
+- Growth-lane fail cohort materialisation: `make ocrfails`
