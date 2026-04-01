@@ -3282,6 +3282,10 @@ def create_app(config: AppConfig) -> FastAPI:
                 content=f"[OCR]\n{extracted_text}",
             )
             result_message_id = appended.message_id
+        effective_source_message_id = req.source_message_id
+        if effective_source_message_id is None and result_message_id is not None:
+            # Preserve a concrete trace link when OCR output is attached to chat.
+            effective_source_message_id = result_message_id
 
         run_id = f"ocr-{uuid.uuid4().hex[:12]}"
         try:
@@ -3290,7 +3294,7 @@ def create_app(config: AppConfig) -> FastAPI:
                 session_id=session_id,
                 source_name=req.source_name,
                 mime_type=req.mime_type,
-                source_message_id=req.source_message_id,
+                source_message_id=effective_source_message_id,
                 result_message_id=result_message_id,
                 status=status,
                 extracted_text=extracted_text,
@@ -3303,7 +3307,7 @@ def create_app(config: AppConfig) -> FastAPI:
                     session_id=session_id,
                     source_name=req.source_name,
                     mime_type=req.mime_type,
-                    source_message_id=req.source_message_id,
+                    source_message_id=effective_source_message_id,
                     result_message_id=result_message_id,
                     status=status,
                     extracted_text=extracted_text,
