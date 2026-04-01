@@ -1,0 +1,5 @@
+docs/peanut/transcripts/**
+docs/portfolio/raw_evidence/**
+.local/**
+output/**
+node_modules/**
