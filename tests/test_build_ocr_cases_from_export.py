@@ -142,6 +142,16 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertIn("field notes", phrases)
         self.assertIn("record wow.", phrases)
 
+    def test_extract_transcribed_lines_filters_non_ocr_narrative_lines(self) -> None:
+        assistant_text = (
+            "Here’s the OCR:\n"
+            "- open fold within\n"
+            "the web branch was like a pocket timeline that could not sustain itself once deleted."
+        )
+        phrases, _ = _extract_transcribed_lines(assistant_text)
+        self.assertIn("open fold within", phrases)
+        self.assertFalse(any("pocket timeline" in phrase.lower() for phrase in phrases))
+
     def test_anchor_terms_filter_weak_and_filetype_tokens(self) -> None:
         anchors = _anchor_terms_for_phrases(
             [
