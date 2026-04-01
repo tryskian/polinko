@@ -595,6 +595,7 @@ def _ordered_terms_for_phrases(phrases: list[str]) -> list[str]:
     ordered: list[str] = []
     seen: set[str] = set()
     for phrase in phrases:
+        phrase_tokens: list[str] = []
         tokens = [token.lower() for token in _phrase_tokens(phrase)]
         for token in tokens:
             if not any(ch.isalpha() for ch in token):
@@ -611,6 +612,13 @@ def _ordered_terms_for_phrases(phrases: list[str]) -> list[str]:
                 continue
             if token in ANCHOR_GENERIC_WORDS:
                 continue
+            phrase_tokens.append(token)
+        # In longer snippets, the first token is frequently a heading/context
+        # marker ("restore", "insight", etc). Prefer the trailing sequence for
+        # order constraints to reduce brittle lead-token gates.
+        if len(phrase_tokens) >= 3:
+            phrase_tokens = phrase_tokens[1:]
+        for token in phrase_tokens:
             if token in seen:
                 continue
             seen.add(token)
@@ -652,12 +660,20 @@ def _ordered_terms_supported_by_anchors(ordered_terms: list[str], anchors: list[
     seen: set[str] = set()
     for token in ordered_terms:
         value = token.lower().strip()
+        if value.endswith("es") and len(value) > 5 and value[:-2] in anchor_set:
+            value = value[:-2]
+        elif value.endswith("s") and len(value) > 4 and value[:-1] in anchor_set:
+            value = value[:-1]
         if value not in anchor_set:
             continue
         if value in seen:
             continue
         seen.add(value)
         filtered.append(value)
+    # A single token is not a sequence; avoid turning order checks into
+    # accidental hard-required singleton anchors in growth lane.
+    if len(filtered) < 2:
+        return []
     return filtered
 
 
