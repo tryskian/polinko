@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 
 from tools.build_ocr_growth_fail_cohort import build_fail_cohort
 
@@ -34,7 +35,7 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
                 },
             ]
         }
-        growth_case_map = {
+        growth_case_map: dict[str, dict[str, Any]] = {
             "gx-1": {
                 "id": "gx-1",
                 "lane": "handwriting",
@@ -67,6 +68,7 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
 
         self.assertEqual(report["summary"]["selected_fail_cases"], 1)
         self.assertEqual(report["summary"]["lane_counts"], {"handwriting": 1})
+        self.assertEqual(report["summary"]["failure_pattern_counts"], {"ordered_phrase_missing": 1})
         self.assertEqual(len(report["cases"]), 1)
         selected = report["cases"][0]
         self.assertEqual(selected["id"], "gx-1")
@@ -75,6 +77,8 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertEqual(selected["image_path"], "/tmp/sample-1.png")
         self.assertEqual(selected["must_contain_any"], ["abc"])
         self.assertEqual(selected["must_appear_in_order"], ["abc", "def"])
+        self.assertEqual(selected["failure_patterns"], ["ordered_phrase_missing"])
+        self.assertEqual(selected["primary_failure_pattern"], "ordered_phrase_missing")
         self.assertEqual(selected["unresolved_fail_age_hours"], 12.345)
 
     def test_include_unstable_adds_unstable_persistent_fail(self) -> None:
@@ -93,7 +97,7 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
                 }
             ]
         }
-        growth_case_map = {
+        growth_case_map: dict[str, dict[str, Any]] = {
             "gx-3": {
                 "id": "gx-3",
                 "lane": "illustration",
