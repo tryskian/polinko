@@ -1331,6 +1331,35 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(export_payload["ocr_runs"][0]["result_message_id"], run["result_message_id"])
         self.assertEqual(export_payload["message_count"], 1)
 
+    def test_ocr_skill_sets_source_message_id_when_attached_without_source(self) -> None:
+        run_resp = self.client.post(
+            "/skills/ocr",
+            headers={"x-api-key": "test-server-key"},
+            json={
+                "session_id": "s-ocr-source-fallback",
+                "source_name": "trace-note.txt",
+                "mime_type": "text/plain",
+                "text_hint": "traceable OCR line",
+                "attach_to_chat": True,
+            },
+        )
+        self.assertEqual(run_resp.status_code, 200)
+        run = run_resp.json()["run"]
+        self.assertIsNotNone(run["result_message_id"])
+        self.assertEqual(run["source_message_id"], run["result_message_id"])
+
+        export_resp = self.client.get(
+            "/chats/s-ocr-source-fallback/export",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(export_resp.status_code, 200)
+        export_payload = export_resp.json()
+        self.assertEqual(len(export_payload["ocr_runs"]), 1)
+        self.assertEqual(
+            export_payload["ocr_runs"][0]["source_message_id"],
+            export_payload["ocr_runs"][0]["result_message_id"],
+        )
+
     def test_ocr_skill_openai_provider_path(self) -> None:
         deps = server.get_runtime_deps()
         deps.ocr_provider = "openai"
