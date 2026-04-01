@@ -183,6 +183,36 @@ plus tests as the active spec surface (`make test`,
    - keep eval/gate logic server-side and binary
    - do not use fixture mode outputs for quality gate decisions
 
+## OCR-Forward Operating Model
+
+1. Treat OCR as the primary eval reliability lane.
+2. Run two parallel lane types:
+   - `lockset` lane:
+     - strict release gate, must stay green
+     - currently represented by benchmark subsets
+       (`handwriting`, `typed`, `illustration`)
+   - `growth` lane:
+     - fail-tolerant novel-case lane
+     - used to measure pass-from-fail movement, not to block release directly
+3. Canonical command sequence:
+   - mine/build cases:
+     - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+   - run lockset lanes:
+     - `make ocrhandbench`
+     - `make ocrtypebench`
+     - `make ocrillubench`
+   - run stability replays:
+     - `make ocrstablehand`
+     - `make ocrstabletype`
+     - `make ocrstableillu`
+4. Local output surfaces:
+   - case sets: `.local/eval_cases/`
+   - run/stability reports: `.local/eval_reports/`
+5. Notebook analysis surface:
+   - `make notes`
+   - starter template:
+     - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+
 ## Python Diagnostics (Ruff + Mypy)
 
 1. Use repo-local tools for deterministic output:

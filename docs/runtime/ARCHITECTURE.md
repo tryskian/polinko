@@ -30,6 +30,10 @@
    deterministic smoke without model calls; default remains `live`.
 6. CLI/API surfaces remain canonical; archived legacy frontend context stays in
    `.archive/live_archive/legacy_frontend/`.
+7. OCR-forward quality loop is the active reliability engine:
+   - transcript case miner builds local OCR case sets
+   - lockset lane gates release quality (strict binary pass/fail)
+   - growth lane captures fail-heavy novel cases for pass-from-fail tracking
 
 ## Data Surfaces
 
@@ -53,6 +57,14 @@
   - no file-log-driven eval wiring exists in runtime gate decisions.
   - deprecated eval/frontend context is reference-only under `.archive/live_archive/`
     and cannot drive active gate decisions.
+- OCR eval lanes (active):
+  - lockset gate: stable benchmark subset that must stay green
+  - growth lane: exploratory/novel subset where failures are expected signal
+  - local case/report surfaces (untracked):
+    - `.local/eval_cases/`
+    - `.local/eval_reports/`
+  - local notebook exploration:
+    - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
 
 ## Placement Rules
 

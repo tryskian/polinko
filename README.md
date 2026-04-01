@@ -79,6 +79,11 @@ make notebook-setup
 make notes
 ```
 
+Starter notebook:
+
+- `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+  (live filters/sliders + instant chart/table updates).
+
 Checks:
 
 ```bash
@@ -161,6 +166,11 @@ python tools/client.py --base-url http://127.0.0.1:8000 --session-id local-dev
 - `/export`
 
 ## Eval Harnesses
+
+OCR-forward lane model:
+
+- `lockset` lane: strict release gate (must stay green)
+- `growth` lane: fail-tolerant novel-case lane for pass-from-fail tracking
 
 Single eval targets:
 
