@@ -134,7 +134,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--runs", type=int, default=5, help="How many repeated runs to execute.")
     parser.add_argument("--run-id", default="", help="Run id prefix (default: unix timestamp).")
     parser.add_argument("--session-prefix", default="ocr-stability")
-    parser.add_argument("--timeout", type=int, default=60)
+    parser.add_argument("--timeout", type=int, default=90)
     parser.add_argument("--strict", action="store_true", help="Pass --strict to tools.eval_ocr.")
     parser.add_argument(
         "--report-dir",

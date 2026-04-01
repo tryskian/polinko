@@ -1365,6 +1365,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("kwargs", captured)
         kwargs = captured["kwargs"]
         self.assertEqual(kwargs["model"], deps.ocr_model)
+        self.assertEqual(kwargs["temperature"], 0.0)
         self.assertIn("input", kwargs)
         ocr_prompt_text = kwargs["input"][0]["content"][0]["text"]
         self.assertIn("Output mode: verbatim.", ocr_prompt_text)
