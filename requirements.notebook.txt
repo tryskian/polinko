@@ -1,0 +1,7 @@
+jupyterlab
+pandas
+plotly
+itables
+ipywidgets
+panel
+nbdime
