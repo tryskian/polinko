@@ -52,6 +52,7 @@ _OCR_MAX_BYTES = 5 * 1024 * 1024
 _PDF_MAX_BYTES = 10 * 1024 * 1024
 _OCR_RETRY_AFTER_RATE_LIMIT_SECONDS = 10
 _OCR_RETRY_AFTER_TRANSIENT_SECONDS = 3
+_OCR_TEMPERATURE = 0.0
 _OCR_TRANSCRIPTION_MODE_VERBATIM = "verbatim"
 _OCR_TRANSCRIPTION_MODE_NORMALIZED = "normalized"
 _OCR_TRANSCRIPTION_MODES = {
@@ -1879,6 +1880,7 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
         response = deps.ocr_client.responses.create(
             model=deps.ocr_model,
             input=ocr_input,
+            temperature=_OCR_TEMPERATURE,
         )
     except AuthenticationError as exc:
         raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc

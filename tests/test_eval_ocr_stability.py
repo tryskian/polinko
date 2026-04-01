@@ -2,6 +2,7 @@ import unittest
 
 from tools.eval_ocr_stability import _normalise_text
 from tools.eval_ocr_stability import _summarise_reports
+from tools.eval_ocr_stability import build_parser
 
 
 def _report(run_id: str, cases: list[dict[str, object]]) -> dict[str, object]:
@@ -18,6 +19,10 @@ def _report(run_id: str, cases: list[dict[str, object]]) -> dict[str, object]:
 
 
 class OcrStabilityTests(unittest.TestCase):
+    def test_build_parser_defaults_timeout_to_eval_ocr_timeout(self) -> None:
+        args = build_parser().parse_args(["--cases", "dummy.json"])
+        self.assertEqual(args.timeout, 90)
+
     def test_normalise_text_collapses_whitespace(self) -> None:
         self.assertEqual(_normalise_text(" a   b \n c "), "a b c")
 
