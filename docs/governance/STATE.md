@@ -531,6 +531,17 @@
   - build focused fail-derived subset: `make ocrfocuscases`
   - run focused stability replay: `make eval-ocr-focus-stability`
   - one-shot kernel: `make ocrfocus`
+- OCR growth miner precision was tightened (April 2, 2026):
+  - UI-error regex phrases are excluded from growth regex fallback
+    (`conversation not found`, `chat html`)
+  - UI-leading ordered fallback tokens are excluded (`restore`, `deleted`)
+  - low-confidence growth admission now requires explicit OCR intent
+    (or askless handwriting overlap signal)
+- Current aligned growth baseline (April 2, 2026):
+  - growth cases: `28`
+  - latest growth stability replay: `24/28` pass, `4/28` fail, `0` errors
+  - fail cohort selection (`require_ocr_framing=true`): `0` selected cases
+  - `skipped_non_framed=4` (indicates residual fails outside framed subset)
 - Growth/focus OCR replay logging is now streamed in real time:
   - Makefile runs growth + focus OCR replay commands with unbuffered Python
     output so long runs do not appear stalled.

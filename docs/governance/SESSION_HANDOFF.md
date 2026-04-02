@@ -311,9 +311,13 @@
       and rerun `make ocrstablegrowth` on refreshed growth cases before
       precision patch decisions
     - current aligned baseline (April 2, 2026):
-      - growth cases: `39`
-      - latest stability replay: `30/39` pass, `9/39` fail, `0` errors
-      - fail cohort selection (`require_ocr_framing=true`): `4` cases
+      - growth cases: `28`
+      - latest stability replay: `24/28` pass, `4/28` fail, `0` errors
+      - fail cohort selection (`require_ocr_framing=true`): `0` cases
+      - framed-selection skip count: `skipped_non_framed=4`
+    - if fail cohort is empty with non-zero `skipped_non_framed`, run one
+      diagnostic pass without framing gate to inspect residual fails:
+      - `OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING=false make ocrfails`
   - focused remediation replay (fail-first subset):
     - `make ocrfocuscases`
     - `make eval-ocr-focus-stability`
