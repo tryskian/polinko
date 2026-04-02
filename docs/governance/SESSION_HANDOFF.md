@@ -223,8 +223,11 @@
 - Transient API pressure can still surface `429` during eval runs:
   - retrieval harness now supports bounded retries
     (`RETRIEVAL_REQUEST_RETRIES`, `RETRIEVAL_REQUEST_RETRY_DELAY_MS`)
-  - OCR harness now supports fail-fast on sustained streaks
-    (`OCR_MAX_CONSEC_RATE_LIMIT_ERRORS`)
+  - OCR harness now supports bounded eval retries + fail-fast on sustained
+    streaks (`OCR_EVAL_OCR_RETRIES`, `OCR_EVAL_OCR_RETRY_DELAY_MS`,
+    `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS`)
+  - latest lockset probe result is currently blocked at provider boundary
+    (`HTTP 429` on first case with fail-fast threshold `1`)
 - Cloud deployment remains paused; local-first execution is canonical.
 - Environment mutation policy:
   - verify repo path + mode + branch before changes
@@ -238,6 +241,8 @@
   - lockset lane remains strict release gate
   - growth lane remains fail-tolerant and tracked separately
 - Re-run lockset and stability sequence:
+  - start with a one-case OCR probe to check provider pressure before full run:
+    - `make ocrhandbench OCR_EVAL_OCR_RETRIES=0 OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=1`
   - `make ocrhandbench`
   - `make ocrtypebench`
   - `make ocrillubench`

@@ -78,7 +78,11 @@
     semantics:
     - `RETRIEVAL_REQUEST_RETRIES`
     - `RETRIEVAL_REQUEST_RETRY_DELAY_MS`
+    - `OCR_EVAL_OCR_RETRIES`
+    - `OCR_EVAL_OCR_RETRY_DELAY_MS`
     - `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS`
+  - latest lockset rerun probe is currently blocked by sustained OCR `429`
+    pressure at provider boundary (`0/1` with fail-fast threshold `1`)
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS

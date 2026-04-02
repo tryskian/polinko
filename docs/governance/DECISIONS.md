@@ -1540,3 +1540,22 @@
 - Why: sustained provider-side `429` streaks consume runtime and quota without
   producing new signal; fail-fast behaviour preserves strict binary semantics
   while improving operator efficiency.
+
+## D-125: Propagate OCR retry knobs to all eval make targets
+
+- Date: `2026-04-01`
+- Category: `eval_quality`
+- Tags: `ocr_eval`, `retry_hardening`, `make_surface`
+- Decision:
+  - add make-level OCR eval retry controls:
+    - `OCR_EVAL_OCR_RETRIES` (default `2`)
+    - `OCR_EVAL_OCR_RETRY_DELAY_MS` (default `750`)
+  - wire both controls into every `tools.eval_ocr` make target:
+    - base OCR eval/report targets
+    - handwriting eval targets
+    - transcript lockset/growth single-run targets
+    - quality-gate OCR step
+  - keep strict binary pass/fail semantics unchanged; retries only absorb
+    transient transport/provider pressure.
+- Why: lockset and growth single-run commands were previously missing retry
+  controls, causing avoidable red runs under short-lived `429` pressure.

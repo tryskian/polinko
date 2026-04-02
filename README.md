@@ -200,6 +200,12 @@ OCR fail-fast control (abort early on sustained 429 streaks):
 make eval-ocr OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=3
 ```
 
+OCR eval retry controls (for transient OCR 429/5xx or connection errors):
+
+```bash
+make eval-ocr OCR_EVAL_OCR_RETRIES=2 OCR_EVAL_OCR_RETRY_DELAY_MS=750
+```
+
 Report-generating variants:
 
 ```bash
