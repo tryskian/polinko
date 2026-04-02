@@ -83,6 +83,16 @@ ANCHOR_META_WORDS = {
     "perfect",
     "binareyes",
     "fysics",
+    "page",
+    "partial",
+    "single",
+    "line",
+    "cropped",
+    "continuation",
+    "previous",
+    "updated",
+    "accessible",
+    "entry",
 }
 ANCHOR_WEAK_WORDS = {
     "there",
@@ -94,6 +104,7 @@ ANCHOR_WEAK_WORDS = {
     "real",
     "reads",
     "read",
+    "more",
 }
 ORDERED_FALLBACK_SKIP_WORDS = {
     "there",
@@ -104,6 +115,17 @@ ORDERED_FALLBACK_SKIP_WORDS = {
     "real",
     "reads",
     "read",
+    "more",
+    "page",
+    "partial",
+    "single",
+    "line",
+    "cropped",
+    "continuation",
+    "previous",
+    "updated",
+    "accessible",
+    "entry",
 }
 ANCHOR_FILETYPE_WORDS = {
     "jpeg",
@@ -1039,10 +1061,15 @@ def build_from_export(
             }
             if emit_status == "skipped_low_confidence":
                 # Keep low-confidence growth strict but broader than literal-only
-                # asks: include OCR-framed/correction-led examples so failure-heavy
-                # cohorts can be tracked without dropping to non-OCR chatter.
+                # asks: include correction-led examples and OCR-framed rows only
+                # when there is upstream OCR intent. This avoids metadata-only
+                # transcript chatter entering growth cohorts.
                 growth_emit_status = bool(
-                    (ocr_literal_intent_signal or ocr_framing_signal or correction_signal)
+                    (
+                        ocr_literal_intent_signal
+                        or correction_signal
+                        or (ocr_framing_signal and ocr_intent_signal)
+                    )
                     and transcription_phrases
                 )
             if emit_status == "skipped_unstable_source":

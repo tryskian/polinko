@@ -1902,3 +1902,27 @@
 - Why: long OCR growth runs were operationally opaque during provider latency,
   which looked like hangs. Real-time stdout restores deterministic operator
   visibility without behavioural drift.
+
+## D-144: Tighten growth-case miner to exclude metadata-framed low-confidence noise
+
+- Date: `2026-04-02`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `signal_quality`, `miner`, `precision`
+- Decision:
+  - expand miner token filtering in `tools/build_ocr_cases_from_export.py` to
+    drop metadata-style anchor/order terms (for example: `page`, `partial`,
+    `cropped`, `continuation`, `previous`, `updated`, `entry`, `more`).
+  - tighten low-confidence growth inclusion rule:
+    - include only when one of:
+      - literal OCR intent signal
+      - correction signal
+      - OCR framing **and** OCR intent signal
+    - OCR-framed-only rows without intent/correction are excluded from growth.
+  - update miner regression tests in
+    `tests/test_build_ocr_cases_from_export.py` to lock:
+    - metadata token exclusion
+    - stricter low-confidence growth gating
+    - correction-led askless handwriting growth inclusion
+- Why: growth lane had accumulated metadata-chatter rows that produced
+  low-value failures unrelated to OCR capability. Tightening miner admission
+  preserves fail-heavy evaluation while increasing diagnostic precision.
