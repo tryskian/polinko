@@ -109,6 +109,8 @@ ANCHOR_WEAK_WORDS = {
     "reads",
     "read",
     "more",
+    "find",
+    "chat",
 }
 ORDERED_FALLBACK_SKIP_WORDS = {
     "there",
@@ -134,6 +136,8 @@ ORDERED_FALLBACK_SKIP_WORDS = {
     "found",
     "screenshot",
     "html",
+    "find",
+    "chat",
 }
 ANCHOR_FILETYPE_WORDS = {
     "jpeg",

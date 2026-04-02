@@ -115,12 +115,14 @@
     - metadata-style anchor terms are filtered from growth constraints
       (for example `page`, `partial`, `cropped`, `previous`, `updated`,
       `conversation`, `found`, `screenshot`, `html`)
+    - weak conversational anchor terms are filtered from growth constraints
+      (currently `chat`, `find`)
     - low-confidence rows no longer enter growth on OCR framing alone;
       OCR intent or correction evidence is now required
     - refreshed aligned growth replay:
-      - `make ocrstablegrowth OCR_GROWTH_STABILITY_RUNS=1`: `29/39` pass,
-        `10/39` fail, `0` errors
-      - `make ocrfails`: `selected_fail_cases=5`,
+      - `make ocrstablegrowth OCR_GROWTH_STABILITY_RUNS=1`: `30/39` pass,
+        `9/39` fail, `0` errors
+      - `make ocrfails`: `selected_fail_cases=4`,
         `rate_limited_cases=0`, `rate_limit_abort_runs=0`
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
