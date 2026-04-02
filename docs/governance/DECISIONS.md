@@ -1720,3 +1720,25 @@
   while still being fully blocked. Explicit blocked-case telemetry keeps
   decision quality separate from decision availability and reduces false
   confidence during provider-pressure windows.
+
+## D-135: Auto-start runtime daemon for direct OCR case eval commands
+
+- Date: `2026-04-02`
+- Category: `runtime_ops`
+- Tags: `ocr`, `makefile`, `operator_hygiene`, `preflight`
+- Decision:
+  - direct OCR case eval targets now self-start `server-daemon` before running
+    `tools.eval_ocr`:
+    - `eval-ocr-transcript-cases`
+    - `eval-ocr-transcript-cases-growth`
+    - `eval-ocr-transcript-cases-handwriting`
+    - `eval-ocr-transcript-cases-handwriting-benchmark`
+    - `eval-ocr-transcript-cases-typed`
+    - `eval-ocr-transcript-cases-typed-benchmark`
+    - `eval-ocr-transcript-cases-illustration`
+    - `eval-ocr-transcript-cases-illustration-benchmark`
+  - semantics stay unchanged:
+    - strict/growth gating logic is unchanged
+    - `429`/retry/fail-fast behaviour is unchanged
+- Why: operator runs should fail on OCR signal quality, not on avoidable local
+  daemon preflight drift (`connection refused`).

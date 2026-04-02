@@ -85,6 +85,8 @@
     - `OCR_EVAL_OCR_RETRIES`
     - `OCR_EVAL_OCR_RETRY_DELAY_MS`
     - `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS`
+  - direct OCR case-eval make targets now self-start `server-daemon` before
+    running `tools.eval_ocr` to remove local preflight drift
   - latest lockset rerun probe is currently blocked by sustained OCR `429`
     pressure at provider boundary (`0/1` attempted with fail-fast threshold `1`)
   - latest one-case handwriting probe (`make ocrhandbench` with

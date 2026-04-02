@@ -130,6 +130,8 @@
     (`no ocr`, `not ocr`, `without ocr`, `no transcription`)
   - `make eval-ocr-transcript-stability` now self-starts `server-daemon`
     to avoid localhost preflight drift.
+  - direct OCR case-eval make targets now also self-start `server-daemon`
+    (strict/growth benchmark commands running `tools.eval_ocr`)
   - lane artifacts:
     - `.local/eval_cases/ocr_transcript_cases_all.json`
     - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
