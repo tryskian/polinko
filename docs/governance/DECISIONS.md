@@ -1633,3 +1633,22 @@
 - Why: operators use `make ocr-data` for local dataset refresh and notebook prep.
   Mixing in live OCR eval/stability made the target fail under 429 windows and
   broke the expected offline workflow contract.
+
+## D-130: Route high-signal unstable sources to growth lane only
+
+- Date: `2026-04-02`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `growth_lane`, `source_quarantine`
+- Decision:
+  - keep `UNSTABLE_SOURCE_NAMES` excluded from strict transcript case set
+  - allow unstable rows into growth lane only when signal is strong:
+    - confidence is `medium` or `high`
+    - at least 4 anchor terms
+    - non-empty transcription phrases
+    - OCR framing or correction signal present
+  - mark such growth cases as `source_quarantine=true`
+  - emit summary metric: `growth_quarantine_cases_written`
+  - add OCR intent synonym support for `squibbles and bibbles`
+- Why: unstable crops are too noisy for strict gating but still high-value for
+  fail-heavy growth tracking. Growth-only quarantine preserves strict quality
+  while increasing useful exposure for pattern discovery.
