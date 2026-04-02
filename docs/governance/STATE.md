@@ -97,6 +97,8 @@
   - stability replay now stops remaining runs after first
     `aborted_due_to_rate_limit=true` child report to avoid repeated wasted runs
     during hard throttle windows.
+  - `make ocr-data` is now offline-only (`doctor-env`, `ocrmine`, `ocrdelta`);
+    full online OCR replay remains at `make ocr-notebook-workflow`.
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS
