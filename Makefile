@@ -85,6 +85,8 @@ OCR_FOCUS_OCR_RETRIES ?= 3
 OCR_FOCUS_OCR_RETRY_DELAY_MS ?= 1000
 OCR_FOCUS_CASE_DELAY_MS ?= 1200
 OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS ?= 12000
+OCR_FOCUS_SKIP_RECENT_RATE_LIMIT ?= true
+OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS ?= 900
 OCR_GROWTH_LIMIT_RUNS ?= 0
 OCR_GROWTH_EVAL_OFFSET ?= 0
 OCR_GROWTH_EVAL_MAX_CASES ?= 0
@@ -1073,6 +1075,13 @@ eval-ocr-focus-stability:
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No OCR focus cases available; skipping focus stability run."; \
 		exit 0; \
+	fi; \
+	if [ "$(OCR_FOCUS_SKIP_RECENT_RATE_LIMIT)" = "true" ] && [ -f "$(OCR_FOCUS_OUTPUT)" ]; then \
+		SKIP=$$($(PYTHON) -m tools.should_skip_ocr_run --report "$(OCR_FOCUS_OUTPUT)" --backoff-seconds "$(OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS)"); \
+		if [ "$$SKIP" = "1" ]; then \
+			echo "Skipping focus stability replay: recent rate-limit abort is still within backoff window ($(OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS)s)."; \
+			exit 0; \
+		fi; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
 		$(PYTHON) -m tools.eval_ocr_stability \
