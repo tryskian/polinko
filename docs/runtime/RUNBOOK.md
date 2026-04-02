@@ -66,6 +66,7 @@
    - `make doctor-env`
    - `make lint-docs`
    - `make test`
+   - `make eod-stop`
 3. Purpose:
    - keep local transcript records in consistent rich format
    - catch build/docs drift before day-close
@@ -291,7 +292,9 @@ plus tests as the active spec surface (`make test`,
    - `make caffeinate-status`
 5. Stop command at wrap:
    - `make caffeinate-off`
-6. `decaffeinated` remains workflow shorthand. The explicit command is
+6. Full wrap command (managed + matching unmanaged keep-awake):
+   - `make caffeinate-off-all`
+7. `decaffeinated` remains workflow shorthand. The explicit command is
    `make caffeinate-off`.
 
 ## Docker Build/Run Smoke
@@ -1136,7 +1139,9 @@ Current policy:
    - `make server-daemon`
 2. Stop backend daemon:
    - `make server-daemon-stop`
-3. Optional foreground backend run on localhost:
+3. Full day-close stop surface:
+   - `make eod-stop`
+4. Optional foreground backend run on localhost:
    - `make localhost`
 
 ## Common Connection Error

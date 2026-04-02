@@ -73,7 +73,7 @@
   - `make transcript-fix` auto-normalises curated transcript records
   - `make transcript-check` enforces canonical rich-format structure
   - `make eod` now runs deterministic day-close sequence:
-    `transcript-fix -> transcript-check -> doctor-env -> lint-docs -> test`
+    `transcript-fix -> transcript-check -> doctor-env -> lint-docs -> test -> eod-stop`
 - Transcript-backed OCR mining kernel is merged on `main`:
   - PRs: `#110`, `#132`, `#133`, `#134`, `#155`, `#156`, `#159`, `#160`, `#162`
   - indexer: `tools/index_cgpt_export.py`
@@ -216,6 +216,7 @@
    - `make doctor-env`
    - `make lint-docs`
    - `make test`
+   - `make eod-stop`
 
 ## Known Constraints
 
@@ -235,6 +236,8 @@
   - prefer repo-scoped edits
   - do not modify `~/.zshrc` or global VS Code settings without explicit in-chat approval
 - Keep-awake (`caffeinate`) remains opt-in/request-triggered.
+- Day-close now hard-stops background tasks:
+  - `make eod-stop` stops `server-daemon` and all matching `caffeinate -d -i -m` processes.
 
 ## Immediate Next Step
 
