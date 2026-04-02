@@ -6,6 +6,7 @@ from tools.eval_ocr import _is_rate_limit_ocr_error_message
 from tools.eval_ocr import _is_transient_ocr_error
 from tools.eval_ocr import _ocr_with_retries
 from tools.eval_ocr import _select_cases
+from tools.eval_ocr import OcrRequestError
 from tools.eval_ocr import build_parser
 
 
@@ -299,6 +300,39 @@ class OcrEvalRuleTests(unittest.TestCase):
                     ocr_retry_delay_ms=1,
                 )
         self.assertEqual(mock_ocr.call_count, 1)
+
+    def test_ocr_with_retries_honors_retry_after_on_429(self) -> None:
+        side_effects = [
+            OcrRequestError(
+                method="POST",
+                path="/skills/ocr",
+                status_code=429,
+                detail="rate limit",
+                retry_after_s=7,
+            ),
+            {"run": {"extracted_text": "ok"}},
+        ]
+        with (
+            mock.patch("tools.eval_ocr._ocr", side_effect=side_effects) as mock_ocr,
+            mock.patch("tools.eval_ocr.time.sleep") as mock_sleep,
+        ):
+            payload = _ocr_with_retries(
+                base_url="http://127.0.0.1:8000",
+                headers={},
+                session_id="s-retry-after",
+                source_name="case.png",
+                mime_type="image/png",
+                data_base64="MA==",
+                text_hint=None,
+                visual_context_hint=None,
+                transcription_mode="verbatim",
+                timeout=90,
+                ocr_retries=2,
+                ocr_retry_delay_ms=250,
+            )
+        self.assertEqual(payload, {"run": {"extracted_text": "ok"}})
+        self.assertEqual(mock_ocr.call_count, 2)
+        mock_sleep.assert_called_once_with(7.0)
 
 
 if __name__ == "__main__":

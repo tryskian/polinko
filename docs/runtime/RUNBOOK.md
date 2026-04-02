@@ -226,6 +226,8 @@ plus tests as the active spec surface (`make test`,
        rerun `make ocrstablegrowth` with the target run count.
    - transient OCR pressure tuning (all single-run OCR eval targets):
      - `OCR_EVAL_OCR_RETRIES=2 OCR_EVAL_OCR_RETRY_DELAY_MS=750`
+     - on `HTTP 429`, retries now also honor upstream `Retry-After` when present
+       (effective delay = max of configured delay and header delay)
      - fail-fast remains:
        - `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=3`
    - all stability replay targets (`make ocrstable*`) now stop remaining runs
