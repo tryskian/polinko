@@ -61,6 +61,7 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         report = build_fail_cohort(
             stability_payload=stability_payload,
             growth_case_map=growth_case_map,
+            run_case_map={},
             metrics_map=metrics_map,
             review_index={},
             min_runs=3,
@@ -111,6 +112,7 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         strict_report = build_fail_cohort(
             stability_payload=stability_payload,
             growth_case_map=growth_case_map,
+            run_case_map={},
             metrics_map={},
             review_index={},
             min_runs=3,
@@ -122,6 +124,7 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         relaxed_report = build_fail_cohort(
             stability_payload=stability_payload,
             growth_case_map=growth_case_map,
+            run_case_map={},
             metrics_map={},
             review_index={},
             min_runs=3,
@@ -163,6 +166,7 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         report = build_fail_cohort(
             stability_payload=stability_payload,
             growth_case_map=growth_case_map,
+            run_case_map={},
             metrics_map={},
             review_index=review_index,
             min_runs=3,
@@ -204,6 +208,7 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         report = build_fail_cohort(
             stability_payload=stability_payload,
             growth_case_map=growth_case_map,
+            run_case_map={},
             metrics_map={},
             review_index=review_index,
             min_runs=3,
@@ -213,6 +218,92 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertEqual(report["summary"]["selected_fail_cases"], 1)
         self.assertEqual(report["summary"]["skipped_non_framed"], 0)
         self.assertEqual(report["cases"][0]["framing_episode_count"], 1)
+
+    def test_run_case_map_image_mismatch_is_skipped(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-1",
+                    "observed_runs": 5,
+                    "pass_runs": 0,
+                    "fail_runs": 5,
+                    "decision_stable": True,
+                    "always_fail": True,
+                    "statuses": ["FAIL"] * 5,
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-1": {
+                "id": "gx-1",
+                "lane": "typed",
+                "source_name": "growth.png",
+                "image_path": "/tmp/growth.png",
+            }
+        }
+        run_case_map: dict[str, dict[str, Any]] = {
+            "gx-1": {
+                "id": "gx-1",
+                "source_name": "run.png",
+                "image_path": "/tmp/run.png",
+                "must_contain_any": ["alpha"],
+                "must_appear_in_order": ["alpha", "beta"],
+            }
+        }
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map=run_case_map,
+            metrics_map={},
+            review_index={},
+            min_runs=3,
+            include_unstable=False,
+            require_ocr_framing=False,
+        )
+        self.assertEqual(report["summary"]["selected_fail_cases"], 0)
+        self.assertEqual(report["summary"]["skipped_case_map_mismatch"], 1)
+
+    def test_unknown_lane_falls_back_to_review_lane(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-1",
+                    "observed_runs": 5,
+                    "pass_runs": 0,
+                    "fail_runs": 5,
+                    "decision_stable": True,
+                    "always_fail": True,
+                    "statuses": ["FAIL"] * 5,
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-1": {
+                "id": "gx-1",
+                "lane": "unknown",
+                "source_name": "sample-1.png",
+                "image_path": "/tmp/sample-1.png",
+            }
+        }
+        review_index = {
+            "/tmp/sample-1.png": [
+                {"lane": "handwriting", "ocr_framing_signal": True},
+                {"lane": "handwriting", "ocr_framing_signal": True},
+            ]
+        }
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map={},
+            metrics_map={},
+            review_index=review_index,
+            min_runs=3,
+            include_unstable=False,
+            require_ocr_framing=True,
+        )
+        self.assertEqual(report["summary"]["selected_fail_cases"], 1)
+        self.assertEqual(report["summary"]["lane_counts"], {"handwriting": 1})
+        self.assertEqual(report["cases"][0]["lane"], "handwriting")
 
 
 if __name__ == "__main__":
