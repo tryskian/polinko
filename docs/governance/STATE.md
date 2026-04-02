@@ -520,6 +520,10 @@
   and validates evidence-index + evidence-log metadata completeness.
 - Integration tests exist and pass locally (`tests/test_api.py`).
 - Collaboration v1 supports explicit agent-role handoffs per chat with audit history.
+- OCR growth remediation now has a focused replay lane:
+  - build focused fail-derived subset: `make ocrfocuscases`
+  - run focused stability replay: `make eval-ocr-focus-stability`
+  - one-shot kernel: `make ocrfocus`
 
 ## Portfolio Timeline Snapshot (March 28, 2026)
 

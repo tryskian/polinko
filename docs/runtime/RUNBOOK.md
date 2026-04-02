@@ -225,6 +225,19 @@ plus tests as the active spec surface (`make test`,
      - if cohort is unexpectedly empty, align min-runs with the stability
        report window (for example `make ocrfails OCR_STABILITY_RUNS=3`) or
        rerun `make ocrstablegrowth` with the target run count.
+   - run focused replay on fail-derived subset (fast remediation kernel):
+     - build focused cases from cohort:
+       - `make ocrfocuscases`
+     - run focused stability replay:
+       - `make eval-ocr-focus-stability`
+     - one-shot command (metrics + cohort + focused replay):
+       - `make ocrfocus`
+     - optional knobs:
+       - `OCR_FOCUS_MAX_CASES=<n>`
+       - `OCR_FOCUS_INCLUDE_FAIL_HISTORY=true|false`
+       - `OCR_FOCUS_RUNS=<n>`
+       - `OCR_FOCUS_CASE_DELAY_MS=<ms>`
+       - `OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS=<ms>`
    - transient OCR pressure tuning (all single-run OCR eval targets):
      - `OCR_EVAL_OCR_RETRIES=2 OCR_EVAL_OCR_RETRY_DELAY_MS=750`
      - on `HTTP 429`, retries now also honor upstream `Retry-After` when present
@@ -240,6 +253,7 @@ plus tests as the active spec surface (`make test`,
        - growth rows may include `source_quarantine=true` when mined from known
          unstable sources under strict high-signal guards
      - growth fail cohort: `.local/eval_cases/ocr_growth_fail_cohort.json`
+     - growth focus set: `.local/eval_cases/ocr_growth_focus_cases.json`
    - run/stability reports: `.local/eval_reports/`
      - growth stability: `.local/eval_reports/ocr_growth_stability.json`
      - growth batch reports: `.local/eval_reports/ocr_growth_batched_runs/`
@@ -249,6 +263,8 @@ plus tests as the active spec surface (`make test`,
    - growth metrics reports:
      - `.local/eval_reports/ocr_growth_metrics.json`
      - `.local/eval_reports/ocr_growth_metrics.md`
+   - growth focus stability report:
+     - `.local/eval_reports/ocr_focus_stability.json`
    - growth fail cohort report:
      - `.local/eval_reports/ocr_growth_fail_cohort.md`
      - includes:
