@@ -527,6 +527,11 @@
 - Runtime DB null surfaces now have a read-only audit command:
   - `make nulls`
   - output: `.local/eval_reports/runtime_null_audit.{json,md}`
+- Public-safe repo gate now exists:
+  - `make public`
+  - blocks tracked local/archive/private paths and secret markers before
+    visibility changes.
+  - includes `docs/peanut/` so hypothesis/method records remain local-only.
 
 ## Portfolio Timeline Snapshot (March 28, 2026)
 

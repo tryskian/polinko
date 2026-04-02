@@ -331,6 +331,10 @@
       by phrase regex when anchor/order terms are empty
 - If lockset regresses, apply one precision-safe miner/matcher kernel only,
   then rerun full sequence before merge.
+- Before any repository visibility change, run public-safe gate:
+  - `make public`
+  - confirm zero blocked tracked paths and zero secret-marker findings.
+  - keep hypothesis/method artefacts in `docs/peanut/` (local-only lane).
 - Use notebook starter for fast local triage when needed:
   - `make notes`
   - open `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`

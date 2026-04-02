@@ -51,6 +51,8 @@ _virtualenv.py
 .local/dashboard/
 .local/eval_cases/
 .local_archive/
+output/
+.archive/
 
 # Local planning sandbox docs
 docs/portfolio/
