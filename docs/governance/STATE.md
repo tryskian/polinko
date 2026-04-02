@@ -86,16 +86,19 @@
     - `OCR_EVAL_OCR_RETRY_DELAY_MS`
     - `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS`
   - latest lockset rerun probe is currently blocked by sustained OCR `429`
-    pressure at provider boundary (`0/1` with fail-fast threshold `1`)
-  - latest full transcript single-run attempt (`make ocrall`) aborted under
-    fail-fast after sustained OCR `429` streak (`0/3` PASS, threshold `3`)
+    pressure at provider boundary (`0/1` attempted with fail-fast threshold `1`)
+  - latest one-case handwriting probe (`make ocrhandbench` with
+    `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=1`) aborted at `1/4` attempted due
+    provider `429`
   - fail cohort stale-join guard is active and confirmed:
-    - latest refresh pass (`make ocrstablegrowth && make ocrgrowth && make ocrfails`)
+    - latest refresh pass (`make ocr-data && make ocrgrowth && make ocrfails`)
       reports:
       - `skipped_case_map_mismatch=0`
       - `selected_fail_cases=0`
-    - current blocker is provider throttling (`429`) causing stability replay
-      to abort at `3/147`, so the fail cohort has no usable framed fails yet.
+      - `rate_limited_cases=3`
+      - `rate_limit_abort_runs=1`
+    - current blocker is provider throttling (`429`) causing no decision
+      coverage in current growth snapshot (`decision_coverage_rate=0.0000`)
   - growth fail cohort now explicitly reports provider-pressure blocked rows
     (no PASS/FAIL decision yet) separate from FAIL regressions:
     - `rate_limited_cases`
@@ -465,14 +468,15 @@
     `correction_overlap_signal`)
   - OCR framing signal now excludes explicit negations
     (`no ocr`, `not ocr`, `without ocr`, `no transcription`)
-  - review-summary baseline after rerun:
-    `episodes=172` (`high=7`, `medium=20`, `low=145`)
-  - active mined baseline: `21` cases (`handwriting=4`, `typed=11`,
-    `illustration=6`)
+  - review-summary baseline after latest offline rerun:
+    `episodes=178` (`high=7`, `medium=27`, `low=144`)
+  - active mined baseline: `26` cases (`handwriting=5`, `typed=11`,
+    `illustration=10`)
+  - active growth baseline: `148` cases
   - previous `55`/`29`/`25` mined outputs are retained as legacy reference for
     comparison, not as active strict gate input
 - Transcript OCR benchmark and stability gates remain strict and green under
-  the precision baseline:
+  the last complete lockset baseline:
   - full transcript lane: `21/21` PASS, stability `21 stable / 0 flaky`
   - handwriting benchmark: `4/4` PASS, stability `4 stable / 0 flaky`
   - typed benchmark: `6/6` PASS, stability `6 stable / 0 flaky`
