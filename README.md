@@ -13,6 +13,7 @@ and deterministic eval gates.
   without model calls (`harness_mode=fixture`).
 - UI eval adapter spec is documented in
   `docs/runtime/RUNBOOK.md` (TypeScript types + endpoint flow).
+- Legacy frontend context remains in `.archive/live_archive/legacy_frontend/`.
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
 - Evidence and remediation: evidence indexing and metadata audit tooling with
@@ -40,11 +41,12 @@ make open-api-docs
 
 ## Setup
 
-1. Use a local virtual environment (`./venv`).
+1. Use a local virtual environment (`./venv` or
+   `./polinko-repositioning-system`).
 1. Install Python deps: `pip install -r requirements.txt`.
 1. Copy env file: `cp .env.example .env`.
 1. Set `OPENAI_API_KEY` in `.env`.
-1. Optional notebook/viz stack:
+1. Optional notebook/viz stack (local/private lane):
    `make notebook-setup`.
 1. Optional for harness smoke: set
    `POLINKO_CHAT_HARNESS_DEFAULT_MODE=fixture` to default chat requests to
@@ -53,7 +55,7 @@ make open-api-docs
 Notes:
 
 - `make` auto-selects interpreter in this order:
-  `./venv/bin/python`, `python3`.
+  `./polinko-repositioning-system/bin/python`, `./venv/bin/python`, `python3`.
 - activate a local virtual environment shell with:
   `make venv` (alias: `make env`)
 - short aliases for long-chain commands:
@@ -64,7 +66,7 @@ Notes:
   `make notebook-setup`, `make notes` (aliases: `make notebook`, `make nb`)
 - public-safe preflight before visibility changes:
   `make public`
-  (fails if tracked private paths or secret-like values are found)
+  (fails if tracked local/private paths or secret-like values are found)
 
 ## Core Commands
 
@@ -74,14 +76,17 @@ Backend (canonical):
 make server
 ```
 
-Notebook viz:
+Notebook viz (local/private):
 
 ```bash
 make notebook-setup
 make notes
 ```
 
-Starter notebook is generated in local output after running `make notes`.
+Starter notebook:
+
+- `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+  (live filters/sliders + instant chart/table updates).
 
 Checks:
 
@@ -96,7 +101,8 @@ make public
 
 ## Public-Safe Repo Rule
 
-- Keep private research artefacts in local-only storage (not tracked).
+- Keep local/private research artefacts under `docs/peanut/`, `output/`,
+  `.local/`, and `.archive/` (not tracked).
 - Keep `.env.example` as placeholder-only (no live credential values).
 - Run `make public` before making the repository visible.
 
@@ -250,13 +256,14 @@ Exit-code semantics:
   `eval-clip-ab` support strict failure mode (`--strict`) for non-zero gating.
 - `make quality-gate` runs strict gating where applicable.
 - handwriting lane:
-  - expects a local cases file (override via `OCR_HANDWRITING_CASES=<path>`).
+  - expects a local cases file at `.local/eval_cases/ocr_handwriting_eval_cases.json`
+    (override via `OCR_HANDWRITING_CASES=<path>`).
   - cases should use real `image_path` entries (no `text_hint`).
   - requires `POLINKO_OCR_PROVIDER=openai` for true image OCR behaviour.
 
 Transcript-backed OCR mining lane:
 
-- index a local ChatGPT export:
+- index a local ChatGPT export (local-only artifacts):
   - `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 - mine transcript-backed OCR cases from correction/confirmation turns:
   - `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
@@ -267,7 +274,15 @@ Transcript-backed OCR mining lane:
   - `make eval-ocr-transcript-cases-illustration`
 - run OCR decision-stability replay on mined transcript cases:
   - `make eval-ocr-transcript-stability OCR_STABILITY_RUNS=3`
-- local outputs are written under ignored runtime output directories.
+- default local outputs:
+  - `.local/eval_cases/cgpt_export_attachment_index.json`
+  - `.local/eval_cases/ocr_transcript_cases_all.json`
+  - `.local/eval_cases/ocr_handwriting_from_transcripts.json`
+  - `.local/eval_cases/ocr_typed_from_transcripts.json`
+  - `.local/eval_cases/ocr_illustration_from_transcripts.json`
+  - `.local/eval_cases/ocr_transcript_cases_review.json`
+  - `.local/eval_reports/ocr_transcript_stability.json`
+  - `.local/eval_reports/ocr_stability_runs/`
 
 ## Evidence Tooling
 
@@ -301,6 +316,7 @@ Defaults:
 - `tools/` operational and eval scripts
 - `tests/` unit and integration tests
 - `docs/` architecture, runbook, decisions, state
+- `.archive/live_archive/` live archive for legacy eval/frontend references
 
 ## CI
 
