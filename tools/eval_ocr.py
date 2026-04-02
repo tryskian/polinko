@@ -6,6 +6,7 @@ import os
 import re
 import time
 import uuid
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
@@ -20,6 +21,44 @@ from tools.eval_trace_artifacts import build_eval_trace
 
 SPACED_LETTER_WORD_RX = re.compile(r"\b(?:[A-Za-z]\s+){2,}[A-Za-z]\b")
 OCR_WORD_TOKEN_RX = re.compile(r"\b[a-z0-9-]+\b")
+
+
+class OcrRequestError(RuntimeError):
+    def __init__(
+        self,
+        *,
+        method: str,
+        path: str,
+        status_code: int,
+        detail: str,
+        retry_after_s: int | None = None,
+    ) -> None:
+        self.method = method
+        self.path = path
+        self.status_code = status_code
+        self.detail = detail
+        self.retry_after_s = retry_after_s
+        message = f"{method} {path} failed: HTTP {status_code} - {detail}"
+        if retry_after_s is not None and retry_after_s > 0:
+            message += f" (retry_after_s={retry_after_s})"
+        super().__init__(message)
+
+
+def _parse_retry_after_seconds(header_value: str | None) -> int | None:
+    if not header_value:
+        return None
+    value = header_value.strip()
+    if not value:
+        return None
+    if value.isdigit():
+        parsed = int(value)
+        return parsed if parsed >= 0 else None
+    try:
+        target_dt = parsedate_to_datetime(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    retry_after = int(round(target_dt.timestamp() - time.time()))
+    return retry_after if retry_after > 0 else 0
 
 
 def _contains_optional_letter_spacing(
@@ -168,8 +207,12 @@ def _request_json(
                 detail = str(body["detail"])
         except ValueError:
             pass
-        raise RuntimeError(
-            f"{method} {path} failed: HTTP {response.status_code} - {detail}"
+        raise OcrRequestError(
+            method=method,
+            path=path,
+            status_code=int(response.status_code),
+            detail=detail,
+            retry_after_s=_parse_retry_after_seconds(response.headers.get("Retry-After")),
         )
     try:
         body = response.json()
@@ -359,6 +402,8 @@ def _ocr(
 
 
 def _is_transient_ocr_error(exc: Exception) -> bool:
+    if isinstance(exc, OcrRequestError):
+        return exc.status_code == 429 or exc.status_code >= 500
     message = str(exc).lower()
     return (
         "connection error" in message
@@ -411,12 +456,20 @@ def _ocr_with_retries(
         except Exception as exc:
             if attempt >= max_attempts or not _is_transient_ocr_error(exc):
                 raise
+            retry_delay_ms_effective = ocr_retry_delay_ms
+            if isinstance(exc, OcrRequestError) and exc.status_code == 429:
+                retry_after_s = exc.retry_after_s
+                if retry_after_s is not None and retry_after_s > 0:
+                    retry_delay_ms_effective = max(
+                        retry_delay_ms_effective,
+                        retry_after_s * 1000,
+                    )
             print(
                 f"  WARN transient OCR error for {session_id} "
                 f"(attempt {attempt}/{max_attempts - 1} retries): {exc}"
             )
-            if ocr_retry_delay_ms > 0:
-                time.sleep(ocr_retry_delay_ms / 1000)
+            if retry_delay_ms_effective > 0:
+                time.sleep(retry_delay_ms_effective / 1000)
     raise RuntimeError("OCR call failed after retries.")
 
 

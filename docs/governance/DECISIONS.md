@@ -1668,3 +1668,18 @@
   structure but collapse to zero anchor tokens after stopword/meta filtering.
   Regex-only growth constraints widen fail-heavy exposure without weakening
   strict gate semantics.
+
+## D-132: Honor `Retry-After` in OCR eval retries
+
+- Date: `2026-04-02`
+- Category: `eval_runtime`
+- Tags: `ocr`, `rate_limit`, `retry_after`, `operator_efficiency`
+- Decision:
+  - OCR eval request failures now preserve HTTP metadata via `OcrRequestError`
+  - when retrying transient OCR failures, `HTTP 429` waits now honor
+    `Retry-After` (if present) and use the max of:
+    - configured `OCR_EVAL_OCR_RETRY_DELAY_MS`
+    - header-derived wait seconds
+- Why: fixed short retry delays under provider throttling burn attempts too
+  quickly. Respecting `Retry-After` reduces wasted retry churn while preserving
+  strict PASS/FAIL behavior.

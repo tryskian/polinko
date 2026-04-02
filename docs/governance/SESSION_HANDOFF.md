@@ -226,6 +226,7 @@
   - OCR harness now supports bounded eval retries + fail-fast on sustained
     streaks (`OCR_EVAL_OCR_RETRIES`, `OCR_EVAL_OCR_RETRY_DELAY_MS`,
     `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS`)
+  - OCR retries now respect provider `Retry-After` on `429` when present
   - latest lockset probe result is currently blocked at provider boundary
     (`HTTP 429` on first case with fail-fast threshold `1`)
 - Cloud deployment remains paused; local-first execution is canonical.

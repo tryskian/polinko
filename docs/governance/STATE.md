@@ -76,6 +76,8 @@
     and connection errors (`--request-retries`, `--request-retry-delay-ms`)
   - OCR harness now supports fail-fast under sustained provider pressure via
     `--max-consecutive-rate-limit-errors`
+  - OCR retry path now respects provider `Retry-After` on `429` when present
+    (effective retry sleep = max of configured delay and header delay)
   - make-level controls are exposed for operator tuning without changing gate
     semantics:
     - `RETRIEVAL_REQUEST_RETRIES`
