@@ -524,9 +524,17 @@
   - build focused fail-derived subset: `make ocrfocuscases`
   - run focused stability replay: `make eval-ocr-focus-stability`
   - one-shot kernel: `make ocrfocus`
+- Growth/focus OCR replay logging is now streamed in real time:
+  - Makefile runs growth + focus OCR replay commands with unbuffered Python
+    output so long runs do not appear stalled.
 - Runtime DB null surfaces now have a read-only audit command:
   - `make nulls`
   - output: `.local/eval_reports/runtime_null_audit.{json,md}`
+- Latest lockset rerun (April 2, 2026) is fully green:
+  - one-case provider probe: `4/4` PASS
+  - lockset lanes: handwriting `4/4`, typed `6/6`, illustration `3/3`
+  - lockset stability: handwriting `4 stable / 0 flaky`,
+    typed `6 stable / 0 flaky`, illustration `3 stable / 0 flaky`
 
 ## Portfolio Timeline Snapshot (March 28, 2026)
 
