@@ -66,8 +66,8 @@ OCR-forward reliability loops, and production-ready API foundations.
     rule exists
   - human controls go/no-go and next-slice prioritisation
   - engineer executes proactively inside that control frame
-- Question-routing policy for answer-only vs execute mode is documented in:
-  - `docs/governance/POLINKO_WORKFLOW.md`
+- Question-routing policy for answer-only vs execute mode is maintained as a
+  local peanut workflow doc (`docs/peanut/refs/POLINKO_WORKFLOW.md`).
 
 ## Core Runtime
 
@@ -76,8 +76,8 @@ OCR-forward reliability loops, and production-ready API foundations.
 - API implementation: `api/app_factory.py`
 - Prompt versions: `core/prompts.py`
 - API tests: `tests/test_api.py`
-- Archived web UI context is documented under
-  `.archive/live_archive/legacy_frontend/`.
+- Archived legacy context lives in private snapshot/archive repos, not this
+  public-facing engineering repo.
 
 ## Security / Ops Baseline
 
