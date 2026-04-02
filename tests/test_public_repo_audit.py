@@ -37,8 +37,10 @@ class PublicRepoAuditTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (root / ".env.example").write_text("OPENAI_API_KEY=", encoding="utf-8")
+            openai_assignment = f"{openai_key_name}="
+            placeholder_assignment = openai_assignment + "sk-test-key-1234567890"
             (root / "placeholder.md").write_text(
-                "OPENAI_API_KEY=sk-test-key-1234567890",
+                placeholder_assignment,
                 encoding="utf-8",
             )
 
@@ -49,6 +51,21 @@ class PublicRepoAuditTests(unittest.TestCase):
 
             self.assertEqual(len(findings), 1)
             self.assertEqual(findings[0]["path"], "notes.md")
+            self.assertEqual(findings[0]["marker"], "OPENAI_API_KEY")
+
+    def test_env_example_with_real_value_is_flagged(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            openai_key_name = "OPENAI_API_KEY"
+            openai_assignment = f"{openai_key_name}="
+            synthetic_live_value = "sk-" + "live-real-token-value-1234567890"
+            (root / ".env.example").write_text(
+                openai_assignment + synthetic_live_value,
+                encoding="utf-8",
+            )
+            findings = find_secret_markers(repo_root=root, tracked_paths=[".env.example"])
+            self.assertEqual(len(findings), 1)
+            self.assertEqual(findings[0]["path"], ".env.example")
             self.assertEqual(findings[0]["marker"], "OPENAI_API_KEY")
 
 

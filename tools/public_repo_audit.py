@@ -38,9 +38,6 @@ SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ),
 )
 
-MARKER_ALLOWED_PATHS = frozenset({".env.example"})
-
-
 def _is_placeholder_value(value: str) -> bool:
     raw = value.strip().strip("\"'`")
     if not raw:
@@ -58,6 +55,8 @@ def _is_placeholder_value(value: str) -> bool:
         "placeholder",
         "redacted",
         "your_",
+        "your-key",
+        "yourkey",
         "<your",
         "fake",
         "dummy",
@@ -83,7 +82,7 @@ def find_secret_markers(*, repo_root: Path, tracked_paths: Iterable[str]) -> lis
     findings: list[dict[str, str]] = []
     for raw in tracked_paths:
         path = str(raw).strip()
-        if not path or path in MARKER_ALLOWED_PATHS:
+        if not path:
             continue
         file_path = repo_root / path
         if not file_path.is_file():
