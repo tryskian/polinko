@@ -632,6 +632,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(review["confidence"], "low")
             self.assertTrue(review["ocr_literal_intent_signal"])
             self.assertFalse(review["ocr_framing_signal"])
+            self.assertEqual(review["skip_reason"], "low_confidence")
+            self.assertIn("transcribe this exactly", review["query_text"])
+            self.assertIn("alpha", review["expected_text"].lower())
 
     def test_build_widens_growth_lane_for_low_confidence_literal_intent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

@@ -987,7 +987,9 @@ def build_from_export(
                     "conversation_json": str(conversation_path),
                     "image_path": image_path,
                     "ask_text": msg.text,
+                    "query_text": msg.text,
                     "assistant_text": assistant_text,
+                    "expected_text": transcription_phrases[0] if transcription_phrases else "",
                     "followup_user_messages": followups[:5],
                     "positive_signal": positive_signal,
                     "correction_signal": correction_signal,
@@ -1001,6 +1003,11 @@ def build_from_export(
                     "anchor_terms": anchor_terms,
                     "anchor_terms_count": len(anchor_terms),
                     "emit_status": emit_status,
+                    "skip_reason": (
+                        ""
+                        if emit_status == "emitted"
+                        else emit_status.removeprefix("skipped_")
+                    ),
                     "confidence": confidence,
                     "lane": lane,
                 }
