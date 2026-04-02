@@ -166,6 +166,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Delay between transient OCR retries, in milliseconds.",
     )
     parser.add_argument(
+        "--case-delay-ms",
+        type=int,
+        default=0,
+        help="Delay between child OCR cases, in milliseconds.",
+    )
+    parser.add_argument(
+        "--rate-limit-cooldown-ms",
+        type=int,
+        default=0,
+        help=(
+            "Additional cooldown in milliseconds after a rate-limit error in "
+            "child OCR eval."
+        ),
+    )
+    parser.add_argument(
         "--max-consecutive-rate-limit-errors",
         type=int,
         default=0,
@@ -230,6 +245,12 @@ def main() -> int:
     if args.ocr_retry_delay_ms < 0:
         print("ocr-retry-delay-ms must be >= 0")
         return 2
+    if args.case_delay_ms < 0:
+        print("case-delay-ms must be >= 0")
+        return 2
+    if args.rate_limit_cooldown_ms < 0:
+        print("rate-limit-cooldown-ms must be >= 0")
+        return 2
     if args.max_consecutive_rate_limit_errors < 0:
         print("max-consecutive-rate-limit-errors must be >= 0")
         return 2
@@ -276,6 +297,10 @@ def main() -> int:
             str(args.ocr_retries),
             "--ocr-retry-delay-ms",
             str(args.ocr_retry_delay_ms),
+            "--case-delay-ms",
+            str(args.case_delay_ms),
+            "--rate-limit-cooldown-ms",
+            str(args.rate_limit_cooldown_ms),
             "--max-consecutive-rate-limit-errors",
             str(args.max_consecutive_rate_limit_errors),
             "--report-json",
@@ -360,6 +385,8 @@ def main() -> int:
         "max_cases": args.max_cases,
         "ocr_retries": args.ocr_retries,
         "ocr_retry_delay_ms": args.ocr_retry_delay_ms,
+        "case_delay_ms": args.case_delay_ms,
+        "rate_limit_cooldown_ms": args.rate_limit_cooldown_ms,
         "max_consecutive_rate_limit_errors": args.max_consecutive_rate_limit_errors,
         "stop_on_rate_limit_abort": args.stop_on_rate_limit_abort,
         "runs_requested": args.runs,
