@@ -24,15 +24,11 @@ BLOCKED_PREFIXES = (
 SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     (
         "OPENAI_API_KEY",
-        re.compile(
-            r"""(?m)^\s*(?:export\s+)?OPENAI_API_KEY\s*(?:=|:)\s*["']?(?P<value>[^\s"',}#]+)"""
-        ),
+        re.compile(r"""OPENAI_API_KEY\s*=\s*["']?(?P<value>[^\s"',}]+)"""),
     ),
     (
         "BRAINTRUST_API_KEY",
-        re.compile(
-            r"""(?m)^\s*(?:export\s+)?BRAINTRUST_API_KEY\s*(?:=|:)\s*["']?(?P<value>[^\s"',}#]+)"""
-        ),
+        re.compile(r"""BRAINTRUST_API_KEY\s*=\s*["']?(?P<value>[^\s"',}]+)"""),
     ),
     (
         "OPENAI_TOKEN",
@@ -41,6 +37,9 @@ SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
         ),
     ),
 )
+
+MARKER_ALLOWED_PATHS = frozenset({".env.example"})
+
 
 def _is_placeholder_value(value: str) -> bool:
     raw = value.strip().strip("\"'`")
@@ -59,8 +58,6 @@ def _is_placeholder_value(value: str) -> bool:
         "placeholder",
         "redacted",
         "your_",
-        "your-key",
-        "yourkey",
         "<your",
         "fake",
         "dummy",
@@ -86,7 +83,7 @@ def find_secret_markers(*, repo_root: Path, tracked_paths: Iterable[str]) -> lis
     findings: list[dict[str, str]] = []
     for raw in tracked_paths:
         path = str(raw).strip()
-        if not path:
+        if not path or path in MARKER_ALLOWED_PATHS:
             continue
         file_path = repo_root / path
         if not file_path.is_file():

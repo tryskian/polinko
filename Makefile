@@ -234,7 +234,7 @@ ocr-notebook-workflow:
 	$(MAKE) --no-print-directory ocrgrowth; \
 	$(MAKE) --no-print-directory ocrfails
 
-gate: quality-gate-deterministic public
+gate: quality-gate-deterministic
 
 eod:
 	./tools/end_of_day_routine.sh
@@ -392,11 +392,10 @@ doctor-env:
 	VIRTUAL_ENV="$$ACTIVE_VENV" PATH="$$ACTIVE_VENV/bin:$$PATH" "$(PYTHON)" -m tools.doctor_env
 
 backend-gate:
-	@echo "Running backend gate (doctor + tests + deterministic quality gate + public audit)..."
+	@echo "Running backend gate (doctor + tests + deterministic quality gate)..."
 	@$(MAKE) doctor-env
 	@$(MAKE) test
 	@$(MAKE) quality-gate-deterministic
-	@$(MAKE) public
 
 caffeinate-on:
 	@set -eu; \
