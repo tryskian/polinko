@@ -29,6 +29,8 @@ HALLUCINATION_JUDGE_BASE_URL ?=
 HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
 STYLE_CASE_ATTEMPTS ?= 1
 STYLE_MIN_PASS_ATTEMPTS ?= 1
+RETRIEVAL_REQUEST_RETRIES ?= 2
+RETRIEVAL_REQUEST_RETRY_DELAY_MS ?= 750
 CLIP_AB_SOURCE_TYPES ?= image
 OCR_HANDWRITING_CASES ?= .local/eval_cases/ocr_handwriting_eval_cases.json
 CGPT_EXPORT_ROOT ?=
@@ -457,12 +459,18 @@ trivy-image:
 	$(DOCKER) build -t $(DOCKER_IMAGE) . && trivy image --severity "$(TRIVY_SEVERITY)" --exit-code 1 $(DOCKER_IMAGE)
 
 eval-retrieval:
-	$(PYTHON) -m tools.eval_retrieval
+	$(PYTHON) -m tools.eval_retrieval \
+		--request-retries "$(RETRIEVAL_REQUEST_RETRIES)" \
+		--request-retry-delay-ms "$(RETRIEVAL_REQUEST_RETRY_DELAY_MS)"
 
 eval-retrieval-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) -m tools.eval_retrieval --run-id $$RUN_ID --report-json "eval_reports/retrieval-$$RUN_ID.json"
+	$(PYTHON) -m tools.eval_retrieval \
+		--run-id $$RUN_ID \
+		--request-retries "$(RETRIEVAL_REQUEST_RETRIES)" \
+		--request-retry-delay-ms "$(RETRIEVAL_REQUEST_RETRY_DELAY_MS)" \
+		--report-json "eval_reports/retrieval-$$RUN_ID.json"
 
 eval-file-search:
 	$(PYTHON) -m tools.eval_file_search
@@ -632,7 +640,7 @@ quality-gate:
 		exit 1; \
 	fi; \
 	$(PYTHON) -m unittest discover -s tests -p "test_*.py"; \
-	$(PYTHON) -m tools.eval_retrieval --base-url "$$BASE_URL"; \
+	$(PYTHON) -m tools.eval_retrieval --base-url "$$BASE_URL" --request-retries "$(RETRIEVAL_REQUEST_RETRIES)" --request-retry-delay-ms "$(RETRIEVAL_REQUEST_RETRY_DELAY_MS)"; \
 	$(PYTHON) -m tools.eval_file_search --base-url "$$BASE_URL"; \
 	$(PYTHON) -m tools.eval_ocr --base-url "$$BASE_URL" --strict; \
 	$(PYTHON) -m tools.eval_style --base-url "$$BASE_URL" --strict --case-attempts "$(STYLE_CASE_ATTEMPTS)" --min-pass-attempts "$(STYLE_MIN_PASS_ATTEMPTS)"; \

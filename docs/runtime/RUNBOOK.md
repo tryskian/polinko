@@ -703,10 +703,14 @@ Hash fields in responses:
 3. Optional:
    - custom endpoint:
      `python tools/eval_retrieval.py --base-url http://127.0.0.1:8000`
+   - transient request retries (429/5xx + connection errors):
+     `python tools/eval_retrieval.py --request-retries 2 --request-retry-delay-ms 750`
    - retain generated eval chats: `python tools/eval_retrieval.py --keep-chats`
    - write JSON report:
      `python tools/eval_retrieval.py --report-json eval_reports/retrieval-latest.json`
    - one-command report run: `make eval-retrieval-report`
+   - make-level retry controls:
+     `make eval-retrieval RETRIEVAL_REQUEST_RETRIES=2 RETRIEVAL_REQUEST_RETRY_DELAY_MS=750`
 
 ## Run File Search Eval
 

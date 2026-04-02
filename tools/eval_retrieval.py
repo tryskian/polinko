@@ -13,6 +13,8 @@ from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
 
+RETRYABLE_HTTP_STATUS_CODES = {429, 500, 502, 503, 504}
+
 
 def _headers() -> dict[str, str]:
     return {"Content-Type": "application/json"}
@@ -26,18 +28,39 @@ def _request_json(
     headers: dict[str, str],
     payload: dict[str, Any] | None = None,
     timeout: int = 60,
+    retries: int = 0,
+    retry_delay_ms: int = 0,
 ) -> dict[str, Any]:
-    try:
-        response = requests.request(
-            method=method,
-            url=f"{base_url}{path}",
-            headers=headers,
-            json=payload,
-            timeout=timeout,
-        )
-    except requests.RequestException as exc:
-        raise RuntimeError(f"{method} {path} failed: connection error - {exc}") from exc
-    if not response.ok:
+    attempts = max(0, retries) + 1
+    delay_seconds = max(0, retry_delay_ms) / 1000.0
+    last_error: RuntimeError | None = None
+
+    for attempt in range(attempts):
+        try:
+            response = requests.request(
+                method=method,
+                url=f"{base_url}{path}",
+                headers=headers,
+                json=payload,
+                timeout=timeout,
+            )
+        except requests.RequestException as exc:
+            last_error = RuntimeError(
+                f"{method} {path} failed: connection error - {exc}"
+            )
+            if attempt < attempts - 1 and delay_seconds > 0:
+                time.sleep(delay_seconds)
+            if attempt < attempts - 1:
+                continue
+            raise last_error from exc
+
+        if response.ok:
+            try:
+                body = response.json()
+            except ValueError:
+                return {}
+            return body if isinstance(body, dict) else {}
+
         detail = response.text
         try:
             body = response.json()
@@ -45,12 +68,19 @@ def _request_json(
                 detail = str(body["detail"])
         except ValueError:
             pass
-        raise RuntimeError(f"{method} {path} failed: HTTP {response.status_code} - {detail}")
-    try:
-        body = response.json()
-    except ValueError:
-        return {}
-    return body if isinstance(body, dict) else {}
+        last_error = RuntimeError(
+            f"{method} {path} failed: HTTP {response.status_code} - {detail}"
+        )
+        is_retryable = response.status_code in RETRYABLE_HTTP_STATUS_CODES
+        if is_retryable and attempt < attempts - 1:
+            if delay_seconds > 0:
+                time.sleep(delay_seconds)
+            continue
+        raise last_error
+
+    if last_error is not None:
+        raise last_error
+    raise RuntimeError(f"{method} {path} failed: unknown request error")
 
 
 def _normalize_terms(value: Any) -> list[str]:
@@ -83,7 +113,9 @@ def _find_expected_citation(
     return None
 
 
-def _has_cross_session_leak(memory_used: list[dict[str, Any]], seed_session: str) -> bool:
+def _has_cross_session_leak(
+    memory_used: list[dict[str, Any]], seed_session: str
+) -> bool:
     return any(str(item.get("session_id", "")) == seed_session for item in memory_used)
 
 
@@ -119,7 +151,14 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
     return normalized
 
 
-def _create_chat(base_url: str, headers: dict[str, str], session_id: str, timeout: int) -> None:
+def _create_chat(
+    base_url: str,
+    headers: dict[str, str],
+    session_id: str,
+    timeout: int,
+    retries: int,
+    retry_delay_ms: int,
+) -> None:
     _request_json(
         method="POST",
         base_url=base_url,
@@ -127,16 +166,27 @@ def _create_chat(base_url: str, headers: dict[str, str], session_id: str, timeou
         headers=headers,
         payload={"session_id": session_id, "title": session_id},
         timeout=timeout,
+        retries=retries,
+        retry_delay_ms=retry_delay_ms,
     )
 
 
-def _delete_chat(base_url: str, headers: dict[str, str], session_id: str, timeout: int) -> None:
+def _delete_chat(
+    base_url: str,
+    headers: dict[str, str],
+    session_id: str,
+    timeout: int,
+    retries: int,
+    retry_delay_ms: int,
+) -> None:
     _request_json(
         method="DELETE",
         base_url=base_url,
         path=f"/chats/{session_id}",
         headers=headers,
         timeout=timeout,
+        retries=retries,
+        retry_delay_ms=retry_delay_ms,
     )
 
 
@@ -147,6 +197,8 @@ def _set_memory_scope(
     session_id: str,
     scope: str,
     timeout: int,
+    retries: int,
+    retry_delay_ms: int,
 ) -> None:
     _request_json(
         method="POST",
@@ -155,6 +207,8 @@ def _set_memory_scope(
         headers=headers,
         payload={"memory_scope": scope},
         timeout=timeout,
+        retries=retries,
+        retry_delay_ms=retry_delay_ms,
     )
 
 
@@ -166,6 +220,8 @@ def _seed_ocr_memory(
     source_name: str,
     text: str,
     timeout: int,
+    retries: int,
+    retry_delay_ms: int,
 ) -> dict[str, Any]:
     return _request_json(
         method="POST",
@@ -180,6 +236,8 @@ def _seed_ocr_memory(
             "attach_to_chat": False,
         },
         timeout=timeout,
+        retries=retries,
+        retry_delay_ms=retry_delay_ms,
     )
 
 
@@ -190,6 +248,8 @@ def _chat(
     session_id: str,
     message: str,
     timeout: int,
+    retries: int,
+    retry_delay_ms: int,
 ) -> dict[str, Any]:
     return _request_json(
         method="POST",
@@ -198,16 +258,26 @@ def _chat(
         headers=headers,
         payload={"session_id": session_id, "message": message},
         timeout=timeout,
+        retries=retries,
+        retry_delay_ms=retry_delay_ms,
     )
 
 
-def _preflight(base_url: str, headers: dict[str, str], timeout: int) -> None:
+def _preflight(
+    base_url: str,
+    headers: dict[str, str],
+    timeout: int,
+    retries: int,
+    retry_delay_ms: int,
+) -> None:
     health = _request_json(
         method="GET",
         base_url=base_url,
         path="/health",
         headers=headers,
         timeout=timeout,
+        retries=retries,
+        retry_delay_ms=retry_delay_ms,
     )
     status = str(health.get("status", "")).lower()
     if status != "ok":
@@ -219,6 +289,8 @@ def _preflight(base_url: str, headers: dict[str, str], timeout: int) -> None:
         path="/chats",
         headers=headers,
         timeout=timeout,
+        retries=retries,
+        retry_delay_ms=retry_delay_ms,
     )
 
 
@@ -253,6 +325,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="HTTP timeout in seconds.",
     )
     parser.add_argument(
+        "--request-retries",
+        type=int,
+        default=2,
+        help="Retry count for transient HTTP failures (429/5xx) and connection errors.",
+    )
+    parser.add_argument(
+        "--request-retry-delay-ms",
+        type=int,
+        default=750,
+        help="Delay between transient HTTP retries, in milliseconds.",
+    )
+    parser.add_argument(
         "--keep-chats",
         action="store_true",
         help="Keep generated eval chats instead of deleting them.",
@@ -278,13 +362,26 @@ def main() -> int:
         raise SystemExit(f"Cases file not found: {cases_path}")
 
     cases = _load_cases(cases_path)
+    if args.request_retries < 0:
+        raise SystemExit("--request-retries must be >= 0")
+    if args.request_retry_delay_ms < 0:
+        raise SystemExit("--request-retry-delay-ms must be >= 0")
     run_id = args.run_id.strip() or str(int(time.time()))
     headers = _headers()
 
     print(f"Running retrieval eval on {args.base_url}")
-    print(f"Cases: {len(cases)} | run_id={run_id}")
+    print(
+        f"Cases: {len(cases)} | run_id={run_id} | request_retries={args.request_retries} | "
+        f"retry_delay_ms={args.request_retry_delay_ms}"
+    )
     try:
-        _preflight(args.base_url, headers, args.timeout)
+        _preflight(
+            args.base_url,
+            headers,
+            args.timeout,
+            retries=args.request_retries,
+            retry_delay_ms=args.request_retry_delay_ms,
+        )
     except Exception as exc:
         print(f"Preflight failed: {exc}")
         print("Checks:")
@@ -315,8 +412,22 @@ def main() -> int:
         global_found = False
         session_leak = False
         try:
-            _create_chat(args.base_url, headers, seed_session, args.timeout)
-            _create_chat(args.base_url, headers, target_session, args.timeout)
+            _create_chat(
+                args.base_url,
+                headers,
+                seed_session,
+                args.timeout,
+                retries=args.request_retries,
+                retry_delay_ms=args.request_retry_delay_ms,
+            )
+            _create_chat(
+                args.base_url,
+                headers,
+                target_session,
+                args.timeout,
+                retries=args.request_retries,
+                retry_delay_ms=args.request_retry_delay_ms,
+            )
             _seed_ocr_memory(
                 base_url=args.base_url,
                 headers=headers,
@@ -324,6 +435,8 @@ def main() -> int:
                 source_name=source_name,
                 text=case["seed_text"],
                 timeout=args.timeout,
+                retries=args.request_retries,
+                retry_delay_ms=args.request_retry_delay_ms,
             )
 
             _set_memory_scope(
@@ -332,6 +445,8 @@ def main() -> int:
                 session_id=target_session,
                 scope="global",
                 timeout=args.timeout,
+                retries=args.request_retries,
+                retry_delay_ms=args.request_retry_delay_ms,
             )
             global_chat = _chat(
                 base_url=args.base_url,
@@ -339,11 +454,15 @@ def main() -> int:
                 session_id=target_session,
                 message=case["query"],
                 timeout=args.timeout,
+                retries=args.request_retries,
+                retry_delay_ms=args.request_retry_delay_ms,
             )
             global_memory = global_chat.get("memory_used")
             if not isinstance(global_memory, list):
                 raise RuntimeError("Missing or invalid memory_used in /chat response.")
-            global_memory_count = len([item for item in global_memory if isinstance(item, dict)])
+            global_memory_count = len(
+                [item for item in global_memory if isinstance(item, dict)]
+            )
             global_citation = _find_expected_citation(
                 memory_used=[item for item in global_memory if isinstance(item, dict)],
                 seed_session=seed_session,
@@ -367,6 +486,8 @@ def main() -> int:
                 session_id=target_session,
                 scope="session",
                 timeout=args.timeout,
+                retries=args.request_retries,
+                retry_delay_ms=args.request_retry_delay_ms,
             )
             session_chat = _chat(
                 base_url=args.base_url,
@@ -374,10 +495,14 @@ def main() -> int:
                 session_id=target_session,
                 message=case["query"],
                 timeout=args.timeout,
+                retries=args.request_retries,
+                retry_delay_ms=args.request_retry_delay_ms,
             )
             session_memory = session_chat.get("memory_used")
             if not isinstance(session_memory, list):
-                raise RuntimeError("Missing or invalid memory_used in session-scope response.")
+                raise RuntimeError(
+                    "Missing or invalid memory_used in session-scope response."
+                )
             session_items = [item for item in session_memory if isinstance(item, dict)]
             if _has_cross_session_leak(session_items, seed_session):
                 case_status = "FAIL"
@@ -431,6 +556,8 @@ def main() -> int:
                             headers,
                             session_id,
                             timeout=args.timeout,
+                            retries=args.request_retries,
+                            retry_delay_ms=args.request_retry_delay_ms,
                         )
                     except Exception as exc:
                         print(f"  WARN cleanup failed for {session_id}: {exc}")
@@ -438,7 +565,9 @@ def main() -> int:
     print("\nSummary")
     print(f"  Passed: {passes}/{len(cases)}")
     print(f"  Failed: {len(failures)}")
-    print(f"  Breakdown: global_miss={global_miss_count} leak={leak_count} errors={error_count}")
+    print(
+        f"  Breakdown: global_miss={global_miss_count} leak={leak_count} errors={error_count}"
+    )
     report_json = str(args.report_json or "").strip()
     if report_json:
         gate_passed, gate_failed = gate_counts_from_case_results(case_results)
@@ -490,6 +619,8 @@ def main() -> int:
                 summary=report_payload["summary"],
                 metadata={
                     "base_url": args.base_url,
+                    "request_retries": args.request_retries,
+                    "request_retry_delay_ms": args.request_retry_delay_ms,
                 },
             )
             trace_path = append_eval_trace(

@@ -188,6 +188,12 @@ make eval-clip-ab
 make eval-clip-ab-readiness
 ```
 
+Retrieval retry controls (for transient 429/5xx or connection errors):
+
+```bash
+make eval-retrieval RETRIEVAL_REQUEST_RETRIES=2 RETRIEVAL_REQUEST_RETRY_DELAY_MS=750
+```
+
 Report-generating variants:
 
 ```bash
