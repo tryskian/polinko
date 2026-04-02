@@ -68,6 +68,7 @@ OCR_STABILITY_REPORT_DIR ?= .local/eval_reports/ocr_stability_runs
 OCR_GROWTH_MAX_CASES ?= 600
 OCR_GROWTH_STABILITY_OUTPUT ?= .local/eval_reports/ocr_growth_stability.json
 OCR_GROWTH_STABILITY_REPORT_DIR ?= .local/eval_reports/ocr_growth_stability_runs
+OCR_GROWTH_STABILITY_RUNS ?= $(OCR_STABILITY_RUNS)
 OCR_GROWTH_METRICS_OUTPUT ?= .local/eval_reports/ocr_growth_metrics.json
 OCR_GROWTH_METRICS_MARKDOWN ?= .local/eval_reports/ocr_growth_metrics.md
 OCR_GROWTH_FAIL_COHORT_JSON ?= .local/eval_cases/ocr_growth_fail_cohort.json
@@ -1123,12 +1124,12 @@ eval-ocr-transcript-stability-growth:
 		echo "Using sliced growth stability output: $$OUTPUT_JSON"; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-		$(PYTHON) -m tools.eval_ocr_stability \
-			--base-url "http://127.0.0.1:8000" \
-			--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
-			--runs "$(OCR_STABILITY_RUNS)" \
-			--offset "$(OCR_GROWTH_EVAL_OFFSET)" \
-			--max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" \
+			$(PYTHON) -m tools.eval_ocr_stability \
+				--base-url "http://127.0.0.1:8000" \
+				--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
+				--runs "$(OCR_GROWTH_STABILITY_RUNS)" \
+				--offset "$(OCR_GROWTH_EVAL_OFFSET)" \
+				--max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" \
 			--ocr-retries "$(OCR_GROWTH_OCR_RETRIES)" \
 			--ocr-retry-delay-ms "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" \
 			--case-delay-ms "$(OCR_GROWTH_CASE_DELAY_MS)" \
