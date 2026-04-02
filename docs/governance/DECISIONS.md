@@ -1828,3 +1828,26 @@
   or early growth runs. A separate fail-history surface preserves binary gate
   integrity while exposing high-value fail signals and conversion patterns for
   analyst review.
+
+## D-140: Add focused fail-replay lane from growth cohorts
+
+- Date: `2026-04-02`
+- Category: `eval_runtime`
+- Tags: `ocr_growth`, `remediation`, `subset_replay`, `operator_speed`
+- Decision:
+  - add `tools/build_ocr_focus_cases.py` to materialise a replay subset from:
+    - persistent fail cohort (`cases`)
+    - optional fail-history cohort (`fail_history_cases`)
+  - add Make targets:
+    - `make ocrfocuscases` -> build focused case set
+    - `make eval-ocr-focus-stability` -> run stability on focused set only
+    - `make ocrfocus` -> chain `ocrgrowth` + `ocrfails` + focused replay
+  - focused lane defaults are paced and bounded for fail-first iteration:
+    - `OCR_FOCUS_MAX_CASES=40`
+    - `OCR_FOCUS_RUNS=1`
+    - `OCR_FOCUS_CASE_DELAY_MS=1200`
+    - `OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS=12000`
+    - `OCR_FOCUS_INCLUDE_FAIL_HISTORY=true`
+- Why: full growth replays are expensive during provider throttling. A focused
+  fail-derived subset gives faster remediation feedback while preserving binary
+  gate semantics and existing lockset release rules.

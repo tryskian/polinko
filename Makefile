@@ -75,6 +75,16 @@ OCR_GROWTH_FAIL_COHORT_MARKDOWN ?= .local/eval_reports/ocr_growth_fail_cohort.md
 OCR_FAIL_COHORT_MIN_RUNS ?= 1
 OCR_FAIL_COHORT_INCLUDE_UNSTABLE ?= true
 OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING ?= true
+OCR_FOCUS_CASES_JSON ?= .local/eval_cases/ocr_growth_focus_cases.json
+OCR_FOCUS_RUNS ?= 1
+OCR_FOCUS_MAX_CASES ?= 40
+OCR_FOCUS_INCLUDE_FAIL_HISTORY ?= true
+OCR_FOCUS_OUTPUT ?= .local/eval_reports/ocr_focus_stability.json
+OCR_FOCUS_REPORT_DIR ?= .local/eval_reports/ocr_focus_runs
+OCR_FOCUS_OCR_RETRIES ?= 3
+OCR_FOCUS_OCR_RETRY_DELAY_MS ?= 1000
+OCR_FOCUS_CASE_DELAY_MS ?= 1200
+OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS ?= 12000
 OCR_GROWTH_LIMIT_RUNS ?= 0
 OCR_GROWTH_EVAL_OFFSET ?= 0
 OCR_GROWTH_EVAL_MAX_CASES ?= 0
@@ -101,7 +111,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env notebook-setup notebook nb notes ocrindex ocrmine ocrall ocrwiden ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env notebook-setup notebook nb notes ocrindex ocrmine ocrall ocrwiden ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 
 chat:
 	$(PYTHON) app.py
@@ -157,6 +167,15 @@ ocrstablegrowth: eval-ocr-transcript-stability-growth
 ocrgrowth: eval-ocr-transcript-growth
 
 ocrfails: eval-ocr-growth-fail-cohort
+
+ocrfocuscases: eval-ocr-focus-cases
+
+ocrfocus:
+	@set -eu; \
+	$(MAKE) --no-print-directory ocrgrowth; \
+	$(MAKE) --no-print-directory ocrfails; \
+	$(MAKE) --no-print-directory ocrfocuscases; \
+	$(MAKE) --no-print-directory eval-ocr-focus-stability
 
 ocrhandbench: eval-ocr-transcript-cases-handwriting-benchmark
 
@@ -1014,6 +1033,56 @@ eval-ocr-growth-fail-cohort:
 		--output-json "$(OCR_GROWTH_FAIL_COHORT_JSON)" \
 		--output-markdown "$(OCR_GROWTH_FAIL_COHORT_MARKDOWN)" \
 		$$FAIL_COHORT_ARGS
+
+eval-ocr-focus-cases:
+	@set -eu; \
+	if [ ! -f "$(OCR_GROWTH_FAIL_COHORT_JSON)" ]; then \
+		echo "OCR growth fail cohort not found: $(OCR_GROWTH_FAIL_COHORT_JSON)"; \
+		echo "Run: make ocrfails"; \
+		exit 1; \
+	fi; \
+	if [ ! -f "$(OCR_TRANSCRIPT_CASES_GROWTH)" ]; then \
+		echo "Transcript OCR growth cases not found: $(OCR_TRANSCRIPT_CASES_GROWTH)"; \
+		echo "Run: make ocrmine"; \
+		exit 1; \
+	fi; \
+	FOCUS_ARGS=""; \
+	if [ "$(OCR_FOCUS_INCLUDE_FAIL_HISTORY)" = "false" ]; then \
+		FOCUS_ARGS="--exclude-fail-history"; \
+	fi; \
+	$(PYTHON) -m tools.build_ocr_focus_cases \
+		--cohort "$(OCR_GROWTH_FAIL_COHORT_JSON)" \
+		--source-cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
+		--output-cases "$(OCR_FOCUS_CASES_JSON)" \
+		--max-cases "$(OCR_FOCUS_MAX_CASES)" \
+		$$FOCUS_ARGS
+
+eval-ocr-focus-stability:
+	@set -eu; \
+	if [ ! -f "$(OCR_FOCUS_CASES_JSON)" ]; then \
+		echo "OCR focus cases not found: $(OCR_FOCUS_CASES_JSON)"; \
+		echo "Run: make ocrfocuscases"; \
+		exit 1; \
+	fi; \
+	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_FOCUS_CASES_JSON)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	if [ "$$CASE_COUNT" -eq 0 ]; then \
+		echo "No OCR focus cases available; skipping focus stability run."; \
+		exit 0; \
+	fi; \
+	$(MAKE) --no-print-directory server-daemon; \
+		$(PYTHON) -m tools.eval_ocr_stability \
+			--base-url "http://127.0.0.1:8000" \
+			--cases "$(OCR_FOCUS_CASES_JSON)" \
+			--runs "$(OCR_FOCUS_RUNS)" \
+			--ocr-retries "$(OCR_FOCUS_OCR_RETRIES)" \
+			--ocr-retry-delay-ms "$(OCR_FOCUS_OCR_RETRY_DELAY_MS)" \
+			--case-delay-ms "$(OCR_FOCUS_CASE_DELAY_MS)" \
+			--rate-limit-cooldown-ms "$(OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS)" \
+			--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
+			--stop-on-rate-limit-abort \
+			--strict \
+			--report-dir "$(OCR_FOCUS_REPORT_DIR)" \
+			--output-json "$(OCR_FOCUS_OUTPUT)"
 
 eval-ocr-transcript-stability-growth:
 	@set -eu; \

@@ -299,6 +299,17 @@
     - if `skipped_case_map_mismatch > 0`, treat cohort as stale-join protected
       and rerun `make ocrstablegrowth` on refreshed growth cases before
       precision patch decisions
+  - focused remediation replay (fail-first subset):
+    - `make ocrfocuscases`
+    - `make eval-ocr-focus-stability`
+    - one-shot chain:
+      - `make ocrfocus`
+    - tuning knobs:
+      - `OCR_FOCUS_MAX_CASES`
+      - `OCR_FOCUS_INCLUDE_FAIL_HISTORY`
+      - `OCR_FOCUS_RUNS`
+      - `OCR_FOCUS_CASE_DELAY_MS`
+      - `OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS`
 - If eval runs hit sustained `429` streaks:
   - keep binary pass/fail semantics unchanged
   - tune retry/fail-fast knobs only (do not relax gate criteria)
@@ -311,12 +322,6 @@
       growth cases are expected and remain excluded from strict transcript set
     - review `growth_regex_only_cases_written` to track growth rows constrained
       by phrase regex when anchor/order terms are empty
-  - current blocker snapshot:
-    - lockset probes are currently provider-throttled (`429`) before
-      meaningful decision coverage
-    - latest fallback metrics show no PASS/FAIL decision coverage yet
-      (`decision_coverage_rate=0.0000`) while surfacing blocked cases
-      (`rate_limited_cases=3`)
 - If lockset regresses, apply one precision-safe miner/matcher kernel only,
   then rerun full sequence before merge.
 - Use notebook starter for fast local triage when needed:
