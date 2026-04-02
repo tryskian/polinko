@@ -85,7 +85,8 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertEqual(report["summary"]["fail_to_pass_cases"], 1)
         self.assertEqual(report["summary"]["lane_counts"], {"handwriting": 1})
         self.assertEqual(report["summary"]["fail_history_lane_counts"], {"typed": 1})
-        self.assertEqual(report["summary"]["failure_pattern_counts"], {"ordered_phrase_missing": 1})
+        self.assertEqual(report["summary"]["failure_pattern_counts"].get("ordered_phrase_missing"), 1)
+        self.assertEqual(report["summary"]["failure_pattern_counts"].get("recovered_after_fail"), 1)
         self.assertEqual(len(report["cases"]), 1)
         selected = report["cases"][0]
         self.assertEqual(selected["id"], "gx-1")
@@ -420,6 +421,53 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertEqual(report["summary"]["cases_total"], 2)
         self.assertEqual(report["summary"]["selected_fail_cases"], 1)
         self.assertEqual(report["cases"][0]["id"], "gx-2")
+        self.assertEqual(report["cases"][0]["primary_failure_pattern"], "persistent_fail")
+        self.assertEqual(report["summary"]["failure_pattern_counts"], {"persistent_fail": 1})
+
+    def test_fallback_pattern_prefers_ordered_proxy_when_gate_fields_exist(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-ord",
+                    "observed_runs": 4,
+                    "pass_runs": 0,
+                    "fail_runs": 4,
+                    "error_runs": 0,
+                    "statuses": ["FAIL"] * 4,
+                    "decision_stable": True,
+                    "always_fail": True,
+                    "sample_reasons": [],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-ord": {
+                "id": "gx-ord",
+                "lane": "typed",
+                "source_name": "ord.png",
+                "image_path": "/tmp/ord.png",
+                "must_appear_in_order": ["foo", "bar"],
+                "must_contain_any": ["foo"],
+            }
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map={},
+            metrics_map={},
+            review_index={},
+            min_runs=1,
+            include_unstable=False,
+            require_ocr_framing=False,
+        )
+
+        self.assertEqual(report["summary"]["selected_fail_cases"], 1)
+        self.assertEqual(report["cases"][0]["primary_failure_pattern"], "ordered_phrase_missing_proxy")
+        self.assertEqual(
+            report["summary"]["failure_pattern_counts"],
+            {"ordered_phrase_missing_proxy": 1},
+        )
 
     def test_load_run_case_map_accepts_repo_relative_report_path(self) -> None:
         with TemporaryDirectory() as tmpdir:

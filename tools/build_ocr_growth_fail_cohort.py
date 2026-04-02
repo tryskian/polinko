@@ -126,6 +126,40 @@ def _reason_pattern(reason: str) -> str:
     return "other"
 
 
+def _fallback_failure_pattern(
+    *,
+    growth_case: dict[str, Any],
+    fail_runs: int,
+    pass_runs: int,
+    error_runs: int,
+    first_status: str,
+    latest_status: str,
+) -> str:
+    must_order = growth_case.get("must_appear_in_order")
+    if isinstance(must_order, list) and must_order:
+        return "ordered_phrase_missing_proxy"
+
+    must_any = growth_case.get("must_contain_any")
+    if isinstance(must_any, list) and must_any:
+        return "anchor_any_missing_proxy"
+
+    if error_runs > 0 and fail_runs <= 0 and pass_runs <= 0:
+        return "runtime_error_only"
+    if error_runs > 0 and fail_runs > 0 and pass_runs <= 0:
+        return "fail_with_errors"
+    if fail_runs > 0 and pass_runs <= 0:
+        return "persistent_fail"
+    if fail_runs > 0 and pass_runs > 0:
+        if latest_status == "PASS":
+            return "recovered_after_fail"
+        if latest_status == "FAIL":
+            return "regressed_after_pass"
+        if first_status == "FAIL":
+            return "flaky_fail_first"
+        return "flaky_mixed"
+    return "other"
+
+
 def _merge_case_rows(
     *,
     stability_cases: list[dict[str, Any]],
@@ -289,6 +323,16 @@ def build_fail_cohort(
         primary_failure_pattern = "unknown"
         if case_reason_patterns:
             primary_failure_pattern = case_reason_patterns.most_common(1)[0][0]
+        else:
+            primary_failure_pattern = _fallback_failure_pattern(
+                growth_case=growth_case,
+                fail_runs=fail_runs,
+                pass_runs=pass_runs,
+                error_runs=int(row.get("error_runs", 0) or 0),
+                first_status=first_status,
+                latest_status=latest_status,
+            )
+            reason_pattern_counts[primary_failure_pattern] += 1
 
         if fail_runs > 0 and pass_runs > 0:
             fail_history_cases.append(
