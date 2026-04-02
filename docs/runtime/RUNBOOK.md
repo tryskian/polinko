@@ -257,6 +257,7 @@ plus tests as the active spec surface (`make test`,
            growth cases.
    - miner summary now includes:
      - `growth_quarantine_cases_written`
+     - `growth_regex_only_cases_written`
 5. Notebook analysis surface:
    - `make notes`
    - offline transcript mining refresh (no live OCR calls):

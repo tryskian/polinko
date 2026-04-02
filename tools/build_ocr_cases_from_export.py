@@ -755,6 +755,7 @@ def build_from_export(
     emitted_cases = 0
     growth_cases_written = 0
     growth_quarantine_cases_written = 0
+    growth_regex_only_cases_written = 0
 
     conversation_files = sorted(conversations_dir.glob("*.json"))
     for conversation_path in conversation_files:
@@ -999,6 +1000,7 @@ def build_from_export(
                 growth_ordered_terms,
                 growth_anchor_terms,
             )
+            growth_regex_patterns = _regex_patterns_for_phrases(transcription_phrases[:3])[:3]
 
             growth_emit_status = emit_status in {
                 "emitted",
@@ -1024,8 +1026,17 @@ def build_from_export(
             if emit_status == "skipped_duplicate_image_path":
                 growth_emit_status = False
 
-            has_growth_constraints = bool(growth_anchor_terms) or len(growth_ordered_terms) >= 2
+            has_growth_constraints = (
+                bool(growth_anchor_terms)
+                or len(growth_ordered_terms) >= 2
+                or bool(growth_regex_patterns)
+            )
             source_quarantine = emit_status == "skipped_unstable_source"
+            regex_only_case = (
+                not growth_anchor_terms
+                and len(growth_ordered_terms) < 2
+                and bool(growth_regex_patterns)
+            )
             if (
                 growth_emit_status
                 and has_growth_constraints
@@ -1042,6 +1053,7 @@ def build_from_export(
                         "transcription_mode": "verbatim",
                         "must_contain_any": growth_anchor_terms[:8],
                         "must_appear_in_order": growth_ordered_terms[:4],
+                        "must_match_regex": growth_regex_patterns,
                         "must_not_contain_words": ["likely", "maybe", "guess"],
                         "min_chars": 3,
                         "source_quarantine": source_quarantine,
@@ -1051,6 +1063,8 @@ def build_from_export(
                 growth_cases_written += 1
                 if source_quarantine:
                     growth_quarantine_cases_written += 1
+                if regex_only_case:
+                    growth_regex_only_cases_written += 1
 
             if emit_status == "skipped_low_confidence":
                 skipped_low_confidence += 1
@@ -1215,6 +1229,7 @@ def build_from_export(
         "emitted_cases": emitted_cases,
         "growth_emitted_cases": growth_cases_written,
         "growth_quarantine_cases_written": growth_quarantine_cases_written,
+        "growth_regex_only_cases_written": growth_regex_only_cases_written,
         "skipped_low_confidence": skipped_low_confidence,
         "skipped_duplicate_image_path": skipped_duplicate_image_path,
         "skipped_insufficient_anchor_terms": skipped_insufficient_anchor_terms,
@@ -1306,6 +1321,7 @@ def main() -> int:
         "emitted_cases",
         "growth_emitted_cases",
         "growth_quarantine_cases_written",
+        "growth_regex_only_cases_written",
         "skipped_low_confidence",
         "skipped_duplicate_image_path",
         "skipped_insufficient_anchor_terms",

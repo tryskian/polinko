@@ -1652,3 +1652,19 @@
 - Why: unstable crops are too noisy for strict gating but still high-value for
   fail-heavy growth tracking. Growth-only quarantine preserves strict quality
   while increasing useful exposure for pattern discovery.
+
+## D-131: Allow regex-only constraints in growth lane when anchors are empty
+
+- Date: `2026-04-02`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `growth_lane`, `regex_constraints`, `fail_exposure`
+- Decision:
+  - when growth-lane candidates have no usable anchor/order terms, allow
+    `must_match_regex` constraints derived from OCR transcription phrases
+  - keep strict transcript set unchanged: regex-only routing applies to growth
+    lane only
+  - emit summary metric: `growth_regex_only_cases_written`
+- Why: many low-confidence transcript rows still contain OCR-like phrase
+  structure but collapse to zero anchor tokens after stopword/meta filtering.
+  Regex-only growth constraints widen fail-heavy exposure without weakening
+  strict gate semantics.

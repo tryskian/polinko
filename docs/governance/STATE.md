@@ -103,6 +103,7 @@
     only (`source_quarantine=true`), with latest summary:
     - `growth_cases_written=148`
     - `growth_quarantine_cases_written=1`
+    - `growth_regex_only_cases_written=0` (metric active; no current rows)
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS
