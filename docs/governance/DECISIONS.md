@@ -1767,3 +1767,37 @@
 - Why: these cues are high-value, user-authored intent markers observed in the
   transcript corpus. Capturing them improves episode discovery and fail-from-pass
   learning surfaces without loosening release criteria.
+
+## D-137: Add OCR eval pacing and post-429 cooldown controls
+
+- Date: `2026-04-02`
+- Category: `eval_runtime`
+- Tags: `ocr`, `rate_limit`, `stability`, `operator_control`
+- Decision:
+  - add two explicit controls to `tools/eval_ocr.py`:
+    - `--case-delay-ms`
+    - `--rate-limit-cooldown-ms`
+  - when a case errors with OCR rate-limit semantics (`HTTP 429`), apply
+    cooldown as the max of:
+    - configured `rate_limit_cooldown_ms`
+    - header-derived `Retry-After` wait
+  - plumb both controls through `tools/eval_ocr_stability.py` and Makefile
+    stability targets (strict + growth + benchmark lanes).
+- Why: retry-only handling is insufficient under sustained throttling.
+  Explicit pacing/cooldown reduces abort churn and preserves deterministic
+  binary gate behavior without relaxing PASS/FAIL criteria.
+
+## D-138: Enrich OCR transcript review rows for analyst-facing queryability
+
+- Date: `2026-04-02`
+- Category: `eval_observability`
+- Tags: `ocr_transcripts`, `review_rows`, `data_quality`, `db_viewer`
+- Decision:
+  - mined review episodes now include:
+    - `query_text` (alias of ask text for direct filtering)
+    - `expected_text` (preview from mined transcription phrases)
+    - `skip_reason` (normalized reason when not emitted)
+  - existing `emit_status`/confidence/lane semantics are unchanged.
+- Why: analyst tools (DB Viewer/Data Wrangler) need high-signal columns for
+  filtering and cohort inspection. These fields reduce manual reconstruction
+  while keeping mining and gate logic stable.
