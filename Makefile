@@ -866,7 +866,7 @@ eval-ocr-transcript-cases-growth:
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" --show-text --offset "$(OCR_GROWTH_EVAL_OFFSET)" --max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" --show-text --offset "$(OCR_GROWTH_EVAL_OFFSET)" --max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-growth-batched:
 	@set -eu; \
@@ -876,7 +876,7 @@ eval-ocr-transcript-cases-growth-batched:
 		exit 1; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	$(PYTHON) -m tools.eval_ocr_batched \
+	PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr_batched \
 		--base-url "http://127.0.0.1:8000" \
 		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
 		--batch-size "$(OCR_GROWTH_BATCH_SIZE)" \
@@ -986,7 +986,7 @@ eval-ocr-transcript-stability:
 		exit 1; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-		$(PYTHON) -m tools.eval_ocr_stability \
+		PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr_stability \
 			--base-url "http://127.0.0.1:8000" \
 			--cases "$(OCR_TRANSCRIPT_CASES)" \
 			--runs "$(OCR_STABILITY_RUNS)" \
@@ -1134,7 +1134,7 @@ eval-ocr-transcript-stability-growth:
 		echo "Using sliced growth stability output: $$OUTPUT_JSON"; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-			$(PYTHON) -m tools.eval_ocr_stability \
+			PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr_stability \
 				--base-url "http://127.0.0.1:8000" \
 				--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
 				--runs "$(OCR_GROWTH_STABILITY_RUNS)" \
