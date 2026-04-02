@@ -1742,3 +1742,26 @@
     - `429`/retry/fail-fast behaviour is unchanged
 - Why: operator runs should fail on OCR signal quality, not on avoidable local
   daemon preflight drift (`connection refused`).
+
+## D-136: Record broad OCR-intent mining cue expansion
+
+- Date: `2026-04-02`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `intent_mining`, `signal_coverage`, `precision_safe`
+- Decision:
+  - transcript miner OCR-intent pattern includes broad cue terms used in
+    real session language:
+    - `new drop`
+    - `binareyes`
+    - `scribbles and bibbles` / `squibbles and bibbles`
+    - `peanut cursive`
+    - `scratched out`
+  - compact numeric entry markers are treated as valid OCR phrase tokens for
+    anchor/ordered-term extraction:
+    - 24-hour compact time tokens (`HHMM`)
+    - compact date-like tokens with year suffix (`...24`, `...25`, `...26`)
+  - strict binary gate semantics are unchanged; this is mining-signal widening,
+    not gate relaxation.
+- Why: these cues are high-value, user-authored intent markers observed in the
+  transcript corpus. Capturing them improves episode discovery and fail-from-pass
+  learning surfaces without loosening release criteria.
