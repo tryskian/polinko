@@ -257,6 +257,9 @@
     - fail cohort now enforces OCR-framed review linkage
       (`ocr_framing_signal=true`) using
       `.local/eval_cases/ocr_transcript_cases_review.json`
+    - ensure `OCR_STABILITY_RUNS` matches observed run window in
+      `.local/eval_reports/ocr_growth_stability.json` (for example `3` vs `5`)
+      to avoid false-empty cohorts
 - If eval runs hit sustained `429` streaks:
   - keep binary pass/fail semantics unchanged
   - tune retry/fail-fast knobs only (do not relax gate criteria)

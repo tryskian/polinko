@@ -221,6 +221,9 @@ plus tests as the active spec surface (`make test`,
      - cohort is filtered to OCR-framed transcript episodes
        (`ocr_framing_signal=true`) via
        `.local/eval_cases/ocr_transcript_cases_review.json`
+     - if cohort is unexpectedly empty, align min-runs with the stability
+       report window (for example `make ocrfails OCR_STABILITY_RUNS=3`) or
+       rerun `make ocrstablegrowth` with the target run count.
    - transient OCR pressure tuning (all single-run OCR eval targets):
      - `OCR_EVAL_OCR_RETRIES=2 OCR_EVAL_OCR_RETRY_DELAY_MS=750`
      - fail-fast remains:
