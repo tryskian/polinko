@@ -1968,3 +1968,73 @@
 - Why: conversational tokens were producing low-value fail reasons unrelated to
   OCR difficulty. Filtering them keeps the growth lane fail-tolerant while
   increasing diagnostic utility of each failure.
+
+## D-147: Drop UI error phrases from regex-only growth constraints
+
+- Date: `2026-04-02`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `regex_filter`, `signal_quality`, `precision`
+- Decision:
+  - suppress UI error phrases from regex pattern emission in
+    `tools/build_ocr_cases_from_export.py`, specifically:
+    - `conversation not found`
+    - `chat html`
+  - add miner regression tests in
+    `tests/test_build_ocr_cases_from_export.py` for both phrases.
+  - rerun growth alignment sequence after remine:
+    - `make ocrmine`
+    - `make ocrstablegrowth`
+    - `make ocrgrowth`
+    - `make ocrfails`
+- Why: regex-only UI error rows were entering growth and consuming fail budget
+  without improving OCR remediation signal.
+
+## D-148: Skip UI-leading ordered tokens in growth fallback sequences
+
+- Date: `2026-04-02`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `ordered_terms`, `signal_quality`, `precision`
+- Decision:
+  - add `restore` and `deleted` to ordered-term fallback skip words in
+    `tools/build_ocr_cases_from_export.py`.
+  - keep anchor terms unchanged; this only removes brittle leading order
+    constraints for UI-like phrase prefixes.
+  - extend miner regression coverage in
+    `tests/test_build_ocr_cases_from_export.py`.
+  - rerun growth alignment sequence after remine:
+    - `make ocrmine`
+    - `make ocrstablegrowth`
+    - `make ocrgrowth`
+    - `make ocrfails`
+- Why: UI-leading ordered constraints were causing false hard-fails in growth
+  despite sufficient OCR signal in anchor terms.
+
+## D-149: Require explicit OCR intent for low-confidence growth admission
+
+- Date: `2026-04-02`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `low_confidence`, `intent_gate`, `signal_quality`
+- Decision:
+  - tighten low-confidence growth admission in
+    `tools/build_ocr_cases_from_export.py`:
+    - include when one of:
+      - literal OCR intent signal
+      - askless handwriting overlap signal
+      - OCR intent signal with correction/framing signal
+    - exclude correction/framing-only rows without OCR intent.
+  - add regression test to lock correction-without-intent exclusion in
+    `tests/test_build_ocr_cases_from_export.py`.
+  - rerun growth alignment sequence after remine:
+    - `make ocrmine`
+    - `make ocrstablegrowth`
+    - `make ocrgrowth`
+    - `make ocrfails`
+    - `make ocrfocus`
+  - refreshed aligned baseline:
+    - growth cases: `28`
+    - latest stability replay: `24/28` pass, `4/28` fail, `0` errors
+    - fail cohort selection (`require_ocr_framing=true`): `0` selected cases
+    - framed selection skips recorded: `skipped_non_framed=4`
+- Why: non-OCR concept dialogue with incidental correction phrasing was
+  contaminating growth with low-value fails. Intent-gating preserves
+  fail-heavy evaluation while keeping the cohort remediation-focused.
