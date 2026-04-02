@@ -1025,7 +1025,12 @@ def build_from_export(
                 growth_ordered_terms,
                 growth_anchor_terms,
             )
-            growth_regex_patterns = _regex_patterns_for_phrases(transcription_phrases[:3])[:3]
+            growth_regex_patterns: list[str] = []
+            if not growth_anchor_terms and len(growth_ordered_terms) < 2:
+                # Regex constraints are the most brittle gate in OCR growth cases.
+                # Keep them only as a fallback when we have no anchor or ordered
+                # constraints, and cap to a single compact pattern.
+                growth_regex_patterns = _regex_patterns_for_phrases(transcription_phrases[:3])[:1]
 
             growth_emit_status = emit_status in {
                 "emitted",

@@ -1715,6 +1715,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             growth_case = json.loads(output_growth.read_text(encoding="utf-8"))["cases"][0]
             self.assertEqual(growth_case["must_contain_any"], ["stirring"])
             self.assertEqual(growth_case["must_appear_in_order"], [])
+            self.assertEqual(growth_case["must_match_regex"], [])
             self.assertNotIn("something", growth_case["must_appear_in_order"])
 
     def test_build_skips_known_unstable_handwriting_source(self) -> None:
