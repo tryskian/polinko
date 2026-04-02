@@ -1683,3 +1683,20 @@
 - Why: fixed short retry delays under provider throttling burn attempts too
   quickly. Respecting `Retry-After` reduces wasted retry churn while preserving
   strict PASS/FAIL behavior.
+
+## D-133: Enforce deterministic day-close background task shutdown
+
+- Date: `2026-04-02`
+- Category: `runtime_ops`
+- Tags: `eod`, `task_hygiene`, `server`, `caffeinate`
+- Decision:
+  - extend `make eod` to include explicit shutdown step (`make eod-stop`) after
+    validation checks
+  - add `make eod-stop` to stop runtime background processes:
+    - `make server-daemon-stop`
+    - `make caffeinate-off-all`
+  - add `make caffeinate-off-all` to stop both managed and matching unmanaged
+    `caffeinate -d -i -m` processes
+- Why: closing editor/app windows does not guarantee `caffeinate` or daemon
+  processes exit. Deterministic shutdown prevents stale keep-awake and runtime
+  task drift between days.
