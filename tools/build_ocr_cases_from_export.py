@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 OCR_INTENT_PATTERN = (
-    r"what does (this|it) say|what(?:'s| is) written|can you read|read (this|it)|\btranscrib\w*|\bocr\b|\bbinareyes\b"
+    r"what does (this|it) say|what(?:'s| is) written|can you read|read (this|it)|\btranscrib\w*|\bocr\b|\bocrable\b|\bbinareyes\b"
 )
 ASK_RX = re.compile(OCR_INTENT_PATTERN, re.IGNORECASE)
 HANDWRITING_HINT_RX = re.compile(
@@ -295,7 +295,7 @@ def _to_msg(message: dict[str, Any]) -> Msg:
     parts = content.get("parts") if isinstance(content, dict) else []
     if not isinstance(parts, list):
         parts = []
-    text = " ".join(part for part in parts if isinstance(part, str)).strip()
+    text = html.unescape(" ".join(part for part in parts if isinstance(part, str)).strip())
     attachments = ((message.get("metadata") or {}).get("attachments") or [])
     if not isinstance(attachments, list):
         attachments = []
