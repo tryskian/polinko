@@ -410,19 +410,37 @@ def _is_entry_numeric_token(token: str) -> bool:
     )
 
 
+def _is_numeric_entry_phrase(text: str) -> bool:
+    value = " ".join(text.split()).strip()
+    if not value:
+        return False
+    numeric_tokens = re.findall(r"\d{3,8}", value)
+    if not numeric_tokens:
+        return False
+    if not all(_is_entry_numeric_token(token) for token in numeric_tokens):
+        return False
+    residue = re.sub(r"\d{3,8}", " ", value)
+    residue = re.sub(r"[\s,.;:/|\\\-()\[\]{}]+", "", residue)
+    return residue == ""
+
+
 def _extract_transcribed_lines(assistant_text: str) -> tuple[list[str], bool]:
     candidates: list[str] = []
     candidates.extend(_extract_inline_highlight_phrases(assistant_text))
     for match in FRAMED_TRANSCRIPTION_RX.findall(assistant_text):
         value = _normalize_phrase_candidate(str(match))
-        if 6 <= len(value) <= 120 and any(ch.isalpha() for ch in value):
+        if 2 <= len(value) <= 120 and (
+            any(ch.isalpha() for ch in value) or _is_numeric_entry_phrase(value)
+        ):
             candidates.append(value)
     blocks = CODE_BLOCK_RX.findall(assistant_text)
     had_code_block = bool(blocks)
     for block in blocks:
         for line in str(block).splitlines():
             value = _normalize_phrase_candidate(line)
-            if len(value) >= 4 and any(ch.isalpha() for ch in value):
+            if len(value) >= 2 and (
+                any(ch.isalpha() for ch in value) or _is_numeric_entry_phrase(value)
+            ):
                 candidates.append(value)
     # Also inspect raw assistant lines for OCR-style bullet/label text.
     for raw_line in assistant_text.splitlines():

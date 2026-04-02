@@ -1756,8 +1756,10 @@
     - `scribbles and bibbles` / `squibbles and bibbles`
     - `peanut cursive`
     - `scratched out`
-  - compact numeric entry markers are treated as valid OCR phrase tokens for
-    anchor/ordered-term extraction:
+  - compact numeric entry markers are treated as valid OCR phrase content
+    end-to-end:
+    - preserved during framed/code-block transcription phrase extraction
+    - used as valid tokens for anchor/ordered-term extraction
     - 24-hour compact time tokens (`HHMM`)
     - compact date-like tokens with year suffix (`...24`, `...25`, `...26`)
   - strict binary gate semantics are unchanged; this is mining-signal widening,

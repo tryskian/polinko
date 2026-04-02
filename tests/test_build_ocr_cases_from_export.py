@@ -175,6 +175,13 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertFalse(had_code_block)
         self.assertIn("There seems to be something stirring.", phrases)
 
+    def test_extract_transcribed_lines_accepts_numeric_entry_tokens(self) -> None:
+        assistant_text = "it reads: 1745\nand line two is 200226."
+        phrases, had_code_block = _extract_transcribed_lines(assistant_text)
+        self.assertFalse(had_code_block)
+        self.assertIn("1745", phrases)
+        self.assertTrue(any("200226" in phrase for phrase in phrases))
+
     def test_extract_transcribed_lines_from_ocr_bullet_lines(self) -> None:
         assistant_text = "Here’s the OCR from your page:\n- field notes\n- record wow."
         phrases, _ = _extract_transcribed_lines(assistant_text)

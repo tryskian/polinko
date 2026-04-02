@@ -118,6 +118,9 @@
   - OCR matcher now also hardens one-character token drift on required
     long-form anchors (example: `CHATTIEST` vs `CHATTEST`) without
     loosening forbidden-phrase checks.
+  - transcript miner now preserves compact numeric entry phrases from framed
+    and code-block assistant OCR lines (for example `1745`, `200226`) so
+    valid timestamp/date transcriptions are not dropped before anchoring.
   - correction-anchor hardening is active:
     - correction phrases only drive high-confidence anchors when they overlap
       with OCR transcription phrases
