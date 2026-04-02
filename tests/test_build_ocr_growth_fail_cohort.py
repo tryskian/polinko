@@ -58,7 +58,13 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             "gx-1": {
                 "id": "gx-1",
                 "unresolved_fail_age_hours": 12.345,
-            }
+            },
+            "gx-2": {
+                "id": "gx-2",
+                "fail_to_pass_converted": True,
+                "first_status": "FAIL",
+                "latest_status": "PASS",
+            },
         }
 
         report = build_fail_cohort(
@@ -73,7 +79,12 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         )
 
         self.assertEqual(report["summary"]["selected_fail_cases"], 1)
+        self.assertEqual(report["summary"]["stability_cases_total"], 2)
+        self.assertEqual(report["summary"]["metrics_rows_added"], 0)
+        self.assertEqual(report["summary"]["fail_history_cases"], 1)
+        self.assertEqual(report["summary"]["fail_to_pass_cases"], 1)
         self.assertEqual(report["summary"]["lane_counts"], {"handwriting": 1})
+        self.assertEqual(report["summary"]["fail_history_lane_counts"], {"typed": 1})
         self.assertEqual(report["summary"]["failure_pattern_counts"], {"ordered_phrase_missing": 1})
         self.assertEqual(len(report["cases"]), 1)
         selected = report["cases"][0]
@@ -86,6 +97,13 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertEqual(selected["failure_patterns"], ["ordered_phrase_missing"])
         self.assertEqual(selected["primary_failure_pattern"], "ordered_phrase_missing")
         self.assertEqual(selected["unresolved_fail_age_hours"], 12.345)
+        self.assertEqual(len(report["fail_history_cases"]), 1)
+        fail_history = report["fail_history_cases"][0]
+        self.assertEqual(fail_history["id"], "gx-2")
+        self.assertEqual(fail_history["lane"], "typed")
+        self.assertEqual(fail_history["fail_to_pass_converted"], True)
+        self.assertEqual(fail_history["first_status"], "FAIL")
+        self.assertEqual(fail_history["latest_status"], "PASS")
 
     def test_include_unstable_adds_unstable_persistent_fail(self) -> None:
         stability_payload = {
@@ -352,6 +370,56 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertEqual(report["summary"]["rate_limit_abort_runs"], 1)
         self.assertEqual(len(report["rate_limited_cases"]), 1)
         self.assertEqual(report["rate_limited_cases"][0]["id"], "gx-rate-1")
+
+    def test_metrics_observed_rows_are_merged_when_stability_is_partial(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-1",
+                    "observed_runs": 1,
+                    "pass_runs": 1,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "statuses": ["PASS"],
+                    "decision_stable": True,
+                    "always_fail": False,
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-1": {
+                "id": "gx-1",
+                "lane": "typed",
+                "source_name": "one.png",
+                "image_path": "/tmp/one.png",
+            },
+            "gx-2": {
+                "id": "gx-2",
+                "lane": "handwriting",
+                "source_name": "two.png",
+                "image_path": "/tmp/two.png",
+            },
+        }
+        metrics_map = {
+            "gx-1": {"id": "gx-1", "observed_runs": 1, "pass_runs": 1, "fail_runs": 0, "error_runs": 0},
+            "gx-2": {"id": "gx-2", "observed_runs": 2, "pass_runs": 0, "fail_runs": 2, "error_runs": 0},
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map={},
+            metrics_map=metrics_map,
+            review_index={},
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=False,
+        )
+        self.assertEqual(report["summary"]["stability_cases_total"], 1)
+        self.assertEqual(report["summary"]["metrics_rows_added"], 1)
+        self.assertEqual(report["summary"]["cases_total"], 2)
+        self.assertEqual(report["summary"]["selected_fail_cases"], 1)
+        self.assertEqual(report["cases"][0]["id"], "gx-2")
 
     def test_load_run_case_map_accepts_repo_relative_report_path(self) -> None:
         with TemporaryDirectory() as tmpdir:

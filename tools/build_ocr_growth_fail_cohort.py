@@ -126,6 +126,51 @@ def _reason_pattern(reason: str) -> str:
     return "other"
 
 
+def _merge_case_rows(
+    *,
+    stability_cases: list[dict[str, Any]],
+    metrics_map: dict[str, dict[str, Any]],
+) -> tuple[list[dict[str, Any]], int]:
+    merged: dict[str, dict[str, Any]] = {}
+    for row in stability_cases:
+        case_id = str(row.get("id", "")).strip()
+        if not case_id:
+            continue
+        merged[case_id] = row
+
+    added_from_metrics = 0
+    for case_id, metrics in metrics_map.items():
+        if case_id in merged:
+            continue
+        observed_runs = int(metrics.get("observed_runs", 0) or 0)
+        if observed_runs <= 0:
+            continue
+        pass_runs = int(metrics.get("pass_runs", 0) or 0)
+        fail_runs = int(metrics.get("fail_runs", 0) or 0)
+        error_runs = int(metrics.get("error_runs", 0) or 0)
+        statuses: list[str] = []
+        if observed_runs > 0 and pass_runs <= 0 and fail_runs <= 0 and error_runs > 0:
+            statuses = ["ERROR"]
+
+        merged[case_id] = {
+            "id": case_id,
+            "observed_runs": observed_runs,
+            "pass_runs": pass_runs,
+            "fail_runs": fail_runs,
+            "error_runs": error_runs,
+            "pass_rate": float(metrics.get("pass_rate", 0.0) or 0.0),
+            "decision_stable": bool(metrics.get("decision_stable", False)),
+            "always_fail": bool(metrics.get("always_fail", False)),
+            "statuses": statuses,
+            "sample_reasons": [],
+            "text_variant_count": int(metrics.get("text_variant_count", 0) or 0),
+            "char_count_span": int(metrics.get("char_count_span", 0) or 0),
+        }
+        added_from_metrics += 1
+
+    return list(merged.values()), added_from_metrics
+
+
 def build_fail_cohort(
     *,
     stability_payload: dict[str, Any],
@@ -140,15 +185,23 @@ def build_fail_cohort(
     raw_cases = stability_payload.get("cases")
     if not isinstance(raw_cases, list):
         raise RuntimeError("Expected 'cases' list in stability payload")
+    stability_cases_total = len(raw_cases)
+    raw_cases, metrics_rows_added = _merge_case_rows(
+        stability_cases=raw_cases,
+        metrics_map=metrics_map,
+    )
 
     selected: list[dict[str, Any]] = []
+    fail_history_cases: list[dict[str, Any]] = []
     rate_limited_cases: list[dict[str, Any]] = []
     lane_counts: Counter[str] = Counter()
+    fail_history_lane_counts: Counter[str] = Counter()
     reason_counts: Counter[str] = Counter()
     reason_pattern_counts: Counter[str] = Counter()
     skipped_non_framed = 0
     skipped_case_map_mismatch = 0
     rate_limit_abort_runs = 0
+    fail_to_pass_cases = 0
 
     raw_runs = stability_payload.get("runs")
     if isinstance(raw_runs, list):
@@ -175,14 +228,8 @@ def build_fail_cohort(
 
         if observed_runs < min_runs:
             continue
-        if pass_runs > 0 or fail_runs <= 0:
+        if fail_runs <= 0:
             continue
-        if include_unstable:
-            if not (fail_runs > 0 and pass_runs == 0):
-                continue
-        else:
-            if not (decision_stable and always_fail):
-                continue
 
         growth_case = growth_case_map.get(case_id, {})
         run_case = run_case_map.get(case_id, {})
@@ -219,6 +266,9 @@ def build_fail_cohort(
         metrics = metrics_map.get(case_id, {})
         unresolved_fail_age_hours = metrics.get("unresolved_fail_age_hours")
         age_hours = float(unresolved_fail_age_hours or 0.0)
+        fail_to_pass_converted = bool(metrics.get("fail_to_pass_converted", False))
+        first_status = str(metrics.get("first_status", "")).strip().upper() or "ERROR"
+        latest_status = str(metrics.get("latest_status", "")).strip().upper() or "ERROR"
 
         sample_reasons_raw = row.get("sample_reasons")
         sample_reasons = (
@@ -239,6 +289,42 @@ def build_fail_cohort(
         primary_failure_pattern = "unknown"
         if case_reason_patterns:
             primary_failure_pattern = case_reason_patterns.most_common(1)[0][0]
+
+        if fail_runs > 0 and pass_runs > 0:
+            fail_history_cases.append(
+                {
+                    "id": case_id,
+                    "lane": lane,
+                    "source_name": source_name,
+                    "image_path": image_path,
+                    "observed_runs": observed_runs,
+                    "pass_runs": pass_runs,
+                    "fail_runs": fail_runs,
+                    "error_runs": int(row.get("error_runs", 0) or 0),
+                    "pass_rate": float(row.get("pass_rate", 0.0) or 0.0),
+                    "fail_to_pass_converted": fail_to_pass_converted,
+                    "first_status": first_status,
+                    "latest_status": latest_status,
+                    "sample_reasons": sample_reasons,
+                    "failure_patterns": sorted(case_reason_patterns.keys()),
+                    "primary_failure_pattern": primary_failure_pattern,
+                    "framing_episode_count": framing_episode_count,
+                    "review_episode_count": len(linked_review_rows),
+                }
+            )
+            fail_history_lane_counts[lane] += 1
+            if fail_to_pass_converted:
+                fail_to_pass_cases += 1
+
+        persistent_fail_selected = False
+        if pass_runs == 0:
+            if include_unstable:
+                persistent_fail_selected = True
+            else:
+                persistent_fail_selected = bool(decision_stable and always_fail)
+
+        if not persistent_fail_selected:
+            continue
 
         selected_row = {
             "id": case_id,
@@ -279,7 +365,8 @@ def build_fail_cohort(
         pass_runs = int(row.get("pass_runs", 0) or 0)
         fail_runs = int(row.get("fail_runs", 0) or 0)
         error_runs = int(row.get("error_runs", 0) or 0)
-        statuses = row.get("statuses") if isinstance(row.get("statuses"), list) else []
+        raw_statuses = row.get("statuses")
+        statuses = raw_statuses if isinstance(raw_statuses, list) else []
         has_only_error_statuses = bool(statuses) and all(str(item).upper() == "ERROR" for item in statuses)
         if observed_runs <= 0:
             continue
@@ -328,11 +415,22 @@ def build_fail_cohort(
             item["id"],
         )
     )
+    fail_history_cases.sort(
+        key=lambda item: (
+            item["lane"],
+            -int(item.get("fail_runs", 0) or 0),
+            item["id"],
+        )
+    )
     rate_limited_cases.sort(key=lambda item: (item["lane"], item["id"]))
 
     summary = {
         "cases_total": len(raw_cases),
+        "stability_cases_total": stability_cases_total,
+        "metrics_rows_added": metrics_rows_added,
         "selected_fail_cases": len(selected),
+        "fail_history_cases": len(fail_history_cases),
+        "fail_to_pass_cases": fail_to_pass_cases,
         "rate_limited_cases": len(rate_limited_cases),
         "rate_limit_abort_runs": rate_limit_abort_runs,
         "min_runs": min_runs,
@@ -341,6 +439,7 @@ def build_fail_cohort(
         "skipped_non_framed": skipped_non_framed,
         "skipped_case_map_mismatch": skipped_case_map_mismatch,
         "lane_counts": dict(sorted(lane_counts.items())),
+        "fail_history_lane_counts": dict(sorted(fail_history_lane_counts.items())),
         "top_reasons": [
             {"reason": reason, "count": count}
             for reason, count in reason_counts.most_common(10)
@@ -352,6 +451,7 @@ def build_fail_cohort(
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "summary": summary,
         "cases": selected,
+        "fail_history_cases": fail_history_cases,
         "rate_limited_cases": rate_limited_cases,
     }
 
@@ -359,6 +459,11 @@ def build_fail_cohort(
 def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_cases: Path) -> str:
     summary = report["summary"]
     selected = report["cases"]
+    fail_history_cases = (
+        report.get("fail_history_cases")
+        if isinstance(report.get("fail_history_cases"), list)
+        else []
+    )
     rate_limited_cases = (
         report.get("rate_limited_cases") if isinstance(report.get("rate_limited_cases"), list) else []
     )
@@ -376,7 +481,11 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
     lines.append("| metric | value |")
     lines.append("|---|---:|")
     lines.append(f"| cases_total | {summary['cases_total']} |")
+    lines.append(f"| stability_cases_total | {summary['stability_cases_total']} |")
+    lines.append(f"| metrics_rows_added | {summary['metrics_rows_added']} |")
     lines.append(f"| selected_fail_cases | {summary['selected_fail_cases']} |")
+    lines.append(f"| fail_history_cases | {summary['fail_history_cases']} |")
+    lines.append(f"| fail_to_pass_cases | {summary['fail_to_pass_cases']} |")
     lines.append(f"| rate_limited_cases | {summary['rate_limited_cases']} |")
     lines.append(f"| rate_limit_abort_runs | {summary['rate_limit_abort_runs']} |")
     lines.append(f"| min_runs | {summary['min_runs']} |")
@@ -393,6 +502,16 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
         lines.append("| lane | selected_fail_cases |")
         lines.append("|---|---:|")
         for lane, count in lane_counts.items():
+            lines.append(f"| {lane} | {count} |")
+        lines.append("")
+
+    fail_history_lane_counts = summary.get("fail_history_lane_counts")
+    if isinstance(fail_history_lane_counts, dict) and fail_history_lane_counts:
+        lines.append("## Fail-History Lane Counts")
+        lines.append("")
+        lines.append("| lane | fail_history_cases |")
+        lines.append("|---|---:|")
+        for lane, count in fail_history_lane_counts.items():
             lines.append(f"| {lane} | {count} |")
         lines.append("")
 
@@ -419,6 +538,29 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
 
     if selected:
         lines.append("## Selected Cases")
+        lines.append("")
+
+    if fail_history_cases:
+        lines.append("## Fail-History Cases (At Least One PASS and One FAIL)")
+        lines.append("")
+        lines.append(
+            "| case_id | lane | pattern | fail_runs | pass_runs | observed_runs | fail_to_pass | source_name | image_path |"
+        )
+        lines.append("|---|---|---|---:|---:|---:|---|---|---|")
+        for row in fail_history_cases:
+            case_id = str(row.get("id", ""))
+            lane = str(row.get("lane", ""))
+            pattern = str(row.get("primary_failure_pattern", ""))
+            fail_runs = int(row.get("fail_runs", 0) or 0)
+            pass_runs = int(row.get("pass_runs", 0) or 0)
+            observed = int(row.get("observed_runs", 0) or 0)
+            fail_to_pass = bool(row.get("fail_to_pass_converted", False))
+            source_name = str(row.get("source_name", "")).replace("|", "\\|")
+            image_path = str(row.get("image_path", "")).replace("|", "\\|")
+            lines.append(
+                f"| {case_id} | {lane} | {pattern} | {fail_runs} | {pass_runs} | {observed} | {fail_to_pass} | "
+                f"{source_name} | {image_path} |"
+            )
         lines.append("")
         lines.append(
             "| case_id | lane | pattern | fail_runs | observed_runs | framing_eps | age_hours | source_name | image_path |"
@@ -582,7 +724,11 @@ def main() -> int:
 
     summary = report["summary"]
     print("OCR growth fail cohort")
+    print(f"  stability_cases_total: {summary['stability_cases_total']}")
+    print(f"  metrics_rows_added: {summary['metrics_rows_added']}")
     print(f"  selected_fail_cases: {summary['selected_fail_cases']}")
+    print(f"  fail_history_cases: {summary['fail_history_cases']}")
+    print(f"  fail_to_pass_cases: {summary['fail_to_pass_cases']}")
     print(f"  rate_limited_cases: {summary['rate_limited_cases']}")
     print(f"  rate_limit_abort_runs: {summary['rate_limit_abort_runs']}")
     print(f"  cases_total: {summary['cases_total']}")
