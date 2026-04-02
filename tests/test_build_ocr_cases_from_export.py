@@ -239,9 +239,13 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertIn("200226", anchors)
         self.assertIn("1745", ordered)
 
-    def test_ordered_terms_drop_leading_token_in_long_phrase(self) -> None:
+    def test_ordered_terms_drop_ui_prefix_tokens_in_long_phrase(self) -> None:
         ordered = _ordered_terms_for_phrases(["Restore Deleted Chat"])
-        self.assertEqual(ordered, ["restore", "deleted"])
+        self.assertEqual(ordered, [])
+
+    def test_ordered_terms_keep_non_ui_trailing_sequence(self) -> None:
+        ordered = _ordered_terms_for_phrases(["Restore Deleted Spectral Branch Phenomenon"])
+        self.assertEqual(ordered, ["branch", "phenomenon"])
 
     def test_regex_patterns_drop_ui_not_found_phrase(self) -> None:
         patterns = _regex_patterns_for_phrases(["Conversation not found"])
