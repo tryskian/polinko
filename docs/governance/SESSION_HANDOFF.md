@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-04-01
+- 2026-04-02
 
 ## Current Snapshot
 
@@ -113,7 +113,8 @@
   - OCR eval matcher now hardens mixed split-letter anchor variants:
     - required one-of matching handles forms like `CHAT T IEST`
     - forbidden whole-word matching handles forms like `GU ESS`
-    - transcript stability replay is now `21 stable / 0 flaky`
+    - last full transcript stability replay (pre-widening) is
+      `21 stable / 0 flaky`
   - OCR matcher now also hardens one-character token drift on required
     long-form anchors (example: `CHATTIEST` vs `CHATTEST`) without
     loosening forbidden-phrase checks.
@@ -139,13 +140,15 @@
     - `.local/eval_cases/ocr_illustration_benchmark_cases.json`
     - `.local/eval_cases/ocr_transcript_cases_delta.md`
   - active precision baseline:
-    - mined cases: `21` total
-      (`handwriting=4`, `typed=11`, `illustration=6`)
-    - review summary: `episodes=172`
-      (`high=7`, `medium=20`, `low=145`)
+    - mined cases: `26` total
+      (`handwriting=5`, `typed=11`, `illustration=10`)
+    - growth cases: `148`
+    - review summary: `episodes=178`
+      (`high=7`, `medium=27`, `low=144`)
     - previous `55`/`29`/`25` mined outputs are legacy reference only
   - latest lane validations:
-    - full transcript lane (diagnostic): `21/21` PASS (`0` fail)
+    - latest complete transcript lane (diagnostic, pre-widening):
+      `21/21` PASS (`0` fail)
     - handwriting benchmark: `4/4` PASS
     - typed benchmark: `6/6` PASS
     - illustration benchmark: `2/2` PASS
@@ -158,7 +161,7 @@
       - handwriting: `4` stable, `0` flaky
       - typed: `6` stable, `0` flaky
       - illustration: `2` stable, `0` flaky
-    - full transcript stability: `21` stable, `0` flaky
+    - full transcript stability (pre-widening): `21` stable, `0` flaky
   - growth metrics command is active:
     - `make ocrgrowth`
     - outputs:
@@ -174,6 +177,15 @@
       `.local/eval_reports/ocr_growth_fail_cohort.md`
   - run-report join resolver now supports repo-root-relative `.local/...`
     report paths to avoid stale fail-cohort case mapping
+  - latest fallback refresh (provider-pressure window, April 2, 2026):
+    - `make ocr-data` emitted `26` strict cases, `148` growth cases
+    - `make ocrgrowth OCR_GROWTH_LIMIT_RUNS=1`:
+      - `decision_coverage_rate=0.0000`
+      - `first_error_rate=1.0000`
+    - `make ocrfails OCR_STABILITY_RUNS=1`:
+      - `selected_fail_cases=0`
+      - `rate_limited_cases=3`
+      - `rate_limit_abort_runs=1`
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`
@@ -240,6 +252,9 @@
   - OCR retries now respect provider `Retry-After` on `429` when present
   - latest lockset probe result is currently blocked at provider boundary
     (`HTTP 429` on first case with fail-fast threshold `1`)
+  - latest one-case handwriting probe (`make ocrhandbench` with
+    `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=1`) aborted at `1/4` attempted due
+    provider `429`
 - Cloud deployment remains paused; local-first execution is canonical.
 - Environment mutation policy:
   - verify repo path + mode + branch before changes
@@ -292,8 +307,11 @@
     - review `growth_regex_only_cases_written` to track growth rows constrained
       by phrase regex when anchor/order terms are empty
   - current blocker snapshot:
-    - `make ocrall` aborted at `3/26` attempted with sustained `429` streak
-      (fail-fast threshold `3`)
+    - lockset probes are currently provider-throttled (`429`) before
+      meaningful decision coverage
+    - latest fallback metrics show no PASS/FAIL decision coverage yet
+      (`decision_coverage_rate=0.0000`) while surfacing blocked cases
+      (`rate_limited_cases=3`)
 - If lockset regresses, apply one precision-safe miner/matcher kernel only,
   then rerun full sequence before merge.
 - Use notebook starter for fast local triage when needed:
