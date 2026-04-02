@@ -64,6 +64,9 @@ Notes:
   `make ocrstablegrowth`, `make ocrgrowth`, `make ocrfails`, `make gate`
 - notebook commands:
   `make notebook-setup`, `make notes` (aliases: `make notebook`, `make nb`)
+- public-safe preflight before visibility changes:
+  `make public`
+  (fails if tracked local/private paths or secret-like values are found)
 
 ## Core Commands
 
@@ -93,7 +96,15 @@ make lint-docs
 make backend-gate
 make quality-gate
 make quality-gate-deterministic
+make public
 ```
+
+## Public-Safe Repo Rule
+
+- Keep local/private research artefacts under `docs/peanut/`, `output/`,
+  `.local/`, and `.archive/` (not tracked).
+- Keep `.env.example` as placeholder-only (no live credential values).
+- Run `make public` before making the repository visible.
 
 ## API Surface
 
