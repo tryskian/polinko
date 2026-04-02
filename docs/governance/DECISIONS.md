@@ -1886,3 +1886,26 @@
 - Why: repeated immediate replays under known provider throttle waste call
   budget and produce no new signal. Backoff skip preserves binary criteria
   while improving runtime efficiency.
+
+## D-143: Add public-safe release audit and remove tracked local archive/output surfaces
+
+- Date: `2026-04-02`
+- Category: `repo_governance`
+- Tags: `privacy`, `public_release`, `hygiene`, `operator_gate`
+- Decision:
+  - add `tools/public_repo_audit.py` with `make public` / `make public-audit`
+    to enforce a public-safe tracked surface.
+  - public audit blocks tracked paths under local/confidential prefixes:
+    - `.archive/`, `.local/`, `output/`, `eval_reports/`,
+      `docs/peanut/`, `docs/portfolio/`, `docs/internal/`
+  - public audit scans tracked text files for secret markers and fails fast.
+  - remove tracked local-only files from repo surface:
+    - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+    - `.archive/live_archive/README.md`
+    - `.archive/live_archive/legacy_frontend/README.md`
+  - keep deep historical context in private snapshot repos (for example
+    `polinko-build-snapshot`) rather than tracked in the public-facing repo.
+  - treat hypothesis/method artefacts as local-only research assets and keep
+    them under `docs/peanut/` (blocked from tracked public surface by gate).
+- Why: the main engineering repo should be shareable without exposing local
+  archives, notebook state, or accidental secret-bearing artifacts.
