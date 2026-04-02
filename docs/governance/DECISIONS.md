@@ -1926,3 +1926,25 @@
 - Why: growth lane had accumulated metadata-chatter rows that produced
   low-value failures unrelated to OCR capability. Tightening miner admission
   preserves fail-heavy evaluation while increasing diagnostic precision.
+
+## D-145: Prune residual export-metadata tokens from growth anchors
+
+- Date: `2026-04-02`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `anchor_filtering`, `signal_quality`, `precision`
+- Decision:
+  - extend metadata token filtering in
+    `tools/build_ocr_cases_from_export.py` to also exclude:
+    `conversation`, `found`, `screenshot`, `html`.
+  - extend miner regression coverage in
+    `tests/test_build_ocr_cases_from_export.py` to lock those exclusions.
+  - rerun growth alignment sequence after remine:
+    - `make ocrstablegrowth`
+    - `make ocrgrowth`
+    - `make ocrfails`
+  - refreshed aligned baseline:
+    - growth stability: `29/39` pass, `10/39` fail, `0` errors
+    - fail cohort (`require_ocr_framing=true`): `5` selected fail cases
+- Why: residual export-descriptor tokens were still leaking into growth
+  constraints and inflating low-value failure reasons. Pruning them preserves
+  strict fail visibility while improving cohort diagnostic signal.
