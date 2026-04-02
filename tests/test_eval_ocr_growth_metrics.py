@@ -33,6 +33,8 @@ class OcrGrowthMetricsTests(unittest.TestCase):
         metrics = report["metrics"]
         self.assertEqual(report["runs_total"], 2)
         self.assertEqual(report["cases_total"], 3)
+        self.assertEqual(metrics["decision_coverage_rate"], 1.0)
+        self.assertEqual(metrics["first_error_rate"], 0.0)
         self.assertEqual(metrics["first_pass_fail_rate"], 0.6667)
         self.assertEqual(metrics["fail_to_pass_conversion_rate"], 0.5)
         self.assertEqual(metrics["median_runs_to_pass"], 1.5)
@@ -43,6 +45,28 @@ class OcrGrowthMetricsTests(unittest.TestCase):
         self.assertIn("handwriting", lane_metrics)
         self.assertEqual(lane_metrics["handwriting"]["fail_to_pass_conversion_rate"], 1.0)
         self.assertEqual(lane_metrics["illustration"]["unresolved_fail_cases"], 1)
+
+    def test_build_growth_report_captures_error_first_coverage_gap(self) -> None:
+        case_map = {
+            "c1": CaseMetadata(case_id="c1", lane="handwriting", source_name="c1.png", image_path="/tmp/c1.png"),
+            "c2": CaseMetadata(case_id="c2", lane="typed", source_name="c2.png", image_path="/tmp/c2.png"),
+        }
+        runs = [
+            RunReport(
+                run_id="r1",
+                timestamp=1000,
+                case_statuses={"c1": "ERROR", "c2": "FAIL"},
+            )
+        ]
+
+        report = build_growth_report(case_map=case_map, run_reports=runs, now_epoch=1100)
+        metrics = report["metrics"]
+        self.assertEqual(metrics["cases"], 2)
+        self.assertEqual(metrics["first_decision_cases"], 1)
+        self.assertEqual(metrics["first_error_cases"], 1)
+        self.assertEqual(metrics["decision_coverage_rate"], 0.5)
+        self.assertEqual(metrics["first_error_rate"], 0.5)
+        self.assertEqual(metrics["first_pass_fail_rate"], 1.0)
 
     def test_collect_run_reports_filters_by_cases_path(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
