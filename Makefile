@@ -1083,6 +1083,13 @@ eval-ocr-focus-stability:
 			exit 0; \
 		fi; \
 	fi; \
+	if [ "$(OCR_FOCUS_SKIP_RECENT_RATE_LIMIT)" = "true" ] && [ -f "$(OCR_GROWTH_FAIL_COHORT_JSON)" ]; then \
+		SKIP=$$($(PYTHON) -m tools.should_skip_ocr_run --report "$(OCR_GROWTH_FAIL_COHORT_JSON)" --backoff-seconds "$(OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS)"); \
+		if [ "$$SKIP" = "1" ]; then \
+			echo "Skipping focus stability replay: recent growth fail cohort shows active rate-limit pressure (backoff $(OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS)s)."; \
+			exit 0; \
+		fi; \
+	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
 		$(PYTHON) -m tools.eval_ocr_stability \
 			--base-url "http://127.0.0.1:8000" \
