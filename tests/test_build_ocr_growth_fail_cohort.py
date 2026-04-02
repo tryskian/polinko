@@ -1,7 +1,10 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Any
 
 from tools.build_ocr_growth_fail_cohort import build_fail_cohort
+from tools.build_ocr_growth_fail_cohort import _load_run_case_map
 
 
 class OcrGrowthFailCohortTests(unittest.TestCase):
@@ -304,6 +307,92 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertEqual(report["summary"]["selected_fail_cases"], 1)
         self.assertEqual(report["summary"]["lane_counts"], {"handwriting": 1})
         self.assertEqual(report["cases"][0]["lane"], "handwriting")
+
+    def test_rate_limited_cases_are_reported_separately(self) -> None:
+        stability_payload = {
+            "runs": [
+                {
+                    "summary": {"aborted_due_to_rate_limit": True},
+                }
+            ],
+            "cases": [
+                {
+                    "id": "gx-rate-1",
+                    "observed_runs": 1,
+                    "pass_runs": 0,
+                    "fail_runs": 0,
+                    "error_runs": 1,
+                    "statuses": ["ERROR"],
+                    "decision_stable": False,
+                    "always_fail": False,
+                }
+            ],
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-rate-1": {
+                "id": "gx-rate-1",
+                "lane": "handwriting",
+                "source_name": "rate.png",
+                "image_path": "/tmp/rate.png",
+            }
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map={},
+            metrics_map={},
+            review_index={},
+            min_runs=1,
+            include_unstable=False,
+            require_ocr_framing=False,
+        )
+        self.assertEqual(report["summary"]["selected_fail_cases"], 0)
+        self.assertEqual(report["summary"]["rate_limited_cases"], 1)
+        self.assertEqual(report["summary"]["rate_limit_abort_runs"], 1)
+        self.assertEqual(len(report["rate_limited_cases"]), 1)
+        self.assertEqual(report["rate_limited_cases"][0]["id"], "gx-rate-1")
+
+    def test_load_run_case_map_accepts_repo_relative_report_path(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            run_report_path = tmp / ".local" / "eval_reports" / "ocr_growth_stability_runs" / "r1.json"
+            run_report_path.parent.mkdir(parents=True, exist_ok=True)
+            run_report_path.write_text(
+                """{
+                  "cases": [
+                    {"id": "gx-1", "source_name": "s.png", "image_path": "/tmp/s.png"}
+                  ]
+                }""",
+                encoding="utf-8",
+            )
+
+            stability_payload = {
+                "runs": [
+                    {
+                        "report_json": ".local/eval_reports/ocr_growth_stability_runs/r1.json",
+                    }
+                ]
+            }
+            stability_report_path = tmp / ".local" / "eval_reports" / "ocr_growth_stability.json"
+            stability_report_path.parent.mkdir(parents=True, exist_ok=True)
+            stability_report_path.write_text("{}", encoding="utf-8")
+
+            previous_cwd = Path.cwd()
+            try:
+                # Repo-relative report_json should resolve from cwd first.
+                import os
+
+                os.chdir(tmp)
+                run_case_map = _load_run_case_map(
+                    stability_payload=stability_payload,
+                    stability_report_path=stability_report_path,
+                )
+            finally:
+                os.chdir(previous_cwd)
+
+            self.assertIn("gx-1", run_case_map)
+            self.assertEqual(run_case_map["gx-1"]["source_name"], "s.png")
 
 
 if __name__ == "__main__":
