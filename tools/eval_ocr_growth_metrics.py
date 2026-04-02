@@ -142,8 +142,10 @@ def _run_metrics_for_cases(
     summaries: list[dict[str, Any]],
     now_epoch: int,
 ) -> dict[str, Any]:
+    total_cases = len(summaries)
     first_decision_cases = 0
     first_fail_cases = 0
+    first_error_cases = 0
     fail_first_cases = 0
     fail_to_pass_cases = 0
     runs_to_pass_values: list[int] = []
@@ -158,6 +160,8 @@ def _run_metrics_for_cases(
                 fail_first_cases += 1
                 if bool(row.get("fail_to_pass_converted", False)):
                     fail_to_pass_cases += 1
+        else:
+            first_error_cases += 1
         runs_to_first_pass = row.get("runs_to_first_pass")
         if isinstance(runs_to_first_pass, int):
             runs_to_pass_values.append(runs_to_first_pass)
@@ -174,9 +178,12 @@ def _run_metrics_for_cases(
     median_runs_to_pass = float(median(runs_to_pass_values)) if runs_to_pass_values else 0.0
 
     return {
-        "cases": len(summaries),
+        "cases": total_cases,
         "first_decision_cases": first_decision_cases,
         "first_fail_cases": first_fail_cases,
+        "first_error_cases": first_error_cases,
+        "decision_coverage_rate": _format_rate(first_decision_cases, total_cases),
+        "first_error_rate": _format_rate(first_error_cases, total_cases),
         "first_pass_fail_rate": _format_rate(first_fail_cases, first_decision_cases),
         "fail_first_cases": fail_first_cases,
         "fail_to_pass_cases": fail_to_pass_cases,
@@ -313,6 +320,8 @@ def _render_markdown(
     lines.append("|---|---:|")
     lines.append(f"| runs_total | {report['runs_total']} |")
     lines.append(f"| cases_total | {report['cases_total']} |")
+    lines.append(f"| decision_coverage_rate | {metrics['decision_coverage_rate']:.4f} |")
+    lines.append(f"| first_error_rate | {metrics['first_error_rate']:.4f} |")
     lines.append(f"| first_pass_fail_rate | {metrics['first_pass_fail_rate']:.4f} |")
     lines.append(f"| fail_to_pass_conversion_rate | {metrics['fail_to_pass_conversion_rate']:.4f} |")
     lines.append(f"| median_runs_to_pass | {metrics['median_runs_to_pass']} |")
@@ -323,12 +332,13 @@ def _render_markdown(
     lines.append("")
     lines.append("## Per Lane")
     lines.append("")
-    lines.append("| lane | cases | first_pass_fail_rate | fail_to_pass_conversion_rate | median_runs_to_pass | unresolved_fail_age (hours) |")
-    lines.append("|---|---:|---:|---:|---:|---:|")
+    lines.append("| lane | cases | decision_coverage_rate | first_error_rate | first_pass_fail_rate | fail_to_pass_conversion_rate | median_runs_to_pass | unresolved_fail_age (hours) |")
+    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|")
     for lane in sorted(lane_metrics.keys()):
         item = lane_metrics[lane]
         lines.append(
-            f"| {lane} | {item['cases']} | {item['first_pass_fail_rate']:.4f} | "
+            f"| {lane} | {item['cases']} | {item['decision_coverage_rate']:.4f} | "
+            f"{item['first_error_rate']:.4f} | {item['first_pass_fail_rate']:.4f} | "
             f"{item['fail_to_pass_conversion_rate']:.4f} | {item['median_runs_to_pass']} | "
             f"{item['unresolved_fail_age']} |"
         )
@@ -439,6 +449,8 @@ def main() -> int:
     print("OCR growth metrics")
     print(f"  runs_total: {report['runs_total']}")
     print(f"  cases_total: {report['cases_total']}")
+    print(f"  decision_coverage_rate: {metrics['decision_coverage_rate']:.4f}")
+    print(f"  first_error_rate: {metrics['first_error_rate']:.4f}")
     print(f"  first_pass_fail_rate: {metrics['first_pass_fail_rate']:.4f}")
     print(f"  fail_to_pass_conversion_rate: {metrics['fail_to_pass_conversion_rate']:.4f}")
     print(f"  median_runs_to_pass: {metrics['median_runs_to_pass']}")
