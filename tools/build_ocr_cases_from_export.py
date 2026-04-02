@@ -93,6 +93,10 @@ ANCHOR_META_WORDS = {
     "updated",
     "accessible",
     "entry",
+    "conversation",
+    "found",
+    "screenshot",
+    "html",
 }
 ANCHOR_WEAK_WORDS = {
     "there",
@@ -126,6 +130,10 @@ ORDERED_FALLBACK_SKIP_WORDS = {
     "updated",
     "accessible",
     "entry",
+    "conversation",
+    "found",
+    "screenshot",
+    "html",
 }
 ANCHOR_FILETYPE_WORDS = {
     "jpeg",
