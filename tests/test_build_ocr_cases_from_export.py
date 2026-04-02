@@ -800,6 +800,82 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
 
+    def test_build_does_not_widen_growth_lane_for_correction_without_ocr_intent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "img_020.png").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-growth-correction-no-intent",
+                "title": "Concept dialogue with correction wording",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["thoughts on this concept sketch?"]},
+                            "metadata": {"attachments": [{"name": "img_020.png", "id": "file_growth_corr"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["it reads: human perception, machine cognition"]},
+                            "metadata": {},
+                        }
+                    },
+                    "3": {
+                        "message": {
+                            "create_time": 3,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["this should be related"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-growth-correction-no-intent.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_growth = Path(tmp_dir) / "cases_growth.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_growth=output_growth,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                max_growth_cases=50,
+            )
+
+            self.assertEqual(summary["cases_written"], 0)
+            self.assertEqual(summary["growth_cases_written"], 0)
+
+            growth_payload = json.loads(output_growth.read_text(encoding="utf-8"))
+            self.assertEqual(growth_payload["cases"], [])
+
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["confidence"], "low")
+            self.assertFalse(review["ocr_intent_signal"])
+            self.assertTrue(review["correction_signal"])
+            self.assertTrue(review["ocr_framing_signal"])
+
     def test_build_widens_growth_lane_with_regex_only_constraints(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"

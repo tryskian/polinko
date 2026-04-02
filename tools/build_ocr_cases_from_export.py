@@ -1081,16 +1081,17 @@ def build_from_export(
             }
             if emit_status == "skipped_low_confidence":
                 # Keep low-confidence growth strict but broader than literal-only
-                # asks: include correction-led examples and OCR-framed rows only
-                # when there is upstream OCR intent. This avoids metadata-only
-                # transcript chatter entering growth cohorts.
+                # asks: include correction/framing rows only when there is
+                # explicit OCR intent (or askless handwriting overlap signal).
+                # This avoids non-OCR concept dialogue entering growth cohorts
+                # from incidental correction-like wording.
                 growth_emit_status = bool(
-                    (
+                    transcription_phrases
+                    and (
                         ocr_literal_intent_signal
-                        or correction_signal
-                        or (ocr_framing_signal and ocr_intent_signal)
+                        or askless_handwriting_signal
+                        or (ocr_intent_signal and (correction_signal or ocr_framing_signal))
                     )
-                    and transcription_phrases
                 )
             if emit_status == "skipped_unstable_source":
                 growth_emit_status = _allow_unstable_source_in_growth(
