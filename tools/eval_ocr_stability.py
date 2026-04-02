@@ -110,7 +110,9 @@ def _summarise_reports(
 
     stable_decision_cases = sum(1 for item in case_summaries if item["decision_stable"])
     decision_flaky_cases = len(case_summaries) - stable_decision_cases
-    output_variant_cases = sum(1 for item in case_summaries if item["text_variant_count"] > 1)
+    output_variant_cases = sum(
+        1 for item in case_summaries if item["text_variant_count"] > 1
+    )
     always_pass_cases = sum(1 for item in case_summaries if item["always_pass"])
     always_fail_cases = sum(1 for item in case_summaries if item["always_fail"])
 
@@ -131,8 +133,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--base-url", default="http://127.0.0.1:8000")
     parser.add_argument("--cases", required=True, help="Path to OCR eval cases JSON.")
-    parser.add_argument("--runs", type=int, default=5, help="How many repeated runs to execute.")
-    parser.add_argument("--run-id", default="", help="Run id prefix (default: unix timestamp).")
+    parser.add_argument(
+        "--runs", type=int, default=5, help="How many repeated runs to execute."
+    )
+    parser.add_argument(
+        "--run-id", default="", help="Run id prefix (default: unix timestamp)."
+    )
     parser.add_argument("--session-prefix", default="ocr-stability")
     parser.add_argument("--timeout", type=int, default=90)
     parser.add_argument(
@@ -159,7 +165,18 @@ def build_parser() -> argparse.ArgumentParser:
         default=0,
         help="Delay between transient OCR retries, in milliseconds.",
     )
-    parser.add_argument("--strict", action="store_true", help="Pass --strict to tools.eval_ocr.")
+    parser.add_argument(
+        "--max-consecutive-rate-limit-errors",
+        type=int,
+        default=0,
+        help=(
+            "Abort each child tools.eval_ocr run early after N consecutive OCR "
+            "rate-limit errors (0 disables early abort)."
+        ),
+    )
+    parser.add_argument(
+        "--strict", action="store_true", help="Pass --strict to tools.eval_ocr."
+    )
     parser.add_argument(
         "--report-dir",
         default=".local/eval_reports/ocr_stability_runs",
@@ -205,6 +222,9 @@ def main() -> int:
     if args.ocr_retry_delay_ms < 0:
         print("ocr-retry-delay-ms must be >= 0")
         return 2
+    if args.max_consecutive_rate_limit_errors < 0:
+        print("max-consecutive-rate-limit-errors must be >= 0")
+        return 2
 
     run_id = args.run_id.strip() or str(int(time.time()))
     cases_path = Path(args.cases).expanduser()
@@ -246,6 +266,8 @@ def main() -> int:
             str(args.ocr_retries),
             "--ocr-retry-delay-ms",
             str(args.ocr_retry_delay_ms),
+            "--max-consecutive-rate-limit-errors",
+            str(args.max_consecutive_rate_limit_errors),
             "--report-json",
             str(run_report),
         ]
@@ -273,7 +295,9 @@ def main() -> int:
                     "stderr_tail": stderr_tail,
                 }
             )
-            print(f"[{index}/{args.runs}] run_id={run_tag} report load failed (exit={proc.returncode})")
+            print(
+                f"[{index}/{args.runs}] run_id={run_tag} report load failed (exit={proc.returncode})"
+            )
             continue
 
         run_reports.append(payload)
@@ -317,6 +341,7 @@ def main() -> int:
         "max_cases": args.max_cases,
         "ocr_retries": args.ocr_retries,
         "ocr_retry_delay_ms": args.ocr_retry_delay_ms,
+        "max_consecutive_rate_limit_errors": args.max_consecutive_rate_limit_errors,
         "runs_requested": args.runs,
         "runs_with_report": len(run_reports),
         "run_error_count": run_error_count,
@@ -334,7 +359,9 @@ def main() -> int:
         ),
         "generated_at": int(time.time()),
     }
-    output_json.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    output_json.write_text(
+        json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     print("\nStability summary")
     print(f"  Runs with report: {len(run_reports)}/{args.runs}")

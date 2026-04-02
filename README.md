@@ -194,6 +194,12 @@ Retrieval retry controls (for transient 429/5xx or connection errors):
 make eval-retrieval RETRIEVAL_REQUEST_RETRIES=2 RETRIEVAL_REQUEST_RETRY_DELAY_MS=750
 ```
 
+OCR fail-fast control (abort early on sustained 429 streaks):
+
+```bash
+make eval-ocr OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=3
+```
+
 Report-generating variants:
 
 ```bash

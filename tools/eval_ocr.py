@@ -168,7 +168,9 @@ def _request_json(
                 detail = str(body["detail"])
         except ValueError:
             pass
-        raise RuntimeError(f"{method} {path} failed: HTTP {response.status_code} - {detail}")
+        raise RuntimeError(
+            f"{method} {path} failed: HTTP {response.status_code} - {detail}"
+        )
     try:
         body = response.json()
     except ValueError:
@@ -204,20 +206,48 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
         if not case_id:
             raise RuntimeError(f"Case #{idx} must include non-empty 'id'.")
         if not image_path and not text_hint:
-            raise RuntimeError(f"Case '{case_id}' must include either 'image_path' or 'text_hint'.")
+            raise RuntimeError(
+                f"Case '{case_id}' must include either 'image_path' or 'text_hint'."
+            )
         if mime_type and "/" not in mime_type:
-            raise RuntimeError(f"Case '{case_id}' mime_type must look like type/subtype.")
+            raise RuntimeError(
+                f"Case '{case_id}' mime_type must look like type/subtype."
+            )
 
-        must_contain = [str(x).strip() for x in case.get("must_contain", []) if str(x).strip()]
-        must_contain_any = [str(x).strip() for x in case.get("must_contain_any", []) if str(x).strip()]
-        must_not_contain = [str(x).strip() for x in case.get("must_not_contain", []) if str(x).strip()]
-        must_not_contain_words = [str(x).strip() for x in case.get("must_not_contain_words", []) if str(x).strip()]
-        must_appear_in_order = [str(x).strip() for x in case.get("must_appear_in_order", []) if str(x).strip()]
-        must_match_regex = [str(x).strip() for x in case.get("must_match_regex", []) if str(x).strip()]
-        must_not_match_regex = [str(x).strip() for x in case.get("must_not_match_regex", []) if str(x).strip()]
-        transcription_mode = str(case.get("transcription_mode", "verbatim")).strip() or "verbatim"
+        must_contain = [
+            str(x).strip() for x in case.get("must_contain", []) if str(x).strip()
+        ]
+        must_contain_any = [
+            str(x).strip() for x in case.get("must_contain_any", []) if str(x).strip()
+        ]
+        must_not_contain = [
+            str(x).strip() for x in case.get("must_not_contain", []) if str(x).strip()
+        ]
+        must_not_contain_words = [
+            str(x).strip()
+            for x in case.get("must_not_contain_words", [])
+            if str(x).strip()
+        ]
+        must_appear_in_order = [
+            str(x).strip()
+            for x in case.get("must_appear_in_order", [])
+            if str(x).strip()
+        ]
+        must_match_regex = [
+            str(x).strip() for x in case.get("must_match_regex", []) if str(x).strip()
+        ]
+        must_not_match_regex = [
+            str(x).strip()
+            for x in case.get("must_not_match_regex", [])
+            if str(x).strip()
+        ]
+        transcription_mode = (
+            str(case.get("transcription_mode", "verbatim")).strip() or "verbatim"
+        )
         if transcription_mode not in {"verbatim", "normalized"}:
-            raise RuntimeError(f"Case '{case_id}' transcription_mode must be verbatim|normalized.")
+            raise RuntimeError(
+                f"Case '{case_id}' transcription_mode must be verbatim|normalized."
+            )
         min_chars = case.get("min_chars")
         max_chars = case.get("max_chars")
         if min_chars is not None:
@@ -233,7 +263,11 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
             {
                 "id": case_id,
                 "image_path": image_path,
-                "source_name": str(case.get("source_name", Path(image_path).name if image_path else case_id)).strip()
+                "source_name": str(
+                    case.get(
+                        "source_name", Path(image_path).name if image_path else case_id
+                    )
+                ).strip()
                 or None,
                 "mime_type": mime_type or None,
                 "text_hint": text_hint or None,
@@ -254,7 +288,9 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
     return normalized
 
 
-def _create_chat(base_url: str, headers: dict[str, str], session_id: str, timeout: int) -> None:
+def _create_chat(
+    base_url: str, headers: dict[str, str], session_id: str, timeout: int
+) -> None:
     _request_json(
         method="POST",
         base_url=base_url,
@@ -265,7 +301,9 @@ def _create_chat(base_url: str, headers: dict[str, str], session_id: str, timeou
     )
 
 
-def _delete_chat(base_url: str, headers: dict[str, str], session_id: str, timeout: int) -> None:
+def _delete_chat(
+    base_url: str, headers: dict[str, str], session_id: str, timeout: int
+) -> None:
     _request_json(
         method="DELETE",
         base_url=base_url,
@@ -328,6 +366,11 @@ def _is_transient_ocr_error(exc: Exception) -> bool:
         or "http 5" in message
         or "http 429" in message
     )
+
+
+def _is_rate_limit_ocr_error_message(message: str) -> bool:
+    normalized = str(message).lower()
+    return "http 429" in normalized or "rate limit" in normalized
 
 
 def _ocr_with_retries(
@@ -399,7 +442,9 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
 
     def contains_required(needle: str) -> bool:
         probe = needle if case_sensitive else needle.lower()
-        return contains(needle) or _contains_near_single_token(tokens=haystack_word_tokens, probe=probe)
+        return contains(needle) or _contains_near_single_token(
+            tokens=haystack_word_tokens, probe=probe
+        )
 
     def contains_word(word: str) -> bool:
         probe = word if case_sensitive else word.lower()
@@ -407,7 +452,9 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
         return (
             bool(pattern.search(haystack))
             or bool(pattern.search(haystack_spaced_normalized))
-            or _contains_optional_letter_spacing(haystack=haystack, probe=probe, whole_word=True)
+            or _contains_optional_letter_spacing(
+                haystack=haystack, probe=probe, whole_word=True
+            )
         )
 
     for phrase in case["must_contain"]:
@@ -416,7 +463,9 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
 
     if case["must_contain_any"]:
         if not any(contains_required(phrase) for phrase in case["must_contain_any"]):
-            reasons.append(f"missing one-of required phrases: {case['must_contain_any']}")
+            reasons.append(
+                f"missing one-of required phrases: {case['must_contain_any']}"
+            )
 
     for phrase in case["must_not_contain"]:
         if contains(phrase):
@@ -486,16 +535,30 @@ def _select_cases(
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run OCR eval cases against /skills/ocr.")
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
+    parser = argparse.ArgumentParser(
+        description="Run OCR eval cases against /skills/ocr."
+    )
+    parser.add_argument(
+        "--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL."
+    )
     parser.add_argument(
         "--cases",
         default="docs/eval/cases/ocr_eval_cases.json",
         help="Path to OCR eval cases JSON file.",
     )
-    parser.add_argument("--session-prefix", default="ocr-eval", help="Session id prefix for generated eval chats.")
-    parser.add_argument("--run-id", default="", help="Optional run id suffix. Defaults to current epoch seconds.")
-    parser.add_argument("--timeout", type=int, default=90, help="HTTP timeout in seconds.")
+    parser.add_argument(
+        "--session-prefix",
+        default="ocr-eval",
+        help="Session id prefix for generated eval chats.",
+    )
+    parser.add_argument(
+        "--run-id",
+        default="",
+        help="Optional run id suffix. Defaults to current epoch seconds.",
+    )
+    parser.add_argument(
+        "--timeout", type=int, default=90, help="HTTP timeout in seconds."
+    )
     parser.add_argument(
         "--ocr-retries",
         type=int,
@@ -508,10 +571,27 @@ def build_parser() -> argparse.ArgumentParser:
         default=750,
         help="Delay between OCR retries in milliseconds.",
     )
-    parser.add_argument("--strict", action="store_true", help="Exit non-zero if any case fails.")
-    parser.add_argument("--keep-chats", action="store_true", help="Keep generated eval chats.")
-    parser.add_argument("--show-text", action="store_true", help="Print extracted text for each case.")
-    parser.add_argument("--offset", type=int, default=0, help="Skip first N cases before evaluation.")
+    parser.add_argument(
+        "--max-consecutive-rate-limit-errors",
+        type=int,
+        default=0,
+        help=(
+            "Abort eval early after N consecutive OCR rate-limit errors "
+            "(0 disables early abort)."
+        ),
+    )
+    parser.add_argument(
+        "--strict", action="store_true", help="Exit non-zero if any case fails."
+    )
+    parser.add_argument(
+        "--keep-chats", action="store_true", help="Keep generated eval chats."
+    )
+    parser.add_argument(
+        "--show-text", action="store_true", help="Print extracted text for each case."
+    )
+    parser.add_argument(
+        "--offset", type=int, default=0, help="Skip first N cases before evaluation."
+    )
     parser.add_argument(
         "--max-cases",
         type=int,
@@ -539,7 +619,9 @@ def main() -> int:
         raise SystemExit(f"Cases file not found: {cases_path}")
     cases = _load_cases(cases_path)
     try:
-        selected_cases = _select_cases(cases, offset=args.offset, max_cases=args.max_cases)
+        selected_cases = _select_cases(
+            cases, offset=args.offset, max_cases=args.max_cases
+        )
     except RuntimeError as exc:
         raise SystemExit(str(exc)) from exc
     if not selected_cases:
@@ -550,7 +632,12 @@ def main() -> int:
         raise SystemExit("--ocr-retries must be >= 0.")
     if int(args.ocr_retry_delay_ms) < 0:
         raise SystemExit("--ocr-retry-delay-ms must be >= 0.")
-    run_id = args.run_id.strip() or f"{int(time.time() * 1000)}-{os.getpid()}-{uuid.uuid4().hex[:6]}"
+    if int(args.max_consecutive_rate_limit_errors) < 0:
+        raise SystemExit("--max-consecutive-rate-limit-errors must be >= 0.")
+    run_id = (
+        args.run_id.strip()
+        or f"{int(time.time() * 1000)}-{os.getpid()}-{uuid.uuid4().hex[:6]}"
+    )
     headers = _headers()
 
     print(f"Running OCR eval on {args.base_url}")
@@ -570,6 +657,8 @@ def main() -> int:
     errors = 0
     session_ids: list[str] = []
     case_results: list[dict[str, Any]] = []
+    consecutive_rate_limit_errors = 0
+    aborted_due_to_rate_limit = False
 
     for index, case in enumerate(selected_cases, start=1):
         case_id = case["id"]
@@ -593,7 +682,9 @@ def main() -> int:
                 raw_bytes = b"0"
             data_base64 = base64.b64encode(raw_bytes).decode("ascii")
             inferred_mime = case["mime_type"] or (
-                mimetypes.guess_type(str(image_path))[0] if image_path is not None else "application/octet-stream"
+                mimetypes.guess_type(str(image_path))[0]
+                if image_path is not None
+                else "application/octet-stream"
             )
             mime_type = str(inferred_mime or "application/octet-stream")
             payload = _ocr_with_retries(
@@ -610,10 +701,14 @@ def main() -> int:
                 ocr_retries=args.ocr_retries,
                 ocr_retry_delay_ms=args.ocr_retry_delay_ms,
             )
-            extracted_text = str(payload.get("run", {}).get("extracted_text", "")).strip()
+            extracted_text = str(
+                payload.get("run", {}).get("extracted_text", "")
+            ).strip()
             passed, reasons = _check_case(case, extracted_text)
             status = "PASS" if passed else "FAIL"
-            print(f"[{status}] {case_id} chars={len(extracted_text)} mode={case['transcription_mode']}")
+            print(
+                f"[{status}] {case_id} chars={len(extracted_text)} mode={case['transcription_mode']}"
+            )
             if args.show_text:
                 print(f"  text: {extracted_text!r}")
             if reasons:
@@ -621,12 +716,17 @@ def main() -> int:
                     print(f"  - {reason}")
             if not passed:
                 failures += 1
+            consecutive_rate_limit_errors = 0
         except Exception as exc:
             status = "ERROR"
             error_text = str(exc)
             errors += 1
             failures += 1
             print(f"[ERROR] {case_id}: {exc}")
+            if _is_rate_limit_ocr_error_message(error_text):
+                consecutive_rate_limit_errors += 1
+            else:
+                consecutive_rate_limit_errors = 0
         finally:
             gate_decision = resolve_fail_closed_status(
                 status=status,
@@ -661,6 +761,19 @@ def main() -> int:
                 }
             )
 
+        max_rate_limit_errors = int(args.max_consecutive_rate_limit_errors)
+        if (
+            max_rate_limit_errors > 0
+            and consecutive_rate_limit_errors >= max_rate_limit_errors
+        ):
+            aborted_due_to_rate_limit = True
+            print(
+                "  ABORT early: consecutive OCR rate-limit errors "
+                f"({consecutive_rate_limit_errors}) reached "
+                f"--max-consecutive-rate-limit-errors={max_rate_limit_errors}"
+            )
+            break
+
     if not args.keep_chats:
         for session_id in session_ids:
             try:
@@ -668,11 +781,15 @@ def main() -> int:
             except Exception as exc:
                 print(f"  WARN cleanup failed for {session_id}: {exc}")
 
-    passed_count = total_selected - failures
+    attempted_cases = len(case_results)
+    passed_count = attempted_cases - failures
     print("\nSummary")
-    print(f"  Passed: {passed_count}/{total_selected}")
+    print(f"  Attempted: {attempted_cases}/{total_selected}")
+    print(f"  Passed: {passed_count}/{attempted_cases}")
     print(f"  Failed: {failures}")
     print(f"  Errors: {errors}")
+    if aborted_due_to_rate_limit:
+        print("  Abort: rate-limit threshold reached")
     report_json = str(args.report_json or "").strip()
     if report_json:
         gate_passed, gate_failed = gate_counts_from_case_results(case_results)
@@ -685,6 +802,8 @@ def main() -> int:
             "strict": bool(args.strict),
             "summary": {
                 "total": total_selected,
+                "total_selected": total_selected,
+                "attempted": attempted_cases,
                 "passed": passed_count,
                 "failed": failures,
                 "errors": errors,
@@ -692,6 +811,7 @@ def main() -> int:
                 "gate_failed": gate_failed,
                 "offset": int(args.offset),
                 "max_cases": int(args.max_cases),
+                "aborted_due_to_rate_limit": aborted_due_to_rate_limit,
             },
             "cases": case_results,
             "generated_at": int(time.time()),

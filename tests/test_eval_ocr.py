@@ -2,9 +2,11 @@ import unittest
 from unittest import mock
 
 from tools.eval_ocr import _check_case
+from tools.eval_ocr import _is_rate_limit_ocr_error_message
 from tools.eval_ocr import _is_transient_ocr_error
 from tools.eval_ocr import _ocr_with_retries
 from tools.eval_ocr import _select_cases
+from tools.eval_ocr import build_parser
 
 
 class OcrEvalRuleTests(unittest.TestCase):
@@ -64,7 +66,9 @@ class OcrEvalRuleTests(unittest.TestCase):
         case["must_match_regex"] = ["("]
         passed, reasons = _check_case(case, "text")
         self.assertFalse(passed)
-        self.assertTrue(any("invalid must_match_regex pattern" in reason for reason in reasons))
+        self.assertTrue(
+            any("invalid must_match_regex pattern" in reason for reason in reasons)
+        )
 
     def test_length_bounds_are_enforced(self) -> None:
         case = self._base_case()
@@ -121,14 +125,18 @@ class OcrEvalRuleTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(reasons, [])
 
-    def test_must_contain_any_allows_terminal_char_ocr_drift_for_long_anchor(self) -> None:
+    def test_must_contain_any_allows_terminal_char_ocr_drift_for_long_anchor(
+        self,
+    ) -> None:
         case = self._base_case()
         case["must_contain_any"] = ["stirring"]
         passed, reasons = _check_case(case, "something - stirriny")
         self.assertTrue(passed)
         self.assertEqual(reasons, [])
 
-    def test_must_appear_in_order_allows_terminal_char_ocr_drift_for_long_anchor(self) -> None:
+    def test_must_appear_in_order_allows_terminal_char_ocr_drift_for_long_anchor(
+        self,
+    ) -> None:
         case = self._base_case()
         case["must_appear_in_order"] = ["something", "stirring"]
         passed, reasons = _check_case(case, "something - stirriny")
@@ -142,14 +150,18 @@ class OcrEvalRuleTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(reasons, [])
 
-    def test_must_appear_in_order_allows_near_signature_match_for_long_anchor(self) -> None:
+    def test_must_appear_in_order_allows_near_signature_match_for_long_anchor(
+        self,
+    ) -> None:
         case = self._base_case()
         case["must_appear_in_order"] = ["something", "stirring"]
         passed, reasons = _check_case(case, "something - starving")
         self.assertTrue(passed)
         self.assertEqual(reasons, [])
 
-    def test_must_contain_any_allows_signature_match_with_different_last_letter(self) -> None:
+    def test_must_contain_any_allows_signature_match_with_different_last_letter(
+        self,
+    ) -> None:
         case = self._base_case()
         case["must_contain_any"] = ["stirring"]
         passed, reasons = _check_case(case, "There seems to be something strange.")
@@ -201,7 +213,9 @@ class OcrEvalRuleTests(unittest.TestCase):
     def test_is_transient_ocr_error_detects_timeout_signatures(self) -> None:
         self.assertTrue(
             _is_transient_ocr_error(
-                RuntimeError("POST /skills/ocr failed: connection error - Read timed out."),
+                RuntimeError(
+                    "POST /skills/ocr failed: connection error - Read timed out."
+                ),
             )
         )
         self.assertTrue(
@@ -219,6 +233,21 @@ class OcrEvalRuleTests(unittest.TestCase):
                 RuntimeError("POST /skills/ocr failed: HTTP 422 - validation error"),
             )
         )
+
+    def test_is_rate_limit_ocr_error_message_detects_expected_signatures(self) -> None:
+        self.assertTrue(
+            _is_rate_limit_ocr_error_message("HTTP 429 - OCR rate limit reached.")
+        )
+        self.assertTrue(_is_rate_limit_ocr_error_message("provider rate limit reached"))
+        self.assertFalse(
+            _is_rate_limit_ocr_error_message("HTTP 503 - service unavailable")
+        )
+
+    def test_build_parser_defaults_max_consecutive_rate_limit_errors_to_zero(
+        self,
+    ) -> None:
+        args = build_parser().parse_args([])
+        self.assertEqual(args.max_consecutive_rate_limit_errors, 0)
 
     def test_ocr_with_retries_retries_transient_then_succeeds(self) -> None:
         side_effects = [
@@ -250,7 +279,9 @@ class OcrEvalRuleTests(unittest.TestCase):
     def test_ocr_with_retries_does_not_retry_non_transient(self) -> None:
         with mock.patch(
             "tools.eval_ocr._ocr",
-            side_effect=RuntimeError("POST /skills/ocr failed: HTTP 422 - validation error"),
+            side_effect=RuntimeError(
+                "POST /skills/ocr failed: HTTP 422 - validation error"
+            ),
         ) as mock_ocr:
             with self.assertRaises(RuntimeError):
                 _ocr_with_retries(
