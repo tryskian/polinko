@@ -1505,3 +1505,38 @@
 - Why: Growth widening increases failure signal volume; a deterministic fail
   cohort keeps remediation focused, reproducible, and separate from release
   gating.
+
+## D-123: Add transient request retries to retrieval eval harness and quality gate path
+
+- Date: `2026-04-01`
+- Category: `eval_quality`
+- Tags: `retrieval_eval`, `rate_limit_hardening`, `quality_gate`
+- Decision:
+  - add transient retry controls to `tools/eval_retrieval.py`:
+    - `--request-retries`
+    - `--request-retry-delay-ms`
+  - retry on connection errors and transient HTTP statuses (`429`, `5xx`)
+  - wire retry controls into `make eval-retrieval`,
+    `make eval-retrieval-report`, and `make quality-gate`
+  - add dedicated unit coverage for retry behaviour and parser defaults
+- Why: Deterministic quality runs were producing avoidable false-red failures
+  under short-lived API pressure; bounded retries reduce operational noise
+  without relaxing case-level pass/fail logic.
+
+## D-124: Add OCR fail-fast guard for sustained rate-limit streaks
+
+- Date: `2026-04-01`
+- Category: `eval_quality`
+- Tags: `ocr_eval`, `rate_limit_hardening`, `operator_hygiene`
+- Decision:
+  - add `--max-consecutive-rate-limit-errors` to `tools/eval_ocr.py`
+  - if enabled (`>0`), abort long OCR runs early when sustained `429` streaks
+    occur
+  - pass this control through `tools/eval_ocr_stability.py` so stability
+    sequences inherit the same fail-fast behaviour
+  - expose make-level knob:
+    - `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS` (default `3`)
+  - keep summary/report compatibility while adding attempted/abort metadata
+- Why: sustained provider-side `429` streaks consume runtime and quota without
+  producing new signal; fail-fast behaviour preserves strict binary semantics
+  while improving operator efficiency.
