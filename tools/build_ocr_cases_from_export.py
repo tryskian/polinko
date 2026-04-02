@@ -132,6 +132,8 @@ ORDERED_FALLBACK_SKIP_WORDS = {
     "updated",
     "accessible",
     "entry",
+    "restore",
+    "deleted",
     "conversation",
     "found",
     "screenshot",
