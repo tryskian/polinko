@@ -29,6 +29,15 @@ def _parse_generated_at(value: Any) -> int:
 
 
 def _has_rate_limit_abort(payload: dict[str, Any]) -> bool:
+    summary = payload.get("summary")
+    if isinstance(summary, dict):
+        abort_runs = summary.get("rate_limit_abort_runs")
+        if isinstance(abort_runs, (int, float)) and abort_runs > 0:
+            return True
+        rate_limited_cases = summary.get("rate_limited_cases")
+        if isinstance(rate_limited_cases, (int, float)) and rate_limited_cases > 0:
+            return True
+
     runs = payload.get("runs")
     if not isinstance(runs, list):
         return False
