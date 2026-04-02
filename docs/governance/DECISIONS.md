@@ -1258,7 +1258,7 @@
   - add a top-level `summary` block in
     `.local/eval_cases/ocr_transcript_cases_review.json` with:
     - `conversation_files`, `episodes`
-    - `confidence_counts`, `lane_counts`
+    - `signal_strength_counts`, `lane_counts`
     - `emit_status_counts`, `lane_emit_status_counts`
   - keep per-episode review rows unchanged under `episodes`
   - keep confidence thresholds and case emission rules unchanged
@@ -2038,3 +2038,24 @@
 - Why: non-OCR concept dialogue with incidental correction phrasing was
   contaminating growth with low-value fails. Intent-gating preserves
   fail-heavy evaluation while keeping the cohort remediation-focused.
+
+## D-150: Rename transcript miner confidence schema to signal_strength
+
+- Date: `2026-04-02`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `schema`, `naming`, `signal_quality`
+- Decision:
+  - rename OCR transcript miner review/result schema keys:
+    - per-episode field: `confidence` -> `signal_strength`
+    - summary field: `confidence_counts` -> `signal_strength_counts`
+    - CLI counters: `high_signal_strength`, `medium_signal_strength`,
+      `low_signal_strength`
+  - keep emit-status semantics unchanged (`skipped_low_confidence` remains as
+    the status identifier for low-signal rows)
+  - maintain backward-compatible readers in downstream tools:
+    - `tools/report_ocr_case_mining_delta.py`
+    - `tools/build_handwriting_benchmark_cases.py`
+    - both now read `signal_strength` first, then legacy `confidence`
+- Why: in this fail-tolerant OCR expansion phase, `signal_strength` is the
+  correct semantic label for mining quality, while preserving status and reader
+  compatibility avoids behavioural drift.

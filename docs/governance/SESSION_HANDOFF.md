@@ -108,8 +108,10 @@
       `skipped_duplicate_image_path`, `skipped_insufficient_anchor_terms`
     - review fields: `emit_status`, `anchor_terms`, `anchor_terms_count`
     - review summary block:
-      `confidence_counts`, `lane_counts`, `emit_status_counts`,
+      `signal_strength_counts`, `lane_counts`, `emit_status_counts`,
       `lane_emit_status_counts`
+    - schema naming now uses `signal_strength`; downstream readers keep
+      compatibility fallback for legacy `confidence` fields
   - OCR eval matcher now hardens mixed split-letter anchor variants:
     - required one-of matching handles forms like `CHAT T IEST`
     - forbidden whole-word matching handles forms like `GU ESS`

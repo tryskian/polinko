@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 
-CONFIDENCE_LEVELS = ("high", "medium", "low")
+SIGNAL_STRENGTH_LEVELS = ("high", "medium", "low")
 ACTIONABLE_EMIT_STATUSES = (
     "skipped_unstable_source",
     "skipped_insufficient_anchor_terms",
@@ -20,7 +20,7 @@ EMIT_STATUS_PRIORITY = {
     "skipped_insufficient_anchor_terms": 1,
     "skipped_low_confidence": 2,
 }
-CONFIDENCE_PRIORITY = {"high": 0, "medium": 1, "low": 2}
+SIGNAL_STRENGTH_PRIORITY = {"high": 0, "medium": 1, "low": 2}
 
 
 def _load_payload(path: Path) -> dict[str, Any]:
@@ -34,21 +34,21 @@ def _empty_payload() -> dict[str, Any]:
     return {"summary": {}, "episodes": []}
 
 
-def _count_confidence(payload: dict[str, Any]) -> dict[str, int]:
-    counts = {level: 0 for level in CONFIDENCE_LEVELS}
+def _count_signal_strength(payload: dict[str, Any]) -> dict[str, int]:
+    counts = {level: 0 for level in SIGNAL_STRENGTH_LEVELS}
     episodes = payload.get("episodes")
     if not isinstance(episodes, list):
         return counts
     for row in episodes:
         if not isinstance(row, dict):
             continue
-        confidence = str(row.get("confidence", "")).strip().lower()
-        if confidence in counts:
-            counts[confidence] += 1
+        signal_strength = str(row.get("signal_strength", row.get("confidence", ""))).strip().lower()
+        if signal_strength in counts:
+            counts[signal_strength] += 1
     return counts
 
 
-def _count_lane_confidence(payload: dict[str, Any]) -> dict[str, dict[str, int]]:
+def _count_lane_signal_strength(payload: dict[str, Any]) -> dict[str, dict[str, int]]:
     counts: dict[str, dict[str, int]] = {}
     episodes = payload.get("episodes")
     if not isinstance(episodes, list):
@@ -57,11 +57,11 @@ def _count_lane_confidence(payload: dict[str, Any]) -> dict[str, dict[str, int]]
         if not isinstance(row, dict):
             continue
         lane = str(row.get("lane", "unknown")).strip() or "unknown"
-        confidence = str(row.get("confidence", "")).strip().lower()
-        if confidence not in CONFIDENCE_LEVELS:
+        signal_strength = str(row.get("signal_strength", row.get("confidence", ""))).strip().lower()
+        if signal_strength not in SIGNAL_STRENGTH_LEVELS:
             continue
-        bucket = counts.setdefault(lane, {level: 0 for level in CONFIDENCE_LEVELS})
-        bucket[confidence] += 1
+        bucket = counts.setdefault(lane, {level: 0 for level in SIGNAL_STRENGTH_LEVELS})
+        bucket[signal_strength] += 1
     return counts
 
 
@@ -115,9 +115,9 @@ def _extract_actionable_backlog(payload: dict[str, Any], *, max_items: int) -> l
             )
             if not has_ocr_signal:
                 continue
-        confidence = str(row.get("confidence", "low")).strip().lower()
-        if confidence not in CONFIDENCE_LEVELS:
-            confidence = "low"
+        signal_strength = str(row.get("signal_strength", row.get("confidence", "low"))).strip().lower()
+        if signal_strength not in SIGNAL_STRENGTH_LEVELS:
+            signal_strength = "low"
         anchor_terms = row.get("anchor_terms")
         anchor_count = len(anchor_terms) if isinstance(anchor_terms, list) else int(row.get("anchor_terms_count", 0) or 0)
         chosen_phrases = row.get("chosen_phrases")
@@ -132,7 +132,7 @@ def _extract_actionable_backlog(payload: dict[str, Any], *, max_items: int) -> l
                 "conversation_id": str(row.get("conversation_id", "")).strip(),
                 "conversation_title": _single_line(row.get("conversation_title", ""), max_chars=70),
                 "lane": str(row.get("lane", "unknown")).strip() or "unknown",
-                "confidence": confidence,
+                "signal_strength": signal_strength,
                 "anchor_terms_count": anchor_count,
                 "source_name": _single_line(source_name, max_chars=70),
                 "image_path": image_path,
@@ -143,7 +143,7 @@ def _extract_actionable_backlog(payload: dict[str, Any], *, max_items: int) -> l
     rows.sort(
         key=lambda item: (
             EMIT_STATUS_PRIORITY.get(item["emit_status"], 99),
-            CONFIDENCE_PRIORITY.get(str(item["confidence"]), 99),
+            SIGNAL_STRENGTH_PRIORITY.get(str(item["signal_strength"]), 99),
             -int(item["anchor_terms_count"]),
             item["lane"],
             item["conversation_title"].lower(),
@@ -174,23 +174,23 @@ def _render_markdown(*, report: dict[str, Any]) -> str:
         delta = after - before
         lines.append(f"| {metric} | {before} | {after} | {delta:+d} |")
     lines.append("")
-    lines.append("## Confidence")
+    lines.append("## Signal Strength")
     lines.append("")
-    lines.append("| confidence | before | after | delta |")
+    lines.append("| signal_strength | before | after | delta |")
     lines.append("|---|---:|---:|---:|")
-    for level in CONFIDENCE_LEVELS:
-        before = int(report["confidence"]["before"].get(level, 0))
-        after = int(report["confidence"]["after"].get(level, 0))
+    for level in SIGNAL_STRENGTH_LEVELS:
+        before = int(report["signal_strength"]["before"].get(level, 0))
+        after = int(report["signal_strength"]["after"].get(level, 0))
         delta = after - before
         lines.append(f"| {level} | {before} | {after} | {delta:+d} |")
     lines.append("")
-    lines.append("## Lane by Confidence")
+    lines.append("## Lane by Signal Strength")
     lines.append("")
     lines.append("| lane | high (before) | high (after) | delta | medium (before) | medium (after) | delta | low (before) | low (after) | delta |")
     lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for lane in report["lanes"]:
-        before_bucket = report["lane_confidence"]["before"].get(lane, {level: 0 for level in CONFIDENCE_LEVELS})
-        after_bucket = report["lane_confidence"]["after"].get(lane, {level: 0 for level in CONFIDENCE_LEVELS})
+        before_bucket = report["lane_signal_strength"]["before"].get(lane, {level: 0 for level in SIGNAL_STRENGTH_LEVELS})
+        after_bucket = report["lane_signal_strength"]["after"].get(lane, {level: 0 for level in SIGNAL_STRENGTH_LEVELS})
         hb, ha = int(before_bucket["high"]), int(after_bucket["high"])
         mb, ma = int(before_bucket["medium"]), int(after_bucket["medium"])
         lb, la = int(before_bucket["low"]), int(after_bucket["low"])
@@ -202,12 +202,12 @@ def _render_markdown(*, report: dict[str, Any]) -> str:
     if isinstance(backlog_rows, list) and backlog_rows:
         lines.append("## Actionable Skipped Episodes")
         lines.append("")
-        lines.append("| rank | status | lane | confidence | anchors | source | image_path | ask excerpt | chosen preview |")
+        lines.append("| rank | status | lane | signal_strength | anchors | source | image_path | ask excerpt | chosen preview |")
         lines.append("|---:|---|---|---|---:|---|---|---|---|")
         for idx, row in enumerate(backlog_rows, start=1):
             lines.append(
                 "| "
-                + f"{idx} | {_md_cell(row['emit_status'])} | {_md_cell(row['lane'])} | {_md_cell(row['confidence'])} | "
+                + f"{idx} | {_md_cell(row['emit_status'])} | {_md_cell(row['lane'])} | {_md_cell(row['signal_strength'])} | "
                 + f"{row['anchor_terms_count']} | {_md_cell(row['source_name'])} | {_md_cell(row['image_path'])} | "
                 + f"{_md_cell(row['ask_excerpt'])} | {_md_cell(row['chosen_preview'])} |"
             )
@@ -228,11 +228,11 @@ def build_delta_report(
     if previous_review_path is not None and previous_review_path.is_file():
         previous_payload = _load_payload(previous_review_path)
 
-    before_confidence = _count_confidence(previous_payload)
-    after_confidence = _count_confidence(current_payload)
-    before_lane_confidence = _count_lane_confidence(previous_payload)
-    after_lane_confidence = _count_lane_confidence(current_payload)
-    lanes = sorted(set(before_lane_confidence.keys()) | set(after_lane_confidence.keys()))
+    before_signal_strength = _count_signal_strength(previous_payload)
+    after_signal_strength = _count_signal_strength(current_payload)
+    before_lane_signal_strength = _count_lane_signal_strength(previous_payload)
+    after_lane_signal_strength = _count_lane_signal_strength(current_payload)
+    lanes = sorted(set(before_lane_signal_strength.keys()) | set(after_lane_signal_strength.keys()))
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     report = {
@@ -255,13 +255,13 @@ def build_delta_report(
                 "skipped_unstable_source": _emit_status_count(current_payload, "skipped_unstable_source"),
             },
         },
-        "confidence": {
-            "before": before_confidence,
-            "after": after_confidence,
+        "signal_strength": {
+            "before": before_signal_strength,
+            "after": after_signal_strength,
         },
-        "lane_confidence": {
-            "before": before_lane_confidence,
-            "after": after_lane_confidence,
+        "lane_signal_strength": {
+            "before": before_lane_signal_strength,
+            "after": after_lane_signal_strength,
         },
         "lanes": lanes,
         "actionable_backlog": _extract_actionable_backlog(

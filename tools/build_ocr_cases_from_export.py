@@ -765,7 +765,7 @@ def _ordered_terms_supported_by_anchors(ordered_terms: list[str], anchors: list[
 
 def _allow_unstable_source_in_growth(
     *,
-    confidence: str,
+    signal_strength: str,
     correction_signal: bool,
     ocr_framing_signal: bool,
     anchor_terms: list[str],
@@ -773,7 +773,7 @@ def _allow_unstable_source_in_growth(
 ) -> bool:
     # Keep strict set quarantined while allowing high-signal unstable rows into
     # growth lane for fail-heavy pattern tracking.
-    if confidence not in {"medium", "high"}:
+    if signal_strength not in {"medium", "high"}:
         return False
     if len(anchor_terms) < 4:
         return False
@@ -914,7 +914,7 @@ def build_from_export(
                 NEGATED_OCR_FRAMING_RX.search(assistant_text)
             )
 
-            confidence = "low"
+            signal_strength = "low"
             chosen_phrases: list[str] = []
             followup_correction_phrases = [p for p in followup_correction_phrases if _is_ocr_like_phrase(p)]
             followup_correction_phrases = _dedupe_phrases(followup_correction_phrases)
@@ -969,10 +969,10 @@ def build_from_export(
                 and followup_correction_phrases
                 and correction_overlap_signal
             ):
-                confidence = "high"
+                signal_strength = "high"
                 chosen_phrases = followup_correction_phrases[:5]
             elif strong_high_transcription_signal and transcription_phrases:
-                confidence = "high"
+                signal_strength = "high"
                 chosen_phrases = transcription_phrases[:5]
             elif (
                 medium_intent_signal
@@ -985,16 +985,16 @@ def build_from_export(
                     or strong_illustration_phrase_signal
                 )
             ):
-                confidence = "medium"
+                signal_strength = "medium"
                 chosen_phrases = transcription_phrases[:5]
             anchor_source_phrases = chosen_phrases[:]
             if (
-                confidence == "high"
+                signal_strength == "high"
                 and correction_signal
                 and len(_anchor_terms_for_phrases(anchor_source_phrases)) < 3
                 and transcription_phrases
             ):
-                # Some high-confidence corrections are numeric-heavy (for example sequence fixes).
+                # Some high signal-strength corrections are numeric-heavy (for example sequence fixes).
                 # Backfill anchors from transcription phrases so valid OCR rows are not dropped.
                 anchor_source_phrases = _dedupe_phrases(
                     [*anchor_source_phrases[:5], *transcription_phrases[:3]]
@@ -1002,16 +1002,16 @@ def build_from_export(
             anchor_terms = _expand_anchor_variants(_anchor_terms_for_phrases(anchor_source_phrases)[:8])
             ordered_terms = _ordered_terms_for_phrases(transcription_phrases_raw[:1])[:4]
             ordered_phrase_fallback = ordered_terms if len(anchor_terms) < 3 else []
-            low_confidence_has_ocr_signal = bool(
+            low_signal_strength_has_ocr_signal = bool(
                 ocr_literal_intent_signal
                 or ocr_framing_signal
                 or correction_signal
                 or correction_overlap_signal
             )
-            if confidence == "low" and not low_confidence_has_ocr_signal:
+            if signal_strength == "low" and not low_signal_strength_has_ocr_signal:
                 # Drop non-transcription chatter from review noise.
                 continue
-            if confidence == "low":
+            if signal_strength == "low":
                 emit_status = "skipped_low_confidence"
             elif Path(image_path).name in UNSTABLE_SOURCE_NAMES:
                 emit_status = "skipped_unstable_source"
@@ -1050,7 +1050,7 @@ def build_from_export(
                         if emit_status == "emitted"
                         else emit_status.removeprefix("skipped_")
                     ),
-                    "confidence": confidence,
+                    "signal_strength": signal_strength,
                     "lane": lane,
                 }
             )
@@ -1080,7 +1080,7 @@ def build_from_export(
                 "skipped_low_confidence",
             }
             if emit_status == "skipped_low_confidence":
-                # Keep low-confidence growth strict but broader than literal-only
+                # Keep low signal-strength growth strict but broader than literal-only
                 # asks: include correction/framing rows only when there is
                 # explicit OCR intent (or askless handwriting overlap signal).
                 # This avoids non-OCR concept dialogue entering growth cohorts
@@ -1095,7 +1095,7 @@ def build_from_export(
                 )
             if emit_status == "skipped_unstable_source":
                 growth_emit_status = _allow_unstable_source_in_growth(
-                    confidence=confidence,
+                    signal_strength=signal_strength,
                     correction_signal=correction_signal,
                     ocr_framing_signal=ocr_framing_signal,
                     anchor_terms=growth_anchor_terms,
@@ -1179,21 +1179,21 @@ def build_from_export(
 
     review_rows.sort(
         key=lambda row: (
-            0 if row["confidence"] == "high" else 1 if row["confidence"] == "medium" else 2,
+            0 if row["signal_strength"] == "high" else 1 if row["signal_strength"] == "medium" else 2,
             row["conversation_title"].lower(),
             row["image_path"],
         )
     )
 
-    confidence_counts: dict[str, int] = {"high": 0, "medium": 0, "low": 0}
+    signal_strength_counts: dict[str, int] = {"high": 0, "medium": 0, "low": 0}
     lane_counts: dict[str, int] = {}
     emit_status_counts: dict[str, int] = {}
     lane_emit_status_counts: dict[str, dict[str, int]] = {}
     for row in review_rows:
-        confidence = str(row.get("confidence", "low"))
+        signal_strength = str(row.get("signal_strength", row.get("confidence", "low")))
         lane = str(row.get("lane", "typed"))
         emit_status = str(row.get("emit_status", "skipped_low_confidence"))
-        confidence_counts[confidence] = confidence_counts.get(confidence, 0) + 1
+        signal_strength_counts[signal_strength] = signal_strength_counts.get(signal_strength, 0) + 1
         lane_counts[lane] = lane_counts.get(lane, 0) + 1
         emit_status_counts[emit_status] = emit_status_counts.get(emit_status, 0) + 1
         lane_bucket = lane_emit_status_counts.setdefault(lane, {})
@@ -1220,7 +1220,7 @@ def build_from_export(
             "typed": len(growth_typed_cases),
             "illustration": len(growth_illustration_cases),
         },
-        "confidence_counts": confidence_counts,
+        "signal_strength_counts": signal_strength_counts,
         "lane_counts": lane_counts,
         "emit_status_counts": emit_status_counts,
     }
@@ -1278,7 +1278,7 @@ def build_from_export(
             "summary": {
                 "conversation_files": len(conversation_files),
                 "episodes": len(review_rows),
-                "confidence_counts": confidence_counts,
+                "signal_strength_counts": signal_strength_counts,
                 "lane_counts": lane_counts,
                 "emit_status_counts": emit_status_counts,
                 "lane_emit_status_counts": lane_emit_status_counts,
@@ -1287,15 +1287,15 @@ def build_from_export(
         },
     )
 
-    high = sum(1 for row in review_rows if row["confidence"] == "high")
-    medium = sum(1 for row in review_rows if row["confidence"] == "medium")
-    low = sum(1 for row in review_rows if row["confidence"] == "low")
+    high = sum(1 for row in review_rows if row["signal_strength"] == "high")
+    medium = sum(1 for row in review_rows if row["signal_strength"] == "medium")
+    low = sum(1 for row in review_rows if row["signal_strength"] == "low")
     return {
         "conversation_files": len(conversation_files),
         "episodes": len(review_rows),
-        "high_confidence": high,
-        "medium_confidence": medium,
-        "low_confidence": low,
+        "high_signal_strength": high,
+        "medium_signal_strength": medium,
+        "low_signal_strength": low,
         "cases_written": len(cases),
         "growth_cases_written": len(growth_cases),
         "handwriting_cases_written": len(handwriting_cases),
@@ -1385,9 +1385,9 @@ def main() -> int:
     for key in (
         "conversation_files",
         "episodes",
-        "high_confidence",
-        "medium_confidence",
-        "low_confidence",
+        "high_signal_strength",
+        "medium_signal_strength",
+        "low_signal_strength",
         "cases_written",
         "growth_cases_written",
         "handwriting_cases_written",

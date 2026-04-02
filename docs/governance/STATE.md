@@ -326,7 +326,7 @@
   - miner diagnostics now expose explicit emit/skip reasons for each reviewed
     episode (`emit_status`, `anchor_terms`, and skip counters in command output)
   - review output now includes a summary aggregate block for faster lane-level
-    triage (`confidence_counts`, `lane_counts`, and per-lane emit-status counts)
+    triage (`signal_strength_counts`, `lane_counts`, and per-lane emit-status counts)
   - OCR required/forbidden anchor matching now tolerates mixed split-letter
     artefacts (for example `CHAT T IEST`, `GU ESS`) to prevent deterministic
     false failures
@@ -537,6 +537,9 @@
   - UI-leading ordered fallback tokens are excluded (`restore`, `deleted`)
   - low-confidence growth admission now requires explicit OCR intent
     (or askless handwriting overlap signal)
+  - transcript miner schema now uses `signal_strength` naming
+    (`signal_strength_counts`) with legacy `confidence` read-compatibility in
+    downstream reporting/build tooling
 - Current aligned growth baseline (April 2, 2026):
   - growth cases: `28`
   - latest growth stability replay: `24/28` pass, `4/28` fail, `0` errors
