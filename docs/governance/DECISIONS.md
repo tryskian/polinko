@@ -1851,3 +1851,21 @@
 - Why: full growth replays are expensive during provider throttling. A focused
   fail-derived subset gives faster remediation feedback while preserving binary
   gate semantics and existing lockset release rules.
+
+## D-141: Add read-only runtime NULL audit command
+
+- Date: `2026-04-02`
+- Category: `eval_observability`
+- Tags: `runtime_db`, `null_audit`, `operator_clarity`, `read_only`
+- Decision:
+  - add `tools/audit_runtime_nulls.py` and `make nulls` to report high-signal
+    null surfaces in active runtime DBs:
+    - `history.db` / `ocr_runs` (`source_message_id`, `result_message_id`)
+    - `vector.db` / `message_vectors` (`message_id`, especially non-chat rows)
+  - emit both machine and human outputs:
+    - `.local/eval_reports/runtime_null_audit.json`
+    - `.local/eval_reports/runtime_null_audit.md`
+  - treat this as read-only observability (no DB lifecycle mutation commands).
+- Why: repeated confusion around null-link columns is an observability gap.
+  A deterministic audit surface clarifies expected nulls vs stale-link drift
+  without reintroducing runtime DB lifecycle complexity.
