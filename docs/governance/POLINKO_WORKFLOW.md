@@ -14,7 +14,7 @@ implementation flow.
 - Use a separate agent/thread for:
   - non-blocking side questions
   - external site/content work (`krystian.io`, portfolio copy, narrative framing)
-  - tool-specific learning tracks (SQLite Intelliview workflows, notebook UX)
+  - tool-specific learning tracks (SQLite viewer workflows, notebook UX)
 
 ## Ask Format (No-Execution)
 
@@ -41,11 +41,11 @@ Acceptance: <how done is measured>
 
 ## Copy/Paste Prompts
 
-### SQLite Intelliview (answer-only)
+### SQLite Viewer (answer-only)
 
 ```text
 Mode: answer-only
-Objective: teach me how to query SQLite Intelliview for Polinko eval/runtime DBs
+Objective: teach me how to query DB Viewer Enhanced for Polinko eval/runtime DBs
 Scope: this repo context only
 Constraints: no code changes, no git actions
 Output: 8-12 practical queries, what each query tells me, and common mistakes
