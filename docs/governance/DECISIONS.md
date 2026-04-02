@@ -1948,3 +1948,23 @@
 - Why: residual export-descriptor tokens were still leaking into growth
   constraints and inflating low-value failure reasons. Pruning them preserves
   strict fail visibility while improving cohort diagnostic signal.
+
+## D-146: Filter weak conversational anchor tokens from growth constraints
+
+- Date: `2026-04-02`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `anchor_terms`, `signal_quality`, `precision`
+- Decision:
+  - treat `chat` and `find` as weak anchor/order tokens in
+    `tools/build_ocr_cases_from_export.py`.
+  - extend miner unit coverage to ensure weak-token-only phrases are filtered.
+  - rerun growth alignment sequence after remine:
+    - `make ocrstablegrowth`
+    - `make ocrgrowth`
+    - `make ocrfails`
+  - refreshed aligned baseline:
+    - growth stability: `30/39` pass, `9/39` fail, `0` errors
+    - fail cohort (`require_ocr_framing=true`): `4` selected fail cases
+- Why: conversational tokens were producing low-value fail reasons unrelated to
+  OCR difficulty. Filtering them keeps the growth lane fail-tolerant while
+  increasing diagnostic utility of each failure.

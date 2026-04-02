@@ -217,6 +217,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 "page partial single line cropped",
                 "continuation previous entry more accessible updated",
                 "conversation found screenshot html",
+                "find chat",
             ]
         )
         ordered = _ordered_terms_for_phrases(
@@ -224,6 +225,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 "page partial single line cropped",
                 "continuation previous entry more accessible updated",
                 "conversation found screenshot html",
+                "find chat",
             ]
         )
         self.assertEqual(anchors, [])
@@ -238,7 +240,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
     def test_ordered_terms_drop_leading_token_in_long_phrase(self) -> None:
         ordered = _ordered_terms_for_phrases(["Restore Deleted Chat"])
-        self.assertEqual(ordered, ["deleted", "chat"])
+        self.assertEqual(ordered, ["restore", "deleted"])
 
     def test_ordered_terms_supported_by_anchors_singularizes_plural_when_available(self) -> None:
         ordered = _ordered_terms_supported_by_anchors(["folds", "within"], ["fold", "within"])
