@@ -175,6 +175,14 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     parser.add_argument(
+        "--stop-on-rate-limit-abort",
+        action="store_true",
+        help=(
+            "Stop remaining runs when a child OCR eval report signals "
+            "aborted_due_to_rate_limit."
+        ),
+    )
+    parser.add_argument(
         "--strict", action="store_true", help="Pass --strict to tools.eval_ocr."
     )
     parser.add_argument(
@@ -239,8 +247,10 @@ def main() -> int:
 
     run_reports: list[dict[str, Any]] = []
     run_statuses: list[dict[str, Any]] = []
+    runs_executed = 0
 
     for index in range(1, args.runs + 1):
+        runs_executed += 1
         run_tag = f"{run_id}-r{index:02d}"
         run_report = report_dir / f"ocr-{run_tag}.json"
         cmd = [
@@ -303,6 +313,7 @@ def main() -> int:
         run_reports.append(payload)
         raw_summary = payload.get("summary")
         summary: dict[str, Any] = raw_summary if isinstance(raw_summary, dict) else {}
+        aborted_due_to_rate_limit = bool(summary.get("aborted_due_to_rate_limit", False))
         total = int(summary.get("total", 0) or 0)
         passed = int(summary.get("passed", 0) or 0)
         failed = int(summary.get("failed", 0) or 0)
@@ -319,6 +330,7 @@ def main() -> int:
                     "passed": passed,
                     "failed": failed,
                     "errors": errors,
+                    "aborted_due_to_rate_limit": aborted_due_to_rate_limit,
                 },
             }
         )
@@ -326,10 +338,17 @@ def main() -> int:
             f"[{index}/{args.runs}] run_id={payload.get('run_id', run_tag)} "
             f"passed={passed}/{total} failed={failed} errors={errors}"
         )
+        if args.stop_on_rate_limit_abort and aborted_due_to_rate_limit:
+            print(
+                f"  STOP after run {index}: child report aborted due to sustained OCR "
+                "rate limits."
+            )
+            break
 
+    expected_runs = runs_executed if runs_executed > 0 else args.runs
     aggregate_summary, case_summaries = _summarise_reports(
         reports=run_reports,
-        expected_runs=args.runs,
+        expected_runs=expected_runs,
     )
 
     run_error_count = sum(1 for item in run_statuses if not item.get("report_loaded"))
@@ -342,7 +361,10 @@ def main() -> int:
         "ocr_retries": args.ocr_retries,
         "ocr_retry_delay_ms": args.ocr_retry_delay_ms,
         "max_consecutive_rate_limit_errors": args.max_consecutive_rate_limit_errors,
+        "stop_on_rate_limit_abort": args.stop_on_rate_limit_abort,
         "runs_requested": args.runs,
+        "runs_executed": runs_executed,
+        "runs_expected_for_stability": expected_runs,
         "runs_with_report": len(run_reports),
         "run_error_count": run_error_count,
         "summary": aggregate_summary,
@@ -364,7 +386,8 @@ def main() -> int:
     )
 
     print("\nStability summary")
-    print(f"  Runs with report: {len(run_reports)}/{args.runs}")
+    print(f"  Runs executed: {runs_executed}/{args.runs}")
+    print(f"  Runs with report: {len(run_reports)}/{runs_executed}")
     print(f"  Run errors: {run_error_count}")
     print(f"  Cases: {aggregate_summary['cases_total']}")
     print(

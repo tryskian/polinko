@@ -87,12 +87,16 @@
     pressure at provider boundary (`0/1` with fail-fast threshold `1`)
   - latest full transcript single-run attempt (`make ocrall`) aborted under
     fail-fast after sustained OCR `429` streak (`0/3` PASS, threshold `3`)
-  - fail cohort now protects against stale case-map joins:
-    - current analysis view (`make ocrfails OCR_STABILITY_RUNS=3`) reports:
-      - `selected_fail_cases=20`
-      - `skipped_case_map_mismatch=35`
-    - indicates growth stability history and current growth case map are from
-      different generations; rerun `make ocrstablegrowth` after refresh.
+  - fail cohort stale-join guard is active and confirmed:
+    - latest refresh pass (`make ocrstablegrowth && make ocrgrowth && make ocrfails`)
+      reports:
+      - `skipped_case_map_mismatch=0`
+      - `selected_fail_cases=0`
+    - current blocker is provider throttling (`429`) causing stability replay
+      to abort at `3/147`, so the fail cohort has no usable framed fails yet.
+  - stability replay now stops remaining runs after first
+    `aborted_due_to_rate_limit=true` child report to avoid repeated wasted runs
+    during hard throttle windows.
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS

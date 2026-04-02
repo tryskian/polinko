@@ -1600,3 +1600,20 @@
 - Why: growth case ids can be regenerated while preserving id shape, which can
   silently misjoin stability history to new case definitions. The stale-join
   guard keeps fail cohorts trustworthy for remediation decisions.
+
+## D-128: Stop stability replay after first sustained rate-limit abort
+
+- Date: `2026-04-01`
+- Category: `eval_runtime`
+- Tags: `ocr_transcripts`, `stability`, `rate_limit`, `operator_efficiency`
+- Decision:
+  - add `--stop-on-rate-limit-abort` to `tools/eval_ocr_stability.py`
+  - when enabled, stop remaining runs after first child report with
+    `summary.aborted_due_to_rate_limit=true`
+  - expose effective run window in stability output:
+    - `runs_executed`
+    - `runs_expected_for_stability`
+  - enable this guard for all Makefile `eval_ocr_stability` entrypoints
+- Why: under hard OCR `429` windows, replaying all requested runs produces no
+  new signal and burns budget. Early stop preserves strict gates while reducing
+  wasted retries and time-to-recovery.

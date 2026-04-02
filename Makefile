@@ -914,6 +914,7 @@ eval-ocr-transcript-stability:
 		--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
 		--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
 		--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
+		--stop-on-rate-limit-abort \
 		--strict \
 		--report-dir "$(OCR_STABILITY_REPORT_DIR)" \
 		--output-json "$(OCR_STABILITY_OUTPUT)"
@@ -991,6 +992,7 @@ eval-ocr-transcript-stability-growth:
 		--ocr-retries "$(OCR_GROWTH_OCR_RETRIES)" \
 		--ocr-retry-delay-ms "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" \
 		--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
+		--stop-on-rate-limit-abort \
 		--report-dir "$(OCR_GROWTH_STABILITY_REPORT_DIR)" \
 		--output-json "$$OUTPUT_JSON"
 
@@ -1012,6 +1014,7 @@ eval-ocr-transcript-stability-handwriting-benchmark:
 		--cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" \
 		--runs "$(OCR_STABILITY_RUNS)" \
 		--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
+		--stop-on-rate-limit-abort \
 		--strict \
 		--report-dir "$(OCR_STABILITY_HANDWRITING_BENCHMARK_REPORT_DIR)" \
 		--output-json "$(OCR_STABILITY_HANDWRITING_BENCHMARK_OUTPUT)"
@@ -1034,6 +1037,7 @@ eval-ocr-transcript-stability-typed-benchmark:
 		--cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" \
 		--runs "$(OCR_STABILITY_RUNS)" \
 		--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
+		--stop-on-rate-limit-abort \
 		--strict \
 		--report-dir "$(OCR_STABILITY_TYPED_BENCHMARK_REPORT_DIR)" \
 		--output-json "$(OCR_STABILITY_TYPED_BENCHMARK_OUTPUT)"
@@ -1056,6 +1060,7 @@ eval-ocr-transcript-stability-illustration-benchmark:
 		--cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" \
 		--runs "$(OCR_STABILITY_RUNS)" \
 		--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
+		--stop-on-rate-limit-abort \
 		--strict \
 		--report-dir "$(OCR_STABILITY_ILLUSTRATION_BENCHMARK_REPORT_DIR)" \
 		--output-json "$(OCR_STABILITY_ILLUSTRATION_BENCHMARK_OUTPUT)"
