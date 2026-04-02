@@ -806,6 +806,7 @@ eval-ocr-transcript-cases:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
+	$(MAKE) --no-print-directory server-daemon; \
 	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-growth:
@@ -820,6 +821,7 @@ eval-ocr-transcript-cases-growth:
 		echo "No transcript OCR growth cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
+	$(MAKE) --no-print-directory server-daemon; \
 	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" --show-text --offset "$(OCR_GROWTH_EVAL_OFFSET)" --max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-growth-batched:
@@ -854,6 +856,7 @@ eval-ocr-transcript-cases-handwriting:
 		echo "No transcript handwriting OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
+	$(MAKE) --no-print-directory server-daemon; \
 	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-handwriting-benchmark:
@@ -868,6 +871,7 @@ eval-ocr-transcript-cases-handwriting-benchmark:
 		echo "No transcript handwriting benchmark OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
+	$(MAKE) --no-print-directory server-daemon; \
 	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-typed:
@@ -882,6 +886,7 @@ eval-ocr-transcript-cases-typed:
 		echo "No transcript typed OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
+	$(MAKE) --no-print-directory server-daemon; \
 	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_TYPED)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-typed-benchmark:
@@ -896,6 +901,7 @@ eval-ocr-transcript-cases-typed-benchmark:
 		echo "No transcript typed benchmark OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
+	$(MAKE) --no-print-directory server-daemon; \
 	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-illustration:
@@ -910,6 +916,7 @@ eval-ocr-transcript-cases-illustration:
 		echo "No transcript illustration OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
+	$(MAKE) --no-print-directory server-daemon; \
 	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-illustration-benchmark:
@@ -924,6 +931,7 @@ eval-ocr-transcript-cases-illustration-benchmark:
 		echo "No transcript illustration benchmark OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
+	$(MAKE) --no-print-directory server-daemon; \
 	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-stability:
