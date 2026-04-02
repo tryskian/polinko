@@ -52,10 +52,12 @@
     - `growth` lane (fail-tolerant novel cases used for pass-from-fail tracking)
   - growth metrics are executable via:
     - growth eval/stability:
-      - `make ocrwiden`
-      - `make ocrstablegrowth`
+    - `make ocrwiden`
+    - `make ocrstablegrowth`
     - `make ocrgrowth`
     - `make ocrfails`
+      - now requires OCR-framed review linkage (`ocr_framing_signal=true`)
+        from `.local/eval_cases/ocr_transcript_cases_review.json`
     - outputs:
       - `.local/eval_cases/ocr_transcript_cases_growth.json`
       - `.local/eval_cases/ocr_growth_fail_cohort.json`
@@ -83,6 +85,8 @@
     - `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS`
   - latest lockset rerun probe is currently blocked by sustained OCR `429`
     pressure at provider boundary (`0/1` with fail-fast threshold `1`)
+  - latest full transcript single-run attempt (`make ocrall`) aborted under
+    fail-fast after sustained OCR `429` streak (`0/3` PASS, threshold `3`)
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS

@@ -254,9 +254,15 @@
   - `make ocrstablegrowth`
   - `make ocrgrowth`
   - `make ocrfails`
+    - fail cohort now enforces OCR-framed review linkage
+      (`ocr_framing_signal=true`) using
+      `.local/eval_cases/ocr_transcript_cases_review.json`
 - If eval runs hit sustained `429` streaks:
   - keep binary pass/fail semantics unchanged
   - tune retry/fail-fast knobs only (do not relax gate criteria)
+  - current blocker snapshot:
+    - `make ocrall` aborted at `3/26` attempted with sustained `429` streak
+      (fail-fast threshold `3`)
 - If lockset regresses, apply one precision-safe miner/matcher kernel only,
   then rerun full sequence before merge.
 - Use notebook starter for fast local triage when needed:
