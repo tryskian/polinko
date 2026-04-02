@@ -310,6 +310,9 @@
       - `OCR_FOCUS_RUNS`
       - `OCR_FOCUS_CASE_DELAY_MS`
       - `OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS`
+  - run read-only runtime null audit for DB observability:
+    - `make nulls`
+    - review `.local/eval_reports/runtime_null_audit.md`
 - If eval runs hit sustained `429` streaks:
   - keep binary pass/fail semantics unchanged
   - tune retry/fail-fast knobs only (do not relax gate criteria)

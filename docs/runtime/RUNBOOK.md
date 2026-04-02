@@ -172,6 +172,13 @@ Local runtime DB commands are retired during wiring lock; treat this runbook
 plus tests as the active spec surface (`make test`,
 `make quality-gate-deterministic`). No local DB lifecycle commands remain.
 
+Read-only DB audits remain allowed:
+
+- `make nulls`
+  - writes:
+    - `.local/eval_reports/runtime_null_audit.json`
+    - `.local/eval_reports/runtime_null_audit.md`
+
 ## Chat Harness Mode (Deterministic Smoke Without Model Calls)
 
 1. Default mode is `live` (normal backend/model execution).

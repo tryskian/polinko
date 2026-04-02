@@ -524,6 +524,9 @@
   - build focused fail-derived subset: `make ocrfocuscases`
   - run focused stability replay: `make eval-ocr-focus-stability`
   - one-shot kernel: `make ocrfocus`
+- Runtime DB null surfaces now have a read-only audit command:
+  - `make nulls`
+  - output: `.local/eval_reports/runtime_null_audit.{json,md}`
 
 ## Portfolio Timeline Snapshot (March 28, 2026)
 
