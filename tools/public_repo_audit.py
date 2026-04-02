@@ -24,11 +24,15 @@ BLOCKED_PREFIXES = (
 SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     (
         "OPENAI_API_KEY",
-        re.compile(r"""OPENAI_API_KEY\s*=\s*["']?(?P<value>[^\s"',}]+)"""),
+        re.compile(
+            r"""(?m)^\s*(?:export\s+)?OPENAI_API_KEY\s*(?:=|:)\s*["']?(?P<value>[^\s"',}#]+)"""
+        ),
     ),
     (
         "BRAINTRUST_API_KEY",
-        re.compile(r"""BRAINTRUST_API_KEY\s*=\s*["']?(?P<value>[^\s"',}]+)"""),
+        re.compile(
+            r"""(?m)^\s*(?:export\s+)?BRAINTRUST_API_KEY\s*(?:=|:)\s*["']?(?P<value>[^\s"',}#]+)"""
+        ),
     ),
     (
         "OPENAI_TOKEN",

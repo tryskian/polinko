@@ -68,6 +68,19 @@ class PublicRepoAuditTests(unittest.TestCase):
             self.assertEqual(findings[0]["path"], ".env.example")
             self.assertEqual(findings[0]["marker"], "OPENAI_API_KEY")
 
+    def test_yaml_assignment_with_real_value_is_flagged(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            synthetic_live_value = "sk-" + "live-token-value-abcdefghijklmnopqrstuvwxyz"
+            (root / "workflow.yml").write_text(
+                f"env:\n  OPENAI_API_KEY: {synthetic_live_value}\n",
+                encoding="utf-8",
+            )
+            findings = find_secret_markers(repo_root=root, tracked_paths=["workflow.yml"])
+            self.assertEqual(len(findings), 1)
+            self.assertEqual(findings[0]["path"], "workflow.yml")
+            self.assertEqual(findings[0]["marker"], "OPENAI_API_KEY")
+
 
 if __name__ == "__main__":
     unittest.main()
