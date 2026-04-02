@@ -69,6 +69,16 @@
     - illustration: `2/2` PASS
   - local visual analysis starter is available at:
     - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+- Eval runtime resilience checkpoint (April 1, 2026):
+  - retrieval harness now supports bounded transient retries for `429`/`5xx`
+    and connection errors (`--request-retries`, `--request-retry-delay-ms`)
+  - OCR harness now supports fail-fast under sustained provider pressure via
+    `--max-consecutive-rate-limit-errors`
+  - make-level controls are exposed for operator tuning without changing gate
+    semantics:
+    - `RETRIEVAL_REQUEST_RETRIES`
+    - `RETRIEVAL_REQUEST_RETRY_DELAY_MS`
+    - `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS`
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS

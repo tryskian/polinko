@@ -220,6 +220,11 @@
 ## Known Constraints
 
 - Network-dependent model calls can fail in restricted environments.
+- Transient API pressure can still surface `429` during eval runs:
+  - retrieval harness now supports bounded retries
+    (`RETRIEVAL_REQUEST_RETRIES`, `RETRIEVAL_REQUEST_RETRY_DELAY_MS`)
+  - OCR harness now supports fail-fast on sustained streaks
+    (`OCR_MAX_CONSEC_RATE_LIMIT_ERRORS`)
 - Cloud deployment remains paused; local-first execution is canonical.
 - Environment mutation policy:
   - verify repo path + mode + branch before changes
@@ -244,6 +249,9 @@
   - `make ocrstablegrowth`
   - `make ocrgrowth`
   - `make ocrfails`
+- If eval runs hit sustained `429` streaks:
+  - keep binary pass/fail semantics unchanged
+  - tune retry/fail-fast knobs only (do not relax gate criteria)
 - If lockset regresses, apply one precision-safe miner/matcher kernel only,
   then rerun full sequence before merge.
 - Use notebook starter for fast local triage when needed:
