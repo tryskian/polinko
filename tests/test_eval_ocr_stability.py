@@ -23,6 +23,13 @@ class OcrStabilityTests(unittest.TestCase):
         args = build_parser().parse_args(["--cases", "dummy.json"])
         self.assertEqual(args.timeout, 90)
         self.assertEqual(args.max_consecutive_rate_limit_errors, 0)
+        self.assertFalse(args.stop_on_rate_limit_abort)
+
+    def test_build_parser_accepts_stop_on_rate_limit_abort(self) -> None:
+        args = build_parser().parse_args(
+            ["--cases", "dummy.json", "--stop-on-rate-limit-abort"]
+        )
+        self.assertTrue(args.stop_on_rate_limit_abort)
 
     def test_normalise_text_collapses_whitespace(self) -> None:
         self.assertEqual(_normalise_text(" a   b \n c "), "a b c")

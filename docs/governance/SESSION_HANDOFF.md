@@ -266,6 +266,9 @@
 - If eval runs hit sustained `429` streaks:
   - keep binary pass/fail semantics unchanged
   - tune retry/fail-fast knobs only (do not relax gate criteria)
+  - stability replays now stop after first run with
+    `aborted_due_to_rate_limit=true` (prevents multi-run call waste under hard
+    provider throttle)
   - current blocker snapshot:
     - `make ocrall` aborted at `3/26` attempted with sustained `429` streak
       (fail-fast threshold `3`)

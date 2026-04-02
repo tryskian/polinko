@@ -228,6 +228,9 @@ plus tests as the active spec surface (`make test`,
      - `OCR_EVAL_OCR_RETRIES=2 OCR_EVAL_OCR_RETRY_DELAY_MS=750`
      - fail-fast remains:
        - `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=3`
+   - all stability replay targets (`make ocrstable*`) now stop remaining runs
+     after the first child report with `aborted_due_to_rate_limit=true` to avoid
+     burning repeated provider-throttled runs without new signal.
 4. Local output surfaces:
    - case sets: `.local/eval_cases/`
      - growth set: `.local/eval_cases/ocr_transcript_cases_growth.json`
