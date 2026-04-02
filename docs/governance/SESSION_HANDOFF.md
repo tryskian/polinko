@@ -147,7 +147,7 @@
   - active precision baseline:
     - mined cases: `26` total
       (`handwriting=5`, `typed=11`, `illustration=10`)
-    - growth cases: `148`
+    - growth cases: `39`
     - review summary: `episodes=178`
       (`high=7`, `medium=27`, `low=144`)
     - previous `55`/`29`/`25` mined outputs are legacy reference only
@@ -192,14 +192,14 @@
   - latest aligned refresh (April 2, 2026):
     - `make ocrmine` emitted `26` strict cases, `39` growth cases
     - `make ocrstablegrowth OCR_GROWTH_STABILITY_RUNS=1`:
-      - `39` cases replayed, `28` pass, `11` fail, `0` errors
+      - `39` cases replayed, `29` pass, `10` fail, `0` errors
       - stability: `39` stable, `0` flaky
     - `make ocrgrowth`:
       - `decision_coverage_rate=1.0000`
       - `first_pass_fail_rate=0.2821`
       - `first_error_rate=0.0000`
     - `make ocrfails`:
-      - `selected_fail_cases=6`
+      - `selected_fail_cases=5`
       - `rate_limited_cases=0`
       - `rate_limit_abort_runs=0`
 - Case-study grounding method is now explicit in benchmark docs:
@@ -312,8 +312,8 @@
       precision patch decisions
     - current aligned baseline (April 2, 2026):
       - growth cases: `39`
-      - latest stability replay: `28/39` pass, `11/39` fail, `0` errors
-      - fail cohort selection (`require_ocr_framing=true`): `6` cases
+      - latest stability replay: `29/39` pass, `10/39` fail, `0` errors
+      - fail cohort selection (`require_ocr_framing=true`): `5` cases
   - focused remediation replay (fail-first subset):
     - `make ocrfocuscases`
     - `make eval-ocr-focus-stability`

@@ -113,9 +113,15 @@
     - `growth_regex_only_cases_written=0` (metric active; no current rows)
   - growth miner signal-quality hardening (April 2, 2026):
     - metadata-style anchor terms are filtered from growth constraints
-      (for example `page`, `partial`, `cropped`, `previous`, `updated`)
+      (for example `page`, `partial`, `cropped`, `previous`, `updated`,
+      `conversation`, `found`, `screenshot`, `html`)
     - low-confidence rows no longer enter growth on OCR framing alone;
       OCR intent or correction evidence is now required
+    - refreshed aligned growth replay:
+      - `make ocrstablegrowth OCR_GROWTH_STABILITY_RUNS=1`: `29/39` pass,
+        `10/39` fail, `0` errors
+      - `make ocrfails`: `selected_fail_cases=5`,
+        `rate_limited_cases=0`, `rate_limit_abort_runs=0`
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS
