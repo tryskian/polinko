@@ -218,6 +218,10 @@ plus tests as the active spec surface (`make test`,
      - `make ocrgrowth`
    - materialise stable growth FAIL cohort for next-kernel remediation:
      - `make ocrfails`
+   - transient OCR pressure tuning (all single-run OCR eval targets):
+     - `OCR_EVAL_OCR_RETRIES=2 OCR_EVAL_OCR_RETRY_DELAY_MS=750`
+     - fail-fast remains:
+       - `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=3`
 4. Local output surfaces:
    - case sets: `.local/eval_cases/`
      - growth set: `.local/eval_cases/ocr_transcript_cases_growth.json`
@@ -783,8 +787,8 @@ Current policy:
    - write JSON report:
      `python tools/eval_ocr.py --report-json eval_reports/ocr-latest.json`
    - one-command report run: `make eval-ocr-report`
-   - make-level fail-fast control:
-     `make eval-ocr OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=3`
+   - make-level fail-fast + retry controls:
+     `make eval-ocr OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=3 OCR_EVAL_OCR_RETRIES=2 OCR_EVAL_OCR_RETRY_DELAY_MS=750`
 4. Cases:
    - default cases file: `docs/eval/cases/ocr_eval_cases.json`
    - supports image cases (`image_path`) and deterministic text-hint cases
