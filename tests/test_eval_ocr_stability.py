@@ -22,6 +22,7 @@ class OcrStabilityTests(unittest.TestCase):
     def test_build_parser_defaults_timeout_to_eval_ocr_timeout(self) -> None:
         args = build_parser().parse_args(["--cases", "dummy.json"])
         self.assertEqual(args.timeout, 90)
+        self.assertEqual(args.max_consecutive_rate_limit_errors, 0)
 
     def test_normalise_text_collapses_whitespace(self) -> None:
         self.assertEqual(_normalise_text(" a   b \n c "), "a b c")
@@ -31,13 +32,23 @@ class OcrStabilityTests(unittest.TestCase):
             _report(
                 "r1",
                 [
-                    {"id": "case-1", "status": "PASS", "char_count": 10, "extracted_text": "alpha"},
+                    {
+                        "id": "case-1",
+                        "status": "PASS",
+                        "char_count": 10,
+                        "extracted_text": "alpha",
+                    },
                 ],
             ),
             _report(
                 "r2",
                 [
-                    {"id": "case-1", "status": "FAIL", "char_count": 9, "extracted_text": "alpha"},
+                    {
+                        "id": "case-1",
+                        "status": "FAIL",
+                        "char_count": 9,
+                        "extracted_text": "alpha",
+                    },
                 ],
             ),
         ]
@@ -55,13 +66,23 @@ class OcrStabilityTests(unittest.TestCase):
             _report(
                 "r1",
                 [
-                    {"id": "case-1", "status": "PASS", "char_count": 12, "extracted_text": "alpha beta"},
+                    {
+                        "id": "case-1",
+                        "status": "PASS",
+                        "char_count": 12,
+                        "extracted_text": "alpha beta",
+                    },
                 ],
             ),
             _report(
                 "r2",
                 [
-                    {"id": "case-1", "status": "PASS", "char_count": 13, "extracted_text": "alpha  beta !"},
+                    {
+                        "id": "case-1",
+                        "status": "PASS",
+                        "char_count": 13,
+                        "extracted_text": "alpha  beta !",
+                    },
                 ],
             ),
         ]

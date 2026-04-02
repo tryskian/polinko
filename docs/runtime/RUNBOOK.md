@@ -777,10 +777,14 @@ Current policy:
      `python tools/eval_ocr.py --base-url http://127.0.0.1:8000`
    - show extracted text: `python tools/eval_ocr.py --show-text`
    - strict fail on any failed case: `python tools/eval_ocr.py --strict`
+   - abort early on sustained OCR 429s:
+     `python tools/eval_ocr.py --max-consecutive-rate-limit-errors 3`
    - retain generated eval chats: `python tools/eval_ocr.py --keep-chats`
    - write JSON report:
      `python tools/eval_ocr.py --report-json eval_reports/ocr-latest.json`
    - one-command report run: `make eval-ocr-report`
+   - make-level fail-fast control:
+     `make eval-ocr OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=3`
 4. Cases:
    - default cases file: `docs/eval/cases/ocr_eval_cases.json`
    - supports image cases (`image_path`) and deterministic text-hint cases
