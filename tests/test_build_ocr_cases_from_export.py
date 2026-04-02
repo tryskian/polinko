@@ -32,6 +32,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
     def test_ask_regex_matches_ocrable_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("is this OCRable with your binareyes?"))
 
+    def test_ask_regex_matches_ocr_dash_able_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("this one should be ocr-able"))
+
     def test_ask_regex_matches_new_drop_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("new drop: can your binareyes read this?"))
 
