@@ -246,6 +246,10 @@ PATH_FILE_EXT_RX = re.compile(
     r"[\\/][^\s]{1,120}\.(?:png|jpe?g|webp|gif|tiff?|heic|pdf|json|md|txt)\b",
     re.IGNORECASE,
 )
+REGEX_UI_ERROR_PHRASE_RX = re.compile(
+    r"\b(?:conversation|chat)\W*not\W*found\b|\bchat\W*html\b",
+    re.IGNORECASE,
+)
 CONTROL_TOKEN_RX = re.compile(
     r"\b(?:imagegenview|imagegen|sandbox:|mnt/data|tool_call|assistant_response)\b",
     re.IGNORECASE,
@@ -617,6 +621,8 @@ def _regex_patterns_for_phrases(phrases: list[str]) -> list[str]:
     patterns: list[str] = []
     seen: set[str] = set()
     for phrase in phrases:
+        if REGEX_UI_ERROR_PHRASE_RX.search(phrase):
+            continue
         tokens = _phrase_tokens(phrase)
         if len(tokens) < 2:
             continue

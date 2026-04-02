@@ -16,6 +16,7 @@ from tools.build_ocr_cases_from_export import (
     _is_ocr_like_phrase,
     _ordered_terms_for_phrases,
     _ordered_terms_supported_by_anchors,
+    _regex_patterns_for_phrases,
     build_from_export,
 )
 
@@ -241,6 +242,14 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
     def test_ordered_terms_drop_leading_token_in_long_phrase(self) -> None:
         ordered = _ordered_terms_for_phrases(["Restore Deleted Chat"])
         self.assertEqual(ordered, ["restore", "deleted"])
+
+    def test_regex_patterns_drop_ui_not_found_phrase(self) -> None:
+        patterns = _regex_patterns_for_phrases(["Conversation not found"])
+        self.assertEqual(patterns, [])
+
+    def test_regex_patterns_drop_ui_chat_html_phrase(self) -> None:
+        patterns = _regex_patterns_for_phrases(["chat html"])
+        self.assertEqual(patterns, [])
 
     def test_ordered_terms_supported_by_anchors_singularizes_plural_when_available(self) -> None:
         ordered = _ordered_terms_supported_by_anchors(["folds", "within"], ["fold", "within"])
