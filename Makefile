@@ -54,6 +54,8 @@ OCR_TYPED_BENCHMARK_MIN_ANCHORS ?= 3
 OCR_ILLUSTRATION_BENCHMARK_TOP_K ?= 6
 OCR_ILLUSTRATION_BENCHMARK_MIN_ANCHORS ?= 2
 OCR_STABILITY_RUNS ?= 5
+OCR_STABILITY_OCR_RETRIES ?= 2
+OCR_STABILITY_OCR_RETRY_DELAY_MS ?= 750
 OCR_STABILITY_OUTPUT ?= .local/eval_reports/ocr_transcript_stability.json
 OCR_STABILITY_REPORT_DIR ?= .local/eval_reports/ocr_stability_runs
 OCR_GROWTH_MAX_CASES ?= 600
@@ -898,6 +900,8 @@ eval-ocr-transcript-stability:
 		--base-url "http://127.0.0.1:8000" \
 		--cases "$(OCR_TRANSCRIPT_CASES)" \
 		--runs "$(OCR_STABILITY_RUNS)" \
+		--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
+		--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
 		--strict \
 		--report-dir "$(OCR_STABILITY_REPORT_DIR)" \
 		--output-json "$(OCR_STABILITY_OUTPUT)"
