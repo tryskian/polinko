@@ -31,6 +31,21 @@ def _case_id_list(payload: dict[str, Any], key: str) -> list[str]:
     return out
 
 
+def _cohort_case_map(payload: dict[str, Any], key: str) -> dict[str, dict[str, Any]]:
+    rows = payload.get(key)
+    if not isinstance(rows, list):
+        return {}
+    out: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        case_id = str(row.get("id", "")).strip()
+        if not case_id:
+            continue
+        out[case_id] = row
+    return out
+
+
 def _case_map(cases_payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
     raw_cases = cases_payload.get("cases")
     if not isinstance(raw_cases, list):
@@ -54,6 +69,8 @@ def build_focus_cases(
     max_cases: int,
 ) -> dict[str, Any]:
     source_map = _case_map(source_cases_payload)
+    persistent_map = _cohort_case_map(cohort_payload, "cases")
+    fail_history_map = _cohort_case_map(cohort_payload, "fail_history_cases")
 
     selected_ids: list[str] = []
     selected_ids.extend(_case_id_list(cohort_payload, "cases"))
@@ -71,14 +88,37 @@ def build_focus_cases(
     found: list[dict[str, Any]] = []
     missing: list[str] = []
     for case_id in dedup_ids:
-        row = source_map.get(case_id)
-        if row is None:
+        source_row = source_map.get(case_id)
+        if source_row is None:
             missing.append(case_id)
             continue
-        found.append(row)
+
+        cohort_row = persistent_map.get(case_id)
+        source_bucket = "persistent_fail"
+        if cohort_row is None:
+            cohort_row = fail_history_map.get(case_id)
+            source_bucket = "fail_history"
+
+        merged = dict(source_row)
+        if cohort_row:
+            for key, value in cohort_row.items():
+                if key == "id":
+                    continue
+                existing = merged.get(key)
+                if existing in (None, "", [], {}):
+                    merged[key] = value
+            merged["focus_source"] = source_bucket
+
+        found.append(merged)
 
     if max_cases > 0:
         found = found[:max_cases]
+
+    cases_with_cohort_history = sum(
+        1
+        for row in found
+        if row.get("focus_source") in {"persistent_fail", "fail_history"}
+    )
 
     summary = {
         "source_case_count": len(source_map),
@@ -87,6 +127,7 @@ def build_focus_cases(
         "missing_ids": len(missing),
         "include_fail_history": include_fail_history,
         "max_cases": max_cases,
+        "cases_with_cohort_history": cases_with_cohort_history,
     }
     return {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
