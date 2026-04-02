@@ -9,7 +9,14 @@ from pathlib import Path
 from typing import Any
 
 
-DEFAULT_SUITES = ("retrieval", "file_search", "ocr", "style", "hallucination")
+DEFAULT_SUITES = (
+    "retrieval",
+    "file_search",
+    "ocr",
+    "style",
+    "response_behaviour",
+    "hallucination",
+)
 
 
 def _suite_module(suite: str) -> str:
@@ -18,6 +25,7 @@ def _suite_module(suite: str) -> str:
         "file_search": "tools.eval_file_search",
         "ocr": "tools.eval_ocr",
         "style": "tools.eval_style",
+        "response_behaviour": "tools.eval_response_behaviour",
         "hallucination": "tools.eval_hallucination",
     }
     return modules[suite]
@@ -29,6 +37,7 @@ def _suite_report_path(suite: str, run_id: str) -> Path:
         "file_search": "file-search",
         "ocr": "ocr",
         "style": "style",
+        "response_behaviour": "response-behaviour",
         "hallucination": "hallucination",
     }
     return Path("eval_reports") / f"{names[suite]}-{run_id}.json"
@@ -152,7 +161,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--suites",
         default=",".join(DEFAULT_SUITES),
-        help="Comma-separated suites. Supported: retrieval,file_search,ocr,style,hallucination",
+        help=(
+            "Comma-separated suites. Supported: "
+            "retrieval,file_search,ocr,style,response_behaviour,hallucination"
+        ),
     )
     parser.add_argument(
         "--max-workers",
