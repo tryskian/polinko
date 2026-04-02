@@ -255,6 +255,10 @@ plus tests as the active spec surface (`make test`,
            growth cases.
 5. Notebook analysis surface:
    - `make notes`
+   - offline transcript mining refresh (no live OCR calls):
+     - `make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+   - full online notebook/eval workflow (includes live OCR eval + stability):
+     - `make ocr-notebook-workflow CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
    - starter template:
      - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
 

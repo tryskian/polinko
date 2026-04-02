@@ -1617,3 +1617,19 @@
 - Why: under hard OCR `429` windows, replaying all requested runs produces no
   new signal and burns budget. Early stop preserves strict gates while reducing
   wasted retries and time-to-recovery.
+
+## D-129: Keep `make ocr-data` offline-only
+
+- Date: `2026-04-01`
+- Category: `eval_ops`
+- Tags: `ocr_transcripts`, `operator_surface`, `offline_workflow`
+- Decision:
+  - redefine `make ocr-data` to run offline data steps only:
+    - `doctor-env`
+    - `ocrmine`
+    - `ocrdelta`
+  - keep full online OCR replay path under
+    `make ocr-notebook-workflow`
+- Why: operators use `make ocr-data` for local dataset refresh and notebook prep.
+  Mixing in live OCR eval/stability made the target fail under 429 windows and
+  broke the expected offline workflow contract.

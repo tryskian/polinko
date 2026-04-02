@@ -176,7 +176,9 @@ ocr-data:
 		echo "Run: make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"; \
 		exit 1; \
 	fi; \
-	$(MAKE) --no-print-directory ocr-notebook-workflow CGPT_EXPORT_ROOT="$$EXPORT_ROOT"
+	$(MAKE) --no-print-directory doctor-env; \
+	$(MAKE) --no-print-directory ocrmine CGPT_EXPORT_ROOT="$$EXPORT_ROOT"; \
+	$(MAKE) --no-print-directory ocrdelta
 
 ocr-notebook-workflow:
 	@set -eu; \
