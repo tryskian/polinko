@@ -56,24 +56,6 @@
    - `make test`
    - `make quality-gate-deterministic` when runtime/eval execution behaviour changed
 
-## Public-Safe Release Gate
-
-1. Keep deep archive/history in private snapshot repos (for example
-   `polinko-build-snapshot`), not in the public engineering repo.
-2. Run `make public` (`make public-audit`) before any visibility change.
-3. Public audit blocks tracked files under local/confidential surfaces:
-   - `.archive/`
-   - `.local/`
-   - `output/`
-   - `eval_reports/`
-   - `docs/peanut/`
-   - `docs/portfolio/`
-   - `docs/internal/`
-4. Public audit also scans tracked text files for secret markers and fails fast
-   when found.
-5. Keep hypothesis/method notes in `docs/peanut/` only (local/private lane),
-   not in tracked public repo scope.
-
 ## End-of-Day Routine (Codexbeab)
 
 1. Run the end-of-day script:
