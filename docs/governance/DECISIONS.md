@@ -1700,3 +1700,23 @@
 - Why: closing editor/app windows does not guarantee `caffeinate` or daemon
   processes exit. Deterministic shutdown prevents stale keep-awake and runtime
   task drift between days.
+
+## D-134: Separate rate-limit blocked cases from fail cohort decisions
+
+- Date: `2026-04-02`
+- Category: `eval_observability`
+- Tags: `ocr`, `growth_lane`, `rate_limit`, `cohort_quality`
+- Decision:
+  - `tools/build_ocr_growth_fail_cohort.py` now emits explicit rate-limit
+    blocked case surfaces:
+    - `summary.rate_limited_cases`
+    - `summary.rate_limit_abort_runs`
+    - `rate_limited_cases[]` list (ERROR-only, no PASS/FAIL decision yet)
+  - fail cohort selection semantics remain unchanged:
+    - only persistent FAIL decision cases enter `cases[]`
+  - run report path resolution now checks repo-root-relative paths first to
+    avoid stale joins when stability JSON stores `.local/...` report paths
+- Why: under sustained OCR `429`, growth metrics can show zero selected fails
+  while still being fully blocked. Explicit blocked-case telemetry keeps
+  decision quality separate from decision availability and reduces false
+  confidence during provider-pressure windows.

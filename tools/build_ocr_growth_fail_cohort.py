@@ -39,6 +39,9 @@ def _resolve_run_report_path(*, report_path: str, stability_report_path: Path) -
     candidate = Path(report_path).expanduser()
     if candidate.is_absolute():
         return candidate
+    cwd_candidate = (Path.cwd() / candidate).resolve()
+    if cwd_candidate.is_file():
+        return cwd_candidate
     return (stability_report_path.parent / candidate).resolve()
 
 
@@ -139,11 +142,23 @@ def build_fail_cohort(
         raise RuntimeError("Expected 'cases' list in stability payload")
 
     selected: list[dict[str, Any]] = []
+    rate_limited_cases: list[dict[str, Any]] = []
     lane_counts: Counter[str] = Counter()
     reason_counts: Counter[str] = Counter()
     reason_pattern_counts: Counter[str] = Counter()
     skipped_non_framed = 0
     skipped_case_map_mismatch = 0
+    rate_limit_abort_runs = 0
+
+    raw_runs = stability_payload.get("runs")
+    if isinstance(raw_runs, list):
+        rate_limit_abort_runs = sum(
+            1
+            for run in raw_runs
+            if isinstance(run, dict)
+            and isinstance(run.get("summary"), dict)
+            and bool(run["summary"].get("aborted_due_to_rate_limit", False))
+        )
 
     for row in raw_cases:
         if not isinstance(row, dict):
@@ -254,6 +269,58 @@ def build_fail_cohort(
         selected.append(selected_row)
         lane_counts[lane] += 1
 
+    for row in raw_cases:
+        if not isinstance(row, dict):
+            continue
+        case_id = str(row.get("id", "")).strip()
+        if not case_id:
+            continue
+        observed_runs = int(row.get("observed_runs", 0) or 0)
+        pass_runs = int(row.get("pass_runs", 0) or 0)
+        fail_runs = int(row.get("fail_runs", 0) or 0)
+        error_runs = int(row.get("error_runs", 0) or 0)
+        statuses = row.get("statuses") if isinstance(row.get("statuses"), list) else []
+        has_only_error_statuses = bool(statuses) and all(str(item).upper() == "ERROR" for item in statuses)
+        if observed_runs <= 0:
+            continue
+        if pass_runs > 0 or fail_runs > 0 or error_runs <= 0:
+            continue
+        if not has_only_error_statuses:
+            continue
+
+        growth_case = growth_case_map.get(case_id, {})
+        run_case = run_case_map.get(case_id, {})
+        lane = str(growth_case.get("lane", "unknown")).strip() or "unknown"
+        source_name = (
+            str(run_case.get("source_name", "")).strip()
+            or str(growth_case.get("source_name", "")).strip()
+            or case_id
+        )
+        image_path = (
+            str(run_case.get("image_path", "")).strip()
+            or str(growth_case.get("image_path", "")).strip()
+        )
+        growth_image_path = str(growth_case.get("image_path", "")).strip()
+        if run_case_map and growth_image_path and image_path and growth_image_path != image_path:
+            continue
+        linked_review_rows = review_index.get(image_path, [])
+        framing_episode_count = sum(
+            1 for review_row in linked_review_rows if bool(review_row.get("ocr_framing_signal", False))
+        )
+
+        rate_limited_cases.append(
+            {
+                "id": case_id,
+                "lane": lane,
+                "source_name": source_name,
+                "image_path": image_path,
+                "observed_runs": observed_runs,
+                "error_runs": error_runs,
+                "statuses": statuses,
+                "framing_episode_count": framing_episode_count,
+            }
+        )
+
     selected.sort(
         key=lambda item: (
             item["lane"],
@@ -261,10 +328,13 @@ def build_fail_cohort(
             item["id"],
         )
     )
+    rate_limited_cases.sort(key=lambda item: (item["lane"], item["id"]))
 
     summary = {
         "cases_total": len(raw_cases),
         "selected_fail_cases": len(selected),
+        "rate_limited_cases": len(rate_limited_cases),
+        "rate_limit_abort_runs": rate_limit_abort_runs,
         "min_runs": min_runs,
         "include_unstable": include_unstable,
         "require_ocr_framing": require_ocr_framing,
@@ -282,12 +352,16 @@ def build_fail_cohort(
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "summary": summary,
         "cases": selected,
+        "rate_limited_cases": rate_limited_cases,
     }
 
 
 def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_cases: Path) -> str:
     summary = report["summary"]
     selected = report["cases"]
+    rate_limited_cases = (
+        report.get("rate_limited_cases") if isinstance(report.get("rate_limited_cases"), list) else []
+    )
     top_reasons = summary.get("top_reasons") if isinstance(summary.get("top_reasons"), list) else []
 
     lines: list[str] = []
@@ -303,6 +377,8 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
     lines.append("|---|---:|")
     lines.append(f"| cases_total | {summary['cases_total']} |")
     lines.append(f"| selected_fail_cases | {summary['selected_fail_cases']} |")
+    lines.append(f"| rate_limited_cases | {summary['rate_limited_cases']} |")
+    lines.append(f"| rate_limit_abort_runs | {summary['rate_limit_abort_runs']} |")
     lines.append(f"| min_runs | {summary['min_runs']} |")
     lines.append(f"| include_unstable | {summary['include_unstable']} |")
     lines.append(f"| require_ocr_framing | {summary['require_ocr_framing']} |")
@@ -361,6 +437,24 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
             lines.append(
                 f"| {case_id} | {lane} | {pattern} | {fail_runs} | {observed} | {framing_eps} | {age_hours:.3f} | "
                 f"{source_name} | {image_path} |"
+            )
+        lines.append("")
+
+    if rate_limited_cases:
+        lines.append("## Rate-Limited Cases (No PASS/FAIL Decision Yet)")
+        lines.append("")
+        lines.append("| case_id | lane | error_runs | observed_runs | framing_eps | source_name | image_path |")
+        lines.append("|---|---|---:|---:|---:|---|---|")
+        for row in rate_limited_cases:
+            case_id = str(row.get("id", ""))
+            lane = str(row.get("lane", ""))
+            error_runs = int(row.get("error_runs", 0) or 0)
+            observed = int(row.get("observed_runs", 0) or 0)
+            framing_eps = int(row.get("framing_episode_count", 0) or 0)
+            source_name = str(row.get("source_name", "")).replace("|", "\\|")
+            image_path = str(row.get("image_path", "")).replace("|", "\\|")
+            lines.append(
+                f"| {case_id} | {lane} | {error_runs} | {observed} | {framing_eps} | {source_name} | {image_path} |"
             )
         lines.append("")
 
@@ -489,6 +583,8 @@ def main() -> int:
     summary = report["summary"]
     print("OCR growth fail cohort")
     print(f"  selected_fail_cases: {summary['selected_fail_cases']}")
+    print(f"  rate_limited_cases: {summary['rate_limited_cases']}")
+    print(f"  rate_limit_abort_runs: {summary['rate_limit_abort_runs']}")
     print(f"  cases_total: {summary['cases_total']}")
     print(f"  min_runs: {summary['min_runs']}")
     print(f"  include_unstable: {summary['include_unstable']}")

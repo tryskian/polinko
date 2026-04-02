@@ -164,6 +164,16 @@
     - outputs:
       - `.local/eval_reports/ocr_growth_metrics.json`
       - `.local/eval_reports/ocr_growth_metrics.md`
+  - fail cohort now separates persistent FAIL cases from provider-pressure
+    no-decision cases:
+    - `summary.rate_limited_cases`
+    - `summary.rate_limit_abort_runs`
+    - `rate_limited_cases[]` list in
+      `.local/eval_cases/ocr_growth_fail_cohort.json`
+    - matching markdown section in
+      `.local/eval_reports/ocr_growth_fail_cohort.md`
+  - run-report join resolver now supports repo-root-relative `.local/...`
+    report paths to avoid stale fail-cohort case mapping
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`
@@ -258,6 +268,8 @@
   - `make ocrstablegrowth`
   - `make ocrgrowth`
   - `make ocrfails`
+    - review `rate_limited_cases` + `rate_limit_abort_runs` before treating
+      empty fail cohorts as clean OCR-quality signals
     - fail cohort now enforces OCR-framed review linkage
       (`ocr_framing_signal=true`) using
       `.local/eval_cases/ocr_transcript_cases_review.json`

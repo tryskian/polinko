@@ -96,6 +96,12 @@
       - `selected_fail_cases=0`
     - current blocker is provider throttling (`429`) causing stability replay
       to abort at `3/147`, so the fail cohort has no usable framed fails yet.
+  - growth fail cohort now explicitly reports provider-pressure blocked rows
+    (no PASS/FAIL decision yet) separate from FAIL regressions:
+    - `rate_limited_cases`
+    - `rate_limit_abort_runs`
+  - fail-cohort run-report joins now resolve repo-root-relative `.local/...`
+    report paths before fallback relative joins to avoid stale mapping misses.
   - stability replay now stops remaining runs after first
     `aborted_due_to_rate_limit=true` child report to avoid repeated wasted runs
     during hard throttle windows.
