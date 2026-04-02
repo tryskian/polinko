@@ -68,7 +68,7 @@
   - latest lockset benchmark baseline (local):
     - handwriting: `4/4` PASS
     - typed: `6/6` PASS
-    - illustration: `2/2` PASS
+    - illustration: `3/3` PASS
   - local visual analysis starter is available at:
     - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
 - Eval runtime resilience checkpoint (April 1, 2026):
@@ -87,20 +87,14 @@
     - `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS`
   - direct OCR case-eval make targets now self-start `server-daemon` before
     running `tools.eval_ocr` to remove local preflight drift
-  - latest lockset rerun probe is currently blocked by sustained OCR `429`
-    pressure at provider boundary (`0/1` attempted with fail-fast threshold `1`)
-  - latest one-case handwriting probe (`make ocrhandbench` with
-    `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=1`) aborted at `1/4` attempted due
-    provider `429`
+  - latest one-case probe + lockset rerun are green (April 2, 2026):
+    - probe: `4/4` PASS (`make ocrhandbench` with fail-fast threshold `1`)
+    - lockset lanes: handwriting `4/4`, typed `6/6`, illustration `3/3`
+    - lockset stability: handwriting `4 stable / 0 flaky`, typed
+      `6 stable / 0 flaky`, illustration `3 stable / 0 flaky`
   - fail cohort stale-join guard is active and confirmed:
-    - latest refresh pass (`make ocr-data && make ocrgrowth && make ocrfails`)
-      reports:
-      - `skipped_case_map_mismatch=0`
-      - `selected_fail_cases=0`
-      - `rate_limited_cases=3`
-      - `rate_limit_abort_runs=1`
-    - current blocker is provider throttling (`429`) causing no decision
-      coverage in current growth snapshot (`decision_coverage_rate=0.0000`)
+    - current refresh reports `skipped_case_map_mismatch=0`
+    - growth metrics/cohort are valid after remine + fresh stability replay
   - growth fail cohort now explicitly reports provider-pressure blocked rows
     (no PASS/FAIL decision yet) separate from FAIL regressions:
     - `rate_limited_cases`
@@ -114,9 +108,14 @@
     full online OCR replay remains at `make ocr-notebook-workflow`.
   - offline miner now routes strong unstable-source episodes to growth lane
     only (`source_quarantine=true`), with latest summary:
-    - `growth_cases_written=148`
+    - `growth_cases_written=39`
     - `growth_quarantine_cases_written=1`
     - `growth_regex_only_cases_written=0` (metric active; no current rows)
+  - growth miner signal-quality hardening (April 2, 2026):
+    - metadata-style anchor terms are filtered from growth constraints
+      (for example `page`, `partial`, `cropped`, `previous`, `updated`)
+    - low-confidence rows no longer enter growth on OCR framing alone;
+      OCR intent or correction evidence is now required
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS

@@ -189,15 +189,19 @@
       `.local/eval_reports/ocr_growth_fail_cohort.md`
   - run-report join resolver now supports repo-root-relative `.local/...`
     report paths to avoid stale fail-cohort case mapping
-  - latest fallback refresh (provider-pressure window, April 2, 2026):
-    - `make ocr-data` emitted `26` strict cases, `148` growth cases
-    - `make ocrgrowth OCR_GROWTH_LIMIT_RUNS=1`:
-      - `decision_coverage_rate=0.0000`
-      - `first_error_rate=1.0000`
-    - `make ocrfails OCR_STABILITY_RUNS=1`:
-      - `selected_fail_cases=0`
-      - `rate_limited_cases=3`
-      - `rate_limit_abort_runs=1`
+  - latest aligned refresh (April 2, 2026):
+    - `make ocrmine` emitted `26` strict cases, `39` growth cases
+    - `make ocrstablegrowth OCR_GROWTH_STABILITY_RUNS=1`:
+      - `39` cases replayed, `28` pass, `11` fail, `0` errors
+      - stability: `39` stable, `0` flaky
+    - `make ocrgrowth`:
+      - `decision_coverage_rate=1.0000`
+      - `first_pass_fail_rate=0.2821`
+      - `first_error_rate=0.0000`
+    - `make ocrfails`:
+      - `selected_fail_cases=6`
+      - `rate_limited_cases=0`
+      - `rate_limit_abort_runs=0`
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`
@@ -288,6 +292,9 @@
   - `make ocrstabletype`
   - `make ocrstableillu`
 - Recompute growth-lane pass-from-fail metrics:
+  - if growth cases were rematerialised (`make ocrmine`), run
+    `make ocrstablegrowth` before `make ocrgrowth`/`make ocrfails` so metrics
+    are aligned to the current case map.
   - `make ocrwiden`
   - `make ocrstablegrowth`
   - `make ocrgrowth`
@@ -303,6 +310,10 @@
     - if `skipped_case_map_mismatch > 0`, treat cohort as stale-join protected
       and rerun `make ocrstablegrowth` on refreshed growth cases before
       precision patch decisions
+    - current aligned baseline (April 2, 2026):
+      - growth cases: `39`
+      - latest stability replay: `28/39` pass, `11/39` fail, `0` errors
+      - fail cohort selection (`require_ocr_framing=true`): `6` cases
   - focused remediation replay (fail-first subset):
     - `make ocrfocuscases`
     - `make eval-ocr-focus-stability`

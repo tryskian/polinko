@@ -211,6 +211,22 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertNotIn("seems", anchors)
         self.assertNotIn("something", anchors)
 
+    def test_anchor_and_ordered_terms_drop_cropping_metadata_tokens(self) -> None:
+        anchors = _anchor_terms_for_phrases(
+            [
+                "page partial single line cropped",
+                "continuation previous entry more accessible updated",
+            ]
+        )
+        ordered = _ordered_terms_for_phrases(
+            [
+                "page partial single line cropped",
+                "continuation previous entry more accessible updated",
+            ]
+        )
+        self.assertEqual(anchors, [])
+        self.assertEqual(ordered, [])
+
     def test_anchor_and_ordered_terms_include_entry_numeric_tokens(self) -> None:
         anchors = _anchor_terms_for_phrases(["1745", "200226", "field notes"])
         ordered = _ordered_terms_for_phrases(["1745 field notes"])
@@ -700,7 +716,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(growth_cases[0]["id"], "gx-conv-gro-001")
             self.assertEqual(growth_cases[0]["lane"], "handwriting")
 
-    def test_build_widens_growth_lane_for_low_confidence_ocr_framing(self) -> None:
+    def test_build_does_not_widen_growth_lane_for_framed_low_confidence_without_intent(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -757,11 +773,10 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             )
 
             self.assertEqual(summary["cases_written"], 0)
-            self.assertEqual(summary["growth_cases_written"], 1)
+            self.assertEqual(summary["growth_cases_written"], 0)
             growth_payload = json.loads(output_growth.read_text(encoding="utf-8"))
             growth_cases = growth_payload["cases"]
-            self.assertEqual(len(growth_cases), 1)
-            self.assertEqual(growth_cases[0]["id"], "gx-conv-gro-001")
+            self.assertEqual(len(growth_cases), 0)
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
             self.assertEqual(review["confidence"], "low")
@@ -1414,6 +1429,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             )
 
             output_cases = Path(tmp_dir) / "cases_all.json"
+            output_growth = Path(tmp_dir) / "cases_growth.json"
             output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
             output_typed = Path(tmp_dir) / "cases_typed.json"
             output_illustration = Path(tmp_dir) / "cases_illustration.json"
@@ -1422,6 +1438,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             summary = build_from_export(
                 export_root,
                 output_cases=output_cases,
+                output_cases_growth=output_growth,
                 output_cases_handwriting=output_handwriting,
                 output_cases_typed=output_typed,
                 output_cases_illustration=output_illustration,
@@ -1431,12 +1448,14 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["medium_confidence"], 0)
             self.assertEqual(summary["handwriting_cases_written"], 0)
+            self.assertEqual(summary["growth_cases_written"], 0)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
             self.assertEqual(review["confidence"], "low")
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
             self.assertFalse(review["correction_signal"])
             self.assertFalse(review["correction_overlap_signal"])
+            self.assertEqual(json.loads(output_growth.read_text(encoding="utf-8"))["cases"], [])
 
     def test_build_promotes_askless_handwriting_with_followup_correction_signal(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1488,6 +1507,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             )
 
             output_cases = Path(tmp_dir) / "cases_all.json"
+            output_growth = Path(tmp_dir) / "cases_growth.json"
             output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
             output_typed = Path(tmp_dir) / "cases_typed.json"
             output_illustration = Path(tmp_dir) / "cases_illustration.json"
@@ -1496,6 +1516,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             summary = build_from_export(
                 export_root,
                 output_cases=output_cases,
+                output_cases_growth=output_growth,
                 output_cases_handwriting=output_handwriting,
                 output_cases_typed=output_typed,
                 output_cases_illustration=output_illustration,
@@ -1505,11 +1526,13 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["high_confidence"], 1)
             self.assertEqual(summary["handwriting_cases_written"], 1)
+            self.assertEqual(summary["growth_cases_written"], 1)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
             self.assertEqual(review["confidence"], "high")
             self.assertTrue(review["ocr_framing_signal"])
             self.assertTrue(review["correction_signal"])
             self.assertTrue(review["correction_overlap_signal"])
+            self.assertEqual(len(json.loads(output_growth.read_text(encoding="utf-8"))["cases"]), 1)
 
     def test_build_keeps_askless_handwriting_low_with_non_overlapping_correction(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
