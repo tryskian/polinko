@@ -755,6 +755,72 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
 
+    def test_build_widens_growth_lane_with_regex_only_constraints(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "img_019.png").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-growth-regex-only",
+                "title": "Regex-only growth constraints",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this exactly?"]},
+                            "metadata": {"attachments": [{"name": "img_019.png", "id": "file_growth_regex"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["Here is the OCR:\n- central circle grid wave"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-growth-regex-only.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_growth = Path(tmp_dir) / "cases_growth.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_growth=output_growth,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                max_growth_cases=50,
+            )
+
+            self.assertEqual(summary["cases_written"], 0)
+            self.assertEqual(summary["growth_cases_written"], 1)
+            self.assertEqual(summary["growth_regex_only_cases_written"], 1)
+
+            growth_payload = json.loads(output_growth.read_text(encoding="utf-8"))
+            growth_case = growth_payload["cases"][0]
+            self.assertEqual(growth_case["must_contain_any"], [])
+            self.assertEqual(growth_case["must_appear_in_order"], [])
+            self.assertTrue(growth_case["must_match_regex"])
+
     def test_build_does_not_promote_literal_intent_single_token_lists(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"

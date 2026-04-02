@@ -273,6 +273,8 @@
     - `make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
     - review `growth_quarantine_cases_written` in miner summary; quarantined
       growth cases are expected and remain excluded from strict transcript set
+    - review `growth_regex_only_cases_written` to track growth rows constrained
+      by phrase regex when anchor/order terms are empty
   - current blocker snapshot:
     - `make ocrall` aborted at `3/26` attempted with sustained `429` streak
       (fail-fast threshold `3`)
