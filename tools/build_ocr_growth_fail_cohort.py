@@ -35,6 +35,25 @@ def _load_case_map(path: Path) -> dict[str, dict[str, Any]]:
     return out
 
 
+def _load_review_index(path: Path) -> dict[str, list[dict[str, Any]]]:
+    if not path.is_file():
+        return {}
+    payload = _load_json_object(path)
+    raw_episodes = payload.get("episodes")
+    if not isinstance(raw_episodes, list):
+        return {}
+
+    out: dict[str, list[dict[str, Any]]] = {}
+    for row in raw_episodes:
+        if not isinstance(row, dict):
+            continue
+        image_path = str(row.get("image_path", "")).strip()
+        if not image_path:
+            continue
+        out.setdefault(image_path, []).append(row)
+    return out
+
+
 def _normalise_reason(raw: str) -> str:
     cleaned = " ".join(str(raw).split()).strip()
     if not cleaned:
@@ -64,8 +83,10 @@ def build_fail_cohort(
     stability_payload: dict[str, Any],
     growth_case_map: dict[str, dict[str, Any]],
     metrics_map: dict[str, dict[str, Any]],
+    review_index: dict[str, list[dict[str, Any]]],
     min_runs: int,
     include_unstable: bool,
+    require_ocr_framing: bool,
 ) -> dict[str, Any]:
     raw_cases = stability_payload.get("cases")
     if not isinstance(raw_cases, list):
@@ -75,6 +96,7 @@ def build_fail_cohort(
     lane_counts: Counter[str] = Counter()
     reason_counts: Counter[str] = Counter()
     reason_pattern_counts: Counter[str] = Counter()
+    skipped_non_framed = 0
 
     for row in raw_cases:
         if not isinstance(row, dict):
@@ -104,6 +126,13 @@ def build_fail_cohort(
         lane = str(growth_case.get("lane", "unknown")).strip() or "unknown"
         source_name = str(growth_case.get("source_name", "")).strip() or case_id
         image_path = str(growth_case.get("image_path", "")).strip()
+        linked_review_rows = review_index.get(image_path, [])
+        framing_episode_count = sum(
+            1 for review_row in linked_review_rows if bool(review_row.get("ocr_framing_signal", False))
+        )
+        if require_ocr_framing and framing_episode_count <= 0:
+            skipped_non_framed += 1
+            continue
 
         metrics = metrics_map.get(case_id, {})
         unresolved_fail_age_hours = metrics.get("unresolved_fail_age_hours")
@@ -150,6 +179,8 @@ def build_fail_cohort(
             "must_contain_any": growth_case.get("must_contain_any", []),
             "must_appear_in_order": growth_case.get("must_appear_in_order", []),
             "unresolved_fail_age_hours": round(age_hours, 3),
+            "review_episode_count": len(linked_review_rows),
+            "framing_episode_count": framing_episode_count,
         }
         selected.append(selected_row)
         lane_counts[lane] += 1
@@ -167,6 +198,8 @@ def build_fail_cohort(
         "selected_fail_cases": len(selected),
         "min_runs": min_runs,
         "include_unstable": include_unstable,
+        "require_ocr_framing": require_ocr_framing,
+        "skipped_non_framed": skipped_non_framed,
         "lane_counts": dict(sorted(lane_counts.items())),
         "top_reasons": [
             {"reason": reason, "count": count}
@@ -202,6 +235,8 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
     lines.append(f"| selected_fail_cases | {summary['selected_fail_cases']} |")
     lines.append(f"| min_runs | {summary['min_runs']} |")
     lines.append(f"| include_unstable | {summary['include_unstable']} |")
+    lines.append(f"| require_ocr_framing | {summary['require_ocr_framing']} |")
+    lines.append(f"| skipped_non_framed | {summary['skipped_non_framed']} |")
     lines.append("")
 
     lane_counts = summary.get("lane_counts")
@@ -239,20 +274,21 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
         lines.append("## Selected Cases")
         lines.append("")
         lines.append(
-            "| case_id | lane | pattern | fail_runs | observed_runs | age_hours | source_name | image_path |"
+            "| case_id | lane | pattern | fail_runs | observed_runs | framing_eps | age_hours | source_name | image_path |"
         )
-        lines.append("|---|---|---|---:|---:|---:|---|---|")
+        lines.append("|---|---|---|---:|---:|---:|---:|---|---|")
         for row in selected:
             case_id = str(row.get("id", ""))
             lane = str(row.get("lane", ""))
             pattern = str(row.get("primary_failure_pattern", ""))
             fail_runs = int(row.get("fail_runs", 0) or 0)
             observed = int(row.get("observed_runs", 0) or 0)
+            framing_eps = int(row.get("framing_episode_count", 0) or 0)
             age_hours = float(row.get("unresolved_fail_age_hours", 0.0) or 0.0)
             source_name = str(row.get("source_name", "")).replace("|", "\\|")
             image_path = str(row.get("image_path", "")).replace("|", "\\|")
             lines.append(
-                f"| {case_id} | {lane} | {pattern} | {fail_runs} | {observed} | {age_hours:.3f} | "
+                f"| {case_id} | {lane} | {pattern} | {fail_runs} | {observed} | {framing_eps} | {age_hours:.3f} | "
                 f"{source_name} | {image_path} |"
             )
         lines.append("")
@@ -280,6 +316,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional path to OCR growth metrics JSON (for fail-age enrichment).",
     )
     parser.add_argument(
+        "--review",
+        default=".local/eval_cases/ocr_transcript_cases_review.json",
+        help="Optional path to OCR transcript review JSON (for OCR-framing filter).",
+    )
+    parser.add_argument(
         "--output-json",
         default=".local/eval_cases/ocr_growth_fail_cohort.json",
         help="Output path for fail cohort JSON.",
@@ -300,6 +341,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Include persistent fail cases even when decision_stable is false.",
     )
+    parser.add_argument(
+        "--require-ocr-framing",
+        action="store_true",
+        help="Require selected fail cases to map to at least one review episode with ocr_framing_signal=true.",
+    )
     return parser
 
 
@@ -312,6 +358,7 @@ def main() -> int:
     stability_path = Path(args.stability_report).expanduser()
     cases_path = Path(args.cases).expanduser()
     metrics_path = Path(args.metrics).expanduser()
+    review_path = Path(args.review).expanduser()
     output_json = Path(args.output_json).expanduser()
     output_markdown = Path(args.output_markdown).expanduser()
 
@@ -336,17 +383,21 @@ def main() -> int:
                 case_id = str(row.get("id", "")).strip()
                 if case_id:
                     metrics_map[case_id] = row
+    review_index = _load_review_index(review_path)
 
     report = build_fail_cohort(
         stability_payload=stability_payload,
         growth_case_map=growth_case_map,
         metrics_map=metrics_map,
+        review_index=review_index,
         min_runs=int(args.min_runs),
         include_unstable=bool(args.include_unstable),
+        require_ocr_framing=bool(args.require_ocr_framing),
     )
     report["stability_report"] = str(stability_path)
     report["cases_path"] = str(cases_path)
     report["metrics_path"] = str(metrics_path)
+    report["review_path"] = str(review_path)
 
     output_json.parent.mkdir(parents=True, exist_ok=True)
     output_json.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -365,6 +416,8 @@ def main() -> int:
     print(f"  cases_total: {summary['cases_total']}")
     print(f"  min_runs: {summary['min_runs']}")
     print(f"  include_unstable: {summary['include_unstable']}")
+    print(f"  require_ocr_framing: {summary['require_ocr_framing']}")
+    print(f"  skipped_non_framed: {summary['skipped_non_framed']}")
     print(f"  json: {output_json}")
     print(f"  markdown: {output_markdown}")
     return 0

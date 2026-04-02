@@ -1559,3 +1559,26 @@
     transient transport/provider pressure.
 - Why: lockset and growth single-run commands were previously missing retry
   controls, causing avoidable red runs under short-lived `429` pressure.
+
+## D-126: Constrain growth fail cohort to OCR-framed transcript episodes
+
+- Date: `2026-04-01`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `growth_lane`, `fail_cohort`, `framing_gate`
+- Decision:
+  - extend `tools/build_ocr_growth_fail_cohort.py` with transcript-review
+    linkage by `image_path`
+  - add review-aware cohort controls:
+    - `--review` (defaults to
+      `.local/eval_cases/ocr_transcript_cases_review.json`)
+    - `--require-ocr-framing`
+  - enforce framing gate in canonical fail-cohort command surface:
+    - `make eval-ocr-growth-fail-cohort`
+    - `make ocrfails`
+  - include cohort diagnostics for operator clarity:
+    - `require_ocr_framing`
+    - `skipped_non_framed`
+    - per-case `framing_episode_count`
+- Why: growth fail cohorts should remain OCR-specific remediation inputs. This
+  avoids pulling non-framed/noisy failures into the hard-fail set while
+  preserving strict binary gate semantics.

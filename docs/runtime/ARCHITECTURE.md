@@ -107,3 +107,5 @@
 - Local eval trace backfill (optional): `make backfill-eval-traces`
 - Growth-lane metrics report: `make ocrgrowth`
 - Growth-lane fail cohort materialisation: `make ocrfails`
+  - selection is constrained to growth-lane cases that map to OCR-framed
+    transcript review episodes (`ocr_framing_signal=true`)

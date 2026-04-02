@@ -949,13 +949,20 @@ eval-ocr-growth-fail-cohort:
 		echo "Run: make ocrmine"; \
 		exit 1; \
 	fi; \
+	if [ ! -f "$(OCR_TRANSCRIPT_REVIEW)" ]; then \
+		echo "Transcript OCR review report not found: $(OCR_TRANSCRIPT_REVIEW)"; \
+		echo "Run: make ocrmine"; \
+		exit 1; \
+	fi; \
 	$(PYTHON) -m tools.build_ocr_growth_fail_cohort \
 		--stability-report "$(OCR_GROWTH_STABILITY_OUTPUT)" \
 		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
 		--metrics "$(OCR_GROWTH_METRICS_OUTPUT)" \
+		--review "$(OCR_TRANSCRIPT_REVIEW)" \
 		--output-json "$(OCR_GROWTH_FAIL_COHORT_JSON)" \
 		--output-markdown "$(OCR_GROWTH_FAIL_COHORT_MARKDOWN)" \
-		--min-runs "$(OCR_STABILITY_RUNS)"
+		--min-runs "$(OCR_STABILITY_RUNS)" \
+		--require-ocr-framing
 
 eval-ocr-transcript-stability-growth:
 	@set -eu; \

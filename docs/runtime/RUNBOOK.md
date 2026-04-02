@@ -218,6 +218,9 @@ plus tests as the active spec surface (`make test`,
      - `make ocrgrowth`
    - materialise stable growth FAIL cohort for next-kernel remediation:
      - `make ocrfails`
+     - cohort is filtered to OCR-framed transcript episodes
+       (`ocr_framing_signal=true`) via
+       `.local/eval_cases/ocr_transcript_cases_review.json`
    - transient OCR pressure tuning (all single-run OCR eval targets):
      - `OCR_EVAL_OCR_RETRIES=2 OCR_EVAL_OCR_RETRY_DELAY_MS=750`
      - fail-fast remains:
@@ -237,6 +240,9 @@ plus tests as the active spec surface (`make test`,
      - `.local/eval_reports/ocr_growth_metrics.md`
    - growth fail cohort report:
      - `.local/eval_reports/ocr_growth_fail_cohort.md`
+     - includes:
+       - `require_ocr_framing`
+       - `skipped_non_framed`
 5. Notebook analysis surface:
    - `make notes`
    - starter template:
