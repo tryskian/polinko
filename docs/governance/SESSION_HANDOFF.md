@@ -156,7 +156,7 @@
       `21/21` PASS (`0` fail)
     - handwriting benchmark: `4/4` PASS
     - typed benchmark: `6/6` PASS
-    - illustration benchmark: `2/2` PASS
+    - illustration benchmark: `3/3` PASS
   - notebook visual starter for fast local analysis:
     - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
     - launch via: `make notes`
@@ -165,8 +165,15 @@
     - benchmark decision stability:
       - handwriting: `4` stable, `0` flaky
       - typed: `6` stable, `0` flaky
-      - illustration: `2` stable, `0` flaky
+      - illustration: `3` stable, `0` flaky
     - full transcript stability (pre-widening): `21` stable, `0` flaky
+  - lockset rerun checkpoint (April 2, 2026) is green:
+    - one-case provider probe (`make ocrhandbench` with fail-fast `1`) completed
+      successfully
+    - lockset + stability commands reran with all PASS outcomes
+  - growth/focus replay commands now stream logs in real time:
+    - Makefile uses unbuffered Python output for growth and focus replay
+      targets to avoid false "hung" runs during slow provider windows
   - growth metrics command is active:
     - `make ocrgrowth`
     - outputs:
@@ -255,11 +262,8 @@
     streaks (`OCR_EVAL_OCR_RETRIES`, `OCR_EVAL_OCR_RETRY_DELAY_MS`,
     `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS`)
   - OCR retries now respect provider `Retry-After` on `429` when present
-  - latest lockset probe result is currently blocked at provider boundary
-    (`HTTP 429` on first case with fail-fast threshold `1`)
-  - latest one-case handwriting probe (`make ocrhandbench` with
-    `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=1`) aborted at `1/4` attempted due
-    provider `429`
+  - provider pressure remains intermittent; keep one-case probe first before
+    full growth replay when call budget is uncertain
 - Cloud deployment remains paused; local-first execution is canonical.
 - Environment mutation policy:
   - verify repo path + mode + branch before changes

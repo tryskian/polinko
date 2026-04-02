@@ -1886,3 +1886,19 @@
 - Why: repeated immediate replays under known provider throttle waste call
   budget and produce no new signal. Backoff skip preserves binary criteria
   while improving runtime efficiency.
+
+## D-143: Stream OCR growth/stability command output in real time
+
+- Date: `2026-04-02`
+- Category: `eval_runtime`
+- Tags: `ocr`, `operator_observability`, `run_feedback`, `growth_lane`
+- Decision:
+  - run growth/focus OCR replay commands with `PYTHONUNBUFFERED=1` in Makefile:
+    - `eval-ocr-transcript-cases-growth`
+    - `eval-ocr-transcript-cases-growth-batched`
+    - `eval-ocr-transcript-stability-growth`
+    - `eval-ocr-focus-stability`
+  - no gate semantics, retries, or PASS/FAIL criteria were changed.
+- Why: long OCR growth runs were operationally opaque during provider latency,
+  which looked like hangs. Real-time stdout restores deterministic operator
+  visibility without behavioural drift.
