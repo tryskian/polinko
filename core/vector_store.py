@@ -124,6 +124,19 @@ class VectorStore:
             conn.execute("ALTER TABLE message_vectors ADD COLUMN source_ref TEXT;")
         if "metadata_json" not in columns:
             conn.execute("ALTER TABLE message_vectors ADD COLUMN metadata_json TEXT;")
+        # Backfill legacy OCR/PDF/image rows that predate non-chat message-id resolution.
+        conn.execute(
+            """
+            UPDATE message_vectors
+            SET message_id = source_type || ':' || source_ref
+            WHERE (message_id IS NULL OR trim(message_id) = '')
+              AND source_type IS NOT NULL
+              AND trim(source_type) <> ''
+              AND lower(source_type) <> 'chat'
+              AND source_ref IS NOT NULL
+              AND trim(source_ref) <> '';
+            """
+        )
 
     def upsert_message_vector(
         self,
@@ -140,17 +153,26 @@ class VectorStore:
     ) -> str:
         if role not in {"user", "assistant"}:
             raise ValueError(f"Unsupported role for vector storage: {role}")
+        resolved_message_id = message_id
+        if (
+            (resolved_message_id is None or resolved_message_id.strip() == "")
+            and source_type.strip().lower() != "chat"
+            and source_ref is not None
+            and source_ref.strip() != ""
+        ):
+            # Non-chat vectors (OCR/PDF/image chunks) still need a stable identifier.
+            resolved_message_id = f"{source_type}:{source_ref}"
         ts = created_at if created_at is not None else _now_ms()
         vector_id = f"vec-{uuid.uuid4().hex[:12]}"
         payload = json.dumps(embedding, separators=(",", ":"))
         metadata_payload = json.dumps(metadata or {}, separators=(",", ":"))
         with self._connection() as conn:
-            if message_id:
+            if resolved_message_id:
                 existing = conn.execute(
                     """
                     SELECT vector_id FROM message_vectors WHERE message_id = ? LIMIT 1;
                     """,
-                    (message_id,),
+                    (resolved_message_id,),
                 ).fetchone()
                 if existing is not None:
                     existing_id = str(existing["vector_id"])
@@ -203,7 +225,7 @@ class VectorStore:
                     vector_id,
                     session_id,
                     role,
-                    message_id,
+                    resolved_message_id,
                     source_type,
                     source_ref,
                     metadata_payload,
