@@ -6,6 +6,7 @@ from pathlib import Path
 from tools.build_ocr_cases_from_export import (
     ASK_RX,
     CORRECTION_RX,
+    _to_msg,
     _has_correction_signal,
     _anchor_terms_for_phrases,
     _classify_lane,
@@ -27,6 +28,19 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
     def test_correction_regex_does_not_match_generic_read_request(self) -> None:
         text = "can you read this?"
         self.assertIsNone(CORRECTION_RX.search(text))
+
+    def test_ask_regex_matches_ocrable_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("is this OCRable with your binareyes?"))
+
+    def test_to_msg_unescapes_html_entities_in_text(self) -> None:
+        raw = {
+            "create_time": 1,
+            "author": {"role": "user"},
+            "content": {"parts": ["yeah, it&#x27;s the theory itself"]},
+            "metadata": {},
+        }
+        msg = _to_msg(raw)
+        self.assertEqual(msg.text, "yeah, it's the theory itself")
 
     def test_phrase_filter_rejects_stopword_singletons(self) -> None:
         self.assertFalse(_is_ocr_like_phrase("and"))
