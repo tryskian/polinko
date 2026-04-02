@@ -30,8 +30,10 @@ class PublicRepoAuditTests(unittest.TestCase):
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             (root / "safe.md").write_text("hello", encoding="utf-8")
+            openai_key_name = "OPENAI_API_KEY"
+            synthetic_live_value = "sk-" + "proj-" + "abcdefghijklmnopqrstuvwxyz0123456789"
             (root / "notes.md").write_text(
-                "OPENAI_API_KEY=sk-proj-abcdefghijklmnopqrstuvwxyz0123456789",
+                f"{openai_key_name}={synthetic_live_value}",
                 encoding="utf-8",
             )
             (root / ".env.example").write_text("OPENAI_API_KEY=", encoding="utf-8")
