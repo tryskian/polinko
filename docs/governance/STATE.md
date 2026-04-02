@@ -99,6 +99,10 @@
     during hard throttle windows.
   - `make ocr-data` is now offline-only (`doctor-env`, `ocrmine`, `ocrdelta`);
     full online OCR replay remains at `make ocr-notebook-workflow`.
+  - offline miner now routes strong unstable-source episodes to growth lane
+    only (`source_quarantine=true`), with latest summary:
+    - `growth_cases_written=148`
+    - `growth_quarantine_cases_written=1`
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS

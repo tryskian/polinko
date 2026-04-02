@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 OCR_INTENT_PATTERN = (
-    r"what does (this|it) say|what(?:'s| is) written|can you read|read (this|it)|\btranscrib\w*|\bocr\b|\bocrable\b|\bbinareyes\b|\bnew\s+drop\b|\bscribbles?\s+and\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratched\s+out\b"
+    r"what does (this|it) say|what(?:'s| is) written|can you read|read (this|it)|\btranscrib\w*|\bocr\b|\bocrable\b|\bbinareyes\b|\bnew\s+drop\b|\b(?:s|sq)cribbles?\s+and\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratched\s+out\b"
 )
 ASK_RX = re.compile(OCR_INTENT_PATTERN, re.IGNORECASE)
 HANDWRITING_HINT_RX = re.compile(
@@ -703,6 +703,25 @@ def _ordered_terms_supported_by_anchors(ordered_terms: list[str], anchors: list[
     return filtered
 
 
+def _allow_unstable_source_in_growth(
+    *,
+    confidence: str,
+    correction_signal: bool,
+    ocr_framing_signal: bool,
+    anchor_terms: list[str],
+    transcription_phrases: list[str],
+) -> bool:
+    # Keep strict set quarantined while allowing high-signal unstable rows into
+    # growth lane for fail-heavy pattern tracking.
+    if confidence not in {"medium", "high"}:
+        return False
+    if len(anchor_terms) < 4:
+        return False
+    if not transcription_phrases:
+        return False
+    return bool(correction_signal or ocr_framing_signal)
+
+
 def build_from_export(
     export_root: Path,
     *,
@@ -735,6 +754,7 @@ def build_from_export(
     skipped_unstable_source = 0
     emitted_cases = 0
     growth_cases_written = 0
+    growth_quarantine_cases_written = 0
 
     conversation_files = sorted(conversations_dir.glob("*.json"))
     for conversation_path in conversation_files:
@@ -993,10 +1013,19 @@ def build_from_export(
                     (ocr_literal_intent_signal or ocr_framing_signal or correction_signal)
                     and transcription_phrases
                 )
-            if emit_status in {"skipped_duplicate_image_path", "skipped_unstable_source"}:
+            if emit_status == "skipped_unstable_source":
+                growth_emit_status = _allow_unstable_source_in_growth(
+                    confidence=confidence,
+                    correction_signal=correction_signal,
+                    ocr_framing_signal=ocr_framing_signal,
+                    anchor_terms=growth_anchor_terms,
+                    transcription_phrases=transcription_phrases,
+                )
+            if emit_status == "skipped_duplicate_image_path":
                 growth_emit_status = False
 
             has_growth_constraints = bool(growth_anchor_terms) or len(growth_ordered_terms) >= 2
+            source_quarantine = emit_status == "skipped_unstable_source"
             if (
                 growth_emit_status
                 and has_growth_constraints
@@ -1015,10 +1044,13 @@ def build_from_export(
                         "must_appear_in_order": growth_ordered_terms[:4],
                         "must_not_contain_words": ["likely", "maybe", "guess"],
                         "min_chars": 3,
+                        "source_quarantine": source_quarantine,
                     }
                 )
                 seen_growth_case_paths.add(image_path)
                 growth_cases_written += 1
+                if source_quarantine:
+                    growth_quarantine_cases_written += 1
 
             if emit_status == "skipped_low_confidence":
                 skipped_low_confidence += 1
@@ -1182,6 +1214,7 @@ def build_from_export(
         "growth_illustration_cases_written": len(growth_illustration_cases),
         "emitted_cases": emitted_cases,
         "growth_emitted_cases": growth_cases_written,
+        "growth_quarantine_cases_written": growth_quarantine_cases_written,
         "skipped_low_confidence": skipped_low_confidence,
         "skipped_duplicate_image_path": skipped_duplicate_image_path,
         "skipped_insufficient_anchor_terms": skipped_insufficient_anchor_terms,
@@ -1272,6 +1305,7 @@ def main() -> int:
         "growth_illustration_cases_written",
         "emitted_cases",
         "growth_emitted_cases",
+        "growth_quarantine_cases_written",
         "skipped_low_confidence",
         "skipped_duplicate_image_path",
         "skipped_insufficient_anchor_terms",

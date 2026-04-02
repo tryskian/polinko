@@ -234,6 +234,8 @@ plus tests as the active spec surface (`make test`,
 4. Local output surfaces:
    - case sets: `.local/eval_cases/`
      - growth set: `.local/eval_cases/ocr_transcript_cases_growth.json`
+       - growth rows may include `source_quarantine=true` when mined from known
+         unstable sources under strict high-signal guards
      - growth fail cohort: `.local/eval_cases/ocr_growth_fail_cohort.json`
    - run/stability reports: `.local/eval_reports/`
      - growth stability: `.local/eval_reports/ocr_growth_stability.json`
@@ -253,6 +255,8 @@ plus tests as the active spec surface (`make test`,
          - if non-zero, stability history and current growth case map are from
            different generations; rerun `make ocrstablegrowth` after refreshing
            growth cases.
+   - miner summary now includes:
+     - `growth_quarantine_cases_written`
 5. Notebook analysis surface:
    - `make notes`
    - offline transcript mining refresh (no live OCR calls):

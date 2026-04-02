@@ -38,6 +38,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
     def test_ask_regex_matches_scribbles_and_bibbles_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("can you still OCR my scribbles and bibbles?"))
 
+    def test_ask_regex_matches_squibbles_and_bibbles_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("can you still OCR my squibbles and bibbles?"))
+
     def test_ask_regex_matches_peanut_cursive_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("this one is peanut cursive from my notebook"))
 
@@ -1756,6 +1759,80 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["skipped_unstable_source"], 1)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
             self.assertEqual(review["emit_status"], "skipped_unstable_source")
+
+    def test_build_routes_strong_unstable_source_to_growth_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            unstable_name = "file_0000000047f871f7af65c1ce3955cc2e-sanitized.png"
+            (assets / unstable_name).write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-unstable-growth",
+                "title": "unstable growth route",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you read this?"]},
+                            "metadata": {"attachments": [{"name": unstable_name, "id": "file_unstable_growth"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {
+                                "parts": ["it reads: word bull-fly\nma’am, let the plot breathe.\nword bully"]
+                            },
+                            "metadata": {},
+                        }
+                    },
+                    "3": {
+                        "message": {
+                            "create_time": 3,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["lol bully! not bull-fly!"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-unstable-growth.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_growth = Path(tmp_dir) / "cases_growth.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_growth=output_growth,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["cases_written"], 0)
+            self.assertEqual(summary["skipped_unstable_source"], 1)
+            self.assertEqual(summary["growth_cases_written"], 1)
+            self.assertEqual(summary["growth_quarantine_cases_written"], 1)
+            growth_cases = json.loads(output_growth.read_text(encoding="utf-8"))["cases"]
+            self.assertEqual(len(growth_cases), 1)
+            self.assertTrue(growth_cases[0]["source_quarantine"])
 
     def test_build_does_not_promote_ask_phrases_without_correction_signal(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
