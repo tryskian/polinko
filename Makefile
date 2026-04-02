@@ -58,6 +58,8 @@ OCR_ILLUSTRATION_BENCHMARK_MIN_ANCHORS ?= 2
 OCR_STABILITY_RUNS ?= 5
 OCR_STABILITY_OCR_RETRIES ?= 2
 OCR_STABILITY_OCR_RETRY_DELAY_MS ?= 750
+OCR_STABILITY_CASE_DELAY_MS ?= 0
+OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS ?= 0
 OCR_MAX_CONSEC_RATE_LIMIT_ERRORS ?= 3
 OCR_EVAL_OCR_RETRIES ?= 2
 OCR_EVAL_OCR_RETRY_DELAY_MS ?= 750
@@ -76,6 +78,8 @@ OCR_GROWTH_EVAL_MAX_CASES ?= 0
 OCR_GROWTH_BATCH_SIZE ?= 40
 OCR_GROWTH_OCR_RETRIES ?= 2
 OCR_GROWTH_OCR_RETRY_DELAY_MS ?= 750
+OCR_GROWTH_CASE_DELAY_MS ?= 0
+OCR_GROWTH_RATE_LIMIT_COOLDOWN_MS ?= 0
 OCR_GROWTH_BATCH_REPORT_DIR ?= .local/eval_reports/ocr_growth_batched_runs
 OCR_GROWTH_BATCH_SUMMARY_JSON ?= .local/eval_reports/ocr_growth_batched_summary.json
 OCR_GROWTH_BATCH_SUMMARY_MD ?= .local/eval_reports/ocr_growth_batched_summary.md
@@ -942,17 +946,19 @@ eval-ocr-transcript-stability:
 		exit 1; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	$(PYTHON) -m tools.eval_ocr_stability \
-		--base-url "http://127.0.0.1:8000" \
-		--cases "$(OCR_TRANSCRIPT_CASES)" \
-		--runs "$(OCR_STABILITY_RUNS)" \
-		--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
-		--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
-		--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-		--stop-on-rate-limit-abort \
-		--strict \
-		--report-dir "$(OCR_STABILITY_REPORT_DIR)" \
-		--output-json "$(OCR_STABILITY_OUTPUT)"
+		$(PYTHON) -m tools.eval_ocr_stability \
+			--base-url "http://127.0.0.1:8000" \
+			--cases "$(OCR_TRANSCRIPT_CASES)" \
+			--runs "$(OCR_STABILITY_RUNS)" \
+			--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
+			--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
+			--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \
+			--rate-limit-cooldown-ms "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" \
+			--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
+			--stop-on-rate-limit-abort \
+			--strict \
+			--report-dir "$(OCR_STABILITY_REPORT_DIR)" \
+			--output-json "$(OCR_STABILITY_OUTPUT)"
 
 eval-ocr-transcript-growth:
 	@set -eu; \
@@ -1018,18 +1024,20 @@ eval-ocr-transcript-stability-growth:
 		echo "Using sliced growth stability output: $$OUTPUT_JSON"; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	$(PYTHON) -m tools.eval_ocr_stability \
-		--base-url "http://127.0.0.1:8000" \
-		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
-		--runs "$(OCR_STABILITY_RUNS)" \
-		--offset "$(OCR_GROWTH_EVAL_OFFSET)" \
-		--max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" \
-		--ocr-retries "$(OCR_GROWTH_OCR_RETRIES)" \
-		--ocr-retry-delay-ms "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" \
-		--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-		--stop-on-rate-limit-abort \
-		--report-dir "$(OCR_GROWTH_STABILITY_REPORT_DIR)" \
-		--output-json "$$OUTPUT_JSON"
+		$(PYTHON) -m tools.eval_ocr_stability \
+			--base-url "http://127.0.0.1:8000" \
+			--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
+			--runs "$(OCR_STABILITY_RUNS)" \
+			--offset "$(OCR_GROWTH_EVAL_OFFSET)" \
+			--max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" \
+			--ocr-retries "$(OCR_GROWTH_OCR_RETRIES)" \
+			--ocr-retry-delay-ms "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" \
+			--case-delay-ms "$(OCR_GROWTH_CASE_DELAY_MS)" \
+			--rate-limit-cooldown-ms "$(OCR_GROWTH_RATE_LIMIT_COOLDOWN_MS)" \
+			--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
+			--stop-on-rate-limit-abort \
+			--report-dir "$(OCR_GROWTH_STABILITY_REPORT_DIR)" \
+			--output-json "$$OUTPUT_JSON"
 
 eval-ocr-transcript-stability-handwriting-benchmark:
 	@set -eu; \
@@ -1044,17 +1052,19 @@ eval-ocr-transcript-stability-handwriting-benchmark:
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-		$(PYTHON) -m tools.eval_ocr_stability \
-			--base-url "http://127.0.0.1:8000" \
-			--cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" \
-			--runs "$(OCR_STABILITY_RUNS)" \
-			--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
-			--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
-			--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-			--stop-on-rate-limit-abort \
-			--strict \
-			--report-dir "$(OCR_STABILITY_HANDWRITING_BENCHMARK_REPORT_DIR)" \
-			--output-json "$(OCR_STABILITY_HANDWRITING_BENCHMARK_OUTPUT)"
+			$(PYTHON) -m tools.eval_ocr_stability \
+				--base-url "http://127.0.0.1:8000" \
+				--cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" \
+				--runs "$(OCR_STABILITY_RUNS)" \
+				--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
+				--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
+				--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \
+				--rate-limit-cooldown-ms "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" \
+				--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
+				--stop-on-rate-limit-abort \
+				--strict \
+				--report-dir "$(OCR_STABILITY_HANDWRITING_BENCHMARK_REPORT_DIR)" \
+				--output-json "$(OCR_STABILITY_HANDWRITING_BENCHMARK_OUTPUT)"
 
 eval-ocr-transcript-stability-typed-benchmark:
 	@set -eu; \
@@ -1069,17 +1079,19 @@ eval-ocr-transcript-stability-typed-benchmark:
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-		$(PYTHON) -m tools.eval_ocr_stability \
-			--base-url "http://127.0.0.1:8000" \
-			--cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" \
-			--runs "$(OCR_STABILITY_RUNS)" \
-			--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
-			--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
-			--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-			--stop-on-rate-limit-abort \
-			--strict \
-			--report-dir "$(OCR_STABILITY_TYPED_BENCHMARK_REPORT_DIR)" \
-			--output-json "$(OCR_STABILITY_TYPED_BENCHMARK_OUTPUT)"
+			$(PYTHON) -m tools.eval_ocr_stability \
+				--base-url "http://127.0.0.1:8000" \
+				--cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" \
+				--runs "$(OCR_STABILITY_RUNS)" \
+				--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
+				--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
+				--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \
+				--rate-limit-cooldown-ms "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" \
+				--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
+				--stop-on-rate-limit-abort \
+				--strict \
+				--report-dir "$(OCR_STABILITY_TYPED_BENCHMARK_REPORT_DIR)" \
+				--output-json "$(OCR_STABILITY_TYPED_BENCHMARK_OUTPUT)"
 
 eval-ocr-transcript-stability-illustration-benchmark:
 	@set -eu; \
@@ -1094,17 +1106,19 @@ eval-ocr-transcript-stability-illustration-benchmark:
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-		$(PYTHON) -m tools.eval_ocr_stability \
-			--base-url "http://127.0.0.1:8000" \
-			--cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" \
-			--runs "$(OCR_STABILITY_RUNS)" \
-			--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
-			--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
-			--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-			--stop-on-rate-limit-abort \
-			--strict \
-			--report-dir "$(OCR_STABILITY_ILLUSTRATION_BENCHMARK_REPORT_DIR)" \
-			--output-json "$(OCR_STABILITY_ILLUSTRATION_BENCHMARK_OUTPUT)"
+			$(PYTHON) -m tools.eval_ocr_stability \
+				--base-url "http://127.0.0.1:8000" \
+				--cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" \
+				--runs "$(OCR_STABILITY_RUNS)" \
+				--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
+				--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
+				--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \
+				--rate-limit-cooldown-ms "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" \
+				--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
+				--stop-on-rate-limit-abort \
+				--strict \
+				--report-dir "$(OCR_STABILITY_ILLUSTRATION_BENCHMARK_REPORT_DIR)" \
+				--output-json "$(OCR_STABILITY_ILLUSTRATION_BENCHMARK_OUTPUT)"
 
 docker-build:
 	$(DOCKER) build -t $(DOCKER_IMAGE) .

@@ -23,6 +23,8 @@ class OcrStabilityTests(unittest.TestCase):
         args = build_parser().parse_args(["--cases", "dummy.json"])
         self.assertEqual(args.timeout, 90)
         self.assertEqual(args.max_consecutive_rate_limit_errors, 0)
+        self.assertEqual(args.case_delay_ms, 0)
+        self.assertEqual(args.rate_limit_cooldown_ms, 0)
         self.assertFalse(args.stop_on_rate_limit_abort)
 
     def test_build_parser_accepts_stop_on_rate_limit_abort(self) -> None:

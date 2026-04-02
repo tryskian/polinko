@@ -625,6 +625,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Delay between OCR retries in milliseconds.",
     )
     parser.add_argument(
+        "--case-delay-ms",
+        type=int,
+        default=0,
+        help="Delay between OCR cases in milliseconds.",
+    )
+    parser.add_argument(
+        "--rate-limit-cooldown-ms",
+        type=int,
+        default=0,
+        help=(
+            "Additional cooldown in milliseconds after a rate-limit error before "
+            "continuing to the next case."
+        ),
+    )
+    parser.add_argument(
         "--max-consecutive-rate-limit-errors",
         type=int,
         default=0,
@@ -685,6 +700,10 @@ def main() -> int:
         raise SystemExit("--ocr-retries must be >= 0.")
     if int(args.ocr_retry_delay_ms) < 0:
         raise SystemExit("--ocr-retry-delay-ms must be >= 0.")
+    if int(args.case_delay_ms) < 0:
+        raise SystemExit("--case-delay-ms must be >= 0.")
+    if int(args.rate_limit_cooldown_ms) < 0:
+        raise SystemExit("--rate-limit-cooldown-ms must be >= 0.")
     if int(args.max_consecutive_rate_limit_errors) < 0:
         raise SystemExit("--max-consecutive-rate-limit-errors must be >= 0.")
     run_id = (
@@ -714,6 +733,8 @@ def main() -> int:
     aborted_due_to_rate_limit = False
 
     for index, case in enumerate(selected_cases, start=1):
+        if index > 1 and int(args.case_delay_ms) > 0:
+            time.sleep(int(args.case_delay_ms) / 1000)
         case_id = case["id"]
         session_id = f"{args.session_prefix}-{run_id}-{index:02d}"
         session_ids.append(session_id)
@@ -778,6 +799,13 @@ def main() -> int:
             print(f"[ERROR] {case_id}: {exc}")
             if _is_rate_limit_ocr_error_message(error_text):
                 consecutive_rate_limit_errors += 1
+                cooldown_ms = int(args.rate_limit_cooldown_ms)
+                if isinstance(exc, OcrRequestError) and exc.status_code == 429:
+                    if exc.retry_after_s is not None and exc.retry_after_s > 0:
+                        cooldown_ms = max(cooldown_ms, exc.retry_after_s * 1000)
+                if cooldown_ms > 0:
+                    print(f"  COOLING down after rate limit: {cooldown_ms}ms")
+                    time.sleep(cooldown_ms / 1000)
             else:
                 consecutive_rate_limit_errors = 0
         finally:
@@ -864,6 +892,8 @@ def main() -> int:
                 "gate_failed": gate_failed,
                 "offset": int(args.offset),
                 "max_cases": int(args.max_cases),
+                "case_delay_ms": int(args.case_delay_ms),
+                "rate_limit_cooldown_ms": int(args.rate_limit_cooldown_ms),
                 "aborted_due_to_rate_limit": aborted_due_to_rate_limit,
             },
             "cases": case_results,

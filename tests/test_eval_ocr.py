@@ -249,6 +249,8 @@ class OcrEvalRuleTests(unittest.TestCase):
     ) -> None:
         args = build_parser().parse_args([])
         self.assertEqual(args.max_consecutive_rate_limit_errors, 0)
+        self.assertEqual(args.case_delay_ms, 0)
+        self.assertEqual(args.rate_limit_cooldown_ms, 0)
 
     def test_ocr_with_retries_retries_transient_then_succeeds(self) -> None:
         side_effects = [
