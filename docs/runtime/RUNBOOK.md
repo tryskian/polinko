@@ -245,6 +245,8 @@ Read-only DB audits remain allowed:
        - `OCR_FOCUS_RUNS=<n>`
        - `OCR_FOCUS_CASE_DELAY_MS=<ms>`
        - `OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS=<ms>`
+       - `OCR_FOCUS_SKIP_RECENT_RATE_LIMIT=true|false`
+       - `OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS=<n>`
    - transient OCR pressure tuning (all single-run OCR eval targets):
      - `OCR_EVAL_OCR_RETRIES=2 OCR_EVAL_OCR_RETRY_DELAY_MS=750`
      - on `HTTP 429`, retries now also honor upstream `Retry-After` when present
@@ -254,6 +256,10 @@ Read-only DB audits remain allowed:
    - all stability replay targets (`make ocrstable*`) now stop remaining runs
      after the first child report with `aborted_due_to_rate_limit=true` to avoid
      burning repeated provider-throttled runs without new signal.
+   - focused replay adds preflight backoff guard:
+     - if latest `.local/eval_reports/ocr_focus_stability.json` has recent
+       rate-limit abort, `make eval-ocr-focus-stability` auto-skips within
+       `OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS`.
 4. Local output surfaces:
    - case sets: `.local/eval_cases/`
      - growth set: `.local/eval_cases/ocr_transcript_cases_growth.json`

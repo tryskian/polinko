@@ -1869,3 +1869,20 @@
 - Why: repeated confusion around null-link columns is an observability gap.
   A deterministic audit surface clarifies expected nulls vs stale-link drift
   without reintroducing runtime DB lifecycle complexity.
+
+## D-142: Add rate-limit backoff skip guard for focused replay
+
+- Date: `2026-04-02`
+- Category: `eval_runtime`
+- Tags: `ocr_focus`, `rate_limit`, `backoff`, `call_budget`
+- Decision:
+  - add `tools/should_skip_ocr_run.py` as a deterministic preflight guard.
+  - `make eval-ocr-focus-stability` now checks recent focus output:
+    - if prior run aborted due to rate limits and is within
+      `OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS`, skip replay.
+  - control knobs:
+    - `OCR_FOCUS_SKIP_RECENT_RATE_LIMIT=true|false`
+    - `OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS=<seconds>`
+- Why: repeated immediate replays under known provider throttle waste call
+  budget and produce no new signal. Backoff skip preserves binary criteria
+  while improving runtime efficiency.

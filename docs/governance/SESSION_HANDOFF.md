@@ -316,6 +316,10 @@
 - If eval runs hit sustained `429` streaks:
   - keep binary pass/fail semantics unchanged
   - tune retry/fail-fast knobs only (do not relax gate criteria)
+  - focused replay auto-skips during configured backoff after recent
+    rate-limit abort:
+    - `OCR_FOCUS_SKIP_RECENT_RATE_LIMIT`
+    - `OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS`
   - stability replays now stop after first run with
     `aborted_due_to_rate_limit=true` (prevents multi-run call waste under hard
     provider throttle)
