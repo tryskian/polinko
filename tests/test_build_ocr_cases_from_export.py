@@ -216,12 +216,14 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             [
                 "page partial single line cropped",
                 "continuation previous entry more accessible updated",
+                "conversation found screenshot html",
             ]
         )
         ordered = _ordered_terms_for_phrases(
             [
                 "page partial single line cropped",
                 "continuation previous entry more accessible updated",
+                "conversation found screenshot html",
             ]
         )
         self.assertEqual(anchors, [])
