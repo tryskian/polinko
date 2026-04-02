@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 OCR_INTENT_PATTERN = (
-    r"what does (this|it) say|what(?:'s| is) written|can you read|read (this|it)|\btranscrib\w*|\bocr\b|\bocrable\b|\bbinareyes\b"
+    r"what does (this|it) say|what(?:'s| is) written|can you read|read (this|it)|\btranscrib\w*|\bocr\b|\bocrable\b|\bbinareyes\b|\bnew\s+drop\b|\bscribbles?\s+and\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratched\s+out\b"
 )
 ASK_RX = re.compile(OCR_INTENT_PATTERN, re.IGNORECASE)
 HANDWRITING_HINT_RX = re.compile(
@@ -216,6 +216,8 @@ CONTROL_TOKEN_RX = re.compile(
     r"\b(?:imagegenview|imagegen|sandbox:|mnt/data|tool_call|assistant_response)\b",
     re.IGNORECASE,
 )
+COMPACT_24H_TIME_RX = re.compile(r"^(?:[01]\d|2[0-3])[0-5]\d$")
+COMPACT_YEAR_SUFFIX_DATE_RX = re.compile(r"^\d{4,8}(?:24|25|26)$")
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 
 
@@ -397,6 +399,17 @@ def _has_correction_signal(text: str) -> bool:
     )
 
 
+def _is_compact_24h_time_token(token: str) -> bool:
+    return bool(COMPACT_24H_TIME_RX.fullmatch(token.strip()))
+
+
+def _is_entry_numeric_token(token: str) -> bool:
+    cleaned = token.strip()
+    return bool(
+        _is_compact_24h_time_token(cleaned) or COMPACT_YEAR_SUFFIX_DATE_RX.fullmatch(cleaned)
+    )
+
+
 def _extract_transcribed_lines(assistant_text: str) -> tuple[list[str], bool]:
     candidates: list[str] = []
     candidates.extend(_extract_inline_highlight_phrases(assistant_text))
@@ -450,6 +463,10 @@ def _is_ocr_like_phrase(text: str) -> bool:
         return False
     if CONTROL_TOKEN_RX.search(value):
         return False
+    if value.isdigit() and not _is_entry_numeric_token(value):
+        return False
+    if _is_entry_numeric_token(value):
+        return True
     noisy_markers = (
         "confirmed",
         "transcription",
@@ -570,6 +587,12 @@ def _anchor_terms_for_phrases(phrases: list[str]) -> list[str]:
     for phrase in phrases:
         tokens = [token.lower() for token in _phrase_tokens(phrase)]
         for token in tokens:
+            if _is_entry_numeric_token(token):
+                if token in seen:
+                    continue
+                seen.add(token)
+                anchors.append(token)
+                continue
             if not any(ch.isalpha() for ch in token):
                 continue
             if len(token) < 4:
@@ -598,6 +621,9 @@ def _ordered_terms_for_phrases(phrases: list[str]) -> list[str]:
         phrase_tokens: list[str] = []
         tokens = [token.lower() for token in _phrase_tokens(phrase)]
         for token in tokens:
+            if _is_entry_numeric_token(token):
+                phrase_tokens.append(token)
+                continue
             if not any(ch.isalpha() for ch in token):
                 continue
             if len(token) < 4:
@@ -616,7 +642,7 @@ def _ordered_terms_for_phrases(phrases: list[str]) -> list[str]:
         # In longer snippets, the first token is frequently a heading/context
         # marker ("restore", "insight", etc). Prefer the trailing sequence for
         # order constraints to reduce brittle lead-token gates.
-        if len(phrase_tokens) >= 3:
+        if len(phrase_tokens) >= 3 and not _is_entry_numeric_token(phrase_tokens[0]):
             phrase_tokens = phrase_tokens[1:]
         for token in phrase_tokens:
             if token in seen:

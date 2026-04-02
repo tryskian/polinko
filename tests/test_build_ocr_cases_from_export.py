@@ -32,6 +32,18 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
     def test_ask_regex_matches_ocrable_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("is this OCRable with your binareyes?"))
 
+    def test_ask_regex_matches_new_drop_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("new drop: can your binareyes read this?"))
+
+    def test_ask_regex_matches_scribbles_and_bibbles_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("can you still OCR my scribbles and bibbles?"))
+
+    def test_ask_regex_matches_peanut_cursive_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("this one is peanut cursive from my notebook"))
+
+    def test_ask_regex_matches_scratched_out_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("this line is scratched out, can you still read it?"))
+
     def test_to_msg_unescapes_html_entities_in_text(self) -> None:
         raw = {
             "create_time": 1,
@@ -53,6 +65,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertFalse(_is_ocr_like_phrase("assets/file-abc123/Screenshot_2026-03-29.png"))
         self.assertFalse(_is_ocr_like_phrase(r"C:\Users\me\Downloads\ocr_note.png"))
         self.assertTrue(_is_ocr_like_phrase("there seems to be something stirring"))
+
+    def test_phrase_filter_accepts_compact_timestamp_and_date_tokens(self) -> None:
+        self.assertTrue(_is_ocr_like_phrase("1745"))
+        self.assertTrue(_is_ocr_like_phrase("200226"))
+        self.assertFalse(_is_ocr_like_phrase("2460"))
 
     def test_expand_anchor_variants_adds_stems(self) -> None:
         anchors = _expand_anchor_variants(["archival", "tumbles", "floating"])
@@ -180,6 +197,13 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertNotIn("there", anchors)
         self.assertNotIn("seems", anchors)
         self.assertNotIn("something", anchors)
+
+    def test_anchor_and_ordered_terms_include_entry_numeric_tokens(self) -> None:
+        anchors = _anchor_terms_for_phrases(["1745", "200226", "field notes"])
+        ordered = _ordered_terms_for_phrases(["1745 field notes"])
+        self.assertIn("1745", anchors)
+        self.assertIn("200226", anchors)
+        self.assertIn("1745", ordered)
 
     def test_ordered_terms_drop_leading_token_in_long_phrase(self) -> None:
         ordered = _ordered_terms_for_phrases(["Restore Deleted Chat"])
