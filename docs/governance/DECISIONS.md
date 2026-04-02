@@ -1801,3 +1801,30 @@
 - Why: analyst tools (DB Viewer/Data Wrangler) need high-signal columns for
   filtering and cohort inspection. These fields reduce manual reconstruction
   while keeping mining and gate logic stable.
+
+## D-139: Surface fail-history cohort alongside persistent fails
+
+- Date: `2026-04-02`
+- Category: `eval_observability`
+- Tags: `ocr_growth`, `fail_history`, `cohorting`, `rate_limit_resilience`
+- Decision:
+  - `tools/build_ocr_growth_fail_cohort.py` now emits two distinct cohorts:
+    - `cases`: persistent fail cohort (existing strict semantics)
+    - `fail_history_cases`: mixed-outcome cohort with at least one `FAIL` and
+      one `PASS`
+  - fail-history rows include conversion-state context:
+    - `fail_to_pass_converted`
+    - `first_status`
+    - `latest_status`
+  - summary now includes:
+    - `fail_history_cases`
+    - `fail_to_pass_cases`
+    - `fail_history_lane_counts`
+  - `make ocrfails` defaults are tuned for early-run visibility:
+    - `OCR_FAIL_COHORT_MIN_RUNS=1`
+    - `OCR_FAIL_COHORT_INCLUDE_UNSTABLE=true`
+    - `OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING=true`
+- Why: strict persistent-fail selection can be empty during rate-limit-heavy
+  or early growth runs. A separate fail-history surface preserves binary gate
+  integrity while exposing high-value fail signals and conversion patterns for
+  analyst review.

@@ -72,6 +72,9 @@ OCR_GROWTH_METRICS_OUTPUT ?= .local/eval_reports/ocr_growth_metrics.json
 OCR_GROWTH_METRICS_MARKDOWN ?= .local/eval_reports/ocr_growth_metrics.md
 OCR_GROWTH_FAIL_COHORT_JSON ?= .local/eval_cases/ocr_growth_fail_cohort.json
 OCR_GROWTH_FAIL_COHORT_MARKDOWN ?= .local/eval_reports/ocr_growth_fail_cohort.md
+OCR_FAIL_COHORT_MIN_RUNS ?= 1
+OCR_FAIL_COHORT_INCLUDE_UNSTABLE ?= true
+OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING ?= true
 OCR_GROWTH_LIMIT_RUNS ?= 0
 OCR_GROWTH_EVAL_OFFSET ?= 0
 OCR_GROWTH_EVAL_MAX_CASES ?= 0
@@ -996,6 +999,13 @@ eval-ocr-growth-fail-cohort:
 		echo "Run: make ocrmine"; \
 		exit 1; \
 	fi; \
+	FAIL_COHORT_ARGS="--min-runs $(OCR_FAIL_COHORT_MIN_RUNS)"; \
+	if [ "$(OCR_FAIL_COHORT_INCLUDE_UNSTABLE)" = "true" ]; then \
+		FAIL_COHORT_ARGS="$$FAIL_COHORT_ARGS --include-unstable"; \
+	fi; \
+	if [ "$(OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING)" = "true" ]; then \
+		FAIL_COHORT_ARGS="$$FAIL_COHORT_ARGS --require-ocr-framing"; \
+	fi; \
 	$(PYTHON) -m tools.build_ocr_growth_fail_cohort \
 		--stability-report "$(OCR_GROWTH_STABILITY_OUTPUT)" \
 		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
@@ -1003,8 +1013,7 @@ eval-ocr-growth-fail-cohort:
 		--review "$(OCR_TRANSCRIPT_REVIEW)" \
 		--output-json "$(OCR_GROWTH_FAIL_COHORT_JSON)" \
 		--output-markdown "$(OCR_GROWTH_FAIL_COHORT_MARKDOWN)" \
-		--min-runs "$(OCR_STABILITY_RUNS)" \
-		--require-ocr-framing
+		$$FAIL_COHORT_ARGS
 
 eval-ocr-transcript-stability-growth:
 	@set -eu; \
