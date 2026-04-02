@@ -126,6 +126,77 @@ def _reason_pattern(reason: str) -> str:
     return "other"
 
 
+def _fallback_failure_pattern(
+    *,
+    growth_case: dict[str, Any],
+    fail_runs: int,
+    pass_runs: int,
+    error_runs: int,
+    first_status: str,
+    latest_status: str,
+) -> str:
+    must_order = growth_case.get("must_appear_in_order")
+    if isinstance(must_order, list) and must_order:
+        return "ordered_phrase_missing_proxy"
+
+    must_any = growth_case.get("must_contain_any")
+    if isinstance(must_any, list) and must_any:
+        return "anchor_any_missing_proxy"
+
+    if error_runs > 0 and fail_runs <= 0 and pass_runs <= 0:
+        return "runtime_error_only"
+    if error_runs > 0 and fail_runs > 0 and pass_runs <= 0:
+        return "fail_with_errors"
+    if fail_runs > 0 and pass_runs <= 0:
+        return "persistent_fail"
+    if fail_runs > 0 and pass_runs > 0:
+        if latest_status == "PASS":
+            return "recovered_after_fail"
+        if latest_status == "FAIL":
+            return "regressed_after_pass"
+        if first_status == "FAIL":
+            return "flaky_fail_first"
+        return "flaky_mixed"
+    return "other"
+
+
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    out: list[str] = []
+    for item in value:
+        token = str(item).strip()
+        if token:
+            out.append(token)
+    return out
+
+
+def _effective_gate_terms(
+    *,
+    growth_case: dict[str, Any],
+    run_case: dict[str, Any],
+) -> tuple[list[str], list[str]]:
+    run_any = _string_list(run_case.get("must_contain_any"))
+    growth_any = _string_list(growth_case.get("must_contain_any"))
+    run_order = _string_list(run_case.get("must_appear_in_order"))
+    growth_order = _string_list(growth_case.get("must_appear_in_order"))
+    return (run_any or growth_any, run_order or growth_order)
+
+
+def _preview_terms(values: list[str], *, limit: int = 3) -> str:
+    if not values:
+        return "-"
+    head = values[:limit]
+    preview = ", ".join(head)
+    if len(values) > limit:
+        preview = f"{preview} (+{len(values) - limit})"
+    return preview
+
+
+def _format_gate_probe(must_any: list[str], must_order: list[str]) -> str:
+    return f"any[{_preview_terms(must_any)}] order[{_preview_terms(must_order)}]"
+
+
 def _merge_case_rows(
     *,
     stability_cases: list[dict[str, Any]],
@@ -276,6 +347,11 @@ def build_fail_cohort(
             if isinstance(sample_reasons_raw, list)
             else []
         )
+        effective_must_any, effective_must_order = _effective_gate_terms(
+            growth_case=growth_case,
+            run_case=run_case,
+        )
+        gate_probe_summary = _format_gate_probe(effective_must_any, effective_must_order)
         case_reason_patterns: Counter[str] = Counter()
 
         for reason in sample_reasons:
@@ -289,6 +365,16 @@ def build_fail_cohort(
         primary_failure_pattern = "unknown"
         if case_reason_patterns:
             primary_failure_pattern = case_reason_patterns.most_common(1)[0][0]
+        else:
+            primary_failure_pattern = _fallback_failure_pattern(
+                growth_case=growth_case,
+                fail_runs=fail_runs,
+                pass_runs=pass_runs,
+                error_runs=int(row.get("error_runs", 0) or 0),
+                first_status=first_status,
+                latest_status=latest_status,
+            )
+            reason_pattern_counts[primary_failure_pattern] += 1
 
         if fail_runs > 0 and pass_runs > 0:
             fail_history_cases.append(
@@ -308,6 +394,9 @@ def build_fail_cohort(
                     "sample_reasons": sample_reasons,
                     "failure_patterns": sorted(case_reason_patterns.keys()),
                     "primary_failure_pattern": primary_failure_pattern,
+                    "gate_probe_summary": gate_probe_summary,
+                    "effective_must_contain_any": effective_must_any,
+                    "effective_must_appear_in_order": effective_must_order,
                     "framing_episode_count": framing_episode_count,
                     "review_episode_count": len(linked_review_rows),
                 }
@@ -348,6 +437,9 @@ def build_fail_cohort(
             "must_appear_in_order": growth_case.get("must_appear_in_order", []),
             "run_must_contain_any": run_case.get("must_contain_any", []),
             "run_must_appear_in_order": run_case.get("must_appear_in_order", []),
+            "effective_must_contain_any": effective_must_any,
+            "effective_must_appear_in_order": effective_must_order,
+            "gate_probe_summary": gate_probe_summary,
             "unresolved_fail_age_hours": round(age_hours, 3),
             "review_episode_count": len(linked_review_rows),
             "framing_episode_count": framing_episode_count,
@@ -405,6 +497,14 @@ def build_fail_cohort(
                 "error_runs": error_runs,
                 "statuses": statuses,
                 "framing_episode_count": framing_episode_count,
+                "effective_must_contain_any": _string_list(
+                    run_case.get("must_contain_any")
+                )
+                or _string_list(growth_case.get("must_contain_any")),
+                "effective_must_appear_in_order": _string_list(
+                    run_case.get("must_appear_in_order")
+                )
+                or _string_list(growth_case.get("must_appear_in_order")),
             }
         )
 
@@ -544,13 +644,14 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
         lines.append("## Fail-History Cases (At Least One PASS and One FAIL)")
         lines.append("")
         lines.append(
-            "| case_id | lane | pattern | fail_runs | pass_runs | observed_runs | fail_to_pass | source_name | image_path |"
+            "| case_id | lane | pattern | gate_probe | fail_runs | pass_runs | observed_runs | fail_to_pass | source_name | image_path |"
         )
-        lines.append("|---|---|---|---:|---:|---:|---|---|---|")
+        lines.append("|---|---|---|---|---:|---:|---:|---|---|---|")
         for row in fail_history_cases:
             case_id = str(row.get("id", ""))
             lane = str(row.get("lane", ""))
             pattern = str(row.get("primary_failure_pattern", ""))
+            gate_probe = str(row.get("gate_probe_summary", "-")).replace("|", "\\|")
             fail_runs = int(row.get("fail_runs", 0) or 0)
             pass_runs = int(row.get("pass_runs", 0) or 0)
             observed = int(row.get("observed_runs", 0) or 0)
@@ -558,18 +659,19 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
             source_name = str(row.get("source_name", "")).replace("|", "\\|")
             image_path = str(row.get("image_path", "")).replace("|", "\\|")
             lines.append(
-                f"| {case_id} | {lane} | {pattern} | {fail_runs} | {pass_runs} | {observed} | {fail_to_pass} | "
+                f"| {case_id} | {lane} | {pattern} | {gate_probe} | {fail_runs} | {pass_runs} | {observed} | {fail_to_pass} | "
                 f"{source_name} | {image_path} |"
             )
         lines.append("")
         lines.append(
-            "| case_id | lane | pattern | fail_runs | observed_runs | framing_eps | age_hours | source_name | image_path |"
+            "| case_id | lane | pattern | gate_probe | fail_runs | observed_runs | framing_eps | age_hours | source_name | image_path |"
         )
-        lines.append("|---|---|---|---:|---:|---:|---:|---|---|")
+        lines.append("|---|---|---|---|---:|---:|---:|---:|---|---|")
         for row in selected:
             case_id = str(row.get("id", ""))
             lane = str(row.get("lane", ""))
             pattern = str(row.get("primary_failure_pattern", ""))
+            gate_probe = str(row.get("gate_probe_summary", "-")).replace("|", "\\|")
             fail_runs = int(row.get("fail_runs", 0) or 0)
             observed = int(row.get("observed_runs", 0) or 0)
             framing_eps = int(row.get("framing_episode_count", 0) or 0)
@@ -577,7 +679,7 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
             source_name = str(row.get("source_name", "")).replace("|", "\\|")
             image_path = str(row.get("image_path", "")).replace("|", "\\|")
             lines.append(
-                f"| {case_id} | {lane} | {pattern} | {fail_runs} | {observed} | {framing_eps} | {age_hours:.3f} | "
+                f"| {case_id} | {lane} | {pattern} | {gate_probe} | {fail_runs} | {observed} | {framing_eps} | {age_hours:.3f} | "
                 f"{source_name} | {image_path} |"
             )
         lines.append("")
@@ -585,18 +687,24 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
     if rate_limited_cases:
         lines.append("## Rate-Limited Cases (No PASS/FAIL Decision Yet)")
         lines.append("")
-        lines.append("| case_id | lane | error_runs | observed_runs | framing_eps | source_name | image_path |")
-        lines.append("|---|---|---:|---:|---:|---|---|")
+        lines.append(
+            "| case_id | lane | gate_probe | error_runs | observed_runs | framing_eps | source_name | image_path |"
+        )
+        lines.append("|---|---|---|---:|---:|---:|---|---|")
         for row in rate_limited_cases:
             case_id = str(row.get("id", ""))
             lane = str(row.get("lane", ""))
+            gate_probe = _format_gate_probe(
+                _string_list(row.get("effective_must_contain_any")),
+                _string_list(row.get("effective_must_appear_in_order")),
+            ).replace("|", "\\|")
             error_runs = int(row.get("error_runs", 0) or 0)
             observed = int(row.get("observed_runs", 0) or 0)
             framing_eps = int(row.get("framing_episode_count", 0) or 0)
             source_name = str(row.get("source_name", "")).replace("|", "\\|")
             image_path = str(row.get("image_path", "")).replace("|", "\\|")
             lines.append(
-                f"| {case_id} | {lane} | {error_runs} | {observed} | {framing_eps} | {source_name} | {image_path} |"
+                f"| {case_id} | {lane} | {gate_probe} | {error_runs} | {observed} | {framing_eps} | {source_name} | {image_path} |"
             )
         lines.append("")
 
