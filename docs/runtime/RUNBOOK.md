@@ -246,6 +246,10 @@ plus tests as the active spec surface (`make test`,
      - includes:
        - `require_ocr_framing`
        - `skipped_non_framed`
+       - `skipped_case_map_mismatch`
+         - if non-zero, stability history and current growth case map are from
+           different generations; rerun `make ocrstablegrowth` after refreshing
+           growth cases.
 5. Notebook analysis surface:
    - `make notes`
    - starter template:

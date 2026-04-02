@@ -1582,3 +1582,21 @@
 - Why: growth fail cohorts should remain OCR-specific remediation inputs. This
   avoids pulling non-framed/noisy failures into the hard-fail set while
   preserving strict binary gate semantics.
+
+## D-127: Protect growth fail cohort from stale case-map joins
+
+- Date: `2026-04-01`
+- Category: `eval_quality`
+- Tags: `ocr_transcripts`, `growth_lane`, `fail_cohort`, `stale_join_guard`
+- Decision:
+  - load canonical per-case metadata from stability run reports
+    (`report_json`) when building fail cohorts
+  - if growth case-map `image_path` for a case id does not match run-report
+    `image_path`, skip that row and increment `skipped_case_map_mismatch`
+  - add cohort diagnostics:
+    - summary: `skipped_case_map_mismatch`
+    - per-case: `run_must_contain_any`, `run_must_appear_in_order`
+  - add lane fallback from linked review rows when growth lane is unknown
+- Why: growth case ids can be regenerated while preserving id shape, which can
+  silently misjoin stability history to new case definitions. The stale-join
+  guard keeps fail cohorts trustworthy for remediation decisions.

@@ -87,6 +87,12 @@
     pressure at provider boundary (`0/1` with fail-fast threshold `1`)
   - latest full transcript single-run attempt (`make ocrall`) aborted under
     fail-fast after sustained OCR `429` streak (`0/3` PASS, threshold `3`)
+  - fail cohort now protects against stale case-map joins:
+    - current analysis view (`make ocrfails OCR_STABILITY_RUNS=3`) reports:
+      - `selected_fail_cases=20`
+      - `skipped_case_map_mismatch=35`
+    - indicates growth stability history and current growth case map are from
+      different generations; rerun `make ocrstablegrowth` after refresh.
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS

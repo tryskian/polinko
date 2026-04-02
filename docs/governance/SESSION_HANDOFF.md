@@ -260,6 +260,9 @@
     - ensure `OCR_STABILITY_RUNS` matches observed run window in
       `.local/eval_reports/ocr_growth_stability.json` (for example `3` vs `5`)
       to avoid false-empty cohorts
+    - if `skipped_case_map_mismatch > 0`, treat cohort as stale-join protected
+      and rerun `make ocrstablegrowth` on refreshed growth cases before
+      precision patch decisions
 - If eval runs hit sustained `429` streaks:
   - keep binary pass/fail semantics unchanged
   - tune retry/fail-fast knobs only (do not relax gate criteria)

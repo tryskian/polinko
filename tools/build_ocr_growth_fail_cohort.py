@@ -35,6 +35,51 @@ def _load_case_map(path: Path) -> dict[str, dict[str, Any]]:
     return out
 
 
+def _resolve_run_report_path(*, report_path: str, stability_report_path: Path) -> Path:
+    candidate = Path(report_path).expanduser()
+    if candidate.is_absolute():
+        return candidate
+    return (stability_report_path.parent / candidate).resolve()
+
+
+def _load_run_case_map(
+    *, stability_payload: dict[str, Any], stability_report_path: Path
+) -> dict[str, dict[str, Any]]:
+    runs = stability_payload.get("runs")
+    if not isinstance(runs, list):
+        return {}
+    for run in runs:
+        if not isinstance(run, dict):
+            continue
+        report_rel = str(run.get("report_json", "")).strip()
+        if not report_rel:
+            continue
+        report_path = _resolve_run_report_path(
+            report_path=report_rel,
+            stability_report_path=stability_report_path,
+        )
+        if not report_path.is_file():
+            continue
+        try:
+            payload = _load_json_object(report_path)
+        except Exception:
+            continue
+        raw_cases = payload.get("cases")
+        if not isinstance(raw_cases, list) or not raw_cases:
+            continue
+        out: dict[str, dict[str, Any]] = {}
+        for row in raw_cases:
+            if not isinstance(row, dict):
+                continue
+            case_id = str(row.get("id", "")).strip()
+            if not case_id:
+                continue
+            out[case_id] = row
+        if out:
+            return out
+    return {}
+
+
 def _load_review_index(path: Path) -> dict[str, list[dict[str, Any]]]:
     if not path.is_file():
         return {}
@@ -82,6 +127,7 @@ def build_fail_cohort(
     *,
     stability_payload: dict[str, Any],
     growth_case_map: dict[str, dict[str, Any]],
+    run_case_map: dict[str, dict[str, Any]],
     metrics_map: dict[str, dict[str, Any]],
     review_index: dict[str, list[dict[str, Any]]],
     min_runs: int,
@@ -97,6 +143,7 @@ def build_fail_cohort(
     reason_counts: Counter[str] = Counter()
     reason_pattern_counts: Counter[str] = Counter()
     skipped_non_framed = 0
+    skipped_case_map_mismatch = 0
 
     for row in raw_cases:
         if not isinstance(row, dict):
@@ -123,10 +170,30 @@ def build_fail_cohort(
                 continue
 
         growth_case = growth_case_map.get(case_id, {})
+        run_case = run_case_map.get(case_id, {})
         lane = str(growth_case.get("lane", "unknown")).strip() or "unknown"
-        source_name = str(growth_case.get("source_name", "")).strip() or case_id
-        image_path = str(growth_case.get("image_path", "")).strip()
+        source_name = (
+            str(run_case.get("source_name", "")).strip()
+            or str(growth_case.get("source_name", "")).strip()
+            or case_id
+        )
+        image_path = (
+            str(run_case.get("image_path", "")).strip()
+            or str(growth_case.get("image_path", "")).strip()
+        )
+        growth_image_path = str(growth_case.get("image_path", "")).strip()
+        if run_case_map and growth_image_path and image_path and growth_image_path != image_path:
+            skipped_case_map_mismatch += 1
+            continue
         linked_review_rows = review_index.get(image_path, [])
+        if lane == "unknown" and linked_review_rows:
+            review_lane_counts: Counter[str] = Counter(
+                str(review_row.get("lane", "")).strip() or "unknown"
+                for review_row in linked_review_rows
+                if isinstance(review_row, dict)
+            )
+            if review_lane_counts:
+                lane = review_lane_counts.most_common(1)[0][0]
         framing_episode_count = sum(
             1 for review_row in linked_review_rows if bool(review_row.get("ocr_framing_signal", False))
         )
@@ -178,6 +245,8 @@ def build_fail_cohort(
             "char_count_span": int(row.get("char_count_span", 0) or 0),
             "must_contain_any": growth_case.get("must_contain_any", []),
             "must_appear_in_order": growth_case.get("must_appear_in_order", []),
+            "run_must_contain_any": run_case.get("must_contain_any", []),
+            "run_must_appear_in_order": run_case.get("must_appear_in_order", []),
             "unresolved_fail_age_hours": round(age_hours, 3),
             "review_episode_count": len(linked_review_rows),
             "framing_episode_count": framing_episode_count,
@@ -200,6 +269,7 @@ def build_fail_cohort(
         "include_unstable": include_unstable,
         "require_ocr_framing": require_ocr_framing,
         "skipped_non_framed": skipped_non_framed,
+        "skipped_case_map_mismatch": skipped_case_map_mismatch,
         "lane_counts": dict(sorted(lane_counts.items())),
         "top_reasons": [
             {"reason": reason, "count": count}
@@ -237,6 +307,7 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
     lines.append(f"| include_unstable | {summary['include_unstable']} |")
     lines.append(f"| require_ocr_framing | {summary['require_ocr_framing']} |")
     lines.append(f"| skipped_non_framed | {summary['skipped_non_framed']} |")
+    lines.append(f"| skipped_case_map_mismatch | {summary['skipped_case_map_mismatch']} |")
     lines.append("")
 
     lane_counts = summary.get("lane_counts")
@@ -384,10 +455,15 @@ def main() -> int:
                 if case_id:
                     metrics_map[case_id] = row
     review_index = _load_review_index(review_path)
+    run_case_map = _load_run_case_map(
+        stability_payload=stability_payload,
+        stability_report_path=stability_path,
+    )
 
     report = build_fail_cohort(
         stability_payload=stability_payload,
         growth_case_map=growth_case_map,
+        run_case_map=run_case_map,
         metrics_map=metrics_map,
         review_index=review_index,
         min_runs=int(args.min_runs),
@@ -418,6 +494,7 @@ def main() -> int:
     print(f"  include_unstable: {summary['include_unstable']}")
     print(f"  require_ocr_framing: {summary['require_ocr_framing']}")
     print(f"  skipped_non_framed: {summary['skipped_non_framed']}")
+    print(f"  skipped_case_map_mismatch: {summary['skipped_case_map_mismatch']}")
     print(f"  json: {output_json}")
     print(f"  markdown: {output_markdown}")
     return 0
