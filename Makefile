@@ -953,6 +953,11 @@ eval-ocr-transcript-stability-growth:
 		echo "No transcript OCR growth cases available yet; skipping stability run."; \
 		exit 0; \
 	fi; \
+	OUTPUT_JSON="$(OCR_GROWTH_STABILITY_OUTPUT)"; \
+	if [ "$(OCR_GROWTH_EVAL_OFFSET)" -gt 0 ] || [ "$(OCR_GROWTH_EVAL_MAX_CASES)" -gt 0 ]; then \
+		OUTPUT_JSON=".local/eval_reports/ocr_growth_stability.slice-offset$(OCR_GROWTH_EVAL_OFFSET)-max$(OCR_GROWTH_EVAL_MAX_CASES).json"; \
+		echo "Using sliced growth stability output: $$OUTPUT_JSON"; \
+	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
 	$(PYTHON) -m tools.eval_ocr_stability \
 		--base-url "http://127.0.0.1:8000" \
@@ -963,7 +968,7 @@ eval-ocr-transcript-stability-growth:
 		--ocr-retries "$(OCR_GROWTH_OCR_RETRIES)" \
 		--ocr-retry-delay-ms "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" \
 		--report-dir "$(OCR_GROWTH_STABILITY_REPORT_DIR)" \
-		--output-json "$(OCR_GROWTH_STABILITY_OUTPUT)"
+		--output-json "$$OUTPUT_JSON"
 
 eval-ocr-transcript-stability-handwriting-benchmark:
 	@set -eu; \
