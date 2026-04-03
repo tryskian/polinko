@@ -204,7 +204,11 @@ Read-only DB audits remain allowed:
      - used to measure pass-from-fail movement, not to block release directly
 3. Canonical command sequence:
    - mine/build cases:
-     - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+     - `make ocrmine`
+     - optional explicit override:
+       - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+     - default export root fallback (when unset):
+       - `CGPT_EXPORT_ROOT_DEFAULT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT`
    - run widened growth lane (fail-tolerant):
      - `make ocrwiden`
      - optional bounded batch run:
@@ -1042,6 +1046,20 @@ Current policy:
    - meta-level shift handling
    - anti-mimicry style adaptation
    - grounding under playful abstraction
+
+## Run OCR Safety Bridge Eval (Deterministic)
+
+1. Ensure API is running locally (`make server` or `make server-daemon`).
+2. Run:
+   - `make eval-ocr-safety`
+3. Optional timestamped report run:
+   - `make eval-ocr-safety-report`
+4. Scope:
+   - case file: `docs/eval/cases/ocr_safety_eval_cases.json`
+   - harness: deterministic response-behaviour gate
+   - intent: measure OCR-calibration transfer into safety/uncertainty responses
+5. Gate posture:
+   - this lane is diagnostic and non-release-gating in current phase.
 
 ## Generate All Eval Reports
 

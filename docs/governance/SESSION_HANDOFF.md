@@ -13,6 +13,8 @@
 - OCR-forward model is active:
   - `lockset` lane is release-gating (strict green requirement)
   - `growth` lane is fail-tolerant for pass-from-fail measurement
+  - `ocr_safety` lane is diagnostic (non-release-gating) for OCR-to-safety
+    calibration transfer checks
 - `POST /chat` now supports deterministic harness testing for UI smoke:
   - request override: `harness_mode=fixture`
   - optional fixed output: `fixture_output`
@@ -128,9 +130,10 @@
       with OCR transcription phrases
     - review diagnostics include `correction_overlap_signal`
     - off-topic/late correction phrases no longer pollute anchor terms
-  - low-confidence review rows are now filtered to OCR-signaled episodes only
-    (`ocr_literal_intent_signal`, `ocr_framing_signal`, `correction_signal`, or
-    `correction_overlap_signal`)
+  - low-confidence review rows are now filtered to OCR-signaled episodes only:
+    - all lanes: `ocr_literal_intent_signal`, `correction_signal`,
+      `correction_overlap_signal`, `askless_handwriting_signal`
+    - handwriting lane only: `ocr_framing_signal`
   - OCR framing signal ignores explicit negated wording
     (`no ocr`, `not ocr`, `without ocr`, `no transcription`)
   - `make eval-ocr-transcript-stability` now self-starts `server-daemon`
@@ -150,8 +153,8 @@
     - mined cases: `20` total
       (`handwriting=5`, `typed=11`, `illustration=4`)
     - growth cases: `21`
-    - review summary: `episodes=167`
-      (`high=7`, `medium=17`, `low=143`)
+    - review summary: `episodes=53`
+      (`high=7`, `medium=17`, `low=29`)
     - previous `55`/`29`/`25` mined outputs are legacy reference only
   - latest lane validations:
     - latest complete transcript lane (diagnostic, pre-widening):
@@ -193,6 +196,10 @@
     report paths to avoid stale fail-cohort case mapping
   - latest aligned refresh (April 3, 2026):
     - `make ocrmine` emitted `20` strict cases, `21` growth cases
+    - review summary tightened to `53` episodes
+      (`high=7`, `medium=17`, `low=29`)
+    - export-root fallback is active for mining/index commands when unset:
+      - `CGPT_EXPORT_ROOT_DEFAULT`
     - `make ocrstablegrowth`:
       - `21` cases replayed, `21` pass, `0` fail, `0` errors
       - stability: `21` stable, `0` flaky
@@ -211,6 +218,9 @@
   - deterministic response-behaviour gate remains green after phrase-coverage
     hardening for `no_memory_pretend_claim` (retain/store/remember inability
     forms included).
+  - OCR safety bridge lane is now runnable via:
+    - `make eval-ocr-safety`
+    - `make eval-ocr-safety-report`
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`

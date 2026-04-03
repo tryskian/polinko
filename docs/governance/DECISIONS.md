@@ -2121,3 +2121,70 @@
 - Why: the residual growth fail came from a non-OCR idiom being mined as OCR
   intent, and response-behaviour determinism was penalising valid explicit
   non-memory refusals that used retain/store/remember phrasing.
+
+## D-153: Add OCR-to-safety bridge eval lane as deterministic non-gating diagnostic
+
+- Date: `2026-04-02`
+- Category: `eval_data`
+- Tags: `ocr_safety`, `bridge_lane`, `determinism`, `diagnostic`
+- Decision:
+  - add dedicated OCR safety bridge case file:
+    - `docs/eval/cases/ocr_safety_eval_cases.json`
+  - add canonical commands:
+    - `make eval-ocr-safety`
+    - `make eval-ocr-safety-report`
+  - extend deterministic response-behaviour harness with `--suite-id` so
+    report/trace metadata remains lane-specific when sharing one evaluator.
+  - include OCR safety report generation in `make eval-reports`.
+  - keep this lane explicitly non-release-gating in current phase.
+- Why: we need a measurable transfer check from OCR calibration into
+  uncertainty/safety response behaviour without destabilising the strict
+  release gate.
+
+## D-154: Default transcript export root fallback for OCR mining commands
+
+- Date: `2026-04-03`
+- Category: `workflow_environment`
+- Tags: `command_surface`, `ocr_mining`, `defaults`, `operator_efficiency`
+- Decision:
+  - update Makefile export-index/mining targets to use fallback export root
+    when `CGPT_EXPORT_ROOT` is unset:
+    - `make cgpt-export-index`
+    - `make ocr-cases-from-export` (and alias `make ocrmine`)
+  - fallback source:
+    - `CGPT_EXPORT_ROOT_DEFAULT`
+  - keep explicit override support via:
+    - `CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+- Why: removes repetitive operator friction and keeps OCR mining commands
+  deterministic from canonical local defaults.
+
+## D-155: Restrict low-signal review retention to OCR-evidenced episodes
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_mining`, `signal_quality`, `review_noise`, `precision`
+- Decision:
+  - tighten low-signal episode retention in
+    `tools/build_ocr_cases_from_export.py`:
+    - retain low-signal rows only when one of:
+      - `ocr_literal_intent_signal`
+      - `correction_signal`
+      - `correction_overlap_signal`
+      - `askless_handwriting_signal`
+      - handwriting-lane `ocr_framing_signal`
+    - remove broad framing-only retention for typed/illustration rows.
+  - validation run sequence:
+    - `python -m unittest tests.test_build_ocr_cases_from_export`
+    - `make ocrmine`
+    - `make test`
+    - `make quality-gate-deterministic`
+  - refreshed mining baseline after remine:
+    - strict mined cases unchanged: `20`
+    - growth cases unchanged: `21`
+    - review summary tightened: `episodes=53`
+      (`high=7`, `medium=17`, `low=29`)
+    - `skipped_low_confidence=29`
+    - `actionable_backlog=12`
+- Why: review files had accumulated low-value non-OCR conversational rows under
+  framing-only retention. Tightening retention preserves strict/growth outputs
+  while improving manual triage quality.

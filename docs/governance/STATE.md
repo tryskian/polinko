@@ -50,6 +50,7 @@
   - active eval model is split into:
     - `lockset` lane (strict release gate, must remain green)
     - `growth` lane (fail-tolerant novel cases used for pass-from-fail tracking)
+    - `ocr_safety` lane (diagnostic OCR-to-safety bridge, non-release-gating)
   - growth metrics are executable via:
     - growth eval/stability:
     - `make ocrwiden`
@@ -58,6 +59,9 @@
     - `make ocrfails`
       - now requires OCR-framed review linkage (`ocr_framing_signal=true`)
         from `.local/eval_cases/ocr_transcript_cases_review.json`
+    - mining/index commands now use default export-root fallback when
+      `CGPT_EXPORT_ROOT` is unset:
+      - `CGPT_EXPORT_ROOT_DEFAULT`
     - outputs:
       - `.local/eval_cases/ocr_transcript_cases_growth.json`
       - `.local/eval_cases/ocr_growth_fail_cohort.json`
@@ -71,6 +75,9 @@
     - illustration: `3/3` PASS
   - local visual analysis starter is available at:
     - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+  - OCR safety bridge commands:
+    - `make eval-ocr-safety`
+    - `make eval-ocr-safety-report`
 - Eval runtime resilience checkpoint (April 1, 2026):
   - retrieval harness now supports bounded transient retries for `429`/`5xx`
     and connection errors (`--request-retries`, `--request-retry-delay-ms`)
@@ -474,24 +481,25 @@
   - handwriting hint detection is token-bounded (prevents substring drift such
     as `Polinko` matching `ink`)
   - unstable transcript sources are quarantined from the active strict set
-  - low-confidence review episodes are retained only when OCR signal is present
-    (`ocr_literal_intent_signal`, `ocr_framing_signal`, `correction_signal`, or
-    `correction_overlap_signal`)
+  - low-confidence review episodes are retained only when OCR signal is present:
+    - all lanes: `ocr_literal_intent_signal`, `correction_signal`,
+      `correction_overlap_signal`, `askless_handwriting_signal`
+    - handwriting lane only: `ocr_framing_signal`
   - OCR framing signal now excludes explicit negations
     (`no ocr`, `not ocr`, `without ocr`, `no transcription`)
   - review-summary baseline after latest offline rerun:
-    `episodes=178` (`high=7`, `medium=27`, `low=144`)
-  - active mined baseline: `26` cases (`handwriting=5`, `typed=11`,
-    `illustration=10`)
-  - active growth baseline: `148` cases
-  - previous `55`/`29`/`25` mined outputs are retained as legacy reference for
-    comparison, not as active strict gate input
+    `episodes=53` (`high=7`, `medium=17`, `low=29`)
+  - active mined baseline: `20` cases (`handwriting=5`, `typed=11`,
+    `illustration=4`)
+  - active growth baseline: `21` cases
+  - previous exploratory miner outputs remain legacy reference only and are not
+    active strict gate input
 - Transcript OCR benchmark and stability gates remain strict and green under
   the last complete lockset baseline:
   - full transcript lane: `21/21` PASS, stability `21 stable / 0 flaky`
   - handwriting benchmark: `4/4` PASS, stability `4 stable / 0 flaky`
   - typed benchmark: `6/6` PASS, stability `6 stable / 0 flaky`
-  - illustration benchmark: `2/2` PASS, stability `2 stable / 0 flaky`
+  - illustration benchmark: `3/3` PASS, stability `3 stable / 0 flaky`
 - Optional Responses API orchestration mode is implemented behind feature flags:
   - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED`
   - `POLINKO_RESPONSES_VECTOR_STORE_ID`

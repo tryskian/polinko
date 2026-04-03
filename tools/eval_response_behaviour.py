@@ -164,7 +164,7 @@ def _normalize_phrase_groups(raw: Any, *, field_name: str, case_id: str) -> list
     return groups
 
 
-def _load_cases(path: Path) -> list[dict[str, Any]]:
+def _load_cases(path: Path, *, default_case_prefix: str = "response-behaviour") -> list[dict[str, Any]]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise RuntimeError("Cases file must be a JSON object.")
@@ -176,7 +176,7 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
     for index, case in enumerate(cases, start=1):
         if not isinstance(case, dict):
             raise RuntimeError(f"Case #{index} must be an object.")
-        case_id = str(case.get("id", f"response-behaviour-{index}")).strip()
+        case_id = str(case.get("id", f"{default_case_prefix}-{index}")).strip()
         query = str(case.get("query", "")).strip()
         if not case_id or not query:
             raise RuntimeError(f"Case #{index} must include non-empty 'id' and 'query'.")
@@ -333,6 +333,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Session id prefix for generated eval chats.",
     )
     parser.add_argument(
+        "--suite-id",
+        default="response_behaviour",
+        help="Logical suite id used in trace metadata (snake_case).",
+    )
+    parser.add_argument(
         "--run-id",
         default="",
         help="Optional run id suffix. Defaults to current epoch seconds.",
@@ -382,14 +387,18 @@ def main() -> int:
         raise SystemExit("--min-pass-attempts must be >= 1.")
     if args.min_pass_attempts > args.case_attempts:
         raise SystemExit("--min-pass-attempts cannot exceed --case-attempts.")
+    suite_id = str(args.suite_id).strip().lower().replace("-", "_")
+    if not suite_id or not re.fullmatch(r"[a-z0-9_]+", suite_id):
+        raise SystemExit("--suite-id must match [a-z0-9_]+.")
+
     cases_path = Path(args.cases)
     if not cases_path.exists():
         raise SystemExit(f"Cases file not found: {cases_path}")
-    cases = _load_cases(cases_path)
+    cases = _load_cases(cases_path, default_case_prefix=suite_id.replace("_", "-"))
     run_id = args.run_id.strip() or str(int(time.time()))
     headers = _headers()
 
-    print(f"Running response behaviour eval on {args.base_url}")
+    print(f"Running {suite_id} eval on {args.base_url}")
     print(f"Cases: {len(cases)} | run_id={run_id}")
     print(
         "Attempts per case: "
@@ -543,6 +552,7 @@ def main() -> int:
         report_path.parent.mkdir(parents=True, exist_ok=True)
         report_payload = {
             "run_id": run_id,
+            "suite_id": suite_id,
             "base_url": args.base_url,
             "cases_path": str(cases_path),
             "strict": bool(args.strict),
@@ -569,7 +579,7 @@ def main() -> int:
                 },
                 gate_outcomes=[
                     {
-                        "name": "response_behaviour_eval",
+                        "name": f"{suite_id}_eval",
                         "passed": len(failures) == 0,
                         "detail": f"passed={passes}/{len(cases)}, failed={len(failures)}",
                     }
@@ -579,6 +589,7 @@ def main() -> int:
                 metadata={
                     "base_url": args.base_url,
                     "strict": bool(args.strict),
+                    "suite_id": suite_id,
                 },
             )
             trace_path = append_eval_trace(
