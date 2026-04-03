@@ -1058,6 +1058,7 @@ def build_from_export(
                     "conversation_title": title,
                     "conversation_json": str(conversation_path),
                     "image_path": image_path,
+                    "source_name": Path(image_path).name,
                     "ask_text": msg.text,
                     "query_text": msg.text,
                     "assistant_text": assistant_text,
