@@ -2471,3 +2471,28 @@
 - Why: focused replay should stay diagnostically diverse by lane when case
   budget is constrained, instead of over-favoring one lane due global score
   sorting.
+
+## D-165: Filter exploratory anchor-any overrides to remove low-signal terms
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `exploratory_lane`, `probe_quality`, `anchor_terms`
+- Decision:
+  - refine exploratory `must_contain_any` generation in
+    `tools/build_ocr_growth_fail_cohort.py`:
+    - drop numeric-only anchor terms
+    - drop generic/stopword-heavy anchors
+    - deduplicate plural/singular near-duplicates
+    - keep multi-token anchors only when they contain at least two meaningful
+      lexical terms
+  - preserve strict replay behaviour while reducing low-signal gate clutter in
+    exploratory probes.
+  - add regression coverage:
+    - `test_exploratory_refines_anchor_any_terms`
+      in `tests/test_build_ocr_growth_fail_cohort.py`
+  - validation:
+    - `make ocrfocus`
+    - `make test`
+    - `make lint-docs`
+- Why: exploratory fail signal should come from OCR-relevant lexical anchors,
+  not numeric noise or redundant term variants.

@@ -598,6 +598,10 @@
 - Exploratory probe selection now uses lane-balanced round-robin:
   - candidate ranking remains per-lane score-driven
   - final selection rotates lanes to keep low-budget focused runs diverse.
+- Exploratory `must_contain_any` anchors are now filtered for signal quality:
+  - numeric-only and generic terms are dropped
+  - plural/singular near-duplicates are collapsed
+  - multi-token anchors require at least two meaningful lexical terms.
 - Runtime DB null surfaces now have a read-only audit command:
   - `make nulls`
   - output: `.local/eval_reports/runtime_null_audit.{json,md}`

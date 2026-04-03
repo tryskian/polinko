@@ -266,6 +266,50 @@ def _derive_order_tokens_from_anchors(anchors: list[str]) -> list[str]:
     return ordered_tokens
 
 
+def _derive_anchor_any_terms(anchors: list[str]) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for phrase in anchors:
+        raw = " ".join(str(phrase).split()).strip()
+        if not raw:
+            continue
+        raw_lower = raw.lower()
+        tokens = _tokenise_phrase(raw)
+        if not tokens:
+            continue
+        if len(tokens) == 1:
+            token = tokens[0]
+            canonical = _canonical_probe_token(token)
+            if token.isdigit():
+                continue
+            if len(token) < EXPLORATORY_MIN_TOKEN_LEN:
+                continue
+            if canonical in EXPLORATORY_STOPWORDS:
+                continue
+            if canonical in seen:
+                continue
+            seen.add(canonical)
+            out.append(raw)
+            continue
+
+        # Multi-token phrase: keep if it includes meaningful lexical content.
+        meaningful_tokens = [
+            token
+            for token in tokens
+            if re.search(r"[a-z]", token)
+            and len(token) >= EXPLORATORY_MIN_TOKEN_LEN
+            and _canonical_probe_token(token) not in EXPLORATORY_STOPWORDS
+        ]
+        if len(meaningful_tokens) < 2:
+            continue
+        phrase_key = f"phrase:{raw_lower}"
+        if phrase_key in seen:
+            continue
+        seen.add(phrase_key)
+        out.append(raw)
+    return out
+
+
 def _derive_exploratory_overrides(
     *,
     growth_case: dict[str, Any],
@@ -306,7 +350,9 @@ def _derive_exploratory_overrides(
         overrides["must_appear_in_order"] = selected_order
 
     if effective_any:
-        overrides["must_contain_any"] = effective_any[:8]
+        refined_any = _derive_anchor_any_terms(effective_any)
+        if refined_any:
+            overrides["must_contain_any"] = refined_any[:8]
 
     try:
         base_min_chars = int(run_case.get("min_chars") or growth_case.get("min_chars") or 0)

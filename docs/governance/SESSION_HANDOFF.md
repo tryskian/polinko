@@ -360,6 +360,8 @@
       - numeric/generic token filtering for `must_appear_in_order`
       - minimum probe token length of `5`
       - plural/singular near-duplicate collapse during order-term selection
+      - low-signal anchor-any filtering (`must_contain_any`) to drop numeric,
+        generic, and duplicate-stem terms
       - `min_chars` floor of `12`
       - compact exploratory order chains (`max=3` terms)
     - exploratory case selection now uses lane-balanced round-robin (important
