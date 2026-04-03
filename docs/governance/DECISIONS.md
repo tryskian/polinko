@@ -2157,3 +2157,34 @@
     - `CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 - Why: removes repetitive operator friction and keeps OCR mining commands
   deterministic from canonical local defaults.
+
+## D-155: Restrict low-signal review retention to OCR-evidenced episodes
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_mining`, `signal_quality`, `review_noise`, `precision`
+- Decision:
+  - tighten low-signal episode retention in
+    `tools/build_ocr_cases_from_export.py`:
+    - retain low-signal rows only when one of:
+      - `ocr_literal_intent_signal`
+      - `correction_signal`
+      - `correction_overlap_signal`
+      - `askless_handwriting_signal`
+      - handwriting-lane `ocr_framing_signal`
+    - remove broad framing-only retention for typed/illustration rows.
+  - validation run sequence:
+    - `python -m unittest tests.test_build_ocr_cases_from_export`
+    - `make ocrmine`
+    - `make test`
+    - `make quality-gate-deterministic`
+  - refreshed mining baseline after remine:
+    - strict mined cases unchanged: `20`
+    - growth cases unchanged: `21`
+    - review summary tightened: `episodes=53`
+      (`high=7`, `medium=17`, `low=29`)
+    - `skipped_low_confidence=29`
+    - `actionable_backlog=12`
+- Why: review files had accumulated low-value non-OCR conversational rows under
+  framing-only retention. Tightening retention preserves strict/growth outputs
+  while improving manual triage quality.

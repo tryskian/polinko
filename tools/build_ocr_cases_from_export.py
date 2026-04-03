@@ -1010,9 +1010,10 @@ def build_from_export(
             ordered_phrase_fallback = ordered_terms if len(anchor_terms) < 3 else []
             low_signal_strength_has_ocr_signal = bool(
                 ocr_literal_intent_signal
-                or ocr_framing_signal
                 or correction_signal
                 or correction_overlap_signal
+                or askless_handwriting_signal
+                or (lane == "handwriting" and ocr_framing_signal)
             )
             if signal_strength == "low" and not low_signal_strength_has_ocr_signal:
                 # Drop non-transcription chatter from review noise.
