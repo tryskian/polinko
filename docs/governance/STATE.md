@@ -594,6 +594,8 @@
   - order chains are capped at `2` terms
   - order terms prefer tokens observed in prior successful OCR extracted text
     (anchor-only order is fallback when run text is unavailable)
+  - when run text exists but yields `<2` order terms due short-token filtering,
+    existing case-order terms are preferred before anchor-guess order.
   - probe tokens require length `>=5`
   - plural/singular near-duplicate terms are collapsed during probe selection
     (for example `tumble/tumbles`).

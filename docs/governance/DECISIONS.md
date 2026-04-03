@@ -2714,3 +2714,29 @@
 - Why: this removes deterministic false fails caused by anchor-guess order
   chains that were not OCR-visible in prior successful runs, while preserving
   strict binary gate semantics.
+
+## D-175: Prefer existing case-order fallback for short-token OCR text
+
+- Date: `2026-04-03`
+- Category: `ocr_hardening`
+- Tags: `exploratory`, `ordered_terms`, `short_tokens`, `false_fail_reduction`
+- Decision:
+  - refine exploratory order fallback in
+    `tools/build_ocr_growth_fail_cohort.py`:
+    - when run OCR text is present but yields `<2` order terms (for example
+      short token `fold` filtered by min-length rule), prefer existing
+      case-order terms before anchor-derived guess order.
+    - keep prior behaviour when run OCR text is absent:
+      - anchor-derived order remains primary over stale source-order chains.
+  - add regression coverage:
+    - `tests/test_build_ocr_growth_fail_cohort.py`
+      - verifies short-token run-text path keeps `fold -> within` ordering
+        rather than switching to `gyrus -> folds`.
+  - validation:
+    - `make test`
+    - `make ocrfocus`
+  - measured outcome:
+    - focused replay moved from `11/12` pass (`1` fail on `gx-693c53e4-011`)
+      to `12/12` pass (`0` fail).
+- Why: short-token OCR lines should not trigger anchor-guess head terms that
+  create avoidable deterministic fails in otherwise stable exploratory probes.

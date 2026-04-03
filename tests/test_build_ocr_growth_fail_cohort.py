@@ -741,6 +741,67 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             ["impact", "human"],
         )
 
+    def test_exploratory_prefers_existing_order_when_run_text_tokens_are_too_short(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-pass-short-token-order",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-short-token-order": {
+                "id": "gx-pass-short-token-order",
+                "lane": "handwriting",
+                "source_name": "sample-pass-short-token-order.png",
+                "image_path": "/tmp/sample-pass-short-token-order.png",
+                "must_contain_any": ["gyrus", "folds", "within", "neurological"],
+                "must_appear_in_order": ["fold", "within"],
+            }
+        }
+        run_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-short-token-order": {
+                "id": "gx-pass-short-token-order",
+                "source_name": "sample-pass-short-token-order.png",
+                "image_path": "/tmp/sample-pass-short-token-order.png",
+                "extracted_text": "open fold within",
+            }
+        }
+        review_index = {
+            "/tmp/sample-pass-short-token-order.png": [
+                {"ocr_framing_signal": True, "lane": "handwriting"}
+            ]
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map=run_case_map,
+            metrics_map={},
+            review_index=review_index,
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=True,
+            include_exploratory=True,
+            exploratory_max_cases=5,
+        )
+        self.assertEqual(report["summary"]["exploratory_cases"], 1)
+        exploratory = report["exploratory_cases"][0]
+        overrides = exploratory.get("focus_overrides")
+        self.assertIsInstance(overrides, dict)
+        self.assertEqual(
+            overrides.get("must_appear_in_order"),
+            ["fold", "within"],
+        )
+
     def test_exploratory_collapses_plural_singular_probe_duplicates(self) -> None:
         stability_payload = {
             "cases": [

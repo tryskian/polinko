@@ -369,6 +369,9 @@
     - exploratory probe quality now enforces:
       - order chains prefer tokens observed in prior successful OCR extracted
         text (anchor-derived order is fallback when run text is missing)
+      - if run text is present but produces `<2` order terms (short-token
+        constraint), existing case order is preferred before anchor-derived
+        order guesses
       - numeric/generic token filtering for `must_appear_in_order`
       - minimum probe token length of `5`
       - plural/singular near-duplicate collapse during order-term selection

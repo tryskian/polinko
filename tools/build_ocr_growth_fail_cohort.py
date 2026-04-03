@@ -405,10 +405,16 @@ def _derive_exploratory_overrides(
         for token in _tokenise_phrase(" ".join(effective_any))
         if len(token) >= EXPLORATORY_MIN_TOKEN_LEN
     }
+    run_extracted_text = str(run_case.get("extracted_text", "") or "")
     selected_order = _derive_order_tokens_from_text(
-        str(run_case.get("extracted_text", "") or ""),
+        run_extracted_text,
         preferred_tokens=anchor_token_pool or None,
     )
+    if len(selected_order) < 2:
+        # Prefer known case order before anchor-guess order to avoid
+        # introducing new head-token failures when OCR text is terse.
+        if run_extracted_text.strip() and len(effective_order) >= 2:
+            selected_order = effective_order[:EXPLORATORY_ORDER_MAX_TERMS]
     if len(selected_order) < 2:
         selected_order = _derive_order_tokens_from_anchors(effective_any)
     if len(selected_order) < 2 and len(effective_order) >= 2:
