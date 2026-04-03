@@ -132,6 +132,67 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
         self.assertEqual(report["failing_cases"][1]["source_name"], "eng-note.jpeg")
         self.assertEqual(report["failing_cases"][1]["image_path"], "/tmp/eng-note.jpeg")
 
+    def test_build_report_recommends_widening_when_no_failures_present(self) -> None:
+        stability_payload: dict[str, Any] = {
+            "cases": [
+                {
+                    "id": "gx-pass-a",
+                    "fail_runs": 0,
+                    "pass_runs": 1,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "sample_reasons": [],
+                    "text_variant_count": 1,
+                    "char_count_span": 0,
+                },
+                {
+                    "id": "gx-pass-b",
+                    "fail_runs": 0,
+                    "pass_runs": 1,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "sample_reasons": [],
+                    "text_variant_count": 1,
+                    "char_count_span": 0,
+                },
+                {
+                    "id": "gx-pass-c",
+                    "fail_runs": 0,
+                    "pass_runs": 1,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "sample_reasons": [],
+                    "text_variant_count": 1,
+                    "char_count_span": 0,
+                },
+            ]
+        }
+        focus_case_map = {
+            "gx-pass-a": {"id": "gx-pass-a", "lane": "handwriting"},
+            "gx-pass-b": {"id": "gx-pass-b", "lane": "typed"},
+            "gx-pass-c": {"id": "gx-pass-c", "lane": "typed"},
+        }
+
+        report = build_report(
+            stability_payload=stability_payload,
+            focus_case_map=focus_case_map,
+        )
+        summary = report["summary"]
+        self.assertEqual(summary["failing_cases"], 0)
+        self.assertEqual(summary["lane_sequence_hotspots"], [])
+        self.assertEqual(
+            summary["recommended_next_kernel"],
+            {
+                "lane": "typed",
+                "bucket": "none",
+                "count": 0,
+                "hint": (
+                    "No active fail hotspots. Widen exploratory probes in typed lane "
+                    "to recover diagnostic fail signal."
+                ),
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

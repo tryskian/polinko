@@ -619,6 +619,8 @@
   - summary lane matrix `lane_missing_order_sequence_position_buckets`
   - summary hotspot list `lane_sequence_hotspots` for direct next-kernel targeting
   - summary `recommended_next_kernel` for deterministic autonomous sequencing
+    including no-fail states (`bucket=none`) to drive exploratory widening
+    instead of returning null guidance.
 - OCR matcher now allows bounded terminal drift for 7-char anchors/order terms:
   - supports variants like `tumbles` -> `tumbler` / `tumblies` under one-edit checks
   - keeps shorter probes under strict terminal guards

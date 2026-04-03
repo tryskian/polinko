@@ -361,7 +361,9 @@
         - `missing_order_sequence_position_buckets` (`head`/`mid`/`tail`/`unknown`)
         - `lane_missing_order_sequence_position_buckets` (lane x sequence matrix)
         - `lane_sequence_hotspots` (sorted lane/bucket/count targeting list)
-        - `recommended_next_kernel` (top hotspot + execution hint)
+        - `recommended_next_kernel`:
+          - with failures: top hotspot + execution hint
+          - with no failures: `bucket=none` + widening hint for dominant lane
     - exploratory strict-replay defaults are enabled:
       - `OCR_FAIL_COHORT_INCLUDE_EXPLORATORY=true`
       - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES=12`

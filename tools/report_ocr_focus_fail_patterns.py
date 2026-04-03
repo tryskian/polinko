@@ -273,6 +273,20 @@ def build_report(
             "count": count,
             "hint": f"Prioritize {lane} lane hardening for {bucket} ordered-term misses.",
         }
+    elif total_cases > 0:
+        top_lane = sorted(
+            lane_summary.items(),
+            key=lambda item: (-int(item[1].get("total_cases", 0) or 0), item[0]),
+        )[0][0]
+        summary["recommended_next_kernel"] = {
+            "lane": str(top_lane),
+            "bucket": "none",
+            "count": 0,
+            "hint": (
+                f"No active fail hotspots. Widen exploratory probes in {top_lane} lane "
+                "to recover diagnostic fail signal."
+            ),
+        }
     else:
         summary["recommended_next_kernel"] = None
     return {

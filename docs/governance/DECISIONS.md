@@ -2740,3 +2740,27 @@
       to `12/12` pass (`0` fail).
 - Why: short-token OCR lines should not trigger anchor-guess head terms that
   create avoidable deterministic fails in otherwise stable exploratory probes.
+
+## D-176: Emit next-action recommendation when focused fail count is zero
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_focus`, `reporting`, `autonomy`, `no_fail_state`
+- Decision:
+  - update `tools/report_ocr_focus_fail_patterns.py` recommendation logic:
+    - when `lane_sequence_hotspots` is empty and `cases_total > 0`, emit
+      `recommended_next_kernel` with:
+      - dominant lane by case volume
+      - `bucket=none`
+      - `count=0`
+      - hint to widen exploratory probes and recover diagnostic fail signal
+  - keep existing hotspot-based recommendation path unchanged when failures
+    are present.
+  - add regression coverage:
+    - `tests/test_report_ocr_focus_fail_patterns.py`
+      - validates recommendation output for fully green focused runs.
+  - validation:
+    - `python3 -m unittest tests.test_report_ocr_focus_fail_patterns`
+    - `make ocrfocusreport`
+- Why: all-pass focused runs should still yield an actionable next kernel
+  instead of a null recommendation.
