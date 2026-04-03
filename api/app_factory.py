@@ -13,6 +13,7 @@ from typing import Any, Literal, cast
 from agents import Agent, Runner, RunConfig
 from agents.memory import Session
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
 from openai import (
     APIConnectionError,
     APIStatusError,
@@ -22,6 +23,7 @@ from openai import (
 )
 from pydantic import BaseModel, Field
 
+from api.eval_viz import build_pass_fail_viz_payload, render_pass_fail_viz_html
 from config import AppConfig
 from core.history_store import (
     ChatHistoryStore,
@@ -2994,6 +2996,18 @@ def create_app(config: AppConfig) -> FastAPI:
             "status": "ok",
             "prompt_version": ACTIVE_PROMPT_VERSION,
         }
+
+    @app.get("/viz/pass-fail", response_class=HTMLResponse)
+    def pass_fail_viz(refresh_ms: int = 4000, chart_max_points: int = 32) -> str:
+        # Lightweight live dashboard for PASS/FAIL eval trend + latest-case table.
+        return render_pass_fail_viz_html(
+            refresh_ms=refresh_ms,
+            chart_max_points=max(8, min(chart_max_points, 120)),
+        )
+
+    @app.get("/viz/pass-fail/data")
+    def pass_fail_viz_data(max_evals: int = 180) -> dict[str, Any]:
+        return build_pass_fail_viz_payload(max_evals=max(1, min(max_evals, 500)))
 
     @app.get("/metrics", response_model=MetricsResponse)
     def metrics(request: Request) -> MetricsResponse:

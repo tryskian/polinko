@@ -12,6 +12,7 @@ DOCKER_PORT ?= 8000
 DEV_HOST ?= 127.0.0.1
 DEV_BACKEND_PORT ?= 8000
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
+DEV_VIZ_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/viz/pass-fail
 ENV_FILE ?= .env
 K6_BASE_URL ?= http://127.0.0.1:8000
 K6_VUS ?= 3
@@ -115,7 +116,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env notebook-setup notebook nb notes ocrindex ocrmine ocrall ocrwiden ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env notebook-setup notebook nb notes viz ocrindex ocrmine ocrall ocrwiden ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 
 chat:
 	$(PYTHON) app.py
@@ -363,6 +364,19 @@ open-api-docs:
 
 docs:
 	@$(MAKE) --no-print-directory open-api-docs
+
+viz:
+	@set -eu; \
+	$(MAKE) --no-print-directory server-daemon; \
+	URL="$(DEV_VIZ_URL)"; \
+	if command -v open >/dev/null 2>&1; then \
+		open "$$URL"; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open "$$URL" >/dev/null 2>&1 || true; \
+	else \
+		echo "Open this URL in your browser: $$URL"; \
+	fi; \
+	echo "PASS/FAIL viz URL: $$URL"
 
 session-status:
 	@echo "== Server =="
