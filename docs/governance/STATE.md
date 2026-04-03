@@ -127,10 +127,10 @@
     - low-confidence rows no longer enter growth on OCR framing alone;
       OCR intent or correction evidence is now required
     - refreshed aligned growth replay:
-      - `make ocrstablegrowth` (5 runs): `21/22` pass, `1/22` fail, `0` errors
-      - decision stability: `22 stable`, `0 flaky`
+      - `make ocrstablegrowth` (5 runs): `23/23` pass, `0/23` fail, `0` errors
+      - decision stability: `23 stable`, `0 flaky`
       - `make ocrfails` (`require_ocr_framing=true`):
-        `selected_fail_cases=0`, `skipped_non_framed=1`
+        `selected_fail_cases=0`, `skipped_non_framed=5`
       - diagnostic unframed cohort (`OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING=false`):
         `selected_fail_cases=0`
 - Latest local report baseline (March 6, 2026) is green:
@@ -551,14 +551,25 @@
   - transcript miner schema now uses `signal_strength` naming
     (`signal_strength_counts`) with legacy `confidence` read-compatibility in
     downstream reporting/build tooling
+  - scaffold-label-only phrase candidates are now excluded from OCR anchors:
+    - `timestamp`
+    - `crossed-out header`
+    - `bullet <n>`
+    - `archived and translated as`
+  - long OCR lines now recover leading phrase heads before separators
+    (for example `into`, `:`, `;`) when the full line is too noisy.
 - Response-behaviour deterministic gate phrase coverage now accepts explicit
   no-memory inability phrasing across retain/store/remember variants in
   `no_memory_pretend_claim`.
 - Current aligned growth baseline (April 3, 2026):
-  - growth cases: `22`
-  - latest growth stability replay: `21/22` pass, `1/22` fail, `0` errors
+  - growth cases: `23`
+  - latest growth stability replay: `23/23` pass, `0/23` fail, `0` errors
   - fail cohort selection (`require_ocr_framing=true`): `0` selected cases
-  - `skipped_non_framed=1`
+  - `skipped_non_framed=5`
+  - growth metrics:
+    - `decision_coverage_rate=1.0000`
+    - `first_pass_fail_rate=0.1739`
+    - `fail_to_pass_conversion_rate=1.0000`
   - diagnostic unframed cohort:
     - `selected_fail_cases=0`
 - Growth/focus OCR replay logging is now streamed in real time:
