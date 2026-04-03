@@ -2496,3 +2496,28 @@
     - `make lint-docs`
 - Why: exploratory fail signal should come from OCR-relevant lexical anchors,
   not numeric noise or redundant term variants.
+
+## D-166: Collapse truncated prefix stems in exploratory OCR probe terms
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `exploratory_lane`, `probe_quality`, `stem_collapse`
+- Decision:
+  - add `_drop_prefix_stem_terms(...)` in
+    `tools/build_ocr_growth_fail_cohort.py` to remove truncated stem variants
+    when a near-length lexical completion exists (for example:
+    `increas` -> `increases`).
+  - apply prefix-stem collapse to exploratory signal derivation:
+    - `must_appear_in_order` tokens from `_derive_order_tokens_from_anchors`
+    - single-token `must_contain_any` anchors from `_derive_anchor_any_terms`
+  - keep strict replay semantics unchanged; this is a probe-quality refinement
+    only.
+  - add regression coverage:
+    - update `test_exploratory_refines_anchor_any_terms` in
+      `tests/test_build_ocr_growth_fail_cohort.py`
+  - validation:
+    - `make ocrfocus`
+    - `make test`
+    - `make lint-docs`
+- Why: truncated stem probes add noise without increasing failure discovery and
+  reduce readability for focused fail diagnosis.

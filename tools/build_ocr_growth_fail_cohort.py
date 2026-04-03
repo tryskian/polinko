@@ -243,6 +243,30 @@ def _canonical_probe_token(token: str) -> str:
     return lowered
 
 
+def _drop_prefix_stem_terms(
+    terms: list[str],
+    *,
+    min_len: int = 6,
+    max_extra_chars: int = 2,
+) -> list[str]:
+    lowered = [item.lower() for item in terms]
+    dropped: set[int] = set()
+    for idx, token in enumerate(lowered):
+        if len(token) < min_len:
+            continue
+        for other_idx, other in enumerate(lowered):
+            if idx == other_idx:
+                continue
+            if len(other) <= len(token):
+                continue
+            if len(other) - len(token) > max_extra_chars:
+                continue
+            if other.startswith(token):
+                dropped.add(idx)
+                break
+    return [term for idx, term in enumerate(terms) if idx not in dropped]
+
+
 def _derive_order_tokens_from_anchors(anchors: list[str]) -> list[str]:
     ordered_tokens: list[str] = []
     seen: set[str] = set()
@@ -261,9 +285,8 @@ def _derive_order_tokens_from_anchors(anchors: list[str]) -> list[str]:
                 continue
             seen.add(canonical)
             ordered_tokens.append(token)
-            if len(ordered_tokens) >= EXPLORATORY_ORDER_MAX_TERMS:
-                return ordered_tokens
-    return ordered_tokens
+    collapsed = _drop_prefix_stem_terms(ordered_tokens)
+    return collapsed[:EXPLORATORY_ORDER_MAX_TERMS]
 
 
 def _derive_anchor_any_terms(anchors: list[str]) -> list[str]:
@@ -307,7 +330,28 @@ def _derive_anchor_any_terms(anchors: list[str]) -> list[str]:
             continue
         seen.add(phrase_key)
         out.append(raw)
-    return out
+    single_token_terms: list[str] = []
+    multi_token_terms: set[str] = set()
+    for term in out:
+        tokenised = _tokenise_phrase(term)
+        if len(tokenised) == 1:
+            single_token_terms.append(term)
+        else:
+            multi_token_terms.add(term.lower())
+
+    collapsed_single_terms = _drop_prefix_stem_terms(single_token_terms)
+    collapsed_single_set = {item.lower() for item in collapsed_single_terms}
+
+    filtered: list[str] = []
+    for term in out:
+        tokenised = _tokenise_phrase(term)
+        if len(tokenised) == 1:
+            if term.lower() in collapsed_single_set:
+                filtered.append(term)
+            continue
+        if term.lower() in multi_token_terms:
+            filtered.append(term)
+    return filtered
 
 
 def _derive_exploratory_overrides(

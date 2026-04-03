@@ -362,6 +362,8 @@
       - plural/singular near-duplicate collapse during order-term selection
       - low-signal anchor-any filtering (`must_contain_any`) to drop numeric,
         generic, and duplicate-stem terms
+      - truncated prefix-stem collapse when lexical completions exist
+        (for example, `increas` -> `increases`)
       - `min_chars` floor of `12`
       - compact exploratory order chains (`max=3` terms)
     - exploratory case selection now uses lane-balanced round-robin (important

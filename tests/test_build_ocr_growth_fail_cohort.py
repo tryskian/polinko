@@ -868,6 +868,8 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
                     "archival",
                     "tumbles",
                     "tumble",
+                    "increas",
+                    "increases",
                     "field notes",
                     "restore deleted spectral",
                 ],
@@ -896,7 +898,7 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertIsInstance(overrides, dict)
         self.assertEqual(
             overrides.get("must_contain_any"),
-            ["archival", "tumbles", "restore deleted spectral"],
+            ["archival", "tumbles", "increases", "restore deleted spectral"],
         )
 
 

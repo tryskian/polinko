@@ -602,6 +602,9 @@
   - numeric-only and generic terms are dropped
   - plural/singular near-duplicates are collapsed
   - multi-token anchors require at least two meaningful lexical terms.
+- Exploratory probe terms now collapse truncated prefix stems when a lexical
+  completion exists (for example, `increas` -> `increases`) for both order and
+  anchor-any signals.
 - Runtime DB null surfaces now have a read-only audit command:
   - `make nulls`
   - output: `.local/eval_reports/runtime_null_audit.{json,md}`
