@@ -13,6 +13,8 @@
 - OCR-forward model is active:
   - `lockset` lane is release-gating (strict green requirement)
   - `growth` lane is fail-tolerant for pass-from-fail measurement
+  - `ocr_safety` lane is diagnostic (non-release-gating) for OCR-to-safety
+    calibration transfer checks
 - `POST /chat` now supports deterministic harness testing for UI smoke:
   - request override: `harness_mode=fixture`
   - optional fixed output: `fixture_output`
@@ -211,6 +213,9 @@
   - deterministic response-behaviour gate remains green after phrase-coverage
     hardening for `no_memory_pretend_claim` (retain/store/remember inability
     forms included).
+  - OCR safety bridge lane is now runnable via:
+    - `make eval-ocr-safety`
+    - `make eval-ocr-safety-report`
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`

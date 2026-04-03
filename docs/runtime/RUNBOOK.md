@@ -1043,6 +1043,20 @@ Current policy:
    - anti-mimicry style adaptation
    - grounding under playful abstraction
 
+## Run OCR Safety Bridge Eval (Deterministic)
+
+1. Ensure API is running locally (`make server` or `make server-daemon`).
+2. Run:
+   - `make eval-ocr-safety`
+3. Optional timestamped report run:
+   - `make eval-ocr-safety-report`
+4. Scope:
+   - case file: `docs/eval/cases/ocr_safety_eval_cases.json`
+   - harness: deterministic response-behaviour gate
+   - intent: measure OCR-calibration transfer into safety/uncertainty responses
+5. Gate posture:
+   - this lane is diagnostic and non-release-gating in current phase.
+
 ## Generate All Eval Reports
 
 1. Ensure API is running locally (`make server`).

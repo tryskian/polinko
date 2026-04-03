@@ -2121,3 +2121,22 @@
 - Why: the residual growth fail came from a non-OCR idiom being mined as OCR
   intent, and response-behaviour determinism was penalising valid explicit
   non-memory refusals that used retain/store/remember phrasing.
+
+## D-153: Add OCR-to-safety bridge eval lane as deterministic non-gating diagnostic
+
+- Date: `2026-04-02`
+- Category: `eval_data`
+- Tags: `ocr_safety`, `bridge_lane`, `determinism`, `diagnostic`
+- Decision:
+  - add dedicated OCR safety bridge case file:
+    - `docs/eval/cases/ocr_safety_eval_cases.json`
+  - add canonical commands:
+    - `make eval-ocr-safety`
+    - `make eval-ocr-safety-report`
+  - extend deterministic response-behaviour harness with `--suite-id` so
+    report/trace metadata remains lane-specific when sharing one evaluator.
+  - include OCR safety report generation in `make eval-reports`.
+  - keep this lane explicitly non-release-gating in current phase.
+- Why: we need a measurable transfer check from OCR calibration into
+  uncertainty/safety response behaviour without destabilising the strict
+  release gate.

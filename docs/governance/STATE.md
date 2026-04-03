@@ -50,6 +50,7 @@
   - active eval model is split into:
     - `lockset` lane (strict release gate, must remain green)
     - `growth` lane (fail-tolerant novel cases used for pass-from-fail tracking)
+    - `ocr_safety` lane (diagnostic OCR-to-safety bridge, non-release-gating)
   - growth metrics are executable via:
     - growth eval/stability:
     - `make ocrwiden`
@@ -71,6 +72,9 @@
     - illustration: `3/3` PASS
   - local visual analysis starter is available at:
     - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+  - OCR safety bridge commands:
+    - `make eval-ocr-safety`
+    - `make eval-ocr-safety-report`
 - Eval runtime resilience checkpoint (April 1, 2026):
   - retrieval harness now supports bounded transient retries for `429`/`5xx`
     and connection errors (`--request-retries`, `--request-retry-delay-ms`)

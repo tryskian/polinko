@@ -17,12 +17,15 @@ class ResponseBehaviourEvalTests(unittest.TestCase):
                 "--strict",
                 "--report-json",
                 "eval_reports/response-behaviour.json",
+                "--suite-id",
+                "ocr_safety",
             ]
         )
         self.assertTrue(args.strict)
         self.assertEqual(args.report_json, "eval_reports/response-behaviour.json")
         self.assertEqual(args.case_attempts, 3)
         self.assertEqual(args.min_pass_attempts, 2)
+        self.assertEqual(args.suite_id, "ocr_safety")
 
     def test_contains_forbidden_phrases_matches_case_insensitive(self) -> None:
         answer = "Done and pushed the change."

@@ -33,6 +33,7 @@ RETRIEVAL_REQUEST_RETRIES ?= 2
 RETRIEVAL_REQUEST_RETRY_DELAY_MS ?= 750
 CLIP_AB_SOURCE_TYPES ?= image
 OCR_HANDWRITING_CASES ?= .local/eval_cases/ocr_handwriting_eval_cases.json
+OCR_SAFETY_CASES ?= docs/eval/cases/ocr_safety_eval_cases.json
 CGPT_EXPORT_ROOT ?=
 CGPT_EXPORT_ROOT_DEFAULT ?= /Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT
 CGPT_EXPORT_OUTPUT_DIR ?= .local/eval_cases
@@ -114,7 +115,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env notebook-setup notebook nb notes ocrindex ocrmine ocrall ocrwiden ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env notebook-setup notebook nb notes ocrindex ocrmine ocrall ocrwiden ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 
 chat:
 	$(PYTHON) app.py
@@ -592,6 +593,14 @@ eval-response-behaviour-report:
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
 	$(PYTHON) -m tools.eval_response_behaviour --run-id $$RUN_ID --report-json "eval_reports/response-behaviour-$$RUN_ID.json"
 
+eval-ocr-safety:
+	$(PYTHON) -m tools.eval_response_behaviour --suite-id ocr_safety --cases "$(OCR_SAFETY_CASES)" --session-prefix ocr-safety-eval
+
+eval-ocr-safety-report:
+	@mkdir -p eval_reports
+	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
+	$(PYTHON) -m tools.eval_response_behaviour --suite-id ocr_safety --cases "$(OCR_SAFETY_CASES)" --session-prefix ocr-safety-eval --run-id $$RUN_ID --report-json "eval_reports/ocr-safety-$$RUN_ID.json"
+
 eval-ocr:
 	$(PYTHON) -m tools.eval_ocr --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
@@ -657,6 +666,7 @@ eval-reports:
 	@$(MAKE) eval-ocr-report
 	@$(MAKE) eval-style-report
 	@$(MAKE) eval-response-behaviour-report
+	@$(MAKE) eval-ocr-safety-report
 	@$(MAKE) eval-hallucination-report
 
 eval-reports-parallel:
