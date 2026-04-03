@@ -195,6 +195,8 @@
     report paths to avoid stale fail-cohort case mapping
   - latest aligned refresh (April 3, 2026):
     - `make ocrmine` emitted `20` strict cases, `21` growth cases
+    - export-root fallback is active for mining/index commands when unset:
+      - `CGPT_EXPORT_ROOT_DEFAULT`
     - `make ocrstablegrowth`:
       - `21` cases replayed, `21` pass, `0` fail, `0` errors
       - stability: `21` stable, `0` flaky

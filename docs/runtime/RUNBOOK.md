@@ -204,7 +204,11 @@ Read-only DB audits remain allowed:
      - used to measure pass-from-fail movement, not to block release directly
 3. Canonical command sequence:
    - mine/build cases:
-     - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+     - `make ocrmine`
+     - optional explicit override:
+       - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+     - default export root fallback (when unset):
+       - `CGPT_EXPORT_ROOT_DEFAULT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT`
    - run widened growth lane (fail-tolerant):
      - `make ocrwiden`
      - optional bounded batch run:

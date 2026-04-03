@@ -59,6 +59,9 @@
     - `make ocrfails`
       - now requires OCR-framed review linkage (`ocr_framing_signal=true`)
         from `.local/eval_cases/ocr_transcript_cases_review.json`
+    - mining/index commands now use default export-root fallback when
+      `CGPT_EXPORT_ROOT` is unset:
+      - `CGPT_EXPORT_ROOT_DEFAULT`
     - outputs:
       - `.local/eval_cases/ocr_transcript_cases_growth.json`
       - `.local/eval_cases/ocr_growth_fail_cohort.json`

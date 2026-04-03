@@ -759,25 +759,33 @@ portfolio-metadata-audit:
 
 cgpt-export-index:
 	@set -eu; \
-	if [ -z "$(CGPT_EXPORT_ROOT)" ]; then \
-		echo "Set CGPT_EXPORT_ROOT to your export root path."; \
-		echo "Example: make cgpt-export-index CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT"; \
+	EXPORT_ROOT="$(CGPT_EXPORT_ROOT)"; \
+	if [ -z "$$EXPORT_ROOT" ]; then \
+		EXPORT_ROOT="$(CGPT_EXPORT_ROOT_DEFAULT)"; \
+	fi; \
+	if [ ! -d "$$EXPORT_ROOT" ]; then \
+		echo "CGPT export root not found: $$EXPORT_ROOT"; \
+		echo "Run: make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"; \
 		exit 2; \
 	fi; \
-	$(PYTHON) -m tools.index_cgpt_export --export-root "$(CGPT_EXPORT_ROOT)" --output-dir "$(CGPT_EXPORT_OUTPUT_DIR)"
+	$(PYTHON) -m tools.index_cgpt_export --export-root "$$EXPORT_ROOT" --output-dir "$(CGPT_EXPORT_OUTPUT_DIR)"
 
 ocr-cases-from-export:
 	@set -eu; \
-	if [ -z "$(CGPT_EXPORT_ROOT)" ]; then \
-		echo "Set CGPT_EXPORT_ROOT to your export root path."; \
-		echo "Example: make ocr-cases-from-export CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT"; \
+	EXPORT_ROOT="$(CGPT_EXPORT_ROOT)"; \
+	if [ -z "$$EXPORT_ROOT" ]; then \
+		EXPORT_ROOT="$(CGPT_EXPORT_ROOT_DEFAULT)"; \
+	fi; \
+	if [ ! -d "$$EXPORT_ROOT" ]; then \
+		echo "CGPT export root not found: $$EXPORT_ROOT"; \
+		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"; \
 		exit 2; \
 	fi; \
 	if [ -f "$(OCR_TRANSCRIPT_REVIEW)" ]; then \
 		cp "$(OCR_TRANSCRIPT_REVIEW)" "$(OCR_TRANSCRIPT_REVIEW_PREV)"; \
 	fi; \
 	$(PYTHON) -m tools.build_ocr_cases_from_export \
-		--export-root "$(CGPT_EXPORT_ROOT)" \
+		--export-root "$$EXPORT_ROOT" \
 		--output-cases "$(OCR_TRANSCRIPT_CASES_ALL)" \
 		--output-cases-growth "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
 		--output-cases-handwriting "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" \

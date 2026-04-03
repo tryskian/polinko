@@ -2140,3 +2140,20 @@
 - Why: we need a measurable transfer check from OCR calibration into
   uncertainty/safety response behaviour without destabilising the strict
   release gate.
+
+## D-154: Default transcript export root fallback for OCR mining commands
+
+- Date: `2026-04-03`
+- Category: `workflow_environment`
+- Tags: `command_surface`, `ocr_mining`, `defaults`, `operator_efficiency`
+- Decision:
+  - update Makefile export-index/mining targets to use fallback export root
+    when `CGPT_EXPORT_ROOT` is unset:
+    - `make cgpt-export-index`
+    - `make ocr-cases-from-export` (and alias `make ocrmine`)
+  - fallback source:
+    - `CGPT_EXPORT_ROOT_DEFAULT`
+  - keep explicit override support via:
+    - `CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+- Why: removes repetitive operator friction and keeps OCR mining commands
+  deterministic from canonical local defaults.
