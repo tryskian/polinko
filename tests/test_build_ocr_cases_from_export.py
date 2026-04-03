@@ -1999,6 +1999,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["skipped_unstable_source"], 1)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
             self.assertEqual(review["emit_status"], "skipped_unstable_source")
+            self.assertEqual(review["source_name"], unstable_name)
 
     def test_build_skips_known_unstable_typed_source(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -2058,6 +2059,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["skipped_unstable_source"], 1)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
             self.assertEqual(review["emit_status"], "skipped_unstable_source")
+            self.assertEqual(review["source_name"], unstable_name)
 
     def test_build_routes_strong_unstable_source_to_growth_only(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
