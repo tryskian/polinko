@@ -2188,3 +2188,40 @@
 - Why: review files had accumulated low-value non-OCR conversational rows under
   framing-only retention. Tightening retention preserves strict/growth outputs
   while improving manual triage quality.
+
+## D-156: Add correction-markup OCR cues and block non-intent overlap promotion
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_mining`, `signal_quality`, `intent_gate`, `false_positive_control`
+- Decision:
+  - expand OCR intent cue regex in
+    `tools/build_ocr_cases_from_export.py` for handwriting correction markup:
+    - `crossed out` / `crossing out`
+    - `strikethrough` / `strike through`
+  - tighten high-signal correction promotion:
+    - correction overlap now promotes to `high` only when OCR intent evidence
+      is present (`ocr_literal_intent_signal`, askless-handwriting overlap, or
+      `ocr_intent_signal` + `ocr_framing_signal`)
+    - prevents non-OCR style dialogue from being promoted via incidental phrase overlap.
+  - add regression coverage in
+    `tests/test_build_ocr_cases_from_export.py`:
+    - new ask-regex coverage for `crossed out` and `strikethrough`
+    - new build regression for overlap-correction without OCR intent.
+  - rerun validation + growth alignment:
+    - `python -m unittest tests.test_build_ocr_cases_from_export`
+    - `make ocrmine`
+    - `make ocrstablegrowth`
+    - `make ocrgrowth`
+    - `make ocrfails`
+    - `make quality-gate-deterministic`
+  - refreshed baseline:
+    - review summary: `episodes=54` (`high=7`, `medium=18`, `low=29`)
+    - strict mined cases: `20`
+    - growth cases: `22`
+    - growth stability replay: `21/22` pass, `1/22` fail, `0` errors
+    - fail cohort (`require_ocr_framing=true`): `selected_fail_cases=0`,
+      `skipped_non_framed=1`
+- Why: we need better capture of real handwriting correction prompts while
+  suppressing a newly observed false-positive path where non-OCR style critique
+  was promoted through correction-overlap alone.

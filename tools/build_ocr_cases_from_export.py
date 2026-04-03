@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 OCR_INTENT_PATTERN = (
-    r"what does (this|it) say|what(?:'s| is) written|can you read|read (?:this|it)(?!\s+and\s+weep)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew\s+drop\b|\b(?:s|sq)cribbles?\s+and\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratched\s+out\b"
+    r"what does (this|it) say|what(?:'s| is) written|can you read|read (?:this|it)(?!\s+and\s+weep)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew\s+drop\b|\b(?:s|sq)cribbles?\s+and\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratched\s+out\b|\bcross(?:ed|ing)?\s+out\b|\bstrike[\s-]?through\b|\bstrikethrough\b"
 )
 ASK_RX = re.compile(OCR_INTENT_PATTERN, re.IGNORECASE)
 HANDWRITING_HINT_RX = re.compile(
@@ -962,6 +962,16 @@ def build_from_export(
                 and len(transcription_phrases) >= 2
                 and len(transcription_anchor_terms) >= 4
             )
+            high_correction_signal = (
+                followup_correction_signal
+                and followup_correction_phrases
+                and correction_overlap_signal
+                and (
+                    ocr_literal_intent_signal
+                    or askless_handwriting_signal
+                    or (ocr_intent_signal and ocr_framing_signal)
+                )
+            )
             medium_intent_signal = ocr_literal_intent_signal or askless_handwriting_signal or (
                 ocr_intent_signal
                 and (
@@ -970,11 +980,7 @@ def build_from_export(
                     or askless_handwriting_signal
                 )
             )
-            if (
-                followup_correction_signal
-                and followup_correction_phrases
-                and correction_overlap_signal
-            ):
+            if high_correction_signal:
                 signal_strength = "high"
                 chosen_phrases = followup_correction_phrases[:5]
             elif strong_high_transcription_signal and transcription_phrases:

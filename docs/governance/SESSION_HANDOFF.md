@@ -152,9 +152,9 @@
   - active precision baseline:
     - mined cases: `20` total
       (`handwriting=5`, `typed=11`, `illustration=4`)
-    - growth cases: `21`
-    - review summary: `episodes=53`
-      (`high=7`, `medium=17`, `low=29`)
+    - growth cases: `22`
+    - review summary: `episodes=54`
+      (`high=7`, `medium=18`, `low=29`)
     - previous `55`/`29`/`25` mined outputs are legacy reference only
   - latest lane validations:
     - latest complete transcript lane (diagnostic, pre-widening):
@@ -195,21 +195,21 @@
   - run-report join resolver now supports repo-root-relative `.local/...`
     report paths to avoid stale fail-cohort case mapping
   - latest aligned refresh (April 3, 2026):
-    - `make ocrmine` emitted `20` strict cases, `21` growth cases
-    - review summary tightened to `53` episodes
-      (`high=7`, `medium=17`, `low=29`)
+    - `make ocrmine` emitted `20` strict cases, `22` growth cases
+    - review summary tightened to `54` episodes
+      (`high=7`, `medium=18`, `low=29`)
     - export-root fallback is active for mining/index commands when unset:
       - `CGPT_EXPORT_ROOT_DEFAULT`
     - `make ocrstablegrowth`:
-      - `21` cases replayed, `21` pass, `0` fail, `0` errors
-      - stability: `21` stable, `0` flaky
+      - `22` cases replayed, `21` pass, `1` fail, `0` errors
+      - stability: `22` stable, `0` flaky
     - `make ocrgrowth`:
       - `decision_coverage_rate=1.0000`
-      - `first_pass_fail_rate=0.1905`
+      - `first_pass_fail_rate=0.3182`
       - `first_error_rate=0.0000`
     - `make ocrfails`:
       - `selected_fail_cases=0` (`require_ocr_framing=true`)
-      - `skipped_non_framed=0`
+      - `skipped_non_framed=1`
       - `rate_limited_cases=0`
       - `rate_limit_abort_runs=0`
     - diagnostic unframed fail cohort:
@@ -330,10 +330,10 @@
       and rerun `make ocrstablegrowth` on refreshed growth cases before
       precision patch decisions
     - current aligned baseline (April 3, 2026):
-      - growth cases: `21`
-      - latest stability replay: `21/21` pass, `0/21` fail, `0` errors
+      - growth cases: `22`
+      - latest stability replay: `21/22` pass, `1/22` fail, `0` errors
       - fail cohort selection (`require_ocr_framing=true`): `0` cases
-      - framed-selection skip count: `skipped_non_framed=0`
+      - framed-selection skip count: `skipped_non_framed=1`
       - unframed diagnostic selection: `0` cases
     - if fail cohort is empty but `skipped_non_framed > 0`, run one
       diagnostic pass without framing gate to inspect residual fails:
