@@ -587,6 +587,11 @@
     - `.local/eval_reports/ocr_focus_fail_patterns.md`
   - latest focused run remains intentionally fail-heavy:
     - `2/12` PASS, `10/12` FAIL, `0` errors.
+- Exploratory strict-replay probes are now de-brittled:
+  - order chains are capped at `3` terms
+  - probe tokens require length `>=5`
+  - plural/singular near-duplicate terms are collapsed during probe selection
+    (for example `tumble/tumbles`).
 - Runtime DB null surfaces now have a read-only audit command:
   - `make nulls`
   - output: `.local/eval_reports/runtime_null_audit.{json,md}`

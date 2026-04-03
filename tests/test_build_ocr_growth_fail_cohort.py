@@ -681,6 +681,56 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             ["field", "measurable", "record"],
         )
 
+    def test_exploratory_collapses_plural_singular_probe_duplicates(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-pass-3",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-3": {
+                "id": "gx-pass-3",
+                "lane": "illustration",
+                "source_name": "sample-pass-3.png",
+                "image_path": "/tmp/sample-pass-3.png",
+                "must_contain_any": ["tumbles tumble restore spectral"],
+            }
+        }
+        review_index = {
+            "/tmp/sample-pass-3.png": [{"ocr_framing_signal": True, "lane": "illustration"}]
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map={},
+            metrics_map={},
+            review_index=review_index,
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=True,
+            include_exploratory=True,
+            exploratory_max_cases=5,
+        )
+        self.assertEqual(report["summary"]["exploratory_cases"], 1)
+        exploratory = report["exploratory_cases"][0]
+        overrides = exploratory.get("focus_overrides")
+        self.assertIsInstance(overrides, dict)
+        self.assertEqual(
+            overrides.get("must_appear_in_order"),
+            ["tumbles", "restore", "spectral"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

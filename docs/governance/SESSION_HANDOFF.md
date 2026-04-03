@@ -356,7 +356,10 @@
     - exploratory probe quality now enforces:
       - anchor-derived order chains (not inherited stale source order by default)
       - numeric/generic token filtering for `must_appear_in_order`
+      - minimum probe token length of `5`
+      - plural/singular near-duplicate collapse during order-term selection
       - `min_chars` floor of `12`
+      - compact exploratory order chains (`max=3` terms)
     - focus lane reporting now backfills from cohort when source lane is
       `unknown`
     - expected behaviour when fail history is empty:

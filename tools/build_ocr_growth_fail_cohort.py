@@ -229,25 +229,38 @@ EXPLORATORY_STOPWORDS = {
     "lines",
 }
 
+EXPLORATORY_ORDER_MAX_TERMS = 3
+EXPLORATORY_MIN_TOKEN_LEN = 5
+
+
+def _canonical_probe_token(token: str) -> str:
+    lowered = token.lower()
+    if len(lowered) > 5 and lowered.endswith("ies"):
+        return f"{lowered[:-3]}y"
+    if len(lowered) > 4 and lowered.endswith("s") and not lowered.endswith("ss"):
+        return lowered[:-1]
+    return lowered
+
 
 def _derive_order_tokens_from_anchors(anchors: list[str]) -> list[str]:
     ordered_tokens: list[str] = []
     seen: set[str] = set()
     for phrase in anchors:
         for token in _tokenise_phrase(phrase):
-            if token in seen:
+            canonical = _canonical_probe_token(token)
+            if canonical in seen:
                 continue
             if token.isdigit():
                 continue
             if not re.search(r"[a-z]", token):
                 continue
-            if len(token) < 4:
+            if len(token) < EXPLORATORY_MIN_TOKEN_LEN:
                 continue
             if token in EXPLORATORY_STOPWORDS:
                 continue
-            seen.add(token)
+            seen.add(canonical)
             ordered_tokens.append(token)
-            if len(ordered_tokens) >= 4:
+            if len(ordered_tokens) >= EXPLORATORY_ORDER_MAX_TERMS:
                 return ordered_tokens
     return ordered_tokens
 
@@ -265,14 +278,27 @@ def _derive_exploratory_overrides(
     if len(selected_order) < 2 and len(effective_order) >= 2:
         # Keep source order only as fallback; inherited order chains can be
         # stale and create impossible sequence checks in exploratory replay.
-        selected_order = effective_order[:3]
+        selected_order = effective_order[:EXPLORATORY_ORDER_MAX_TERMS]
     elif len(selected_order) < 2:
-        unique_tokens = sorted(
-            {token for token in _tokenise_phrase(" ".join(effective_order)) if len(token) >= 4},
+        unique_tokens: list[str] = []
+        seen_tokens: set[str] = set()
+        for token in sorted(
+            {
+                token
+                for token in _tokenise_phrase(" ".join(effective_order))
+                if len(token) >= EXPLORATORY_MIN_TOKEN_LEN
+            },
             key=len,
             reverse=True,
-        )
-        selected_order = unique_tokens[:3]
+        ):
+            canonical = _canonical_probe_token(token)
+            if canonical in seen_tokens:
+                continue
+            seen_tokens.add(canonical)
+            unique_tokens.append(token)
+        selected_order = unique_tokens[:EXPLORATORY_ORDER_MAX_TERMS]
+    if len(selected_order) > EXPLORATORY_ORDER_MAX_TERMS:
+        selected_order = selected_order[:EXPLORATORY_ORDER_MAX_TERMS]
 
     overrides: dict[str, Any] = {}
     if len(selected_order) >= 2:

@@ -2387,3 +2387,34 @@
 - Why: fail-heavy focused replay is intentional; operator-facing reporting must
   make failure structure explicit (lane + phrase patterns) so tuning decisions
   are evidence-led, not guess-led.
+
+## D-162: De-brittle exploratory order probes via stem-aware token shaping
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `exploratory_lane`, `probe_quality`, `token_shape`
+- Decision:
+  - refine exploratory order-token derivation in
+    `tools/build_ocr_growth_fail_cohort.py`:
+    - cap exploratory order chains to `3` terms
+    - require minimum token length `>=5`
+    - collapse plural/singular near-duplicates for probe selection
+      (for example `tumble/tumbles`, `fold/folds`)
+  - keep exploratory semantics strict (ordered replay still required), but
+    reduce artefactual sequence noise from duplicate stems and overly long
+    order chains.
+  - add regression test:
+    - `test_exploratory_collapses_plural_singular_probe_duplicates`
+      in `tests/test_build_ocr_growth_fail_cohort.py`
+  - validation:
+    - `make ocrfocus`
+    - `make test`
+    - `make lint-docs`
+  - current outcome:
+    - focus order terms are now consistently compact (`3` terms per case),
+      with duplicate stem inflation removed from exploratory probes
+    - focused replay remains intentionally fail-heavy:
+      `2/12` PASS, `10/12` FAIL, `0` errors.
+- Why: the goal is fail-rich signal, not synthetic brittleness; compact,
+  de-duplicated order probes preserve diagnostic pressure while improving
+  interpretability.
