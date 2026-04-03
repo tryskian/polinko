@@ -66,16 +66,20 @@ def build_focus_cases(
     cohort_payload: dict[str, Any],
     source_cases_payload: dict[str, Any],
     include_fail_history: bool,
+    include_exploratory: bool = True,
     max_cases: int,
 ) -> dict[str, Any]:
     source_map = _case_map(source_cases_payload)
     persistent_map = _cohort_case_map(cohort_payload, "cases")
     fail_history_map = _cohort_case_map(cohort_payload, "fail_history_cases")
+    exploratory_map = _cohort_case_map(cohort_payload, "exploratory_cases")
 
     selected_ids: list[str] = []
     selected_ids.extend(_case_id_list(cohort_payload, "cases"))
     if include_fail_history:
         selected_ids.extend(_case_id_list(cohort_payload, "fail_history_cases"))
+    if include_exploratory:
+        selected_ids.extend(_case_id_list(cohort_payload, "exploratory_cases"))
 
     dedup_ids: list[str] = []
     seen: set[str] = set()
@@ -98,6 +102,9 @@ def build_focus_cases(
         if cohort_row is None:
             cohort_row = fail_history_map.get(case_id)
             source_bucket = "fail_history"
+        if cohort_row is None:
+            cohort_row = exploratory_map.get(case_id)
+            source_bucket = "exploratory"
 
         merged = dict(source_row)
         if cohort_row:
@@ -107,6 +114,15 @@ def build_focus_cases(
                 existing = merged.get(key)
                 if existing in (None, "", [], {}):
                     merged[key] = value
+            focus_overrides = (
+                cohort_row.get("focus_overrides")
+                if isinstance(cohort_row.get("focus_overrides"), dict)
+                else {}
+            )
+            for key, value in focus_overrides.items():
+                merged[key] = value
+            if focus_overrides:
+                merged["focus_override_keys"] = sorted(str(key) for key in focus_overrides.keys())
             merged["focus_source"] = source_bucket
 
         found.append(merged)
@@ -126,6 +142,7 @@ def build_focus_cases(
         "selected_cases": len(found),
         "missing_ids": len(missing),
         "include_fail_history": include_fail_history,
+        "include_exploratory": include_exploratory,
         "max_cases": max_cases,
         "cases_with_cohort_history": cases_with_cohort_history,
     }
@@ -167,6 +184,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Exclude mixed PASS/FAIL fail-history cases from the focused set.",
     )
+    parser.add_argument(
+        "--exclude-exploratory",
+        action="store_true",
+        help="Exclude exploratory strict-replay cases from the focused set.",
+    )
     return parser
 
 
@@ -193,6 +215,7 @@ def main() -> int:
         cohort_payload=cohort_payload,
         source_cases_payload=source_cases_payload,
         include_fail_history=not bool(args.exclude_fail_history),
+        include_exploratory=not bool(args.exclude_exploratory),
         max_cases=int(args.max_cases),
     )
 
@@ -209,6 +232,7 @@ def main() -> int:
     print(f"  selected_cases: {summary['selected_cases']}")
     print(f"  missing_ids: {summary['missing_ids']}")
     print(f"  include_fail_history: {summary['include_fail_history']}")
+    print(f"  include_exploratory: {summary['include_exploratory']}")
     print(f"  max_cases: {summary['max_cases']}")
     print(f"  output: {output_cases_path}")
     return 0

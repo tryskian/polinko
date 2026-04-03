@@ -78,10 +78,13 @@ OCR_GROWTH_FAIL_COHORT_MARKDOWN ?= .local/eval_reports/ocr_growth_fail_cohort.md
 OCR_FAIL_COHORT_MIN_RUNS ?= 1
 OCR_FAIL_COHORT_INCLUDE_UNSTABLE ?= true
 OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING ?= true
+OCR_FAIL_COHORT_INCLUDE_EXPLORATORY ?= true
+OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES ?= 12
 OCR_FOCUS_CASES_JSON ?= .local/eval_cases/ocr_growth_focus_cases.json
 OCR_FOCUS_RUNS ?= 1
 OCR_FOCUS_MAX_CASES ?= 40
 OCR_FOCUS_INCLUDE_FAIL_HISTORY ?= true
+OCR_FOCUS_INCLUDE_EXPLORATORY ?= true
 OCR_FOCUS_OUTPUT ?= .local/eval_reports/ocr_focus_stability.json
 OCR_FOCUS_REPORT_DIR ?= .local/eval_reports/ocr_focus_runs
 OCR_FOCUS_OCR_RETRIES ?= 3
@@ -1075,6 +1078,10 @@ eval-ocr-growth-fail-cohort:
 	if [ "$(OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING)" = "true" ]; then \
 		FAIL_COHORT_ARGS="$$FAIL_COHORT_ARGS --require-ocr-framing"; \
 	fi; \
+	if [ "$(OCR_FAIL_COHORT_INCLUDE_EXPLORATORY)" = "true" ]; then \
+		FAIL_COHORT_ARGS="$$FAIL_COHORT_ARGS --include-exploratory"; \
+	fi; \
+	FAIL_COHORT_ARGS="$$FAIL_COHORT_ARGS --exploratory-max-cases $(OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES)"; \
 	$(PYTHON) -m tools.build_ocr_growth_fail_cohort \
 		--stability-report "$(OCR_GROWTH_STABILITY_OUTPUT)" \
 		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
@@ -1099,6 +1106,9 @@ eval-ocr-focus-cases:
 	FOCUS_ARGS=""; \
 	if [ "$(OCR_FOCUS_INCLUDE_FAIL_HISTORY)" = "false" ]; then \
 		FOCUS_ARGS="--exclude-fail-history"; \
+	fi; \
+	if [ "$(OCR_FOCUS_INCLUDE_EXPLORATORY)" = "false" ]; then \
+		FOCUS_ARGS="$$FOCUS_ARGS --exclude-exploratory"; \
 	fi; \
 	$(PYTHON) -m tools.build_ocr_focus_cases \
 		--cohort "$(OCR_GROWTH_FAIL_COHORT_JSON)" \

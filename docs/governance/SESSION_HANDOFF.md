@@ -345,9 +345,18 @@
     - `make eval-ocr-focus-stability`
     - one-shot chain:
       - `make ocrfocus`
+    - exploratory strict-replay defaults are enabled:
+      - `OCR_FAIL_COHORT_INCLUDE_EXPLORATORY=true`
+      - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES=12`
+      - `OCR_FOCUS_INCLUDE_EXPLORATORY=true`
+    - expected behaviour when fail history is empty:
+      - fail cohort can remain `selected_fail_cases=0`
+      - focus set is populated from `exploratory_cases`
+      - focused replay should produce fail-heavy diagnostic signal
     - tuning knobs:
       - `OCR_FOCUS_MAX_CASES`
       - `OCR_FOCUS_INCLUDE_FAIL_HISTORY`
+      - `OCR_FOCUS_INCLUDE_EXPLORATORY`
       - `OCR_FOCUS_RUNS`
       - `OCR_FOCUS_CASE_DELAY_MS`
       - `OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS`

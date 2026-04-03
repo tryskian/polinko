@@ -565,6 +565,9 @@
   - growth cases: `23`
   - latest growth stability replay: `23/23` pass, `0/23` fail, `0` errors
   - fail cohort selection (`require_ocr_framing=true`): `0` selected cases
+  - exploratory strict-replay cohort: `12` selected cases
+    (`OCR_FAIL_COHORT_INCLUDE_EXPLORATORY=true`)
+  - latest focused replay (exploratory): `3/12` pass, `9/12` fail, `0` errors
   - `skipped_non_framed=5`
   - growth metrics:
     - `decision_coverage_rate=1.0000`

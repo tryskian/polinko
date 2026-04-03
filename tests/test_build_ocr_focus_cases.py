@@ -124,6 +124,48 @@ class BuildOcrFocusCasesTests(unittest.TestCase):
         # Empty source list is backfilled from cohort history.
         self.assertEqual(selected["sample_reasons"], ["missing tokens"])
 
+    def test_can_include_exploratory_with_focus_overrides(self) -> None:
+        cohort_payload = {
+            "cases": [],
+            "fail_history_cases": [],
+            "exploratory_cases": [
+                {
+                    "id": "gx-exp-1",
+                    "focus_overrides": {
+                        "must_appear_in_order": ["gyro", "folds", "within"],
+                        "min_chars": 17,
+                    },
+                }
+            ],
+        }
+        source_cases_payload: dict[str, Any] = {
+            "cases": [
+                {
+                    "id": "gx-exp-1",
+                    "lane": "handwriting",
+                    "must_appear_in_order": ["old", "order"],
+                    "min_chars": 10,
+                }
+            ]
+        }
+
+        report = build_focus_cases(
+            cohort_payload=cohort_payload,
+            source_cases_payload=source_cases_payload,
+            include_fail_history=True,
+            include_exploratory=True,
+            max_cases=0,
+        )
+
+        self.assertEqual(report["summary"]["requested_ids"], 1)
+        self.assertEqual(report["summary"]["selected_cases"], 1)
+        self.assertEqual(report["summary"]["include_exploratory"], True)
+        selected = report["cases"][0]
+        self.assertEqual(selected["focus_source"], "exploratory")
+        self.assertEqual(selected["must_appear_in_order"], ["gyro", "folds", "within"])
+        self.assertEqual(selected["min_chars"], 17)
+        self.assertEqual(selected["focus_override_keys"], ["min_chars", "must_appear_in_order"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -2287,3 +2287,38 @@
 - Why: over-prescriptive prompts were observed to increase confusion and reduce
   adaptation quality. Pattern-led execution with explicit checks preserves
   reliability while improving flow and focus.
+
+## D-159: Add exploratory strict-replay OCR cohort when fail history is empty
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `fail_signal`, `focus_lane`, `strict_replay`
+- Decision:
+  - extend fail cohort builder (`tools/build_ocr_growth_fail_cohort.py`) with
+    an exploratory mode that selects stable PASS-only growth rows and emits
+    strict replay overrides:
+    - `focus_overrides.must_appear_in_order` (derived sequence gate)
+    - `focus_overrides.min_chars` (tightened minimum length)
+  - keep source growth cases immutable; strictness is applied only in focused
+    replay via cohort metadata.
+  - extend focus case builder (`tools/build_ocr_focus_cases.py`) to include
+    `exploratory_cases` and apply `focus_overrides` deterministically.
+  - wire defaults in `Makefile`:
+    - `OCR_FAIL_COHORT_INCLUDE_EXPLORATORY=true`
+    - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES=12`
+    - `OCR_FOCUS_INCLUDE_EXPLORATORY=true`
+  - add regression tests:
+    - `tests/test_build_ocr_growth_fail_cohort.py`
+    - `tests/test_build_ocr_focus_cases.py`
+  - validation:
+    - `make ocrfails`
+    - `make ocrfocuscases`
+    - `make ocrfocus`
+    - `make test`
+  - current outcome:
+    - fail cohort: `selected_fail_cases=0`, `exploratory_cases=12`
+    - focused replay: `3/12` PASS, `9/12` FAIL, `0` errors
+- Why: growth lockset has reached all-green runs, which suppresses new
+  fail-derived signal. Exploratory strict replay reintroduces controlled
+  fail-heavy pressure without relaxing binary gate semantics or mutating source
+  datasets.

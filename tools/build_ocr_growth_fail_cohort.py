@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections import Counter
 from datetime import datetime
 from datetime import timezone
@@ -197,6 +198,47 @@ def _format_gate_probe(must_any: list[str], must_order: list[str]) -> str:
     return f"any[{_preview_terms(must_any)}] order[{_preview_terms(must_order)}]"
 
 
+def _tokenise_phrase(phrase: str) -> list[str]:
+    return [token for token in re.findall(r"[A-Za-z0-9]+", phrase.lower()) if token]
+
+
+def _derive_exploratory_overrides(
+    *,
+    growth_case: dict[str, Any],
+    run_case: dict[str, Any],
+) -> dict[str, Any]:
+    effective_any, effective_order = _effective_gate_terms(
+        growth_case=growth_case,
+        run_case=run_case,
+    )
+    selected_order: list[str] = []
+    if len(effective_order) >= 2:
+        selected_order = effective_order[:4]
+    else:
+        token_candidates: list[str] = []
+        for phrase in effective_any:
+            token_candidates.extend(_tokenise_phrase(phrase))
+        unique_tokens = sorted({token for token in token_candidates if len(token) >= 3}, key=len, reverse=True)
+        selected_order = unique_tokens[:3]
+
+    overrides: dict[str, Any] = {}
+    if selected_order:
+        overrides["must_appear_in_order"] = selected_order
+
+    if effective_any:
+        overrides["must_contain_any"] = effective_any[:8]
+
+    try:
+        base_min_chars = int(run_case.get("min_chars") or growth_case.get("min_chars") or 0)
+    except (TypeError, ValueError):
+        base_min_chars = 0
+    if base_min_chars > 0:
+        overrides["min_chars"] = max(base_min_chars, int(round(base_min_chars * 1.15)))
+    elif selected_order:
+        overrides["min_chars"] = max(10, sum(len(term) for term in selected_order))
+    return overrides
+
+
 def _merge_case_rows(
     *,
     stability_cases: list[dict[str, Any]],
@@ -252,6 +294,8 @@ def build_fail_cohort(
     min_runs: int,
     include_unstable: bool,
     require_ocr_framing: bool,
+    include_exploratory: bool = False,
+    exploratory_max_cases: int = 0,
 ) -> dict[str, Any]:
     raw_cases = stability_payload.get("cases")
     if not isinstance(raw_cases, list):
@@ -264,9 +308,11 @@ def build_fail_cohort(
 
     selected: list[dict[str, Any]] = []
     fail_history_cases: list[dict[str, Any]] = []
+    exploratory_cases: list[dict[str, Any]] = []
     rate_limited_cases: list[dict[str, Any]] = []
     lane_counts: Counter[str] = Counter()
     fail_history_lane_counts: Counter[str] = Counter()
+    exploratory_lane_counts: Counter[str] = Counter()
     reason_counts: Counter[str] = Counter()
     reason_pattern_counts: Counter[str] = Counter()
     skipped_non_framed = 0
@@ -508,6 +554,100 @@ def build_fail_cohort(
             }
         )
 
+    if include_exploratory and exploratory_max_cases > 0:
+        lane_priority = {"handwriting": 3, "illustration": 2, "typed": 1}
+        exploratory_candidates: list[tuple[int, dict[str, Any]]] = []
+        for row in raw_cases:
+            if not isinstance(row, dict):
+                continue
+            case_id = str(row.get("id", "")).strip()
+            if not case_id:
+                continue
+            observed_runs = int(row.get("observed_runs", 0) or 0)
+            pass_runs = int(row.get("pass_runs", 0) or 0)
+            fail_runs = int(row.get("fail_runs", 0) or 0)
+            error_runs = int(row.get("error_runs", 0) or 0)
+            if observed_runs < min_runs:
+                continue
+            if pass_runs <= 0 or fail_runs > 0 or error_runs > 0:
+                continue
+            growth_case = growth_case_map.get(case_id, {})
+            run_case = run_case_map.get(case_id, {})
+            lane = str(growth_case.get("lane", "unknown")).strip() or "unknown"
+            if lane == "unknown":
+                continue
+            source_name = (
+                str(run_case.get("source_name", "")).strip()
+                or str(growth_case.get("source_name", "")).strip()
+                or case_id
+            )
+            image_path = (
+                str(run_case.get("image_path", "")).strip()
+                or str(growth_case.get("image_path", "")).strip()
+            )
+            linked_review_rows = review_index.get(image_path, [])
+            framing_episode_count = sum(
+                1 for review_row in linked_review_rows if bool(review_row.get("ocr_framing_signal", False))
+            )
+            if require_ocr_framing and framing_episode_count <= 0:
+                continue
+
+            overrides = _derive_exploratory_overrides(
+                growth_case=growth_case,
+                run_case=run_case,
+            )
+            # Keep exploratory probes actionable: they need at least a 2-token
+            # ordered gate so we can intentionally stress OCR sequence quality.
+            ordered_terms = _string_list(overrides.get("must_appear_in_order"))
+            if len(ordered_terms) < 2:
+                continue
+            effective_must_any, effective_must_order = _effective_gate_terms(
+                growth_case=growth_case,
+                run_case=run_case,
+            )
+            gate_probe_summary = _format_gate_probe(effective_must_any, effective_must_order)
+            score = (
+                lane_priority.get(lane, 0) * 1_000_000
+                + int(row.get("text_variant_count", 0) or 0) * 10_000
+                + int(row.get("char_count_span", 0) or 0) * 100
+                + len(ordered_terms) * 10
+                + min(len(" ".join(ordered_terms)), 9)
+            )
+            exploratory_candidates.append(
+                (
+                    score,
+                    {
+                        "id": case_id,
+                        "lane": lane,
+                        "source_name": source_name,
+                        "image_path": image_path,
+                        "observed_runs": observed_runs,
+                        "pass_runs": pass_runs,
+                        "fail_runs": fail_runs,
+                        "error_runs": error_runs,
+                        "pass_rate": float(row.get("pass_rate", 0.0) or 0.0),
+                        "decision_stable": bool(row.get("decision_stable", False)),
+                        "always_fail": bool(row.get("always_fail", False)),
+                        "primary_failure_pattern": "exploratory_stress_probe",
+                        "failure_patterns": ["exploratory_stress_probe"],
+                        "text_variant_count": int(row.get("text_variant_count", 0) or 0),
+                        "char_count_span": int(row.get("char_count_span", 0) or 0),
+                        "effective_must_contain_any": effective_must_any,
+                        "effective_must_appear_in_order": effective_must_order,
+                        "gate_probe_summary": gate_probe_summary,
+                        "focus_overrides": overrides,
+                        "exploratory_reason": "strict_replay_from_stable_pass_only",
+                        "review_episode_count": len(linked_review_rows),
+                        "framing_episode_count": framing_episode_count,
+                    },
+                )
+            )
+
+        exploratory_candidates.sort(key=lambda item: (-item[0], str(item[1].get("id", ""))))
+        for _score, row in exploratory_candidates[:exploratory_max_cases]:
+            exploratory_cases.append(row)
+            exploratory_lane_counts[str(row.get("lane", "unknown"))] += 1
+
     selected.sort(
         key=lambda item: (
             item["lane"],
@@ -522,6 +662,7 @@ def build_fail_cohort(
             item["id"],
         )
     )
+    exploratory_cases.sort(key=lambda item: (str(item.get("lane", "")), str(item.get("id", ""))))
     rate_limited_cases.sort(key=lambda item: (item["lane"], item["id"]))
 
     summary = {
@@ -530,16 +671,20 @@ def build_fail_cohort(
         "metrics_rows_added": metrics_rows_added,
         "selected_fail_cases": len(selected),
         "fail_history_cases": len(fail_history_cases),
+        "exploratory_cases": len(exploratory_cases),
         "fail_to_pass_cases": fail_to_pass_cases,
         "rate_limited_cases": len(rate_limited_cases),
         "rate_limit_abort_runs": rate_limit_abort_runs,
         "min_runs": min_runs,
         "include_unstable": include_unstable,
         "require_ocr_framing": require_ocr_framing,
+        "include_exploratory": include_exploratory,
+        "exploratory_max_cases": exploratory_max_cases,
         "skipped_non_framed": skipped_non_framed,
         "skipped_case_map_mismatch": skipped_case_map_mismatch,
         "lane_counts": dict(sorted(lane_counts.items())),
         "fail_history_lane_counts": dict(sorted(fail_history_lane_counts.items())),
+        "exploratory_lane_counts": dict(sorted(exploratory_lane_counts.items())),
         "top_reasons": [
             {"reason": reason, "count": count}
             for reason, count in reason_counts.most_common(10)
@@ -552,6 +697,7 @@ def build_fail_cohort(
         "summary": summary,
         "cases": selected,
         "fail_history_cases": fail_history_cases,
+        "exploratory_cases": exploratory_cases,
         "rate_limited_cases": rate_limited_cases,
     }
 
@@ -562,6 +708,11 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
     fail_history_cases = (
         report.get("fail_history_cases")
         if isinstance(report.get("fail_history_cases"), list)
+        else []
+    )
+    exploratory_cases = (
+        report.get("exploratory_cases")
+        if isinstance(report.get("exploratory_cases"), list)
         else []
     )
     rate_limited_cases = (
@@ -585,12 +736,15 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
     lines.append(f"| metrics_rows_added | {summary['metrics_rows_added']} |")
     lines.append(f"| selected_fail_cases | {summary['selected_fail_cases']} |")
     lines.append(f"| fail_history_cases | {summary['fail_history_cases']} |")
+    lines.append(f"| exploratory_cases | {summary['exploratory_cases']} |")
     lines.append(f"| fail_to_pass_cases | {summary['fail_to_pass_cases']} |")
     lines.append(f"| rate_limited_cases | {summary['rate_limited_cases']} |")
     lines.append(f"| rate_limit_abort_runs | {summary['rate_limit_abort_runs']} |")
     lines.append(f"| min_runs | {summary['min_runs']} |")
     lines.append(f"| include_unstable | {summary['include_unstable']} |")
     lines.append(f"| require_ocr_framing | {summary['require_ocr_framing']} |")
+    lines.append(f"| include_exploratory | {summary['include_exploratory']} |")
+    lines.append(f"| exploratory_max_cases | {summary['exploratory_max_cases']} |")
     lines.append(f"| skipped_non_framed | {summary['skipped_non_framed']} |")
     lines.append(f"| skipped_case_map_mismatch | {summary['skipped_case_map_mismatch']} |")
     lines.append("")
@@ -612,6 +766,16 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
         lines.append("| lane | fail_history_cases |")
         lines.append("|---|---:|")
         for lane, count in fail_history_lane_counts.items():
+            lines.append(f"| {lane} | {count} |")
+        lines.append("")
+
+    exploratory_lane_counts = summary.get("exploratory_lane_counts")
+    if isinstance(exploratory_lane_counts, dict) and exploratory_lane_counts:
+        lines.append("## Exploratory Lane Counts")
+        lines.append("")
+        lines.append("| lane | exploratory_cases |")
+        lines.append("|---|---:|")
+        for lane, count in exploratory_lane_counts.items():
             lines.append(f"| {lane} | {count} |")
         lines.append("")
 
@@ -638,6 +802,28 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
 
     if selected:
         lines.append("## Selected Cases")
+        lines.append("")
+
+    if exploratory_cases:
+        lines.append("## Exploratory Cases (Strict Replay of Stable PASS Cases)")
+        lines.append("")
+        lines.append(
+            "| case_id | lane | gate_probe | focus_override_order | focus_override_min_chars | observed_runs | source_name | image_path |"
+        )
+        lines.append("|---|---|---|---|---:|---:|---|---|")
+        for row in exploratory_cases:
+            case_id = str(row.get("id", ""))
+            lane = str(row.get("lane", ""))
+            gate_probe = str(row.get("gate_probe_summary", "-")).replace("|", "\\|")
+            focus_overrides = row.get("focus_overrides") if isinstance(row.get("focus_overrides"), dict) else {}
+            order_override = _preview_terms(_string_list(focus_overrides.get("must_appear_in_order")), limit=4)
+            min_chars_override = int(focus_overrides.get("min_chars", 0) or 0)
+            observed = int(row.get("observed_runs", 0) or 0)
+            source_name = str(row.get("source_name", "")).replace("|", "\\|")
+            image_path = str(row.get("image_path", "")).replace("|", "\\|")
+            lines.append(
+                f"| {case_id} | {lane} | {gate_probe} | {order_override} | {min_chars_override} | {observed} | {source_name} | {image_path} |"
+            )
         lines.append("")
 
     if fail_history_cases:
@@ -761,6 +947,17 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Require selected fail cases to map to at least one review episode with ocr_framing_signal=true.",
     )
+    parser.add_argument(
+        "--include-exploratory",
+        action="store_true",
+        help="Include strict replay exploratory cases when fail history is sparse.",
+    )
+    parser.add_argument(
+        "--exploratory-max-cases",
+        type=int,
+        default=12,
+        help="Maximum exploratory cases to emit when --include-exploratory is set.",
+    )
     return parser
 
 
@@ -768,6 +965,9 @@ def main() -> int:
     args = build_parser().parse_args()
     if args.min_runs < 1:
         print("min-runs must be >= 1")
+        return 2
+    if args.exploratory_max_cases < 0:
+        print("exploratory-max-cases must be >= 0")
         return 2
 
     stability_path = Path(args.stability_report).expanduser()
@@ -813,6 +1013,8 @@ def main() -> int:
         min_runs=int(args.min_runs),
         include_unstable=bool(args.include_unstable),
         require_ocr_framing=bool(args.require_ocr_framing),
+        include_exploratory=bool(args.include_exploratory),
+        exploratory_max_cases=int(args.exploratory_max_cases),
     )
     report["stability_report"] = str(stability_path)
     report["cases_path"] = str(cases_path)
@@ -836,6 +1038,7 @@ def main() -> int:
     print(f"  metrics_rows_added: {summary['metrics_rows_added']}")
     print(f"  selected_fail_cases: {summary['selected_fail_cases']}")
     print(f"  fail_history_cases: {summary['fail_history_cases']}")
+    print(f"  exploratory_cases: {summary['exploratory_cases']}")
     print(f"  fail_to_pass_cases: {summary['fail_to_pass_cases']}")
     print(f"  rate_limited_cases: {summary['rate_limited_cases']}")
     print(f"  rate_limit_abort_runs: {summary['rate_limit_abort_runs']}")
@@ -843,6 +1046,8 @@ def main() -> int:
     print(f"  min_runs: {summary['min_runs']}")
     print(f"  include_unstable: {summary['include_unstable']}")
     print(f"  require_ocr_framing: {summary['require_ocr_framing']}")
+    print(f"  include_exploratory: {summary['include_exploratory']}")
+    print(f"  exploratory_max_cases: {summary['exploratory_max_cases']}")
     print(f"  skipped_non_framed: {summary['skipped_non_framed']}")
     print(f"  skipped_case_map_mismatch: {summary['skipped_case_map_mismatch']}")
     print(f"  json: {output_json}")

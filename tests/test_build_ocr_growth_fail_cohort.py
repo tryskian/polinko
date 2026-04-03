@@ -573,6 +573,63 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             self.assertIn("gx-1", run_case_map)
             self.assertEqual(run_case_map["gx-1"]["source_name"], "s.png")
 
+    def test_include_exploratory_selects_stable_pass_probes(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-pass-1",
+                    "observed_runs": 3,
+                    "pass_runs": 3,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS"] * 3,
+                    "text_variant_count": 2,
+                    "char_count_span": 11,
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-1": {
+                "id": "gx-pass-1",
+                "lane": "handwriting",
+                "source_name": "sample-pass.png",
+                "image_path": "/tmp/sample-pass.png",
+                "must_contain_any": ["gyro folds within", "field notes", "origin"],
+            }
+        }
+        review_index = {
+            "/tmp/sample-pass.png": [
+                {"ocr_framing_signal": True, "lane": "handwriting"},
+            ]
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map={},
+            metrics_map={},
+            review_index=review_index,
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=True,
+            include_exploratory=True,
+            exploratory_max_cases=5,
+        )
+
+        self.assertEqual(report["summary"]["selected_fail_cases"], 0)
+        self.assertEqual(report["summary"]["exploratory_cases"], 1)
+        self.assertEqual(report["summary"]["exploratory_lane_counts"], {"handwriting": 1})
+        exploratory = report["exploratory_cases"][0]
+        self.assertEqual(exploratory["id"], "gx-pass-1")
+        self.assertEqual(exploratory["primary_failure_pattern"], "exploratory_stress_probe")
+        overrides = exploratory.get("focus_overrides")
+        self.assertIsInstance(overrides, dict)
+        self.assertGreaterEqual(len(overrides.get("must_appear_in_order", [])), 2)
+        self.assertGreater(int(overrides.get("min_chars", 0) or 0), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
