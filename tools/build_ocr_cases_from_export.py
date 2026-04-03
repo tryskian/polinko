@@ -252,6 +252,10 @@ REGEX_UI_ERROR_PHRASE_RX = re.compile(
     r"\b(?:conversation|chat)\W*not\W*found\b|\bchat\W*html\b",
     re.IGNORECASE,
 )
+OCR_LABEL_ONLY_RX = re.compile(
+    r"(?:timestamp|crossed[-\s]?out\s+header|bullet(?:\s+\d+)?|archived\s+and\s+translated\s+as)",
+    re.IGNORECASE,
+)
 CONTROL_TOKEN_RX = re.compile(
     r"\b(?:imagegenview|imagegen|sandbox:|mnt/data|tool_call|assistant_response)\b",
     re.IGNORECASE,
@@ -487,6 +491,16 @@ def _extract_transcribed_lines(assistant_text: str) -> tuple[list[str], bool]:
         value = _normalize_phrase_candidate(raw_line.lstrip("-*•> "))
         if 4 <= len(value) <= 120 and _is_ocr_like_phrase(value):
             candidates.append(value)
+            continue
+        # Long OCR lines often include useful leading clauses that are lost if
+        # we only keep short, already-ocr-like strings.
+        for separator in (" into ", " — ", " – ", ":", ";", "|", "("):
+            if separator not in value:
+                continue
+            head = _normalize_phrase_candidate(value.split(separator, 1)[0])
+            if 4 <= len(head) <= 120 and _is_ocr_like_phrase(head):
+                candidates.append(head)
+                break
     if not candidates:
         # Fallback: split by sentence-like punctuation for short line candidates.
         for chunk in re.split(r"[;\n]+", assistant_text):
@@ -520,6 +534,9 @@ def _is_ocr_like_phrase(text: str) -> bool:
     if PATH_FILE_EXT_RX.search(value):
         return False
     if CONTROL_TOKEN_RX.search(value):
+        return False
+    normalized_label = re.sub(r"[^a-z0-9\s-]", "", lowered).strip()
+    if OCR_LABEL_ONLY_RX.fullmatch(normalized_label):
         return False
     if value.isdigit() and not _is_entry_numeric_token(value):
         return False

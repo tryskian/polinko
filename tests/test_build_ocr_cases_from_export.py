@@ -87,6 +87,12 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertTrue(_is_ocr_like_phrase("200226"))
         self.assertFalse(_is_ocr_like_phrase("2460"))
 
+    def test_phrase_filter_rejects_label_only_headers(self) -> None:
+        self.assertFalse(_is_ocr_like_phrase("Timestamp"))
+        self.assertFalse(_is_ocr_like_phrase("Crossed-out header"))
+        self.assertFalse(_is_ocr_like_phrase("Bullet 1"))
+        self.assertFalse(_is_ocr_like_phrase("archived and translated as"))
+
     def test_expand_anchor_variants_adds_stems(self) -> None:
         anchors = _expand_anchor_variants(["archival", "tumbles", "floating"])
         self.assertIn("tumble", anchors)
@@ -207,6 +213,14 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         phrases, _ = _extract_transcribed_lines(assistant_text)
         self.assertIn("open fold within", phrases)
         self.assertFalse(any("pocket timeline" in phrase.lower() for phrase in phrases))
+
+    def test_extract_transcribed_lines_keeps_head_fragment_from_long_line(self) -> None:
+        assistant_text = (
+            "Transforms human lived experience into structured notes; "
+            "archived and translated as field log."
+        )
+        phrases, _ = _extract_transcribed_lines(assistant_text)
+        self.assertIn("Transforms human lived experience", phrases)
 
     def test_anchor_terms_filter_weak_and_filetype_tokens(self) -> None:
         anchors = _anchor_terms_for_phrases(
