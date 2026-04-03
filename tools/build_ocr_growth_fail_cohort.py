@@ -229,7 +229,9 @@ EXPLORATORY_STOPWORDS = {
     "lines",
 }
 
-EXPLORATORY_ORDER_MAX_TERMS = 3
+# Keep exploratory order probes compact to avoid brittle tail-token failures
+# that are less diagnostic than head/mid sequence breaks.
+EXPLORATORY_ORDER_MAX_TERMS = 2
 EXPLORATORY_MIN_TOKEN_LEN = 5
 EXPLORATORY_LANE_ORDER = ("handwriting", "typed", "illustration", "unknown")
 

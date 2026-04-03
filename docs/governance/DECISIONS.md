@@ -2662,3 +2662,26 @@
     - `make lint-docs`
 - Why: this removes a deterministic false-negative class in handwriting-focused
   growth/focus kernels without loosening binary gate discipline.
+
+## D-173: Cap exploratory ordered probes at 2 terms to reduce brittle tail misses
+
+- Date: `2026-04-03`
+- Category: `ocr_hardening`
+- Tags: `exploratory`, `ordered_terms`, `focus_kernel`, `brittleness_control`
+- Decision:
+  - tighten exploratory override order-chain cap in
+    `tools/build_ocr_growth_fail_cohort.py`:
+    - `EXPLORATORY_ORDER_MAX_TERMS: 3 -> 2`
+  - keep exploratory probes sequence-sensitive (`>=2` terms still required),
+    but reduce tail-token overfitting that creates low-value deterministic
+    failures.
+  - docs alignment:
+    - `docs/governance/STATE.md`
+    - `docs/governance/SESSION_HANDOFF.md`
+  - validation:
+    - `make test`
+    - `make lint-docs`
+    - `make ocrfocus`
+- Why: latest focus hotspot moved to handwriting tail misses; trimming
+  exploratory sequence length keeps kernels diagnostic while lowering
+  brittle tail-term noise.

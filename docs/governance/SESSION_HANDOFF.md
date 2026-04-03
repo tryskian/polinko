@@ -376,7 +376,7 @@
       - truncated prefix-stem collapse when lexical completions exist
         (for example, `increas` -> `increases`)
       - `min_chars` floor of `12`
-      - compact exploratory order chains (`max=3` terms)
+      - compact exploratory order chains (`max=2` terms)
       - OCR matcher accepts bounded terminal drift for 7-char anchors/order
         terms (for example `tumbles` -> `tumbler` / `tumblies`) while keeping
         shorter anchors strict

@@ -678,7 +678,7 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertIsInstance(overrides, dict)
         self.assertEqual(
             overrides.get("must_appear_in_order"),
-            ["field", "measurable", "record"],
+            ["field", "measurable"],
         )
 
     def test_exploratory_collapses_plural_singular_probe_duplicates(self) -> None:
@@ -728,7 +728,7 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertIsInstance(overrides, dict)
         self.assertEqual(
             overrides.get("must_appear_in_order"),
-            ["tumbles", "restore", "spectral"],
+            ["tumbles", "restore"],
         )
 
     def test_exploratory_balances_lane_selection_round_robin(self) -> None:
