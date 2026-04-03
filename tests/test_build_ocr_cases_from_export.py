@@ -39,8 +39,17 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
     def test_ask_regex_matches_new_drop_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("new drop: can your binareyes read this?"))
 
+    def test_ask_regex_matches_newdrop_compact_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("newdrop can your binareyes read this?"))
+
     def test_ask_regex_matches_scribbles_and_bibbles_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("can you still OCR my scribbles and bibbles?"))
+
+    def test_ask_regex_matches_scribbles_ampersand_bibbles_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("can you still OCR my scribbles & bibbles?"))
+
+    def test_ask_regex_matches_scrumbles_and_bibbles_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("can you still OCR my scrumbles and bibbles?"))
 
     def test_ask_regex_matches_squibbles_and_bibbles_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("can you still OCR my squibbles and bibbles?"))
@@ -50,6 +59,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
     def test_ask_regex_matches_scratched_out_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("this line is scratched out, can you still read it?"))
+
+    def test_ask_regex_matches_scratch_out_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("this line is scratch out but still ocrable"))
 
     def test_ask_regex_matches_crossed_out_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("this line is crossed out, can you still read it?"))
