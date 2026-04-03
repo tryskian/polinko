@@ -21,6 +21,9 @@ EMIT_STATUS_PRIORITY = {
     "skipped_low_confidence": 2,
 }
 SIGNAL_STRENGTH_PRIORITY = {"high": 0, "medium": 1, "low": 2}
+KNOWN_QUARANTINED_UNSTABLE_SOURCES = {
+    "file_0000000047f871f7af65c1ce3955cc2e-sanitized.png",
+}
 
 
 def _load_payload(path: Path) -> dict[str, Any]:
@@ -122,6 +125,11 @@ def _extract_actionable_backlog(payload: dict[str, Any], *, max_items: int) -> l
             has_anchor_potential = bool(anchor_count > 0 or ordered_count > 0 or chosen_count > 0)
             if not has_actionable_ocr_intent or not has_anchor_potential:
                 continue
+        source_name = str(row.get("source_name", "")).strip() or Path(str(row.get("image_path", "")).strip()).name
+        if emit_status == "skipped_unstable_source" and source_name.lower() in KNOWN_QUARANTINED_UNSTABLE_SOURCES:
+            # Known quarantined sources are intentionally excluded from
+            # base-case remediation; keep backlog focused on actionable rows.
+            continue
         signal_strength = str(row.get("signal_strength", row.get("confidence", "low"))).strip().lower()
         if signal_strength not in SIGNAL_STRENGTH_LEVELS:
             signal_strength = "low"
@@ -129,7 +137,7 @@ def _extract_actionable_backlog(payload: dict[str, Any], *, max_items: int) -> l
         if isinstance(chosen_phrases, list) and chosen_phrases:
             chosen_preview = _single_line(" | ".join(str(item) for item in chosen_phrases[:3]), max_chars=140)
         image_path = str(row.get("image_path", "")).strip()
-        source_name = str(row.get("source_name", "")).strip() or Path(image_path).name
+        source_name = source_name or Path(image_path).name
         rows.append(
             {
                 "emit_status": emit_status,
