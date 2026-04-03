@@ -159,6 +159,22 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
                         "correction_overlap_signal": False,
                         "transcription_phrases": [],
                     },
+                    {
+                        "lane": "typed",
+                        "signal_strength": "low",
+                        "emit_status": "skipped_low_confidence",
+                        "conversation_title": "ocr framing but no anchors",
+                        "source_name": "file_d.png",
+                        "image_path": "/tmp/file_d.png",
+                        "anchor_terms_count": 0,
+                        "ask_text": "please transcribe this image",
+                        "chosen_phrases": [],
+                        "ocr_literal_intent_signal": False,
+                        "ocr_framing_signal": True,
+                        "correction_signal": True,
+                        "correction_overlap_signal": False,
+                        "transcription_phrases": ["hello there"],
+                    },
                 ],
             }
             curr_path.write_text(json.dumps(curr_payload), encoding="utf-8")
@@ -182,6 +198,7 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
             self.assertIn("## Actionable Skipped Episodes", markdown)
             self.assertIn("/tmp/file_b.png", markdown)
             self.assertNotIn("/tmp/file_c.png", markdown)
+            self.assertNotIn("/tmp/file_d.png", markdown)
 
 
 if __name__ == "__main__":
