@@ -41,9 +41,21 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
             ]
         }
         focus_case_map = {
-            "gx-1": {"id": "gx-1", "lane": "handwriting", "must_appear_in_order": ["focus", "stillness"]},
+            "gx-1": {
+                "id": "gx-1",
+                "lane": "handwriting",
+                "must_appear_in_order": ["focus", "stillness"],
+                "source_name": "focus-note.jpeg",
+                "image_path": "/tmp/focus-note.jpeg",
+            },
             "gx-2": {"id": "gx-2", "lane": "typed", "must_appear_in_order": ["origin", "binary"]},
-            "gx-3": {"id": "gx-3", "lane": "typed", "must_appear_in_order": ["instance", "engineering"]},
+            "gx-3": {
+                "id": "gx-3",
+                "lane": "typed",
+                "must_appear_in_order": ["instance", "engineering"],
+                "source_name": "eng-note.jpeg",
+                "image_path": "/tmp/eng-note.jpeg",
+            },
         }
 
         report = build_report(
@@ -75,8 +87,14 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
         self.assertEqual(failing_case_ids, ["gx-1", "gx-3"])
         self.assertEqual(report["failing_cases"][0]["top_missing_phrase"], "focus")
         self.assertEqual(report["failing_cases"][0]["top_missing_offset"], 20)
+        self.assertEqual(report["failing_cases"][0]["top_missing_offset_bucket"], "mid_sequence")
+        self.assertEqual(report["failing_cases"][0]["source_name"], "focus-note.jpeg")
+        self.assertEqual(report["failing_cases"][0]["image_path"], "/tmp/focus-note.jpeg")
         self.assertEqual(report["failing_cases"][1]["top_missing_phrase"], "engineering")
         self.assertEqual(report["failing_cases"][1]["top_missing_offset"], 0)
+        self.assertEqual(report["failing_cases"][1]["top_missing_offset_bucket"], "at_start")
+        self.assertEqual(report["failing_cases"][1]["source_name"], "eng-note.jpeg")
+        self.assertEqual(report["failing_cases"][1]["image_path"], "/tmp/eng-note.jpeg")
 
 
 if __name__ == "__main__":

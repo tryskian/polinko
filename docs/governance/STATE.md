@@ -605,6 +605,10 @@
 - Exploratory probe terms now collapse truncated prefix stems when a lexical
   completion exists (for example, `increas` -> `increases`) for both order and
   anchor-any signals.
+- OCR focus fail-pattern rows now include direct source fields:
+  - `source_name`
+  - `image_path`
+  - per-case `top_missing_offset_bucket`
 - Runtime DB null surfaces now have a read-only audit command:
   - `make nulls`
   - output: `.local/eval_reports/runtime_null_audit.{json,md}`

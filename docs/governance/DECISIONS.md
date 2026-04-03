@@ -2521,3 +2521,26 @@
     - `make lint-docs`
 - Why: truncated stem probes add noise without increasing failure discovery and
   reduce readability for focused fail diagnosis.
+
+## D-167: Enrich OCR focus fail reports with per-case source and offset bucket
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_focus`, `observability`, `source_path`, `offset_bucket`
+- Decision:
+  - extend `tools/report_ocr_focus_fail_patterns.py` per-case rows with:
+    - `source_name`
+    - `image_path`
+    - `top_missing_offset_bucket`
+  - keep existing summary buckets unchanged while adding explicit per-case
+    offset-bucket visibility to simplify targeted replay triage.
+  - include the new fields in markdown output table:
+    - `.local/eval_reports/ocr_focus_fail_patterns.md`
+  - add regression coverage updates in:
+    - `tests/test_report_ocr_focus_fail_patterns.py`
+  - validation:
+    - `make ocrfocusreport`
+    - `make test`
+    - `make lint-docs`
+- Why: focused fail triage needs direct asset linkage and per-case sequence
+  failure position without requiring extra joins or manual lookup.

@@ -142,6 +142,8 @@ def build_report(
                 "text_variant_count": int(row.get("text_variant_count", 0) or 0),
                 "char_count_span": int(row.get("char_count_span", 0) or 0),
                 "focus_source": str(focus_case.get("focus_source", "")).strip() or "unknown",
+                "source_name": str(focus_case.get("source_name", "")).strip(),
+                "image_path": str(focus_case.get("image_path", "")).strip(),
                 "order_preview": _preview_order(
                     [
                         str(term).strip()
@@ -154,6 +156,7 @@ def build_report(
                 "top_reason": reasons[0] if reasons else "",
                 "top_missing_phrase": top_missing_phrase,
                 "top_missing_offset": top_missing_offset,
+                "top_missing_offset_bucket": _missing_offset_bucket(top_missing_offset),
             }
         )
 
@@ -279,12 +282,14 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
         lines.append("## Failing Cases")
         lines.append("")
         lines.append(
-            "| case_id | lane | fail_runs | pass_runs | pass_rate | order_preview | missing_phrase | missing_offset | top_reason |"
+            "| case_id | lane | source_name | image_path | fail_runs | pass_runs | pass_rate | order_preview | missing_phrase | missing_offset | missing_offset_bucket | top_reason |"
         )
-        lines.append("|---|---|---:|---:|---:|---|---|---:|---|")
+        lines.append("|---|---|---|---|---:|---:|---:|---|---|---:|---|---|")
         for row in failing_cases:
             case_id = str(row.get("id", ""))
             lane = str(row.get("lane", ""))
+            source_name = str(row.get("source_name", "")).replace("|", "\\|")
+            image_path = str(row.get("image_path", "")).replace("|", "\\|")
             fail_runs = int(row.get("fail_runs", 0) or 0)
             pass_runs = int(row.get("pass_runs", 0) or 0)
             pass_rate = float(row.get("pass_rate", 0.0) or 0.0)
@@ -296,10 +301,11 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
                 if isinstance(missing_offset, int)
                 else "-"
             )
+            missing_offset_bucket = str(row.get("top_missing_offset_bucket", "unknown")).replace("|", "\\|")
             top_reason = str(row.get("top_reason", "")).replace("|", "\\|")
             lines.append(
-                f"| {case_id} | {lane} | {fail_runs} | {pass_runs} | {pass_rate:.4f} | {order_preview} | "
-                f"{missing_phrase} | {missing_offset_value} | {top_reason} |"
+                f"| {case_id} | {lane} | {source_name} | {image_path} | {fail_runs} | {pass_runs} | {pass_rate:.4f} | "
+                f"{order_preview} | {missing_phrase} | {missing_offset_value} | {missing_offset_bucket} | {top_reason} |"
             )
         lines.append("")
 
