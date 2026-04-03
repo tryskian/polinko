@@ -2225,3 +2225,42 @@
 - Why: we need better capture of real handwriting correction prompts while
   suppressing a newly observed false-positive path where non-OCR style critique
   was promoted through correction-overlap alone.
+
+## D-157: Filter scaffold labels from OCR anchors and recover long-line heads
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_mining`, `anchor_quality`, `growth_stability`, `false_fail_removal`
+- Decision:
+  - harden transcript OCR phrase extraction in
+    `tools/build_ocr_cases_from_export.py`:
+    - reject scaffold-label-only phrases from OCR anchors:
+      - `timestamp`
+      - `crossed-out header`
+      - `bullet <n>`
+      - `archived and translated as`
+    - when long OCR lines are too broad/noisy for direct phrase admission,
+      extract and retain leading head fragments before separators
+      (`into`, `:`, `;`, `|`, `(`, en/em dash variants).
+  - add regressions in `tests/test_build_ocr_cases_from_export.py`:
+    - label-only phrase rejection test
+    - long-line head-fragment extraction test.
+  - rerun aligned validation sequence:
+    - `./venv/bin/python -m unittest tests.test_build_ocr_cases_from_export`
+    - `make ocrmine`
+    - `make ocrstablegrowth`
+    - `make ocrgrowth`
+    - `make ocrfails`
+    - `make quality-gate-deterministic`
+  - refreshed aligned baseline:
+    - mined strict cases: `20`
+    - growth cases: `23`
+    - growth stability replay: `23/23` pass, `0/23` fail, `0` errors
+    - fail cohort (`require_ocr_framing=true`): `selected_fail_cases=0`,
+      `skipped_non_framed=5`
+    - growth metrics: `decision_coverage_rate=1.0000`,
+      `first_pass_fail_rate=0.1739`,
+      `fail_to_pass_conversion_rate=1.0000`
+- Why: the remaining growth false-fail path was caused by format headers being
+  treated as anchors. Removing label-only anchors and recovering meaningful
+  phrase heads restores stable matching without relaxing binary gate semantics.
