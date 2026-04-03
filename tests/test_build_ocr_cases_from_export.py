@@ -51,6 +51,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
     def test_ask_regex_matches_scratched_out_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("this line is scratched out, can you still read it?"))
 
+    def test_ask_regex_does_not_match_read_it_and_weep_idiom(self) -> None:
+        self.assertIsNone(ASK_RX.search("read it and weep binch!"))
+
     def test_to_msg_unescapes_html_entities_in_text(self) -> None:
         raw = {
             "create_time": 1,

@@ -2089,3 +2089,35 @@
 - Why: medium/quarantine ordered constraints were producing deterministic
   false-hard failures that did not add remediation value. This keeps growth
   fail-tolerant while preserving one meaningful residual fail signal.
+
+## D-152: Remove residual growth false-fail idiom and stabilise no-memory response gating
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `response_behaviour`, `determinism`, `quality_gate`
+- Decision:
+  - exclude idiomatic phrase `read it and weep` from OCR intent mining in
+    `tools/build_ocr_cases_from_export.py` by tightening the `read it/this`
+    regex branch.
+  - add miner regression coverage in
+    `tests/test_build_ocr_cases_from_export.py`:
+    - `test_ask_regex_does_not_match_read_it_and_weep_idiom`
+  - expand deterministic response-behaviour case phrase coverage in
+    `docs/eval/cases/response_behaviour_eval_cases.json` for
+    `no_memory_pretend_claim` to include explicit inability variants beyond
+    `don't/do not have` (retain/store/remember forms).
+  - rerun aligned validation + growth chain:
+    - `make quality-gate-deterministic`
+    - `CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT make ocrmine`
+    - `make ocrstablegrowth`
+    - `make ocrgrowth`
+    - `make ocrfails`
+    - `OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING=false make ocrfails`
+  - refreshed aligned baseline:
+    - growth cases: `21`
+    - growth stability: `21/21` pass, `0/21` fail, `0` errors
+    - fail cohort (`require_ocr_framing=true`): `selected_fail_cases=0`
+    - diagnostic unframed cohort: `selected_fail_cases=0`
+- Why: the residual growth fail came from a non-OCR idiom being mined as OCR
+  intent, and response-behaviour determinism was penalising valid explicit
+  non-memory refusals that used retain/store/remember phrasing.
