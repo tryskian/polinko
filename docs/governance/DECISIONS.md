@@ -2264,3 +2264,26 @@
 - Why: the remaining growth false-fail path was caused by format headers being
   treated as anchors. Removing label-only anchors and recovering meaningful
   phrase heads restores stable matching without relaxing binary gate semantics.
+
+## D-158: Prefer pattern-led execution over prescriptive instruction density
+
+- Date: `2026-04-03`
+- Category: `collaboration_method`
+- Tags: `co_reasoning`, `execution_control`, `pattern_learning`, `operator_clarity`
+- Decision:
+  - adopt a sparse-control collaboration mode for active kernels:
+    - required controls:
+      - clear objective
+      - hard acceptance checks
+      - example signals
+    - avoid dense procedural instruction stacks when equivalent control is
+      provided by objective + validation boundaries.
+  - keep go/no-go human-led while allowing execution-path inference to remain
+    model-driven and evidence-linked.
+  - capture as transcript evidence in:
+    - `docs/peanut/transcripts/co_reasoning/pattern_learning_over_prescriptive_instruction_2026-04-03.md`
+  - record method excerpt in:
+    - `docs/peanut/refs/PEANUT_METHOD_EXCERPTS.md`
+- Why: over-prescriptive prompts were observed to increase confusion and reduce
+  adaptation quality. Pattern-led execution with explicit checks preserves
+  reliability while improving flow and focus.

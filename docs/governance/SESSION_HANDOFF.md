@@ -243,6 +243,7 @@
 ## Key Files To Read First
 
 - `docs/governance/CHARTER.md`
+- `docs/governance/DATA_SCIENCE_CHARTER.md`
 - `docs/governance/WORKSTREAMS.md`
 - `docs/governance/STATE.md`
 - `docs/governance/DECISIONS.md`
