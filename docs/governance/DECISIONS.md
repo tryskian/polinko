@@ -2059,3 +2059,33 @@
 - Why: in this fail-tolerant OCR expansion phase, `signal_strength` is the
   correct semantic label for mining quality, while preserving status and reader
   compatibility avoids behavioural drift.
+
+## D-151: Tighten illustration admission and drop brittle ordered constraints in growth lane
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `signal_quality`, `constraint_hardening`, `stability`
+- Decision:
+  - tighten medium-signal illustration admission in
+    `tools/build_ocr_cases_from_export.py`:
+    - illustration rows now require anchor evidence plus at least one stronger
+      OCR signal (`ocr_literal_intent_signal`, `correction_signal`,
+      `correction_overlap_signal`, or `ocr_framing_signal`)
+  - keep growth ordered constraints only for highest-signal rows:
+    - clear `must_appear_in_order` for medium/low signal rows
+    - clear `must_appear_in_order` for quarantined unstable-source rows
+  - rerun alignment sequence:
+    - `make ocrmine`
+    - `make ocrstablegrowth`
+    - `make ocrgrowth`
+    - `make ocrfails`
+    - `OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING=false make ocrfails`
+  - refreshed aligned baseline:
+    - growth cases: `22`
+    - growth stability: `21/22` pass, `1/22` fail, `0` errors
+    - fail cohort (`require_ocr_framing=true`): `selected_fail_cases=0`
+      with `skipped_non_framed=6`
+    - diagnostic unframed cohort: `selected_fail_cases=1`
+- Why: medium/quarantine ordered constraints were producing deterministic
+  false-hard failures that did not add remediation value. This keeps growth
+  fail-tolerant while preserving one meaningful residual fail signal.

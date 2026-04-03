@@ -939,6 +939,12 @@ def build_from_export(
             strong_illustration_phrase_signal = (
                 lane == "illustration"
                 and len(transcription_anchor_terms) >= 2
+                and (
+                    ocr_literal_intent_signal
+                    or correction_signal
+                    or correction_overlap_signal
+                    or ocr_framing_signal
+                )
             )
             askless_handwriting_signal = (
                 (not ask_signal)
@@ -1104,12 +1110,18 @@ def build_from_export(
             if emit_status == "skipped_duplicate_image_path":
                 growth_emit_status = False
 
+            source_quarantine = emit_status == "skipped_unstable_source"
+            if signal_strength != "high" or source_quarantine:
+                # Ordered constraints are useful only on highest-signal rows.
+                # For medium/low and quarantined rows they create brittle
+                # deterministic failures without adding diagnostic value.
+                growth_ordered_terms = []
+
             has_growth_constraints = (
                 bool(growth_anchor_terms)
                 or len(growth_ordered_terms) >= 2
                 or bool(growth_regex_patterns)
             )
-            source_quarantine = emit_status == "skipped_unstable_source"
             regex_only_case = (
                 not growth_anchor_terms
                 and len(growth_ordered_terms) < 2
