@@ -240,6 +240,22 @@ def build_report(
             }
             for lane, bucket in sorted(lane_sequence_position_buckets.items())
         },
+        "lane_sequence_hotspots": [
+            {
+                "lane": lane,
+                "bucket": bucket_name,
+                "count": int(count),
+            }
+            for lane, bucket_name, count in sorted(
+                (
+                    (lane, bucket_name, int(bucket.get(bucket_name, 0)))
+                    for lane, bucket in lane_sequence_position_buckets.items()
+                    for bucket_name in ("head", "mid", "tail", "unknown")
+                    if int(bucket.get(bucket_name, 0)) > 0
+                ),
+                key=lambda item: (-item[2], item[0], item[1]),
+            )
+        ],
         "top_reasons": [
             {"reason": reason, "count": count}
             for reason, count in reason_counts.most_common(20)
@@ -350,6 +366,23 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
                 f"{int(bucket.get('tail', 0) or 0)} | "
                 f"{int(bucket.get('unknown', 0) or 0)} |"
             )
+        lines.append("")
+
+    lane_hotspots = (
+        summary.get("lane_sequence_hotspots")
+        if isinstance(summary.get("lane_sequence_hotspots"), list)
+        else []
+    )
+    if lane_hotspots:
+        lines.append("## Lane Sequence Hotspots")
+        lines.append("")
+        lines.append("| lane | bucket | count |")
+        lines.append("|---|---|---:|")
+        for row in lane_hotspots:
+            lane = str(row.get("lane", "")).replace("|", "\\|")
+            bucket = str(row.get("bucket", "")).replace("|", "\\|")
+            count = int(row.get("count", 0) or 0)
+            lines.append(f"| {lane} | {bucket} | {count} |")
         lines.append("")
 
     if top_reasons:

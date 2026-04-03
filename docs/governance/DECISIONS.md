@@ -2592,3 +2592,26 @@
     - `make lint-docs`
 - Why: next-kernel targeting often depends on lane-specific failure shape, not
   just global distribution.
+
+## D-170: Surface lane-sequence hotspots in focused OCR fail summaries
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_focus`, `observability`, `hotspots`, `targeting`
+- Decision:
+  - extend `tools/report_ocr_focus_fail_patterns.py` summary with
+    `lane_sequence_hotspots`:
+    - flattened, sorted `(lane, bucket, count)` tuples derived from
+      lane-sequence matrix counts
+    - sorted by `count desc`, then `lane`, then `bucket`
+  - add markdown section:
+    - `Lane Sequence Hotspots`
+  - keep lane matrix and per-case sequence diagnostics unchanged.
+  - add regression coverage updates:
+    - `tests/test_report_ocr_focus_fail_patterns.py`
+  - validation:
+    - `make ocrfocusreport`
+    - `make test`
+    - `make lint-docs`
+- Why: hotspot ranking reduces manual scan time and makes next-kernel selection
+  deterministic.

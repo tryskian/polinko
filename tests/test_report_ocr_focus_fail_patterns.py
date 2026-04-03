@@ -98,6 +98,13 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
                 "typed": {"head": 0, "mid": 0, "tail": 1, "unknown": 0},
             },
         )
+        self.assertEqual(
+            summary["lane_sequence_hotspots"],
+            [
+                {"lane": "handwriting", "bucket": "head", "count": 1},
+                {"lane": "typed", "bucket": "tail", "count": 1},
+            ],
+        )
 
         failing_case_ids = [row["id"] for row in report["failing_cases"]]
         self.assertEqual(failing_case_ids, ["gx-1", "gx-3"])
