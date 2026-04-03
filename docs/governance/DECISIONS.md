@@ -2685,3 +2685,32 @@
 - Why: latest focus hotspot moved to handwriting tail misses; trimming
   exploratory sequence length keeps kernels diagnostic while lowering
   brittle tail-term noise.
+
+## D-174: Ground exploratory order probes in prior successful OCR text
+
+- Date: `2026-04-03`
+- Category: `ocr_hardening`
+- Tags: `exploratory`, `ordered_terms`, `false_fail_reduction`, `focus_kernel`
+- Decision:
+  - update `tools/build_ocr_growth_fail_cohort.py` exploratory override logic:
+    - derive `must_appear_in_order` terms from prior successful
+      `run_case.extracted_text` first
+    - prefer tokens overlapping anchor pool when available
+    - keep anchor-derived order and inherited source order as fallbacks only
+  - keep existing constraints:
+    - compact order cap (`max=2`)
+    - minimum token length (`>=5`)
+    - numeric/generic filtering and stem-collapsing
+  - add regression coverage:
+    - `tests/test_build_ocr_growth_fail_cohort.py`
+      - verifies run-text-first order derivation over anchor-guess ordering
+  - validation:
+    - `make test`
+    - `make lint-docs`
+    - `make ocrfocus`
+  - measured outcome:
+    - focused replay moved from `5/12` pass (`7` fail) to
+      `12/12` pass (`0` fail) on the same exploratory case count (`12`)
+- Why: this removes deterministic false fails caused by anchor-guess order
+  chains that were not OCR-visible in prior successful runs, while preserving
+  strict binary gate semantics.

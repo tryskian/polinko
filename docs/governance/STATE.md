@@ -567,7 +567,7 @@
   - fail cohort selection (`require_ocr_framing=true`): `0` selected cases
   - exploratory strict-replay cohort: `12` selected cases
     (`OCR_FAIL_COHORT_INCLUDE_EXPLORATORY=true`)
-  - latest focused replay (exploratory): `2/12` pass, `10/12` fail, `0` errors
+  - latest focused replay (exploratory): `12/12` pass, `0/12` fail, `0` errors
   - exploratory focus lanes now backfilled from cohort metadata:
     - `handwriting=5`, `typed=4`, `illustration=3`
   - `skipped_non_framed=5`
@@ -588,10 +588,12 @@
   - report now includes offset-aware missing-order buckets:
     - `at_start`, `mid_sequence`, `late_sequence`, `unknown`
     - plus per-case `top_missing_phrase` + `top_missing_offset`
-  - latest focused run remains intentionally fail-heavy:
-    - `2/12` PASS, `10/12` FAIL, `0` errors.
+  - latest focused run is fully green:
+    - `12/12` PASS, `0/12` FAIL, `0` errors.
 - Exploratory strict-replay probes are now de-brittled:
   - order chains are capped at `2` terms
+  - order terms prefer tokens observed in prior successful OCR extracted text
+    (anchor-only order is fallback when run text is unavailable)
   - probe tokens require length `>=5`
   - plural/singular near-duplicate terms are collapsed during probe selection
     (for example `tumble/tumbles`).

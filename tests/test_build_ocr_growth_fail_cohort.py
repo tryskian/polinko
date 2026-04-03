@@ -681,6 +681,66 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             ["field", "measurable"],
         )
 
+    def test_exploratory_prefers_run_extracted_tokens_over_anchor_guess_tokens(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-pass-ocr-order",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-ocr-order": {
+                "id": "gx-pass-ocr-order",
+                "lane": "typed",
+                "source_name": "sample-pass-ocr-order.png",
+                "image_path": "/tmp/sample-pass-ocr-order.png",
+                "must_contain_any": ["instance", "engineering", "design", "informed"],
+            }
+        }
+        run_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-ocr-order": {
+                "id": "gx-pass-ocr-order",
+                "source_name": "sample-pass-ocr-order.png",
+                "image_path": "/tmp/sample-pass-ocr-order.png",
+                "extracted_text": (
+                    "impact on human psyche design increases risk and improves clarity"
+                ),
+            }
+        }
+        review_index = {
+            "/tmp/sample-pass-ocr-order.png": [{"ocr_framing_signal": True, "lane": "typed"}]
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map=run_case_map,
+            metrics_map={},
+            review_index=review_index,
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=True,
+            include_exploratory=True,
+            exploratory_max_cases=5,
+        )
+        self.assertEqual(report["summary"]["exploratory_cases"], 1)
+        exploratory = report["exploratory_cases"][0]
+        overrides = exploratory.get("focus_overrides")
+        self.assertIsInstance(overrides, dict)
+        self.assertEqual(
+            overrides.get("must_appear_in_order"),
+            ["impact", "human"],
+        )
+
     def test_exploratory_collapses_plural_singular_probe_duplicates(self) -> None:
         stability_payload = {
             "cases": [

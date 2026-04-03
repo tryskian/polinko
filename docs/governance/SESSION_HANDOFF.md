@@ -367,7 +367,8 @@
       - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES=12`
       - `OCR_FOCUS_INCLUDE_EXPLORATORY=true`
     - exploratory probe quality now enforces:
-      - anchor-derived order chains (not inherited stale source order by default)
+      - order chains prefer tokens observed in prior successful OCR extracted
+        text (anchor-derived order is fallback when run text is missing)
       - numeric/generic token filtering for `must_appear_in_order`
       - minimum probe token length of `5`
       - plural/singular near-duplicate collapse during order-term selection
@@ -387,7 +388,9 @@
     - expected behaviour when fail history is empty:
       - fail cohort can remain `selected_fail_cases=0`
       - focus set is populated from `exploratory_cases`
-      - focused replay should produce fail-heavy diagnostic signal
+      - focused replay can converge to all-pass if exploratory order terms are
+        run-grounded; if that happens, widen exploratory anchors before adding
+        matcher loosenings
     - tuning knobs:
       - `OCR_FOCUS_MAX_CASES`
       - `OCR_FOCUS_INCLUDE_FAIL_HISTORY`

@@ -291,6 +291,41 @@ def _derive_order_tokens_from_anchors(anchors: list[str]) -> list[str]:
     return collapsed[:EXPLORATORY_ORDER_MAX_TERMS]
 
 
+def _derive_order_tokens_from_text(
+    text: str,
+    *,
+    preferred_tokens: set[str] | None = None,
+) -> list[str]:
+    if not text.strip():
+        return []
+
+    ordered_tokens: list[str] = []
+    seen: set[str] = set()
+    for token in _tokenise_phrase(text):
+        canonical = _canonical_probe_token(token)
+        if canonical in seen:
+            continue
+        if token.isdigit():
+            continue
+        if not re.search(r"[a-z]", token):
+            continue
+        if len(token) < EXPLORATORY_MIN_TOKEN_LEN:
+            continue
+        if token in EXPLORATORY_STOPWORDS:
+            continue
+        seen.add(canonical)
+        ordered_tokens.append(token)
+
+    if preferred_tokens:
+        preferred = [tok for tok in ordered_tokens if _canonical_probe_token(tok) in preferred_tokens]
+        collapsed_preferred = _drop_prefix_stem_terms(preferred)
+        if len(collapsed_preferred) >= 2:
+            return collapsed_preferred[:EXPLORATORY_ORDER_MAX_TERMS]
+
+    collapsed = _drop_prefix_stem_terms(ordered_tokens)
+    return collapsed[:EXPLORATORY_ORDER_MAX_TERMS]
+
+
 def _derive_anchor_any_terms(anchors: list[str]) -> list[str]:
     out: list[str] = []
     seen: set[str] = set()
@@ -365,7 +400,17 @@ def _derive_exploratory_overrides(
         growth_case=growth_case,
         run_case=run_case,
     )
-    selected_order = _derive_order_tokens_from_anchors(effective_any)
+    anchor_token_pool = {
+        _canonical_probe_token(token)
+        for token in _tokenise_phrase(" ".join(effective_any))
+        if len(token) >= EXPLORATORY_MIN_TOKEN_LEN
+    }
+    selected_order = _derive_order_tokens_from_text(
+        str(run_case.get("extracted_text", "") or ""),
+        preferred_tokens=anchor_token_pool or None,
+    )
+    if len(selected_order) < 2:
+        selected_order = _derive_order_tokens_from_anchors(effective_any)
     if len(selected_order) < 2 and len(effective_order) >= 2:
         # Keep source order only as fallback; inherited order chains can be
         # stale and create impossible sequence checks in exploratory replay.
