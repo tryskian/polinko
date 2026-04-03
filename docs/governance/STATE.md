@@ -580,6 +580,13 @@
 - Growth/focus OCR replay logging is now streamed in real time:
   - Makefile runs growth + focus OCR replay commands with unbuffered Python
     output so long runs do not appear stalled.
+- Focused OCR replay now emits a fail-pattern observability report by default:
+  - `make ocrfocus` includes `make ocrfocusreport`
+  - outputs:
+    - `.local/eval_reports/ocr_focus_fail_patterns.json`
+    - `.local/eval_reports/ocr_focus_fail_patterns.md`
+  - latest focused run remains intentionally fail-heavy:
+    - `2/12` PASS, `10/12` FAIL, `0` errors.
 - Runtime DB null surfaces now have a read-only audit command:
   - `make nulls`
   - output: `.local/eval_reports/runtime_null_audit.{json,md}`

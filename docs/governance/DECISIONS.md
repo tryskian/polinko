@@ -2355,3 +2355,35 @@
       `2/12` PASS, `10/12` FAIL, `0` errors.
 - Why: exploratory cases should fail for meaningful OCR reasons, not brittle
   ordering inherited from stale source chains or non-semantic tokens.
+
+## D-161: Add focused fail-pattern reporting for OCR observability
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_focus`, `observability`, `fail_patterns`, `reporting`
+- Decision:
+  - add focused fail-pattern reporter:
+    - `tools/report_ocr_focus_fail_patterns.py`
+    - outputs:
+      - `.local/eval_reports/ocr_focus_fail_patterns.json`
+      - `.local/eval_reports/ocr_focus_fail_patterns.md`
+  - reporter summarises:
+    - failing-case rate for focused replay
+    - lane-level fail counts and rates
+    - top missing ordered phrases from focused fail reasons
+    - per-case fail surface (`sample_reasons`, gate probes, lane metadata)
+  - add regression coverage:
+    - `tests/test_report_ocr_focus_fail_patterns.py`
+  - wire Makefile execution:
+    - `make ocrfocusreport`
+    - `make ocrfocus` now runs report generation after stability replay
+  - validation:
+    - `make ocrfocus`
+    - `make test`
+    - `make lint-docs`
+  - current outcome:
+    - focused replay: `2/12` PASS, `10/12` FAIL, `0` errors
+    - fail-pattern report generated automatically each focused run.
+- Why: fail-heavy focused replay is intentional; operator-facing reporting must
+  make failure structure explicit (lane + phrase patterns) so tuning decisions
+  are evidence-led, not guess-led.

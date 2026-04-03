@@ -343,8 +343,12 @@
   - focused remediation replay (fail-first subset):
     - `make ocrfocuscases`
     - `make eval-ocr-focus-stability`
+    - `make ocrfocusreport`
     - one-shot chain:
       - `make ocrfocus`
+    - focused fail-pattern outputs:
+      - `.local/eval_reports/ocr_focus_fail_patterns.json`
+      - `.local/eval_reports/ocr_focus_fail_patterns.md`
     - exploratory strict-replay defaults are enabled:
       - `OCR_FAIL_COHORT_INCLUDE_EXPLORATORY=true`
       - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES=12`

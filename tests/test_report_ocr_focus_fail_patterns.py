@@ -1,0 +1,70 @@
+import unittest
+from typing import Any
+
+from tools.report_ocr_focus_fail_patterns import build_report
+
+
+class ReportOcrFocusFailPatternsTests(unittest.TestCase):
+    def test_build_report_summarises_lane_and_missing_phrase_counts(self) -> None:
+        stability_payload: dict[str, Any] = {
+            "cases": [
+                {
+                    "id": "gx-1",
+                    "fail_runs": 1,
+                    "pass_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 0.0,
+                    "sample_reasons": ["missing ordered phrase: 'focus' after offset 20"],
+                    "text_variant_count": 1,
+                    "char_count_span": 0,
+                },
+                {
+                    "id": "gx-2",
+                    "fail_runs": 0,
+                    "pass_runs": 1,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "sample_reasons": [],
+                    "text_variant_count": 1,
+                    "char_count_span": 0,
+                },
+                {
+                    "id": "gx-3",
+                    "fail_runs": 1,
+                    "pass_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 0.0,
+                    "sample_reasons": ["missing ordered phrase: 'engineering' after offset 0"],
+                    "text_variant_count": 2,
+                    "char_count_span": 3,
+                },
+            ]
+        }
+        focus_case_map = {
+            "gx-1": {"id": "gx-1", "lane": "handwriting", "must_appear_in_order": ["focus", "stillness"]},
+            "gx-2": {"id": "gx-2", "lane": "typed", "must_appear_in_order": ["origin", "binary"]},
+            "gx-3": {"id": "gx-3", "lane": "typed", "must_appear_in_order": ["instance", "engineering"]},
+        }
+
+        report = build_report(
+            stability_payload=stability_payload,
+            focus_case_map=focus_case_map,
+        )
+
+        summary = report["summary"]
+        self.assertEqual(summary["cases_total"], 3)
+        self.assertEqual(summary["failing_cases"], 2)
+        self.assertEqual(summary["lane_summary"]["handwriting"]["failing_cases"], 1)
+        self.assertEqual(summary["lane_summary"]["typed"]["failing_cases"], 1)
+        top_missing = summary["top_missing_ordered_phrases"]
+        self.assertEqual(top_missing[0]["phrase"], "focus")
+        self.assertEqual(top_missing[0]["count"], 1)
+        self.assertEqual(top_missing[1]["phrase"], "engineering")
+        self.assertEqual(top_missing[1]["count"], 1)
+
+        failing_case_ids = [row["id"] for row in report["failing_cases"]]
+        self.assertEqual(failing_case_ids, ["gx-1", "gx-3"])
+
+
+if __name__ == "__main__":
+    unittest.main()
