@@ -2418,3 +2418,32 @@
 - Why: the goal is fail-rich signal, not synthetic brittleness; compact,
   de-duplicated order probes preserve diagnostic pressure while improving
   interpretability.
+
+## D-163: Add offset-aware fail metrics to focused OCR reporting
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_focus`, `observability`, `fail_reason_offsets`
+- Decision:
+  - extend focused fail reporting in
+    `tools/report_ocr_focus_fail_patterns.py` to parse missing-order offsets
+    from fail reasons and emit bucketed metrics:
+    - `at_start` (`offset <= 0`)
+    - `mid_sequence` (`1-199`)
+    - `late_sequence` (`>=200`)
+    - `unknown`
+  - add per-case surfacing of:
+    - `top_missing_phrase`
+    - `top_missing_offset`
+  - include new markdown section in
+    `.local/eval_reports/ocr_focus_fail_patterns.md`:
+    - `Missing Ordered Phrase Offset Buckets`
+  - add regression coverage:
+    - update `tests/test_report_ocr_focus_fail_patterns.py` with offset bucket
+      assertions and per-case offset extraction checks
+  - validation:
+    - `make ocrfocusreport`
+    - `make test`
+    - `make lint-docs`
+- Why: knowing where sequence checks fail (start vs mid vs late) makes focused
+  tuning decisions precise and reduces guesswork in fail-heavy replay lanes.

@@ -11,7 +11,10 @@ from datetime import timezone
 from pathlib import Path
 from typing import Any
 
-MISSING_ORDERED_PHRASE_RX = re.compile(r"missing ordered phrase: '([^']+)'", flags=re.IGNORECASE)
+MISSING_ORDERED_PHRASE_RX = re.compile(
+    r"missing ordered phrase: '([^']+)'(?: after offset (\d+))?",
+    flags=re.IGNORECASE,
+)
 
 
 def _load_json_object(path: Path) -> dict[str, Any]:
@@ -37,12 +40,29 @@ def _load_case_map(path: Path) -> dict[str, dict[str, Any]]:
     return out
 
 
-def _extract_missing_ordered_phrase(reason: str) -> str | None:
+def _extract_missing_ordered_phrase(reason: str) -> tuple[str | None, int | None]:
     match = MISSING_ORDERED_PHRASE_RX.search(reason)
     if not match:
-        return None
+        return (None, None)
     phrase = str(match.group(1)).strip().lower()
-    return phrase or None
+    offset_raw = match.group(2)
+    offset: int | None = None
+    if offset_raw is not None:
+        try:
+            offset = int(offset_raw)
+        except ValueError:
+            offset = None
+    return (phrase or None, offset)
+
+
+def _missing_offset_bucket(offset: int | None) -> str:
+    if offset is None:
+        return "unknown"
+    if offset <= 0:
+        return "at_start"
+    if offset < 200:
+        return "mid_sequence"
+    return "late_sequence"
 
 
 def _preview_order(ordered_terms: list[str], *, limit: int = 4) -> str:
@@ -73,6 +93,7 @@ def build_report(
     lane_fail_counts: Counter[str] = Counter()
     reason_counts: Counter[str] = Counter()
     missing_phrase_counts: Counter[str] = Counter()
+    missing_offset_buckets: Counter[str] = Counter()
 
     for row in raw_cases:
         if not isinstance(row, dict):
@@ -94,11 +115,17 @@ def build_report(
             if isinstance(sample_reasons, list)
             else []
         )
+        top_missing_phrase = ""
+        top_missing_offset: int | None = None
         for reason in reasons:
             reason_counts[reason] += 1
-            maybe_phrase = _extract_missing_ordered_phrase(reason)
+            maybe_phrase, maybe_offset = _extract_missing_ordered_phrase(reason)
             if maybe_phrase:
                 missing_phrase_counts[maybe_phrase] += 1
+                missing_offset_buckets[_missing_offset_bucket(maybe_offset)] += 1
+                if not top_missing_phrase:
+                    top_missing_phrase = maybe_phrase
+                    top_missing_offset = maybe_offset
 
         if fail_runs <= 0:
             continue
@@ -125,6 +152,8 @@ def build_report(
                     else []
                 ),
                 "top_reason": reasons[0] if reasons else "",
+                "top_missing_phrase": top_missing_phrase,
+                "top_missing_offset": top_missing_offset,
             }
         )
 
@@ -153,6 +182,12 @@ def build_report(
             {"phrase": phrase, "count": count}
             for phrase, count in missing_phrase_counts.most_common(20)
         ],
+        "missing_order_offset_buckets": {
+            "at_start": int(missing_offset_buckets.get("at_start", 0)),
+            "mid_sequence": int(missing_offset_buckets.get("mid_sequence", 0)),
+            "late_sequence": int(missing_offset_buckets.get("late_sequence", 0)),
+            "unknown": int(missing_offset_buckets.get("unknown", 0)),
+        },
         "top_reasons": [
             {"reason": reason, "count": count}
             for reason, count in reason_counts.most_common(20)
@@ -215,6 +250,20 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
             lines.append(f"| {phrase} | {count} |")
         lines.append("")
 
+    offset_buckets = (
+        summary.get("missing_order_offset_buckets")
+        if isinstance(summary.get("missing_order_offset_buckets"), dict)
+        else {}
+    )
+    if offset_buckets:
+        lines.append("## Missing Ordered Phrase Offset Buckets")
+        lines.append("")
+        lines.append("| bucket | count |")
+        lines.append("|---|---:|")
+        for bucket in ("at_start", "mid_sequence", "late_sequence", "unknown"):
+            lines.append(f"| {bucket} | {int(offset_buckets.get(bucket, 0) or 0)} |")
+        lines.append("")
+
     if top_reasons:
         lines.append("## Top Fail Reasons")
         lines.append("")
@@ -230,9 +279,9 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
         lines.append("## Failing Cases")
         lines.append("")
         lines.append(
-            "| case_id | lane | fail_runs | pass_runs | pass_rate | order_preview | top_reason |"
+            "| case_id | lane | fail_runs | pass_runs | pass_rate | order_preview | missing_phrase | missing_offset | top_reason |"
         )
-        lines.append("|---|---|---:|---:|---:|---|---|")
+        lines.append("|---|---|---:|---:|---:|---|---|---:|---|")
         for row in failing_cases:
             case_id = str(row.get("id", ""))
             lane = str(row.get("lane", ""))
@@ -240,9 +289,17 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
             pass_runs = int(row.get("pass_runs", 0) or 0)
             pass_rate = float(row.get("pass_rate", 0.0) or 0.0)
             order_preview = str(row.get("order_preview", "-")).replace("|", "\\|")
+            missing_phrase = str(row.get("top_missing_phrase", "")).replace("|", "\\|")
+            missing_offset = row.get("top_missing_offset")
+            missing_offset_value = (
+                str(int(missing_offset))
+                if isinstance(missing_offset, int)
+                else "-"
+            )
             top_reason = str(row.get("top_reason", "")).replace("|", "\\|")
             lines.append(
-                f"| {case_id} | {lane} | {fail_runs} | {pass_runs} | {pass_rate:.4f} | {order_preview} | {top_reason} |"
+                f"| {case_id} | {lane} | {fail_runs} | {pass_runs} | {pass_rate:.4f} | {order_preview} | "
+                f"{missing_phrase} | {missing_offset_value} | {top_reason} |"
             )
         lines.append("")
 

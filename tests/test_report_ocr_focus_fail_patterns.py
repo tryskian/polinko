@@ -61,9 +61,22 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
         self.assertEqual(top_missing[0]["count"], 1)
         self.assertEqual(top_missing[1]["phrase"], "engineering")
         self.assertEqual(top_missing[1]["count"], 1)
+        self.assertEqual(
+            summary["missing_order_offset_buckets"],
+            {
+                "at_start": 1,
+                "mid_sequence": 1,
+                "late_sequence": 0,
+                "unknown": 0,
+            },
+        )
 
         failing_case_ids = [row["id"] for row in report["failing_cases"]]
         self.assertEqual(failing_case_ids, ["gx-1", "gx-3"])
+        self.assertEqual(report["failing_cases"][0]["top_missing_phrase"], "focus")
+        self.assertEqual(report["failing_cases"][0]["top_missing_offset"], 20)
+        self.assertEqual(report["failing_cases"][1]["top_missing_phrase"], "engineering")
+        self.assertEqual(report["failing_cases"][1]["top_missing_offset"], 0)
 
 
 if __name__ == "__main__":

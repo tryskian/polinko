@@ -585,6 +585,9 @@
   - outputs:
     - `.local/eval_reports/ocr_focus_fail_patterns.json`
     - `.local/eval_reports/ocr_focus_fail_patterns.md`
+  - report now includes offset-aware missing-order buckets:
+    - `at_start`, `mid_sequence`, `late_sequence`, `unknown`
+    - plus per-case `top_missing_phrase` + `top_missing_offset`
   - latest focused run remains intentionally fail-heavy:
     - `2/12` PASS, `10/12` FAIL, `0` errors.
 - Exploratory strict-replay probes are now de-brittled:

@@ -349,6 +349,8 @@
     - focused fail-pattern outputs:
       - `.local/eval_reports/ocr_focus_fail_patterns.json`
       - `.local/eval_reports/ocr_focus_fail_patterns.md`
+      - includes missing-order offset buckets:
+        - `at_start`, `mid_sequence`, `late_sequence`, `unknown`
     - exploratory strict-replay defaults are enabled:
       - `OCR_FAIL_COHORT_INCLUDE_EXPLORATORY=true`
       - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES=12`
