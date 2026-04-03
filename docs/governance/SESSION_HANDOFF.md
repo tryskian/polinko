@@ -355,6 +355,10 @@
         - `source_name`
         - `image_path`
         - `top_missing_offset_bucket`
+        - `top_missing_sequence_position_bucket`
+        - `top_missing_sequence_index`
+      - summary includes:
+        - `missing_order_sequence_position_buckets` (`head`/`mid`/`tail`/`unknown`)
     - exploratory strict-replay defaults are enabled:
       - `OCR_FAIL_COHORT_INCLUDE_EXPLORATORY=true`
       - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES=12`

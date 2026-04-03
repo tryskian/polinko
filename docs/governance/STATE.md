@@ -609,6 +609,9 @@
   - `source_name`
   - `image_path`
   - per-case `top_missing_offset_bucket`
+- OCR focus fail-pattern reporting now includes order-chain position metrics:
+  - per-case `top_missing_sequence_position_bucket` + `top_missing_sequence_index`
+  - summary `missing_order_sequence_position_buckets` (`head`/`mid`/`tail`/`unknown`)
 - Runtime DB null surfaces now have a read-only audit command:
   - `make nulls`
   - output: `.local/eval_reports/runtime_null_audit.{json,md}`

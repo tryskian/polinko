@@ -2544,3 +2544,29 @@
     - `make lint-docs`
 - Why: focused fail triage needs direct asset linkage and per-case sequence
   failure position without requiring extra joins or manual lookup.
+
+## D-168: Add sequence-position diagnostics for missing ordered phrase fails
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_focus`, `observability`, `order_sequence`, `fail_diagnostics`
+- Decision:
+  - extend `tools/report_ocr_focus_fail_patterns.py` with missing-phrase
+    sequence position diagnostics against each case's ordered-term chain:
+    - per-case:
+      - `top_missing_sequence_position_bucket` (`head`/`mid`/`tail`/`unknown`)
+      - `top_missing_sequence_index`
+    - summary:
+      - `missing_order_sequence_position_buckets`
+  - update markdown output:
+    - add `Missing Ordered Phrase Sequence Position Buckets` section
+    - include per-case sequence bucket/index columns in failing-case table
+  - add regression coverage updates:
+    - `tests/test_report_ocr_focus_fail_patterns.py`
+  - validation:
+    - `make ocrfocusreport`
+    - `make test`
+    - `make lint-docs`
+- Why: sequence-position visibility distinguishes early-chain failures from
+  late-chain failures, improving precision when choosing the next hardening
+  slice.

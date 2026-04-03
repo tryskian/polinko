@@ -78,6 +78,27 @@ def _preview_order(ordered_terms: list[str], *, limit: int = 4) -> str:
     return preview
 
 
+def _sequence_position_bucket(
+    *,
+    missing_phrase: str | None,
+    ordered_terms: list[str],
+) -> tuple[str, int | None]:
+    if not missing_phrase or not ordered_terms:
+        return ("unknown", None)
+    lowered = [str(term).strip().lower() for term in ordered_terms if str(term).strip()]
+    if not lowered:
+        return ("unknown", None)
+    try:
+        index = lowered.index(missing_phrase.lower())
+    except ValueError:
+        return ("unknown", None)
+    if index == 0:
+        return ("head", index)
+    if index == len(lowered) - 1:
+        return ("tail", index)
+    return ("mid", index)
+
+
 def build_report(
     *,
     stability_payload: dict[str, Any],
@@ -94,6 +115,7 @@ def build_report(
     reason_counts: Counter[str] = Counter()
     missing_phrase_counts: Counter[str] = Counter()
     missing_offset_buckets: Counter[str] = Counter()
+    missing_sequence_position_buckets: Counter[str] = Counter()
 
     for row in raw_cases:
         if not isinstance(row, dict):
@@ -131,6 +153,21 @@ def build_report(
             continue
 
         lane_fail_counts[lane] += 1
+        ordered_terms = (
+            [
+                str(term).strip()
+                for term in focus_case.get("must_appear_in_order", [])
+                if str(term).strip()
+            ]
+            if isinstance(focus_case.get("must_appear_in_order"), list)
+            else []
+        )
+        sequence_bucket, sequence_index = _sequence_position_bucket(
+            missing_phrase=top_missing_phrase or None,
+            ordered_terms=ordered_terms,
+        )
+        missing_sequence_position_buckets[sequence_bucket] += 1
+
         failing_case_rows.append(
             {
                 "id": case_id,
@@ -144,19 +181,13 @@ def build_report(
                 "focus_source": str(focus_case.get("focus_source", "")).strip() or "unknown",
                 "source_name": str(focus_case.get("source_name", "")).strip(),
                 "image_path": str(focus_case.get("image_path", "")).strip(),
-                "order_preview": _preview_order(
-                    [
-                        str(term).strip()
-                        for term in focus_case.get("must_appear_in_order", [])
-                        if str(term).strip()
-                    ]
-                    if isinstance(focus_case.get("must_appear_in_order"), list)
-                    else []
-                ),
+                "order_preview": _preview_order(ordered_terms),
                 "top_reason": reasons[0] if reasons else "",
                 "top_missing_phrase": top_missing_phrase,
                 "top_missing_offset": top_missing_offset,
                 "top_missing_offset_bucket": _missing_offset_bucket(top_missing_offset),
+                "top_missing_sequence_position_bucket": sequence_bucket,
+                "top_missing_sequence_index": sequence_index,
             }
         )
 
@@ -190,6 +221,12 @@ def build_report(
             "mid_sequence": int(missing_offset_buckets.get("mid_sequence", 0)),
             "late_sequence": int(missing_offset_buckets.get("late_sequence", 0)),
             "unknown": int(missing_offset_buckets.get("unknown", 0)),
+        },
+        "missing_order_sequence_position_buckets": {
+            "head": int(missing_sequence_position_buckets.get("head", 0)),
+            "mid": int(missing_sequence_position_buckets.get("mid", 0)),
+            "tail": int(missing_sequence_position_buckets.get("tail", 0)),
+            "unknown": int(missing_sequence_position_buckets.get("unknown", 0)),
         },
         "top_reasons": [
             {"reason": reason, "count": count}
@@ -267,6 +304,20 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
             lines.append(f"| {bucket} | {int(offset_buckets.get(bucket, 0) or 0)} |")
         lines.append("")
 
+    sequence_buckets = (
+        summary.get("missing_order_sequence_position_buckets")
+        if isinstance(summary.get("missing_order_sequence_position_buckets"), dict)
+        else {}
+    )
+    if sequence_buckets:
+        lines.append("## Missing Ordered Phrase Sequence Position Buckets")
+        lines.append("")
+        lines.append("| bucket | count |")
+        lines.append("|---|---:|")
+        for bucket in ("head", "mid", "tail", "unknown"):
+            lines.append(f"| {bucket} | {int(sequence_buckets.get(bucket, 0) or 0)} |")
+        lines.append("")
+
     if top_reasons:
         lines.append("## Top Fail Reasons")
         lines.append("")
@@ -282,9 +333,9 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
         lines.append("## Failing Cases")
         lines.append("")
         lines.append(
-            "| case_id | lane | source_name | image_path | fail_runs | pass_runs | pass_rate | order_preview | missing_phrase | missing_offset | missing_offset_bucket | top_reason |"
+            "| case_id | lane | source_name | image_path | fail_runs | pass_runs | pass_rate | order_preview | missing_phrase | missing_offset | missing_offset_bucket | missing_sequence_bucket | missing_sequence_index | top_reason |"
         )
-        lines.append("|---|---|---|---|---:|---:|---:|---|---|---:|---|---|")
+        lines.append("|---|---|---|---|---:|---:|---:|---|---|---:|---|---|---:|---|")
         for row in failing_cases:
             case_id = str(row.get("id", ""))
             lane = str(row.get("lane", ""))
@@ -302,10 +353,20 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
                 else "-"
             )
             missing_offset_bucket = str(row.get("top_missing_offset_bucket", "unknown")).replace("|", "\\|")
+            missing_sequence_bucket = str(
+                row.get("top_missing_sequence_position_bucket", "unknown")
+            ).replace("|", "\\|")
+            missing_sequence_index = row.get("top_missing_sequence_index")
+            missing_sequence_index_value = (
+                str(int(missing_sequence_index))
+                if isinstance(missing_sequence_index, int)
+                else "-"
+            )
             top_reason = str(row.get("top_reason", "")).replace("|", "\\|")
             lines.append(
                 f"| {case_id} | {lane} | {source_name} | {image_path} | {fail_runs} | {pass_runs} | {pass_rate:.4f} | "
-                f"{order_preview} | {missing_phrase} | {missing_offset_value} | {missing_offset_bucket} | {top_reason} |"
+                f"{order_preview} | {missing_phrase} | {missing_offset_value} | {missing_offset_bucket} | "
+                f"{missing_sequence_bucket} | {missing_sequence_index_value} | {top_reason} |"
             )
         lines.append("")
 

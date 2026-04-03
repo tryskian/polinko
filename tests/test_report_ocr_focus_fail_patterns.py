@@ -82,17 +82,30 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
                 "unknown": 0,
             },
         )
+        self.assertEqual(
+            summary["missing_order_sequence_position_buckets"],
+            {
+                "head": 1,
+                "mid": 0,
+                "tail": 1,
+                "unknown": 0,
+            },
+        )
 
         failing_case_ids = [row["id"] for row in report["failing_cases"]]
         self.assertEqual(failing_case_ids, ["gx-1", "gx-3"])
         self.assertEqual(report["failing_cases"][0]["top_missing_phrase"], "focus")
         self.assertEqual(report["failing_cases"][0]["top_missing_offset"], 20)
         self.assertEqual(report["failing_cases"][0]["top_missing_offset_bucket"], "mid_sequence")
+        self.assertEqual(report["failing_cases"][0]["top_missing_sequence_position_bucket"], "head")
+        self.assertEqual(report["failing_cases"][0]["top_missing_sequence_index"], 0)
         self.assertEqual(report["failing_cases"][0]["source_name"], "focus-note.jpeg")
         self.assertEqual(report["failing_cases"][0]["image_path"], "/tmp/focus-note.jpeg")
         self.assertEqual(report["failing_cases"][1]["top_missing_phrase"], "engineering")
         self.assertEqual(report["failing_cases"][1]["top_missing_offset"], 0)
         self.assertEqual(report["failing_cases"][1]["top_missing_offset_bucket"], "at_start")
+        self.assertEqual(report["failing_cases"][1]["top_missing_sequence_position_bucket"], "tail")
+        self.assertEqual(report["failing_cases"][1]["top_missing_sequence_index"], 1)
         self.assertEqual(report["failing_cases"][1]["source_name"], "eng-note.jpeg")
         self.assertEqual(report["failing_cases"][1]["image_path"], "/tmp/eng-note.jpeg")
 
