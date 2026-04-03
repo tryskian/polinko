@@ -116,6 +116,7 @@ def build_report(
     missing_phrase_counts: Counter[str] = Counter()
     missing_offset_buckets: Counter[str] = Counter()
     missing_sequence_position_buckets: Counter[str] = Counter()
+    lane_sequence_position_buckets: dict[str, Counter[str]] = {}
 
     for row in raw_cases:
         if not isinstance(row, dict):
@@ -167,6 +168,8 @@ def build_report(
             ordered_terms=ordered_terms,
         )
         missing_sequence_position_buckets[sequence_bucket] += 1
+        lane_bucket = lane_sequence_position_buckets.setdefault(lane, Counter())
+        lane_bucket[sequence_bucket] += 1
 
         failing_case_rows.append(
             {
@@ -227,6 +230,15 @@ def build_report(
             "mid": int(missing_sequence_position_buckets.get("mid", 0)),
             "tail": int(missing_sequence_position_buckets.get("tail", 0)),
             "unknown": int(missing_sequence_position_buckets.get("unknown", 0)),
+        },
+        "lane_missing_order_sequence_position_buckets": {
+            lane: {
+                "head": int(bucket.get("head", 0)),
+                "mid": int(bucket.get("mid", 0)),
+                "tail": int(bucket.get("tail", 0)),
+                "unknown": int(bucket.get("unknown", 0)),
+            }
+            for lane, bucket in sorted(lane_sequence_position_buckets.items())
         },
         "top_reasons": [
             {"reason": reason, "count": count}
@@ -316,6 +328,28 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
         lines.append("|---|---:|")
         for bucket in ("head", "mid", "tail", "unknown"):
             lines.append(f"| {bucket} | {int(sequence_buckets.get(bucket, 0) or 0)} |")
+        lines.append("")
+
+    lane_sequence_buckets = (
+        summary.get("lane_missing_order_sequence_position_buckets")
+        if isinstance(summary.get("lane_missing_order_sequence_position_buckets"), dict)
+        else {}
+    )
+    if lane_sequence_buckets:
+        lines.append("## Lane Missing Ordered Sequence Position Buckets")
+        lines.append("")
+        lines.append("| lane | head | mid | tail | unknown |")
+        lines.append("|---|---:|---:|---:|---:|")
+        for lane, bucket in lane_sequence_buckets.items():
+            if not isinstance(bucket, dict):
+                continue
+            lines.append(
+                f"| {str(lane).replace('|', '\\|')} | "
+                f"{int(bucket.get('head', 0) or 0)} | "
+                f"{int(bucket.get('mid', 0) or 0)} | "
+                f"{int(bucket.get('tail', 0) or 0)} | "
+                f"{int(bucket.get('unknown', 0) or 0)} |"
+            )
         lines.append("")
 
     if top_reasons:

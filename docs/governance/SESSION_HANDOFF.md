@@ -359,6 +359,7 @@
         - `top_missing_sequence_index`
       - summary includes:
         - `missing_order_sequence_position_buckets` (`head`/`mid`/`tail`/`unknown`)
+        - `lane_missing_order_sequence_position_buckets` (lane x sequence matrix)
     - exploratory strict-replay defaults are enabled:
       - `OCR_FAIL_COHORT_INCLUDE_EXPLORATORY=true`
       - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES=12`

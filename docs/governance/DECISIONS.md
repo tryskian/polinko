@@ -2570,3 +2570,25 @@
 - Why: sequence-position visibility distinguishes early-chain failures from
   late-chain failures, improving precision when choosing the next hardening
   slice.
+
+## D-169: Add lane-by-sequence matrix to focused OCR fail reporting
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_focus`, `observability`, `lane_matrix`, `sequence_position`
+- Decision:
+  - extend `tools/report_ocr_focus_fail_patterns.py` summary with lane-level
+    sequence-position matrix:
+    - `lane_missing_order_sequence_position_buckets`
+    - counts per lane for `head`/`mid`/`tail`/`unknown`
+  - add markdown section:
+    - `Lane Missing Ordered Sequence Position Buckets`
+  - preserve existing per-case and global sequence metrics.
+  - add regression coverage updates:
+    - `tests/test_report_ocr_focus_fail_patterns.py`
+  - validation:
+    - `make ocrfocusreport`
+    - `make test`
+    - `make lint-docs`
+- Why: next-kernel targeting often depends on lane-specific failure shape, not
+  just global distribution.

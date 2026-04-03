@@ -91,6 +91,13 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
                 "unknown": 0,
             },
         )
+        self.assertEqual(
+            summary["lane_missing_order_sequence_position_buckets"],
+            {
+                "handwriting": {"head": 1, "mid": 0, "tail": 0, "unknown": 0},
+                "typed": {"head": 0, "mid": 0, "tail": 1, "unknown": 0},
+            },
+        )
 
         failing_case_ids = [row["id"] for row in report["failing_cases"]]
         self.assertEqual(failing_case_ids, ["gx-1", "gx-3"])
