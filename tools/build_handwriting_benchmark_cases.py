@@ -9,13 +9,13 @@ from pathlib import Path
 from typing import Any
 
 
-CONFIDENCE_RANK = {"high": 2, "medium": 1, "low": 0}
+SIGNAL_STRENGTH_RANK = {"high": 2, "medium": 1, "low": 0}
 
 
 @dataclass(frozen=True)
 class Candidate:
     image_path: str
-    confidence: str
+    signal_strength: str
     anchor_terms_count: int
     chosen_phrase_count: int
     conversation_id: str
@@ -23,7 +23,7 @@ class Candidate:
     @property
     def rank_key(self) -> tuple[int, int, int, str]:
         return (
-            CONFIDENCE_RANK.get(self.confidence, 0),
+            SIGNAL_STRENGTH_RANK.get(self.signal_strength, 0),
             self.anchor_terms_count,
             self.chosen_phrase_count,
             self.conversation_id,
@@ -56,8 +56,8 @@ def _iter_candidates(review_payload: dict[str, Any], *, lane: str) -> list[Candi
             continue
         if "ocr_framing_signal" in row and not bool(row.get("ocr_framing_signal")):
             continue
-        confidence = str(row.get("confidence", "low")).strip().lower()
-        if CONFIDENCE_RANK.get(confidence, 0) <= 0:
+        signal_strength = str(row.get("signal_strength", row.get("confidence", "low"))).strip().lower()
+        if SIGNAL_STRENGTH_RANK.get(signal_strength, 0) <= 0:
             continue
         chosen_phrases = [
             str(item).strip().lower()
@@ -83,7 +83,7 @@ def _iter_candidates(review_payload: dict[str, Any], *, lane: str) -> list[Candi
         candidates.append(
             Candidate(
                 image_path=image_path,
-                confidence=confidence,
+                signal_strength=signal_strength,
                 anchor_terms_count=int(row.get("anchor_terms_count", 0) or 0),
                 chosen_phrase_count=len(row.get("chosen_phrases", []) or []),
                 conversation_id=str(row.get("conversation_id", "")).strip(),

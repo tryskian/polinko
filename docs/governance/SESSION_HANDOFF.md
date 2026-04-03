@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-04-02
+- 2026-04-03
 
 ## Current Snapshot
 
@@ -108,8 +108,10 @@
       `skipped_duplicate_image_path`, `skipped_insufficient_anchor_terms`
     - review fields: `emit_status`, `anchor_terms`, `anchor_terms_count`
     - review summary block:
-      `confidence_counts`, `lane_counts`, `emit_status_counts`,
+      `signal_strength_counts`, `lane_counts`, `emit_status_counts`,
       `lane_emit_status_counts`
+    - schema naming now uses `signal_strength`; downstream readers keep
+      compatibility fallback for legacy `confidence` fields
   - OCR eval matcher now hardens mixed split-letter anchor variants:
     - required one-of matching handles forms like `CHAT T IEST`
     - forbidden whole-word matching handles forms like `GU ESS`
@@ -145,11 +147,11 @@
     - `.local/eval_cases/ocr_illustration_benchmark_cases.json`
     - `.local/eval_cases/ocr_transcript_cases_delta.md`
   - active precision baseline:
-    - mined cases: `26` total
-      (`handwriting=5`, `typed=11`, `illustration=10`)
-    - growth cases: `39`
-    - review summary: `episodes=178`
-      (`high=7`, `medium=27`, `low=144`)
+    - mined cases: `20` total
+      (`handwriting=5`, `typed=11`, `illustration=4`)
+    - growth cases: `22`
+    - review summary: `episodes=168`
+      (`high=7`, `medium=17`, `low=144`)
     - previous `55`/`29`/`25` mined outputs are legacy reference only
   - latest lane validations:
     - latest complete transcript lane (diagnostic, pre-widening):
@@ -190,18 +192,22 @@
   - run-report join resolver now supports repo-root-relative `.local/...`
     report paths to avoid stale fail-cohort case mapping
   - latest aligned refresh (April 2, 2026):
-    - `make ocrmine` emitted `26` strict cases, `39` growth cases
-    - `make ocrstablegrowth OCR_GROWTH_STABILITY_RUNS=1`:
-      - `39` cases replayed, `30` pass, `9` fail, `0` errors
-      - stability: `39` stable, `0` flaky
+    - `make ocrmine` emitted `20` strict cases, `22` growth cases
+    - `make ocrstablegrowth`:
+      - `22` cases replayed, `21` pass, `1` fail, `0` errors
+      - stability: `22` stable, `0` flaky
     - `make ocrgrowth`:
       - `decision_coverage_rate=1.0000`
-      - `first_pass_fail_rate=0.2821`
+      - `first_pass_fail_rate=0.3182`
       - `first_error_rate=0.0000`
     - `make ocrfails`:
-      - `selected_fail_cases=4`
+      - `selected_fail_cases=0` (`require_ocr_framing=true`)
+      - `skipped_non_framed=6`
       - `rate_limited_cases=0`
       - `rate_limit_abort_runs=0`
+    - diagnostic unframed fail cohort:
+      - `OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING=false make ocrfails`
+      - `selected_fail_cases=1`
 - Case-study grounding method is now explicit in benchmark docs:
   - lightweight primary-source addendum in
     `docs/runtime/RUNBOOK.md`
@@ -311,10 +317,11 @@
       and rerun `make ocrstablegrowth` on refreshed growth cases before
       precision patch decisions
     - current aligned baseline (April 2, 2026):
-      - growth cases: `28`
-      - latest stability replay: `24/28` pass, `4/28` fail, `0` errors
+      - growth cases: `22`
+      - latest stability replay: `21/22` pass, `1/22` fail, `0` errors
       - fail cohort selection (`require_ocr_framing=true`): `0` cases
-      - framed-selection skip count: `skipped_non_framed=4`
+      - framed-selection skip count: `skipped_non_framed=6`
+      - unframed diagnostic selection: `1` case
     - if fail cohort is empty with non-zero `skipped_non_framed`, run one
       diagnostic pass without framing gate to inspect residual fails:
       - `OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING=false make ocrfails`

@@ -968,7 +968,7 @@ Current policy:
 8. Review diagnostics:
    - review file now includes a top-level `summary`:
      - `conversation_files`, `episodes`
-     - `confidence_counts`, `lane_counts`
+     - `signal_strength_counts`, `lane_counts`
      - `emit_status_counts`, `lane_emit_status_counts`
    - each review episode now includes:
      - `emit_status` (`emitted`, `skipped_low_confidence`,

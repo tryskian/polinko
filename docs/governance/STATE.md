@@ -108,7 +108,7 @@
     full online OCR replay remains at `make ocr-notebook-workflow`.
   - offline miner now routes strong unstable-source episodes to growth lane
     only (`source_quarantine=true`), with latest summary:
-    - `growth_cases_written=39`
+    - `growth_cases_written=22`
     - `growth_quarantine_cases_written=1`
     - `growth_regex_only_cases_written=0` (metric active; no current rows)
   - growth miner signal-quality hardening (April 2, 2026):
@@ -120,10 +120,12 @@
     - low-confidence rows no longer enter growth on OCR framing alone;
       OCR intent or correction evidence is now required
     - refreshed aligned growth replay:
-      - `make ocrstablegrowth OCR_GROWTH_STABILITY_RUNS=1`: `30/39` pass,
-        `9/39` fail, `0` errors
-      - `make ocrfails`: `selected_fail_cases=4`,
-        `rate_limited_cases=0`, `rate_limit_abort_runs=0`
+      - `make ocrstablegrowth` (5 runs): `21/22` pass, `1/22` fail, `0` errors
+      - decision stability: `22 stable`, `0 flaky`
+      - `make ocrfails` (`require_ocr_framing=true`):
+        `selected_fail_cases=0`, `skipped_non_framed=6`
+      - diagnostic unframed cohort (`OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING=false`):
+        `selected_fail_cases=1` (`anchor_any_missing`)
 - Latest local report baseline (March 6, 2026) is green:
   - `make eval-ocr-report` PASS
   - `make eval-file-search-report` PASS
@@ -326,7 +328,7 @@
   - miner diagnostics now expose explicit emit/skip reasons for each reviewed
     episode (`emit_status`, `anchor_terms`, and skip counters in command output)
   - review output now includes a summary aggregate block for faster lane-level
-    triage (`confidence_counts`, `lane_counts`, and per-lane emit-status counts)
+    triage (`signal_strength_counts`, `lane_counts`, and per-lane emit-status counts)
   - OCR required/forbidden anchor matching now tolerates mixed split-letter
     artefacts (for example `CHAT T IEST`, `GU ESS`) to prevent deterministic
     false failures
@@ -537,11 +539,18 @@
   - UI-leading ordered fallback tokens are excluded (`restore`, `deleted`)
   - low-confidence growth admission now requires explicit OCR intent
     (or askless handwriting overlap signal)
+  - transcript miner schema now uses `signal_strength` naming
+    (`signal_strength_counts`) with legacy `confidence` read-compatibility in
+    downstream reporting/build tooling
 - Current aligned growth baseline (April 2, 2026):
-  - growth cases: `28`
-  - latest growth stability replay: `24/28` pass, `4/28` fail, `0` errors
+  - growth cases: `22`
+  - latest growth stability replay: `21/22` pass, `1/22` fail, `0` errors
   - fail cohort selection (`require_ocr_framing=true`): `0` selected cases
-  - `skipped_non_framed=4` (indicates residual fails outside framed subset)
+  - `skipped_non_framed=6` (indicates residual fails outside framed subset)
+  - diagnostic unframed cohort:
+    - `selected_fail_cases=1`
+    - top reason:
+      `missing one-of required phrases: ['certex', 'vertex', 'cortex']`
 - Growth/focus OCR replay logging is now streamed in real time:
   - Makefile runs growth + focus OCR replay commands with unbuffered Python
     output so long runs do not appear stalled.

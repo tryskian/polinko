@@ -312,11 +312,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 1)
+            self.assertEqual(summary["medium_signal_strength"], 1)
             self.assertEqual(summary["cases_written"], 1)
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "medium")
+            self.assertEqual(review["signal_strength"], "medium")
             self.assertTrue(review["ocr_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
             self.assertIn("Alpha spiral field", review["chosen_phrases"])
@@ -374,11 +374,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 1)
+            self.assertEqual(summary["medium_signal_strength"], 1)
             self.assertEqual(summary["cases_written"], 1)
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "medium")
+            self.assertEqual(review["signal_strength"], "medium")
             self.assertTrue(review["ocr_literal_intent_signal"])
             self.assertFalse(review["ocr_framing_signal"])
 
@@ -439,15 +439,15 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["high_confidence"], 1)
+            self.assertEqual(summary["high_signal_strength"], 1)
             self.assertEqual(summary["cases_written"], 1)
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "high")
+            self.assertEqual(review["signal_strength"], "high")
             self.assertTrue(review["ocr_literal_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
 
-    def test_build_emits_high_confidence_when_correction_phrase_is_numeric_only(self) -> None:
+    def test_build_emits_high_signal_strength_when_correction_phrase_is_numeric_only(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -515,7 +515,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["cases_written"], 1)
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertIn(review["confidence"], {"high", "medium"})
+            self.assertIn(review["signal_strength"], {"high", "medium"})
             self.assertEqual(review["emit_status"], "emitted")
             self.assertGreaterEqual(review["anchor_terms_count"], 3)
 
@@ -658,11 +658,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 0)
+            self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["cases_written"], 0)
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "low")
+            self.assertEqual(review["signal_strength"], "low")
             self.assertTrue(review["ocr_literal_intent_signal"])
             self.assertFalse(review["ocr_framing_signal"])
             self.assertEqual(review["skip_reason"], "low_confidence")
@@ -796,7 +796,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(len(growth_cases), 0)
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "low")
+            self.assertEqual(review["signal_strength"], "low")
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
 
@@ -871,7 +871,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(growth_payload["cases"], [])
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "low")
+            self.assertEqual(review["signal_strength"], "low")
             self.assertFalse(review["ocr_intent_signal"])
             self.assertTrue(review["correction_signal"])
             self.assertTrue(review["ocr_framing_signal"])
@@ -995,11 +995,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 0)
+            self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["cases_written"], 0)
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "low")
+            self.assertEqual(review["signal_strength"], "low")
             self.assertTrue(review["ocr_literal_intent_signal"])
             self.assertFalse(review["ocr_framing_signal"])
 
@@ -1064,11 +1064,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 0)
+            self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["cases_written"], 0)
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "low")
+            self.assertEqual(review["signal_strength"], "low")
             self.assertTrue(review["positive_signal"])
             self.assertFalse(review["ocr_framing_signal"])
 
@@ -1189,7 +1189,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 1)
+            self.assertEqual(summary["medium_signal_strength"], 1)
             self.assertEqual(summary["illustration_cases_written"], 1)
             cases_payload = json.loads(output_cases.read_text(encoding="utf-8"))
             self.assertIn("summary", cases_payload)
@@ -1255,11 +1255,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["high_confidence"], 0)
-            self.assertEqual(summary["medium_confidence"], 1)
+            self.assertEqual(summary["high_signal_strength"], 0)
+            self.assertEqual(summary["medium_signal_strength"], 1)
             self.assertEqual(summary["handwriting_cases_written"], 1)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "medium")
+            self.assertEqual(review["signal_strength"], "medium")
             self.assertIn("insight", [p.lower() for p in review["correction_phrases"]])
             self.assertIn("abacus method", " ".join(review["chosen_phrases"]).lower())
 
@@ -1332,10 +1332,10 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 0)
+            self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["cases_written"], 0)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "low")
+            self.assertEqual(review["signal_strength"], "low")
             self.assertFalse(review["ocr_framing_signal"])
             self.assertEqual(review["correction_phrases"], [])
             self.assertFalse(review["correction_signal"])
@@ -1473,10 +1473,10 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 1)
+            self.assertEqual(summary["medium_signal_strength"], 1)
             self.assertEqual(summary["cases_written"], 1)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "medium")
+            self.assertEqual(review["signal_strength"], "medium")
             self.assertTrue(review["ocr_intent_signal"])
             self.assertFalse(review["ocr_literal_intent_signal"])
 
@@ -1539,11 +1539,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 0)
+            self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["handwriting_cases_written"], 0)
             self.assertEqual(summary["growth_cases_written"], 0)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "low")
+            self.assertEqual(review["signal_strength"], "low")
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
             self.assertFalse(review["correction_signal"])
@@ -1617,11 +1617,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["high_confidence"], 1)
+            self.assertEqual(summary["high_signal_strength"], 1)
             self.assertEqual(summary["handwriting_cases_written"], 1)
             self.assertEqual(summary["growth_cases_written"], 1)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "high")
+            self.assertEqual(review["signal_strength"], "high")
             self.assertTrue(review["ocr_framing_signal"])
             self.assertTrue(review["correction_signal"])
             self.assertTrue(review["correction_overlap_signal"])
@@ -1692,10 +1692,10 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 0)
+            self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["handwriting_cases_written"], 0)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
-            self.assertEqual(review["confidence"], "low")
+            self.assertEqual(review["signal_strength"], "low")
             self.assertTrue(review["ocr_framing_signal"])
             self.assertTrue(review["correction_signal"])
             self.assertFalse(review["correction_overlap_signal"])
@@ -1753,7 +1753,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 max_cases=50,
             )
 
-            self.assertEqual(summary["medium_confidence"], 1)
+            self.assertEqual(summary["medium_signal_strength"], 1)
             self.assertEqual(summary["cases_written"], 1)
             self.assertEqual(summary["skipped_insufficient_anchor_terms"], 0)
             review_payload = json.loads(output_review.read_text(encoding="utf-8"))

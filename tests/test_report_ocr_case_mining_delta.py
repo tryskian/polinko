@@ -25,8 +25,8 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
                     },
                 },
                 "episodes": [
-                    {"lane": "handwriting", "confidence": "medium"},
-                    {"lane": "typed", "confidence": "low"},
+                    {"lane": "handwriting", "signal_strength": "medium"},
+                    {"lane": "typed", "signal_strength": "low"},
                 ],
             }
             curr_payload = {
@@ -39,9 +39,9 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
                     },
                 },
                 "episodes": [
-                    {"lane": "handwriting", "confidence": "high"},
-                    {"lane": "handwriting", "confidence": "medium"},
-                    {"lane": "typed", "confidence": "low"},
+                    {"lane": "handwriting", "signal_strength": "high"},
+                    {"lane": "handwriting", "signal_strength": "medium"},
+                    {"lane": "typed", "signal_strength": "low"},
                 ],
             }
 
@@ -59,9 +59,9 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
             self.assertEqual(report["totals"]["after"]["episodes"], 3)
             self.assertEqual(report["totals"]["before"]["emitted_cases"], 1)
             self.assertEqual(report["totals"]["after"]["emitted_cases"], 2)
-            self.assertEqual(report["confidence"]["before"]["medium"], 1)
-            self.assertEqual(report["confidence"]["after"]["high"], 1)
-            self.assertEqual(report["lane_confidence"]["after"]["handwriting"]["high"], 1)
+            self.assertEqual(report["signal_strength"]["before"]["medium"], 1)
+            self.assertEqual(report["signal_strength"]["after"]["high"], 1)
+            self.assertEqual(report["lane_signal_strength"]["after"]["handwriting"]["high"], 1)
             self.assertIn("typed", report["lanes"])
             self.assertTrue(out_md.is_file())
             self.assertTrue(out_json.is_file())
@@ -82,7 +82,7 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
                         "skipped_duplicate_image_path": 0,
                     },
                 },
-                "episodes": [{"lane": "handwriting", "confidence": "medium"}],
+                "episodes": [{"lane": "handwriting", "signal_strength": "medium"}],
             }
             curr_path.write_text(json.dumps(curr_payload), encoding="utf-8")
 
@@ -94,8 +94,8 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
             )
             self.assertEqual(report["totals"]["before"]["episodes"], 0)
             self.assertEqual(report["totals"]["after"]["episodes"], 1)
-            self.assertEqual(report["confidence"]["before"]["medium"], 0)
-            self.assertEqual(report["confidence"]["after"]["medium"], 1)
+            self.assertEqual(report["signal_strength"]["before"]["medium"], 0)
+            self.assertEqual(report["signal_strength"]["after"]["medium"], 1)
 
     def test_build_delta_report_includes_actionable_backlog_preview(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -117,12 +117,12 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
                 "episodes": [
                     {
                         "lane": "typed",
-                        "confidence": "medium",
+                        "signal_strength": "medium",
                         "emit_status": "emitted",
                     },
                     {
                         "lane": "typed",
-                        "confidence": "medium",
+                        "signal_strength": "medium",
                         "emit_status": "skipped_low_confidence",
                         "conversation_title": "typed lane case",
                         "source_name": "file_a.png",
@@ -134,7 +134,7 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
                     },
                     {
                         "lane": "handwriting",
-                        "confidence": "high",
+                        "signal_strength": "high",
                         "emit_status": "skipped_unstable_source",
                         "conversation_title": "handwriting unstable",
                         "source_name": "file_b.png",
@@ -145,7 +145,7 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
                     },
                     {
                         "lane": "typed",
-                        "confidence": "low",
+                        "signal_strength": "low",
                         "emit_status": "skipped_low_confidence",
                         "conversation_title": "off-topic visual chat",
                         "source_name": "file_c.png",
