@@ -2157,3 +2157,133 @@
     - `CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 - Why: removes repetitive operator friction and keeps OCR mining commands
   deterministic from canonical local defaults.
+
+## D-155: Restrict low-signal review retention to OCR-evidenced episodes
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_mining`, `signal_quality`, `review_noise`, `precision`
+- Decision:
+  - tighten low-signal episode retention in
+    `tools/build_ocr_cases_from_export.py`:
+    - retain low-signal rows only when one of:
+      - `ocr_literal_intent_signal`
+      - `correction_signal`
+      - `correction_overlap_signal`
+      - `askless_handwriting_signal`
+      - handwriting-lane `ocr_framing_signal`
+    - remove broad framing-only retention for typed/illustration rows.
+  - validation run sequence:
+    - `python -m unittest tests.test_build_ocr_cases_from_export`
+    - `make ocrmine`
+    - `make test`
+    - `make quality-gate-deterministic`
+  - refreshed mining baseline after remine:
+    - strict mined cases unchanged: `20`
+    - growth cases unchanged: `21`
+    - review summary tightened: `episodes=53`
+      (`high=7`, `medium=17`, `low=29`)
+    - `skipped_low_confidence=29`
+    - `actionable_backlog=12`
+- Why: review files had accumulated low-value non-OCR conversational rows under
+  framing-only retention. Tightening retention preserves strict/growth outputs
+  while improving manual triage quality.
+
+## D-156: Add correction-markup OCR cues and block non-intent overlap promotion
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_mining`, `signal_quality`, `intent_gate`, `false_positive_control`
+- Decision:
+  - expand OCR intent cue regex in
+    `tools/build_ocr_cases_from_export.py` for handwriting correction markup:
+    - `crossed out` / `crossing out`
+    - `strikethrough` / `strike through`
+  - tighten high-signal correction promotion:
+    - correction overlap now promotes to `high` only when OCR intent evidence
+      is present (`ocr_literal_intent_signal`, askless-handwriting overlap, or
+      `ocr_intent_signal` + `ocr_framing_signal`)
+    - prevents non-OCR style dialogue from being promoted via incidental phrase overlap.
+  - add regression coverage in
+    `tests/test_build_ocr_cases_from_export.py`:
+    - new ask-regex coverage for `crossed out` and `strikethrough`
+    - new build regression for overlap-correction without OCR intent.
+  - rerun validation + growth alignment:
+    - `python -m unittest tests.test_build_ocr_cases_from_export`
+    - `make ocrmine`
+    - `make ocrstablegrowth`
+    - `make ocrgrowth`
+    - `make ocrfails`
+    - `make quality-gate-deterministic`
+  - refreshed baseline:
+    - review summary: `episodes=54` (`high=7`, `medium=18`, `low=29`)
+    - strict mined cases: `20`
+    - growth cases: `22`
+    - growth stability replay: `21/22` pass, `1/22` fail, `0` errors
+    - fail cohort (`require_ocr_framing=true`): `selected_fail_cases=0`,
+      `skipped_non_framed=1`
+- Why: we need better capture of real handwriting correction prompts while
+  suppressing a newly observed false-positive path where non-OCR style critique
+  was promoted through correction-overlap alone.
+
+## D-157: Filter scaffold labels from OCR anchors and recover long-line heads
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_mining`, `anchor_quality`, `growth_stability`, `false_fail_removal`
+- Decision:
+  - harden transcript OCR phrase extraction in
+    `tools/build_ocr_cases_from_export.py`:
+    - reject scaffold-label-only phrases from OCR anchors:
+      - `timestamp`
+      - `crossed-out header`
+      - `bullet <n>`
+      - `archived and translated as`
+    - when long OCR lines are too broad/noisy for direct phrase admission,
+      extract and retain leading head fragments before separators
+      (`into`, `:`, `;`, `|`, `(`, en/em dash variants).
+  - add regressions in `tests/test_build_ocr_cases_from_export.py`:
+    - label-only phrase rejection test
+    - long-line head-fragment extraction test.
+  - rerun aligned validation sequence:
+    - `./venv/bin/python -m unittest tests.test_build_ocr_cases_from_export`
+    - `make ocrmine`
+    - `make ocrstablegrowth`
+    - `make ocrgrowth`
+    - `make ocrfails`
+    - `make quality-gate-deterministic`
+  - refreshed aligned baseline:
+    - mined strict cases: `20`
+    - growth cases: `23`
+    - growth stability replay: `23/23` pass, `0/23` fail, `0` errors
+    - fail cohort (`require_ocr_framing=true`): `selected_fail_cases=0`,
+      `skipped_non_framed=5`
+    - growth metrics: `decision_coverage_rate=1.0000`,
+      `first_pass_fail_rate=0.1739`,
+      `fail_to_pass_conversion_rate=1.0000`
+- Why: the remaining growth false-fail path was caused by format headers being
+  treated as anchors. Removing label-only anchors and recovering meaningful
+  phrase heads restores stable matching without relaxing binary gate semantics.
+
+## D-158: Prefer pattern-led execution over prescriptive instruction density
+
+- Date: `2026-04-03`
+- Category: `collaboration_method`
+- Tags: `co_reasoning`, `execution_control`, `pattern_learning`, `operator_clarity`
+- Decision:
+  - adopt a sparse-control collaboration mode for active kernels:
+    - required controls:
+      - clear objective
+      - hard acceptance checks
+      - example signals
+    - avoid dense procedural instruction stacks when equivalent control is
+      provided by objective + validation boundaries.
+  - keep go/no-go human-led while allowing execution-path inference to remain
+    model-driven and evidence-linked.
+  - capture as transcript evidence in:
+    - `docs/peanut/transcripts/co_reasoning/pattern_learning_over_prescriptive_instruction_2026-04-03.md`
+  - record method excerpt in:
+    - `docs/peanut/refs/PEANUT_METHOD_EXCERPTS.md`
+- Why: over-prescriptive prompts were observed to increase confusion and reduce
+  adaptation quality. Pattern-led execution with explicit checks preserves
+  reliability while improving flow and focus.
