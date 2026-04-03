@@ -595,6 +595,9 @@
   - probe tokens require length `>=5`
   - plural/singular near-duplicate terms are collapsed during probe selection
     (for example `tumble/tumbles`).
+- Exploratory probe selection now uses lane-balanced round-robin:
+  - candidate ranking remains per-lane score-driven
+  - final selection rotates lanes to keep low-budget focused runs diverse.
 - Runtime DB null surfaces now have a read-only audit command:
   - `make nulls`
   - output: `.local/eval_reports/runtime_null_audit.{json,md}`

@@ -231,6 +231,7 @@ EXPLORATORY_STOPWORDS = {
 
 EXPLORATORY_ORDER_MAX_TERMS = 3
 EXPLORATORY_MIN_TOKEN_LEN = 5
+EXPLORATORY_LANE_ORDER = ("handwriting", "typed", "illustration", "unknown")
 
 
 def _canonical_probe_token(token: str) -> str:
@@ -316,6 +317,47 @@ def _derive_exploratory_overrides(
     elif selected_order:
         overrides["min_chars"] = max(10, sum(len(term) for term in selected_order))
     return overrides
+
+
+def _lane_sort_key(lane: str) -> tuple[int, str]:
+    try:
+        return (EXPLORATORY_LANE_ORDER.index(lane), lane)
+    except ValueError:
+        return (len(EXPLORATORY_LANE_ORDER), lane)
+
+
+def _select_exploratory_rows_balanced(
+    *,
+    exploratory_candidates: list[tuple[int, dict[str, Any]]],
+    max_cases: int,
+) -> list[dict[str, Any]]:
+    if max_cases <= 0 or not exploratory_candidates:
+        return []
+
+    lanes: dict[str, list[tuple[int, dict[str, Any]]]] = {}
+    for score, row in exploratory_candidates:
+        lane = str(row.get("lane", "unknown")).strip() or "unknown"
+        lanes.setdefault(lane, []).append((score, row))
+
+    for queue in lanes.values():
+        queue.sort(key=lambda item: (-item[0], str(item[1].get("id", ""))))
+
+    lane_order = sorted(lanes.keys(), key=_lane_sort_key)
+    selected: list[dict[str, Any]] = []
+    while len(selected) < max_cases:
+        progressed = False
+        for lane in lane_order:
+            queue = lanes.get(lane, [])
+            if not queue:
+                continue
+            _score, row = queue.pop(0)
+            selected.append(row)
+            progressed = True
+            if len(selected) >= max_cases:
+                break
+        if not progressed:
+            break
+    return selected
 
 
 def _merge_case_rows(
@@ -722,8 +764,10 @@ def build_fail_cohort(
                 )
             )
 
-        exploratory_candidates.sort(key=lambda item: (-item[0], str(item[1].get("id", ""))))
-        for _score, row in exploratory_candidates[:exploratory_max_cases]:
+        for row in _select_exploratory_rows_balanced(
+            exploratory_candidates=exploratory_candidates,
+            max_cases=exploratory_max_cases,
+        ):
             exploratory_cases.append(row)
             exploratory_lane_counts[str(row.get("lane", "unknown"))] += 1
 

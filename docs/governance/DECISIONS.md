@@ -2447,3 +2447,27 @@
     - `make lint-docs`
 - Why: knowing where sequence checks fail (start vs mid vs late) makes focused
   tuning decisions precise and reduces guesswork in fail-heavy replay lanes.
+
+## D-164: Select exploratory probes with lane-balanced round-robin
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `exploratory_lane`, `selection_balance`
+- Decision:
+  - replace exploratory top-N slice selection with lane-balanced round-robin
+    in `tools/build_ocr_growth_fail_cohort.py`:
+    - candidates are still ranked per lane by score
+    - final selection rotates across lanes (`handwriting`, `typed`,
+      `illustration`, then fallback)
+  - preserve strict exploratory gating semantics while reducing lane-cluster
+    bias under low `exploratory_max_cases` settings.
+  - add regression coverage:
+    - `test_exploratory_balances_lane_selection_round_robin`
+      in `tests/test_build_ocr_growth_fail_cohort.py`
+  - validation:
+    - `make ocrfocus`
+    - `make test`
+    - `make lint-docs`
+- Why: focused replay should stay diagnostically diverse by lane when case
+  budget is constrained, instead of over-favoring one lane due global score
+  sorting.

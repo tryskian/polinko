@@ -731,6 +731,115 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             ["tumbles", "restore", "spectral"],
         )
 
+    def test_exploratory_balances_lane_selection_round_robin(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-hand-a",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                    "text_variant_count": 9,
+                },
+                {
+                    "id": "gx-hand-b",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                    "text_variant_count": 8,
+                },
+                {
+                    "id": "gx-type-a",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                    "text_variant_count": 2,
+                },
+                {
+                    "id": "gx-illu-a",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                    "text_variant_count": 1,
+                },
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-hand-a": {
+                "id": "gx-hand-a",
+                "lane": "handwriting",
+                "source_name": "hand-a.png",
+                "image_path": "/tmp/hand-a.png",
+                "must_contain_any": ["mechanical checking fingers"],
+            },
+            "gx-hand-b": {
+                "id": "gx-hand-b",
+                "lane": "handwriting",
+                "source_name": "hand-b.png",
+                "image_path": "/tmp/hand-b.png",
+                "must_contain_any": ["restore deleted spectral"],
+            },
+            "gx-type-a": {
+                "id": "gx-type-a",
+                "lane": "typed",
+                "source_name": "type-a.png",
+                "image_path": "/tmp/type-a.png",
+                "must_contain_any": ["instance engineering design"],
+            },
+            "gx-illu-a": {
+                "id": "gx-illu-a",
+                "lane": "illustration",
+                "source_name": "illu-a.png",
+                "image_path": "/tmp/illu-a.png",
+                "must_contain_any": ["correcting simulacra reality"],
+            },
+        }
+        review_index = {
+            "/tmp/hand-a.png": [{"ocr_framing_signal": True, "lane": "handwriting"}],
+            "/tmp/hand-b.png": [{"ocr_framing_signal": True, "lane": "handwriting"}],
+            "/tmp/type-a.png": [{"ocr_framing_signal": True, "lane": "typed"}],
+            "/tmp/illu-a.png": [{"ocr_framing_signal": True, "lane": "illustration"}],
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map={},
+            metrics_map={},
+            review_index=review_index,
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=True,
+            include_exploratory=True,
+            exploratory_max_cases=3,
+        )
+
+        self.assertEqual(report["summary"]["exploratory_cases"], 3)
+        self.assertEqual(
+            report["summary"]["exploratory_lane_counts"],
+            {"handwriting": 1, "illustration": 1, "typed": 1},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

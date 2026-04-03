@@ -362,6 +362,8 @@
       - plural/singular near-duplicate collapse during order-term selection
       - `min_chars` floor of `12`
       - compact exploratory order chains (`max=3` terms)
+    - exploratory case selection now uses lane-balanced round-robin (important
+      when `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES` is reduced below full cohort)
     - focus lane reporting now backfills from cohort when source lane is
       `unknown`
     - expected behaviour when fail history is empty:
