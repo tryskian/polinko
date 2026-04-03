@@ -335,8 +335,11 @@
       - growth cases: `23`
       - latest stability replay: `23/23` pass, `0/23` fail, `0` errors
       - fail cohort selection (`require_ocr_framing=true`): `0` cases
-      - framed-selection skip count: `skipped_non_framed=5`
+      - exploratory selection (`exploratory_max_cases=18`): `14` cases
+      - framed-selection skip count: `skipped_non_framed=0`
       - unframed diagnostic selection: `0` cases
+      - focused replay (`OCR_FOCUS_RUNS=3`): `14/14` pass across `3` runs,
+        `0` flaky
     - if fail cohort is empty but `skipped_non_framed > 0`, run one
       diagnostic pass without framing gate to inspect residual fails:
       - `OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING=false make ocrfails`
@@ -366,8 +369,9 @@
           - with no failures: `bucket=none` + widening hint for dominant lane
     - exploratory strict-replay defaults are enabled:
       - `OCR_FAIL_COHORT_INCLUDE_EXPLORATORY=true`
-      - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES=12`
+      - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES=18`
       - `OCR_FOCUS_INCLUDE_EXPLORATORY=true`
+      - `OCR_FOCUS_RUNS=3`
     - exploratory probe quality now enforces:
       - order chains prefer tokens observed in prior successful OCR extracted
         text (anchor-derived order is fallback when run text is missing)

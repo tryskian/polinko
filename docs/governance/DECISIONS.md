@@ -2764,3 +2764,28 @@
     - `make ocrfocusreport`
 - Why: all-pass focused runs should still yield an actionable next kernel
   instead of a null recommendation.
+
+## D-177: Widen exploratory focus surface and multi-run replay defaults
+
+- Date: `2026-04-03`
+- Category: `ocr_hardening`
+- Tags: `exploratory`, `focus_replay`, `signal_recovery`, `strict_binary`
+- Decision:
+  - raise default exploratory case cap for fail-cohort generation:
+    - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES: 12 -> 18`
+  - raise focused stability replay default:
+    - `OCR_FOCUS_RUNS: 1 -> 3`
+  - keep gate logic unchanged:
+    - no matcher loosening
+    - no binary decision relaxation (`pass`/`fail` only)
+  - validation:
+    - `make ocrfocus`
+    - `make lint-docs`
+    - `make test`
+  - measured outcome (local):
+    - fail cohort exploratory selection widened from `12` to `14` cases
+    - focused case set widened from `12` to `14` cases
+    - focused replay (`3` runs): `14/14` PASS each run, `0` flaky cases
+- Why: with persistent fail cohort currently empty, strict exploratory probes
+  need a broader sample and multi-run replay to surface diagnostic fail signal
+  without changing core OCR gate semantics.

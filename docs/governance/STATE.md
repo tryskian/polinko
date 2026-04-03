@@ -69,6 +69,11 @@
       - `.local/eval_reports/ocr_growth_metrics.json`
       - `.local/eval_reports/ocr_growth_metrics.md`
       - `.local/eval_reports/ocr_growth_fail_cohort.md`
+  - exploratory/focused replay defaults were widened (April 3, 2026):
+    - `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES=18` (was `12`)
+    - `OCR_FOCUS_RUNS=3` (was `1`)
+    - intent: recover actionable fail signal under strict binary gates without
+      matcher/gate relaxation
   - latest lockset benchmark baseline (local):
     - handwriting: `4/4` PASS
     - typed: `6/6` PASS
