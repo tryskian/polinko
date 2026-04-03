@@ -115,7 +115,7 @@
     full online OCR replay remains at `make ocr-notebook-workflow`.
   - offline miner now routes strong unstable-source episodes to growth lane
     only (`source_quarantine=true`), with latest summary:
-    - `growth_cases_written=21`
+    - `growth_cases_written=22`
     - `growth_quarantine_cases_written=1`
     - `growth_regex_only_cases_written=0` (metric active; no current rows)
   - growth miner signal-quality hardening (April 2, 2026):
@@ -127,10 +127,10 @@
     - low-confidence rows no longer enter growth on OCR framing alone;
       OCR intent or correction evidence is now required
     - refreshed aligned growth replay:
-      - `make ocrstablegrowth` (5 runs): `21/21` pass, `0/21` fail, `0` errors
-      - decision stability: `21 stable`, `0 flaky`
+      - `make ocrstablegrowth` (5 runs): `21/22` pass, `1/22` fail, `0` errors
+      - decision stability: `22 stable`, `0 flaky`
       - `make ocrfails` (`require_ocr_framing=true`):
-        `selected_fail_cases=0`, `skipped_non_framed=0`
+        `selected_fail_cases=0`, `skipped_non_framed=1`
       - diagnostic unframed cohort (`OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING=false`):
         `selected_fail_cases=0`
 - Latest local report baseline (March 6, 2026) is green:
@@ -488,10 +488,10 @@
   - OCR framing signal now excludes explicit negations
     (`no ocr`, `not ocr`, `without ocr`, `no transcription`)
   - review-summary baseline after latest offline rerun:
-    `episodes=53` (`high=7`, `medium=17`, `low=29`)
+    `episodes=54` (`high=7`, `medium=18`, `low=29`)
   - active mined baseline: `20` cases (`handwriting=5`, `typed=11`,
     `illustration=4`)
-  - active growth baseline: `21` cases
+  - active growth baseline: `22` cases
   - previous exploratory miner outputs remain legacy reference only and are not
     active strict gate input
 - Transcript OCR benchmark and stability gates remain strict and green under
@@ -555,10 +555,10 @@
   no-memory inability phrasing across retain/store/remember variants in
   `no_memory_pretend_claim`.
 - Current aligned growth baseline (April 3, 2026):
-  - growth cases: `21`
-  - latest growth stability replay: `21/21` pass, `0/21` fail, `0` errors
+  - growth cases: `22`
+  - latest growth stability replay: `21/22` pass, `1/22` fail, `0` errors
   - fail cohort selection (`require_ocr_framing=true`): `0` selected cases
-  - `skipped_non_framed=0`
+  - `skipped_non_framed=1`
   - diagnostic unframed cohort:
     - `selected_fail_cases=0`
 - Growth/focus OCR replay logging is now streamed in real time:
