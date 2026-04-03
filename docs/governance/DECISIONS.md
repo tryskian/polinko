@@ -2322,3 +2322,36 @@
   fail-derived signal. Exploratory strict replay reintroduces controlled
   fail-heavy pressure without relaxing binary gate semantics or mutating source
   datasets.
+
+## D-160: Tighten exploratory replay probes with anchor-derived ordering
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_growth`, `exploratory_lane`, `probe_quality`, `lane_observability`
+- Decision:
+  - refine exploratory override generation in
+    `tools/build_ocr_growth_fail_cohort.py`:
+    - derive `must_appear_in_order` from anchor phrase tokens first (not
+      inherited source order chains by default)
+    - filter weak probe tokens:
+      - numeric-only tokens
+      - short/generic stopwords (for example `thing`, `notes`)
+    - enforce exploratory `min_chars` floor of `12`.
+  - improve focus-case observability in `tools/build_ocr_focus_cases.py`:
+    - when source lane is `unknown`, backfill lane from cohort row.
+  - add regression coverage:
+    - anchor-derived order preference test
+    - unknown-lane backfill test
+  - validation:
+    - `make ocrfails`
+    - `make ocrfocuscases`
+    - `make ocrfocus`
+    - `make test`
+    - `make lint-docs`
+  - current outcome:
+    - focus lanes are now explicit (`handwriting=5`, `typed=4`,
+      `illustration=3`)
+    - latest focused replay remains intentionally fail-heavy:
+      `2/12` PASS, `10/12` FAIL, `0` errors.
+- Why: exploratory cases should fail for meaningful OCR reasons, not brittle
+  ordering inherited from stale source chains or non-semantic tokens.

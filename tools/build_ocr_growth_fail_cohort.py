@@ -202,6 +202,56 @@ def _tokenise_phrase(phrase: str) -> list[str]:
     return [token for token in re.findall(r"[A-Za-z0-9]+", phrase.lower()) if token]
 
 
+EXPLORATORY_STOPWORDS = {
+    "the",
+    "and",
+    "for",
+    "with",
+    "from",
+    "into",
+    "that",
+    "this",
+    "were",
+    "was",
+    "are",
+    "but",
+    "not",
+    "you",
+    "your",
+    "our",
+    "their",
+    "thing",
+    "things",
+    "note",
+    "notes",
+    "text",
+    "line",
+    "lines",
+}
+
+
+def _derive_order_tokens_from_anchors(anchors: list[str]) -> list[str]:
+    ordered_tokens: list[str] = []
+    seen: set[str] = set()
+    for phrase in anchors:
+        for token in _tokenise_phrase(phrase):
+            if token in seen:
+                continue
+            if token.isdigit():
+                continue
+            if not re.search(r"[a-z]", token):
+                continue
+            if len(token) < 4:
+                continue
+            if token in EXPLORATORY_STOPWORDS:
+                continue
+            seen.add(token)
+            ordered_tokens.append(token)
+            if len(ordered_tokens) >= 4:
+                return ordered_tokens
+    return ordered_tokens
+
+
 def _derive_exploratory_overrides(
     *,
     growth_case: dict[str, Any],
@@ -211,18 +261,21 @@ def _derive_exploratory_overrides(
         growth_case=growth_case,
         run_case=run_case,
     )
-    selected_order: list[str] = []
-    if len(effective_order) >= 2:
-        selected_order = effective_order[:4]
-    else:
-        token_candidates: list[str] = []
-        for phrase in effective_any:
-            token_candidates.extend(_tokenise_phrase(phrase))
-        unique_tokens = sorted({token for token in token_candidates if len(token) >= 3}, key=len, reverse=True)
+    selected_order = _derive_order_tokens_from_anchors(effective_any)
+    if len(selected_order) < 2 and len(effective_order) >= 2:
+        # Keep source order only as fallback; inherited order chains can be
+        # stale and create impossible sequence checks in exploratory replay.
+        selected_order = effective_order[:3]
+    elif len(selected_order) < 2:
+        unique_tokens = sorted(
+            {token for token in _tokenise_phrase(" ".join(effective_order)) if len(token) >= 4},
+            key=len,
+            reverse=True,
+        )
         selected_order = unique_tokens[:3]
 
     overrides: dict[str, Any] = {}
-    if selected_order:
+    if len(selected_order) >= 2:
         overrides["must_appear_in_order"] = selected_order
 
     if effective_any:
@@ -233,7 +286,7 @@ def _derive_exploratory_overrides(
     except (TypeError, ValueError):
         base_min_chars = 0
     if base_min_chars > 0:
-        overrides["min_chars"] = max(base_min_chars, int(round(base_min_chars * 1.15)))
+        overrides["min_chars"] = max(base_min_chars, int(round(base_min_chars * 1.15)), 12)
     elif selected_order:
         overrides["min_chars"] = max(10, sum(len(term) for term in selected_order))
     return overrides

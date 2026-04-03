@@ -114,6 +114,8 @@ def build_focus_cases(
                 existing = merged.get(key)
                 if existing in (None, "", [], {}):
                     merged[key] = value
+                if key == "lane" and str(existing).strip().lower() == "unknown":
+                    merged[key] = value
             focus_overrides = (
                 cohort_row.get("focus_overrides")
                 if isinstance(cohort_row.get("focus_overrides"), dict)

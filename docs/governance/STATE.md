@@ -567,7 +567,9 @@
   - fail cohort selection (`require_ocr_framing=true`): `0` selected cases
   - exploratory strict-replay cohort: `12` selected cases
     (`OCR_FAIL_COHORT_INCLUDE_EXPLORATORY=true`)
-  - latest focused replay (exploratory): `3/12` pass, `9/12` fail, `0` errors
+  - latest focused replay (exploratory): `2/12` pass, `10/12` fail, `0` errors
+  - exploratory focus lanes now backfilled from cohort metadata:
+    - `handwriting=5`, `typed=4`, `illustration=3`
   - `skipped_non_framed=5`
   - growth metrics:
     - `decision_coverage_rate=1.0000`

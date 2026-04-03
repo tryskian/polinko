@@ -166,6 +166,33 @@ class BuildOcrFocusCasesTests(unittest.TestCase):
         self.assertEqual(selected["min_chars"], 17)
         self.assertEqual(selected["focus_override_keys"], ["min_chars", "must_appear_in_order"])
 
+    def test_unknown_lane_backfills_from_cohort_row(self) -> None:
+        cohort_payload = {
+            "cases": [],
+            "fail_history_cases": [],
+            "exploratory_cases": [{"id": "gx-exp-lane", "lane": "handwriting"}],
+        }
+        source_cases_payload: dict[str, Any] = {
+            "cases": [
+                {
+                    "id": "gx-exp-lane",
+                    "lane": "unknown",
+                    "must_contain_any": ["field notes"],
+                }
+            ]
+        }
+
+        report = build_focus_cases(
+            cohort_payload=cohort_payload,
+            source_cases_payload=source_cases_payload,
+            include_fail_history=True,
+            include_exploratory=True,
+            max_cases=0,
+        )
+
+        self.assertEqual(report["summary"]["selected_cases"], 1)
+        self.assertEqual(report["cases"][0]["lane"], "handwriting")
+
 
 if __name__ == "__main__":
     unittest.main()
