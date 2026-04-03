@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 OCR_INTENT_PATTERN = (
-    r"what does (this|it) say|what(?:'s| is) written|can you read|read (this|it)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew\s+drop\b|\b(?:s|sq)cribbles?\s+and\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratched\s+out\b"
+    r"what does (this|it) say|what(?:'s| is) written|can you read|read (?:this|it)(?!\s+and\s+weep)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew\s+drop\b|\b(?:s|sq)cribbles?\s+and\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratched\s+out\b"
 )
 ASK_RX = re.compile(OCR_INTENT_PATTERN, re.IGNORECASE)
 HANDWRITING_HINT_RX = re.compile(
