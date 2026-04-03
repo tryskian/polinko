@@ -145,9 +145,11 @@ def _contains_near_single_token(*, tokens: list[str], probe: str) -> bool:
         ):
             return True
         # Keep a strict final-character guard for shorter anchors, but allow
-        # terminal OCR drift on longer anchors (for example `stirring` -> `stirriny`).
+        # single-character terminal OCR drift on 7-char anchors
+        # (for example `tumbles` -> `tumbler`).
         if 5 <= len(probe) < 8 and token[-1:] != probe[-1:]:
-            continue
+            if len(probe) < 7 or not _edit_distance_at_most_one(token, probe):
+                continue
         if abs(len(token) - len(probe)) > 1:
             continue
         if _edit_distance_at_most_one(token, probe):

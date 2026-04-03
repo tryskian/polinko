@@ -2640,3 +2640,25 @@
     - `make lint-docs`
 - Why: keeps autonomous kernel sequencing explicit and reproducible without
   manual report interpretation.
+
+## D-172: Allow bounded 7-char terminal OCR drift in anchor/order matching
+
+- Date: `2026-04-03`
+- Category: `ocr_hardening`
+- Tags: `matcher`, `handwriting`, `ordered_terms`, `precision_patch`
+- Decision:
+  - update `tools/eval_ocr.py` near-token matcher to allow one-character
+    terminal drift for `7`-character probes while keeping stricter guards for
+    shorter probes.
+    - example supported: `tumbles` -> `tumbler` / `tumblies`
+  - keep gate bounded by existing single-edit distance check (no broad fuzzy
+    expansion to unrelated terms).
+  - add regression coverage:
+    - `tests/test_eval_ocr.py`
+      - `must_contain_any` and `must_appear_in_order` now explicitly test
+        `tumbles` terminal drift variants.
+  - validation:
+    - `make test`
+    - `make lint-docs`
+- Why: this removes a deterministic false-negative class in handwriting-focused
+  growth/focus kernels without loosening binary gate discipline.

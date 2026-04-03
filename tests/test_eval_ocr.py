@@ -169,6 +169,38 @@ class OcrEvalRuleTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(reasons, [])
 
+    def test_must_contain_any_allows_terminal_char_drift_for_seven_char_anchor(
+        self,
+    ) -> None:
+        case = self._base_case()
+        case["must_contain_any"] = ["tumbles"]
+        passed_tumbler, reasons_tumbler = _check_case(case, "archive tumbler floating")
+        self.assertTrue(passed_tumbler)
+        self.assertEqual(reasons_tumbler, [])
+
+        passed_tumblies, reasons_tumblies = _check_case(
+            case,
+            "archive tumblies floating",
+        )
+        self.assertTrue(passed_tumblies)
+        self.assertEqual(reasons_tumblies, [])
+
+    def test_must_appear_in_order_allows_terminal_char_drift_for_seven_char_anchor(
+        self,
+    ) -> None:
+        case = self._base_case()
+        case["must_appear_in_order"] = ["archive", "tumbles", "floating"]
+        passed_tumbler, reasons_tumbler = _check_case(case, "archive tumbler floating")
+        self.assertTrue(passed_tumbler)
+        self.assertEqual(reasons_tumbler, [])
+
+        passed_tumblies, reasons_tumblies = _check_case(
+            case,
+            "archive tumblies floating",
+        )
+        self.assertTrue(passed_tumblies)
+        self.assertEqual(reasons_tumblies, [])
+
     def test_forbidden_word_matches_spaced_letter_tokens(self) -> None:
         case = self._base_case()
         case["must_not_contain_words"] = ["guess"]

@@ -615,6 +615,10 @@
   - summary lane matrix `lane_missing_order_sequence_position_buckets`
   - summary hotspot list `lane_sequence_hotspots` for direct next-kernel targeting
   - summary `recommended_next_kernel` for deterministic autonomous sequencing
+- OCR matcher now allows bounded terminal drift for 7-char anchors/order terms:
+  - supports variants like `tumbles` -> `tumbler` / `tumblies` under one-edit checks
+  - keeps shorter probes under strict terminal guards
+  - locked with regression tests in `tests/test_eval_ocr.py`
 - Runtime DB null surfaces now have a read-only audit command:
   - `make nulls`
   - output: `.local/eval_reports/runtime_null_audit.{json,md}`

@@ -377,6 +377,9 @@
         (for example, `increas` -> `increases`)
       - `min_chars` floor of `12`
       - compact exploratory order chains (`max=3` terms)
+      - OCR matcher accepts bounded terminal drift for 7-char anchors/order
+        terms (for example `tumbles` -> `tumbler` / `tumblies`) while keeping
+        shorter anchors strict
     - exploratory case selection now uses lane-balanced round-robin (important
       when `OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES` is reduced below full cohort)
     - focus lane reporting now backfills from cohort when source lane is
