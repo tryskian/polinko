@@ -261,6 +261,20 @@ def build_report(
             for reason, count in reason_counts.most_common(20)
         ],
     }
+    lane_hotspots = summary.get("lane_sequence_hotspots", [])
+    if isinstance(lane_hotspots, list) and lane_hotspots:
+        top_hotspot = lane_hotspots[0]
+        lane = str(top_hotspot.get("lane", "unknown")).strip() or "unknown"
+        bucket = str(top_hotspot.get("bucket", "unknown")).strip() or "unknown"
+        count = int(top_hotspot.get("count", 0) or 0)
+        summary["recommended_next_kernel"] = {
+            "lane": lane,
+            "bucket": bucket,
+            "count": count,
+            "hint": f"Prioritize {lane} lane hardening for {bucket} ordered-term misses.",
+        }
+    else:
+        summary["recommended_next_kernel"] = None
     return {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "summary": summary,
@@ -383,6 +397,20 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
             bucket = str(row.get("bucket", "")).replace("|", "\\|")
             count = int(row.get("count", 0) or 0)
             lines.append(f"| {lane} | {bucket} | {count} |")
+        lines.append("")
+
+    recommended_kernel = summary.get("recommended_next_kernel")
+    if isinstance(recommended_kernel, dict):
+        lines.append("## Recommended Next Kernel")
+        lines.append("")
+        lines.append("| lane | bucket | count | hint |")
+        lines.append("|---|---|---:|---|")
+        lines.append(
+            f"| {str(recommended_kernel.get('lane', '')).replace('|', '\\|')} | "
+            f"{str(recommended_kernel.get('bucket', '')).replace('|', '\\|')} | "
+            f"{int(recommended_kernel.get('count', 0) or 0)} | "
+            f"{str(recommended_kernel.get('hint', '')).replace('|', '\\|')} |"
+        )
         lines.append("")
 
     if top_reasons:

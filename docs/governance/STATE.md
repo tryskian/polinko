@@ -614,6 +614,7 @@
   - summary `missing_order_sequence_position_buckets` (`head`/`mid`/`tail`/`unknown`)
   - summary lane matrix `lane_missing_order_sequence_position_buckets`
   - summary hotspot list `lane_sequence_hotspots` for direct next-kernel targeting
+  - summary `recommended_next_kernel` for deterministic autonomous sequencing
 - Runtime DB null surfaces now have a read-only audit command:
   - `make nulls`
   - output: `.local/eval_reports/runtime_null_audit.{json,md}`

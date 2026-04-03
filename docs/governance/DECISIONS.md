@@ -2615,3 +2615,28 @@
     - `make lint-docs`
 - Why: hotspot ranking reduces manual scan time and makes next-kernel selection
   deterministic.
+
+## D-171: Add explicit next-kernel recommendation in focused fail report
+
+- Date: `2026-04-03`
+- Category: `eval_data`
+- Tags: `ocr_focus`, `autonomy`, `kernel_targeting`, `decision_support`
+- Decision:
+  - extend `tools/report_ocr_focus_fail_patterns.py` summary with:
+    - `recommended_next_kernel`
+  - recommendation derives from top-ranked hotspot (already sorted by
+    count/lane/bucket), and includes:
+    - `lane`
+    - `bucket`
+    - `count`
+    - `hint`
+  - add markdown section:
+    - `Recommended Next Kernel`
+  - add regression coverage updates:
+    - `tests/test_report_ocr_focus_fail_patterns.py`
+  - validation:
+    - `make ocrfocusreport`
+    - `make test`
+    - `make lint-docs`
+- Why: keeps autonomous kernel sequencing explicit and reproducible without
+  manual report interpretation.
