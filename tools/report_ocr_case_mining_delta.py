@@ -105,22 +105,26 @@ def _extract_actionable_backlog(payload: dict[str, Any], *, max_items: int) -> l
         emit_status = str(row.get("emit_status", "")).strip()
         if emit_status not in ACTIONABLE_EMIT_STATUSES:
             continue
+        anchor_terms = row.get("anchor_terms")
+        anchor_count = len(anchor_terms) if isinstance(anchor_terms, list) else int(row.get("anchor_terms_count", 0) or 0)
+        ordered_terms = row.get("ordered_terms")
+        ordered_count = len(ordered_terms) if isinstance(ordered_terms, list) else 0
+        chosen_phrases = row.get("chosen_phrases")
+        chosen_count = len(chosen_phrases) if isinstance(chosen_phrases, list) else 0
         if emit_status == "skipped_low_confidence":
-            has_ocr_signal = bool(
+            # Low-confidence backlog rows are only actionable when they show
+            # OCR intent and at least some anchor potential.
+            has_actionable_ocr_intent = bool(
                 row.get("ocr_literal_intent_signal")
-                or row.get("ocr_framing_signal")
                 or row.get("correction_signal")
                 or row.get("correction_overlap_signal")
-                or row.get("transcription_phrases")
             )
-            if not has_ocr_signal:
+            has_anchor_potential = bool(anchor_count > 0 or ordered_count > 0 or chosen_count > 0)
+            if not has_actionable_ocr_intent or not has_anchor_potential:
                 continue
         signal_strength = str(row.get("signal_strength", row.get("confidence", "low"))).strip().lower()
         if signal_strength not in SIGNAL_STRENGTH_LEVELS:
             signal_strength = "low"
-        anchor_terms = row.get("anchor_terms")
-        anchor_count = len(anchor_terms) if isinstance(anchor_terms, list) else int(row.get("anchor_terms_count", 0) or 0)
-        chosen_phrases = row.get("chosen_phrases")
         chosen_preview = ""
         if isinstance(chosen_phrases, list) and chosen_phrases:
             chosen_preview = _single_line(" | ".join(str(item) for item in chosen_phrases[:3]), max_chars=140)

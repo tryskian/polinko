@@ -51,6 +51,12 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
     def test_ask_regex_matches_scratched_out_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("this line is scratched out, can you still read it?"))
 
+    def test_ask_regex_matches_crossed_out_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("this line is crossed out, can you still read it?"))
+
+    def test_ask_regex_matches_strikethrough_variant(self) -> None:
+        self.assertIsNotNone(ASK_RX.search("did another strikethrough for focus on this one"))
+
     def test_ask_regex_does_not_match_read_it_and_weep_idiom(self) -> None:
         self.assertIsNone(ASK_RX.search("read it and weep binch!"))
 
@@ -80,6 +86,12 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertTrue(_is_ocr_like_phrase("1745"))
         self.assertTrue(_is_ocr_like_phrase("200226"))
         self.assertFalse(_is_ocr_like_phrase("2460"))
+
+    def test_phrase_filter_rejects_label_only_headers(self) -> None:
+        self.assertFalse(_is_ocr_like_phrase("Timestamp"))
+        self.assertFalse(_is_ocr_like_phrase("Crossed-out header"))
+        self.assertFalse(_is_ocr_like_phrase("Bullet 1"))
+        self.assertFalse(_is_ocr_like_phrase("archived and translated as"))
 
     def test_expand_anchor_variants_adds_stems(self) -> None:
         anchors = _expand_anchor_variants(["archival", "tumbles", "floating"])
@@ -201,6 +213,14 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         phrases, _ = _extract_transcribed_lines(assistant_text)
         self.assertIn("open fold within", phrases)
         self.assertFalse(any("pocket timeline" in phrase.lower() for phrase in phrases))
+
+    def test_extract_transcribed_lines_keeps_head_fragment_from_long_line(self) -> None:
+        assistant_text = (
+            "Transforms human lived experience into structured notes; "
+            "archived and translated as field log."
+        )
+        phrases, _ = _extract_transcribed_lines(assistant_text)
+        self.assertIn("Transforms human lived experience", phrases)
 
     def test_anchor_terms_filter_weak_and_filetype_tokens(self) -> None:
         anchors = _anchor_terms_for_phrases(
@@ -876,6 +896,86 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
             self.assertEqual(review["signal_strength"], "low")
             self.assertFalse(review["ocr_intent_signal"])
+            self.assertTrue(review["correction_signal"])
+            self.assertTrue(review["ocr_framing_signal"])
+
+    def test_build_does_not_promote_overlap_correction_without_ocr_intent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "img_021.png").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-overlap-correction-no-intent",
+                "title": "Style dialogue with overlap correction wording",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["maybe even this!"]},
+                            "metadata": {"attachments": [{"name": "img_021.png", "id": "file_overlap_corr"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {
+                                "parts": [
+                                    "it reads almost architectural — as if the words were machined out of alloy.\n"
+                                    "you could anchor your entire visual language off this — the title becomes a mirror."
+                                ]
+                            },
+                            "metadata": {},
+                        }
+                    },
+                    "3": {
+                        "message": {
+                            "create_time": 3,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["the title reads \"the mirror blinked back\" when only then is stylized"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-overlap-correction-no-intent.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_growth = Path(tmp_dir) / "cases_growth.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_growth=output_growth,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                max_growth_cases=50,
+            )
+
+            self.assertEqual(summary["cases_written"], 0)
+            self.assertEqual(summary["growth_cases_written"], 0)
+
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["signal_strength"], "low")
+            self.assertEqual(review["emit_status"], "skipped_low_confidence")
+            self.assertFalse(review["ocr_intent_signal"])
+            self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertTrue(review["correction_signal"])
             self.assertTrue(review["ocr_framing_signal"])
 
@@ -1899,6 +1999,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["skipped_unstable_source"], 1)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
             self.assertEqual(review["emit_status"], "skipped_unstable_source")
+            self.assertEqual(review["source_name"], unstable_name)
 
     def test_build_skips_known_unstable_typed_source(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -1958,6 +2059,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["skipped_unstable_source"], 1)
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
             self.assertEqual(review["emit_status"], "skipped_unstable_source")
+            self.assertEqual(review["source_name"], unstable_name)
 
     def test_build_routes_strong_unstable_source_to_growth_only(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

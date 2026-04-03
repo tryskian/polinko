@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 OCR_INTENT_PATTERN = (
-    r"what does (this|it) say|what(?:'s| is) written|can you read|read (?:this|it)(?!\s+and\s+weep)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew\s+drop\b|\b(?:s|sq)cribbles?\s+and\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratched\s+out\b"
+    r"what does (this|it) say|what(?:'s| is) written|can you read|read (?:this|it)(?!\s+and\s+weep)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew\s+drop\b|\b(?:s|sq)cribbles?\s+and\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratched\s+out\b|\bcross(?:ed|ing)?\s+out\b|\bstrike[\s-]?through\b|\bstrikethrough\b"
 )
 ASK_RX = re.compile(OCR_INTENT_PATTERN, re.IGNORECASE)
 HANDWRITING_HINT_RX = re.compile(
@@ -252,6 +252,10 @@ REGEX_UI_ERROR_PHRASE_RX = re.compile(
     r"\b(?:conversation|chat)\W*not\W*found\b|\bchat\W*html\b",
     re.IGNORECASE,
 )
+OCR_LABEL_ONLY_RX = re.compile(
+    r"(?:timestamp|crossed[-\s]?out\s+header|bullet(?:\s+\d+)?|archived\s+and\s+translated\s+as)",
+    re.IGNORECASE,
+)
 CONTROL_TOKEN_RX = re.compile(
     r"\b(?:imagegenview|imagegen|sandbox:|mnt/data|tool_call|assistant_response)\b",
     re.IGNORECASE,
@@ -487,6 +491,16 @@ def _extract_transcribed_lines(assistant_text: str) -> tuple[list[str], bool]:
         value = _normalize_phrase_candidate(raw_line.lstrip("-*•> "))
         if 4 <= len(value) <= 120 and _is_ocr_like_phrase(value):
             candidates.append(value)
+            continue
+        # Long OCR lines often include useful leading clauses that are lost if
+        # we only keep short, already-ocr-like strings.
+        for separator in (" into ", " — ", " – ", ":", ";", "|", "("):
+            if separator not in value:
+                continue
+            head = _normalize_phrase_candidate(value.split(separator, 1)[0])
+            if 4 <= len(head) <= 120 and _is_ocr_like_phrase(head):
+                candidates.append(head)
+                break
     if not candidates:
         # Fallback: split by sentence-like punctuation for short line candidates.
         for chunk in re.split(r"[;\n]+", assistant_text):
@@ -520,6 +534,9 @@ def _is_ocr_like_phrase(text: str) -> bool:
     if PATH_FILE_EXT_RX.search(value):
         return False
     if CONTROL_TOKEN_RX.search(value):
+        return False
+    normalized_label = re.sub(r"[^a-z0-9\s-]", "", lowered).strip()
+    if OCR_LABEL_ONLY_RX.fullmatch(normalized_label):
         return False
     if value.isdigit() and not _is_entry_numeric_token(value):
         return False
@@ -962,6 +979,16 @@ def build_from_export(
                 and len(transcription_phrases) >= 2
                 and len(transcription_anchor_terms) >= 4
             )
+            high_correction_signal = (
+                followup_correction_signal
+                and followup_correction_phrases
+                and correction_overlap_signal
+                and (
+                    ocr_literal_intent_signal
+                    or askless_handwriting_signal
+                    or (ocr_intent_signal and ocr_framing_signal)
+                )
+            )
             medium_intent_signal = ocr_literal_intent_signal or askless_handwriting_signal or (
                 ocr_intent_signal
                 and (
@@ -970,11 +997,7 @@ def build_from_export(
                     or askless_handwriting_signal
                 )
             )
-            if (
-                followup_correction_signal
-                and followup_correction_phrases
-                and correction_overlap_signal
-            ):
+            if high_correction_signal:
                 signal_strength = "high"
                 chosen_phrases = followup_correction_phrases[:5]
             elif strong_high_transcription_signal and transcription_phrases:
@@ -1010,9 +1033,10 @@ def build_from_export(
             ordered_phrase_fallback = ordered_terms if len(anchor_terms) < 3 else []
             low_signal_strength_has_ocr_signal = bool(
                 ocr_literal_intent_signal
-                or ocr_framing_signal
                 or correction_signal
                 or correction_overlap_signal
+                or askless_handwriting_signal
+                or (lane == "handwriting" and ocr_framing_signal)
             )
             if signal_strength == "low" and not low_signal_strength_has_ocr_signal:
                 # Drop non-transcription chatter from review noise.
@@ -1034,6 +1058,7 @@ def build_from_export(
                     "conversation_title": title,
                     "conversation_json": str(conversation_path),
                     "image_path": image_path,
+                    "source_name": Path(image_path).name,
                     "ask_text": msg.text,
                     "query_text": msg.text,
                     "assistant_text": assistant_text,

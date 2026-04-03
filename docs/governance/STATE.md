@@ -115,7 +115,7 @@
     full online OCR replay remains at `make ocr-notebook-workflow`.
   - offline miner now routes strong unstable-source episodes to growth lane
     only (`source_quarantine=true`), with latest summary:
-    - `growth_cases_written=21`
+    - `growth_cases_written=22`
     - `growth_quarantine_cases_written=1`
     - `growth_regex_only_cases_written=0` (metric active; no current rows)
   - growth miner signal-quality hardening (April 2, 2026):
@@ -127,10 +127,10 @@
     - low-confidence rows no longer enter growth on OCR framing alone;
       OCR intent or correction evidence is now required
     - refreshed aligned growth replay:
-      - `make ocrstablegrowth` (5 runs): `21/21` pass, `0/21` fail, `0` errors
-      - decision stability: `21 stable`, `0 flaky`
+      - `make ocrstablegrowth` (5 runs): `23/23` pass, `0/23` fail, `0` errors
+      - decision stability: `23 stable`, `0 flaky`
       - `make ocrfails` (`require_ocr_framing=true`):
-        `selected_fail_cases=0`, `skipped_non_framed=0`
+        `selected_fail_cases=0`, `skipped_non_framed=5`
       - diagnostic unframed cohort (`OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING=false`):
         `selected_fail_cases=0`
 - Latest local report baseline (March 6, 2026) is green:
@@ -481,24 +481,25 @@
   - handwriting hint detection is token-bounded (prevents substring drift such
     as `Polinko` matching `ink`)
   - unstable transcript sources are quarantined from the active strict set
-  - low-confidence review episodes are retained only when OCR signal is present
-    (`ocr_literal_intent_signal`, `ocr_framing_signal`, `correction_signal`, or
-    `correction_overlap_signal`)
+  - low-confidence review episodes are retained only when OCR signal is present:
+    - all lanes: `ocr_literal_intent_signal`, `correction_signal`,
+      `correction_overlap_signal`, `askless_handwriting_signal`
+    - handwriting lane only: `ocr_framing_signal`
   - OCR framing signal now excludes explicit negations
     (`no ocr`, `not ocr`, `without ocr`, `no transcription`)
   - review-summary baseline after latest offline rerun:
-    `episodes=178` (`high=7`, `medium=27`, `low=144`)
-  - active mined baseline: `26` cases (`handwriting=5`, `typed=11`,
-    `illustration=10`)
-  - active growth baseline: `148` cases
-  - previous `55`/`29`/`25` mined outputs are retained as legacy reference for
-    comparison, not as active strict gate input
+    `episodes=54` (`high=7`, `medium=18`, `low=29`)
+  - active mined baseline: `20` cases (`handwriting=5`, `typed=11`,
+    `illustration=4`)
+  - active growth baseline: `22` cases
+  - previous exploratory miner outputs remain legacy reference only and are not
+    active strict gate input
 - Transcript OCR benchmark and stability gates remain strict and green under
   the last complete lockset baseline:
   - full transcript lane: `21/21` PASS, stability `21 stable / 0 flaky`
   - handwriting benchmark: `4/4` PASS, stability `4 stable / 0 flaky`
   - typed benchmark: `6/6` PASS, stability `6 stable / 0 flaky`
-  - illustration benchmark: `2/2` PASS, stability `2 stable / 0 flaky`
+  - illustration benchmark: `3/3` PASS, stability `3 stable / 0 flaky`
 - Optional Responses API orchestration mode is implemented behind feature flags:
   - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED`
   - `POLINKO_RESPONSES_VECTOR_STORE_ID`
@@ -550,14 +551,25 @@
   - transcript miner schema now uses `signal_strength` naming
     (`signal_strength_counts`) with legacy `confidence` read-compatibility in
     downstream reporting/build tooling
+  - scaffold-label-only phrase candidates are now excluded from OCR anchors:
+    - `timestamp`
+    - `crossed-out header`
+    - `bullet <n>`
+    - `archived and translated as`
+  - long OCR lines now recover leading phrase heads before separators
+    (for example `into`, `:`, `;`) when the full line is too noisy.
 - Response-behaviour deterministic gate phrase coverage now accepts explicit
   no-memory inability phrasing across retain/store/remember variants in
   `no_memory_pretend_claim`.
 - Current aligned growth baseline (April 3, 2026):
-  - growth cases: `21`
-  - latest growth stability replay: `21/21` pass, `0/21` fail, `0` errors
+  - growth cases: `23`
+  - latest growth stability replay: `23/23` pass, `0/23` fail, `0` errors
   - fail cohort selection (`require_ocr_framing=true`): `0` selected cases
-  - `skipped_non_framed=0`
+  - `skipped_non_framed=5`
+  - growth metrics:
+    - `decision_coverage_rate=1.0000`
+    - `first_pass_fail_rate=0.1739`
+    - `fail_to_pass_conversion_rate=1.0000`
   - diagnostic unframed cohort:
     - `selected_fail_cases=0`
 - Growth/focus OCR replay logging is now streamed in real time:
