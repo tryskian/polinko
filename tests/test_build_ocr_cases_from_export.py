@@ -363,6 +363,536 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertTrue(review["ocr_framing_signal"])
             self.assertIn("Alpha spiral field", review["chosen_phrases"])
 
+    def test_build_respects_include_title_regex(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "img_001.jpg").write_bytes(b"not-a-real-image")
+            (assets / "img_002.jpg").write_bytes(b"not-a-real-image")
+
+            def make_conversation(conversation_id: str, title: str, image_name: str) -> dict[str, object]:
+                return {
+                    "conversation_id": conversation_id,
+                    "title": title,
+                    "mapping": {
+                        "1": {
+                            "message": {
+                                "create_time": 1,
+                                "author": {"role": "user"},
+                                "content": {"parts": ["can you transcribe this note?"]},
+                                "metadata": {"attachments": [{"name": image_name, "id": f"file_{conversation_id}"}]},
+                            }
+                        },
+                        "2": {
+                            "message": {
+                                "create_time": 2,
+                                "author": {"role": "assistant"},
+                                "content": {"parts": ['it reads: "alpha spiral field"']},
+                                "metadata": {},
+                            }
+                        },
+                    },
+                }
+
+            (conversations / "conv_focus.json").write_text(
+                json.dumps(make_conversation("conv-focus", "Focus Session", "img_001.jpg")),
+                encoding="utf-8",
+            )
+            (conversations / "conv_misc.json").write_text(
+                json.dumps(make_conversation("conv-misc", "Misc Session", "img_002.jpg")),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                include_title_regex="focus",
+            )
+
+            self.assertEqual(summary["conversation_files"], 2)
+            self.assertEqual(summary["skipped_filtered_conversations"], 1)
+            self.assertEqual(summary["cases_written"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))
+            self.assertEqual(review["summary"]["skipped_filtered_conversations"], 1)
+            self.assertEqual(len(review["episodes"]), 1)
+            self.assertEqual(review["episodes"][0]["conversation_title"], "Focus Session")
+
+    def test_build_respects_include_conversation_regex(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "img_001.jpg").write_bytes(b"not-a-real-image")
+            (assets / "img_002.jpg").write_bytes(b"not-a-real-image")
+
+            def make_conversation(conversation_id: str, image_name: str) -> dict[str, object]:
+                return {
+                    "conversation_id": conversation_id,
+                    "title": "OCR Session",
+                    "mapping": {
+                        "1": {
+                            "message": {
+                                "create_time": 1,
+                                "author": {"role": "user"},
+                                "content": {"parts": ["can you transcribe this note?"]},
+                                "metadata": {"attachments": [{"name": image_name, "id": f"file_{conversation_id}"}]},
+                            }
+                        },
+                        "2": {
+                            "message": {
+                                "create_time": 2,
+                                "author": {"role": "assistant"},
+                                "content": {"parts": ['it reads: "alpha spiral field"']},
+                                "metadata": {},
+                            }
+                        },
+                    },
+                }
+
+            (conversations / "conv_focus.json").write_text(
+                json.dumps(make_conversation("conv-focus-001", "img_001.jpg")),
+                encoding="utf-8",
+            )
+            (conversations / "conv_misc.json").write_text(
+                json.dumps(make_conversation("conv-misc-002", "img_002.jpg")),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                include_conversation_regex="focus-001",
+            )
+
+            self.assertEqual(summary["conversation_files"], 2)
+            self.assertEqual(summary["skipped_filtered_conversations"], 1)
+            self.assertEqual(summary["cases_written"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))
+            self.assertEqual(len(review["episodes"]), 1)
+            self.assertEqual(review["episodes"][0]["conversation_id"], "conv-focus-001")
+
+    def test_build_respects_include_lanes_and_counts_filtered_episodes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "img_001.jpg").write_bytes(b"not-a-real-image")
+            (assets / "Screenshot_2026-03-29.png").write_bytes(b"not-a-real-image")
+
+            conversation_handwriting = {
+                "conversation_id": "conv-lanes-hand",
+                "title": "Handwriting Session",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this note?"]},
+                            "metadata": {"attachments": [{"name": "img_001.jpg", "id": "file_lane_a"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ['it reads: "alpha spiral field"']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            conversation_typed = {
+                "conversation_id": "conv-lanes-typed",
+                "title": "Typed Session",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this screenshot text?"]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "Screenshot_2026-03-29.png", "id": "file_lane_b"}
+                                ]
+                            },
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ['it reads: "tensor matrix ledger"']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conv_lanes_hand.json").write_text(
+                json.dumps(conversation_handwriting),
+                encoding="utf-8",
+            )
+            (conversations / "conv_lanes_typed.json").write_text(
+                json.dumps(conversation_typed),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                include_lanes={"typed"},
+            )
+
+            self.assertEqual(summary["conversation_files"], 2)
+            self.assertEqual(summary["skipped_filtered_conversations"], 0)
+            self.assertEqual(summary["skipped_filtered_episodes"], 1)
+            self.assertEqual(summary["cases_written"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))
+            self.assertEqual(review["summary"]["skipped_filtered_episodes"], 1)
+            self.assertEqual(len(review["episodes"]), 1)
+            self.assertEqual(review["episodes"][0]["lane"], "typed")
+
+    def test_build_rejects_unknown_lane_filters(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "img_001.jpg").write_bytes(b"not-a-real-image")
+            conversation = {
+                "conversation_id": "conv-lanes-invalid",
+                "title": "Lane Validation Session",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this note?"]},
+                            "metadata": {"attachments": [{"name": "img_001.jpg", "id": "file_lane_invalid"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ['it reads: "alpha spiral field"']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conv_lanes_invalid.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            with self.assertRaisesRegex(ValueError, "Invalid lane filters"):
+                build_from_export(
+                    export_root,
+                    output_cases=output_cases,
+                    output_cases_handwriting=output_handwriting,
+                    output_cases_typed=output_typed,
+                    output_cases_illustration=output_illustration,
+                    output_review=output_review,
+                    max_cases=50,
+                    include_lanes={"typed", "sketch"},
+                )
+
+    def test_build_respects_include_signal_strengths_and_counts_filtered_episodes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "img_high.jpg").write_bytes(b"not-a-real-image")
+            (assets / "img_medium.jpg").write_bytes(b"not-a-real-image")
+
+            conversation_high = {
+                "conversation_id": "conv-signal-high",
+                "title": "Signal High",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this exactly?"]},
+                            "metadata": {"attachments": [{"name": "img_high.jpg", "id": "file_signal_high"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["Here's the OCR:\n- alpha spiral field\n- tensor matrix ledger"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            conversation_medium = {
+                "conversation_id": "conv-signal-medium",
+                "title": "Signal Medium",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this exactly?"]},
+                            "metadata": {"attachments": [{"name": "img_medium.jpg", "id": "file_signal_medium"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["- alpha spiral field\n- tensor matrix ledger\n- delta mapping"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conv_signal_high.json").write_text(
+                json.dumps(conversation_high),
+                encoding="utf-8",
+            )
+            (conversations / "conv_signal_medium.json").write_text(
+                json.dumps(conversation_medium),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                include_signal_strengths={"high"},
+            )
+
+            self.assertEqual(summary["conversation_files"], 2)
+            self.assertEqual(summary["skipped_filtered_conversations"], 0)
+            self.assertEqual(summary["skipped_filtered_episodes"], 1)
+            self.assertEqual(summary["high_signal_strength"], 1)
+            self.assertEqual(summary["medium_signal_strength"], 0)
+            review = json.loads(output_review.read_text(encoding="utf-8"))
+            self.assertEqual(review["summary"]["skipped_filtered_episodes"], 1)
+            self.assertEqual(len(review["episodes"]), 1)
+            self.assertEqual(review["episodes"][0]["signal_strength"], "high")
+
+    def test_build_respects_include_emit_statuses_and_counts_filtered_episodes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "img_emitted.jpg").write_bytes(b"not-a-real-image")
+            (assets / "img_low.jpg").write_bytes(b"not-a-real-image")
+
+            conversation_emitted = {
+                "conversation_id": "conv-emit-emitted",
+                "title": "Emit Status Emitted",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this exactly?"]},
+                            "metadata": {"attachments": [{"name": "img_emitted.jpg", "id": "file_emit_ok"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["Here's the OCR:\n- alpha spiral field\n- tensor matrix ledger"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            conversation_low = {
+                "conversation_id": "conv-emit-low",
+                "title": "Emit Status Low",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this?"]},
+                            "metadata": {"attachments": [{"name": "img_low.jpg", "id": "file_emit_low"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["I cannot tell."]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conv_emit_emitted.json").write_text(
+                json.dumps(conversation_emitted),
+                encoding="utf-8",
+            )
+            (conversations / "conv_emit_low.json").write_text(
+                json.dumps(conversation_low),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                include_emit_statuses={"skipped_low_confidence"},
+            )
+
+            self.assertEqual(summary["conversation_files"], 2)
+            self.assertEqual(summary["skipped_filtered_conversations"], 0)
+            self.assertEqual(summary["skipped_filtered_episodes"], 1)
+            self.assertEqual(summary["cases_written"], 0)
+            self.assertEqual(summary["skipped_low_confidence"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))
+            self.assertEqual(review["summary"]["skipped_filtered_episodes"], 1)
+            self.assertEqual(len(review["episodes"]), 1)
+            self.assertEqual(review["episodes"][0]["emit_status"], "skipped_low_confidence")
+
+    def test_build_respects_include_source_regex_and_counts_filtered_episodes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "IMG_7001.jpg").write_bytes(b"not-a-real-image")
+            (assets / "Screenshot_2026-03-29.png").write_bytes(b"not-a-real-image")
+
+            def make_conversation(conversation_id: str, image_name: str) -> dict[str, object]:
+                return {
+                    "conversation_id": conversation_id,
+                    "title": "OCR Session",
+                    "mapping": {
+                        "1": {
+                            "message": {
+                                "create_time": 1,
+                                "author": {"role": "user"},
+                                "content": {"parts": ["can you transcribe this note?"]},
+                                "metadata": {"attachments": [{"name": image_name, "id": f"file_{conversation_id}"}]},
+                            }
+                        },
+                        "2": {
+                            "message": {
+                                "create_time": 2,
+                                "author": {"role": "assistant"},
+                                "content": {"parts": ['it reads: "alpha spiral field"']},
+                                "metadata": {},
+                            }
+                        },
+                    },
+                }
+
+            (conversations / "conv_hand.json").write_text(
+                json.dumps(make_conversation("conv-hand-001", "IMG_7001.jpg")),
+                encoding="utf-8",
+            )
+            (conversations / "conv_typed.json").write_text(
+                json.dumps(make_conversation("conv-typed-001", "Screenshot_2026-03-29.png")),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                include_source_regex=r"^IMG_",
+            )
+
+            self.assertEqual(summary["conversation_files"], 2)
+            self.assertEqual(summary["skipped_filtered_conversations"], 0)
+            self.assertEqual(summary["skipped_filtered_episodes"], 1)
+            self.assertEqual(summary["cases_written"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))
+            self.assertEqual(review["summary"]["skipped_filtered_episodes"], 1)
+            self.assertEqual(len(review["episodes"]), 1)
+            self.assertEqual(review["episodes"][0]["source_name"], "IMG_7001.jpg")
+
     def test_build_promotes_medium_for_askless_typed_framed_transcription(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"

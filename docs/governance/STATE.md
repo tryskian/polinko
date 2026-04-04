@@ -76,6 +76,19 @@
     - `OCR_FOCUS_RUNS=3` (was `1`)
     - intent: recover actionable fail signal under strict binary gates without
       matcher/gate relaxation
+  - transcript miner scope controls are now first-class for targeted kernels:
+    - conversation/title/source regex filters:
+      `--include-conversation-regex`, `--exclude-conversation-regex`,
+      `--include-title-regex`, `--exclude-title-regex`,
+      `--include-source-regex`, `--exclude-source-regex`
+    - lane/signal/status filters:
+      `--include-lanes`, `--include-signal-strengths`,
+      `--include-emit-statuses`
+    - short mining aliases:
+      `make ocrminehand`, `make ocrminetype`, `make ocrmineillu`,
+      `make ocrminehigh`, `make ocrminelow`, `make ocrminebacklog`
+    - filtered rows are now visible in miner summaries via
+      `skipped_filtered_conversations` and `skipped_filtered_episodes`
   - latest lockset benchmark baseline (local):
     - handwriting: `4/4` PASS
     - typed: `6/6` PASS

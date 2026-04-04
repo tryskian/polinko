@@ -267,6 +267,15 @@ CONTROL_TOKEN_RX = re.compile(
 COMPACT_24H_TIME_RX = re.compile(r"^(?:[01]\d|2[0-3])[0-5]\d$")
 COMPACT_YEAR_SUFFIX_DATE_RX = re.compile(r"^\d{4,8}(?:24|25|26)$")
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
+VALID_LANES = {"handwriting", "typed", "illustration"}
+VALID_SIGNAL_STRENGTHS = {"high", "medium", "low"}
+VALID_EMIT_STATUSES = {
+    "emitted",
+    "skipped_low_confidence",
+    "skipped_duplicate_image_path",
+    "skipped_unstable_source",
+    "skipped_insufficient_anchor_terms",
+}
 
 
 @dataclass
@@ -822,6 +831,15 @@ def build_from_export(
     output_review: Path,
     max_cases: int,
     max_growth_cases: int = 600,
+    include_title_regex: str = "",
+    exclude_title_regex: str = "",
+    include_conversation_regex: str = "",
+    exclude_conversation_regex: str = "",
+    include_source_regex: str = "",
+    exclude_source_regex: str = "",
+    include_lanes: set[str] | None = None,
+    include_signal_strengths: set[str] | None = None,
+    include_emit_statuses: set[str] | None = None,
 ) -> dict[str, int]:
     conversations_dir = export_root / "conversations"
     assets_dir = export_root / "assets"
@@ -831,6 +849,44 @@ def build_from_export(
         raise RuntimeError(f"Missing assets directory: {assets_dir}")
 
     by_name, by_token = _asset_indexes(assets_dir)
+    if include_lanes is not None:
+        include_lanes = {lane.strip().lower() for lane in include_lanes if lane.strip()}
+        invalid_lanes = sorted(lane for lane in include_lanes if lane not in VALID_LANES)
+        if invalid_lanes:
+            raise ValueError(
+                "Invalid lane filters: "
+                + ", ".join(invalid_lanes)
+                + ". Expected one of: "
+                + ", ".join(sorted(VALID_LANES))
+            )
+    if include_signal_strengths is not None:
+        include_signal_strengths = {
+            strength.strip().lower() for strength in include_signal_strengths if strength.strip()
+        }
+        invalid_signal_strengths = sorted(
+            strength for strength in include_signal_strengths if strength not in VALID_SIGNAL_STRENGTHS
+        )
+        if invalid_signal_strengths:
+            raise ValueError(
+                "Invalid signal-strength filters: "
+                + ", ".join(invalid_signal_strengths)
+                + ". Expected one of: "
+                + ", ".join(sorted(VALID_SIGNAL_STRENGTHS))
+            )
+    if include_emit_statuses is not None:
+        include_emit_statuses = {
+            status.strip().lower() for status in include_emit_statuses if status.strip()
+        }
+        invalid_emit_statuses = sorted(
+            status for status in include_emit_statuses if status not in VALID_EMIT_STATUSES
+        )
+        if invalid_emit_statuses:
+            raise ValueError(
+                "Invalid emit-status filters: "
+                + ", ".join(invalid_emit_statuses)
+                + ". Expected one of: "
+                + ", ".join(sorted(VALID_EMIT_STATUSES))
+            )
 
     review_rows: list[dict[str, Any]] = []
     cases: list[dict[str, Any]] = []
@@ -846,11 +902,36 @@ def build_from_export(
     growth_quarantine_cases_written = 0
     growth_regex_only_cases_written = 0
 
+    include_title_rx = re.compile(include_title_regex, re.IGNORECASE) if include_title_regex else None
+    exclude_title_rx = re.compile(exclude_title_regex, re.IGNORECASE) if exclude_title_regex else None
+    include_conversation_rx = (
+        re.compile(include_conversation_regex, re.IGNORECASE) if include_conversation_regex else None
+    )
+    exclude_conversation_rx = (
+        re.compile(exclude_conversation_regex, re.IGNORECASE) if exclude_conversation_regex else None
+    )
+    include_source_rx = re.compile(include_source_regex, re.IGNORECASE) if include_source_regex else None
+    exclude_source_rx = re.compile(exclude_source_regex, re.IGNORECASE) if exclude_source_regex else None
+
     conversation_files = sorted(conversations_dir.glob("*.json"))
+    skipped_filtered_conversations = 0
+    skipped_filtered_episodes = 0
     for conversation_path in conversation_files:
         convo = _load_json(conversation_path)
         conversation_id = str(convo.get("conversation_id", "")).strip() or conversation_path.stem
         title = str(convo.get("title", "")).strip()
+        if include_conversation_rx and not include_conversation_rx.search(conversation_id):
+            skipped_filtered_conversations += 1
+            continue
+        if exclude_conversation_rx and exclude_conversation_rx.search(conversation_id):
+            skipped_filtered_conversations += 1
+            continue
+        if include_title_rx and not include_title_rx.search(title):
+            skipped_filtered_conversations += 1
+            continue
+        if exclude_title_rx and exclude_title_rx.search(title):
+            skipped_filtered_conversations += 1
+            continue
         mapping = convo.get("mapping") or {}
         if not isinstance(mapping, dict):
             continue
@@ -921,6 +1002,13 @@ def build_from_export(
             image_path = resolved_paths[0] if resolved_paths else ""
             if not image_path:
                 continue
+            source_name = Path(image_path).name
+            if include_source_rx and not include_source_rx.search(source_name):
+                skipped_filtered_episodes += 1
+                continue
+            if exclude_source_rx and exclude_source_rx.search(source_name):
+                skipped_filtered_episodes += 1
+                continue
             try:
                 if Path(image_path).stat().st_size > MAX_IMAGE_BYTES:
                     continue
@@ -932,6 +1020,9 @@ def build_from_export(
                 image_path=image_path,
                 followups=followups,
             )
+            if include_lanes is not None and lane not in include_lanes:
+                skipped_filtered_episodes += 1
+                continue
             ask_followup_text = "\n".join([msg.text, *followups])
             ocr_intent_signal = ask_signal or bool(
                 OCR_INTENT_RX.search(ask_followup_text)
@@ -1038,6 +1129,9 @@ def build_from_export(
             ):
                 signal_strength = "medium"
                 chosen_phrases = transcription_phrases[:5]
+            if include_signal_strengths is not None and signal_strength not in include_signal_strengths:
+                skipped_filtered_episodes += 1
+                continue
             anchor_source_phrases = chosen_phrases[:]
             if (
                 signal_strength == "high"
@@ -1074,6 +1168,9 @@ def build_from_export(
                 emit_status = "skipped_insufficient_anchor_terms"
             else:
                 emit_status = "emitted"
+            if include_emit_statuses is not None and emit_status not in include_emit_statuses:
+                skipped_filtered_episodes += 1
+                continue
 
             review_rows.append(
                 {
@@ -1081,7 +1178,7 @@ def build_from_export(
                     "conversation_title": title,
                     "conversation_json": str(conversation_path),
                     "image_path": image_path,
-                    "source_name": Path(image_path).name,
+                    "source_name": source_name,
                     "ask_text": msg.text,
                     "query_text": msg.text,
                     "assistant_text": assistant_text,
@@ -1187,7 +1284,7 @@ def build_from_export(
                     {
                         "id": growth_case_id,
                         "image_path": image_path,
-                        "source_name": Path(image_path).name,
+                        "source_name": source_name,
                         "lane": lane,
                         "transcription_mode": "verbatim",
                         "must_contain_any": growth_anchor_terms[:8],
@@ -1222,7 +1319,7 @@ def build_from_export(
                 {
                     "id": case_id,
                     "image_path": image_path,
-                    "source_name": Path(image_path).name,
+                    "source_name": source_name,
                     "lane": lane,
                     "transcription_mode": "verbatim",
                     "must_contain_any": anchor_terms,
@@ -1339,6 +1436,8 @@ def build_from_export(
             "summary": {
                 "conversation_files": len(conversation_files),
                 "episodes": len(review_rows),
+                "skipped_filtered_conversations": skipped_filtered_conversations,
+                "skipped_filtered_episodes": skipped_filtered_episodes,
                 "signal_strength_counts": signal_strength_counts,
                 "lane_counts": lane_counts,
                 "emit_status_counts": emit_status_counts,
@@ -1354,6 +1453,8 @@ def build_from_export(
     return {
         "conversation_files": len(conversation_files),
         "episodes": len(review_rows),
+        "skipped_filtered_conversations": skipped_filtered_conversations,
+        "skipped_filtered_episodes": skipped_filtered_episodes,
         "high_signal_strength": high,
         "medium_signal_strength": medium,
         "low_signal_strength": low,
@@ -1427,11 +1528,75 @@ def parse_args() -> argparse.Namespace:
         default=600,
         help="Maximum number of runnable growth-lane cases to emit.",
     )
+    parser.add_argument(
+        "--include-title-regex",
+        default="",
+        help="Only mine conversations whose title matches this regex (case-insensitive).",
+    )
+    parser.add_argument(
+        "--exclude-title-regex",
+        default="",
+        help="Skip conversations whose title matches this regex (case-insensitive).",
+    )
+    parser.add_argument(
+        "--include-conversation-regex",
+        default="",
+        help="Only mine conversations whose conversation_id matches this regex (case-insensitive).",
+    )
+    parser.add_argument(
+        "--exclude-conversation-regex",
+        default="",
+        help="Skip conversations whose conversation_id matches this regex (case-insensitive).",
+    )
+    parser.add_argument(
+        "--include-source-regex",
+        default="",
+        help="Only mine episodes whose resolved source filename matches this regex (case-insensitive).",
+    )
+    parser.add_argument(
+        "--exclude-source-regex",
+        default="",
+        help="Skip episodes whose resolved source filename matches this regex (case-insensitive).",
+    )
+    parser.add_argument(
+        "--include-lanes",
+        default="",
+        help="Comma-separated lane filter (handwriting,typed,illustration). Empty = all lanes.",
+    )
+    parser.add_argument(
+        "--include-signal-strengths",
+        default="",
+        help="Comma-separated signal-strength filter (high,medium,low). Empty = all strengths.",
+    )
+    parser.add_argument(
+        "--include-emit-statuses",
+        default="",
+        help=(
+            "Comma-separated emit-status filter "
+            "(emitted,skipped_low_confidence,skipped_duplicate_image_path,"
+            "skipped_unstable_source,skipped_insufficient_anchor_terms). Empty = all statuses."
+        ),
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    include_lanes = {
+        lane.strip().lower()
+        for lane in str(args.include_lanes or "").split(",")
+        if lane.strip()
+    } or None
+    include_signal_strengths = {
+        strength.strip().lower()
+        for strength in str(args.include_signal_strengths or "").split(",")
+        if strength.strip()
+    } or None
+    include_emit_statuses = {
+        status.strip().lower()
+        for status in str(args.include_emit_statuses or "").split(",")
+        if status.strip()
+    } or None
     summary = build_from_export(
         Path(args.export_root).expanduser().resolve(),
         output_cases=Path(args.output_cases).expanduser().resolve(),
@@ -1442,10 +1607,21 @@ def main() -> int:
         output_review=Path(args.output_review).expanduser().resolve(),
         max_cases=int(args.max_cases),
         max_growth_cases=int(args.max_growth_cases),
+        include_title_regex=str(args.include_title_regex or ""),
+        exclude_title_regex=str(args.exclude_title_regex or ""),
+        include_conversation_regex=str(args.include_conversation_regex or ""),
+        exclude_conversation_regex=str(args.exclude_conversation_regex or ""),
+        include_source_regex=str(args.include_source_regex or ""),
+        exclude_source_regex=str(args.exclude_source_regex or ""),
+        include_lanes=include_lanes,
+        include_signal_strengths=include_signal_strengths,
+        include_emit_statuses=include_emit_statuses,
     )
     for key in (
         "conversation_files",
         "episodes",
+        "skipped_filtered_conversations",
+        "skipped_filtered_episodes",
         "high_signal_strength",
         "medium_signal_strength",
         "low_signal_strength",
