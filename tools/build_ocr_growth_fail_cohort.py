@@ -300,6 +300,7 @@ def _derive_order_tokens_from_text(
         return []
 
     ordered_tokens: list[str] = []
+    token_first_index: dict[str, int] = {}
     seen: set[str] = set()
     for token in _tokenise_phrase(text):
         canonical = _canonical_probe_token(token)
@@ -314,11 +315,21 @@ def _derive_order_tokens_from_text(
         if token in EXPLORATORY_STOPWORDS:
             continue
         seen.add(canonical)
+        token_first_index[token] = len(ordered_tokens)
         ordered_tokens.append(token)
 
     if preferred_tokens:
         preferred = [tok for tok in ordered_tokens if _canonical_probe_token(tok) in preferred_tokens]
         collapsed_preferred = _drop_prefix_stem_terms(preferred)
+        if len(collapsed_preferred) >= 3:
+            # Heading tokens at the very start are often less stable across OCR
+            # variants; prefer later preferred anchors when available.
+            late_preferred = [
+                tok for tok in collapsed_preferred if int(token_first_index.get(tok, 999)) >= 2
+            ]
+            collapsed_late_preferred = _drop_prefix_stem_terms(late_preferred)
+            if len(collapsed_late_preferred) >= 2:
+                return collapsed_late_preferred[:EXPLORATORY_ORDER_MAX_TERMS]
         if len(collapsed_preferred) >= 2:
             return collapsed_preferred[:EXPLORATORY_ORDER_MAX_TERMS]
 

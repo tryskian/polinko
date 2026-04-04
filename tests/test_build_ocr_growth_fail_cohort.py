@@ -1078,6 +1078,64 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertIsInstance(overrides, dict)
         self.assertEqual(overrides.get("must_contain_any"), ["alpha"])
 
+    def test_exploratory_prefers_late_preferred_anchor_order_tokens(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-pass-late-order",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-late-order": {
+                "id": "gx-pass-late-order",
+                "lane": "typed",
+                "source_name": "sample-pass-late-order.png",
+                "image_path": "/tmp/sample-pass-late-order.png",
+                "must_contain_any": ["action", "rationale", "reality", "higher"],
+            }
+        }
+        run_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-late-order": {
+                "id": "gx-pass-late-order",
+                "source_name": "sample-pass-late-order.png",
+                "image_path": "/tmp/sample-pass-late-order.png",
+                "extracted_text": (
+                    "ACTION RATIONALE SELF 3D REALITY BODY MIND HIGHER SELF"
+                ),
+            }
+        }
+        review_index = {
+            "/tmp/sample-pass-late-order.png": [{"ocr_framing_signal": True, "lane": "typed"}]
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map=run_case_map,
+            metrics_map={},
+            review_index=review_index,
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=True,
+            include_exploratory=True,
+            exploratory_max_cases=5,
+        )
+
+        self.assertEqual(report["summary"]["exploratory_cases"], 1)
+        exploratory = report["exploratory_cases"][0]
+        overrides = exploratory.get("focus_overrides")
+        self.assertIsInstance(overrides, dict)
+        self.assertEqual(overrides.get("must_appear_in_order"), ["reality", "higher"])
+
     def test_exploratory_skips_run_growth_image_mismatch(self) -> None:
         stability_payload = {
             "cases": [
