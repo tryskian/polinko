@@ -193,6 +193,47 @@ class BuildOcrFocusCasesTests(unittest.TestCase):
         self.assertEqual(report["summary"]["selected_cases"], 1)
         self.assertEqual(report["cases"][0]["lane"], "handwriting")
 
+    def test_max_cases_prioritizes_actionable_ordered_failures(self) -> None:
+        cohort_payload = {
+            "cases": [
+                {
+                    "id": "gx-anchor-noise",
+                    "primary_failure_pattern": "anchor_any_missing",
+                    "effective_must_contain_any": ["alignment", "archive"],
+                    "effective_must_appear_in_order": [],
+                    "fail_runs": 2,
+                    "observed_runs": 2,
+                    "lane": "typed",
+                },
+                {
+                    "id": "gx-ordered-actionable",
+                    "primary_failure_pattern": "ordered_phrase_missing",
+                    "effective_must_contain_any": ["phase transition", "stability"],
+                    "effective_must_appear_in_order": ["phase", "transition"],
+                    "fail_runs": 2,
+                    "observed_runs": 2,
+                    "lane": "typed",
+                },
+            ],
+            "fail_history_cases": [],
+        }
+        source_cases_payload: dict[str, Any] = {
+            "cases": [
+                {"id": "gx-anchor-noise", "lane": "typed"},
+                {"id": "gx-ordered-actionable", "lane": "typed"},
+            ]
+        }
+
+        report = build_focus_cases(
+            cohort_payload=cohort_payload,
+            source_cases_payload=source_cases_payload,
+            include_fail_history=True,
+            max_cases=1,
+        )
+
+        self.assertEqual(report["summary"]["selected_cases"], 1)
+        self.assertEqual(report["cases"][0]["id"], "gx-ordered-actionable")
+
 
 if __name__ == "__main__":
     unittest.main()
