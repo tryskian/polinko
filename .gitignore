@@ -50,6 +50,7 @@ _virtualenv.py
 .local/visuals/
 .local/dashboard/
 .local/eval_cases/
+.local/logs/
 .local_archive/
 
 # Local eval artifacts
