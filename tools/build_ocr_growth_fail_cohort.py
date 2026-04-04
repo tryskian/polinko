@@ -391,6 +391,54 @@ def _derive_anchor_any_terms(anchors: list[str]) -> list[str]:
     return filtered
 
 
+def _text_token_pool(text: str) -> set[str]:
+    return {
+        _canonical_probe_token(token)
+        for token in _tokenise_phrase(text)
+        if re.search(r"[a-z]", token) and len(token) >= 3
+    }
+
+
+def _term_supported_by_text(
+    *,
+    term: str,
+    text: str,
+    text_token_pool: set[str],
+) -> bool:
+    term_norm = " ".join(str(term).split()).strip().lower()
+    if not term_norm:
+        return False
+    text_norm = " ".join(str(text).split()).strip().lower()
+    if term_norm and term_norm in text_norm:
+        return True
+
+    canonical_tokens = [
+        _canonical_probe_token(token)
+        for token in _tokenise_phrase(term_norm)
+        if re.search(r"[a-z]", token) and len(token) >= 3
+    ]
+    if not canonical_tokens:
+        return False
+
+    overlap = sum(1 for token in canonical_tokens if token in text_token_pool)
+    if len(canonical_tokens) == 1:
+        return overlap >= 1
+    return overlap >= 2
+
+
+def _filter_terms_to_text_support(*, terms: list[str], text: str) -> list[str]:
+    if not terms:
+        return []
+    text_tokens = _text_token_pool(text)
+    if not text_tokens and not str(text).strip():
+        return terms
+    supported: list[str] = []
+    for term in terms:
+        if _term_supported_by_text(term=term, text=text, text_token_pool=text_tokens):
+            supported.append(term)
+    return supported
+
+
 def _derive_exploratory_overrides(
     *,
     growth_case: dict[str, Any],
@@ -441,6 +489,8 @@ def _derive_exploratory_overrides(
         selected_order = unique_tokens[:EXPLORATORY_ORDER_MAX_TERMS]
     if len(selected_order) > EXPLORATORY_ORDER_MAX_TERMS:
         selected_order = selected_order[:EXPLORATORY_ORDER_MAX_TERMS]
+    if run_extracted_text.strip():
+        selected_order = _filter_terms_to_text_support(terms=selected_order, text=run_extracted_text)
 
     overrides: dict[str, Any] = {}
     if len(selected_order) >= 2:
@@ -448,6 +498,8 @@ def _derive_exploratory_overrides(
 
     if effective_any:
         refined_any = _derive_anchor_any_terms(effective_any)
+        if run_extracted_text.strip():
+            refined_any = _filter_terms_to_text_support(terms=refined_any, text=run_extracted_text)
         if refined_any:
             overrides["must_contain_any"] = refined_any[:8]
 
@@ -849,6 +901,9 @@ def build_fail_cohort(
                 str(run_case.get("image_path", "")).strip()
                 or str(growth_case.get("image_path", "")).strip()
             )
+            growth_image_path = str(growth_case.get("image_path", "")).strip()
+            if run_case_map and growth_image_path and image_path and growth_image_path != image_path:
+                continue
             linked_review_rows = review_index.get(image_path, [])
             framing_episode_count = sum(
                 1 for review_row in linked_review_rows if bool(review_row.get("ocr_framing_signal", False))

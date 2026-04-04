@@ -1022,6 +1022,112 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             ["archival", "tumbles", "increases", "restore deleted spectral"],
         )
 
+    def test_exploratory_filters_anchor_any_to_run_text_support(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-pass-filter-any",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-filter-any": {
+                "id": "gx-pass-filter-any",
+                "lane": "typed",
+                "source_name": "sample-pass-filter-any.png",
+                "image_path": "/tmp/sample-pass-filter-any.png",
+                "must_contain_any": ["alpha", "beta", "gamma"],
+            }
+        }
+        run_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-filter-any": {
+                "id": "gx-pass-filter-any",
+                "source_name": "sample-pass-filter-any.png",
+                "image_path": "/tmp/sample-pass-filter-any.png",
+                "extracted_text": "delta epsilon alpha marker",
+            }
+        }
+        review_index = {
+            "/tmp/sample-pass-filter-any.png": [{"ocr_framing_signal": True, "lane": "typed"}]
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map=run_case_map,
+            metrics_map={},
+            review_index=review_index,
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=True,
+            include_exploratory=True,
+            exploratory_max_cases=5,
+        )
+
+        self.assertEqual(report["summary"]["exploratory_cases"], 1)
+        exploratory = report["exploratory_cases"][0]
+        overrides = exploratory.get("focus_overrides")
+        self.assertIsInstance(overrides, dict)
+        self.assertEqual(overrides.get("must_contain_any"), ["alpha"])
+
+    def test_exploratory_skips_run_growth_image_mismatch(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-pass-mismatch",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-mismatch": {
+                "id": "gx-pass-mismatch",
+                "lane": "typed",
+                "source_name": "growth.png",
+                "image_path": "/tmp/growth.png",
+                "must_contain_any": ["field notes measurable record"],
+            }
+        }
+        run_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-mismatch": {
+                "id": "gx-pass-mismatch",
+                "source_name": "run.png",
+                "image_path": "/tmp/run.png",
+                "extracted_text": "field notes measurable record and archive",
+            }
+        }
+        review_index = {"/tmp/run.png": [{"ocr_framing_signal": True, "lane": "typed"}]}
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map=run_case_map,
+            metrics_map={},
+            review_index=review_index,
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=True,
+            include_exploratory=True,
+            exploratory_max_cases=5,
+        )
+
+        self.assertEqual(report["summary"]["exploratory_cases"], 0)
+
 
 if __name__ == "__main__":
     unittest.main()
