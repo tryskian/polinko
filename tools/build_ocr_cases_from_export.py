@@ -269,6 +269,13 @@ COMPACT_YEAR_SUFFIX_DATE_RX = re.compile(r"^\d{4,8}(?:24|25|26)$")
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 VALID_LANES = {"handwriting", "typed", "illustration"}
 VALID_SIGNAL_STRENGTHS = {"high", "medium", "low"}
+VALID_EMIT_STATUSES = {
+    "emitted",
+    "skipped_low_confidence",
+    "skipped_duplicate_image_path",
+    "skipped_unstable_source",
+    "skipped_insufficient_anchor_terms",
+}
 
 
 @dataclass
@@ -830,6 +837,7 @@ def build_from_export(
     exclude_conversation_regex: str = "",
     include_lanes: set[str] | None = None,
     include_signal_strengths: set[str] | None = None,
+    include_emit_statuses: set[str] | None = None,
 ) -> dict[str, int]:
     conversations_dir = export_root / "conversations"
     assets_dir = export_root / "assets"
@@ -862,6 +870,20 @@ def build_from_export(
                 + ", ".join(invalid_signal_strengths)
                 + ". Expected one of: "
                 + ", ".join(sorted(VALID_SIGNAL_STRENGTHS))
+            )
+    if include_emit_statuses is not None:
+        include_emit_statuses = {
+            status.strip().lower() for status in include_emit_statuses if status.strip()
+        }
+        invalid_emit_statuses = sorted(
+            status for status in include_emit_statuses if status not in VALID_EMIT_STATUSES
+        )
+        if invalid_emit_statuses:
+            raise ValueError(
+                "Invalid emit-status filters: "
+                + ", ".join(invalid_emit_statuses)
+                + ". Expected one of: "
+                + ", ".join(sorted(VALID_EMIT_STATUSES))
             )
 
     review_rows: list[dict[str, Any]] = []
@@ -1135,6 +1157,9 @@ def build_from_export(
                 emit_status = "skipped_insufficient_anchor_terms"
             else:
                 emit_status = "emitted"
+            if include_emit_statuses is not None and emit_status not in include_emit_statuses:
+                skipped_filtered_episodes += 1
+                continue
 
             review_rows.append(
                 {
@@ -1522,6 +1547,15 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Comma-separated signal-strength filter (high,medium,low). Empty = all strengths.",
     )
+    parser.add_argument(
+        "--include-emit-statuses",
+        default="",
+        help=(
+            "Comma-separated emit-status filter "
+            "(emitted,skipped_low_confidence,skipped_duplicate_image_path,"
+            "skipped_unstable_source,skipped_insufficient_anchor_terms). Empty = all statuses."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -1536,6 +1570,11 @@ def main() -> int:
         strength.strip().lower()
         for strength in str(args.include_signal_strengths or "").split(",")
         if strength.strip()
+    } or None
+    include_emit_statuses = {
+        status.strip().lower()
+        for status in str(args.include_emit_statuses or "").split(",")
+        if status.strip()
     } or None
     summary = build_from_export(
         Path(args.export_root).expanduser().resolve(),
@@ -1553,6 +1592,7 @@ def main() -> int:
         exclude_conversation_regex=str(args.exclude_conversation_regex or ""),
         include_lanes=include_lanes,
         include_signal_strengths=include_signal_strengths,
+        include_emit_statuses=include_emit_statuses,
     )
     for key in (
         "conversation_files",

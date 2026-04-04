@@ -734,6 +734,96 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(len(review["episodes"]), 1)
             self.assertEqual(review["episodes"][0]["signal_strength"], "high")
 
+    def test_build_respects_include_emit_statuses_and_counts_filtered_episodes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "img_emitted.jpg").write_bytes(b"not-a-real-image")
+            (assets / "img_low.jpg").write_bytes(b"not-a-real-image")
+
+            conversation_emitted = {
+                "conversation_id": "conv-emit-emitted",
+                "title": "Emit Status Emitted",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this exactly?"]},
+                            "metadata": {"attachments": [{"name": "img_emitted.jpg", "id": "file_emit_ok"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["Here's the OCR:\n- alpha spiral field\n- tensor matrix ledger"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            conversation_low = {
+                "conversation_id": "conv-emit-low",
+                "title": "Emit Status Low",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this?"]},
+                            "metadata": {"attachments": [{"name": "img_low.jpg", "id": "file_emit_low"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["I cannot tell."]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conv_emit_emitted.json").write_text(
+                json.dumps(conversation_emitted),
+                encoding="utf-8",
+            )
+            (conversations / "conv_emit_low.json").write_text(
+                json.dumps(conversation_low),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                include_emit_statuses={"skipped_low_confidence"},
+            )
+
+            self.assertEqual(summary["conversation_files"], 2)
+            self.assertEqual(summary["skipped_filtered_conversations"], 0)
+            self.assertEqual(summary["skipped_filtered_episodes"], 1)
+            self.assertEqual(summary["cases_written"], 0)
+            self.assertEqual(summary["skipped_low_confidence"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))
+            self.assertEqual(review["summary"]["skipped_filtered_episodes"], 1)
+            self.assertEqual(len(review["episodes"]), 1)
+            self.assertEqual(review["episodes"][0]["emit_status"], "skipped_low_confidence")
+
     def test_build_promotes_medium_for_askless_typed_framed_transcription(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
