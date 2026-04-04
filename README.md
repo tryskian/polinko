@@ -13,8 +13,6 @@ Snapshot label for this baseline: `polinko-build-snapshot-040426`.
   required key validation (`OPENAI_API_KEY`).
 - API backend: FastAPI app for chat, OCR/PDF ingest, retrieval search,
   feedback, and checkpoints, backed by SQLite persistence.
-- Frontend: Vite app under `frontend/` (repurposed from legacy frontend),
-  wired to backend chat/feedback/session endpoints.
 - Chat harness mode: optional deterministic fixture responses for smoke testing
   without model calls (`harness_mode=fixture`).
 - UI eval adapter spec is documented in
@@ -34,15 +32,12 @@ make server
 Open:
 
 - `http://127.0.0.1:8000/docs` (backend OpenAPI)
-- `http://127.0.0.1:5173` (frontend)
 
 Or open it via `make` target:
 
 ```bash
 make docs
 make open-api-docs
-make ui-install
-make ui
 ```
 
 ## Setup
@@ -77,13 +72,6 @@ Backend (canonical):
 
 ```bash
 make server
-```
-
-Frontend (repurposed legacy UI):
-
-```bash
-make ui-install
-make ui
 ```
 
 Notebook viz (local/private):
