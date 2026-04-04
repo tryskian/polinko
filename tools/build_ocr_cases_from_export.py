@@ -232,6 +232,10 @@ FRAMED_TRANSCRIPTION_RX = re.compile(
     r"\bit (?:reads?|says)\b[,:-]?\s*([^\n]{3,120})",
     re.IGNORECASE,
 )
+ENTRY_NUMERIC_MARKER_RX = re.compile(
+    r"\b(?:timestamp|time|date|entry(?:\s+time)?)\b\s*[:#=\-]?\s*([^\n]{1,80})",
+    re.IGNORECASE,
+)
 ROOT_PATH_RX = re.compile(
     r"(?:^|[\s(])/(?:mnt|tmp|var|home|users?|data)/[^\s]+",
     re.IGNORECASE,
@@ -390,6 +394,14 @@ def _extract_candidate_phrases(text: str) -> list[str]:
             value = _normalize_phrase_candidate(str(left))
             if 3 <= len(value) <= 80:
                 phrases.append(value)
+    # OCR notes frequently include compact time/date markers (for example 1745, 200226)
+    # that we want to preserve as anchor candidates.
+    marker_matches = ENTRY_NUMERIC_MARKER_RX.findall(text)
+    for marker in marker_matches:
+        tokens = [token for token in re.findall(r"\d{3,8}", marker) if _is_entry_numeric_token(token)]
+        if not tokens:
+            continue
+        phrases.append(" ".join(tokens))
     phrases.extend(_extract_inline_highlight_phrases(text))
     dedup: list[str] = []
     seen: set[str] = set()

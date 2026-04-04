@@ -185,6 +185,13 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         phrases = _extract_candidate_phrases(text)
         self.assertIn("alpha spiral field", [p.lower() for p in phrases])
 
+    def test_extract_candidate_phrases_keeps_timestamp_and_date_tokens(self) -> None:
+        text = "correction: timestamp 1745; date 200226"
+        phrases = _extract_candidate_phrases(text)
+        joined = " ".join(phrases)
+        self.assertIn("1745", joined)
+        self.assertIn("200226", joined)
+
     def test_has_correction_signal_detects_not_pair(self) -> None:
         text = "bully not bull-fly"
         self.assertFalse(_has_correction_signal(text))
