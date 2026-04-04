@@ -24,6 +24,7 @@ from openai import (
 from pydantic import BaseModel, Field
 
 from api.eval_viz import build_pass_fail_viz_payload, render_pass_fail_viz_html
+from api.manual_evals_surface import build_manual_evals_surface_payload
 from config import AppConfig
 from core.history_store import (
     ChatHistoryStore,
@@ -3008,6 +3009,13 @@ def create_app(config: AppConfig) -> FastAPI:
     @app.get("/viz/pass-fail/data")
     def pass_fail_viz_data(max_evals: int = 180) -> dict[str, Any]:
         return build_pass_fail_viz_payload(max_evals=max(1, min(max_evals, 500)))
+
+    @app.get("/manual-evals/surface")
+    def manual_evals_surface(max_runs: int = 180, max_sessions: int = 60) -> dict[str, Any]:
+        return build_manual_evals_surface_payload(
+            max_runs=max(1, min(max_runs, 800)),
+            max_sessions=max(1, min(max_sessions, 300)),
+        )
 
     @app.get("/metrics", response_model=MetricsResponse)
     def metrics(request: Request) -> MetricsResponse:

@@ -119,3 +119,8 @@ OCR-forward reliability loops, and production-ready API foundations.
 - Cookbook priority pin (next integration kernel):
   - `Vision Fine-tuning on GPT-4o for Visual Question Answering` is first in
     the cookbook integration sequence.
+- Runtime progress pin (next engineering kernel):
+  - build a manual-eval data surface from `manual_evals.db`
+  - expose read-only API endpoints for summary + runs + thumbnails + session
+    feedback/checkpoint context
+  - keep UI work presentation-only against that API contract

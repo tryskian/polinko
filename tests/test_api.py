@@ -92,6 +92,18 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(body["status"], "ok")
         self.assertIn("prompt_version", body)
 
+    def test_manual_evals_surface_endpoint_returns_payload_shape(self) -> None:
+        resp = self.client.get(
+            "/manual-evals/surface",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertIn("available", payload)
+        self.assertIn("summary", payload)
+        self.assertIn("sessions", payload)
+        self.assertIn("runs", payload)
+
     def test_api_key_is_not_required_for_core_endpoints(self) -> None:
         chat_resp = self.client.post(
             "/chat",

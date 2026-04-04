@@ -583,6 +583,9 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
 - `GET /viz/pass-fail/data` return the pulse payload:
   chart timeline from `history.db` / `ocr_runs`, summary/detail rows from
   `eval_viz.db` / `eval_points` when available
+- `GET /manual-evals/surface` return manual-eval data surface from
+  `manual_evals.db` (summary + sessions + OCR runs + thumbnail preview fields +
+  session feedback/checkpoint context)
 - `GET /metrics` request counters, status counts, latency buckets, rate-limit
   totals
 
@@ -1141,6 +1144,24 @@ Current policy:
    - Realtime out-of-band transcription
    - RAG with graph DB
    - search reranking with cross-encoders
+
+## Runtime Kernel Pin
+
+1. Current engineering pin (manual eval surface):
+   - build canonical data surface from:
+     - `.local/runtime_dbs/active/manual_evals.db`
+   - include:
+     - OCR run stream
+     - thumbnail previews (when present)
+     - session-level feedback/checkpoint context
+2. Contract-first implementation order:
+   - data surface builder/query helper
+   - read-only API endpoint(s)
+   - presentation/UI consumption layer
+3. Constraints:
+   - local-only runtime surface
+   - no eval-policy mutation in UI lane
+   - keep binary gate semantics unchanged (`pass`/`fail`)
 
 ## Calibrate Hallucination Threshold
 

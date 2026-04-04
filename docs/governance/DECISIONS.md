@@ -2937,3 +2937,17 @@
     currently present in tracked project paths.
 - Why: keeps transition context visible for research narrative while preserving
   clean separation between active runtime logic and historical eval behaviour.
+
+## D-184: Pin manual-eval data surface as next runtime kernel
+
+- Date: `2026-04-04`
+- Category: `runtime_engineering`
+- Tags: `manual_eval_surface`, `api_contract`, `thumbnail_preview`, `kernel_pin`
+- Decision:
+  - pin the next runtime kernel as:
+    - manual-eval data surface from `manual_evals.db`
+    - read-only API exposure for summary + runs + thumbnails + session
+      feedback/checkpoint context
+    - UI lanes consume this contract without redefining eval logic
+- Why: keeps progress focused on a stable backend contract first, so visual
+  iteration can move faster without policy drift.
