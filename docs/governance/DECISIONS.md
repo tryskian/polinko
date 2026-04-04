@@ -2920,3 +2920,20 @@
 - Why: objective FAIL criteria give clearer model/operator signal boundaries and
   make PASS interpretable as contrastive evidence instead of a loose positive
   label.
+
+## D-183: Normalise eval-era documentation into a three-phase legacy map
+
+- Date: `2026-04-04`
+- Category: `eval_quality`
+- Tags: `legacy_map`, `phase_model`, `documentation_hygiene`, `binary_transition`
+- Decision:
+  - document eval history under `docs/eval/legacy/` as three explicit eras:
+    - eval gates + traditional training logic
+    - binary gates + traditional training logic
+    - binary gates + binary training logic
+  - move preserved OCR legacy screenshot artefacts into era-2 docs lane for
+    direct contrast analysis.
+  - add a legacy database lane note indicating no legacy DB snapshots are
+    currently present in tracked project paths.
+- Why: keeps transition context visible for research narrative while preserving
+  clean separation between active runtime logic and historical eval behaviour.
