@@ -920,6 +920,15 @@ Current policy:
    - `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 3. Mine OCR eval cases from transcript correction/confirmation signals:
    - `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+   - scoped shortcuts:
+     - `make ocrminehand`
+     - `make ocrminetype`
+     - `make ocrmineillu`
+     - `make ocrminehigh`
+     - `make ocrminelow`
+     - `make ocrminebacklog`
+   - scoped argument passthrough (advanced):
+     - `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_CASES_FROM_EXPORT_ARGS='--include-lanes handwriting --include-signal-strengths high'`
    - precision guard: askless handwriting episodes now require
      correction-overlap signal before promotion to medium confidence
      (reduces conversational anchor noise)
@@ -967,6 +976,16 @@ Current policy:
      `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_CASES_ILLUSTRATION=/abs/path/to/illustration-cases.json`
    - override generated review file path:
      `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_TRANSCRIPT_REVIEW=/abs/path/to/review.json`
+   - mine only matching conversation titles:
+     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_CASES_FROM_EXPORT_ARGS='--include-title-regex focus'`
+   - mine only matching conversation IDs:
+     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_CASES_FROM_EXPORT_ARGS='--include-conversation-regex conv-focus'`
+   - mine only matching source filenames:
+     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_CASES_FROM_EXPORT_ARGS='--include-source-regex ^IMG_'`
+   - mine only specific signal strengths:
+     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_CASES_FROM_EXPORT_ARGS='--include-signal-strengths high,medium'`
+   - mine only specific emit statuses:
+     `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/export OCR_CASES_FROM_EXPORT_ARGS='--include-emit-statuses skipped_low_confidence'`
 7. Default local artifacts:
    - `.local/eval_cases/cgpt_export_attachment_index.json`
    - `.local/eval_cases/cgpt_export_behaviour_eval_ocr_ready.json`
@@ -984,6 +1003,7 @@ Current policy:
 8. Review diagnostics:
    - review file now includes a top-level `summary`:
      - `conversation_files`, `episodes`
+     - `skipped_filtered_conversations`, `skipped_filtered_episodes`
      - `signal_strength_counts`, `lane_counts`
      - `emit_status_counts`, `lane_emit_status_counts`
    - each review episode now includes:

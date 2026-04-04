@@ -125,9 +125,22 @@
   - transcript miner now preserves compact numeric entry phrases from framed
     and code-block assistant OCR lines (for example `1745`, `200226`) so
     valid timestamp/date transcriptions are not dropped before anchoring.
+  - transcript miner scope controls are active for targeted kernels:
+    - conversation/title/source regex filters:
+      `--include-conversation-regex`, `--exclude-conversation-regex`,
+      `--include-title-regex`, `--exclude-title-regex`,
+      `--include-source-regex`, `--exclude-source-regex`
+    - lane/signal/status filters:
+      `--include-lanes`, `--include-signal-strengths`,
+      `--include-emit-statuses`
+    - Make aliases:
+      `ocrminehand`, `ocrminetype`, `ocrmineillu`,
+      `ocrminehigh`, `ocrminelow`, `ocrminebacklog`
+    - filter diagnostics are explicit in summaries:
+      `skipped_filtered_conversations`, `skipped_filtered_episodes`
   - correction-anchor hardening is active:
     - correction phrases only drive high-confidence anchors when they overlap
-      with OCR transcription phrases
+    with OCR transcription phrases
     - review diagnostics include `correction_overlap_signal`
     - off-topic/late correction phrases no longer pollute anchor terms
   - low-confidence review rows are now filtered to OCR-signaled episodes only:
