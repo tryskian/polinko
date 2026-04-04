@@ -268,6 +268,7 @@ COMPACT_24H_TIME_RX = re.compile(r"^(?:[01]\d|2[0-3])[0-5]\d$")
 COMPACT_YEAR_SUFFIX_DATE_RX = re.compile(r"^\d{4,8}(?:24|25|26)$")
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 VALID_LANES = {"handwriting", "typed", "illustration"}
+VALID_SIGNAL_STRENGTHS = {"high", "medium", "low"}
 
 
 @dataclass
@@ -828,6 +829,7 @@ def build_from_export(
     include_conversation_regex: str = "",
     exclude_conversation_regex: str = "",
     include_lanes: set[str] | None = None,
+    include_signal_strengths: set[str] | None = None,
 ) -> dict[str, int]:
     conversations_dir = export_root / "conversations"
     assets_dir = export_root / "assets"
@@ -846,6 +848,20 @@ def build_from_export(
                 + ", ".join(invalid_lanes)
                 + ". Expected one of: "
                 + ", ".join(sorted(VALID_LANES))
+            )
+    if include_signal_strengths is not None:
+        include_signal_strengths = {
+            strength.strip().lower() for strength in include_signal_strengths if strength.strip()
+        }
+        invalid_signal_strengths = sorted(
+            strength for strength in include_signal_strengths if strength not in VALID_SIGNAL_STRENGTHS
+        )
+        if invalid_signal_strengths:
+            raise ValueError(
+                "Invalid signal-strength filters: "
+                + ", ".join(invalid_signal_strengths)
+                + ". Expected one of: "
+                + ", ".join(sorted(VALID_SIGNAL_STRENGTHS))
             )
 
     review_rows: list[dict[str, Any]] = []
@@ -1080,6 +1096,9 @@ def build_from_export(
             ):
                 signal_strength = "medium"
                 chosen_phrases = transcription_phrases[:5]
+            if include_signal_strengths is not None and signal_strength not in include_signal_strengths:
+                skipped_filtered_episodes += 1
+                continue
             anchor_source_phrases = chosen_phrases[:]
             if (
                 signal_strength == "high"
@@ -1498,6 +1517,11 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Comma-separated lane filter (handwriting,typed,illustration). Empty = all lanes.",
     )
+    parser.add_argument(
+        "--include-signal-strengths",
+        default="",
+        help="Comma-separated signal-strength filter (high,medium,low). Empty = all strengths.",
+    )
     return parser.parse_args()
 
 
@@ -1507,6 +1531,11 @@ def main() -> int:
         lane.strip().lower()
         for lane in str(args.include_lanes or "").split(",")
         if lane.strip()
+    } or None
+    include_signal_strengths = {
+        strength.strip().lower()
+        for strength in str(args.include_signal_strengths or "").split(",")
+        if strength.strip()
     } or None
     summary = build_from_export(
         Path(args.export_root).expanduser().resolve(),
@@ -1523,6 +1552,7 @@ def main() -> int:
         include_conversation_regex=str(args.include_conversation_regex or ""),
         exclude_conversation_regex=str(args.exclude_conversation_regex or ""),
         include_lanes=include_lanes,
+        include_signal_strengths=include_signal_strengths,
     )
     for key in (
         "conversation_files",

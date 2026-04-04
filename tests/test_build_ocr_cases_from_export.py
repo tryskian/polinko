@@ -644,6 +644,96 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                     include_lanes={"typed", "sketch"},
                 )
 
+    def test_build_respects_include_signal_strengths_and_counts_filtered_episodes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "img_high.jpg").write_bytes(b"not-a-real-image")
+            (assets / "img_medium.jpg").write_bytes(b"not-a-real-image")
+
+            conversation_high = {
+                "conversation_id": "conv-signal-high",
+                "title": "Signal High",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this exactly?"]},
+                            "metadata": {"attachments": [{"name": "img_high.jpg", "id": "file_signal_high"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["Here's the OCR:\n- alpha spiral field\n- tensor matrix ledger"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            conversation_medium = {
+                "conversation_id": "conv-signal-medium",
+                "title": "Signal Medium",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this exactly?"]},
+                            "metadata": {"attachments": [{"name": "img_medium.jpg", "id": "file_signal_medium"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["- alpha spiral field\n- tensor matrix ledger\n- delta mapping"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conv_signal_high.json").write_text(
+                json.dumps(conversation_high),
+                encoding="utf-8",
+            )
+            (conversations / "conv_signal_medium.json").write_text(
+                json.dumps(conversation_medium),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                include_signal_strengths={"high"},
+            )
+
+            self.assertEqual(summary["conversation_files"], 2)
+            self.assertEqual(summary["skipped_filtered_conversations"], 0)
+            self.assertEqual(summary["skipped_filtered_episodes"], 1)
+            self.assertEqual(summary["high_signal_strength"], 1)
+            self.assertEqual(summary["medium_signal_strength"], 0)
+            review = json.loads(output_review.read_text(encoding="utf-8"))
+            self.assertEqual(review["summary"]["skipped_filtered_episodes"], 1)
+            self.assertEqual(len(review["episodes"]), 1)
+            self.assertEqual(review["episodes"][0]["signal_strength"], "high")
+
     def test_build_promotes_medium_for_askless_typed_framed_transcription(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
