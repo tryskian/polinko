@@ -44,6 +44,14 @@ OCR-forward reliability loops, and production-ready API foundations.
 - Human-directed precision takes priority over agent-side summarisation/cleanup.
 - Keep deprecated workflow context in `.archive/live_archive/`; keep active docs and
   runtime specs binary-only.
+- Never delete local files as a first action:
+  - archive first
+  - delete only when explicitly approved as a final cleanup step
+- Beta tracking policy:
+  - track legacy eval docs/assets in `docs/eval/legacy/` for transition
+    traceability
+  - keep raw DB snapshots and confidential internals local-only unless
+    explicitly approved for tracking
 - During eval wiring lock, avoid DB init/refresh flows; allow only archive/reset
   maintenance commands until spec sign-off
   (`docs/runtime/RUNBOOK.md` is canonical in this phase).
