@@ -154,6 +154,10 @@ notebook nb notes:
 		$(PYTHON) -m jupyter lab --notebook-dir="$(NOTEBOOK_DIR_ABS)" "$(NOTEBOOK_DIR_ABS)"; \
 	fi
 
+.PHONY: manual-evals-db manualdb
+manual-evals-db manualdb:
+	$(PYTHON) -m tools.build_manual_evals_db
+
 ui: ui-dev
 
 ui-install:
