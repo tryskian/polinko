@@ -14,6 +14,10 @@ OCR_INTENT_PATTERN = (
     r"what does (this|it) say|what(?:'s| is) written|can you read|read (?:this|it)(?!\s+and\s+weep)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew[\s-]?drop\b|\b(?:scribbles?|squibbles?|scrumbles?)\s+(?:and|&)\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratch(?:ed)?\s+out\b|\bcross(?:ed|ing)?\s+out\b|\bstrike[\s-]?through\b|\bstrikethrough\b"
 )
 ASK_RX = re.compile(OCR_INTENT_PATTERN, re.IGNORECASE)
+OCR_MARKUP_INTENT_RX = re.compile(
+    r"\bscratch(?:ed)?\s+out\b|\bcross(?:ed|ing)?\s+out\b|\bstrike[\s-]?through\b|\bstrikethrough\b",
+    re.IGNORECASE,
+)
 HANDWRITING_HINT_RX = re.compile(
     r"\bhandwrit\w*\b|\bcursive\b|\bscript\b|\bnotebook\b|\bsketchbook\b|\bjournal\b|\bink\b|\bpen\b|\bmanifold\b",
     re.IGNORECASE,
@@ -1092,6 +1096,15 @@ def build_from_export(
                 and has_multi_token_transcription
                 and len(transcription_anchor_terms) >= 3
             )
+            ask_markup_handwriting_signal = (
+                lane == "handwriting"
+                and ocr_intent_signal
+                and not ocr_literal_intent_signal
+                and bool(OCR_MARKUP_INTENT_RX.search(ask_followup_text))
+                and ocr_framing_signal
+                and has_multi_token_transcription
+                and len(transcription_anchor_terms) >= 3
+            )
             strong_high_transcription_signal = (
                 ocr_literal_intent_signal
                 and ocr_framing_signal
@@ -1119,7 +1132,9 @@ def build_from_export(
                     or askless_handwriting_signal
                 )
             )
-            medium_intent_signal = medium_intent_signal or askless_typed_signal
+            medium_intent_signal = (
+                medium_intent_signal or askless_typed_signal or ask_markup_handwriting_signal
+            )
             if high_correction_signal:
                 signal_strength = "high"
                 chosen_phrases = followup_correction_phrases[:5]

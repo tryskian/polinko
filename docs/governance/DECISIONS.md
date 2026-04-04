@@ -2980,3 +2980,31 @@
   - keep default behaviour unchanged unless an override is provided.
 - Why: avoids long blocked kernel runs under timeout pressure while preserving
   deterministic operator control for slice diagnostics.
+
+## D-187: Promote explicit handwriting markup OCR asks under framed transcription
+
+- Date: `2026-04-04`
+- Category: `ocr_hardening`
+- Tags: `ocr_mining`, `handwriting`, `signal_strength`, `precision`
+- Decision:
+  - add a dedicated markup-intent matcher in
+    `tools/build_ocr_cases_from_export.py` for:
+    - `strikethrough` / `strike-through`
+    - `crossed out` / `crossing out`
+    - `scratched out` / `scratch out`
+  - promote these rows from `low` to `medium` only when all of the following
+    are true:
+    - lane is `handwriting`
+    - OCR intent is present but not literal OCR phrasing
+    - assistant output has OCR framing signal
+    - transcription has multi-token + anchor-strength quality
+  - keep existing low-confidence filtering unchanged for non-markup asks.
+  - add regression in `tests/test_build_ocr_cases_from_export.py`:
+    - `test_build_promotes_markup_handwriting_with_framed_transcription`
+- Validation:
+  - `python -m unittest tests.test_build_ocr_cases_from_export`
+  - `make gate`
+  - `CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT make ocrmine`
+- Why: explicit handwriting correction-markup asks are OCR intent in practice.
+  This keeps strict precision while recovering one actionable medium-signal row
+  that was previously stuck in low-confidence backlog.

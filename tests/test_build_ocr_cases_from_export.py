@@ -2285,6 +2285,73 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertFalse(review["correction_overlap_signal"])
             self.assertEqual(json.loads(output_growth.read_text(encoding="utf-8"))["cases"], [])
 
+    def test_build_promotes_markup_handwriting_with_framed_transcription(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "IMG_2004.jpg").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-markup-hand-medium",
+                "title": "Journal page",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["Did another strikethrough for focus on this one :)"]},
+                            "metadata": {"attachments": [{"name": "IMG_2004.jpg", "id": "file_markup_hand"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {
+                                "parts": [
+                                    "Here’s the OCR:\n- gyrus folds within\n- tensor field remains stable"
+                                ]
+                            },
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-markup-hand-medium.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_growth = Path(tmp_dir) / "cases_growth.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_growth=output_growth,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["medium_signal_strength"], 1)
+            self.assertEqual(summary["handwriting_cases_written"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["signal_strength"], "medium")
+            self.assertTrue(review["ocr_intent_signal"])
+            self.assertFalse(review["ocr_literal_intent_signal"])
+            self.assertTrue(review["ocr_framing_signal"])
+
     def test_build_promotes_askless_handwriting_with_followup_correction_signal(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
