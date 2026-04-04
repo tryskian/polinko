@@ -2864,3 +2864,24 @@
 - Why: improve fail-first signal capture (especially timestamp/date-heavy notes),
   preserve strict binary gate semantics, and reduce operator overhead by giving
   one deterministic OCR kernel command for full-cycle execution.
+
+## D-180: Treat overlay evidence as an OCR disambiguation lane and isolate stale-memory risk
+
+- Date: `2026-04-04`
+- Category: `eval_quality`
+- Tags: `ocr`, `overlay_disambiguation`, `memory_carryover`, `human_review`
+- Decision:
+  - record legacy overlay screenshots as valid OCR evidence inputs for
+    disambiguation analysis (not as direct gate-pass justification).
+  - classify "stale summary / stale memory carryover" as a separate failure mode
+    from pure glyph-read failure.
+  - keep behaviour+OCR split:
+    - human-led manual behaviour evals continue in parallel for nuanced cases.
+    - engineering OCR kernels continue automated fail-first hardening.
+  - when a run shows memory anchoring, prioritise:
+    - stateless re-read comparison
+    - observed-vs-expected extraction checks
+    - contradiction tracking across sequential attempts.
+- Why: overlay markup can improve character visibility, but legacy evidence
+  shows that summary/memory anchoring can still degrade productivity and
+  correctness even when visual signal is sufficient.
