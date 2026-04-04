@@ -103,6 +103,7 @@ def build_report(
     *,
     stability_payload: dict[str, Any],
     focus_case_map: dict[str, dict[str, Any]],
+    growth_fail_cohort_payload: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     raw_cases = stability_payload.get("cases")
     if not isinstance(raw_cases, list):
@@ -210,10 +211,22 @@ def build_report(
             "fail_case_rate": round((fails / total) if total else 0.0, 4),
         }
 
+    rate_limited_cases = 0
+    rate_limit_abort_runs = 0
+    if isinstance(growth_fail_cohort_payload, dict):
+        growth_summary = growth_fail_cohort_payload.get("summary")
+        if isinstance(growth_summary, dict):
+            rate_limited_cases = int(growth_summary.get("rate_limited_cases", 0) or 0)
+            rate_limit_abort_runs = int(growth_summary.get("rate_limit_abort_runs", 0) or 0)
+    rate_limit_pressure = bool(rate_limited_cases > 0 or rate_limit_abort_runs > 0)
+
     summary = {
         "cases_total": total_cases,
         "failing_cases": len(failing_case_rows),
         "failing_case_rate": round((len(failing_case_rows) / total_cases) if total_cases else 0.0, 4),
+        "rate_limit_pressure": rate_limit_pressure,
+        "rate_limited_cases": rate_limited_cases,
+        "rate_limit_abort_runs": rate_limit_abort_runs,
         "lane_summary": lane_summary,
         "top_missing_ordered_phrases": [
             {"phrase": phrase, "count": count}
@@ -278,15 +291,26 @@ def build_report(
             lane_summary.items(),
             key=lambda item: (-int(item[1].get("total_cases", 0) or 0), item[0]),
         )[0][0]
-        summary["recommended_next_kernel"] = {
-            "lane": str(top_lane),
-            "bucket": "none",
-            "count": 0,
-            "hint": (
-                f"No active fail hotspots. Widen exploratory probes in {top_lane} lane "
-                "to recover diagnostic fail signal."
-            ),
-        }
+        if rate_limit_pressure:
+            summary["recommended_next_kernel"] = {
+                "lane": str(top_lane),
+                "bucket": "rate_limit_backoff",
+                "count": int(rate_limited_cases),
+                "hint": (
+                    "Focus replay skipped/pressured by rate limits. "
+                    "Wait for backoff window, then rerun focus stability before drift conclusions."
+                ),
+            }
+        else:
+            summary["recommended_next_kernel"] = {
+                "lane": str(top_lane),
+                "bucket": "none",
+                "count": 0,
+                "hint": (
+                    f"No active fail hotspots. Widen exploratory probes in {top_lane} lane "
+                    "to recover diagnostic fail signal."
+                ),
+            }
     else:
         summary["recommended_next_kernel"] = None
     return {
@@ -321,6 +345,9 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
     lines.append(f"| cases_total | {summary['cases_total']} |")
     lines.append(f"| failing_cases | {summary['failing_cases']} |")
     lines.append(f"| failing_case_rate | {summary['failing_case_rate']:.4f} |")
+    lines.append(f"| rate_limit_pressure | {bool(summary.get('rate_limit_pressure', False))} |")
+    lines.append(f"| rate_limited_cases | {int(summary.get('rate_limited_cases', 0) or 0)} |")
+    lines.append(f"| rate_limit_abort_runs | {int(summary.get('rate_limit_abort_runs', 0) or 0)} |")
     lines.append("")
 
     if lane_summary:
@@ -495,6 +522,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to focused OCR case map JSON.",
     )
     parser.add_argument(
+        "--growth-fail-cohort",
+        default=".local/eval_cases/ocr_growth_fail_cohort.json",
+        help="Optional path to OCR growth fail cohort JSON (for rate-limit pressure context).",
+    )
+    parser.add_argument(
         "--output-json",
         default=".local/eval_reports/ocr_focus_fail_patterns.json",
         help="Output path for fail-pattern summary JSON.",
@@ -511,6 +543,7 @@ def main() -> int:
     args = build_parser().parse_args()
     stability_report = Path(args.stability_report).expanduser()
     focus_cases = Path(args.focus_cases).expanduser()
+    growth_fail_cohort = Path(args.growth_fail_cohort).expanduser()
     output_json = Path(args.output_json).expanduser()
     output_markdown = Path(args.output_markdown).expanduser()
 
@@ -523,9 +556,14 @@ def main() -> int:
 
     stability_payload = _load_json_object(stability_report)
     focus_case_map = _load_case_map(focus_cases)
+    growth_fail_cohort_payload: dict[str, Any] | None = None
+    if growth_fail_cohort.is_file():
+        maybe_cohort = _load_json_object(growth_fail_cohort)
+        growth_fail_cohort_payload = maybe_cohort if isinstance(maybe_cohort, dict) else None
     report = build_report(
         stability_payload=stability_payload,
         focus_case_map=focus_case_map,
+        growth_fail_cohort_payload=growth_fail_cohort_payload,
     )
     report["stability_report"] = str(stability_report)
     report["focus_cases_path"] = str(focus_cases)

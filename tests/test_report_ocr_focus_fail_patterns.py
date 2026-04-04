@@ -193,6 +193,64 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
             },
         )
 
+    def test_build_report_prefers_backoff_hint_when_rate_limit_pressure_present(self) -> None:
+        stability_payload: dict[str, Any] = {
+            "cases": [
+                {
+                    "id": "gx-pass-a",
+                    "fail_runs": 0,
+                    "pass_runs": 1,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "sample_reasons": [],
+                    "text_variant_count": 1,
+                    "char_count_span": 0,
+                },
+                {
+                    "id": "gx-pass-b",
+                    "fail_runs": 0,
+                    "pass_runs": 1,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "sample_reasons": [],
+                    "text_variant_count": 1,
+                    "char_count_span": 0,
+                },
+            ]
+        }
+        focus_case_map = {
+            "gx-pass-a": {"id": "gx-pass-a", "lane": "typed"},
+            "gx-pass-b": {"id": "gx-pass-b", "lane": "typed"},
+        }
+        growth_fail_cohort_payload: dict[str, Any] = {
+            "summary": {
+                "rate_limited_cases": 3,
+                "rate_limit_abort_runs": 0,
+            }
+        }
+
+        report = build_report(
+            stability_payload=stability_payload,
+            focus_case_map=focus_case_map,
+            growth_fail_cohort_payload=growth_fail_cohort_payload,
+        )
+        summary = report["summary"]
+        self.assertTrue(summary["rate_limit_pressure"])
+        self.assertEqual(summary["rate_limited_cases"], 3)
+        self.assertEqual(summary["rate_limit_abort_runs"], 0)
+        self.assertEqual(
+            summary["recommended_next_kernel"],
+            {
+                "lane": "typed",
+                "bucket": "rate_limit_backoff",
+                "count": 3,
+                "hint": (
+                    "Focus replay skipped/pressured by rate limits. "
+                    "Wait for backoff window, then rerun focus stability before drift conclusions."
+                ),
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
