@@ -2885,3 +2885,20 @@
 - Why: overlay markup can improve character visibility, but legacy evidence
   shows that summary/memory anchoring can still degrade productivity and
   correctness even when visual signal is sufficient.
+
+## D-181: Add negative-anchor binary lane for OCR contradiction handling
+
+- Date: `2026-04-04`
+- Category: `ocr_hardening`
+- Tags: `binary_gate`, `negative_anchor`, `contradiction`, `review_loop`
+- Decision:
+  - treat user contradiction cues of the form "it is NOT X" as hard negative
+    anchors in OCR review flow.
+  - split the correction into two binary checks:
+    - lane A: reject repeated prior guess (`NOT previous_read`).
+    - lane B: reject inferred punctuation/token assumption (`NOT inferred_mark`),
+      then force re-read from image evidence.
+  - on contradiction, disallow "memory restatement" responses; require a
+    refreshed observed-text attempt.
+- Why: this preserves strict binary gating while preventing stale-loop repeats
+  when users provide explicit disconfirmation.
