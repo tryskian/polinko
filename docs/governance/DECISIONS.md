@@ -2951,3 +2951,18 @@
     - UI lanes consume this contract without redefining eval logic
 - Why: keeps progress focused on a stable backend contract first, so visual
   iteration can move faster without policy drift.
+
+## D-185: Pin UI as deferred lane while backend kernels advance
+
+- Date: `2026-04-04`
+- Category: `runtime_engineering`
+- Tags: `ui_deferred`, `kernel_focus`, `backend_first`, `execution_order`
+- Decision:
+  - pin UI refinement as a deferred lane for now.
+  - continue active execution focus on backend/eval kernels:
+    - OCR mining hardening
+    - manual eval data surfaces
+    - API contract stability and validation
+  - UI work remains consumption/presentation-only against stable contracts.
+- Why: prevents context switching and keeps engineering throughput on the
+  highest-leverage reliability work.

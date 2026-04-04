@@ -124,3 +124,4 @@ OCR-forward reliability loops, and production-ready API foundations.
   - expose read-only API endpoints for summary + runs + thumbnails + session
     feedback/checkpoint context
   - keep UI work presentation-only against that API contract
+  - defer UI styling/interaction iterations until backend kernels are stable

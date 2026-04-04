@@ -1157,7 +1157,7 @@ Current policy:
 2. Contract-first implementation order:
    - data surface builder/query helper
    - read-only API endpoint(s)
-   - presentation/UI consumption layer
+   - presentation/UI consumption layer (deferred until backend kernel set is stable)
 3. Constraints:
    - local-only runtime surface
    - no eval-policy mutation in UI lane
