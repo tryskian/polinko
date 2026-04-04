@@ -363,6 +363,74 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertTrue(review["ocr_framing_signal"])
             self.assertIn("Alpha spiral field", review["chosen_phrases"])
 
+    def test_build_respects_include_title_regex(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "img_001.jpg").write_bytes(b"not-a-real-image")
+            (assets / "img_002.jpg").write_bytes(b"not-a-real-image")
+
+            def make_conversation(conversation_id: str, title: str, image_name: str) -> dict[str, object]:
+                return {
+                    "conversation_id": conversation_id,
+                    "title": title,
+                    "mapping": {
+                        "1": {
+                            "message": {
+                                "create_time": 1,
+                                "author": {"role": "user"},
+                                "content": {"parts": ["can you transcribe this note?"]},
+                                "metadata": {"attachments": [{"name": image_name, "id": f"file_{conversation_id}"}]},
+                            }
+                        },
+                        "2": {
+                            "message": {
+                                "create_time": 2,
+                                "author": {"role": "assistant"},
+                                "content": {"parts": ['it reads: "alpha spiral field"']},
+                                "metadata": {},
+                            }
+                        },
+                    },
+                }
+
+            (conversations / "conv_focus.json").write_text(
+                json.dumps(make_conversation("conv-focus", "Focus Session", "img_001.jpg")),
+                encoding="utf-8",
+            )
+            (conversations / "conv_misc.json").write_text(
+                json.dumps(make_conversation("conv-misc", "Misc Session", "img_002.jpg")),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                include_title_regex="focus",
+            )
+
+            self.assertEqual(summary["conversation_files"], 2)
+            self.assertEqual(summary["skipped_filtered_conversations"], 1)
+            self.assertEqual(summary["cases_written"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))
+            self.assertEqual(review["summary"]["skipped_filtered_conversations"], 1)
+            self.assertEqual(len(review["episodes"]), 1)
+            self.assertEqual(review["episodes"][0]["conversation_title"], "Focus Session")
+
     def test_build_promotes_medium_for_askless_typed_framed_transcription(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"

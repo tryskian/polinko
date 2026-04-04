@@ -822,6 +822,8 @@ def build_from_export(
     output_review: Path,
     max_cases: int,
     max_growth_cases: int = 600,
+    include_title_regex: str = "",
+    exclude_title_regex: str = "",
 ) -> dict[str, int]:
     conversations_dir = export_root / "conversations"
     assets_dir = export_root / "assets"
@@ -846,11 +848,21 @@ def build_from_export(
     growth_quarantine_cases_written = 0
     growth_regex_only_cases_written = 0
 
+    include_title_rx = re.compile(include_title_regex, re.IGNORECASE) if include_title_regex else None
+    exclude_title_rx = re.compile(exclude_title_regex, re.IGNORECASE) if exclude_title_regex else None
+
     conversation_files = sorted(conversations_dir.glob("*.json"))
+    skipped_filtered_conversations = 0
     for conversation_path in conversation_files:
         convo = _load_json(conversation_path)
         conversation_id = str(convo.get("conversation_id", "")).strip() or conversation_path.stem
         title = str(convo.get("title", "")).strip()
+        if include_title_rx and not include_title_rx.search(title):
+            skipped_filtered_conversations += 1
+            continue
+        if exclude_title_rx and exclude_title_rx.search(title):
+            skipped_filtered_conversations += 1
+            continue
         mapping = convo.get("mapping") or {}
         if not isinstance(mapping, dict):
             continue
@@ -1339,6 +1351,7 @@ def build_from_export(
             "summary": {
                 "conversation_files": len(conversation_files),
                 "episodes": len(review_rows),
+                "skipped_filtered_conversations": skipped_filtered_conversations,
                 "signal_strength_counts": signal_strength_counts,
                 "lane_counts": lane_counts,
                 "emit_status_counts": emit_status_counts,
@@ -1354,6 +1367,7 @@ def build_from_export(
     return {
         "conversation_files": len(conversation_files),
         "episodes": len(review_rows),
+        "skipped_filtered_conversations": skipped_filtered_conversations,
         "high_signal_strength": high,
         "medium_signal_strength": medium,
         "low_signal_strength": low,
@@ -1427,6 +1441,16 @@ def parse_args() -> argparse.Namespace:
         default=600,
         help="Maximum number of runnable growth-lane cases to emit.",
     )
+    parser.add_argument(
+        "--include-title-regex",
+        default="",
+        help="Only mine conversations whose title matches this regex (case-insensitive).",
+    )
+    parser.add_argument(
+        "--exclude-title-regex",
+        default="",
+        help="Skip conversations whose title matches this regex (case-insensitive).",
+    )
     return parser.parse_args()
 
 
@@ -1442,10 +1466,13 @@ def main() -> int:
         output_review=Path(args.output_review).expanduser().resolve(),
         max_cases=int(args.max_cases),
         max_growth_cases=int(args.max_growth_cases),
+        include_title_regex=str(args.include_title_regex or ""),
+        exclude_title_regex=str(args.exclude_title_regex or ""),
     )
     for key in (
         "conversation_files",
         "episodes",
+        "skipped_filtered_conversations",
         "high_signal_strength",
         "medium_signal_strength",
         "low_signal_strength",
