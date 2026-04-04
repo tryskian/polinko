@@ -3,6 +3,10 @@
 Polinko is a local-first GPT assistant app with a FastAPI backend, CLI workflow,
 and deterministic eval gates.
 
+Current release lane: `beta v2.0`.
+
+Snapshot label for this baseline: `polinko-build-snapshot-040426`.
+
 ## Build Blocks
 
 - Runtime and config: Python runtime with `.env`-driven config loading and
