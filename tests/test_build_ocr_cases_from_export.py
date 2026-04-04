@@ -264,6 +264,18 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertNotIn("seems", anchors)
         self.assertNotIn("something", anchors)
 
+    def test_anchor_terms_filter_meta_transcription_words(self) -> None:
+        anchors = _anchor_terms_for_phrases(
+            [
+                "please transcribe this journal thing",
+                "gyrus folds within",
+            ]
+        )
+        self.assertIn("gyrus", anchors)
+        self.assertNotIn("transcribe", anchors)
+        self.assertNotIn("journal", anchors)
+        self.assertNotIn("thing", anchors)
+
     def test_anchor_and_ordered_terms_drop_cropping_metadata_tokens(self) -> None:
         anchors = _anchor_terms_for_phrases(
             [

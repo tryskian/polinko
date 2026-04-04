@@ -64,6 +64,8 @@ ANCHOR_STOPWORDS = {
 }
 ANCHOR_META_WORDS = {
     "transcription",
+    "transcribe",
+    "transcribed",
     "overlay",
     "interpretation",
     "binaric",
@@ -101,6 +103,10 @@ ANCHOR_META_WORDS = {
     "found",
     "screenshot",
     "html",
+    "journal",
+    "journaling",
+    "thing",
+    "things",
 }
 ANCHOR_WEAK_WORDS = {
     "there",

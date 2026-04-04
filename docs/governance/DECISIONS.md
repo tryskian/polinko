@@ -3008,3 +3008,23 @@
 - Why: explicit handwriting correction-markup asks are OCR intent in practice.
   This keeps strict precision while recovering one actionable medium-signal row
   that was previously stuck in low-confidence backlog.
+
+## D-188: Filter transcription-meta tokens from OCR growth anchor terms
+
+- Date: `2026-04-04`
+- Category: `ocr_hardening`
+- Tags: `ocr_growth`, `anchor_quality`, `false_fail_reduction`, `precision`
+- Decision:
+  - extend anchor meta-word filtering in
+    `tools/build_ocr_cases_from_export.py` to exclude transcription-meta tokens:
+    - `transcribe`, `transcribed`, `journal`, `journaling`, `thing`, `things`
+  - keep lexical OCR-bearing terms unchanged.
+  - add regression in `tests/test_build_ocr_cases_from_export.py`:
+    - `test_anchor_terms_filter_meta_transcription_words`
+- Validation:
+  - `python -m unittest tests.test_build_ocr_cases_from_export`
+  - `make gate`
+  - `CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT make ocrmine`
+- Why: these words create low-value `must_contain_any` anchors that inflate
+  false fails in growth slices. Filtering them keeps fail signal tied to OCR
+  content rather than operator phrasing.

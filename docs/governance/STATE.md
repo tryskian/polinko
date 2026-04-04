@@ -702,6 +702,11 @@
   - low signal rows `24 -> 23`
   - emitted cases `84 -> 85`
   - one previously skipped `strikethrough` row now emitted as medium.
+- Growth-anchor hygiene update (same day):
+  - transcription-meta tokens are now excluded from anchor construction:
+    `transcribe`, `transcribed`, `journal`, `journaling`, `thing`, `things`.
+  - this removes low-value `must_contain_any` anchors and keeps growth-fail
+    signal tied to OCR-bearing terms.
 
 ## Portfolio Timeline Snapshot (March 28, 2026)
 
