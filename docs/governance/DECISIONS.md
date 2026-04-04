@@ -223,15 +223,19 @@
   input and auto-closure when a later PASS artifact exists for the same chat.
 - Why: Preserve remediation traceability and avoid losing unresolved FAIL
   context between eval cycles.
+- Status: Archived from active runtime workflow. Legacy tooling moved to
+  `.archive/live_archive/legacy_eval/evidence_tooling/`.
 
 ## D-028: Portfolio metadata audit as a strict gate
 
 - Category: `evidence_governance`
 - Tags: `metadata`, `audit`, `portfolio_readiness`, `strict_gate`
-- Decision: Add a dedicated metadata audit command (`make portfolio-metadata-audit`)
-  that validates evidence index completeness and evidence-log field coverage.
+- Decision: Add a dedicated metadata audit command that validates evidence
+  index completeness and evidence-log field coverage.
 - Why: Ensures portfolio claims remain traceable to complete, machine-readable
   metadata before publication.
+- Status: Superseded. Portfolio evidence lane is deprecated in active project
+  flow; tooling archived under `.archive/live_archive/legacy_eval/evidence_tooling/`.
 
 ## D-029: Configurable hallucination gate threshold + calibration helper
 
@@ -414,7 +418,7 @@
   (`tools/eval_trace_artifacts.py`, schema `polinko.eval_trace.v1`) and wire
   report-producing eval tooling + hybrid readiness checker to append JSONL
   traces to
-  `docs/portfolio/raw_evidence/INBOX/eval_trace_artifacts.jsonl`.
+  `.archive/live_archive/legacy_eval/raw_evidence/INBOX/eval_trace_artifacts.jsonl`.
 - Why: Creates a stable evidence spec for hybrid OpenAI adoption phases
   without changing runtime `/chat` behaviour, while improving auditability and
   promotion confidence for future OpenAI-native tooling pilots.
@@ -644,7 +648,7 @@
 - Tags: `drift_control`, `readme_spec`, `local_ci_parity`
 - Decision: Add deterministic preflight guard checks for README-to-route parity,
   Makefile tool-module wiring, local lint parity with CI scope, and local-only
-  eval-cleanup guard behaviour.
+  helper-tool guard behaviour.
 - Why: Supports step-by-step fresh-path execution without hard resets by
   catching spec drift and local-only dependency leaks before wider refactor
   moves.
@@ -951,7 +955,7 @@
 - Decision:
   - move deprecated coordination docs from top-level `docs/` into:
     - `.archive/live_archive/legacy_coordination/`
-  - keep `docs/governance/WORKSTREAMS.md` active and refresh it for current
+  - keep collaboration workflow notes active and refresh them for current
     imagineer/engineer `Reasoning Loops` collaboration semantics
   - remove `.DS_Store` files from `docs/` surfaces
 - Why: Reduces operator clutter in active docs while preserving historical
@@ -2282,8 +2286,7 @@
     model-driven and evidence-linked.
   - capture as transcript evidence in:
     - `docs/peanut/transcripts/co_reasoning/pattern_learning_over_prescriptive_instruction_2026-04-03.md`
-  - record method excerpt in:
-    - `docs/peanut/refs/PEANUT_METHOD_EXCERPTS.md`
+  - record method excerpt in the local peanut refs lane
 - Why: over-prescriptive prompts were observed to increase confusion and reduce
   adaptation quality. Pattern-led execution with explicit checks preserves
   reliability while improving flow and focus.
@@ -2816,7 +2819,6 @@
     - if `eval_viz.db` is unavailable, the page still renders from raw OCR
       history without inventing eval detail
   - docs alignment:
-    - `docs/governance/POLINKO_WORKFLOW.md`
     - `docs/runtime/ARCHITECTURE.md`
     - `docs/runtime/RUNBOOK.md`
   - regression coverage:

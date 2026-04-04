@@ -116,16 +116,12 @@
 
 1. Non-build internal docs are local-only by default and ignored by git.
 2. Use these local-only paths for confidential notes/material:
-   - `docs/peanut/refs/FIGMA_NODE_TRACKER.md`
-   - `docs/peanut/refs/PEANUT_TOOLING_REF.md`
    - `docs/internal/`
    - `docs/peanut/`
-   - `docs/portfolio/`
    - `.archive/live_archive/legacy_eval/`
    - `.archive/live_archive/legacy_human_reference/`
 3. Build/source-of-truth docs stay tracked:
    - `docs/governance/CHARTER.md`
-   - `docs/governance/WORKSTREAMS.md`
    - `docs/runtime/ARCHITECTURE.md`
    - `docs/runtime/RUNBOOK.md`
    - `docs/governance/STATE.md`
@@ -1172,17 +1168,13 @@ Current policy:
 
 ## Start Fresh Eval Cycle
 
-1. Clean generated eval chats:
-   - `make eval-cleanup`
-   - note: this is local-only helper behaviour; if the local script is absent,
-     the target exits cleanly and skips cleanup.
-2. If needed, reset one chat session:
+1. If needed, reset one chat session:
    - `POST /session/reset` with `{"session_id":"<chat-id>"}`.
-3. Re-run deterministic baseline gate:
+2. Re-run deterministic baseline gate:
    - `make quality-gate-deterministic`
-4. Regenerate fresh eval report artefacts:
+3. Regenerate fresh eval report artefacts:
    - `make eval-reports-parallel`
-5. Keep historical context in Git history; only clear active checkpoint state for
+4. Keep historical context in Git history; only clear active checkpoint state for
    the next clean eval pass.
 
 ## Export CLI Transcript

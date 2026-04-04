@@ -1,6 +1,5 @@
 ignores:
   - "docs/peanut/transcripts/**/*.md"
-  - "docs/portfolio/raw_evidence/**/*.md"
 
 config:
   MD013: false

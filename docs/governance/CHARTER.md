@@ -18,11 +18,18 @@ OCR-forward reliability loops, and production-ready API foundations.
 ## Engineering Principles
 
 - Keep behaviour stable and backend-first; web UI is archived from active operations.
+- Eval direction/orchestration is owned by the core backend lane; UI work is
+  presentation-only and must not redefine eval policy.
 - Preserve prompt continuity through minimal, explicit prompt instructions.
 - Fail fast on config/auth issues.
 - Prefer deterministic, testable backend changes.
 - Keep eval gate semantics strictly binary (`pass`/`fail`) across API, CLI, and
   tooling.
+- Keep operator notes out of gate logic:
+  - notes are for human review/refinement workflow
+  - notes must not mutate runtime config/prompt wiring by default
+  - behavioural changes come through explicit eval-process updates, validated in
+    the normal quality gates
 - Keep OCR as the primary reliability lane:
   - lockset lane is release-gating and must remain green
   - growth lane is fail-tolerant and used to measure pass-from-fail movement
@@ -56,18 +63,19 @@ OCR-forward reliability loops, and production-ready API foundations.
 - Collaboration model is `Reasoning Loops`:
   - imagineer leads hypotheses/theory framing, visual culture shape, and eval
     operations
+  - imagineer + engineer own eval process notes as a human co-reasoning layer
   - imagineer is not expected to run terminal commands or Git operations
   - engineer leads implementation, tooling/process decisions, validation, and
     execution recommendations
   - engineer executes commands, validations, and branch/PR/merge flow end-to-end
+  - auxiliary UI lanes may implement surfaces, but eval policy authority remains
+    with the core engineer/imagineer loop
 - Human work-management authority is required in co-reasoning:
   - human sets objective, scope boundaries, and acceptance criteria
   - human resolves ambiguous meaning-level trade-offs where no deterministic
     rule exists
   - human controls go/no-go and next-slice prioritisation
   - engineer executes proactively inside that control frame
-- Question-routing policy for answer-only vs execute mode is documented in:
-  - `docs/governance/POLINKO_WORKFLOW.md`
 
 ## Core Runtime
 

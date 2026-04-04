@@ -224,8 +224,8 @@
     runbook/state/handoff references
   - archived docs are hidden from explorer/search to reduce active-workflow
     clutter
-  - `docs/peanut/refs/PEANUT_TOOLING_REF.md` remains visible for day-to-day
-    operator use
+  - peanut reference notes remain local operator artifacts, outside the core
+    governance read set
 - Git-native retention checkpoint (March 27, 2026):
   - archive-folder workflow removed from active operations
     (`make eval-reset-baseline` removed)
@@ -253,8 +253,8 @@
   - active top-level docs now stay focused on current runtime/eval operations
     and research workflow
 - Docs consolidation checkpoint (March 29, 2026):
-  - active spec content is consolidated into seven canonical docs:
-    - `CHARTER`, `WORKSTREAMS`, `DECISIONS`, `SESSION_HANDOFF`, `STATE`,
+  - active spec content is consolidated into six canonical docs:
+    - `CHARTER`, `DECISIONS`, `SESSION_HANDOFF`, `STATE`,
       `ARCHITECTURE`, `RUNBOOK`
   - benchmark/eval spec details are now maintained directly in
     `docs/runtime/RUNBOOK.md`
@@ -549,9 +549,6 @@
 - OCR ambiguity/recovery eval harness is available via
   `make eval-ocr-recovery` with case template
   `docs/eval/cases/ocr_recovery_eval_cases.json`.
-- Evidence indexing now tracks FAIL remediation lifecycle with
-  `recommended_action`, `action_taken`, `status`, and optional PASS-linked
-  closure metadata.
 - Adaptive runtime note selection now applies decay-weighted feedback scoring,
   near-duplicate suppression, and a max of two active notes, with note-change
   events logged as `adaptive_style_notes_updated` to prevent prompt/input
@@ -567,8 +564,6 @@
 - Style eval cases now include co-reasoning stress scenarios for
   constraint-retention, meta-shift handling, anti-mimicry adaptation, and
   grounding-under-abstraction checks.
-- Portfolio metadata audit tooling is available (`make portfolio-metadata-audit`)
-  and validates evidence-index + evidence-log metadata completeness.
 - Integration tests exist and pass locally (`tests/test_api.py`).
 - Collaboration v1 supports explicit agent-role handoffs per chat with audit history.
 - OCR growth remediation now has a focused replay lane:
@@ -713,8 +708,6 @@
 - API tests: `tests/test_api.py`
 - Local API client: `tools/client.py`
 - Environment doctor: `tools/doctor_env.py`
-- Evidence index builder: `tools/build_evidence_index.py`
-- Portfolio metadata auditor: `tools/audit_portfolio_metadata.py`
 - Hallucination threshold calibrator: `tools/calibrate_hallucination_threshold.py`
 - CLIP A/B eval harness: `tools/eval_clip_ab.py`
 - Parallel eval orchestrator: `tools/eval_parallel_orchestrator.py`

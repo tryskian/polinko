@@ -245,7 +245,10 @@ class EvalVizTests(unittest.TestCase):
         self.assertIn("--lane-handwriting", html)
         self.assertIn("const REFRESH_MS = 2500;", html)
         self.assertIn("const DEFAULT_MAX_CHART_POINTS = 20;", html)
-        self.assertNotIn('id="evalRows"', html)
+        self.assertIn('id="evalRows"', html)
+        self.assertIn('id="evalEmpty"', html)
+        self.assertIn('id="pollStatus"', html)
+        self.assertIn('id="refreshNow"', html)
         self.assertNotIn('id="detailCard"', html)
 
 

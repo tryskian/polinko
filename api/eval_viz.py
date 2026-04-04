@@ -772,6 +772,152 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       text-align: center;
     }
 
+    .eval-panel {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .eval-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .eval-title {
+      font-size: 0.96rem;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    .eval-subtitle {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .eval-table-wrap {
+      max-height: 34vh;
+      overflow: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(84, 67, 49, 0.12);
+      background: rgba(255, 255, 255, 0.48);
+    }
+
+    table.eval-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .eval-table th,
+    .eval-table td {
+      text-align: left;
+      vertical-align: top;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(84, 67, 49, 0.1);
+    }
+
+    .eval-table th {
+      position: sticky;
+      top: 0;
+      background: rgba(244, 241, 233, 0.96);
+      color: var(--ink-soft);
+      font-weight: 600;
+      z-index: 1;
+    }
+
+    .eval-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .eval-outcome {
+      display: inline-block;
+      min-width: 40px;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 0.74rem;
+    }
+
+    .eval-outcome.pass {
+      color: #114735;
+      background: rgba(45, 109, 62, 0.16);
+    }
+
+    .eval-outcome.fail {
+      color: #7a1d18;
+      background: rgba(198, 58, 49, 0.15);
+    }
+
+    .eval-outcome.error {
+      color: #5f4317;
+      background: rgba(166, 122, 49, 0.16);
+    }
+
+    .eval-clip {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .eval-path {
+      font-family: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      word-break: break-all;
+    }
+
+    .poll-status {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .poll-status[data-mode="updating"] {
+      color: #145a46;
+    }
+
+    .poll-status[data-mode="error"] {
+      color: #7a1d18;
+    }
+
+    .eval-empty {
+      padding: 14px 12px;
+      color: var(--muted);
+    }
+
+    .eval-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .refresh-btn {
+      border: 1px solid rgba(84, 67, 49, 0.2);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--ink-soft);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 0.78rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .refresh-btn:disabled {
+      opacity: 0.55;
+      cursor: wait;
+    }
+
     @media (max-width: 980px) {
       body { padding: 16px; }
       .hero,
@@ -853,6 +999,33 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
         <span class="window-copy">bucketed OCR lane history</span>
         <span>now</span>
       </div>
+
+      <div class="eval-panel" aria-live="polite">
+        <div class="eval-header">
+          <div class="eval-title">Latest Eval Rows</div>
+          <div class="eval-controls">
+            <button class="refresh-btn" id="refreshNow" type="button">Refresh</button>
+            <div class="poll-status" id="pollStatus">update mode: post-batch/manual</div>
+          </div>
+        </div>
+        <div class="eval-subtitle">item · expected · observed · source path (latest run)</div>
+        <div class="eval-table-wrap">
+          <table class="eval-table">
+            <thead>
+              <tr>
+                <th>outcome</th>
+                <th>lane</th>
+                <th>item</th>
+                <th>expected</th>
+                <th>observed</th>
+                <th>path</th>
+              </tr>
+            </thead>
+            <tbody id="evalRows"></tbody>
+          </table>
+          <div class="eval-empty" id="evalEmpty">No eval rows yet.</div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -861,87 +1034,7 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
     const DEFAULT_MAX_CHART_POINTS = __DEFAULT_MAX_CHART_POINTS__;
     const dataUrl = '/viz/pass-fail/data';
     const state = { payload: null, chartMaxPoints: DEFAULT_MAX_CHART_POINTS };
-    const ACTIVE_LOCK_KEY = 'polinko.viz.pass_fail.active';
-    const CLIENT_ID = `viz-${Math.random().toString(36).slice(2)}-${Date.now()}`;
-    const LEASE_MS = Math.max(REFRESH_MS * 3, 15000);
-    const HIDDEN_REFRESH_MULTIPLIER = 4;
-    let pollTimer = null;
     let inFlight = false;
-
-    function storageAvailable() {
-      try {
-        localStorage.setItem('__viz_probe__', '1');
-        localStorage.removeItem('__viz_probe__');
-        return true;
-      } catch {
-        return false;
-      }
-    }
-
-    const hasStorage = storageAvailable();
-
-    function readLease() {
-      if (!hasStorage) return null;
-      try {
-        const raw = localStorage.getItem(ACTIVE_LOCK_KEY);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== 'object') return null;
-        return parsed;
-      } catch {
-        return null;
-      }
-    }
-
-    function writeLease(owner, expiresAt) {
-      if (!hasStorage) return;
-      try {
-        localStorage.setItem(ACTIVE_LOCK_KEY, JSON.stringify({ owner, expiresAt }));
-      } catch {}
-    }
-
-    function leaseActive(lease) {
-      if (!lease) return false;
-      return Number(lease.expiresAt || 0) > Date.now();
-    }
-
-    function hasLease() {
-      if (!hasStorage) return true;
-      const lease = readLease();
-      return leaseActive(lease) && lease.owner === CLIENT_ID;
-    }
-
-    function acquireLease(force = false) {
-      if (!hasStorage) return true;
-      const lease = readLease();
-      if (!force && leaseActive(lease) && lease.owner !== CLIENT_ID) {
-        return false;
-      }
-      writeLease(CLIENT_ID, Date.now() + LEASE_MS);
-      return true;
-    }
-
-    function releaseLease() {
-      if (!hasStorage) return;
-      const lease = readLease();
-      if (lease && lease.owner === CLIENT_ID) {
-        try {
-          localStorage.removeItem(ACTIVE_LOCK_KEY);
-        } catch {}
-      }
-    }
-
-    function pollDelayMs() {
-      if (document.visibilityState === 'hidden') {
-        return REFRESH_MS * HIDDEN_REFRESH_MULTIPLIER;
-      }
-      return REFRESH_MS;
-    }
-
-    function schedulePoll(delayMs = pollDelayMs()) {
-      if (pollTimer) clearTimeout(pollTimer);
-      pollTimer = setTimeout(tick, Math.max(1000, delayMs));
-    }
 
     const passRateEl = document.getElementById('passRate');
     const deltaLabelEl = document.getElementById('deltaLabel');
@@ -950,6 +1043,43 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
     const latestMixEl = document.getElementById('latestMix');
     const windowLabelEl = document.getElementById('windowLabel');
     const updatedEl = document.getElementById('updatedAt');
+    const pollStatusEl = document.getElementById('pollStatus');
+    const refreshNowEl = document.getElementById('refreshNow');
+    const evalRowsEl = document.getElementById('evalRows');
+    const evalEmptyEl = document.getElementById('evalEmpty');
+
+    function setPollStatus(text, mode = '') {
+      if (!pollStatusEl) return;
+      if (mode) {
+        pollStatusEl.dataset.mode = mode;
+      } else {
+        pollStatusEl.removeAttribute('data-mode');
+      }
+      pollStatusEl.textContent = text;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function shorten(text, maxLen = 140) {
+      const value = String(text ?? '').trim();
+      if (!value) return '(none)';
+      if (value.length <= maxLen) return value;
+      return `${value.slice(0, maxLen - 1)}…`;
+    }
+
+    function leafName(path) {
+      const value = String(path || '').trim();
+      if (!value) return '(none)';
+      const bits = value.split('/');
+      return bits[bits.length - 1] || value;
+    }
 
     function normalizePoint(point, fallbackIndex = 0) {
       const pass = Number(point?.pass || 0);
@@ -1218,7 +1348,50 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
         });
     }
 
+    function renderEvals(payload) {
+      const evals = Array.isArray(payload?.evals) ? payload.evals : [];
+      const rows = evals.slice(0, 60);
+      if (!rows.length) {
+        evalRowsEl.innerHTML = '';
+        evalEmptyEl.style.display = 'block';
+        return;
+      }
+      evalEmptyEl.style.display = 'none';
+      evalRowsEl.innerHTML = rows.map(row => {
+        const outcome = String(row?.outcome || 'UNKNOWN').toUpperCase();
+        const outcomeClass = outcome === 'PASS'
+          ? 'pass'
+          : outcome === 'FAIL'
+            ? 'fail'
+            : 'error';
+        const lane = escapeHtml(row?.lane || row?.source_name || 'other');
+        const item = escapeHtml(shorten(row?.item || '(unknown)', 80));
+        const expected = escapeHtml(shorten(row?.expected || '(none)', 200));
+        const observed = escapeHtml(shorten(row?.observed || '(none)', 220));
+        const pathValue = String(row?.image_path || '').trim();
+        const pathLeaf = escapeHtml(leafName(pathValue));
+        const fullPath = escapeHtml(pathValue || '(none)');
+        const pathCell = pathValue
+          ? `<a class="eval-path" href="file://${encodeURI(pathValue)}" title="${fullPath}">${pathLeaf}</a>`
+          : `<span class="eval-path">(none)</span>`;
+        return `
+          <tr>
+            <td><span class="eval-outcome ${outcomeClass}">${escapeHtml(outcome)}</span></td>
+            <td><span class="eval-clip">${lane}</span></td>
+            <td><span class="eval-clip" title="${escapeHtml(String(row?.item || ''))}">${item}</span></td>
+            <td><span class="eval-clip" title="${escapeHtml(String(row?.expected || ''))}">${expected}</span></td>
+            <td><span class="eval-clip" title="${escapeHtml(String(row?.observed || ''))}">${observed}</span></td>
+            <td>${pathCell}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
     async function refresh() {
+      if (inFlight) return;
+      inFlight = true;
+      if (refreshNowEl) refreshNowEl.disabled = true;
+      setPollStatus('refreshing…', 'updating');
       try {
         const res = await fetch(dataUrl, { cache: 'no-store' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -1226,40 +1399,23 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
         state.payload = payload;
         renderSummary(payload);
         renderChart(payload);
+        renderEvals(payload);
+        setPollStatus('update mode: post-batch/manual');
       } catch (error) {
         console.error(error);
-      }
-    }
-
-    async function tick() {
-      if (!acquireLease(false)) {
-        schedulePoll();
-        return;
-      }
-      if (inFlight) {
-        schedulePoll();
-        return;
-      }
-      inFlight = true;
-      try {
-        await refresh();
+        setPollStatus('refresh failed (see console)', 'error');
       } finally {
         inFlight = false;
-        acquireLease(true);
-        schedulePoll();
+        if (refreshNowEl) refreshNowEl.disabled = false;
       }
     }
 
-    acquireLease(true);
-    tick();
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        acquireLease(true);
-        tick();
-      }
-    });
-    window.addEventListener('beforeunload', releaseLease);
-    window.addEventListener('pagehide', releaseLease);
+    if (refreshNowEl) {
+      refreshNowEl.addEventListener('click', () => {
+        refresh();
+      });
+    }
+    refresh();
   </script>
 </body>
 </html>

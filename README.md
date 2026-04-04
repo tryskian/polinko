@@ -16,8 +16,6 @@ and deterministic eval gates.
 - Legacy frontend context remains in `.archive/live_archive/legacy_frontend/`.
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
-- Evidence and remediation: evidence indexing and metadata audit tooling with
-  open/closed remediation tracking.
 
 ## Quick Start
 
@@ -272,16 +270,6 @@ Transcript-backed OCR mining lane:
   - `.local/eval_cases/ocr_transcript_cases_review.json`
   - `.local/eval_reports/ocr_transcript_stability.json`
   - `.local/eval_reports/ocr_stability_runs/`
-
-## Evidence Tooling
-
-Evidence and metadata:
-
-```bash
-make evidence-index
-make evidence-refresh
-make portfolio-metadata-audit
-```
 
 ## Docker Smoke Test
 

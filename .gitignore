@@ -52,9 +52,6 @@ _virtualenv.py
 .local/eval_cases/
 .local_archive/
 
-# Local planning sandbox docs
-docs/portfolio/
-
 # Local eval artifacts
 eval_reports/
 
