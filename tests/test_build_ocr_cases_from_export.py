@@ -498,6 +498,99 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(len(review["episodes"]), 1)
             self.assertEqual(review["episodes"][0]["conversation_id"], "conv-focus-001")
 
+    def test_build_respects_include_lanes_and_counts_filtered_episodes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "img_001.jpg").write_bytes(b"not-a-real-image")
+            (assets / "Screenshot_2026-03-29.png").write_bytes(b"not-a-real-image")
+
+            conversation_handwriting = {
+                "conversation_id": "conv-lanes-hand",
+                "title": "Handwriting Session",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this note?"]},
+                            "metadata": {"attachments": [{"name": "img_001.jpg", "id": "file_lane_a"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ['it reads: "alpha spiral field"']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            conversation_typed = {
+                "conversation_id": "conv-lanes-typed",
+                "title": "Typed Session",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this screenshot text?"]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "Screenshot_2026-03-29.png", "id": "file_lane_b"}
+                                ]
+                            },
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ['it reads: "tensor matrix ledger"']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conv_lanes_hand.json").write_text(
+                json.dumps(conversation_handwriting),
+                encoding="utf-8",
+            )
+            (conversations / "conv_lanes_typed.json").write_text(
+                json.dumps(conversation_typed),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+                include_lanes={"typed"},
+            )
+
+            self.assertEqual(summary["conversation_files"], 2)
+            self.assertEqual(summary["skipped_filtered_conversations"], 0)
+            self.assertEqual(summary["skipped_filtered_episodes"], 1)
+            self.assertEqual(summary["cases_written"], 1)
+            review = json.loads(output_review.read_text(encoding="utf-8"))
+            self.assertEqual(review["summary"]["skipped_filtered_episodes"], 1)
+            self.assertEqual(len(review["episodes"]), 1)
+            self.assertEqual(review["episodes"][0]["lane"], "typed")
+
     def test_build_promotes_medium_for_askless_typed_framed_transcription(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"

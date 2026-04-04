@@ -826,6 +826,7 @@ def build_from_export(
     exclude_title_regex: str = "",
     include_conversation_regex: str = "",
     exclude_conversation_regex: str = "",
+    include_lanes: set[str] | None = None,
 ) -> dict[str, int]:
     conversations_dir = export_root / "conversations"
     assets_dir = export_root / "assets"
@@ -861,6 +862,7 @@ def build_from_export(
 
     conversation_files = sorted(conversations_dir.glob("*.json"))
     skipped_filtered_conversations = 0
+    skipped_filtered_episodes = 0
     for conversation_path in conversation_files:
         convo = _load_json(conversation_path)
         conversation_id = str(convo.get("conversation_id", "")).strip() or conversation_path.stem
@@ -958,6 +960,9 @@ def build_from_export(
                 image_path=image_path,
                 followups=followups,
             )
+            if include_lanes is not None and lane not in include_lanes:
+                skipped_filtered_episodes += 1
+                continue
             ask_followup_text = "\n".join([msg.text, *followups])
             ocr_intent_signal = ask_signal or bool(
                 OCR_INTENT_RX.search(ask_followup_text)
@@ -1366,6 +1371,7 @@ def build_from_export(
                 "conversation_files": len(conversation_files),
                 "episodes": len(review_rows),
                 "skipped_filtered_conversations": skipped_filtered_conversations,
+                "skipped_filtered_episodes": skipped_filtered_episodes,
                 "signal_strength_counts": signal_strength_counts,
                 "lane_counts": lane_counts,
                 "emit_status_counts": emit_status_counts,
@@ -1382,6 +1388,7 @@ def build_from_export(
         "conversation_files": len(conversation_files),
         "episodes": len(review_rows),
         "skipped_filtered_conversations": skipped_filtered_conversations,
+        "skipped_filtered_episodes": skipped_filtered_episodes,
         "high_signal_strength": high,
         "medium_signal_strength": medium,
         "low_signal_strength": low,
@@ -1475,11 +1482,21 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Skip conversations whose conversation_id matches this regex (case-insensitive).",
     )
+    parser.add_argument(
+        "--include-lanes",
+        default="",
+        help="Comma-separated lane filter (handwriting,typed,illustration). Empty = all lanes.",
+    )
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
+    include_lanes = {
+        lane.strip().lower()
+        for lane in str(args.include_lanes or "").split(",")
+        if lane.strip()
+    } or None
     summary = build_from_export(
         Path(args.export_root).expanduser().resolve(),
         output_cases=Path(args.output_cases).expanduser().resolve(),
@@ -1494,11 +1511,13 @@ def main() -> int:
         exclude_title_regex=str(args.exclude_title_regex or ""),
         include_conversation_regex=str(args.include_conversation_regex or ""),
         exclude_conversation_regex=str(args.exclude_conversation_regex or ""),
+        include_lanes=include_lanes,
     )
     for key in (
         "conversation_files",
         "episodes",
         "skipped_filtered_conversations",
+        "skipped_filtered_episodes",
         "high_signal_strength",
         "medium_signal_strength",
         "low_signal_strength",
