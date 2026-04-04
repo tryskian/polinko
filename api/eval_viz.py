@@ -861,6 +861,87 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
     const DEFAULT_MAX_CHART_POINTS = __DEFAULT_MAX_CHART_POINTS__;
     const dataUrl = '/viz/pass-fail/data';
     const state = { payload: null, chartMaxPoints: DEFAULT_MAX_CHART_POINTS };
+    const ACTIVE_LOCK_KEY = 'polinko.viz.pass_fail.active';
+    const CLIENT_ID = `viz-${Math.random().toString(36).slice(2)}-${Date.now()}`;
+    const LEASE_MS = Math.max(REFRESH_MS * 3, 15000);
+    const HIDDEN_REFRESH_MULTIPLIER = 4;
+    let pollTimer = null;
+    let inFlight = false;
+
+    function storageAvailable() {
+      try {
+        localStorage.setItem('__viz_probe__', '1');
+        localStorage.removeItem('__viz_probe__');
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    const hasStorage = storageAvailable();
+
+    function readLease() {
+      if (!hasStorage) return null;
+      try {
+        const raw = localStorage.getItem(ACTIVE_LOCK_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return null;
+        return parsed;
+      } catch {
+        return null;
+      }
+    }
+
+    function writeLease(owner, expiresAt) {
+      if (!hasStorage) return;
+      try {
+        localStorage.setItem(ACTIVE_LOCK_KEY, JSON.stringify({ owner, expiresAt }));
+      } catch {}
+    }
+
+    function leaseActive(lease) {
+      if (!lease) return false;
+      return Number(lease.expiresAt || 0) > Date.now();
+    }
+
+    function hasLease() {
+      if (!hasStorage) return true;
+      const lease = readLease();
+      return leaseActive(lease) && lease.owner === CLIENT_ID;
+    }
+
+    function acquireLease(force = false) {
+      if (!hasStorage) return true;
+      const lease = readLease();
+      if (!force && leaseActive(lease) && lease.owner !== CLIENT_ID) {
+        return false;
+      }
+      writeLease(CLIENT_ID, Date.now() + LEASE_MS);
+      return true;
+    }
+
+    function releaseLease() {
+      if (!hasStorage) return;
+      const lease = readLease();
+      if (lease && lease.owner === CLIENT_ID) {
+        try {
+          localStorage.removeItem(ACTIVE_LOCK_KEY);
+        } catch {}
+      }
+    }
+
+    function pollDelayMs() {
+      if (document.visibilityState === 'hidden') {
+        return REFRESH_MS * HIDDEN_REFRESH_MULTIPLIER;
+      }
+      return REFRESH_MS;
+    }
+
+    function schedulePoll(delayMs = pollDelayMs()) {
+      if (pollTimer) clearTimeout(pollTimer);
+      pollTimer = setTimeout(tick, Math.max(1000, delayMs));
+    }
 
     const passRateEl = document.getElementById('passRate');
     const deltaLabelEl = document.getElementById('deltaLabel');
@@ -1150,8 +1231,35 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       }
     }
 
-    refresh();
-    setInterval(refresh, REFRESH_MS);
+    async function tick() {
+      if (!acquireLease(false)) {
+        schedulePoll();
+        return;
+      }
+      if (inFlight) {
+        schedulePoll();
+        return;
+      }
+      inFlight = true;
+      try {
+        await refresh();
+      } finally {
+        inFlight = false;
+        acquireLease(true);
+        schedulePoll();
+      }
+    }
+
+    acquireLease(true);
+    tick();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        acquireLease(true);
+        tick();
+      }
+    });
+    window.addEventListener('beforeunload', releaseLease);
+    window.addEventListener('pagehide', releaseLease);
   </script>
 </body>
 </html>
