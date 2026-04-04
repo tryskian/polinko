@@ -169,6 +169,16 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         )
         self.assertEqual(lane, "typed")
 
+    def test_classify_lane_promotes_symbolic_script_to_illustration(self) -> None:
+        lane = _classify_lane(
+            ask_text="can you transcribe this?",
+            title="glyph notes",
+            image_path="/tmp/file-xyz-note.png",
+            followups=[],
+            assistant_text="𓂀𓏏𓅓𓅱𓂋𓏏𓏤",
+        )
+        self.assertEqual(lane, "illustration")
+
     def test_extract_candidate_phrases_from_quotes_and_emphasis(self) -> None:
         text = 'correction: "Only Alpha Spiral Field" and *Beta Grid*'
         phrases = _extract_candidate_phrases(text)

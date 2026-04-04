@@ -615,7 +615,16 @@ def _classify_lane(
     title: str,
     image_path: str,
     followups: list[str],
+    assistant_text: str = "",
 ) -> str:
+    symbolic_chars = [ch for ch in assistant_text if ch.isalpha()]
+    if symbolic_chars:
+        hieroglyph_count = sum(1 for ch in symbolic_chars if 0x13000 <= ord(ch) <= 0x1342F)
+        ascii_letters = sum(1 for ch in symbolic_chars if "a" <= ch.lower() <= "z")
+        non_ascii_letter_ratio = 1.0 - (ascii_letters / len(symbolic_chars))
+        if hieroglyph_count >= 3 or (len(symbolic_chars) >= 8 and non_ascii_letter_ratio >= 0.65):
+            return "illustration"
+
     haystack = "\n".join([ask_text, title, *followups])
     if ILLUSTRATION_HINT_RX.search(haystack):
         return "illustration"
@@ -1019,6 +1028,7 @@ def build_from_export(
                 title=title,
                 image_path=image_path,
                 followups=followups,
+                assistant_text=assistant_text,
             )
             if include_lanes is not None and lane not in include_lanes:
                 skipped_filtered_episodes += 1
