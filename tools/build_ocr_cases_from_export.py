@@ -824,6 +824,8 @@ def build_from_export(
     max_growth_cases: int = 600,
     include_title_regex: str = "",
     exclude_title_regex: str = "",
+    include_conversation_regex: str = "",
+    exclude_conversation_regex: str = "",
 ) -> dict[str, int]:
     conversations_dir = export_root / "conversations"
     assets_dir = export_root / "assets"
@@ -850,6 +852,12 @@ def build_from_export(
 
     include_title_rx = re.compile(include_title_regex, re.IGNORECASE) if include_title_regex else None
     exclude_title_rx = re.compile(exclude_title_regex, re.IGNORECASE) if exclude_title_regex else None
+    include_conversation_rx = (
+        re.compile(include_conversation_regex, re.IGNORECASE) if include_conversation_regex else None
+    )
+    exclude_conversation_rx = (
+        re.compile(exclude_conversation_regex, re.IGNORECASE) if exclude_conversation_regex else None
+    )
 
     conversation_files = sorted(conversations_dir.glob("*.json"))
     skipped_filtered_conversations = 0
@@ -857,6 +865,12 @@ def build_from_export(
         convo = _load_json(conversation_path)
         conversation_id = str(convo.get("conversation_id", "")).strip() or conversation_path.stem
         title = str(convo.get("title", "")).strip()
+        if include_conversation_rx and not include_conversation_rx.search(conversation_id):
+            skipped_filtered_conversations += 1
+            continue
+        if exclude_conversation_rx and exclude_conversation_rx.search(conversation_id):
+            skipped_filtered_conversations += 1
+            continue
         if include_title_rx and not include_title_rx.search(title):
             skipped_filtered_conversations += 1
             continue
@@ -1451,6 +1465,16 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Skip conversations whose title matches this regex (case-insensitive).",
     )
+    parser.add_argument(
+        "--include-conversation-regex",
+        default="",
+        help="Only mine conversations whose conversation_id matches this regex (case-insensitive).",
+    )
+    parser.add_argument(
+        "--exclude-conversation-regex",
+        default="",
+        help="Skip conversations whose conversation_id matches this regex (case-insensitive).",
+    )
     return parser.parse_args()
 
 
@@ -1468,6 +1492,8 @@ def main() -> int:
         max_growth_cases=int(args.max_growth_cases),
         include_title_regex=str(args.include_title_regex or ""),
         exclude_title_regex=str(args.exclude_title_regex or ""),
+        include_conversation_regex=str(args.include_conversation_regex or ""),
+        exclude_conversation_regex=str(args.exclude_conversation_regex or ""),
     )
     for key in (
         "conversation_files",
