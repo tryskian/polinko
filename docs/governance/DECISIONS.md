@@ -2902,3 +2902,21 @@
     refreshed observed-text attempt.
 - Why: this preserves strict binary gating while preventing stale-loop repeats
   when users provide explicit disconfirmation.
+
+## D-182: Keep legacy evals archived and treat FAIL as the objective contrast lane
+
+- Date: `2026-04-04`
+- Category: `eval_quality`
+- Tags: `legacy_archive`, `binary_gate`, `fail_objective`, `contrastive_signal`
+- Decision:
+  - keep legacy eval artefacts in archive-only lanes, excluded from active
+    runtime/eval surfaces.
+  - apply fail-objective interpretation in active binary gates:
+    - define explicit FAIL conditions first.
+    - resolve PASS only as "not FAIL" against those objective failure
+      conditions.
+  - use archived legacy examples as reference context only (no direct carryover
+    of legacy pass/mixed/fail heuristics).
+- Why: objective FAIL criteria give clearer model/operator signal boundaries and
+  make PASS interpretable as contrastive evidence instead of a loose positive
+  label.
