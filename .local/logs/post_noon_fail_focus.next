@@ -1,5 +1,0 @@
-# Post-noon fail-focused kernel (bounded)
-make ocrfails && \
-make ocrfocuscases && \
-make eval-ocr-focus-stability OCR_FOCUS_RUNS=3 OCR_FOCUS_MAX_CASES=24 OCR_FOCUS_OCR_RETRIES=0 OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=1 && \
-make ocrfocusreport
