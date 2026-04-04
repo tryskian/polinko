@@ -45,7 +45,6 @@ const exportMarkdownEl = document.getElementById("export-markdown");
 const exportJsonEl = document.getElementById("export-json");
 const exportOcrEl = document.getElementById("export-ocr");
 const exportTriageEl = document.getElementById("export-triage");
-const evalPresetSelectEl = document.getElementById("eval-preset-select");
 const evalSubmitEl = document.getElementById("eval-submit");
 const checkpointJumpEl = document.getElementById("checkpoint-jump");
 const appPipEl = document.getElementById("app-pip");
@@ -74,12 +73,17 @@ const TRIAGE_HIGH_FAIL_RATIO_THRESHOLD = 0.5;
 const TRIAGE_PRIORITY_LIMIT = 5;
 const DEFAULT_ATTACHMENT_PROMPT =
   "Transcribe visible text from the attached image(s) verbatim. Do not interpret.";
-const BASE_EVAL_PROMPT_PRESETS = Object.freeze([
-  {
-    key: "binary_gate",
-    prompt:
-      "Evaluate the latest assistant response with a binary gate only. Return PASS or FAIL and cite exact Style and Hallucination risk reasons.",
-  },
+const EVAL_CHAT_SESSION_PREFIXES = Object.freeze([
+  "ocr-eval-",
+  "ocr-recovery-eval-",
+  "style-eval-",
+  "hallucination-eval-",
+  "response-behaviour-eval-",
+  "retrieval-eval-",
+  "file-search-eval-",
+  "clip-ab-eval-",
+  "ocr-stability-",
+  "ocr-growth-batch-",
 ]);
 const OCR_REQUEST_HINTS = [
   "ocr",
@@ -387,9 +391,15 @@ function initTheme() {
 const exportUiState = createExportUiState({
   getActiveChatId: () => activeChatId,
   setButtonsDisabled(disabled) {
-    exportMarkdownEl.disabled = disabled;
-    exportJsonEl.disabled = disabled;
-    exportOcrEl.disabled = disabled;
+    if (exportMarkdownEl) {
+      exportMarkdownEl.disabled = disabled;
+    }
+    if (exportJsonEl) {
+      exportJsonEl.disabled = disabled;
+    }
+    if (exportOcrEl) {
+      exportOcrEl.disabled = disabled;
+    }
     if (exportTriageEl) {
       exportTriageEl.disabled = disabled;
     }
@@ -2160,21 +2170,12 @@ function normalizeMemoryScope(value) {
   return "global";
 }
 
-function applyEvalPromptPreset(presetKey) {
-  const key = String(presetKey || "").trim();
-  if (!key) {
+function isEvalSessionId(sessionId) {
+  const normalized = String(sessionId || "").trim().toLowerCase();
+  if (!normalized) {
     return false;
   }
-  const preset = BASE_EVAL_PROMPT_PRESETS.find((item) => item.key === key);
-  if (!preset) {
-    return false;
-  }
-  messageEl.value = preset.prompt;
-  autoSizeComposer();
-  messageEl.focus();
-  const cursorPos = messageEl.value.length;
-  messageEl.setSelectionRange(cursorPos, cursorPos);
-  return true;
+  return EVAL_CHAT_SESSION_PREFIXES.some((prefix) => normalized.startsWith(prefix));
 }
 
 async function resetSession(sessionId) {
@@ -2715,7 +2716,7 @@ function applyChats(nextChats) {
 
 async function refreshChats() {
   const payload = await apiListChats();
-  const nextChats = payload.chats ?? [];
+  const nextChats = (payload.chats ?? []).filter((chat) => !isEvalSessionId(chat?.session_id));
   applyChats(nextChats);
   await refreshCheckpointSummaries(nextChats.map((chat) => chat.session_id));
   refreshChatListUi();
@@ -3022,15 +3023,6 @@ messageEl.addEventListener("keydown", (event) => {
   }
 });
 
-evalPresetSelectEl?.addEventListener("change", () => {
-  const key = String(evalPresetSelectEl.value || "");
-  if (!key) {
-    return;
-  }
-  applyEvalPromptPreset(key);
-  evalPresetSelectEl.value = "";
-});
-
 resetEl.addEventListener("click", async () => {
   if (!activeChatId) {
     return;
@@ -3064,7 +3056,7 @@ appPipEl?.addEventListener("click", async () => {
   await toggleAppPip();
 });
 
-exportMarkdownEl.addEventListener("click", async () => {
+exportMarkdownEl?.addEventListener("click", async () => {
   if (!activeChatId) {
     return;
   }
@@ -3086,7 +3078,7 @@ exportMarkdownEl.addEventListener("click", async () => {
   });
 });
 
-exportJsonEl.addEventListener("click", async () => {
+exportJsonEl?.addEventListener("click", async () => {
   if (!activeChatId) {
     return;
   }
@@ -3100,7 +3092,7 @@ exportJsonEl.addEventListener("click", async () => {
   });
 });
 
-exportOcrEl.addEventListener("click", async () => {
+exportOcrEl?.addEventListener("click", async () => {
   if (!activeChatId) {
     return;
   }

@@ -1177,29 +1177,6 @@ body {
   gap: 0.35rem;
 }
 
-.composer-preset-select {
-  min-width: 7.4rem;
-  min-height: 2.15rem;
-  border-radius: 999px;
-  border: 1px solid var(--interactive-border-secondary-default);
-  background: var(--interactive-bg-secondary-default);
-  color: var(--interactive-label-secondary-default);
-  font: inherit;
-  font-size: 0.75rem;
-  padding: 0.2rem 0.6rem;
-}
-
-.composer-preset-select:hover {
-  border-color: var(--interactive-border-secondary-hover);
-  background: var(--interactive-bg-secondary-hover);
-  color: var(--interactive-label-secondary-hover);
-}
-
-.composer-preset-select:focus {
-  outline: none;
-  border-color: var(--focus-ring);
-}
-
 .icon-button {
   width: 2.2rem;
   height: 2.2rem;
@@ -1541,11 +1518,6 @@ button {
   .memory-search-form {
     grid-template-columns: 1fr;
     gap: 0.35rem;
-  }
-
-  .composer-preset-select {
-    min-width: 6.6rem;
-    font-size: 0.72rem;
   }
 
   #memory-search-source,

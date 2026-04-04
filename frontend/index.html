@@ -29,42 +29,6 @@
             <option value="global">Global memory</option>
             <option value="session">This chat</option>
           </select>
-          <button
-            id="export-markdown"
-            type="button"
-            class="header-icon"
-            aria-label="Download transcript markdown"
-            title="Download transcript markdown"
-          >
-            <span class="material-symbols-outlined" aria-hidden="true">description</span>
-          </button>
-          <button
-            id="export-json"
-            type="button"
-            class="header-icon"
-            aria-label="Download transcript json"
-            title="Download transcript json"
-          >
-            <span class="material-symbols-outlined" aria-hidden="true">download</span>
-          </button>
-          <button
-            id="export-ocr"
-            type="button"
-            class="header-icon"
-            aria-label="Download OCR run history"
-            title="Download OCR run history"
-          >
-            <span class="material-symbols-outlined" aria-hidden="true">fact_check</span>
-          </button>
-          <button
-            id="export-triage"
-            type="button"
-            class="header-icon"
-            aria-label="Download eval triage rollup"
-            title="Download eval triage rollup"
-          >
-            <span class="material-symbols-outlined" aria-hidden="true">analytics</span>
-          </button>
           <button id="reset" type="button" class="reset" aria-label="Reset session" title="Reset session">
             <span class="material-symbols-outlined" aria-hidden="true">history</span>
           </button>
@@ -89,15 +53,6 @@
               <span class="material-symbols-outlined" aria-hidden="true">flag</span>
             </button>
           </div>
-          <button
-            id="app-pip"
-            type="button"
-            class="header-icon"
-            aria-label="Open mini app window"
-            title="Open mini app window"
-          >
-            <span id="app-pip-icon" class="material-symbols-outlined" aria-hidden="true">picture_in_picture_alt</span>
-          </button>
         </div>
       </header>
       <aside id="chat-drawer" class="chat-drawer" aria-label="Chats">
@@ -144,16 +99,6 @@
           ></textarea>
           <div class="composer-row">
             <div class="composer-actions">
-              <label for="eval-preset-select" class="visually-hidden">Apply base eval prompt preset</label>
-              <select
-                id="eval-preset-select"
-                class="composer-preset-select"
-                aria-label="Apply base eval prompt preset"
-                title="Apply base eval prompt preset"
-              >
-                <option value="">Eval preset</option>
-                <option value="binary_gate">Binary Gate</option>
-              </select>
               <button
                 id="memory-search-toggle"
                 type="button"
