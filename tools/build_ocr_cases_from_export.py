@@ -835,6 +835,8 @@ def build_from_export(
     exclude_title_regex: str = "",
     include_conversation_regex: str = "",
     exclude_conversation_regex: str = "",
+    include_source_regex: str = "",
+    exclude_source_regex: str = "",
     include_lanes: set[str] | None = None,
     include_signal_strengths: set[str] | None = None,
     include_emit_statuses: set[str] | None = None,
@@ -908,6 +910,8 @@ def build_from_export(
     exclude_conversation_rx = (
         re.compile(exclude_conversation_regex, re.IGNORECASE) if exclude_conversation_regex else None
     )
+    include_source_rx = re.compile(include_source_regex, re.IGNORECASE) if include_source_regex else None
+    exclude_source_rx = re.compile(exclude_source_regex, re.IGNORECASE) if exclude_source_regex else None
 
     conversation_files = sorted(conversations_dir.glob("*.json"))
     skipped_filtered_conversations = 0
@@ -997,6 +1001,13 @@ def build_from_export(
             resolved_paths = list(dict.fromkeys(resolved_paths))
             image_path = resolved_paths[0] if resolved_paths else ""
             if not image_path:
+                continue
+            source_name = Path(image_path).name
+            if include_source_rx and not include_source_rx.search(source_name):
+                skipped_filtered_episodes += 1
+                continue
+            if exclude_source_rx and exclude_source_rx.search(source_name):
+                skipped_filtered_episodes += 1
                 continue
             try:
                 if Path(image_path).stat().st_size > MAX_IMAGE_BYTES:
@@ -1167,7 +1178,7 @@ def build_from_export(
                     "conversation_title": title,
                     "conversation_json": str(conversation_path),
                     "image_path": image_path,
-                    "source_name": Path(image_path).name,
+                    "source_name": source_name,
                     "ask_text": msg.text,
                     "query_text": msg.text,
                     "assistant_text": assistant_text,
@@ -1273,7 +1284,7 @@ def build_from_export(
                     {
                         "id": growth_case_id,
                         "image_path": image_path,
-                        "source_name": Path(image_path).name,
+                        "source_name": source_name,
                         "lane": lane,
                         "transcription_mode": "verbatim",
                         "must_contain_any": growth_anchor_terms[:8],
@@ -1308,7 +1319,7 @@ def build_from_export(
                 {
                     "id": case_id,
                     "image_path": image_path,
-                    "source_name": Path(image_path).name,
+                    "source_name": source_name,
                     "lane": lane,
                     "transcription_mode": "verbatim",
                     "must_contain_any": anchor_terms,
@@ -1538,6 +1549,16 @@ def parse_args() -> argparse.Namespace:
         help="Skip conversations whose conversation_id matches this regex (case-insensitive).",
     )
     parser.add_argument(
+        "--include-source-regex",
+        default="",
+        help="Only mine episodes whose resolved source filename matches this regex (case-insensitive).",
+    )
+    parser.add_argument(
+        "--exclude-source-regex",
+        default="",
+        help="Skip episodes whose resolved source filename matches this regex (case-insensitive).",
+    )
+    parser.add_argument(
         "--include-lanes",
         default="",
         help="Comma-separated lane filter (handwriting,typed,illustration). Empty = all lanes.",
@@ -1590,6 +1611,8 @@ def main() -> int:
         exclude_title_regex=str(args.exclude_title_regex or ""),
         include_conversation_regex=str(args.include_conversation_regex or ""),
         exclude_conversation_regex=str(args.exclude_conversation_regex or ""),
+        include_source_regex=str(args.include_source_regex or ""),
+        exclude_source_regex=str(args.exclude_source_regex or ""),
         include_lanes=include_lanes,
         include_signal_strengths=include_signal_strengths,
         include_emit_statuses=include_emit_statuses,
