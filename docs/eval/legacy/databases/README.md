@@ -7,7 +7,15 @@ Legacy database snapshots are expected in this lane when recovered.
 - No legacy `.db` files are present in tracked repo paths.
 - Snapshot check (`polinko_snapshot/main`, commit `fc8de944f61caf2cd688990a59d26c8ddff28c83`)
   also contains no tracked `.db` files.
-- Only active runtime DBs are present:
+- Legacy DB snapshots recovered from local backup source:
+  - `/Users/tryskian/Github/old/polinko-incase/.polinko_history.db`
+  - `/Users/tryskian/Github/old/polinko-incase/.polinko_memory.db`
+  - `/Users/tryskian/Github/old/polinko-incase/.polinko_vector.db`
+- Local live-archive copies stored at:
+  - `.archive/live_archive/legacy_eval/databases/.polinko_history.db`
+  - `.archive/live_archive/legacy_eval/databases/.polinko_memory.db`
+  - `.archive/live_archive/legacy_eval/databases/.polinko_vector.db`
+- Active runtime DBs remain:
   - `.local/runtime_dbs/active/history.db`
   - `.local/runtime_dbs/active/memory.db`
   - `.local/runtime_dbs/active/vector.db`
