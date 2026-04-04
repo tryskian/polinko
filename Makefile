@@ -38,6 +38,7 @@ OCR_SAFETY_CASES ?= docs/eval/cases/ocr_safety_eval_cases.json
 CGPT_EXPORT_ROOT ?=
 CGPT_EXPORT_ROOT_DEFAULT ?= /Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT
 CGPT_EXPORT_OUTPUT_DIR ?= .local/eval_cases
+OCR_CASES_FROM_EXPORT_ARGS ?=
 OCR_TRANSCRIPT_CASES_ALL ?= .local/eval_cases/ocr_transcript_cases_all.json
 OCR_TRANSCRIPT_CASES_GROWTH ?= .local/eval_cases/ocr_transcript_cases_growth.json
 OCR_TRANSCRIPT_CASES_HANDWRITING ?= .local/eval_cases/ocr_handwriting_from_transcripts.json
@@ -121,7 +122,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env notebook-setup notebook nb notes viz ocrindex ocrmine ocrall ocrwiden ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrall ocrwiden ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 
 chat:
 	$(PYTHON) app.py
@@ -155,6 +156,24 @@ notebook nb notes:
 ocrindex: cgpt-export-index
 
 ocrmine: ocr-cases-from-export
+
+ocrminehand:
+	@set -eu; \
+	$(MAKE) --no-print-directory ocr-cases-from-export \
+		CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
+		OCR_CASES_FROM_EXPORT_ARGS='--include-lanes handwriting'
+
+ocrminetype:
+	@set -eu; \
+	$(MAKE) --no-print-directory ocr-cases-from-export \
+		CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
+		OCR_CASES_FROM_EXPORT_ARGS='--include-lanes typed'
+
+ocrmineillu:
+	@set -eu; \
+	$(MAKE) --no-print-directory ocr-cases-from-export \
+		CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
+		OCR_CASES_FROM_EXPORT_ARGS='--include-lanes illustration'
 
 ocrall: eval-ocr-transcript-cases
 
@@ -836,10 +855,10 @@ ocr-cases-from-export:
 		--output-cases-typed "$(OCR_TRANSCRIPT_CASES_TYPED)" \
 		--output-cases-illustration "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" \
 		--output-review "$(OCR_TRANSCRIPT_REVIEW)" \
-		--max-growth-cases "$(OCR_GROWTH_MAX_CASES)"; \
-		$(MAKE) --no-print-directory ocr-handwriting-benchmark-cases; \
-		$(MAKE) --no-print-directory ocr-typed-benchmark-cases; \
-		$(MAKE) --no-print-directory ocr-illustration-benchmark-cases; \
+		--max-growth-cases "$(OCR_GROWTH_MAX_CASES)" $(OCR_CASES_FROM_EXPORT_ARGS); \
+			$(MAKE) --no-print-directory ocr-handwriting-benchmark-cases; \
+			$(MAKE) --no-print-directory ocr-typed-benchmark-cases; \
+			$(MAKE) --no-print-directory ocr-illustration-benchmark-cases; \
 		$(MAKE) --no-print-directory ocr-transcript-delta
 
 ocr-handwriting-benchmark-cases:
