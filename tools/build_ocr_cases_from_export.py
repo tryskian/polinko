@@ -983,6 +983,14 @@ def build_from_export(
                 and has_multi_token_transcription
                 and len(transcription_anchor_terms) >= 3
             )
+            askless_typed_signal = (
+                (not ask_signal)
+                and lane == "typed"
+                and ocr_framing_signal
+                and not positive_signal
+                and has_multi_token_transcription
+                and len(transcription_anchor_terms) >= 3
+            )
             strong_high_transcription_signal = (
                 ocr_literal_intent_signal
                 and ocr_framing_signal
@@ -998,6 +1006,7 @@ def build_from_export(
                 and (
                     ocr_literal_intent_signal
                     or askless_handwriting_signal
+                    or askless_typed_signal
                     or (ocr_intent_signal and ocr_framing_signal)
                 )
             )
@@ -1009,6 +1018,7 @@ def build_from_export(
                     or askless_handwriting_signal
                 )
             )
+            medium_intent_signal = medium_intent_signal or askless_typed_signal
             if high_correction_signal:
                 signal_strength = "high"
                 chosen_phrases = followup_correction_phrases[:5]
@@ -1048,6 +1058,7 @@ def build_from_export(
                 or correction_signal
                 or correction_overlap_signal
                 or askless_handwriting_signal
+                or askless_typed_signal
                 or (lane == "handwriting" and ocr_framing_signal)
             )
             if signal_strength == "low" and not low_signal_strength_has_ocr_signal:
@@ -1133,6 +1144,7 @@ def build_from_export(
                     and (
                         ocr_literal_intent_signal
                         or askless_handwriting_signal
+                        or askless_typed_signal
                         or (ocr_intent_signal and (correction_signal or ocr_framing_signal))
                     )
                 )
