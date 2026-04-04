@@ -86,6 +86,13 @@ Use these directly in DB Viewer Enhanced.
 
 ### A) `history.db` (chat/runtime + OCR)
 
+`/viz/pass-fail` is a local-only, visual-forward pulse surface. It uses
+`history.db` as the source of truth for the moving chart itself. The chart
+reads recent `ocr_runs`, classifies each row into `typed` / `handwriting` /
+`illustration` in `api/eval_viz.py`, and then buckets those runs into a
+smaller stacked lane strip for near-real-time, insight-first viewing. Raw
+`ocr_runs` rows do not store a lane column directly.
+
 #### 1) Recent OCR runs (latest first)
 
 ```sql
@@ -148,6 +155,34 @@ LEFT JOIN chat_messages rm ON rm.message_id = r.result_message_id
 WHERE lower(r.status) <> 'ok'
 ORDER BY r.created_ts DESC
 LIMIT 200;
+```
+
+#### 3c) Recent OCR runs for pulse chart inspection
+
+Use this when you want to inspect the raw rows that feed the pulse chart before
+lane classification and bucketing happen in application code.
+
+```sql
+WITH runs AS (
+  SELECT
+    run_id,
+    session_id,
+    source_name,
+    status,
+    length(extracted_text) AS extracted_char_count,
+    CASE WHEN created_at > 20000000000 THEN created_at / 1000 ELSE created_at END AS created_ts
+  FROM ocr_runs
+)
+SELECT
+  run_id,
+  session_id,
+  source_name,
+  status,
+  extracted_char_count,
+  datetime(created_ts, 'unixepoch', 'localtime') AS created_local
+FROM runs
+ORDER BY created_ts DESC
+LIMIT 120;
 ```
 
 #### 3b) OCR trace-link completeness (attach-aware)
@@ -291,7 +326,11 @@ LIMIT 200;
 
 If this returns rows for non-chat source types, run-time backfill has drifted.
 
-### D) `eval_viz.db` (dashboard-ready eval points)
+### D) `eval_viz.db` (dashboard-ready eval points + pulse summary source)
+
+`eval_viz.db` remains the evaluated surface. The local pulse page still uses it
+for the headline pass-rate summary and latest eval detail rows when recent
+`eval_points` exist, but it no longer drives the stacked timeline by itself.
 
 #### 11) Eval outcomes by day and lane
 
@@ -332,4 +371,12 @@ LIMIT 300;
 - Treating mixed timestamp units as all-seconds.
 - Filtering only `status='ok'` and hiding useful fail cohorts.
 - Using `INNER JOIN` where `LEFT JOIN` is needed for diagnostics.
-- Reading eval data from `history.db` only; visual-ready rows live in `eval_viz.db`.
+- Assuming one DB drives the whole OCR pulse page.
+- Reading `eval_viz.db` only and expecting to reconstruct the live OCR timeline.
+- Reading `history.db` only and expecting evaluated pass-rate summary/detail rows.
+- For `/viz/pass-fail`, the wiring is hybrid:
+  `history.db` / `ocr_runs` drive the bucketed lane chart, while `eval_viz.db`
+  / `eval_points` drive the headline eval summary when available.
+- Forgetting the charter constraints for this surface:
+  it is meant to stay local-only, near-real-time, visual-forward, and
+  insight-first rather than turning into a dense analytics dashboard.

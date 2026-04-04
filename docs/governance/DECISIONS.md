@@ -2789,3 +2789,48 @@
 - Why: with persistent fail cohort currently empty, strict exploratory probes
   need a broader sample and multi-run replay to surface diagnostic fail signal
   without changing core OCR gate semantics.
+
+## D-178: Make OCR pulse view hybrid between raw history and eval summary
+
+- Date: `2026-04-03`
+- Category: `eval_observability`
+- Tags: `ocr_pulse`, `runtime_db`, `history_db`, `eval_viz`, `ui_clarity`
+- Decision:
+  - rewire `/viz/pass-fail` away from an `eval_viz.db`-only model:
+    - use `history.db` / `ocr_runs` as the source for the moving chart
+      timeline
+    - classify raw OCR rows into `typed` / `handwriting` / `illustration`
+      inside `api/eval_viz.py`
+    - bucket recent OCR runs into a smaller stacked lane strip for the live
+      view
+  - keep `eval_viz.db` / `eval_points` as the evaluated surface:
+    - use it for the headline pass-rate summary and latest eval detail rows
+      when recent eval data exists
+  - preserve charter constraints for the surface:
+    - local-only execution
+    - visual-forward, insight-first presentation
+    - near-real-time updates from active runtime outputs
+  - preserve fallback behaviour:
+    - if `history.db` is unavailable, the view can still fall back to
+      `eval_viz.db`
+    - if `eval_viz.db` is unavailable, the page still renders from raw OCR
+      history without inventing eval detail
+  - docs alignment:
+    - `docs/governance/POLINKO_WORKFLOW.md`
+    - `docs/runtime/ARCHITECTURE.md`
+    - `docs/runtime/RUNBOOK.md`
+  - regression coverage:
+    - `tests/test_eval_viz.py`
+      - verifies `eval_viz.db`-only payload path still works
+      - verifies `history.db` drives chart points while `eval_viz.db` drives
+        summary when both are present
+  - validation:
+    - `python3 -m unittest tests.test_eval_viz`
+    - `python3 -m py_compile api/eval_viz.py api/app_factory.py tests/test_eval_viz.py`
+    - `make lint-docs`
+- Why: the old page collapsed two different questions into one surface.
+  Raw OCR activity lives in `history.db`, while evaluated lane health lives in
+  `eval_viz.db`. Splitting those responsibilities makes the chart feel alive
+  and truthful without losing the higher-level pass-rate signal, while keeping
+  the page inside the charter’s local-only, visual-forward, insight-first
+  scope.

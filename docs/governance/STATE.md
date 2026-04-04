@@ -10,6 +10,8 @@
 - Backend API is running with:
   - `GET /health`
   - `GET /metrics`
+  - `GET /viz/pass-fail`
+  - `GET /viz/pass-fail/data`
   - `POST /chat`
   - `POST /session/reset`
   - `POST /skills/ocr`
@@ -83,6 +85,20 @@
   - OCR safety bridge commands:
     - `make eval-ocr-safety`
     - `make eval-ocr-safety-report`
+- OCR pulse observability checkpoint (April 3, 2026):
+  - `/viz/pass-fail` is now an active local-only, near-real-time pulse surface
+    for OCR activity
+  - pulse wiring is hybrid by design:
+    - chart timeline comes from `history.db` / `ocr_runs`
+    - recent OCR rows are bucketed and stacked by inferred lane:
+      `text`, `handwriting`, `illustration`
+    - headline pass-rate summary and latest eval detail rows come from
+      `eval_viz.db` / `eval_points` when available
+  - the pulse page is intentionally visual-forward and insight-first rather
+    than a dense dashboard surface
+  - current default page window is `20` buckets
+  - stale root-level `.local/eval_viz.db` is removed; canonical eval pulse DB
+    path remains `.local/runtime_dbs/active/eval_viz.db`
 - Eval runtime resilience checkpoint (April 1, 2026):
   - retrieval harness now supports bounded transient retries for `429`/`5xx`
     and connection errors (`--request-retries`, `--request-retry-delay-ms`)

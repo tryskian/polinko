@@ -45,11 +45,22 @@
   - `.local/runtime_dbs/active/history.db` via `core/history_store.py`
     - `message_feedback` (binary `pass`/`fail` + tags/notes/status)
     - `eval_checkpoints` (`pass_count`, `fail_count`, `non_binary_count`)
+    - `ocr_runs` raw OCR history used by the live pulse chart timeline
   - active gate logic is binary-only (`pass`/`fail`); `non_binary_count` is an
     integrity signal only.
   - checkpoint API responses include explicit fail-closed `gate_outcome`
     (`pass`/`fail`) derived from counts.
   - canonical policy/gate/ui specs are maintained in `docs/runtime/RUNBOOK.md`.
+- Eval visualization surfaces (hybrid):
+  - `.local/runtime_dbs/active/history.db`
+    - recent `ocr_runs` feed the bucketed `text` / `handwriting` /
+      `illustration` chart in `/viz/pass-fail`
+  - `.local/runtime_dbs/active/eval_viz.db`
+    - `eval_points` feed the evaluated headline summary and latest eval detail
+      rows for `/viz/pass-fail` when available
+  - design intent:
+    - local-only, visual-forward, near-real-time surface
+    - insight-first summary rather than dense dashboard analysis
 - Eval artefacts (non-authoritative):
   - Git history is the canonical retention mechanism for tracked project state.
   - local eval artefacts are operational outputs (default under `eval_reports/`)

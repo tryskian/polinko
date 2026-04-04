@@ -575,6 +575,14 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
   `responses_index_reason`, `responses_vector_store_file_id`)
 - `POST /skills/file_search` search indexed vector content (OCR/chat sources,
   includes `backend`, `fallback_reason`, and `candidate_count`)
+- `GET /viz/pass-fail` render the live OCR pulse page:
+  bucketed `ocr_runs` history stacked by inferred lane
+  (`text` / `handwriting` / `illustration`) with evaluated headline summary
+  when `eval_viz.db` is populated; intended as a local-only, near-real-time,
+  insight-first instrument panel
+- `GET /viz/pass-fail/data` return the pulse payload:
+  chart timeline from `history.db` / `ocr_runs`, summary/detail rows from
+  `eval_viz.db` / `eval_points` when available
 - `GET /metrics` request counters, status counts, latency buckets, rate-limit
   totals
 

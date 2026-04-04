@@ -2998,8 +2998,8 @@ def create_app(config: AppConfig) -> FastAPI:
         }
 
     @app.get("/viz/pass-fail", response_class=HTMLResponse)
-    def pass_fail_viz(refresh_ms: int = 4000, chart_max_points: int = 32) -> str:
-        # Lightweight live dashboard for PASS/FAIL eval trend + latest-case table.
+    def pass_fail_viz(refresh_ms: int = 4000, chart_max_points: int = 20) -> str:
+        # Live PASS/FAIL surface with latest eval detail interactions.
         return render_pass_fail_viz_html(
             refresh_ms=refresh_ms,
             chart_max_points=max(8, min(chart_max_points, 120)),
