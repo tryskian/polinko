@@ -353,7 +353,7 @@ class ChatAttachment(BaseModel):
     text_hint: str | None = None
     visual_context_hint: str | None = None
     transcription_mode: str = Field(default=_OCR_TRANSCRIPTION_MODE_VERBATIM, pattern="^(verbatim|normalized)$")
-    memory_scope: str = Field(default="global", pattern="^(global|session)$")
+    memory_scope: str = Field(default="session", pattern="^(global|session)$")
 
 
 class ChatRequest(BaseModel):
@@ -4089,7 +4089,7 @@ def create_app(config: AppConfig) -> FastAPI:
                             source_name=run_source_name,
                             status=run_status,
                             chars=len(extracted_text),
-                            memory_scope=_normalize_memory_scope(ocr_req.memory_scope, default="global"),
+                            memory_scope=_normalize_memory_scope(ocr_req.memory_scope, default="session"),
                             index_session_id=index_session_id,
                             dedup_hit=dedup_hit,
                         )

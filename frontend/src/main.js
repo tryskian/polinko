@@ -1621,7 +1621,7 @@ function attachmentsFromImageBatch(imageEntries) {
         source_name: escapeAttachmentName(entry?.sourceName || "image.png"),
         mime_type: inferMimeTypeFromDataUrl(dataBase64),
         data_base64: dataBase64,
-        memory_scope: "global",
+        memory_scope: normalizeMemoryScope(activeMemoryScope),
       };
     })
     .filter((entry) => entry !== null);
@@ -2382,7 +2382,7 @@ async function queueAttachmentFiles(files) {
       source_name: prepared.source_name,
       mime_type: prepared.mime_type || null,
       data_base64: prepared.data_base64,
-      memory_scope: "global",
+      memory_scope: normalizeMemoryScope(activeMemoryScope),
     });
   }
   pendingAttachments = [...pendingAttachments, ...added];
