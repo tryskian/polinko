@@ -185,6 +185,13 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         phrases = _extract_candidate_phrases(text)
         self.assertIn("alpha spiral field", [p.lower() for p in phrases])
 
+    def test_extract_candidate_phrases_keeps_timestamp_and_date_tokens(self) -> None:
+        text = "correction: timestamp 1745; date 200226"
+        phrases = _extract_candidate_phrases(text)
+        joined = " ".join(phrases)
+        self.assertIn("1745", joined)
+        self.assertIn("200226", joined)
+
     def test_has_correction_signal_detects_not_pair(self) -> None:
         text = "bully not bull-fly"
         self.assertFalse(_has_correction_signal(text))
@@ -355,6 +362,79 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertTrue(review["ocr_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
             self.assertIn("Alpha spiral field", review["chosen_phrases"])
+
+    def test_build_promotes_medium_for_askless_typed_framed_transcription(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            (assets / "Screenshot_2026-03-29.png").write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-askless-typed",
+                "title": "Askless typed OCR",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["attached sample for reference"]},
+                            "metadata": {
+                                "attachments": [
+                                    {
+                                        "name": "Screenshot_2026-03-29.png",
+                                        "id": "file_askless_typed",
+                                    }
+                                ]
+                            },
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {
+                                "parts": [
+                                    "Here's the OCR:\n- alpha spiral field\n- tensor matrix ledger"
+                                ]
+                            },
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-askless-typed.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                max_cases=50,
+            )
+
+            self.assertEqual(summary["medium_signal_strength"], 1)
+            self.assertEqual(summary["cases_written"], 1)
+
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            self.assertEqual(review["lane"], "typed")
+            self.assertEqual(review["signal_strength"], "medium")
+            self.assertEqual(review["emit_status"], "emitted")
+            self.assertTrue(review["ocr_framing_signal"])
 
     def test_build_promotes_medium_with_literal_intent_and_strong_anchor_phrases(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

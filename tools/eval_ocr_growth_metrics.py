@@ -150,9 +150,21 @@ def _run_metrics_for_cases(
     fail_to_pass_cases = 0
     runs_to_pass_values: list[int] = []
     unresolved_ages_hours: list[float] = []
+    observed_status_total = 0
+    pass_status_total = 0
+    fail_status_total = 0
+    error_status_total = 0
 
     for row in summaries:
         first_status = str(row.get("first_status", "")).upper()
+        observed_runs = int(row.get("observed_runs", 0) or 0)
+        pass_runs = int(row.get("pass_runs", 0) or 0)
+        fail_runs = int(row.get("fail_runs", 0) or 0)
+        error_runs = int(row.get("error_runs", 0) or 0)
+        observed_status_total += observed_runs
+        pass_status_total += pass_runs
+        fail_status_total += fail_runs
+        error_status_total += error_runs
         if first_status in {PASS, FAIL}:
             first_decision_cases += 1
             if first_status == FAIL:
@@ -176,6 +188,7 @@ def _run_metrics_for_cases(
     unresolved_oldest = max(unresolved_ages_hours) if unresolved_ages_hours else 0.0
     unresolved_median = median(unresolved_ages_hours) if unresolved_ages_hours else 0.0
     median_runs_to_pass = float(median(runs_to_pass_values)) if runs_to_pass_values else 0.0
+    decision_status_total = pass_status_total + fail_status_total
 
     return {
         "cases": total_cases,
@@ -183,6 +196,11 @@ def _run_metrics_for_cases(
         "first_fail_cases": first_fail_cases,
         "first_error_cases": first_error_cases,
         "decision_coverage_rate": _format_rate(first_decision_cases, total_cases),
+        "observed_status_total": observed_status_total,
+        "decision_run_rate": _format_rate(decision_status_total, observed_status_total),
+        "pass_run_rate": _format_rate(pass_status_total, observed_status_total),
+        "fail_run_rate": _format_rate(fail_status_total, observed_status_total),
+        "error_run_rate": _format_rate(error_status_total, observed_status_total),
         "first_error_rate": _format_rate(first_error_cases, total_cases),
         "first_pass_fail_rate": _format_rate(first_fail_cases, first_decision_cases),
         "fail_first_cases": fail_first_cases,
@@ -321,6 +339,10 @@ def _render_markdown(
     lines.append(f"| runs_total | {report['runs_total']} |")
     lines.append(f"| cases_total | {report['cases_total']} |")
     lines.append(f"| decision_coverage_rate | {metrics['decision_coverage_rate']:.4f} |")
+    lines.append(f"| decision_run_rate | {metrics['decision_run_rate']:.4f} |")
+    lines.append(f"| pass_run_rate | {metrics['pass_run_rate']:.4f} |")
+    lines.append(f"| fail_run_rate | {metrics['fail_run_rate']:.4f} |")
+    lines.append(f"| error_run_rate | {metrics['error_run_rate']:.4f} |")
     lines.append(f"| first_error_rate | {metrics['first_error_rate']:.4f} |")
     lines.append(f"| first_pass_fail_rate | {metrics['first_pass_fail_rate']:.4f} |")
     lines.append(f"| fail_to_pass_conversion_rate | {metrics['fail_to_pass_conversion_rate']:.4f} |")
@@ -332,12 +354,14 @@ def _render_markdown(
     lines.append("")
     lines.append("## Per Lane")
     lines.append("")
-    lines.append("| lane | cases | decision_coverage_rate | first_error_rate | first_pass_fail_rate | fail_to_pass_conversion_rate | median_runs_to_pass | unresolved_fail_age (hours) |")
-    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|")
+    lines.append("| lane | cases | decision_coverage_rate | decision_run_rate | pass_run_rate | fail_run_rate | error_run_rate | first_error_rate | first_pass_fail_rate | fail_to_pass_conversion_rate | median_runs_to_pass | unresolved_fail_age (hours) |")
+    lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for lane in sorted(lane_metrics.keys()):
         item = lane_metrics[lane]
         lines.append(
             f"| {lane} | {item['cases']} | {item['decision_coverage_rate']:.4f} | "
+            f"{item['decision_run_rate']:.4f} | {item['pass_run_rate']:.4f} | "
+            f"{item['fail_run_rate']:.4f} | {item['error_run_rate']:.4f} | "
             f"{item['first_error_rate']:.4f} | {item['first_pass_fail_rate']:.4f} | "
             f"{item['fail_to_pass_conversion_rate']:.4f} | {item['median_runs_to_pass']} | "
             f"{item['unresolved_fail_age']} |"

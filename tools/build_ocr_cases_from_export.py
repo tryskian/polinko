@@ -232,6 +232,10 @@ FRAMED_TRANSCRIPTION_RX = re.compile(
     r"\bit (?:reads?|says)\b[,:-]?\s*([^\n]{3,120})",
     re.IGNORECASE,
 )
+ENTRY_NUMERIC_MARKER_RX = re.compile(
+    r"\b(?:timestamp|time|date|entry(?:\s+time)?)\b\s*[:#=\-]?\s*([^\n]{1,80})",
+    re.IGNORECASE,
+)
 ROOT_PATH_RX = re.compile(
     r"(?:^|[\s(])/(?:mnt|tmp|var|home|users?|data)/[^\s]+",
     re.IGNORECASE,
@@ -390,6 +394,14 @@ def _extract_candidate_phrases(text: str) -> list[str]:
             value = _normalize_phrase_candidate(str(left))
             if 3 <= len(value) <= 80:
                 phrases.append(value)
+    # OCR notes frequently include compact time/date markers (for example 1745, 200226)
+    # that we want to preserve as anchor candidates.
+    marker_matches = ENTRY_NUMERIC_MARKER_RX.findall(text)
+    for marker in marker_matches:
+        tokens = [token for token in re.findall(r"\d{3,8}", marker) if _is_entry_numeric_token(token)]
+        if not tokens:
+            continue
+        phrases.append(" ".join(tokens))
     phrases.extend(_extract_inline_highlight_phrases(text))
     dedup: list[str] = []
     seen: set[str] = set()
@@ -971,6 +983,14 @@ def build_from_export(
                 and has_multi_token_transcription
                 and len(transcription_anchor_terms) >= 3
             )
+            askless_typed_signal = (
+                (not ask_signal)
+                and lane == "typed"
+                and ocr_framing_signal
+                and not positive_signal
+                and has_multi_token_transcription
+                and len(transcription_anchor_terms) >= 3
+            )
             strong_high_transcription_signal = (
                 ocr_literal_intent_signal
                 and ocr_framing_signal
@@ -986,6 +1006,7 @@ def build_from_export(
                 and (
                     ocr_literal_intent_signal
                     or askless_handwriting_signal
+                    or askless_typed_signal
                     or (ocr_intent_signal and ocr_framing_signal)
                 )
             )
@@ -997,6 +1018,7 @@ def build_from_export(
                     or askless_handwriting_signal
                 )
             )
+            medium_intent_signal = medium_intent_signal or askless_typed_signal
             if high_correction_signal:
                 signal_strength = "high"
                 chosen_phrases = followup_correction_phrases[:5]
@@ -1036,6 +1058,7 @@ def build_from_export(
                 or correction_signal
                 or correction_overlap_signal
                 or askless_handwriting_signal
+                or askless_typed_signal
                 or (lane == "handwriting" and ocr_framing_signal)
             )
             if signal_strength == "low" and not low_signal_strength_has_ocr_signal:
@@ -1121,6 +1144,7 @@ def build_from_export(
                     and (
                         ocr_literal_intent_signal
                         or askless_handwriting_signal
+                        or askless_typed_signal
                         or (ocr_intent_signal and (correction_signal or ocr_framing_signal))
                     )
                 )

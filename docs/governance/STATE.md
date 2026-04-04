@@ -10,6 +10,8 @@
 - Backend API is running with:
   - `GET /health`
   - `GET /metrics`
+  - `GET /viz/pass-fail`
+  - `GET /viz/pass-fail/data`
   - `POST /chat`
   - `POST /session/reset`
   - `POST /skills/ocr`
@@ -83,6 +85,20 @@
   - OCR safety bridge commands:
     - `make eval-ocr-safety`
     - `make eval-ocr-safety-report`
+- OCR pulse observability checkpoint (April 3, 2026):
+  - `/viz/pass-fail` is now an active local-only, near-real-time pulse surface
+    for OCR activity
+  - pulse wiring is hybrid by design:
+    - chart timeline comes from `history.db` / `ocr_runs`
+    - recent OCR rows are bucketed and stacked by inferred lane:
+      `text`, `handwriting`, `illustration`
+    - headline pass-rate summary and latest eval detail rows come from
+      `eval_viz.db` / `eval_points` when available
+  - the pulse page is intentionally visual-forward and insight-first rather
+    than a dense dashboard surface
+  - current default page window is `20` buckets
+  - stale root-level `.local/eval_viz.db` is removed; canonical eval pulse DB
+    path remains `.local/runtime_dbs/active/eval_viz.db`
 - Eval runtime resilience checkpoint (April 1, 2026):
   - retrieval harness now supports bounded transient retries for `429`/`5xx`
     and connection errors (`--request-retries`, `--request-retry-delay-ms`)
@@ -638,6 +654,30 @@
   - lockset lanes: handwriting `4/4`, typed `6/6`, illustration `3/3`
   - lockset stability: handwriting `4 stable / 0 flaky`,
     typed `6 stable / 0 flaky`, illustration `3 stable / 0 flaky`
+
+## OCR Kernel Checkpoint (April 3, 2026)
+
+- Mining hardening landed:
+  - compact timestamp/date correction tokens are now preserved as anchors
+    (for example `1745`, `200226`).
+  - strict askless-typed OCR rows are now mineable when framing + multi-token
+    transcription + anchor strength are present.
+- Growth observability widened:
+  - growth metrics now include run-level rates:
+    - `decision_run_rate`
+    - `pass_run_rate`
+    - `fail_run_rate`
+    - `error_run_rate`
+  - lane markdown now carries those rates for quicker fail-heavy triage.
+- Operator surface simplified:
+  - one command now runs the full OCR kernel chain:
+    - `make ocrkernel`
+  - retains explicit override:
+    - `make ocrkernel CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+- Validation snapshot for this checkpoint:
+  - `python3 -m unittest tests.test_build_ocr_cases_from_export` -> PASS
+  - `python3 -m unittest tests.test_eval_ocr_growth_metrics tests.test_eval_ocr_stability` -> PASS
+  - `make lint-docs` -> PASS
 
 ## Portfolio Timeline Snapshot (March 28, 2026)
 
