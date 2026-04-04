@@ -203,6 +203,10 @@ Read-only DB audits remain allowed:
      - fail-tolerant novel-case lane
      - used to measure pass-from-fail movement, not to block release directly
 3. Canonical command sequence:
+   - one-shot autonomous kernel (mine -> widen -> stability -> growth -> fail cohort -> focus replay):
+     - `make ocrkernel`
+     - optional explicit export root override:
+       - `make ocrkernel CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
    - mine/build cases:
      - `make ocrmine`
      - optional explicit override:
