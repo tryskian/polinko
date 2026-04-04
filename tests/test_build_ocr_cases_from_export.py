@@ -591,6 +591,59 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(len(review["episodes"]), 1)
             self.assertEqual(review["episodes"][0]["lane"], "typed")
 
+    def test_build_rejects_unknown_lane_filters(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+            (assets / "img_001.jpg").write_bytes(b"not-a-real-image")
+            conversation = {
+                "conversation_id": "conv-lanes-invalid",
+                "title": "Lane Validation Session",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you transcribe this note?"]},
+                            "metadata": {"attachments": [{"name": "img_001.jpg", "id": "file_lane_invalid"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ['it reads: "alpha spiral field"']},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conv_lanes_invalid.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+
+            with self.assertRaisesRegex(ValueError, "Invalid lane filters"):
+                build_from_export(
+                    export_root,
+                    output_cases=output_cases,
+                    output_cases_handwriting=output_handwriting,
+                    output_cases_typed=output_typed,
+                    output_cases_illustration=output_illustration,
+                    output_review=output_review,
+                    max_cases=50,
+                    include_lanes={"typed", "sketch"},
+                )
+
     def test_build_promotes_medium_for_askless_typed_framed_transcription(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"

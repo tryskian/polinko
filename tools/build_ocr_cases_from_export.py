@@ -267,6 +267,7 @@ CONTROL_TOKEN_RX = re.compile(
 COMPACT_24H_TIME_RX = re.compile(r"^(?:[01]\d|2[0-3])[0-5]\d$")
 COMPACT_YEAR_SUFFIX_DATE_RX = re.compile(r"^\d{4,8}(?:24|25|26)$")
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
+VALID_LANES = {"handwriting", "typed", "illustration"}
 
 
 @dataclass
@@ -836,6 +837,16 @@ def build_from_export(
         raise RuntimeError(f"Missing assets directory: {assets_dir}")
 
     by_name, by_token = _asset_indexes(assets_dir)
+    if include_lanes is not None:
+        include_lanes = {lane.strip().lower() for lane in include_lanes if lane.strip()}
+        invalid_lanes = sorted(lane for lane in include_lanes if lane not in VALID_LANES)
+        if invalid_lanes:
+            raise ValueError(
+                "Invalid lane filters: "
+                + ", ".join(invalid_lanes)
+                + ". Expected one of: "
+                + ", ".join(sorted(VALID_LANES))
+            )
 
     review_rows: list[dict[str, Any]] = []
     cases: list[dict[str, Any]] = []
