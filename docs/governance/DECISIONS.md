@@ -2966,3 +2966,17 @@
   - UI work remains consumption/presentation-only against stable contracts.
 - Why: prevents context switching and keeps engineering throughput on the
   highest-leverage reliability work.
+
+## D-186: Add configurable OCR eval timeout across Make targets
+
+- Date: `2026-04-04`
+- Category: `ocr_hardening`
+- Tags: `timeout_control`, `make_surface`, `throughput`, `runtime_stability`
+- Decision:
+  - add `OCR_EVAL_TIMEOUT` (default `90`) to Makefile OCR eval surfaces.
+  - pass timeout explicitly to:
+    - `tools.eval_ocr` targets (core + transcript lane + benchmark lanes)
+    - `tools.eval_ocr_stability` targets (core, growth, focus, benchmark stability)
+  - keep default behaviour unchanged unless an override is provided.
+- Why: avoids long blocked kernel runs under timeout pressure while preserving
+  deterministic operator control for slice diagnostics.

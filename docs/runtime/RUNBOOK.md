@@ -213,6 +213,8 @@ Read-only DB audits remain allowed:
      - `make ocrwiden`
      - optional bounded batch run:
        - `make ocrwiden OCR_GROWTH_EVAL_OFFSET=0 OCR_GROWTH_EVAL_MAX_CASES=40`
+     - optional timeout-safe slice run (prevents long stalled requests):
+       - `make ocrwiden OCR_GROWTH_EVAL_MAX_CASES=40 OCR_EVAL_TIMEOUT=35 OCR_EVAL_OCR_RETRIES=0`
      - optional chunked full-window run:
        - `make ocrwidenall OCR_GROWTH_BATCH_SIZE=40`
      - retry-tuned chunked run (for transient OCR timeouts):
