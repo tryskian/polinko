@@ -303,6 +303,18 @@
 - Keep OCR-forward split stable:
   - lockset lane remains strict release gate
   - growth lane remains fail-tolerant and tracked separately
+- Prefer one-shot full OCR cycle when running autonomous kernels:
+  - `make ocrkernel`
+  - optional root override:
+    - `make ocrkernel CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+  - `ocrkernel` executes:
+    - `ocrmine` -> `ocrdelta` -> `ocrwiden` -> `ocrstablegrowth` ->
+      `ocrgrowth` -> `ocrfails` -> `ocrfocuscases` ->
+      `eval-ocr-focus-stability` -> `ocrfocusreport`
+- Keep miner strict while widening signal capture:
+  - compact timestamp/date correction markers now count as anchor source.
+  - askless typed rows are allowed only with OCR framing + multi-token
+    transcription + strong anchor terms.
 - Re-run lockset and stability sequence:
   - start with a one-case OCR probe to check provider pressure before full run:
     - `make ocrhandbench OCR_EVAL_OCR_RETRIES=0 OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=1`

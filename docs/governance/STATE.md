@@ -655,6 +655,30 @@
   - lockset stability: handwriting `4 stable / 0 flaky`,
     typed `6 stable / 0 flaky`, illustration `3 stable / 0 flaky`
 
+## OCR Kernel Checkpoint (April 3, 2026)
+
+- Mining hardening landed:
+  - compact timestamp/date correction tokens are now preserved as anchors
+    (for example `1745`, `200226`).
+  - strict askless-typed OCR rows are now mineable when framing + multi-token
+    transcription + anchor strength are present.
+- Growth observability widened:
+  - growth metrics now include run-level rates:
+    - `decision_run_rate`
+    - `pass_run_rate`
+    - `fail_run_rate`
+    - `error_run_rate`
+  - lane markdown now carries those rates for quicker fail-heavy triage.
+- Operator surface simplified:
+  - one command now runs the full OCR kernel chain:
+    - `make ocrkernel`
+  - retains explicit override:
+    - `make ocrkernel CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+- Validation snapshot for this checkpoint:
+  - `python3 -m unittest tests.test_build_ocr_cases_from_export` -> PASS
+  - `python3 -m unittest tests.test_eval_ocr_growth_metrics tests.test_eval_ocr_stability` -> PASS
+  - `make lint-docs` -> PASS
+
 ## Portfolio Timeline Snapshot (March 28, 2026)
 
 - Engineering build completion estimate: `65-75%`

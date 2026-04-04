@@ -2834,3 +2834,31 @@
   and truthful without losing the higher-level pass-rate signal, while keeping
   the page inside the charter’s local-only, visual-forward, insight-first
   scope.
+
+## D-179: Harden OCR growth mining and add one-shot kernel pipeline
+
+- Date: `2026-04-03`
+- Category: `ocr_hardening`
+- Tags: `mining`, `growth_metrics`, `operator_surface`, `strict_binary`
+- Decision:
+  - extend transcript miner phrase extraction to preserve compact entry
+    numerics from correction markers (for example `timestamp 1745`, `date 200226`)
+    as anchor candidates.
+  - add strict askless-typed pathway:
+    - allow `typed` episodes without explicit ask phrase only when framed OCR
+      output + multi-token transcription + strong anchors are present.
+    - keep gate strictness unchanged (`pass`/`fail` only; no matcher loosening).
+  - expose run-level growth rates in `tools/eval_ocr_growth_metrics.py`:
+    - `decision_run_rate`, `pass_run_rate`, `fail_run_rate`, `error_run_rate`
+    - render new columns in growth markdown for lane-level triage.
+  - add one-shot operator command:
+    - `make ocrkernel`
+    - runs mine -> delta -> widen -> growth stability -> growth metrics ->
+      fail cohort -> focus replay -> focus report.
+  - validation:
+    - `python3 -m unittest tests.test_build_ocr_cases_from_export`
+    - `python3 -m unittest tests.test_eval_ocr_growth_metrics tests.test_eval_ocr_stability`
+    - `make lint-docs`
+- Why: improve fail-first signal capture (especially timestamp/date-heavy notes),
+  preserve strict binary gate semantics, and reduce operator overhead by giving
+  one deterministic OCR kernel command for full-cycle execution.
