@@ -127,6 +127,61 @@ def _reason_pattern(reason: str) -> str:
     return "other"
 
 
+NON_ACTIONABLE_REASON_RX = re.compile(
+    r"(?ix)"
+    r"(?:"
+    r"\bno\s+(?:readable\s+)?text\b"
+    r"|"
+    r"\btext\s+not\s+detected\b"
+    r"|"
+    r"\bunable\s+to\s+(?:read|detect|recognis[ez]e|transcrib(?:e|ing))\b"
+    r"|"
+    r"\bcould\s+not\s+(?:read|detect|recognis[ez]e|transcrib(?:e|ing))\b"
+    r"|"
+    r"\billegible\b"
+    r"|"
+    r"\bblank\s+(?:image|output)\b"
+    r"|"
+    r"\bempty\s+(?:image|output)\b"
+    r")"
+)
+
+
+def _is_symbol_only_tiny_variants(row: dict[str, Any], *, sample_reasons: list[str]) -> bool:
+    reasons_text = " | ".join(sample_reasons).lower()
+    if "text too short" not in reasons_text:
+        return False
+
+    max_chars = int(row.get("char_count_max", 0) or 0)
+    if max_chars > 2:
+        return False
+
+    raw_variants = row.get("text_variants")
+    if not isinstance(raw_variants, list):
+        return False
+    variants = [str(item).strip() for item in raw_variants if str(item).strip()]
+    if not variants:
+        return False
+
+    # Keep this strict: classify as non-actionable only when every variant is
+    # tiny and has no ASCII alphanumeric anchor we could gate against.
+    for text in variants:
+        if len(text) > 2:
+            return False
+        if any(char.isascii() and char.isalnum() for char in text):
+            return False
+    return True
+
+
+def _non_actionable_skip_reason(*, row: dict[str, Any], sample_reasons: list[str]) -> str:
+    for reason in sample_reasons:
+        if NON_ACTIONABLE_REASON_RX.search(reason):
+            return "no_text_detected_or_illegible"
+    if _is_symbol_only_tiny_variants(row, sample_reasons=sample_reasons):
+        return "symbol_only_tiny_output"
+    return ""
+
+
 def _fallback_failure_pattern(
     *,
     growth_case: dict[str, Any],
@@ -642,7 +697,9 @@ def build_fail_cohort(
     exploratory_lane_counts: Counter[str] = Counter()
     reason_counts: Counter[str] = Counter()
     reason_pattern_counts: Counter[str] = Counter()
+    non_actionable_reason_counts: Counter[str] = Counter()
     skipped_non_framed = 0
+    skipped_non_actionable = 0
     skipped_case_map_mismatch = 0
     rate_limit_abort_runs = 0
     fail_to_pass_cases = 0
@@ -786,6 +843,15 @@ def build_fail_cohort(
                 persistent_fail_selected = bool(decision_stable and always_fail)
 
         if not persistent_fail_selected:
+            continue
+
+        non_actionable_reason = _non_actionable_skip_reason(
+            row=row,
+            sample_reasons=sample_reasons,
+        )
+        if non_actionable_reason:
+            skipped_non_actionable += 1
+            non_actionable_reason_counts[non_actionable_reason] += 1
             continue
 
         selected_row = {
@@ -1013,10 +1079,12 @@ def build_fail_cohort(
         "include_exploratory": include_exploratory,
         "exploratory_max_cases": exploratory_max_cases,
         "skipped_non_framed": skipped_non_framed,
+        "skipped_non_actionable": skipped_non_actionable,
         "skipped_case_map_mismatch": skipped_case_map_mismatch,
         "lane_counts": dict(sorted(lane_counts.items())),
         "fail_history_lane_counts": dict(sorted(fail_history_lane_counts.items())),
         "exploratory_lane_counts": dict(sorted(exploratory_lane_counts.items())),
+        "non_actionable_reason_counts": dict(sorted(non_actionable_reason_counts.items())),
         "top_reasons": [
             {"reason": reason, "count": count}
             for reason, count in reason_counts.most_common(10)
@@ -1078,6 +1146,7 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
     lines.append(f"| include_exploratory | {summary['include_exploratory']} |")
     lines.append(f"| exploratory_max_cases | {summary['exploratory_max_cases']} |")
     lines.append(f"| skipped_non_framed | {summary['skipped_non_framed']} |")
+    lines.append(f"| skipped_non_actionable | {summary['skipped_non_actionable']} |")
     lines.append(f"| skipped_case_map_mismatch | {summary['skipped_case_map_mismatch']} |")
     lines.append("")
 
@@ -1130,6 +1199,16 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
         lines.append("|---|---:|")
         for pattern, count in failure_pattern_counts.items():
             lines.append(f"| {pattern} | {int(count)} |")
+        lines.append("")
+
+    non_actionable_reason_counts = summary.get("non_actionable_reason_counts")
+    if isinstance(non_actionable_reason_counts, dict) and non_actionable_reason_counts:
+        lines.append("## Non-Actionable Skip Reasons")
+        lines.append("")
+        lines.append("| reason | count |")
+        lines.append("|---|---:|")
+        for reason, count in non_actionable_reason_counts.items():
+            lines.append(f"| {reason} | {int(count)} |")
         lines.append("")
 
     if selected:
@@ -1381,6 +1460,7 @@ def main() -> int:
     print(f"  include_exploratory: {summary['include_exploratory']}")
     print(f"  exploratory_max_cases: {summary['exploratory_max_cases']}")
     print(f"  skipped_non_framed: {summary['skipped_non_framed']}")
+    print(f"  skipped_non_actionable: {summary['skipped_non_actionable']}")
     print(f"  skipped_case_map_mismatch: {summary['skipped_case_map_mismatch']}")
     print(f"  json: {output_json}")
     print(f"  markdown: {output_markdown}")

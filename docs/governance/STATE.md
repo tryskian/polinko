@@ -707,6 +707,16 @@
     `transcribe`, `transcribed`, `journal`, `journaling`, `thing`, `things`.
   - this removes low-value `must_contain_any` anchors and keeps growth-fail
     signal tied to OCR-bearing terms.
+- Fail-cohort signal hygiene update (same day):
+  - persistent FAIL selection now skips clearly non-actionable rows:
+    - explicit no-text / illegible / blank-output reason signals
+    - symbol-only tiny outputs (`text too short` + max chars <= 2)
+  - cohort summary now reports:
+    - `skipped_non_actionable`
+    - `non_actionable_reason_counts`
+  - latest `make ocrfails` snapshot:
+    - `selected_fail_cases=16`, `exploratory_cases=16`
+    - `skipped_non_actionable=1`
 
 ## Portfolio Timeline Snapshot (March 28, 2026)
 

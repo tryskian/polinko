@@ -3028,3 +3028,34 @@
 - Why: these words create low-value `must_contain_any` anchors that inflate
   false fails in growth slices. Filtering them keeps fail signal tied to OCR
   content rather than operator phrasing.
+
+## D-189: Exclude non-actionable persistent OCR fails from fail cohort selection
+
+- Date: `2026-04-04`
+- Category: `ocr_hardening`
+- Tags: `fail_cohort`, `focus_signal`, `non_actionable_filter`, `precision`
+- Decision:
+  - add a strict non-actionable filter in
+    `tools/build_ocr_growth_fail_cohort.py` before persistent fail selection.
+  - skip persistent fail rows only when one of these is true:
+    - sample reasons explicitly indicate no readable text / illegible / blank
+      or empty output.
+    - sample reasons include `text too short` and every variant is symbol-only
+      tiny output (max length <= 2, no ASCII alphanumeric anchors).
+  - keep fail-history and exploratory cohort logic unchanged.
+  - surface skip visibility in cohort outputs:
+    - summary metric: `skipped_non_actionable`
+    - summary breakdown: `non_actionable_reason_counts`
+    - markdown section: `Non-Actionable Skip Reasons`
+  - add regressions in `tests/test_build_ocr_growth_fail_cohort.py`:
+    - `test_non_actionable_reason_skips_persistent_fail_case`
+    - `test_symbol_only_tiny_output_skips_persistent_fail_case`
+- Validation:
+  - `python -m unittest tests.test_build_ocr_growth_fail_cohort`
+  - `make gate`
+  - `make ocrfails`
+  - `make ocrfocuscases`
+  - `make ocrfocusreport`
+- Why: this keeps focus replay kernels high-signal by excluding rows with no
+  meaningful OCR remediation surface, without loosening any binary pass/fail
+  policy logic.
