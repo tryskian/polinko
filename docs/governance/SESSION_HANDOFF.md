@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-04-03
+- 2026-04-05
 
 ## Current Snapshot
 
@@ -28,6 +28,11 @@
   - no active `ui/index.html` file
   - fixture controls remain available through `POST /chat` request fields
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
+- Portfolio docs are now consolidated for drift control:
+  - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md` is the canonical
+    portfolio strategy and locked nucleus source.
+  - `docs/peanut/refs/OPENAI_ROLE_SCRATCHPAD.md` is the canonical
+    role-targeting source (`Final Selection` is authoritative).
 - Backend runtime no longer includes API-key auth config/enforcement
   (`POLINKO_SERVER_API_KEY*` removed from active surface).
 - Eval spec is strict binary end-to-end:
@@ -313,10 +318,13 @@
 ## Immediate Next Step
 
 - Portfolio-first execution kernel (primary for next session):
-  - create/update one portfolio spec as the day anchor:
-    - objective
-    - claims-to-evidence map
-    - acceptance criteria for apply-ready package
+  - execute from the consolidated strategy anchor:
+    - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md`
+  - use role targeting only from:
+    - `docs/peanut/refs/OPENAI_ROLE_SCRATCHPAD.md`
+      (`Final Selection` order)
+  - keep one claims-to-evidence map and one role source of truth; no duplicate
+    planning docs.
   - run packaging first, then backend maintenance.
   - keep scope tight: no new UI rewires during this kernel.
 - Keep OCR-forward split stable:
