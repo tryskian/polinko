@@ -54,6 +54,19 @@
     - `docs/peanut/refs/OPENAI_ROLE_SCRATCHPAD.md`
     - `Final Selection` section is canonical for current-cycle applications
   - duplicate portfolio nucleus file was removed to prevent drift.
+- Notion operating mode checkpoint (April 5, 2026):
+  - canonical planning hub is now:
+    - `POL Project Hub — Focus Mode`
+      (`https://www.notion.so/315b79f28a59819aa1bcf516d2a4d921`)
+  - case-study assembly now runs in:
+    - `Research Assembly`
+      (`https://www.notion.so/52d98a2d094c4dceb4a0aa5469afc45b`)
+  - low-noise curation defaults are:
+    - `Beab Focus — Low Noise Queue`
+    - concept-specific `Focus — ...` views
+  - Notion duplicate/obsolete page policy:
+    - duplicate pages are deleted directly
+    - obsolete pages with no evidence value are deleted directly
 - Quality gate is implemented and passing locally via `make quality-gate`:
   - unit tests
   - retrieval eval (`12/12`)

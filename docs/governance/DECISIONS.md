@@ -3122,3 +3122,31 @@
     assembly and evidence mapping.
 - Why: this preserves authorship traceability while preventing ad hoc
   interpretation drift during portfolio synthesis.
+
+## D-193: Adopt Notion focus hub as canonical day-to-day portfolio operating surface
+
+- Date: `2026-04-05`
+- Category: `evidence_governance`
+- Tags: `notion`, `focus_mode`, `portfolio_ops`, `low_noise`
+- Decision:
+  - set `POL Project Hub — Focus Mode` as the canonical operator surface for
+    daily portfolio work.
+  - use `Research Assembly` as the primary curation database for
+    claim/evidence mapping.
+  - keep repo governance docs as durable system memory, but run day-to-day
+    curation from Notion focus views first.
+- Why: the focus hub structure reduces cognitive load and keeps section-first
+  execution aligned with human-managed co-reasoning.
+
+## D-194: Enforce direct-delete policy for duplicate and obsolete Notion pages
+
+- Date: `2026-04-05`
+- Category: `evidence_governance`
+- Tags: `notion_hygiene`, `deduplication`, `low_noise`
+- Decision:
+  - delete duplicate Notion pages directly (no archive lane required).
+  - delete obsolete Notion pages directly when they do not carry active
+    evidence value.
+  - reserve archive usage for evidence-bearing artefacts only.
+- Why: duplicate-page archival adds noise and slows focus-mode execution during
+  portfolio assembly.

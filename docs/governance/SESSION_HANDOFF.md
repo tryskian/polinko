@@ -33,6 +33,19 @@
     portfolio strategy and locked nucleus source.
   - `docs/peanut/refs/OPENAI_ROLE_SCRATCHPAD.md` is the canonical
     role-targeting source (`Final Selection` is authoritative).
+- Notion portfolio operating base is active:
+  - hub:
+    - `POL Project Hub — Focus Mode`
+      (`https://www.notion.so/315b79f28a59819aa1bcf516d2a4d921`)
+  - assembly database:
+    - `Research Assembly`
+      (`https://www.notion.so/52d98a2d094c4dceb4a0aa5469afc45b`)
+  - low-noise defaults:
+    - `Beab Focus — Low Noise Queue`
+    - concept-specific `Focus — ...` views
+  - Notion page hygiene:
+    - duplicate pages are deleted directly
+    - obsolete pages with no evidence value are deleted directly
 - Backend runtime no longer includes API-key auth config/enforcement
   (`POLINKO_SERVER_API_KEY*` removed from active surface).
 - Eval spec is strict binary end-to-end:
@@ -318,6 +331,9 @@
 ## Immediate Next Step
 
 - Portfolio-first execution kernel (primary for next session):
+  - work from the Notion hub first (focus mode), then sync only material
+    deltas back into repo docs.
+  - keep case-study curation concept-first in `Research Assembly`.
   - execute from the consolidated strategy anchor:
     - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md`
   - use role targeting only from:
