@@ -209,10 +209,14 @@ Read-only DB audits remain allowed:
        - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
      - default export root fallback (when unset):
        - `CGPT_EXPORT_ROOT_DEFAULT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT`
-   - run widened growth lane (fail-tolerant):
+   - run widened growth lane (fail-tolerant, batch-first):
      - `make ocrwiden`
+     - explicit synchronous fallback:
+       - `make ocrwidensync`
      - optional bounded batch run:
        - `make ocrwiden OCR_GROWTH_EVAL_OFFSET=0 OCR_GROWTH_EVAL_MAX_CASES=40`
+     - optional timeout-safe slice run (prevents long stalled requests):
+       - `make ocrwiden OCR_GROWTH_EVAL_MAX_CASES=40 OCR_EVAL_TIMEOUT=35 OCR_EVAL_OCR_RETRIES=0`
      - optional chunked full-window run:
        - `make ocrwidenall OCR_GROWTH_BATCH_SIZE=40`
      - retry-tuned chunked run (for transient OCR timeouts):
@@ -241,8 +245,8 @@ Read-only DB audits remain allowed:
        - `make ocrfocuscases`
      - run focused stability replay:
        - `make eval-ocr-focus-stability`
-     - one-shot command (metrics + cohort + focused replay):
-       - `make ocrfocus`
+   - one-shot command (metrics + cohort + focused replay):
+     - `make ocrfocus`
      - optional knobs:
        - `OCR_FOCUS_MAX_CASES=<n>`
        - `OCR_FOCUS_INCLUDE_FAIL_HISTORY=true|false`
@@ -583,6 +587,9 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
 - `GET /viz/pass-fail/data` return the pulse payload:
   chart timeline from `history.db` / `ocr_runs`, summary/detail rows from
   `eval_viz.db` / `eval_points` when available
+- `GET /manual-evals/surface` return manual-eval data surface from
+  `manual_evals.db` (summary + sessions + OCR runs + thumbnail preview fields +
+  session feedback/checkpoint context)
 - `GET /metrics` request counters, status counts, latency buckets, rate-limit
   totals
 
@@ -1142,6 +1149,24 @@ Current policy:
    - RAG with graph DB
    - search reranking with cross-encoders
 
+## Runtime Kernel Pin
+
+1. Current engineering pin (manual eval surface):
+   - build canonical data surface from:
+     - `.local/runtime_dbs/active/manual_evals.db`
+   - include:
+     - OCR run stream
+     - thumbnail previews (when present)
+     - session-level feedback/checkpoint context
+2. Contract-first implementation order:
+   - data surface builder/query helper
+   - read-only API endpoint(s)
+   - presentation/UI consumption layer (deferred until backend kernel set is stable)
+3. Constraints:
+   - local-only runtime surface
+   - no eval-policy mutation in UI lane
+   - keep binary gate semantics unchanged (`pass`/`fail`)
+
 ## Calibrate Hallucination Threshold
 
 1. Generate one or more hallucination report artifacts:
@@ -1239,3 +1264,21 @@ Checks:
 2. If using Figma desktop workflow, select the target frame/layer before fetch.
 3. If using URL workflow, ensure the link includes a valid `node-id` and retry.
 4. Restart Codex after first-time MCP login to refresh tool availability.
+
+## Rate and Credit Operator Guardrails
+
+1. Treat throughput and spend as separate control planes:
+   - rate limits (`RPM`, `TPM`, queue limits)
+   - usage/billing (token burn, budget, credits)
+2. Cost posture:
+   - keep interactive checks synchronous
+   - run recurring heavy growth lanes batch-first (`make ocrwiden`)
+3. Watch dashboards as part of normal operation:
+   - `make open-limits`
+   - `make open-usage`
+   - `make open-billing`
+   - or one-shot: `make open-cost-console`
+4. Efficiency defaults:
+   - keep `n=1` (single-choice responses)
+   - keep output token bounds tight where tunable
+   - keep exponential backoff/retry behaviour enabled

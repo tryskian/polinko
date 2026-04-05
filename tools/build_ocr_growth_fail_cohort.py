@@ -127,6 +127,61 @@ def _reason_pattern(reason: str) -> str:
     return "other"
 
 
+NON_ACTIONABLE_REASON_RX = re.compile(
+    r"(?ix)"
+    r"(?:"
+    r"\bno\s+(?:readable\s+)?text\b"
+    r"|"
+    r"\btext\s+not\s+detected\b"
+    r"|"
+    r"\bunable\s+to\s+(?:read|detect|recognis[ez]e|transcrib(?:e|ing))\b"
+    r"|"
+    r"\bcould\s+not\s+(?:read|detect|recognis[ez]e|transcrib(?:e|ing))\b"
+    r"|"
+    r"\billegible\b"
+    r"|"
+    r"\bblank\s+(?:image|output)\b"
+    r"|"
+    r"\bempty\s+(?:image|output)\b"
+    r")"
+)
+
+
+def _is_symbol_only_tiny_variants(row: dict[str, Any], *, sample_reasons: list[str]) -> bool:
+    reasons_text = " | ".join(sample_reasons).lower()
+    if "text too short" not in reasons_text:
+        return False
+
+    max_chars = int(row.get("char_count_max", 0) or 0)
+    if max_chars > 2:
+        return False
+
+    raw_variants = row.get("text_variants")
+    if not isinstance(raw_variants, list):
+        return False
+    variants = [str(item).strip() for item in raw_variants if str(item).strip()]
+    if not variants:
+        return False
+
+    # Keep this strict: classify as non-actionable only when every variant is
+    # tiny and has no ASCII alphanumeric anchor we could gate against.
+    for text in variants:
+        if len(text) > 2:
+            return False
+        if any(char.isascii() and char.isalnum() for char in text):
+            return False
+    return True
+
+
+def _non_actionable_skip_reason(*, row: dict[str, Any], sample_reasons: list[str]) -> str:
+    for reason in sample_reasons:
+        if NON_ACTIONABLE_REASON_RX.search(reason):
+            return "no_text_detected_or_illegible"
+    if _is_symbol_only_tiny_variants(row, sample_reasons=sample_reasons):
+        return "symbol_only_tiny_output"
+    return ""
+
+
 def _fallback_failure_pattern(
     *,
     growth_case: dict[str, Any],
@@ -300,6 +355,7 @@ def _derive_order_tokens_from_text(
         return []
 
     ordered_tokens: list[str] = []
+    token_first_index: dict[str, int] = {}
     seen: set[str] = set()
     for token in _tokenise_phrase(text):
         canonical = _canonical_probe_token(token)
@@ -314,11 +370,21 @@ def _derive_order_tokens_from_text(
         if token in EXPLORATORY_STOPWORDS:
             continue
         seen.add(canonical)
+        token_first_index[token] = len(ordered_tokens)
         ordered_tokens.append(token)
 
     if preferred_tokens:
         preferred = [tok for tok in ordered_tokens if _canonical_probe_token(tok) in preferred_tokens]
         collapsed_preferred = _drop_prefix_stem_terms(preferred)
+        if len(collapsed_preferred) >= 3:
+            # Heading tokens at the very start are often less stable across OCR
+            # variants; prefer later preferred anchors when available.
+            late_preferred = [
+                tok for tok in collapsed_preferred if int(token_first_index.get(tok, 999)) >= 2
+            ]
+            collapsed_late_preferred = _drop_prefix_stem_terms(late_preferred)
+            if len(collapsed_late_preferred) >= 2:
+                return collapsed_late_preferred[:EXPLORATORY_ORDER_MAX_TERMS]
         if len(collapsed_preferred) >= 2:
             return collapsed_preferred[:EXPLORATORY_ORDER_MAX_TERMS]
 
@@ -391,6 +457,54 @@ def _derive_anchor_any_terms(anchors: list[str]) -> list[str]:
     return filtered
 
 
+def _text_token_pool(text: str) -> set[str]:
+    return {
+        _canonical_probe_token(token)
+        for token in _tokenise_phrase(text)
+        if re.search(r"[a-z]", token) and len(token) >= 3
+    }
+
+
+def _term_supported_by_text(
+    *,
+    term: str,
+    text: str,
+    text_token_pool: set[str],
+) -> bool:
+    term_norm = " ".join(str(term).split()).strip().lower()
+    if not term_norm:
+        return False
+    text_norm = " ".join(str(text).split()).strip().lower()
+    if term_norm and term_norm in text_norm:
+        return True
+
+    canonical_tokens = [
+        _canonical_probe_token(token)
+        for token in _tokenise_phrase(term_norm)
+        if re.search(r"[a-z]", token) and len(token) >= 3
+    ]
+    if not canonical_tokens:
+        return False
+
+    overlap = sum(1 for token in canonical_tokens if token in text_token_pool)
+    if len(canonical_tokens) == 1:
+        return overlap >= 1
+    return overlap >= 2
+
+
+def _filter_terms_to_text_support(*, terms: list[str], text: str) -> list[str]:
+    if not terms:
+        return []
+    text_tokens = _text_token_pool(text)
+    if not text_tokens and not str(text).strip():
+        return terms
+    supported: list[str] = []
+    for term in terms:
+        if _term_supported_by_text(term=term, text=text, text_token_pool=text_tokens):
+            supported.append(term)
+    return supported
+
+
 def _derive_exploratory_overrides(
     *,
     growth_case: dict[str, Any],
@@ -441,6 +555,8 @@ def _derive_exploratory_overrides(
         selected_order = unique_tokens[:EXPLORATORY_ORDER_MAX_TERMS]
     if len(selected_order) > EXPLORATORY_ORDER_MAX_TERMS:
         selected_order = selected_order[:EXPLORATORY_ORDER_MAX_TERMS]
+    if run_extracted_text.strip():
+        selected_order = _filter_terms_to_text_support(terms=selected_order, text=run_extracted_text)
 
     overrides: dict[str, Any] = {}
     if len(selected_order) >= 2:
@@ -448,6 +564,8 @@ def _derive_exploratory_overrides(
 
     if effective_any:
         refined_any = _derive_anchor_any_terms(effective_any)
+        if run_extracted_text.strip():
+            refined_any = _filter_terms_to_text_support(terms=refined_any, text=run_extracted_text)
         if refined_any:
             overrides["must_contain_any"] = refined_any[:8]
 
@@ -579,7 +697,9 @@ def build_fail_cohort(
     exploratory_lane_counts: Counter[str] = Counter()
     reason_counts: Counter[str] = Counter()
     reason_pattern_counts: Counter[str] = Counter()
+    non_actionable_reason_counts: Counter[str] = Counter()
     skipped_non_framed = 0
+    skipped_non_actionable = 0
     skipped_case_map_mismatch = 0
     rate_limit_abort_runs = 0
     fail_to_pass_cases = 0
@@ -725,6 +845,15 @@ def build_fail_cohort(
         if not persistent_fail_selected:
             continue
 
+        non_actionable_reason = _non_actionable_skip_reason(
+            row=row,
+            sample_reasons=sample_reasons,
+        )
+        if non_actionable_reason:
+            skipped_non_actionable += 1
+            non_actionable_reason_counts[non_actionable_reason] += 1
+            continue
+
         selected_row = {
             "id": case_id,
             "lane": lane,
@@ -849,6 +978,9 @@ def build_fail_cohort(
                 str(run_case.get("image_path", "")).strip()
                 or str(growth_case.get("image_path", "")).strip()
             )
+            growth_image_path = str(growth_case.get("image_path", "")).strip()
+            if run_case_map and growth_image_path and image_path and growth_image_path != image_path:
+                continue
             linked_review_rows = review_index.get(image_path, [])
             framing_episode_count = sum(
                 1 for review_row in linked_review_rows if bool(review_row.get("ocr_framing_signal", False))
@@ -947,10 +1079,12 @@ def build_fail_cohort(
         "include_exploratory": include_exploratory,
         "exploratory_max_cases": exploratory_max_cases,
         "skipped_non_framed": skipped_non_framed,
+        "skipped_non_actionable": skipped_non_actionable,
         "skipped_case_map_mismatch": skipped_case_map_mismatch,
         "lane_counts": dict(sorted(lane_counts.items())),
         "fail_history_lane_counts": dict(sorted(fail_history_lane_counts.items())),
         "exploratory_lane_counts": dict(sorted(exploratory_lane_counts.items())),
+        "non_actionable_reason_counts": dict(sorted(non_actionable_reason_counts.items())),
         "top_reasons": [
             {"reason": reason, "count": count}
             for reason, count in reason_counts.most_common(10)
@@ -1012,6 +1146,7 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
     lines.append(f"| include_exploratory | {summary['include_exploratory']} |")
     lines.append(f"| exploratory_max_cases | {summary['exploratory_max_cases']} |")
     lines.append(f"| skipped_non_framed | {summary['skipped_non_framed']} |")
+    lines.append(f"| skipped_non_actionable | {summary['skipped_non_actionable']} |")
     lines.append(f"| skipped_case_map_mismatch | {summary['skipped_case_map_mismatch']} |")
     lines.append("")
 
@@ -1064,6 +1199,16 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
         lines.append("|---|---:|")
         for pattern, count in failure_pattern_counts.items():
             lines.append(f"| {pattern} | {int(count)} |")
+        lines.append("")
+
+    non_actionable_reason_counts = summary.get("non_actionable_reason_counts")
+    if isinstance(non_actionable_reason_counts, dict) and non_actionable_reason_counts:
+        lines.append("## Non-Actionable Skip Reasons")
+        lines.append("")
+        lines.append("| reason | count |")
+        lines.append("|---|---:|")
+        for reason, count in non_actionable_reason_counts.items():
+            lines.append(f"| {reason} | {int(count)} |")
         lines.append("")
 
     if selected:
@@ -1315,6 +1460,7 @@ def main() -> int:
     print(f"  include_exploratory: {summary['include_exploratory']}")
     print(f"  exploratory_max_cases: {summary['exploratory_max_cases']}")
     print(f"  skipped_non_framed: {summary['skipped_non_framed']}")
+    print(f"  skipped_non_actionable: {summary['skipped_non_actionable']}")
     print(f"  skipped_case_map_mismatch: {summary['skipped_case_map_mismatch']}")
     print(f"  json: {output_json}")
     print(f"  markdown: {output_markdown}")

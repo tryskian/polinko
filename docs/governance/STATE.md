@@ -40,6 +40,10 @@
 - OpenAI developer docs MCP server is now configured for Codex/VS Code usage:
   - endpoint: `https://developers.openai.com/mcp`
   - workspace wiring: `.vscode/mcp.json`
+- Rate/credit operating posture:
+  - throughput (`RPM`/`TPM`/queue) and spend/credits are tracked separately.
+  - recurring heavy OCR growth runs are batch-first.
+  - interactive probes remain synchronous.
 - Figma/UI parity work is deprecated for current cycle; execution focus is backend retrieval, OCR, and file-search reliability.
 - Quality gate is implemented and passing locally via `make quality-gate`:
   - unit tests
@@ -55,7 +59,8 @@
     - `ocr_safety` lane (diagnostic OCR-to-safety bridge, non-release-gating)
   - growth metrics are executable via:
     - growth eval/stability:
-    - `make ocrwiden`
+    - `make ocrwiden` (batch-first default)
+    - `make ocrwidensync` (explicit synchronous fallback)
     - `make ocrstablegrowth`
     - `make ocrgrowth`
     - `make ocrfails`
@@ -686,6 +691,37 @@
   - `python3 -m unittest tests.test_build_ocr_cases_from_export` -> PASS
   - `python3 -m unittest tests.test_eval_ocr_growth_metrics tests.test_eval_ocr_stability` -> PASS
   - `make lint-docs` -> PASS
+
+## OCR Miner Update (April 4, 2026)
+
+- Explicit handwriting markup asks (for example `strikethrough`, `crossed out`,
+  `scratched out`) now promote to medium signal when OCR framing and anchor
+  quality are present, even when literal OCR phrasing is absent.
+- This is intentionally narrow:
+  - lane must be `handwriting`
+  - OCR intent must be present
+  - OCR framing signal must be present
+  - multi-token transcription + anchor quality must pass.
+- Latest rerun result:
+  - `make ocrmine` -> medium signal rows `89 -> 90`
+  - low signal rows `24 -> 23`
+  - emitted cases `84 -> 85`
+  - one previously skipped `strikethrough` row now emitted as medium.
+- Growth-anchor hygiene update (same day):
+  - transcription-meta tokens are now excluded from anchor construction:
+    `transcribe`, `transcribed`, `journal`, `journaling`, `thing`, `things`.
+  - this removes low-value `must_contain_any` anchors and keeps growth-fail
+    signal tied to OCR-bearing terms.
+- Fail-cohort signal hygiene update (same day):
+  - persistent FAIL selection now skips clearly non-actionable rows:
+    - explicit no-text / illegible / blank-output reason signals
+    - symbol-only tiny outputs (`text too short` + max chars <= 2)
+  - cohort summary now reports:
+    - `skipped_non_actionable`
+    - `non_actionable_reason_counts`
+  - latest `make ocrfails` snapshot:
+    - `selected_fail_cases=16`, `exploratory_cases=16`
+    - `skipped_non_actionable=1`
 
 ## Portfolio Timeline Snapshot (March 28, 2026)
 

@@ -14,6 +14,10 @@ OCR_INTENT_PATTERN = (
     r"what does (this|it) say|what(?:'s| is) written|can you read|read (?:this|it)(?!\s+and\s+weep)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew[\s-]?drop\b|\b(?:scribbles?|squibbles?|scrumbles?)\s+(?:and|&)\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratch(?:ed)?\s+out\b|\bcross(?:ed|ing)?\s+out\b|\bstrike[\s-]?through\b|\bstrikethrough\b"
 )
 ASK_RX = re.compile(OCR_INTENT_PATTERN, re.IGNORECASE)
+OCR_MARKUP_INTENT_RX = re.compile(
+    r"\bscratch(?:ed)?\s+out\b|\bcross(?:ed|ing)?\s+out\b|\bstrike[\s-]?through\b|\bstrikethrough\b",
+    re.IGNORECASE,
+)
 HANDWRITING_HINT_RX = re.compile(
     r"\bhandwrit\w*\b|\bcursive\b|\bscript\b|\bnotebook\b|\bsketchbook\b|\bjournal\b|\bink\b|\bpen\b|\bmanifold\b",
     re.IGNORECASE,
@@ -60,6 +64,8 @@ ANCHOR_STOPWORDS = {
 }
 ANCHOR_META_WORDS = {
     "transcription",
+    "transcribe",
+    "transcribed",
     "overlay",
     "interpretation",
     "binaric",
@@ -97,6 +103,10 @@ ANCHOR_META_WORDS = {
     "found",
     "screenshot",
     "html",
+    "journal",
+    "journaling",
+    "thing",
+    "things",
 }
 ANCHOR_WEAK_WORDS = {
     "there",
@@ -615,7 +625,16 @@ def _classify_lane(
     title: str,
     image_path: str,
     followups: list[str],
+    assistant_text: str = "",
 ) -> str:
+    symbolic_chars = [ch for ch in assistant_text if ch.isalpha()]
+    if symbolic_chars:
+        hieroglyph_count = sum(1 for ch in symbolic_chars if 0x13000 <= ord(ch) <= 0x1342F)
+        ascii_letters = sum(1 for ch in symbolic_chars if "a" <= ch.lower() <= "z")
+        non_ascii_letter_ratio = 1.0 - (ascii_letters / len(symbolic_chars))
+        if hieroglyph_count >= 3 or (len(symbolic_chars) >= 8 and non_ascii_letter_ratio >= 0.65):
+            return "illustration"
+
     haystack = "\n".join([ask_text, title, *followups])
     if ILLUSTRATION_HINT_RX.search(haystack):
         return "illustration"
@@ -1019,6 +1038,7 @@ def build_from_export(
                 title=title,
                 image_path=image_path,
                 followups=followups,
+                assistant_text=assistant_text,
             )
             if include_lanes is not None and lane not in include_lanes:
                 skipped_filtered_episodes += 1
@@ -1082,6 +1102,15 @@ def build_from_export(
                 and has_multi_token_transcription
                 and len(transcription_anchor_terms) >= 3
             )
+            ask_markup_handwriting_signal = (
+                lane == "handwriting"
+                and ocr_intent_signal
+                and not ocr_literal_intent_signal
+                and bool(OCR_MARKUP_INTENT_RX.search(ask_followup_text))
+                and ocr_framing_signal
+                and has_multi_token_transcription
+                and len(transcription_anchor_terms) >= 3
+            )
             strong_high_transcription_signal = (
                 ocr_literal_intent_signal
                 and ocr_framing_signal
@@ -1109,7 +1138,9 @@ def build_from_export(
                     or askless_handwriting_signal
                 )
             )
-            medium_intent_signal = medium_intent_signal or askless_typed_signal
+            medium_intent_signal = (
+                medium_intent_signal or askless_typed_signal or ask_markup_handwriting_signal
+            )
             if high_correction_signal:
                 signal_strength = "high"
                 chosen_phrases = followup_correction_phrases[:5]

@@ -24,6 +24,7 @@ from openai import (
 from pydantic import BaseModel, Field
 
 from api.eval_viz import build_pass_fail_viz_payload, render_pass_fail_viz_html
+from api.manual_evals_surface import build_manual_evals_surface_payload
 from config import AppConfig
 from core.history_store import (
     ChatHistoryStore,
@@ -353,7 +354,7 @@ class ChatAttachment(BaseModel):
     text_hint: str | None = None
     visual_context_hint: str | None = None
     transcription_mode: str = Field(default=_OCR_TRANSCRIPTION_MODE_VERBATIM, pattern="^(verbatim|normalized)$")
-    memory_scope: str = Field(default="global", pattern="^(global|session)$")
+    memory_scope: str = Field(default="session", pattern="^(global|session)$")
 
 
 class ChatRequest(BaseModel):
@@ -3009,6 +3010,13 @@ def create_app(config: AppConfig) -> FastAPI:
     def pass_fail_viz_data(max_evals: int = 180) -> dict[str, Any]:
         return build_pass_fail_viz_payload(max_evals=max(1, min(max_evals, 500)))
 
+    @app.get("/manual-evals/surface")
+    def manual_evals_surface(max_runs: int = 180, max_sessions: int = 60) -> dict[str, Any]:
+        return build_manual_evals_surface_payload(
+            max_runs=max(1, min(max_runs, 800)),
+            max_sessions=max(1, min(max_sessions, 300)),
+        )
+
     @app.get("/metrics", response_model=MetricsResponse)
     def metrics(request: Request) -> MetricsResponse:
         deps = _runtime_deps(request.app)
@@ -4089,7 +4097,7 @@ def create_app(config: AppConfig) -> FastAPI:
                             source_name=run_source_name,
                             status=run_status,
                             chars=len(extracted_text),
-                            memory_scope=_normalize_memory_scope(ocr_req.memory_scope, default="global"),
+                            memory_scope=_normalize_memory_scope(ocr_req.memory_scope, default="session"),
                             index_session_id=index_session_id,
                             dedup_hit=dedup_hit,
                         )

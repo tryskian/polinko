@@ -61,6 +61,68 @@ def _case_map(cases_payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return out
 
 
+def _string_list(value: Any) -> list[str]:
+    if not isinstance(value, list):
+        return []
+    out: list[str] = []
+    for item in value:
+        token = str(item).strip()
+        if token:
+            out.append(token)
+    return out
+
+
+def _lane_priority(lane: str) -> int:
+    lane_norm = str(lane).strip().lower()
+    if lane_norm == "handwriting":
+        return 2
+    if lane_norm == "illustration":
+        return 1
+    if lane_norm == "typed":
+        return 0
+    return -1
+
+
+def _focus_actionability_score(row: dict[str, Any]) -> int:
+    must_order = _string_list(
+        row.get("effective_must_appear_in_order") or row.get("must_appear_in_order")
+    )
+    must_any = _string_list(
+        row.get("effective_must_contain_any") or row.get("must_contain_any")
+    )
+
+    primary_pattern = str(row.get("primary_failure_pattern", "")).strip().lower()
+    fail_runs = int(row.get("fail_runs", 0) or 0)
+    observed_runs = int(row.get("observed_runs", 0) or 0)
+    text_variant_count = int(row.get("text_variant_count", 0) or 0)
+    char_count_span = int(row.get("char_count_span", 0) or 0)
+    lane_score = _lane_priority(str(row.get("lane", "")))
+
+    score = 0
+    if len(must_order) >= 2:
+        score += 200
+        score += min(len(must_order), 4) * 20
+    elif primary_pattern == "anchor_any_missing":
+        # Anchor-only misses with no sequence probe are high-noise in focus sets.
+        score -= 150
+    elif len(must_any) == 0:
+        score -= 120
+
+    if primary_pattern == "ordered_phrase_missing":
+        score += 80
+    elif primary_pattern.startswith("ordered_phrase_missing_"):
+        score += 70
+    elif primary_pattern == "anchor_any_missing":
+        score += 10
+
+    score += min(fail_runs, 6) * 8
+    score += min(observed_runs, 6) * 4
+    score += min(text_variant_count, 8) * 3
+    score += min(char_count_span, 60) // 5
+    score += lane_score * 10
+    return score
+
+
 def build_focus_cases(
     *,
     cohort_payload: dict[str, Any],
@@ -129,7 +191,11 @@ def build_focus_cases(
         found.append(merged)
 
     if max_cases > 0:
-        found = found[:max_cases]
+        ranked_rows = sorted(
+            enumerate(found),
+            key=lambda item: (-_focus_actionability_score(item[1]), item[0]),
+        )
+        found = [row for _idx, row in ranked_rows[:max_cases]]
 
     cases_with_cohort_history = sum(
         1

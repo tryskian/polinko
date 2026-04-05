@@ -2937,3 +2937,158 @@
     currently present in tracked project paths.
 - Why: keeps transition context visible for research narrative while preserving
   clean separation between active runtime logic and historical eval behaviour.
+
+## D-184: Pin manual-eval data surface as next runtime kernel
+
+- Date: `2026-04-04`
+- Category: `runtime_engineering`
+- Tags: `manual_eval_surface`, `api_contract`, `thumbnail_preview`, `kernel_pin`
+- Decision:
+  - pin the next runtime kernel as:
+    - manual-eval data surface from `manual_evals.db`
+    - read-only API exposure for summary + runs + thumbnails + session
+      feedback/checkpoint context
+    - UI lanes consume this contract without redefining eval logic
+- Why: keeps progress focused on a stable backend contract first, so visual
+  iteration can move faster without policy drift.
+
+## D-185: Pin UI as deferred lane while backend kernels advance
+
+- Date: `2026-04-04`
+- Category: `runtime_engineering`
+- Tags: `ui_deferred`, `kernel_focus`, `backend_first`, `execution_order`
+- Decision:
+  - pin UI refinement as a deferred lane for now.
+  - continue active execution focus on backend/eval kernels:
+    - OCR mining hardening
+    - manual eval data surfaces
+    - API contract stability and validation
+  - UI work remains consumption/presentation-only against stable contracts.
+- Why: prevents context switching and keeps engineering throughput on the
+  highest-leverage reliability work.
+
+## D-186: Add configurable OCR eval timeout across Make targets
+
+- Date: `2026-04-04`
+- Category: `ocr_hardening`
+- Tags: `timeout_control`, `make_surface`, `throughput`, `runtime_stability`
+- Decision:
+  - add `OCR_EVAL_TIMEOUT` (default `90`) to Makefile OCR eval surfaces.
+  - pass timeout explicitly to:
+    - `tools.eval_ocr` targets (core + transcript lane + benchmark lanes)
+    - `tools.eval_ocr_stability` targets (core, growth, focus, benchmark stability)
+  - keep default behaviour unchanged unless an override is provided.
+- Why: avoids long blocked kernel runs under timeout pressure while preserving
+  deterministic operator control for slice diagnostics.
+
+## D-187: Promote explicit handwriting markup OCR asks under framed transcription
+
+- Date: `2026-04-04`
+- Category: `ocr_hardening`
+- Tags: `ocr_mining`, `handwriting`, `signal_strength`, `precision`
+- Decision:
+  - add a dedicated markup-intent matcher in
+    `tools/build_ocr_cases_from_export.py` for:
+    - `strikethrough` / `strike-through`
+    - `crossed out` / `crossing out`
+    - `scratched out` / `scratch out`
+  - promote these rows from `low` to `medium` only when all of the following
+    are true:
+    - lane is `handwriting`
+    - OCR intent is present but not literal OCR phrasing
+    - assistant output has OCR framing signal
+    - transcription has multi-token + anchor-strength quality
+  - keep existing low-confidence filtering unchanged for non-markup asks.
+  - add regression in `tests/test_build_ocr_cases_from_export.py`:
+    - `test_build_promotes_markup_handwriting_with_framed_transcription`
+- Validation:
+  - `python -m unittest tests.test_build_ocr_cases_from_export`
+  - `make gate`
+  - `CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT make ocrmine`
+- Why: explicit handwriting correction-markup asks are OCR intent in practice.
+  This keeps strict precision while recovering one actionable medium-signal row
+  that was previously stuck in low-confidence backlog.
+
+## D-188: Filter transcription-meta tokens from OCR growth anchor terms
+
+- Date: `2026-04-04`
+- Category: `ocr_hardening`
+- Tags: `ocr_growth`, `anchor_quality`, `false_fail_reduction`, `precision`
+- Decision:
+  - extend anchor meta-word filtering in
+    `tools/build_ocr_cases_from_export.py` to exclude transcription-meta tokens:
+    - `transcribe`, `transcribed`, `journal`, `journaling`, `thing`, `things`
+  - keep lexical OCR-bearing terms unchanged.
+  - add regression in `tests/test_build_ocr_cases_from_export.py`:
+    - `test_anchor_terms_filter_meta_transcription_words`
+- Validation:
+  - `python -m unittest tests.test_build_ocr_cases_from_export`
+  - `make gate`
+  - `CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT make ocrmine`
+- Why: these words create low-value `must_contain_any` anchors that inflate
+  false fails in growth slices. Filtering them keeps fail signal tied to OCR
+  content rather than operator phrasing.
+
+## D-189: Exclude non-actionable persistent OCR fails from fail cohort selection
+
+- Date: `2026-04-04`
+- Category: `ocr_hardening`
+- Tags: `fail_cohort`, `focus_signal`, `non_actionable_filter`, `precision`
+- Decision:
+  - add a strict non-actionable filter in
+    `tools/build_ocr_growth_fail_cohort.py` before persistent fail selection.
+  - skip persistent fail rows only when one of these is true:
+    - sample reasons explicitly indicate no readable text / illegible / blank
+      or empty output.
+    - sample reasons include `text too short` and every variant is symbol-only
+      tiny output (max length <= 2, no ASCII alphanumeric anchors).
+  - keep fail-history and exploratory cohort logic unchanged.
+  - surface skip visibility in cohort outputs:
+    - summary metric: `skipped_non_actionable`
+    - summary breakdown: `non_actionable_reason_counts`
+    - markdown section: `Non-Actionable Skip Reasons`
+  - add regressions in `tests/test_build_ocr_growth_fail_cohort.py`:
+    - `test_non_actionable_reason_skips_persistent_fail_case`
+    - `test_symbol_only_tiny_output_skips_persistent_fail_case`
+- Validation:
+  - `python -m unittest tests.test_build_ocr_growth_fail_cohort`
+  - `make gate`
+  - `make ocrfails`
+  - `make ocrfocuscases`
+  - `make ocrfocusreport`
+- Why: this keeps focus replay kernels high-signal by excluding rows with no
+  meaningful OCR remediation surface, without loosening any binary pass/fail
+  policy logic.
+
+## D-190: Set OCR growth execution to batch-first and formalise rate/credit operator controls
+
+- Date: `2026-04-04`
+- Category: `eval_operations`
+- Tags: `batch_first`, `rate_limits`, `credits`, `operator_hygiene`
+- Decision:
+  - switch growth widening aliases to batch-first defaults:
+    - `make ocrwiden -> eval-ocr-transcript-cases-growth-batched`
+    - `make ocrwidenbatch -> eval-ocr-transcript-cases-growth-batched`
+  - add explicit synchronous fallback alias:
+    - `make ocrwidensync -> eval-ocr-transcript-cases-growth`
+  - keep behaviour drift minimal by preserving zero-case skip semantics for the
+    batched path:
+    - `eval-ocr-transcript-cases-growth-batched` now checks case count and
+      exits cleanly when no growth rows exist.
+  - add quick operator shortcuts for rate/budget visibility:
+    - `make open-limits`
+    - `make open-usage`
+    - `make open-billing`
+    - `make open-cost-console` (opens all three)
+  - codify operator posture in docs:
+    - throughput limits and spend/credits are tracked independently.
+    - interactive checks remain synchronous.
+    - recurring heavy OCR growth runs remain batch-first.
+    - keep `n=1`, tight output token bounds where tunable, and retry/backoff enabled.
+- Validation:
+  - `make lint-docs`
+  - `make test`
+  - `make quality-gate-deterministic`
+- Why: separates throughput pressure from budget pressure, lowers recurring
+  eval cost/limit friction, and keeps interactive debugging responsive without
+  changing binary gate semantics.

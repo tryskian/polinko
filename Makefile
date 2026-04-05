@@ -13,6 +13,9 @@ DEV_HOST ?= 127.0.0.1
 DEV_BACKEND_PORT ?= 8000
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
 DEV_VIZ_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/viz/pass-fail
+OPENAI_LIMITS_URL ?= https://platform.openai.com/settings/organization/limits
+OPENAI_USAGE_URL ?= https://platform.openai.com/settings/organization/usage
+OPENAI_BILLING_URL ?= https://platform.openai.com/settings/organization/billing/overview
 ENV_FILE ?= .env
 K6_BASE_URL ?= http://127.0.0.1:8000
 K6_VUS ?= 3
@@ -64,6 +67,7 @@ OCR_STABILITY_OCR_RETRY_DELAY_MS ?= 750
 OCR_STABILITY_CASE_DELAY_MS ?= 0
 OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS ?= 0
 OCR_MAX_CONSEC_RATE_LIMIT_ERRORS ?= 3
+OCR_EVAL_TIMEOUT ?= 90
 OCR_EVAL_OCR_RETRIES ?= 2
 OCR_EVAL_OCR_RETRY_DELAY_MS ?= 750
 OCR_STABILITY_OUTPUT ?= .local/eval_reports/ocr_transcript_stability.json
@@ -122,7 +126,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 
 chat:
 	$(PYTHON) app.py
@@ -151,6 +155,10 @@ notebook nb notes:
 	else \
 		$(PYTHON) -m jupyter lab --notebook-dir="$(NOTEBOOK_DIR_ABS)" "$(NOTEBOOK_DIR_ABS)"; \
 	fi
+
+.PHONY: manual-evals-db manualdb
+manual-evals-db manualdb:
+	$(PYTHON) -m tools.build_manual_evals_db
 
 # Short aliases for frequent long-chain commands.
 ocrindex: cgpt-export-index
@@ -195,9 +203,11 @@ ocrminebacklog:
 
 ocrall: eval-ocr-transcript-cases
 
-ocrwiden: eval-ocr-transcript-cases-growth
+ocrwiden: eval-ocr-transcript-cases-growth-batched
 
-ocrwidenbatch: eval-ocr-transcript-cases-growth
+ocrwidensync: eval-ocr-transcript-cases-growth
+
+ocrwidenbatch: eval-ocr-transcript-cases-growth-batched
 
 ocrwidenall: eval-ocr-transcript-cases-growth-batched
 
@@ -431,6 +441,48 @@ open-api-docs:
 
 docs:
 	@$(MAKE) --no-print-directory open-api-docs
+
+open-limits:
+	@set -eu; \
+	URL="$(OPENAI_LIMITS_URL)"; \
+	if command -v open >/dev/null 2>&1; then \
+		open "$$URL"; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open "$$URL" >/dev/null 2>&1 || true; \
+	else \
+		echo "Open this URL in your browser: $$URL"; \
+	fi; \
+	echo "OpenAI limits URL: $$URL"
+
+open-usage:
+	@set -eu; \
+	URL="$(OPENAI_USAGE_URL)"; \
+	if command -v open >/dev/null 2>&1; then \
+		open "$$URL"; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open "$$URL" >/dev/null 2>&1 || true; \
+	else \
+		echo "Open this URL in your browser: $$URL"; \
+	fi; \
+	echo "OpenAI usage URL: $$URL"
+
+open-billing:
+	@set -eu; \
+	URL="$(OPENAI_BILLING_URL)"; \
+	if command -v open >/dev/null 2>&1; then \
+		open "$$URL"; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open "$$URL" >/dev/null 2>&1 || true; \
+	else \
+		echo "Open this URL in your browser: $$URL"; \
+	fi; \
+	echo "OpenAI billing URL: $$URL"
+
+open-cost-console:
+	@set -eu; \
+	$(MAKE) --no-print-directory open-limits; \
+	$(MAKE) --no-print-directory open-usage; \
+	$(MAKE) --no-print-directory open-billing
 
 viz:
 	@set -eu; \
@@ -683,12 +735,12 @@ eval-ocr-safety-report:
 	$(PYTHON) -m tools.eval_response_behaviour --suite-id ocr_safety --cases "$(OCR_SAFETY_CASES)" --session-prefix ocr-safety-eval --run-id $$RUN_ID --report-json "eval_reports/ocr-safety-$$RUN_ID.json"
 
 eval-ocr:
-	$(PYTHON) -m tools.eval_ocr --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-report:
 	@mkdir -p eval_reports
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) -m tools.eval_ocr --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" --run-id $$RUN_ID --report-json "eval_reports/ocr-$$RUN_ID.json"
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" --run-id $$RUN_ID --report-json "eval_reports/ocr-$$RUN_ID.json"
 
 eval-ocr-handwriting:
 	@set -eu; \
@@ -697,7 +749,7 @@ eval-ocr-handwriting:
 		echo "Create it with image_path entries (see docs/runtime/RUNBOOK.md)."; \
 		exit 1; \
 	fi; \
-	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_HANDWRITING_CASES)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_HANDWRITING_CASES)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-handwriting-report:
 	@set -eu; \
@@ -708,7 +760,7 @@ eval-ocr-handwriting-report:
 	fi; \
 	mkdir -p eval_reports; \
 	RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_HANDWRITING_CASES)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" --run-id $$RUN_ID --report-json "eval_reports/ocr-handwriting-$$RUN_ID.json"
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_HANDWRITING_CASES)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" --run-id $$RUN_ID --report-json "eval_reports/ocr-handwriting-$$RUN_ID.json"
 
 eval-ocr-recovery:
 	$(PYTHON) -m tools.eval_ocr_recovery
@@ -797,7 +849,7 @@ quality-gate:
 	$(PYTHON) -m unittest discover -s tests -p "test_*.py"; \
 	$(PYTHON) -m tools.eval_retrieval --base-url "$$BASE_URL" --request-retries "$(RETRIEVAL_REQUEST_RETRIES)" --request-retry-delay-ms "$(RETRIEVAL_REQUEST_RETRY_DELAY_MS)"; \
 	$(PYTHON) -m tools.eval_file_search --base-url "$$BASE_URL"; \
-	$(PYTHON) -m tools.eval_ocr --base-url "$$BASE_URL" --strict --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"; \
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --base-url "$$BASE_URL" --strict --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"; \
 	$(PYTHON) -m tools.eval_style --base-url "$$BASE_URL" --strict --case-attempts "$(STYLE_CASE_ATTEMPTS)" --min-pass-attempts "$(STYLE_MIN_PASS_ATTEMPTS)"; \
 	$(PYTHON) -m tools.eval_response_behaviour --base-url "$$BASE_URL" --strict; \
 	$(PYTHON) -m tools.eval_hallucination --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"; \
@@ -918,7 +970,7 @@ eval-ocr-transcript-cases:
 		exit 1; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-growth:
 	@set -eu; \
@@ -933,7 +985,7 @@ eval-ocr-transcript-cases-growth:
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" --show-text --offset "$(OCR_GROWTH_EVAL_OFFSET)" --max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" --show-text --offset "$(OCR_GROWTH_EVAL_OFFSET)" --max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-growth-batched:
 	@set -eu; \
@@ -941,6 +993,11 @@ eval-ocr-transcript-cases-growth-batched:
 		echo "Transcript OCR growth cases not found: $(OCR_TRANSCRIPT_CASES_GROWTH)"; \
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
+	fi; \
+	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_GROWTH)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	if [ "$$CASE_COUNT" -eq 0 ]; then \
+		echo "No transcript OCR growth cases available yet; skipping eval."; \
+		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
 	PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr_batched \
@@ -968,7 +1025,7 @@ eval-ocr-transcript-cases-handwriting:
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-handwriting-benchmark:
 	@set -eu; \
@@ -983,7 +1040,7 @@ eval-ocr-transcript-cases-handwriting-benchmark:
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-typed:
 	@set -eu; \
@@ -998,7 +1055,7 @@ eval-ocr-transcript-cases-typed:
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_TYPED)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_TYPED)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-typed-benchmark:
 	@set -eu; \
@@ -1013,7 +1070,7 @@ eval-ocr-transcript-cases-typed-benchmark:
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-illustration:
 	@set -eu; \
@@ -1028,7 +1085,7 @@ eval-ocr-transcript-cases-illustration:
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-illustration-benchmark:
 	@set -eu; \
@@ -1043,7 +1100,7 @@ eval-ocr-transcript-cases-illustration-benchmark:
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
-	$(PYTHON) -m tools.eval_ocr --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-stability:
 	@set -eu; \
@@ -1057,6 +1114,7 @@ eval-ocr-transcript-stability:
 			--base-url "http://127.0.0.1:8000" \
 			--cases "$(OCR_TRANSCRIPT_CASES)" \
 			--runs "$(OCR_STABILITY_RUNS)" \
+			--timeout "$(OCR_EVAL_TIMEOUT)" \
 			--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
 			--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
 			--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \
@@ -1180,6 +1238,7 @@ eval-ocr-focus-stability:
 			--base-url "http://127.0.0.1:8000" \
 			--cases "$(OCR_FOCUS_CASES_JSON)" \
 			--runs "$(OCR_FOCUS_RUNS)" \
+			--timeout "$(OCR_EVAL_TIMEOUT)" \
 			--ocr-retries "$(OCR_FOCUS_OCR_RETRIES)" \
 			--ocr-retry-delay-ms "$(OCR_FOCUS_OCR_RETRY_DELAY_MS)" \
 			--case-delay-ms "$(OCR_FOCUS_CASE_DELAY_MS)" \
@@ -1232,6 +1291,7 @@ eval-ocr-transcript-stability-growth:
 				--runs "$(OCR_GROWTH_STABILITY_RUNS)" \
 				--offset "$(OCR_GROWTH_EVAL_OFFSET)" \
 				--max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" \
+			--timeout "$(OCR_EVAL_TIMEOUT)" \
 			--ocr-retries "$(OCR_GROWTH_OCR_RETRIES)" \
 			--ocr-retry-delay-ms "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" \
 			--case-delay-ms "$(OCR_GROWTH_CASE_DELAY_MS)" \
@@ -1258,6 +1318,7 @@ eval-ocr-transcript-stability-handwriting-benchmark:
 				--base-url "http://127.0.0.1:8000" \
 				--cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" \
 				--runs "$(OCR_STABILITY_RUNS)" \
+				--timeout "$(OCR_EVAL_TIMEOUT)" \
 				--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
 				--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
 				--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \
@@ -1285,6 +1346,7 @@ eval-ocr-transcript-stability-typed-benchmark:
 				--base-url "http://127.0.0.1:8000" \
 				--cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" \
 				--runs "$(OCR_STABILITY_RUNS)" \
+				--timeout "$(OCR_EVAL_TIMEOUT)" \
 				--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
 				--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
 				--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \
@@ -1312,6 +1374,7 @@ eval-ocr-transcript-stability-illustration-benchmark:
 				--base-url "http://127.0.0.1:8000" \
 				--cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" \
 				--runs "$(OCR_STABILITY_RUNS)" \
+				--timeout "$(OCR_EVAL_TIMEOUT)" \
 				--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
 				--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
 				--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \

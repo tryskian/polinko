@@ -33,6 +33,10 @@ OCR-forward reliability loops, and production-ready API foundations.
 - Keep OCR as the primary reliability lane:
   - lockset lane is release-gating and must remain green
   - growth lane is fail-tolerant and used to measure pass-from-fail movement
+  - recurring growth execution is batch-first; sync is reserved for interactive probes
+- Rate and budget controls are tracked separately:
+  - throughput limits (`RPM`/`TPM`/queue)
+  - spend/credits (usage + billing)
 - Run `make doctor-env` when local environment behaviour looks suspicious.
 - Run `make quality-gate` before push when backend/prompt/retrieval logic changes.
 - Streamline-first operator rule: keep one canonical make target per workflow action
@@ -119,3 +123,9 @@ OCR-forward reliability loops, and production-ready API foundations.
 - Cookbook priority pin (next integration kernel):
   - `Vision Fine-tuning on GPT-4o for Visual Question Answering` is first in
     the cookbook integration sequence.
+- Runtime progress pin (next engineering kernel):
+  - build a manual-eval data surface from `manual_evals.db`
+  - expose read-only API endpoints for summary + runs + thumbnails + session
+    feedback/checkpoint context
+  - keep UI work presentation-only against that API contract
+  - defer UI styling/interaction iterations until backend kernels are stable

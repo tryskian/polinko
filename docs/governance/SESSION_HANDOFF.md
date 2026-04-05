@@ -101,7 +101,8 @@
     - `make eval-ocr-transcript-stability-typed-benchmark`
     - `make eval-ocr-transcript-stability-illustration-benchmark`
     - `make ocrdelta`
-    - aliases: `make ocrwiden`, `make ocrstablegrowth`,
+    - aliases: `make ocrwiden` (batch-first), `make ocrwidensync`,
+      `make ocrstablegrowth`,
       `make ocrtypebench`, `make ocrillubench`,
       `make ocrstabletype`, `make ocrstableillu`
   - generated transcript OCR cases stay local-only in `.local/eval_cases/`
@@ -339,7 +340,8 @@
   - if growth cases were rematerialised (`make ocrmine`), run
     `make ocrstablegrowth` before `make ocrgrowth`/`make ocrfails` so metrics
     are aligned to the current case map.
-  - `make ocrwiden`
+  - `make ocrwiden` (batch-first default)
+  - `make ocrwidensync` (explicit sync fallback)
   - `make ocrstablegrowth`
   - `make ocrgrowth`
   - `make ocrfails`

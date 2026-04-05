@@ -1022,6 +1022,268 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             ["archival", "tumbles", "increases", "restore deleted spectral"],
         )
 
+    def test_exploratory_filters_anchor_any_to_run_text_support(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-pass-filter-any",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-filter-any": {
+                "id": "gx-pass-filter-any",
+                "lane": "typed",
+                "source_name": "sample-pass-filter-any.png",
+                "image_path": "/tmp/sample-pass-filter-any.png",
+                "must_contain_any": ["alpha", "beta", "gamma"],
+            }
+        }
+        run_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-filter-any": {
+                "id": "gx-pass-filter-any",
+                "source_name": "sample-pass-filter-any.png",
+                "image_path": "/tmp/sample-pass-filter-any.png",
+                "extracted_text": "delta epsilon alpha marker",
+            }
+        }
+        review_index = {
+            "/tmp/sample-pass-filter-any.png": [{"ocr_framing_signal": True, "lane": "typed"}]
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map=run_case_map,
+            metrics_map={},
+            review_index=review_index,
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=True,
+            include_exploratory=True,
+            exploratory_max_cases=5,
+        )
+
+        self.assertEqual(report["summary"]["exploratory_cases"], 1)
+        exploratory = report["exploratory_cases"][0]
+        overrides = exploratory.get("focus_overrides")
+        self.assertIsInstance(overrides, dict)
+        self.assertEqual(overrides.get("must_contain_any"), ["alpha"])
+
+    def test_exploratory_prefers_late_preferred_anchor_order_tokens(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-pass-late-order",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-late-order": {
+                "id": "gx-pass-late-order",
+                "lane": "typed",
+                "source_name": "sample-pass-late-order.png",
+                "image_path": "/tmp/sample-pass-late-order.png",
+                "must_contain_any": ["action", "rationale", "reality", "higher"],
+            }
+        }
+        run_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-late-order": {
+                "id": "gx-pass-late-order",
+                "source_name": "sample-pass-late-order.png",
+                "image_path": "/tmp/sample-pass-late-order.png",
+                "extracted_text": (
+                    "ACTION RATIONALE SELF 3D REALITY BODY MIND HIGHER SELF"
+                ),
+            }
+        }
+        review_index = {
+            "/tmp/sample-pass-late-order.png": [{"ocr_framing_signal": True, "lane": "typed"}]
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map=run_case_map,
+            metrics_map={},
+            review_index=review_index,
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=True,
+            include_exploratory=True,
+            exploratory_max_cases=5,
+        )
+
+        self.assertEqual(report["summary"]["exploratory_cases"], 1)
+        exploratory = report["exploratory_cases"][0]
+        overrides = exploratory.get("focus_overrides")
+        self.assertIsInstance(overrides, dict)
+        self.assertEqual(overrides.get("must_appear_in_order"), ["reality", "higher"])
+
+    def test_exploratory_skips_run_growth_image_mismatch(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-pass-mismatch",
+                    "observed_runs": 2,
+                    "pass_runs": 2,
+                    "fail_runs": 0,
+                    "error_runs": 0,
+                    "pass_rate": 1.0,
+                    "decision_stable": True,
+                    "always_fail": False,
+                    "statuses": ["PASS", "PASS"],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-mismatch": {
+                "id": "gx-pass-mismatch",
+                "lane": "typed",
+                "source_name": "growth.png",
+                "image_path": "/tmp/growth.png",
+                "must_contain_any": ["field notes measurable record"],
+            }
+        }
+        run_case_map: dict[str, dict[str, Any]] = {
+            "gx-pass-mismatch": {
+                "id": "gx-pass-mismatch",
+                "source_name": "run.png",
+                "image_path": "/tmp/run.png",
+                "extracted_text": "field notes measurable record and archive",
+            }
+        }
+        review_index = {"/tmp/run.png": [{"ocr_framing_signal": True, "lane": "typed"}]}
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map=run_case_map,
+            metrics_map={},
+            review_index=review_index,
+            min_runs=1,
+            include_unstable=True,
+            require_ocr_framing=True,
+            include_exploratory=True,
+            exploratory_max_cases=5,
+        )
+
+        self.assertEqual(report["summary"]["exploratory_cases"], 0)
+
+    def test_non_actionable_reason_skips_persistent_fail_case(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-no-text",
+                    "observed_runs": 3,
+                    "pass_runs": 0,
+                    "fail_runs": 3,
+                    "error_runs": 0,
+                    "pass_rate": 0.0,
+                    "decision_stable": True,
+                    "always_fail": True,
+                    "statuses": ["FAIL"] * 3,
+                    "sample_reasons": ["no readable text detected in image"],
+                    "text_variant_count": 1,
+                    "char_count_max": 0,
+                    "char_count_min": 0,
+                    "text_variants": [""],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-no-text": {
+                "id": "gx-no-text",
+                "lane": "typed",
+                "source_name": "no-text.png",
+                "image_path": "/tmp/no-text.png",
+                "must_contain_any": ["alpha"],
+            }
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map={},
+            metrics_map={},
+            review_index={},
+            min_runs=1,
+            include_unstable=False,
+            require_ocr_framing=False,
+        )
+
+        self.assertEqual(report["summary"]["selected_fail_cases"], 0)
+        self.assertEqual(report["summary"]["skipped_non_actionable"], 1)
+        self.assertEqual(
+            report["summary"]["non_actionable_reason_counts"],
+            {"no_text_detected_or_illegible": 1},
+        )
+
+    def test_symbol_only_tiny_output_skips_persistent_fail_case(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-symbol-only",
+                    "observed_runs": 4,
+                    "pass_runs": 0,
+                    "fail_runs": 4,
+                    "error_runs": 0,
+                    "pass_rate": 0.0,
+                    "decision_stable": True,
+                    "always_fail": True,
+                    "statuses": ["FAIL"] * 4,
+                    "sample_reasons": ["text too short: 1 < min_chars=3"],
+                    "text_variant_count": 2,
+                    "char_count_max": 1,
+                    "char_count_min": 1,
+                    "text_variants": ["*", "#"],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-symbol-only": {
+                "id": "gx-symbol-only",
+                "lane": "typed",
+                "source_name": "symbols.png",
+                "image_path": "/tmp/symbols.png",
+                "must_contain_any": ["alpha"],
+            }
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map={},
+            metrics_map={},
+            review_index={},
+            min_runs=1,
+            include_unstable=False,
+            require_ocr_framing=False,
+        )
+
+        self.assertEqual(report["summary"]["selected_fail_cases"], 0)
+        self.assertEqual(report["summary"]["skipped_non_actionable"], 1)
+        self.assertEqual(
+            report["summary"]["non_actionable_reason_counts"],
+            {"symbol_only_tiny_output": 1},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

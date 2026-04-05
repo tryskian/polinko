@@ -92,6 +92,18 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(body["status"], "ok")
         self.assertIn("prompt_version", body)
 
+    def test_manual_evals_surface_endpoint_returns_payload_shape(self) -> None:
+        resp = self.client.get(
+            "/manual-evals/surface",
+            headers={"x-api-key": "test-server-key"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertIn("available", payload)
+        self.assertIn("summary", payload)
+        self.assertIn("sessions", payload)
+        self.assertIn("runs", payload)
+
     def test_api_key_is_not_required_for_core_endpoints(self) -> None:
         chat_resp = self.client.post(
             "/chat",
@@ -776,6 +788,75 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertTrue(any(item["source_type"] == "ocr" for item in payload["memory_used"]))
         self.assertTrue(any(item["session_id"] == "s-attach-seed" for item in payload["memory_used"]))
         self.assertIn("RETRIEVED_MEMORY", captured["input"])
+
+    def test_chat_attachment_default_memory_scope_matches_ocr_session_default(self) -> None:
+        deps = server.get_runtime_deps()
+        deps.vector_enabled = True
+        deps.vector_store = VectorStore(
+            os.path.join(self.tmpdir.name, "test-vectors-chat-attachments-default-scope.db")
+        )
+        deps.vector_min_similarity = 0.0
+        deps.vector_min_similarity_global = 0.0
+        deps.vector_min_similarity_session = 0.0
+
+        class _FakeEmbeddings:
+            @staticmethod
+            def _embed(text: str) -> list[float]:
+                lowered = text.lower()
+                return [
+                    1.0 if "default" in lowered else 0.0,
+                    1.0 if "scope" in lowered else 0.0,
+                    1.0 if "attachment" in lowered else 0.0,
+                    float(len(lowered) % 31) / 31.0,
+                ]
+
+            def create(self, **kwargs: Any) -> SimpleNamespace:
+                inputs = kwargs["input"]
+                payload = [inputs] if isinstance(inputs, str) else list(inputs)
+                data = [SimpleNamespace(embedding=self._embed(text)) for text in payload]
+                return SimpleNamespace(data=data)
+
+        deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
+        payload_b64 = base64.b64encode(b"placeholder").decode("ascii")
+
+        with self._stub_runner("Scoped default response"):
+            seeded = self.client.post(
+                "/chat",
+                headers={"x-api-key": "test-server-key"},
+                json={
+                    "message": "Store this attachment using default scope.",
+                    "session_id": "s-attach-default-scope",
+                    "attachments": [
+                        {
+                            "source_name": "default-scope.png",
+                            "mime_type": "image/png",
+                            "data_base64": payload_b64,
+                            "text_hint": "default scope attachment anchor",
+                        }
+                    ],
+                },
+            )
+        self.assertEqual(seeded.status_code, 200)
+
+        query_vector = _FakeEmbeddings._embed("default scope attachment")
+        session_matches = deps.vector_store.search(
+            query_embedding=query_vector,
+            limit=10,
+            min_similarity=0.0,
+            roles=("assistant",),
+            include_session_id="s-attach-default-scope",
+            source_types=("ocr", "image"),
+        )
+        global_matches = deps.vector_store.search(
+            query_embedding=query_vector,
+            limit=10,
+            min_similarity=0.0,
+            roles=("assistant",),
+            include_session_id="__global_memory__",
+            source_types=("ocr", "image"),
+        )
+        self.assertGreaterEqual(len(session_matches), 1)
+        self.assertEqual(len(global_matches), 0)
 
     def test_chat_attachment_ocr_dedups_identical_requests(self) -> None:
         deps = server.get_runtime_deps()
