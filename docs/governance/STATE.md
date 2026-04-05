@@ -47,6 +47,13 @@
 - Figma/UI parity work is deprecated for current cycle; execution focus is backend retrieval, OCR, and file-search reliability.
 - Active sequencing bias is now portfolio-first packaging, with OCR/backend
   maintenance kept as the secondary track.
+- Portfolio doc consolidation checkpoint (April 5, 2026):
+  - locked nucleus content is now embedded in:
+    - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md`
+  - role-targeting is now single-source:
+    - `docs/peanut/refs/OPENAI_ROLE_SCRATCHPAD.md`
+    - `Final Selection` section is canonical for current-cycle applications
+  - duplicate portfolio nucleus file was removed to prevent drift.
 - Quality gate is implemented and passing locally via `make quality-gate`:
   - unit tests
   - retrieval eval (`12/12`)

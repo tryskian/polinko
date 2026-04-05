@@ -3092,3 +3092,33 @@
 - Why: separates throughput pressure from budget pressure, lowers recurring
   eval cost/limit friction, and keeps interactive debugging responsive without
   changing binary gate semantics.
+
+## D-191: Consolidate portfolio docs to single-source strategy and role targeting
+
+- Date: `2026-04-05`
+- Category: `evidence_governance`
+- Tags: `portfolio`, `doc_consolidation`, `single_source_of_truth`, `drift_prevention`
+- Decision:
+  - embed locked portfolio nucleus content directly in
+    `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md`.
+  - use `docs/peanut/refs/OPENAI_ROLE_SCRATCHPAD.md` as the only role-targeting
+    source of truth (including `Final Selection` ordering).
+  - remove duplicate nucleus doc to prevent split ownership and stale edits.
+- Why: portfolio packaging now runs as the primary workstream, so duplicated
+  planning docs created avoidable drift and slowed execution.
+
+## D-192: Use evidence-bookended schema for case-study reasoning flow
+
+- Date: `2026-04-05`
+- Category: `evidence_governance`
+- Tags: `portfolio_schema`, `hypothesis_flow`, `evidence_synthesis`, `bookend_structure`
+- Decision:
+  - adopt one canonical case-study reasoning sequence:
+    1. Initial Hypothesis (as documented baseline)
+    2. Evidence Expansion (transcripts, decisions, eval patterns, metrics)
+    3. Synthesis Findings (what consistently emerged)
+    4. Evidence-Bound Conclusion (supported, revised, or split hypothesis)
+  - keep this sequence as the default packaging order for portfolio narrative
+    assembly and evidence mapping.
+- Why: this preserves authorship traceability while preventing ad hoc
+  interpretation drift during portfolio synthesis.

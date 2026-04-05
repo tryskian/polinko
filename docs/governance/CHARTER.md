@@ -129,3 +129,8 @@ OCR-forward reliability loops, and production-ready API foundations.
     feedback/checkpoint context
   - keep UI work presentation-only against that API contract
   - defer UI styling/interaction iterations until backend kernels are stable
+- Portfolio governance pin:
+  - keep one canonical portfolio strategy doc:
+    - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md`
+  - keep one canonical role-targeting source of truth:
+    - `docs/peanut/refs/OPENAI_ROLE_SCRATCHPAD.md`
