@@ -40,6 +40,10 @@
 - OpenAI developer docs MCP server is now configured for Codex/VS Code usage:
   - endpoint: `https://developers.openai.com/mcp`
   - workspace wiring: `.vscode/mcp.json`
+- Rate/credit operating posture:
+  - throughput (`RPM`/`TPM`/queue) and spend/credits are tracked separately.
+  - recurring heavy OCR growth runs are batch-first.
+  - interactive probes remain synchronous.
 - Figma/UI parity work is deprecated for current cycle; execution focus is backend retrieval, OCR, and file-search reliability.
 - Quality gate is implemented and passing locally via `make quality-gate`:
   - unit tests
@@ -55,7 +59,8 @@
     - `ocr_safety` lane (diagnostic OCR-to-safety bridge, non-release-gating)
   - growth metrics are executable via:
     - growth eval/stability:
-    - `make ocrwiden`
+    - `make ocrwiden` (batch-first default)
+    - `make ocrwidensync` (explicit synchronous fallback)
     - `make ocrstablegrowth`
     - `make ocrgrowth`
     - `make ocrfails`

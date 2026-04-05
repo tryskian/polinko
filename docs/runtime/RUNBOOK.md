@@ -209,8 +209,10 @@ Read-only DB audits remain allowed:
        - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
      - default export root fallback (when unset):
        - `CGPT_EXPORT_ROOT_DEFAULT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT`
-   - run widened growth lane (fail-tolerant):
+   - run widened growth lane (fail-tolerant, batch-first):
      - `make ocrwiden`
+     - explicit synchronous fallback:
+       - `make ocrwidensync`
      - optional bounded batch run:
        - `make ocrwiden OCR_GROWTH_EVAL_OFFSET=0 OCR_GROWTH_EVAL_MAX_CASES=40`
      - optional timeout-safe slice run (prevents long stalled requests):
@@ -243,8 +245,8 @@ Read-only DB audits remain allowed:
        - `make ocrfocuscases`
      - run focused stability replay:
        - `make eval-ocr-focus-stability`
-     - one-shot command (metrics + cohort + focused replay):
-       - `make ocrfocus`
+   - one-shot command (metrics + cohort + focused replay):
+     - `make ocrfocus`
      - optional knobs:
        - `OCR_FOCUS_MAX_CASES=<n>`
        - `OCR_FOCUS_INCLUDE_FAIL_HISTORY=true|false`
@@ -1262,3 +1264,21 @@ Checks:
 2. If using Figma desktop workflow, select the target frame/layer before fetch.
 3. If using URL workflow, ensure the link includes a valid `node-id` and retry.
 4. Restart Codex after first-time MCP login to refresh tool availability.
+
+## Rate and Credit Operator Guardrails
+
+1. Treat throughput and spend as separate control planes:
+   - rate limits (`RPM`, `TPM`, queue limits)
+   - usage/billing (token burn, budget, credits)
+2. Cost posture:
+   - keep interactive checks synchronous
+   - run recurring heavy growth lanes batch-first (`make ocrwiden`)
+3. Watch dashboards as part of normal operation:
+   - `make open-limits`
+   - `make open-usage`
+   - `make open-billing`
+   - or one-shot: `make open-cost-console`
+4. Efficiency defaults:
+   - keep `n=1` (single-choice responses)
+   - keep output token bounds tight where tunable
+   - keep exponential backoff/retry behaviour enabled

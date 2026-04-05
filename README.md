@@ -62,7 +62,14 @@ Notes:
 - short aliases for long-chain commands:
   `make ocrindex`, `make ocrmine`, `make ocrall`, `make ocrhand`,
   `make ocrtype`, `make ocrillu`, `make ocrstable`, `make ocrwiden`,
+  `make ocrwidensync`,
   `make ocrstablegrowth`, `make ocrgrowth`, `make ocrfails`, `make gate`
+- Batch-first OCR widening:
+  `make ocrwiden` now runs the batched growth lane by default.
+  Use `make ocrwidensync` for explicit synchronous fallback.
+- OpenAI rate/budget quick openers:
+  `make open-cost-console` (or `make open-limits`, `make open-usage`,
+  `make open-billing`).
 - notebook commands:
   `make notebook-setup`, `make notes` (aliases: `make notebook`, `make nb`)
 
@@ -95,6 +102,16 @@ make backend-gate
 make quality-gate
 make quality-gate-deterministic
 ```
+
+Rate/credit hygiene:
+
+- Rate limits (`RPM`/`TPM`) and spend/credits are separate controls.
+- Keep interactive checks sync, and run heavy recurring OCR growth with
+  `make ocrwiden` (batch-first).
+- Watch these three dashboards regularly:
+  - Limits (throughput)
+  - Usage (token/cost burn)
+  - Billing (payment/credits)
 
 ## API Surface
 

@@ -13,6 +13,9 @@ DEV_HOST ?= 127.0.0.1
 DEV_BACKEND_PORT ?= 8000
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
 DEV_VIZ_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/viz/pass-fail
+OPENAI_LIMITS_URL ?= https://platform.openai.com/settings/organization/limits
+OPENAI_USAGE_URL ?= https://platform.openai.com/settings/organization/usage
+OPENAI_BILLING_URL ?= https://platform.openai.com/settings/organization/billing/overview
 ENV_FILE ?= .env
 K6_BASE_URL ?= http://127.0.0.1:8000
 K6_VUS ?= 3
@@ -123,7 +126,7 @@ CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat venv env notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 
 chat:
 	$(PYTHON) app.py
@@ -200,9 +203,11 @@ ocrminebacklog:
 
 ocrall: eval-ocr-transcript-cases
 
-ocrwiden: eval-ocr-transcript-cases-growth
+ocrwiden: eval-ocr-transcript-cases-growth-batched
 
-ocrwidenbatch: eval-ocr-transcript-cases-growth
+ocrwidensync: eval-ocr-transcript-cases-growth
+
+ocrwidenbatch: eval-ocr-transcript-cases-growth-batched
 
 ocrwidenall: eval-ocr-transcript-cases-growth-batched
 
@@ -436,6 +441,48 @@ open-api-docs:
 
 docs:
 	@$(MAKE) --no-print-directory open-api-docs
+
+open-limits:
+	@set -eu; \
+	URL="$(OPENAI_LIMITS_URL)"; \
+	if command -v open >/dev/null 2>&1; then \
+		open "$$URL"; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open "$$URL" >/dev/null 2>&1 || true; \
+	else \
+		echo "Open this URL in your browser: $$URL"; \
+	fi; \
+	echo "OpenAI limits URL: $$URL"
+
+open-usage:
+	@set -eu; \
+	URL="$(OPENAI_USAGE_URL)"; \
+	if command -v open >/dev/null 2>&1; then \
+		open "$$URL"; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open "$$URL" >/dev/null 2>&1 || true; \
+	else \
+		echo "Open this URL in your browser: $$URL"; \
+	fi; \
+	echo "OpenAI usage URL: $$URL"
+
+open-billing:
+	@set -eu; \
+	URL="$(OPENAI_BILLING_URL)"; \
+	if command -v open >/dev/null 2>&1; then \
+		open "$$URL"; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open "$$URL" >/dev/null 2>&1 || true; \
+	else \
+		echo "Open this URL in your browser: $$URL"; \
+	fi; \
+	echo "OpenAI billing URL: $$URL"
+
+open-cost-console:
+	@set -eu; \
+	$(MAKE) --no-print-directory open-limits; \
+	$(MAKE) --no-print-directory open-usage; \
+	$(MAKE) --no-print-directory open-billing
 
 viz:
 	@set -eu; \
@@ -946,6 +993,11 @@ eval-ocr-transcript-cases-growth-batched:
 		echo "Transcript OCR growth cases not found: $(OCR_TRANSCRIPT_CASES_GROWTH)"; \
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
+	fi; \
+	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_GROWTH)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	if [ "$$CASE_COUNT" -eq 0 ]; then \
+		echo "No transcript OCR growth cases available yet; skipping eval."; \
+		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory server-daemon; \
 	PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr_batched \

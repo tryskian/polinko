@@ -3059,3 +3059,36 @@
 - Why: this keeps focus replay kernels high-signal by excluding rows with no
   meaningful OCR remediation surface, without loosening any binary pass/fail
   policy logic.
+
+## D-190: Set OCR growth execution to batch-first and formalise rate/credit operator controls
+
+- Date: `2026-04-04`
+- Category: `eval_operations`
+- Tags: `batch_first`, `rate_limits`, `credits`, `operator_hygiene`
+- Decision:
+  - switch growth widening aliases to batch-first defaults:
+    - `make ocrwiden -> eval-ocr-transcript-cases-growth-batched`
+    - `make ocrwidenbatch -> eval-ocr-transcript-cases-growth-batched`
+  - add explicit synchronous fallback alias:
+    - `make ocrwidensync -> eval-ocr-transcript-cases-growth`
+  - keep behaviour drift minimal by preserving zero-case skip semantics for the
+    batched path:
+    - `eval-ocr-transcript-cases-growth-batched` now checks case count and
+      exits cleanly when no growth rows exist.
+  - add quick operator shortcuts for rate/budget visibility:
+    - `make open-limits`
+    - `make open-usage`
+    - `make open-billing`
+    - `make open-cost-console` (opens all three)
+  - codify operator posture in docs:
+    - throughput limits and spend/credits are tracked independently.
+    - interactive checks remain synchronous.
+    - recurring heavy OCR growth runs remain batch-first.
+    - keep `n=1`, tight output token bounds where tunable, and retry/backoff enabled.
+- Validation:
+  - `make lint-docs`
+  - `make test`
+  - `make quality-gate-deterministic`
+- Why: separates throughput pressure from budget pressure, lowers recurring
+  eval cost/limit friction, and keeps interactive debugging responsive without
+  changing binary gate semantics.
