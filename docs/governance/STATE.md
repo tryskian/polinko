@@ -45,6 +45,8 @@
   - recurring heavy OCR growth runs are batch-first.
   - interactive probes remain synchronous.
 - Figma/UI parity work is deprecated for current cycle; execution focus is backend retrieval, OCR, and file-search reliability.
+- Active sequencing bias is now portfolio-first packaging, with OCR/backend
+  maintenance kept as the secondary track.
 - Quality gate is implemented and passing locally via `make quality-gate`:
   - unit tests
   - retrieval eval (`12/12`)

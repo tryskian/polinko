@@ -312,6 +312,13 @@
 
 ## Immediate Next Step
 
+- Portfolio-first execution kernel (primary for next session):
+  - create/update one portfolio spec as the day anchor:
+    - objective
+    - claims-to-evidence map
+    - acceptance criteria for apply-ready package
+  - run packaging first, then backend maintenance.
+  - keep scope tight: no new UI rewires during this kernel.
 - Keep OCR-forward split stable:
   - lockset lane remains strict release gate
   - growth lane remains fail-tolerant and tracked separately
