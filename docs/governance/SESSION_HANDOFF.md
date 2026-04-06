@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-04-05
+- 2026-04-06
 
 ## Current Snapshot
 
@@ -33,6 +33,13 @@
     portfolio strategy and locked nucleus source.
   - `docs/peanut/refs/OPENAI_ROLE_SCRATCHPAD.md` is the canonical
     role-targeting source (`Final Selection` is authoritative).
+- Portfolio presentation format is now locked:
+  - primary: `Failure Museum`
+  - secondary: `Before/After Engine`
+  - secondary: `Operator's Console` (placed last as live status layer)
+  - `Claim Stress Test` remains embedded in each case card
+  - case-study scope remains binary-eval architecture (no reasoning-loops
+    primary section)
 - Notion portfolio operating base is active:
   - hub:
     - `POL Project Hub — Focus Mode`
@@ -333,7 +340,12 @@
 - Portfolio-first execution kernel (primary for next session):
   - work from the Notion hub first (focus mode), then sync only material
     deltas back into repo docs.
-  - keep case-study curation concept-first in `Research Assembly`.
+  - keep case-study curation in consolidation mode:
+    reuse existing transcripts/decisions/eval artefacts; no restart-from-scratch drafting.
+  - use locked format order:
+    1. `Failure Museum`
+    2. `Before/After Engine`
+    3. `Operator's Console`
   - execute from the consolidated strategy anchor:
     - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md`
   - use role targeting only from:

@@ -3150,3 +3150,25 @@
   - reserve archive usage for evidence-bearing artefacts only.
 - Why: duplicate-page archival adds noise and slows focus-mode execution during
   portfolio assembly.
+
+## D-195: Lock portfolio case-study format to fail-first architecture
+
+- Date: `2026-04-06`
+- Category: `evidence_governance`
+- Tags: `portfolio_format`, `failure_museum`, `before_after`, `operator_console`, `consolidation`
+- Decision:
+  - lock the case-study presentation stack to:
+    1. primary: `Failure Museum`
+    2. secondary: `Before/After Engine`
+    3. secondary: `Operator's Console` (last section, live status layer)
+  - embed `Claim Stress Test` directly in each case card rather than creating
+    a separate section.
+  - keep case-study scope focused on binary eval architecture and evidence;
+    `Reasoning Loops` stays background context for this package.
+  - execute in consolidation mode:
+    - reuse existing transcript insights, decisions, and eval artefacts
+    - remove duplicates/drift surfaces
+    - avoid restart-from-scratch narrative rewrites
+- Why: this preserves authorship style while keeping evidence density high,
+  reducing structure drift, and maintaining a clear claim-to-proof pathway for
+  portfolio readiness.
