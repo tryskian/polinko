@@ -173,6 +173,7 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
                 {
                     "id": step_id,
                     "user": user_prompt,
+                    "attach_image": bool(step.get("attach_image", True)),
                     "must_contain": [
                         str(x).strip()
                         for x in step.get("must_contain", [])
@@ -379,21 +380,23 @@ def main() -> int:
             )
             visual_context_hint = case["attachment"].get("visual_context_hint")
 
+            seed_attachments: list[dict[str, Any]] = [
+                {
+                    "data_base64": data_base64,
+                    "mime_type": mime_type,
+                    "source_name": source_name,
+                    "text_hint": text_hint,
+                    "visual_context_hint": visual_context_hint,
+                    "memory_scope": "global",
+                }
+            ]
+
             first_resp = _send_chat(
                 base_url=args.base_url,
                 headers=headers,
                 session_id=session_id,
                 message=case["seed_prompt"],
-                attachments=[
-                    {
-                        "data_base64": data_base64,
-                        "mime_type": mime_type,
-                        "source_name": source_name,
-                        "text_hint": text_hint,
-                        "visual_context_hint": visual_context_hint,
-                        "memory_scope": "global",
-                    }
-                ],
+                attachments=seed_attachments,
                 timeout=args.timeout,
             )
             first_text = str(first_resp.get("output", "")).strip()
@@ -423,7 +426,7 @@ def main() -> int:
                     headers=headers,
                     session_id=session_id,
                     message=prompt,
-                    attachments=None,
+                    attachments=seed_attachments if step["attach_image"] else None,
                     timeout=args.timeout,
                 )
                 followup_text = str(followup.get("output", "")).strip()
