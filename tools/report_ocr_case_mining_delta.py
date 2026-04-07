@@ -22,6 +22,7 @@ EMIT_STATUS_PRIORITY = {
 }
 SIGNAL_STRENGTH_PRIORITY = {"high": 0, "medium": 1, "low": 2}
 KNOWN_QUARANTINED_UNSTABLE_SOURCES = {
+    "file_00000000b01871fdac46c44584b95d6a-sanitized.png",
     "file_0000000047f871f7af65c1ce3955cc2e-sanitized.png",
 }
 

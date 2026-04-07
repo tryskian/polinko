@@ -186,6 +186,17 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
                         "ask_text": "lol bully! not bull-fly!",
                         "chosen_phrases": ["word bull-fly", "word bully"],
                     },
+                    {
+                        "lane": "typed",
+                        "signal_strength": "high",
+                        "emit_status": "skipped_unstable_source",
+                        "conversation_title": "known unstable quarantined source 2",
+                        "source_name": "file_00000000b01871fdac46c44584b95d6a-sanitized.png",
+                        "image_path": "/tmp/file_00000000b01871fdac46c44584b95d6a-sanitized.png",
+                        "anchor_terms": ["soh", "cah", "toah"],
+                        "ask_text": "first time this was written",
+                        "chosen_phrases": ["SOH CAH TOAH"],
+                    },
                 ],
             }
             curr_path.write_text(json.dumps(curr_payload), encoding="utf-8")
@@ -211,6 +222,7 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
             self.assertNotIn("/tmp/file_c.png", markdown)
             self.assertNotIn("/tmp/file_d.png", markdown)
             self.assertNotIn("/tmp/file_0000000047f871f7af65c1ce3955cc2e-sanitized.png", markdown)
+            self.assertNotIn("/tmp/file_00000000b01871fdac46c44584b95d6a-sanitized.png", markdown)
 
 
 if __name__ == "__main__":
