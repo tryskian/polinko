@@ -7,6 +7,12 @@ Current release lane: `beta v2.0`.
 
 Snapshot label for this baseline: `polinko-build-snapshot-040426`.
 
+## Confidentiality Note
+
+This repository intentionally keeps proprietary/local research files untracked.
+Folder skeletons are tracked for navigability, while sensitive lane contents
+remain ignored via `.gitignore`.
+
 ## Build Blocks
 
 - Runtime and config: Python runtime with `.env`-driven config loading and

@@ -61,15 +61,19 @@ eval_reports/
 polinko.code-workspace
 
 # Local peanut knowledge lane (confidential/local-only)
-docs/peanut/
-docs/internal/
+docs/peanut/**
+!docs/peanut/.gitkeep
+docs/internal/**
+!docs/internal/.gitkeep
 
 # Local legacy coordination/planning docs (archived/deprecated)
 .archive/live_archive/legacy_coordination/
 
 # Local legacy archive lanes (confidential/local-only)
-.archive/live_archive/legacy_eval/
-.archive/live_archive/legacy_human_reference/
+.archive/live_archive/legacy_eval/**
+!.archive/live_archive/legacy_eval/.gitkeep
+.archive/live_archive/legacy_human_reference/**
+!.archive/live_archive/legacy_human_reference/.gitkeep
 
 # Local maintenance helper script
 tools/cleanup_eval_chats.py
