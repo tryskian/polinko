@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-04-06
+- 2026-04-07
 
 ## Current Snapshot
 
@@ -40,6 +40,9 @@
   - `Claim Stress Test` remains embedded in each case card
   - case-study scope remains binary-eval architecture (no reasoning-loops
     primary section)
+- Portfolio v1.1 failure body is now six cards with Card F promoted and hardened:
+  - Card F recovery breadth includes adversarial contradiction persistence and
+    is stable at `4/4` pass (`run_id=20260407-134839`)
 - Notion portfolio operating base is active:
   - hub:
     - `POL Project Hub — Focus Mode`

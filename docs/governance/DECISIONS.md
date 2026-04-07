@@ -3186,3 +3186,25 @@
   - allow quoted heredoc as fallback when a body file is not practical.
 - Why: prevents shell-quoting substitution errors and keeps PR metadata
   deterministic.
+
+## D-197: Promote Card F with adversarial contradiction-persistence hardening
+
+- Date: `2026-04-07`
+- Category: `eval_architecture`
+- Tags: `failure_museum`, `ocr_recovery`, `adversarial_case`, `binary_gate`
+- Decision:
+  - keep Card F in the active Failure Museum body and expand recovery breadth
+    with one adversarial contradiction-persistence case:
+    - `phi_adversarial_contradiction_persistence_template`
+  - preserve binary gate semantics while resolving symbol/word variance at
+    case level (`phi` and `φ` accepted for this case only).
+  - treat this as a portfolio material delta and keep Notion + repo governance
+    state in sync to the same run signature.
+- Validation:
+  - `make eval-ocr-recovery-report`
+  - `make test`
+- Outcome:
+  - recovery breadth is stable at `4/4` pass (`run_id=20260407-134839`)
+  - no global matcher loosenings were introduced.
+- Why: hardens contradiction-reset reliability under adversarial phrasing while
+  keeping binary release discipline intact.
