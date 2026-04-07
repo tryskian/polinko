@@ -14,7 +14,7 @@ from typing import Any, Literal, cast
 from agents import Agent, Runner, RunConfig
 from agents.memory import Session
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 from openai import (
     APIConnectionError,
     APIStatusError,
@@ -2998,6 +2998,10 @@ def create_app(config: AppConfig) -> FastAPI:
             "status": "ok",
             "prompt_version": ACTIVE_PROMPT_VERSION,
         }
+
+    @app.get("/")
+    def portfolio_root_redirect() -> RedirectResponse:
+        return RedirectResponse(url="/portfolio")
 
     @app.get("/portfolio")
     def portfolio_shell() -> FileResponse:
