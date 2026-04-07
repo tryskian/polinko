@@ -381,6 +381,10 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
             self.assertEqual(review["signal_strength"], "medium")
+            self.assertEqual(review["confidence"], "medium")
+            self.assertEqual(review["selected_confidence"], "medium")
+            self.assertEqual(review["selected_phrase"], "Alpha spiral field")
+            self.assertTrue(str(review["candidate_id"]).startswith("cv-conv-123-"))
             self.assertTrue(review["ocr_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
             self.assertIn("Alpha spiral field", review["chosen_phrases"])

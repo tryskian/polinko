@@ -1205,6 +1205,7 @@ def build_from_export(
 
             review_rows.append(
                 {
+                    "candidate_id": f"cv-{conversation_id[:8]}-{len(review_rows)+1:03d}",
                     "conversation_id": conversation_id,
                     "conversation_title": title,
                     "conversation_json": str(conversation_path),
@@ -1232,6 +1233,12 @@ def build_from_export(
                         if emit_status == "emitted"
                         else emit_status.removeprefix("skipped_")
                     ),
+                    # Compatibility aliases used by notebook/dataframe workflows.
+                    # Keep these aligned with signal-strength decisions so older
+                    # analysis code can remain schema-stable.
+                    "confidence": signal_strength,
+                    "selected_confidence": signal_strength,
+                    "selected_phrase": chosen_phrases[0] if chosen_phrases else "",
                     "signal_strength": signal_strength,
                     "lane": lane,
                 }
