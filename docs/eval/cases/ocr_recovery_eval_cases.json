@@ -51,6 +51,104 @@
           ]
         }
       ]
+    },
+    {
+      "id": "phi_overlay_contradiction_reset_template",
+      "labeling_guidance": {
+        "outcome": "partial",
+        "pass_tags": [
+          "policy_pass",
+          "high_value_alignment",
+          "evidence_complete"
+        ],
+        "fail_tags": [
+          "policy_fail",
+          "high_value_miss",
+          "evidence_incomplete"
+        ],
+        "note": "Tests contradiction reset when prior guess is explicitly negated by the operator."
+      },
+      "seed_prompt": "OCR this handwritten Greek letter.",
+      "attachment": {
+        "source_name": "handwritten-phi-overlay-template.png",
+        "mime_type": "image/png",
+        "text_hint": "handwritten greek letter with looped stem, easy to confuse as tau",
+        "visual_context_hint": "single symbol with loop and descending stroke"
+      },
+      "steps": [
+        {
+          "id": "seed_guess",
+          "must_contain_any": [
+            "phi",
+            "tau",
+            "uncertain",
+            "not sure"
+          ],
+          "must_not_contain": [
+            "without question"
+          ]
+        },
+        {
+          "id": "negative_anchor_recheck",
+          "user": "Not tau. Re-check from the image evidence only and answer with just the letter name.",
+          "must_contain_any": [
+            "phi"
+          ],
+          "must_not_contain": [
+            "tau",
+            "not sure",
+            "uncertain"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "phi_memory_carryover_reset_template",
+      "labeling_guidance": {
+        "outcome": "partial",
+        "pass_tags": [
+          "policy_pass",
+          "high_value_alignment",
+          "evidence_complete"
+        ],
+        "fail_tags": [
+          "policy_fail",
+          "high_value_miss",
+          "evidence_incomplete"
+        ],
+        "note": "Tests stale-memory suppression and fresh read after contradiction cue."
+      },
+      "seed_prompt": "What letter is in this image?",
+      "attachment": {
+        "source_name": "handwritten-phi-memory-reset-template.png",
+        "mime_type": "image/png",
+        "text_hint": "handwritten phi character from notes, sometimes misread as tau",
+        "visual_context_hint": "isolated glyph; loop and vertical tail"
+      },
+      "steps": [
+        {
+          "id": "initial_answer",
+          "must_contain_any": [
+            "phi",
+            "tau",
+            "uncertain",
+            "not sure"
+          ]
+        },
+        {
+          "id": "fresh_read_after_correction",
+          "user": "Previous guess can be wrong due to stale memory. Ignore prior output, re-read the image, and return only the correct letter name.",
+          "must_contain_any": [
+            "phi"
+          ],
+          "must_not_contain": [
+            "tau"
+          ],
+          "must_not_match_regex": [
+            "\\b(?:maybe|likely|probably)\\b"
+          ]
+        }
+      ]
     }
   ]
 }
