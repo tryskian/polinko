@@ -3208,3 +3208,25 @@
   - no global matcher loosenings were introduced.
 - Why: hardens contradiction-reset reliability under adversarial phrasing while
   keeping binary release discipline intact.
+
+## D-198: Extend Card F contradiction-reset transfer to non-Greek OCR form
+
+- Date: `2026-04-07`
+- Category: `eval_architecture`
+- Tags: `failure_museum`, `ocr_recovery`, `transfer_hardening`, `binary_gate`
+- Decision:
+  - add one non-Greek adversarial contradiction-persistence case to OCR
+    recovery breadth:
+    - `kernel_word_adversarial_contradiction_persistence_template`
+  - keep contradiction-reset semantics and fail-closed binary gating unchanged.
+  - treat transfer hardening as a material portfolio delta and sync Notion
+    Failure Museum + Before/After + Operator’s Console with the same run id.
+- Validation:
+  - `make eval-ocr-recovery-report`
+  - `make test`
+  - `make quality-gate-deterministic`
+- Outcome:
+  - recovery breadth is stable at `5/5` pass (`run_id=20260407-141013`)
+  - no global matcher/policy loosenings introduced.
+- Why: verifies Card F contradiction-reset reliability transfers beyond the
+  Greek-symbol lane into non-Greek handwritten OCR without semantics drift.
