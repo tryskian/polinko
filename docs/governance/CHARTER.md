@@ -17,7 +17,8 @@ OCR-forward reliability loops, and production-ready API foundations.
 
 ## Engineering Principles
 
-- Keep behaviour stable and backend-first; web UI is archived from active operations.
+- Keep behaviour stable and backend-first; runtime web UI is archived from
+  active operations.
 - Eval direction/orchestration is owned by the core backend lane; UI work is
   presentation-only and must not redefine eval policy.
 - Preserve prompt continuity through minimal, explicit prompt instructions.
@@ -118,6 +119,8 @@ OCR-forward reliability loops, and production-ready API foundations.
 - In scope: retrieval/OCR/file-search reliability and eval hardening.
 - In scope: OCR-forward eval operations (`lockset` + `growth`) with
   transcript-backed case mining and stability replay.
+- In scope: portfolio presentation shell work (IA/low-fi first) as a
+  non-runtime surface.
 - In scope: local notebook visual analysis for OCR evals (`make notes`).
 - Archived: web UI as an active execution surface; retained only in
   live-archive references.

@@ -71,6 +71,17 @@
    - keep local transcript records in consistent rich format
    - catch build/docs drift before day-close
    - hand off a clean validation state for next startup
+4. Kernel closeout (mandatory):
+   - list kernels executed that day (one line per kernel)
+   - inspect each kernel against:
+     - intended objective
+     - observed outcome
+   - run a full-build ghost sweep (repo-wide, tracked + untracked):
+     - stale/duplicate files/folders
+     - stale scripts/command surfaces
+     - stale links/paths/reference wiring
+   - mark disposition for each kernel:
+     - `go`, `rework`, or `park`
 
 ## Command Ownership Rule (Reasoning Loops)
 
