@@ -173,12 +173,32 @@ def _is_symbol_only_tiny_variants(row: dict[str, Any], *, sample_reasons: list[s
     return True
 
 
+def _is_single_char_tiny_output(row: dict[str, Any], *, sample_reasons: list[str]) -> bool:
+    reasons_text = " | ".join(sample_reasons).lower()
+    if "text too short" not in reasons_text:
+        return False
+
+    max_chars = int(row.get("char_count_max", 0) or 0)
+    if max_chars > 1:
+        return False
+
+    raw_variants = row.get("text_variants")
+    if not isinstance(raw_variants, list):
+        return False
+    variants = [str(item).strip() for item in raw_variants if str(item).strip()]
+    if not variants:
+        return False
+    return all(len(text) <= 1 for text in variants)
+
+
 def _non_actionable_skip_reason(*, row: dict[str, Any], sample_reasons: list[str]) -> str:
     for reason in sample_reasons:
         if NON_ACTIONABLE_REASON_RX.search(reason):
             return "no_text_detected_or_illegible"
     if _is_symbol_only_tiny_variants(row, sample_reasons=sample_reasons):
         return "symbol_only_tiny_output"
+    if _is_single_char_tiny_output(row, sample_reasons=sample_reasons):
+        return "single_char_tiny_output"
     return ""
 
 
