@@ -149,6 +149,67 @@
           ]
         }
       ]
+    },
+    {
+      "id": "phi_adversarial_contradiction_persistence_template",
+      "labeling_guidance": {
+        "outcome": "partial",
+        "pass_tags": [
+          "policy_pass",
+          "high_value_alignment",
+          "evidence_complete"
+        ],
+        "fail_tags": [
+          "policy_fail",
+          "high_value_miss",
+          "evidence_incomplete"
+        ],
+        "note": "Adversarial contradiction persistence: repeated negative-anchor cues must still produce a fresh, stable phi read."
+      },
+      "seed_prompt": "OCR this handwritten symbol.",
+      "attachment": {
+        "source_name": "handwritten-phi-adversarial-template.png",
+        "mime_type": "image/png",
+        "text_hint": "single handwritten greek symbol, often confused as tau",
+        "visual_context_hint": "looped head with descending stroke, isolated on neutral background"
+      },
+      "steps": [
+        {
+          "id": "seed_read",
+          "must_contain_any": [
+            "phi",
+            "tau",
+            "uncertain",
+            "not sure"
+          ]
+        },
+        {
+          "id": "contradiction_reset_round1",
+          "user": "Do not repeat any prior guess. Re-read only from image evidence and answer with the letter name.",
+          "must_contain_any": [
+            "phi"
+          ],
+          "must_not_contain": [
+            "tau"
+          ]
+        },
+        {
+          "id": "contradiction_reset_round2",
+          "user": "Final check: still not tau. Return only one token from image evidence.",
+          "must_contain_any": [
+            "phi",
+            "φ"
+          ],
+          "must_not_contain": [
+            "tau",
+            "uncertain",
+            "not sure"
+          ],
+          "must_not_match_regex": [
+            "\\b(?:maybe|likely|probably)\\b"
+          ]
+        }
+      ]
     }
   ]
 }
