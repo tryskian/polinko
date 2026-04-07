@@ -2285,7 +2285,7 @@
   - keep go/no-go human-led while allowing execution-path inference to remain
     model-driven and evidence-linked.
   - capture as transcript evidence in:
-    - `docs/peanut/transcripts/co_reasoning/pattern_learning_over_prescriptive_instruction_2026-04-03.md`
+    - `docs/peanut/transcripts/co_reasoning/13_pattern_learning_over_prescriptive_instruction_2026-04-03.md`
   - record method excerpt in the local peanut refs lane
 - Why: over-prescriptive prompts were observed to increase confusion and reduce
   adaptation quality. Pattern-led execution with explicit checks preserves

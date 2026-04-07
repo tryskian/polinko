@@ -309,7 +309,7 @@
   - no special-purpose `eval-rubric` branch/ruleset is active
 - Safety certainty checkpoint (March 21, 2026):
   - captured transcript + peanut-reference framing in
-    `docs/peanut/transcripts/safety/safety_certainty_and_inference_notes_2026-03-21.md`
+    `docs/peanut/transcripts/safety/02_safety_certainty_and_inference_notes_2026-03-21.md`
     (unsupported certainty = fail; uncertainty + grounded recovery = pass)
 - Reasoning Loops diagnostic checkpoint (March 22, 2026):
   - captured transcript + structured interpretation in the March 22 diagnostic
