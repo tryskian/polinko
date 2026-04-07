@@ -41,8 +41,9 @@
   - case-study scope remains binary-eval architecture (no reasoning-loops
     primary section)
 - Portfolio v1.1 failure body is now six cards with Card F promoted and hardened:
-  - Card F recovery breadth includes adversarial contradiction persistence and
-    is stable at `4/4` pass (`run_id=20260407-134839`)
+  - Card F recovery breadth includes adversarial contradiction persistence
+    across Greek and non-Greek forms and is stable at `5/5` pass
+    (`run_id=20260407-141013`)
 - Notion portfolio operating base is active:
   - hub:
     - `POL Project Hub — Focus Mode`

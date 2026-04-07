@@ -588,8 +588,9 @@
 - OCR ambiguity/recovery eval harness is available via
   `make eval-ocr-recovery` with case template
   `docs/eval/cases/ocr_recovery_eval_cases.json`.
-- OCR recovery breadth v1.1 now includes an adversarial contradiction-persistence
-  case and is currently stable at `4/4` pass (`run_id=20260407-134839`).
+- OCR recovery breadth v1.1 now includes adversarial contradiction-persistence
+  coverage across Greek and non-Greek forms and is currently stable at `5/5`
+  pass (`run_id=20260407-141013`).
 - Adaptive runtime note selection now applies decay-weighted feedback scoring,
   near-duplicate suppression, and a max of two active notes, with note-change
   events logged as `adaptive_style_notes_updated` to prevent prompt/input
