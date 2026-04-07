@@ -8,12 +8,13 @@ import sqlite3
 import time
 import uuid
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Literal, cast
 
 from agents import Agent, Runner, RunConfig
 from agents.memory import Session
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from openai import (
     APIConnectionError,
     APIStatusError,
@@ -2998,6 +2999,13 @@ def create_app(config: AppConfig) -> FastAPI:
             "prompt_version": ACTIVE_PROMPT_VERSION,
         }
 
+    @app.get("/portfolio")
+    def portfolio_shell() -> FileResponse:
+        shell_path = Path(__file__).resolve().parents[1] / "ui" / "index.html"
+        if not shell_path.is_file():
+            raise HTTPException(status_code=404, detail="Portfolio shell not found.")
+        return FileResponse(path=shell_path)
+
     @app.get("/viz/pass-fail", response_class=HTMLResponse)
     def pass_fail_viz(refresh_ms: int = 4000, chart_max_points: int = 20) -> str:
         # Live PASS/FAIL surface with latest eval detail interactions.
@@ -3007,8 +3015,28 @@ def create_app(config: AppConfig) -> FastAPI:
         )
 
     @app.get("/viz/pass-fail/data")
-    def pass_fail_viz_data(max_evals: int = 180) -> dict[str, Any]:
-        return build_pass_fail_viz_payload(max_evals=max(1, min(max_evals, 500)))
+    def pass_fail_viz_data(max_evals: int = 180, run_id: str | None = None) -> dict[str, Any]:
+        return build_pass_fail_viz_payload(
+            max_evals=max(1, min(max_evals, 500)),
+            run_id=(run_id or "").strip() or None,
+        )
+
+    @app.get("/viz/pass-fail/image")
+    def pass_fail_viz_image(path: str) -> FileResponse:
+        resolved = Path(path).expanduser()
+        if not resolved.is_absolute():
+            resolved = (Path.cwd() / resolved).resolve()
+        else:
+            resolved = resolved.resolve()
+
+        allowed_suffixes = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".heic", ".heif"}
+        suffix = resolved.suffix.lower()
+        if suffix not in allowed_suffixes:
+            raise HTTPException(status_code=400, detail="Unsupported image type.")
+        if not resolved.is_file():
+            raise HTTPException(status_code=404, detail="Image file not found.")
+
+        return FileResponse(path=resolved)
 
     @app.get("/manual-evals/surface")
     def manual_evals_surface(max_runs: int = 180, max_sessions: int = 60) -> dict[str, Any]:
