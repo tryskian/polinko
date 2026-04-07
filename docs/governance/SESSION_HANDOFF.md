@@ -27,6 +27,8 @@
   - no `GET /ui` route
   - no active `ui/index.html` file
   - fixture controls remain available through `POST /chat` request fields
+- Portfolio UI shell remains active as a separate presentation lane
+  (IA/low-fi-first, no runtime eval-policy ownership).
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Portfolio docs are now consolidated for drift control:
   - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md` is the canonical
@@ -40,14 +42,25 @@
   - `Claim Stress Test` remains embedded in each case card
   - case-study scope remains binary-eval architecture (no reasoning-loops
     primary section)
+- Portfolio IA planning is now locked to low-fi first:
+  - canonical spec:
+    - `docs/runtime/PORTFOLIO_UI_IA_WIREFRAME.md`
+  - nav baseline:
+    - desktop sticky top-nav anchors
+    - mobile burger drawer with matching anchors
+  - left-rail baseline is retired for this portfolio slice
+  - hi-fi shell work is deferred to a later kernel
+- Ship-week execution mode is now split-kernel:
+  - core ship lane (portfolio evidence/package progression)
+  - fixed visuals lane (time-boxed, one deliverable per day)
 - Portfolio v1.1 failure body is now six cards with Card F promoted and hardened:
   - Card F recovery breadth includes adversarial contradiction persistence
     across Greek and non-Greek forms and is stable at `5/5` pass
     (`run_id=20260407-141013`)
 - Notion portfolio operating base is active:
   - hub:
-    - `POL Project Hub — Focus Mode`
-      (`https://www.notion.so/315b79f28a59819aa1bcf516d2a4d921`)
+    - `POL Portfolio Hub — Start Here`
+      (`https://www.notion.so/tryskian/POL-Portfolio-Hub-Start-Here-33ab79f28a598060a5fdd53bb4c5cf65?source=copy_link`)
   - assembly database:
     - `Research Assembly`
       (`https://www.notion.so/52d98a2d094c4dceb4a0aa5469afc45b`)
@@ -105,6 +118,19 @@
   - `make transcript-check` enforces canonical rich-format structure
   - `make eod` now runs deterministic day-close sequence:
     `transcript-fix -> transcript-check -> doctor-env -> lint-docs -> test -> eod-stop`
+- Session closeout policy is mandatory after every session:
+  - run full cleanup before handoff:
+    - `make eod`
+  - list kernels executed during the session (one line per kernel)
+  - inspect each kernel against intended objective and observed outcome
+  - run a ghost sweep of the full build (repo-wide, tracked + untracked):
+    - stale/duplicate files and folders
+    - stale scripts/commands/make targets
+    - stale links/paths (local + Notion)
+    - deprecated or superseded wiring/references left in active docs or runtime files
+  - record per-kernel disposition (`go`, `rework`, or `park`) before closeout
+  - verify no stray runtime tasks remain (`server-daemon`, `caffeinate`)
+  - capture material deltas in governance docs before final closeout
 - Transcript-backed OCR mining kernel is merged on `main`:
   - PRs: `#110`, `#132`, `#133`, `#134`, `#155`, `#156`, `#159`, `#160`, `#162`
   - indexer: `tools/index_cgpt_export.py`
@@ -345,6 +371,8 @@
 ## Immediate Next Step
 
 - Portfolio-first execution kernel (primary for next session):
+  - session-end requirement (every day):
+    - complete full cleanup and closeout via `make eod` before ending the session
   - work from the Notion hub first (focus mode), then sync only material
     deltas back into repo docs.
   - keep case-study curation in consolidation mode:
@@ -361,7 +389,14 @@
   - keep one claims-to-evidence map and one role source of truth; no duplicate
     planning docs.
   - run packaging first, then backend maintenance.
-  - keep scope tight: no new UI rewires during this kernel.
+  - keep scope tight: no UI rewires in this kernel; only IA + low-fi spec
+    refinement is allowed.
+  - keep portfolio navigation consistent with D-199:
+    top-nav desktop + burger mobile.
+  - starting tomorrow, execute a split daily kernel:
+    - lane 1: core portfolio ship task
+    - lane 2: fixed visual deliverable task
+    - lane 2 is bounded to one daily output and cannot expand lane 1 scope.
 - Keep OCR-forward split stable:
   - lockset lane remains strict release gate
   - growth lane remains fail-tolerant and tracked separately

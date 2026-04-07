@@ -44,7 +44,10 @@
   - throughput (`RPM`/`TPM`/queue) and spend/credits are tracked separately.
   - recurring heavy OCR growth runs are batch-first.
   - interactive probes remain synchronous.
-- Figma/UI parity work is deprecated for current cycle; execution focus is backend retrieval, OCR, and file-search reliability.
+- Runtime UI parity work is deprecated for current cycle; execution focus is
+  backend retrieval, OCR, and file-search reliability.
+- Portfolio UI shell work is active as a presentation-only lane
+  (IA/low-fi-first, no eval-policy ownership).
 - Active sequencing bias is now portfolio-first packaging, with OCR/backend
   maintenance kept as the secondary track.
 - Portfolio doc consolidation checkpoint (April 5, 2026):
@@ -66,10 +69,24 @@
     - no restart-from-scratch drafting path
   - this case-study scope remains binary-eval-centered; `Reasoning Loops`
     remains background context and not a core section.
-- Notion operating mode checkpoint (April 5, 2026):
+- Portfolio IA + wireframe checkpoint (April 7, 2026):
+  - canonical IA/wireframe spec is now:
+    - `docs/runtime/PORTFOLIO_UI_IA_WIREFRAME.md`
+  - navigation baseline is locked to:
+    - desktop sticky top-nav anchors
+    - mobile burger drawer with matching anchors
+  - left-rail IA baseline is deprecated for portfolio v1.
+  - hi-fi shell styling is explicitly deferred; current scope is IA + low-fi only.
+- Ship-week execution checkpoint (April 7, 2026):
+  - daily execution is now split into two lanes:
+    - core ship lane (portfolio evidence/package progression)
+    - fixed visuals lane (time-boxed)
+  - visuals lane is constrained to one concrete deliverable per day to avoid
+    scope drift while preserving design momentum.
+- Notion operating mode checkpoint (April 7, 2026):
   - canonical planning hub is now:
-    - `POL Project Hub — Focus Mode`
-      (`https://www.notion.so/315b79f28a59819aa1bcf516d2a4d921`)
+    - `POL Portfolio Hub — Start Here`
+      (`https://www.notion.so/tryskian/POL-Portfolio-Hub-Start-Here-33ab79f28a598060a5fdd53bb4c5cf65?source=copy_link`)
   - case-study assembly now runs in:
     - `Research Assembly`
       (`https://www.notion.so/52d98a2d094c4dceb4a0aa5469afc45b`)

@@ -3129,14 +3129,19 @@
 - Category: `evidence_governance`
 - Tags: `notion`, `focus_mode`, `portfolio_ops`, `low_noise`
 - Decision:
-  - set `POL Project Hub — Focus Mode` as the canonical operator surface for
-    daily portfolio work.
+  - set an initial Notion focus hub as the canonical operator surface for
+    daily portfolio work (historical baseline, now superseded).
   - use `Research Assembly` as the primary curation database for
     claim/evidence mapping.
   - keep repo governance docs as durable system memory, but run day-to-day
     curation from Notion focus views first.
 - Why: the focus hub structure reduces cognitive load and keeps section-first
   execution aligned with human-managed co-reasoning.
+- Status:
+  - superseded by `D-201` for active execution context.
+  - current canonical page is:
+    `POL Portfolio Hub — Start Here`
+    (`https://www.notion.so/tryskian/POL-Portfolio-Hub-Start-Here-33ab79f28a598060a5fdd53bb4c5cf65?source=copy_link`)
 
 ## D-194: Enforce direct-delete policy for duplicate and obsolete Notion pages
 
@@ -3230,3 +3235,47 @@
   - no global matcher/policy loosenings introduced.
 - Why: verifies Card F contradiction-reset reliability transfers beyond the
   Greek-symbol lane into non-Greek handwritten OCR without semantics drift.
+
+## D-199: Lock portfolio IA navigation to top-nav desktop and burger mobile
+
+- Date: `2026-04-07`
+- Category: `evidence_governance`
+- Tags: `portfolio_ia`, `wireframe`, `navigation_lock`, `low_fidelity_first`
+- Decision:
+  - lock portfolio IA v1 navigation to:
+    - desktop: sticky top-nav with section anchors
+    - mobile: burger drawer with the same section anchors
+  - retire left-rail navigation from the IA baseline.
+  - keep execution in IA + low-fi wireframe mode; defer hi-fi shell styling to
+    a later kernel.
+- Why: preserves a cleaner narrative-first surface for portfolio reading while
+  keeping implementation scope tight and non-disruptive to backend kernels.
+
+## D-200: Ship-week execution uses a split kernel with a fixed visuals block
+
+- Date: `2026-04-07`
+- Category: `workflow_environment`
+- Tags: `ship_week`, `timeboxing`, `visuals_lane`, `portfolio_delivery`
+- Decision:
+  - run this week as a split daily kernel:
+    - core ship lane (evidence + portfolio packaging)
+    - fixed visuals lane (time-boxed UI/visual progress)
+  - visuals lane is mandatory but bounded:
+    - one visual deliverable per day
+    - no scope expansion beyond the day’s visual target
+  - tomorrow start is locked to this split-kernel execution mode.
+- Why: protects portfolio ship velocity while ensuring visual quality advances
+  every day instead of being postponed or over-expanding.
+
+## D-201: Set Portfolio Hub page as canonical Notion context for portfolio kernels
+
+- Date: `2026-04-07`
+- Category: `evidence_governance`
+- Tags: `notion`, `portfolio_hub`, `source_of_truth`, `context_alignment`
+- Decision:
+  - set `POL Portfolio Hub — Start Here` as the canonical Notion context page
+    for portfolio kernel execution:
+    - `https://www.notion.so/tryskian/POL-Portfolio-Hub-Start-Here-33ab79f28a598060a5fdd53bb4c5cf65?source=copy_link`
+  - keep automation prompts and governance references aligned to that page.
+- Why: prevents stale-hub drift and keeps portfolio execution grounded to one
+  current Notion source of truth.
