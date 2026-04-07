@@ -69,6 +69,10 @@ OCR-forward reliability loops, and production-ready API foundations.
   - execute cleanup/validation/doc alignment without waiting for reminders
   - escalate only when trade-offs or approvals are genuinely required
   - execute user requests directly by default
+  - use shell-safe PR body workflow:
+    - never pass multiline Markdown directly in `gh pr create --body "..."`
+    - use `--body-file <path>` (preferred) or a quoted heredoc
+    - avoid inline backticks in shell-quoted body strings
 - Automation lane policy:
   - default mode is `paused` (single manual lane).
   - re-enable only with explicit human go/no-go.

@@ -331,6 +331,9 @@
   - verify repo path + mode + branch before changes
   - prefer repo-scoped edits
   - do not modify `~/.zshrc` or global VS Code settings without explicit in-chat approval
+- PR description shell-safety policy:
+  - use `gh pr create --body-file <path>` for multiline PR descriptions
+  - avoid inline `--body "..."` when Markdown contains backticks or shell-sensitive text
 - Keep-awake (`caffeinate`) remains opt-in/request-triggered.
 - Day-close now hard-stops background tasks:
   - `make eod-stop` stops `server-daemon` and all matching `caffeinate -d -i -m` processes.
