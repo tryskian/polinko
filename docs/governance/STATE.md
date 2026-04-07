@@ -54,6 +54,18 @@
     - `docs/peanut/refs/OPENAI_ROLE_SCRATCHPAD.md`
     - `Final Selection` section is canonical for current-cycle applications
   - duplicate portfolio nucleus file was removed to prevent drift.
+- Portfolio presentation architecture checkpoint (April 6, 2026):
+  - case-study format is locked:
+    - primary: `Failure Museum`
+    - secondary: `Before/After Engine`
+    - secondary: `Operator's Console` (last layer, live status only)
+  - per-card rigor is locked:
+    - `Claim Stress Test` is embedded within each case card.
+  - portfolio execution mode is locked to consolidation:
+    - reuse existing transcript/eval/decision evidence
+    - no restart-from-scratch drafting path
+  - this case-study scope remains binary-eval-centered; `Reasoning Loops`
+    remains background context and not a core section.
 - Notion operating mode checkpoint (April 5, 2026):
   - canonical planning hub is now:
     - `POL Project Hub — Focus Mode`

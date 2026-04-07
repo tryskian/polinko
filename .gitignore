@@ -51,6 +51,7 @@ _virtualenv.py
 .local/dashboard/
 .local/eval_cases/
 .local/logs/
+.local/legacy_eval/
 .local_archive/
 
 # Local eval artifacts

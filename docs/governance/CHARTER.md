@@ -134,3 +134,14 @@ OCR-forward reliability loops, and production-ready API foundations.
     - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md`
   - keep one canonical role-targeting source of truth:
     - `docs/peanut/refs/OPENAI_ROLE_SCRATCHPAD.md`
+  - lock case-study presentation architecture to:
+    - primary: `Failure Museum`
+    - secondary: `Before/After Engine`
+    - secondary: `Operator's Console` (live status layer, placed last)
+  - embed `Claim Stress Test` inside each case card (not as a standalone section)
+  - keep case-study scope binary-eval-centered; `Reasoning Loops` remains
+    background context for this package
+  - run portfolio work in consolidation mode:
+    - reuse existing transcript/decision/eval evidence
+    - remove duplicate/drift surfaces
+    - avoid restart-from-scratch narrative rewrites
