@@ -3172,3 +3172,17 @@
 - Why: this preserves authorship style while keeping evidence density high,
   reducing structure drift, and maintaining a clear claim-to-proof pathway for
   portfolio readiness.
+
+## D-196: Enforce shell-safe PR body creation via file input
+
+- Date: `2026-04-06`
+- Category: `workflow_hygiene`
+- Tags: `github`, `pr_workflow`, `shell_safety`, `quoting`
+- Decision:
+  - use `gh pr create --body-file <path>` as the default path for multiline PR
+    descriptions.
+  - avoid inline `--body "..."` strings when content includes Markdown
+    backticks or shell-sensitive characters.
+  - allow quoted heredoc as fallback when a body file is not practical.
+- Why: prevents shell-quoting substitution errors and keeps PR metadata
+  deterministic.
