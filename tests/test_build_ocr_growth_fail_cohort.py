@@ -1336,6 +1336,58 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             {"single_char_tiny_output": 1},
         )
 
+    def test_no_text_marker_output_skips_persistent_fail_case(self) -> None:
+        stability_payload = {
+            "cases": [
+                {
+                    "id": "gx-no-text-marker",
+                    "observed_runs": 4,
+                    "pass_runs": 0,
+                    "fail_runs": 4,
+                    "error_runs": 0,
+                    "pass_rate": 0.0,
+                    "decision_stable": True,
+                    "always_fail": True,
+                    "statuses": ["FAIL"] * 4,
+                    "sample_reasons": [
+                        "missing one-of required phrases: ['human', 'machine']",
+                        "text too short: 1 < min_chars=3",
+                    ],
+                    "text_variant_count": 2,
+                    "char_count_max": 23,
+                    "char_count_min": 1,
+                    "text_variants": ["*", "[OCR] No text detected."],
+                }
+            ]
+        }
+        growth_case_map: dict[str, dict[str, Any]] = {
+            "gx-no-text-marker": {
+                "id": "gx-no-text-marker",
+                "lane": "typed",
+                "source_name": "no-text-marker.png",
+                "image_path": "/tmp/no-text-marker.png",
+                "must_contain_any": ["human", "machine"],
+            }
+        }
+
+        report = build_fail_cohort(
+            stability_payload=stability_payload,
+            growth_case_map=growth_case_map,
+            run_case_map={},
+            metrics_map={},
+            review_index={},
+            min_runs=1,
+            include_unstable=False,
+            require_ocr_framing=False,
+        )
+
+        self.assertEqual(report["summary"]["selected_fail_cases"], 0)
+        self.assertEqual(report["summary"]["skipped_non_actionable"], 1)
+        self.assertEqual(
+            report["summary"]["non_actionable_reason_counts"],
+            {"no_text_marker_output": 1},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
