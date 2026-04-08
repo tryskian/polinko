@@ -17,8 +17,11 @@ OCR-forward reliability loops, and production-ready API foundations.
 
 ## Engineering Principles
 
-- Keep behaviour stable and backend-first; runtime web UI is archived from
-  active operations.
+- Keep behaviour stable and backend-first; legacy runtime web UI is archived
+  from active operations.
+- Portfolio shell routes are allowed as presentation-only surfaces:
+  - `GET /` redirects to `GET /portfolio`
+  - `GET /portfolio` serves low-fi IA/content shell only
 - Eval direction/orchestration is owned by the core backend lane; UI work is
   presentation-only and must not redefine eval policy.
 - Preserve prompt continuity through minimal, explicit prompt instructions.
