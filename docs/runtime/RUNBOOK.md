@@ -382,6 +382,10 @@ Read-only DB audits remain allowed:
 3. Active rule:
    - use OpenAI docs MCP for documentation lookup
    - keep local repo runtime/eval stack as implementation source of truth
+4. Codex auth/config guardrail:
+   - when using Codex via ChatGPT account auth, keep `service_tier` unset in
+     `.codex/config.toml`.
+   - only set `service_tier` intentionally for API-key workflows that require it.
 
 ## Tooling Baseline
 
