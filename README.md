@@ -164,6 +164,15 @@ Skills:
 - `POST /skills/pdf_ingest`
 - `POST /skills/file_search`
 
+## UI Shell Access
+
+- `GET /` redirects to `GET /portfolio`.
+- `GET /portfolio` serves the low-fidelity `POL Portfolio Hub — Start Here` shell for editable content sections:
+  - Operator's Console
+  - Failure Museum
+  - Before/After Engine
+  - What I'm Working On (label: Operator's Console — What I'm Working On in Notion)
+
 ## CLI Modes
 
 Local CLI runner:

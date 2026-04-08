@@ -598,6 +598,9 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
 - `GET /viz/pass-fail/data` return the pulse payload:
   chart timeline from `history.db` / `ocr_runs`, summary/detail rows from
   `eval_viz.db` / `eval_points` when available
+- `GET /` redirects to `GET /portfolio`.
+- `GET /portfolio` serves the static UI shell draft for immediate content
+  editing and operator review.
 - `GET /manual-evals/surface` return manual-eval data surface from
   `manual_evals.db` (summary + sessions + OCR runs + thumbnail preview fields +
   session feedback/checkpoint context)
