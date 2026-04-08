@@ -92,6 +92,17 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(body["status"], "ok")
         self.assertIn("prompt_version", body)
 
+    def test_root_redirects_to_portfolio(self) -> None:
+        resp = self.client.get("/", follow_redirects=False)
+        self.assertEqual(resp.status_code, 307)
+        self.assertEqual(resp.headers.get("location"), "/portfolio")
+
+    def test_portfolio_shell_returns_html(self) -> None:
+        resp = self.client.get("/portfolio")
+        self.assertEqual(resp.status_code, 200)
+        self.assertEqual(resp.headers.get("content-type"), "text/html; charset=utf-8")
+        self.assertTrue(resp.text.lstrip().lower().startswith("<!doctype html>"))
+
     def test_manual_evals_surface_endpoint_returns_payload_shape(self) -> None:
         resp = self.client.get(
             "/manual-evals/surface",
