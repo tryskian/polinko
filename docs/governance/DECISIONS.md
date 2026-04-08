@@ -3329,6 +3329,10 @@
 - Why: enables maintainable UI iteration speed without reopening policy/runtime
   drift or coupling risk in the active binary-eval architecture.
 - Operator recovery note:
-  - when scope blubs happen, recover by re-locking contract boundaries
-    (`structure can change`, `runtime/eval semantics cannot`) before resuming
-    implementation.
+  - human-ai collaboration includes human error as a normal part of iteration.
+  - when a human request is outside best practice, execute only the safe
+    bounded slice.
+  - recovery burden is human-led: the human explicitly requests engineer
+    recommendation/re-lock before proceeding.
+  - once recovery is requested, continue under re-locked boundaries
+    (`structure can change`, `runtime/eval semantics cannot`).
