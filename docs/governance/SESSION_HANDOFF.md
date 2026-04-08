@@ -31,6 +31,10 @@
   - `GET /` redirects to `GET /portfolio`
   - `GET /portfolio` serves `ui/index.html`
   - route smoke tests are now in `tests/test_api.py`
+  - frontend build contract:
+    - canonical source: `frontend/`
+    - generated served output: `ui/` (via `make frontend-build`)
+    - `ui/` remains generated output, not hand-edited source
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Portfolio docs are now consolidated for drift control:
   - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md` is the canonical

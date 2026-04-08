@@ -54,6 +54,10 @@
   - `GET /` -> `GET /portfolio` redirect
   - `GET /portfolio` serves `ui/index.html`
   - route smoke tests are now in `tests/test_api.py`
+- Portfolio shell frontend build contract is active:
+  - canonical source lives in `frontend/`
+  - served shell output is generated into `ui/` via `make frontend-build`
+  - `ui/` is treated as build output (no manual edits)
 - Active sequencing bias is now portfolio-first packaging, with OCR/backend
   maintenance kept as the secondary track.
 - Portfolio doc consolidation checkpoint (April 5, 2026):

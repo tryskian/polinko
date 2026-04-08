@@ -2,6 +2,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import tempfile
 import unittest
 import httpx
@@ -102,6 +103,17 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.headers.get("content-type"), "text/html; charset=utf-8")
         self.assertTrue(resp.text.lstrip().lower().startswith("<!doctype html>"))
+
+    def test_portfolio_shell_assets_are_served(self) -> None:
+        resp = self.client.get("/portfolio")
+        self.assertEqual(resp.status_code, 200)
+        asset_paths = set(
+            re.findall(r'(?:href|src)="(/assets/[^"]+)"', resp.text)
+        )
+        self.assertTrue(asset_paths)
+        for asset_path in asset_paths:
+            asset_resp = self.client.get(asset_path)
+            self.assertEqual(asset_resp.status_code, 200)
 
     def test_manual_evals_surface_endpoint_returns_payload_shape(self) -> None:
         resp = self.client.get(

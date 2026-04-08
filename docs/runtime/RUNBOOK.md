@@ -601,6 +601,11 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
 - `GET /` redirects to `GET /portfolio`.
 - `GET /portfolio` serves the static UI shell draft for immediate content
   editing and operator review.
+  - canonical build flow:
+    - source: `frontend/`
+    - generated output: `ui/`
+    - build command: `make frontend-build`
+  - `ui/` is generated output only; do not hand-edit built files.
 - `GET /manual-evals/surface` return manual-eval data surface from
   `manual_evals.db` (summary + sessions + OCR runs + thumbnail preview fields +
   session feedback/checkpoint context)

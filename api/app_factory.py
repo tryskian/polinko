@@ -15,6 +15,7 @@ from agents import Agent, Runner, RunConfig
 from agents.memory import Session
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from openai import (
     APIConnectionError,
     APIStatusError,
@@ -2956,6 +2957,14 @@ def create_app(config: AppConfig) -> FastAPI:
         run_config=create_run_config(store=True),
         agent=create_agent(),
     )
+    ui_dir = Path(__file__).resolve().parents[1] / "ui"
+    portfolio_assets_dir = ui_dir / "assets"
+    portfolio_assets_dir.mkdir(parents=True, exist_ok=True)
+    app.mount(
+        "/assets",
+        StaticFiles(directory=str(portfolio_assets_dir)),
+        name="portfolio-assets",
+    )
 
     @app.middleware("http")
     async def request_logging(request: Request, call_next):
@@ -3005,7 +3014,7 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.get("/portfolio")
     def portfolio_shell() -> FileResponse:
-        shell_path = Path(__file__).resolve().parents[1] / "ui" / "index.html"
+        shell_path = ui_dir / "index.html"
         if not shell_path.is_file():
             raise HTTPException(status_code=404, detail="Portfolio shell not found.")
         return FileResponse(path=shell_path)
