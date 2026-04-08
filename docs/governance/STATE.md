@@ -8,6 +8,8 @@
 - CLI agent loop works with persistent SQLite memory (`.local/runtime_dbs/active/memory.db`) and
   `/reset`.
 - Backend API is running with:
+  - `GET /` (redirect to portfolio shell)
+  - `GET /portfolio`
   - `GET /health`
   - `GET /metrics`
   - `GET /viz/pass-fail`
@@ -48,6 +50,10 @@
   backend retrieval, OCR, and file-search reliability.
 - Portfolio UI shell work is active as a presentation-only lane
   (IA/low-fi-first, no eval-policy ownership).
+- Portfolio shell route contract is active:
+  - `GET /` -> `GET /portfolio` redirect
+  - `GET /portfolio` serves `ui/index.html`
+  - route smoke tests are now in `tests/test_api.py`
 - Active sequencing bias is now portfolio-first packaging, with OCR/backend
   maintenance kept as the secondary track.
 - Portfolio doc consolidation checkpoint (April 5, 2026):

@@ -3279,3 +3279,29 @@
   - keep automation prompts and governance references aligned to that page.
 - Why: prevents stale-hub drift and keeps portfolio execution grounded to one
   current Notion source of truth.
+
+## D-202: Activate portfolio shell route contract with smoke-test coverage
+
+- Date: `2026-04-07`
+- Category: `runtime_surface`
+- Tags: `portfolio_shell`, `presentation_only`, `route_contract`, `smoke_tests`
+- Decision:
+  - activate a presentation-only shell route contract for portfolio work:
+    - `GET /` -> redirect to `GET /portfolio`
+    - `GET /portfolio` -> serve `ui/index.html`
+  - keep runtime policy ownership unchanged:
+    - no eval semantics changes
+    - no gate logic changes
+    - no backend policy delegation to UI
+  - add smoke tests to lock contract behaviour:
+    - redirect contract for `/`
+    - HTML response contract for `/portfolio`
+  - normalize shell label variants to one canonical form:
+    - `Operator's Console`
+    - `What I'm Working On`
+- Validation:
+  - `make test`
+  - `make lint-docs`
+  - local route smoke check via test client (`/` and `/portfolio`)
+- Why: enables immediate portfolio editing/navigation while preserving binary
+  eval-runtime integrity and preventing UI/policy coupling drift.

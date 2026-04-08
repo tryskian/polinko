@@ -23,12 +23,14 @@
 - Canonical UI eval adapter spec is published:
   - `docs/runtime/RUNBOOK.md`
   - includes TypeScript request/response shapes + chat/eval/checkpoint flow
-- Local UI shell is retired from active runtime surface:
+- Legacy chat UI shell remains retired from active runtime surface:
   - no `GET /ui` route
-  - no active `ui/index.html` file
   - fixture controls remain available through `POST /chat` request fields
-- Portfolio UI shell remains active as a separate presentation lane
-  (IA/low-fi-first, no runtime eval-policy ownership).
+- Portfolio UI shell is active as a separate presentation lane
+  (IA/low-fi-first, no runtime eval-policy ownership):
+  - `GET /` redirects to `GET /portfolio`
+  - `GET /portfolio` serves `ui/index.html`
+  - route smoke tests are now in `tests/test_api.py`
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Portfolio docs are now consolidated for drift control:
   - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md` is the canonical
@@ -389,8 +391,8 @@
   - keep one claims-to-evidence map and one role source of truth; no duplicate
     planning docs.
   - run packaging first, then backend maintenance.
-  - keep scope tight: no UI rewires in this kernel; only IA + low-fi spec
-    refinement is allowed.
+  - keep scope tight: UI work remains presentation-only; no eval-policy or
+    runtime-gate ownership moves into UI kernels.
   - keep portfolio navigation consistent with D-199:
     top-nav desktop + burger mobile.
   - starting tomorrow, execute a split daily kernel:
