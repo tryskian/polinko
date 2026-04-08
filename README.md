@@ -25,6 +25,10 @@ remain ignored via `.gitignore`.
   `docs/runtime/RUNBOOK.md` (TypeScript types + endpoint flow).
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
+- Portfolio shell build surface:
+  - source of truth: `frontend/`
+  - generated runtime output: `ui/`
+  - runtime route: `GET /portfolio`
 
 ## Quick Start
 
@@ -85,6 +89,12 @@ Backend (canonical):
 
 ```bash
 make server
+```
+
+Portfolio shell (canonical frontend flow):
+
+```bash
+make portfolio
 ```
 
 Notebook viz (local/private):
@@ -172,6 +182,10 @@ Skills:
   - Failure Museum
   - Before/After Engine
   - What I'm Working On (label: Operator's Console — What I'm Working On in Notion)
+- frontend shell build contract:
+  - edit source in `frontend/`
+  - generate served shell with `make frontend-build` (writes to `ui/`)
+  - do not hand-edit built files under `ui/`
 
 ## CLI Modes
 

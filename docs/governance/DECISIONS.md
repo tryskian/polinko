@@ -3305,3 +3305,30 @@
   - local route smoke check via test client (`/` and `/portfolio`)
 - Why: enables immediate portfolio editing/navigation while preserving binary
   eval-runtime integrity and preventing UI/policy coupling drift.
+
+## D-203: Lock portfolio shell frontend refactor contract to structure-only changes
+
+- Date: `2026-04-08`
+- Category: `runtime_surface`
+- Tags: `portfolio_shell`, `frontend_refactor`, `structure_only`, `policy_guardrail`
+- Decision:
+  - allow portfolio shell refactor into modular frontend files
+    (for example `frontend/` source + `ui/` built output or equivalent modular
+    split of `ui/index.html`) as a presentation-layer change.
+  - keep runtime/eval semantics unchanged during this refactor:
+    - no OCR/eval pipeline logic edits
+    - no binary gate logic edits
+    - no backend policy ownership moved to UI
+  - require route continuity for shell access:
+    - `GET /` redirects to `/portfolio`
+    - `GET /portfolio` serves the shell surface
+  - require validation closure before merge:
+    - frontend build command (if present)
+    - `make test`
+    - `make lint-docs`
+- Why: enables maintainable UI iteration speed without reopening policy/runtime
+  drift or coupling risk in the active binary-eval architecture.
+- Operator recovery note:
+  - when scope blubs happen, recover by re-locking contract boundaries
+    (`structure can change`, `runtime/eval semantics cannot`) before resuming
+    implementation.
