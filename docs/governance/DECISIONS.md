@@ -3311,6 +3311,19 @@
 - Date: `2026-04-08`
 - Category: `runtime_surface`
 - Tags: `portfolio_shell`, `frontend_refactor`, `structure_only`, `policy_guardrail`
+- Human-AI collaboration context:
+  - human request:
+    - move to a framework-based shell architecture
+      (`frontend/` as source-of-truth, `ui/` as generated output).
+  - engineer action:
+    - executed the requested change in a safe bounded slice.
+  - human recovery:
+    - asked for engineering standards/recommendation after recognizing
+      scope/standards uncertainty.
+  - engineer response:
+    - provided standards + recommendation, then re-locked boundaries.
+  - alignment closure:
+    - human confirmed the engineer recommendation before continuation.
 - Decision:
   - allow portfolio shell refactor into modular frontend files
     (for example `frontend/` source + `ui/` built output or equivalent modular
@@ -3328,11 +3341,3 @@
     - `make lint-docs`
 - Why: enables maintainable UI iteration speed without reopening policy/runtime
   drift or coupling risk in the active binary-eval architecture.
-- Operator recovery note:
-  - human-ai collaboration includes human error as a normal part of iteration.
-  - when a human request is outside best practice, execute only the safe
-    bounded slice.
-  - recovery burden is human-led: the human explicitly requests engineer
-    recommendation/re-lock before proceeding.
-  - once recovery is requested, continue under re-locked boundaries
-    (`structure can change`, `runtime/eval semantics cannot`).
