@@ -58,6 +58,15 @@
   - canonical source lives in `frontend/`
   - served shell output is generated into `ui/` via `make frontend-build`
   - `ui/` is treated as build output (no manual edits)
+- Portfolio UI direction checkpoint (April 9, 2026):
+  - execution mode is now form-first and structure-first before content lock.
+  - shell copy/content is intentionally placeholder-only during concept phase.
+  - scaffolding/layout/state pass stays presentation-only:
+    - no backend route/policy/eval ownership changes
+    - no runtime semantics edits
+  - target interaction concept is now explicit:
+    - slide-like narrative driven by natural scroll input
+    - mobile fallback remains vertical-first.
 - Active sequencing bias is now portfolio-first packaging, with OCR/backend
   maintenance kept as the secondary track.
 - Portfolio doc consolidation checkpoint (April 5, 2026):

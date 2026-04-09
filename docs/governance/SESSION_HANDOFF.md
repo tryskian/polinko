@@ -56,6 +56,19 @@
     - mobile burger drawer with matching anchors
   - left-rail baseline is retired for this portfolio slice
   - hi-fi shell work is deferred to a later kernel
+- Portfolio UI concept checkpoint (April 9, 2026):
+  - current mode is structure-first:
+    - placeholder content only
+    - section/interaction scaffolding before final copy pass
+  - constraints are explicit:
+    - `frontend/` only
+    - no backend/API route changes
+    - no eval/runtime logic changes
+    - preserve section order + nav contract
+    - preserve presentation-only boundary (no policy ownership in UI)
+  - interaction direction is now:
+    - slide-like narrative with natural scroll gesture mapping
+    - mobile remains vertical-first fallback
 - Ship-week execution mode is now split-kernel:
   - core ship lane (portfolio evidence/package progression)
   - fixed visuals lane (time-boxed, one deliverable per day)
