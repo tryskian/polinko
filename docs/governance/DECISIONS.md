@@ -3341,3 +3341,24 @@
     - `make lint-docs`
 - Why: enables maintainable UI iteration speed without reopening policy/runtime
   drift or coupling risk in the active binary-eval architecture.
+
+## D-204: Use form-first structure mode before portfolio content lock
+
+- Date: `2026-04-09`
+- Category: `evidence_governance`
+- Tags: `portfolio_ui`, `form_first`, `structure_mode`, `scaffolding`
+- Decision:
+  - run portfolio UI in form-first structure mode before final copy lock:
+    - prioritize IA, section hierarchy, placeholder states, and interaction
+      scaffolding
+    - defer content finalization to a later pass
+  - keep shell constraints hard during structure mode:
+    - preserve section order + nav contract
+    - keep changes in presentation layer only
+    - do not change backend routes, eval semantics, or runtime policy ownership
+  - explicit interaction direction:
+    - support slide-like narrative progression from natural scroll gesture
+      mapping for desktop
+    - keep mobile fallback vertical-first
+- Why: reduces rework and coupling risk by stabilizing visual architecture
+  before content-level iteration, while preserving runtime integrity.
