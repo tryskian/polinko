@@ -64,6 +64,8 @@ function setupSectionPath() {
   const sections = SECTION_SEQUENCE.map((id) => document.getElementById(id)).filter(Boolean);
   let activeIndex = 0;
   let isTransitioning = false;
+  let lastNavigationAt = 0;
+  const NAVIGATION_COOLDOWN_MS = 420;
 
   const updateActiveState = () => {
     sections.forEach((section, index) => {
@@ -78,13 +80,19 @@ function setupSectionPath() {
       return;
     }
     updateActiveState();
+    lastNavigationAt = performance.now();
 
     const duration = immediate ? 0 : 0.88;
+    const targetX = Math.round(-target.offsetLeft);
+    const targetY = Math.round(-target.offsetTop);
+
     gsap.to(board, {
-      x: -target.offsetLeft,
-      y: -target.offsetTop,
+      x: targetX,
+      y: targetY,
       duration,
       ease: "power3.inOut",
+      overwrite: "auto",
+      autoRound: true,
       onStart: () => {
         isTransitioning = !immediate;
       },
@@ -96,7 +104,8 @@ function setupSectionPath() {
 
   const onWheel = (event) => {
     event.preventDefault();
-    if (isTransitioning || Math.abs(event.deltaY) < 8) {
+    const now = performance.now();
+    if (isTransitioning || now - lastNavigationAt < NAVIGATION_COOLDOWN_MS || Math.abs(event.deltaY) < 8) {
       return;
     }
     const direction = event.deltaY > 0 ? 1 : -1;
