@@ -131,3 +131,71 @@ body {
   background: rgba(255, 255, 255, 0.7);
   z-index: 2;
 }
+
+.sankey-shell {
+  position: absolute;
+  inset: 0;
+  padding: 10vh 7vw;
+  display: grid;
+  grid-template-columns: 1fr 1.2fr auto;
+  align-items: center;
+  gap: clamp(1.2rem, 2vw, 2.4rem);
+}
+
+.sankey-shell-right {
+  grid-template-columns: auto 1.2fr 1fr;
+}
+
+.flow-stack {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.45rem, 1.1vh, 1rem);
+}
+
+.flow-bar {
+  height: clamp(0.65rem, 1.2vh, 1.1rem);
+  border-radius: 999px;
+  background: rgba(7, 12, 23, 0.22);
+}
+
+.flow-bar-wide {
+  width: 88%;
+}
+
+.flow-stack-left .flow-bar {
+  width: clamp(36%, 13vw, 62%);
+}
+
+.flow-stack-right .flow-bar {
+  width: clamp(54%, 18vw, 82%);
+}
+
+.sankey-shell-right .flow-stack-left .flow-bar {
+  width: clamp(56%, 18vw, 84%);
+}
+
+.sankey-shell-right .flow-stack-right .flow-bar {
+  width: clamp(36%, 13vw, 62%);
+}
+
+.spine-bridge {
+  width: clamp(2.1rem, 3.2vw, 3.4rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.45rem, 1.1vh, 1rem);
+}
+
+.bridge-bar {
+  width: 100%;
+  height: clamp(0.65rem, 1.2vh, 1.1rem);
+  border-radius: 999px;
+  background: rgba(2, 2, 2, 0.38);
+}
+
+.spine-bridge-right {
+  justify-self: end;
+}
+
+.spine-bridge-left {
+  justify-self: start;
+}
