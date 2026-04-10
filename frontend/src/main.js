@@ -29,56 +29,25 @@ function setupWebGLStage() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  const geometry = new THREE.PlaneGeometry(5.4, 5.4, 16, 16);
-  const material = new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: `
-      varying vec2 vUv;
-      uniform float uTime;
-      void main() {
-        vUv = uv;
-        vec3 transformed = position;
-        transformed.z += sin((uv.x * 8.0) + uTime * 0.35) * 0.03;
-        transformed.z += cos((uv.y * 10.0) + uTime * 0.25) * 0.02;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
-      }
-    `,
-    fragmentShader: `
-      varying vec2 vUv;
-      uniform float uTime;
-      void main() {
-        vec3 base = vec3(0.992, 0.992, 0.985);
-        float lineA = smoothstep(0.48, 0.5, abs(sin((vUv.x + uTime * 0.01) * 18.0)));
-        float lineB = smoothstep(0.48, 0.5, abs(cos((vUv.y - uTime * 0.01) * 24.0)));
-        vec3 tintA = vec3(0.96, 0.97, 0.99) * lineA * 0.08;
-        vec3 tintB = vec3(0.98, 0.97, 0.95) * lineB * 0.06;
-        gl_FragColor = vec4(base + tintA + tintB, 1.0);
-      }
-    `,
-  });
+  const geometry = new THREE.PlaneGeometry(5.4, 5.4, 1, 1);
+  const material = new THREE.MeshBasicMaterial({ color: 0xf8f7ef });
 
   const mesh = new THREE.Mesh(geometry, material);
   mesh.position.z = -0.25;
   scene.add(mesh);
 
-  const clock = new THREE.Clock();
-  let rafId = 0;
-  const renderFrame = () => {
-    material.uniforms.uTime.value = clock.getElapsedTime();
-    renderer.render(scene, camera);
-    rafId = requestAnimationFrame(renderFrame);
-  };
+  const renderFrame = () => renderer.render(scene, camera);
   renderFrame();
 
   const handleResize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderFrame();
   };
   window.addEventListener("resize", handleResize);
 
   return () => {
-    cancelAnimationFrame(rafId);
     window.removeEventListener("resize", handleResize);
     geometry.dispose();
     material.dispose();

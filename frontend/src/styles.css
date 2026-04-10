@@ -55,8 +55,8 @@ body {
 
 .block {
   position: absolute;
-  width: 100vw;
-  height: 100vh;
+  width: calc(100vw + 2px);
+  height: calc(100vh + 2px);
   user-select: none;
 }
 
