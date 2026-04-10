@@ -1,7 +1,6 @@
 import "./styles.css";
 import { gsap } from "gsap";
 import * as THREE from "three";
-import { initSankeyScaffold } from "./visuals/sankey-scaffold";
 
 const SECTION_SEQUENCE = [
   "hero",
@@ -175,19 +174,8 @@ function setupSectionPath() {
 
 const teardownWebGL = setupWebGLStage();
 const teardownPath = setupSectionPath();
-initSankeyScaffold();
-
-let sankeyResizeTimer = 0;
-const handleSankeyResize = () => {
-  window.clearTimeout(sankeyResizeTimer);
-  sankeyResizeTimer = window.setTimeout(() => {
-    initSankeyScaffold();
-  }, 120);
-};
-window.addEventListener("resize", handleSankeyResize);
 
 window.addEventListener("beforeunload", () => {
   teardownWebGL();
   teardownPath();
-  window.removeEventListener("resize", handleSankeyResize);
 });
