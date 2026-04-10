@@ -3,122 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>POL Portfolio Shell (Low-Fi)</title>
-    <script type="module" crossorigin src="/assets/index-eWpylXpf.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-Dc6np1Fm.css">
+    <title>POLINKOfolio Interface Board</title>
+    <script type="module" crossorigin src="/assets/index-DthhbYar.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-sTnHyyhh.css">
   </head>
   <body>
-    <header>
-      <div class="shell topbar">
-        <div class="brand">POL Portfolio Shell (low-fi)</div>
-        <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open menu">
-          ☰
-        </button>
-        <nav class="desktop-nav" aria-label="Primary">
-          <a href="#operator-console">Operator's Console</a>
-          <a href="#failure-museum">Failure Museum</a>
-          <a href="#before-after-engine">Before/After Engine</a>
-          <a href="#working-on">What I'm Working On</a>
-        </nav>
-      </div>
-      <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
-        <div class="drawer-panel">
-          <button id="drawerClose" type="button">Close</button>
-          <nav class="drawer-links" aria-label="Mobile">
-            <a href="#operator-console">Operator's Console</a>
-            <a href="#failure-museum">Failure Museum</a>
-            <a href="#before-after-engine">Before/After Engine</a>
-            <a href="#working-on">What I'm Working On</a>
-          </nav>
-        </div>
-      </div>
-    </header>
-
-    <main class="shell">
-      <section class="hero">
-        <h1>POL Portfolio Hub — Start Here</h1>
-        <p>
-          Binary-eval case-study shell. Content is evidence-first and aligned to
-          the current nucleus, Failure Museum, and Before/After claim layers.
-        </p>
-      </section>
-
-      <section id="operator-console" class="section anchor-pad">
-        <h2>Operator's Console</h2>
-        <p>
-          Current case-study state, active risk, and next kernel in one compact
-          operator view.
-        </p>
-        <div class="section-shell-note">Source: case-study nucleus + governance decisions</div>
-        <div class="status-grid" id="operatorStatus"></div>
-      </section>
-
-      <section id="failure-museum" class="section anchor-pad">
-        <h2>Failure Museum</h2>
-        <p>
-          Claim cards record one complete engineering loop:
-          failure -> intervention -> measurable delta -> stress test -> decision.
-        </p>
-        <div class="section-shell-note">Source: Apr 1+ binary-only evidence</div>
-        <div class="card-grid" id="failureCards"></div>
-
-        <section class="detail-drawer" id="failureDetail" aria-live="polite">
-          <h4>Failure card detail</h4>
-          <p class="item-subtle">
-            Select a card above to surface intervention and decision context.
-          </p>
-          <div id="failureDetailBody"></div>
-        </section>
-      </section>
-
-      <section id="before-after-engine" class="section anchor-pad">
-        <h2>Before/After Engine</h2>
-        <p>
-          Compact comparison table for case-level deltas and decision impact.
-        </p>
-        <div class="section-shell-note">Source: Failure Museum claim-to-evidence map</div>
-
-        <div class="controls" aria-label="Before and After filters">
-          <label>
-            Filter by card
-            <select id="filterCard"></select>
-          </label>
-          <label>
-            Filter by metric theme
-            <select id="filterTheme"></select>
-          </label>
-        </div>
-
-        <table>
-          <thead>
-            <tr>
-              <th>Card</th>
-              <th>Before state</th>
-              <th>After state</th>
-              <th>Metric delta</th>
-              <th>Decision impact</th>
-              <th>Evidence anchor</th>
-            </tr>
-          </thead>
-          <tbody id="beforeAfterBody"></tbody>
-        </table>
-      </section>
-
-      <section id="working-on" class="section anchor-pad">
-        <h2>What I'm Working On</h2>
-        <p>Live queue for in-flight kernels, blockers, and go/no-go posture.</p>
-        <div class="section-shell-note">Source: operator kernel log + handoff state</div>
-        <div class="metrics-grid queue">
-          <div class="item">
-            <strong>In-progress queue</strong>
-            <ul id="kernelQueue"></ul>
-          </div>
-          <div class="item">
-            <strong>Blockers</strong>
-            <ul id="kernelBlockers"></ul>
-          </div>
-        </div>
-        <p class="go-no-go" id="goNoGo"></p>
+    <canvas id="webgl-stage" aria-hidden="true"></canvas>
+    <main class="board-wrap" aria-label="Portfolio interface layout board">
+      <section class="board" role="presentation">
+        <section id="hero" class="block hero" data-label="hero"></section>
+        <section id="intro" class="block intro" data-label="intro"></section>
+        <section id="pipeline-one" class="block pipeline-one" data-label="pipeline 1"></section>
+        <section id="sankey-one" class="block sankey-one" data-label="sankey 1"></section>
+        <section id="sankey-two" class="block sankey-two" data-label="sankey 2"></section>
+        <section id="pipeline-two" class="block pipeline-two" data-label="pipeline 2"></section>
+        <section id="conclusion" class="block conclusion" data-label="conclusion"></section>
+        <section id="about" class="block about" data-label="about/lab"></section>
       </section>
     </main>
 
