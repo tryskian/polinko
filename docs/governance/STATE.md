@@ -67,6 +67,20 @@
   - target interaction concept is now explicit:
     - slide-like narrative driven by natural scroll input
     - mobile fallback remains vertical-first.
+- Portfolio shell baseline checkpoint (April 10, 2026):
+  - active shell is now intentionally chrome-free:
+    - no section labels
+    - no module/pill placeholder layer
+    - structural surfaces only while IA/layout is finalized
+  - scroll stability hardening is applied at the known hot segment
+    (`pipeline-two -> conclusion`):
+    - gesture cooldown to prevent burst-triggered section skipping
+    - integer-snapped transform targets to reduce seam jitter
+    - GSAP overwrite/autoround for deterministic transition settling
+  - next visual kernel is defined but not yet implemented:
+    - twin Sankey sections with a shared center spine
+    - D3 Sankey mechanics, placeholder data first
+    - runtime/eval semantics unchanged
 - Active sequencing bias is now portfolio-first packaging, with OCR/backend
   maintenance kept as the secondary track.
 - Portfolio doc consolidation checkpoint (April 5, 2026):

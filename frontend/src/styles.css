@@ -60,19 +60,6 @@ body {
   user-select: none;
 }
 
-.block::after {
-  content: attr(data-label);
-  position: absolute;
-  left: 0.45rem;
-  top: 0.35rem;
-  font-size: 0.45rem;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  text-transform: lowercase;
-  color: rgba(0, 0, 0, 0.62);
-  pointer-events: none;
-}
-
 .hero {
   left: 0;
   top: 0;

@@ -4,7 +4,7 @@
 
 ## Date
 
-- 2026-04-07
+- 2026-04-10
 
 ## Current Snapshot
 
@@ -69,6 +69,19 @@
   - interaction direction is now:
     - slide-like narrative with natural scroll gesture mapping
     - mobile remains vertical-first fallback
+- Portfolio shell cleanup checkpoint (April 10, 2026):
+  - shell chrome was stripped from active surface:
+    - no section labels
+    - no module/pill UI placeholders
+    - current shell is pure structural surfaces only
+  - transition hardening applied for `pipeline-two -> conclusion`:
+    - wheel gesture cooldown (`one gesture -> one section`)
+    - integer-snapped target transforms for reduced jitter
+    - GSAP overwrite/autoround enabled on path transitions
+  - next UI kernel is locked:
+    - twin Sankey implementation with shared central spine
+    - use D3 Sankey reference mechanics (placeholder data first)
+    - preserve existing runtime/eval semantics and route contract
 - Ship-week execution mode is now split-kernel:
   - core ship lane (portfolio evidence/package progression)
   - fixed visuals lane (time-boxed, one deliverable per day)
