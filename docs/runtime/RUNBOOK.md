@@ -127,7 +127,6 @@
 
 1. Non-build internal docs are local-only by default and ignored by git.
 2. Use these local-only paths for confidential notes/material:
-   - `docs/internal/`
    - `docs/peanut/`
 3. Build/source-of-truth docs stay tracked:
    - `docs/governance/CHARTER.md`
