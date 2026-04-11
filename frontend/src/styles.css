@@ -109,6 +109,43 @@ body {
   background: #ebe4cf;
 }
 
+.pipeline-shell {
+  position: absolute;
+  inset: 4.2rem 5.2rem;
+  display: grid;
+  place-content: center;
+  gap: 1rem;
+  justify-items: center;
+  text-align: center;
+  color: #111;
+}
+
+.pipeline-fpo-diagram {
+  width: min(66vw, 860px);
+  height: min(44vh, 360px);
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 2px;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.pipeline-fpo-copy {
+  width: min(62vw, 760px);
+  min-height: 5.5rem;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 2px;
+  padding: 0.8rem 1rem;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
 .conclusion {
   left: 300vw;
   top: 300vh;
@@ -134,7 +171,7 @@ body {
 
 .sankey-shell,
 .morph-shell,
-.museum-shell {
+.about-shell {
   position: absolute;
   inset: 4.8rem 5.2rem 4.2rem;
   color: #111;
@@ -261,41 +298,80 @@ body {
   margin: 0;
 }
 
-.museum-strip {
-  margin-top: 0.8rem;
+.about-shell {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.52fr);
+  align-items: stretch;
+  gap: 1.4rem;
+}
+
+.about-main {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
+  justify-items: start;
 }
 
-.museum-tile {
+.about-photo-fpo {
+  width: min(32vw, 420px);
+  height: min(42vh, 420px);
   display: grid;
-  gap: 0.5rem;
-}
-
-.museum-thumb {
-  aspect-ratio: 16 / 9;
-  background: rgba(0, 0, 0, 0.2);
+  place-items: center;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 2px;
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.museum-caption {
-  margin: 0;
-  font-size: 0.82rem;
+.about-text-fpo {
+  width: min(44vw, 620px);
+  min-height: 7rem;
+  display: grid;
+  place-items: center start;
+  text-align: left;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 2px;
+  font-size: 0.94rem;
+  line-height: 1.45;
 }
 
-.museum-path {
-  display: block;
-  font-size: 0.68rem;
-  opacity: 0.74;
-  white-space: normal;
-  overflow-wrap: anywhere;
+.about-contact-fpo {
+  align-self: start;
+  justify-self: end;
+  width: min(26vw, 360px);
+  min-height: 11rem;
+  display: grid;
+  place-items: center end;
+  text-align: right;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 2px;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 @media (max-width: 1024px) {
+  .pipeline-shell {
+    inset: 3.4rem 2.2rem;
+  }
+
+  .pipeline-fpo-diagram {
+    width: min(88vw, 760px);
+    height: min(34vh, 280px);
+  }
+
+  .pipeline-fpo-copy {
+    width: min(88vw, 700px);
+    min-height: 4.8rem;
+  }
+
   .sankey-shell,
   .morph-shell,
-  .museum-shell {
+  .about-shell {
     inset: 3.4rem 2.2rem 2.8rem;
   }
 
@@ -309,7 +385,23 @@ body {
     grid-template-columns: 1fr;
   }
 
-  .museum-strip {
+  .about-shell {
     grid-template-columns: 1fr;
+  }
+
+  .about-photo-fpo {
+    width: min(88vw, 420px);
+    height: min(32vh, 280px);
+  }
+
+  .about-text-fpo {
+    width: min(88vw, 680px);
+  }
+
+  .about-contact-fpo {
+    justify-self: start;
+    width: min(88vw, 520px);
+    place-items: center start;
+    text-align: left;
   }
 }
