@@ -342,7 +342,7 @@ Defaults:
 - `tools/` operational and eval scripts
 - `tests/` unit and integration tests
 - `docs/` architecture, runbook, decisions, state
-- `.archive/live_archive/` live archive for legacy eval/frontend references
+- `docs/eval/` beta lanes and active eval cases
 
 ## CI
 
