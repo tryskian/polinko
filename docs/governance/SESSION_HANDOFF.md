@@ -35,6 +35,19 @@
     - canonical source: `frontend/`
     - generated served output: `ui/` (via `make frontend-build`)
     - `ui/` remains generated output, not hand-edited source
+  - twin-Sankey data contract:
+    - `Baseline` + `Bridge (Polinko Beta 1.0)` source from Polinko-1 legacy
+      eval reports:
+      `../old/polinko-incase/eval_reports`
+    - `Polinko Beta 2.0` source from active eval DB:
+      `.local/runtime_dbs/active/eval_viz.db`
+    - generated payload:
+      `frontend/src/data/twin_sankey_raw.json`
+    - refresh command:
+      `make portfolio-sankey-data` (included in `make frontend-build`)
+  - section navigation hardening:
+    - wheel + transition locks now enforce one-step section progression to
+      prevent skip drift across Sankey pages.
 - Prompt/runtime behaviour stays minimal and aligned with the original `try.py` style.
 - Portfolio docs are now consolidated for drift control:
   - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md` is the canonical

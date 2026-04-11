@@ -58,6 +58,20 @@
   - canonical source lives in `frontend/`
   - served shell output is generated into `ui/` via `make frontend-build`
   - `ui/` is treated as build output (no manual edits)
+- Portfolio twin-Sankey data contract checkpoint (April 11, 2026):
+  - stage sourcing is mixed by design:
+    - `Baseline` + `Bridge (Polinko Beta 1.0)` from legacy Polinko-1 eval
+      reports at `../old/polinko-incase/eval_reports`
+    - `Polinko Beta 2.0` from active `.local/runtime_dbs/active/eval_viz.db`
+  - generated payload:
+    - `frontend/src/data/twin_sankey_raw.json`
+  - generation path:
+    - `make portfolio-sankey-data` (also runs as part of `make frontend-build`)
+- Portfolio section-navigation hardening checkpoint (April 11, 2026):
+  - transition guard now prevents multi-section skip drift on burst wheel input
+    (notably Sankey A -> Conclusion jumps)
+  - section progression is locked one-step-at-a-time under transition and wheel
+    cooldown gates.
 - Portfolio UI direction checkpoint (April 9, 2026):
   - execution mode is now form-first and structure-first before content lock.
   - shell copy/content is intentionally placeholder-only during concept phase.
