@@ -16,6 +16,15 @@ Navigation lock for this version:
 - Mobile: burger drawer with the same anchors
 - Hi-fi shell exploration is deferred; this spec is IA + low-fi only
 
+Transformation-stage naming contract:
+
+- UI/public labels:
+  1. `Baseline`
+  2. `Bridge (Polinko Beta 1.0)`
+  3. `Polinko Beta 2.0`
+- Technical/repo language:
+  - treat `Baseline` as the experimental `Control` in method/evidence notes.
+
 ## IA chart
 
 ```mermaid
@@ -124,6 +133,15 @@ flowchart TD
 - Controls:
   - filter by card
   - filter by metric theme
+- Conclusion morph (required):
+  - include a replayable transformation sequence:
+    - `Baseline` -> `Bridge (Polinko Beta 1.0)` -> `Polinko Beta 2.0`
+  - anchor the morph to 3-4 explicit deltas:
+    - gate density/shape
+    - fail handling discipline
+    - uncertainty handling posture
+    - release gate strictness
+  - keep this as evidence-linked motion, not decorative animation.
 
 ### 4) What I'm Working On
 
@@ -131,6 +149,13 @@ flowchart TD
   - in-progress kernels
   - blockers
   - explicit go/no-go line
+- Human-AI interaction snapshots (optional strip):
+  - compact captioned snapshots from:
+    - `docs/peanut/assets/screenshots/human-ai-interaction/`
+  - purpose is tone/authorship evidence, not primary technical proof.
+  - each snapshot requires:
+    - one-line caption
+    - evidence anchor/path
 
 ## Data model (UI-facing)
 
@@ -173,10 +198,31 @@ flowchart TD
       "evidence_anchor": "path"
     }
   ],
+  "conclusion_morph": {
+    "stages": ["Baseline", "Bridge (Polinko Beta 1.0)", "Polinko Beta 2.0"],
+    "delta_callouts": [
+      "gate_density_shape",
+      "fail_handling_discipline",
+      "uncertainty_handling_posture",
+      "release_gate_strictness"
+    ],
+    "replay_enabled": true
+  },
   "work_queue": {
     "queue": ["string"],
     "blockers": ["string"],
-    "go_no_go": "GO|NO-GO"
+    "go_no_go": "GO|NO-GO",
+    "interaction_snapshots": [
+      {
+        "image_path": "docs/peanut/assets/screenshots/human-ai-interaction/<file>",
+        "caption": "string",
+        "evidence_anchor": "path:line"
+      }
+    ]
+  },
+  "method_language": {
+    "ui_label": "Baseline",
+    "repo_label": "Control"
   }
 }
 ```

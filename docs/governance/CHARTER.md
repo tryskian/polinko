@@ -49,6 +49,13 @@ OCR-forward reliability loops, and production-ready API foundations.
 ## Workflow
 
 - Inspect before optimise when system intent or provenance is unclear.
+- Inspect-first is mandatory when concrete evidence is provided:
+  - if a source/path/image/log is named, inspect it before interpretation
+  - do not substitute summary/inference for direct inspection
+  - if not yet inspected, state that explicitly and pause claims
+  - inference-before-inspection is a fail event in this workflow
+- `docs/runtime/RUNBOOK.md` (`Inspect-First Rule (Directed Mode)`) is the
+  execution-level authority for this contract.
 - Human-directed precision takes priority over agent-side summarisation/cleanup.
 - Keep deprecated workflow context in `.archive/live_archive/`; keep active docs and
   runtime specs binary-only.

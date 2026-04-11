@@ -3362,3 +3362,41 @@
     - keep mobile fallback vertical-first
 - Why: reduces rework and coupling risk by stabilizing visual architecture
   before content-level iteration, while preserving runtime integrity.
+
+## D-205: Split terminology for transformation stage labels (UI vs repo)
+
+- Date: `2026-04-11`
+- Category: `evidence_governance`
+- Tags: `terminology_lock`, `portfolio_ui`, `experimental_method`, `naming_consistency`
+- Decision:
+  - lock transformation-stage labels to this split:
+    - UI/public narrative label: `Baseline`
+    - repo/method/evidence label: `Control`
+  - keep stage order fixed in both surfaces:
+    1. `Baseline` (UI) / `Control` (repo)
+    2. `Bridge (Polinko Beta 1.0)`
+    3. `Polinko Beta 2.0`
+  - use `Control` terminology only in technical experimental language
+    (eval methods, evidence notes, comparative analysis), not in public section
+    headings.
+- Why: preserves clarity for non-technical readers while maintaining
+  experiment-accurate terminology in the technical evidence layer.
+
+## D-206: Enforce inspect-first evidence discipline across all source modalities
+
+- Date: `2026-04-11`
+- Category: `evidence_governance`
+- Tags: `inspect_first`, `anti_inference`, `screenshot_evidence`, `falsifiability`
+- Decision:
+  - treat all user-provided sources as inspect-first evidence, including:
+    - file paths
+    - screenshots/images
+    - logs/export artifacts
+  - do not substitute summaries or inferred interpretations for direct
+    inspection when a concrete source is provided.
+  - if a source has not been inspected yet, state that explicitly and pause
+    interpretation until inspection completes.
+  - classify inference-before-inspection as a fail event in the active
+    research workflow.
+- Why: prevents "hallucination masquerading as efficiency" and preserves
+  falsifiable claim discipline in human-AI collaboration.

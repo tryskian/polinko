@@ -109,6 +109,43 @@ body {
   background: #ebe4cf;
 }
 
+.pipeline-shell {
+  position: absolute;
+  inset: 4.2rem 5.2rem;
+  display: grid;
+  place-content: center;
+  gap: 1rem;
+  justify-items: center;
+  text-align: center;
+  color: #111;
+}
+
+.pipeline-fpo-diagram {
+  width: min(66vw, 860px);
+  height: min(44vh, 360px);
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 2px;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.pipeline-fpo-copy {
+  width: min(62vw, 760px);
+  min-height: 5.5rem;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 2px;
+  padding: 0.8rem 1rem;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
 .conclusion {
   left: 300vw;
   top: 300vh;
@@ -130,4 +167,241 @@ body {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.7);
   z-index: 2;
+}
+
+.sankey-shell,
+.morph-shell,
+.about-shell {
+  position: absolute;
+  inset: 4.8rem 5.2rem 4.2rem;
+  color: #111;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.sankey-title,
+.morph-title,
+.museum-title {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.sankey-subtitle,
+.morph-subtitle,
+.museum-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.84;
+}
+
+.sankey-flow {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr 0.9fr 1fr;
+  gap: 1.2rem;
+  align-items: center;
+}
+
+.sankey-column {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sankey-column-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+}
+
+.sankey-bar {
+  height: 1.25rem;
+  background: rgba(0, 0, 0, 0.56);
+  border-radius: 2px;
+}
+
+.sankey-bar.short {
+  width: 64%;
+}
+
+.sankey-bar.wide {
+  width: 88%;
+}
+
+.sankey-links {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.sankey-link {
+  height: 0.48rem;
+  background: rgba(0, 0, 0, 0.26);
+  border-radius: 2px;
+}
+
+.sankey-link.strong {
+  background: rgba(0, 0, 0, 0.48);
+  height: 0.62rem;
+}
+
+.morph-stage-row {
+  margin-top: 0.65rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.morph-replay {
+  justify-self: start;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  background: transparent;
+  color: #111;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.morph-stages {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.morph-stage {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.65rem;
+  width: fit-content;
+  padding: 0 0.5rem;
+  font-size: 0.86rem;
+  opacity: 0.45;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.morph-stage.active {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.morph-deltas {
+  margin-top: 0.6rem;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+}
+
+.morph-deltas p {
+  margin: 0;
+}
+
+.about-shell {
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.52fr);
+  align-items: stretch;
+  gap: 1.4rem;
+}
+
+.about-main {
+  display: grid;
+  gap: 1rem;
+  justify-items: start;
+}
+
+.about-photo-fpo {
+  width: min(32vw, 420px);
+  height: min(42vh, 420px);
+  display: grid;
+  place-items: center;
+  text-align: left;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 2px;
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.about-text-fpo {
+  width: min(44vw, 620px);
+  min-height: 7rem;
+  display: grid;
+  place-items: center start;
+  text-align: left;
+  padding: 0.9rem 1rem;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 2px;
+  font-size: 0.94rem;
+  line-height: 1.45;
+}
+
+.about-contact-fpo {
+  align-self: start;
+  justify-self: end;
+  width: min(26vw, 360px);
+  min-height: 11rem;
+  display: grid;
+  place-items: center end;
+  text-align: right;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 2px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 1024px) {
+  .pipeline-shell {
+    inset: 3.4rem 2.2rem;
+  }
+
+  .pipeline-fpo-diagram {
+    width: min(88vw, 760px);
+    height: min(34vh, 280px);
+  }
+
+  .pipeline-fpo-copy {
+    width: min(88vw, 700px);
+    min-height: 4.8rem;
+  }
+
+  .sankey-shell,
+  .morph-shell,
+  .about-shell {
+    inset: 3.4rem 2.2rem 2.8rem;
+  }
+
+  .sankey-title,
+  .morph-title,
+  .museum-title {
+    font-size: 1.72rem;
+  }
+
+  .sankey-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .about-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .about-photo-fpo {
+    width: min(88vw, 420px);
+    height: min(32vh, 280px);
+  }
+
+  .about-text-fpo {
+    width: min(88vw, 680px);
+  }
+
+  .about-contact-fpo {
+    justify-self: start;
+    width: min(88vw, 520px);
+    place-items: center start;
+    text-align: left;
+  }
 }
