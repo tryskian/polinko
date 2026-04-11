@@ -3,6 +3,7 @@ import { gsap } from "gsap";
 import * as THREE from "three";
 import * as d3 from "d3";
 import { sankey as d3Sankey, sankeyLinkHorizontal } from "d3-sankey";
+import twinSankeyRaw from "./data/twin_sankey_raw.json";
 
 const SECTION_SEQUENCE = [
   "hero",
@@ -15,116 +16,22 @@ const SECTION_SEQUENCE = [
   "about",
 ];
 
-const TWIN_SANKEY_CONFIG = [
-  {
-    id: "sankey-one",
-    data: {
-      nodes: [
-        {
-          id: "baseline_dense_gates",
-          name: "Dense gate stack",
-          stage: "Baseline",
-          note: "High complexity routing before stable fail classification.",
-        },
-        {
-          id: "baseline_summary_bias",
-          name: "Summary-first routing",
-          stage: "Baseline",
-          note: "Compression logic over-prioritized concise output.",
-        },
-        {
-          id: "baseline_uncertain_certainty",
-          name: "Uncertainty -> certainty",
-          stage: "Baseline",
-          note: "Ambiguous states often collapsed into unsupported confidence.",
-        },
-        {
-          id: "bridge_spine",
-          name: "Bridge (Polinko Beta 1.0)",
-          stage: "Bridge (Polinko Beta 1.0)",
-          note: "Shared spine that normalizes flow into binary gate discipline.",
-        },
-      ],
-      links: [
-        {
-          id: "l1",
-          source: "baseline_dense_gates",
-          target: "bridge_spine",
-          value: 8,
-          note: "Complexity tightened into explicit route boundaries.",
-        },
-        {
-          id: "l2",
-          source: "baseline_summary_bias",
-          target: "bridge_spine",
-          value: 6,
-          note: "Summary bias rerouted through inspect-first checks.",
-        },
-        {
-          id: "l3",
-          source: "baseline_uncertain_certainty",
-          target: "bridge_spine",
-          value: 7,
-          note: "Uncertainty now carried into explicit gate decisions.",
-        },
-      ],
-    },
-  },
-  {
-    id: "sankey-two",
-    data: {
-      nodes: [
-        {
-          id: "bridge_spine",
-          name: "Bridge (Polinko Beta 1.0)",
-          stage: "Bridge (Polinko Beta 1.0)",
-          note: "Shared spine between Sankey A and Sankey B.",
-        },
-        {
-          id: "beta2_lockset",
-          name: "Lockset release lane",
-          stage: "Polinko Beta 2.0",
-          note: "Strict binary release lane with fail-closed authority.",
-        },
-        {
-          id: "beta2_growth",
-          name: "Growth learning lane",
-          stage: "Polinko Beta 2.0",
-          note: "Fail-rich lane for pass-from-fail learning signal.",
-        },
-        {
-          id: "beta2_calibration",
-          name: "Calibration discipline",
-          stage: "Polinko Beta 2.0",
-          note: "Explicit uncertainty boundaries and inspect-first posture.",
-        },
-      ],
-      links: [
-        {
-          id: "l4",
-          source: "bridge_spine",
-          target: "beta2_lockset",
-          value: 7,
-          note: "Bridge stability routed into strict release gates.",
-        },
-        {
-          id: "l5",
-          source: "bridge_spine",
-          target: "beta2_growth",
-          value: 6,
-          note: "Bridge lane split supports fail-rich exploration.",
-        },
-        {
-          id: "l6",
-          source: "bridge_spine",
-          target: "beta2_calibration",
-          value: 8,
-          note: "Bridge logic carries uncertainty boundary controls.",
-        },
-      ],
-    },
-  },
-];
+function normalizeTwinSankeyConfig(rawPayload) {
+  if (!rawPayload || !Array.isArray(rawPayload.sankeys)) {
+    return [];
+  }
+  return rawPayload.sankeys
+    .filter((entry) => entry && typeof entry.id === "string" && entry.data)
+    .map((entry) => ({
+      id: entry.id,
+      data: {
+        nodes: Array.isArray(entry.data.nodes) ? entry.data.nodes : [],
+        links: Array.isArray(entry.data.links) ? entry.data.links : [],
+      },
+    }));
+}
+
+const TWIN_SANKEY_CONFIG = normalizeTwinSankeyConfig(twinSankeyRaw);
 
 function setupWebGLStage() {
   const canvas = document.getElementById("webgl-stage");
@@ -177,6 +84,7 @@ function setupSectionPath() {
   const sections = SECTION_SEQUENCE.map((id) => document.getElementById(id)).filter(Boolean);
   let activeIndex = 0;
   let isTransitioning = false;
+  let wheelLockedUntil = 0;
 
   const updateActiveState = () => {
     sections.forEach((section, index) => {
@@ -185,7 +93,11 @@ function setupSectionPath() {
   };
 
   const moveTo = (index, immediate = false) => {
-    activeIndex = Math.max(0, Math.min(index, sections.length - 1));
+    const nextIndex = Math.max(0, Math.min(index, sections.length - 1));
+    if (nextIndex === activeIndex) {
+      return;
+    }
+    activeIndex = nextIndex;
     const target = sections[activeIndex];
     if (!(target instanceof HTMLElement)) {
       return;
@@ -193,17 +105,21 @@ function setupSectionPath() {
     updateActiveState();
 
     const duration = immediate ? 0 : 0.88;
+    if (!immediate) {
+      isTransitioning = true;
+    }
     gsap.to(board, {
       x: -target.offsetLeft,
       y: -target.offsetTop,
       duration,
       ease: "power3.inOut",
-      onStart: () => {
-        isTransitioning = !immediate;
-      },
       onComplete: () => {
         isTransitioning = false;
       },
+      onInterrupt: () => {
+        isTransitioning = false;
+      },
+      overwrite: "auto",
     });
     window.dispatchEvent(
       new CustomEvent("polinko:section-change", {
@@ -214,14 +130,19 @@ function setupSectionPath() {
 
   const onWheel = (event) => {
     event.preventDefault();
-    if (isTransitioning || Math.abs(event.deltaY) < 8) {
+    const now = performance.now();
+    if (now < wheelLockedUntil || isTransitioning || Math.abs(event.deltaY) < 8) {
       return;
     }
+    wheelLockedUntil = now + 420;
     const direction = event.deltaY > 0 ? 1 : -1;
     moveTo(activeIndex + direction);
   };
 
   const onKey = (event) => {
+    if (isTransitioning) {
+      return;
+    }
     if (event.key === "ArrowDown" || event.key === "ArrowRight" || event.key === "PageDown") {
       event.preventDefault();
       moveTo(activeIndex + 1);
@@ -276,43 +197,13 @@ function setupTwinSankeys() {
     }
 
     const svgElement = wrap.querySelector(".sankey-chart");
-    const detailElement = wrap.querySelector(".sankey-detail");
-    const resetButton = wrap.querySelector(".sankey-detail-reset");
-    if (!(svgElement instanceof SVGElement) || !(detailElement instanceof HTMLElement)) {
+    if (!(svgElement instanceof SVGElement)) {
       return;
     }
 
-    let pinned = null;
     let graph = null;
     let nodeGroups = null;
     let linkPaths = null;
-
-    const setDetail = ({ mode, title, body }) => {
-      const kicker = detailElement.querySelector(".sankey-detail-kicker");
-      const titleNode = detailElement.querySelector(".sankey-detail-title");
-      const bodyNode = detailElement.querySelector(".sankey-detail-body");
-      if (kicker instanceof HTMLElement) {
-        kicker.textContent = mode === "pinned" ? "Pinned Detail" : "Hover Detail";
-      }
-      if (titleNode instanceof HTMLElement) {
-        titleNode.textContent = title;
-      }
-      if (bodyNode instanceof HTMLElement) {
-        bodyNode.textContent = body;
-      }
-      detailElement.dataset.mode = mode;
-      if (resetButton instanceof HTMLButtonElement) {
-        resetButton.disabled = mode !== "pinned";
-      }
-    };
-
-    const resetDetail = () => {
-      setDetail({
-        mode: "hover",
-        title: "Hover a node or link",
-        body: "Detail text appears here. Click to pin details.",
-      });
-    };
 
     const applyHighlight = (activeItem) => {
       if (!graph || !nodeGroups || !linkPaths) {
@@ -349,40 +240,26 @@ function setupTwinSankeys() {
         .classed("is-dim", (link) => activeLinkIds.size > 0 && !activeLinkIds.has(link.id));
     };
 
-    const activateNode = (node, mode) => {
-      const inbound = graph.links
-        .filter((link) => link.target.id === node.id)
-        .reduce((sum, link) => sum + link.value, 0);
-      const outbound = graph.links
-        .filter((link) => link.source.id === node.id)
-        .reduce((sum, link) => sum + link.value, 0);
+    const activateNode = (node) => {
       applyHighlight({ type: "node", id: node.id });
-      setDetail({
-        mode,
-        title: `${node.name} (${node.stage})`,
-        body: `${node.note} Flow in: ${inbound}. Flow out: ${outbound}.`,
-      });
     };
 
-    const activateLink = (link, mode) => {
+    const activateLink = (link) => {
       applyHighlight({ type: "link", id: link.id });
-      setDetail({
-        mode,
-        title: `${link.source.name} -> ${link.target.name}`,
-        body: `${link.note} Placeholder weight: ${link.value}.`,
-      });
     };
 
     const clearActive = () => {
       applyHighlight(null);
-      resetDetail();
     };
 
     const render = () => {
       const bounds = wrap.getBoundingClientRect();
-      const width = Math.max(480, Math.floor(bounds.width));
-      const height = Math.max(260, Math.floor(bounds.height * 0.6));
-      const margin = { top: 20, right: 16, bottom: 16, left: 16 };
+      const width = Math.max(1, Math.floor(bounds.width));
+      const height = Math.max(1, Math.floor(bounds.height));
+      const isFull = wrap.closest(".sankey-shell-full");
+      const margin = isFull
+        ? { top: 0, right: 0, bottom: 0, left: 0 }
+        : { top: 20, right: 16, bottom: 16, left: 16 };
 
       const svg = d3.select(svgElement);
       svg.selectAll("*").remove();
@@ -409,52 +286,16 @@ function setupTwinSankeys() {
         .attr("class", "sankey-link-path")
         .attr("d", sankeyLinkHorizontal())
         .attr("stroke-width", (link) => Math.max(2, link.width))
-        .on("mouseenter", (_, link) => {
-          if (!pinned) {
-            activateLink(link, "hover");
-          }
-        })
-        .on("mouseleave", () => {
-          if (!pinned) {
-            clearActive();
-          }
-        })
-        .on("click", (event, link) => {
-          event.stopPropagation();
-          if (pinned?.type === "link" && pinned.id === link.id) {
-            pinned = null;
-            clearActive();
-            return;
-          }
-          pinned = { type: "link", id: link.id };
-          activateLink(link, "pinned");
-        });
+        .on("mouseenter", (_, link) => activateLink(link))
+        .on("mouseleave", () => clearActive());
 
       nodeGroups = svg
         .append("g")
         .selectAll("g")
         .data(graph.nodes)
         .join("g")
-        .on("mouseenter", (_, node) => {
-          if (!pinned) {
-            activateNode(node, "hover");
-          }
-        })
-        .on("mouseleave", () => {
-          if (!pinned) {
-            clearActive();
-          }
-        })
-        .on("click", (event, node) => {
-          event.stopPropagation();
-          if (pinned?.type === "node" && pinned.id === node.id) {
-            pinned = null;
-            clearActive();
-            return;
-          }
-          pinned = { type: "node", id: node.id };
-          activateNode(node, "pinned");
-        });
+        .on("mouseenter", (_, node) => activateNode(node))
+        .on("mouseleave", () => clearActive());
 
       nodeGroups
         .append("rect")
@@ -473,46 +314,11 @@ function setupTwinSankeys() {
         .attr("text-anchor", (node) => (node.x0 < width / 2 ? "start" : "end"))
         .text((node) => node.name);
 
-      svg.on("click", () => {
-        pinned = null;
-        clearActive();
-      });
-
-      if (pinned) {
-        if (pinned.type === "node") {
-          const node = graph.nodes.find((entry) => entry.id === pinned.id);
-          if (node) {
-            activateNode(node, "pinned");
-          } else {
-            pinned = null;
-            clearActive();
-          }
-        } else if (pinned.type === "link") {
-          const link = graph.links.find((entry) => entry.id === pinned.id);
-          if (link) {
-            activateLink(link, "pinned");
-          } else {
-            pinned = null;
-            clearActive();
-          }
-        }
-      } else {
-        clearActive();
-      }
+      clearActive();
     };
 
     const resizeObserver = new ResizeObserver(() => render());
     resizeObserver.observe(wrap);
-
-    if (resetButton instanceof HTMLButtonElement) {
-      const onReset = (event) => {
-        event.stopPropagation();
-        pinned = null;
-        clearActive();
-      };
-      resetButton.addEventListener("click", onReset);
-      cleanups.push(() => resetButton.removeEventListener("click", onReset));
-    }
 
     render();
 

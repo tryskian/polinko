@@ -1,0 +1,179 @@
+{
+  "meta": {
+    "generated_at_utc": "2026-04-11T17:16:37.058832+00:00",
+    "source_db": "/Users/tryskian/Github/polinko/.local/runtime_dbs/active/eval_viz.db",
+    "total_points": 56,
+    "run_count": 6,
+    "min_ts_unix": 1774737703,
+    "max_ts_unix": 1774902006,
+    "control_suites": [
+      "hallucination",
+      "style",
+      "retrieval",
+      "file-search"
+    ],
+    "bridge_suite": "ocr",
+    "beta2_suite": "ocr_transcript_stability",
+    "legacy_reports_dir": "/Users/tryskian/Github/old/polinko-incase/eval_reports",
+    "legacy_rollup_suites": [
+      "file-search",
+      "hallucination",
+      "ocr",
+      "retrieval",
+      "style"
+    ]
+  },
+  "sankeys": [
+    {
+      "id": "sankey-one",
+      "data": {
+        "nodes": [
+          {
+            "id": "control_hallucination",
+            "name": "Hallucination checks (6)",
+            "stage": "Baseline",
+            "note": "Raw suite=hallucination; total=6; pass=6; fail=0",
+            "evidence": [
+              "grounded_invoice_total",
+              "grounded_policy_join",
+              "grounded_guardrails"
+            ]
+          },
+          {
+            "id": "control_style",
+            "name": "Style checks (6)",
+            "stage": "Baseline",
+            "note": "Raw suite=style; total=6; pass=6; fail=0",
+            "evidence": [
+              "concise_playful_precision",
+              "followup_tone_continuity",
+              "structured_strategy_answer"
+            ]
+          },
+          {
+            "id": "control_retrieval",
+            "name": "Retrieval checks (12)",
+            "stage": "Baseline",
+            "note": "Raw suite=retrieval; total=12; pass=12; fail=0",
+            "evidence": [
+              "aurora_lattice",
+              "cedar_loop",
+              "delta_forge"
+            ]
+          },
+          {
+            "id": "control_file_search",
+            "name": "File-search checks (5)",
+            "stage": "Baseline",
+            "note": "Raw suite=file-search; total=5; pass=5; fail=0",
+            "evidence": [
+              "ocr_signal_chain",
+              "ocr_lineage_guard",
+              "pdf_invoice_totals"
+            ]
+          },
+          {
+            "id": "bridge_spine_one",
+            "name": "Bridge (Polinko Beta 1.0) (29)",
+            "stage": "Bridge (Polinko Beta 1.0)",
+            "note": "Raw baseline suites collapsed into bridge. Bridge suite (ocr) observed total=6; pass=6; fail=0.",
+            "evidence": [
+              "ocr_verbatim_smoke",
+              "ocr_normalized_smoke",
+              "ocr_crossout_replacement_order"
+            ]
+          }
+        ],
+        "links": [
+          {
+            "id": "control_to_bridge_hallucination",
+            "source": "control_hallucination",
+            "target": "bridge_spine_one",
+            "value": 6,
+            "note": "Hallucination checks raw contribution into bridge."
+          },
+          {
+            "id": "control_to_bridge_style",
+            "source": "control_style",
+            "target": "bridge_spine_one",
+            "value": 6,
+            "note": "Style checks raw contribution into bridge."
+          },
+          {
+            "id": "control_to_bridge_retrieval",
+            "source": "control_retrieval",
+            "target": "bridge_spine_one",
+            "value": 12,
+            "note": "Retrieval checks raw contribution into bridge."
+          },
+          {
+            "id": "control_to_bridge_file_search",
+            "source": "control_file_search",
+            "target": "bridge_spine_one",
+            "value": 5,
+            "note": "File-search checks raw contribution into bridge."
+          }
+        ]
+      }
+    },
+    {
+      "id": "sankey-two",
+      "data": {
+        "nodes": [
+          {
+            "id": "bridge_spine_two",
+            "name": "Bridge (Polinko Beta 1.0) (15)",
+            "stage": "Bridge (Polinko Beta 1.0)",
+            "note": "Input bridge for ocr_transcript_stability; raw total=15; pass=15; fail=0",
+            "evidence": [
+              "tx-68f91bcc-006",
+              "tx-695bf82d-014",
+              "tx-694aef69-009"
+            ]
+          },
+          {
+            "id": "beta2_lane_typed",
+            "name": "Typed lane (7)",
+            "stage": "Polinko Beta 2.0",
+            "note": "Raw lane=typed; total=7; pass=7; fail=0"
+          },
+          {
+            "id": "beta2_lane_handwriting",
+            "name": "Handwriting lane (5)",
+            "stage": "Polinko Beta 2.0",
+            "note": "Raw lane=handwriting; total=5; pass=5; fail=0"
+          },
+          {
+            "id": "beta2_lane_illustration",
+            "name": "Illustration lane (3)",
+            "stage": "Polinko Beta 2.0",
+            "note": "Raw lane=illustration; total=3; pass=3; fail=0"
+          }
+        ],
+        "links": [
+          {
+            "id": "bridge_to_beta2_typed",
+            "source": "bridge_spine_two",
+            "target": "beta2_lane_typed",
+            "value": 7,
+            "note": "Bridge flow into Beta 2.0 typed lane."
+          },
+          {
+            "id": "bridge_to_beta2_handwriting",
+            "source": "bridge_spine_two",
+            "target": "beta2_lane_handwriting",
+            "value": 5,
+            "note": "Bridge flow into Beta 2.0 handwriting lane."
+          },
+          {
+            "id": "bridge_to_beta2_illustration",
+            "source": "bridge_spine_two",
+            "target": "beta2_lane_illustration",
+            "value": 3,
+            "note": "Bridge flow into Beta 2.0 illustration lane."
+          }
+        ]
+      }
+    }
+  ]
+}

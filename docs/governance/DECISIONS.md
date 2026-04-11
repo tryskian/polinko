@@ -3400,3 +3400,47 @@
     research workflow.
 - Why: prevents "hallucination masquerading as efficiency" and preserves
   falsifiable claim discipline in human-AI collaboration.
+
+## D-207: Use Polinko-1 legacy eval reports as the baseline/bridge source for twin Sankey
+
+- Date: `2026-04-11`
+- Category: `evidence_governance`
+- Tags: `portfolio_evidence`, `baseline`, `bridge`, `legacy_source`, `sankey`
+- Decision:
+  - source twin-Sankey stage data from two lanes:
+    - `Baseline` + `Bridge (Polinko Beta 1.0)` from Polinko-1 legacy eval
+      reports (`../old/polinko-incase/eval_reports`)
+    - `Polinko Beta 2.0` from active eval DB
+      (`.local/runtime_dbs/active/eval_viz.db`)
+  - keep this as a mixed-source comparison by design:
+    - historical baseline/bridge vs current binary lane
+  - keep exporter fallback behavior explicit:
+    - if a legacy suite report is unavailable, exporter falls back to active DB
+      rollups for that suite.
+- Validation:
+  - `make portfolio-sankey-data`
+  - `make frontend-build`
+- Why: grounds the portfolio transformation narrative in real historical
+  baseline evidence instead of synthetic or current-only rollups.
+
+## D-208: Harden section-step navigation to prevent multi-section skip drift
+
+- Date: `2026-04-11`
+- Category: `runtime_surface`
+- Tags: `portfolio_ui`, `navigation`, `scroll_lock`, `transition_guard`
+- Decision:
+  - harden section navigation in `frontend/src/main.js`:
+    - set transition lock immediately when movement begins
+    - add wheel cooldown gate for burst-scroll input
+    - ignore no-op moves to current section index
+    - keep keyboard navigation under the same transition lock discipline
+  - preserve presentation-only boundary:
+    - no backend route changes
+    - no eval semantics changes
+    - no runtime policy ownership changes.
+- Validation:
+  - `make frontend-build`
+  - local `/portfolio` navigation smoke check across section sequence
+    (`hero -> intro -> pipeline-one -> sankey-one -> sankey-two -> pipeline-two -> conclusion -> about`)
+- Why: prevents Sankey-section skip behavior and keeps narrative progression
+  deterministic for operator review.

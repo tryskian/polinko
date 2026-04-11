@@ -610,6 +610,21 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     - generated output: `ui/`
     - build command: `make frontend-build`
   - `ui/` is generated output only; do not hand-edit built files.
+- portfolio twin-Sankey raw data flow:
+  - generator tool:
+    - `python -m tools.export_portfolio_sankey_data`
+  - generated payload:
+    - `frontend/src/data/twin_sankey_raw.json`
+  - make entrypoint:
+    - `make portfolio-sankey-data`
+  - source contract:
+    - `Baseline` + `Bridge (Polinko Beta 1.0)` are sourced from Polinko-1
+      legacy reports at `../old/polinko-incase/eval_reports` (default)
+    - `Polinko Beta 2.0` is sourced from active
+      `.local/runtime_dbs/active/eval_viz.db`
+  - optional override:
+    - pass `--legacy-reports-dir /abs/path/to/eval_reports` when running the
+      exporter directly.
 - `GET /manual-evals/surface` return manual-eval data surface from
   `manual_evals.db` (summary + sessions + OCR runs + thumbnail preview fields +
   session feedback/checkpoint context)
