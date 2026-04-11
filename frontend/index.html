@@ -11,39 +11,29 @@
       <section class="board" role="presentation">
         <section id="hero" class="block hero" data-label="hero"></section>
         <section id="intro" class="block intro" data-label="intro"></section>
-        <section id="pipeline-one" class="block pipeline-one" data-label="established">
-          <div class="pipeline-shell" aria-label="established pipeline placeholder">
+        <section id="pipeline-one" class="block pipeline-one" data-label="baseline">
+          <div class="pipeline-shell" aria-label="baseline pipeline placeholder">
             <div class="pipeline-fpo-diagram">FPO Diagram Placeholder</div>
             <div class="pipeline-fpo-copy">
-              Placeholder text block for established/control pipeline context.
+              Placeholder text block for baseline/control pipeline context.
             </div>
           </div>
         </section>
         <section
           id="sankey-one"
           class="block sankey-one"
-          data-label="established -> bridge (polinko beta 1.0)"
+          data-label="baseline -> bridge (polinko beta 1.0)"
         >
           <div class="sankey-shell" aria-label="baseline to bridge placeholder">
             <h2 class="sankey-title">Twin Sankey A</h2>
             <p class="sankey-subtitle">Baseline -> Bridge (Polinko Beta 1.0)</p>
-            <div class="sankey-flow">
-              <div class="sankey-column">
-                <p class="sankey-column-title">Baseline</p>
-                <div class="sankey-bar"></div>
-                <div class="sankey-bar short"></div>
-                <div class="sankey-bar wide"></div>
-              </div>
-              <div class="sankey-links">
-                <div class="sankey-link"></div>
-                <div class="sankey-link strong"></div>
-                <div class="sankey-link"></div>
-              </div>
-              <div class="sankey-column">
-                <p class="sankey-column-title">Bridge (Polinko Beta 1.0)</p>
-                <div class="sankey-bar"></div>
-                <div class="sankey-bar wide"></div>
-                <div class="sankey-bar short"></div>
+            <div class="sankey-chart-wrap" data-sankey-id="sankey-one">
+              <svg class="sankey-chart" aria-label="Twin Sankey A chart placeholder"></svg>
+              <div class="sankey-detail" data-mode="hover">
+                <p class="sankey-detail-kicker">Hover Detail</p>
+                <p class="sankey-detail-title">Hover a node or link</p>
+                <p class="sankey-detail-body">Detail text appears here. Click to pin details.</p>
+                <button class="sankey-detail-reset" type="button">Clear Pin</button>
               </div>
             </div>
           </div>
@@ -56,23 +46,13 @@
           <div class="sankey-shell" aria-label="bridge to beta-two placeholder">
             <h2 class="sankey-title">Twin Sankey B</h2>
             <p class="sankey-subtitle">Bridge (Polinko Beta 1.0) -> Polinko Beta 2.0</p>
-            <div class="sankey-flow">
-              <div class="sankey-column">
-                <p class="sankey-column-title">Bridge (Polinko Beta 1.0)</p>
-                <div class="sankey-bar wide"></div>
-                <div class="sankey-bar"></div>
-                <div class="sankey-bar short"></div>
-              </div>
-              <div class="sankey-links">
-                <div class="sankey-link"></div>
-                <div class="sankey-link"></div>
-                <div class="sankey-link strong"></div>
-              </div>
-              <div class="sankey-column">
-                <p class="sankey-column-title">Polinko Beta 2.0</p>
-                <div class="sankey-bar"></div>
-                <div class="sankey-bar short"></div>
-                <div class="sankey-bar wide"></div>
+            <div class="sankey-chart-wrap" data-sankey-id="sankey-two">
+              <svg class="sankey-chart" aria-label="Twin Sankey B chart placeholder"></svg>
+              <div class="sankey-detail" data-mode="hover">
+                <p class="sankey-detail-kicker">Hover Detail</p>
+                <p class="sankey-detail-title">Hover a node or link</p>
+                <p class="sankey-detail-body">Detail text appears here. Click to pin details.</p>
+                <button class="sankey-detail-reset" type="button">Clear Pin</button>
               </div>
             </div>
           </div>

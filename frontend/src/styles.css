@@ -197,54 +197,102 @@ body {
   opacity: 0.84;
 }
 
-.sankey-flow {
-  margin-top: 0.75rem;
+.sankey-chart-wrap {
+  margin-top: 0.85rem;
   display: grid;
-  grid-template-columns: 1fr 0.9fr 1fr;
-  gap: 1.2rem;
-  align-items: center;
+  gap: 0.8rem;
 }
 
-.sankey-column {
-  display: grid;
-  gap: 0.5rem;
+.sankey-chart {
+  width: 100%;
+  height: clamp(280px, 46vh, 420px);
+  display: block;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 2px;
 }
 
-.sankey-column-title {
-  margin: 0 0 0.35rem;
-  font-size: 0.88rem;
+.sankey-link-path {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.26);
+  transition: opacity 160ms ease, stroke 160ms ease;
+}
+
+.sankey-link-path.is-active {
+  stroke: rgba(0, 0, 0, 0.52);
+}
+
+.sankey-link-path.is-dim {
+  opacity: 0.2;
+}
+
+.sankey-node-rect {
+  fill: rgba(0, 0, 0, 0.56);
+  transition: opacity 160ms ease, fill 160ms ease;
+}
+
+.sankey-node-rect.is-active {
+  fill: rgba(0, 0, 0, 0.82);
+}
+
+.sankey-node-rect.is-dim {
+  opacity: 0.25;
+}
+
+.sankey-node-label {
+  font-size: 0.78rem;
+  fill: rgba(0, 0, 0, 0.92);
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.sankey-detail {
+  display: grid;
+  gap: 0.35rem;
+  align-content: start;
+  min-height: 7.2rem;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 2px;
+  padding: 0.75rem 0.85rem;
+}
+
+.sankey-detail[data-mode="pinned"] {
+  border-color: rgba(0, 0, 0, 0.28);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.sankey-detail-kicker {
+  margin: 0;
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.68;
+}
+
+.sankey-detail-title {
+  margin: 0;
+  font-size: 0.95rem;
   font-weight: 600;
-  letter-spacing: 0.015em;
 }
 
-.sankey-bar {
-  height: 1.25rem;
-  background: rgba(0, 0, 0, 0.56);
+.sankey-detail-body {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.4;
+}
+
+.sankey-detail-reset {
+  justify-self: start;
+  margin-top: 0.2rem;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  background: transparent;
+  color: #111;
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.24rem 0.55rem;
   border-radius: 2px;
-}
-
-.sankey-bar.short {
-  width: 64%;
-}
-
-.sankey-bar.wide {
-  width: 88%;
-}
-
-.sankey-links {
-  display: grid;
-  gap: 0.55rem;
-}
-
-.sankey-link {
-  height: 0.48rem;
-  background: rgba(0, 0, 0, 0.26);
-  border-radius: 2px;
-}
-
-.sankey-link.strong {
-  background: rgba(0, 0, 0, 0.48);
-  height: 0.62rem;
+  cursor: pointer;
 }
 
 .morph-stage-row {
@@ -381,8 +429,8 @@ body {
     font-size: 1.72rem;
   }
 
-  .sankey-flow {
-    grid-template-columns: 1fr;
+  .sankey-chart {
+    height: clamp(240px, 36vh, 320px);
   }
 
   .about-shell {
