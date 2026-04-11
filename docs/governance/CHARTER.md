@@ -57,14 +57,14 @@ OCR-forward reliability loops, and production-ready API foundations.
 - `docs/runtime/RUNBOOK.md` (`Inspect-First Rule (Directed Mode)`) is the
   execution-level authority for this contract.
 - Human-directed precision takes priority over agent-side summarisation/cleanup.
-- Keep deprecated workflow context in `.archive/live_archive/`; keep active docs and
-  runtime specs binary-only.
+- Keep deprecated eval/runtime context in `docs/eval/beta_1_0/`; keep active docs
+  and runtime specs binary-only.
 - Never delete local files as a first action:
   - archive first
   - delete only when explicitly approved as a final cleanup step
 - Beta tracking policy:
-  - track legacy eval docs/assets in `docs/eval/legacy/` for transition
-    traceability
+  - track beta eval docs/assets in `docs/eval/beta_1_0/` and
+    `docs/eval/beta_2_0/` for transition traceability
   - keep raw DB snapshots and confidential internals local-only unless
     explicitly approved for tracking
 - During eval wiring lock, avoid DB init/refresh flows; allow only archive/reset
@@ -111,8 +111,8 @@ OCR-forward reliability loops, and production-ready API foundations.
 - API implementation: `api/app_factory.py`
 - Prompt versions: `core/prompts.py`
 - API tests: `tests/test_api.py`
-- Archived web UI context is documented under
-  `.archive/live_archive/legacy_frontend/`.
+- Historical eval transition evidence is maintained under
+  `docs/eval/beta_1_0/`.
 
 ## Security / Ops Baseline
 
@@ -147,10 +147,8 @@ OCR-forward reliability loops, and production-ready API foundations.
   - keep UI work presentation-only against that API contract
   - defer UI styling/interaction iterations until backend kernels are stable
 - Portfolio governance pin:
-  - keep one canonical portfolio strategy doc:
-    - `docs/peanut/refs/PORTFOLIO_CASE_STUDY_STRATEGY.md`
-  - keep one canonical role-targeting source of truth:
-    - `docs/peanut/refs/OPENAI_ROLE_SCRATCHPAD.md`
+  - keep portfolio strategy and role-targeting canon in Notion
+    (single-source planning surface).
   - lock case-study presentation architecture to:
     - primary: `Failure Museum`
     - secondary: `Before/After Engine`

@@ -18,7 +18,7 @@
   - API/runtime regression tests.
 - `docs/`
   - Charter, state, decisions, runbook, handoff, operator references, and
-    live archive lanes.
+    eval lane references.
 
 ## Runtime Flow
 
@@ -28,8 +28,8 @@
 4. Request execution delegates to `core/` runtime and persistence modules.
 5. `POST /chat` supports harness override (`harness_mode=fixture`) for
    deterministic smoke without model calls; default remains `live`.
-6. CLI/API surfaces remain canonical; archived legacy frontend context stays in
-   `.archive/live_archive/legacy_frontend/`.
+6. CLI/API surfaces remain canonical; historical beta transition evidence is
+   maintained under `docs/eval/beta_1_0/`.
 7. OCR-forward quality loop is the active reliability engine:
    - transcript case miner builds local OCR case sets
    - lockset lane gates release quality (strict binary pass/fail)
@@ -66,7 +66,7 @@
   - local eval artefacts are operational outputs (default under `eval_reports/`)
     and are non-authoritative for runtime gate decisions.
   - no file-log-driven eval wiring exists in runtime gate decisions.
-  - deprecated eval/frontend context is reference-only under `.archive/live_archive/`
+  - deprecated transition context is reference-only under `docs/eval/beta_1_0/`
     and cannot drive active gate decisions.
 - OCR eval lanes (active):
   - lockset gate: stable benchmark subset that must stay green
@@ -94,7 +94,7 @@
 - Prompt/runtime behaviour and policy logic: `core/`
 - Eval/report/reference scripts and one-off operators: `tools/`
 - Execution state/decisions/handoff documentation: `docs/`
-- Deprecated implementation references: `.archive/live_archive/`
+- Historical beta transition references: `docs/eval/beta_1_0/`
 
 ## Governance Flow
 

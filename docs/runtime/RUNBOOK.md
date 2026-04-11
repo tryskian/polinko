@@ -129,8 +129,6 @@
 2. Use these local-only paths for confidential notes/material:
    - `docs/internal/`
    - `docs/peanut/`
-   - `.archive/live_archive/legacy_eval/`
-   - `.archive/live_archive/legacy_human_reference/`
 3. Build/source-of-truth docs stay tracked:
    - `docs/governance/CHARTER.md`
    - `docs/runtime/ARCHITECTURE.md`
@@ -161,15 +159,14 @@
    discovery; manual `source .../activate` chaining is not required for
    `make server` / `make caffeinate-on`.
 
-## Live Archive Reference
+## Historical Reference
 
-1. Use `.archive/live_archive/` as the single active reference location for
-   deprecated implementation context.
-2. Legacy eval context belongs in:
-   - `.archive/live_archive/legacy_eval/`
-3. Legacy frontend context belongs in:
-   - `.archive/live_archive/legacy_frontend/`
-4. Archive content is reference-only:
+1. Use `docs/eval/beta_1_0/` as the active reference location for deprecated
+   transition evidence.
+2. Beta eval context belongs in:
+   - `docs/eval/beta_1_0/`
+   - `docs/eval/beta_2_0/`
+3. Historical content is reference-only:
    - do not wire it into active runtime/eval gate paths.
    - keep binary runtime specs sourced from active docs/code.
 
@@ -610,21 +607,6 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     - generated output: `ui/`
     - build command: `make frontend-build`
   - `ui/` is generated output only; do not hand-edit built files.
-- portfolio twin-Sankey raw data flow:
-  - generator tool:
-    - `python -m tools.export_portfolio_sankey_data`
-  - generated payload:
-    - `frontend/src/data/twin_sankey_raw.json`
-  - make entrypoint:
-    - `make portfolio-sankey-data`
-  - source contract:
-    - `Baseline` + `Bridge (Polinko Beta 1.0)` are sourced from Polinko-1
-      legacy reports at `../old/polinko-incase/eval_reports` (default)
-    - `Polinko Beta 2.0` is sourced from active
-      `.local/runtime_dbs/active/eval_viz.db`
-  - optional override:
-    - pass `--legacy-reports-dir /abs/path/to/eval_reports` when running the
-      exporter directly.
 - `GET /manual-evals/surface` return manual-eval data surface from
   `manual_evals.db` (summary + sessions + OCR runs + thumbnail preview fields +
   session feedback/checkpoint context)
