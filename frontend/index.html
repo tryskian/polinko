@@ -11,12 +11,104 @@
       <section class="board" role="presentation">
         <section id="hero" class="block hero" data-label="hero"></section>
         <section id="intro" class="block intro" data-label="intro"></section>
-        <section id="pipeline-one" class="block pipeline-one" data-label="pipeline 1"></section>
-        <section id="sankey-one" class="block sankey-one" data-label="sankey 1"></section>
-        <section id="sankey-two" class="block sankey-two" data-label="sankey 2"></section>
-        <section id="pipeline-two" class="block pipeline-two" data-label="pipeline 2"></section>
-        <section id="conclusion" class="block conclusion" data-label="conclusion"></section>
-        <section id="about" class="block about" data-label="about/lab"></section>
+        <section id="pipeline-one" class="block pipeline-one" data-label="established"></section>
+        <section
+          id="sankey-one"
+          class="block sankey-one"
+          data-label="established -> bridge (polinko beta 1.0)"
+        >
+          <div class="sankey-shell" aria-label="baseline to bridge placeholder">
+            <h2 class="sankey-title">Twin Sankey A</h2>
+            <p class="sankey-subtitle">Baseline -> Bridge (Polinko Beta 1.0)</p>
+            <div class="sankey-flow">
+              <div class="sankey-column">
+                <p class="sankey-column-title">Baseline</p>
+                <div class="sankey-bar"></div>
+                <div class="sankey-bar short"></div>
+                <div class="sankey-bar wide"></div>
+              </div>
+              <div class="sankey-links">
+                <div class="sankey-link"></div>
+                <div class="sankey-link strong"></div>
+                <div class="sankey-link"></div>
+              </div>
+              <div class="sankey-column">
+                <p class="sankey-column-title">Bridge (Polinko Beta 1.0)</p>
+                <div class="sankey-bar"></div>
+                <div class="sankey-bar wide"></div>
+                <div class="sankey-bar short"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section
+          id="sankey-two"
+          class="block sankey-two"
+          data-label="bridge (polinko beta 1.0) -> polinko beta 2.0"
+        >
+          <div class="sankey-shell" aria-label="bridge to beta-two placeholder">
+            <h2 class="sankey-title">Twin Sankey B</h2>
+            <p class="sankey-subtitle">Bridge (Polinko Beta 1.0) -> Polinko Beta 2.0</p>
+            <div class="sankey-flow">
+              <div class="sankey-column">
+                <p class="sankey-column-title">Bridge (Polinko Beta 1.0)</p>
+                <div class="sankey-bar wide"></div>
+                <div class="sankey-bar"></div>
+                <div class="sankey-bar short"></div>
+              </div>
+              <div class="sankey-links">
+                <div class="sankey-link"></div>
+                <div class="sankey-link"></div>
+                <div class="sankey-link strong"></div>
+              </div>
+              <div class="sankey-column">
+                <p class="sankey-column-title">Polinko Beta 2.0</p>
+                <div class="sankey-bar"></div>
+                <div class="sankey-bar short"></div>
+                <div class="sankey-bar wide"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section id="pipeline-two" class="block pipeline-two" data-label="polinko beta 2.0"></section>
+        <section id="conclusion" class="block conclusion" data-label="conclusion">
+          <div class="morph-shell" aria-label="transformation conclusion scaffold">
+            <h2 class="morph-title">Conclusion Morph</h2>
+            <p class="morph-subtitle">Replayable transformation: Baseline -> Bridge -> Polinko Beta 2.0</p>
+            <div class="morph-stage-row">
+              <button class="morph-replay" type="button">Replay Transformation</button>
+              <div class="morph-stages" role="list" aria-label="morph stages">
+                <span class="morph-stage active" role="listitem" data-stage="baseline">Baseline</span>
+                <span class="morph-stage" role="listitem" data-stage="bridge">Bridge (Polinko Beta 1.0)</span>
+                <span class="morph-stage" role="listitem" data-stage="beta2">Polinko Beta 2.0</span>
+              </div>
+            </div>
+            <div class="morph-deltas">
+              <p>gate density/shape</p>
+              <p>fail handling discipline</p>
+              <p>uncertainty handling posture</p>
+              <p>release gate strictness</p>
+            </div>
+          </div>
+        </section>
+        <section id="about" class="block about" data-label="about/lab">
+          <div class="museum-shell" aria-label="interaction museum non-evidence strip">
+            <h2 class="museum-title">Interaction Museum</h2>
+            <p class="museum-subtitle">Tone/Authorship lane (non-evidence)</p>
+            <div class="museum-strip">
+              <article class="museum-tile">
+                <div class="museum-thumb"></div>
+                <p class="museum-caption">Grip Released: no modules, no pills.</p>
+                <code class="museum-path">docs/peanut/assets/screenshots/human-ai-interaction/Screenshot 2026-04-10 at 20.36.44.png</code>
+              </article>
+              <article class="museum-tile">
+                <div class="museum-thumb"></div>
+                <p class="museum-caption">Inspect-first over infer-first.</p>
+                <code class="museum-path">docs/peanut/assets/screenshots/Screenshot 2026-03-28 at 15.43.22.png</code>
+              </article>
+            </div>
+          </div>
+        </section>
       </section>
     </main>
 

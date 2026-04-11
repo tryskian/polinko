@@ -137,6 +137,12 @@
   - `make transcript-check` enforces canonical rich-format structure
   - `make eod` now runs deterministic day-close sequence:
     `transcript-fix -> transcript-check -> doctor-env -> lint-docs -> test -> eod-stop`
+- Inspect-first evidence rule is mandatory:
+  - when a concrete source/path is provided, inspect it before interpretation
+  - screenshots/images are primary evidence, not secondary cues
+  - do not use summary/inference as a substitute for direct inspection
+  - if inspection has not occurred yet, state that explicitly and pause claims
+  - inference-before-inspection is treated as a fail event in this workflow
 - Session closeout policy is mandatory after every session:
   - run full cleanup before handoff:
     - `make eod`

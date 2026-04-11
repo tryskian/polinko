@@ -131,3 +131,185 @@ body {
   background: rgba(255, 255, 255, 0.7);
   z-index: 2;
 }
+
+.sankey-shell,
+.morph-shell,
+.museum-shell {
+  position: absolute;
+  inset: 4.8rem 5.2rem 4.2rem;
+  color: #111;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.sankey-title,
+.morph-title,
+.museum-title {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.sankey-subtitle,
+.morph-subtitle,
+.museum-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  opacity: 0.84;
+}
+
+.sankey-flow {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr 0.9fr 1fr;
+  gap: 1.2rem;
+  align-items: center;
+}
+
+.sankey-column {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sankey-column-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: 0.015em;
+}
+
+.sankey-bar {
+  height: 1.25rem;
+  background: rgba(0, 0, 0, 0.56);
+  border-radius: 2px;
+}
+
+.sankey-bar.short {
+  width: 64%;
+}
+
+.sankey-bar.wide {
+  width: 88%;
+}
+
+.sankey-links {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.sankey-link {
+  height: 0.48rem;
+  background: rgba(0, 0, 0, 0.26);
+  border-radius: 2px;
+}
+
+.sankey-link.strong {
+  background: rgba(0, 0, 0, 0.48);
+  height: 0.62rem;
+}
+
+.morph-stage-row {
+  margin-top: 0.65rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.morph-replay {
+  justify-self: start;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  background: transparent;
+  color: #111;
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.morph-stages {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.morph-stage {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.65rem;
+  width: fit-content;
+  padding: 0 0.5rem;
+  font-size: 0.86rem;
+  opacity: 0.45;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.morph-stage.active {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.morph-deltas {
+  margin-top: 0.6rem;
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+}
+
+.morph-deltas p {
+  margin: 0;
+}
+
+.museum-strip {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.museum-tile {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.museum-thumb {
+  aspect-ratio: 16 / 9;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.16);
+}
+
+.museum-caption {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.museum-path {
+  display: block;
+  font-size: 0.68rem;
+  opacity: 0.74;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1024px) {
+  .sankey-shell,
+  .morph-shell,
+  .museum-shell {
+    inset: 3.4rem 2.2rem 2.8rem;
+  }
+
+  .sankey-title,
+  .morph-title,
+  .museum-title {
+    font-size: 1.72rem;
+  }
+
+  .sankey-flow {
+    grid-template-columns: 1fr;
+  }
+
+  .museum-strip {
+    grid-template-columns: 1fr;
+  }
+}

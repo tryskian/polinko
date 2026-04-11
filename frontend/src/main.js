@@ -92,6 +92,11 @@ function setupSectionPath() {
         isTransitioning = false;
       },
     });
+    window.dispatchEvent(
+      new CustomEvent("polinko:section-change", {
+        detail: { id: target.id, index: activeIndex },
+      })
+    );
   };
 
   const onWheel = (event) => {
@@ -141,10 +146,67 @@ function setupSectionPath() {
   };
 }
 
+function setupConclusionMorph() {
+  const stages = Array.from(document.querySelectorAll(".morph-stage"));
+  const replayButton = document.querySelector(".morph-replay");
+  if (!(replayButton instanceof HTMLButtonElement) || stages.length === 0) {
+    return () => {};
+  }
+
+  const stageOrder = ["baseline", "bridge", "beta2"];
+  let running = false;
+  let timers = [];
+
+  const setStage = (key) => {
+    stages.forEach((node) => {
+      node.classList.toggle("active", node.getAttribute("data-stage") === key);
+    });
+  };
+
+  const clearTimers = () => {
+    timers.forEach((timer) => timer.kill());
+    timers = [];
+  };
+
+  const replay = () => {
+    if (running) {
+      clearTimers();
+    }
+    running = true;
+    stageOrder.forEach((stageKey, index) => {
+      const timer = gsap.delayedCall(index * 0.55, () => setStage(stageKey));
+      timers.push(timer);
+    });
+    timers.push(
+      gsap.delayedCall(stageOrder.length * 0.55 + 0.05, () => {
+        running = false;
+      })
+    );
+  };
+
+  const onSectionChange = (event) => {
+    if (event.detail?.id === "conclusion") {
+      replay();
+    }
+  };
+
+  replayButton.addEventListener("click", replay);
+  window.addEventListener("polinko:section-change", onSectionChange);
+  setStage("baseline");
+
+  return () => {
+    replayButton.removeEventListener("click", replay);
+    window.removeEventListener("polinko:section-change", onSectionChange);
+    clearTimers();
+  };
+}
+
 const teardownWebGL = setupWebGLStage();
 const teardownPath = setupSectionPath();
+const teardownMorph = setupConclusionMorph();
 
 window.addEventListener("beforeunload", () => {
   teardownWebGL();
   teardownPath();
+  teardownMorph();
 });
