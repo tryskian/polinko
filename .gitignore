@@ -63,8 +63,6 @@ polinko.code-workspace
 # Local peanut knowledge lane (confidential/local-only)
 docs/peanut/**
 !docs/peanut/.gitkeep
-docs/internal/**
-!docs/internal/.gitkeep
 docs/eval/**
 !docs/eval/.gitkeep
 
