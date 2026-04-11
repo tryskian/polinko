@@ -3362,3 +3362,25 @@
     - keep mobile fallback vertical-first
 - Why: reduces rework and coupling risk by stabilizing visual architecture
   before content-level iteration, while preserving runtime integrity.
+
+## D-205: Keep portfolio shell chrome-free and stabilize section-step transitions
+
+- Date: `2026-04-10`
+- Category: `runtime_surface`
+- Tags: `portfolio_shell`, `no_chrome`, `scroll_stability`, `deterministic_motion`
+- Decision:
+  - keep active portfolio shell surface intentionally chrome-free while layout is
+    being finalized:
+    - no section labels
+    - no module/pill placeholder layer
+    - structural surfaces only
+  - harden section-step motion at the known hot segment
+    (`pipeline-two -> conclusion`) without changing route/eval semantics:
+    - wheel gesture cooldown to prevent burst retriggers
+    - integer-snapped transform targets
+    - GSAP overwrite/autoround on board transitions
+  - lock next kernel direction:
+    - implement twin Sankey sections with a shared center spine
+    - start with placeholder data and preserve current runtime contract
+- Why: maintain visual intent and operator clarity while eliminating transition
+  instability and avoiding UI/runtime coupling drift.
