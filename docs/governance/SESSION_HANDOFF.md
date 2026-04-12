@@ -2,7 +2,7 @@
 
 # Session Handoff (Current Only)
 
-Last updated: 2026-04-11
+Last updated: 2026-04-12
 
 ## Startup
 
@@ -24,7 +24,7 @@ Last updated: 2026-04-11
   - edit in `frontend/`
   - build to `ui/` with `make frontend-build`
   - no manual edits under `ui/`
-- Twin Sankey path is retired for current cycle.
+- Sankey portfolio shell path is active for current cycle.
 - OCR lockset/growth lane model remains active and unchanged.
 - Eval gate contract remains binary pass/fail.
 
