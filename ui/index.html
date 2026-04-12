@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>POLINKOfolio Interface Board</title>
-    <script type="module" crossorigin src="/assets/index-BBIZoNsx.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DO76bIgr.css">
+    <script type="module" crossorigin src="/assets/index-vUMsy2z2.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-D69I52zT.css">
   </head>
   <body>
     <canvas id="webgl-stage" aria-hidden="true"></canvas>
@@ -14,33 +14,23 @@
         <section id="hero" class="block hero" data-label="hero"></section>
         <section id="intro" class="block intro" data-label="intro"></section>
         <section id="pipeline-one" class="block pipeline-one" data-label="baseline">
-          <div class="pipeline-shell" aria-label="baseline pipeline placeholder">
-            <div class="pipeline-fpo-diagram">FPO Diagram Placeholder</div>
-            <div class="pipeline-fpo-copy">
-              Placeholder text block for baseline/control pipeline context.
-            </div>
+          <div class="sankey-stage" aria-label="baseline control sankey">
+            <svg id="sankey-baseline" class="sankey-svg" role="img" aria-label="Baseline control flow"></svg>
           </div>
         </section>
         <section id="bridge-one" class="block bridge-one" data-label="bridge panel a">
-          <div class="bridge-shell" aria-label="bridge panel a placeholder">
-            <div class="bridge-fpo-wrap">
-              <div class="bridge-fpo-card">Placeholder panel A (clean slate)</div>
-            </div>
+          <div class="sankey-stage" aria-label="bridge a sankey">
+            <svg id="sankey-bridge-a" class="sankey-svg" role="img" aria-label="Bridge A flow"></svg>
           </div>
         </section>
         <section id="bridge-two" class="block bridge-two" data-label="bridge panel b">
-          <div class="bridge-shell" aria-label="bridge panel b placeholder">
-            <div class="bridge-fpo-wrap">
-              <div class="bridge-fpo-card">Placeholder panel B (clean slate)</div>
-            </div>
+          <div class="sankey-stage" aria-label="bridge b sankey">
+            <svg id="sankey-bridge-b" class="sankey-svg" role="img" aria-label="Bridge B flow"></svg>
           </div>
         </section>
         <section id="pipeline-two" class="block pipeline-two" data-label="polinko beta 2.0">
-          <div class="pipeline-shell" aria-label="polinko beta 2.0 pipeline placeholder">
-            <div class="pipeline-fpo-diagram">FPO Diagram Placeholder</div>
-            <div class="pipeline-fpo-copy">
-              Placeholder text block for Polinko Beta 2.0 pipeline context.
-            </div>
+          <div class="sankey-stage" aria-label="polinko beta 2 sankey">
+            <svg id="sankey-beta2" class="sankey-svg" role="img" aria-label="Polinko beta 2 flow"></svg>
           </div>
         </section>
         <section id="conclusion" class="block conclusion" data-label="conclusion">
