@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-04-11
+Last updated: 2026-04-12
 
 ## Current Truth
 
@@ -13,9 +13,9 @@ Last updated: 2026-04-11
   - `GET /` redirects to `GET /portfolio`.
   - `GET /portfolio` serves `ui/index.html` (build output).
   - source of truth for shell edits is `frontend/`.
-- Twin Sankey implementation is retired from active frontend/runtime path:
-  - no Sankey data/export pipeline in Makefile/tools.
-  - middle portfolio sections are currently neutral bridge placeholders.
+- Sankey portfolio shell iteration is active in the frontend lane:
+  - four-section sankey strip prototype is currently under refinement.
+  - source remains `frontend/` with generated output in `ui/`.
 - OCR-forward eval model remains active:
   - lockset lane is release-gating.
   - growth lane is fail-tolerant and signal-seeking.
