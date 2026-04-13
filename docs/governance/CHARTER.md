@@ -56,9 +56,24 @@ OCR-forward reliability loops, and production-ready API foundations.
   - inference-before-inspection is a fail event in this workflow
 - `docs/runtime/RUNBOOK.md` (`Inspect-First Rule (Directed Mode)`) is the
   execution-level authority for this contract.
+- Long-term context reliability depends on evidence chains, not recursive
+  summaries:
+  - transcripts/screenshots/raw reports are source evidence, not decorative
+    archive
+  - decisions encode binding interpretation of that evidence
+  - state/handoff files point to current constraints and must not replace the
+    underlying evidence trail
+  - do not delete or demote evidence files as a context-cleanup shortcut
+  - if a summary conflicts with source evidence, source evidence wins and the
+    summary must be corrected
 - Human-directed precision takes priority over agent-side summarisation/cleanup.
-- Keep deprecated eval/runtime context in `docs/eval/beta_1_0/`; keep active docs
-  and runtime specs binary-only.
+- Keep historical eval/runtime context visible through `docs/eval/`; keep active
+  runtime gate semantics binary-only.
+- Fail signal is first-class research data:
+  - pass-only dashboards are insufficient and can be misleading
+  - strict binary gates should expose FAIL pressure directly
+  - manual eval notes remain the human interpretation layer and must not be
+    flattened into gate arithmetic
 - Never delete local files as a first action:
   - archive first
   - delete only when explicitly approved as a final cleanup step

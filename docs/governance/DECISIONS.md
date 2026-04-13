@@ -2798,7 +2798,8 @@
 - Date: `2026-04-03`
 - Category: `eval_observability`
 - Tags: `ocr_pulse`, `runtime_db`, `history_db`, `eval_viz`, `ui_clarity`
-- Status: Superseded by D-214.
+- Status: Superseded by D-214, then by D-215 for the active pass/fail
+  visualization source.
 - Decision:
   - rewire `/viz/pass-fail` away from an `eval_viz.db`-only model:
     - use `history.db` / `ocr_runs` as the source for the moving chart
@@ -3475,6 +3476,9 @@
 - Date: `2026-04-13`
 - Category: `evidence_governance`
 - Tags: `beta_1_0`, `portfolio_evidence`, `binary_transition`, `decisions`
+- Status: Refined by D-216 for transcript/source-evidence authority. `DECISIONS`
+  remains the binding interpretation layer, but transcript/report evidence must
+  not be demoted to disposable or merely decorative context.
 - Decision:
   - keep earlier beta 1.0 decision entries as the canonical evidence layer for
     the transition to strict binary eval semantics.
@@ -3482,9 +3486,9 @@
   - treat beta 2.0/current eval data as meaningful by comparison against beta
     1.0's binary-transition decisions, not as a replacement that makes beta
     1.0 irrelevant.
-  - use local-only transcript context under `docs/peanut/transcripts/` only as
-    supporting interpretation material; `DECISIONS` remains the canonical
-    tracked source for beta 1.0 information.
+  - use local-only transcript context under `docs/peanut/transcripts/` as
+    source evidence for reasoning/eval interpretation; `DECISIONS` remains the
+    canonical tracked interpretation layer for beta 1.0 information.
 - Why: Beta 1.0 contains the original manual/screenshot-backed eval context and
   binary-transition rationale that makes later binary/OCR eval data
   interpretable.
@@ -3533,9 +3537,12 @@
 - Date: `2026-04-13`
 - Category: `evidence_governance`
 - Tags: `manual_evals_db`, `beta_1_0`, `current_eval_data`, `database_provenance`
+- Status: Refined by D-215. `manual_evals.db` remains the integrated
+  manual-eval warehouse; it is not the primary strict OCR binary-gate chart
+  source.
 - Decision:
   - use `.local/runtime_dbs/active/manual_evals.db` as the single app-facing
-    eval warehouse for analysis/UI work.
+    eval warehouse for integrated manual-eval analysis/manual-eval UI work.
   - rebuild it with `make manual-evals-db`.
   - import current eval/runtime rows from `.local/runtime_dbs/active/history.db`.
   - import Beta 1.0 rows from optional local source
@@ -3569,6 +3576,9 @@
 - Date: `2026-04-13`
 - Category: `eval_observability`
 - Tags: `manual_evals_db`, `pass_fail_viz`, `eval_viz_retired`, `single_source`
+- Status: Superseded by D-215. `manual_evals.db` remains canonical for
+  integrated manual-eval evidence, but strict OCR pass/fail observability now
+  defaults to Pol-3 binary gate reports.
 - Decision:
   - make `/viz/pass-fail/data` read its chart points, headline summary, and
     latest detail rows from `.local/runtime_dbs/active/manual_evals.db`.
@@ -3589,3 +3599,60 @@
   Beta 1.0/current eval rows are integrated into the canonical eval warehouse.
   A single app-facing DB keeps the visual surface, manual eval surface, and
   portfolio evidence model aligned.
+
+## D-215: Treat Pol-3 OCR binary gate reports as the primary pass/fail visualization signal
+
+- Date: `2026-04-13`
+- Category: `eval_observability`
+- Tags: `binary_gates`, `pass_fail_viz`, `fail_signal`, `manual_eval_layer`, `context_reliability`
+- Decision:
+  - make `/viz/pass-fail/data` prefer OCR binary gate reports under
+    `.local/eval_reports/` when no explicit DB path is supplied.
+  - set default chart mode to `binary_gates`.
+  - stack chart buckets by strict `fail` / `pass` outcomes from gate reports.
+  - sort latest detail rows FAIL-first so unresolved gate pressure remains
+    visible.
+  - order report windows by report/run timestamp, not filesystem copy/restore
+    mtime.
+  - keep `.local/runtime_dbs/active/manual_evals.db` as the canonical
+    integrated manual-eval warehouse and explicit/fallback DB path.
+  - keep manual eval `PASS` / `PARTIAL` / `FAIL` feedback as the human
+    interpretation layer; it captures qualitative research notes and must not
+    be flattened into strict OCR gate arithmetic.
+  - keep `eval_viz.db` retired as an app-facing DB.
+- Validation:
+  - `./venv/bin/python -m py_compile api/eval_viz.py tests/test_eval_viz.py`
+  - `./venv/bin/python -m unittest tests.test_eval_viz`
+  - `./venv/bin/python -m unittest tests.test_api tests.test_eval_viz`
+  - `git diff --check`
+- Result:
+  - local default payload now reports `chart_mode=binary_gates`.
+  - last 120 local OCR binary gate reports show `2112` pass cases and `610`
+    fail cases.
+  - latest report summary is `68` pass / `19` fail from
+    `ocr_growth_stability_runs`.
+- Why: The research signal being tracked is fail pressure in strict Pol-3 OCR
+  binary gates. Routing the default dashboard through manual feedback or raw
+  OCR run status creates plausible but misleading pass-centered visuals. FAIL
+  is first-class signal; pass-only summaries remove the evidence needed for
+  pass-from-fail research.
+
+## D-216: Preserve evidence chains over recursive summary compression
+
+- Date: `2026-04-13`
+- Category: `evidence_governance`
+- Tags: `context_reliability`, `transcripts`, `evidence_chain`, `anti_drift`
+- Decision:
+  - treat transcripts, screenshots, raw reports, and local eval artefacts as
+    source evidence, not decorative archive.
+  - treat `DECISIONS` as the binding interpretation layer over source evidence.
+  - treat `STATE` and `SESSION_HANDOFF` as current-context pointers; they must
+    not replace source evidence or durable decisions.
+  - do not delete, demote, or externalize evidence files as a context-cleanup
+    shortcut.
+  - if a summary conflicts with transcript/report evidence, correct the
+    summary instead of treating the source as stale.
+- Why: Reliability in this research repo depends on long-term context anchored
+  to primary evidence. Recursive "summary of summary" compression loses
+  constraints, makes plausible but wrong implementations more likely, and can
+  directly contradict the fail-signal research hypothesis.

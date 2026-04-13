@@ -45,7 +45,8 @@
   - `.local/runtime_dbs/active/history.db` via `core/history_store.py`
     - `message_feedback` (binary `pass`/`fail` + tags/notes/status)
     - `eval_checkpoints` (`pass_count`, `fail_count`, `non_binary_count`)
-    - `ocr_runs` raw OCR history used by the live pulse chart timeline
+    - `ocr_runs` raw OCR history imported into `manual_evals.db` and available
+      as fallback/manual-eval lane context
   - active gate logic is binary-only (`pass`/`fail`); `non_binary_count` is an
     integrity signal only.
   - checkpoint API responses include explicit fail-closed `gate_outcome`
@@ -58,22 +59,30 @@
       `.local/legacy_eval/archive_legacy_eval/databases/.polinko_history.db`
     - stores integrated rows with explicit `era`, source DB, source session,
       and source run provenance
-  - this is the single app-facing eval database for analysis/UI work; raw
-    history files are import sources, not separate eval truths.
-- Eval visualization surfaces (hybrid):
+  - this is the single app-facing eval database for integrated manual-eval
+    analysis and manual-eval UI work; raw history files are import sources, not
+    separate eval truths.
+- Eval visualization surfaces:
+  - `.local/eval_reports/`
+    - primary source for `/viz/pass-fail` and `/viz/pass-fail/data`
+    - OCR binary gate reports feed bucketed strict `fail` / `pass` stacks
+    - latest detail rows are sorted FAIL-first so failure pressure is visible
+    - report timestamps/run IDs drive ordering; filesystem copy/restore times
+      must not define the research window
   - `.local/runtime_dbs/active/manual_evals.db`
-    - recent integrated OCR rows feed the bucketed `text` / `handwriting` /
-      `illustration` chart in `/viz/pass-fail`
-    - feedback/status context feeds the headline summary and latest detail rows
+    - canonical integrated manual-eval warehouse
+    - explicit/fallback data source for manual feedback and OCR lane context
     - Beta 1.0/current provenance remains visible through `era` and source
       columns
   - design intent:
     - local-only, visual-forward, near-real-time surface
+    - fail-signal instrument rather than pass-rate vanity dashboard
     - insight-first summary rather than dense dashboard analysis
-- Eval artefacts (non-authoritative):
+- Eval artefacts:
   - Git history is the canonical retention mechanism for tracked project state.
-  - local eval artefacts are operational outputs (default under `eval_reports/`)
-    and are non-authoritative for runtime gate decisions.
+  - local eval artefacts are operational outputs (default under `eval_reports/`).
+  - local OCR binary gate reports are authoritative observability evidence for
+    the pass/fail visualization, but they do not mutate runtime gate policy.
   - no file-log-driven eval wiring exists in runtime gate decisions.
   - beta transition evidence is reference-only for active runtime gates:
     - `docs/eval/beta_1_0/` records binary-transition evidence
