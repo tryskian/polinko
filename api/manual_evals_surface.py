@@ -39,12 +39,37 @@ def _safe_count(conn: sqlite3.Connection, table_name: str) -> int:
     return int(row["c"] or 0) if row is not None else 0
 
 
+def _table_columns(conn: sqlite3.Connection, table_name: str) -> set[str]:
+    try:
+        rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    except sqlite3.Error:
+        return set()
+    return {str(row["name"]) for row in rows}
+
+
+def _column_or_default(
+    columns: set[str],
+    column_name: str,
+    *,
+    table_alias: str | None = None,
+    default_sql: str = "''",
+) -> str:
+    if column_name in columns:
+        prefix = f"{table_alias}." if table_alias else ""
+        return f"{prefix}{column_name} AS {column_name}"
+    return f"{default_sql} AS {column_name}"
+
+
 def _load_sessions(conn: sqlite3.Connection, *, max_sessions: int) -> list[dict[str, Any]]:
+    session_columns = _table_columns(conn, "sessions")
     try:
         rows = conn.execute(
-            """
+            f"""
             SELECT
               session_id,
+              {_column_or_default(session_columns, "era", default_sql="'current'")},
+              {_column_or_default(session_columns, "source_label", default_sql="'current'")},
+              {_column_or_default(session_columns, "source_session_id", default_sql="session_id")},
               title,
               status,
               created_at,
@@ -71,6 +96,9 @@ def _load_sessions(conn: sqlite3.Connection, *, max_sessions: int) -> list[dict[
         sessions.append(
             {
                 "session_id": str(row["session_id"] or ""),
+                "era": str(row["era"] or "current"),
+                "source_label": str(row["source_label"] or ""),
+                "source_session_id": str(row["source_session_id"] or row["session_id"] or ""),
                 "title": str(row["title"] or ""),
                 "status": str(row["status"] or ""),
                 "created_at": int(row["created_at"] or 0),
@@ -93,12 +121,17 @@ def _load_sessions(conn: sqlite3.Connection, *, max_sessions: int) -> list[dict[
 
 
 def _load_runs(conn: sqlite3.Connection, *, max_runs: int) -> list[dict[str, Any]]:
+    run_columns = _table_columns(conn, "ocr_runs")
     try:
         rows = conn.execute(
-            """
+            f"""
             SELECT
               r.id,
               r.run_id,
+              {_column_or_default(run_columns, "source_run_id", table_alias="r", default_sql="r.run_id")},
+              {_column_or_default(run_columns, "era", table_alias="r", default_sql="'current'")},
+              {_column_or_default(run_columns, "source_label", table_alias="r", default_sql="'current'")},
+              {_column_or_default(run_columns, "source_session_id", table_alias="r", default_sql="r.session_id")},
               r.session_id,
               r.source_name,
               r.mime_type,
@@ -160,7 +193,11 @@ def _load_runs(conn: sqlite3.Connection, *, max_runs: int) -> list[dict[str, Any
             {
                 "id": int(row["id"] or 0),
                 "run_id": str(row["run_id"] or ""),
+                "source_run_id": str(row["source_run_id"] or row["run_id"] or ""),
+                "era": str(row["era"] or "current"),
+                "source_label": str(row["source_label"] or ""),
                 "session_id": str(row["session_id"] or ""),
+                "source_session_id": str(row["source_session_id"] or row["session_id"] or ""),
                 "source_name": str(row["source_name"] or ""),
                 "mime_type": str(row["mime_type"] or ""),
                 "status": str(row["status"] or ""),

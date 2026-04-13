@@ -158,14 +158,16 @@
    discovery; manual `source .../activate` chaining is not required for
    `make server` / `make caffeinate-on`.
 
-## Historical Reference
+## Beta Evidence Reference
 
-1. Use `docs/eval/beta_1_0/` as the active reference location for deprecated
-   transition evidence.
-2. Beta eval context belongs in:
+1. Use `docs/eval/README.md` as the phase map for Beta 1.0 and Beta 2.0
+   evidence parity.
+2. Beta 1.0 is binary-transition evidence, not lesser/deprecated evidence.
+3. Beta 2.0 is binary-operational evidence.
+4. Beta eval context belongs in:
    - `docs/eval/beta_1_0/`
    - `docs/eval/beta_2_0/`
-3. Historical content is reference-only:
+5. Historical content is reference-only for active runtime gates:
    - do not wire it into active runtime/eval gate paths.
    - keep binary runtime specs sourced from active docs/code.
 
@@ -592,12 +594,13 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
   includes `backend`, `fallback_reason`, and `candidate_count`)
 - `GET /viz/pass-fail` render the live OCR pulse page:
   bucketed `ocr_runs` history stacked by inferred lane
-  (`text` / `handwriting` / `illustration`) with evaluated headline summary
-  when `eval_viz.db` is populated; intended as a local-only, near-real-time,
-  insight-first instrument panel
+  (`text` / `handwriting` / `illustration`) from the integrated
+  `manual_evals.db` warehouse; intended as a local-only, near-real-time,
+  insight-first instrument panel after `make manual-evals-db` refreshes the
+  local warehouse
 - `GET /viz/pass-fail/data` return the pulse payload:
-  chart timeline from `history.db` / `ocr_runs`, summary/detail rows from
-  `eval_viz.db` / `eval_points` when available
+  chart timeline, summary, and detail rows from
+  `.local/runtime_dbs/active/manual_evals.db`
 - `GET /` redirects to `GET /portfolio`.
 - `GET /portfolio` serves the static UI shell draft for immediate content
   editing and operator review.
@@ -607,8 +610,9 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     - build command: `make frontend-build`
   - `ui/` is generated output only; do not hand-edit built files.
 - `GET /manual-evals/surface` return manual-eval data surface from
-  `manual_evals.db` (summary + sessions + OCR runs + thumbnail preview fields +
-  session feedback/checkpoint context)
+  the canonical integrated `manual_evals.db` warehouse (summary + sessions +
+  OCR runs + thumbnail preview fields + session feedback/checkpoint context,
+  including `era` and source provenance)
 - `GET /metrics` request counters, status counts, latency buckets, rate-limit
   totals
 
@@ -1171,12 +1175,21 @@ Current policy:
 ## Runtime Kernel Pin
 
 1. Current engineering pin (manual eval surface):
-   - build canonical data surface from:
+   - build canonical integrated eval warehouse at:
      - `.local/runtime_dbs/active/manual_evals.db`
+   - rebuild with:
+     - `make manual-evals-db`
+   - import source inputs:
+     - `.local/runtime_dbs/active/history.db`
+     - optional
+       `.local/legacy_eval/archive_legacy_eval/databases/.polinko_history.db`
    - include:
+     - `era` and source provenance for Beta 1.0/current rows
      - OCR run stream
      - thumbnail previews (when present)
      - session-level feedback/checkpoint context
+   - do not create a second app-facing eval DB for Beta 1.0; raw DBs are input
+     sources only
 2. Contract-first implementation order:
    - data surface builder/query helper
    - read-only API endpoint(s)

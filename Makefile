@@ -161,7 +161,10 @@ notebook nb notes:
 
 .PHONY: manual-evals-db manualdb
 manual-evals-db manualdb:
-	$(PYTHON) -m tools.build_manual_evals_db
+	$(PYTHON) -m tools.build_manual_evals_db \
+		--optional-history-source beta_1_0=.local/legacy_eval/archive_legacy_eval/databases/.polinko_history.db \
+		--history-source current=.local/runtime_dbs/active/history.db \
+		--include-eval-sessions
 
 # Short aliases for frequent long-chain commands.
 ocrindex: cgpt-export-index

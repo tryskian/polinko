@@ -141,7 +141,11 @@ OCR-forward reliability loops, and production-ready API foundations.
   - `Vision Fine-tuning on GPT-4o for Visual Question Answering` is first in
     the cookbook integration sequence.
 - Runtime progress pin (next engineering kernel):
-  - build a manual-eval data surface from `manual_evals.db`
+  - build the integrated manual/eval data surface from `manual_evals.db`
+    (`make manual-evals-db`)
+  - treat current and Beta 1.0 history DBs as import sources only; the
+    app-facing eval surface should be one canonical derived DB with era/source
+    provenance
   - expose read-only API endpoints for summary + runs + thumbnails + session
     feedback/checkpoint context
   - keep UI work presentation-only against that API contract
@@ -160,3 +164,8 @@ OCR-forward reliability loops, and production-ready API foundations.
     - reuse existing transcript/decision/eval evidence
     - remove duplicate/drift surfaces
     - avoid restart-from-scratch narrative rewrites
+  - treat beta 1.0 as the binary-transition evidence layer, not irrelevant
+    archive; beta 2.0/current eval evidence is meaningful by contrast against
+    the beta 1.0 transition decisions.
+  - keep Beta 1.0 and Beta 2.0 equally prominent in evidence mapping across
+    documents, databases, evals, and logic.
