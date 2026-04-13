@@ -14,14 +14,22 @@ Last updated: 2026-04-13
   - `GET /portfolio` serves `ui/index.html` (build output).
   - source of truth for shell edits is `frontend/`.
 - Twin Sankey portfolio shell iteration is active in the frontend lane:
-  - four-section sankey strip now renders from real local data through
+  - four-section Sankey strip now renders from real local data through
     `GET /portfolio/sankey-data`.
+  - PR `#302` merged the latest visible scaffold checkpoint to `main`.
+  - current visible row is `pipeline -> sankey 1 -> sankey 2 -> sankey 3 ->
+    sankey 4 -> pipeline`.
+  - that scaffold is a checkpoint, not the next implementation lock. The next
+    frontend pass should reset from a clean slate rather than retrofit existing
+    section logic.
   - the left Sankey uses Beta 1.0 manual feedback rows from
     `.local/runtime_dbs/active/manual_evals.db`.
   - the right Sankey uses current OCR binary gate report cases from
     `.local/eval_reports/`.
-  - the bridge uses source-side signal/category counts only; it is not a
-    row-level join between legacy and current datasets.
+  - the connector graph uses source-side signal/category counts only; it is not
+    a row-level join between legacy and current datasets.
+  - `graphs.bridge` remains an API payload key for compatibility; it is not a
+    portfolio IA label.
   - missing required sources produce an explicit no-data state, not decorative
     placeholder links.
   - beta 1.0 marks the transition to binary eval semantics and is the evidence
@@ -59,8 +67,11 @@ Last updated: 2026-04-13
 ## Active Priorities
 
 1. Portfolio shipping lane:
-   - keep shell structure clean and navigable.
-   - fill evidence modules incrementally against locked architecture.
+   - start the next frontend pass from a clean slate.
+   - remove current portfolio UI artefacts/wiring intentionally before
+     rebuilding the desired IA.
+   - preserve real-data evidence contracts unless explicitly changing backend
+     data shape.
 2. OCR reliability lane:
    - continue growth/lockset operations without changing binary gate semantics.
    - keep FAIL-first observability in `/viz/pass-fail`.
@@ -78,6 +89,7 @@ Last updated: 2026-04-13
 ## Validation Baseline
 
 - `make doctor-env`
+- `make eod-docs-check`
 - `make lint-docs`
 - `make test`
 - `make frontend-build` (when `frontend/` changes)

@@ -63,12 +63,15 @@
 2. Script sequence (deterministic):
    - `make transcript-fix`
    - `make transcript-check`
+   - `make eod-docs-check`
    - `make doctor-env`
    - `make lint-docs`
    - `make test`
    - `make eod-stop`
 3. Purpose:
    - keep local transcript records in consistent rich format
+   - enforce same-day current-truth updates for `STATE` and
+     `SESSION_HANDOFF`
    - catch build/docs drift before day-close
    - hand off a clean validation state for next startup
 4. Kernel closeout (mandatory):

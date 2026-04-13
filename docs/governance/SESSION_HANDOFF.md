@@ -31,9 +31,17 @@ Last updated: 2026-04-13
   - left side uses Beta 1.0 manual feedback rows from `manual_evals.db`.
   - right side uses current OCR binary gate report cases from
     `.local/eval_reports/`.
-  - bridge links are source-side counts through an evidence-continuity anchor,
-    not fabricated row-level joins.
+  - connector graph links are source-side counts through an
+    evidence-continuity anchor, not fabricated row-level joins.
   - missing sources must render as no-data, not decorative placeholder data.
+- Portfolio UI checkpoint:
+  - PR `#302` merged the latest scaffold checkpoint to `main`.
+  - current visible row is `pipeline -> sankey 1 -> sankey 2 -> sankey 3 ->
+    sankey 4 -> pipeline`.
+  - this is a checkpoint, not a locked implementation. Next frontend pass
+    should start from a clean slate rather than retrofit the current scaffold.
+  - do not remove or fake the real-data Sankey payload contract while resetting
+    the frontend shell.
 - OCR lockset/growth lane model remains active and unchanged.
 - Eval gate contract remains binary pass/fail.
 - `/viz/pass-fail` is a fail-signal instrument:
@@ -45,7 +53,11 @@ Last updated: 2026-04-13
 
 ## Next Execution Slice
 
-1. Portfolio shell/module progression (content placement + Sankey refinement).
+1. Portfolio frontend fresh-slate reset:
+   - remove current portfolio UI artefacts/wiring intentionally.
+   - rebuild the shell from the desired IA instead of retrofitting the current
+     scaffold.
+   - preserve backend evidence/data contracts unless explicitly changing them.
 2. OCR hardening kernels (lockset stability + growth signal quality).
 3. Keep docs aligned via canonical ownership map.
 
@@ -62,5 +74,7 @@ Last updated: 2026-04-13
 - Peanut prompt includes terms:
   - "wind down" or "human time"
 - `make eod`
+- `make eod` includes `make eod-docs-check`; update `STATE` and this handoff
+  first so current-truth docs carry today's `Last updated` date.
 - Ensure clean tree or explicitly scoped modified files.
 - Update only current-truth facts in `STATE` and this file.

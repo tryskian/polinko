@@ -3693,3 +3693,58 @@
   current binary gate evidence visible while preserving the difference between
   the two data shapes. Decorative placeholder flows would repeat the exact
   evidence-drift failure this repo is designed to prevent.
+
+## D-218: Checkpoint the portfolio scaffold and restart frontend UI from a clean slate
+
+- Date: `2026-04-13`
+- Category: `portfolio_ui`
+- Tags: `frontend`, `portfolio_shell`, `clean_slate`, `twin_sankey`, `handoff`
+- Decision:
+  - treat PR `#302` / commit `524cba1` as a merged checkpoint of the current
+    portfolio scaffold, not as the locked implementation direction.
+  - next frontend portfolio pass should intentionally remove current UI
+    artefacts/wiring before rebuilding the desired shell, rather than retrofit
+    the current section logic.
+  - preserve the backend evidence/data contract unless explicitly changing data
+    shape:
+    - `GET /portfolio/sankey-data`
+    - real-data-only payload behavior
+    - no decorative fallback data
+    - Beta 1.0 manual evals and current OCR binary gates as the visible
+      evidence sources.
+  - keep `graphs.bridge` only as an API compatibility key for the connector
+    graph; do not use "bridge" as a portfolio IA label.
+- Validation:
+  - PR `#302` merged after CI passed.
+  - `make eod` passed after merge: transcript checks, environment doctor,
+    docs lint, full unittest suite, and shutdown routine.
+- Why: The next portfolio UI needs a fresh composition pass guided by the
+  intended IA (`pipeline -> four Sankey panels -> pipeline`) rather than
+  accumulating retrofit logic from exploratory scaffolds. The data discipline
+  remains unchanged: real evidence only, no fake flows, and no summary drift.
+
+## D-219: Make current-truth doc freshness part of EOD
+
+- Date: `2026-04-13`
+- Category: `workflow_governance`
+- Tags: `eod`, `docs`, `handoff`, `state`, `drift_control`
+- Decision:
+  - add `make eod-docs-check` to the end-of-day routine.
+  - require `docs/governance/STATE.md` and
+    `docs/governance/SESSION_HANDOFF.md` to carry today's `Last updated`
+    marker before `make eod` can complete.
+  - keep the check non-mutating; the operator/agent must update current-truth
+    docs deliberately before closeout.
+  - run the docs freshness gate before environment/doc lint/test steps in
+    `tools/end_of_day_routine.sh`.
+- Validation:
+  - `make eod-docs-check`
+  - `make lint-docs`
+  - `./venv/bin/python -m py_compile tools/check_eod_docs.py`
+  - `bash -n tools/end_of_day_routine.sh`
+  - `make eod`
+- Why: Day-close reliability depends on current-truth docs being updated before
+  handoff. A deterministic EOD gate prevents successful closeout with stale
+  `STATE` or `SESSION_HANDOFF` summaries while preserving the evidence-chain
+  rule that summaries must be updated intentionally, not generated as a
+  substitute for source evidence.

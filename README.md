@@ -198,6 +198,9 @@ Eval visualization and surfaces:
   - visual weights are normalized for readability across Beta 1.0 and current
     totals; labels/tooltips retain actual source counts
   - eval endpoint sections are layout labels only until the content pass
+  - current scaffold is a merged checkpoint, not a locked implementation; next
+    frontend pass should reset from a clean slate rather than retrofit section
+    logic
   - explicit no-data behavior when real local sources are unavailable
 - frontend shell build contract:
   - edit source in `frontend/`
