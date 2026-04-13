@@ -7,10 +7,12 @@ import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 const SECTION_SEQUENCE = [
   "hero",
   "intro",
-  "pipeline-one",
-  "bridge-one",
-  "bridge-two",
-  "pipeline-two",
+  "beta-one-pipeline",
+  "sankey-panel-one",
+  "sankey-panel-two",
+  "sankey-panel-three",
+  "sankey-panel-four",
+  "current-ocr-pipeline",
   "conclusion",
   "about",
 ];
@@ -39,45 +41,81 @@ const EMPTY_GRAPHS = {
   current: { nodes: [], links: [] },
 };
 
-const STAGE_CONFIG = [
-  {
-    sectionId: "pipeline-one",
-    svgId: "sankey-baseline",
-    graphKey: "legacy",
-    title: "Beta 1.0 manual evals",
-    meta: "manual feedback outcomes and signal tags",
-    edgeInset: 44,
-  },
-  {
-    sectionId: "bridge-one",
-    svgId: "sankey-bridge-a",
-    graphKey: "bridge",
-    title: "Signal bridge",
-    meta: "legacy signal categories to current OCR lanes",
-    edgeInset: 0,
-  },
-  {
-    sectionId: "bridge-two",
-    svgId: "sankey-bridge-b",
-    graphKey: "bridge",
-    title: "Evidence continuity",
-    meta: "source-side counts only; no row-level join implied",
-    edgeInset: 0,
-  },
-  {
-    sectionId: "pipeline-two",
-    svgId: "sankey-beta2",
-    graphKey: "current",
-    title: "Current OCR binary gates",
-    meta: "strict binary gate cases by OCR lane and outcome",
-    edgeInset: 44,
-  },
-];
-
 function cloneGraph(graph) {
   return {
     nodes: (graph?.nodes ?? []).map((node) => ({ ...node })),
     links: (graph?.links ?? []).map((link) => ({ ...link })),
+  };
+}
+
+function remapGraphNodeId(nodeId) {
+  if (nodeId.startsWith("bridge_signal_")) {
+    return nodeId.replace("bridge_signal_", "legacy_signal_");
+  }
+  if (nodeId.startsWith("bridge_lane_")) {
+    return nodeId.replace("bridge_lane_", "current_lane_");
+  }
+  return nodeId;
+}
+
+function buildTwinGraph(graphs) {
+  const nodes = new Map();
+  const rawNodeIncoming = new Map();
+  const rawNodeOutgoing = new Map();
+  const links = [];
+  const legacyBridgeTotal = d3.sum(
+    graphs?.bridge?.links ?? [],
+    (link) => (link.kind === "legacy_signal_to_bridge" ? Number(link.value) || 0 : 0)
+  );
+  const currentBridgeTotal = d3.sum(
+    graphs?.bridge?.links ?? [],
+    (link) => (link.kind === "bridge_to_current_lane" ? Number(link.value) || 0 : 0)
+  );
+  const legacyVisualScale = legacyBridgeTotal > 0 && currentBridgeTotal > 0
+    ? currentBridgeTotal / legacyBridgeTotal
+    : 1;
+  const scaledLegacyKinds = new Set([
+    "legacy_feedback_to_outcome",
+    "legacy_outcome_to_signal",
+    "legacy_signal_to_bridge",
+  ]);
+
+  const addNode = (node) => {
+    const id = remapGraphNodeId(String(node?.id ?? ""));
+    if (!id || id === "current_binary_reports" || nodes.has(id)) {
+      return;
+    }
+    nodes.set(id, { ...node, id });
+  };
+
+  const addLink = (link) => {
+    const source = remapGraphNodeId(String(link?.source ?? ""));
+    const target = remapGraphNodeId(String(link?.target ?? ""));
+    if (!source || !target || source === "current_binary_reports" || target === "current_binary_reports") {
+      return;
+    }
+    const rawValue = Number(link?.value) || 0;
+    const visualValue = scaledLegacyKinds.has(String(link?.kind))
+      ? rawValue * legacyVisualScale
+      : rawValue;
+    rawNodeOutgoing.set(source, (rawNodeOutgoing.get(source) ?? 0) + rawValue);
+    rawNodeIncoming.set(target, (rawNodeIncoming.get(target) ?? 0) + rawValue);
+    links.push({ ...link, source, target, rawValue, value: visualValue });
+  };
+
+  [graphs?.legacy, graphs?.bridge, graphs?.current].forEach((graph) => {
+    (graph?.nodes ?? []).forEach(addNode);
+    (graph?.links ?? []).forEach(addLink);
+  });
+
+  return {
+    id: "twin",
+    label: "Twin Sankey",
+    nodes: Array.from(nodes.values()).map((node) => ({
+      ...node,
+      rawValue: Math.max(rawNodeIncoming.get(node.id) ?? 0, rawNodeOutgoing.get(node.id) ?? 0),
+    })),
+    links,
   };
 }
 
@@ -100,13 +138,6 @@ function formatNumber(value) {
     return "0";
   }
   return new Intl.NumberFormat("en").format(numeric);
-}
-
-function setText(selector, value) {
-  const node = document.querySelector(selector);
-  if (node instanceof HTMLElement) {
-    node.textContent = value;
-  }
 }
 
 function stretchSankeyYToFit(graph, top, bottom) {
@@ -139,8 +170,9 @@ function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
     return;
   }
 
-  const width = Math.max(section.clientWidth, 1);
-  const height = Math.max(section.clientHeight, 1);
+  const boundsNode = svgNode.parentElement instanceof HTMLElement ? svgNode.parentElement : section;
+  const width = Math.max(boundsNode.clientWidth, 1);
+  const height = Math.max(boundsNode.clientHeight, 1);
   const svg = d3.select(svgNode);
   svg.selectAll("*").remove();
   svg.attr("viewBox", `0 0 ${width} ${height}`);
@@ -156,7 +188,7 @@ function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
     return;
   }
 
-  const nodeWidth = Math.max(12, Math.floor(width * 0.014));
+  const nodeWidth = Math.min(30, Math.max(12, Math.floor(width * 0.014)));
   const nodePadding = Math.max(10, Math.floor(height * 0.022));
 
   const layout = sankey()
@@ -188,7 +220,7 @@ function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
     .text((link) => {
       const source = link.source.label ?? link.source.id;
       const target = link.target.label ?? link.target.id;
-      return `${source} -> ${target}: ${formatNumber(link.value)} (${link.provenance ?? "source data"})`;
+      return `${source} -> ${target}: ${formatNumber(link.rawValue ?? link.value)} (${link.provenance ?? "source data"})`;
     });
 
   root
@@ -203,7 +235,7 @@ function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
     .attr("height", (node) => Math.max(1, node.y1 - node.y0))
     .attr("fill", (node) => nodeColor(node))
     .append("title")
-    .text((node) => `${node.label ?? node.id}: ${formatNumber(node.value)}`);
+    .text((node) => `${node.label ?? node.id}: ${formatNumber(node.rawValue ?? node.value)}`);
 
   root
     .append("g")
@@ -225,41 +257,19 @@ function setupFilmSankey() {
 
   const updateCopy = () => {
     const available = Boolean(payload?.available);
-    const summary = payload?.summary ?? {};
-    setText("#legacyRows", `${formatNumber(summary.legacy_feedback_rows)} manual evals`);
-    setText("#legacySignals", `${formatNumber(summary.legacy_signal_mentions)} signal mentions`);
-    setText("#currentCases", `${formatNumber(summary.current_binary_cases)} gate cases`);
-    setText("#currentReports", `${formatNumber(summary.current_binary_reports)} reports`);
-    setText("#bridgeCategories", `${formatNumber(summary.bridge_categories)} bridge categories`);
-    setText("#dataState", available ? "real data connected" : "waiting for real data");
-    setText("#dataReason", available ? "No decorative fallback is rendered." : payload?.reason ?? "Loading local sources.");
-
-    STAGE_CONFIG.forEach((stage) => {
-      const section = document.getElementById(stage.sectionId);
-      if (!(section instanceof HTMLElement)) {
-        return;
-      }
+    const section = document.getElementById("sankey-film");
+    if (section instanceof HTMLElement) {
       section.dataset.state = available ? "ready" : "empty";
-      const title = section.querySelector(".sankey-stage-title");
-      const meta = section.querySelector(".sankey-stage-meta");
-      if (title instanceof HTMLElement) {
-        title.textContent = stage.title;
-      }
-      if (meta instanceof HTMLElement) {
-        meta.textContent = available ? stage.meta : "Explicit no-data state. Add/restore required source data to render.";
-      }
-    });
+    }
   };
 
   const render = () => {
     const graphs = payload?.graphs ?? EMPTY_GRAPHS;
-    STAGE_CONFIG.forEach((stage) => {
-      drawSankey({
-        sectionId: stage.sectionId,
-        svgId: stage.svgId,
-        graph: graphs[stage.graphKey],
-        edgeInset: stage.edgeInset,
-      });
+    drawSankey({
+      sectionId: "sankey-film",
+      svgId: "sankey-flow",
+      graph: buildTwinGraph(graphs),
+      edgeInset: 0,
     });
     updateCopy();
   };
@@ -371,13 +381,15 @@ function setupSectionPath() {
     }
     updateActiveState();
 
+    const targetX = target.offsetLeft + Math.max(0, target.offsetWidth - window.innerWidth) / 2;
+    const targetY = target.offsetTop + Math.max(0, target.offsetHeight - window.innerHeight) / 2;
     const duration = immediate ? 0 : 0.88;
     if (!immediate) {
       isTransitioning = true;
     }
     gsap.to(board, {
-      x: -target.offsetLeft,
-      y: -target.offsetTop,
+      x: -targetX,
+      y: -targetY,
       duration,
       ease: "power3.inOut",
       onComplete: () => {
@@ -447,69 +459,12 @@ function setupSectionPath() {
   };
 }
 
-function setupConclusionMorph() {
-  const stages = Array.from(document.querySelectorAll(".morph-stage"));
-  const replayButton = document.querySelector(".morph-replay");
-  if (!(replayButton instanceof HTMLButtonElement) || stages.length === 0) {
-    return () => {};
-  }
-
-  const stageOrder = ["baseline", "bridge", "beta2"];
-  let running = false;
-  let timers = [];
-
-  const setStage = (key) => {
-    stages.forEach((node) => {
-      node.classList.toggle("active", node.getAttribute("data-stage") === key);
-    });
-  };
-
-  const clearTimers = () => {
-    timers.forEach((timer) => timer.kill());
-    timers = [];
-  };
-
-  const replay = () => {
-    if (running) {
-      clearTimers();
-    }
-    running = true;
-    stageOrder.forEach((stageKey, index) => {
-      const timer = gsap.delayedCall(index * 0.55, () => setStage(stageKey));
-      timers.push(timer);
-    });
-    timers.push(
-      gsap.delayedCall(stageOrder.length * 0.55 + 0.05, () => {
-        running = false;
-      })
-    );
-  };
-
-  const onSectionChange = (event) => {
-    if (event.detail?.id === "conclusion") {
-      replay();
-    }
-  };
-
-  replayButton.addEventListener("click", replay);
-  window.addEventListener("polinko:section-change", onSectionChange);
-  setStage("baseline");
-
-  return () => {
-    replayButton.removeEventListener("click", replay);
-    window.removeEventListener("polinko:section-change", onSectionChange);
-    clearTimers();
-  };
-}
-
 const teardownWebGL = setupWebGLStage();
 const teardownSankey = setupFilmSankey();
 const teardownPath = setupSectionPath();
-const teardownMorph = setupConclusionMorph();
 
 window.addEventListener("beforeunload", () => {
   teardownWebGL();
   teardownSankey();
   teardownPath();
-  teardownMorph();
 });

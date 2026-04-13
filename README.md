@@ -189,15 +189,25 @@ Eval visualization and surfaces:
 ## UI Shell Access
 
 - `GET /` redirects to `GET /portfolio`.
-- `GET /portfolio` serves the Twin Sankey evidence-continuity shell:
-  - Beta 1.0 manual eval Sankey
-  - source-side signal bridge
-  - current OCR binary gate Sankey
+- `GET /portfolio` serves the form-first portfolio scaffold:
+  - section path: hero -> intro -> pipeline -> Sankey panel 1 ->
+    Sankey panel 2 -> Sankey panel 3 -> Sankey panel 4 -> pipeline ->
+    conclusion -> about/lab
+  - the twin-Sankey film strip spans the four Sankey panels and composes the
+    real legacy, connector, and current endpoint graphs
+  - visual weights are normalized for readability across Beta 1.0 and current
+    totals; labels/tooltips retain actual source counts
+  - eval endpoint sections are layout labels only until the content pass
   - explicit no-data behavior when real local sources are unavailable
 - frontend shell build contract:
   - edit source in `frontend/`
   - generate served shell with `make frontend-build` (writes to `ui/`)
   - do not hand-edit built files under `ui/`
+- Playwright CLI captures use `.playwright/cli.config.json` and write to
+  `docs/peanut/assets/screenshots/playwright`.
+  Use `pwcli --session <name> open <url> --config .playwright/cli.config.json`
+  for CLI sessions; explicit `--filename` values should include the same
+  directory path.
 
 ## CLI Modes
 

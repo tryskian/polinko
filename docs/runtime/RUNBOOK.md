@@ -603,14 +603,36 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
 - `GET /` redirects to `GET /portfolio`.
 - `GET /portfolio` serves the static UI shell draft for immediate content
   editing and operator review.
+  - current shell mode is a form-first portfolio scaffold:
+    `hero -> intro -> pipeline -> Sankey panel 1 -> Sankey panel 2 ->
+    Sankey panel 3 -> Sankey panel 4 -> pipeline -> conclusion -> about/lab`
+  - visible Sankey rendering is one four-column film strip across the Sankey
+    panels, composing the real legacy, connector, and current endpoint graphs;
+    eval endpoint sections are layout labels until the content pass
+  - the frontend normalizes visual weights across Beta 1.0/current totals for
+    readability; labels/tooltips continue to show actual source counts from
+    `GET /portfolio/sankey-data`
+  - do not add decorative placeholder copy/cards/FPO content to this scaffold
   - canonical build flow:
     - source: `frontend/`
     - generated output: `ui/`
     - build command: `make frontend-build`
   - `ui/` is generated output only; do not hand-edit built files.
+- Playwright CLI snapshots/screenshots:
+  - repo-local config: `.playwright/cli.config.json`
+  - output directory: `docs/peanut/assets/screenshots/playwright`
+  - open sessions with the repo config when using the CLI:
+    `pwcli --session <name> open <url> --config .playwright/cli.config.json`
+  - when passing `--filename`, use an explicit path under
+    `docs/peanut/assets/screenshots/playwright/`; bare filenames are written
+    relative to the command cwd by the CLI
+  - this directory is local evidence under the peanut lane; do not use
+    `output/playwright/` for portfolio UI captures in this repo.
 - `GET /portfolio/sankey-data` returns the real-data Twin Sankey payload:
   - left side: Beta 1.0 manual feedback rows from `manual_evals.db`
-  - bridge: source-side signal/category counts, not row-level joins
+  - connector graph: source-side signal/category counts, exposed under the
+    `graphs.bridge` payload key for API compatibility, not as a portfolio
+    section label
   - right side: current OCR binary gate cases from `.local/eval_reports/`
   - if either source is missing, the payload returns `available=false` with
     empty graphs; do not add decorative fallback data
