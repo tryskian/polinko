@@ -5,169 +5,156 @@ import unittest
 from pathlib import Path
 
 from api.eval_viz import build_pass_fail_viz_payload, render_pass_fail_viz_html
+from tools.build_manual_evals_db import build_manual_evals_db
+
+
+def _init_viz_history_db(path: Path, *, include_feedback: bool = False) -> None:
+    with sqlite3.connect(path) as conn:
+        conn.executescript(
+            """
+            CREATE TABLE chats (
+              session_id TEXT PRIMARY KEY,
+              title TEXT NOT NULL,
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL,
+              status TEXT NOT NULL DEFAULT 'active',
+              deprecated_at INTEGER
+            );
+            CREATE TABLE chat_messages (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              session_id TEXT NOT NULL,
+              role TEXT NOT NULL,
+              content TEXT NOT NULL,
+              created_at INTEGER NOT NULL,
+              message_id TEXT,
+              parent_message_id TEXT
+            );
+            CREATE TABLE message_feedback (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              session_id TEXT NOT NULL,
+              message_id TEXT NOT NULL,
+              outcome TEXT NOT NULL,
+              tags_json TEXT NOT NULL DEFAULT '[]',
+              note TEXT,
+              recommended_action TEXT,
+              action_taken TEXT,
+              status TEXT NOT NULL DEFAULT 'logged',
+              created_at INTEGER NOT NULL,
+              updated_at INTEGER NOT NULL
+            );
+            CREATE TABLE eval_checkpoints (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              checkpoint_id TEXT UNIQUE NOT NULL,
+              session_id TEXT NOT NULL,
+              total_count INTEGER NOT NULL,
+              pass_count INTEGER NOT NULL,
+              fail_count INTEGER NOT NULL,
+              other_count INTEGER NOT NULL,
+              created_at INTEGER NOT NULL
+            );
+            CREATE TABLE ocr_runs (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              run_id TEXT UNIQUE NOT NULL,
+              session_id TEXT NOT NULL,
+              source_name TEXT,
+              mime_type TEXT,
+              source_message_id TEXT,
+              result_message_id TEXT,
+              status TEXT NOT NULL,
+              extracted_text TEXT NOT NULL,
+              created_at INTEGER NOT NULL
+            );
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO chats (session_id, title, created_at, updated_at, status, deprecated_at)
+            VALUES ('chat-1', 'Manual OCR', 1774900000000, 1774904000000, 'active', NULL)
+            """
+        )
+        conn.executemany(
+            """
+            INSERT INTO ocr_runs (
+              run_id, session_id, source_name, mime_type, source_message_id,
+              result_message_id, status, extracted_text, created_at
+            ) VALUES (?, 'chat-1', ?, ?, NULL, NULL, ?, ?, ?)
+            """,
+            [
+                ("ocr-1", "Screenshot-1.png", "image/png", "ok", "hello world", 1774901000000),
+                ("ocr-2", "IMG_0001.jpeg", "image/jpeg", "ok", "notes on paper", 1774902000000),
+                ("ocr-3", "diagram-card.png", "image/png", "error", "NODE\nEDGE\nGRAPH", 1774903000000),
+            ],
+        )
+        if include_feedback:
+            conn.execute(
+                """
+                INSERT INTO message_feedback (
+                  session_id, message_id, outcome, tags_json, note, recommended_action,
+                  action_taken, status, created_at, updated_at
+                ) VALUES (
+                  'chat-1', 'm-result-1', 'PASS', '[]', 'manual beta note',
+                  NULL, NULL, 'closed', 1774902500000, 1774902600000
+                )
+                """
+            )
+        conn.commit()
 
 
 class EvalVizTests(unittest.TestCase):
-    def test_payload_prefers_eval_viz_db_lane_runs(self) -> None:
+    def test_payload_uses_manual_evals_db_for_points_and_rows(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
-            db_path = Path(tmp_dir) / "eval_viz.db"
-            conn = sqlite3.connect(db_path)
-            conn.executescript(
-                """
-                CREATE TABLE eval_points (
-                    point_id TEXT PRIMARY KEY,
-                    suite TEXT NOT NULL,
-                    run_id TEXT NOT NULL,
-                    case_id TEXT NOT NULL,
-                    lane TEXT NOT NULL,
-                    outcome TEXT NOT NULL,
-                    pass_rate REAL NOT NULL,
-                    ts_unix INTEGER NOT NULL,
-                    source_path TEXT,
-                    expected_text TEXT,
-                    observed_text TEXT,
-                    summary TEXT,
-                    origin_file TEXT NOT NULL,
-                    case_index INTEGER NOT NULL
-                );
-                CREATE TABLE metadata (
-                    key TEXT PRIMARY KEY,
-                    value TEXT NOT NULL
-                );
-                """
+            root = Path(tmp_dir)
+            history_db = root / "history.db"
+            manual_db = root / "manual_evals.db"
+            _init_viz_history_db(history_db)
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=manual_db,
+                include_thumbnails=False,
             )
-            conn.executemany(
-                """
-                INSERT INTO eval_points (
-                    point_id, suite, run_id, case_id, lane, outcome, pass_rate, ts_unix,
-                    source_path, expected_text, observed_text, summary, origin_file, case_index
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                [
-                    ("p1", "ocr", "1774901000", "typed-a", "typed", "pass", 1.0, 1774901000, "/tmp/typed-a.png", "alpha", "alpha", "", "origin-a", 0),
-                    ("p2", "ocr", "1774901000", "hand-a", "handwriting", "fail", 0.0, 1774901000, "/tmp/hand-a.png", "beta", "bet", "", "origin-a", 1),
-                    ("p3", "ocr", "1774901000", "ill-a", "illustration", "pass", 1.0, 1774901000, "/tmp/ill-a.png", "gamma", "gamma", "", "origin-a", 2),
-                    ("p4", "ocr", "1774902000", "typed-b", "typed", "pass", 1.0, 1774902000, "/tmp/typed-b.png", "delta", "delta", "", "origin-b", 0),
-                    ("p5", "ocr", "1774902000", "typed-c", "typed", "pass", 1.0, 1774902000, "/tmp/typed-c.png", "epsilon", "epsilon", "", "origin-b", 1),
-                    ("p6", "ocr", "1774902000", "hand-b", "handwriting", "pass", 1.0, 1774902000, "/tmp/hand-b.png", "zeta", "zeta", "", "origin-b", 2),
-                    ("p7", "ocr", "1774902000", "ill-b", "illustration", "error", 0.0, 1774902000, "/tmp/ill-b.png", "eta", "", "", "origin-b", 3),
-                ],
-            )
-            conn.execute("INSERT INTO metadata (key, value) VALUES ('rebuilt_at_unix', '1774902999')")
-            conn.commit()
-            conn.close()
 
             payload = build_pass_fail_viz_payload(
-                db_path=db_path,
-                history_db_path=Path(tmp_dir) / "missing_history.db",
-                max_evals=10,
-            )
-
-            self.assertEqual(payload["runs_total"], 2)
-            self.assertEqual(payload["summary"]["run_id"], "1774902000")
-            self.assertEqual(payload["summary"]["pass"], 3)
-            self.assertEqual(payload["summary"]["errors"], 1)
-            self.assertEqual(payload["summary"]["text"], 2)
-            self.assertEqual(payload["summary"]["handwriting"], 1)
-            self.assertEqual(payload["summary"]["illustration"], 1)
-            self.assertEqual(payload["updated_at"], "2026-03-30T20:36:39Z")
-            self.assertEqual(payload["points"][-1]["text"], 2)
-            self.assertEqual(payload["points"][-1]["illustration"], 1)
-            self.assertEqual(payload["evals"][0]["lane"], "text")
-            self.assertEqual(payload["evals"][-1]["outcome"], "ERROR")
-
-    def test_payload_prefers_history_ocr_runs_for_chart_points(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            eval_db_path = Path(tmp_dir) / "eval_viz.db"
-            history_db_path = Path(tmp_dir) / "history.db"
-
-            eval_conn = sqlite3.connect(eval_db_path)
-            eval_conn.executescript(
-                """
-                CREATE TABLE eval_points (
-                    point_id TEXT PRIMARY KEY,
-                    suite TEXT NOT NULL,
-                    run_id TEXT NOT NULL,
-                    case_id TEXT NOT NULL,
-                    lane TEXT NOT NULL,
-                    outcome TEXT NOT NULL,
-                    pass_rate REAL NOT NULL,
-                    ts_unix INTEGER NOT NULL,
-                    source_path TEXT,
-                    expected_text TEXT,
-                    observed_text TEXT,
-                    summary TEXT,
-                    origin_file TEXT NOT NULL,
-                    case_index INTEGER NOT NULL
-                );
-                CREATE TABLE metadata (
-                    key TEXT PRIMARY KEY,
-                    value TEXT NOT NULL
-                );
-                """
-            )
-            eval_conn.executemany(
-                """
-                INSERT INTO eval_points (
-                    point_id, suite, run_id, case_id, lane, outcome, pass_rate, ts_unix,
-                    source_path, expected_text, observed_text, summary, origin_file, case_index
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                [
-                    ("ep1", "ocr", "1774901000", "typed-a", "typed", "pass", 1.0, 1774901000, "/tmp/typed-a.png", "alpha", "alpha", "", "origin-a", 0),
-                    ("ep2", "ocr", "1774902000", "typed-b", "typed", "fail", 0.0, 1774902000, "/tmp/typed-b.png", "beta", "bet", "", "origin-b", 0),
-                ],
-            )
-            eval_conn.execute("INSERT INTO metadata (key, value) VALUES ('rebuilt_at_unix', '1774902999')")
-            eval_conn.commit()
-            eval_conn.close()
-
-            history_conn = sqlite3.connect(history_db_path)
-            history_conn.executescript(
-                """
-                CREATE TABLE ocr_runs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    run_id TEXT UNIQUE NOT NULL,
-                    session_id TEXT NOT NULL,
-                    source_name TEXT,
-                    mime_type TEXT,
-                    source_message_id TEXT,
-                    result_message_id TEXT,
-                    status TEXT NOT NULL,
-                    extracted_text TEXT NOT NULL,
-                    created_at INTEGER NOT NULL
-                );
-                """
-            )
-            history_conn.executemany(
-                """
-                INSERT INTO ocr_runs (
-                    run_id, session_id, source_name, mime_type, source_message_id,
-                    result_message_id, status, extracted_text, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                [
-                    ("ocr-1", "session-1", "Screenshot-1.png", "image/png", None, None, "ok", "hello world", 1774903000),
-                    ("ocr-2", "session-1", "IMG_0001.jpeg", "image/jpeg", None, None, "ok", "notes on paper", 1774904000),
-                    ("ocr-3", "session-1", "diagram-card.png", "image/png", None, None, "ok", "NODE\nEDGE\nGRAPH", 1774905000),
-                ],
-            )
-            history_conn.commit()
-            history_conn.close()
-
-            payload = build_pass_fail_viz_payload(
-                db_path=eval_db_path,
-                history_db_path=history_db_path,
+                db_path=manual_db,
                 max_evals=10,
                 max_history_runs=50,
             )
 
             self.assertEqual(payload["runs_total"], 3)
-            self.assertEqual(payload["summary"]["run_id"], "1774902000")
-            self.assertEqual(payload["summary_points"][-1]["run_id"], "1774902000")
+            self.assertEqual(payload["summary"]["run_id"], "ocr-3")
+            self.assertEqual(payload["summary"]["errors"], 1)
+            self.assertEqual(payload["summary"]["text"], 0)
+            self.assertEqual(payload["summary"]["handwriting"], 0)
+            self.assertEqual(payload["summary"]["illustration"], 1)
             self.assertEqual(payload["points"][0]["text"], 1)
             self.assertEqual(payload["points"][1]["handwriting"], 1)
-            self.assertEqual(payload["points"][2]["illustration"], 1)
+            self.assertEqual(payload["points"][-1]["illustration"], 1)
+            self.assertEqual(payload["evals"][0]["lane"], "illustration")
+            self.assertEqual(payload["evals"][0]["outcome"], "ERROR")
+
+    def test_payload_can_filter_eval_rows_by_run_id(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            history_db = root / "history.db"
+            manual_db = root / "manual_evals.db"
+            _init_viz_history_db(history_db, include_feedback=True)
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=manual_db,
+                include_thumbnails=False,
+            )
+
+            payload = build_pass_fail_viz_payload(
+                db_path=manual_db,
+                max_evals=10,
+                max_history_runs=50,
+                run_id="ocr-2",
+            )
+
+            self.assertEqual(payload["runs_total"], 3)
+            self.assertEqual(len(payload["evals"]), 1)
+            self.assertEqual(payload["evals"][0]["source_run_id"], "ocr-2")
+            self.assertEqual(payload["evals"][0]["outcome"], "PASS")
+            self.assertIn("session feedback", payload["evals"][0]["expected"])
 
     def test_payload_uses_latest_report_and_builds_rows(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

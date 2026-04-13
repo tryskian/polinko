@@ -51,7 +51,10 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             self.assertEqual(len(payload["runs"]), 1)
             run = payload["runs"][0]
             self.assertEqual(run["run_id"], "ocr-1")
+            self.assertEqual(run["source_run_id"], "ocr-1")
+            self.assertEqual(run["era"], "current")
             self.assertEqual(run["session_id"], "chat-1")
+            self.assertEqual(run["source_session_id"], "chat-1")
             self.assertIn("image", run)
             self.assertIn("session_eval", run)
             self.assertEqual(run["session_eval"]["feedback_count"], 0)

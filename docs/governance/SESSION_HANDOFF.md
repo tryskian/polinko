@@ -2,16 +2,18 @@
 
 # Session Handoff (Current Only)
 
-Last updated: 2026-04-12
+Last updated: 2026-04-13
 
 ## Startup
 
-1. Confirm location and branch:
+1. Peanut prompt:
+   - "hi! new day!"
+2. Confirm location and branch:
    - repo: `/Users/tryskian/Github/polinko`
    - branch: `git branch --show-current`
-2. Run environment sanity:
+3. Run environment sanity:
    - `make doctor-env`
-3. If frontend changed, rebuild shell output:
+4. If frontend changed, rebuild shell output:
    - `make frontend-build`
 
 ## Current Snapshot
@@ -24,7 +26,7 @@ Last updated: 2026-04-12
   - edit in `frontend/`
   - build to `ui/` with `make frontend-build`
   - no manual edits under `ui/`
-- Sankey portfolio shell path is active for current cycle.
+- Twin Sankey portfolio shell path is active for current cycle.
 - OCR lockset/growth lane model remains active and unchanged.
 - Eval gate contract remains binary pass/fail.
 
@@ -42,6 +44,8 @@ Last updated: 2026-04-12
 
 ## Session Close
 
+- Peanut prompt includes terms:
+  - "wind down" or "human time"
 - `make eod`
 - Ensure clean tree or explicitly scoped modified files.
 - Update only current-truth facts in `STATE` and this file.

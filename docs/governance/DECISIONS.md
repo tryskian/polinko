@@ -2798,6 +2798,7 @@
 - Date: `2026-04-03`
 - Category: `eval_observability`
 - Tags: `ocr_pulse`, `runtime_db`, `history_db`, `eval_viz`, `ui_clarity`
+- Status: Superseded by D-214.
 - Decision:
   - rewire `/viz/pass-fail` away from an `eval_viz.db`-only model:
     - use `history.db` / `ocr_runs` as the source for the moving chart
@@ -3444,3 +3445,147 @@
     (`hero -> intro -> pipeline-one -> bridge-one -> bridge-two -> pipeline-two -> conclusion -> about`)
 - Why: prevents multi-section skip behavior and keeps narrative progression
   deterministic for operator review.
+
+## D-209: Keep Twin Sankey active with real-data discipline
+
+- Date: `2026-04-13`
+- Category: `workflow_environment`
+- Tags: `portfolio_ui`, `twin_sankey`, `real_data`, `drift_control`
+- Decision:
+  - supersede D-207 as active guidance: Twin Sankey is not deprecated or
+    retired.
+  - keep the portfolio shell lane presentation-only, with legacy eval-era
+    evidence on the left bridging to current eval-era evidence on the right.
+  - allow OCR evidence on both legacy and current sides when supported by the
+    underlying eval records.
+  - treat legacy OCR evidence as screenshot-backed/manual where applicable,
+    with preserved source material under `docs/eval/beta_1_0/` and archived
+    beta 1.0 OCR prompts/reports under
+    `docs/eval/beta_1_0/build_snapshot_polinko-incase/`.
+  - treat manually evaluated beta 1.0 evidence as meaningful data, not as
+    weaker or decorative context.
+  - ground the diagram in real project/eval data; do not replace it with
+    decorative strokes, placeholder cards, or invented narrative content.
+- Why: The lane was paused for implementation quality control after grangled
+  attempts, not cancelled; docs must distinguish pause/refinement from
+  deprecation.
+
+## D-210: Preserve earlier beta 1.0 decisions as binary-transition evidence
+
+- Date: `2026-04-13`
+- Category: `evidence_governance`
+- Tags: `beta_1_0`, `portfolio_evidence`, `binary_transition`, `decisions`
+- Decision:
+  - keep earlier beta 1.0 decision entries as the canonical evidence layer for
+    the transition to strict binary eval semantics.
+  - treat beta 1.0 manual evaluations as meaningful data.
+  - treat beta 2.0/current eval data as meaningful by comparison against beta
+    1.0's binary-transition decisions, not as a replacement that makes beta
+    1.0 irrelevant.
+  - use local-only transcript context under `docs/peanut/transcripts/` only as
+    supporting interpretation material; `DECISIONS` remains the canonical
+    tracked source for beta 1.0 information.
+- Why: Beta 1.0 contains the original manual/screenshot-backed eval context and
+  binary-transition rationale that makes later binary/OCR eval data
+  interpretable.
+
+## D-211: Keep Beta 1.0 and Beta 2.0 equally prominent in evidence mapping
+
+- Date: `2026-04-13`
+- Category: `evidence_governance`
+- Tags: `beta_1_0`, `beta_2_0`, `evidence_map`, `portfolio_sankey`
+- Decision:
+  - add `docs/eval/README.md` as the tracked phase evidence map for Beta 1.0
+    and Beta 2.0.
+  - map both eras with the same top-level categories:
+    - documents
+    - databases
+    - evals
+    - logic
+    - Sankey role
+  - preserve the distinction that Beta 1.0 is binary-transition evidence while
+    Beta 2.0 is binary-operational evidence.
+- Why: Equal prominence prevents later agents from treating Beta 1.0 as
+  irrelevant archive material and keeps the portfolio comparison legible.
+
+## D-212: Use the full local Beta 1.0 snapshot as the parity source
+
+- Date: `2026-04-13`
+- Category: `evidence_governance`
+- Tags: `beta_1_0`, `snapshot`, `manual_eval_data`, `local_only`
+- Decision:
+  - treat `/Users/tryskian/Github/old/polinko-incase` as the full local Beta
+    1.0 parity source for documents, databases, evals, and logic.
+  - recognise the Beta 1.0 local DBs as meaningful historical data surfaces:
+    - `.polinko_history.db`
+    - `.polinko_memory.db`
+    - `.polinko_vector.db`
+  - do not commit the full snapshot wholesale because it includes `.env`,
+    `.git`, editor history, runtime DBs, and other local-only material.
+  - promote only curated maps or explicitly approved artifacts into tracked
+    docs.
+- Why: Beta 1.0 was manually evaluated and contains meaningful data; equality
+  with Beta 2.0 requires preserving access to the full local evidence source
+  without leaking secrets or local state.
+
+## D-213: Integrate Beta 1.0 and current eval rows into one derived eval DB
+
+- Date: `2026-04-13`
+- Category: `evidence_governance`
+- Tags: `manual_evals_db`, `beta_1_0`, `current_eval_data`, `database_provenance`
+- Decision:
+  - use `.local/runtime_dbs/active/manual_evals.db` as the single app-facing
+    eval warehouse for analysis/UI work.
+  - rebuild it with `make manual-evals-db`.
+  - import current eval/runtime rows from `.local/runtime_dbs/active/history.db`.
+  - import Beta 1.0 rows from optional local source
+    `.local/legacy_eval/archive_legacy_eval/databases/.polinko_history.db`
+    when present.
+  - include eval-prefixed sessions in the integrated build so the warehouse
+    represents all eval runs rather than only non-eval chat sessions.
+  - preserve provenance columns (`era`, `source_key`, `source_history_db`,
+    `source_session_id`, `source_run_id`) instead of flattening away source
+    identity.
+  - treat raw legacy/current SQLite files as import sources, not separate
+    user-facing eval truths.
+  - retire `eval_viz.db` as an app-facing eval database.
+  - if an old local `eval_viz.db` copy exists, treat it as a legacy cache only;
+    do not wire current UI or analysis against it.
+- Validation:
+  - `python3 -m unittest tests.test_build_manual_evals_db tests.test_manual_evals_surface`
+  - `python3 -m py_compile tools/build_manual_evals_db.py api/manual_evals_surface.py`
+  - `make manual-evals-db`
+- Result:
+  - integrated local build contains 703 sessions, 726 OCR runs, and 116 manual
+    feedback rows.
+  - Beta 1.0 contributes 69 sessions, 90 OCR runs, and 116 feedback rows.
+  - current contributes 634 sessions, 636 OCR runs, and 0 feedback rows.
+- Why: Beta 1.0 and current eval evidence should be compared through one
+  canonical eval surface while retaining provenance. Separate app-facing DBs
+  invite drift and make Beta 1.0 look detached from the current build.
+
+## D-214: Route the pass/fail visualization through manual_evals.db only
+
+- Date: `2026-04-13`
+- Category: `eval_observability`
+- Tags: `manual_evals_db`, `pass_fail_viz`, `eval_viz_retired`, `single_source`
+- Decision:
+  - make `/viz/pass-fail/data` read its chart points, headline summary, and
+    latest detail rows from `.local/runtime_dbs/active/manual_evals.db`.
+  - keep `report_root` JSON parsing only as an explicit offline/test fallback.
+  - keep `history_db_path` as a compatibility argument but do not use it in the
+    default app-facing data path.
+  - remove `eval_viz.db` / `eval_points` from the active visualization code and
+    tests.
+  - preserve `run_id` filtering for latest detail rows, using either canonical
+    `run_id` or `source_run_id`.
+  - move the old active local cache to
+    `.local/runtime_dbs/archive/retired_eval_viz_20260413/eval_viz.db`
+    instead of deleting it.
+- Validation:
+  - `./venv/bin/python -m py_compile api/eval_viz.py api/app_factory.py tests/test_eval_viz.py`
+  - `./venv/bin/python -m unittest tests.test_eval_viz`
+- Why: The active UI should not need a separate visualization database after
+  Beta 1.0/current eval rows are integrated into the canonical eval warehouse.
+  A single app-facing DB keeps the visual surface, manual eval surface, and
+  portfolio evidence model aligned.

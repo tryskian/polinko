@@ -8,6 +8,7 @@ import mimetypes
 import os
 import re
 import sqlite3
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
@@ -45,6 +46,36 @@ DEFAULT_IMAGE_ROOTS: tuple[Path, ...] = (
 )
 
 _FILE_UPLOAD_PREFIX_RE = re.compile(r"^file[-_][^-_]+[-_](.+)$", re.IGNORECASE)
+_SOURCE_KEY_RE = re.compile(r"[^a-zA-Z0-9_.-]+")
+
+
+@dataclass(frozen=True)
+class HistorySource:
+    era: str
+    history_db: Path
+    label: str | None = None
+    optional: bool = False
+
+    @property
+    def display_label(self) -> str:
+        return (self.label or self.era).strip()
+
+
+@dataclass(frozen=True)
+class LoadedHistorySource:
+    era: str
+    source_key: str
+    label: str
+    history_db: Path
+    sessions: list[sqlite3.Row]
+    feedback: list[sqlite3.Row]
+    checkpoints: list[sqlite3.Row]
+    ocr_runs: list[sqlite3.Row]
+
+
+def _source_key(value: str, *, fallback: str) -> str:
+    cleaned = _SOURCE_KEY_RE.sub("_", value.strip()).strip("_")
+    return cleaned or fallback
 
 
 def _normalize_prefixes(values: Sequence[str]) -> list[str]:
@@ -292,6 +323,11 @@ def _init_output_db(conn: sqlite3.Connection) -> None:
 
         CREATE TABLE sessions (
           session_id TEXT PRIMARY KEY,
+          era TEXT NOT NULL,
+          source_key TEXT NOT NULL,
+          source_label TEXT NOT NULL,
+          source_history_db TEXT NOT NULL,
+          source_session_id TEXT NOT NULL,
           title TEXT NOT NULL,
           status TEXT NOT NULL,
           created_at INTEGER NOT NULL,
@@ -308,6 +344,12 @@ def _init_output_db(conn: sqlite3.Connection) -> None:
 
         CREATE TABLE feedback (
           id INTEGER PRIMARY KEY,
+          source_id INTEGER NOT NULL,
+          era TEXT NOT NULL,
+          source_key TEXT NOT NULL,
+          source_label TEXT NOT NULL,
+          source_history_db TEXT NOT NULL,
+          source_session_id TEXT NOT NULL,
           session_id TEXT NOT NULL,
           message_id TEXT NOT NULL,
           outcome TEXT NOT NULL,
@@ -323,6 +365,12 @@ def _init_output_db(conn: sqlite3.Connection) -> None:
 
         CREATE TABLE checkpoints (
           id INTEGER PRIMARY KEY,
+          source_id INTEGER NOT NULL,
+          era TEXT NOT NULL,
+          source_key TEXT NOT NULL,
+          source_label TEXT NOT NULL,
+          source_history_db TEXT NOT NULL,
+          source_session_id TEXT NOT NULL,
           checkpoint_id TEXT UNIQUE NOT NULL,
           session_id TEXT NOT NULL,
           total_count INTEGER NOT NULL,
@@ -351,6 +399,13 @@ def _init_output_db(conn: sqlite3.Connection) -> None:
 
         CREATE TABLE ocr_runs (
           id INTEGER PRIMARY KEY,
+          source_id INTEGER NOT NULL,
+          source_run_id TEXT NOT NULL,
+          era TEXT NOT NULL,
+          source_key TEXT NOT NULL,
+          source_label TEXT NOT NULL,
+          source_history_db TEXT NOT NULL,
+          source_session_id TEXT NOT NULL,
           run_id TEXT UNIQUE NOT NULL,
           session_id TEXT NOT NULL,
           source_name TEXT,
@@ -379,7 +434,7 @@ def _init_output_db(conn: sqlite3.Connection) -> None:
 
 def _prepare_image_assets(
     *,
-    ocr_runs: Sequence[sqlite3.Row],
+    ocr_runs: Sequence[sqlite3.Row | dict[str, Any]],
     image_roots: Sequence[Path],
     thumbnail_size: int,
     enable_thumbnails: bool,
@@ -497,17 +552,194 @@ def build_manual_evals_db(
     image_roots: Sequence[Path] = DEFAULT_IMAGE_ROOTS,
     thumbnail_size: int = 240,
     include_thumbnails: bool = True,
+    history_sources: Sequence[HistorySource] | None = None,
 ) -> dict[str, int]:
-    if not history_db.is_file():
-        raise FileNotFoundError(f"History DB not found: {history_db}")
+    source_specs = list(history_sources or [HistorySource(era="current", history_db=history_db)])
+    loaded_sources: list[LoadedHistorySource] = []
+    source_key_counts: dict[str, int] = {}
 
-    history_conn = sqlite3.connect(f"file:{history_db}?mode=ro", uri=True)
-    history_conn.row_factory = sqlite3.Row
-    sessions = _read_sessions(history_conn, exclude_prefixes=exclude_prefixes)
-    feedback = _read_feedback(history_conn, exclude_prefixes=exclude_prefixes)
-    checkpoints = _read_checkpoints(history_conn, exclude_prefixes=exclude_prefixes)
-    ocr_runs = _read_ocr_runs(history_conn, exclude_prefixes=exclude_prefixes)
-    history_conn.close()
+    for index, source in enumerate(source_specs, start=1):
+        source_path = source.history_db.expanduser()
+        if not source_path.is_file():
+            if source.optional:
+                continue
+            raise FileNotFoundError(f"History DB not found: {source_path}")
+
+        base_key = _source_key(source.display_label, fallback=f"source_{index}")
+        source_key_counts[base_key] = source_key_counts.get(base_key, 0) + 1
+        source_key = (
+            base_key
+            if source_key_counts[base_key] == 1
+            else f"{base_key}_{source_key_counts[base_key]}"
+        )
+
+        history_conn = sqlite3.connect(f"file:{source_path}?mode=ro", uri=True)
+        history_conn.row_factory = sqlite3.Row
+        loaded_sources.append(
+            LoadedHistorySource(
+                era=source.era,
+                source_key=source_key,
+                label=source.display_label,
+                history_db=source_path,
+                sessions=_read_sessions(history_conn, exclude_prefixes=exclude_prefixes),
+                feedback=_read_feedback(history_conn, exclude_prefixes=exclude_prefixes),
+                checkpoints=_read_checkpoints(history_conn, exclude_prefixes=exclude_prefixes),
+                ocr_runs=_read_ocr_runs(history_conn, exclude_prefixes=exclude_prefixes),
+            )
+        )
+        history_conn.close()
+
+    if not loaded_sources:
+        raise FileNotFoundError("No history DB sources were available.")
+
+    multi_source = len(loaded_sources) > 1
+    sessions: list[dict[str, Any]] = []
+    feedback: list[dict[str, Any]] = []
+    checkpoints: list[dict[str, Any]] = []
+    ocr_runs: list[dict[str, Any]] = []
+    session_id_by_source: dict[tuple[str, str], str] = {}
+
+    def output_text_key(source: LoadedHistorySource, value: Any) -> str:
+        raw = str(value or "").strip()
+        if not multi_source:
+            return raw
+        return f"{source.source_key}:{raw}"
+
+    for source in loaded_sources:
+        for row in source.sessions:
+            source_session_id = str(row["session_id"])
+            session_id = output_text_key(source, source_session_id)
+            session_id_by_source[(source.source_key, source_session_id)] = session_id
+            sessions.append(
+                {
+                    "session_id": session_id,
+                    "era": source.era,
+                    "source_key": source.source_key,
+                    "source_label": source.label,
+                    "source_history_db": str(source.history_db),
+                    "source_session_id": source_session_id,
+                    "title": str(row["title"] or ""),
+                    "status": str(row["status"] or "active"),
+                    "created_at": int(row["created_at"] or 0),
+                    "updated_at": int(row["updated_at"] or 0),
+                    "deprecated_at": (
+                        int(row["deprecated_at"]) if row["deprecated_at"] is not None else None
+                    ),
+                    "message_count": int(row["message_count"] or 0),
+                    "feedback_count": int(row["feedback_count"] or 0),
+                    "checkpoint_count": int(row["checkpoint_count"] or 0),
+                    "ocr_runs_count": int(row["ocr_runs_count"] or 0),
+                    "last_feedback_at": (
+                        int(row["last_feedback_at"]) if row["last_feedback_at"] is not None else None
+                    ),
+                    "last_checkpoint_at": (
+                        int(row["last_checkpoint_at"])
+                        if row["last_checkpoint_at"] is not None
+                        else None
+                    ),
+                    "last_ocr_at": (
+                        int(row["last_ocr_at"]) if row["last_ocr_at"] is not None else None
+                    ),
+                }
+            )
+
+        for row in source.feedback:
+            source_session_id = str(row["session_id"])
+            session_id = session_id_by_source.get(
+                (source.source_key, source_session_id),
+                output_text_key(source, source_session_id),
+            )
+            feedback.append(
+                {
+                    "id": len(feedback) + 1,
+                    "source_id": int(row["id"]),
+                    "era": source.era,
+                    "source_key": source.source_key,
+                    "source_label": source.label,
+                    "source_history_db": str(source.history_db),
+                    "source_session_id": source_session_id,
+                    "session_id": session_id,
+                    "message_id": str(row["message_id"]),
+                    "outcome": str(row["outcome"] or ""),
+                    "tags_json": str(row["tags_json"] or "[]"),
+                    "note": str(row["note"]) if row["note"] is not None else None,
+                    "recommended_action": (
+                        str(row["recommended_action"])
+                        if row["recommended_action"] is not None
+                        else None
+                    ),
+                    "action_taken": (
+                        str(row["action_taken"]) if row["action_taken"] is not None else None
+                    ),
+                    "status": str(row["status"] or ""),
+                    "created_at": int(row["created_at"] or 0),
+                    "updated_at": int(row["updated_at"] or 0),
+                }
+            )
+
+        for row in source.checkpoints:
+            source_session_id = str(row["session_id"])
+            session_id = session_id_by_source.get(
+                (source.source_key, source_session_id),
+                output_text_key(source, source_session_id),
+            )
+            checkpoints.append(
+                {
+                    "id": len(checkpoints) + 1,
+                    "source_id": int(row["id"]),
+                    "era": source.era,
+                    "source_key": source.source_key,
+                    "source_label": source.label,
+                    "source_history_db": str(source.history_db),
+                    "source_session_id": source_session_id,
+                    "checkpoint_id": output_text_key(source, row["checkpoint_id"]),
+                    "session_id": session_id,
+                    "total_count": int(row["total_count"] or 0),
+                    "pass_count": int(row["pass_count"] or 0),
+                    "fail_count": int(row["fail_count"] or 0),
+                    "other_count": int(row["other_count"] or 0),
+                    "created_at": int(row["created_at"] or 0),
+                }
+            )
+
+        for row in source.ocr_runs:
+            source_session_id = str(row["session_id"] or "")
+            source_run_id = str(row["run_id"] or "")
+            session_id = session_id_by_source.get(
+                (source.source_key, source_session_id),
+                output_text_key(source, source_session_id),
+            )
+            ocr_runs.append(
+                {
+                    "id": len(ocr_runs) + 1,
+                    "source_id": int(row["id"]),
+                    "source_run_id": source_run_id,
+                    "era": source.era,
+                    "source_key": source.source_key,
+                    "source_label": source.label,
+                    "source_history_db": str(source.history_db),
+                    "source_session_id": source_session_id,
+                    "run_id": output_text_key(source, source_run_id),
+                    "session_id": session_id,
+                    "source_name": (
+                        str(row["source_name"]) if row["source_name"] is not None else None
+                    ),
+                    "mime_type": str(row["mime_type"]) if row["mime_type"] is not None else None,
+                    "source_message_id": (
+                        str(row["source_message_id"])
+                        if row["source_message_id"] is not None
+                        else None
+                    ),
+                    "result_message_id": (
+                        str(row["result_message_id"])
+                        if row["result_message_id"] is not None
+                        else None
+                    ),
+                    "status": str(row["status"] or ""),
+                    "extracted_text": str(row["extracted_text"] or ""),
+                    "created_at": int(row["created_at"] or 0),
+                }
+            )
 
     output_db.parent.mkdir(parents=True, exist_ok=True)
     if output_db.exists():
@@ -527,26 +759,32 @@ def build_manual_evals_db(
     output_conn.executemany(
         """
         INSERT INTO sessions (
-          session_id, title, status, created_at, updated_at, deprecated_at,
+          session_id, era, source_key, source_label, source_history_db, source_session_id,
+          title, status, created_at, updated_at, deprecated_at,
           message_count, feedback_count, checkpoint_count, ocr_runs_count,
           last_feedback_at, last_checkpoint_at, last_ocr_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         [
             (
-                str(row["session_id"]),
-                str(row["title"] or ""),
-                str(row["status"] or "active"),
-                int(row["created_at"] or 0),
-                int(row["updated_at"] or 0),
-                int(row["deprecated_at"]) if row["deprecated_at"] is not None else None,
-                int(row["message_count"] or 0),
-                int(row["feedback_count"] or 0),
-                int(row["checkpoint_count"] or 0),
-                int(row["ocr_runs_count"] or 0),
-                int(row["last_feedback_at"]) if row["last_feedback_at"] is not None else None,
-                int(row["last_checkpoint_at"]) if row["last_checkpoint_at"] is not None else None,
-                int(row["last_ocr_at"]) if row["last_ocr_at"] is not None else None,
+                row["session_id"],
+                row["era"],
+                row["source_key"],
+                row["source_label"],
+                row["source_history_db"],
+                row["source_session_id"],
+                row["title"],
+                row["status"],
+                row["created_at"],
+                row["updated_at"],
+                row["deprecated_at"],
+                row["message_count"],
+                row["feedback_count"],
+                row["checkpoint_count"],
+                row["ocr_runs_count"],
+                row["last_feedback_at"],
+                row["last_checkpoint_at"],
+                row["last_ocr_at"],
             )
             for row in sessions
         ],
@@ -555,23 +793,30 @@ def build_manual_evals_db(
     output_conn.executemany(
         """
         INSERT INTO feedback (
-          id, session_id, message_id, outcome, tags_json, note, recommended_action,
+          id, source_id, era, source_key, source_label, source_history_db, source_session_id,
+          session_id, message_id, outcome, tags_json, note, recommended_action,
           action_taken, status, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         [
             (
-                int(row["id"]),
-                str(row["session_id"]),
-                str(row["message_id"]),
-                str(row["outcome"] or ""),
-                str(row["tags_json"] or "[]"),
-                str(row["note"]) if row["note"] is not None else None,
-                str(row["recommended_action"]) if row["recommended_action"] is not None else None,
-                str(row["action_taken"]) if row["action_taken"] is not None else None,
-                str(row["status"] or ""),
-                int(row["created_at"] or 0),
-                int(row["updated_at"] or 0),
+                row["id"],
+                row["source_id"],
+                row["era"],
+                row["source_key"],
+                row["source_label"],
+                row["source_history_db"],
+                row["source_session_id"],
+                row["session_id"],
+                row["message_id"],
+                row["outcome"],
+                row["tags_json"],
+                row["note"],
+                row["recommended_action"],
+                row["action_taken"],
+                row["status"],
+                row["created_at"],
+                row["updated_at"],
             )
             for row in feedback
         ],
@@ -580,19 +825,26 @@ def build_manual_evals_db(
     output_conn.executemany(
         """
         INSERT INTO checkpoints (
-          id, checkpoint_id, session_id, total_count, pass_count, fail_count, other_count, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          id, source_id, era, source_key, source_label, source_history_db, source_session_id,
+          checkpoint_id, session_id, total_count, pass_count, fail_count, other_count, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         [
             (
-                int(row["id"]),
-                str(row["checkpoint_id"]),
-                str(row["session_id"]),
-                int(row["total_count"] or 0),
-                int(row["pass_count"] or 0),
-                int(row["fail_count"] or 0),
-                int(row["other_count"] or 0),
-                int(row["created_at"] or 0),
+                row["id"],
+                row["source_id"],
+                row["era"],
+                row["source_key"],
+                row["source_label"],
+                row["source_history_db"],
+                row["source_session_id"],
+                row["checkpoint_id"],
+                row["session_id"],
+                row["total_count"],
+                row["pass_count"],
+                row["fail_count"],
+                row["other_count"],
+                row["created_at"],
             )
             for row in checkpoints
         ],
@@ -612,22 +864,30 @@ def build_manual_evals_db(
     output_conn.executemany(
         """
         INSERT INTO ocr_runs (
-          id, run_id, session_id, source_name, mime_type, source_message_id, result_message_id,
+          id, source_id, source_run_id, era, source_key, source_label, source_history_db,
+          source_session_id, run_id, session_id, source_name, mime_type, source_message_id, result_message_id,
           status, extracted_text, created_at, image_asset_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         [
             (
-                int(row["id"]),
-                str(row["run_id"] or ""),
-                str(row["session_id"] or ""),
-                str(row["source_name"]) if row["source_name"] is not None else None,
-                str(row["mime_type"]) if row["mime_type"] is not None else None,
-                str(row["source_message_id"]) if row["source_message_id"] is not None else None,
-                str(row["result_message_id"]) if row["result_message_id"] is not None else None,
-                str(row["status"] or ""),
-                str(row["extracted_text"] or ""),
-                int(row["created_at"] or 0),
+                row["id"],
+                row["source_id"],
+                row["source_run_id"],
+                row["era"],
+                row["source_key"],
+                row["source_label"],
+                row["source_history_db"],
+                row["source_session_id"],
+                row["run_id"],
+                row["session_id"],
+                row["source_name"],
+                row["mime_type"],
+                row["source_message_id"],
+                row["result_message_id"],
+                row["status"],
+                row["extracted_text"],
+                row["created_at"],
                 image_asset_ids.get(str(row["source_name"] or "").strip()),
             )
             for row in ocr_runs
@@ -635,9 +895,24 @@ def build_manual_evals_db(
     )
 
     normalized_prefixes = _normalize_prefixes(exclude_prefixes)
+    source_counts = {
+        source.source_key: {
+            "era": source.era,
+            "label": source.label,
+            "history_db": str(source.history_db),
+            "sessions": len(source.sessions),
+            "feedback": len(source.feedback),
+            "checkpoints": len(source.checkpoints),
+            "ocr_runs": len(source.ocr_runs),
+        }
+        for source in loaded_sources
+    }
     metadata = {
         "generated_at_utc": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "source_history_db": str(history_db),
+        "source_history_db": str(loaded_sources[0].history_db),
+        "source_history_dbs_json": json.dumps(list(source_counts.values()), ensure_ascii=False),
+        "source_counts_json": json.dumps(source_counts, ensure_ascii=False),
+        "source_count": str(len(loaded_sources)),
         "exclude_prefixes_json": json.dumps(normalized_prefixes, ensure_ascii=False),
         "image_roots_json": json.dumps([str(root) for root in _normalize_image_roots(image_roots)], ensure_ascii=False),
         "sessions_count": str(len(sessions)),
@@ -675,12 +950,26 @@ def build_manual_evals_db(
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Build a manual-evals-only SQLite DB from runtime history.db.",
+        description="Build the canonical eval SQLite DB from one or more history DB sources.",
     )
     parser.add_argument(
         "--history-db",
         default=".local/runtime_dbs/active/history.db",
-        help="Path to source history DB.",
+        help="Path to source history DB when --history-source is not provided.",
+    )
+    parser.add_argument(
+        "--history-source",
+        action="append",
+        default=[],
+        metavar="ERA=PATH",
+        help="History DB source to import into one eval DB (repeatable).",
+    )
+    parser.add_argument(
+        "--optional-history-source",
+        action="append",
+        default=[],
+        metavar="ERA=PATH",
+        help="Optional history DB source to import if the path exists (repeatable).",
     )
     parser.add_argument(
         "--output-db",
@@ -692,6 +981,11 @@ def _build_parser() -> argparse.ArgumentParser:
         action="append",
         default=[],
         help="Session-id prefix to exclude (repeatable).",
+    )
+    parser.add_argument(
+        "--include-eval-sessions",
+        action="store_true",
+        help="Disable the default eval-session exclusions and include all sessions.",
     )
     parser.add_argument(
         "--image-root",
@@ -713,12 +1007,34 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _parse_history_source_spec(raw: str, *, optional: bool) -> HistorySource:
+    era, separator, path = raw.partition("=")
+    if not separator or not era.strip() or not path.strip():
+        raise ValueError(f"History source must use ERA=PATH: {raw}")
+    return HistorySource(
+        era=era.strip(),
+        label=era.strip(),
+        history_db=Path(path).expanduser(),
+        optional=optional,
+    )
+
+
 def main() -> int:
     args = _build_parser().parse_args()
     custom_prefixes = _normalize_prefixes(args.exclude_prefix)
-    prefixes = custom_prefixes if custom_prefixes else list(DEFAULT_EXCLUDE_PREFIXES)
+    if args.include_eval_sessions:
+        prefixes = []
+    else:
+        prefixes = custom_prefixes if custom_prefixes else list(DEFAULT_EXCLUDE_PREFIXES)
     custom_image_roots = _normalize_image_roots(args.image_root)
     image_roots = custom_image_roots if custom_image_roots else list(DEFAULT_IMAGE_ROOTS)
+    history_sources = [
+        _parse_history_source_spec(value, optional=False)
+        for value in args.history_source
+    ] + [
+        _parse_history_source_spec(value, optional=True)
+        for value in args.optional_history_source
+    ]
     result = build_manual_evals_db(
         history_db=Path(args.history_db).expanduser(),
         output_db=Path(args.output_db).expanduser(),
@@ -726,6 +1042,7 @@ def main() -> int:
         image_roots=image_roots,
         thumbnail_size=max(24, int(args.thumbnail_size)),
         include_thumbnails=not args.no_thumbnails,
+        history_sources=history_sources or None,
     )
     print(
         "manual_evals.db built: "

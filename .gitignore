@@ -65,6 +65,7 @@ docs/peanut/**
 !docs/peanut/.gitkeep
 docs/eval/**
 !docs/eval/.gitkeep
+!docs/eval/README.md
 
 # Local legacy coordination/planning docs (archived/deprecated)
 .archive/live_archive/legacy_coordination/

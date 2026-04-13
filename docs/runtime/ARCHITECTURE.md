@@ -28,8 +28,8 @@
 4. Request execution delegates to `core/` runtime and persistence modules.
 5. `POST /chat` supports harness override (`harness_mode=fixture`) for
    deterministic smoke without model calls; default remains `live`.
-6. CLI/API surfaces remain canonical; historical beta transition evidence is
-   maintained under `docs/eval/beta_1_0/`.
+6. CLI/API surfaces remain canonical; beta transition evidence is maintained
+   under `docs/eval/` and mapped in `docs/eval/README.md`.
 7. OCR-forward quality loop is the active reliability engine:
    - transcript case miner builds local OCR case sets
    - lockset lane gates release quality (strict binary pass/fail)
@@ -41,7 +41,7 @@
   - SQLite stores (chat history + memory/vector artifacts).
   - Runtime DBs live under `.local/runtime_dbs/active/`; archives under
     `.local/runtime_dbs/archive/`.
-- Eval runtime state (authoritative):
+- Eval runtime state (raw source):
   - `.local/runtime_dbs/active/history.db` via `core/history_store.py`
     - `message_feedback` (binary `pass`/`fail` + tags/notes/status)
     - `eval_checkpoints` (`pass_count`, `fail_count`, `non_binary_count`)
@@ -51,13 +51,22 @@
   - checkpoint API responses include explicit fail-closed `gate_outcome`
     (`pass`/`fail`) derived from counts.
   - canonical policy/gate/ui specs are maintained in `docs/runtime/RUNBOOK.md`.
+- Canonical eval warehouse:
+  - `.local/runtime_dbs/active/manual_evals.db`
+    - rebuilt by `make manual-evals-db`
+    - imports current `history.db` plus optional Beta 1.0 history from
+      `.local/legacy_eval/archive_legacy_eval/databases/.polinko_history.db`
+    - stores integrated rows with explicit `era`, source DB, source session,
+      and source run provenance
+  - this is the single app-facing eval database for analysis/UI work; raw
+    history files are import sources, not separate eval truths.
 - Eval visualization surfaces (hybrid):
-  - `.local/runtime_dbs/active/history.db`
-    - recent `ocr_runs` feed the bucketed `text` / `handwriting` /
+  - `.local/runtime_dbs/active/manual_evals.db`
+    - recent integrated OCR rows feed the bucketed `text` / `handwriting` /
       `illustration` chart in `/viz/pass-fail`
-  - `.local/runtime_dbs/active/eval_viz.db`
-    - `eval_points` feed the evaluated headline summary and latest eval detail
-      rows for `/viz/pass-fail` when available
+    - feedback/status context feeds the headline summary and latest detail rows
+    - Beta 1.0/current provenance remains visible through `era` and source
+      columns
   - design intent:
     - local-only, visual-forward, near-real-time surface
     - insight-first summary rather than dense dashboard analysis
@@ -66,8 +75,10 @@
   - local eval artefacts are operational outputs (default under `eval_reports/`)
     and are non-authoritative for runtime gate decisions.
   - no file-log-driven eval wiring exists in runtime gate decisions.
-  - deprecated transition context is reference-only under `docs/eval/beta_1_0/`
-    and cannot drive active gate decisions.
+  - beta transition evidence is reference-only for active runtime gates:
+    - `docs/eval/beta_1_0/` records binary-transition evidence
+    - `docs/eval/beta_2_0/` records binary-operational evidence
+    - neither path can drive active gate decisions directly
 - OCR eval lanes (active):
   - lockset gate: stable benchmark subset that must stay green
   - growth lane: exploratory/novel subset where failures are expected signal
@@ -94,7 +105,7 @@
 - Prompt/runtime behaviour and policy logic: `core/`
 - Eval/report/reference scripts and one-off operators: `tools/`
 - Execution state/decisions/handoff documentation: `docs/`
-- Historical beta transition references: `docs/eval/beta_1_0/`
+- Historical beta transition references: `docs/eval/README.md`
 
 ## Governance Flow
 

@@ -9,8 +9,7 @@ from typing import Any
 
 _REPORT_SUBDIRS = ("ocr_stability_runs", "ocr_growth_stability_runs")
 _RUN_ID_TIMESTAMP_RE = re.compile(r"^(?P<epoch>\d{9,})-r\d+$")
-_EVAL_VIZ_DB_PATH = Path(".local/runtime_dbs/active/eval_viz.db")
-_HISTORY_DB_PATH = Path(".local/runtime_dbs/active/history.db")
+_MANUAL_EVALS_DB_PATH = Path(".local/runtime_dbs/active/manual_evals.db")
 _OCR_LANES = ("typed", "handwriting", "illustration")
 _LANE_LABELS = {
     "typed": "text",
@@ -141,7 +140,82 @@ def _classify_ocr_history_lane(*, source_name: str, extracted_text: str) -> str:
     return "typed"
 
 
-def _build_payload_from_history_db(db_path: Path, *, max_runs: int = 120) -> dict[str, Any] | None:
+def _unixish_to_timestamp_ms(value: Any) -> int:
+    try:
+        raw = int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+    if raw and raw < 10_000_000_000:
+        return raw * 1000
+    return raw
+
+
+def _status_counts(status: str) -> tuple[int, int, int]:
+    normalized = status.strip().lower()
+    if normalized in {"ok", "pass", "passed", "success", "complete", "completed"}:
+        return 1, 0, 0
+    if "error" in normalized:
+        return 0, 0, 1
+    return 0, 1, 0
+
+
+def _feedback_outcome(row: sqlite3.Row, *, status: str) -> str:
+    feedback_count = int(row["feedback_count"] or 0)
+    if feedback_count <= 0:
+        passed, failed, errors = _status_counts(status)
+        if passed:
+            return "PASS"
+        if failed:
+            return "FAIL"
+        if errors:
+            return "ERROR"
+        return "UNKNOWN"
+
+    if int(row["feedback_fail_count"] or 0) > 0:
+        return "FAIL"
+    if int(row["feedback_other_count"] or 0) > 0:
+        return "PARTIAL"
+    if int(row["feedback_pass_count"] or 0) > 0:
+        return "PASS"
+    return "UNKNOWN"
+
+
+def _feedback_expected(row: sqlite3.Row) -> str:
+    feedback_count = int(row["feedback_count"] or 0)
+    if feedback_count <= 0:
+        return "(raw OCR status)"
+
+    pass_count = int(row["feedback_pass_count"] or 0)
+    fail_count = int(row["feedback_fail_count"] or 0)
+    other_count = int(row["feedback_other_count"] or 0)
+    note = _normalize_text(row["feedback_notes"] or "", max_chars=220)
+    summary = f"session feedback: {pass_count} pass / {fail_count} fail"
+    if other_count:
+        summary += f" / {other_count} other"
+    if note:
+        summary += f"; notes: {note}"
+    return summary
+
+
+def _load_metadata(conn: sqlite3.Connection) -> dict[str, str]:
+    try:
+        rows = conn.execute("SELECT key, value FROM metadata").fetchall()
+    except sqlite3.Error:
+        return {}
+    return {
+        str(row["key"]): str(row["value"])
+        for row in rows
+        if str(row["key"] or "").strip()
+    }
+
+
+def _build_payload_from_manual_evals_db(
+    db_path: Path,
+    *,
+    max_evals: int,
+    max_runs: int,
+    run_id: str | None = None,
+) -> dict[str, Any] | None:
     if not db_path.is_file():
         return None
 
@@ -151,16 +225,47 @@ def _build_payload_from_history_db(db_path: Path, *, max_runs: int = 120) -> dic
         return None
 
     conn.row_factory = sqlite3.Row
+    metadata = _load_metadata(conn)
 
     try:
         rows = conn.execute(
             """
-            SELECT run_id, source_name, status, extracted_text, created_at
+            SELECT *
             FROM (
-                SELECT id, run_id, source_name, status, extracted_text, created_at
-                FROM ocr_runs
-                ORDER BY created_at DESC
-                LIMIT ?
+              SELECT
+                r.id,
+                r.run_id,
+                r.source_run_id,
+                r.era,
+                r.source_label,
+                r.session_id,
+                r.source_session_id,
+                r.source_name,
+                r.status,
+                r.extracted_text,
+                r.created_at,
+                ia.source_filename,
+                ia.resolved_path,
+                COALESCE(fb.feedback_count, 0) AS feedback_count,
+                COALESCE(fb.pass_count, 0) AS feedback_pass_count,
+                COALESCE(fb.fail_count, 0) AS feedback_fail_count,
+                COALESCE(fb.other_count, 0) AS feedback_other_count,
+                fb.notes AS feedback_notes
+              FROM ocr_runs r
+              LEFT JOIN image_assets ia ON ia.id = r.image_asset_id
+              LEFT JOIN (
+                SELECT
+                  session_id,
+                  COUNT(*) AS feedback_count,
+                  SUM(CASE WHEN lower(outcome) = 'pass' THEN 1 ELSE 0 END) AS pass_count,
+                  SUM(CASE WHEN lower(outcome) = 'fail' THEN 1 ELSE 0 END) AS fail_count,
+                  SUM(CASE WHEN lower(outcome) NOT IN ('pass', 'fail') THEN 1 ELSE 0 END) AS other_count,
+                  GROUP_CONCAT(NULLIF(note, ''), ' | ') AS notes
+                FROM feedback
+                GROUP BY session_id
+              ) fb ON fb.session_id = r.session_id
+              ORDER BY r.created_at DESC, r.id DESC
+              LIMIT ?
             )
             ORDER BY created_at ASC, id ASC
             """,
@@ -179,163 +284,112 @@ def _build_payload_from_history_db(db_path: Path, *, max_runs: int = 120) -> dic
         source_name = str(row["source_name"] or "").strip()
         extracted_text = str(row["extracted_text"] or "")
         lane = _classify_ocr_history_lane(source_name=source_name, extracted_text=extracted_text)
-        status = str(row["status"] or "").strip().lower()
-        point = _default_point(timestamp_ms=int(row["created_at"] or 0))
-        point.update(
+        passed, failed, errors = _status_counts(str(row["status"] or ""))
+        run_id_value = str(row["run_id"] or "").strip() or "n/a"
+        points.append(
             {
-                "run_id": str(row["run_id"] or "").strip() or "n/a",
-                "label": str(row["run_id"] or "").strip() or "n/a",
-                "pass": 1 if status == "ok" else 0,
-                "fail": 0 if status == "ok" else 1,
-                "errors": 0,
+                "run_id": run_id_value,
+                "timestamp_ms": _unixish_to_timestamp_ms(row["created_at"]),
+                "label": str(row["source_run_id"] or run_id_value),
+                "pass": passed,
+                "fail": failed,
+                "errors": errors,
                 "total": 1,
                 "text": 1 if lane == "typed" else 0,
                 "handwriting": 1 if lane == "handwriting" else 0,
                 "illustration": 1 if lane == "illustration" else 0,
                 "source": source_name or db_path.name,
-            }
-        )
-        points.append(point)
-
-    latest_point = points[-1]
-    conn.close()
-
-    return {
-        "updated_at": datetime.fromtimestamp(
-            int(latest_point["timestamp_ms"]) / 1000,
-            tz=timezone.utc,
-        ).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "summary": {
-            "pass": int(latest_point["pass"]),
-            "fail": int(latest_point["fail"]),
-            "errors": int(latest_point["errors"]),
-            "total": int(latest_point["total"]),
-            "run_id": str(latest_point["run_id"]),
-            "source": str(latest_point["source"]),
-            "timestamp_ms": int(latest_point["timestamp_ms"]),
-            "text": int(latest_point["text"]),
-            "handwriting": int(latest_point["handwriting"]),
-            "illustration": int(latest_point["illustration"]),
-        },
-        "summary_points": points[-2:],
-        "points": points,
-        "runs_total": len(points),
-        "evals": [],
-    }
-
-
-def _build_payload_from_eval_db(db_path: Path, *, max_evals: int) -> dict[str, Any] | None:
-    if not db_path.is_file():
-        return None
-
-    try:
-        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    except sqlite3.Error:
-        return None
-
-    conn.row_factory = sqlite3.Row
-
-    try:
-        point_rows = conn.execute(
-            """
-            SELECT
-                run_id,
-                MAX(ts_unix) AS ts_unix,
-                SUM(CASE WHEN lower(outcome) = 'pass' THEN 1 ELSE 0 END) AS pass,
-                SUM(CASE WHEN lower(outcome) = 'fail' THEN 1 ELSE 0 END) AS fail,
-                SUM(CASE WHEN lower(outcome) = 'error' THEN 1 ELSE 0 END) AS errors,
-                COUNT(*) AS total,
-                SUM(CASE WHEN lane = 'typed' THEN 1 ELSE 0 END) AS typed,
-                SUM(CASE WHEN lane = 'handwriting' THEN 1 ELSE 0 END) AS handwriting,
-                SUM(CASE WHEN lane = 'illustration' THEN 1 ELSE 0 END) AS illustration
-            FROM eval_points
-            WHERE lane IN (?, ?, ?)
-            GROUP BY run_id
-            ORDER BY MAX(ts_unix) ASC, run_id ASC
-            """,
-            _OCR_LANES,
-        ).fetchall()
-    except sqlite3.Error:
-        conn.close()
-        return None
-
-    if not point_rows:
-        conn.close()
-        return None
-
-    points: list[dict[str, Any]] = []
-    for row in point_rows:
-        timestamp_ms = int(row["ts_unix"] or 0) * 1000
-        run_id = str(row["run_id"] or "").strip() or "n/a"
-        points.append(
-            {
-                "run_id": run_id,
-                "timestamp_ms": timestamp_ms,
-                "label": run_id,
-                "pass": int(row["pass"] or 0),
-                "fail": int(row["fail"] or 0),
-                "errors": int(row["errors"] or 0),
-                "total": int(row["total"] or 0),
-                "text": int(row["typed"] or 0),
-                "handwriting": int(row["handwriting"] or 0),
-                "illustration": int(row["illustration"] or 0),
-                "source": db_path.name,
+                "era": str(row["era"] or ""),
             }
         )
 
     latest_point = points[-1] if points else _default_point()
-    try:
-        rebuilt_row = conn.execute(
-            "SELECT value FROM metadata WHERE key = 'rebuilt_at_unix'"
-        ).fetchone()
-    except sqlite3.Error:
-        rebuilt_row = None
-    try:
-        rebuilt_at_unix = int(str(rebuilt_row["value"]).strip() or 0) if rebuilt_row else 0
-    except (TypeError, ValueError):
-        rebuilt_at_unix = 0
-    updated_at_unix = rebuilt_at_unix or (int(latest_point["timestamp_ms"]) // 1000) or int(
-        datetime.now(tz=timezone.utc).timestamp()
-    )
-    updated_at = datetime.fromtimestamp(
-        updated_at_unix,
-        tz=timezone.utc,
-    ).strftime("%Y-%m-%dT%H:%M:%SZ")
-
     eval_rows: list[dict[str, Any]] = []
+
+    eval_where = ""
+    params: list[Any] = []
+    if run_id:
+        eval_where = "WHERE r.run_id = ? OR r.source_run_id = ?"
+        params.extend([run_id, run_id])
+
     try:
         latest_rows = conn.execute(
-            """
-            SELECT case_id, lane, outcome, expected_text, observed_text, source_path, case_index
-            FROM eval_points
-            WHERE run_id = ? AND lane IN (?, ?, ?)
-            ORDER BY case_index ASC, case_id ASC
+            f"""
+            SELECT
+              r.id,
+              r.run_id,
+              r.source_run_id,
+              r.era,
+              r.source_label,
+              r.session_id,
+              r.source_session_id,
+              r.source_name,
+              r.status,
+              r.extracted_text,
+              r.created_at,
+              ia.source_filename,
+              ia.resolved_path,
+              COALESCE(fb.feedback_count, 0) AS feedback_count,
+              COALESCE(fb.pass_count, 0) AS feedback_pass_count,
+              COALESCE(fb.fail_count, 0) AS feedback_fail_count,
+              COALESCE(fb.other_count, 0) AS feedback_other_count,
+              fb.notes AS feedback_notes
+            FROM ocr_runs r
+            LEFT JOIN image_assets ia ON ia.id = r.image_asset_id
+            LEFT JOIN (
+              SELECT
+                session_id,
+                COUNT(*) AS feedback_count,
+                SUM(CASE WHEN lower(outcome) = 'pass' THEN 1 ELSE 0 END) AS pass_count,
+                SUM(CASE WHEN lower(outcome) = 'fail' THEN 1 ELSE 0 END) AS fail_count,
+                SUM(CASE WHEN lower(outcome) NOT IN ('pass', 'fail') THEN 1 ELSE 0 END) AS other_count,
+                GROUP_CONCAT(NULLIF(note, ''), ' | ') AS notes
+              FROM feedback
+              GROUP BY session_id
+            ) fb ON fb.session_id = r.session_id
+            {eval_where}
+            ORDER BY r.created_at DESC, r.id DESC
             LIMIT ?
             """,
-            (str(latest_point["run_id"]), *_OCR_LANES, max_evals),
+            (*params, max_evals),
         ).fetchall()
     except sqlite3.Error:
         latest_rows = []
 
     for index, row in enumerate(latest_rows):
-        case_id = str(row["case_id"] or "").strip() or "(unknown)"
-        source_path = str(row["source_path"] or "").strip()
-        lane = _LANE_LABELS.get(str(row["lane"] or "").strip(), "other")
-        row_key = f"{case_id}::{source_path or index}"
+        source_name = str(row["source_name"] or "").strip()
+        source_path = str(row["resolved_path"] or "").strip()
+        source_filename = str(row["source_filename"] or "").strip()
+        extracted_text = str(row["extracted_text"] or "")
+        lane_key = _classify_ocr_history_lane(source_name=source_name, extracted_text=extracted_text)
+        lane = _LANE_LABELS.get(lane_key, "other")
+        item = source_filename or Path(source_name).name or str(row["source_run_id"] or row["run_id"])
+        row_key = f"{row['run_id']}::{source_path or source_name or index}"
         eval_rows.append(
             {
                 "row_key": row_key,
-                "item": case_id,
-                "outcome": str(row["outcome"] or "UNKNOWN").strip().upper() or "UNKNOWN",
-                "expected": _normalize_text(row["expected_text"] or "(none)", max_chars=360),
-                "observed": _normalize_text(row["observed_text"] or "", max_chars=520),
+                "item": item,
+                "outcome": _feedback_outcome(row, status=str(row["status"] or "")),
+                "expected": _feedback_expected(row),
+                "observed": _normalize_text(extracted_text, max_chars=520),
                 "source_name": lane,
-                "image_path": source_path,
+                "image_path": source_path or source_name,
                 "lane": lane,
+                "era": str(row["era"] or ""),
+                "run_id": str(row["run_id"] or ""),
+                "source_run_id": str(row["source_run_id"] or ""),
+                "source_session_id": str(row["source_session_id"] or ""),
             }
         )
 
     conn.close()
+
+    updated_at = metadata.get("generated_at_utc")
+    if not updated_at:
+        updated_at = datetime.fromtimestamp(
+            int(latest_point["timestamp_ms"]) / 1000,
+            tz=timezone.utc,
+        ).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     return {
         "updated_at": updated_at,
@@ -365,39 +419,35 @@ def build_pass_fail_viz_payload(
     db_path: Path | None = None,
     history_db_path: Path | None = None,
     max_history_runs: int = 120,
+    run_id: str | None = None,
 ) -> dict[str, Any]:
-    effective_db_path = db_path if db_path is not None else (_EVAL_VIZ_DB_PATH if report_root is None else None)
-    effective_history_db_path = (
-        history_db_path
-        if history_db_path is not None
-        else (_HISTORY_DB_PATH if report_root is None and db_path is None else None)
+    _ = history_db_path
+    effective_db_path = db_path if db_path is not None else (
+        _MANUAL_EVALS_DB_PATH if report_root is None else None
     )
     if report_root is None:
-        history_payload = (
-            _build_payload_from_history_db(effective_history_db_path, max_runs=max(1, max_history_runs))
-            if effective_history_db_path is not None
-            else None
-        )
-        eval_payload = (
-            _build_payload_from_eval_db(effective_db_path, max_evals=max_evals)
+        payload = (
+            _build_payload_from_manual_evals_db(
+                effective_db_path,
+                max_evals=max(1, max_evals),
+                max_runs=max(1, max_history_runs),
+                run_id=run_id,
+            )
             if effective_db_path is not None
             else None
         )
-        if history_payload is not None:
-            if eval_payload is not None:
-                return {
-                    "updated_at": history_payload["updated_at"],
-                    "summary": eval_payload["summary"],
-                    "summary_points": eval_payload.get("summary_points", []),
-                    "points": history_payload["points"],
-                    "runs_total": history_payload["runs_total"],
-                    "evals": eval_payload["evals"],
-                }
-            return history_payload
-        if eval_payload is not None:
-            return eval_payload
+        if payload is not None:
+            return payload
+        return {
+            "updated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "summary": _default_point(),
+            "summary_points": [],
+            "points": [],
+            "runs_total": 0,
+            "evals": [],
+        }
 
-    root = report_root or Path(".local/eval_reports")
+    root = report_root
     run_records: list[tuple[int, dict[str, Any], dict[str, Any], Path]] = []
 
     for path in _report_paths(root):
@@ -413,12 +463,14 @@ def build_pass_fail_viz_payload(
         errors = int(summary.get("errors", 0) or 0)
         attempted = int(summary.get("attempted", summary.get("total_selected", 0)) or 0)
         timestamp_ms = _timestamp_ms(report, path)
-        run_id = str(report.get("run_id", path.stem)).strip() or path.stem
+        report_run_id = str(report.get("run_id", path.stem)).strip() or path.stem
+        if run_id is not None and report_run_id != run_id:
+            continue
 
         point = {
-            "run_id": run_id,
+            "run_id": report_run_id,
             "timestamp_ms": timestamp_ms,
-            "label": run_id,
+            "label": report_run_id,
             "pass": passed,
             "fail": failed,
             "errors": errors,
@@ -1008,7 +1060,7 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
             <div class="poll-status" id="pollStatus">update mode: post-batch/manual</div>
           </div>
         </div>
-        <div class="eval-subtitle">item · expected · observed · source path (latest run)</div>
+        <div class="eval-subtitle">item · feedback/status · observed · source path (recent integrated rows)</div>
         <div class="eval-table-wrap">
           <table class="eval-table">
             <thead>
