@@ -4,131 +4,47 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>POLINKOfolio Interface Board</title>
-    <script type="module" crossorigin src="/assets/index-DkeAC5kn.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-D_zn9mfP.css">
+    <script type="module" crossorigin src="/assets/index-Dbw_T5EW.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BeYNHyek.css">
   </head>
   <body>
     <canvas id="webgl-stage" aria-hidden="true"></canvas>
     <main class="board-wrap" aria-label="Portfolio interface layout board">
       <section class="board" role="presentation">
         <section id="hero" class="block hero" data-label="hero">
-          <div class="hero-shell" aria-label="portfolio overview">
-            <p class="eyebrow">Polinko research lab</p>
-            <h1>Evidence continuity, not decoration.</h1>
-            <p>
-              Twin Sankey view for the eval story: Beta 1.0 manual evidence on the left,
-              current OCR binary gates on the right, with the bridge labeled as source-side
-              counts instead of pretend joins.
-            </p>
-            <div class="data-strip" aria-label="live data status">
-              <span id="dataState">loading real data</span>
-              <span id="dataReason">No decorative fallback is rendered.</span>
-            </div>
-          </div>
+          <h1 class="scaffold-label">hero</h1>
         </section>
         <section id="intro" class="block intro" data-label="intro">
-          <div class="intro-shell" aria-label="sankey data contract">
-            <p class="eyebrow">Real-data contract</p>
-            <h2>Legacy and current evals stay equal, but not identical.</h2>
-            <div class="metric-grid" aria-label="twin sankey source metrics">
-              <div>
-                <span class="metric-value" id="legacyRows">0 manual evals</span>
-                <span class="metric-label">Beta 1.0 source rows</span>
-              </div>
-              <div>
-                <span class="metric-value" id="legacySignals">0 signal mentions</span>
-                <span class="metric-label">manual tags mapped into bridge categories</span>
-              </div>
-              <div>
-                <span class="metric-value" id="currentCases">0 gate cases</span>
-                <span class="metric-label">current strict OCR binary outcomes</span>
-              </div>
-              <div>
-                <span class="metric-value" id="currentReports">0 reports</span>
-                <span class="metric-label">binary report window</span>
-              </div>
-              <div>
-                <span class="metric-value" id="bridgeCategories">0 bridge categories</span>
-                <span class="metric-label">legacy signal families in view</span>
-              </div>
-            </div>
-          </div>
+          <h2 class="scaffold-label">intro</h2>
         </section>
-        <section id="pipeline-one" class="block pipeline-one" data-label="baseline">
-          <div class="sankey-caption">
-            <p class="eyebrow">Left sankey</p>
-            <h2 class="sankey-stage-title">Beta 1.0 manual evals</h2>
-            <p class="sankey-stage-meta">manual feedback outcomes and signal tags</p>
-          </div>
-          <div class="sankey-stage" aria-label="baseline control sankey">
-            <svg id="sankey-baseline" class="sankey-svg" role="img" aria-label="Baseline control flow"></svg>
-          </div>
+        <section id="beta-one-pipeline" class="block beta-one-pipeline" data-label="Beta 1.0 pipeline">
+          <h2 class="scaffold-label">pipeline</h2>
         </section>
-        <section id="bridge-one" class="block bridge-one" data-label="bridge panel a">
-          <div class="sankey-caption">
-            <p class="eyebrow">Bridge</p>
-            <h2 class="sankey-stage-title">Signal bridge</h2>
-            <p class="sankey-stage-meta">legacy signal categories to current OCR lanes</p>
-          </div>
-          <div class="sankey-stage" aria-label="bridge a sankey">
-            <svg id="sankey-bridge-a" class="sankey-svg" role="img" aria-label="Bridge A flow"></svg>
-          </div>
+        <section id="sankey-panel-one" class="block sankey-panel sankey-panel-one" data-label="sankey panel 1">
+          <h2 class="scaffold-label">sankey 1</h2>
         </section>
-        <section id="bridge-two" class="block bridge-two" data-label="bridge panel b">
-          <div class="sankey-caption">
-            <p class="eyebrow">Bridge detail</p>
-            <h2 class="sankey-stage-title">Evidence continuity</h2>
-            <p class="sankey-stage-meta">source-side counts only; no row-level join implied</p>
-          </div>
-          <div class="sankey-stage" aria-label="bridge b sankey">
-            <svg id="sankey-bridge-b" class="sankey-svg" role="img" aria-label="Bridge B flow"></svg>
-          </div>
+        <section id="sankey-panel-two" class="block sankey-panel sankey-panel-two" data-label="sankey panel 2">
+          <h2 class="scaffold-label">sankey 2</h2>
         </section>
-        <section id="pipeline-two" class="block pipeline-two" data-label="polinko beta 2.0">
-          <div class="sankey-caption right">
-            <p class="eyebrow">Right sankey</p>
-            <h2 class="sankey-stage-title">Current OCR binary gates</h2>
-            <p class="sankey-stage-meta">strict binary gate cases by OCR lane and outcome</p>
-          </div>
-          <div class="sankey-stage" aria-label="polinko beta 2 sankey">
-            <svg id="sankey-beta2" class="sankey-svg" role="img" aria-label="Polinko beta 2 flow"></svg>
-          </div>
+        <section id="sankey-panel-three" class="block sankey-panel sankey-panel-three" data-label="sankey panel 3">
+          <h2 class="scaffold-label">sankey 3</h2>
         </section>
+        <section id="sankey-panel-four" class="block sankey-panel sankey-panel-four" data-label="sankey panel 4">
+          <h2 class="scaffold-label">sankey 4</h2>
+        </section>
+        <section id="current-ocr-pipeline" class="block current-ocr-pipeline" data-label="Current OCR pipeline">
+          <h2 class="scaffold-label">pipeline</h2>
+        </section>
+        <div id="sankey-film" class="sankey-film" aria-label="twin sankey film strip">
+          <div class="sankey-stage" aria-label="twin sankey scaffold">
+            <svg id="sankey-flow" class="sankey-svg" role="img" aria-label="Twin Sankey flow"></svg>
+          </div>
+        </div>
         <section id="conclusion" class="block conclusion" data-label="conclusion">
-          <div class="morph-shell" aria-label="transformation conclusion scaffold">
-            <h2 class="morph-title">What the bridge is allowed to claim</h2>
-            <p class="morph-subtitle">
-              Beta 1.0 and current data are connected by evidence categories, not by fabricated
-              one-to-one joins.
-            </p>
-            <div class="morph-stage-row">
-              <button class="morph-replay" type="button">Replay evidence path</button>
-              <div class="morph-stages" role="list" aria-label="morph stages">
-                <span class="morph-stage active" role="listitem" data-stage="baseline">Manual evidence</span>
-                <span class="morph-stage" role="listitem" data-stage="bridge">Signal bridge</span>
-                <span class="morph-stage" role="listitem" data-stage="beta2">Binary gates</span>
-              </div>
-            </div>
-            <div class="morph-deltas">
-              <p>legacy values: manual feedback rows and tags</p>
-              <p>current values: OCR gate case outcomes</p>
-              <p>bridge values: source-side counts, not decorative strokes</p>
-              <p>missing sources: explicit no-data state</p>
-            </div>
-          </div>
+          <h2 class="scaffold-label">conclusion</h2>
         </section>
-        <section id="about" class="block about" data-label="about/contact">
-          <div class="about-shell" aria-label="about and contact placeholders">
-            <div class="about-main">
-              <div class="about-photo-fpo">Photo Placeholder</div>
-              <div class="about-text-fpo">
-                Left-aligned placeholder for about text and short bio summary.
-              </div>
-            </div>
-            <div class="about-contact-fpo">
-              Right-aligned placeholder for contact links and call-to-action.
-            </div>
-          </div>
+        <section id="about" class="block about" data-label="about / lab">
+          <h2 class="scaffold-label">about / lab</h2>
         </section>
       </section>
     </main>
