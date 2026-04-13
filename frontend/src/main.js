@@ -15,133 +15,98 @@ const SECTION_SEQUENCE = [
   "about",
 ];
 
+const SANKEY_DATA_URL = "/portfolio/sankey-data";
+
 const FLOW_COLORS = {
-  input: "#5079A8",
-  prompt_router: "#996FD5",
-  memory_probe: "#53A7AF",
-  policy_gate: "#E96666",
-  summary_stack: "#E29757",
-  response: "#3FA756",
-  noise_bucket: "#B9B7AE",
-  trigger_surface: "#7A7EE6",
-  evidence_parse: "#5079A8",
-  certainty_gate: "#3FA756",
-  uncertainty_gate: "#53A7AF",
-  fail_routing: "#E96666",
-  pass_routing: "#996FD5",
-  release_gate: "#E29757",
-  emit: "#3A70B5",
+  legacy_source: "#2f5f8f",
+  legacy_outcome: "#7aa9cb",
+  legacy_signal: "#ee7321",
+  bridge: "#f2d35d",
+  current_source: "#1e5f35",
+  current_lane: "#8cc66c",
+  current_outcome: "#83558e",
+  legacy_feedback_to_outcome: "#2f5f8f",
+  legacy_outcome_to_signal: "#ee7321",
+  legacy_signal_to_bridge: "#ee7321",
+  bridge_to_current_lane: "#1e5f35",
+  current_report_to_lane: "#1e5f35",
+  current_lane_to_outcome: "#83558e",
 };
 
-const BASELINE_GRAPH = {
-  nodes: [
-    { id: "input" },
-    { id: "prompt_router" },
-    { id: "memory_probe" },
-    { id: "policy_gate" },
-    { id: "summary_stack" },
-    { id: "response" },
-    { id: "noise_bucket" },
-    { id: "trigger_surface" },
-  ],
-  links: [
-    { source: "input", target: "prompt_router", value: 18 },
-    { source: "prompt_router", target: "memory_probe", value: 12 },
-    { source: "prompt_router", target: "policy_gate", value: 6 },
-    { source: "memory_probe", target: "summary_stack", value: 8 },
-    { source: "memory_probe", target: "trigger_surface", value: 4 },
-    { source: "policy_gate", target: "summary_stack", value: 3 },
-    { source: "policy_gate", target: "noise_bucket", value: 3 },
-    { source: "trigger_surface", target: "summary_stack", value: 3 },
-    { source: "trigger_surface", target: "noise_bucket", value: 1 },
-    { source: "summary_stack", target: "response", value: 10 },
-    { source: "summary_stack", target: "noise_bucket", value: 4 },
-  ],
+const EMPTY_GRAPHS = {
+  legacy: { nodes: [], links: [] },
+  bridge: { nodes: [], links: [] },
+  current: { nodes: [], links: [] },
 };
 
-const BETA2_GRAPH = {
-  nodes: [
-    { id: "evidence_parse" },
-    { id: "certainty_gate" },
-    { id: "uncertainty_gate" },
-    { id: "fail_routing" },
-    { id: "pass_routing" },
-    { id: "release_gate" },
-    { id: "emit" },
-    { id: "noise_bucket" },
-  ],
-  links: [
-    { source: "evidence_parse", target: "certainty_gate", value: 10 },
-    { source: "evidence_parse", target: "uncertainty_gate", value: 8 },
-    { source: "certainty_gate", target: "pass_routing", value: 9 },
-    { source: "certainty_gate", target: "fail_routing", value: 1 },
-    { source: "uncertainty_gate", target: "fail_routing", value: 6 },
-    { source: "uncertainty_gate", target: "pass_routing", value: 2 },
-    { source: "fail_routing", target: "noise_bucket", value: 2 },
-    { source: "fail_routing", target: "release_gate", value: 5 },
-    { source: "pass_routing", target: "release_gate", value: 11 },
-    { source: "release_gate", target: "emit", value: 14 },
-    { source: "release_gate", target: "noise_bucket", value: 2 },
-  ],
-};
-
-const BRIDGE_A_GRAPH = {
-  nodes: [
-    { id: "input" },
-    { id: "prompt_router" },
-    { id: "memory_probe" },
-    { id: "certainty_gate" },
-    { id: "uncertainty_gate" },
-    { id: "release_gate" },
-    { id: "response" },
-    { id: "noise_bucket" },
-  ],
-  links: [
-    { source: "input", target: "prompt_router", value: 18 },
-    { source: "prompt_router", target: "memory_probe", value: 11 },
-    { source: "prompt_router", target: "uncertainty_gate", value: 7 },
-    { source: "memory_probe", target: "certainty_gate", value: 9 },
-    { source: "memory_probe", target: "uncertainty_gate", value: 2 },
-    { source: "certainty_gate", target: "release_gate", value: 8 },
-    { source: "certainty_gate", target: "noise_bucket", value: 1 },
-    { source: "uncertainty_gate", target: "release_gate", value: 5 },
-    { source: "uncertainty_gate", target: "noise_bucket", value: 4 },
-    { source: "release_gate", target: "response", value: 11 },
-    { source: "release_gate", target: "noise_bucket", value: 2 },
-  ],
-};
-
-const BRIDGE_B_GRAPH = {
-  nodes: [
-    { id: "evidence_parse" },
-    { id: "certainty_gate" },
-    { id: "uncertainty_gate" },
-    { id: "fail_routing" },
-    { id: "pass_routing" },
-    { id: "release_gate" },
-    { id: "emit" },
-    { id: "noise_bucket" },
-  ],
-  links: [
-    { source: "evidence_parse", target: "certainty_gate", value: 11 },
-    { source: "evidence_parse", target: "uncertainty_gate", value: 7 },
-    { source: "certainty_gate", target: "pass_routing", value: 9 },
-    { source: "certainty_gate", target: "fail_routing", value: 2 },
-    { source: "uncertainty_gate", target: "fail_routing", value: 4 },
-    { source: "uncertainty_gate", target: "pass_routing", value: 3 },
-    { source: "fail_routing", target: "release_gate", value: 3 },
-    { source: "fail_routing", target: "noise_bucket", value: 3 },
-    { source: "pass_routing", target: "release_gate", value: 12 },
-    { source: "release_gate", target: "emit", value: 13 },
-    { source: "release_gate", target: "noise_bucket", value: 2 },
-  ],
-};
+const STAGE_CONFIG = [
+  {
+    sectionId: "pipeline-one",
+    svgId: "sankey-baseline",
+    graphKey: "legacy",
+    title: "Beta 1.0 manual evals",
+    meta: "manual feedback outcomes and signal tags",
+    edgeInset: 44,
+  },
+  {
+    sectionId: "bridge-one",
+    svgId: "sankey-bridge-a",
+    graphKey: "bridge",
+    title: "Signal bridge",
+    meta: "legacy signal categories to current OCR lanes",
+    edgeInset: 0,
+  },
+  {
+    sectionId: "bridge-two",
+    svgId: "sankey-bridge-b",
+    graphKey: "bridge",
+    title: "Evidence continuity",
+    meta: "source-side counts only; no row-level join implied",
+    edgeInset: 0,
+  },
+  {
+    sectionId: "pipeline-two",
+    svgId: "sankey-beta2",
+    graphKey: "current",
+    title: "Current OCR binary gates",
+    meta: "strict binary gate cases by OCR lane and outcome",
+    edgeInset: 44,
+  },
+];
 
 function cloneGraph(graph) {
   return {
-    nodes: graph.nodes.map((node) => ({ ...node })),
-    links: graph.links.map((link) => ({ ...link })),
+    nodes: (graph?.nodes ?? []).map((node) => ({ ...node })),
+    links: (graph?.links ?? []).map((link) => ({ ...link })),
   };
+}
+
+function graphHasData(graph) {
+  return Array.isArray(graph?.nodes) && graph.nodes.length > 0
+    && Array.isArray(graph?.links) && graph.links.length > 0;
+}
+
+function nodeColor(node) {
+  return FLOW_COLORS[node.group] ?? FLOW_COLORS[node.id] ?? "#161616";
+}
+
+function linkColor(link) {
+  return FLOW_COLORS[link.kind] ?? nodeColor(link.source) ?? "rgba(30, 30, 30, 0.55)";
+}
+
+function formatNumber(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return "0";
+  }
+  return new Intl.NumberFormat("en").format(numeric);
+}
+
+function setText(selector, value) {
+  const node = document.querySelector(selector);
+  if (node instanceof HTMLElement) {
+    node.textContent = value;
+  }
 }
 
 function stretchSankeyYToFit(graph, top, bottom) {
@@ -176,6 +141,21 @@ function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
 
   const width = Math.max(section.clientWidth, 1);
   const height = Math.max(section.clientHeight, 1);
+  const svg = d3.select(svgNode);
+  svg.selectAll("*").remove();
+  svg.attr("viewBox", `0 0 ${width} ${height}`);
+
+  if (!graphHasData(graph)) {
+    svg
+      .append("text")
+      .attr("class", "sankey-empty-text")
+      .attr("x", width / 2)
+      .attr("y", height / 2)
+      .attr("text-anchor", "middle")
+      .text("No real twin-sankey data available");
+    return;
+  }
+
   const nodeWidth = Math.max(12, Math.floor(width * 0.014));
   const nodePadding = Math.max(10, Math.floor(height * 0.022));
 
@@ -190,9 +170,6 @@ function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
 
   const sankeyGraph = layout(cloneGraph(graph));
   stretchSankeyYToFit(sankeyGraph, edgeInset, height - edgeInset);
-  const svg = d3.select(svgNode);
-  svg.selectAll("*").remove();
-  svg.attr("viewBox", `0 0 ${width} ${height}`);
 
   const root = svg.append("g");
 
@@ -203,10 +180,16 @@ function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
     .join("path")
     .attr("class", "sankey-link")
     .attr("d", sankeyLinkHorizontal())
-    .attr("stroke", (link) => FLOW_COLORS[link.source.id] ?? "rgba(30, 30, 30, 0.55)")
+    .attr("stroke", (link) => linkColor(link))
     .attr("stroke-width", (link) => Math.max(1, link.width))
-    .attr("stroke-opacity", 0.43)
-    .attr("fill", "none");
+    .attr("stroke-opacity", 0.52)
+    .attr("fill", "none")
+    .append("title")
+    .text((link) => {
+      const source = link.source.label ?? link.source.id;
+      const target = link.target.label ?? link.target.id;
+      return `${source} -> ${target}: ${formatNumber(link.value)} (${link.provenance ?? "source data"})`;
+    });
 
   root
     .append("g")
@@ -218,38 +201,85 @@ function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
     .attr("y", (node) => node.y0)
     .attr("width", (node) => Math.max(1, node.x1 - node.x0))
     .attr("height", (node) => Math.max(1, node.y1 - node.y0))
-    .attr("fill", (node) => FLOW_COLORS[node.id] ?? "#111");
+    .attr("fill", (node) => nodeColor(node))
+    .append("title")
+    .text((node) => `${node.label ?? node.id}: ${formatNumber(node.value)}`);
 
+  root
+    .append("g")
+    .attr("class", "sankey-labels")
+    .selectAll("text")
+    .data(sankeyGraph.nodes)
+    .join("text")
+    .attr("class", "sankey-label")
+    .attr("x", (node) => (node.x0 < width / 2 ? node.x1 + 10 : node.x0 - 10))
+    .attr("y", (node) => (node.y0 + node.y1) / 2)
+    .attr("dy", "0.35em")
+    .attr("text-anchor", (node) => (node.x0 < width / 2 ? "start" : "end"))
+    .text((node) => node.label ?? node.id);
 }
 
 function setupFilmSankey() {
   let resizeFrame = 0;
+  let payload = null;
+
+  const updateCopy = () => {
+    const available = Boolean(payload?.available);
+    const summary = payload?.summary ?? {};
+    setText("#legacyRows", `${formatNumber(summary.legacy_feedback_rows)} manual evals`);
+    setText("#legacySignals", `${formatNumber(summary.legacy_signal_mentions)} signal mentions`);
+    setText("#currentCases", `${formatNumber(summary.current_binary_cases)} gate cases`);
+    setText("#currentReports", `${formatNumber(summary.current_binary_reports)} reports`);
+    setText("#bridgeCategories", `${formatNumber(summary.bridge_categories)} bridge categories`);
+    setText("#dataState", available ? "real data connected" : "waiting for real data");
+    setText("#dataReason", available ? "No decorative fallback is rendered." : payload?.reason ?? "Loading local sources.");
+
+    STAGE_CONFIG.forEach((stage) => {
+      const section = document.getElementById(stage.sectionId);
+      if (!(section instanceof HTMLElement)) {
+        return;
+      }
+      section.dataset.state = available ? "ready" : "empty";
+      const title = section.querySelector(".sankey-stage-title");
+      const meta = section.querySelector(".sankey-stage-meta");
+      if (title instanceof HTMLElement) {
+        title.textContent = stage.title;
+      }
+      if (meta instanceof HTMLElement) {
+        meta.textContent = available ? stage.meta : "Explicit no-data state. Add/restore required source data to render.";
+      }
+    });
+  };
 
   const render = () => {
-    drawSankey({
-      sectionId: "pipeline-one",
-      svgId: "sankey-baseline",
-      graph: BASELINE_GRAPH,
-      edgeInset: 44,
+    const graphs = payload?.graphs ?? EMPTY_GRAPHS;
+    STAGE_CONFIG.forEach((stage) => {
+      drawSankey({
+        sectionId: stage.sectionId,
+        svgId: stage.svgId,
+        graph: graphs[stage.graphKey],
+        edgeInset: stage.edgeInset,
+      });
     });
-    drawSankey({
-      sectionId: "bridge-one",
-      svgId: "sankey-bridge-a",
-      graph: BRIDGE_A_GRAPH,
-      edgeInset: 0,
-    });
-    drawSankey({
-      sectionId: "bridge-two",
-      svgId: "sankey-bridge-b",
-      graph: BRIDGE_B_GRAPH,
-      edgeInset: 0,
-    });
-    drawSankey({
-      sectionId: "pipeline-two",
-      svgId: "sankey-beta2",
-      graph: BETA2_GRAPH,
-      edgeInset: 44,
-    });
+    updateCopy();
+  };
+
+  const load = async () => {
+    try {
+      const response = await fetch(SANKEY_DATA_URL, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      payload = await response.json();
+    } catch (error) {
+      payload = {
+        available: false,
+        reason: `Unable to load ${SANKEY_DATA_URL}: ${error.message}`,
+        summary: {},
+        graphs: EMPTY_GRAPHS,
+      };
+    }
+    render();
   };
 
   const onResize = () => {
@@ -259,7 +289,9 @@ function setupFilmSankey() {
     resizeFrame = requestAnimationFrame(render);
   };
 
+  updateCopy();
   render();
+  load();
   window.addEventListener("resize", onResize);
   return () => {
     window.removeEventListener("resize", onResize);

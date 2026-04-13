@@ -3656,3 +3656,40 @@
   to primary evidence. Recursive "summary of summary" compression loses
   constraints, makes plausible but wrong implementations more likely, and can
   directly contradict the fail-signal research hypothesis.
+
+## D-217: Twin Sankey portfolio surface must render real eval continuity only
+
+- Date: `2026-04-13`
+- Category: `portfolio_evidence`
+- Tags: `twin_sankey`, `real_data_only`, `beta_1_0`, `binary_gates`, `portfolio`
+- Decision:
+  - add `GET /portfolio/sankey-data` as the real-data payload for the portfolio
+    Twin Sankey surface.
+  - use Beta 1.0 manual feedback rows from
+    `.local/runtime_dbs/active/manual_evals.db` as the left-side/legacy Sankey
+    source.
+  - use current OCR binary gate cases from `.local/eval_reports/` as the
+    right-side/current Sankey source.
+  - expose `source_integrity=real_data_only` in the payload.
+  - return `available=false` with empty graphs when required sources are
+    missing; do not render fake/static/decorative fallback data.
+  - represent the bridge as source-side signal/category counts through an
+    evidence-continuity anchor, not as a row-level join between legacy and
+    current datasets.
+  - keep the served portfolio shell generated from `frontend/` into `ui/`; do
+    not hand-edit `ui/`.
+- Validation:
+  - `./venv/bin/python -m py_compile api/portfolio_sankey.py tests/test_portfolio_sankey.py`
+  - `./venv/bin/python -m unittest tests.test_portfolio_sankey`
+  - `./venv/bin/python -m unittest tests.test_api.PolinkoApiTests.test_portfolio_sankey_data_endpoint_returns_contract_shape`
+  - `npm run build` from `frontend/`
+  - browser smoke against `GET /portfolio`
+- Result:
+  - local payload reports `116` Beta 1.0 manual eval rows, `324` legacy signal
+    mentions, `2722` current OCR binary gate cases, `120` current reports, and
+    `7` bridge categories.
+- Why: The Twin Sankey is a portfolio evidence surface, not an illustration.
+  It should make the continuity between Beta 1.0 manual eval evidence and
+  current binary gate evidence visible while preserving the difference between
+  the two data shapes. Decorative placeholder flows would repeat the exact
+  evidence-drift failure this repo is designed to prevent.

@@ -14,7 +14,16 @@ Last updated: 2026-04-13
   - `GET /portfolio` serves `ui/index.html` (build output).
   - source of truth for shell edits is `frontend/`.
 - Twin Sankey portfolio shell iteration is active in the frontend lane:
-  - four-section sankey strip prototype is currently under refinement.
+  - four-section sankey strip now renders from real local data through
+    `GET /portfolio/sankey-data`.
+  - the left Sankey uses Beta 1.0 manual feedback rows from
+    `.local/runtime_dbs/active/manual_evals.db`.
+  - the right Sankey uses current OCR binary gate report cases from
+    `.local/eval_reports/`.
+  - the bridge uses source-side signal/category counts only; it is not a
+    row-level join between legacy and current datasets.
+  - missing required sources produce an explicit no-data state, not decorative
+    placeholder links.
   - beta 1.0 marks the transition to binary eval semantics and is the evidence
     layer for interpreting beta 2.0/current eval data.
   - beta 1.0 manual evaluations are meaningful data, not weaker evidence.

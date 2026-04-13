@@ -115,6 +115,19 @@ class PolinkoApiTests(unittest.TestCase):
             asset_resp = self.client.get(asset_path)
             self.assertEqual(asset_resp.status_code, 200)
 
+    def test_portfolio_sankey_data_endpoint_returns_contract_shape(self) -> None:
+        resp = self.client.get("/portfolio/sankey-data")
+        self.assertEqual(resp.status_code, 200)
+        payload = resp.json()
+        self.assertIn("available", payload)
+        self.assertEqual(payload["source_integrity"], "real_data_only")
+        self.assertIn("summary", payload)
+        self.assertIn("sources", payload)
+        self.assertIn("graphs", payload)
+        self.assertIn("legacy", payload["graphs"])
+        self.assertIn("bridge", payload["graphs"])
+        self.assertIn("current", payload["graphs"])
+
     def test_manual_evals_surface_endpoint_returns_payload_shape(self) -> None:
         resp = self.client.get(
             "/manual-evals/surface",
