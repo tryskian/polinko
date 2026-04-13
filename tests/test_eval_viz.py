@@ -2,6 +2,7 @@ import json
 import sqlite3
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 
 from api.eval_viz import build_pass_fail_viz_payload, render_pass_fail_viz_html
@@ -119,6 +120,7 @@ class EvalVizTests(unittest.TestCase):
                 max_history_runs=50,
             )
 
+            self.assertEqual(payload["chart_mode"], "ocr_lanes")
             self.assertEqual(payload["runs_total"], 3)
             self.assertEqual(payload["summary"]["run_id"], "ocr-3")
             self.assertEqual(payload["summary"]["errors"], 1)
@@ -150,11 +152,56 @@ class EvalVizTests(unittest.TestCase):
                 run_id="ocr-2",
             )
 
+            self.assertEqual(payload["chart_mode"], "ocr_lanes")
             self.assertEqual(payload["runs_total"], 3)
             self.assertEqual(len(payload["evals"]), 1)
             self.assertEqual(payload["evals"][0]["source_run_id"], "ocr-2")
             self.assertEqual(payload["evals"][0]["outcome"], "PASS")
             self.assertIn("session feedback", payload["evals"][0]["expected"])
+
+    def test_payload_prefers_fail_focused_feedback_chart_by_default(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            history_db = root / "history.db"
+            manual_db = root / "manual_evals.db"
+            _init_viz_history_db(history_db, include_feedback=True)
+            with sqlite3.connect(history_db) as conn:
+                conn.executemany(
+                    """
+                    INSERT INTO message_feedback (
+                      session_id, message_id, outcome, tags_json, note, recommended_action,
+                      action_taken, status, created_at, updated_at
+                    ) VALUES (
+                      'chat-1', ?, ?, '[]', ?, NULL, NULL, 'closed', ?, ?
+                    )
+                    """,
+                    [
+                        ("m-result-2", "FAIL", "missed handwriting context", 1774902700000, 1774902800000),
+                        ("m-result-3", "PARTIAL", "illustration text was incomplete", 1774902900000, 1774903000000),
+                    ],
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=manual_db,
+                include_thumbnails=False,
+            )
+
+            payload = build_pass_fail_viz_payload(
+                db_path=manual_db,
+                max_evals=10,
+                max_history_runs=50,
+            )
+
+            self.assertEqual(payload["chart_mode"], "feedback")
+            self.assertEqual(payload["runs_total"], 3)
+            self.assertEqual(Counter(point["outcome"] for point in payload["points"]), {
+                "PASS": 1,
+                "FAIL": 1,
+                "PARTIAL": 1,
+            })
+            self.assertEqual(payload["evals"][0]["outcome"], "FAIL")
+            self.assertIn("missed handwriting context", payload["evals"][0]["expected"])
 
     def test_payload_uses_latest_report_and_builds_rows(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -191,10 +238,12 @@ class EvalVizTests(unittest.TestCase):
             (growth_dir / "1711003600-r1.json").write_text(json.dumps(second), encoding="utf-8")
 
             payload = build_pass_fail_viz_payload(report_root=root, max_evals=10)
+            self.assertEqual(payload["chart_mode"], "binary_gates")
             self.assertEqual(payload["runs_total"], 2)
             self.assertEqual(payload["summary"]["run_id"], "1711003600-r1")
             self.assertEqual(payload["summary"]["pass"], 4)
             self.assertEqual(payload["summary"]["fail"], 2)
+            self.assertEqual(payload["summary"]["point_kind"], "binary_gate_report")
             self.assertEqual(len(payload["evals"]), 1)
             row = payload["evals"][0]
             self.assertEqual(row["item"], "case-a")
@@ -204,7 +253,7 @@ class EvalVizTests(unittest.TestCase):
             self.assertIn("ordered: one -> two", row["expected"])
             self.assertIn("regex: \\\\d+", row["expected"])
             self.assertEqual(row["observed"], "alpha and beta")
-            self.assertTrue(row["row_key"].startswith("case-a::"))
+            self.assertTrue(row["row_key"].startswith("1711003600-r1::case-a::"))
 
     def test_payload_without_reports_has_safe_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -223,12 +272,21 @@ class EvalVizTests(unittest.TestCase):
         self.assertIn('id="latestMix"', html)
         self.assertIn('id="windowLabel"', html)
         self.assertIn('id="chartTip"', html)
+        self.assertIn("bucketed binary gate report history", html)
+        self.assertIn("bucketed manual eval outcome history", html)
         self.assertIn("bucketed OCR lane history", html)
         self.assertIn("function clipId(runId)", html)
         self.assertIn("function bucketPoints(points, desiredBuckets = DEFAULT_MAX_CHART_POINTS)", html)
+        self.assertIn("function computeFailState(rate, total)", html)
+        self.assertIn("function sumPoints(points)", html)
         self.assertIn("Latest Bucket", html)
+        self.assertIn("OCR binary gate outcomes", html)
+        self.assertIn("Evaluated OCR outcomes", html)
         self.assertIn("Recent OCR mix", html)
-        self.assertIn("0 text · 0 handwriting · 0 illustration", html)
+        self.assertIn("0 fail · 0 pass", html)
+        self.assertIn("fail rate in binary gate window", html)
+        self.assertIn("fail/partial rate in evaluated OCR window", html)
+        self.assertIn("chart_mode", html)
         self.assertIn("--lane-handwriting", html)
         self.assertIn("const REFRESH_MS = 2500;", html)
         self.assertIn("const DEFAULT_MAX_CHART_POINTS = 20;", html)

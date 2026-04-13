@@ -32,13 +32,20 @@ Last updated: 2026-04-13
   - legacy and current eval eras may both include OCR evidence.
   - legacy OCR evidence includes screenshot-backed/manual eval artifacts under
     `docs/eval/beta_1_0/`.
-  - local-only transcripts under `docs/peanut/transcripts/` are supporting
-    interpretation context, not the canonical decision source.
+  - local-only transcripts under `docs/peanut/transcripts/` are source
+    evidence for reasoning/eval interpretation; `DECISIONS` records the
+    binding interpretation and must not contradict transcript evidence.
+  - long-term context should preserve evidence chains; do not replace source
+    transcripts/reports with summary-of-summary state.
   - source remains `frontend/` with generated output in `ui/`.
 - OCR-forward eval model remains active:
   - lockset lane is release-gating.
   - growth lane is fail-tolerant and signal-seeking.
 - Eval gate semantics remain strict binary (`pass`/`fail`).
+- Pass/fail visualization defaults to Pol-3 OCR binary gate reports under
+  `.local/eval_reports/` so FAIL pressure stays visible.
+- `manual_evals.db` remains the canonical integrated manual-eval warehouse and
+  fallback/explicit DB path, not the primary strict-gate chart source.
 
 ## Active Priorities
 
@@ -47,8 +54,10 @@ Last updated: 2026-04-13
    - fill evidence modules incrementally against locked architecture.
 2. OCR reliability lane:
    - continue growth/lockset operations without changing binary gate semantics.
+   - keep FAIL-first observability in `/viz/pass-fail`.
 3. Documentation hygiene lane:
-   - keep facts single-sourced via canonical ownership.
+   - keep facts anchored to source evidence + binding decisions; avoid
+     recursive summary drift.
 
 ## Canonical Sources
 

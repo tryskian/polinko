@@ -593,14 +593,13 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
 - `POST /skills/file_search` search indexed vector content (OCR/chat sources,
   includes `backend`, `fallback_reason`, and `candidate_count`)
 - `GET /viz/pass-fail` render the live OCR pulse page:
-  bucketed `ocr_runs` history stacked by inferred lane
-  (`text` / `handwriting` / `illustration`) from the integrated
-  `manual_evals.db` warehouse; intended as a local-only, near-real-time,
-  insight-first instrument panel after `make manual-evals-db` refreshes the
-  local warehouse
+  bucketed strict OCR binary gate reports stacked by `fail` / `pass` from
+  `.local/eval_reports/`; intended as a local-only, near-real-time,
+  FAIL-first research signal instrument
 - `GET /viz/pass-fail/data` return the pulse payload:
-  chart timeline, summary, and detail rows from
-  `.local/runtime_dbs/active/manual_evals.db`
+  chart timeline, summary, and FAIL-first detail rows from `.local/eval_reports/`
+  when binary gate reports exist; explicit/fallback DB paths still support
+  `.local/runtime_dbs/active/manual_evals.db` manual-eval views
 - `GET /` redirects to `GET /portfolio`.
 - `GET /portfolio` serves the static UI shell draft for immediate content
   editing and operator review.
@@ -1174,7 +1173,17 @@ Current policy:
 
 ## Runtime Kernel Pin
 
-1. Current engineering pin (manual eval surface):
+1. Current engineering pin (fail-signal eval visualization):
+   - `/viz/pass-fail` defaults to `.local/eval_reports/` OCR binary gate reports.
+   - chart mode is `binary_gates`.
+   - stacked chart segments are strict `fail` / `pass`, not manual
+     `PASS` / `PARTIAL` / `FAIL` feedback.
+   - detail rows are FAIL-first and should expose the observed OCR text, source,
+     lane, and report/run provenance.
+   - manual feedback is interpretive evidence and remains available through the
+     manual-eval warehouse/fallback path; it must not be mistaken for strict
+     binary gate data.
+2. Manual eval surface:
    - build canonical integrated eval warehouse at:
      - `.local/runtime_dbs/active/manual_evals.db`
    - rebuild with:
@@ -1190,11 +1199,11 @@ Current policy:
      - session-level feedback/checkpoint context
    - do not create a second app-facing eval DB for Beta 1.0; raw DBs are input
      sources only
-2. Contract-first implementation order:
+3. Contract-first implementation order:
    - data surface builder/query helper
    - read-only API endpoint(s)
    - presentation/UI consumption layer (deferred until backend kernel set is stable)
-3. Constraints:
+4. Constraints:
    - local-only runtime surface
    - no eval-policy mutation in UI lane
    - keep binary gate semantics unchanged (`pass`/`fail`)

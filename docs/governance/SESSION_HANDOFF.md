@@ -29,6 +29,12 @@ Last updated: 2026-04-13
 - Twin Sankey portfolio shell path is active for current cycle.
 - OCR lockset/growth lane model remains active and unchanged.
 - Eval gate contract remains binary pass/fail.
+- `/viz/pass-fail` is a fail-signal instrument:
+  - default chart source is `.local/eval_reports/` OCR binary gate reports.
+  - `manual_evals.db` remains the integrated manual-eval warehouse and fallback
+    data path.
+- Transcripts/raw reports/screenshots are evidence anchors; do not replace them
+  with recursive summaries.
 
 ## Next Execution Slice
 
@@ -41,6 +47,8 @@ Last updated: 2026-04-13
 - Do not duplicate historical decision timelines in this file.
 - Keep command catalogs in `docs/runtime/RUNBOOK.md` only.
 - Keep durable rationale/history in `docs/governance/DECISIONS.md` only.
+- Keep evidence anchors intact; summaries must point back to decisions/source
+  evidence rather than becoming the evidence.
 
 ## Session Close
 

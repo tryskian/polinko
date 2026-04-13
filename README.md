@@ -174,6 +174,14 @@ Skills:
 - `POST /skills/pdf_ingest`
 - `POST /skills/file_search`
 
+Eval visualization and surfaces:
+
+- `GET /viz/pass-fail` renders the local OCR fail-signal pulse.
+- `GET /viz/pass-fail/data` returns the pulse payload.
+- Default pulse source: strict OCR binary gate reports under `.local/eval_reports/`.
+- Manual eval warehouse: `.local/runtime_dbs/active/manual_evals.db`
+  (`make manual-evals-db`) for integrated Beta 1.0/current manual-eval rows.
+
 ## UI Shell Access
 
 - `GET /` redirects to `GET /portfolio`.
@@ -319,6 +327,16 @@ Transcript-backed OCR mining lane:
   - `.local/eval_cases/ocr_transcript_cases_review.json`
   - `.local/eval_reports/ocr_transcript_stability.json`
   - `.local/eval_reports/ocr_stability_runs/`
+
+Eval interpretation rules:
+
+- FAIL pressure is first-class research signal; pass-only summaries are not
+  sufficient for eval observability.
+- Manual eval notes remain a human interpretation layer and may capture
+  qualitative issues such as factuality, tone, usefulness, or whimsy delivered
+  as fact.
+- Transcripts, screenshots, and raw reports are source evidence; decisions are
+  the binding interpretation layer over that evidence.
 
 ## Docker Smoke Test
 

@@ -15,9 +15,10 @@ Beta 1.0 marks the move from meaningful manual/screenshot-backed evaluation
 toward strict binary eval semantics. Beta 2.0 extends that transition into a
 more structured operational eval stack.
 
-## Canonical Eval Database
+## Canonical Eval Surfaces
 
-There should be one app-facing eval database for analysis and UI work:
+There should be one app-facing eval database for integrated manual-eval
+analysis and manual-eval UI work:
 
 - canonical derived DB: `.local/runtime_dbs/active/manual_evals.db`
 - rebuild command: `make manual-evals-db`
@@ -29,6 +30,20 @@ There should be one app-facing eval database for analysis and UI work:
 current history sources into one schema with explicit `era`, `source_key`,
 `source_history_db`, `source_session_id`, and `source_run_id` provenance. The
 source DBs remain raw inputs, not separate user-facing eval truths.
+
+Strict OCR binary gate observability uses the report evidence stream, not the
+manual-eval warehouse:
+
+- primary pass/fail visual source: `.local/eval_reports/`
+- default dashboard/API: `/viz/pass-fail` and `/viz/pass-fail/data`
+- chart mode: `binary_gates`
+- interpretation: FAIL pressure is the research signal; PASS-only summaries are
+  insufficient.
+
+Manual evals remain first-class evidence, but they answer a different question:
+they capture human judgment and qualitative notes such as factuality, tone,
+whimsy-presented-as-fact, usefulness, and trust. They should not be flattened
+into the strict OCR binary gate chart.
 
 The 2026-04-13 local integrated build contains:
 
@@ -141,6 +156,11 @@ role:
 - Beta 1.0 manual evaluations are meaningful data.
 - Beta 2.0 shows operationalization of that transition.
 - Current eval work extends the operational lane.
+
+Do not treat transcripts, screenshots, or raw eval reports as disposable
+context. They are source evidence. Decision records are the binding
+interpretation layer over that evidence; summaries must not contradict the
+source artifacts they summarize.
 
 Do not commit the full Beta 1.0 snapshot wholesale. It contains local-only
 runtime state, `.env` material, `.git` metadata, editor history, and database
