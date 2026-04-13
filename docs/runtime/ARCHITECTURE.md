@@ -78,6 +78,20 @@
     - local-only, visual-forward, near-real-time surface
     - fail-signal instrument rather than pass-rate vanity dashboard
     - insight-first summary rather than dense dashboard analysis
+- Portfolio Twin Sankey evidence surface:
+  - `GET /portfolio/sankey-data`
+    - combines Beta 1.0 manual feedback from
+      `.local/runtime_dbs/active/manual_evals.db` with current OCR binary gate
+      reports from `.local/eval_reports/`
+    - returns `source_integrity=real_data_only`
+    - returns `available=false` and empty graphs when either source is missing;
+      it must not fabricate decorative fallback links
+    - bridge links are source-side counts through an evidence-continuity anchor,
+      not row-level joins between legacy and current datasets
+  - `GET /portfolio`
+    - serves `ui/index.html`, generated from `frontend/`
+    - the frontend renders the Twin Sankey payload and keeps no-data behavior
+      visible in the shell
 - Eval artefacts:
   - Git history is the canonical retention mechanism for tracked project state.
   - local eval artefacts are operational outputs (default under `eval_reports/`).

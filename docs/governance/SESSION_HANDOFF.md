@@ -26,7 +26,14 @@ Last updated: 2026-04-13
   - edit in `frontend/`
   - build to `ui/` with `make frontend-build`
   - no manual edits under `ui/`
-- Twin Sankey portfolio shell path is active for current cycle.
+- Twin Sankey portfolio shell path is active for current cycle:
+  - `GET /portfolio/sankey-data` supplies the real-data payload.
+  - left side uses Beta 1.0 manual feedback rows from `manual_evals.db`.
+  - right side uses current OCR binary gate report cases from
+    `.local/eval_reports/`.
+  - bridge links are source-side counts through an evidence-continuity anchor,
+    not fabricated row-level joins.
+  - missing sources must render as no-data, not decorative placeholder data.
 - OCR lockset/growth lane model remains active and unchanged.
 - Eval gate contract remains binary pass/fail.
 - `/viz/pass-fail` is a fail-signal instrument:
@@ -38,7 +45,7 @@ Last updated: 2026-04-13
 
 ## Next Execution Slice
 
-1. Portfolio shell/module progression (structure/content placement).
+1. Portfolio shell/module progression (content placement + Sankey refinement).
 2. OCR hardening kernels (lockset stability + growth signal quality).
 3. Keep docs aligned via canonical ownership map.
 

@@ -108,6 +108,9 @@ Sankey role:
 - records meaningful manual evaluation and the transition into binary eval
   semantics.
 - provides the contrast that makes Beta 2.0/current eval data meaningful.
+- active portfolio payload source: `GET /portfolio/sankey-data`
+  - consumes Beta 1.0 manual feedback rows through `manual_evals.db`
+  - refuses decorative fallback if the source rows are unavailable
 
 ## Beta 2.0
 
@@ -146,6 +149,9 @@ Sankey role:
 - right-side/current eval-era evidence.
 - shows what became structured, operational, and repeatable after the beta 1.0
   binary transition.
+- active portfolio payload source: `GET /portfolio/sankey-data`
+  - consumes current OCR binary gate cases from `.local/eval_reports/`
+  - treats bridge links as source-side counts, not row-level joins
 
 ## Interpretation Rule
 

@@ -27,6 +27,7 @@ from pydantic import BaseModel, Field
 
 from api.eval_viz import build_pass_fail_viz_payload, render_pass_fail_viz_html
 from api.manual_evals_surface import build_manual_evals_surface_payload
+from api.portfolio_sankey import build_portfolio_sankey_payload
 from config import AppConfig
 from core.history_store import (
     ChatHistoryStore,
@@ -3018,6 +3019,12 @@ def create_app(config: AppConfig) -> FastAPI:
         if not shell_path.is_file():
             raise HTTPException(status_code=404, detail="Portfolio shell not found.")
         return FileResponse(path=shell_path)
+
+    @app.get("/portfolio/sankey-data")
+    def portfolio_sankey_data(max_reports: int = 120) -> dict[str, Any]:
+        return build_portfolio_sankey_payload(
+            max_reports=max(1, min(max_reports, 240)),
+        )
 
     @app.get("/viz/pass-fail", response_class=HTMLResponse)
     def pass_fail_viz(refresh_ms: int = 4000, chart_max_points: int = 20) -> str:

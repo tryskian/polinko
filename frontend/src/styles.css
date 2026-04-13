@@ -1,6 +1,9 @@
 :root {
   --bg: #000000;
   --ink: #161616;
+  --muted: rgba(22, 22, 22, 0.68);
+  --veil: rgba(255, 255, 255, 0.42);
+  --line: rgba(0, 0, 0, 0.16);
 }
 
 * {
@@ -67,13 +70,17 @@ body {
 .hero {
   left: 0;
   top: 0;
-  background: #dce2c6;
+  background:
+    radial-gradient(circle at 78% 14%, rgba(238, 115, 33, 0.28), transparent 24%),
+    linear-gradient(135deg, #dce2c6 0%, #f4ead5 54%, #a9cce3 100%);
 }
 
 .intro {
   left: 0;
   top: 100vh;
-  background: #bfdcc4;
+  background:
+    radial-gradient(circle at 22% 72%, rgba(47, 95, 143, 0.24), transparent 28%),
+    linear-gradient(120deg, #bfdcc4 0%, #e4e7bf 62%, #ebe4cf 100%);
 }
 
 .pipeline-one {
@@ -107,6 +114,7 @@ body {
   border-radius: 3px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.22);
+  z-index: 1;
 }
 
 .pipeline-one .sankey-stage {
@@ -135,6 +143,172 @@ body {
 
 .sankey-link {
   mix-blend-mode: multiply;
+}
+
+.sankey-label {
+  font-size: clamp(0.62rem, 0.86vw, 0.92rem);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  fill: rgba(12, 12, 12, 0.76);
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.68);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.sankey-empty-text {
+  fill: rgba(0, 0, 0, 0.48);
+  font-size: clamp(1rem, 1.8vw, 1.8rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.hero-shell,
+.intro-shell {
+  position: absolute;
+  inset: 6rem auto auto 6rem;
+  width: min(60vw, 760px);
+  color: var(--ink);
+  display: grid;
+  gap: 1.1rem;
+}
+
+.hero-shell h1,
+.intro-shell h2 {
+  margin: 0;
+  max-width: 11ch;
+  font-size: clamp(4.4rem, 10vw, 11rem);
+  line-height: 0.8;
+  letter-spacing: -0.085em;
+  font-weight: 740;
+}
+
+.intro-shell h2 {
+  max-width: 13ch;
+  font-size: clamp(3.4rem, 7vw, 8rem);
+}
+
+.hero-shell p,
+.intro-shell p {
+  margin: 0;
+  max-width: 48rem;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.3vw, 1.28rem);
+  line-height: 1.45;
+}
+
+.eyebrow {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.58);
+  font-size: 0.78rem;
+  font-weight: 760;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.data-strip {
+  margin-top: 1.4rem;
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 0.8rem;
+  align-items: center;
+  justify-self: start;
+  padding: 0.68rem 0.85rem;
+  background: rgba(255, 255, 255, 0.46);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(14px);
+  font-size: 0.86rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.data-strip span:first-child {
+  font-weight: 760;
+}
+
+.data-strip span + span {
+  color: var(--muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.metric-grid {
+  margin-top: 1.6rem;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  width: min(86vw, 1120px);
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+.metric-grid > div {
+  min-height: 10.6rem;
+  padding: 1.1rem;
+  background: rgba(255, 255, 255, 0.46);
+  display: grid;
+  align-content: space-between;
+}
+
+.metric-value {
+  display: block;
+  font-size: clamp(1.45rem, 2.6vw, 3.35rem);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+  font-weight: 760;
+}
+
+.metric-label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.sankey-caption {
+  position: absolute;
+  left: 2.6rem;
+  top: 2.4rem;
+  z-index: 2;
+  width: min(22vw, 310px);
+  padding: 0.92rem 1rem 1rem;
+  background: rgba(255, 255, 255, 0.54);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(14px);
+  color: var(--ink);
+  pointer-events: none;
+}
+
+.sankey-caption.right {
+  left: auto;
+  right: 2.6rem;
+  text-align: right;
+}
+
+.sankey-caption h2 {
+  margin: 0.35rem 0 0;
+  font-size: clamp(1.65rem, 3.2vw, 3.7rem);
+  line-height: 0.9;
+  letter-spacing: -0.07em;
+  font-weight: 760;
+}
+
+.sankey-caption p {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.32;
+}
+
+.block[data-state="empty"] .sankey-stage {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.16),
+      rgba(255, 255, 255, 0.16) 16px,
+      rgba(255, 255, 255, 0.28) 16px,
+      rgba(255, 255, 255, 0.28) 32px
+    );
 }
 
 .conclusion {

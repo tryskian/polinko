@@ -181,15 +181,19 @@ Eval visualization and surfaces:
 - Default pulse source: strict OCR binary gate reports under `.local/eval_reports/`.
 - Manual eval warehouse: `.local/runtime_dbs/active/manual_evals.db`
   (`make manual-evals-db`) for integrated Beta 1.0/current manual-eval rows.
+- `GET /portfolio/sankey-data` returns the Twin Sankey portfolio payload:
+  Beta 1.0 manual eval rows from `manual_evals.db` plus current OCR binary gate
+  reports from `.local/eval_reports/`. It returns an explicit no-data state
+  rather than decorative fallback when either source is missing.
 
 ## UI Shell Access
 
 - `GET /` redirects to `GET /portfolio`.
-- `GET /portfolio` serves the low-fidelity `POL Portfolio Hub — Start Here` shell for editable content sections:
-  - Operator's Console
-  - Failure Museum
-  - Before/After Engine
-  - What I'm Working On (label: Operator's Console — What I'm Working On in Notion)
+- `GET /portfolio` serves the Twin Sankey evidence-continuity shell:
+  - Beta 1.0 manual eval Sankey
+  - source-side signal bridge
+  - current OCR binary gate Sankey
+  - explicit no-data behavior when real local sources are unavailable
 - frontend shell build contract:
   - edit source in `frontend/`
   - generate served shell with `make frontend-build` (writes to `ui/`)

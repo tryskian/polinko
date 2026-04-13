@@ -608,6 +608,12 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     - generated output: `ui/`
     - build command: `make frontend-build`
   - `ui/` is generated output only; do not hand-edit built files.
+- `GET /portfolio/sankey-data` returns the real-data Twin Sankey payload:
+  - left side: Beta 1.0 manual feedback rows from `manual_evals.db`
+  - bridge: source-side signal/category counts, not row-level joins
+  - right side: current OCR binary gate cases from `.local/eval_reports/`
+  - if either source is missing, the payload returns `available=false` with
+    empty graphs; do not add decorative fallback data
 - `GET /manual-evals/surface` return manual-eval data surface from
   the canonical integrated `manual_evals.db` warehouse (summary + sessions +
   OCR runs + thumbnail preview fields + session feedback/checkpoint context,
