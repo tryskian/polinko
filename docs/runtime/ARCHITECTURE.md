@@ -92,6 +92,10 @@
     - serves `ui/index.html`, generated from `frontend/`
     - the frontend renders the Twin Sankey payload and keeps no-data behavior
       visible in the shell
+    - the frontend interaction model is pinned-stage stepping: document scroll
+      is locked, GSAP `Observer` maps one gesture to one scene, `.board`
+      transforms vertical scenes, and `.horizontal-track` transforms the
+      middle `pipeline-one -> sankey -> pipeline-two` chapter
 - Eval artefacts:
   - Git history is the canonical retention mechanism for tracked project state.
   - local eval artefacts are operational outputs (default under `eval_reports/`).

@@ -3804,3 +3804,56 @@
   real configured Braintrust connection. That creates misleading workflow
   surface area and editor warnings. Removing the provider-specific wiring keeps
   the real generic judge capability while preserving the no-guessing rule.
+
+## D-222: Use pinned-stage stepping for the portfolio shell
+
+- Date: `2026-04-14`
+- Category: `portfolio_ui`
+- Tags: `portfolio_shell`, `pinned_stage`, `section_stepper`, `horizontal_chapter`
+- Decision:
+  - replace native document scroll/snap behavior with a pinned-stage stepper in
+    the portfolio shell.
+  - keep document scroll locked while GSAP `Observer` maps one wheel/touch/key
+    gesture to one exact scene.
+  - move vertical scenes through `.board` transforms.
+  - move the middle horizontal chapter through `.horizontal-track` transforms.
+  - set the active scene sequence to:
+    `hero -> intro -> pipeline-one -> sankey -> pipeline-two -> conclusion ->
+    about-lab`.
+  - preserve the real-data Twin Sankey payload contract and no-placeholder
+    discipline.
+- Validation:
+  - `make portfolio-build`
+  - `make portfolio`
+  - Playwright forward/backward wheel sequence:
+    `hero -> intro -> pipeline-one -> sankey -> pipeline-two -> conclusion ->
+    about-lab` and back to `hero`
+  - Playwright verified `scrollY=0` throughout the sequence.
+  - `venv/bin/python -m pytest tests/test_api.py -k "portfolio_shell or root_redirects_to_portfolio or portfolio_sankey_data"`
+- Why: The intended portfolio interaction is pinned section stepping, not
+  browser-owned scroll snap. Native scroll momentum can skip or loosen the
+  horizontal storytelling beat; a locked stage keeps the human-facing narrative
+  deterministic while preserving the evidence payload underneath it.
+
+## D-223: Keep portfolio browser iteration deterministic
+
+- Date: `2026-04-14`
+- Category: `workflow_environment`
+- Tags: `portfolio_workflow`, `playwright`, `cache_bust`, `browser_iteration`
+- Decision:
+  - make `make portfolio` open a cache-busted portfolio URL after rebuilding.
+  - keep `make portfolio-build` as the build-only command.
+  - keep `make pwcli` repo-scoped with default session `polinko`.
+  - make `make pwcli` add dated filenames only for capture commands
+    (`snapshot`, `screenshot`, `pdf`) so non-capture commands like `eval` and
+    `resize` remain valid.
+  - keep Playwright artifacts under
+    `docs/peanut/assets/screenshots/playwright/DD-MM-YY`.
+- Validation:
+  - `make portfolio`
+  - `make pwcli ARGS="resize 1440 900"`
+  - `make pwcli ARGS="open http://127.0.0.1:8000/portfolio?verify=pinned-stage-full"`
+  - `make pwcli ARGS="console error"`
+- Why: Portfolio UI work depends on tight visual feedback. Rebuilding without
+  cache-busting or breaking non-capture Playwright commands creates stale
+  browser state and false debugging signals.

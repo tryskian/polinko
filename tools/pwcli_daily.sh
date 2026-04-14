@@ -31,39 +31,15 @@ if ! command -v npx >/dev/null 2>&1; then
   exit 1
 fi
 
-config_dir=".local/logs/playwright"
-config_file="$config_dir/cli.config.json"
-mkdir -p "$config_dir"
-
-"${PYTHON:-python3}" - "$config_file" "$snapshot_dir" <<'PY'
-import json
-import sys
-from pathlib import Path
-
-config_path = Path(sys.argv[1])
-snapshot_dir = sys.argv[2]
-config_path.write_text(
-    json.dumps(
-        {
-            "outputDir": snapshot_dir,
-            "outputMode": "file",
-        },
-        indent=2,
-    )
-    + "\n",
-    encoding="utf-8",
-)
-PY
-
-has_config="false"
 has_session="false"
+has_filename="false"
 for arg in "$@"; do
   case "$arg" in
-    --config|--config=*)
-      has_config="true"
-      ;;
-    --session|--session=*)
+    --session|--session=*|-s|-s=*)
       has_session="true"
+      ;;
+    --filename|--filename=*)
+      has_filename="true"
       ;;
   esac
 done
@@ -76,11 +52,41 @@ if [[ ! -x "$pwcli" ]]; then
 fi
 
 args=("$@")
-if [[ "$has_config" != "true" ]]; then
-  args+=(--config "$config_file")
-fi
 if [[ "$has_session" != "true" ]]; then
   args=(--session "$default_session" "${args[@]}")
+fi
+
+command_name=""
+for ((i = 0; i < ${#args[@]}; i++)); do
+  arg="${args[$i]}"
+  case "$arg" in
+    --session|-s)
+      ((i += 1))
+      ;;
+    --session=*|-s=*)
+      ;;
+    --*)
+      ;;
+    *)
+      command_name="$arg"
+      break
+      ;;
+  esac
+done
+
+if [[ "$has_filename" != "true" ]]; then
+  timestamp="$(date -u +%Y-%m-%dT%H-%M-%SZ)-$RANDOM"
+  case "$command_name" in
+    snapshot)
+      args+=(--filename "$snapshot_dir/snapshot-$timestamp.md")
+      ;;
+    screenshot)
+      args+=(--filename "$snapshot_dir/screenshot-$timestamp.png")
+      ;;
+    pdf)
+      args+=(--filename "$snapshot_dir/page-$timestamp.pdf")
+      ;;
+  esac
 fi
 
 echo "Playwright snapshot directory: $snapshot_dir" >&2

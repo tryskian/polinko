@@ -547,14 +547,19 @@ portfolio:
 	$(MAKE) --no-print-directory portfolio-build; \
 	$(MAKE) --no-print-directory server-daemon; \
 	URL="$(DEV_PORTFOLIO_URL)"; \
+	CACHE_BUST="$$(date +%s)"; \
+	case "$$URL" in \
+		*\?*) OPEN_URL="$$URL&rebuild=$$CACHE_BUST" ;; \
+		*) OPEN_URL="$$URL?rebuild=$$CACHE_BUST" ;; \
+	esac; \
 	if command -v open >/dev/null 2>&1; then \
-		open "$$URL"; \
+		open "$$OPEN_URL"; \
 	elif command -v xdg-open >/dev/null 2>&1; then \
-		xdg-open "$$URL" >/dev/null 2>&1 || true; \
+		xdg-open "$$OPEN_URL" >/dev/null 2>&1 || true; \
 	else \
-		echo "Open this URL in your browser: $$URL"; \
+		echo "Open this URL in your browser: $$OPEN_URL"; \
 	fi; \
-	echo "Portfolio shell URL: $$URL"
+	echo "Portfolio shell URL: $$OPEN_URL"
 
 pwcli playwright-cli:
 	@PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" \
