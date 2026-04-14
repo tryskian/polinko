@@ -98,8 +98,10 @@ body {
   background: #bfdcc4;
 }
 
-.pipeline-one {
-  background: #a9cce3;
+.pipeline-one,
+.pipeline-two,
+.sankey-bridge {
+  background: #fdfdfd;
 }
 
 .sankey {
@@ -153,10 +155,6 @@ body {
   font-size: clamp(1rem, 1.2vw, 1.4rem);
   font-weight: 600;
   letter-spacing: -0.02em;
-}
-
-.pipeline-two {
-  background: #a9cce3;
 }
 
 .conclusion {

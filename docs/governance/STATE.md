@@ -22,6 +22,8 @@ Last updated: 2026-04-14
     - `make portfolio` is the canonical rebuild + serve + open workflow.
     - `make portfolio` opens a cache-busted URL after rebuild so the browser
       does not reuse a stale shell bundle.
+    - default launch opens a visible Playwright tab in the repo-scoped
+      `polinko` session, avoiding the previous extra browser-window gremlin.
     - `make portfolio-build` is the canonical build-only workflow.
     - stale alias `make portfolio-open` has been removed.
   - frontend interaction model currently uses pinned-stage stepping:
@@ -30,12 +32,19 @@ Last updated: 2026-04-14
     - the vertical `.board` transform moves between vertical scenes.
     - the horizontal `.horizontal-track` transform moves the middle chapter.
 - Twin Sankey portfolio shell iteration is active in the frontend lane:
-  - one `sankey` section now renders real local data through
-    `GET /portfolio/sankey-data`.
+  - the horizontal chapter is split into separate Beta 1.0 Sankey, bridge, and
+    Beta 2.0 Sankey panels.
+  - `beta-one-sankey` currently renders the real local data payload through
+    `GET /portfolio/sankey-data`; bridge and Beta 2.0 panels are scaffolded
+    for the next design/data pass.
   - current stage sequence is:
-    - `hero -> intro -> pipeline-one -> sankey -> pipeline-two -> conclusion
-      -> about-lab`
-  - `pipeline-one -> sankey -> pipeline-two` is the horizontal chapter.
+    - `hero -> intro -> pipeline-one -> beta-one-sankey -> sankey-bridge ->
+      beta-two-sankey -> pipeline-two -> conclusion -> about-lab`
+  - `pipeline-one -> beta-one-sankey -> sankey-bridge -> beta-two-sankey ->
+    pipeline-two` is the horizontal chapter.
+  - blueprint/free-pan exploration was intentionally abandoned for this UI
+    because wheel-scroll and pan gestures conflict; keep deterministic
+    pinned-stage stepping for this portfolio shell.
   - the left Sankey uses Beta 1.0 manual feedback rows from
     `.local/runtime_dbs/active/manual_evals.db`.
   - the right Sankey uses current OCR binary gate report cases from
@@ -69,6 +78,10 @@ Last updated: 2026-04-14
   - long-term context should preserve evidence chains; do not replace source
     transcripts/reports with summary-of-summary state.
   - source remains `frontend/` with generated output in `ui/`.
+  - Recommended Sankey design references for the next visual pass are
+    inspiration only, not data/structure authority:
+    - `https://dribbble.com/shots/25691831-Sankey-Diagram`
+    - `https://dribbble.com/shots/19660633-Sankey-Chart-Orion-UI-Kit`
 - OCR-forward eval model remains active:
   - lockset lane is release-gating.
   - growth lane is fail-tolerant and signal-seeking.
@@ -87,8 +100,9 @@ Last updated: 2026-04-14
 
 1. Portfolio shipping lane:
    - preserve pinned-stage stepping while refining the visual design.
-   - improve the Sankey composition and surrounding pipeline panels without
-     changing the real-data payload contract.
+   - improve the split Sankey composition, palette, opacity, node/link polish,
+     and surrounding pipeline panels without changing the real-data payload
+     contract.
    - preserve real-data evidence contracts unless explicitly changing backend
      data shape.
 2. OCR reliability lane:

@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>POLINKOfolio Interface Board</title>
-    <script type="module" crossorigin src="/assets/index-BKt9cvZ8.js"></script>
+    <script type="module" crossorigin src="/assets/index-DYDSTQe0.js"></script>
     <link rel="modulepreload" crossorigin href="/assets/vendor-d3-BmKmKfvD.js">
     <link rel="modulepreload" crossorigin href="/assets/vendor-motion-CxQyqKOh.js">
-    <link rel="stylesheet" crossorigin href="/assets/index-DTeOV6PW.css">
+    <link rel="stylesheet" crossorigin href="/assets/index-Dw1Lb-xd.css">
   </head>
   <body>
     <canvas id="webgl-stage" aria-hidden="true"></canvas>
@@ -15,11 +15,15 @@
       <section class="board" role="presentation">
         <section id="hero" class="section hero"></section>
         <section id="intro" class="section intro"></section>
-        <section id="horizontal-chapter" class="horizontal-chapter" aria-label="Pipeline, Twin Sankey, and second pipeline">
+        <section id="horizontal-chapter" class="horizontal-chapter" aria-label="Beta 1 pipeline, Sankey bridge, and Beta 2 pipeline">
           <div id="horizontal-track" class="horizontal-track">
             <section id="pipeline-one" class="horizontal-panel pipeline-one"></section>
-            <section id="sankey" class="horizontal-panel sankey" aria-label="Twin Sankey">
-              <svg id="sankey-svg" class="sankey-svg" role="img" aria-label="Comparative Sankey"></svg>
+            <section id="beta-one-sankey" class="horizontal-panel sankey beta-one-sankey" aria-label="Beta 1.0 Sankey">
+              <svg id="beta-one-sankey-svg" class="sankey-svg" role="img" aria-label="Beta 1.0 Sankey"></svg>
+            </section>
+            <section id="sankey-bridge" class="horizontal-panel sankey-bridge" aria-label="Bridge from Beta 1.0 to Beta 2.0"></section>
+            <section id="beta-two-sankey" class="horizontal-panel sankey beta-two-sankey" aria-label="Beta 2.0 Sankey">
+              <svg id="beta-two-sankey-svg" class="sankey-svg" role="img" aria-label="Beta 2.0 Sankey"></svg>
             </section>
             <section id="pipeline-two" class="horizontal-panel pipeline-two"></section>
           </div>
