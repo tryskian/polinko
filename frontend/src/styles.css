@@ -49,6 +49,8 @@ body {
   position: relative;
   width: 100%;
   min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .hero {
@@ -63,7 +65,7 @@ body {
   background: #a9cce3;
 }
 
-.sankey-film {
+.sankey {
   width: 100%;
   min-height: 100vh;
   background: #fdfdfd;

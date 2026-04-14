@@ -1,4 +1,7 @@
 import "./styles.css";
+import { gsap } from "gsap";
+import { Observer } from "gsap/Observer";
+import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import {
   Color,
   Mesh,
@@ -11,9 +14,15 @@ import {
 import * as d3 from "d3";
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 
+gsap.registerPlugin(Observer, ScrollToPlugin);
+
 const SANKEY_DATA_URL = "/portfolio/sankey-data";
 const SANKEY_LAYOUT_MIN_VALUE = 2;
 const SANKEY_LAYOUT_MAX_VALUE = 16;
+const SECTION_SCROLL_DURATION = 1.05;
+const SECTION_SCROLL_EASE = "power1.inOut";
+const SECTION_SCROLL_TOLERANCE = 20;
+const SECTION_SCROLL_COOLDOWN_MS = 360;
 
 const FLOW_COLORS = {
   legacy_source: "#2f5f8f",
@@ -153,9 +162,9 @@ function formatNumber(value) {
 }
 
 function drawComparativeSankey(payload) {
-  const film = document.getElementById("sankey-film");
+  const sankeySurface = document.getElementById("sankey");
   const svgNode = document.getElementById("sankey-svg");
-  if (!(film instanceof HTMLElement) || !(svgNode instanceof SVGSVGElement)) {
+  if (!(sankeySurface instanceof HTMLElement) || !(svgNode instanceof SVGSVGElement)) {
     return;
   }
 
@@ -279,8 +288,8 @@ function drawComparativeSankey(payload) {
 }
 
 function setupSankeyDataWiring() {
-  const film = document.getElementById("sankey-film");
-  if (!(film instanceof HTMLElement)) {
+  const sankeySurface = document.getElementById("sankey");
+  if (!(sankeySurface instanceof HTMLElement)) {
     return () => {};
   }
 
@@ -297,7 +306,7 @@ function setupSankeyDataWiring() {
   };
 
   const load = async () => {
-    film.dataset.state = "loading";
+    sankeySurface.dataset.state = "loading";
     try {
       const response = await fetch(SANKEY_DATA_URL, { cache: "no-store" });
       if (!response.ok) {
@@ -305,9 +314,9 @@ function setupSankeyDataWiring() {
       }
       payload = await response.json();
       window.__POLINKO_SANKEY_DATA__ = payload;
-      film.dataset.state = payload?.available ? "ready" : "empty";
+      sankeySurface.dataset.state = payload?.available ? "ready" : "empty";
       if (!payload?.available) {
-        film.dataset.reason = payload?.reason ?? "No Sankey data available";
+        sankeySurface.dataset.reason = payload?.reason ?? "No Sankey data available";
       }
       window.dispatchEvent(new CustomEvent("polinko:sankey-data", { detail: payload }));
     } catch (error) {
@@ -316,8 +325,8 @@ function setupSankeyDataWiring() {
         reason: error instanceof Error ? error.message : String(error),
         graphs: EMPTY_GRAPHS,
       };
-      film.dataset.state = "error";
-      film.dataset.reason = payload.reason;
+      sankeySurface.dataset.state = "error";
+      sankeySurface.dataset.reason = payload.reason;
     }
     render();
   };
@@ -329,6 +338,146 @@ function setupSankeyDataWiring() {
     if (resizeFrame) {
       cancelAnimationFrame(resizeFrame);
     }
+  };
+}
+
+function setupSectionScroll() {
+  const sections = gsap.utils.toArray(".section")
+    .filter((section) => section instanceof HTMLElement);
+  if (sections.length < 2) {
+    return () => {};
+  }
+
+  if ("scrollRestoration" in window.history) {
+    window.history.scrollRestoration = "manual";
+  }
+
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const clampIndex = gsap.utils.clamp(0, sections.length - 1);
+  let currentIndex = 0;
+  let isAnimating = false;
+  let gestureLockedUntil = 0;
+
+  const sectionTop = (index) => Math.round(
+    sections[index].getBoundingClientRect().top + window.scrollY
+  );
+
+  const nearestSectionIndex = () => {
+    const scrollY = window.scrollY;
+    return sections.reduce((nearest, section, index) => {
+      const top = section.getBoundingClientRect().top + scrollY;
+      const distance = Math.abs(top - scrollY);
+      return distance < nearest.distance ? { index, distance } : nearest;
+    }, { index: currentIndex, distance: Number.POSITIVE_INFINITY }).index;
+  };
+
+  const setActiveSection = (index) => {
+    currentIndex = clampIndex(index);
+    document.documentElement.dataset.activeSection = sections[currentIndex].id;
+  };
+
+  const goToSection = (index, immediate = false) => {
+    const nextIndex = clampIndex(index);
+    if (isAnimating && nextIndex === currentIndex) {
+      return;
+    }
+
+    setActiveSection(nextIndex);
+    isAnimating = true;
+    const duration = immediate || reducedMotion ? 0 : SECTION_SCROLL_DURATION;
+    gestureLockedUntil = performance.now() + (duration * 1000) + SECTION_SCROLL_COOLDOWN_MS;
+
+    gsap.to(window, {
+      duration,
+      ease: immediate || reducedMotion ? "none" : SECTION_SCROLL_EASE,
+      overwrite: true,
+      scrollTo: {
+        y: sectionTop(nextIndex),
+        autoKill: false,
+      },
+      onComplete: () => {
+        isAnimating = false;
+        setActiveSection(nearestSectionIndex());
+      },
+      onInterrupt: () => {
+        isAnimating = false;
+      },
+    });
+  };
+
+  const stepSection = (direction) => {
+    if (isAnimating || performance.now() < gestureLockedUntil) {
+      return;
+    }
+    setActiveSection(nearestSectionIndex());
+    goToSection(currentIndex + direction);
+  };
+
+  const initialHashId = window.location.hash.slice(1);
+  const initialIndex = sections.findIndex((section) => section.id === initialHashId);
+  goToSection(initialIndex >= 0 ? initialIndex : nearestSectionIndex(), true);
+
+  const observer = Observer.create({
+    target: window,
+    type: "wheel,touch",
+    preventDefault: true,
+    allowClicks: true,
+    lockAxis: true,
+    tolerance: SECTION_SCROLL_TOLERANCE,
+    wheelSpeed: -1,
+    onUp: () => stepSection(1),
+    onDown: () => stepSection(-1),
+  });
+
+  const snapToNearest = gsap.delayedCall(0.16, () => {
+    if (!isAnimating) {
+      goToSection(nearestSectionIndex(), true);
+    }
+  }).pause();
+
+  const onResize = () => {
+    snapToNearest.restart(true);
+  };
+
+  const onKeyDown = (event) => {
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) {
+      return;
+    }
+    const target = event.target;
+    if (
+      target instanceof HTMLElement
+      && (
+        target.isContentEditable
+        || ["INPUT", "SELECT", "TEXTAREA", "BUTTON"].includes(target.tagName)
+      )
+    ) {
+      return;
+    }
+
+    if (["ArrowDown", "PageDown", " ", "Spacebar"].includes(event.key)) {
+      event.preventDefault();
+      stepSection(1);
+    } else if (["ArrowUp", "PageUp"].includes(event.key)) {
+      event.preventDefault();
+      stepSection(-1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      goToSection(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      goToSection(sections.length - 1);
+    }
+  };
+
+  window.addEventListener("resize", onResize);
+  window.addEventListener("keydown", onKeyDown);
+
+  return () => {
+    observer.kill();
+    snapToNearest.kill();
+    window.removeEventListener("resize", onResize);
+    window.removeEventListener("keydown", onKeyDown);
+    gsap.killTweensOf(window);
   };
 }
 
@@ -375,9 +524,11 @@ function setupWebGLStage() {
 }
 
 const teardownSankey = setupSankeyDataWiring();
+const teardownSectionScroll = setupSectionScroll();
 const teardownWebGL = setupWebGLStage();
 
 window.addEventListener("beforeunload", () => {
   teardownSankey();
+  teardownSectionScroll();
   teardownWebGL();
 });

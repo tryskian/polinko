@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-04-13
+Last updated: 2026-04-14
 
 ## Current Truth
 
@@ -18,6 +18,11 @@ Last updated: 2026-04-13
   - `GET /` redirects to `GET /portfolio`.
   - `GET /portfolio` serves `ui/index.html` (build output).
   - source of truth for shell edits is `frontend/`.
+  - command surface is simplified:
+    - `make portfolio` is the canonical rebuild + serve + open workflow.
+    - stale alias `make portfolio-open` has been removed.
+  - frontend interaction model currently uses native page scroll semantics
+    (no GSAP/transform-based pseudo-scroll path).
 - Twin Sankey portfolio shell iteration is active in the frontend lane:
   - four-section Sankey strip now renders from real local data through
     `GET /portfolio/sankey-data`.
@@ -68,6 +73,11 @@ Last updated: 2026-04-13
   `.local/eval_reports/` so FAIL pressure stays visible.
 - `manual_evals.db` remains the canonical integrated manual-eval warehouse and
   fallback/explicit DB path, not the primary strict-gate chart source.
+- Playwright capture flow is deterministic and repo-scoped:
+  - wrapper config path: `.local/logs/playwright/cli.config.json`
+  - wrapper default session: `polinko`
+  - snapshot folders rotate by date under
+    `docs/peanut/assets/screenshots/playwright/DD-MM-YY`.
 
 ## Active Priorities
 
