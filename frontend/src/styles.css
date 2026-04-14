@@ -10,15 +10,15 @@ html,
 body {
   margin: 0;
   width: 100%;
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
   overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
 }
 
 body {
   background: var(--board-bg);
   font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  min-height: 100vh;
 }
 
 #webgl-stage {
@@ -31,18 +31,19 @@ body {
 }
 
 .board-wrap {
-  position: relative;
-  width: 100%;
-  min-height: 100vh;
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
   z-index: 1;
 }
 
 .board {
   position: relative;
   width: 100%;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  height: 100vh;
+  will-change: transform;
 }
 
 .section {
@@ -50,7 +51,43 @@ body {
   width: 100%;
   min-height: 100vh;
   height: 100vh;
+}
+
+.horizontal-chapter {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
   overflow: hidden;
+}
+
+.horizontal-track {
+  display: flex;
+  width: max-content;
+  height: 100%;
+  will-change: transform;
+}
+
+.horizontal-panel {
+  position: relative;
+  flex: 0 0 100vw;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
+}
+
+.horizontal-chapter.is-reduced-motion {
+  height: auto;
+  overflow: visible;
+}
+
+.horizontal-chapter.is-reduced-motion .horizontal-track {
+  display: block;
+  width: 100%;
+}
+
+.horizontal-chapter.is-reduced-motion .horizontal-panel {
+  width: 100%;
 }
 
 .hero {
@@ -66,11 +103,7 @@ body {
 }
 
 .sankey {
-  width: 100%;
-  min-height: 100vh;
   background: #fdfdfd;
-  overflow: hidden;
-  position: relative;
 }
 
 .sankey-svg {

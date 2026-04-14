@@ -1,7 +1,6 @@
 import "./styles.css";
 import { gsap } from "gsap";
 import { Observer } from "gsap/Observer";
-import { ScrollToPlugin } from "gsap/ScrollToPlugin";
 import {
   Color,
   Mesh,
@@ -14,15 +13,15 @@ import {
 import * as d3 from "d3";
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 
-gsap.registerPlugin(Observer, ScrollToPlugin);
+gsap.registerPlugin(Observer);
 
 const SANKEY_DATA_URL = "/portfolio/sankey-data";
 const SANKEY_LAYOUT_MIN_VALUE = 2;
 const SANKEY_LAYOUT_MAX_VALUE = 16;
-const SECTION_SCROLL_DURATION = 1.05;
-const SECTION_SCROLL_EASE = "power1.inOut";
-const SECTION_SCROLL_TOLERANCE = 20;
-const SECTION_SCROLL_COOLDOWN_MS = 360;
+const STAGE_STEP_DURATION = 0.92;
+const STAGE_STEP_EASE = "power2.inOut";
+const STAGE_GESTURE_TOLERANCE = 14;
+const STAGE_GESTURE_COOLDOWN_MS = 180;
 
 const FLOW_COLORS = {
   legacy_source: "#2f5f8f",
@@ -341,63 +340,74 @@ function setupSankeyDataWiring() {
   };
 }
 
-function setupSectionScroll() {
-  const sections = gsap.utils.toArray(".section")
-    .filter((section) => section instanceof HTMLElement);
-  if (sections.length < 2) {
+function setupPinnedStageStepper() {
+  const board = document.querySelector(".board");
+  const track = document.getElementById("horizontal-track");
+  if (!(board instanceof HTMLElement) || !(track instanceof HTMLElement)) {
+    return () => {};
+  }
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const scenes = [
+    { id: "hero", row: 0, column: 0 },
+    { id: "intro", row: 1, column: 0 },
+    { id: "pipeline-one", row: 2, column: 0 },
+    { id: "sankey", row: 2, column: 1 },
+    { id: "pipeline-two", row: 2, column: 2 },
+    { id: "conclusion", row: 3, column: 2 },
+    { id: "about-lab", row: 4, column: 2 },
+  ].filter((scene) => document.getElementById(scene.id));
+
+  if (scenes.length < 2) {
     return () => {};
   }
 
   if ("scrollRestoration" in window.history) {
     window.history.scrollRestoration = "manual";
   }
+  window.scrollTo(0, 0);
 
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const clampIndex = gsap.utils.clamp(0, sections.length - 1);
-  let currentIndex = 0;
+  const clampSceneIndex = gsap.utils.clamp(0, scenes.length - 1);
+  let currentIndex = Math.max(
+    0,
+    scenes.findIndex((scene) => scene.id === window.location.hash.slice(1))
+  );
   let isAnimating = false;
   let gestureLockedUntil = 0;
 
-  const sectionTop = (index) => Math.round(
-    sections[index].getBoundingClientRect().top + window.scrollY
-  );
+  const sceneTransforms = (scene) => ({
+    boardY: -scene.row * window.innerHeight,
+    trackX: -scene.column * window.innerWidth,
+  });
 
-  const nearestSectionIndex = () => {
-    const scrollY = window.scrollY;
-    return sections.reduce((nearest, section, index) => {
-      const top = section.getBoundingClientRect().top + scrollY;
-      const distance = Math.abs(top - scrollY);
-      return distance < nearest.distance ? { index, distance } : nearest;
-    }, { index: currentIndex, distance: Number.POSITIVE_INFINITY }).index;
+  const setActiveScene = (index) => {
+    currentIndex = clampSceneIndex(index);
+    document.documentElement.dataset.activeScene = scenes[currentIndex].id;
   };
 
-  const setActiveSection = (index) => {
-    currentIndex = clampIndex(index);
-    document.documentElement.dataset.activeSection = sections[currentIndex].id;
-  };
+  const goToScene = (index, immediate = false) => {
+    const nextIndex = clampSceneIndex(index);
+    const scene = scenes[nextIndex];
+    const { boardY, trackX } = sceneTransforms(scene);
+    const duration = immediate || prefersReducedMotion ? 0 : STAGE_STEP_DURATION;
 
-  const goToSection = (index, immediate = false) => {
-    const nextIndex = clampIndex(index);
-    if (isAnimating && nextIndex === currentIndex) {
-      return;
-    }
-
-    setActiveSection(nextIndex);
+    setActiveScene(nextIndex);
     isAnimating = true;
-    const duration = immediate || reducedMotion ? 0 : SECTION_SCROLL_DURATION;
-    gestureLockedUntil = performance.now() + (duration * 1000) + SECTION_SCROLL_COOLDOWN_MS;
+    gestureLockedUntil = performance.now() + (duration * 1000) + STAGE_GESTURE_COOLDOWN_MS;
 
-    gsap.to(window, {
+    gsap.to(board, {
+      y: boardY,
       duration,
-      ease: immediate || reducedMotion ? "none" : SECTION_SCROLL_EASE,
+      ease: immediate || prefersReducedMotion ? "none" : STAGE_STEP_EASE,
       overwrite: true,
-      scrollTo: {
-        y: sectionTop(nextIndex),
-        autoKill: false,
-      },
+    });
+    gsap.to(track, {
+      x: trackX,
+      duration,
+      ease: immediate || prefersReducedMotion ? "none" : STAGE_STEP_EASE,
+      overwrite: true,
       onComplete: () => {
         isAnimating = false;
-        setActiveSection(nearestSectionIndex());
       },
       onInterrupt: () => {
         isAnimating = false;
@@ -405,39 +415,24 @@ function setupSectionScroll() {
     });
   };
 
-  const stepSection = (direction) => {
+  const stepScene = (direction) => {
     if (isAnimating || performance.now() < gestureLockedUntil) {
       return;
     }
-    setActiveSection(nearestSectionIndex());
-    goToSection(currentIndex + direction);
+    goToScene(currentIndex + direction);
   };
-
-  const initialHashId = window.location.hash.slice(1);
-  const initialIndex = sections.findIndex((section) => section.id === initialHashId);
-  goToSection(initialIndex >= 0 ? initialIndex : nearestSectionIndex(), true);
 
   const observer = Observer.create({
     target: window,
-    type: "wheel,touch",
+    type: "wheel,touch,pointer",
     preventDefault: true,
     allowClicks: true,
     lockAxis: true,
-    tolerance: SECTION_SCROLL_TOLERANCE,
+    tolerance: STAGE_GESTURE_TOLERANCE,
     wheelSpeed: -1,
-    onUp: () => stepSection(1),
-    onDown: () => stepSection(-1),
+    onUp: () => stepScene(1),
+    onDown: () => stepScene(-1),
   });
-
-  const snapToNearest = gsap.delayedCall(0.16, () => {
-    if (!isAnimating) {
-      goToSection(nearestSectionIndex(), true);
-    }
-  }).pause();
-
-  const onResize = () => {
-    snapToNearest.restart(true);
-  };
 
   const onKeyDown = (event) => {
     if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) {
@@ -454,30 +449,34 @@ function setupSectionScroll() {
       return;
     }
 
-    if (["ArrowDown", "PageDown", " ", "Spacebar"].includes(event.key)) {
+    if (["ArrowDown", "PageDown", " ", "Spacebar", "ArrowRight"].includes(event.key)) {
       event.preventDefault();
-      stepSection(1);
-    } else if (["ArrowUp", "PageUp"].includes(event.key)) {
+      stepScene(1);
+    } else if (["ArrowUp", "PageUp", "ArrowLeft"].includes(event.key)) {
       event.preventDefault();
-      stepSection(-1);
+      stepScene(-1);
     } else if (event.key === "Home") {
       event.preventDefault();
-      goToSection(0);
+      goToScene(0);
     } else if (event.key === "End") {
       event.preventDefault();
-      goToSection(sections.length - 1);
+      goToScene(scenes.length - 1);
     }
   };
 
-  window.addEventListener("resize", onResize);
+  const onResize = () => goToScene(currentIndex, true);
+
+  gsap.set([board, track], { force3D: true });
+  goToScene(currentIndex, true);
   window.addEventListener("keydown", onKeyDown);
+  window.addEventListener("resize", onResize);
 
   return () => {
     observer.kill();
-    snapToNearest.kill();
-    window.removeEventListener("resize", onResize);
     window.removeEventListener("keydown", onKeyDown);
-    gsap.killTweensOf(window);
+    window.removeEventListener("resize", onResize);
+    gsap.killTweensOf([board, track]);
+    gsap.set([board, track], { clearProps: "transform" });
   };
 }
 
@@ -524,11 +523,11 @@ function setupWebGLStage() {
 }
 
 const teardownSankey = setupSankeyDataWiring();
-const teardownSectionScroll = setupSectionScroll();
+const teardownStageStepper = setupPinnedStageStepper();
 const teardownWebGL = setupWebGLStage();
 
 window.addEventListener("beforeunload", () => {
   teardownSankey();
-  teardownSectionScroll();
+  teardownStageStepper();
   teardownWebGL();
 });

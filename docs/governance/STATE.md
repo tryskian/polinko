@@ -20,18 +20,22 @@ Last updated: 2026-04-14
   - source of truth for shell edits is `frontend/`.
   - command surface is simplified:
     - `make portfolio` is the canonical rebuild + serve + open workflow.
+    - `make portfolio` opens a cache-busted URL after rebuild so the browser
+      does not reuse a stale shell bundle.
     - `make portfolio-build` is the canonical build-only workflow.
     - stale alias `make portfolio-open` has been removed.
-  - frontend interaction model currently uses GSAP section stepping
-    (`Observer` + `ScrollToPlugin`) with no transform-based pseudo-scroll path.
+  - frontend interaction model currently uses pinned-stage stepping:
+    - browser document scroll is locked (`scrollY` should remain `0`).
+    - GSAP `Observer` maps one wheel/touch/key gesture to one exact scene.
+    - the vertical `.board` transform moves between vertical scenes.
+    - the horizontal `.horizontal-track` transform moves the middle chapter.
 - Twin Sankey portfolio shell iteration is active in the frontend lane:
   - one `sankey` section now renders real local data through
     `GET /portfolio/sankey-data`.
-  - PR `#302` merged the latest visible scaffold checkpoint to `main`.
-  - current visible row is `pipeline -> sankey -> pipeline`.
-  - that scaffold is a checkpoint, not the next implementation lock. The next
-    frontend pass should reset from a clean slate rather than retrofit existing
-    section logic.
+  - current stage sequence is:
+    - `hero -> intro -> pipeline-one -> sankey -> pipeline-two -> conclusion
+      -> about-lab`
+  - `pipeline-one -> sankey -> pipeline-two` is the horizontal chapter.
   - the left Sankey uses Beta 1.0 manual feedback rows from
     `.local/runtime_dbs/active/manual_evals.db`.
   - the right Sankey uses current OCR binary gate report cases from
@@ -82,9 +86,9 @@ Last updated: 2026-04-14
 ## Active Priorities
 
 1. Portfolio shipping lane:
-   - start the next frontend pass from a clean slate.
-   - remove current portfolio UI artefacts/wiring intentionally before
-     rebuilding the desired IA.
+   - preserve pinned-stage stepping while refining the visual design.
+   - improve the Sankey composition and surrounding pipeline panels without
+     changing the real-data payload contract.
    - preserve real-data evidence contracts unless explicitly changing backend
      data shape.
 2. OCR reliability lane:

@@ -606,9 +606,12 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
 - `GET /` redirects to `GET /portfolio`.
 - `GET /portfolio` serves the static UI shell draft for immediate content
   editing and operator review.
-  - current shell mode is a form-first portfolio scaffold:
-    `hero -> intro -> pipeline -> Sankey -> pipeline -> conclusion ->
-    about/lab`
+  - current shell mode is a pinned-stage portfolio scaffold:
+    `hero -> intro -> pipeline-one -> Sankey -> pipeline-two -> conclusion ->
+    about-lab`
+  - document scroll is intentionally locked; the stage advances by transforming
+    `.board` vertically and `.horizontal-track` horizontally.
+  - one wheel/touch/key gesture should advance one exact scene.
   - visible Sankey rendering is one section composing the real legacy,
     connector, and current endpoint graphs
   - the frontend normalizes visual weights across Beta 1.0/current totals for
@@ -619,7 +622,8 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     - source: `frontend/`
     - generated output: `ui/`
     - build-only command: `make portfolio-build`
-    - launch command: `make portfolio` (rebuild + serve + open)
+    - launch command: `make portfolio` (rebuild + serve + open with a
+      cache-busted URL)
   - `ui/` is generated output only; do not hand-edit built files.
 - Playwright CLI snapshots/screenshots:
   - repo wrapper: `make pwcli ARGS="..."`

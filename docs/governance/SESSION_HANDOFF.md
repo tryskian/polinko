@@ -32,7 +32,16 @@ Last updated: 2026-04-14
   - no manual edits under `ui/`
   - canonical launch command:
     - `make portfolio` (rebuild + serve + open)
+    - launch URL includes a `rebuild=<timestamp>` cache-bust query.
   - `make portfolio-open` alias has been removed.
+- Portfolio UI interaction model is pinned-stage stepping:
+  - document scroll is locked (`scrollY` should stay `0`).
+  - one wheel/touch/key gesture advances one exact scene.
+  - vertical scenes move through `.board` transform.
+  - horizontal chapter moves through `.horizontal-track` transform.
+  - active sequence:
+    `hero -> intro -> pipeline-one -> sankey -> pipeline-two -> conclusion ->
+    about-lab`
 - Twin Sankey portfolio shell path is active for current cycle:
   - `GET /portfolio/sankey-data` supplies the real-data payload.
   - left side uses Beta 1.0 manual feedback rows from `manual_evals.db`.
@@ -42,11 +51,10 @@ Last updated: 2026-04-14
     evidence-continuity anchor, not fabricated row-level joins.
   - missing sources must render as no-data, not decorative placeholder data.
 - Portfolio UI checkpoint:
-  - PR `#302` merged the latest scaffold checkpoint to `main`.
-  - current visible row is `pipeline -> sankey -> pipeline`.
-  - this is a checkpoint, not a locked implementation. Next frontend pass
-    should start from a clean slate rather than retrofit the current scaffold.
-  - do not remove or fake the real-data Sankey payload contract while resetting
+  - pinned-stage stepping is the current interaction baseline.
+  - next design pass should improve the Sankey and pipeline visuals on top of
+    the pinned stage, not reintroduce native scroll snap/scrub behavior.
+  - do not remove or fake the real-data Sankey payload contract while refining
     the frontend shell.
 - OCR lockset/growth lane model remains active and unchanged.
 - Eval gate contract remains binary pass/fail.
@@ -63,10 +71,9 @@ Last updated: 2026-04-14
 
 ## Next Execution Slice
 
-1. Portfolio frontend fresh-slate reset:
-   - remove current portfolio UI artefacts/wiring intentionally.
-   - rebuild the shell from the desired IA instead of retrofitting the current
-     scaffold.
+1. Portfolio frontend design pass:
+   - preserve pinned-stage stepping.
+   - refine the Sankey and pipeline visual composition.
    - preserve backend evidence/data contracts unless explicitly changing them.
 2. OCR hardening kernels (lockset stability + growth signal quality).
 3. Keep docs aligned via canonical ownership map.
