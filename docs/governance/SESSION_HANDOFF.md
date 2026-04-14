@@ -2,7 +2,7 @@
 
 # Session Handoff (Current Only)
 
-Last updated: 2026-04-13
+Last updated: 2026-04-14
 
 ## Startup
 
@@ -14,7 +14,7 @@ Last updated: 2026-04-13
 3. Run environment sanity:
    - `make doctor-env`
 4. If frontend changed, rebuild shell output:
-   - `make frontend-build`
+   - `make portfolio-build`
 
 ## Current Snapshot
 
@@ -28,8 +28,11 @@ Last updated: 2026-04-13
   - `GET /portfolio` -> `ui/index.html`
 - Frontend source/build contract is active:
   - edit in `frontend/`
-  - build to `ui/` with `make frontend-build`
+  - build to `ui/` with `make portfolio-build`
   - no manual edits under `ui/`
+  - canonical launch command:
+    - `make portfolio` (rebuild + serve + open)
+  - `make portfolio-open` alias has been removed.
 - Twin Sankey portfolio shell path is active for current cycle:
   - `GET /portfolio/sankey-data` supplies the real-data payload.
   - left side uses Beta 1.0 manual feedback rows from `manual_evals.db`.
@@ -40,8 +43,7 @@ Last updated: 2026-04-13
   - missing sources must render as no-data, not decorative placeholder data.
 - Portfolio UI checkpoint:
   - PR `#302` merged the latest scaffold checkpoint to `main`.
-  - current visible row is `pipeline -> sankey 1 -> sankey 2 -> sankey 3 ->
-    sankey 4 -> pipeline`.
+  - current visible row is `pipeline -> sankey -> pipeline`.
   - this is a checkpoint, not a locked implementation. Next frontend pass
     should start from a clean slate rather than retrofit the current scaffold.
   - do not remove or fake the real-data Sankey payload contract while resetting
@@ -54,6 +56,10 @@ Last updated: 2026-04-13
     data path.
 - Transcripts/raw reports/screenshots are evidence anchors; do not replace them
   with recursive summaries.
+- Playwright wrapper defaults are deterministic and repo-scoped:
+  - config path: `.local/logs/playwright/cli.config.json`
+  - default session: `polinko`
+  - snapshot folders: `docs/peanut/assets/screenshots/playwright/DD-MM-YY`
 
 ## Next Execution Slice
 

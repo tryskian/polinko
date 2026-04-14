@@ -194,21 +194,20 @@ Eval visualization and surfaces:
 
 - `GET /` redirects to `GET /portfolio`.
 - `GET /portfolio` serves the form-first portfolio scaffold:
-  - section path: hero -> intro -> pipeline -> Sankey panel 1 ->
-    Sankey panel 2 -> Sankey panel 3 -> Sankey panel 4 -> pipeline ->
+  - section path: hero -> intro -> pipeline -> Sankey -> pipeline ->
     conclusion -> about/lab
-  - the twin-Sankey film strip spans the four Sankey panels and composes the
-    real legacy, connector, and current endpoint graphs
+  - the Twin Sankey section composes the real legacy, connector, and current
+    endpoint graphs
   - visual weights are normalized for readability across Beta 1.0 and current
     totals; labels/tooltips retain actual source counts
-  - eval endpoint sections are layout labels only until the content pass
   - current scaffold is a merged checkpoint, not a locked implementation; next
     frontend pass should reset from a clean slate rather than retrofit section
     logic
   - explicit no-data behavior when real local sources are unavailable
 - frontend shell build contract:
   - edit source in `frontend/`
-  - generate served shell with `make frontend-build` (writes to `ui/`)
+  - generate served shell with `make portfolio-build` (writes to `ui/`)
+  - use `make portfolio` for the canonical rebuild + serve + open workflow
   - do not hand-edit built files under `ui/`
 - Playwright CLI captures should use the repo wrapper so snapshots/screenshots
   are grouped by local day under `docs/peanut/assets/screenshots/playwright`.
