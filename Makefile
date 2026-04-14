@@ -30,7 +30,6 @@ GATE_VECTOR_DB ?= /tmp/polinko-quality-gate-vector.db
 HALLUCINATION_EVAL_MODE ?= judge
 HALLUCINATION_JUDGE_MODEL ?= gpt-4.1-mini
 HALLUCINATION_JUDGE_API_KEY_ENV ?= OPENAI_API_KEY
-BRAINTRUST_OPENAI_BASE_URL ?=
 HALLUCINATION_JUDGE_BASE_URL ?=
 HALLUCINATION_MIN_ACCEPTABLE_SCORE ?= 5
 STYLE_CASE_ATTEMPTS ?= 1
@@ -127,9 +126,15 @@ CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
 CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
+PLAYWRIGHT_SNAPSHOT_BASE_DIR ?= docs/peanut/assets/screenshots/playwright
+PLAYWRIGHT_SNAPSHOT_DAY ?= $(shell date +%F)
+PWCLI_TOOL ?= tools/pwcli_daily.sh
+REQUIREMENTS_IN ?= requirements.in
+REQUIREMENTS_LOCK ?= requirements.lock
+PIP_TOOLS_VERSION ?= 7.5.3
 
-.PHONY: chat venv env notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-docs-check eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
-.PHONY: frontend-install frontend-build portfolio portfolio-open
+.PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-docs-check eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: frontend-install frontend-build portfolio portfolio-open pwcli playwright-cli playwright-snapshot-dir
 
 chat:
 	$(PYTHON) app.py
@@ -148,6 +153,21 @@ venv env:
 	. "$$ACTIVATE_PATH"; \
 	echo "VIRTUAL_ENV=$$VIRTUAL_ENV"; \
 	exec "$$SHELL" -i
+
+deps-install:
+	$(PYTHON) -m pip install -r "$(REQUIREMENTS_LOCK)"
+
+deps-lock:
+	@set -eu; \
+	if ! $(PYTHON) -m piptools --version >/dev/null 2>&1; then \
+		$(PYTHON) -m pip install "pip-tools==$(PIP_TOOLS_VERSION)"; \
+	fi; \
+	$(PYTHON) -m piptools compile \
+		--resolver=backtracking \
+		--allow-unsafe \
+		--strip-extras \
+		--output-file "$(REQUIREMENTS_LOCK)" \
+		"$(REQUIREMENTS_IN)"
 
 notebook-setup:
 	$(PYTHON) -m pip install -r requirements.notebook.txt
@@ -536,6 +556,16 @@ portfolio:
 portfolio-open:
 	@$(MAKE) --no-print-directory portfolio
 
+pwcli playwright-cli:
+	@PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" \
+		PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" \
+		"$(PWCLI_TOOL)" $(ARGS)
+
+playwright-snapshot-dir:
+	@PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" \
+		PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" \
+		"$(PWCLI_TOOL)" --print-dir
+
 session-status:
 	@echo "== Server =="
 	@$(MAKE) --no-print-directory server-daemon-status || true
@@ -722,24 +752,6 @@ eval-hallucination:
 
 eval-hallucination-deterministic:
 	$(PYTHON) -m tools.eval_hallucination --evaluation-mode deterministic --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
-
-eval-hallucination-braintrust:
-	@set -eu; \
-	BASE_URL="$(HALLUCINATION_JUDGE_BASE_URL)"; \
-	if [ -z "$$BASE_URL" ]; then \
-		BASE_URL="$(BRAINTRUST_OPENAI_BASE_URL)"; \
-	fi; \
-	if [ -z "$$BASE_URL" ]; then \
-		echo "Missing Braintrust base URL."; \
-		echo "Set BRAINTRUST_OPENAI_BASE_URL (recommended: https://api.braintrust.dev/v1/proxy)"; \
-		echo "or pass HALLUCINATION_JUDGE_BASE_URL explicitly."; \
-		exit 2; \
-	fi; \
-	if [ -z "$${BRAINTRUST_API_KEY:-}" ]; then \
-		echo "Missing BRAINTRUST_API_KEY in environment."; \
-		exit 2; \
-	fi; \
-	$(PYTHON) -m tools.eval_hallucination --evaluation-mode judge --judge-api-key-env BRAINTRUST_API_KEY --judge-base-url "$$BASE_URL" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 eval-hallucination-report:
 	@mkdir -p eval_reports

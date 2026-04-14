@@ -196,12 +196,15 @@
 
 - Category: `eval_quality`
 - Tags: `hallucination_gate`, `judge_endpoint`, `braintrust`, `ci_optional`
-- Decision: Extend hallucination eval judge config with `--judge-api-key-env`
-  and `--judge-base-url`, add `make hallucination-gate`, and wire an optional
-  CI step that runs strict hallucination gating against an OpenAI-compatible
-  Braintrust endpoint when repo vars/secrets are present.
-- Why: Enables P1 judge-gate rollout without changing runtime assistant
-  behaviour and avoids hard-coding a single judge provider path.
+- Status: Superseded by D-221. The Braintrust-specific CI scaffold was based on
+  an unverified inferred integration, not a confirmed connection, and has been
+  removed from active workflow.
+- Decision: Historical record of the original scaffold: extend hallucination eval
+  judge config with `--judge-api-key-env` and `--judge-base-url`, add
+  `make hallucination-gate`, and wire an optional CI step for a provider-specific
+  remote judge endpoint when repo vars/secrets are present.
+- Why: The confirmed durable part was provider-neutral judge configuration; the
+  provider-specific Braintrust assumption was not validated.
 
 ## D-026: Host/container interpreter separation for VS Code Python resolution
 
@@ -241,11 +244,14 @@
 
 - Category: `eval_quality`
 - Tags: `threshold_tuning`, `calibration`, `hallucination_gate`
+- Status: Braintrust-specific threshold tuning superseded by D-221 because the
+  Braintrust connection was never confirmed; generic hallucination gate threshold
+  support remains active.
 - Decision: Make hallucination gate score threshold configurable via
   `HALLUCINATION_MIN_ACCEPTABLE_SCORE` and add a report-based calibration helper
   (`make calibrate-hallucination-threshold`).
-- Why: Supports explicit Braintrust threshold tuning in CI while preserving
-  default behaviour when calibration vars are not yet set.
+- Why: Supports explicit threshold tuning while preserving default behaviour when
+  calibration vars are not yet set.
 
 ## D-030: Start P2 multimodal retrieval A/B harness with CLIP-proxy arm
 
@@ -3748,3 +3754,53 @@
   `STATE` or `SESSION_HANDOFF` summaries while preserving the evidence-chain
   rule that summaries must be updated intentionally, not generated as a
   substitute for source evidence.
+
+## D-220: Use a real Python dependency lock strategy
+
+- Date: `2026-04-14`
+- Category: `dependency_governance`
+- Tags: `python`, `pip-tools`, `requirements_lock`, `ci`, `docker`
+- Decision:
+  - replace `requirements.txt` as the dependency source with
+    `requirements.in`.
+  - generate `requirements.lock` with `pip-tools` / `pip-compile` so the lock
+    contains the full resolved transitive dependency set.
+  - install Python dependencies from `requirements.lock` in local setup, CI,
+    and Docker.
+  - keep direct dependency edits in `requirements.in`; regenerate the lock with
+    `make deps-lock`.
+  - align CI to Python `3.14`, matching the local/Docker runtime used to
+    generate the lock.
+- Validation:
+  - `make deps-lock`
+  - `make deps-install`
+  - `make doctor-env`
+  - `./venv/bin/python -m unittest tests.test_build_manual_evals_db tests.test_manual_evals_surface`
+  - `git diff --check`
+- Why: The old `requirements.lock` duplicated direct pins from
+  `requirements.txt`, so it drifted without providing lockfile guarantees.
+  A generated transitive lock gives one install target and one editable input,
+  reducing dependency ambiguity across local, CI, and container workflows.
+
+## D-221: Remove unverified Braintrust workflow wiring
+
+- Date: `2026-04-14`
+- Category: `workflow_governance`
+- Tags: `braintrust`, `ci`, `hallucination_gate`, `anti_inference`
+- Decision:
+  - remove the optional Braintrust hallucination gate from GitHub Actions.
+  - remove `make eval-hallucination-braintrust` and Braintrust-specific
+    environment variables from the Makefile.
+  - keep generic OpenAI-compatible judge endpoint support through
+    `HALLUCINATION_JUDGE_BASE_URL` and `HALLUCINATION_JUDGE_API_KEY_ENV`.
+  - update tests and docs to use neutral custom-judge examples instead of
+    Braintrust-specific examples.
+- Validation:
+  - `rg -n "eval-hallucination-braintrust|BRAINTRUST|braintrust" Makefile .github docs/runtime tests tools --glob '!docs/peanut/**'`
+  - `./venv/bin/python -m unittest tests.test_eval_hallucination`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: The repo was carrying active Braintrust integration claims without a
+  real configured Braintrust connection. That creates misleading workflow
+  surface area and editor warnings. Removing the provider-specific wiring keeps
+  the real generic judge capability while preserving the no-guessing rule.

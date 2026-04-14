@@ -8,5 +8,22 @@ export default defineConfig({
   build: {
     outDir: uiDir,
     emptyOutDir: true,
+    chunkSizeWarningLimit: 650,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("/node_modules/d3") || id.includes("/node_modules/d3-sankey")) {
+            return "vendor-d3";
+          }
+          if (id.includes("/node_modules/gsap") || id.includes("/node_modules/three")) {
+            return "vendor-motion";
+          }
+          if (id.includes("/node_modules/")) {
+            return "vendor";
+          }
+          return undefined;
+        },
+      },
+    },
   },
 });

@@ -1,6 +1,14 @@
 import "./styles.css";
 import { gsap } from "gsap";
-import * as THREE from "three";
+import {
+  Color,
+  Mesh,
+  MeshBasicMaterial,
+  PerspectiveCamera,
+  PlaneGeometry,
+  Scene,
+  WebGLRenderer,
+} from "three";
 import * as d3 from "d3";
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 
@@ -331,19 +339,19 @@ function setupWebGLStage() {
     return () => {};
   }
 
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x202124);
+  const scene = new Scene();
+  scene.background = new Color(0x202124);
 
-  const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 100);
+  const camera = new PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 100);
   camera.position.z = 3;
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(6, 6, 1, 1),
-    new THREE.MeshBasicMaterial({ color: 0x202124 })
+  const plane = new Mesh(
+    new PlaneGeometry(6, 6, 1, 1),
+    new MeshBasicMaterial({ color: 0x202124 })
   );
   plane.position.z = -0.4;
   scene.add(plane);

@@ -54,7 +54,7 @@ make open-api-docs
 
 1. Use a local virtual environment (`./venv` or
    `./polinko-repositioning-system`).
-1. Install Python deps: `pip install -r requirements.txt`.
+1. Install Python deps: `make deps-install`.
 1. Copy env file: `cp .env.example .env`.
 1. Set `OPENAI_API_KEY` in `.env`.
 1. Optional notebook/viz stack (local/private lane):
@@ -82,6 +82,10 @@ Notes:
   `make open-billing`).
 - notebook commands:
   `make notebook-setup`, `make notes` (aliases: `make notebook`, `make nb`)
+- Python dependency lock strategy:
+  - edit direct dependencies in `requirements.in`
+  - regenerate the full lock with `make deps-lock`
+  - install from `requirements.lock` with `make deps-install`
 
 ## Core Commands
 
@@ -206,11 +210,13 @@ Eval visualization and surfaces:
   - edit source in `frontend/`
   - generate served shell with `make frontend-build` (writes to `ui/`)
   - do not hand-edit built files under `ui/`
-- Playwright CLI captures use `.playwright/cli.config.json` and write to
-  `docs/peanut/assets/screenshots/playwright`.
-  Use `pwcli --session <name> open <url> --config .playwright/cli.config.json`
-  for CLI sessions; explicit `--filename` values should include the same
-  directory path.
+- Playwright CLI captures should use the repo wrapper so snapshots/screenshots
+  are grouped by local day under `docs/peanut/assets/screenshots/playwright`.
+  Use `make pwcli ARGS="--session <name> open <url>"`; this generates a dated
+  config automatically, for example
+  `docs/peanut/assets/screenshots/playwright/YYYY-MM-DD`.
+  Run `make playwright-snapshot-dir` to print the active folder. If passing an
+  explicit `--filename`, keep it under that dated folder.
 
 ## CLI Modes
 

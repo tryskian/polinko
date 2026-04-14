@@ -434,7 +434,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--judge-base-url",
         default="",
-        help="Optional OpenAI-compatible base URL for judge requests (for example Braintrust gateway).",
+        help="Optional OpenAI-compatible base URL for judge requests.",
     )
     parser.add_argument(
         "--evaluation-mode",
