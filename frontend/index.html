@@ -9,44 +9,17 @@
     <canvas id="webgl-stage" aria-hidden="true"></canvas>
     <main class="board-wrap" aria-label="Portfolio interface layout board">
       <section class="board" role="presentation">
-        <section id="hero" class="block hero" data-label="hero">
-          <h1 class="scaffold-label">hero</h1>
+        <section id="hero" class="section hero"></section>
+        <section id="intro" class="section intro"></section>
+        <section id="pipeline-one" class="section pipeline-one"></section>
+        <section id="sankey-film" class="section sankey-film" aria-label="Twin Sankey filmstrip">
+          <svg id="sankey-svg" class="sankey-svg" role="img" aria-label="Twin mirrored Sankey"></svg>
         </section>
-        <section id="intro" class="block intro" data-label="intro">
-          <h2 class="scaffold-label">intro</h2>
-        </section>
-        <section id="beta-one-pipeline" class="block beta-one-pipeline" data-label="Beta 1.0 pipeline">
-          <h2 class="scaffold-label">pipeline</h2>
-        </section>
-        <section id="sankey-panel-one" class="block sankey-panel sankey-panel-one" data-label="sankey panel 1">
-          <h2 class="scaffold-label">sankey 1</h2>
-        </section>
-        <section id="sankey-panel-two" class="block sankey-panel sankey-panel-two" data-label="sankey panel 2">
-          <h2 class="scaffold-label">sankey 2</h2>
-        </section>
-        <section id="sankey-panel-three" class="block sankey-panel sankey-panel-three" data-label="sankey panel 3">
-          <h2 class="scaffold-label">sankey 3</h2>
-        </section>
-        <section id="sankey-panel-four" class="block sankey-panel sankey-panel-four" data-label="sankey panel 4">
-          <h2 class="scaffold-label">sankey 4</h2>
-        </section>
-        <section id="current-ocr-pipeline" class="block current-ocr-pipeline" data-label="Current OCR pipeline">
-          <h2 class="scaffold-label">pipeline</h2>
-        </section>
-        <div id="sankey-film" class="sankey-film" aria-label="twin sankey film strip">
-          <div class="sankey-stage" aria-label="twin sankey scaffold">
-            <svg id="sankey-flow" class="sankey-svg" role="img" aria-label="Twin Sankey flow"></svg>
-          </div>
-        </div>
-        <section id="conclusion" class="block conclusion" data-label="conclusion">
-          <h2 class="scaffold-label">conclusion</h2>
-        </section>
-        <section id="about" class="block about" data-label="about / lab">
-          <h2 class="scaffold-label">about / lab</h2>
-        </section>
+        <section id="pipeline-two" class="section pipeline-two"></section>
+        <section id="conclusion" class="section conclusion"></section>
+        <section id="about-lab" class="section about-lab"></section>
       </section>
     </main>
-
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

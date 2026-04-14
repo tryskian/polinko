@@ -4,20 +4,9 @@ import * as THREE from "three";
 import * as d3 from "d3";
 import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 
-const SECTION_SEQUENCE = [
-  "hero",
-  "intro",
-  "beta-one-pipeline",
-  "sankey-panel-one",
-  "sankey-panel-two",
-  "sankey-panel-three",
-  "sankey-panel-four",
-  "current-ocr-pipeline",
-  "conclusion",
-  "about",
-];
-
 const SANKEY_DATA_URL = "/portfolio/sankey-data";
+const SANKEY_LAYOUT_MIN_VALUE = 2;
+const SANKEY_LAYOUT_MAX_VALUE = 16;
 
 const FLOW_COLORS = {
   legacy_source: "#2f5f8f",
@@ -48,59 +37,54 @@ function cloneGraph(graph) {
   };
 }
 
-function remapGraphNodeId(nodeId) {
-  if (nodeId.startsWith("bridge_signal_")) {
-    return nodeId.replace("bridge_signal_", "legacy_signal_");
+function remapNodeId(id) {
+  if (id.startsWith("bridge_signal_")) {
+    return id.replace("bridge_signal_", "legacy_signal_");
   }
-  if (nodeId.startsWith("bridge_lane_")) {
-    return nodeId.replace("bridge_lane_", "current_lane_");
+  if (id.startsWith("bridge_lane_")) {
+    return id.replace("bridge_lane_", "current_lane_");
   }
-  return nodeId;
+  return id;
 }
 
-function buildTwinGraph(graphs) {
+function buildComparativeGraph(graphs) {
   const nodes = new Map();
-  const rawNodeIncoming = new Map();
-  const rawNodeOutgoing = new Map();
-  const links = [];
-  const legacyBridgeTotal = d3.sum(
-    graphs?.bridge?.links ?? [],
-    (link) => (link.kind === "legacy_signal_to_bridge" ? Number(link.value) || 0 : 0)
-  );
-  const currentBridgeTotal = d3.sum(
-    graphs?.bridge?.links ?? [],
-    (link) => (link.kind === "bridge_to_current_lane" ? Number(link.value) || 0 : 0)
-  );
-  const legacyVisualScale = legacyBridgeTotal > 0 && currentBridgeTotal > 0
-    ? currentBridgeTotal / legacyBridgeTotal
-    : 1;
-  const scaledLegacyKinds = new Set([
-    "legacy_feedback_to_outcome",
-    "legacy_outcome_to_signal",
-    "legacy_signal_to_bridge",
-  ]);
+  const links = new Map();
+  const incoming = new Map();
+  const outgoing = new Map();
 
   const addNode = (node) => {
-    const id = remapGraphNodeId(String(node?.id ?? ""));
-    if (!id || id === "current_binary_reports" || nodes.has(id)) {
+    const id = remapNodeId(String(node?.id ?? ""));
+    if (!id) {
       return;
     }
-    nodes.set(id, { ...node, id });
+    if (!nodes.has(id)) {
+      nodes.set(id, { ...node, id });
+    }
   };
 
   const addLink = (link) => {
-    const source = remapGraphNodeId(String(link?.source ?? ""));
-    const target = remapGraphNodeId(String(link?.target ?? ""));
-    if (!source || !target || source === "current_binary_reports" || target === "current_binary_reports") {
+    const source = remapNodeId(String(link?.source ?? ""));
+    const target = remapNodeId(String(link?.target ?? ""));
+    if (!source || !target) {
       return;
     }
-    const rawValue = Number(link?.value) || 0;
-    const visualValue = scaledLegacyKinds.has(String(link?.kind))
-      ? rawValue * legacyVisualScale
-      : rawValue;
-    rawNodeOutgoing.set(source, (rawNodeOutgoing.get(source) ?? 0) + rawValue);
-    rawNodeIncoming.set(target, (rawNodeIncoming.get(target) ?? 0) + rawValue);
-    links.push({ ...link, source, target, rawValue, value: visualValue });
+    const value = Number(link?.value) || 0;
+    const kind = String(link?.kind ?? "");
+    const key = `${source}__${target}__${kind}`;
+    if (!links.has(key)) {
+      links.set(key, {
+        source,
+        target,
+        value: 0,
+        kind,
+        provenance: link?.provenance ?? "",
+      });
+    }
+    const row = links.get(key);
+    row.value += value;
+    outgoing.set(source, (outgoing.get(source) ?? 0) + value);
+    incoming.set(target, (incoming.get(target) ?? 0) + value);
   };
 
   [graphs?.legacy, graphs?.bridge, graphs?.current].forEach((graph) => {
@@ -109,13 +93,34 @@ function buildTwinGraph(graphs) {
   });
 
   return {
-    id: "twin",
-    label: "Twin Sankey",
     nodes: Array.from(nodes.values()).map((node) => ({
       ...node,
-      rawValue: Math.max(rawNodeIncoming.get(node.id) ?? 0, rawNodeOutgoing.get(node.id) ?? 0),
+      rawValue: Math.max(incoming.get(node.id) ?? 0, outgoing.get(node.id) ?? 0),
     })),
-    links,
+    links: Array.from(links.values()),
+  };
+}
+
+function scaleGraphForLayout(graph) {
+  const positiveRawValues = (graph?.links ?? [])
+    .map((link) => Number(link?.value) || 0)
+    .filter((value) => value > 0);
+  const minRaw = positiveRawValues.length ? Math.min(...positiveRawValues) : 0;
+  const maxRaw = positiveRawValues.length ? Math.max(...positiveRawValues) : 0;
+  const minLog = Math.log1p(minRaw);
+  const maxLog = Math.log1p(maxRaw);
+  const denom = Math.max(maxLog - minLog, Number.EPSILON);
+
+  return {
+    nodes: (graph?.nodes ?? []).map((node) => ({ ...node })),
+    links: (graph?.links ?? []).map((link) => {
+      const rawValue = Number(link?.value) || 0;
+      const scaledValue = rawValue > 0
+        ? SANKEY_LAYOUT_MIN_VALUE
+          + ((Math.log1p(rawValue) - minLog) / denom) * (SANKEY_LAYOUT_MAX_VALUE - SANKEY_LAYOUT_MIN_VALUE)
+        : 0;
+      return { ...link, rawValue, value: scaledValue };
+    }),
   };
 }
 
@@ -129,54 +134,32 @@ function nodeColor(node) {
 }
 
 function linkColor(link) {
-  return FLOW_COLORS[link.kind] ?? nodeColor(link.source) ?? "rgba(30, 30, 30, 0.55)";
+  return FLOW_COLORS[link.kind] ?? "rgba(35, 35, 35, 0.45)";
 }
 
 function formatNumber(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) {
     return "0";
   }
-  return new Intl.NumberFormat("en").format(numeric);
+  return new Intl.NumberFormat("en").format(n);
 }
 
-function stretchSankeyYToFit(graph, top, bottom) {
-  const minY = d3.min(graph.nodes, (node) => node.y0);
-  const maxY = d3.max(graph.nodes, (node) => node.y1);
-  if (typeof minY !== "number" || typeof maxY !== "number") {
-    return;
-  }
-  const span = maxY - minY;
-  const targetSpan = bottom - top;
-  if (span <= 0) {
-    return;
-  }
-  const scale = targetSpan / span;
-  graph.nodes.forEach((node) => {
-    node.y0 = top + (node.y0 - minY) * scale;
-    node.y1 = top + (node.y1 - minY) * scale;
-  });
-  graph.links.forEach((link) => {
-    link.y0 = top + (link.y0 - minY) * scale;
-    link.y1 = top + (link.y1 - minY) * scale;
-    link.width *= scale;
-  });
-}
-
-function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
-  const section = document.getElementById(sectionId);
-  const svgNode = document.getElementById(svgId);
-  if (!(section instanceof HTMLElement) || !(svgNode instanceof SVGSVGElement)) {
+function drawComparativeSankey(payload) {
+  const film = document.getElementById("sankey-film");
+  const svgNode = document.getElementById("sankey-svg");
+  if (!(film instanceof HTMLElement) || !(svgNode instanceof SVGSVGElement)) {
     return;
   }
 
-  const boundsNode = svgNode.parentElement instanceof HTMLElement ? svgNode.parentElement : section;
-  const width = Math.max(boundsNode.clientWidth, 1);
-  const height = Math.max(boundsNode.clientHeight, 1);
+  const width = Math.max(film.clientWidth, 1);
+  const height = Math.max(film.clientHeight, 1);
   const svg = d3.select(svgNode);
-  svg.selectAll("*").remove();
   svg.attr("viewBox", `0 0 ${width} ${height}`);
+  svg.selectAll("*").remove();
 
+  const graphs = payload?.graphs ?? EMPTY_GRAPHS;
+  const graph = scaleGraphForLayout(buildComparativeGraph(graphs));
   if (!graphHasData(graph)) {
     svg
       .append("text")
@@ -184,28 +167,31 @@ function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
       .attr("x", width / 2)
       .attr("y", height / 2)
       .attr("text-anchor", "middle")
-      .text("No real twin-sankey data available");
+      .text("No Sankey data available");
     return;
   }
 
-  const nodeWidth = Math.min(30, Math.max(12, Math.floor(width * 0.014)));
-  const nodePadding = Math.max(10, Math.floor(height * 0.022));
+  const chartWidth = width;
+  const chartLeft = 0;
+  const insetX = 0;
+  const chartHeight = Math.round(
+    Math.min(height - 32, Math.max(260, height * 0.52))
+  );
+  const chartTop = Math.round((height - chartHeight) / 2);
+  const insetY = Math.max(16, Math.round(chartHeight * 0.07));
 
   const layout = sankey()
     .nodeId((node) => node.id)
-    .nodeWidth(nodeWidth)
-    .nodePadding(nodePadding)
+    .nodeWidth(Math.max(8, Math.round(chartWidth * 0.005)))
+    .nodePadding(Math.max(8, Math.round(height * 0.018)))
     .extent([
-      [0, 0],
-      [width, height],
+      [chartLeft + insetX, chartTop + insetY],
+      [chartLeft + chartWidth - insetX, chartTop + chartHeight - insetY],
     ]);
 
   const sankeyGraph = layout(cloneGraph(graph));
-  stretchSankeyYToFit(sankeyGraph, edgeInset, height - edgeInset);
 
-  const root = svg.append("g");
-
-  root
+  svg
     .append("g")
     .selectAll("path")
     .data(sankeyGraph.links)
@@ -214,16 +200,14 @@ function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
     .attr("d", sankeyLinkHorizontal())
     .attr("stroke", (link) => linkColor(link))
     .attr("stroke-width", (link) => Math.max(1, link.width))
-    .attr("stroke-opacity", 0.52)
-    .attr("fill", "none")
     .append("title")
     .text((link) => {
       const source = link.source.label ?? link.source.id;
       const target = link.target.label ?? link.target.id;
-      return `${source} -> ${target}: ${formatNumber(link.rawValue ?? link.value)} (${link.provenance ?? "source data"})`;
+      return `${source} -> ${target}: ${formatNumber(link.rawValue ?? link.value)}`;
     });
 
-  root
+  svg
     .append("g")
     .selectAll("rect")
     .data(sankeyGraph.nodes)
@@ -236,61 +220,18 @@ function drawSankey({ sectionId, svgId, graph, edgeInset = 0 }) {
     .attr("fill", (node) => nodeColor(node))
     .append("title")
     .text((node) => `${node.label ?? node.id}: ${formatNumber(node.rawValue ?? node.value)}`);
-
-  root
-    .append("g")
-    .attr("class", "sankey-labels")
-    .selectAll("text")
-    .data(sankeyGraph.nodes)
-    .join("text")
-    .attr("class", "sankey-label")
-    .attr("x", (node) => (node.x0 < width / 2 ? node.x1 + 10 : node.x0 - 10))
-    .attr("y", (node) => (node.y0 + node.y1) / 2)
-    .attr("dy", "0.35em")
-    .attr("text-anchor", (node) => (node.x0 < width / 2 ? "start" : "end"))
-    .text((node) => node.label ?? node.id);
 }
 
-function setupFilmSankey() {
+function setupSankeyDataWiring() {
+  const film = document.getElementById("sankey-film");
+  if (!(film instanceof HTMLElement)) {
+    return () => {};
+  }
+
   let resizeFrame = 0;
   let payload = null;
 
-  const updateCopy = () => {
-    const available = Boolean(payload?.available);
-    const section = document.getElementById("sankey-film");
-    if (section instanceof HTMLElement) {
-      section.dataset.state = available ? "ready" : "empty";
-    }
-  };
-
-  const render = () => {
-    const graphs = payload?.graphs ?? EMPTY_GRAPHS;
-    drawSankey({
-      sectionId: "sankey-film",
-      svgId: "sankey-flow",
-      graph: buildTwinGraph(graphs),
-      edgeInset: 0,
-    });
-    updateCopy();
-  };
-
-  const load = async () => {
-    try {
-      const response = await fetch(SANKEY_DATA_URL, { cache: "no-store" });
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
-      payload = await response.json();
-    } catch (error) {
-      payload = {
-        available: false,
-        reason: `Unable to load ${SANKEY_DATA_URL}: ${error.message}`,
-        summary: {},
-        graphs: EMPTY_GRAPHS,
-      };
-    }
-    render();
-  };
+  const render = () => drawComparativeSankey(payload);
 
   const onResize = () => {
     if (resizeFrame) {
@@ -299,10 +240,34 @@ function setupFilmSankey() {
     resizeFrame = requestAnimationFrame(render);
   };
 
-  updateCopy();
-  render();
-  load();
+  const load = async () => {
+    film.dataset.state = "loading";
+    try {
+      const response = await fetch(SANKEY_DATA_URL, { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      payload = await response.json();
+      window.__POLINKO_SANKEY_DATA__ = payload;
+      film.dataset.state = payload?.available ? "ready" : "empty";
+      if (!payload?.available) {
+        film.dataset.reason = payload?.reason ?? "No Sankey data available";
+      }
+      window.dispatchEvent(new CustomEvent("polinko:sankey-data", { detail: payload }));
+    } catch (error) {
+      payload = {
+        available: false,
+        reason: error instanceof Error ? error.message : String(error),
+        graphs: EMPTY_GRAPHS,
+      };
+      film.dataset.state = "error";
+      film.dataset.reason = payload.reason;
+    }
+    render();
+  };
+
   window.addEventListener("resize", onResize);
+  load();
   return () => {
     window.removeEventListener("resize", onResize);
     if (resizeFrame) {
@@ -318,153 +283,198 @@ function setupWebGLStage() {
   }
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xfdfdfd);
+  scene.background = new THREE.Color(0x202124);
 
-  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.z = 3.2;
+  const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 100);
+  camera.position.z = 3;
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  const geometry = new THREE.PlaneGeometry(5.4, 5.4, 1, 1);
-  const material = new THREE.MeshBasicMaterial({ color: 0xfdfdfd });
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.z = -0.25;
-  scene.add(mesh);
+  const plane = new THREE.Mesh(
+    new THREE.PlaneGeometry(6, 6, 1, 1),
+    new THREE.MeshBasicMaterial({ color: 0x202124 })
+  );
+  plane.position.z = -0.4;
+  scene.add(plane);
 
-  const renderFrame = () => renderer.render(scene, camera);
-  renderFrame();
+  const render = () => renderer.render(scene, camera);
+  render();
 
-  const handleResize = () => {
+  const onResize = () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderFrame();
+    render();
   };
-  window.addEventListener("resize", handleResize);
 
+  window.addEventListener("resize", onResize);
   return () => {
-    window.removeEventListener("resize", handleResize);
-    geometry.dispose();
-    material.dispose();
+    window.removeEventListener("resize", onResize);
+    plane.geometry.dispose();
+    plane.material.dispose();
     renderer.dispose();
   };
 }
 
-function setupSectionPath() {
+function setupPseudoScrollPath() {
   const board = document.querySelector(".board");
   if (!(board instanceof HTMLElement)) {
     return () => {};
   }
 
-  const sections = SECTION_SEQUENCE.map((id) => document.getElementById(id)).filter(Boolean);
-  let activeIndex = 0;
-  let isTransitioning = false;
-  let wheelLockedUntil = 0;
+  const sections = Array.from(board.children).filter(
+    (child) => child instanceof HTMLElement && child.classList.contains("section")
+  );
+  if (!sections.length) {
+    return () => {};
+  }
 
-  const updateActiveState = () => {
+  let currentIndex = 0;
+  let isAnimating = false;
+  let wheelLocked = false;
+  let wheelIdleTimer = 0;
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  const clampIndex = (index) => Math.max(0, Math.min(sections.length - 1, index));
+
+  const setActiveSection = () => {
     sections.forEach((section, index) => {
-      section.classList.toggle("is-active", index === activeIndex);
+      section.classList.toggle("is-active", index === currentIndex);
     });
+    document.documentElement.dataset.currentSection = sections[currentIndex]?.id ?? "";
   };
 
-  const moveTo = (index, immediate = false) => {
-    const nextIndex = Math.max(0, Math.min(index, sections.length - 1));
-    if (nextIndex === activeIndex) {
-      return;
+  const snapTo = (index, { immediate = false, force = false } = {}) => {
+    const nextIndex = clampIndex(index);
+    if (!force && nextIndex === currentIndex) {
+      return false;
     }
-    activeIndex = nextIndex;
-    const target = sections[activeIndex];
-    if (!(target instanceof HTMLElement)) {
-      return;
-    }
-    updateActiveState();
 
-    const targetX = target.offsetLeft + Math.max(0, target.offsetWidth - window.innerWidth) / 2;
-    const targetY = target.offsetTop + Math.max(0, target.offsetHeight - window.innerHeight) / 2;
-    const duration = immediate ? 0 : 0.88;
-    if (!immediate) {
-      isTransitioning = true;
+    currentIndex = nextIndex;
+    setActiveSection();
+
+    const section = sections[currentIndex];
+    const targetX = section.offsetLeft;
+    const targetY = section.offsetTop;
+    gsap.killTweensOf(board);
+
+    if (immediate) {
+      isAnimating = false;
+      gsap.set(board, { x: -targetX, y: -targetY });
+      return true;
     }
+
+    isAnimating = true;
     gsap.to(board, {
       x: -targetX,
       y: -targetY,
-      duration,
-      ease: "power3.inOut",
+      duration: 1.35,
+      ease: "power2.inOut",
+      overwrite: true,
       onComplete: () => {
-        isTransitioning = false;
+        gsap.set(board, { x: -targetX, y: -targetY });
+        isAnimating = false;
+        if (!wheelIdleTimer) {
+          wheelLocked = false;
+        }
       },
-      onInterrupt: () => {
-        isTransitioning = false;
-      },
-      overwrite: "auto",
     });
-    window.dispatchEvent(
-      new CustomEvent("polinko:section-change", {
-        detail: { id: target.id, index: activeIndex },
-      })
-    );
+    return true;
+  };
+
+  const unlockWheelAfterIdle = () => {
+    if (wheelIdleTimer) {
+      window.clearTimeout(wheelIdleTimer);
+    }
+    wheelIdleTimer = window.setTimeout(() => {
+      wheelIdleTimer = 0;
+      if (!isAnimating) {
+        wheelLocked = false;
+      }
+    }, 180);
   };
 
   const onWheel = (event) => {
     event.preventDefault();
-    const now = performance.now();
-    if (now < wheelLockedUntil || isTransitioning || Math.abs(event.deltaY) < 8) {
+    const axisDelta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+    unlockWheelAfterIdle();
+    if (wheelLocked || isAnimating || Math.abs(axisDelta) < 12) {
       return;
     }
-    wheelLockedUntil = now + 420;
-    const direction = event.deltaY > 0 ? 1 : -1;
-    moveTo(activeIndex + direction);
+    const direction = axisDelta > 0 ? 1 : -1;
+    wheelLocked = snapTo(currentIndex + direction);
   };
 
   const onKey = (event) => {
-    if (isTransitioning) {
-      return;
-    }
     if (event.key === "ArrowDown" || event.key === "ArrowRight" || event.key === "PageDown") {
       event.preventDefault();
-      moveTo(activeIndex + 1);
-    }
-    if (event.key === "ArrowUp" || event.key === "ArrowLeft" || event.key === "PageUp") {
+      snapTo(currentIndex + 1);
+    } else if (event.key === "ArrowUp" || event.key === "ArrowLeft" || event.key === "PageUp") {
       event.preventDefault();
-      moveTo(activeIndex - 1);
+      snapTo(currentIndex - 1);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      snapTo(0);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      snapTo(sections.length - 1);
     }
   };
 
-  const handleResize = () => moveTo(activeIndex, true);
+  const onTouchStart = (event) => {
+    if (event.touches.length !== 1) {
+      return;
+    }
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+  };
+
+  const onTouchEnd = (event) => {
+    const touch = event.changedTouches[0];
+    if (!touch) {
+      return;
+    }
+    const deltaX = touchStartX - touch.clientX;
+    const deltaY = touchStartY - touch.clientY;
+    const axisDelta = Math.abs(deltaY) >= Math.abs(deltaX) ? deltaY : deltaX;
+    if (Math.abs(axisDelta) < 48 || isAnimating) {
+      return;
+    }
+    snapTo(currentIndex + (axisDelta > 0 ? 1 : -1));
+  };
+
+  const onResize = () => {
+    snapTo(currentIndex, { immediate: true, force: true });
+  };
 
   window.addEventListener("wheel", onWheel, { passive: false });
   window.addEventListener("keydown", onKey);
-  window.addEventListener("resize", handleResize);
-
-  gsap.fromTo(
-    ".block",
-    { opacity: 0, scale: 0.985 },
-    {
-      opacity: 1,
-      scale: 1,
-      duration: 0.66,
-      ease: "power2.out",
-      stagger: 0.045,
-    }
-  );
-
-  moveTo(0, true);
+  window.addEventListener("touchstart", onTouchStart, { passive: true });
+  window.addEventListener("touchend", onTouchEnd, { passive: true });
+  window.addEventListener("resize", onResize);
+  snapTo(0, { immediate: true, force: true });
 
   return () => {
     window.removeEventListener("wheel", onWheel);
     window.removeEventListener("keydown", onKey);
-    window.removeEventListener("resize", handleResize);
+    window.removeEventListener("touchstart", onTouchStart);
+    window.removeEventListener("touchend", onTouchEnd);
+    window.removeEventListener("resize", onResize);
+    if (wheelIdleTimer) {
+      window.clearTimeout(wheelIdleTimer);
+    }
   };
 }
 
+const teardownSankey = setupSankeyDataWiring();
 const teardownWebGL = setupWebGLStage();
-const teardownSankey = setupFilmSankey();
-const teardownPath = setupSectionPath();
+const teardownPath = setupPseudoScrollPath();
 
 window.addEventListener("beforeunload", () => {
-  teardownWebGL();
   teardownSankey();
+  teardownWebGL();
   teardownPath();
 });
