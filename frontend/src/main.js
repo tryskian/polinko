@@ -152,8 +152,8 @@ function drawComparativeSankey(payload) {
     return;
   }
 
-  const width = Math.max(film.clientWidth, 1);
-  const height = Math.max(film.clientHeight, 1);
+  const width = Math.max(svgNode.clientWidth, 1);
+  const height = Math.max(svgNode.clientHeight, 1);
   const svg = d3.select(svgNode);
   svg.attr("viewBox", `0 0 ${width} ${height}`);
   svg.selectAll("*").remove();
@@ -182,7 +182,7 @@ function drawComparativeSankey(payload) {
 
   const layout = sankey()
     .nodeId((node) => node.id)
-    .nodeWidth(Math.max(8, Math.round(chartWidth * 0.005)))
+    .nodeWidth(Math.max(19, Math.round(chartWidth * 0.0135)))
     .nodePadding(Math.max(8, Math.round(height * 0.018)))
     .extent([
       [chartLeft + insetX, chartTop + insetY],
@@ -191,7 +191,14 @@ function drawComparativeSankey(payload) {
 
   const sankeyGraph = layout(cloneGraph(graph));
 
-  svg
+  const nodeAdjacency = new Map();
+  sankeyGraph.nodes.forEach((node) => nodeAdjacency.set(node.id, new Set([node.id])));
+  sankeyGraph.links.forEach((link) => {
+    nodeAdjacency.get(link.source.id)?.add(link.target.id);
+    nodeAdjacency.get(link.target.id)?.add(link.source.id);
+  });
+
+  const linkSelection = svg
     .append("g")
     .selectAll("path")
     .data(sankeyGraph.links)
@@ -199,7 +206,9 @@ function drawComparativeSankey(payload) {
     .attr("class", "sankey-link")
     .attr("d", sankeyLinkHorizontal())
     .attr("stroke", (link) => linkColor(link))
-    .attr("stroke-width", (link) => Math.max(1, link.width))
+    .attr("stroke-width", (link) => Math.max(1, link.width));
+
+  linkSelection
     .append("title")
     .text((link) => {
       const source = link.source.label ?? link.source.id;
@@ -207,7 +216,7 @@ function drawComparativeSankey(payload) {
       return `${source} -> ${target}: ${formatNumber(link.rawValue ?? link.value)}`;
     });
 
-  svg
+  const nodeSelection = svg
     .append("g")
     .selectAll("rect")
     .data(sankeyGraph.nodes)
@@ -217,9 +226,49 @@ function drawComparativeSankey(payload) {
     .attr("y", (node) => node.y0)
     .attr("width", (node) => Math.max(1, node.x1 - node.x0))
     .attr("height", (node) => Math.max(1, node.y1 - node.y0))
-    .attr("fill", (node) => nodeColor(node))
+    .attr("fill", (node) => nodeColor(node));
+
+  nodeSelection
     .append("title")
     .text((node) => `${node.label ?? node.id}: ${formatNumber(node.rawValue ?? node.value)}`);
+
+  const clearFocus = () => {
+    svg.classed("is-focus", false);
+    nodeSelection.classed("is-active", false).classed("is-dimmed", false);
+    linkSelection.classed("is-active", false).classed("is-dimmed", false);
+  };
+
+  const focusNode = (focusNodeDatum) => {
+    const relatedNodes = nodeAdjacency.get(focusNodeDatum.id) ?? new Set([focusNodeDatum.id]);
+    svg.classed("is-focus", true);
+    nodeSelection
+      .classed("is-active", (node) => relatedNodes.has(node.id))
+      .classed("is-dimmed", (node) => !relatedNodes.has(node.id));
+    linkSelection
+      .classed("is-active", (link) => link.source.id === focusNodeDatum.id || link.target.id === focusNodeDatum.id)
+      .classed("is-dimmed", (link) => !(link.source.id === focusNodeDatum.id || link.target.id === focusNodeDatum.id));
+  };
+
+  const focusLink = (focusLinkDatum) => {
+    const relatedNodes = new Set([focusLinkDatum.source.id, focusLinkDatum.target.id]);
+    svg.classed("is-focus", true);
+    nodeSelection
+      .classed("is-active", (node) => relatedNodes.has(node.id))
+      .classed("is-dimmed", (node) => !relatedNodes.has(node.id));
+    linkSelection
+      .classed("is-active", (link) => link === focusLinkDatum)
+      .classed("is-dimmed", (link) => link !== focusLinkDatum);
+  };
+
+  nodeSelection
+    .on("mouseenter", (_, node) => focusNode(node))
+    .on("mouseleave", clearFocus);
+
+  linkSelection
+    .on("mouseenter", (_, link) => focusLink(link))
+    .on("mouseleave", clearFocus);
+
+  svg.on("mouseleave", clearFocus);
 }
 
 function setupSankeyDataWiring() {

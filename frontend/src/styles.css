@@ -87,13 +87,31 @@ body {
 }
 
 .sankey-node {
-  stroke: rgba(9, 9, 9, 0.3);
-  stroke-width: 1;
+  transition: opacity 260ms ease, filter 260ms ease;
+  cursor: pointer;
 }
 
 .sankey-link {
   fill: none;
   stroke-opacity: 0.52;
+  transition: opacity 260ms ease, stroke-opacity 260ms ease, filter 260ms ease;
+  cursor: pointer;
+}
+
+.sankey-svg.is-focus .sankey-node.is-dimmed,
+.sankey-svg.is-focus .sankey-link.is-dimmed {
+  opacity: 0.15;
+}
+
+.sankey-node.is-active {
+  opacity: 1;
+  filter: saturate(1.08);
+}
+
+.sankey-link.is-active {
+  opacity: 1;
+  stroke-opacity: 0.86;
+  filter: saturate(1.06);
 }
 
 .sankey-empty-text {
