@@ -1,9 +1,5 @@
 :root {
-  --bg: #000000;
-  --ink: #161616;
-  --muted: rgba(22, 22, 22, 0.68);
-  --veil: rgba(255, 255, 255, 0.42);
-  --line: rgba(0, 0, 0, 0.16);
+  --board-bg: #202124;
 }
 
 * {
@@ -15,19 +11,13 @@ body {
   margin: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
-  overflow: hidden;
-  background: var(--bg);
-  color: var(--ink);
+  background: var(--board-bg);
   font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
-}
-
-.app-shell {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
 }
 
 #webgl-stage {
@@ -41,109 +31,53 @@ body {
 
 .board-wrap {
   position: relative;
-  z-index: 1;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  z-index: 1;
 }
 
 .board {
   position: absolute;
   left: 0;
   top: 0;
-  width: 600vw;
+  width: 300vw;
   height: 500vh;
   will-change: transform;
 }
 
-.block {
+.section {
   position: absolute;
-  width: calc(100vw + 2px);
-  height: calc(100vh + 2px);
-  user-select: none;
-}
-
-.block::after {
-  content: none;
+  width: 100vw;
+  height: 100vh;
 }
 
 .hero {
   left: 0;
   top: 0;
-  background:
-    radial-gradient(circle at 78% 14%, rgba(238, 115, 33, 0.28), transparent 24%),
-    linear-gradient(135deg, #dce2c6 0%, #f4ead5 54%, #a9cce3 100%);
+  background: #dce2c6;
 }
 
 .intro {
   left: 0;
   top: 100vh;
-  background:
-    radial-gradient(circle at 22% 72%, rgba(47, 95, 143, 0.24), transparent 28%),
-    linear-gradient(120deg, #bfdcc4 0%, #e4e7bf 62%, #ebe4cf 100%);
+  background: #bfdcc4;
 }
 
-.beta-one-pipeline {
+.pipeline-one {
   left: 0;
   top: 200vh;
   background: #a9cce3;
 }
 
-.sankey-panel-one {
-  left: 100vw;
-  top: 200vh;
-  background: #cbbce4;
-}
-
-.sankey-panel-two {
-  left: 200vw;
-  top: 200vh;
-  background: #b9bae3;
-}
-
-.sankey-panel-three {
-  left: 300vw;
-  top: 200vh;
-  background: #bfdcc4;
-}
-
-.sankey-panel-four {
-  left: 400vw;
-  top: 200vh;
-  background: #e4e7bf;
-}
-
-.current-ocr-pipeline {
-  left: 500vw;
-  top: 200vh;
-  background: #ebe4cf;
-}
-
-.sankey-stage {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background: transparent;
-  z-index: 1;
-}
-
 .sankey-film {
-  position: absolute;
   left: 100vw;
   top: 200vh;
-  width: calc(400vw + 2px);
-  height: calc(100vh + 2px);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.sankey-film .sankey-stage {
-  inset: auto;
-  left: 50%;
-  top: 50%;
-  width: calc(400vw - 12rem);
-  height: clamp(380px, 58vh, 620px);
-  transform: translate(-50%, -50%);
+  width: 100vw;
+  height: 100vh;
+  background: #fdfdfd;
+  overflow: hidden;
+  position: relative;
 }
 
 .sankey-svg {
@@ -153,71 +87,36 @@ body {
 }
 
 .sankey-node {
-  stroke: rgba(9, 9, 9, 0.35);
+  stroke: rgba(9, 9, 9, 0.3);
   stroke-width: 1;
 }
 
 .sankey-link {
-  mix-blend-mode: multiply;
-}
-
-.sankey-label {
-  font-size: clamp(0.62rem, 0.86vw, 0.92rem);
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  fill: rgba(12, 12, 12, 0.76);
-  paint-order: stroke;
-  stroke: rgba(255, 255, 255, 0.68);
-  stroke-width: 4px;
-  stroke-linejoin: round;
+  fill: none;
+  stroke-opacity: 0.52;
 }
 
 .sankey-empty-text {
-  fill: rgba(0, 0, 0, 0.48);
-  font-size: clamp(1rem, 1.8vw, 1.8rem);
+  fill: rgba(0, 0, 0, 0.58);
+  font-size: clamp(1rem, 1.2vw, 1.4rem);
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
-.scaffold-label {
-  margin: 0;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  z-index: 2;
-  transform: translate(-50%, -50%);
-  color: #090909;
-  font-size: clamp(1.4rem, 2vw, 2.1rem);
-  font-weight: 760;
-  letter-spacing: -0.04em;
-  text-align: center;
-  pointer-events: none;
-}
-
-.beta-one-pipeline .scaffold-label,
-.sankey-panel .scaffold-label,
-.current-ocr-pipeline .scaffold-label {
-  opacity: 0.18;
-  z-index: 0;
-}
-
-.sankey-film .sankey-label {
-  font-size: clamp(0.58rem, 0.7vw, 0.82rem);
-  stroke-width: 3px;
-}
-
-.sankey-film .sankey-link {
-  stroke-opacity: 0.56;
+.pipeline-two {
+  left: 200vw;
+  top: 200vh;
+  background: #a9cce3;
 }
 
 .conclusion {
-  left: 500vw;
+  left: 200vw;
   top: 300vh;
-  background: #e4e7bf;
+  background: #bfdcc4;
 }
 
-.about {
-  left: 500vw;
+.about-lab {
+  left: 200vw;
   top: 400vh;
-  background: #cce0df;
+  background: #dce2c6;
 }
