@@ -212,9 +212,13 @@ Eval visualization and surfaces:
   - do not hand-edit built files under `ui/`
 - Playwright CLI captures should use the repo wrapper so snapshots/screenshots
   are grouped by local day under `docs/peanut/assets/screenshots/playwright`.
-  Use `make pwcli ARGS="--session <name> open <url>"`; this generates a dated
-  config automatically, for example
-  `docs/peanut/assets/screenshots/playwright/YYYY-MM-DD`.
+  Use `make pwcli ARGS="open <url>"` for the deterministic default flow; this
+  writes a deterministic repo-local config (`.local/logs/playwright/cli.config.json`)
+  and uses a fixed default
+  session (`polinko`) when no session is provided. Example output path:
+  `docs/peanut/assets/screenshots/playwright/DD-MM-YY`.
+  Optional explicit session override:
+  `make pwcli ARGS="--session <name> open <url>"`.
   Run `make playwright-snapshot-dir` to print the active folder. If passing an
   explicit `--filename`, keep it under that dated folder.
 

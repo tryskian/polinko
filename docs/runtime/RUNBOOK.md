@@ -625,12 +625,16 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
   - repo wrapper: `make pwcli ARGS="..."`
   - output root: `docs/peanut/assets/screenshots/playwright`
   - each wrapper run creates/uses a dated local folder, for example
-    `docs/peanut/assets/screenshots/playwright/YYYY-MM-DD`
+    `docs/peanut/assets/screenshots/playwright/DD-MM-YY`
+  - wrapper config path is repo-scoped and deterministic:
+    `.local/logs/playwright/cli.config.json`
+  - wrapper session defaults to `polinko` unless `--session` is passed
   - open sessions through the wrapper:
-    `make pwcli ARGS="--session <name> open <url>"`
+    `make pwcli ARGS="open <url>"`
+    or `make pwcli ARGS="--session <name> open <url>"`
   - capture through the same wrapper:
-    `make pwcli ARGS="--session <name> snapshot"` or
-    `make pwcli ARGS="--session <name> screenshot"`
+    `make pwcli ARGS="snapshot"` or
+    `make pwcli ARGS="screenshot"`
   - run `make playwright-snapshot-dir` to print the active folder
   - if passing `--filename`, use an explicit path under the dated folder;
     bare filenames may be written relative to the command cwd by the CLI
