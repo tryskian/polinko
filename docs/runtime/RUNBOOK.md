@@ -622,13 +622,18 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     - build command: `make frontend-build`
   - `ui/` is generated output only; do not hand-edit built files.
 - Playwright CLI snapshots/screenshots:
-  - repo-local config: `.playwright/cli.config.json`
-  - output directory: `docs/peanut/assets/screenshots/playwright`
-  - open sessions with the repo config when using the CLI:
-    `pwcli --session <name> open <url> --config .playwright/cli.config.json`
-  - when passing `--filename`, use an explicit path under
-    `docs/peanut/assets/screenshots/playwright/`; bare filenames are written
-    relative to the command cwd by the CLI
+  - repo wrapper: `make pwcli ARGS="..."`
+  - output root: `docs/peanut/assets/screenshots/playwright`
+  - each wrapper run creates/uses a dated local folder, for example
+    `docs/peanut/assets/screenshots/playwright/YYYY-MM-DD`
+  - open sessions through the wrapper:
+    `make pwcli ARGS="--session <name> open <url>"`
+  - capture through the same wrapper:
+    `make pwcli ARGS="--session <name> snapshot"` or
+    `make pwcli ARGS="--session <name> screenshot"`
+  - run `make playwright-snapshot-dir` to print the active folder
+  - if passing `--filename`, use an explicit path under the dated folder;
+    bare filenames may be written relative to the command cwd by the CLI
   - this directory is local evidence under the peanut lane; do not use
     `output/playwright/` for portfolio UI captures in this repo.
 - `GET /portfolio/sankey-data` returns the real-data Twin Sankey payload:
@@ -694,8 +699,8 @@ Hash fields in responses:
 
 1. Ensure vector memory is enabled (`POLINKO_VECTOR_ENABLED=true`) and restart
    API.
-2. Ensure PDF parser dependency is available:
-   - `pip install pypdf`
+2. Ensure locked Python dependencies are installed:
+   - `make deps-install`
 3. Ingest with `POST /skills/pdf_ingest`:
    - required: `data_base64` (PDF bytes)
    - optional: `session_id`, `source_name`, `mime_type` (`application/pdf`)
@@ -709,6 +714,14 @@ Hash fields in responses:
    - `responses_index_status`: `disabled|indexed|failed`
    - `responses_index_reason`: reason code when disabled/failed
    - `responses_vector_store_file_id`: populated when indexed
+
+## Python Dependency Locking
+
+1. Edit direct dependencies in `requirements.in`.
+2. Regenerate the full resolved lock with `make deps-lock`.
+3. Install from the lock with `make deps-install`.
+4. CI and Docker install from `requirements.lock`; do not reintroduce
+   `requirements.txt` as a second dependency source.
 
 ## Vector Memory Toggle
 
@@ -1099,10 +1112,11 @@ Current policy:
      - `python tools/eval_hallucination.py --evaluation-mode judge`
      - `python tools/eval_hallucination.py --evaluation-mode deterministic`
      - `python tools/eval_hallucination.py --evaluation-mode auto`
-   - Braintrust judge mode:
-     - set `BRAINTRUST_OPENAI_BASE_URL=https://api.braintrust.dev/v1/proxy`
-     - set `BRAINTRUST_API_KEY` (env/secret)
-     - run `make eval-hallucination-braintrust`
+   - custom OpenAI-compatible judge endpoint:
+     - set `HALLUCINATION_JUDGE_BASE_URL=https://example.test/v1`
+     - set `HALLUCINATION_JUDGE_API_KEY_ENV=JUDGE_API_KEY`
+     - export `JUDGE_API_KEY`
+     - run `make hallucination-gate`
    - retain generated chats: `python tools/eval_hallucination.py --keep-chats`
    - write JSON report:
      `python tools/eval_hallucination.py --report-json eval_reports/hallucination-latest.json`
@@ -1249,7 +1263,7 @@ Current policy:
    - `eval_reports/hallucination-threshold-calibration.json`
 4. Apply chosen threshold:
    - local gate runs: `HALLUCINATION_MIN_ACCEPTABLE_SCORE=<value>`
-   - CI repo variable: `BRAINTRUST_HALLUCINATION_MIN_SCORE`
+   - CI does not run a remote judge gate unless explicitly wired later
 5. Tie-break behaviour:
    - if multiple thresholds have equal metrics, the calibrator picks the
      strictest (highest) threshold among the ties.

@@ -1,6 +1,7 @@
 import base64
 import sqlite3
 import unittest
+from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -21,7 +22,7 @@ def _init_history_db(
     source_name: str = "file-abc123-image1.png",
     feedback_outcome: str | None = None,
 ) -> None:
-    with sqlite3.connect(path) as conn:
+    with closing(sqlite3.connect(path)) as conn:
         conn.executescript(
             """
             CREATE TABLE chats (
@@ -139,7 +140,7 @@ class BuildManualEvalsDbTests(unittest.TestCase):
             self.assertEqual(result["ocr_runs"], 1)
             self.assertEqual(result["image_assets"], 1)
 
-            with sqlite3.connect(output_db) as conn:
+            with closing(sqlite3.connect(output_db)) as conn:
                 conn.row_factory = sqlite3.Row
                 asset = conn.execute(
                     "SELECT resolved_path, status, thumbnail_png FROM image_assets LIMIT 1"
@@ -167,7 +168,7 @@ class BuildManualEvalsDbTests(unittest.TestCase):
                 thumbnail_size=96,
             )
 
-            with sqlite3.connect(output_db) as conn:
+            with closing(sqlite3.connect(output_db)) as conn:
                 conn.row_factory = sqlite3.Row
                 asset = conn.execute(
                     """
@@ -209,7 +210,7 @@ class BuildManualEvalsDbTests(unittest.TestCase):
             self.assertEqual(result["feedback"], 1)
             self.assertEqual(result["ocr_runs"], 2)
 
-            with sqlite3.connect(output_db) as conn:
+            with closing(sqlite3.connect(output_db)) as conn:
                 conn.row_factory = sqlite3.Row
                 sessions = conn.execute(
                     "SELECT session_id, era, source_session_id FROM sessions ORDER BY era"
