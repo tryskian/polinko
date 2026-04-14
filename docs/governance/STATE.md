@@ -20,15 +20,15 @@ Last updated: 2026-04-14
   - source of truth for shell edits is `frontend/`.
   - command surface is simplified:
     - `make portfolio` is the canonical rebuild + serve + open workflow.
+    - `make portfolio-build` is the canonical build-only workflow.
     - stale alias `make portfolio-open` has been removed.
-  - frontend interaction model currently uses native page scroll semantics
-    (no GSAP/transform-based pseudo-scroll path).
+  - frontend interaction model currently uses GSAP section stepping
+    (`Observer` + `ScrollToPlugin`) with no transform-based pseudo-scroll path.
 - Twin Sankey portfolio shell iteration is active in the frontend lane:
-  - four-section Sankey strip now renders from real local data through
+  - one `sankey` section now renders real local data through
     `GET /portfolio/sankey-data`.
   - PR `#302` merged the latest visible scaffold checkpoint to `main`.
-  - current visible row is `pipeline -> sankey 1 -> sankey 2 -> sankey 3 ->
-    sankey 4 -> pipeline`.
+  - current visible row is `pipeline -> sankey -> pipeline`.
   - that scaffold is a checkpoint, not the next implementation lock. The next
     frontend pass should reset from a clean slate rather than retrofit existing
     section logic.
@@ -107,4 +107,4 @@ Last updated: 2026-04-14
 - `make eod-docs-check`
 - `make lint-docs`
 - `make test`
-- `make frontend-build` (when `frontend/` changes)
+- `make portfolio-build` (when `frontend/` changes)

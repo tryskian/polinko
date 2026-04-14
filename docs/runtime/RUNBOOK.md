@@ -607,11 +607,10 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
 - `GET /portfolio` serves the static UI shell draft for immediate content
   editing and operator review.
   - current shell mode is a form-first portfolio scaffold:
-    `hero -> intro -> pipeline -> Sankey panel 1 -> Sankey panel 2 ->
-    Sankey panel 3 -> Sankey panel 4 -> pipeline -> conclusion -> about/lab`
-  - visible Sankey rendering is one four-column film strip across the Sankey
-    panels, composing the real legacy, connector, and current endpoint graphs;
-    eval endpoint sections are layout labels until the content pass
+    `hero -> intro -> pipeline -> Sankey -> pipeline -> conclusion ->
+    about/lab`
+  - visible Sankey rendering is one section composing the real legacy,
+    connector, and current endpoint graphs
   - the frontend normalizes visual weights across Beta 1.0/current totals for
     readability; labels/tooltips continue to show actual source counts from
     `GET /portfolio/sankey-data`
@@ -619,7 +618,8 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
   - canonical build flow:
     - source: `frontend/`
     - generated output: `ui/`
-    - build command: `make frontend-build`
+    - build-only command: `make portfolio-build`
+    - launch command: `make portfolio` (rebuild + serve + open)
   - `ui/` is generated output only; do not hand-edit built files.
 - Playwright CLI snapshots/screenshots:
   - repo wrapper: `make pwcli ARGS="..."`
