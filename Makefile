@@ -14,6 +14,7 @@ DEV_BACKEND_PORT ?= 8000
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
 DEV_VIZ_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/viz/pass-fail
 DEV_PORTFOLIO_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/portfolio
+PORTFOLIO_LAUNCH ?= playwright
 FRONTEND_DIR ?= frontend
 OPENAI_LIMITS_URL ?= https://platform.openai.com/settings/organization/limits
 OPENAI_USAGE_URL ?= https://platform.openai.com/settings/organization/usage
@@ -552,13 +553,27 @@ portfolio:
 		*\?*) OPEN_URL="$$URL&rebuild=$$CACHE_BUST" ;; \
 		*) OPEN_URL="$$URL?rebuild=$$CACHE_BUST" ;; \
 	esac; \
-	if command -v open >/dev/null 2>&1; then \
-		open "$$OPEN_URL"; \
-	elif command -v xdg-open >/dev/null 2>&1; then \
-		xdg-open "$$OPEN_URL" >/dev/null 2>&1 || true; \
-	else \
-		echo "Open this URL in your browser: $$OPEN_URL"; \
-	fi; \
+	case "$(PORTFOLIO_LAUNCH)" in \
+		playwright) \
+			if PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" PLAYWRIGHT_SESSION="$(PLAYWRIGHT_SESSION)" "$(PWCLI_TOOL)" tab-new "$$OPEN_URL" >/dev/null 2>&1; then \
+				echo "Opened Playwright portfolio tab: $$OPEN_URL"; \
+			else \
+				PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" PLAYWRIGHT_SESSION="$(PLAYWRIGHT_SESSION)" "$(PWCLI_TOOL)" open "$$OPEN_URL" --headed; \
+			fi ;; \
+		system) \
+			if command -v open >/dev/null 2>&1; then \
+				open "$$OPEN_URL"; \
+			elif command -v xdg-open >/dev/null 2>&1; then \
+				xdg-open "$$OPEN_URL" >/dev/null 2>&1 || true; \
+			else \
+				echo "Open this URL in your browser: $$OPEN_URL"; \
+			fi ;; \
+		none) \
+			echo "Open this URL in your browser: $$OPEN_URL" ;; \
+		*) \
+			echo "Invalid PORTFOLIO_LAUNCH='$(PORTFOLIO_LAUNCH)' (expected playwright, system, or none)."; \
+			exit 2 ;; \
+	esac; \
 	echo "Portfolio shell URL: $$OPEN_URL"
 
 pwcli playwright-cli:

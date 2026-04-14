@@ -16,6 +16,8 @@ import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 gsap.registerPlugin(Observer);
 
 const SANKEY_DATA_URL = "/portfolio/sankey-data";
+const SANKEY_SURFACE_ID = "beta-one-sankey";
+const SANKEY_SVG_ID = "beta-one-sankey-svg";
 const SANKEY_LAYOUT_MIN_VALUE = 2;
 const SANKEY_LAYOUT_MAX_VALUE = 16;
 const STAGE_STEP_DURATION = 0.92;
@@ -161,8 +163,8 @@ function formatNumber(value) {
 }
 
 function drawComparativeSankey(payload) {
-  const sankeySurface = document.getElementById("sankey");
-  const svgNode = document.getElementById("sankey-svg");
+  const sankeySurface = document.getElementById(SANKEY_SURFACE_ID);
+  const svgNode = document.getElementById(SANKEY_SVG_ID);
   if (!(sankeySurface instanceof HTMLElement) || !(svgNode instanceof SVGSVGElement)) {
     return;
   }
@@ -287,7 +289,7 @@ function drawComparativeSankey(payload) {
 }
 
 function setupSankeyDataWiring() {
-  const sankeySurface = document.getElementById("sankey");
+  const sankeySurface = document.getElementById(SANKEY_SURFACE_ID);
   if (!(sankeySurface instanceof HTMLElement)) {
     return () => {};
   }
@@ -352,10 +354,12 @@ function setupPinnedStageStepper() {
     { id: "hero", row: 0, column: 0 },
     { id: "intro", row: 1, column: 0 },
     { id: "pipeline-one", row: 2, column: 0 },
-    { id: "sankey", row: 2, column: 1 },
-    { id: "pipeline-two", row: 2, column: 2 },
-    { id: "conclusion", row: 3, column: 2 },
-    { id: "about-lab", row: 4, column: 2 },
+    { id: "beta-one-sankey", row: 2, column: 1 },
+    { id: "sankey-bridge", row: 2, column: 2 },
+    { id: "beta-two-sankey", row: 2, column: 3 },
+    { id: "pipeline-two", row: 2, column: 4 },
+    { id: "conclusion", row: 3, column: 4 },
+    { id: "about-lab", row: 4, column: 4 },
   ].filter((scene) => document.getElementById(scene.id));
 
   if (scenes.length < 2) {
@@ -374,16 +378,17 @@ function setupPinnedStageStepper() {
   );
   let isAnimating = false;
   let gestureLockedUntil = 0;
-
-  const sceneTransforms = (scene) => ({
-    boardY: -scene.row * window.innerHeight,
-    trackX: -scene.column * window.innerWidth,
-  });
+  let stageUnlockTween = null;
 
   const setActiveScene = (index) => {
     currentIndex = clampSceneIndex(index);
     document.documentElement.dataset.activeScene = scenes[currentIndex].id;
   };
+
+  const sceneTransforms = (scene) => ({
+    boardY: -scene.row * window.innerHeight,
+    trackX: -scene.column * window.innerWidth,
+  });
 
   const goToScene = (index, immediate = false) => {
     const nextIndex = clampSceneIndex(index);
@@ -392,6 +397,7 @@ function setupPinnedStageStepper() {
     const duration = immediate || prefersReducedMotion ? 0 : STAGE_STEP_DURATION;
 
     setActiveScene(nextIndex);
+    stageUnlockTween?.kill();
     isAnimating = true;
     gestureLockedUntil = performance.now() + (duration * 1000) + STAGE_GESTURE_COOLDOWN_MS;
 
@@ -406,12 +412,15 @@ function setupPinnedStageStepper() {
       duration,
       ease: immediate || prefersReducedMotion ? "none" : STAGE_STEP_EASE,
       overwrite: true,
-      onComplete: () => {
-        isAnimating = false;
-      },
-      onInterrupt: () => {
-        isAnimating = false;
-      },
+    });
+    if (duration === 0) {
+      isAnimating = false;
+      stageUnlockTween = null;
+      return;
+    }
+    stageUnlockTween = gsap.delayedCall(duration, () => {
+      isAnimating = false;
+      stageUnlockTween = null;
     });
   };
 
@@ -473,6 +482,7 @@ function setupPinnedStageStepper() {
 
   return () => {
     observer.kill();
+    stageUnlockTween?.kill();
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("resize", onResize);
     gsap.killTweensOf([board, track]);
