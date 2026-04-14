@@ -9,6 +9,11 @@ Last updated: 2026-04-13
 - Runtime is local-first and backend-first:
   - FastAPI API + CLI are canonical execution surfaces.
   - Prompt/runtime behavior remains minimal and deterministic.
+- End-of-day closeout is green for 2026-04-14:
+  - `make eod` passed end-to-end (`doctor-env`, `lint-docs`, and `test` with
+    393 passing tests).
+  - managed background runtime tasks were stopped (`server-daemon` and
+    managed `caffeinate`).
 - Portfolio shell route contract is active:
   - `GET /` redirects to `GET /portfolio`.
   - `GET /portfolio` serves `ui/index.html` (build output).

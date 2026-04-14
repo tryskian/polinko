@@ -19,6 +19,10 @@ Last updated: 2026-04-13
 ## Current Snapshot
 
 - Backend-first runtime remains canonical.
+- Latest end-of-day closeout completed cleanly (2026-04-14):
+  - `make eod` passed transcript/doc checks, env doctor, docs lint, and tests
+    (`393` passing).
+  - `server-daemon` is OFF and managed `caffeinate` is OFF.
 - Portfolio shell route is active:
   - `GET /` -> redirect to `GET /portfolio`
   - `GET /portfolio` -> `ui/index.html`
