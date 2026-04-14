@@ -5,8 +5,9 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 base_dir="${PLAYWRIGHT_SNAPSHOT_BASE_DIR:-docs/peanut/assets/screenshots/playwright}"
-day="${PLAYWRIGHT_SNAPSHOT_DAY:-$(date +%F)}"
+day="${PLAYWRIGHT_SNAPSHOT_DAY:-$(date +%d-%m-%y)}"
 snapshot_dir="${base_dir%/}/${day}"
+default_session="${PLAYWRIGHT_SESSION:-polinko}"
 
 mkdir -p "$snapshot_dir"
 
@@ -30,8 +31,8 @@ if ! command -v npx >/dev/null 2>&1; then
   exit 1
 fi
 
-config_dir="${PLAYWRIGHT_CLI_CONFIG_DIR:-.local/logs/playwright}"
-config_file="$config_dir/cli.${day}.config.json"
+config_dir=".local/logs/playwright"
+config_file="$config_dir/cli.config.json"
 mkdir -p "$config_dir"
 
 "${PYTHON:-python3}" - "$config_file" "$snapshot_dir" <<'PY'
@@ -55,11 +56,14 @@ config_path.write_text(
 PY
 
 has_config="false"
+has_session="false"
 for arg in "$@"; do
   case "$arg" in
     --config|--config=*)
       has_config="true"
-      break
+      ;;
+    --session|--session=*)
+      has_session="true"
       ;;
   esac
 done
@@ -74,6 +78,9 @@ fi
 args=("$@")
 if [[ "$has_config" != "true" ]]; then
   args+=(--config "$config_file")
+fi
+if [[ "$has_session" != "true" ]]; then
+  args=(--session "$default_session" "${args[@]}")
 fi
 
 echo "Playwright snapshot directory: $snapshot_dir" >&2

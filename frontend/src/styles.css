@@ -10,9 +10,10 @@ html,
 body {
   margin: 0;
   width: 100%;
-  height: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
 }
 
 body {
@@ -31,50 +32,40 @@ body {
 
 .board-wrap {
   position: relative;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
   z-index: 1;
 }
 
 .board {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 300vw;
-  height: 500vh;
-  will-change: transform;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .section {
-  position: absolute;
-  width: 100vw;
-  height: 100vh;
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
 }
 
 .hero {
-  left: 0;
-  top: 0;
   background: #dce2c6;
 }
 
 .intro {
-  left: 0;
-  top: 100vh;
   background: #bfdcc4;
 }
 
 .pipeline-one {
-  left: 0;
-  top: 200vh;
   background: #a9cce3;
 }
 
 .sankey-film {
-  left: 100vw;
-  top: 200vh;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
   background: #fdfdfd;
   overflow: hidden;
   position: relative;
@@ -130,19 +121,13 @@ body {
 }
 
 .pipeline-two {
-  left: 200vw;
-  top: 200vh;
   background: #a9cce3;
 }
 
 .conclusion {
-  left: 200vw;
-  top: 300vh;
   background: #bfdcc4;
 }
 
 .about-lab {
-  left: 200vw;
-  top: 400vh;
   background: #dce2c6;
 }
