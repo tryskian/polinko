@@ -16,6 +16,8 @@ import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 gsap.registerPlugin(Observer);
 
 const SANKEY_DATA_URL = "/portfolio/sankey-data";
+const SANKEY_NODE_WIDTH = 12;
+const SANKEY_NODE_PADDING = 8;
 const SANKEY_SURFACES = [
   {
     graphKey: "legacy",
@@ -34,43 +36,74 @@ const SANKEY_SURFACES = [
     surfaceId: "beta-two-sankey",
     svgId: "beta-two-sankey-svg",
     emptyText: "No Beta 2.0 Sankey data available",
+    linkWidthScale: 0.6,
   },
 ];
 const SANKEY_LAYOUT_MIN_VALUE = 2;
-const SANKEY_LAYOUT_MAX_VALUE = 16;
+const SANKEY_LAYOUT_MAX_VALUE = 10;
 const STAGE_STEP_DURATION = 0.92;
 const STAGE_STEP_EASE = "power2.inOut";
 const STAGE_GESTURE_TOLERANCE = 14;
 const STAGE_GESTURE_COOLDOWN_MS = 180;
+const NODE_BAR_COLOR = "#080806";
 
+// SANKey palette edit zone START
+// Edit swatch values here for live visual tuning. Keep the keys stable unless
+// the backend graph groups/kinds change.
 const FLOW_COLORS = {
-  // Beta 1.0 source block: manual feedback as the legacy evidence root.
-  legacy_source: "#3f4a41",
-  // Beta 1.0 outcome blocks: manual PASS / PARTIAL / FAIL buckets.
-  legacy_outcome: "#6f6a67",
-  // Beta 1.0 signal blocks: extracted manual-eval signal categories.
-  legacy_signal: "#985323",
-  // Middle continuity block: evidence continuity between eras.
-  bridge: "#3f4a41",
-  // Beta 2.0 source block: current OCR binary gate report root.
-  current_source: "#2f2336",
-  // Beta 2.0 lane blocks: OCR lanes such as text, handwriting, illustration.
-  current_lane: "#8fa09c",
-  // Beta 2.0 outcome blocks: binary gate PASS / FAIL buckets.
-  current_outcome: "#4d485f",
-  // Beta 1.0 source -> outcome ribbons.
-  legacy_feedback_to_outcome: "#3f4a41",
-  // Beta 1.0 outcome -> signal ribbons.
-  legacy_outcome_to_signal: "#985323",
-  // Beta 1.0 signal -> continuity bridge ribbons.
-  legacy_signal_to_bridge: "#3f4a41",
-  // Continuity bridge -> Beta 2.0 lane ribbons.
-  bridge_to_current_lane: "#2f2336",
-  // Beta 2.0 source -> OCR lane ribbons.
-  current_report_to_lane: "#2f2336",
-  // Beta 2.0 OCR lane -> outcome ribbons.
-  current_lane_to_outcome: "#4d485f",
+  // Shared source blocks.
+  legacy_source: "#3C5F40",
+  bridge: "#3C5F40",
+  current_source: "#503286",
+
+  // Group fallbacks when a node/link does not have a specific colour below.
+  legacy_outcome: "#CBDCCC",
+  legacy_signal: "#FF8D28",
+  current_lane: "#9DC5C3",
+  current_outcome: "#FB9497",
+
+  // Beta 1.0 outcome buckets.
+  legacy_outcome_fail: "#FF8D28",
+  legacy_outcome_partial: "#FFD9B7",
+  legacy_outcome_pass: "#9DC5C3",
+
+  // Beta 1.0 signal categories.
+  legacy_signal_correctness: "#9DC5C3",
+  legacy_signal_general_eval: "#CBDCCC",
+  legacy_signal_grounding: "#3C5F40",
+  legacy_signal_hallucination_risk: "#FF8D28",
+  legacy_signal_ocr_signal: "#503286",
+  legacy_signal_recovery: "#D3C8E6",
+  legacy_signal_style_voice: "#FB9497",
+  bridge_signal_correctness: "#9DC5C3",
+  bridge_signal_general_eval: "#CBDCCC",
+  bridge_signal_grounding: "#3C5F40",
+  bridge_signal_hallucination_risk: "#FF8D28",
+  bridge_signal_ocr_signal: "#503286",
+  bridge_signal_recovery: "#D3C8E6",
+  bridge_signal_style_voice: "#FB9497",
+
+  // Beta 2.0 OCR lanes.
+  bridge_lane_handwriting: "#9DC5C3",
+  bridge_lane_illustration: "#503286",
+  bridge_lane_text: "#3C5F40",
+  current_lane_handwriting: "#9DC5C3",
+  current_lane_illustration: "#503286",
+  current_lane_text: "#3C5F40",
+
+  // Beta 2.0 binary gate outcomes.
+  current_outcome_fail: "#FF8D28",
+  current_outcome_pass: "#CBDCCC",
+
+  // Link fallbacks. Specific node colours above take precedence.
+  legacy_feedback_to_outcome: "#3C5F40",
+  legacy_outcome_to_signal: "#FF8D28",
+  legacy_signal_to_bridge: "#3C5F40",
+  bridge_to_current_lane: "#503286",
+  current_report_to_lane: "#503286",
+  current_lane_to_outcome: "#FB9497",
 };
+// SANKey palette edit zone END
 
 const EMPTY_GRAPHS = {
   legacy: { nodes: [], links: [] },
@@ -120,17 +153,39 @@ function scaleGraphForLayout(graph) {
   };
 }
 
+function scaleGraphValues(graph, scale = 1) {
+  if (scale === 1) {
+    return graph;
+  }
+
+  return {
+    nodes: graph.nodes,
+    links: graph.links.map((link) => ({
+      ...link,
+      value: link.value * scale,
+    })),
+  };
+}
+
 function graphHasData(graph) {
   return Array.isArray(graph?.nodes) && graph.nodes.length > 0
     && Array.isArray(graph?.links) && graph.links.length > 0;
 }
 
 function nodeColor(node) {
-  return FLOW_COLORS[node.group] ?? FLOW_COLORS[node.id] ?? "#161616";
+  return NODE_BAR_COLOR;
 }
 
 function linkColor(link) {
-  return FLOW_COLORS[link.kind] ?? "rgba(35, 35, 35, 0.45)";
+  const sourceId = typeof link.source === "object" ? link.source.id : link.source;
+  const targetId = typeof link.target === "object" ? link.target.id : link.target;
+  return FLOW_COLORS[`${sourceId}->${targetId}`]
+    ?? FLOW_COLORS[`${link.kind}:${targetId}`]
+    ?? FLOW_COLORS[`${link.kind}:${sourceId}`]
+    ?? FLOW_COLORS[targetId]
+    ?? FLOW_COLORS[sourceId]
+    ?? FLOW_COLORS[link.kind]
+    ?? "rgba(35, 35, 35, 0.45)";
 }
 
 function formatNumber(value) {
@@ -139,6 +194,16 @@ function formatNumber(value) {
     return "0";
   }
   return new Intl.NumberFormat("en").format(n);
+}
+
+function chartLeftFor(width, chartWidth, align = "start") {
+  if (align === "end") {
+    return width - chartWidth;
+  }
+  if (align === "center") {
+    return Math.round((width - chartWidth) / 2);
+  }
+  return 0;
 }
 
 function drawGraphSankey(payload, surfaceConfig) {
@@ -155,7 +220,10 @@ function drawGraphSankey(payload, surfaceConfig) {
   svg.selectAll("*").remove();
 
   const graphs = payload?.graphs ?? EMPTY_GRAPHS;
-  const graph = scaleGraphForLayout(graphs[surfaceConfig.graphKey] ?? EMPTY_GRAPHS[surfaceConfig.graphKey]);
+  const graph = scaleGraphValues(
+    scaleGraphForLayout(graphs[surfaceConfig.graphKey] ?? EMPTY_GRAPHS[surfaceConfig.graphKey]),
+    surfaceConfig.linkWidthScale ?? 1
+  );
   if (!graphHasData(graph)) {
     svg
       .append("text")
@@ -167,8 +235,8 @@ function drawGraphSankey(payload, surfaceConfig) {
     return;
   }
 
-  const chartWidth = width;
-  const chartLeft = 0;
+  const chartWidth = Math.round(width * (surfaceConfig.chartWidthScale ?? 1));
+  const chartLeft = chartLeftFor(width, chartWidth, surfaceConfig.chartAlign);
   const insetX = 0;
   const chartHeight = Math.round(
     Math.min(height - 32, Math.max(260, height * 0.52))
@@ -178,8 +246,8 @@ function drawGraphSankey(payload, surfaceConfig) {
 
   const layout = sankey()
     .nodeId((node) => node.id)
-    .nodeWidth(Math.max(16, Math.round(chartWidth * 0.011)))
-    .nodePadding(Math.max(10, Math.round(height * 0.02)))
+    .nodeWidth(Math.max(SANKEY_NODE_WIDTH, Math.round(chartWidth * 0.00825)))
+    .nodePadding(SANKEY_NODE_PADDING)
     .extent([
       [chartLeft + insetX, chartTop + insetY],
       [chartLeft + chartWidth - insetX, chartTop + chartHeight - insetY],
@@ -224,18 +292,6 @@ function drawGraphSankey(payload, surfaceConfig) {
     .attr("height", (node) => Math.max(1, node.y1 - node.y0))
     .attr("fill", (node) => nodeColor(node))
     .attr("rx", 1.5);
-
-  svg
-    .append("g")
-    .attr("class", "sankey-node-caps")
-    .selectAll("line")
-    .data(sankeyGraph.nodes)
-    .join("line")
-    .attr("class", "sankey-node-cap")
-    .attr("x1", (node) => node.x0)
-    .attr("x2", (node) => node.x1)
-    .attr("y1", (node) => node.y0)
-    .attr("y2", (node) => node.y0);
 
   nodeSelection
     .append("title")

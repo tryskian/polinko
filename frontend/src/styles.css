@@ -1,7 +1,7 @@
 :root {
   --board-bg: #202124;
-  --portfolio-paper: #fbf9f3;
-  --portfolio-ink: #2f2336;
+  --portfolio-paper: #faf9f6;
+  --portfolio-ink: #080806;
   --portfolio-muted: #c8bbb4;
 }
 
@@ -136,14 +136,6 @@ body {
     filter 560ms cubic-bezier(0.16, 1, 0.3, 1);
   cursor: pointer;
   will-change: opacity, filter;
-}
-
-.sankey-node-cap {
-  stroke: var(--portfolio-ink);
-  stroke-width: 4;
-  stroke-linecap: square;
-  opacity: 0.88;
-  pointer-events: none;
 }
 
 .sankey-link {
