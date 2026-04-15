@@ -237,7 +237,10 @@ class PortfolioSankeyTests(unittest.TestCase):
             self.assertNotIn("noise_bucket", all_node_ids)
 
             legacy_links = payload["graphs"]["legacy"]["links"]
+            bridge = payload["graphs"]["bridge"]
             current_links = payload["graphs"]["current"]["links"]
+            bridge_node_ids = {node["id"] for node in bridge["nodes"]}
+            bridge_links = bridge["links"]
             self.assertIn(
                 {
                     "source": "legacy_manual_feedback",
@@ -257,6 +260,22 @@ class PortfolioSankeyTests(unittest.TestCase):
                     "provenance": "eval_reports.cases.outcome",
                 },
                 current_links,
+            )
+            self.assertNotIn("continuity_bridge", bridge_node_ids)
+            self.assertTrue(bridge_links)
+            self.assertEqual(sum(link["value"] for link in bridge_links), 4)
+            self.assertTrue(
+                all(link["kind"] == "bridge_signal_to_lane" for link in bridge_links)
+            )
+            self.assertTrue(
+                all(link["source"].startswith("bridge_signal_") for link in bridge_links)
+            )
+            self.assertTrue(
+                all(link["target"].startswith("bridge_lane_") for link in bridge_links)
+            )
+            self.assertIn(
+                "no row-level join implied",
+                payload["graphs"]["bridge"]["metric"],
             )
 
 

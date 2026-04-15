@@ -207,7 +207,12 @@ Eval visualization and surfaces:
 - frontend shell build contract:
   - edit source in `frontend/`
   - generate served shell with `make portfolio-build` (writes to `ui/`)
-  - use `make portfolio` for the canonical rebuild + serve + open workflow
+  - use `make portfolio` for the canonical rebuild + serve + system-browser
+    open workflow; on macOS this opens through the default browser rather than
+    the repo Playwright session
+  - use `make portfolio-playwright` only for Codex/debug inspection in the
+    repo Playwright session; it opens a Playwright tab instead of using the
+    human-facing browser command
   - do not hand-edit built files under `ui/`
 - Playwright CLI captures should use the repo wrapper so snapshots/screenshots
   are grouped by local day under `docs/peanut/assets/screenshots/playwright`.

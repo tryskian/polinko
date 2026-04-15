@@ -2,7 +2,7 @@
 
 # Session Handoff (Current Only)
 
-Last updated: 2026-04-14
+Last updated: 2026-04-15
 
 ## Startup
 
@@ -33,9 +33,9 @@ Last updated: 2026-04-14
   - canonical launch command:
     - `make portfolio` (rebuild + serve + open)
     - launch URL includes a `rebuild=<timestamp>` cache-bust query.
-    - default launch opens a visible Playwright tab in the repo-scoped
-      `polinko` session; avoid returning to silent `goto` reuse or extra
-      browser-window behavior.
+    - default launch uses the system browser for the human-facing UI.
+    - Codex/debug launch uses `make portfolio-playwright`, which opens a
+      Playwright tab in the repo Playwright session.
   - `make portfolio-open` alias has been removed.
 - Portfolio UI interaction model is pinned-stage stepping:
   - document scroll is locked (`scrollY` should stay `0`).

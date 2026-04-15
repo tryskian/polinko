@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-04-14
+Last updated: 2026-04-15
 
 ## Current Truth
 
@@ -22,8 +22,10 @@ Last updated: 2026-04-14
     - `make portfolio` is the canonical rebuild + serve + open workflow.
     - `make portfolio` opens a cache-busted URL after rebuild so the browser
       does not reuse a stale shell bundle.
-    - default launch opens a visible Playwright tab in the repo-scoped
-      `polinko` session, avoiding the previous extra browser-window gremlin.
+    - default launch uses the system browser so the human-facing UI is separate
+      from Codex Playwright inspection.
+    - `make portfolio-playwright` opens a visible Playwright tab in the
+      repo-scoped Playwright session for Codex/debug snapshots.
     - `make portfolio-build` is the canonical build-only workflow.
     - stale alias `make portfolio-open` has been removed.
   - frontend interaction model currently uses pinned-stage stepping:

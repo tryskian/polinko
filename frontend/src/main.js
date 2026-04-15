@@ -179,6 +179,9 @@ function nodeColor(node) {
 function linkColor(link) {
   const sourceId = typeof link.source === "object" ? link.source.id : link.source;
   const targetId = typeof link.target === "object" ? link.target.id : link.target;
+  if (link.kind === "bridge_signal_to_lane") {
+    return FLOW_COLORS[sourceId] ?? FLOW_COLORS[link.kind] ?? "rgba(35, 35, 35, 0.45)";
+  }
   return FLOW_COLORS[`${sourceId}->${targetId}`]
     ?? FLOW_COLORS[`${link.kind}:${targetId}`]
     ?? FLOW_COLORS[`${link.kind}:${sourceId}`]

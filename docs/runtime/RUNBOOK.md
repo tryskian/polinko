@@ -622,8 +622,10 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     - source: `frontend/`
     - generated output: `ui/`
     - build-only command: `make portfolio-build`
-    - launch command: `make portfolio` (rebuild + serve + open with a
-      cache-busted URL)
+    - human launch command: `make portfolio` (rebuild + serve + system-browser
+      open with a cache-busted URL)
+    - Codex/debug launch command: `make portfolio-playwright` (rebuild, serve,
+      and open a Playwright tab in the repo Playwright session)
   - `ui/` is generated output only; do not hand-edit built files.
 - Playwright CLI snapshots/screenshots:
   - repo wrapper: `make pwcli ARGS="..."`
