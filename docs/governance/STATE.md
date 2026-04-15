@@ -33,24 +33,33 @@ Last updated: 2026-04-15
     - GSAP `Observer` maps one wheel/touch/key gesture to one exact scene.
     - the vertical `.board` transform moves between vertical scenes.
     - the horizontal `.horizontal-track` transform moves the middle chapter.
-- Twin Sankey portfolio shell iteration is active in the frontend lane:
-  - the horizontal chapter is split into separate Beta 1.0 Sankey, bridge, and
-    Beta 2.0 Sankey panels.
-  - `beta-one-sankey` currently renders the real local data payload through
-    `GET /portfolio/sankey-data`; bridge and Beta 2.0 panels are scaffolded
-    for the next design/data pass.
+- Portfolio evidence visual direction is now the WebGL Evidence Field:
+  - primary visual direction is a two-plane WebGL field:
+    - lower plane: Beta 1.0 manual eval evidence
+    - middle ribbons: continuity / translation mechanics
+    - upper plane: Beta 2.0 OCR binary evidence
+  - flat SVG/D3 Sankey or alluvial view remains the accessibility,
+    reduced-motion, performance, and direct-inspection fallback.
+  - both modes must use the same real-data `GET /portfolio/sankey-data`
+    payload.
+  - current frontend implementation uses a tracked stacked SVG evidence-map
+    FPO at `frontend/src/stacked-evidence-map-fpo.svg` while the WebGL
+    Evidence Field is being designed.
+  - the FPO is an implementation placeholder only; it must not be treated as
+    fake data, a decorative fallback, or final visual/data grammar.
+  - the frontend still fetches `GET /portfolio/sankey-data`, stores the result
+    in `window.__POLINKO_SANKEY_DATA__`, and sets readiness state on
+    `#evidence-map`.
   - current stage sequence is:
-    - `hero -> intro -> pipeline-one -> beta-one-sankey -> sankey-bridge ->
-      beta-two-sankey -> pipeline-two -> conclusion -> about-lab`
-  - `pipeline-one -> beta-one-sankey -> sankey-bridge -> beta-two-sankey ->
-    pipeline-two` is the horizontal chapter.
+    - `hero -> intro -> pipeline-one -> evidence-map -> pipeline-two ->
+      conclusion -> about-lab`
+  - `pipeline-one -> evidence-map -> pipeline-two` is the horizontal chapter.
   - blueprint/free-pan exploration was intentionally abandoned for this UI
     because wheel-scroll and pan gestures conflict; keep deterministic
     pinned-stage stepping for this portfolio shell.
-  - the left Sankey uses Beta 1.0 manual feedback rows from
-    `.local/runtime_dbs/active/manual_evals.db`.
-  - the right Sankey uses current OCR binary gate report cases from
-    `.local/eval_reports/`.
+  - the backend evidence payload still uses Beta 1.0 manual feedback rows from
+    `.local/runtime_dbs/active/manual_evals.db` and current OCR binary gate
+    report cases from `.local/eval_reports/`.
   - the connector graph uses source-side signal/category counts only; it is not
     a row-level join between legacy and current datasets.
   - `graphs.bridge` remains an API payload key for compatibility; it is not a
@@ -80,10 +89,10 @@ Last updated: 2026-04-15
   - long-term context should preserve evidence chains; do not replace source
     transcripts/reports with summary-of-summary state.
   - source remains `frontend/` with generated output in `ui/`.
-  - Recommended Sankey design references for the next visual pass are
-    inspiration only, not data/structure authority:
-    - `https://dribbble.com/shots/25691831-Sankey-Diagram`
-    - `https://dribbble.com/shots/19660633-Sankey-Chart-Orion-UI-Kit`
+  - Local-only design contract:
+    - `docs/peanut/refs/POLINKOFOLIO_EVIDENCE_FIELD_DESIGN.md`
+  - UI guardrails: no weird headlines, no dashboard cards, no placeholder
+    copy, no invented overlays, and no fake/decorative FPO evidence panels.
 - OCR-forward eval model remains active:
   - lockset lane is release-gating.
   - growth lane is fail-tolerant and signal-seeking.
@@ -101,10 +110,14 @@ Last updated: 2026-04-15
 ## Active Priorities
 
 1. Portfolio shipping lane:
-   - preserve pinned-stage stepping while refining the visual design.
-   - improve the split Sankey composition, palette, opacity, node/link polish,
-     and surrounding pipeline panels without changing the real-data payload
-     contract.
+   - preserve pinned-stage stepping while refining the stacked SVG fallback
+     grammar.
+   - implement the WebGL Evidence Field only after the flat evidence-map
+     grammar is stable.
+   - WebGL must stay drag-to-rotate only; do not capture wheel/trackpad
+     gestures.
+   - keep the stacked SVG fallback and WebGL surface on the same real-data
+     payload.
    - preserve real-data evidence contracts unless explicitly changing backend
      data shape.
 2. OCR reliability lane:
@@ -113,6 +126,11 @@ Last updated: 2026-04-15
 3. Documentation hygiene lane:
    - keep facts anchored to source evidence + binding decisions; avoid
      recursive summary drift.
+   - follow `docs/runtime/RUNBOOK.md` for startup and end-of-day routines.
+   - refresh `STATE` and `SESSION_HANDOFF` in place as current-truth running
+     docs; do not append daily log sections.
+   - append to `DECISIONS` only for durable process, engineering/tooling,
+     runtime/API, dependency/workflow, or eval-governance decisions.
 
 ## Canonical Sources
 

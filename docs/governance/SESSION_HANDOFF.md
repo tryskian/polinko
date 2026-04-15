@@ -8,13 +8,7 @@ Last updated: 2026-04-15
 
 1. Peanut prompt:
    - "hi! new day!"
-2. Confirm location and branch:
-   - repo: `/Users/tryskian/Github/polinko`
-   - branch: `git branch --show-current`
-3. Run environment sanity:
-   - `make doctor-env`
-4. If frontend changed, rebuild shell output:
-   - `make portfolio-build`
+2. Follow `docs/runtime/RUNBOOK.md` (`Morning Startup Check`).
 
 ## Current Snapshot
 
@@ -43,16 +37,24 @@ Last updated: 2026-04-15
   - vertical scenes move through `.board` transform.
   - horizontal chapter moves through `.horizontal-track` transform.
   - active sequence:
-    `hero -> intro -> pipeline-one -> beta-one-sankey -> sankey-bridge ->
-    beta-two-sankey -> pipeline-two -> conclusion -> about-lab`
-- Twin Sankey portfolio shell path is active for current cycle:
+    `hero -> intro -> pipeline-one -> evidence-map -> pipeline-two ->
+    conclusion -> about-lab`
+- Portfolio evidence visual direction is the WebGL Evidence Field:
   - `GET /portfolio/sankey-data` supplies the real-data payload.
-  - horizontal chapter is split into Beta 1.0 Sankey, bridge, and Beta 2.0
-    Sankey panels.
-  - `beta-one-sankey` currently renders the real local data payload; bridge and
-    Beta 2.0 panels are scaffolded for the next design/data pass.
-  - left side uses Beta 1.0 manual feedback rows from `manual_evals.db`.
-  - right side uses current OCR binary gate report cases from
+  - primary visual is a two-plane WebGL field:
+    - lower plane: Beta 1.0 manual eval evidence
+    - middle ribbons: continuity / translation mechanics
+    - upper plane: Beta 2.0 OCR binary evidence
+  - flat SVG/D3 Sankey or alluvial view remains the accessibility,
+    reduced-motion, performance, and direct-inspection fallback.
+  - current frontend implementation uses a tracked stacked SVG evidence-map
+    FPO at `frontend/src/stacked-evidence-map-fpo.svg`.
+  - the FPO is temporary implementation scaffolding only; the frontend still
+    fetches `/portfolio/sankey-data`, exposes
+    `window.__POLINKO_SANKEY_DATA__`, and sets readiness state on
+    `#evidence-map`.
+  - Beta 1.0 source uses manual feedback rows from `manual_evals.db`.
+  - Beta 2.0/current source uses OCR binary gate report cases from
     `.local/eval_reports/`.
   - connector graph links are source-side counts through an
     evidence-continuity anchor, not fabricated row-level joins.
@@ -62,14 +64,16 @@ Last updated: 2026-04-15
   - blueprint/free-pan exploration was intentionally abandoned for this UI
     because scroll and pan gestures conflict; keep deterministic
     one-gesture-per-section stepping.
-  - next design pass should improve the Sankey and pipeline visuals on top of
-    the pinned stage, not reintroduce native scroll snap/scrub behavior.
+  - next design pass should prototype the Evidence Field inside the pinned
+    stage, not reintroduce native scroll snap/scrub behavior.
+  - WebGL interaction is drag-to-rotate only; do not capture wheel/trackpad
+    gestures inside the canvas.
   - do not remove or fake the real-data Sankey payload contract while refining
     the frontend shell.
-  - Recommended Sankey design references for the next pass are inspiration
-    only, not data/structure authority:
-    - `https://dribbble.com/shots/25691831-Sankey-Diagram`
-    - `https://dribbble.com/shots/19660633-Sankey-Chart-Orion-UI-Kit`
+  - no weird headlines, dashboard cards, placeholder copy, invented
+    explanatory overlays, or fake/decorative FPO evidence panels.
+  - Local-only design contract:
+    - `docs/peanut/refs/POLINKOFOLIO_EVIDENCE_FIELD_DESIGN.md`
 - OCR lockset/growth lane model remains active and unchanged.
 - Eval gate contract remains binary pass/fail.
 - `/viz/pass-fail` is a fail-signal instrument:
@@ -87,8 +91,11 @@ Last updated: 2026-04-15
 
 1. Portfolio frontend design pass:
    - preserve pinned-stage stepping.
-   - refine the split Sankey palette, opacity, node/link polish, and pipeline
-     visual composition.
+   - refine the stacked SVG evidence-map fallback grammar first.
+   - prototype the WebGL Evidence Field only after the flat evidence-map
+     grammar is stable.
+   - keep the stacked SVG fallback and WebGL surface on the same real-data
+     payload.
    - preserve backend evidence/data contracts unless explicitly changing them.
 2. OCR hardening kernels (lockset stability + growth signal quality).
 3. Keep docs aligned via canonical ownership map.
@@ -97,16 +104,14 @@ Last updated: 2026-04-15
 
 - Do not duplicate historical decision timelines in this file.
 - Keep command catalogs in `docs/runtime/RUNBOOK.md` only.
-- Keep durable rationale/history in `docs/governance/DECISIONS.md` only.
+- Keep durable process/engineering/tooling/runtime/eval rationale in
+  `docs/governance/DECISIONS.md` only.
+- Refresh this file in place; do not append daily log sections.
 - Keep evidence anchors intact; summaries must point back to decisions/source
   evidence rather than becoming the evidence.
 
 ## Session Close
 
-- Peanut prompt includes terms:
-  - "wind down" or "human time"
-- `make eod`
-- `make eod` includes `make eod-docs-check`; update `STATE` and this handoff
-  first so current-truth docs carry today's `Last updated` date.
+- Follow `docs/runtime/RUNBOOK.md` (`End-of-Day Routine`).
 - Ensure clean tree or explicitly scoped modified files.
 - Update only current-truth facts in `STATE` and this file.

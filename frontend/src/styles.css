@@ -112,66 +112,21 @@ body {
 .intro,
 .pipeline-one,
 .pipeline-two,
-.sankey-bridge,
 .conclusion,
 .about-lab {
   background: var(--portfolio-paper);
 }
 
-.sankey {
+.evidence-map {
   background: var(--portfolio-paper);
+  display: grid;
+  place-items: center;
+  padding: clamp(1.5rem, 4vw, 4rem);
 }
 
-.sankey-svg {
+.evidence-map__image {
   display: block;
-  width: 100%;
-  height: 100%;
-  color: var(--portfolio-ink);
-}
-
-.sankey-node {
-  fill-opacity: 1;
-  mix-blend-mode: multiply;
-  transition: opacity 560ms cubic-bezier(0.16, 1, 0.3, 1),
-    filter 560ms cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-  will-change: opacity, filter;
-}
-
-.sankey-link {
-  fill: none;
-  stroke-linecap: butt;
-  stroke-opacity: 1;
-  mix-blend-mode: multiply;
-  transition: opacity 560ms cubic-bezier(0.16, 1, 0.3, 1),
-    stroke-opacity 560ms cubic-bezier(0.16, 1, 0.3, 1),
-    filter 560ms cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-  will-change: opacity, stroke-opacity, filter;
-}
-
-.sankey-svg.is-focus .sankey-node.is-dimmed,
-.sankey-svg.is-focus .sankey-link.is-dimmed {
-  opacity: 0.16;
-  transition-duration: 760ms;
-  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  transition-delay: 28ms;
-}
-
-.sankey-node.is-active {
-  opacity: 1;
-  filter: saturate(1.08);
-}
-
-.sankey-link.is-active {
-  opacity: 1;
-  stroke-opacity: 0.9;
-  filter: saturate(1.06);
-}
-
-.sankey-empty-text {
-  fill: rgba(0, 0, 0, 0.58);
-  font-size: clamp(1rem, 1.2vw, 1.4rem);
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  width: min(88vw, 1420px);
+  max-height: 86vh;
+  object-fit: contain;
 }

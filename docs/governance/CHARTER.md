@@ -60,9 +60,10 @@ OCR-forward reliability loops, and production-ready API foundations.
   summaries:
   - transcripts/screenshots/raw reports are source evidence, not decorative
     archive
-  - decisions encode binding interpretation of that evidence
-  - state/handoff files point to current constraints and must not replace the
-    underlying evidence trail
+  - decisions encode durable process, engineering/tooling, runtime, and eval
+    governance interpretation
+  - state/handoff files point to current constraints and must not replace or
+    duplicate the underlying evidence trail
   - do not delete or demote evidence files as a context-cleanup shortcut
   - if a summary conflicts with source evidence, source evidence wins and the
     summary must be corrected
@@ -119,6 +120,23 @@ OCR-forward reliability loops, and production-ready API foundations.
   - human controls go/no-go and next-slice prioritisation
   - engineer executes proactively inside that control frame
 
+## Documentation Governance
+
+- `docs/governance/DECISIONS.md` is append-only for durable human-AI process,
+  engineering/tooling, runtime/API, dependency/workflow, and eval-governance
+  decisions.
+- Do not append transient visual direction, portfolio taste, daily design
+  exploration, or current implementation notes to `DECISIONS.md`.
+- Running docs are refreshed in place, not appended as historical logs:
+  - `docs/governance/STATE.md` is the current-truth snapshot.
+  - `docs/governance/SESSION_HANDOFF.md` is the next-session operating
+    context.
+  - `docs/runtime/RUNBOOK.md` is procedure and command ownership.
+  - `docs/runtime/ARCHITECTURE.md` is stable system shape and contracts.
+- `docs/peanut/` is the local-only lane for visual references, theory,
+  transcripts, design exploration, and human-facing working notes.
+- Daily startup and end-of-day procedures live in `docs/runtime/RUNBOOK.md`.
+
 ## Core Runtime
 
 - CLI runner: `app.py`
@@ -165,22 +183,6 @@ OCR-forward reliability loops, and production-ready API foundations.
     feedback/checkpoint context
   - keep UI work presentation-only against that API contract
   - defer UI styling/interaction iterations until backend kernels are stable
-- Portfolio governance pin:
-  - keep portfolio strategy and role-targeting canon in Notion
-    (single-source planning surface).
-  - lock case-study presentation architecture to:
-    - primary: `Failure Museum`
-    - secondary: `Before/After Engine`
-    - secondary: `Operator's Console` (live status layer, placed last)
-  - embed `Claim Stress Test` inside each case card (not as a standalone section)
-  - keep case-study scope binary-eval-centered; `Reasoning Loops` remains
-    background context for this package
-  - run portfolio work in consolidation mode:
-    - reuse existing transcript/decision/eval evidence
-    - remove duplicate/drift surfaces
-    - avoid restart-from-scratch narrative rewrites
-  - treat beta 1.0 as the binary-transition evidence layer, not irrelevant
-    archive; beta 2.0/current eval evidence is meaningful by contrast against
-    the beta 1.0 transition decisions.
-  - keep Beta 1.0 and Beta 2.0 equally prominent in evidence mapping across
-    documents, databases, evals, and logic.
+- Portfolio details, visual direction, IA, and daily design notes belong in
+  running docs, Notion, or `docs/peanut/`, not in this charter unless they
+  change durable engineering/process governance.
