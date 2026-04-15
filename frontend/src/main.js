@@ -16,8 +16,26 @@ import { sankey, sankeyLinkHorizontal } from "d3-sankey";
 gsap.registerPlugin(Observer);
 
 const SANKEY_DATA_URL = "/portfolio/sankey-data";
-const SANKEY_SURFACE_ID = "beta-one-sankey";
-const SANKEY_SVG_ID = "beta-one-sankey-svg";
+const SANKEY_SURFACES = [
+  {
+    graphKey: "legacy",
+    surfaceId: "beta-one-sankey",
+    svgId: "beta-one-sankey-svg",
+    emptyText: "No Beta 1.0 Sankey data available",
+  },
+  {
+    graphKey: "bridge",
+    surfaceId: "sankey-bridge",
+    svgId: "sankey-bridge-svg",
+    emptyText: "No continuity bridge data available",
+  },
+  {
+    graphKey: "current",
+    surfaceId: "beta-two-sankey",
+    svgId: "beta-two-sankey-svg",
+    emptyText: "No Beta 2.0 Sankey data available",
+  },
+];
 const SANKEY_LAYOUT_MIN_VALUE = 2;
 const SANKEY_LAYOUT_MAX_VALUE = 16;
 const STAGE_STEP_DURATION = 0.92;
@@ -26,19 +44,32 @@ const STAGE_GESTURE_TOLERANCE = 14;
 const STAGE_GESTURE_COOLDOWN_MS = 180;
 
 const FLOW_COLORS = {
-  legacy_source: "#2f5f8f",
-  legacy_outcome: "#7aa9cb",
-  legacy_signal: "#ee7321",
-  bridge: "#f2d35d",
-  current_source: "#1e5f35",
-  current_lane: "#8cc66c",
-  current_outcome: "#83558e",
-  legacy_feedback_to_outcome: "#2f5f8f",
-  legacy_outcome_to_signal: "#ee7321",
-  legacy_signal_to_bridge: "#ee7321",
-  bridge_to_current_lane: "#1e5f35",
-  current_report_to_lane: "#1e5f35",
-  current_lane_to_outcome: "#83558e",
+  // Beta 1.0 source block: manual feedback as the legacy evidence root.
+  legacy_source: "#3f4a41",
+  // Beta 1.0 outcome blocks: manual PASS / PARTIAL / FAIL buckets.
+  legacy_outcome: "#6f6a67",
+  // Beta 1.0 signal blocks: extracted manual-eval signal categories.
+  legacy_signal: "#985323",
+  // Middle continuity block: evidence continuity between eras.
+  bridge: "#3f4a41",
+  // Beta 2.0 source block: current OCR binary gate report root.
+  current_source: "#2f2336",
+  // Beta 2.0 lane blocks: OCR lanes such as text, handwriting, illustration.
+  current_lane: "#8fa09c",
+  // Beta 2.0 outcome blocks: binary gate PASS / FAIL buckets.
+  current_outcome: "#4d485f",
+  // Beta 1.0 source -> outcome ribbons.
+  legacy_feedback_to_outcome: "#3f4a41",
+  // Beta 1.0 outcome -> signal ribbons.
+  legacy_outcome_to_signal: "#985323",
+  // Beta 1.0 signal -> continuity bridge ribbons.
+  legacy_signal_to_bridge: "#3f4a41",
+  // Continuity bridge -> Beta 2.0 lane ribbons.
+  bridge_to_current_lane: "#2f2336",
+  // Beta 2.0 source -> OCR lane ribbons.
+  current_report_to_lane: "#2f2336",
+  // Beta 2.0 OCR lane -> outcome ribbons.
+  current_lane_to_outcome: "#4d485f",
 };
 
 const EMPTY_GRAPHS = {
@@ -54,73 +85,18 @@ function cloneGraph(graph) {
   };
 }
 
-function remapNodeId(id) {
-  if (id.startsWith("bridge_signal_")) {
-    return id.replace("bridge_signal_", "legacy_signal_");
-  }
-  if (id.startsWith("bridge_lane_")) {
-    return id.replace("bridge_lane_", "current_lane_");
-  }
-  return id;
-}
-
-function buildComparativeGraph(graphs) {
-  const nodes = new Map();
-  const links = new Map();
-  const incoming = new Map();
-  const outgoing = new Map();
-
-  const addNode = (node) => {
-    const id = remapNodeId(String(node?.id ?? ""));
-    if (!id) {
-      return;
-    }
-    if (!nodes.has(id)) {
-      nodes.set(id, { ...node, id });
-    }
-  };
-
-  const addLink = (link) => {
-    const source = remapNodeId(String(link?.source ?? ""));
-    const target = remapNodeId(String(link?.target ?? ""));
-    if (!source || !target) {
-      return;
-    }
-    const value = Number(link?.value) || 0;
-    const kind = String(link?.kind ?? "");
-    const key = `${source}__${target}__${kind}`;
-    if (!links.has(key)) {
-      links.set(key, {
-        source,
-        target,
-        value: 0,
-        kind,
-        provenance: link?.provenance ?? "",
-      });
-    }
-    const row = links.get(key);
-    row.value += value;
-    outgoing.set(source, (outgoing.get(source) ?? 0) + value);
-    incoming.set(target, (incoming.get(target) ?? 0) + value);
-  };
-
-  [graphs?.legacy, graphs?.bridge, graphs?.current].forEach((graph) => {
-    (graph?.nodes ?? []).forEach(addNode);
-    (graph?.links ?? []).forEach(addLink);
-  });
-
-  return {
-    nodes: Array.from(nodes.values()).map((node) => ({
-      ...node,
-      rawValue: Math.max(incoming.get(node.id) ?? 0, outgoing.get(node.id) ?? 0),
-    })),
-    links: Array.from(links.values()),
-  };
-}
-
 function scaleGraphForLayout(graph) {
+  const rawIncoming = new Map();
+  const rawOutgoing = new Map();
   const positiveRawValues = (graph?.links ?? [])
-    .map((link) => Number(link?.value) || 0)
+    .map((link) => {
+      const rawValue = Number(link?.value) || 0;
+      const source = String(link?.source ?? "");
+      const target = String(link?.target ?? "");
+      rawOutgoing.set(source, (rawOutgoing.get(source) ?? 0) + rawValue);
+      rawIncoming.set(target, (rawIncoming.get(target) ?? 0) + rawValue);
+      return rawValue;
+    })
     .filter((value) => value > 0);
   const minRaw = positiveRawValues.length ? Math.min(...positiveRawValues) : 0;
   const maxRaw = positiveRawValues.length ? Math.max(...positiveRawValues) : 0;
@@ -129,7 +105,10 @@ function scaleGraphForLayout(graph) {
   const denom = Math.max(maxLog - minLog, Number.EPSILON);
 
   return {
-    nodes: (graph?.nodes ?? []).map((node) => ({ ...node })),
+    nodes: (graph?.nodes ?? []).map((node) => ({
+      ...node,
+      rawValue: Math.max(rawIncoming.get(node.id) ?? 0, rawOutgoing.get(node.id) ?? 0),
+    })),
     links: (graph?.links ?? []).map((link) => {
       const rawValue = Number(link?.value) || 0;
       const scaledValue = rawValue > 0
@@ -162,9 +141,9 @@ function formatNumber(value) {
   return new Intl.NumberFormat("en").format(n);
 }
 
-function drawComparativeSankey(payload) {
-  const sankeySurface = document.getElementById(SANKEY_SURFACE_ID);
-  const svgNode = document.getElementById(SANKEY_SVG_ID);
+function drawGraphSankey(payload, surfaceConfig) {
+  const sankeySurface = document.getElementById(surfaceConfig.surfaceId);
+  const svgNode = document.getElementById(surfaceConfig.svgId);
   if (!(sankeySurface instanceof HTMLElement) || !(svgNode instanceof SVGSVGElement)) {
     return;
   }
@@ -176,7 +155,7 @@ function drawComparativeSankey(payload) {
   svg.selectAll("*").remove();
 
   const graphs = payload?.graphs ?? EMPTY_GRAPHS;
-  const graph = scaleGraphForLayout(buildComparativeGraph(graphs));
+  const graph = scaleGraphForLayout(graphs[surfaceConfig.graphKey] ?? EMPTY_GRAPHS[surfaceConfig.graphKey]);
   if (!graphHasData(graph)) {
     svg
       .append("text")
@@ -184,7 +163,7 @@ function drawComparativeSankey(payload) {
       .attr("x", width / 2)
       .attr("y", height / 2)
       .attr("text-anchor", "middle")
-      .text("No Sankey data available");
+      .text(surfaceConfig.emptyText);
     return;
   }
 
@@ -199,8 +178,8 @@ function drawComparativeSankey(payload) {
 
   const layout = sankey()
     .nodeId((node) => node.id)
-    .nodeWidth(Math.max(19, Math.round(chartWidth * 0.0135)))
-    .nodePadding(Math.max(8, Math.round(height * 0.018)))
+    .nodeWidth(Math.max(16, Math.round(chartWidth * 0.011)))
+    .nodePadding(Math.max(10, Math.round(height * 0.02)))
     .extent([
       [chartLeft + insetX, chartTop + insetY],
       [chartLeft + chartWidth - insetX, chartTop + chartHeight - insetY],
@@ -243,7 +222,20 @@ function drawComparativeSankey(payload) {
     .attr("y", (node) => node.y0)
     .attr("width", (node) => Math.max(1, node.x1 - node.x0))
     .attr("height", (node) => Math.max(1, node.y1 - node.y0))
-    .attr("fill", (node) => nodeColor(node));
+    .attr("fill", (node) => nodeColor(node))
+    .attr("rx", 1.5);
+
+  svg
+    .append("g")
+    .attr("class", "sankey-node-caps")
+    .selectAll("line")
+    .data(sankeyGraph.nodes)
+    .join("line")
+    .attr("class", "sankey-node-cap")
+    .attr("x1", (node) => node.x0)
+    .attr("x2", (node) => node.x1)
+    .attr("y1", (node) => node.y0)
+    .attr("y2", (node) => node.y0);
 
   nodeSelection
     .append("title")
@@ -289,15 +281,30 @@ function drawComparativeSankey(payload) {
 }
 
 function setupSankeyDataWiring() {
-  const sankeySurface = document.getElementById(SANKEY_SURFACE_ID);
-  if (!(sankeySurface instanceof HTMLElement)) {
+  const sankeySurfaces = SANKEY_SURFACES
+    .map((surfaceConfig) => document.getElementById(surfaceConfig.surfaceId))
+    .filter((element) => element instanceof HTMLElement);
+  if (!sankeySurfaces.length) {
     return () => {};
   }
 
   let resizeFrame = 0;
   let payload = null;
 
-  const render = () => drawComparativeSankey(payload);
+  const setSurfaceState = (state, reason = "") => {
+    sankeySurfaces.forEach((surface) => {
+      surface.dataset.state = state;
+      if (reason) {
+        surface.dataset.reason = reason;
+      } else {
+        delete surface.dataset.reason;
+      }
+    });
+  };
+
+  const render = () => {
+    SANKEY_SURFACES.forEach((surfaceConfig) => drawGraphSankey(payload, surfaceConfig));
+  };
 
   const onResize = () => {
     if (resizeFrame) {
@@ -307,7 +314,7 @@ function setupSankeyDataWiring() {
   };
 
   const load = async () => {
-    sankeySurface.dataset.state = "loading";
+    setSurfaceState("loading");
     try {
       const response = await fetch(SANKEY_DATA_URL, { cache: "no-store" });
       if (!response.ok) {
@@ -315,10 +322,7 @@ function setupSankeyDataWiring() {
       }
       payload = await response.json();
       window.__POLINKO_SANKEY_DATA__ = payload;
-      sankeySurface.dataset.state = payload?.available ? "ready" : "empty";
-      if (!payload?.available) {
-        sankeySurface.dataset.reason = payload?.reason ?? "No Sankey data available";
-      }
+      setSurfaceState(payload?.available ? "ready" : "empty", payload?.available ? "" : payload?.reason ?? "No Sankey data available");
       window.dispatchEvent(new CustomEvent("polinko:sankey-data", { detail: payload }));
     } catch (error) {
       payload = {
@@ -326,8 +330,7 @@ function setupSankeyDataWiring() {
         reason: error instanceof Error ? error.message : String(error),
         graphs: EMPTY_GRAPHS,
       };
-      sankeySurface.dataset.state = "error";
-      sankeySurface.dataset.reason = payload.reason;
+      setSurfaceState("error", payload.reason);
     }
     render();
   };
