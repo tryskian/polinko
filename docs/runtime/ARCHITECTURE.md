@@ -78,7 +78,7 @@
     - local-only, visual-forward, near-real-time surface
     - fail-signal instrument rather than pass-rate vanity dashboard
     - insight-first summary rather than dense dashboard analysis
-- Portfolio Twin Sankey evidence surface:
+- Portfolio evidence surface:
   - `GET /portfolio/sankey-data`
     - combines Beta 1.0 manual feedback from
       `.local/runtime_dbs/active/manual_evals.db` with current OCR binary gate
@@ -90,12 +90,17 @@
       not row-level joins between legacy and current datasets
   - `GET /portfolio`
     - serves `ui/index.html`, generated from `frontend/`
-    - the frontend renders the Twin Sankey payload and keeps no-data behavior
-      visible in the shell
+    - selected primary visual direction is a WebGL Evidence Field, with a flat
+      SVG/D3 Sankey or alluvial fallback using the same payload
+    - current frontend implementation uses a tracked stacked SVG evidence-map
+      FPO at `frontend/src/stacked-evidence-map-fpo.svg`
+    - the FPO is temporary implementation scaffolding; the frontend still
+      fetches `GET /portfolio/sankey-data` and exposes readiness state
+    - no-data behavior must stay visible in both primary and fallback surfaces
     - the frontend interaction model is pinned-stage stepping: document scroll
       is locked, GSAP `Observer` maps one gesture to one scene, `.board`
       transforms vertical scenes, and `.horizontal-track` transforms the
-      middle `pipeline-one -> sankey -> pipeline-two` chapter
+      middle `pipeline-one -> evidence-map -> pipeline-two` chapter
 - Eval artefacts:
   - Git history is the canonical retention mechanism for tracked project state.
   - local eval artefacts are operational outputs (default under `eval_reports/`).
@@ -139,10 +144,16 @@
 - Collaboration/execution policy is anchored in `docs/governance/CHARTER.md`.
 - Co-reasoning control rights are human-led for objective/scope/acceptance and
   go/no-go decisions.
-- Formal decision records are appended in `docs/governance/DECISIONS.md`.
+- Durable process, engineering/tooling, runtime/API, dependency/workflow, and
+  eval-governance decisions are appended in
+  `docs/governance/DECISIONS.md`.
 - Operator procedure lives in `docs/runtime/RUNBOOK.md`.
-- Current-state checkpoints live in `docs/governance/STATE.md`.
-- Next-session carryover constraints live in `docs/governance/SESSION_HANDOFF.md`.
+- Current-state checkpoints live in `docs/governance/STATE.md` and are
+  refreshed in place.
+- Next-session carryover constraints live in
+  `docs/governance/SESSION_HANDOFF.md` and are refreshed in place.
+- Visual exploration, theory, transcripts, and human-facing working notes stay
+  in the local-only `docs/peanut/` lane.
 - Policy updates are complete only when all relevant surfaces above are aligned.
 
 ## Operational Commands

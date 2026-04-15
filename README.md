@@ -185,29 +185,43 @@ Eval visualization and surfaces:
 - Default pulse source: strict OCR binary gate reports under `.local/eval_reports/`.
 - Manual eval warehouse: `.local/runtime_dbs/active/manual_evals.db`
   (`make manual-evals-db`) for integrated Beta 1.0/current manual-eval rows.
-- `GET /portfolio/sankey-data` returns the Twin Sankey portfolio payload:
-  Beta 1.0 manual eval rows from `manual_evals.db` plus current OCR binary gate
-  reports from `.local/eval_reports/`. It returns an explicit no-data state
-  rather than decorative fallback when either source is missing.
+- `GET /portfolio/sankey-data` returns the real-data portfolio evidence
+  payload: Beta 1.0 manual eval rows from `manual_evals.db`, continuity
+  bridge counts, and current OCR binary gate reports from `.local/eval_reports/`.
+  It returns an explicit no-data state rather than decorative fallback when
+  either source is missing.
 
 ## UI Shell Access
 
 - `GET /` redirects to `GET /portfolio`.
 - `GET /portfolio` serves the form-first portfolio scaffold:
-  - section path: hero -> intro -> pipeline -> Sankey -> pipeline ->
-    conclusion -> about/lab
-  - the Twin Sankey section composes the real legacy, connector, and current
-    endpoint graphs
+  - current interaction model is pinned-stage stepping
+  - current frontend implementation uses a tracked stacked SVG evidence-map
+    FPO at `frontend/src/stacked-evidence-map-fpo.svg`
+  - the FPO is an implementation placeholder only; `/portfolio/sankey-data`
+    still loads and exposes real-data readiness state
+  - selected visual direction is the WebGL Evidence Field:
+    - lower plane: Beta 1.0 manual eval evidence
+    - middle ribbons: continuity / translation mechanics
+    - upper plane: Beta 2.0 OCR binary evidence
+  - flat SVG/D3 Sankey or alluvial view remains the accessibility,
+    reduced-motion, performance, and direct-inspection fallback
   - visual weights are normalized for readability across Beta 1.0 and current
     totals; labels/tooltips retain actual source counts
-  - current scaffold is a merged checkpoint, not a locked implementation; next
-    frontend pass should reset from a clean slate rather than retrofit section
-    logic
+  - WebGL interaction should be drag-to-rotate only; do not capture
+    wheel/trackpad gestures inside the canvas
+  - no weird headlines, dashboard cards, placeholder copy, invented overlays,
+    decorative fake data, or fake/decorative FPO evidence panels
   - explicit no-data behavior when real local sources are unavailable
 - frontend shell build contract:
   - edit source in `frontend/`
   - generate served shell with `make portfolio-build` (writes to `ui/`)
-  - use `make portfolio` for the canonical rebuild + serve + open workflow
+  - use `make portfolio` for the canonical rebuild + serve + system-browser
+    open workflow; on macOS this opens through the default browser rather than
+    the repo Playwright session
+  - use `make portfolio-playwright` only for Codex/debug inspection in the
+    repo Playwright session; it opens a Playwright tab instead of using the
+    human-facing browser command
   - do not hand-edit built files under `ui/`
 - Playwright CLI captures should use the repo wrapper so snapshots/screenshots
   are grouped by local day under `docs/peanut/assets/screenshots/playwright`.

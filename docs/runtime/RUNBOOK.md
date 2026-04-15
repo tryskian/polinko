@@ -36,12 +36,23 @@
 
 ## Morning Startup Check (Codexbeab)
 
-1. Confirm execution location:
+1. Read morning docs in order:
+   - `docs/governance/CHARTER.md`
+   - `docs/governance/STATE.md`
+   - `docs/governance/SESSION_HANDOFF.md`
+   - `docs/runtime/RUNBOOK.md`
+2. Confirm execution location:
    - canonical root (`/Users/tryskian/Github/polinko`) or dedicated worktree.
-2. Confirm active branch in this thread:
+3. Confirm active branch in this thread:
    - `git branch --show-current`
-3. If running parallel tracks, keep each track in its own dedicated worktree.
-4. Only after 1-3:
+4. Start implementation from a feature branch, not `main`:
+   - if on `main`, create/switch to a task branch before code or docs edits.
+   - default branch prefix: `codex/bigbrain/<task-name>`.
+5. If running parallel tracks, keep each track in its own dedicated worktree.
+6. Give the morning peanut breakdown before implementation:
+   - list the kernels for the whole day in bullets.
+   - state the kernel the engineer is starting with.
+7. Only after 1-6:
    - run `make doctor-env`
    - continue with normal startup (`make server-daemon`, `make session-status`)
 
@@ -58,9 +69,14 @@
 
 ## End-of-Day Routine (Codexbeab)
 
-1. Run the end-of-day script:
+1. Trigger phrases from the human:
+   - `human time`
+   - `wind down`
+2. Run pre-merge validation from the feature branch when work is ready for PR:
+   - `make eod-preflight`
+3. After merge and sync back to `main`, run the final end-of-day script:
    - `make eod`
-2. Script sequence (deterministic):
+4. Script sequence (deterministic):
    - `make transcript-fix`
    - `make transcript-check`
    - `make eod-docs-check`
@@ -68,13 +84,17 @@
    - `make lint-docs`
    - `make test`
    - `make eod-stop`
-3. Purpose:
+   - `make eod-git-check` (`make eod` only)
+5. Purpose:
    - keep local transcript records in consistent rich format
    - enforce same-day current-truth updates for `STATE` and
      `SESSION_HANDOFF`
+   - refresh docs for current truth before closeout validation
+   - refresh running docs in place rather than appending daily log sections
    - catch build/docs drift before day-close
+   - enforce merged clean `main` as the only valid EOD repository state
    - hand off a clean validation state for next startup
-4. Kernel closeout (mandatory):
+6. Kernel closeout (mandatory):
    - list kernels executed that day (one line per kernel)
    - inspect each kernel against:
      - intended objective
@@ -85,6 +105,14 @@
      - stale links/paths/reference wiring
    - mark disposition for each kernel:
      - `go`, `rework`, or `park`
+7. Repository closeout (mandatory):
+   - EOD always finishes merged and clean on local `main`, synced with
+     `origin/main`.
+   - commit/push the feature branch, merge through the protected-main PR flow,
+     then:
+     - `git switch main`
+     - `git pull --ff-only`
+     - `git status --short` must be empty
 
 ## Command Ownership Rule (Reasoning Loops)
 
@@ -483,8 +511,9 @@ Read-only DB audits remain allowed:
    than carrying compatibility paths in active flow.
 3. In human-directed precision mode, execute only the requested slice and avoid
    opportunistic cleanup outside scope.
-4. When this rule changes execution, record it in `docs/governance/DECISIONS.md` and
-   checkpoint it in `docs/governance/STATE.md`.
+4. When this rule changes durable process, engineering/tooling, runtime/API, or
+   eval-governance behaviour, record it in `docs/governance/DECISIONS.md` and
+   checkpoint current truth in `docs/governance/STATE.md`.
 
 ## Proactive Engineering Ownership
 
@@ -527,16 +556,20 @@ Read-only DB audits remain allowed:
 
 ## Policy Propagation Checklist
 
-1. For any collaboration/execution policy change, update all governance surfaces
-   in the same change set:
+1. For any collaboration/execution policy change, update all relevant
+   governance surfaces in the same change set:
    - `docs/governance/CHARTER.md`
-   - `docs/governance/DECISIONS.md`
+   - `docs/governance/DECISIONS.md` only when the change is a durable process,
+     engineering/tooling, runtime/API, dependency/workflow, or eval-governance
+     decision
    - `docs/runtime/RUNBOOK.md`
    - `docs/governance/STATE.md`
    - `docs/governance/SESSION_HANDOFF.md`
    - `docs/runtime/ARCHITECTURE.md` (if operating flow/ownership changes)
-2. Do not treat any single doc as sufficient for policy updates.
-3. End-of-day handoff must include any new policy/cutline so next-session
+2. Refresh running docs in place; do not append daily log sections to
+   `STATE.md` or `SESSION_HANDOFF.md`.
+3. Do not treat any single doc as sufficient for policy updates.
+4. End-of-day handoff must include any new policy/cutline so next-session
    startup does not drift.
 
 ## Reset Local Session Memory
@@ -607,23 +640,35 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
 - `GET /portfolio` serves the static UI shell draft for immediate content
   editing and operator review.
   - current shell mode is a pinned-stage portfolio scaffold:
-    `hero -> intro -> pipeline-one -> Sankey -> pipeline-two -> conclusion ->
-    about-lab`
+    `hero -> intro -> pipeline-one -> evidence-map -> pipeline-two ->
+    conclusion -> about-lab`
   - document scroll is intentionally locked; the stage advances by transforming
     `.board` vertically and `.horizontal-track` horizontally.
   - one wheel/touch/key gesture should advance one exact scene.
-  - visible Sankey rendering is one section composing the real legacy,
-    connector, and current endpoint graphs
-  - the frontend normalizes visual weights across Beta 1.0/current totals for
-    readability; labels/tooltips continue to show actual source counts from
-    `GET /portfolio/sankey-data`
-  - do not add decorative placeholder copy/cards/FPO content to this scaffold
+  - current visual direction is the WebGL Evidence Field:
+    - lower plane: Beta 1.0 manual eval evidence
+    - middle ribbons: continuity / translation mechanics
+    - upper plane: Beta 2.0 OCR binary evidence
+  - flat SVG/D3 Sankey or alluvial view remains the accessibility,
+    reduced-motion, performance, and direct-inspection fallback.
+  - current frontend implementation uses a tracked stacked SVG evidence-map
+    FPO at `frontend/src/stacked-evidence-map-fpo.svg`.
+  - the FPO is temporary implementation scaffolding; `/portfolio/sankey-data`
+    still loads, `window.__POLINKO_SANKEY_DATA__` is populated, and
+    `#evidence-map` receives readiness state.
+  - WebGL interaction is drag-to-rotate only; do not capture wheel/trackpad
+    gestures inside the canvas.
+  - do not add weird headlines, decorative placeholder copy/cards, invented
+    overlays, fake fallback data, or fake/decorative FPO evidence content to
+    this scaffold
   - canonical build flow:
     - source: `frontend/`
     - generated output: `ui/`
     - build-only command: `make portfolio-build`
-    - launch command: `make portfolio` (rebuild + serve + open with a
-      cache-busted URL)
+    - human launch command: `make portfolio` (rebuild + serve + system-browser
+      open with a cache-busted URL)
+    - Codex/debug launch command: `make portfolio-playwright` (rebuild, serve,
+      and open a Playwright tab in the repo Playwright session)
   - `ui/` is generated output only; do not hand-edit built files.
 - Playwright CLI snapshots/screenshots:
   - repo wrapper: `make pwcli ARGS="..."`
@@ -644,12 +689,13 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     bare filenames may be written relative to the command cwd by the CLI
   - this directory is local evidence under the peanut lane; do not use
     `output/playwright/` for portfolio UI captures in this repo.
-- `GET /portfolio/sankey-data` returns the real-data Twin Sankey payload:
-  - left side: Beta 1.0 manual feedback rows from `manual_evals.db`
+- `GET /portfolio/sankey-data` returns the real-data portfolio evidence
+  payload:
+  - legacy graph: Beta 1.0 manual feedback rows from `manual_evals.db`
   - connector graph: source-side signal/category counts, exposed under the
     `graphs.bridge` payload key for API compatibility, not as a portfolio
     section label
-  - right side: current OCR binary gate cases from `.local/eval_reports/`
+  - current graph: current OCR binary gate cases from `.local/eval_reports/`
   - if either source is missing, the payload returns `available=false` with
     empty graphs; do not add decorative fallback data
 - `GET /manual-evals/surface` return manual-eval data surface from

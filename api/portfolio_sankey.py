@@ -38,6 +38,8 @@ _LANE_LABELS = {
     "other": "Other",
 }
 
+_BRIDGE_OCR_LANES = ("text", "handwriting", "illustration")
+
 
 def _empty_graph(graph_id: str, label: str) -> dict[str, Any]:
     return {
@@ -301,6 +303,42 @@ def _link(source: str, target: str, value: int, *, kind: str, provenance: str) -
     }
 
 
+def _allocate_count_by_weights(total: int, weights: dict[str, int]) -> dict[str, int]:
+    if total <= 0:
+        return {}
+
+    positive_weights = {
+        key: int(weight)
+        for key, weight in weights.items()
+        if int(weight or 0) > 0
+    }
+    if not positive_weights:
+        return {}
+
+    weight_total = sum(positive_weights.values())
+    raw_allocations = {
+        key: (total * weight) / weight_total
+        for key, weight in positive_weights.items()
+    }
+    allocations = {
+        key: int(value)
+        for key, value in raw_allocations.items()
+    }
+    remainder = total - sum(allocations.values())
+    if remainder <= 0:
+        return {key: value for key, value in allocations.items() if value > 0}
+
+    ranked_remainders = sorted(
+        raw_allocations,
+        key=lambda key: (raw_allocations[key] - allocations[key], positive_weights[key], key),
+        reverse=True,
+    )
+    for key in ranked_remainders[:remainder]:
+        allocations[key] += 1
+
+    return {key: value for key, value in allocations.items() if value > 0}
+
+
 def _legacy_graph(legacy: dict[str, Any]) -> dict[str, Any]:
     nodes = [_node("legacy_manual_feedback", "Beta 1.0 manual evals", "legacy_source")]
     links: list[dict[str, Any]] = []
@@ -422,10 +460,12 @@ def _current_graph(current: dict[str, Any]) -> dict[str, Any]:
 
 
 def _bridge_graph(legacy: dict[str, Any], current: dict[str, Any]) -> dict[str, Any]:
-    nodes = [_node("continuity_bridge", "Evidence continuity", "bridge")]
+    nodes: list[dict[str, str]] = []
     links: list[dict[str, Any]] = []
 
     signal_counts = legacy.get("signal_counts", {})
+    lane_counts = current.get("lane_counts", {})
+
     if isinstance(signal_counts, dict):
         for signal, raw_count in sorted(signal_counts.items()):
             count = int(raw_count or 0)
@@ -439,17 +479,7 @@ def _bridge_graph(legacy: dict[str, Any], current: dict[str, Any]) -> dict[str, 
                     "legacy_signal",
                 )
             )
-            links.append(
-                _link(
-                    node_id,
-                    "continuity_bridge",
-                    count,
-                    kind="legacy_signal_to_bridge",
-                    provenance="manual_evals.feedback.tags_json",
-                )
-            )
 
-    lane_counts = current.get("lane_counts", {})
     if isinstance(lane_counts, dict):
         for lane, raw_count in sorted(lane_counts.items()):
             count = int(raw_count or 0)
@@ -463,22 +493,33 @@ def _bridge_graph(legacy: dict[str, Any], current: dict[str, Any]) -> dict[str, 
                     "current_lane",
                 )
             )
-            links.append(
-                _link(
-                    "continuity_bridge",
-                    node_id,
-                    count,
-                    kind="bridge_to_current_lane",
-                    provenance="eval_reports.cases.lane",
+
+    if isinstance(signal_counts, dict) and isinstance(lane_counts, dict):
+        for signal, raw_signal_count in sorted(signal_counts.items()):
+            signal_count = int(raw_signal_count or 0)
+            if signal_count <= 0:
+                continue
+            lane_weights = {
+                lane: int(lane_counts.get(lane, 0) or 0)
+                for lane in _BRIDGE_OCR_LANES
+            }
+            for lane, count in sorted(_allocate_count_by_weights(signal_count, lane_weights).items()):
+                links.append(
+                    _link(
+                        f"bridge_signal_{signal}",
+                        f"bridge_lane_{lane}",
+                        count,
+                        kind="bridge_signal_to_lane",
+                        provenance="manual_evals.feedback.tags_json weighted by eval_reports.cases.lane",
+                    )
                 )
-            )
 
     return {
         "id": "bridge",
         "label": "Signal bridge",
         "nodes": nodes,
         "links": links,
-        "metric": "source-side counts; no row-level join implied",
+        "metric": "legacy signal counts proportionally allocated by current OCR lane counts; no row-level join implied",
     }
 
 
@@ -551,6 +592,6 @@ def build_portfolio_sankey_payload(
         },
         "notes": [
             "All graph values are derived from local manual eval rows or local OCR binary gate reports.",
-            "The bridge is a continuity anchor between source-side counts, not a row-level join.",
+            "The bridge carries legacy signal-family counts forward by current OCR lane proportions; it is not a row-level join.",
         ],
     }

@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Polinkofolio stacked evidence map FPO</title>
+  <desc id="desc">A temporary stacked evidence-map visual showing Beta 1.0 manual eval outcomes flowing through signal families and an evidence spine into Beta 2.0 OCR lanes and binary outcomes.</desc>
+  <defs>
+    <style>
+      svg {
+        background: #faf9f6;
+        font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      .paper-grain {
+        fill: #faf9f6;
+      }
+
+      .rule {
+        stroke: #080806;
+        stroke-width: 1.2;
+        stroke-linecap: square;
+      }
+
+      .minor-rule {
+        stroke: #080806;
+        stroke-width: 0.7;
+        stroke-opacity: 0.22;
+      }
+
+      .bar,
+      .tick {
+        fill: #080806;
+      }
+
+      .label {
+        fill: #080806;
+        font-size: 13px;
+        font-weight: 650;
+        letter-spacing: 0.05em;
+      }
+
+      .small-label {
+        fill: #080806;
+        font-size: 10px;
+        font-weight: 650;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .micro-label {
+        fill: #080806;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .muted {
+        fill: #080806;
+        opacity: 0.48;
+      }
+
+      .flow {
+        mix-blend-mode: multiply;
+        stroke: none;
+      }
+
+      .annotation {
+        fill: none;
+        stroke: #080806;
+        stroke-width: 0.9;
+        stroke-opacity: 0.38;
+        stroke-linecap: square;
+      }
+    </style>
+  </defs>
+
+  <rect class="paper-grain" width="1200" height="760" />
+
+  <g aria-hidden="true">
+    <line class="minor-rule" x1="92" y1="86" x2="1108" y2="86" />
+    <line class="minor-rule" x1="92" y1="674" x2="1108" y2="674" />
+    <line class="minor-rule" x1="600" y1="86" x2="600" y2="674" />
+  </g>
+
+  <g id="flows-beta-one-to-signals">
+    <path class="flow" fill="#9dc5c3" d="M140 158 C230 132 280 378 350 378 L350 424 C280 424 230 200 140 214 Z" />
+    <path class="flow" fill="#cbdccc" d="M140 190 C230 198 280 552 350 552 L350 590 C280 590 230 250 140 248 Z" />
+    <path class="flow" fill="#ffd16d" d="M140 302 C230 296 280 202 350 198 L350 238 C280 242 230 330 140 350 Z" />
+    <path class="flow" fill="#fb9497" d="M140 322 C232 342 284 470 350 464 L350 504 C284 510 232 392 140 374 Z" />
+    <path class="flow" fill="#9dc5c3" d="M140 348 C232 382 286 552 350 552 L350 594 C286 594 232 432 140 404 Z" />
+    <path class="flow" fill="#fb5f54" d="M140 504 C230 488 280 123 350 112 L350 168 C282 174 236 536 140 556 Z" />
+    <path class="flow" fill="#ff8d28" d="M140 526 C230 536 278 262 350 260 L350 318 C278 320 226 580 140 586 Z" />
+    <path class="flow" fill="#3c5f40" d="M140 548 C230 572 282 374 350 374 L350 430 C282 431 226 604 140 608 Z" />
+  </g>
+
+  <g id="flows-signals-to-spine">
+    <path class="flow" fill="#503286" d="M368 112 C454 112 504 156 596 156 L596 218 C504 218 454 168 368 168 Z" />
+    <path class="flow" fill="#cbdccc" d="M368 198 C450 196 504 220 596 226 L596 270 C504 270 450 240 368 238 Z" />
+    <path class="flow" fill="#ff8d28" d="M368 260 C454 258 508 310 596 310 L596 374 C508 374 454 320 368 318 Z" />
+    <path class="flow" fill="#3c5f40" d="M368 374 C454 374 508 402 596 408 L596 468 C508 462 454 430 368 430 Z" />
+    <path class="flow" fill="#fb9497" d="M368 464 C452 462 508 506 596 514 L596 558 C508 552 452 506 368 504 Z" />
+    <path class="flow" fill="#9dc5c3" d="M368 552 C452 552 508 586 596 592 L596 638 C508 634 452 594 368 594 Z" />
+  </g>
+
+  <g id="flows-spine-to-beta-two">
+    <path class="flow" fill="#9dc5c3" d="M604 152 C690 154 734 170 808 170 L808 256 C734 258 690 220 604 218 Z" />
+    <path class="flow" fill="#3c5f40" d="M604 226 C690 230 734 322 808 326 L808 414 C734 410 690 272 604 270 Z" />
+    <path class="flow" fill="#503286" d="M604 310 C690 316 734 476 808 480 L808 572 C734 570 690 382 604 374 Z" />
+    <path class="flow" fill="#ff8d28" d="M604 408 C688 414 736 282 808 270 L808 328 C736 336 688 466 604 468 Z" />
+    <path class="flow" fill="#fb9497" d="M604 514 C688 510 736 414 808 414 L808 480 C736 480 688 562 604 558 Z" />
+    <path class="flow" fill="#ffd16d" d="M604 592 C688 588 736 574 808 574 L808 620 C736 620 688 638 604 638 Z" />
+  </g>
+
+  <g id="flows-lanes-to-outcomes">
+    <path class="flow" fill="#9dc5c3" d="M826 170 C900 172 946 210 1026 216 L1026 320 C946 316 900 260 826 256 Z" />
+    <path class="flow" fill="#fb5f54" d="M826 262 C902 264 948 476 1026 492 L1026 552 C948 540 902 326 826 328 Z" />
+    <path class="flow" fill="#3c5f40" d="M826 326 C900 326 946 332 1026 332 L1026 420 C946 420 900 416 826 414 Z" />
+    <path class="flow" fill="#ff8d28" d="M826 422 C902 430 948 552 1026 562 L1026 610 C948 604 902 484 826 480 Z" />
+    <path class="flow" fill="#503286" d="M826 480 C900 476 946 426 1026 430 L1026 494 C946 488 900 570 826 572 Z" />
+    <path class="flow" fill="#ffd16d" d="M826 578 C900 580 946 614 1026 618 L1026 650 C946 648 900 622 826 620 Z" />
+  </g>
+
+  <g id="nodes-beta-one">
+    <text class="micro-label muted" x="82" y="118">Beta 1.0 manual outcomes</text>
+    <rect class="bar" x="122" y="158" width="18" height="90" rx="1.5" />
+    <rect class="bar" x="122" y="302" width="18" height="102" rx="1.5" />
+    <rect class="bar" x="122" y="504" width="18" height="104" rx="1.5" />
+    <text class="label" x="82" y="190">Pass</text>
+    <text class="label" x="66" y="340">Partial</text>
+    <text class="label" x="82" y="558">Fail</text>
+  </g>
+
+  <g id="nodes-signals">
+    <text class="micro-label muted" x="318" y="82">Signal families</text>
+    <rect class="bar" x="350" y="112" width="18" height="56" rx="1.5" />
+    <rect class="bar" x="350" y="198" width="18" height="40" rx="1.5" />
+    <rect class="bar" x="350" y="260" width="18" height="58" rx="1.5" />
+    <rect class="bar" x="350" y="374" width="18" height="56" rx="1.5" />
+    <rect class="bar" x="350" y="464" width="18" height="40" rx="1.5" />
+    <rect class="bar" x="350" y="552" width="18" height="42" rx="1.5" />
+    <text class="small-label" x="382" y="144">OCR signal</text>
+    <text class="small-label" x="382" y="223">Grounding</text>
+    <text class="small-label" x="382" y="293">Hallucination risk</text>
+    <text class="small-label" x="382" y="408">Correctness</text>
+    <text class="small-label" x="382" y="490">Style / voice</text>
+    <text class="small-label" x="382" y="579">Recovery</text>
+  </g>
+
+  <g id="evidence-spine">
+    <text class="micro-label muted" x="558" y="82">Evidence spine</text>
+    <rect class="bar" x="596" y="120" width="8" height="522" rx="1" />
+    <rect class="tick" x="588" y="154" width="24" height="6" rx="1" />
+    <rect class="tick" x="588" y="226" width="24" height="6" rx="1" />
+    <rect class="tick" x="588" y="310" width="24" height="6" rx="1" />
+    <rect class="tick" x="588" y="408" width="24" height="6" rx="1" />
+    <rect class="tick" x="588" y="514" width="24" height="6" rx="1" />
+    <rect class="tick" x="588" y="592" width="24" height="6" rx="1" />
+    <path class="annotation" d="M612 120 L642 120 L642 642 L612 642" />
+  </g>
+
+  <g id="nodes-beta-two">
+    <text class="micro-label muted" x="790" y="82">Beta 2.0 OCR lanes</text>
+    <rect class="bar" x="808" y="170" width="18" height="158" rx="1.5" />
+    <rect class="bar" x="808" y="326" width="18" height="154" rx="1.5" />
+    <rect class="bar" x="808" y="480" width="18" height="140" rx="1.5" />
+    <text class="small-label" x="842" y="246">Text</text>
+    <text class="small-label" x="842" y="405">Handwriting</text>
+    <text class="small-label" x="842" y="558">Illustration</text>
+    <text class="micro-label muted" x="1000" y="118">Binary gates</text>
+    <rect class="bar" x="1026" y="216" width="18" height="278" rx="1.5" />
+    <rect class="bar" x="1026" y="492" width="18" height="158" rx="1.5" />
+    <text class="label" x="1062" y="364">Pass</text>
+    <text class="label" x="1062" y="578">Fail</text>
+  </g>
+
+  <g id="quiet-legend">
+    <line class="rule" x1="92" y1="704" x2="154" y2="704" />
+    <text class="micro-label muted" x="170" y="708">real categories only</text>
+    <line class="rule" x1="476" y1="704" x2="538" y2="704" />
+    <text class="micro-label muted" x="554" y="708">bridge is proportional continuity</text>
+    <line class="rule" x1="906" y1="704" x2="968" y2="704" />
+    <text class="micro-label muted" x="984" y="708">flat fallback grammar</text>
+  </g>
+</svg>

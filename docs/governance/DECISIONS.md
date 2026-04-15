@@ -3101,34 +3101,6 @@
   eval cost/limit friction, and keeps interactive debugging responsive without
   changing binary gate semantics.
 
-## D-191: Consolidate portfolio docs to single-source strategy and role targeting
-
-- Date: `2026-04-05`
-- Category: `evidence_governance`
-- Tags: `portfolio`, `doc_consolidation`, `single_source_of_truth`, `drift_prevention`
-- Decision:
-  - keep locked portfolio strategy and role-targeting in one canonical planning
-    surface (single-source strategy + role ordering).
-  - remove duplicate nucleus doc to prevent split ownership and stale edits.
-- Why: portfolio packaging now runs as the primary workstream, so duplicated
-  planning docs created avoidable drift and slowed execution.
-
-## D-192: Use evidence-bookended schema for case-study reasoning flow
-
-- Date: `2026-04-05`
-- Category: `evidence_governance`
-- Tags: `portfolio_schema`, `hypothesis_flow`, `evidence_synthesis`, `bookend_structure`
-- Decision:
-  - adopt one canonical case-study reasoning sequence:
-    1. Initial Hypothesis (as documented baseline)
-    2. Evidence Expansion (transcripts, decisions, eval patterns, metrics)
-    3. Synthesis Findings (what consistently emerged)
-    4. Evidence-Bound Conclusion (supported, revised, or split hypothesis)
-  - keep this sequence as the default packaging order for portfolio narrative
-    assembly and evidence mapping.
-- Why: this preserves authorship traceability while preventing ad hoc
-  interpretation drift during portfolio synthesis.
-
 ## D-193: Adopt Notion focus hub as canonical day-to-day portfolio operating surface
 
 - Date: `2026-04-05`
@@ -3161,28 +3133,6 @@
   - reserve archive usage for evidence-bearing artefacts only.
 - Why: duplicate-page archival adds noise and slows focus-mode execution during
   portfolio assembly.
-
-## D-195: Lock portfolio case-study format to fail-first architecture
-
-- Date: `2026-04-06`
-- Category: `evidence_governance`
-- Tags: `portfolio_format`, `failure_museum`, `before_after`, `operator_console`, `consolidation`
-- Decision:
-  - lock the case-study presentation stack to:
-    1. primary: `Failure Museum`
-    2. secondary: `Before/After Engine`
-    3. secondary: `Operator's Console` (last section, live status layer)
-  - embed `Claim Stress Test` directly in each case card rather than creating
-    a separate section.
-  - keep case-study scope focused on binary eval architecture and evidence;
-    `Reasoning Loops` stays background context for this package.
-  - execute in consolidation mode:
-    - reuse existing transcript insights, decisions, and eval artefacts
-    - remove duplicates/drift surfaces
-    - avoid restart-from-scratch narrative rewrites
-- Why: this preserves authorship style while keeping evidence density high,
-  reducing structure drift, and maintaining a clear claim-to-proof pathway for
-  portfolio readiness.
 
 ## D-196: Enforce shell-safe PR body creation via file input
 
@@ -3241,21 +3191,6 @@
   - no global matcher/policy loosenings introduced.
 - Why: verifies Card F contradiction-reset reliability transfers beyond the
   Greek-symbol lane into non-Greek handwritten OCR without semantics drift.
-
-## D-199: Lock portfolio IA navigation to top-nav desktop and burger mobile
-
-- Date: `2026-04-07`
-- Category: `evidence_governance`
-- Tags: `portfolio_ia`, `wireframe`, `navigation_lock`, `low_fidelity_first`
-- Decision:
-  - lock portfolio IA v1 navigation to:
-    - desktop: sticky top-nav with section anchors
-    - mobile: burger drawer with the same section anchors
-  - retire left-rail navigation from the IA baseline.
-  - keep execution in IA + low-fi wireframe mode; defer hi-fi shell styling to
-    a later kernel.
-- Why: preserves a cleaner narrative-first surface for portfolio reading while
-  keeping implementation scope tight and non-disruptive to backend kernels.
 
 ## D-200: Ship-week execution uses a split kernel with a fixed visuals block
 
@@ -3348,46 +3283,6 @@
 - Why: enables maintainable UI iteration speed without reopening policy/runtime
   drift or coupling risk in the active binary-eval architecture.
 
-## D-204: Use form-first structure mode before portfolio content lock
-
-- Date: `2026-04-09`
-- Category: `evidence_governance`
-- Tags: `portfolio_ui`, `form_first`, `structure_mode`, `scaffolding`
-- Decision:
-  - run portfolio UI in form-first structure mode before final copy lock:
-    - prioritize IA, section hierarchy, placeholder states, and interaction
-      scaffolding
-    - defer content finalization to a later pass
-  - keep shell constraints hard during structure mode:
-    - preserve section order + nav contract
-    - keep changes in presentation layer only
-    - do not change backend routes, eval semantics, or runtime policy ownership
-  - explicit interaction direction:
-    - support slide-like narrative progression from natural scroll gesture
-      mapping for desktop
-    - keep mobile fallback vertical-first
-- Why: reduces rework and coupling risk by stabilizing visual architecture
-  before content-level iteration, while preserving runtime integrity.
-
-## D-205: Split terminology for transformation stage labels (UI vs repo)
-
-- Date: `2026-04-11`
-- Category: `evidence_governance`
-- Tags: `terminology_lock`, `portfolio_ui`, `experimental_method`, `naming_consistency`
-- Decision:
-  - lock transformation-stage labels to this split:
-    - UI/public narrative label: `Baseline`
-    - repo/method/evidence label: `Control`
-  - keep stage order fixed in both surfaces:
-    1. `Baseline` (UI) / `Control` (repo)
-    2. `Bridge (Polinko Beta 1.0)`
-    3. `Polinko Beta 2.0`
-  - use `Control` terminology only in technical experimental language
-    (eval methods, evidence notes, comparative analysis), not in public section
-    headings.
-- Why: preserves clarity for non-technical readers while maintaining
-  experiment-accurate terminology in the technical evidence layer.
-
 ## D-206: Enforce inspect-first evidence discipline across all source modalities
 
 - Date: `2026-04-11`
@@ -3406,30 +3301,6 @@
     research workflow.
 - Why: prevents "hallucination masquerading as efficiency" and preserves
   falsifiable claim discipline in human-AI collaboration.
-
-## D-207: Retire twin Sankey implementation and reset portfolio evidence shell to clean slate
-
-- Date: `2026-04-11`
-- Category: `portfolio_surface`
-- Tags: `portfolio_ui`, `clean_slate`, `frontend`, `deprecation`
-- Decision:
-  - remove active twin Sankey implementation from the portfolio shell lane:
-    - remove Sankey runtime rendering logic from `frontend/src/main.js`
-    - remove Sankey styling/surface contracts from `frontend/src/styles.css`
-    - remove Sankey data payload/export path
-      (`frontend/src/data/twin_sankey_raw.json`,
-      `tools/export_portfolio_sankey_data.py`, `make portfolio-sankey-data`)
-  - keep middle shell sections as neutral, full-bleed placeholders
-    (`bridge-one`, `bridge-two`) with no chart semantics.
-  - preserve existing route/shell contract:
-    - `GET /portfolio` continues to serve static shell output from `ui/`
-      generated by `make frontend-build`.
-- Validation:
-  - `make frontend-build`
-  - `make test`
-- Why: grounds the portfolio transformation narrative in real historical
-  sequencing while removing partially-defined chart complexity and stale
-  generator coupling.
 
 ## D-208: Harden section-step navigation to prevent multi-section skip drift
 
@@ -3453,30 +3324,6 @@
 - Why: prevents multi-section skip behavior and keeps narrative progression
   deterministic for operator review.
 
-## D-209: Keep Twin Sankey active with real-data discipline
-
-- Date: `2026-04-13`
-- Category: `workflow_environment`
-- Tags: `portfolio_ui`, `twin_sankey`, `real_data`, `drift_control`
-- Decision:
-  - supersede D-207 as active guidance: Twin Sankey is not deprecated or
-    retired.
-  - keep the portfolio shell lane presentation-only, with legacy eval-era
-    evidence on the left bridging to current eval-era evidence on the right.
-  - allow OCR evidence on both legacy and current sides when supported by the
-    underlying eval records.
-  - treat legacy OCR evidence as screenshot-backed/manual where applicable,
-    with preserved source material under `docs/eval/beta_1_0/` and archived
-    beta 1.0 OCR prompts/reports under
-    `docs/eval/beta_1_0/build_snapshot_polinko-incase/`.
-  - treat manually evaluated beta 1.0 evidence as meaningful data, not as
-    weaker or decorative context.
-  - ground the diagram in real project/eval data; do not replace it with
-    decorative strokes, placeholder cards, or invented narrative content.
-- Why: The lane was paused for implementation quality control after grangled
-  attempts, not cancelled; docs must distinguish pause/refinement from
-  deprecation.
-
 ## D-210: Preserve earlier beta 1.0 decisions as binary-transition evidence
 
 - Date: `2026-04-13`
@@ -3498,25 +3345,6 @@
 - Why: Beta 1.0 contains the original manual/screenshot-backed eval context and
   binary-transition rationale that makes later binary/OCR eval data
   interpretable.
-
-## D-211: Keep Beta 1.0 and Beta 2.0 equally prominent in evidence mapping
-
-- Date: `2026-04-13`
-- Category: `evidence_governance`
-- Tags: `beta_1_0`, `beta_2_0`, `evidence_map`, `portfolio_sankey`
-- Decision:
-  - add `docs/eval/README.md` as the tracked phase evidence map for Beta 1.0
-    and Beta 2.0.
-  - map both eras with the same top-level categories:
-    - documents
-    - databases
-    - evals
-    - logic
-    - Sankey role
-  - preserve the distinction that Beta 1.0 is binary-transition evidence while
-    Beta 2.0 is binary-operational evidence.
-- Why: Equal prominence prevents later agents from treating Beta 1.0 as
-  irrelevant archive material and keeps the portfolio comparison legible.
 
 ## D-212: Use the full local Beta 1.0 snapshot as the parity source
 
@@ -3663,72 +3491,6 @@
   constraints, makes plausible but wrong implementations more likely, and can
   directly contradict the fail-signal research hypothesis.
 
-## D-217: Twin Sankey portfolio surface must render real eval continuity only
-
-- Date: `2026-04-13`
-- Category: `portfolio_evidence`
-- Tags: `twin_sankey`, `real_data_only`, `beta_1_0`, `binary_gates`, `portfolio`
-- Decision:
-  - add `GET /portfolio/sankey-data` as the real-data payload for the portfolio
-    Twin Sankey surface.
-  - use Beta 1.0 manual feedback rows from
-    `.local/runtime_dbs/active/manual_evals.db` as the left-side/legacy Sankey
-    source.
-  - use current OCR binary gate cases from `.local/eval_reports/` as the
-    right-side/current Sankey source.
-  - expose `source_integrity=real_data_only` in the payload.
-  - return `available=false` with empty graphs when required sources are
-    missing; do not render fake/static/decorative fallback data.
-  - represent the bridge as source-side signal/category counts through an
-    evidence-continuity anchor, not as a row-level join between legacy and
-    current datasets.
-  - keep the served portfolio shell generated from `frontend/` into `ui/`; do
-    not hand-edit `ui/`.
-- Validation:
-  - `./venv/bin/python -m py_compile api/portfolio_sankey.py tests/test_portfolio_sankey.py`
-  - `./venv/bin/python -m unittest tests.test_portfolio_sankey`
-  - `./venv/bin/python -m unittest tests.test_api.PolinkoApiTests.test_portfolio_sankey_data_endpoint_returns_contract_shape`
-  - `npm run build` from `frontend/`
-  - browser smoke against `GET /portfolio`
-- Result:
-  - local payload reports `116` Beta 1.0 manual eval rows, `324` legacy signal
-    mentions, `2722` current OCR binary gate cases, `120` current reports, and
-    `7` bridge categories.
-- Why: The Twin Sankey is a portfolio evidence surface, not an illustration.
-  It should make the continuity between Beta 1.0 manual eval evidence and
-  current binary gate evidence visible while preserving the difference between
-  the two data shapes. Decorative placeholder flows would repeat the exact
-  evidence-drift failure this repo is designed to prevent.
-
-## D-218: Checkpoint the portfolio scaffold and restart frontend UI from a clean slate
-
-- Date: `2026-04-13`
-- Category: `portfolio_ui`
-- Tags: `frontend`, `portfolio_shell`, `clean_slate`, `twin_sankey`, `handoff`
-- Decision:
-  - treat PR `#302` / commit `524cba1` as a merged checkpoint of the current
-    portfolio scaffold, not as the locked implementation direction.
-  - next frontend portfolio pass should intentionally remove current UI
-    artefacts/wiring before rebuilding the desired shell, rather than retrofit
-    the current section logic.
-  - preserve the backend evidence/data contract unless explicitly changing data
-    shape:
-    - `GET /portfolio/sankey-data`
-    - real-data-only payload behavior
-    - no decorative fallback data
-    - Beta 1.0 manual evals and current OCR binary gates as the visible
-      evidence sources.
-  - keep `graphs.bridge` only as an API compatibility key for the connector
-    graph; do not use "bridge" as a portfolio IA label.
-- Validation:
-  - PR `#302` merged after CI passed.
-  - `make eod` passed after merge: transcript checks, environment doctor,
-    docs lint, full unittest suite, and shutdown routine.
-- Why: The next portfolio UI needs a fresh composition pass guided by the
-  intended IA (`pipeline -> four Sankey panels -> pipeline`) rather than
-  accumulating retrofit logic from exploratory scaffolds. The data discipline
-  remains unchanged: real evidence only, no fake flows, and no summary drift.
-
 ## D-219: Make current-truth doc freshness part of EOD
 
 - Date: `2026-04-13`
@@ -3818,16 +3580,16 @@
   - move vertical scenes through `.board` transforms.
   - move the middle horizontal chapter through `.horizontal-track` transforms.
   - set the active scene sequence to:
-    `hero -> intro -> pipeline-one -> sankey -> pipeline-two -> conclusion ->
-    about-lab`.
-  - preserve the real-data Twin Sankey payload contract and no-placeholder
-    discipline.
+    `hero -> intro -> pipeline-one -> evidence-surface -> pipeline-two ->
+    conclusion -> about-lab`.
+  - preserve the real-data portfolio evidence payload contract and
+    no-placeholder discipline.
 - Validation:
   - `make portfolio-build`
   - `make portfolio`
   - Playwright forward/backward wheel sequence:
-    `hero -> intro -> pipeline-one -> sankey -> pipeline-two -> conclusion ->
-    about-lab` and back to `hero`
+    `hero -> intro -> pipeline-one -> evidence-surface -> pipeline-two ->
+    conclusion -> about-lab` and back to `hero`
   - Playwright verified `scrollY=0` throughout the sequence.
   - `venv/bin/python -m pytest tests/test_api.py -k "portfolio_shell or root_redirects_to_portfolio or portfolio_sankey_data"`
 - Why: The intended portfolio interaction is pinned section stepping, not
