@@ -16,7 +16,8 @@ Last updated: 2026-04-16
   - tracked README/docs remain canonical research documentation
   - public-facing docs/site copy should be derived separately and must not
     replace canonical research docs
-  - public-facing repo entrypoint now starts at `docs/public/README.md`
+  - public-facing repo entrypoint now starts at `docs/public/README.md`, with
+    curated research/evidence/visual pages under `docs/public/`
   - the public portfolio website should be a lightweight about/contact doorway
     into the work, not a full recreation of the research system
 - End-of-day closeout is green for 2026-04-15:

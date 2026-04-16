@@ -4,7 +4,7 @@ Polinko is a repo-native AI evaluation lab and local-first GPT assistant app.
 It combines a FastAPI backend, CLI workflow, deterministic eval gates, OCR
 reliability loops, and evidence-first documentation.
 
-Current release lane: `beta v2.0`.
+Current release lane: `beta v2.1 - Repo-as-Research`.
 
 Snapshot label for this baseline: `polinko-build-snapshot-040426`.
 
@@ -19,19 +19,22 @@ repo docs rather than replacing them.
 
 ## Public Entry
 
-If you are reading Polinko as a research portfolio, start here:
+If you are reading Polinko as a research portfolio, start with the curated
+public path:
 
 - [Public Guide](docs/public/README.md) for the human-readable project map.
+- [Research Frame](docs/public/RESEARCH.md) for what Polinko investigates.
+- [Evidence Guide](docs/public/EVIDENCE.md) for how the proof is organised.
 - [Public Visuals](docs/public/VISUALS.md) for Mermaid diagrams and notebook
   pointers.
-- [Eval Evidence Map](docs/eval/README.md) for beta 1.0/current eval
-  interpretation.
-- [Architecture](docs/runtime/ARCHITECTURE.md) for runtime and data surfaces.
-- [Runbook](docs/runtime/RUNBOOK.md) for local execution commands.
 
 The website should stay lean: identity, contact, and a link into this repo.
 The repo carries the proof: docs, evals, tests, notebooks, diagrams, and data
 contracts.
+
+Tracked governance/runtime docs are part of the working research archive and
+continuity system. They are safe to track, but they are not the primary public
+reading path.
 
 ## Confidentiality Note
 
