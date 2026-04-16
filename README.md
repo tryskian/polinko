@@ -58,8 +58,9 @@ remain ignored via `.gitignore`.
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
 - Portfolio shell build surface:
-  - source of truth: `frontend/`
-  - generated runtime output: `ui/`
+  - local source scaffold: `frontend/` (ignored except `frontend/.gitkeep`)
+  - local generated output: `ui/` (ignored except `ui/.gitkeep`)
+  - tracked fallback: in-app about/contact HTML when `ui/index.html` is absent
   - runtime route: `GET /portfolio`
   - public scope: about/contact doorway
 
@@ -227,9 +228,10 @@ Eval visualization and surfaces:
 ## UI Shell Access
 
 - `GET /` redirects to `GET /portfolio`.
-- `GET /portfolio` serves the local portfolio scaffold:
+- `GET /portfolio` serves the local generated portfolio scaffold when present,
+  or a tracked in-app about/contact fallback when `ui/index.html` is absent:
   - current interaction model is pinned-stage stepping
-  - current frontend implementation uses a tracked stacked SVG evidence-map
+  - current local frontend implementation uses a stacked SVG evidence-map
     FPO at `frontend/src/stacked-evidence-map-fpo.svg`
   - the FPO is an implementation placeholder only; `/portfolio/sankey-data`
     still loads and exposes real-data readiness state
@@ -245,15 +247,19 @@ Eval visualization and surfaces:
     decorative fake data, or fake/decorative FPO evidence panels
   - explicit no-data behavior when real local sources are unavailable
 - frontend shell build contract:
-  - edit source in `frontend/`
-  - generate served shell with `make portfolio-build` (writes to `ui/`)
+  - `frontend/` and `ui/` are local-only working directories with tracked
+    `.gitkeep` placeholders
+  - edit source in `frontend/` when the local frontend scaffold is present
+  - generate served shell with `make portfolio-build` (writes ignored output to
+    `ui/`)
   - use `make portfolio` for the canonical rebuild + serve + system-browser
-    open workflow; `make rebuild` and `make portfolio-rebuild` are aliases for
-    the same human-facing path
+    open workflow when local frontend source is present; `make rebuild` and
+    `make portfolio-rebuild` are aliases for the same human-facing path
   - use `make portfolio-playwright` only for Codex/debug inspection in the
     repo Playwright session; it opens a Playwright tab instead of using the
     human-facing browser command
-  - do not hand-edit built files under `ui/`
+  - do not hand-edit built files under `ui/`; regenerate them from local
+    `frontend/`
 - Playwright CLI captures should use the repo wrapper so snapshots/screenshots
   are grouped by local day under `docs/peanut/assets/screenshots/playwright`.
   Use `make pwcli ARGS="open <url>"` for the deterministic default flow; this

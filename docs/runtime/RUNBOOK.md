@@ -637,8 +637,8 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
   when binary gate reports exist; explicit/fallback DB paths still support
   `.local/runtime_dbs/active/manual_evals.db` manual-eval views
 - `GET /` redirects to `GET /portfolio`.
-- `GET /portfolio` serves the static UI shell draft for immediate content
-  editing and operator review.
+- `GET /portfolio` serves local UI shell output when present, otherwise the
+  tracked in-app about/contact fallback.
   - public portfolio scope is an about/contact doorway into the repo-as-research
     project.
   - tracked README/docs remain canonical research documentation; public-facing
@@ -660,7 +660,7 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     - DBs, Mermaid diagrams, and eval reports belong in the repo research lane
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,
     reduced-motion, performance, and direct-inspection fallback.
-  - current frontend implementation uses a tracked stacked SVG evidence-map
+  - current local frontend implementation uses a stacked SVG evidence-map
     FPO at `frontend/src/stacked-evidence-map-fpo.svg`.
   - current pipeline panels use the pipeline FPO source at
     `frontend/src/pipeline-fpo.svg`.
@@ -673,11 +673,14 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     overlays, fake fallback data, or fake/decorative FPO evidence content to
     this scaffold
   - canonical build flow:
-    - source: `frontend/`
-    - generated output: `ui/`
-    - build-only command: `make portfolio-build`
+    - local source: `frontend/` (ignored except `frontend/.gitkeep`)
+    - local generated output: `ui/` (ignored except `ui/.gitkeep`)
+    - tracked fallback: in-app about/contact HTML when `ui/index.html` is absent
+    - build-only command: `make portfolio-build` when local frontend source is
+      present
     - human launch command: `make portfolio` (aliases: `make rebuild`,
       `make portfolio-rebuild`) rebuilds, serves, and opens a cache-busted URL
+      when local frontend source is present
     - Codex/debug launch command: `make portfolio-playwright` (rebuild, serve,
       and open a Playwright tab in the repo Playwright session)
   - `ui/` is generated output only; do not hand-edit built files.

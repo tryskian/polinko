@@ -30,7 +30,8 @@ Last updated: 2026-04-16
   - `server-daemon` is OFF and managed `caffeinate` is OFF.
 - Portfolio shell route is active:
   - `GET /` -> redirect to `GET /portfolio`
-  - `GET /portfolio` -> `ui/index.html`
+  - `GET /portfolio` -> local `ui/index.html` when present; tracked in-app
+    about/contact fallback otherwise
 - Public portfolio scope is about/contact doorway.
 - Lean portal rule:
   - website = identity and doorway
@@ -39,9 +40,11 @@ Last updated: 2026-04-16
 - Current frontend remains a local FPO scaffold while the public site is
   simplified.
 - Frontend source/build contract is active:
-  - edit in `frontend/`
-  - build to `ui/` with `make portfolio-build`
-  - no manual edits under `ui/`
+  - `frontend/` is local-only and ignored except `frontend/.gitkeep`
+  - `ui/` is local-only and ignored except `ui/.gitkeep`
+  - edit in `frontend/` when the local frontend scaffold is present
+  - build to ignored `ui/` output with `make portfolio-build`
+  - no manual edits under `ui/`; regenerate from local `frontend/`
   - canonical launch command:
     - `make portfolio` (rebuild + serve + open)
     - launch URL includes a `rebuild=<timestamp>` cache-bust query.
@@ -66,7 +69,7 @@ Last updated: 2026-04-16
   - WebGL/data-viz work remains optional research instrumentation.
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,
     reduced-motion, performance, and direct-inspection fallback.
-  - current frontend implementation uses the tracked stacked SVG evidence-map
+  - current local frontend implementation uses the stacked SVG evidence-map
     FPO at `frontend/src/stacked-evidence-map-fpo.svg`; keep it as the
     evidence-map visual/function baseline while refining style.
   - current pipeline panels use `frontend/src/pipeline-fpo.svg` as FPO.
