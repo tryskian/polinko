@@ -16,6 +16,10 @@ Last updated: 2026-04-16
   - tracked README/docs remain canonical research documentation
   - public-facing docs/site copy should be derived separately and must not
     replace canonical research docs
+  - public-facing repo entrypoint now starts at `docs/public/README.md`, with
+    curated method/hypothesis/research/diagrams pages under `docs/public/`
+  - public framing leads with human-led research and AI-assisted engineering
+    collaboration before implementation details
   - the public portfolio website should be a lightweight about/contact doorway
     into the work, not a full recreation of the research system
 - End-of-day closeout is green for 2026-04-15:
@@ -27,10 +31,14 @@ Last updated: 2026-04-16
     `caffeinate`).
 - Portfolio shell route contract is active:
   - `GET /` redirects to `GET /portfolio`.
-  - `GET /portfolio` serves `ui/index.html` (build output).
-  - source of truth for shell edits is `frontend/`.
+  - `GET /portfolio` serves local `ui/index.html` when present, otherwise a
+    tracked in-app about/contact fallback.
+  - frontend source/output directories are local-only:
+    - `frontend/` is ignored except `frontend/.gitkeep`.
+    - `ui/` is ignored except `ui/.gitkeep`.
   - command surface is simplified:
-    - `make portfolio` is the canonical rebuild + serve + open workflow.
+    - `make portfolio` is the canonical rebuild + serve + open workflow when
+      local frontend source is present.
     - `make portfolio` opens a cache-busted URL after rebuild so the browser
       does not reuse a stale shell bundle.
     - default launch uses the system browser so the human-facing UI is separate
@@ -54,7 +62,7 @@ Last updated: 2026-04-16
     reduced-motion, performance, and direct-inspection fallbacks.
   - repo evidence surfaces must use the same real-data
     `GET /portfolio/sankey-data` payload.
-  - current frontend implementation uses the tracked stacked SVG evidence-map
+  - current local frontend implementation uses the stacked SVG evidence-map
     FPO at `frontend/src/stacked-evidence-map-fpo.svg`; preserve this as the
     evidence-map visual/function baseline while refining style.
   - current pipeline panels use the pipeline FPO source at
@@ -107,7 +115,8 @@ Last updated: 2026-04-16
     binding interpretation and must not contradict transcript evidence.
   - long-term context should preserve evidence chains; do not replace source
     transcripts/reports with summary-of-summary state.
-  - source remains `frontend/` with generated output in `ui/`.
+  - local source remains `frontend/` with generated local output in `ui/`; both
+    directories are ignored except tracked `.gitkeep` placeholders.
   - Local-only design contract:
     - `docs/peanut/refs/POLINKOFOLIO_EVIDENCE_FIELD_DESIGN.md`
   - UI guardrails: no weird headlines, no dashboard cards, no placeholder
@@ -159,4 +168,4 @@ Last updated: 2026-04-16
 - `make eod-docs-check`
 - `make lint-docs`
 - `make test`
-- `make portfolio-build` (when `frontend/` changes)
+- `make portfolio-build` (when local `frontend/` changes)

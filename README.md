@@ -1,9 +1,11 @@
 # Polinko
 
-Polinko is a local-first GPT assistant app with a FastAPI backend, CLI workflow,
-and deterministic eval gates.
+Polinko is a human-led, AI-assisted research and engineering project. It is a
+repo-native AI evaluation lab and local-first GPT assistant app with a FastAPI
+backend, CLI workflow, deterministic eval gates, OCR reliability loops, and
+evidence-first documentation.
 
-Current release lane: `beta v2.0`.
+Current release lane: `beta v2.1 - Repo-as-Research`.
 
 Snapshot label for this baseline: `polinko-build-snapshot-040426`.
 
@@ -15,6 +17,32 @@ runtime contracts, and diagrams are the canonical research documentation.
 The public portfolio website is a lightweight about/contact doorway into the
 work. Public-facing docs/copy should be derived separately from the canonical
 repo docs rather than replacing them.
+
+Polinko uses OpenAI Codex for repo-local engineering collaboration and OpenAI
+Platform APIs for model-backed OCR, eval, retrieval, and runtime workflows.
+Research direction, evidence interpretation, and publication decisions remain
+human-authored.
+
+## Research Notes
+
+If you are reading Polinko as a research portfolio, start with the curated
+public path:
+
+- [Research Notes](docs/public/README.md) for the human-readable project map.
+- [Method & Authorship](docs/public/METHOD.md) for the collaboration and
+  responsibility boundary.
+- [Hypothesis](docs/public/HYPOTHESIS.md) for what Polinko investigates.
+- [Research](docs/public/RESEARCH.md) for how the proof is organised.
+- [Diagrams](docs/public/DIAGRAMS.md) for Mermaid diagrams and curated visual
+  evidence pointers.
+
+The website should stay lean: identity, contact, and a link into this repo.
+The repo carries the proof: docs, evals, tests, diagrams, and data contracts.
+Notebook and query outputs stay local-only unless explicitly promoted.
+
+Tracked governance/runtime docs are part of the working research archive and
+continuity system. They are safe to track, but they are not the primary public
+reading path.
 
 ## Confidentiality Note
 
@@ -34,9 +62,13 @@ remain ignored via `.gitignore`.
   `docs/runtime/RUNBOOK.md` (TypeScript types + endpoint flow).
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
+- Research-engineering infrastructure is built for inspectability across
+  runtime, evidence, diagrams, environment, validation, maintenance, and visual
+  analysis.
 - Portfolio shell build surface:
-  - source of truth: `frontend/`
-  - generated runtime output: `ui/`
+  - local source scaffold: `frontend/` (ignored except `frontend/.gitkeep`)
+  - local generated output: `ui/` (ignored except `ui/.gitkeep`)
+  - tracked fallback: in-app about/contact HTML when `ui/index.html` is absent
   - runtime route: `GET /portfolio`
   - public scope: about/contact doorway
 
@@ -111,17 +143,18 @@ Portfolio shell (canonical frontend flow):
 make portfolio
 ```
 
-Notebook viz (local/private):
+Notebook viz (local/private, ignored output lane):
 
 ```bash
 make notebook-setup
 make notes
 ```
 
-Starter notebook:
+Local notebook workspace:
 
-- `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
-  (live filters/sliders + instant chart/table updates).
+- `output/jupyter-notebook/`
+- keep notebook outputs untracked unless explicitly promoted as curated
+  evidence.
 
 Checks:
 
@@ -204,9 +237,10 @@ Eval visualization and surfaces:
 ## UI Shell Access
 
 - `GET /` redirects to `GET /portfolio`.
-- `GET /portfolio` serves the local portfolio scaffold:
+- `GET /portfolio` serves the local generated portfolio scaffold when present,
+  or a tracked in-app about/contact fallback when `ui/index.html` is absent:
   - current interaction model is pinned-stage stepping
-  - current frontend implementation uses a tracked stacked SVG evidence-map
+  - current local frontend implementation uses a stacked SVG evidence-map
     FPO at `frontend/src/stacked-evidence-map-fpo.svg`
   - the FPO is an implementation placeholder only; `/portfolio/sankey-data`
     still loads and exposes real-data readiness state
@@ -222,15 +256,19 @@ Eval visualization and surfaces:
     decorative fake data, or fake/decorative FPO evidence panels
   - explicit no-data behavior when real local sources are unavailable
 - frontend shell build contract:
-  - edit source in `frontend/`
-  - generate served shell with `make portfolio-build` (writes to `ui/`)
+  - `frontend/` and `ui/` are local-only working directories with tracked
+    `.gitkeep` placeholders
+  - edit source in `frontend/` when the local frontend scaffold is present
+  - generate served shell with `make portfolio-build` (writes ignored output to
+    `ui/`)
   - use `make portfolio` for the canonical rebuild + serve + system-browser
-    open workflow; `make rebuild` and `make portfolio-rebuild` are aliases for
-    the same human-facing path
+    open workflow when local frontend source is present; `make rebuild` and
+    `make portfolio-rebuild` are aliases for the same human-facing path
   - use `make portfolio-playwright` only for Codex/debug inspection in the
     repo Playwright session; it opens a Playwright tab instead of using the
     human-facing browser command
-  - do not hand-edit built files under `ui/`
+  - do not hand-edit built files under `ui/`; regenerate them from local
+    `frontend/`
 - Playwright CLI captures should use the repo wrapper so snapshots/screenshots
   are grouped by local day under `docs/peanut/assets/screenshots/playwright`.
   Use `make pwcli ARGS="open <url>"` for the deterministic default flow; this
@@ -407,6 +445,7 @@ Defaults:
 - `core/` runtime logic
 - `tools/` operational and eval scripts
 - `tests/` unit and integration tests
+- `docs/public/` public-facing guide layer derived from canonical docs
 - `docs/` architecture, runbook, decisions, state
 - `docs/eval/` beta lanes and active eval cases
 

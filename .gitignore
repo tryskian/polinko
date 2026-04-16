@@ -27,6 +27,11 @@ polinko-repositioning-system
 # Node (if added later)
 node_modules/
 dist/
+# Local frontend source; keep only the directory placeholder tracked.
+frontend/**
+!frontend/.gitkeep
+ui/**
+!ui/.gitkeep
 frontend/test-results/
 frontend/playwright-report/
 *.log
@@ -37,10 +42,13 @@ yarn-error.log*
 # Local tooling artifacts
 .act/
 .actrc
+.playwright/
 .trivycache/
 .trivyignore.local
 .ipynb_checkpoints/
 *.ipynb.layout
+output/**
+!output/.gitkeep
 
 # Legacy local helper file
 _virtualenv.py

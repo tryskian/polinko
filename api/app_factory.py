@@ -49,6 +49,64 @@ from core.vector_store import VectorMatch, VectorStore
 logger = logging.getLogger("polinko.api")
 
 
+_PORTFOLIO_FALLBACK_HTML = """<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Polinko</title>
+  <style>
+    :root {
+      color: #10120f;
+      background: #faf9f6;
+      font-family: Georgia, "Times New Roman", serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+    }
+
+    main {
+      width: min(760px, calc(100vw - 48px));
+    }
+
+    .eyebrow {
+      font: 700 0.78rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0.2em 0;
+      font-size: clamp(3.5rem, 12vw, 8rem);
+      line-height: 0.88;
+      letter-spacing: -0.08em;
+    }
+
+    p {
+      max-width: 48rem;
+      font-size: clamp(1.1rem, 2vw, 1.5rem);
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Polinko</p>
+    <h1>Repo as research project.</h1>
+    <p>
+      A human-led AI research engineering lab for binary evals, OCR reliability,
+      and evidence-first tooling.
+    </p>
+  </main>
+</body>
+</html>
+"""
+
+
 _LATENCY_BUCKET_EDGES_MS = (10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2000.0)
 _OCR_VECTOR_CHUNK_CHARS = 700
 _OCR_VECTOR_CHUNK_OVERLAP = 120
@@ -3014,10 +3072,10 @@ def create_app(config: AppConfig) -> FastAPI:
         return RedirectResponse(url="/portfolio")
 
     @app.get("/portfolio")
-    def portfolio_shell() -> FileResponse:
+    def portfolio_shell() -> Any:
         shell_path = ui_dir / "index.html"
         if not shell_path.is_file():
-            raise HTTPException(status_code=404, detail="Portfolio shell not found.")
+            return HTMLResponse(content=_PORTFOLIO_FALLBACK_HTML)
         return FileResponse(path=shell_path)
 
     @app.get("/portfolio/sankey-data")

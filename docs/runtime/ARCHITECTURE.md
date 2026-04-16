@@ -89,10 +89,13 @@
     - bridge links are source-side counts through an evidence-continuity anchor,
       not row-level joins between legacy and current datasets
   - `GET /portfolio`
-    - serves `ui/index.html`, generated from `frontend/`
+    - serves local `ui/index.html` when present, otherwise serves the tracked
+      in-app about/contact fallback
+    - `frontend/` and `ui/` are local-only working directories, ignored except
+      tracked `.gitkeep` placeholders
     - selected primary visual direction is a WebGL Evidence Field, with a flat
       SVG/D3 Sankey or alluvial fallback using the same payload
-    - current frontend implementation uses a tracked stacked SVG evidence-map
+    - current local frontend implementation uses a stacked SVG evidence-map
       FPO at `frontend/src/stacked-evidence-map-fpo.svg`
     - the FPO is temporary implementation scaffolding; the frontend still
       fetches `GET /portfolio/sankey-data` and exposes readiness state
@@ -128,8 +131,8 @@
       - `.local/eval_reports/ocr_growth_metrics.md`
     - growth fail cohort report:
       - `.local/eval_reports/ocr_growth_fail_cohort.md`
-  - local notebook exploration:
-    - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+  - local notebook/query exploration:
+    - `output/jupyter-notebook/` (ignored local output lane)
 
 ## Placement Rules
 

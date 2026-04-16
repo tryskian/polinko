@@ -3619,3 +3619,45 @@
 - Why: Portfolio UI work depends on tight visual feedback. Rebuilding without
   cache-busting or breaking non-capture Playwright commands creates stale
   browser state and false debugging signals.
+
+## D-224: Keep portfolio source and build output local-only
+
+- Date: `2026-04-16`
+- Category: `repo_boundary`
+- Tags: `portfolio_shell`, `gitignore`, `frontend`, `ui`, `gitkeep`
+- Decision:
+  - ignore `frontend/` except `frontend/.gitkeep`.
+  - ignore `ui/` except `ui/.gitkeep`.
+  - keep local frontend source and generated UI bundles available for active
+    iteration without tracking them in the public repo.
+  - keep `GET /portfolio` available in fresh clones by serving a tracked
+    in-app about/contact fallback when local `ui/index.html` is absent.
+- Validation:
+  - `git check-ignore -v frontend/package.json ui/index.html`
+  - `venv/bin/python -m pytest tests/test_api.py -k "portfolio_shell or root_redirects_to_portfolio"`
+  - `make lint-docs`
+- Why: The repo is now the portfolio artifact. Local frontend experiments and
+  generated bundles should not become public repo noise, but the API route must
+  remain deterministic when those local-only files are absent.
+
+## D-225: Keep database query cookbooks and notebook outputs local-only
+
+- Date: `2026-04-16`
+- Category: `repo_boundary`
+- Tags: `database_queries`, `notebooks`, `local_outputs`, `privacy_boundary`
+- Decision:
+  - keep DB query examples in the ignored `docs/peanut/` lane.
+  - ignore generated notebook/output artifacts under `output/`, retaining only
+    `output/.gitkeep`.
+  - remove the stale tracked Playwright config that wrote directly into the
+    ignored screenshot lane.
+  - keep public docs at schema/contract level unless local DB/query outputs are
+    explicitly curated for publication.
+- Validation:
+  - `git check-ignore -v docs/peanut/refs/DATABASE_QUERY_COOKBOOK.md`
+  - `git check-ignore -v output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+  - `make lint-docs`
+- Why: Local databases, query outputs, screenshot captures, and notebooks are
+  operator evidence, not public repo files by default. The public repo should
+  show contracts and curated evidence without exposing private/local inspection
+  workflows.

@@ -8,7 +8,7 @@
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
   },
   "forwardPorts": [8000, 5173, 8020],
-  "postCreateCommand": "/bin/bash -lc 'set -euo pipefail; VENV_DIR=polinko-repositioning-system; rm -rf \"$VENV_DIR\"; python3 -m venv --copies \"$VENV_DIR\"; if [ ! -x \"$VENV_DIR/bin/python3\" ]; then echo \"Expected venv interpreter missing: $VENV_DIR/bin/python3\"; exit 1; fi; \"$VENV_DIR/bin/python3\" -m pip install --upgrade pip; \"$VENV_DIR/bin/python3\" -m pip install -r requirements.lock; ln -sfn \"$VENV_DIR\" venv; ln -sfn \"$VENV_DIR\" virtualenv_name; npm install -g npm@latest --no-fund --no-audit; hash -r; cd frontend; npm ci --no-audit --no-fund'",
+  "postCreateCommand": "/bin/bash -lc 'set -euo pipefail; VENV_DIR=polinko-repositioning-system; rm -rf \"$VENV_DIR\"; python3 -m venv --copies \"$VENV_DIR\"; if [ ! -x \"$VENV_DIR/bin/python3\" ]; then echo \"Expected venv interpreter missing: $VENV_DIR/bin/python3\"; exit 1; fi; \"$VENV_DIR/bin/python3\" -m pip install --upgrade pip; \"$VENV_DIR/bin/python3\" -m pip install -r requirements.lock; ln -sfn \"$VENV_DIR\" venv; ln -sfn \"$VENV_DIR\" virtualenv_name; npm install -g npm@latest --no-fund --no-audit; hash -r; if [ -f frontend/package.json ]; then npm --prefix frontend ci --no-audit --no-fund; else echo \"Skipping frontend npm install; frontend source is local-only.\"; fi'",
   "customizations": {
     "vscode": {
       "settings": {
