@@ -13,9 +13,11 @@ Last updated: 2026-04-15
 ## Current Snapshot
 
 - Backend-first runtime remains canonical.
-- Latest end-of-day closeout completed cleanly (2026-04-14):
-  - `make eod` passed transcript/doc checks, env doctor, docs lint, and tests
-    (`393` passing).
+- Latest end-of-day closeout completed cleanly (2026-04-15):
+  - PR #312 merged to `main`.
+  - final `make eod` passed transcript/doc checks, env doctor, docs lint,
+    tests (`393` passing), stop checks, and `eod-git-check`.
+  - local `main` finished clean and synced with `origin/main`.
   - `server-daemon` is OFF and managed `caffeinate` is OFF.
 - Portfolio shell route is active:
   - `GET /` -> redirect to `GET /portfolio`
@@ -47,10 +49,14 @@ Last updated: 2026-04-15
     - upper plane: Beta 2.0 OCR binary evidence
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,
     reduced-motion, performance, and direct-inspection fallback.
-  - current frontend implementation uses a tracked stacked SVG evidence-map
-    FPO at `frontend/src/stacked-evidence-map-fpo.svg`.
-  - the FPO is temporary implementation scaffolding only; the frontend still
-    fetches `/portfolio/sankey-data`, exposes
+  - current frontend implementation uses the tracked stacked SVG evidence-map
+    FPO at `frontend/src/stacked-evidence-map-fpo.svg`; keep it as the
+    evidence-map visual/function baseline while refining style.
+  - Mermaid pipeline diagrams in `docs/peanut/refs/llm_pipeline_diagrams.md`
+    are the high-level pipeline structure baseline for pipeline pages.
+  - peanut-only mockups/references are exploration only; do not replace the
+    working FPO or pipeline structure unless readability/function is preserved.
+  - the frontend still fetches `/portfolio/sankey-data`, exposes
     `window.__POLINKO_SANKEY_DATA__`, and sets readiness state on
     `#evidence-map`.
   - Beta 1.0 source uses manual feedback rows from `manual_evals.db`.
