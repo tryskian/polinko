@@ -18,17 +18,17 @@ The public portfolio website is a lightweight about/contact doorway into the
 work. Public-facing docs/copy should be derived separately from the canonical
 repo docs rather than replacing them.
 
-## Public Entry
+## Research Notes
 
 If you are reading Polinko as a research portfolio, start with the curated
 public path:
 
-- [Public Guide](docs/public/README.md) for the human-readable project map.
+- [Research Notes](docs/public/README.md) for the human-readable project map.
 - [Method & Authorship](docs/public/METHOD.md) for the collaboration and
   responsibility boundary.
-- [Research Frame](docs/public/RESEARCH.md) for what Polinko investigates.
-- [Evidence Guide](docs/public/EVIDENCE.md) for how the proof is organised.
-- [Public Visuals](docs/public/VISUALS.md) for Mermaid diagrams and notebook
+- [Hypothesis](docs/public/HYPOTHESIS.md) for what Polinko investigates.
+- [Research](docs/public/RESEARCH.md) for how the proof is organised.
+- [Diagrams](docs/public/DIAGRAMS.md) for Mermaid diagrams and notebook
   pointers.
 
 The website should stay lean: identity, contact, and a link into this repo.

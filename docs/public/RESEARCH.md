@@ -1,53 +1,80 @@
 <!-- @format -->
 
-# Research Frame
+# Research
 
-Polinko is a human-led research and engineering collaboration. It investigates
-model behaviour through small, inspectable evaluation systems rather than large
-dashboard abstractions.
+Polinko separates public explanation from working research infrastructure.
 
-The working question is:
+Use this note to understand what counts as evidence without needing to read the
+entire operator archive first.
 
-> What changes when evals treat failure as the main signal instead of treating
-> pass rate as the main story?
+## Evidence Layers
 
-## What Polinko Is
+- Method and authorship boundaries define who owns the claims and how AI
+  assistance is used.
+- Source code and tests show the runtime contract.
+- Eval docs and report schemas show the evidence contract.
+- Beta 1.0 materials preserve the manual/screenshot-backed transition into
+  binary evals.
+- Current OCR binary reports show operational fail/pass pressure.
+- Mermaid diagrams, notebooks, and data-viz surfaces are repo-native visual
+  research instruments.
 
-Polinko is a local-first evaluation lab for:
+## Beta 1.0
 
-- binary pass/fail gates
-- OCR reliability
-- fail-signal observability
-- manual evaluation notes
-- human-AI workflow evidence
+Beta 1.0 is not deprecated evidence. It is the transition layer.
 
-It began as theory and became engineering through a collaboration loop:
-human-authored research direction, constraints, and acceptance criteria are
-translated into technical mechanisms, tested against evidence, then accepted,
-reworked, or rejected by human judgement.
+It contains the manual evaluation context that makes the current binary gates
+meaningful. In particular, it preserves OCR and manual-eval evidence from the
+period where Polinko moved from qualitative review toward stricter pass/fail
+semantics.
 
-It is also a working repository. The implementation, tests, docs, eval reports,
-database contracts, and visual research artifacts live together so claims can
-be traced back to source material.
+Canonical map:
 
-## What Changed Across Betas
+- [Eval Evidence Map](../eval/README.md)
 
-- Beta 1.0 captured the transition from manual/screenshot-backed evaluation
-  into binary eval semantics.
-- Beta 2.0 operationalised that transition with stricter OCR gate reports,
-  integrated eval surfaces, and repeatable local commands.
-- Beta 2.1 reframes the project as repo-as-research: the website becomes a
-  doorway, and the repository carries the evidence.
+## Current / Beta 2.x
 
-## Why The Repo Is The Portfolio
+Current Polinko uses binary gates as operational eval surfaces.
 
-The work is not just the final UI. The work is the system of evidence:
+The strict pass/fail signal is intentionally simple. Diagnostic notes may be
+rich, but release-grade gate arithmetic remains binary so failure pressure
+stays visible.
 
-- what was tested
-- what failed
-- what changed
-- what stayed uncertain
-- what the next eval loop should inspect
+Core surfaces:
 
-That structure matters because model behaviour work is easy to over-summarise.
-Polinko keeps the source chain visible enough to challenge the summary.
+- `/viz/pass-fail`
+- `/viz/pass-fail/data`
+- `/portfolio/sankey-data`
+
+## Research Notes vs Working Docs
+
+Research notes are curated explanations derived from the working archive.
+
+The first public layer is [Method & Authorship](METHOD.md): Polinko is
+human-led research, with AI assistance used as inspectable method and
+engineering support.
+
+Working docs stay tracked when they are safe and useful for continuity:
+
+- governance docs
+- runtime architecture
+- runbook commands
+- state and handoff snapshots
+- decision history
+
+Private/local evidence stays untracked unless explicitly promoted:
+
+- raw databases
+- local exports
+- private transcripts
+- scratch screenshots
+- uncurated evidence dumps
+
+## Reading Path
+
+1. Start with [Hypothesis](HYPOTHESIS.md).
+2. Review [Diagrams](DIAGRAMS.md).
+3. Use [Eval Evidence Map](../eval/README.md) when you need the beta/eval
+   detail.
+4. Use runtime/governance docs only when you need implementation or process
+   specifics.

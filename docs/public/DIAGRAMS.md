@@ -1,10 +1,10 @@
 <!-- @format -->
 
-# Public Visuals
+# Diagrams
 
-This page collects public-safe, repo-native visuals. These diagrams are guide
-surfaces; canonical runtime and eval contracts remain in
-`docs/runtime/ARCHITECTURE.md` and `docs/eval/README.md`.
+This page collects repo-native diagrams and notebook pointers. Canonical
+runtime and eval contracts remain in `docs/runtime/ARCHITECTURE.md` and
+`docs/eval/README.md`.
 
 ## Baseline LLM Product Pipeline
 
@@ -55,7 +55,7 @@ flowchart LR
   P --> V["Repo visuals: Sankey, notebooks, diagrams"]
 ```
 
-## Notebook Visuals
+## Notebook
 
 - Tracked starter notebook:
   `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
