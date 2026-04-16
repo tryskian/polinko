@@ -20,10 +20,10 @@ These tools are part of the research-engineering workflow. They do not define
 the research claims, interpret the evidence, or own publication decisions.
 
 The supporting stack is intentionally inspectable. SQLite keeps evidence local
-and queryable; Docker/devcontainers make the environment portable; Make, pytest,
-markdownlint, and GitHub Actions make validation repeatable; Playwright and
-Jupyter extend the workflow into browser-visible inspection, visual capture, and
-local analysis.
+and queryable; Mermaid keeps system logic visible in plain text;
+Docker/devcontainers make the environment portable; Make, pytest, markdownlint,
+and GitHub Actions make validation repeatable; Playwright and Jupyter extend the
+workflow into browser-visible inspection, visual capture, and local analysis.
 
 ## Collaboration Model
 
