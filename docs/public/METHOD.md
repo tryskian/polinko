@@ -19,11 +19,11 @@ retrieval, and runtime experiments.
 These tools are part of the research-engineering workflow. They do not define
 the research claims, interpret the evidence, or own publication decisions.
 
-Supporting tooling is used for reproducibility and inspection: SQLite for local
-evidence stores, Docker/devcontainers for environment portability, Playwright
-for browser-based verification and visual capture, Jupyter for local analysis,
-pytest and markdownlint for validation, GitHub Actions for CI, and Make for
-repeatable operator workflows.
+The supporting stack is intentionally inspectable. SQLite keeps evidence local
+and queryable; Docker/devcontainers make the environment portable; Make, pytest,
+markdownlint, and GitHub Actions make validation repeatable; Playwright and
+Jupyter extend the workflow into browser-visible inspection, visual capture, and
+local analysis.
 
 ## Collaboration Model
 

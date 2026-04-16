@@ -62,10 +62,11 @@ remain ignored via `.gitignore`.
   `docs/runtime/RUNBOOK.md` (TypeScript types + endpoint flow).
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
-- Research-engineering stack: SQLite for local evidence stores, Docker and
-  devcontainers for environment portability, Playwright for browser inspection
-  and visual captures, Jupyter for local analysis, pytest/markdownlint/GitHub
-  Actions for validation, and Make for repeatable operator workflows.
+- Research-engineering infrastructure is built for inspectability: SQLite keeps
+  evidence local and queryable; Docker/devcontainers make the environment
+  portable; Make, pytest, markdownlint, and GitHub Actions keep validation
+  repeatable; Playwright and Jupyter extend the workflow into browser-visible
+  inspection and local analysis.
 - Portfolio shell build surface:
   - local source scaffold: `frontend/` (ignored except `frontend/.gitkeep`)
   - local generated output: `ui/` (ignored except `ui/.gitkeep`)
