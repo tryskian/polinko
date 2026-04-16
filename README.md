@@ -62,12 +62,9 @@ remain ignored via `.gitignore`.
   `docs/runtime/RUNBOOK.md` (TypeScript types + endpoint flow).
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
-- Research-engineering infrastructure is built for inspectability: SQLite keeps
-  evidence local and queryable; Mermaid keeps system logic visible in plain
-  text; Docker/devcontainers make the environment portable; Make, pytest,
-  Ruff, mypy, markdownlint, and GitHub Actions keep validation repeatable;
-  Playwright and Jupyter extend the workflow into browser-visible inspection
-  and local analysis.
+- Research-engineering infrastructure is built for inspectability across
+  runtime, evidence, diagrams, environment, validation, maintenance, and visual
+  analysis.
 - Portfolio shell build surface:
   - local source scaffold: `frontend/` (ignored except `frontend/.gitkeep`)
   - local generated output: `ui/` (ignored except `ui/.gitkeep`)

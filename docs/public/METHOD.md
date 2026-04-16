@@ -19,12 +19,18 @@ retrieval, and runtime experiments.
 These tools are part of the research-engineering workflow. They do not define
 the research claims, interpret the evidence, or own publication decisions.
 
-The supporting stack is intentionally inspectable. FastAPI exposes the local
-runtime surface; SQLite keeps evidence local and queryable; Mermaid keeps system
-logic visible in plain text; Docker/devcontainers make the environment
-portable; Make, pytest, Ruff, mypy, markdownlint, and GitHub Actions make
-validation repeatable; Playwright and Jupyter extend the workflow into
-browser-visible inspection, visual capture, and local analysis.
+The supporting stack is intentionally inspectable:
+
+| Layer | Tooling | Role |
+| --- | --- | --- |
+| Model collaboration | OpenAI Codex, OpenAI Platform APIs | Repo-local engineering support and model-backed OCR, eval, retrieval, and runtime calls. |
+| Runtime surface | FastAPI | Local API surface for assistant, OCR/PDF ingest, retrieval, feedback, and eval workflows. |
+| Evidence stores | SQLite | Local, queryable stores for runtime history, manual evals, vector memory, and evidence inspection. |
+| System maps | Mermaid | Plain-text diagrams for pipelines, eval loops, and research structure. |
+| Environment | Docker, devcontainers | Portable development and runtime environments. |
+| Validation | Make, pytest, Ruff, mypy, markdownlint, GitHub Actions | Repeatable checks across code, docs, and CI. |
+| Maintenance | Dependency update checks | Keeps dependency drift visible without turning maintenance into manual archaeology. |
+| Inspection | Playwright, Jupyter | Browser-visible verification, visual capture, and local analysis. |
 
 ## Collaboration Model
 
