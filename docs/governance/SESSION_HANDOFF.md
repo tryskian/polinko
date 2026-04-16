@@ -28,6 +28,10 @@ Last updated: 2026-04-16
   - `GET /` -> redirect to `GET /portfolio`
   - `GET /portfolio` -> `ui/index.html`
 - Public portfolio scope is about/contact doorway.
+- Lean portal rule:
+  - website = identity and doorway
+  - repo = research object, evidence, visuals, notebooks, Mermaid diagrams,
+    eval data, and implementation
 - Current frontend remains a local FPO scaffold while the public site is
   simplified.
 - Frontend source/build contract is active:
@@ -106,7 +110,7 @@ Last updated: 2026-04-16
 ## Next Execution Slice
 
 1. Portfolio frontend design pass:
-   - simplify public website toward about/contact.
+   - simplify public website toward a lean hero/contact portal.
    - keep repository evidence visualizations as research instruments.
    - preserve backend evidence/data contracts unless explicitly changing them.
 2. OCR hardening kernels (lockset stability + growth signal quality).
