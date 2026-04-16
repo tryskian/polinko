@@ -3639,3 +3639,25 @@
 - Why: The repo is now the portfolio artifact. Local frontend experiments and
   generated bundles should not become public repo noise, but the API route must
   remain deterministic when those local-only files are absent.
+
+## D-225: Keep database query cookbooks and notebook outputs local-only
+
+- Date: `2026-04-16`
+- Category: `repo_boundary`
+- Tags: `database_queries`, `notebooks`, `local_outputs`, `privacy_boundary`
+- Decision:
+  - keep DB query examples in the ignored `docs/peanut/` lane.
+  - ignore generated notebook/output artifacts under `output/`, retaining only
+    `output/.gitkeep`.
+  - remove the stale tracked Playwright config that wrote directly into the
+    ignored screenshot lane.
+  - keep public docs at schema/contract level unless local DB/query outputs are
+    explicitly curated for publication.
+- Validation:
+  - `git check-ignore -v docs/peanut/refs/DATABASE_QUERY_COOKBOOK.md`
+  - `git check-ignore -v output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+  - `make lint-docs`
+- Why: Local databases, query outputs, screenshot captures, and notebooks are
+  operator evidence, not public repo files by default. The public repo should
+  show contracts and curated evidence without exposing private/local inspection
+  workflows.

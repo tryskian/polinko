@@ -19,7 +19,8 @@ narrative.
   the portfolio.
 - [Research](RESEARCH.md): how beta eras, evals, databases, and reports
   relate.
-- [Diagrams](DIAGRAMS.md): Mermaid diagrams and notebook pointers.
+- [Diagrams](DIAGRAMS.md): Mermaid diagrams and curated visual evidence
+  pointers.
 - [Root README](../../README.md): setup, commands, API surface, and local
   operation.
 

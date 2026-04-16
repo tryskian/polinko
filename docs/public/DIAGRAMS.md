@@ -2,7 +2,7 @@
 
 # Diagrams
 
-This page collects repo-native diagrams and notebook pointers. Canonical
+This page collects repo-native diagrams and visual evidence pointers. Canonical
 runtime and eval contracts remain in `docs/runtime/ARCHITECTURE.md` and
 `docs/eval/README.md`.
 
@@ -52,12 +52,11 @@ flowchart LR
   B2 --> R[".local/eval_reports/"]
   W --> P["/portfolio/sankey-data"]
   R --> P
-  P --> V["Repo visuals: Sankey, notebooks, diagrams"]
+  P --> V["Repo visuals: Sankey, diagrams, curated notebooks"]
 ```
 
 ## Notebook
 
-- Tracked starter notebook:
-  `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
-- Local/private notebook outputs should stay untracked unless explicitly
-  promoted as curated public evidence.
+- Notebook experiments and query outputs stay local-only under ignored output
+  lanes by default.
+- Promote only curated, non-private notebook outputs into public docs.

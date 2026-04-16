@@ -16,8 +16,10 @@ entire operator archive first.
 - Beta 1.0 materials preserve the manual/screenshot-backed transition into
   binary evals.
 - Current OCR binary reports show operational fail/pass pressure.
-- Mermaid diagrams, notebooks, and data-viz surfaces are repo-native visual
-  research instruments.
+- Mermaid diagrams and data-viz surfaces are repo-native visual research
+  instruments.
+- Notebook/query outputs remain local-only unless explicitly curated for public
+  evidence.
 
 ## Beta 1.0
 

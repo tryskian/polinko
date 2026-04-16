@@ -131,8 +131,8 @@
       - `.local/eval_reports/ocr_growth_metrics.md`
     - growth fail cohort report:
       - `.local/eval_reports/ocr_growth_fail_cohort.md`
-  - local notebook exploration:
-    - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+  - local notebook/query exploration:
+    - `output/jupyter-notebook/` (ignored local output lane)
 
 ## Placement Rules
 

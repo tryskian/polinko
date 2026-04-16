@@ -42,7 +42,7 @@ CLIP_AB_SOURCE_TYPES ?= image
 OCR_HANDWRITING_CASES ?= .local/eval_cases/ocr_handwriting_eval_cases.json
 OCR_SAFETY_CASES ?= docs/eval/cases/ocr_safety_eval_cases.json
 CGPT_EXPORT_ROOT ?=
-CGPT_EXPORT_ROOT_DEFAULT ?= /Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT
+CGPT_EXPORT_ROOT_DEFAULT ?= $(HOME)/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT
 CGPT_EXPORT_OUTPUT_DIR ?= .local/eval_cases
 OCR_CASES_FROM_EXPORT_ARGS ?=
 OCR_TRANSCRIPT_CASES_ALL ?= .local/eval_cases/ocr_transcript_cases_all.json
@@ -177,7 +177,8 @@ notebook-setup:
 	$(PYTHON) -m pip install -r requirements.notebook.txt
 
 notebook nb notes:
-	@if [ -f "$(NOTEBOOK_START_PATH_ABS)" ]; then \
+	@mkdir -p "$(NOTEBOOK_DIR_ABS)"; \
+	if [ -f "$(NOTEBOOK_START_PATH_ABS)" ]; then \
 		$(PYTHON) -m jupyter lab --notebook-dir="$(NOTEBOOK_DIR_ABS)" "$(NOTEBOOK_START_PATH_ABS)"; \
 	else \
 		$(PYTHON) -m jupyter lab --notebook-dir="$(NOTEBOOK_DIR_ABS)" "$(NOTEBOOK_DIR_ABS)"; \
@@ -327,7 +328,7 @@ ocr-notebook-workflow:
 	@set -eu; \
 	if [ -z "$(CGPT_EXPORT_ROOT)" ]; then \
 		echo "CGPT_EXPORT_ROOT is required."; \
-		echo "Example: make ocr-notebook-workflow CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT"; \
+		echo "Example: make ocr-notebook-workflow CGPT_EXPORT_ROOT=\$$HOME/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT"; \
 		exit 1; \
 	fi; \
 	$(MAKE) --no-print-directory doctor-env; \

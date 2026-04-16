@@ -32,8 +32,8 @@ public path:
   pointers.
 
 The website should stay lean: identity, contact, and a link into this repo.
-The repo carries the proof: docs, evals, tests, notebooks, diagrams, and data
-contracts.
+The repo carries the proof: docs, evals, tests, diagrams, and data contracts.
+Notebook and query outputs stay local-only unless explicitly promoted.
 
 Tracked governance/runtime docs are part of the working research archive and
 continuity system. They are safe to track, but they are not the primary public
@@ -135,17 +135,18 @@ Portfolio shell (canonical frontend flow):
 make portfolio
 ```
 
-Notebook viz (local/private):
+Notebook viz (local/private, ignored output lane):
 
 ```bash
 make notebook-setup
 make notes
 ```
 
-Starter notebook:
+Local notebook workspace:
 
-- `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
-  (live filters/sliders + instant chart/table updates).
+- `output/jupyter-notebook/`
+- keep notebook outputs untracked unless explicitly promoted as curated
+  evidence.
 
 Checks:
 
