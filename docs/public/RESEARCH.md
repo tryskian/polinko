@@ -2,8 +2,9 @@
 
 # Research Frame
 
-Polinko investigates model behaviour through small, inspectable evaluation
-systems rather than large dashboard abstractions.
+Polinko is a human-led research and engineering collaboration. It investigates
+model behaviour through small, inspectable evaluation systems rather than large
+dashboard abstractions.
 
 The working question is:
 
@@ -19,6 +20,11 @@ Polinko is a local-first evaluation lab for:
 - fail-signal observability
 - manual evaluation notes
 - human-AI workflow evidence
+
+It began as theory and became engineering through a collaboration loop:
+human-authored research direction, constraints, and acceptance criteria are
+translated into technical mechanisms, tested against evidence, then accepted,
+reworked, or rejected by human judgement.
 
 It is also a working repository. The implementation, tests, docs, eval reports,
 database contracts, and visual research artifacts live together so claims can

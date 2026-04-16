@@ -9,6 +9,8 @@ entire operator archive first.
 
 ## Evidence Layers
 
+- Method and authorship boundaries define who owns the claims and how AI
+  assistance is used.
 - Source code and tests show the runtime contract.
 - Eval docs and report schemas show the evidence contract.
 - Beta 1.0 materials preserve the manual/screenshot-backed transition into
@@ -47,6 +49,10 @@ Core surfaces:
 ## Public vs Working Docs
 
 Public docs are curated explanations derived from the working archive.
+
+The first public layer is [Method & Authorship](METHOD.md): Polinko is
+human-led research, with AI assistance used as inspectable method and
+engineering support.
 
 Working docs stay tracked when they are safe and useful for continuity:
 

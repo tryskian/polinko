@@ -2,8 +2,9 @@
 
 # Polinko Public Guide
 
-Polinko is a repo-native research project for evaluating model behaviour with
-lightweight binary gates, OCR reliability loops, and human-AI workflow evidence.
+Polinko is a human-led research and engineering collaboration for evaluating
+model behaviour with lightweight binary gates, OCR reliability loops, and
+human-AI workflow evidence.
 
 These docs are the curated public reading path. The tracked governance,
 runtime, state, and handoff docs are working research infrastructure: they are
@@ -12,6 +13,8 @@ narrative.
 
 ## Start Here
 
+- [Method & Authorship](METHOD.md): how human research direction becomes
+  technical implementation.
 - [Research Frame](RESEARCH.md): what Polinko investigates and why the repo is
   the portfolio.
 - [Evidence Guide](EVIDENCE.md): how beta eras, evals, databases, and reports

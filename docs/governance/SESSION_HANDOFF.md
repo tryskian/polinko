@@ -18,6 +18,8 @@ Last updated: 2026-04-16
   - public-facing docs/site copy should be derived separately
   - public-facing repo guide starts at `docs/public/README.md`; curated public
     pages live under `docs/public/`
+  - public framing starts with human-led research and AI-assisted engineering
+    collaboration, not tooling-first implementation detail
   - the public website should be about/contact and point into the work, not
     recreate the research system
 - Latest end-of-day closeout completed cleanly (2026-04-15):

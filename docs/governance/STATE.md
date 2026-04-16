@@ -17,7 +17,9 @@ Last updated: 2026-04-16
   - public-facing docs/site copy should be derived separately and must not
     replace canonical research docs
   - public-facing repo entrypoint now starts at `docs/public/README.md`, with
-    curated research/evidence/visual pages under `docs/public/`
+    curated method/research/evidence/visual pages under `docs/public/`
+  - public framing leads with human-led research and AI-assisted engineering
+    collaboration before implementation details
   - the public portfolio website should be a lightweight about/contact doorway
     into the work, not a full recreation of the research system
 - End-of-day closeout is green for 2026-04-15:

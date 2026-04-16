@@ -1,8 +1,9 @@
 # Polinko
 
-Polinko is a repo-native AI evaluation lab and local-first GPT assistant app.
-It combines a FastAPI backend, CLI workflow, deterministic eval gates, OCR
-reliability loops, and evidence-first documentation.
+Polinko is a human-led, AI-assisted research and engineering project. It is a
+repo-native AI evaluation lab and local-first GPT assistant app with a FastAPI
+backend, CLI workflow, deterministic eval gates, OCR reliability loops, and
+evidence-first documentation.
 
 Current release lane: `beta v2.1 - Repo-as-Research`.
 
@@ -23,6 +24,8 @@ If you are reading Polinko as a research portfolio, start with the curated
 public path:
 
 - [Public Guide](docs/public/README.md) for the human-readable project map.
+- [Method & Authorship](docs/public/METHOD.md) for the collaboration and
+  responsibility boundary.
 - [Research Frame](docs/public/RESEARCH.md) for what Polinko investigates.
 - [Evidence Guide](docs/public/EVIDENCE.md) for how the proof is organised.
 - [Public Visuals](docs/public/VISUALS.md) for Mermaid diagrams and notebook
