@@ -16,6 +16,7 @@ Last updated: 2026-04-16
 - Repo-as-research-project is the portfolio architecture:
   - tracked README/docs remain canonical research documentation
   - public-facing docs/site copy should be derived separately
+  - public-facing repo guide starts at `docs/public/README.md`
   - the public website should be about/contact and point into the work, not
     recreate the research system
 - Latest end-of-day closeout completed cleanly (2026-04-15):

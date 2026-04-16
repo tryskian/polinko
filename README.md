@@ -1,7 +1,8 @@
 # Polinko
 
-Polinko is a local-first GPT assistant app with a FastAPI backend, CLI workflow,
-and deterministic eval gates.
+Polinko is a repo-native AI evaluation lab and local-first GPT assistant app.
+It combines a FastAPI backend, CLI workflow, deterministic eval gates, OCR
+reliability loops, and evidence-first documentation.
 
 Current release lane: `beta v2.0`.
 
@@ -15,6 +16,22 @@ runtime contracts, and diagrams are the canonical research documentation.
 The public portfolio website is a lightweight about/contact doorway into the
 work. Public-facing docs/copy should be derived separately from the canonical
 repo docs rather than replacing them.
+
+## Public Entry
+
+If you are reading Polinko as a research portfolio, start here:
+
+- [Public Guide](docs/public/README.md) for the human-readable project map.
+- [Public Visuals](docs/public/VISUALS.md) for Mermaid diagrams and notebook
+  pointers.
+- [Eval Evidence Map](docs/eval/README.md) for beta 1.0/current eval
+  interpretation.
+- [Architecture](docs/runtime/ARCHITECTURE.md) for runtime and data surfaces.
+- [Runbook](docs/runtime/RUNBOOK.md) for local execution commands.
+
+The website should stay lean: identity, contact, and a link into this repo.
+The repo carries the proof: docs, evals, tests, notebooks, diagrams, and data
+contracts.
 
 ## Confidentiality Note
 
@@ -407,6 +424,7 @@ Defaults:
 - `core/` runtime logic
 - `tools/` operational and eval scripts
 - `tests/` unit and integration tests
+- `docs/public/` public-facing guide layer derived from canonical docs
 - `docs/` architecture, runbook, decisions, state
 - `docs/eval/` beta lanes and active eval cases
 
