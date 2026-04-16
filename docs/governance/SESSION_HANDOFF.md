@@ -2,7 +2,7 @@
 
 # Session Handoff (Current Only)
 
-Last updated: 2026-04-15
+Last updated: 2026-04-16
 
 ## Startup
 
@@ -13,8 +13,13 @@ Last updated: 2026-04-15
 ## Current Snapshot
 
 - Backend-first runtime remains canonical.
+- Repo-as-research-project is the portfolio architecture:
+  - tracked README/docs remain canonical research documentation
+  - public-facing docs/site copy should be derived separately
+  - the public website should be about/contact and point into the work, not
+    recreate the research system
 - Latest end-of-day closeout completed cleanly (2026-04-15):
-  - PR #312 merged to `main`.
+  - PR #313 merged to `main`.
   - final `make eod` passed transcript/doc checks, env doctor, docs lint,
     tests (`393` passing), stop checks, and `eod-git-check`.
   - local `main` finished clean and synced with `origin/main`.
@@ -22,6 +27,13 @@ Last updated: 2026-04-15
 - Portfolio shell route is active:
   - `GET /` -> redirect to `GET /portfolio`
   - `GET /portfolio` -> `ui/index.html`
+- Public portfolio scope is about/contact doorway.
+- Lean portal rule:
+  - website = identity and doorway
+  - repo = research object, evidence, visuals, notebooks, Mermaid diagrams,
+    eval data, and implementation
+- Current frontend remains a local FPO scaffold while the public site is
+  simplified.
 - Frontend source/build contract is active:
   - edit in `frontend/`
   - build to `ui/` with `make portfolio-build`
@@ -36,22 +48,24 @@ Last updated: 2026-04-15
 - Portfolio UI interaction model is pinned-stage stepping:
   - document scroll is locked (`scrollY` should stay `0`).
   - one wheel/touch/key gesture advances one exact scene.
-  - vertical scenes move through `.board` transform.
-  - horizontal chapter moves through `.horizontal-track` transform.
+  - scenes move through `.board` x/y transforms.
+  - scroll guard includes a gesture-stop failsafe so hard trackpad/wheel
+    momentum should not skip sections or lock at section `02`.
   - active sequence:
     `hero -> intro -> pipeline-one -> evidence-map -> pipeline-two ->
     conclusion -> about-lab`
-- Portfolio evidence visual direction is the WebGL Evidence Field:
+  - active map:
+    `home -> intro`, then down through `pipeline-one -> evidence-map ->
+    pipeline-two -> conclusion`, then right to `about-lab`
+- Portfolio evidence surfaces are repo research instruments:
   - `GET /portfolio/sankey-data` supplies the real-data payload.
-  - primary visual is a two-plane WebGL field:
-    - lower plane: Beta 1.0 manual eval evidence
-    - middle ribbons: continuity / translation mechanics
-    - upper plane: Beta 2.0 OCR binary evidence
+  - WebGL/data-viz work remains optional research instrumentation.
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,
     reduced-motion, performance, and direct-inspection fallback.
   - current frontend implementation uses the tracked stacked SVG evidence-map
     FPO at `frontend/src/stacked-evidence-map-fpo.svg`; keep it as the
     evidence-map visual/function baseline while refining style.
+  - current pipeline panels use `frontend/src/pipeline-fpo.svg` as FPO.
   - Mermaid pipeline diagrams in `docs/peanut/refs/llm_pipeline_diagrams.md`
     are the high-level pipeline structure baseline for pipeline pages.
   - peanut-only mockups/references are exploration only; do not replace the
@@ -96,12 +110,8 @@ Last updated: 2026-04-15
 ## Next Execution Slice
 
 1. Portfolio frontend design pass:
-   - preserve pinned-stage stepping.
-   - refine the stacked SVG evidence-map fallback grammar first.
-   - prototype the WebGL Evidence Field only after the flat evidence-map
-     grammar is stable.
-   - keep the stacked SVG fallback and WebGL surface on the same real-data
-     payload.
+   - simplify public website toward a lean hero/contact portal.
+   - keep repository evidence visualizations as research instruments.
    - preserve backend evidence/data contracts unless explicitly changing them.
 2. OCR hardening kernels (lockset stability + growth signal quality).
 3. Keep docs aligned via canonical ownership map.

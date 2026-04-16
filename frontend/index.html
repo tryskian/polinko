@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/src/assets/favicon-3x.png" />
     <title>POLINKOfolio Interface Board</title>
   </head>
   <body>
@@ -11,18 +12,26 @@
       <section class="board" role="presentation">
         <section id="hero" class="section hero" data-page="01"></section>
         <section id="intro" class="section intro" data-page="02"></section>
-        <section id="horizontal-chapter" class="horizontal-chapter" aria-label="Beta 1 pipeline, evidence map, and Beta 2 pipeline">
-          <div id="horizontal-track" class="horizontal-track">
-            <section id="pipeline-one" class="horizontal-panel pipeline-one" data-page="03"></section>
-            <section id="evidence-map" class="horizontal-panel evidence-map" aria-label="Stacked evidence map FPO" data-page="04">
-              <img
-                class="evidence-map__image"
-                src="/src/stacked-evidence-map-fpo.svg"
-                alt="Temporary stacked evidence map connecting Beta 1.0 manual eval outcomes through signal families to Beta 2.0 OCR binary gates"
-              />
-            </section>
-            <section id="pipeline-two" class="horizontal-panel pipeline-two" data-page="05"></section>
-          </div>
+        <section id="pipeline-one" class="section pipeline-one" aria-label="Pipeline FPO" data-page="03">
+          <img
+            class="pipeline-fpo__image"
+            src="/src/pipeline-fpo.svg"
+            alt="Temporary Polinko pipeline diagram showing input, safety and routing, context, generation, binary gate, output, and logging"
+          />
+        </section>
+        <section id="evidence-map" class="section evidence-map" aria-label="Stacked evidence map FPO" data-page="04">
+          <img
+            class="evidence-map__image"
+            src="/src/stacked-evidence-map-fpo.svg"
+            alt="Temporary stacked evidence map connecting Beta 1.0 manual eval outcomes through signal families to Beta 2.0 OCR binary gates"
+          />
+        </section>
+        <section id="pipeline-two" class="section pipeline-two" aria-label="Pipeline FPO" data-page="05">
+          <img
+            class="pipeline-fpo__image"
+            src="/src/pipeline-fpo.svg"
+            alt="Temporary Polinko pipeline diagram showing input, safety and routing, context, generation, binary gate, output, and logging"
+          />
         </section>
         <section id="conclusion" class="section conclusion" data-page="06"></section>
         <section id="about-lab" class="section about-lab" data-page="07"></section>

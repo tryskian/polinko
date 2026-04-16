@@ -19,6 +19,8 @@ const STAGE_STEP_DURATION = 0.92;
 const STAGE_STEP_EASE = "power2.inOut";
 const STAGE_GESTURE_TOLERANCE = 14;
 const STAGE_GESTURE_COOLDOWN_MS = 180;
+const STAGE_GESTURE_STOP_DELAY_SECONDS = 0.42;
+const STAGE_GESTURE_FAILSAFE_SECONDS = 1.65;
 
 const EMPTY_GRAPHS = {
   legacy: { nodes: [], links: [] },
@@ -68,19 +70,18 @@ function setupSankeyDataWiring() {
 
 function setupPinnedStageStepper() {
   const board = document.querySelector(".board");
-  const track = document.getElementById("horizontal-track");
-  if (!(board instanceof HTMLElement) || !(track instanceof HTMLElement)) {
+  if (!(board instanceof HTMLElement)) {
     return () => {};
   }
 
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const scenes = [
     { id: "hero", row: 0, column: 0 },
-    { id: "intro", row: 1, column: 0 },
-    { id: "pipeline-one", row: 2, column: 0 },
+    { id: "intro", row: 0, column: 1 },
+    { id: "pipeline-one", row: 1, column: 1 },
     { id: "evidence-map", row: 2, column: 1 },
-    { id: "pipeline-two", row: 2, column: 2 },
-    { id: "conclusion", row: 3, column: 2 },
+    { id: "pipeline-two", row: 3, column: 1 },
+    { id: "conclusion", row: 4, column: 1 },
     { id: "about-lab", row: 4, column: 2 },
   ].filter((scene) => document.getElementById(scene.id));
 
@@ -100,7 +101,11 @@ function setupPinnedStageStepper() {
   );
   let isAnimating = false;
   let gestureLockedUntil = 0;
+  let gestureInProgress = false;
+  let gestureSettled = true;
   let stageUnlockTween = null;
+  let gestureReleaseTween = null;
+  let gestureFailsafeTween = null;
 
   const setActiveScene = (index) => {
     currentIndex = clampSceneIndex(index);
@@ -108,14 +113,14 @@ function setupPinnedStageStepper() {
   };
 
   const sceneTransforms = (scene) => ({
+    boardX: -scene.column * window.innerWidth,
     boardY: -scene.row * window.innerHeight,
-    trackX: -scene.column * window.innerWidth,
   });
 
   const goToScene = (index, immediate = false) => {
     const nextIndex = clampSceneIndex(index);
     const scene = scenes[nextIndex];
-    const { boardY, trackX } = sceneTransforms(scene);
+    const { boardX, boardY } = sceneTransforms(scene);
     const duration = immediate || prefersReducedMotion ? 0 : STAGE_STEP_DURATION;
 
     setActiveScene(nextIndex);
@@ -124,13 +129,8 @@ function setupPinnedStageStepper() {
     gestureLockedUntil = performance.now() + (duration * 1000) + STAGE_GESTURE_COOLDOWN_MS;
 
     gsap.to(board, {
+      x: boardX,
       y: boardY,
-      duration,
-      ease: immediate || prefersReducedMotion ? "none" : STAGE_STEP_EASE,
-      overwrite: true,
-    });
-    gsap.to(track, {
-      x: trackX,
       duration,
       ease: immediate || prefersReducedMotion ? "none" : STAGE_STEP_EASE,
       overwrite: true,
@@ -138,19 +138,51 @@ function setupPinnedStageStepper() {
     if (duration === 0) {
       isAnimating = false;
       stageUnlockTween = null;
+      releaseGestureIfReady();
       return;
     }
     stageUnlockTween = gsap.delayedCall(duration, () => {
       isAnimating = false;
       stageUnlockTween = null;
+      releaseGestureIfReady();
     });
   };
 
-  const stepScene = (direction) => {
-    if (isAnimating || performance.now() < gestureLockedUntil) {
+  function releaseGestureIfReady() {
+    gestureReleaseTween?.kill();
+    if (!isAnimating && gestureSettled && performance.now() >= gestureLockedUntil) {
+      gestureInProgress = false;
+      gestureReleaseTween = null;
       return;
     }
-    goToScene(currentIndex + direction);
+    gestureReleaseTween = gsap.delayedCall(0.08, releaseGestureIfReady);
+  }
+
+  const markGestureSettled = () => {
+    gestureFailsafeTween?.kill();
+    gestureFailsafeTween = null;
+    gestureSettled = true;
+    releaseGestureIfReady();
+  };
+
+  const stepScene = (direction, source = "gesture") => {
+    const nextIndex = clampSceneIndex(currentIndex + direction);
+    if (
+      nextIndex === currentIndex
+      || isAnimating
+      || performance.now() < gestureLockedUntil
+      || (source === "gesture" && gestureInProgress)
+    ) {
+      return;
+    }
+    if (source === "gesture") {
+      gestureInProgress = true;
+      gestureSettled = false;
+      gestureReleaseTween?.kill();
+      gestureFailsafeTween?.kill();
+      gestureFailsafeTween = gsap.delayedCall(STAGE_GESTURE_FAILSAFE_SECONDS, markGestureSettled);
+    }
+    goToScene(nextIndex);
   };
 
   const observer = Observer.create({
@@ -161,8 +193,10 @@ function setupPinnedStageStepper() {
     lockAxis: true,
     tolerance: STAGE_GESTURE_TOLERANCE,
     wheelSpeed: -1,
-    onUp: () => stepScene(1),
-    onDown: () => stepScene(-1),
+    onStopDelay: STAGE_GESTURE_STOP_DELAY_SECONDS,
+    onUp: () => stepScene(1, "gesture"),
+    onDown: () => stepScene(-1, "gesture"),
+    onStop: markGestureSettled,
   });
 
   const onKeyDown = (event) => {
@@ -182,10 +216,10 @@ function setupPinnedStageStepper() {
 
     if (["ArrowDown", "PageDown", " ", "Spacebar", "ArrowRight"].includes(event.key)) {
       event.preventDefault();
-      stepScene(1);
+      stepScene(1, "keyboard");
     } else if (["ArrowUp", "PageUp", "ArrowLeft"].includes(event.key)) {
       event.preventDefault();
-      stepScene(-1);
+      stepScene(-1, "keyboard");
     } else if (event.key === "Home") {
       event.preventDefault();
       goToScene(0);
@@ -197,7 +231,7 @@ function setupPinnedStageStepper() {
 
   const onResize = () => goToScene(currentIndex, true);
 
-  gsap.set([board, track], { force3D: true });
+  gsap.set(board, { force3D: true });
   goToScene(currentIndex, true);
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("resize", onResize);
@@ -205,10 +239,12 @@ function setupPinnedStageStepper() {
   return () => {
     observer.kill();
     stageUnlockTween?.kill();
+    gestureReleaseTween?.kill();
+    gestureFailsafeTween?.kill();
     window.removeEventListener("keydown", onKeyDown);
     window.removeEventListener("resize", onResize);
-    gsap.killTweensOf([board, track]);
-    gsap.set([board, track], { clearProps: "transform" });
+    gsap.killTweensOf(board);
+    gsap.set(board, { clearProps: "transform" });
   };
 }
 

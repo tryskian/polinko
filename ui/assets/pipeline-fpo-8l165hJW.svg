@@ -1,0 +1,211 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" role="img" aria-labelledby="title desc">
+  <title id="title">Polinkofolio pipeline FPO</title>
+  <desc id="desc">A temporary high-level Polinko pipeline diagram showing input, safety and routing, context, generation, pass/fail gate, and output logging.</desc>
+  <defs>
+    <style>
+      svg {
+        background: #faf9f6;
+        font-family: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+      }
+
+      .paper {
+        fill: #faf9f6;
+      }
+
+      .rule {
+        fill: none;
+        stroke: #080806;
+        stroke-width: 0.8;
+        stroke-opacity: 0.16;
+      }
+
+      .guide {
+        fill: none;
+        stroke: #080806;
+        stroke-width: 0.8;
+        stroke-dasharray: 8 12;
+        stroke-opacity: 0.2;
+      }
+
+      .node {
+        fill: #faf9f6;
+        stroke: #080806;
+        stroke-width: 2;
+      }
+
+      .ghost {
+        fill: none;
+        stroke: #080806;
+        stroke-width: 1;
+        stroke-dasharray: 7 10;
+        stroke-opacity: 0.24;
+      }
+
+      .route {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        mix-blend-mode: multiply;
+      }
+
+      .route-main {
+        stroke: #3f6d6a;
+        stroke-width: 8;
+      }
+
+      .route-gate {
+        stroke: #f06d37;
+        stroke-width: 7;
+      }
+
+      .route-pass {
+        stroke: #8da044;
+        stroke-width: 7;
+      }
+
+      .route-fail {
+        stroke: #d94343;
+        stroke-width: 6;
+      }
+
+      .route-log {
+        stroke: #594388;
+        stroke-width: 5;
+      }
+
+      .dot {
+        stroke: #080806;
+        stroke-width: 1.4;
+      }
+
+      .dot-main {
+        fill: #3f6d6a;
+      }
+
+      .dot-gate {
+        fill: #f06d37;
+      }
+
+      .dot-pass {
+        fill: #8da044;
+      }
+
+      .dot-fail {
+        fill: #d94343;
+      }
+
+      .dot-log {
+        fill: #594388;
+      }
+
+      .label {
+        fill: #080806;
+        font-size: 16px;
+        font-weight: 720;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .micro {
+        fill: #080806;
+        fill-opacity: 0.5;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .tiny {
+        fill: #080806;
+        fill-opacity: 0.36;
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+    </style>
+  </defs>
+
+  <rect class="paper" width="1200" height="760" />
+
+  <g aria-hidden="true">
+    <path class="guide" d="M90 156 H1110" />
+    <path class="guide" d="M90 380 H1110" />
+    <path class="guide" d="M90 604 H1110" />
+    <path class="rule" d="M180 126 V640 M348 126 V640 M516 126 V640 M684 126 V640 M852 126 V640 M1020 126 V640" />
+  </g>
+
+  <text class="micro" x="90" y="92">temporary pipeline diagram / structure baseline</text>
+  <text class="tiny" x="90" y="116">Mermaid-derived flowchart grammar, styled to match the evidence map</text>
+
+  <g id="main-route">
+    <path class="route route-main" d="M192 318 C244 318 284 318 336 318" />
+    <path class="route route-main" d="M420 318 C472 318 512 318 564 318" />
+    <path class="route route-main" d="M648 318 C700 318 740 318 792 318" />
+    <path class="route route-gate" d="M876 318 C928 318 968 318 1020 318" />
+    <path class="route route-pass" d="M1020 318 C1064 318 1090 278 1090 232" />
+    <path class="route route-fail" d="M1020 318 C1064 318 1090 366 1090 418" />
+    <path class="route route-log" d="M1030 486 C816 626 408 628 180 486 C136 458 124 406 150 366" />
+  </g>
+
+  <g id="nodes">
+    <g transform="translate(96 270)">
+      <rect class="ghost" x="10" y="-10" width="106" height="96" rx="2" />
+      <rect class="node" x="0" y="0" width="106" height="96" rx="2" />
+      <path class="rule" d="M24 32 H82 M24 54 H70" />
+      <text class="label" x="14" y="132">input</text>
+      <text class="micro" x="14" y="154">prompt / artefact</text>
+      <circle class="dot dot-main" cx="106" cy="48" r="7" />
+    </g>
+
+    <g transform="translate(336 270)">
+      <rect class="ghost" x="-10" y="10" width="106" height="96" rx="2" />
+      <rect class="node" x="0" y="0" width="106" height="96" rx="2" />
+      <path class="rule" d="M24 32 H82 M24 54 H70" />
+      <text class="label" x="-14" y="132">safety + routing</text>
+      <text class="micro" x="-14" y="154">scope / intent</text>
+      <circle class="dot dot-main" cx="0" cy="48" r="7" />
+      <circle class="dot dot-main" cx="106" cy="48" r="7" />
+    </g>
+
+    <g transform="translate(564 270)">
+      <rect class="ghost" x="10" y="-10" width="106" height="96" rx="2" />
+      <rect class="node" x="0" y="0" width="106" height="96" rx="2" />
+      <path class="rule" d="M24 32 H82 M24 54 H70" />
+      <text class="label" x="0" y="132">context</text>
+      <text class="micro" x="0" y="154">memory / retrieval</text>
+      <circle class="dot dot-main" cx="0" cy="48" r="7" />
+      <circle class="dot dot-main" cx="106" cy="48" r="7" />
+    </g>
+
+    <g transform="translate(792 270)">
+      <rect class="ghost" x="-10" y="10" width="106" height="96" rx="2" />
+      <rect class="node" x="0" y="0" width="106" height="96" rx="2" />
+      <path class="rule" d="M24 32 H82 M24 54 H70" />
+      <text class="label" x="2" y="132">generate</text>
+      <text class="micro" x="2" y="154">model response</text>
+      <circle class="dot dot-main" cx="0" cy="48" r="7" />
+      <circle class="dot dot-gate" cx="106" cy="48" r="7" />
+    </g>
+
+    <g transform="translate(1004 246)">
+      <path class="node" d="M58 0 L116 72 L58 144 L0 72 Z" />
+      <path class="ghost" d="M58 -16 L132 72 L58 160 L-16 72 Z" />
+      <path class="rule" d="M38 62 H78 M30 72 H86 M38 82 H78" />
+      <text class="label" x="26" y="176">gate</text>
+      <text class="micro" x="-6" y="200">pass / fail</text>
+      <circle class="dot dot-gate" cx="0" cy="72" r="7" />
+      <circle class="dot dot-pass" cx="86" cy="-14" r="7" />
+      <circle class="dot dot-fail" cx="86" cy="158" r="7" />
+    </g>
+  </g>
+
+  <g id="outcomes">
+    <text class="label" x="1068" y="210">output</text>
+    <text class="micro" x="1068" y="232">ship + log</text>
+    <text class="label" x="1056" y="462">eval note</text>
+    <text class="micro" x="1056" y="484">fail signal returns</text>
+    <circle class="dot dot-log" cx="1030" cy="486" r="7" />
+    <text class="micro" x="430" y="654">logs feed the next context pass; gates remain binary</text>
+  </g>
+</svg>

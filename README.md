@@ -7,6 +7,15 @@ Current release lane: `beta v2.0`.
 
 Snapshot label for this baseline: `polinko-build-snapshot-040426`.
 
+## Research Project Boundary
+
+This repository is the research project. Tracked README/docs, evals, tests,
+runtime contracts, and diagrams are the canonical research documentation.
+
+The public portfolio website is a lightweight about/contact doorway into the
+work. Public-facing docs/copy should be derived separately from the canonical
+repo docs rather than replacing them.
+
 ## Confidentiality Note
 
 This repository intentionally keeps proprietary/local research files untracked.
@@ -29,6 +38,7 @@ remain ignored via `.gitignore`.
   - source of truth: `frontend/`
   - generated runtime output: `ui/`
   - runtime route: `GET /portfolio`
+  - public scope: about/contact doorway
 
 ## Quick Start
 
@@ -194,16 +204,14 @@ Eval visualization and surfaces:
 ## UI Shell Access
 
 - `GET /` redirects to `GET /portfolio`.
-- `GET /portfolio` serves the form-first portfolio scaffold:
+- `GET /portfolio` serves the local portfolio scaffold:
   - current interaction model is pinned-stage stepping
   - current frontend implementation uses a tracked stacked SVG evidence-map
     FPO at `frontend/src/stacked-evidence-map-fpo.svg`
   - the FPO is an implementation placeholder only; `/portfolio/sankey-data`
     still loads and exposes real-data readiness state
-  - selected visual direction is the WebGL Evidence Field:
-    - lower plane: Beta 1.0 manual eval evidence
-    - middle ribbons: continuity / translation mechanics
-    - upper plane: Beta 2.0 OCR binary evidence
+  - public portfolio direction is about/contact; evidence visualizations remain
+    repo research instruments
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,
     reduced-motion, performance, and direct-inspection fallback
   - visual weights are normalized for readability across Beta 1.0 and current
@@ -217,8 +225,8 @@ Eval visualization and surfaces:
   - edit source in `frontend/`
   - generate served shell with `make portfolio-build` (writes to `ui/`)
   - use `make portfolio` for the canonical rebuild + serve + system-browser
-    open workflow; on macOS this opens through the default browser rather than
-    the repo Playwright session
+    open workflow; `make rebuild` and `make portfolio-rebuild` are aliases for
+    the same human-facing path
   - use `make portfolio-playwright` only for Codex/debug inspection in the
     repo Playwright session; it opens a Playwright tab instead of using the
     human-facing browser command

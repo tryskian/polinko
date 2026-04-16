@@ -639,20 +639,31 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
 - `GET /` redirects to `GET /portfolio`.
 - `GET /portfolio` serves the static UI shell draft for immediate content
   editing and operator review.
+  - public portfolio scope is an about/contact doorway into the repo-as-research
+    project.
+  - tracked README/docs remain canonical research documentation; public-facing
+    copy should be derived separately.
   - current shell mode is a pinned-stage portfolio scaffold:
     `hero -> intro -> pipeline-one -> evidence-map -> pipeline-two ->
     conclusion -> about-lab`
   - document scroll is intentionally locked; the stage advances by transforming
-    `.board` vertically and `.horizontal-track` horizontally.
+    `.board` on x/y between mapped scenes.
+  - active map:
+    `home -> intro`, then down through `pipeline-one -> evidence-map ->
+    pipeline-two -> conclusion`, then right to `about-lab`
   - one wheel/touch/key gesture should advance one exact scene.
-  - current visual direction is the WebGL Evidence Field:
-    - lower plane: Beta 1.0 manual eval evidence
-    - middle ribbons: continuity / translation mechanics
-    - upper plane: Beta 2.0 OCR binary evidence
+  - scroll guard uses a gesture-stop failsafe to avoid hard-scroll skips and
+    stale gesture locks.
+  - evidence visualizations are repo research instruments, not the public
+    website burden:
+    - WebGL/data-viz work remains optional research instrumentation
+    - DBs, Mermaid diagrams, and eval reports belong in the repo research lane
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,
     reduced-motion, performance, and direct-inspection fallback.
   - current frontend implementation uses a tracked stacked SVG evidence-map
     FPO at `frontend/src/stacked-evidence-map-fpo.svg`.
+  - current pipeline panels use the pipeline FPO source at
+    `frontend/src/pipeline-fpo.svg`.
   - the FPO is temporary implementation scaffolding; `/portfolio/sankey-data`
     still loads, `window.__POLINKO_SANKEY_DATA__` is populated, and
     `#evidence-map` receives readiness state.
@@ -665,8 +676,8 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     - source: `frontend/`
     - generated output: `ui/`
     - build-only command: `make portfolio-build`
-    - human launch command: `make portfolio` (rebuild + serve + system-browser
-      open with a cache-busted URL)
+    - human launch command: `make portfolio` (aliases: `make rebuild`,
+      `make portfolio-rebuild`) rebuilds, serves, and opens a cache-busted URL
     - Codex/debug launch command: `make portfolio-playwright` (rebuild, serve,
       and open a Playwright tab in the repo Playwright session)
   - `ui/` is generated output only; do not hand-edit built files.
