@@ -2118,7 +2118,7 @@
     `don't/do not have` (retain/store/remember forms).
   - rerun aligned validation + growth chain:
     - `make quality-gate-deterministic`
-    - `CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT make ocrmine`
+    - `CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT make ocrmine`
     - `make ocrstablegrowth`
     - `make ocrgrowth`
     - `make ocrfails`
@@ -2157,11 +2157,11 @@
 - Category: `workflow_environment`
 - Tags: `command_surface`, `ocr_mining`, `defaults`, `operator_efficiency`
 - Decision:
-  - update Makefile export-index/mining targets to use fallback export root
-    when `CGPT_EXPORT_ROOT` is unset:
+  - update Makefile export-index/mining targets to support a locally
+    configured fallback export root when `CGPT_EXPORT_ROOT` is unset:
     - `make cgpt-export-index`
     - `make ocr-cases-from-export` (and alias `make ocrmine`)
-  - fallback source:
+  - fallback source, when configured outside tracked files:
     - `CGPT_EXPORT_ROOT_DEFAULT`
   - keep explicit override support via:
     - `CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
@@ -3012,7 +3012,7 @@
 - Validation:
   - `python -m unittest tests.test_build_ocr_cases_from_export`
   - `make gate`
-  - `CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT make ocrmine`
+  - `CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT make ocrmine`
 - Why: explicit handwriting correction-markup asks are OCR intent in practice.
   This keeps strict precision while recovering one actionable medium-signal row
   that was previously stuck in low-confidence backlog.
@@ -3032,7 +3032,7 @@
 - Validation:
   - `python -m unittest tests.test_build_ocr_cases_from_export`
   - `make gate`
-  - `CGPT_EXPORT_ROOT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT make ocrmine`
+  - `CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT make ocrmine`
 - Why: these words create low-value `must_contain_any` anchors that inflate
   false fails in growth slices. Filtering them keeps fail signal tied to OCR
   content rather than operator phrasing.
@@ -3118,8 +3118,7 @@
 - Status:
   - superseded by `D-201` for active execution context.
   - current canonical page is:
-    `POL Portfolio Hub — Start Here`
-    (`https://www.notion.so/tryskian/POL-Portfolio-Hub-Start-Here-33ab79f28a598060a5fdd53bb4c5cf65?source=copy_link`)
+    `POL Portfolio Hub — Start Here` (private Notion workspace)
 
 ## D-194: Enforce direct-delete policy for duplicate and obsolete Notion pages
 
@@ -3216,7 +3215,7 @@
 - Decision:
   - set `POL Portfolio Hub — Start Here` as the canonical Notion context page
     for portfolio kernel execution:
-    - `https://www.notion.so/tryskian/POL-Portfolio-Hub-Start-Here-33ab79f28a598060a5fdd53bb4c5cf65?source=copy_link`
+    - `POL Portfolio Hub — Start Here` (private Notion workspace)
   - keep automation prompts and governance references aligned to that page.
 - Why: prevents stale-hub drift and keeps portfolio execution grounded to one
   current Notion source of truth.
@@ -3352,7 +3351,7 @@
 - Category: `evidence_governance`
 - Tags: `beta_1_0`, `snapshot`, `manual_eval_data`, `local_only`
 - Decision:
-  - treat `/Users/tryskian/Github/old/polinko-incase` as the full local Beta
+  - treat `<local-beta-1.0-snapshot>` as the full local Beta
     1.0 parity source for documents, databases, evals, and logic.
   - recognise the Beta 1.0 local DBs as meaningful historical data surfaces:
     - `.polinko_history.db`

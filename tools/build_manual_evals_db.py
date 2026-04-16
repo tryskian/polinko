@@ -41,8 +41,9 @@ DEFAULT_IMAGE_ROOTS: tuple[Path, ...] = (
     Path("docs/peanut/assets/screenshots"),
     Path("docs/peanut/assets/screenshots/ocr_evals_legacy"),
     Path.home() / "Downloads",
-    Path.home() / "Library/CloudStorage/Dropbox/Screenshots",
-    Path.home() / "Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT/assets",
+    Path.home() / "Pictures",
+    Path.home() / "Screenshots",
+    Path.home() / "CGPT-DATA-EXPORT/assets",
 )
 
 _FILE_UPLOAD_PREFIX_RE = re.compile(r"^file[-_][^-_]+[-_](.+)$", re.IGNORECASE)

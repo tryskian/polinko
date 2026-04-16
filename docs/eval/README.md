@@ -61,7 +61,7 @@ against it. The 2026-04-13 active local copy was moved to
 Documents:
 
 - local full snapshot:
-  `/Users/tryskian/Github/old/polinko-incase`
+  `<local-beta-1.0-snapshot>`
 - `docs/eval/beta_1_0/build_snapshot_polinko-incase/docs/`
 - includes archived governance, runbook, state, decisions, research, portfolio,
   and transcript material from the beta 1.0 build snapshot.
@@ -69,9 +69,9 @@ Documents:
 Databases:
 
 - local full snapshot DBs:
-  - `/Users/tryskian/Github/old/polinko-incase/.polinko_history.db`
-  - `/Users/tryskian/Github/old/polinko-incase/.polinko_memory.db`
-  - `/Users/tryskian/Github/old/polinko-incase/.polinko_vector.db`
+  - `<local-beta-1.0-snapshot>/.polinko_history.db`
+  - `<local-beta-1.0-snapshot>/.polinko_memory.db`
+  - `<local-beta-1.0-snapshot>/.polinko_vector.db`
 - local-only legacy database snapshots may exist under
   `.local/legacy_eval/archive_legacy_eval/databases/`.
 - these are not tracked in git and should be treated as private/local audit
@@ -83,7 +83,7 @@ Databases:
 Evals:
 
 - meaningful manual evaluation data in the full snapshot:
-  `/Users/tryskian/Github/old/polinko-incase`
+  `<local-beta-1.0-snapshot>`
 - meaningful screenshot-backed/manual OCR evaluation evidence under
   `docs/eval/beta_1_0/`
 - archived OCR prompts/reports under
@@ -96,7 +96,7 @@ Evals:
 Logic:
 
 - full beta 1.0 runtime/eval logic is preserved locally at
-  `/Users/tryskian/Github/old/polinko-incase`.
+  `<local-beta-1.0-snapshot>`.
 - archived runtime/API/tooling/test logic under
   `docs/eval/beta_1_0/build_snapshot_polinko-incase/`
 - includes earlier OCR, hallucination, retrieval, style, CLIP A/B, evidence

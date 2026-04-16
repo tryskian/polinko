@@ -104,7 +104,7 @@ Last updated: 2026-04-16
   - `eval_viz.db` is retired from the active app-facing path; the previous
     active local cache was archived under `.local/runtime_dbs/archive/`.
   - the full local beta 1.0 parity source is
-    `/Users/tryskian/Github/old/polinko-incase`.
+    `<local-beta-1.0-snapshot>`.
   - canonical beta 1.0 context is in earlier `DECISIONS` entries, not only the
     latest entries.
   - legacy and current eval eras may both include OCR evidence.
