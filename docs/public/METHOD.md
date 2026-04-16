@@ -9,6 +9,16 @@ claims are authored by Krystian Fernando. AI systems are used as research and
 engineering instruments inside that process, not as independent authors or
 source authority.
 
+## Tooling Disclosure
+
+Polinko uses OpenAI Codex as a repo-local engineering collaborator for
+implementation, refactoring, validation, and documentation maintenance. OpenAI
+Platform APIs are used where Polinko makes model-backed calls for OCR, evals,
+retrieval, and runtime experiments.
+
+These tools are part of the research-engineering workflow. They do not define
+the research claims, interpret the evidence, or own publication decisions.
+
 ## Collaboration Model
 
 Polinko moves from human research direction to technical implementation:

@@ -18,6 +18,11 @@ The public portfolio website is a lightweight about/contact doorway into the
 work. Public-facing docs/copy should be derived separately from the canonical
 repo docs rather than replacing them.
 
+Polinko uses OpenAI Codex for repo-local engineering collaboration and OpenAI
+Platform APIs for model-backed OCR, eval, retrieval, and runtime workflows.
+Research direction, evidence interpretation, and publication decisions remain
+human-authored.
+
 ## Research Notes
 
 If you are reading Polinko as a research portfolio, start with the curated
