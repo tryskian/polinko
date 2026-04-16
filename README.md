@@ -33,8 +33,8 @@ public path:
   responsibility boundary.
 - [Hypothesis](docs/public/HYPOTHESIS.md) for what Polinko investigates.
 - [Research](docs/public/RESEARCH.md) for how the proof is organised.
-- [Diagrams](docs/public/DIAGRAMS.md) for Mermaid diagrams and notebook
-  pointers.
+- [Diagrams](docs/public/DIAGRAMS.md) for Mermaid diagrams and curated visual
+  evidence pointers.
 
 The website should stay lean: identity, contact, and a link into this repo.
 The repo carries the proof: docs, evals, tests, diagrams, and data contracts.
@@ -62,6 +62,10 @@ remain ignored via `.gitignore`.
   `docs/runtime/RUNBOOK.md` (TypeScript types + endpoint flow).
 - Eval and quality: deterministic and judge-based eval harnesses under
   `tools/`, plus one-command quality gating.
+- Research-engineering stack: SQLite for local evidence stores, Docker and
+  devcontainers for environment portability, Playwright for browser inspection
+  and visual captures, Jupyter for local analysis, pytest/markdownlint/GitHub
+  Actions for validation, and Make for repeatable operator workflows.
 - Portfolio shell build surface:
   - local source scaffold: `frontend/` (ignored except `frontend/.gitkeep`)
   - local generated output: `ui/` (ignored except `ui/.gitkeep`)

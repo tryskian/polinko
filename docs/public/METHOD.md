@@ -19,6 +19,12 @@ retrieval, and runtime experiments.
 These tools are part of the research-engineering workflow. They do not define
 the research claims, interpret the evidence, or own publication decisions.
 
+Supporting tooling is used for reproducibility and inspection: SQLite for local
+evidence stores, Docker/devcontainers for environment portability, Playwright
+for browser-based verification and visual capture, Jupyter for local analysis,
+pytest and markdownlint for validation, GitHub Actions for CI, and Make for
+repeatable operator workflows.
+
 ## Collaboration Model
 
 Polinko moves from human research direction to technical implementation:
