@@ -9,11 +9,13 @@ Last updated: 2026-04-15
 - Runtime is local-first and backend-first:
   - FastAPI API + CLI are canonical execution surfaces.
   - Prompt/runtime behavior remains minimal and deterministic.
-- End-of-day closeout is green for 2026-04-14:
-  - `make eod` passed end-to-end (`doctor-env`, `lint-docs`, and `test` with
-    393 passing tests).
-  - managed background runtime tasks were stopped (`server-daemon` and
-    managed `caffeinate`).
+- End-of-day closeout is green for 2026-04-15:
+  - PR #312 merged to `main`.
+  - final `make eod` passed end-to-end (`doctor-env`, `lint-docs`, `test`
+    with 393 passing tests, and `eod-git-check`).
+  - local `main` is clean and synced with `origin/main`.
+  - managed background runtime tasks are stopped (`server-daemon` and managed
+    `caffeinate`).
 - Portfolio shell route contract is active:
   - `GET /` redirects to `GET /portfolio`.
   - `GET /portfolio` serves `ui/index.html` (build output).
@@ -42,11 +44,14 @@ Last updated: 2026-04-15
     reduced-motion, performance, and direct-inspection fallback.
   - both modes must use the same real-data `GET /portfolio/sankey-data`
     payload.
-  - current frontend implementation uses a tracked stacked SVG evidence-map
-    FPO at `frontend/src/stacked-evidence-map-fpo.svg` while the WebGL
-    Evidence Field is being designed.
-  - the FPO is an implementation placeholder only; it must not be treated as
-    fake data, a decorative fallback, or final visual/data grammar.
+  - current frontend implementation uses the tracked stacked SVG evidence-map
+    FPO at `frontend/src/stacked-evidence-map-fpo.svg`; preserve this as the
+    evidence-map visual/function baseline while refining style.
+  - Mermaid pipeline diagrams in `docs/peanut/refs/llm_pipeline_diagrams.md`
+    are the high-level pipeline structure baseline for the pipeline pages.
+  - peanut-only visual mockups/references are exploration only; do not replace
+    the working FPO or pipeline structure unless readability/function is
+    preserved.
   - the frontend still fetches `GET /portfolio/sankey-data`, stores the result
     in `window.__POLINKO_SANKEY_DATA__`, and sets readiness state on
     `#evidence-map`.
