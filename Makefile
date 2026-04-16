@@ -42,7 +42,7 @@ CLIP_AB_SOURCE_TYPES ?= image
 OCR_HANDWRITING_CASES ?= .local/eval_cases/ocr_handwriting_eval_cases.json
 OCR_SAFETY_CASES ?= docs/eval/cases/ocr_safety_eval_cases.json
 CGPT_EXPORT_ROOT ?=
-CGPT_EXPORT_ROOT_DEFAULT ?= $(HOME)/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT
+CGPT_EXPORT_ROOT_DEFAULT ?=
 CGPT_EXPORT_OUTPUT_DIR ?= .local/eval_cases
 OCR_CASES_FROM_EXPORT_ARGS ?=
 OCR_TRANSCRIPT_CASES_ALL ?= .local/eval_cases/ocr_transcript_cases_all.json
@@ -315,6 +315,11 @@ ocr-data:
 	if [ -z "$$EXPORT_ROOT" ]; then \
 		EXPORT_ROOT="$(CGPT_EXPORT_ROOT_DEFAULT)"; \
 	fi; \
+	if [ -z "$$EXPORT_ROOT" ]; then \
+		echo "CGPT_EXPORT_ROOT is required."; \
+		echo "Run: make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"; \
+		exit 1; \
+	fi; \
 	if [ ! -d "$$EXPORT_ROOT" ]; then \
 		echo "CGPT export root not found: $$EXPORT_ROOT"; \
 		echo "Run: make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"; \
@@ -328,7 +333,7 @@ ocr-notebook-workflow:
 	@set -eu; \
 	if [ -z "$(CGPT_EXPORT_ROOT)" ]; then \
 		echo "CGPT_EXPORT_ROOT is required."; \
-		echo "Example: make ocr-notebook-workflow CGPT_EXPORT_ROOT=\$$HOME/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT"; \
+		echo "Example: make ocr-notebook-workflow CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"; \
 		exit 1; \
 	fi; \
 	$(MAKE) --no-print-directory doctor-env; \
@@ -951,6 +956,11 @@ cgpt-export-index:
 	if [ -z "$$EXPORT_ROOT" ]; then \
 		EXPORT_ROOT="$(CGPT_EXPORT_ROOT_DEFAULT)"; \
 	fi; \
+	if [ -z "$$EXPORT_ROOT" ]; then \
+		echo "CGPT_EXPORT_ROOT is required."; \
+		echo "Run: make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"; \
+		exit 2; \
+	fi; \
 	if [ ! -d "$$EXPORT_ROOT" ]; then \
 		echo "CGPT export root not found: $$EXPORT_ROOT"; \
 		echo "Run: make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"; \
@@ -963,6 +973,11 @@ ocr-cases-from-export:
 	EXPORT_ROOT="$(CGPT_EXPORT_ROOT)"; \
 	if [ -z "$$EXPORT_ROOT" ]; then \
 		EXPORT_ROOT="$(CGPT_EXPORT_ROOT_DEFAULT)"; \
+	fi; \
+	if [ -z "$$EXPORT_ROOT" ]; then \
+		echo "CGPT_EXPORT_ROOT is required."; \
+		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"; \
+		exit 2; \
 	fi; \
 	if [ ! -d "$$EXPORT_ROOT" ]; then \
 		echo "CGPT export root not found: $$EXPORT_ROOT"; \

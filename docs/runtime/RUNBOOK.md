@@ -5,13 +5,13 @@
 ## Branch, Fork, and Worktree Policy
 
 1. Default workflow is branch-based in the canonical local repo:
-   - `/Users/tryskian/Github/polinko`
+   - `<repo-root>`
 2. Do not fork this repository for normal day-to-day project work.
 3. Create a task branch per change set:
    - `git switch -c codex/bigbrain/<task-name>`
 4. Use a worktree only when you need parallel active tracks (for example:
    CI calibration in one tree and feature scaffold in another):
-   - `git worktree add /Users/tryskian/Github/polinko-<task> -b codex/bigbrain/<task> main`
+   - `git worktree add ../polinko-<task> -b codex/bigbrain/<task> main`
 5. Keep one logical task per branch; merge or close before starting the next.
 
 ## Worktrees vs Multi-Agents (Operating Rule)
@@ -42,7 +42,7 @@
    - `docs/governance/SESSION_HANDOFF.md`
    - `docs/runtime/RUNBOOK.md`
 2. Confirm execution location:
-   - canonical root (`/Users/tryskian/Github/polinko`) or dedicated worktree.
+   - canonical checkout root (`<repo-root>`) or dedicated worktree.
 3. Confirm active branch in this thread:
    - `git branch --show-current`
 4. Start implementation from a feature branch, not `main`:
@@ -141,7 +141,7 @@
 ## Repo vs Container Working Modes
 
 1. Canonical source of truth is always:
-   - `/Users/tryskian/Github/polinko`
+   - `<repo-root>`
 2. Host mode (default):
    - Open and work directly in the canonical path.
    - Best for fast iteration and stable Codex thread/workspace mapping.
@@ -247,8 +247,9 @@ Read-only DB audits remain allowed:
      - `make ocrmine`
      - optional explicit override:
        - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
-     - default export root fallback (when unset):
-       - `CGPT_EXPORT_ROOT_DEFAULT=/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT`
+     - optional local default export root fallback (when configured outside
+       tracked files):
+       - `CGPT_EXPORT_ROOT_DEFAULT=/abs/path/to/CGPT-DATA-EXPORT`
    - run widened growth lane (fail-tolerant, batch-first):
      - `make ocrwiden`
      - explicit synchronous fallback:
@@ -483,7 +484,7 @@ Read-only DB audits remain allowed:
 ## Agent-Safe Environment Changes (No-Guessing Policy)
 
 1. Verify context before any env/tooling mutation:
-   - `pwd` must be `/Users/tryskian/Github/polinko` (canonical repo path).
+   - `pwd` must be the expected repo checkout root (`<repo-root>`).
    - confirm mode: host vs devcontainer.
    - confirm branch: `git rev-parse --abbrev-ref HEAD`.
 2. Prefer repo-scoped changes first:
@@ -1051,8 +1052,8 @@ Current policy:
 
 ## Build Transcript-Backed OCR Cases from ChatGPT Export
 
-1. Keep ChatGPT export data outside the repo (for example in Dropbox), and make
-   it locally available offline.
+1. Keep ChatGPT export data outside the repo, and make it locally available
+   offline.
 2. Build attachment/conversation index artifacts (local-only):
    - `make cgpt-export-index CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 3. Mine OCR eval cases from transcript correction/confirmation signals:
