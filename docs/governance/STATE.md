@@ -2,15 +2,24 @@
 
 # Project State
 
-Last updated: 2026-04-15
+Last updated: 2026-04-16
 
 ## Current Truth
 
 - Runtime is local-first and backend-first:
   - FastAPI API + CLI are canonical execution surfaces.
   - Prompt/runtime behavior remains minimal and deterministic.
+- Repo-as-research-project is the current portfolio architecture:
+  - the repository carries the research proof: source, tests, evals,
+    databases/contracts, Mermaid diagrams, governance docs, runtime docs, and
+    evidence chains
+  - tracked README/docs remain canonical research documentation
+  - public-facing docs/site copy should be derived separately and must not
+    replace canonical research docs
+  - the public portfolio website should be a lightweight about/contact doorway
+    into the work, not a full recreation of the research system
 - End-of-day closeout is green for 2026-04-15:
-  - PR #312 merged to `main`.
+  - PR #313 merged to `main`.
   - final `make eod` passed end-to-end (`doctor-env`, `lint-docs`, `test`
     with 393 passing tests, and `eod-git-check`).
   - local `main` is clean and synced with `origin/main`.
@@ -30,23 +39,26 @@ Last updated: 2026-04-15
       repo-scoped Playwright session for Codex/debug snapshots.
     - `make portfolio-build` is the canonical build-only workflow.
     - stale alias `make portfolio-open` has been removed.
+  - current frontend implementation remains a local FPO scaffold while the
+    public website is simplified toward about/contact.
   - frontend interaction model currently uses pinned-stage stepping:
     - browser document scroll is locked (`scrollY` should remain `0`).
     - GSAP `Observer` maps one wheel/touch/key gesture to one exact scene.
-    - the vertical `.board` transform moves between vertical scenes.
-    - the horizontal `.horizontal-track` transform moves the middle chapter.
-- Portfolio evidence visual direction is now the WebGL Evidence Field:
-  - primary visual direction is a two-plane WebGL field:
-    - lower plane: Beta 1.0 manual eval evidence
-    - middle ribbons: continuity / translation mechanics
-    - upper plane: Beta 2.0 OCR binary evidence
-  - flat SVG/D3 Sankey or alluvial view remains the accessibility,
-    reduced-motion, performance, and direct-inspection fallback.
-  - both modes must use the same real-data `GET /portfolio/sankey-data`
-    payload.
+    - `.board` transforms on x/y between mapped scenes.
+    - scroll guard includes a gesture-stop failsafe so hard trackpad/wheel
+      momentum should not skip sections or lock at section `02`.
+- Portfolio evidence surfaces are research instruments in the repo, not the
+  public website burden:
+  - WebGL/data-viz work remains optional research instrumentation.
+  - flat SVG/D3 Sankey or alluvial views remain valid accessibility,
+    reduced-motion, performance, and direct-inspection fallbacks.
+  - repo evidence surfaces must use the same real-data
+    `GET /portfolio/sankey-data` payload.
   - current frontend implementation uses the tracked stacked SVG evidence-map
     FPO at `frontend/src/stacked-evidence-map-fpo.svg`; preserve this as the
     evidence-map visual/function baseline while refining style.
+  - current pipeline panels use the pipeline FPO source at
+    `frontend/src/pipeline-fpo.svg`.
   - Mermaid pipeline diagrams in `docs/peanut/refs/llm_pipeline_diagrams.md`
     are the high-level pipeline structure baseline for the pipeline pages.
   - peanut-only visual mockups/references are exploration only; do not replace
@@ -58,7 +70,9 @@ Last updated: 2026-04-15
   - current stage sequence is:
     - `hero -> intro -> pipeline-one -> evidence-map -> pipeline-two ->
       conclusion -> about-lab`
-  - `pipeline-one -> evidence-map -> pipeline-two` is the horizontal chapter.
+  - current stage map is:
+    - `home -> intro`, then down through `pipeline-one -> evidence-map ->
+      pipeline-two -> conclusion`, then right to `about-lab`
   - blueprint/free-pan exploration was intentionally abandoned for this UI
     because wheel-scroll and pan gestures conflict; keep deterministic
     pinned-stage stepping for this portfolio shell.
@@ -115,14 +129,9 @@ Last updated: 2026-04-15
 ## Active Priorities
 
 1. Portfolio shipping lane:
-   - preserve pinned-stage stepping while refining the stacked SVG fallback
-     grammar.
-   - implement the WebGL Evidence Field only after the flat evidence-map
-     grammar is stable.
-   - WebGL must stay drag-to-rotate only; do not capture wheel/trackpad
-     gestures.
-   - keep the stacked SVG fallback and WebGL surface on the same real-data
-     payload.
+   - simplify the public website toward about/contact.
+   - keep repo evidence visualizations as research instruments, not the public
+     portfolio's main burden.
    - preserve real-data evidence contracts unless explicitly changing backend
      data shape.
 2. OCR reliability lane:
