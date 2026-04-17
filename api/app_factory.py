@@ -54,54 +54,215 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Polinko</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='8' fill='%23262626'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="https://use.typekit.net/yop1tsd.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0">
+  <title>Krystian Fernando</title>
   <style>
     :root {
-      color: #10120f;
+      --paper: #faf9f6;
+      --ink: #262626;
+      --palette: #262626;
+      --quiet: #5d5d58;
+      --page-inline: clamp(32px, 12.15vw, 166px);
+      --page-block-end: clamp(96px, 16.2svh, 166px);
       background: #faf9f6;
-      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      font-family:
+        "aktiv-grotesk",
+        "Aktiv Grotesk",
+        "Helvetica Neue",
+        Helvetica,
+        Arial,
+        sans-serif;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
+      min-height: 100svh;
+      background: var(--paper);
+    }
+
+    .portal {
+      min-height: 100svh;
+      position: relative;
+      padding-block: 48px var(--page-block-end);
+      padding-inline: var(--page-inline);
+      display: flex;
+      align-items: flex-end;
     }
 
     main {
-      width: min(760px, calc(100vw - 48px));
+      inline-size: min(100%, 780px);
     }
 
-    .eyebrow {
-      font: 700 0.78rem/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
-      letter-spacing: 0.18em;
+    .socials {
+      position: fixed;
+      top: 42px;
+      right: clamp(32px, 5vw, 72px);
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      font-size: 12px;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
     }
 
-    h1 {
-      margin: 0.2em 0;
-      font-size: clamp(3.5rem, 12vw, 8rem);
-      line-height: 0.88;
-      letter-spacing: -0.08em;
+    a {
+      color: inherit;
+      text-decoration: none;
     }
 
-    p {
-      max-width: 48rem;
-      font-size: clamp(1.1rem, 2vw, 1.5rem);
-      line-height: 1.45;
+    .socials a {
+      border-bottom: 1px solid transparent;
+      transition:
+        border-color 160ms ease,
+        color 160ms ease;
+    }
+
+    .socials a:hover,
+    .socials a:focus-visible {
+      border-color: currentColor;
+      color: #111;
+    }
+
+    h1 {
+      color: var(--palette, #262626);
+      font-family:
+        "aktiv-grotesk-thin",
+        "Aktiv Grotesk",
+        "Helvetica Neue",
+        Helvetica,
+        Arial,
+        sans-serif;
+      margin: 0 0 23px;
+      font-size: clamp(56px, 5.86vw, 80px);
+      font-style: normal;
+      font-weight: 200;
+      letter-spacing: 0.15px;
+      line-height: 1;
+      max-inline-size: 100%;
+      text-transform: capitalize;
+      text-wrap: balance;
+    }
+
+    .bio {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      align-items: flex-start;
+    }
+
+    .lede {
+      color: var(--palette, #262626);
+      font-family:
+        "aktiv-grotesk",
+        "Aktiv Grotesk",
+        "Helvetica Neue",
+        Helvetica,
+        Arial,
+        sans-serif;
+      margin: 0;
+      max-width: 627px;
+      font-size: clamp(22px, 1.9vw, 26px);
+      font-style: normal;
+      font-weight: 400;
+      line-height: 1.28;
+      text-wrap: pretty;
+    }
+
+    .because-link {
+      color: var(--palette, #262626);
+      font-family:
+        "aktiv-grotesk",
+        "Aktiv Grotesk",
+        "Helvetica Neue",
+        Helvetica,
+        Arial,
+        sans-serif;
+      margin: 0;
+      font-size: clamp(18px, 1.61vw, 22px);
+      font-style: normal;
+      font-weight: 400;
+      line-height: 1.28332;
+      text-decoration-line: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: currentColor;
+      text-underline-offset: 0.16em;
+      text-wrap: pretty;
+      transition:
+        color 180ms ease,
+        text-decoration-color 180ms ease;
+    }
+
+    .because-link:hover,
+    .because-link:focus-visible {
+      color: var(--quiet);
+    }
+
+    .because-link::after {
+      content: "arrow_outward";
+      display: inline-block;
+      font-family: "Material Symbols Outlined";
+      font-size: 0.95em;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 1;
+      margin-inline-start: 0.16em;
+      text-decoration: none;
+      text-transform: none;
+      vertical-align: -0.12em;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --page-inline: clamp(32px, 13vw, 56px);
+        --page-block-end: clamp(110px, 15.65svh, 132px);
+      }
+
+      .portal {
+        padding-block-start: 32px;
+      }
+
+      .socials {
+        top: 28px;
+        right: var(--page-inline);
+        gap: 14px;
+      }
+
+      h1 {
+        margin-bottom: 24px;
+        font-size: clamp(56px, 14vw, 64px);
+      }
     }
   </style>
 </head>
 <body>
-  <main>
-    <p class="eyebrow">Polinko</p>
-    <h1>Repo as research project.</h1>
-    <p>
-      A human-led AI research engineering lab for binary evals, OCR reliability,
-      and evidence-first tooling.
-    </p>
-  </main>
+  <div class="portal">
+    <nav class="socials" aria-label="Contact links">
+      <a href="https://github.com/tryskian/polinko">GitHub</a>
+      <a href="https://www.linkedin.com/in/krystianfernando">LinkedIn</a>
+      <a href="mailto:hi@krystian.io">Email</a>
+    </nav>
+    <main>
+      <h1>Krystian Fernando</h1>
+      <div class="bio">
+        <p class="lede">
+          Creative AI Research Engineer running an applied design lab to evaluate Human-AI interaction.
+        </p>
+        <a class="because-link" href="https://github.com/tryskian/polinko" aria-label="because one idea turned into a lot of questions">
+          because one idea turned into a lot of questions
+        </a>
+      </div>
+    </main>
+  </div>
 </body>
 </html>
 """

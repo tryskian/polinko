@@ -43,6 +43,7 @@ yarn-error.log*
 .act/
 .actrc
 .playwright/
+.playwright-cli/
 .trivycache/
 .trivyignore.local
 .ipynb_checkpoints/
@@ -86,3 +87,10 @@ docs/eval/**
 
 # Local maintenance helper script
 tools/cleanup_eval_chats.py
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

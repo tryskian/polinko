@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-04-16
+Last updated: 2026-04-17
 
 ## Current Truth
 
@@ -11,6 +11,12 @@ Last updated: 2026-04-16
   - Prompt/runtime behavior remains minimal and deterministic.
 - Repo-as-research-project is the current portfolio architecture:
   - GitHub repository visibility is public.
+  - public GitHub metadata is configured:
+    - description: `Full-stack AI research project exploring human-AI
+      alignment through OCR, evals, evidence chains, and runtime tooling.`
+    - topics emphasize Python/OpenAI, AI research/safety, human-AI/HCI,
+      LLM evaluation, PDF processing, FastAPI, and SQLite.
+    - website URL remains blank until the landing page is live.
   - `main` is protected by the active `polinko` ruleset:
     - pull request required
     - required checks: `test`, `markdownlint`
@@ -38,8 +44,8 @@ Last updated: 2026-04-16
     - faint WebGL alignment field as atmosphere only
     - understated text link CTA, not a pill/button
     - local-only mockups live under ignored `docs/peanut/assets/tumbles/`
-- End-of-day closeout is green for 2026-04-15:
-  - PR #313 merged to `main`.
+- End-of-day closeout is green for 2026-04-16:
+  - PR #317 merged to `main`.
   - final `make eod` passed end-to-end (`doctor-env`, `lint-docs`, `test`
     with 393 passing tests, and `eod-git-check`).
   - local `main` is clean and synced with `origin/main`.
@@ -54,14 +60,19 @@ Last updated: 2026-04-16
     - `ui/` is ignored except `ui/.gitkeep`.
   - command surface is simplified:
     - `make portfolio` is the canonical rebuild + serve + open workflow when
-      local frontend source is present.
-    - `make portfolio` opens a cache-busted URL after rebuild so the browser
-      does not reuse a stale shell bundle.
-    - default launch uses the system browser so the human-facing UI is separate
-      from Codex Playwright inspection.
-    - `make portfolio-playwright` opens a visible Playwright tab in the
-      repo-scoped Playwright session for Codex/debug snapshots.
-    - `make portfolio-build` is the canonical build-only workflow.
+      local frontend source is present, otherwise it serves the tracked
+      `/portfolio` fallback.
+    - `make portfolio` opens a cache-busted URL so the browser does not reuse a
+      stale shell bundle.
+    - default launch uses the repo-scoped Playwright session, opens a new tab
+      when possible, and opens a headed Playwright browser when no session is
+      active.
+    - `make portfolio` restarts the stable no-reload `server-daemon` before
+      opening so embedded fallback HTML updates deterministically.
+    - system-browser launch remains available with
+      `make portfolio PORTFOLIO_LAUNCH=system`.
+    - `make portfolio-build` is the canonical build-only workflow and no-ops
+      when local frontend source is absent.
     - stale alias `make portfolio-open` has been removed.
   - current frontend implementation remains a local FPO scaffold while the
     public website is simplified toward a lean landing/about doorway.

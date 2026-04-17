@@ -2,7 +2,7 @@
 
 # Session Handoff (Current Only)
 
-Last updated: 2026-04-16
+Last updated: 2026-04-17
 
 ## Startup
 
@@ -15,6 +15,12 @@ Last updated: 2026-04-16
 - Backend-first runtime remains canonical.
 - Repo-as-research-project is the portfolio architecture:
   - GitHub repository visibility is public.
+  - public GitHub metadata is configured:
+    - description: `Full-stack AI research project exploring human-AI
+      alignment through OCR, evals, evidence chains, and runtime tooling.`
+    - topics emphasize Python/OpenAI, AI research/safety, human-AI/HCI,
+      LLM evaluation, PDF processing, FastAPI, and SQLite.
+    - website URL remains blank until the landing page is live.
   - `main` is protected by the active `polinko` ruleset:
     - PR required
     - required checks: `test`, `markdownlint`
@@ -32,8 +38,8 @@ Last updated: 2026-04-16
     collaboration, not tooling-first implementation detail
   - the public website should be about/contact and point into the work, not
     recreate the research system
-- Latest end-of-day closeout completed cleanly (2026-04-15):
-  - PR #313 merged to `main`.
+- Latest end-of-day closeout completed cleanly (2026-04-16):
+  - PR #317 merged to `main`.
   - final `make eod` passed transcript/doc checks, env doctor, docs lint,
     tests (`393` passing), stop checks, and `eod-git-check`.
   - local `main` finished clean and synced with `origin/main`.
@@ -74,9 +80,14 @@ Last updated: 2026-04-16
   - canonical launch command:
     - `make portfolio` (rebuild + serve + open)
     - launch URL includes a `rebuild=<timestamp>` cache-bust query.
-    - default launch uses the system browser for the human-facing UI.
-    - Codex/debug launch uses `make portfolio-playwright`, which opens a
-      Playwright tab in the repo Playwright session.
+    - default launch uses the repo Playwright session, opens a new tab when
+      possible, and opens a headed Playwright browser when no session is active.
+    - `make portfolio` restarts the stable no-reload `server-daemon` before
+      opening so embedded fallback HTML updates deterministically.
+    - system-browser launch remains available with
+      `make portfolio PORTFOLIO_LAUNCH=system`.
+    - `make portfolio-build` no-ops when local frontend source is absent so
+      the tracked `/portfolio` fallback remains launchable.
   - `make portfolio-open` alias has been removed.
 - Portfolio UI interaction model is pinned-stage stepping:
   - document scroll is locked (`scrollY` should stay `0`).
