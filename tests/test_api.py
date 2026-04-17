@@ -111,7 +111,7 @@ class PolinkoApiTests(unittest.TestCase):
             re.findall(r'(?:href|src)="(/assets/[^"]+)"', resp.text)
         )
         if not asset_paths:
-            self.assertIn("Repo as research project.", resp.text)
+            self.assertIn("Krystian Fernando", resp.text)
             return
         for asset_path in asset_paths:
             asset_resp = self.client.get(asset_path)

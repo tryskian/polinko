@@ -14,7 +14,10 @@ DEV_BACKEND_PORT ?= 8000
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
 DEV_VIZ_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/viz/pass-fail
 DEV_PORTFOLIO_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/portfolio
-PORTFOLIO_LAUNCH ?= system
+PORTFOLIO_MOCKUP_DIR ?= docs/peanut/assets/tumbles/portfolio
+PORTFOLIO_MOCKUP_PORT ?= 8765
+PORTFOLIO_MOCKUP_URL ?= http://127.0.0.1:$(PORTFOLIO_MOCKUP_PORT)/landing-mockups.html
+PORTFOLIO_LAUNCH ?= playwright
 PORTFOLIO_PLAYWRIGHT_SESSION ?= $(PLAYWRIGHT_SESSION)
 FRONTEND_DIR ?= frontend
 OPENAI_LIMITS_URL ?= https://platform.openai.com/settings/organization/limits
@@ -128,6 +131,8 @@ CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
 CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
+PORTFOLIO_MOCKUP_PID_FILE ?= /tmp/polinko-portfolio-mockups.pid
+PORTFOLIO_MOCKUP_LOG ?= /tmp/polinko-portfolio-mockups.log
 PLAYWRIGHT_SNAPSHOT_BASE_DIR ?= docs/peanut/assets/screenshots/playwright
 PLAYWRIGHT_SNAPSHOT_DAY ?= $(shell date +%d-%m-%y)
 PLAYWRIGHT_SESSION ?= polinko
@@ -137,7 +142,7 @@ REQUIREMENTS_LOCK ?= requirements.lock
 PIP_TOOLS_VERSION ?= 7.5.3
 
 .PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-docs-check eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test lint-docs transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
-.PHONY: frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild portfolio-playwright pwcli playwright-cli playwright-snapshot-dir
+.PHONY: frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 .PHONY: eod-git-check eod-preflight
 
 chat:
@@ -431,7 +436,7 @@ server-daemon:
 			fi; \
 		fi; \
 	fi; \
-	nohup $(PYTHON) -m uvicorn server:app --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" --reload >"$(SERVER_LOG)" 2>&1 & \
+	nohup $(PYTHON) -m uvicorn server:app --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" >"$(SERVER_LOG)" 2>&1 & \
 	PID=$$!; \
 	echo "$$PID" >"$(SERVER_PID_FILE)"; \
 	sleep 0.2; \
@@ -545,13 +550,17 @@ viz:
 frontend-install:
 	@set -eu; \
 	if [ ! -f "$(FRONTEND_DIR)/package.json" ]; then \
-		echo "Frontend package.json not found at $(FRONTEND_DIR)/package.json"; \
-		exit 1; \
+		echo "Frontend source not present at $(FRONTEND_DIR)/package.json; skipping npm install."; \
+		exit 0; \
 	fi; \
 	npm --prefix "$(FRONTEND_DIR)" install
 
 portfolio-build:
 	@set -eu; \
+	if [ ! -f "$(FRONTEND_DIR)/package.json" ]; then \
+		echo "Frontend source not present at $(FRONTEND_DIR)/package.json; using tracked /portfolio fallback."; \
+		exit 0; \
+	fi; \
 	$(MAKE) --no-print-directory frontend-install; \
 	npm --prefix "$(FRONTEND_DIR)" run build
 
@@ -560,6 +569,7 @@ frontend-build: portfolio-build
 portfolio:
 	@set -eu; \
 	$(MAKE) --no-print-directory portfolio-build; \
+	$(MAKE) --no-print-directory server-daemon-stop || true; \
 	$(MAKE) --no-print-directory server-daemon; \
 	URL="$(DEV_PORTFOLIO_URL)"; \
 	CACHE_BUST="$$(date +%s)"; \
@@ -569,11 +579,13 @@ portfolio:
 	esac; \
 	case "$(PORTFOLIO_LAUNCH)" in \
 			playwright) \
+				if PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" PLAYWRIGHT_SESSION="$(PLAYWRIGHT_SESSION)" "$(PWCLI_TOOL)" list 2>/dev/null | awk 'BEGIN { found = 0; bad = 0 } /^- $(PLAYWRIGHT_SESSION):/ { found = 1; next } found && /^- / { found = 0 } found && /headed: false/ { bad = 1 } END { exit bad ? 0 : 1 }'; then \
+					PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" PLAYWRIGHT_SESSION="$(PLAYWRIGHT_SESSION)" "$(PWCLI_TOOL)" close >/dev/null 2>&1 || true; \
+				fi; \
 				if PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" PLAYWRIGHT_SESSION="$(PLAYWRIGHT_SESSION)" "$(PWCLI_TOOL)" tab-new "$$OPEN_URL" >/dev/null 2>&1; then \
 					echo "Opened Playwright portfolio tab: $$OPEN_URL"; \
 				else \
-					echo "Could not open a Playwright tab. Try: make pwcli ARGS=\"tab-new $$OPEN_URL\""; \
-					exit 2; \
+					PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" PLAYWRIGHT_SESSION="$(PLAYWRIGHT_SESSION)" "$(PWCLI_TOOL)" open "$$OPEN_URL" --headed; \
 				fi ;; \
 		system) \
 			if command -v open >/dev/null 2>&1; then \
@@ -595,6 +607,54 @@ portfolio-rebuild rebuild: portfolio
 
 portfolio-playwright:
 	@$(MAKE) --no-print-directory portfolio PORTFOLIO_LAUNCH=playwright PLAYWRIGHT_SESSION="$(PORTFOLIO_PLAYWRIGHT_SESSION)"
+
+portfolio-mockups:
+	@set -eu; \
+	if [ ! -f "$(PORTFOLIO_MOCKUP_DIR)/landing-mockups.html" ]; then \
+		echo "Portfolio mockup not found: $(PORTFOLIO_MOCKUP_DIR)/landing-mockups.html"; \
+		exit 1; \
+	fi; \
+	if ! curl -fsS "$(PORTFOLIO_MOCKUP_URL)" >/dev/null 2>&1; then \
+		if [ -f "$(PORTFOLIO_MOCKUP_PID_FILE)" ]; then \
+			PID=$$(cat "$(PORTFOLIO_MOCKUP_PID_FILE)" 2>/dev/null || true); \
+			if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
+				kill "$$PID" 2>/dev/null || true; \
+			fi; \
+			rm -f "$(PORTFOLIO_MOCKUP_PID_FILE)"; \
+		fi; \
+		nohup $(PYTHON) -m http.server "$(PORTFOLIO_MOCKUP_PORT)" --bind 127.0.0.1 --directory "$(PORTFOLIO_MOCKUP_DIR)" >"$(PORTFOLIO_MOCKUP_LOG)" 2>&1 & \
+		PID=$$!; \
+		echo "$$PID" >"$(PORTFOLIO_MOCKUP_PID_FILE)"; \
+		sleep 0.5; \
+		if ! kill -0 "$$PID" 2>/dev/null; then \
+			rm -f "$(PORTFOLIO_MOCKUP_PID_FILE)"; \
+			echo "Failed to start portfolio mockup server. Check $(PORTFOLIO_MOCKUP_LOG)."; \
+			exit 1; \
+		fi; \
+		echo "portfolio mockup server started (PID $$PID, log: $(PORTFOLIO_MOCKUP_LOG))."; \
+	fi; \
+	URL="$(PORTFOLIO_MOCKUP_URL)?rebuild=$$(date +%s)"; \
+	if PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" PLAYWRIGHT_SESSION="$(PLAYWRIGHT_SESSION)" "$(PWCLI_TOOL)" tab-new "$$URL" >/dev/null 2>&1; then \
+		echo "Opened Playwright mockup tab: $$URL"; \
+	else \
+		PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" PLAYWRIGHT_SESSION="$(PLAYWRIGHT_SESSION)" "$(PWCLI_TOOL)" open "$$URL" --headed; \
+	fi; \
+	echo "Portfolio mockup URL: $$URL"
+
+portfolio-mockups-stop:
+	@set -eu; \
+	if [ ! -f "$(PORTFOLIO_MOCKUP_PID_FILE)" ]; then \
+		echo "No portfolio mockup PID file found."; \
+		exit 0; \
+	fi; \
+	PID=$$(cat "$(PORTFOLIO_MOCKUP_PID_FILE)" 2>/dev/null || true); \
+	if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
+		kill "$$PID"; \
+		echo "portfolio mockup server stopped (PID $$PID)."; \
+	else \
+		echo "Stale portfolio mockup PID file; cleaning up."; \
+	fi; \
+	rm -f "$(PORTFOLIO_MOCKUP_PID_FILE)"
 
 pwcli playwright-cli:
 	@PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" \
