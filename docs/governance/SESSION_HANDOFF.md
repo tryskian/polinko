@@ -38,45 +38,41 @@ Last updated: 2026-04-17
     collaboration, not tooling-first implementation detail
   - the public website should be about/contact and point into the work, not
     recreate the research system
-- Latest end-of-day closeout completed cleanly (2026-04-16):
-  - PR #317 merged to `main`.
-  - final `make eod` passed transcript/doc checks, env doctor, docs lint,
-    tests (`393` passing), stop checks, and `eod-git-check`.
-  - local `main` finished clean and synced with `origin/main`.
-  - `server-daemon` is OFF and managed `caffeinate` is OFF.
+- Latest merged checkpoint (2026-04-17):
+  - PR #318 merged to `main` through the protected PR flow.
+  - required checks passed: `test`, `markdownlint`.
+  - local `main` was rebased/aligned with `origin/main` after the squash merge.
+  - generated Playwright test scaffold was removed; keep only the repo-scoped
+    Playwright CLI wrapper workflow.
+  - orphaned local frontend build/install leftovers were cleaned; only
+    `frontend/.gitkeep` and `ui/.gitkeep` remain in the frontend directories.
 - Portfolio shell route is active:
   - `GET /` -> redirect to `GET /portfolio`
-  - `GET /portfolio` -> local `ui/index.html` when present; tracked in-app
-    about/contact fallback otherwise
+  - `GET /portfolio` -> local `ui/index.html` only when intentionally present;
+    tracked in-app about/contact fallback otherwise
 - Public portfolio scope is about/contact doorway.
 - Lean portal rule:
   - website = identity and doorway
   - repo = research object, evidence, visuals, notebooks, Mermaid diagrams,
     eval data, and implementation
-- Landing-page direction checkpoint:
-  - use the sparse `krystian.io`-style layout direction, not the earlier
-    full portfolio/storytelling UI.
-  - current copy direction:
-    - `Creative Director now AI research engineer designing full-stack research architecture studying human-AI interaction under uncertainty`
-    - `(because one idea turned into a lot of questions.)`
-  - current CTA direction:
-    - `HERE'S WHAT HAPPENED ↗`
-    - text link only; no pill/button treatment
-  - visual treatment:
-    - warm off-white field
-    - large empty space
-    - faint WebGL alignment field as atmosphere, not a hero object
-    - top-right links for GitHub, LinkedIn, email
-  - local-only mockups are under ignored `docs/peanut/assets/tumbles/`; use
-    them as design reference only, not tracked source of truth.
-- Current frontend remains a local FPO scaffold while the public site is
-  simplified.
-- Frontend source/build contract is active:
+- Landing-page fallback is now the active public doorway:
+  - tracked fallback lives in `api/app_factory.py`.
+  - current heading: `Krystian Fernando`.
+  - current one-liner:
+    `Creative AI Research Engineer running an applied design lab to evaluate Human-AI interaction.`
+  - current CTA links to the public repo:
+    `because one idea turned into a lot of questions`.
+  - top-right links: GitHub, LinkedIn, email.
+  - the implementation is acceptable as a tiny fallback; if it becomes the
+    production website, move it out of the large `app_factory.py` HTML string
+    into a dedicated static/template surface.
+- Frontend source/build contract is intentionally minimal:
   - `frontend/` is local-only and ignored except `frontend/.gitkeep`
   - `ui/` is local-only and ignored except `ui/.gitkeep`
-  - edit in `frontend/` when the local frontend scaffold is present
-  - build to ignored `ui/` output with `make portfolio-build`
-  - no manual edits under `ui/`; regenerate from local `frontend/`
+  - no active `frontend/package.json` is present
+  - no active generated `ui/index.html` is present
+  - if a real frontend returns, edit in `frontend/` and regenerate ignored
+    `ui/`; do not hand-edit generated `ui/`
   - canonical launch command:
     - `make portfolio` (rebuild + serve + open)
     - launch URL includes a `rebuild=<timestamp>` cache-bust query.
@@ -89,55 +85,27 @@ Last updated: 2026-04-17
     - `make portfolio-build` no-ops when local frontend source is absent so
       the tracked `/portfolio` fallback remains launchable.
   - `make portfolio-open` alias has been removed.
-- Portfolio UI interaction model is pinned-stage stepping:
-  - document scroll is locked (`scrollY` should stay `0`).
-  - one wheel/touch/key gesture advances one exact scene.
-  - scenes move through `.board` x/y transforms.
-  - scroll guard includes a gesture-stop failsafe so hard trackpad/wheel
-    momentum should not skip sections or lock at section `02`.
-  - active sequence:
-    `hero -> intro -> pipeline-one -> evidence-map -> pipeline-two ->
-    conclusion -> about-lab`
-  - active map:
-    `home -> intro`, then down through `pipeline-one -> evidence-map ->
-    pipeline-two -> conclusion`, then right to `about-lab`
 - Portfolio evidence surfaces are repo research instruments:
   - `GET /portfolio/sankey-data` supplies the real-data payload.
   - WebGL/data-viz work remains optional research instrumentation.
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,
     reduced-motion, performance, and direct-inspection fallback.
-  - current local frontend implementation uses the stacked SVG evidence-map
-    FPO at `frontend/src/stacked-evidence-map-fpo.svg`; keep it as the
-    evidence-map visual/function baseline while refining style.
-  - current pipeline panels use `frontend/src/pipeline-fpo.svg` as FPO.
+  - the former local pinned-stage/FPO frontend is no longer active; treat it as
+    archived design context unless deliberately restored on a new branch.
   - Mermaid pipeline diagrams in `docs/peanut/refs/llm_pipeline_diagrams.md`
     are the high-level pipeline structure baseline for pipeline pages.
-  - peanut-only mockups/references are exploration only; do not replace the
-    working FPO or pipeline structure unless readability/function is preserved.
-  - the frontend still fetches `/portfolio/sankey-data`, exposes
-    `window.__POLINKO_SANKEY_DATA__`, and sets readiness state on
-    `#evidence-map`.
+  - peanut-only mockups/references are exploration only; they are not tracked
+    source of truth.
   - Beta 1.0 source uses manual feedback rows from `manual_evals.db`.
   - Beta 2.0/current source uses OCR binary gate report cases from
     `.local/eval_reports/`.
   - connector graph links are source-side counts through an
     evidence-continuity anchor, not fabricated row-level joins.
   - missing sources must render as no-data, not decorative placeholder data.
-- Portfolio UI checkpoint:
-  - pinned-stage stepping is the current interaction baseline.
-  - blueprint/free-pan exploration was intentionally abandoned for this UI
-    because scroll and pan gestures conflict; keep deterministic
-    one-gesture-per-section stepping.
-  - next design pass should prototype the Evidence Field inside the pinned
-    stage, not reintroduce native scroll snap/scrub behavior.
-  - WebGL interaction is drag-to-rotate only; do not capture wheel/trackpad
-    gestures inside the canvas.
-  - do not remove or fake the real-data Sankey payload contract while refining
-    the frontend shell.
-  - no weird headlines, dashboard cards, placeholder copy, invented
-    explanatory overlays, or fake/decorative FPO evidence panels.
-  - Local-only design contract:
-    - `docs/peanut/refs/POLINKOFOLIO_EVIDENCE_FIELD_DESIGN.md`
+  - if repo evidence visuals return, do not remove or fake the real-data
+    Sankey payload contract.
+  - no dashboard cards, placeholder copy, invented overlays, or fake/decorative
+    FPO evidence panels.
 - OCR lockset/growth lane model remains active and unchanged.
 - Eval gate contract remains binary pass/fail.
 - `/viz/pass-fail` is a fail-signal instrument:
@@ -153,9 +121,9 @@ Last updated: 2026-04-17
 
 ## Next Execution Slice
 
-1. Portfolio frontend design pass:
-   - implement or refine the lean landing/about doorway only after the sparse
-     mockup direction is confirmed.
+1. Portfolio doorway pass:
+   - review the lean landing/about fallback with fresh eyes.
+   - if keeping it as production, extract the HTML/CSS from `app_factory.py`.
    - keep repository evidence visualizations as research instruments.
    - preserve backend evidence/data contracts unless explicitly changing them.
 2. OCR hardening kernels (lockset stability + growth signal quality).

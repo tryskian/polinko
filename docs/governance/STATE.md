@@ -38,30 +38,39 @@ Last updated: 2026-04-17
     collaboration before implementation details
   - the public portfolio website should be a lightweight about/contact doorway
     into the work, not a full recreation of the research system
-  - current landing-page direction is intentionally austere:
+  - current public website direction is intentionally lean:
     - sparse `krystian.io`-style composition
     - name + concise human-facing one-liner
-    - faint WebGL alignment field as atmosphere only
-    - understated text link CTA, not a pill/button
-    - local-only mockups live under ignored `docs/peanut/assets/tumbles/`
-- End-of-day closeout is green for 2026-04-16:
-  - PR #317 merged to `main`.
-  - final `make eod` passed end-to-end (`doctor-env`, `lint-docs`, `test`
-    with 393 passing tests, and `eod-git-check`).
-  - local `main` is clean and synced with `origin/main`.
-  - managed background runtime tasks are stopped (`server-daemon` and managed
-    `caffeinate`).
+    - understated text CTA into the public repo
+    - no full portfolio/storytelling UI on the public site right now
+- Latest merged checkpoint is green for 2026-04-17:
+  - PR #318 merged to `main` through the protected PR flow.
+  - required checks passed: `test`, `markdownlint`.
+  - local `main` was aligned with `origin/main` after the squash merge.
+  - generated Playwright test scaffold was removed; keep only the repo-scoped
+    Playwright CLI wrapper workflow.
+  - orphaned local frontend install/build leftovers were cleaned; only
+    `frontend/.gitkeep` and `ui/.gitkeep` remain in the frontend directories.
 - Portfolio shell route contract is active:
   - `GET /` redirects to `GET /portfolio`.
-  - `GET /portfolio` serves local `ui/index.html` when present, otherwise a
-    tracked in-app about/contact fallback.
-  - frontend source/output directories are local-only:
+  - `GET /portfolio` serves local `ui/index.html` only when intentionally
+    present, otherwise a tracked in-app about/contact fallback.
+  - the tracked fallback currently lives in `api/app_factory.py`:
+    - heading: `Krystian Fernando`
+    - one-liner:
+      `Creative AI Research Engineer running an applied design lab to evaluate Human-AI interaction.`
+    - CTA: `because one idea turned into a lot of questions`
+    - links: GitHub, LinkedIn, email
+  - this fallback is acceptable as a tiny doorway; if it becomes the production
+    website, extract it into a dedicated static/template surface.
+  - frontend source/output directories are placeholders unless deliberately
+    restored:
     - `frontend/` is ignored except `frontend/.gitkeep`.
     - `ui/` is ignored except `ui/.gitkeep`.
+    - no active `frontend/package.json` is present.
+    - no active generated `ui/index.html` is present.
   - command surface is simplified:
-    - `make portfolio` is the canonical rebuild + serve + open workflow when
-      local frontend source is present, otherwise it serves the tracked
-      `/portfolio` fallback.
+    - `make portfolio` is the canonical serve + open workflow.
     - `make portfolio` opens a cache-busted URL so the browser does not reuse a
       stale shell bundle.
     - default launch uses the repo-scoped Playwright session, opens a new tab
@@ -74,14 +83,6 @@ Last updated: 2026-04-17
     - `make portfolio-build` is the canonical build-only workflow and no-ops
       when local frontend source is absent.
     - stale alias `make portfolio-open` has been removed.
-  - current frontend implementation remains a local FPO scaffold while the
-    public website is simplified toward a lean landing/about doorway.
-  - frontend interaction model currently uses pinned-stage stepping:
-    - browser document scroll is locked (`scrollY` should remain `0`).
-    - GSAP `Observer` maps one wheel/touch/key gesture to one exact scene.
-    - `.board` transforms on x/y between mapped scenes.
-    - scroll guard includes a gesture-stop failsafe so hard trackpad/wheel
-      momentum should not skip sections or lock at section `02`.
 - Portfolio evidence surfaces are research instruments in the repo, not the
   public website burden:
   - WebGL/data-viz work remains optional research instrumentation.
@@ -89,28 +90,12 @@ Last updated: 2026-04-17
     reduced-motion, performance, and direct-inspection fallbacks.
   - repo evidence surfaces must use the same real-data
     `GET /portfolio/sankey-data` payload.
-  - current local frontend implementation uses the stacked SVG evidence-map
-    FPO at `frontend/src/stacked-evidence-map-fpo.svg`; preserve this as the
-    evidence-map visual/function baseline while refining style.
-  - current pipeline panels use the pipeline FPO source at
-    `frontend/src/pipeline-fpo.svg`.
+  - the former local pinned-stage/FPO frontend is no longer active; treat it as
+    archived design context unless deliberately restored on a new branch.
   - Mermaid pipeline diagrams in `docs/peanut/refs/llm_pipeline_diagrams.md`
     are the high-level pipeline structure baseline for the pipeline pages.
-  - peanut-only visual mockups/references are exploration only; do not replace
-    the working FPO or pipeline structure unless readability/function is
-    preserved.
-  - the frontend still fetches `GET /portfolio/sankey-data`, stores the result
-    in `window.__POLINKO_SANKEY_DATA__`, and sets readiness state on
-    `#evidence-map`.
-  - current stage sequence is:
-    - `hero -> intro -> pipeline-one -> evidence-map -> pipeline-two ->
-      conclusion -> about-lab`
-  - current stage map is:
-    - `home -> intro`, then down through `pipeline-one -> evidence-map ->
-      pipeline-two -> conclusion`, then right to `about-lab`
-  - blueprint/free-pan exploration was intentionally abandoned for this UI
-    because wheel-scroll and pan gestures conflict; keep deterministic
-    pinned-stage stepping for this portfolio shell.
+  - peanut-only visual mockups/references are exploration only, not tracked
+    source of truth.
   - the backend evidence payload still uses Beta 1.0 manual feedback rows from
     `.local/runtime_dbs/active/manual_evals.db` and current OCR binary gate
     report cases from `.local/eval_reports/`.
@@ -142,12 +127,10 @@ Last updated: 2026-04-17
     binding interpretation and must not contradict transcript evidence.
   - long-term context should preserve evidence chains; do not replace source
     transcripts/reports with summary-of-summary state.
-  - local source remains `frontend/` with generated local output in `ui/`; both
-    directories are ignored except tracked `.gitkeep` placeholders.
   - Local-only design contract:
     - `docs/peanut/refs/POLINKOFOLIO_EVIDENCE_FIELD_DESIGN.md`
-  - UI guardrails: no weird headlines, no dashboard cards, no placeholder
-    copy, no invented overlays, and no fake/decorative FPO evidence panels.
+  - UI guardrails: no dashboard cards, no placeholder copy, no invented
+    overlays, and no fake/decorative FPO evidence panels.
 - OCR-forward eval model remains active:
   - lockset lane is release-gating.
   - growth lane is fail-tolerant and signal-seeking.
@@ -168,6 +151,8 @@ Last updated: 2026-04-17
    - simplify the public website toward about/contact.
    - keep repo evidence visualizations as research instruments, not the public
      portfolio's main burden.
+   - if the fallback page becomes production, extract it out of the large
+     `app_factory.py` HTML string.
    - preserve real-data evidence contracts unless explicitly changing backend
      data shape.
 2. OCR reliability lane:
@@ -195,4 +180,4 @@ Last updated: 2026-04-17
 - `make eod-docs-check`
 - `make lint-docs`
 - `make test`
-- `make portfolio-build` (when local `frontend/` changes)
+- `make portfolio-build`
