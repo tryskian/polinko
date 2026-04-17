@@ -60,13 +60,15 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   <title>Krystian Fernando</title>
   <style>
     :root {
-      --paper: #faf9f6;
-      --ink: #262626;
-      --palette: #262626;
-      --quiet: #5d5d58;
+      --paper: #030404;
+      --ink: #f4f1ea;
+      --palette: #f4f1ea;
+      --quiet: #b3b0a8;
+      --field-black: #000;
+      --field-silver: #d8d8d4;
       --page-inline: clamp(32px, 12.15vw, 166px);
       --page-block-end: clamp(96px, 16.2svh, 166px);
-      background: #faf9f6;
+      background: var(--paper);
       color: var(--ink);
       font-family:
         "aktiv-grotesk",
@@ -87,19 +89,77 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       margin: 0;
       min-height: 100svh;
       background: var(--paper);
+      overflow-x: hidden;
     }
 
     .portal {
       min-height: 100svh;
       position: relative;
-      padding-block: 48px var(--page-block-end);
+      isolation: isolate;
+      overflow: hidden;
+      padding-block: 0 var(--page-block-end);
       padding-inline: var(--page-inline);
-      display: flex;
-      align-items: flex-end;
+      display: grid;
+      grid-template-rows: minmax(420px, 64svh) minmax(250px, 1fr);
+      align-items: end;
     }
 
     main {
+      grid-row: 2;
+      position: relative;
+      z-index: 2;
       inline-size: min(100%, 780px);
+      padding-block-start: clamp(28px, 4vw, 56px);
+    }
+
+    .field-shell {
+      position: absolute;
+      z-index: 0;
+      top: 0;
+      left: 50%;
+      width: 100vw;
+      height: min(68svh, 760px);
+      min-height: 420px;
+      transform: translateX(-50%);
+      background:
+        radial-gradient(circle at 48% 52%, rgb(18 20 19) 0%, rgb(4 5 5) 58%, var(--field-black) 100%);
+      overflow: hidden;
+    }
+
+    .field-shell::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 34%;
+      background: linear-gradient(to bottom, rgb(0 0 0 / 0), var(--paper));
+      pointer-events: none;
+    }
+
+    .field-shell canvas,
+    .field-fallback {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .field-fallback {
+      opacity: 0.68;
+      background-image:
+        radial-gradient(circle, rgb(216 216 212 / 0.58) 0 1px, transparent 1.4px),
+        radial-gradient(ellipse at 48% 55%, rgb(216 216 212 / 0.12), transparent 56%);
+      background-position:
+        center 52%,
+        center;
+      background-size:
+        8px 8px,
+        100% 100%;
+      mask-image: radial-gradient(ellipse at 50% 62%, #000 0%, #000 42%, transparent 72%);
+    }
+
+    .field-shell[data-ready="true"] .field-fallback {
+      display: none;
     }
 
     .socials {
@@ -129,7 +189,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     .socials a:hover,
     .socials a:focus-visible {
       border-color: currentColor;
-      color: #111;
+      color: #fff;
     }
 
     h1 {
@@ -203,7 +263,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     .because-link:hover,
     .because-link:focus-visible {
-      color: var(--quiet);
+      color: #fff;
     }
 
     .because-link::after {
@@ -228,7 +288,13 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       }
 
       .portal {
-        padding-block-start: 32px;
+        grid-template-rows: minmax(340px, 55svh) minmax(320px, 1fr);
+        padding-block-start: 0;
+      }
+
+      .field-shell {
+        min-height: 340px;
+        height: 58svh;
       }
 
       .socials {
@@ -246,6 +312,9 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 </head>
 <body>
   <div class="portal">
+    <div class="field-shell container" data-particle-field aria-hidden="true">
+      <div class="field-fallback"></div>
+    </div>
     <nav class="socials" aria-label="Contact links">
       <a href="https://github.com/tryskian/polinko">GitHub</a>
       <a href="https://www.linkedin.com/in/krystianfernando">LinkedIn</a>
@@ -263,6 +332,233 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       </div>
     </main>
   </div>
+  <script id="vertex-shader" type="x-shader/x-vertex">
+    //
+    // GLSL textureless classic 2D noise "cnoise",
+    // with an RSL-style periodic variant "pnoise".
+    // Author:  Stefan Gustavson (stefan.gustavson@liu.se)
+    // Version: 2011-08-22
+    //
+    // Many thanks to Ian McEwan of Ashima Arts for the
+    // ideas for permutation and gradient selection.
+    //
+    // Copyright (c) 2011 Stefan Gustavson. All rights reserved.
+    // Distributed under the MIT license. See LICENSE file.
+    // https://github.com/ashima/webgl-noise
+    //
+
+    vec4 mod289(vec4 x)
+    {
+      return x - floor(x * (1.0 / 289.0)) * 289.0;
+    }
+
+    vec4 permute(vec4 x)
+    {
+      return mod289(((x*34.0)+1.0)*x);
+    }
+
+    vec4 taylorInvSqrt(vec4 r)
+    {
+      return 1.79284291400159 - 0.85373472095314 * r;
+    }
+
+    vec2 fade(vec2 t) {
+      return t*t*t*(t*(t*6.0-15.0)+10.0);
+    }
+
+    // Classic Perlin noise
+    float cnoise(vec2 P)
+    {
+      vec4 Pi = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
+      vec4 Pf = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
+      Pi = mod289(Pi); // To avoid truncation effects in permutation
+      vec4 ix = Pi.xzxz;
+      vec4 iy = Pi.yyww;
+      vec4 fx = Pf.xzxz;
+      vec4 fy = Pf.yyww;
+
+      vec4 i = permute(permute(ix) + iy);
+
+      vec4 gx = fract(i * (1.0 / 41.0)) * 2.0 - 1.0 ;
+      vec4 gy = abs(gx) - 0.5 ;
+      vec4 tx = floor(gx + 0.5);
+      gx = gx - tx;
+
+      vec2 g00 = vec2(gx.x,gy.x);
+      vec2 g10 = vec2(gx.y,gy.y);
+      vec2 g01 = vec2(gx.z,gy.z);
+      vec2 g11 = vec2(gx.w,gy.w);
+
+      vec4 norm = taylorInvSqrt(vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11)));
+      g00 *= norm.x;
+      g01 *= norm.y;
+      g10 *= norm.z;
+      g11 *= norm.w;
+
+      float n00 = dot(g00, vec2(fx.x, fy.x));
+      float n10 = dot(g10, vec2(fx.y, fy.y));
+      float n01 = dot(g01, vec2(fx.z, fy.z));
+      float n11 = dot(g11, vec2(fx.w, fy.w));
+
+      vec2 fade_xy = fade(Pf.xy);
+      vec2 n_x = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
+      float n_xy = mix(n_x.x, n_x.y, fade_xy.y);
+      return 2.3 * n_xy;
+    }
+
+    float map(float value, float oldMin, float oldMax, float newMin, float newMax) {
+        return newMin + (newMax - newMin) * (value - oldMin) / (oldMax - oldMin);
+    }
+
+    varying vec3 vUv;
+    varying float vTime;
+    varying float vZ;
+    uniform float time;
+    void main()
+    {
+        vUv = position;
+        vTime = time;
+        vec3 newPos = position;
+        vec2 peak = vec2(1.0 - abs(.5 - uv.x), 1.0 - abs(.5 - uv.y));
+        vec2 noise = vec2(
+            map(cnoise(vec2(0.3 * time + uv.x * 5., uv.y * 5.)), 0., 1., -2., (peak.x * peak.y * 30.)),
+            map(cnoise(vec2(-0.3 * time + uv.x * 5., uv.y * 5.)), 0., 1., -2., 25.)
+        );
+
+        //newPos.x += noise.x * 10.;
+        newPos.z += noise.x * .06 * noise.y;
+        vZ = newPos.z;
+        vec4 mvPosition = modelViewMatrix * vec4( newPos, 1.0 );
+        gl_PointSize = 5.0;
+        gl_Position = projectionMatrix * mvPosition;
+    }
+  </script>
+  <script id="fragment-shader" type="x-shader/x-fragment">
+    varying vec3 vUv;
+    varying float vTime;
+    varying float vZ;
+    uniform sampler2D texture;
+
+    float map(float value, float oldMin, float oldMax, float newMin, float newMax) {
+        return newMin + (newMax - newMin) * (value - oldMin) / (oldMax - oldMin);
+    }
+
+
+    void main()
+    {
+        vec3 colorA = vec3(.6, 0.17, 0.17);
+        vec3 colorB = vec3(0.17, 0.8, .7);
+        //vec3 color = mix(colorA, colorB, vUv.x * vUv.y);
+        float alpha = map(vZ / 2., -1. / 2., 30. / 2., 0.17, 1.);
+        vec3 color = vec3(.5, .5, .6);
+
+        gl_FragColor = vec4( color, alpha);
+        gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+  <script>
+    /*
+      Adapted from "WebGL particles + noise displacement" by Nicolas Garnier.
+      Original URL: https://codepen.io/nicodotcomputer/pen/pwwGJE
+      License: MIT. Local reference copy kept under docs/peanut/assets/tumbles/data-viz.
+    */
+    class Scene {
+      constructor(options) {
+        this.$el = options.el;
+        this.time = 0;
+
+        this.bindAll();
+        this.init();
+      }
+
+      bindAll() {
+        this.render = this.render.bind(this);
+        this.resize = this.resize.bind(this);
+      }
+
+      init() {
+        this.textureLoader = new THREE.TextureLoader();
+        this.camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 2000 );
+        this.camera.position.z = 350;
+        this.camera.position.y = 200;
+        this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        this.scene = new THREE.Scene();
+
+        this.renderer = new THREE.WebGLRenderer({ alpha: true });
+        this.renderer.setPixelRatio( window.devicePixelRatio );
+        this.renderer.setSize( window.innerWidth, window.innerHeight );
+        this.$el.appendChild( this.renderer.domElement );
+
+        this.createParticles();
+        this.bindEvents();
+        this.resize();
+        this.render();
+        this.$el.dataset.ready = "true";
+      }
+
+      createParticles() {
+        const plane = new THREE.PlaneBufferGeometry(500, 250, 250, 125);
+
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.crossOrigin = "";
+
+        const material = new THREE.ShaderMaterial( {
+          uniforms: {
+            time: { value: 1.0 },
+            texture: { value: textureLoader.load("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1081752/spark1.png") },
+            resolution: { value: new THREE.Vector2() }
+          },
+
+          vertexShader: document.getElementById("vertex-shader").textContent,
+          fragmentShader: document.getElementById("fragment-shader").textContent,
+          blending: THREE.AdditiveBlending,
+          depthTest: false,
+          transparent: true
+        } );
+
+        this.particles = new THREE.Points( plane, material );
+        this.particles.rotation.x = this.degToRad(-90);
+
+        this.scene.add(this.particles);
+      }
+
+      bindEvents() {
+        window.addEventListener("resize", this.resize);
+      }
+
+      resize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        this.renderer.setSize(w,h);
+        this.camera.aspect = w/h;
+        this.camera.updateProjectionMatrix();
+      }
+
+      moveParticles() {
+        this.particles.material.uniforms.time.value = this.time;
+      }
+
+      render() {
+        requestAnimationFrame(this.render);
+        this.time += .01;
+
+        this.moveParticles();
+        this.renderer.render(this.scene, this.camera);
+      }
+
+      degToRad(angle) {
+        return angle * Math.PI / 180;
+      }
+    }
+
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const fieldShell = document.querySelector("[data-particle-field]");
+    if (fieldShell && !reducedMotion && window.THREE) {
+      new Scene({ el: fieldShell });
+    }
+  </script>
 </body>
 </html>
 """
