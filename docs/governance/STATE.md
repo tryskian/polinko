@@ -10,6 +10,16 @@ Last updated: 2026-04-16
   - FastAPI API + CLI are canonical execution surfaces.
   - Prompt/runtime behavior remains minimal and deterministic.
 - Repo-as-research-project is the current portfolio architecture:
+  - GitHub repository visibility is public.
+  - `main` is protected by the active `polinko` ruleset:
+    - pull request required
+    - required checks: `test`, `markdownlint`
+    - strict status checks enabled
+    - branch deletion and non-fast-forward updates blocked
+    - squash-only merge
+  - public entrypoint/hygiene work is merged:
+    - PR #315: curated public repo entrypoint
+    - PR #316: sanitized public repo references
   - the repository carries the research proof: source, tests, evals,
     databases/contracts, Mermaid diagrams, governance docs, runtime docs, and
     evidence chains
@@ -22,6 +32,12 @@ Last updated: 2026-04-16
     collaboration before implementation details
   - the public portfolio website should be a lightweight about/contact doorway
     into the work, not a full recreation of the research system
+  - current landing-page direction is intentionally austere:
+    - sparse `krystian.io`-style composition
+    - name + concise human-facing one-liner
+    - faint WebGL alignment field as atmosphere only
+    - understated text link CTA, not a pill/button
+    - local-only mockups live under ignored `docs/peanut/assets/tumbles/`
 - End-of-day closeout is green for 2026-04-15:
   - PR #313 merged to `main`.
   - final `make eod` passed end-to-end (`doctor-env`, `lint-docs`, `test`
@@ -48,7 +64,7 @@ Last updated: 2026-04-16
     - `make portfolio-build` is the canonical build-only workflow.
     - stale alias `make portfolio-open` has been removed.
   - current frontend implementation remains a local FPO scaffold while the
-    public website is simplified toward about/contact.
+    public website is simplified toward a lean landing/about doorway.
   - frontend interaction model currently uses pinned-stage stepping:
     - browser document scroll is locked (`scrollY` should remain `0`).
     - GSAP `Observer` maps one wheel/touch/key gesture to one exact scene.

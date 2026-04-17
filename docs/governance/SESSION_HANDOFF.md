@@ -14,6 +14,16 @@ Last updated: 2026-04-16
 
 - Backend-first runtime remains canonical.
 - Repo-as-research-project is the portfolio architecture:
+  - GitHub repository visibility is public.
+  - `main` is protected by the active `polinko` ruleset:
+    - PR required
+    - required checks: `test`, `markdownlint`
+    - strict status checks enabled
+    - deletion and non-fast-forward updates blocked
+    - squash-only merge
+  - public repo entrypoint and hygiene are merged:
+    - PR #315: public repo entrypoint
+    - PR #316: public repo reference sanitization
   - tracked README/docs remain canonical research documentation
   - public-facing docs/site copy should be derived separately
   - public-facing repo guide starts at `docs/public/README.md`; curated public
@@ -37,6 +47,22 @@ Last updated: 2026-04-16
   - website = identity and doorway
   - repo = research object, evidence, visuals, notebooks, Mermaid diagrams,
     eval data, and implementation
+- Landing-page direction checkpoint:
+  - use the sparse `krystian.io`-style layout direction, not the earlier
+    full portfolio/storytelling UI.
+  - current copy direction:
+    - `Creative Director now AI research engineer designing full-stack research architecture studying human-AI interaction under uncertainty`
+    - `(because one idea turned into a lot of questions.)`
+  - current CTA direction:
+    - `HERE'S WHAT HAPPENED ↗`
+    - text link only; no pill/button treatment
+  - visual treatment:
+    - warm off-white field
+    - large empty space
+    - faint WebGL alignment field as atmosphere, not a hero object
+    - top-right links for GitHub, LinkedIn, email
+  - local-only mockups are under ignored `docs/peanut/assets/tumbles/`; use
+    them as design reference only, not tracked source of truth.
 - Current frontend remains a local FPO scaffold while the public site is
   simplified.
 - Frontend source/build contract is active:
@@ -117,7 +143,8 @@ Last updated: 2026-04-16
 ## Next Execution Slice
 
 1. Portfolio frontend design pass:
-   - simplify public website toward a lean hero/contact portal.
+   - implement or refine the lean landing/about doorway only after the sparse
+     mockup direction is confirmed.
    - keep repository evidence visualizations as research instruments.
    - preserve backend evidence/data contracts unless explicitly changing them.
 2. OCR hardening kernels (lockset stability + growth signal quality).
