@@ -60,12 +60,10 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   <title>Krystian Fernando</title>
   <style>
     :root {
-      --paper: #030404;
+      --paper: #000;
       --ink: #f4f1ea;
       --palette: #f4f1ea;
       --quiet: #b3b0a8;
-      --field-black: #000;
-      --field-silver: #d8d8d4;
       --page-inline: clamp(32px, 12.15vw, 166px);
       --page-block-end: clamp(96px, 16.2svh, 166px);
       background: var(--paper);
@@ -89,83 +87,48 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       margin: 0;
       min-height: 100svh;
       background: var(--paper);
-      overflow-x: hidden;
+      overflow: hidden;
     }
 
     .portal {
       min-height: 100svh;
       position: relative;
-      isolation: isolate;
-      overflow: hidden;
-      padding-block: 0 var(--page-block-end);
+      padding-block: 48px var(--page-block-end);
       padding-inline: var(--page-inline);
-      display: grid;
-      grid-template-rows: minmax(420px, 64svh) minmax(250px, 1fr);
-      align-items: end;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .container,
+    canvas {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .container {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    canvas {
+      display: block;
+      background: #000;
     }
 
     main {
-      grid-row: 2;
       position: relative;
       z-index: 2;
       inline-size: min(100%, 780px);
-      padding-block-start: clamp(28px, 4vw, 56px);
-    }
-
-    .field-shell {
-      position: absolute;
-      z-index: 0;
-      top: 0;
-      left: 50%;
-      width: 100vw;
-      height: min(68svh, 760px);
-      min-height: 420px;
-      transform: translateX(-50%);
-      background:
-        radial-gradient(circle at 48% 52%, rgb(18 20 19) 0%, rgb(4 5 5) 58%, var(--field-black) 100%);
-      overflow: hidden;
-    }
-
-    .field-shell::after {
-      content: "";
-      position: absolute;
-      inset: auto 0 0;
-      height: 34%;
-      background: linear-gradient(to bottom, rgb(0 0 0 / 0), var(--paper));
-      pointer-events: none;
-    }
-
-    .field-shell canvas,
-    .field-fallback {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .field-fallback {
-      opacity: 0.68;
-      background-image:
-        radial-gradient(circle, rgb(216 216 212 / 0.58) 0 1px, transparent 1.4px),
-        radial-gradient(ellipse at 48% 55%, rgb(216 216 212 / 0.12), transparent 56%);
-      background-position:
-        center 52%,
-        center;
-      background-size:
-        8px 8px,
-        100% 100%;
-      mask-image: radial-gradient(ellipse at 50% 62%, #000 0%, #000 42%, transparent 72%);
-    }
-
-    .field-shell[data-ready="true"] .field-fallback {
-      display: none;
     }
 
     .socials {
       position: fixed;
       top: 42px;
       right: clamp(32px, 5vw, 72px);
+      z-index: 2;
       display: flex;
       gap: 18px;
       align-items: center;
@@ -288,13 +251,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       }
 
       .portal {
-        grid-template-rows: minmax(340px, 55svh) minmax(320px, 1fr);
-        padding-block-start: 0;
-      }
-
-      .field-shell {
-        min-height: 340px;
-        height: 58svh;
+        padding-block-start: 32px;
       }
 
       .socials {
@@ -312,9 +269,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 </head>
 <body>
   <div class="portal">
-    <div class="field-shell container" data-particle-field aria-hidden="true">
-      <div class="field-fallback"></div>
-    </div>
+    <div class="container" aria-hidden="true"></div>
     <nav class="socials" aria-label="Contact links">
       <a href="https://github.com/tryskian/polinko">GitHub</a>
       <a href="https://www.linkedin.com/in/krystianfernando">LinkedIn</a>
@@ -421,15 +376,15 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
         vec3 newPos = position;
         vec2 peak = vec2(1.0 - abs(.5 - uv.x), 1.0 - abs(.5 - uv.y));
         vec2 noise = vec2(
-            map(cnoise(vec2(0.3 * time + uv.x * 5., uv.y * 5.)), 0., 1., -2., (peak.x * peak.y * 30.)),
-            map(cnoise(vec2(-0.3 * time + uv.x * 5., uv.y * 5.)), 0., 1., -2., 25.)
+            map(cnoise(vec2(0.12 * time + uv.x * 9., uv.y * 20.)), 0., 1., -1.4, (peak.x * peak.y * 24.)),
+            map(cnoise(vec2(-0.12 * time + uv.x * 9., uv.y * 20.)), 0., 1., -1.4, 20.)
         );
 
         //newPos.x += noise.x * 10.;
-        newPos.z += noise.x * .06 * noise.y;
+        newPos.z += noise.x * .055 * noise.y;
         vZ = newPos.z;
         vec4 mvPosition = modelViewMatrix * vec4( newPos, 1.0 );
-        gl_PointSize = 5.0;
+        gl_PointSize = 3.0;
         gl_Position = projectionMatrix * mvPosition;
     }
   </script>
@@ -458,11 +413,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
   <script>
-    /*
-      Adapted from "WebGL particles + noise displacement" by Nicolas Garnier.
-      Original URL: https://codepen.io/nicodotcomputer/pen/pwwGJE
-      License: MIT. Local reference copy kept under docs/peanut/assets/tumbles/data-viz.
-    */
+    // Adapted from the local WebGL particles + noise displacement reference build.
     class Scene {
       constructor(options) {
         this.$el = options.el;
@@ -479,32 +430,31 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
       init() {
         this.textureLoader = new THREE.TextureLoader();
-        this.camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 2000 );
-        this.camera.position.z = 350;
+        this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 2000);
+        this.camera.position.z = 680;
         this.camera.position.y = 200;
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         this.scene = new THREE.Scene();
 
         this.renderer = new THREE.WebGLRenderer({ alpha: true });
-        this.renderer.setPixelRatio( window.devicePixelRatio );
-        this.renderer.setSize( window.innerWidth, window.innerHeight );
-        this.$el.appendChild( this.renderer.domElement );
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.$el.appendChild(this.renderer.domElement);
 
         this.createParticles();
         this.bindEvents();
         this.resize();
         this.render();
-        this.$el.dataset.ready = "true";
       }
 
       createParticles() {
-        const plane = new THREE.PlaneBufferGeometry(500, 250, 250, 125);
+        const plane = new THREE.PlaneBufferGeometry(900, 1000, 450, 500);
 
         const textureLoader = new THREE.TextureLoader();
         textureLoader.crossOrigin = "";
 
-        const material = new THREE.ShaderMaterial( {
+        const material = new THREE.ShaderMaterial({
           uniforms: {
             time: { value: 1.0 },
             texture: { value: textureLoader.load("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1081752/spark1.png") },
@@ -516,9 +466,9 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
           blending: THREE.AdditiveBlending,
           depthTest: false,
           transparent: true
-        } );
+        });
 
-        this.particles = new THREE.Points( plane, material );
+        this.particles = new THREE.Points(plane, material);
         this.particles.rotation.x = this.degToRad(-90);
 
         this.scene.add(this.particles);
@@ -531,8 +481,8 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       resize() {
         const w = window.innerWidth;
         const h = window.innerHeight;
-        this.renderer.setSize(w,h);
-        this.camera.aspect = w/h;
+        this.renderer.setSize(w, h);
+        this.camera.aspect = w / h;
         this.camera.updateProjectionMatrix();
       }
 
@@ -542,7 +492,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
       render() {
         requestAnimationFrame(this.render);
-        this.time += .01;
+        this.time += .002;
 
         this.moveParticles();
         this.renderer.render(this.scene, this.camera);
@@ -551,13 +501,12 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       degToRad(angle) {
         return angle * Math.PI / 180;
       }
+
     }
 
-    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const fieldShell = document.querySelector("[data-particle-field]");
-    if (fieldShell && !reducedMotion && window.THREE) {
-      new Scene({ el: fieldShell });
-    }
+    const scene = new Scene({
+      el: document.querySelector(".container")
+    });
   </script>
 </body>
 </html>
