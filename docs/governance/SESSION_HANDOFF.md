@@ -63,6 +63,13 @@ Last updated: 2026-04-17
   - current CTA links to the public repo:
     `because one idea turned into a lot of questions`.
   - top-right links: GitHub, LinkedIn, email.
+  - current visual checkpoint is a full-viewport WebGL particle-field hero:
+    - reference direction:
+      `docs/peanut/assets/tumbles/particle-field-ref.png`
+    - the checkpoint is visual-only; no portfolio evidence/data wiring is
+      attached to it yet
+    - the mesh has been lengthened with additional geometry/segment density so
+      the field can breathe without stretching/flattening the texture
   - the implementation is acceptable as a tiny fallback; if it becomes the
     production website, move it out of the large `app_factory.py` HTML string
     into a dedicated static/template surface.
@@ -122,7 +129,10 @@ Last updated: 2026-04-17
 ## Next Execution Slice
 
 1. Portfolio doorway pass:
-   - review the lean landing/about fallback with fresh eyes.
+   - review the particle-field checkpoint with fresh eyes.
+   - next visual work: mesh polish only; do not overhaul the concept or switch
+     visual direction.
+   - animation/motion polish comes after the static field shape is accepted.
    - if keeping it as production, extract the HTML/CSS from `app_factory.py`.
    - keep repository evidence visualizations as research instruments.
    - preserve backend evidence/data contracts unless explicitly changing them.

@@ -61,6 +61,12 @@ Last updated: 2026-04-17
       `Creative AI Research Engineer running an applied design lab to evaluate Human-AI interaction.`
     - CTA: `because one idea turned into a lot of questions`
     - links: GitHub, LinkedIn, email
+    - visual checkpoint: full-viewport WebGL particle-field hero based on
+      `docs/peanut/assets/tumbles/particle-field-ref.png`
+    - current particle-field scope is visual-only; no evidence/data wiring is
+      attached yet
+    - mesh length/detail is handled through additional geometry and segment
+      density, not by stretching a smaller mesh
   - this fallback is acceptable as a tiny doorway; if it becomes the production
     website, extract it into a dedicated static/template surface.
   - frontend source/output directories are placeholders unless deliberately
@@ -149,6 +155,9 @@ Last updated: 2026-04-17
 
 1. Portfolio shipping lane:
    - simplify the public website toward about/contact.
+   - review and polish the particle-field hero checkpoint only; do not
+     overhaul the concept or switch visual direction.
+   - add animation/motion polish only after the static mesh shape is accepted.
    - keep repo evidence visualizations as research instruments, not the public
      portfolio's main burden.
    - if the fallback page becomes production, extract it out of the large
