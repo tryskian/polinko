@@ -60,13 +60,13 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   <title>Krystian Fernando</title>
   <style>
     :root {
-      --paper: #faf9f6;
-      --ink: #262626;
-      --palette: #262626;
-      --quiet: #5d5d58;
+      --paper: #000;
+      --ink: #f4f1ea;
+      --palette: #f4f1ea;
+      --quiet: #b3b0a8;
       --page-inline: clamp(32px, 12.15vw, 166px);
       --page-block-end: clamp(96px, 16.2svh, 166px);
-      background: #faf9f6;
+      background: var(--paper);
       color: var(--ink);
       font-family:
         "aktiv-grotesk",
@@ -87,6 +87,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       margin: 0;
       min-height: 100svh;
       background: var(--paper);
+      overflow: hidden;
     }
 
     .portal {
@@ -98,7 +99,28 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       align-items: flex-end;
     }
 
+    .container,
+    canvas {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .container {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    canvas {
+      display: block;
+      background: #000;
+    }
+
     main {
+      position: relative;
+      z-index: 2;
       inline-size: min(100%, 780px);
     }
 
@@ -106,6 +128,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       position: fixed;
       top: 42px;
       right: clamp(32px, 5vw, 72px);
+      z-index: 2;
       display: flex;
       gap: 18px;
       align-items: center;
@@ -129,7 +152,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     .socials a:hover,
     .socials a:focus-visible {
       border-color: currentColor;
-      color: #111;
+      color: #fff;
     }
 
     h1 {
@@ -203,7 +226,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     .because-link:hover,
     .because-link:focus-visible {
-      color: var(--quiet);
+      color: #fff;
     }
 
     .because-link::after {
@@ -246,6 +269,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 </head>
 <body>
   <div class="portal">
+    <div class="container" aria-hidden="true"></div>
     <nav class="socials" aria-label="Contact links">
       <a href="https://github.com/tryskian/polinko">GitHub</a>
       <a href="https://www.linkedin.com/in/krystianfernando">LinkedIn</a>
@@ -263,6 +287,227 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       </div>
     </main>
   </div>
+  <script id="vertex-shader" type="x-shader/x-vertex">
+    //
+    // GLSL textureless classic 2D noise "cnoise",
+    // with an RSL-style periodic variant "pnoise".
+    // Author:  Stefan Gustavson (stefan.gustavson@liu.se)
+    // Version: 2011-08-22
+    //
+    // Many thanks to Ian McEwan of Ashima Arts for the
+    // ideas for permutation and gradient selection.
+    //
+    // Copyright (c) 2011 Stefan Gustavson. All rights reserved.
+    // Distributed under the MIT license. See LICENSE file.
+    // https://github.com/ashima/webgl-noise
+    //
+
+    vec4 mod289(vec4 x)
+    {
+      return x - floor(x * (1.0 / 289.0)) * 289.0;
+    }
+
+    vec4 permute(vec4 x)
+    {
+      return mod289(((x*34.0)+1.0)*x);
+    }
+
+    vec4 taylorInvSqrt(vec4 r)
+    {
+      return 1.79284291400159 - 0.85373472095314 * r;
+    }
+
+    vec2 fade(vec2 t) {
+      return t*t*t*(t*(t*6.0-15.0)+10.0);
+    }
+
+    // Classic Perlin noise
+    float cnoise(vec2 P)
+    {
+      vec4 Pi = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
+      vec4 Pf = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
+      Pi = mod289(Pi); // To avoid truncation effects in permutation
+      vec4 ix = Pi.xzxz;
+      vec4 iy = Pi.yyww;
+      vec4 fx = Pf.xzxz;
+      vec4 fy = Pf.yyww;
+
+      vec4 i = permute(permute(ix) + iy);
+
+      vec4 gx = fract(i * (1.0 / 41.0)) * 2.0 - 1.0 ;
+      vec4 gy = abs(gx) - 0.5 ;
+      vec4 tx = floor(gx + 0.5);
+      gx = gx - tx;
+
+      vec2 g00 = vec2(gx.x,gy.x);
+      vec2 g10 = vec2(gx.y,gy.y);
+      vec2 g01 = vec2(gx.z,gy.z);
+      vec2 g11 = vec2(gx.w,gy.w);
+
+      vec4 norm = taylorInvSqrt(vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11)));
+      g00 *= norm.x;
+      g01 *= norm.y;
+      g10 *= norm.z;
+      g11 *= norm.w;
+
+      float n00 = dot(g00, vec2(fx.x, fy.x));
+      float n10 = dot(g10, vec2(fx.y, fy.y));
+      float n01 = dot(g01, vec2(fx.z, fy.z));
+      float n11 = dot(g11, vec2(fx.w, fy.w));
+
+      vec2 fade_xy = fade(Pf.xy);
+      vec2 n_x = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
+      float n_xy = mix(n_x.x, n_x.y, fade_xy.y);
+      return 2.3 * n_xy;
+    }
+
+    float map(float value, float oldMin, float oldMax, float newMin, float newMax) {
+        return newMin + (newMax - newMin) * (value - oldMin) / (oldMax - oldMin);
+    }
+
+    varying vec3 vUv;
+    varying float vTime;
+    varying float vZ;
+    uniform float time;
+    void main()
+    {
+        vUv = position;
+        vTime = time;
+        vec3 newPos = position;
+        vec2 peak = vec2(1.0 - abs(.5 - uv.x), 1.0 - abs(.5 - uv.y));
+        vec2 noise = vec2(
+            map(cnoise(vec2(0.12 * time + uv.x * 9., uv.y * 20.)), 0., 1., -1.4, (peak.x * peak.y * 24.)),
+            map(cnoise(vec2(-0.12 * time + uv.x * 9., uv.y * 20.)), 0., 1., -1.4, 20.)
+        );
+
+        //newPos.x += noise.x * 10.;
+        newPos.z += noise.x * .055 * noise.y;
+        vZ = newPos.z;
+        vec4 mvPosition = modelViewMatrix * vec4( newPos, 1.0 );
+        gl_PointSize = 3.0;
+        gl_Position = projectionMatrix * mvPosition;
+    }
+  </script>
+  <script id="fragment-shader" type="x-shader/x-fragment">
+    varying vec3 vUv;
+    varying float vTime;
+    varying float vZ;
+    uniform sampler2D texture;
+
+    float map(float value, float oldMin, float oldMax, float newMin, float newMax) {
+        return newMin + (newMax - newMin) * (value - oldMin) / (oldMax - oldMin);
+    }
+
+
+    void main()
+    {
+        vec3 colorA = vec3(.6, 0.17, 0.17);
+        vec3 colorB = vec3(0.17, 0.8, .7);
+        //vec3 color = mix(colorA, colorB, vUv.x * vUv.y);
+        float alpha = map(vZ / 2., -1. / 2., 30. / 2., 0.17, 1.);
+        vec3 color = vec3(.5, .5, .6);
+
+        gl_FragColor = vec4( color, alpha);
+        gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+  <script>
+    // Adapted from the local WebGL particles + noise displacement reference build.
+    class Scene {
+      constructor(options) {
+        this.$el = options.el;
+        this.time = 0;
+
+        this.bindAll();
+        this.init();
+      }
+
+      bindAll() {
+        this.render = this.render.bind(this);
+        this.resize = this.resize.bind(this);
+      }
+
+      init() {
+        this.textureLoader = new THREE.TextureLoader();
+        this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 2000);
+        this.camera.position.z = 680;
+        this.camera.position.y = 200;
+        this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        this.scene = new THREE.Scene();
+
+        this.renderer = new THREE.WebGLRenderer({ alpha: true });
+        this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.$el.appendChild(this.renderer.domElement);
+
+        this.createParticles();
+        this.bindEvents();
+        this.resize();
+        this.render();
+      }
+
+      createParticles() {
+        const plane = new THREE.PlaneBufferGeometry(900, 1000, 450, 500);
+
+        const textureLoader = new THREE.TextureLoader();
+        textureLoader.crossOrigin = "";
+
+        const material = new THREE.ShaderMaterial({
+          uniforms: {
+            time: { value: 1.0 },
+            texture: { value: textureLoader.load("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1081752/spark1.png") },
+            resolution: { value: new THREE.Vector2() }
+          },
+
+          vertexShader: document.getElementById("vertex-shader").textContent,
+          fragmentShader: document.getElementById("fragment-shader").textContent,
+          blending: THREE.AdditiveBlending,
+          depthTest: false,
+          transparent: true
+        });
+
+        this.particles = new THREE.Points(plane, material);
+        this.particles.rotation.x = this.degToRad(-90);
+
+        this.scene.add(this.particles);
+      }
+
+      bindEvents() {
+        window.addEventListener("resize", this.resize);
+      }
+
+      resize() {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        this.renderer.setSize(w, h);
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
+      }
+
+      moveParticles() {
+        this.particles.material.uniforms.time.value = this.time;
+      }
+
+      render() {
+        requestAnimationFrame(this.render);
+        this.time += .002;
+
+        this.moveParticles();
+        this.renderer.render(this.scene, this.camera);
+      }
+
+      degToRad(angle) {
+        return angle * Math.PI / 180;
+      }
+
+    }
+
+    const scene = new Scene({
+      el: document.querySelector(".container")
+    });
+  </script>
 </body>
 </html>
 """
