@@ -2,7 +2,7 @@
 
 # Session Handoff (Current Only)
 
-Last updated: 2026-04-17
+Last updated: 2026-04-18
 
 ## Startup
 
@@ -62,14 +62,14 @@ Last updated: 2026-04-17
     `Creative AI Research Engineer running an applied design lab to evaluate Human-AI interaction.`
   - current CTA links to the public repo:
     `because one idea turned into a lot of questions`.
-  - top-right links: GitHub, LinkedIn, email.
-  - current visual checkpoint is a full-viewport WebGL particle-field hero:
-    - reference direction:
-      `docs/peanut/assets/tumbles/particle-field-ref.png`
-    - the checkpoint is visual-only; no portfolio evidence/data wiring is
-      attached to it yet
-    - the mesh has been lengthened with additional geometry/segment density so
-      the field can breathe without stretching/flattening the texture
+  - top-right controls are being reset to icon-only placeholders for this pass
+    (no social wiring required).
+  - UI direction is reset and locked for current execution:
+    - austere
+    - confident
+    - elegant
+    - single-screen landing only
+  - particle-field/WebGL exploration is parked for now.
   - the implementation is acceptable as a tiny fallback; if it becomes the
     production website, move it out of the large `app_factory.py` HTML string
     into a dedicated static/template surface.
@@ -125,16 +125,24 @@ Last updated: 2026-04-17
   - config path: `.local/logs/playwright/cli.config.json`
   - default session: `polinko`
   - snapshot folders: `docs/peanut/assets/screenshots/playwright/DD-MM-YY`
+- Codex image preview contract:
+  - for local image previews in assistant responses, embed Markdown images with
+    absolute filesystem paths (`![label](/absolute/path.png)`) so previews
+    render in-app.
 
 ## Next Execution Slice
 
 1. Portfolio doorway pass:
-   - review the particle-field checkpoint with fresh eyes.
-   - next visual work: mesh polish only; do not overhaul the concept or switch
-     visual direction.
-   - animation/motion polish comes after the static field shape is accepted.
-   - if keeping it as production, extract the HTML/CSS from `app_factory.py`.
-   - keep repository evidence visualizations as research instruments.
+   - implement the austere single-screen doorway first:
+     - one screen only
+     - name + one-line role + concise thesis line
+     - icon-only top-right placeholders
+   - hold visual complexity:
+     - no particle-field/WebGL pass
+     - no multi-section public portfolio UI
+     - no public Sankey/data-viz embedding
+   - if keeping fallback as production, extract the HTML/CSS from
+     `app_factory.py`.
    - preserve backend evidence/data contracts unless explicitly changing them.
 2. OCR hardening kernels (lockset stability + growth signal quality).
 3. Keep docs aligned via canonical ownership map.
@@ -148,6 +156,8 @@ Last updated: 2026-04-17
 - Refresh this file in place; do not append daily log sections.
 - Keep evidence anchors intact; summaries must point back to decisions/source
   evidence rather than becoming the evidence.
+- Do not post local image previews as plain-text paths only; use inline
+  Markdown image embeds with absolute paths.
 
 ## Session Close
 

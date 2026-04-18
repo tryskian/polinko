@@ -67,7 +67,7 @@ remain ignored via `.gitignore`.
   analysis.
 - Portfolio shell build surface:
   - local source scaffold: `frontend/` (ignored except `frontend/.gitkeep`)
-  - local generated output: `ui/` (ignored except `ui/.gitkeep`)
+  - local generated output: `ui/` (ignored when generated)
   - tracked fallback: in-app about/contact HTML when `ui/index.html` is absent
   - runtime route: `GET /portfolio`
   - public scope: about/contact doorway
@@ -256,8 +256,10 @@ Eval visualization and surfaces:
     decorative fake data, or fake/decorative FPO evidence panels
   - explicit no-data behavior when real local sources are unavailable
 - frontend shell build contract:
-  - `frontend/` and `ui/` are local-only working directories with tracked
-    `.gitkeep` placeholders
+  - `frontend/` is a local-only working directory with a tracked `.gitkeep`
+    placeholder
+  - `ui/` is local generated output only and is not kept as a tracked empty
+    folder
   - edit source in `frontend/` when the local frontend scaffold is present
   - generate served shell with `make portfolio-build` (writes ignored output to
     `ui/`)

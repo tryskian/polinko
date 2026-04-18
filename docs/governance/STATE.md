@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-04-17
+Last updated: 2026-04-18
 
 ## Current Truth
 
@@ -60,13 +60,14 @@ Last updated: 2026-04-17
     - one-liner:
       `Creative AI Research Engineer running an applied design lab to evaluate Human-AI interaction.`
     - CTA: `because one idea turned into a lot of questions`
-    - links: GitHub, LinkedIn, email
-    - visual checkpoint: full-viewport WebGL particle-field hero based on
-      `docs/peanut/assets/tumbles/particle-field-ref.png`
-    - current particle-field scope is visual-only; no evidence/data wiring is
-      attached yet
-    - mesh length/detail is handled through additional geometry and segment
-      density, not by stretching a smaller mesh
+    - top-right controls are being reset to icon-only placeholders (no social
+      wiring required for the current pass)
+    - active visual direction is reset to:
+      - austere
+      - confident
+      - elegant
+      - single-screen landing only
+    - particle-field/WebGL direction is parked for this pass
   - this fallback is acceptable as a tiny doorway; if it becomes the production
     website, extract it into a dedicated static/template surface.
   - frontend source/output directories are placeholders unless deliberately
@@ -150,14 +151,22 @@ Last updated: 2026-04-17
   - wrapper default session: `polinko`
   - snapshot folders rotate by date under
     `docs/peanut/assets/screenshots/playwright/DD-MM-YY`.
+- Codex app local image preview contract is now explicit:
+  - embed previews inline with Markdown image syntax and absolute filesystem
+    paths (`![label](/absolute/path.png)`).
+  - do not rely on plain-text path mentions for preview rendering.
 
 ## Active Priorities
 
 1. Portfolio shipping lane:
-   - simplify the public website toward about/contact.
-   - review and polish the particle-field hero checkpoint only; do not
-     overhaul the concept or switch visual direction.
-   - add animation/motion polish only after the static mesh shape is accepted.
+   - ship a minimal public doorway first:
+     - single viewport
+     - name + one-line role + concise thesis line
+     - icon-only top-right placeholders
+   - avoid portfolio overbuild during this pass:
+     - no multi-section storytelling UI
+     - no Sankey/data-viz/public evidence surfaces on the landing page
+     - no animation-first exploration
    - keep repo evidence visualizations as research instruments, not the public
      portfolio's main burden.
    - if the fallback page becomes production, extract it out of the large

@@ -31,7 +31,6 @@ dist/
 frontend/**
 !frontend/.gitkeep
 ui/**
-!ui/.gitkeep
 frontend/test-results/
 frontend/playwright-report/
 *.log
