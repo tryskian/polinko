@@ -644,35 +644,31 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     project.
   - tracked README/docs remain canonical research documentation; public-facing
     copy should be derived separately.
-  - current shell mode is a pinned-stage portfolio scaffold:
-    `hero -> intro -> pipeline-one -> evidence-map -> pipeline-two ->
-    conclusion -> about-lab`
-  - document scroll is intentionally locked; the stage advances by transforming
-    `.board` on x/y between mapped scenes.
-  - active map:
-    `home -> intro`, then down through `pipeline-one -> evidence-map ->
-    pipeline-two -> conclusion`, then right to `about-lab`
-  - one wheel/touch/key gesture should advance one exact scene.
-  - scroll guard uses a gesture-stop failsafe to avoid hard-scroll skips and
-    stale gesture locks.
+  - current fallback mode is a single-screen doorway placard:
+    - heading: `Krystian Fernando`
+    - origin line:
+      `creative director who somehow became an AI research engineer, after one idea came with its own hypothesis.`
+    - research-focus line:
+      `so now i design evals around the useful signals models reveal when they fail.`
+    - method line: `for fun.`
+    - repo CTA: `because every signal reshapes the experiment.`
+    - top-right peripheral contact dots link to the public GitHub repo and
+      `mailto:hi@krystian.io`
+  - desktop layout keeps the CTA box shifted right while its text stays
+    left-aligned; narrow widths stack the same content responsively.
   - evidence visualizations are repo research instruments, not the public
     website burden:
     - WebGL/data-viz work remains optional research instrumentation
     - DBs, Mermaid diagrams, and eval reports belong in the repo research lane
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,
     reduced-motion, performance, and direct-inspection fallback.
-  - current local frontend implementation uses a stacked SVG evidence-map
-    FPO at `frontend/src/stacked-evidence-map-fpo.svg`.
-  - current pipeline panels use the pipeline FPO source at
-    `frontend/src/pipeline-fpo.svg`.
-  - the FPO is temporary implementation scaffolding; `/portfolio/sankey-data`
-    still loads, `window.__POLINKO_SANKEY_DATA__` is populated, and
-    `#evidence-map` receives readiness state.
-  - WebGL interaction is drag-to-rotate only; do not capture wheel/trackpad
-    gestures inside the canvas.
+  - the former local pinned-stage/FPO frontend is archived design context unless
+    deliberately restored on a new branch.
+  - if WebGL interaction returns, it should be drag-to-rotate only; do not
+    capture wheel/trackpad gestures inside the canvas.
   - do not add weird headlines, decorative placeholder copy/cards, invented
     overlays, fake fallback data, or fake/decorative FPO evidence content to
-    this scaffold
+    this surface
   - canonical build flow:
     - local source: `frontend/` (ignored except `frontend/.gitkeep`)
     - local generated output: `ui/` (ignored except `ui/.gitkeep`)

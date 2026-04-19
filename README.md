@@ -71,6 +71,8 @@ remain ignored via `.gitignore`.
   - tracked fallback: in-app about/contact HTML when `ui/index.html` is absent
   - runtime route: `GET /portfolio`
   - public scope: about/contact doorway
+  - current fallback mode: single-screen editorial doorway with GitHub repo and
+    email contact dots
 
 ## Quick Start
 
@@ -239,11 +241,10 @@ Eval visualization and surfaces:
 - `GET /` redirects to `GET /portfolio`.
 - `GET /portfolio` serves the local generated portfolio scaffold when present,
   or a tracked in-app about/contact fallback when `ui/index.html` is absent:
-  - current interaction model is pinned-stage stepping
-  - current local frontend implementation uses a stacked SVG evidence-map
-    FPO at `frontend/src/stacked-evidence-map-fpo.svg`
-  - the FPO is an implementation placeholder only; `/portfolio/sankey-data`
-    still loads and exposes real-data readiness state
+  - current fallback mode is a single-screen editorial doorway
+  - current copy identifies Krystian Fernando, frames the design-to-research
+    path, and links the primary CTA to the public Polinko repo
+  - top-right peripheral contact dots link to GitHub and `hi@krystian.io`
   - public portfolio direction is about/contact; evidence visualizations remain
     repo research instruments
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,

@@ -93,17 +93,17 @@
       in-app about/contact fallback
     - `frontend/` and `ui/` are local-only working directories, ignored except
       tracked `.gitkeep` placeholders
-    - selected primary visual direction is a WebGL Evidence Field, with a flat
-      SVG/D3 Sankey or alluvial fallback using the same payload
-    - current local frontend implementation uses a stacked SVG evidence-map
-      FPO at `frontend/src/stacked-evidence-map-fpo.svg`
-    - the FPO is temporary implementation scaffolding; the frontend still
-      fetches `GET /portfolio/sankey-data` and exposes readiness state
-    - no-data behavior must stay visible in both primary and fallback surfaces
-    - the frontend interaction model is pinned-stage stepping: document scroll
-      is locked, GSAP `Observer` maps one gesture to one scene, `.board`
-      transforms vertical scenes, and `.horizontal-track` transforms the
-      middle `pipeline-one -> evidence-map -> pipeline-two` chapter
+    - current tracked fallback is a single-screen editorial doorway:
+      identity copy, primary repo CTA, and peripheral GitHub/email contact dots
+    - evidence visualizations are repo research instruments, not public landing
+      page requirements
+    - WebGL/data-viz work remains optional; a flat SVG/D3 Sankey or alluvial
+      view remains the accessibility, reduced-motion, performance, and
+      direct-inspection fallback if evidence visuals return
+    - no-data behavior must stay visible in any evidence surface that consumes
+      `GET /portfolio/sankey-data`
+    - the former pinned-stage/FPO frontend is archived design context unless
+      deliberately restored on a new branch
 - Eval artefacts:
   - Git history is the canonical retention mechanism for tracked project state.
   - local eval artefacts are operational outputs (default under `eval_reports/`).

@@ -3660,3 +3660,40 @@
   operator evidence, not public repo files by default. The public repo should
   show contracts and curated evidence without exposing private/local inspection
   workflows.
+
+## D-226: Adopt doorway placard as tracked portfolio fallback
+
+- Date: `2026-04-19`
+- Category: `portfolio_ui`
+- Tags: `portfolio_shell`, `about_contact`, `tracked_fallback`, `repo_as_research`
+- Decision:
+  - replace the stale one-liner fallback with a single-screen editorial doorway
+    placard in `api/app_factory.py`.
+  - use `Instrument Sans` as the current fallback typeface.
+  - present the current public copy as:
+    - heading: `Krystian Fernando`
+    - origin:
+      `creative director who somehow became an AI research engineer, after one idea came with its own hypothesis.`
+    - focus:
+      `so now i design evals around the useful signals models reveal when they fail.`
+    - method: `for fun.`
+    - repo CTA: `because every signal reshapes the experiment.`
+  - wire the top-right peripheral contact dots to the public GitHub repo and
+    `mailto:hi@krystian.io`.
+  - keep the public landing page as identity/contact only; evidence visuals,
+    databases, eval reports, and Mermaid diagrams remain repo research
+    instruments.
+  - leave `/portfolio/sankey-data` unchanged as the real-data evidence payload.
+  - if this fallback becomes the production website surface, extract the
+    embedded HTML/CSS out of the large `app_factory.py` string into a dedicated
+    static/template surface.
+- Validation:
+  - `venv/bin/python -m pytest tests/test_api.py -k "portfolio_shell or root_redirects_to_portfolio"`
+  - `git diff --check HEAD~1..HEAD`
+  - `make portfolio PORTFOLIO_LAUNCH=playwright`
+  - Playwright desktop and mobile snapshots from the rebuilt local route.
+  - PR #324 passed required GitHub checks: `test`, `markdownlint`.
+- Why: The repo is the research object and proof surface. The public landing
+  page only needs to orient viewers and point them into the work. A tracked
+  fallback keeps fresh clones deterministic without reviving the local-only
+  pinned-stage/FPO frontend or turning the public site into another research UI.

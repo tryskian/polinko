@@ -38,14 +38,12 @@ Last updated: 2026-04-19
     collaboration, not tooling-first implementation detail
   - the public website should be about/contact and point into the work, not
     recreate the research system
-- Latest merged checkpoint (2026-04-17):
-  - PR #318 merged to `main` through the protected PR flow.
+- Latest merged checkpoint (2026-04-19):
+  - PR #324 merged to `main` through the protected PR flow.
   - required checks passed: `test`, `markdownlint`.
-  - local `main` was rebased/aligned with `origin/main` after the squash merge.
-  - generated Playwright test scaffold was removed; keep only the repo-scoped
-    Playwright CLI wrapper workflow.
-  - orphaned local frontend build/install leftovers were cleaned; only
-    `frontend/.gitkeep` and `ui/.gitkeep` remain in the frontend directories.
+  - local `main` was aligned with `origin/main` after the squash merge.
+  - tracked `/portfolio` fallback now uses the doorway placard layout and copy.
+  - fallback shell assertions cover the current copy.
 - Portfolio shell route is active:
   - `GET /` -> redirect to `GET /portfolio`
   - `GET /portfolio` -> local `ui/index.html` only when intentionally present;
@@ -58,17 +56,20 @@ Last updated: 2026-04-19
 - Landing-page fallback is now the active public doorway:
   - tracked fallback lives in `api/app_factory.py`.
   - current heading: `Krystian Fernando`.
-  - current one-liner:
-    `AI Research Engineer designing evals around the useful signals models reveal when they fail.`
-  - current primary repo CTA remains the hook line:
-    `because one idea turned into a lot of questions`.
-  - secondary links are not wired yet; if added, use only peripheral contact
-    links (`LinkedIn`, `Say hi`) below the repo hook, not competing top-right
-    controls.
-  - UI direction is reset and locked for current execution:
-    - austere
-    - confident
-    - elegant
+  - current origin line:
+    `creative director who somehow became an AI research engineer, after one idea came with its own hypothesis.`
+  - current research-focus line:
+    `so now i design evals around the useful signals models reveal when they fail.`
+  - current method line: `for fun.`
+  - current primary repo CTA:
+    `because every signal reshapes the experiment.`
+  - top-right peripheral contact dots are wired to the public GitHub repo and
+    `mailto:hi@krystian.io`.
+  - UI direction is current and locked for this checkpoint:
+    - austere editorial doorway
+    - centered viewport copy block
+    - right-shifted desktop CTA with left-aligned text
+    - responsive stacked narrow-width fallback
     - single-screen landing only
   - particle-field/WebGL exploration is parked for now.
   - the implementation is acceptable as a tiny fallback; if it becomes the
@@ -133,11 +134,9 @@ Last updated: 2026-04-19
 
 ## Next Execution Slice
 
-1. Portfolio doorway pass:
-   - implement the austere single-screen doorway first:
-     - one screen only
-     - name + one-line role + concise thesis line
-     - icon-only top-right placeholders
+1. Portfolio doorway follow-up:
+   - keep current tracked fallback as the live local doorway checkpoint.
+   - tune copy/spacing only if explicitly requested.
    - hold visual complexity:
      - no particle-field/WebGL pass
      - no multi-section public portfolio UI
