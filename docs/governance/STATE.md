@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-04-19
+Last updated: 2026-04-18
 
 ## Current Truth
 
@@ -157,11 +157,6 @@ Last updated: 2026-04-19
   - embed previews inline with Markdown image syntax and absolute filesystem
     paths (`![label](/absolute/path.png)`).
   - do not rely on plain-text path mentions for preview rendering.
-- Codex local session repair has a no-guessing spec:
-  - `docs/runtime/CODEX_SESSION_DEGRANGLE_SPEC.md`
-  - do not edit the active thread's own JSONL while Codex has it open for
-    writing.
-  - repair flow is diagnose -> backup -> targeted cleanup -> validation.
 
 ## Active Priorities
 
@@ -197,7 +192,6 @@ Last updated: 2026-04-19
 - Rules/authority: `docs/governance/CHARTER.md`
 - Structure: `docs/runtime/ARCHITECTURE.md`
 - Commands/procedure: `docs/runtime/RUNBOOK.md`
-- Codex session repair: `docs/runtime/CODEX_SESSION_DEGRANGLE_SPEC.md`
 - Decision history: `docs/governance/DECISIONS.md`
 
 ## Validation Baseline
