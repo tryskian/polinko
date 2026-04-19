@@ -57,23 +57,22 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='8' fill='%23262626'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@200;300;400;500;600;900&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700;800&display=swap">
   <title>Krystian Fernando</title>
   <style>
     :root {
       --paper: #fdfdfd;
       --ink: #262626;
+      --muted: #686868;
       --palette: #262626;
       --font-main:
-        "Public Sans",
+        "Instrument Sans",
         "Helvetica Neue",
         Helvetica,
         Arial,
         sans-serif;
-      --page-inline: 7.6875rem;
-      --page-block-start: 4.3125rem;
-      --page-block-end: 7.6875rem;
-      --page-inline-end: 38.9375rem;
+      --page-inline: clamp(4.5rem, 8.8vw, 8rem);
+      --page-block-start: clamp(3.5rem, 7vh, 5rem);
       background: var(--paper);
       color: var(--ink);
       font-family: var(--font-main);
@@ -89,28 +88,63 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       margin: 0;
       min-height: 100svh;
       background: var(--paper);
+      color: var(--ink);
       overflow-x: hidden;
     }
 
     .portal {
       min-height: 100svh;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      align-items: flex-start;
-      padding: var(--page-block-start) var(--page-inline-end) var(--page-block-end) var(--page-inline);
       position: relative;
+      padding: var(--page-block-start) var(--page-inline) 5.5rem;
     }
 
     main {
-      inline-size: min(100%, 40.6875rem);
+      inline-size: calc(100% - (var(--page-inline) * 2));
+      left: var(--page-inline);
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
     }
 
     a {
       color: inherit;
     }
 
-    .because-link:focus-visible {
+    .social-links {
+      display: flex;
+      gap: 2.1rem;
+      position: absolute;
+      right: clamp(4rem, 7vw, 7.75rem);
+      top: clamp(3rem, 6vh, 4.25rem);
+    }
+
+    .social-link {
+      block-size: 2.06rem;
+      border-radius: 999px;
+      inline-size: 2.06rem;
+      position: relative;
+      text-decoration: none;
+    }
+
+    .social-link::before {
+      background: var(--ink);
+      border-radius: inherit;
+      content: "";
+      inset: 0;
+      position: absolute;
+      transition:
+        opacity 220ms ease,
+        transform 220ms ease;
+    }
+
+    .social-link:hover::before,
+    .social-link:focus-visible::before {
+      opacity: 0.72;
+      transform: scale(0.9);
+    }
+
+    .because-link:focus-visible,
+    .social-link:focus-visible {
       outline: 1px solid currentColor;
       outline-offset: 6px;
     }
@@ -118,34 +152,45 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     h1 {
       color: var(--palette);
       font-family: var(--font-main);
-      margin: 0 0 3.3125rem;
-      font-size: 7.5rem;
+      margin: 0 0 3.35rem;
+      font-size: 1.64rem;
       font-style: normal;
-      font-weight: 200;
-      letter-spacing: -0.03125rem;
-      line-height: 0.91;
+      font-weight: 800;
+      letter-spacing: 0.17em;
+      line-height: 1;
       max-inline-size: 100%;
-      text-transform: capitalize;
-      text-wrap: balance;
+      text-transform: uppercase;
     }
 
     .bio {
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 2.55rem;
       align-items: flex-start;
+      inline-size: 100%;
     }
 
-    .lede {
+    .copy-block {
+      display: grid;
+      gap: 0.62rem;
+      margin: 0;
+    }
+
+    .copy-line {
       color: var(--palette);
       font-family: var(--font-main);
       margin: 0;
-      max-width: 627px;
-      font-size: 1.625rem;
+      max-width: min(62vw, 53rem);
+      font-size: 2.5rem;
       font-style: normal;
-      font-weight: 300;
-      line-height: 1.28;
+      font-weight: 400;
+      letter-spacing: 0;
+      line-height: normal;
       text-wrap: pretty;
+    }
+
+    .compact-line {
+      max-width: 18rem;
     }
 
     .because-link {
@@ -154,15 +199,23 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       font-family: var(--font-main);
       margin: 0;
       position: relative;
-      font-size: 1.625rem;
+      font-size: 3.125rem;
       font-style: normal;
-      font-weight: 300;
-      line-height: 1.28;
+      font-weight: 600;
+      letter-spacing: 0;
+      line-height: normal;
       text-decoration: none;
-      text-wrap: pretty;
+      text-wrap: balance;
       transition:
         color 320ms cubic-bezier(0.22, 1, 0.36, 1),
         text-decoration-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .cta-stack {
+      display: grid;
+      inline-size: min(46rem, 58vw);
+      margin-left: clamp(12rem, 32vw, 32rem);
+      padding-top: 0.35rem;
     }
 
     .because-link:hover,
@@ -215,7 +268,8 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     @media (prefers-reduced-motion: reduce) {
       .because-link,
-      .because-link::before {
+      .because-link::before,
+      .social-link::before {
         transition: none;
       }
     }
@@ -251,17 +305,28 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     @media (max-width: 1180px) {
       :root {
-        --page-inline: clamp(32px, 10vw, 120px);
-        --page-inline-end: clamp(32px, 18vw, 220px);
+        --page-inline: clamp(32px, 8vw, 96px);
+      }
+
+      .copy-line {
+        font-size: clamp(2rem, 3.35vw, 2.5rem);
+        max-width: min(68vw, 48rem);
+      }
+
+      .because-link {
+        font-size: clamp(2.35rem, 4.2vw, 3.125rem);
+      }
+
+      .cta-stack {
+        inline-size: min(42rem, 56vw);
+        margin-left: clamp(9rem, 30vw, 22rem);
       }
     }
 
-    @media (max-width: 760px) {
+    @media (max-width: 860px) {
       :root {
-        --page-inline: clamp(32px, 13vw, 56px);
-        --page-block-start: 32px;
-        --page-block-end: 70px;
-        --page-inline-end: var(--page-inline);
+        --page-inline: clamp(28px, 8vw, 56px);
+        --page-block-start: 30px;
       }
 
       .portal {
@@ -269,44 +334,116 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
         padding-inline: var(--page-inline);
       }
 
-      h1 {
-        margin-bottom: 24px;
-        font-size: clamp(4rem, 17vw, 4.3125rem);
-        line-height: 0.96;
+      .social-links {
+        gap: 1rem;
+        right: var(--page-inline);
+        top: var(--page-block-start);
       }
 
-      .lede {
-        font-size: 1.25rem;
+      .social-link {
+        block-size: 1.55rem;
+        inline-size: 1.55rem;
+      }
+
+      main {
+        left: var(--page-inline);
+        inline-size: calc(100% - (var(--page-inline) * 2));
+        position: relative;
+        top: auto;
+        transform: none;
+        padding-top: clamp(7rem, 18svh, 11rem);
+      }
+
+      h1 {
+        margin-bottom: 2.4rem;
+        font-size: 1.16rem;
+      }
+
+      .bio {
+        gap: 2rem;
+      }
+
+      .copy-line {
+        font-size: clamp(1.42rem, 5.8vw, 2rem);
         font-weight: 400;
-        line-height: 1.28;
+        line-height: normal;
+        max-width: 100%;
       }
 
       .because-link {
-        font-size: 1.25rem;
-        font-weight: 400;
-        line-height: 1.28;
+        font-size: clamp(1.72rem, 7.2vw, 2.45rem);
+        line-height: normal;
+      }
+
+      .cta-stack {
+        inline-size: 100%;
+        margin-left: 0;
+      }
+    }
+
+    @media (max-height: 760px) and (min-width: 861px) {
+      h1 {
+        margin-bottom: 2.4rem;
+      }
+
+      .bio {
+        gap: 1.85rem;
+      }
+
+      .copy-line {
+        font-size: 2rem;
+      }
+
+      .because-link {
+        font-size: 2.55rem;
       }
     }
   </style>
 </head>
 <body>
   <div class="portal">
+    <nav class="social-links" aria-label="Contact links">
+      <a
+        class="social-link"
+        href="https://github.com/tryskian/polinko"
+        aria-label="Open Polinko on GitHub"
+      ></a>
+      <a
+        class="social-link"
+        href="mailto:hi@krystian.io"
+        aria-label="Email Krystian"
+      ></a>
+    </nav>
     <main>
       <h1>Krystian Fernando</h1>
       <div class="bio">
-        <p class="lede">
-          AI Research Engineer designing evals around the useful signals models reveal when they fail.
-        </p>
-        <a
-          class="because-link"
-          href="https://github.com/tryskian/polinko"
-          aria-describedby="repo-link-destination"
-          aria-label="because one idea turned into a lot of questions"
-          data-tooltip="github.com/tryskian/polinko"
-        >
-          <span class="because-text">because one idea turned into a lot of questions.</span> <span class="link-icon" aria-hidden="true">🡭</span>
-        </a>
-        <span id="repo-link-destination" class="sr-only">Opens the Polinko repository on GitHub.</span>
+        <section class="copy-block" aria-label="Origin">
+          <p class="copy-line">
+            creative director who somehow became an AI research engineer,
+            after one idea came with its own hypothesis.
+          </p>
+        </section>
+        <section class="copy-block" aria-label="Research focus">
+          <p class="copy-line">
+            so now i design evals around the useful signals models reveal
+            when they fail.
+          </p>
+        </section>
+        <section class="copy-block" aria-label="Method">
+          <p class="copy-line compact-line">for fun.</p>
+        </section>
+        <div class="cta-stack">
+          <a
+            class="because-link"
+            href="https://github.com/tryskian/polinko"
+            aria-describedby="repo-link-destination"
+            aria-label="because every signal reshapes the experiment"
+            data-tooltip="github.com/tryskian/polinko"
+          >
+            <span class="because-text">because every signal reshapes the experiment.</span> <span class="link-icon" aria-hidden="true">🡭</span>
+          </a>
+          <span id="repo-link-destination" class="sr-only">Opens the Polinko repository on GitHub.</span>
+        </div>
       </div>
     </main>
   </div>
