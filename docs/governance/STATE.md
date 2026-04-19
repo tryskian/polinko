@@ -39,35 +39,37 @@ Last updated: 2026-04-19
   - the public portfolio website should be a lightweight about/contact doorway
     into the work, not a full recreation of the research system
   - current public website direction is intentionally lean:
-    - sparse `krystian.io`-style composition
-    - name + concise human-facing one-liner
-    - understated text CTA into the public repo
+    - sparse editorial doorway composition
+    - name + human-facing origin/focus copy
+    - understated repo CTA into the public work
+    - peripheral contact links only
     - no full portfolio/storytelling UI on the public site right now
-- Latest merged checkpoint is green for 2026-04-17:
-  - PR #318 merged to `main` through the protected PR flow.
+- Latest merged checkpoint is green for 2026-04-19:
+  - PR #324 merged to `main` through the protected PR flow.
   - required checks passed: `test`, `markdownlint`.
   - local `main` was aligned with `origin/main` after the squash merge.
-  - generated Playwright test scaffold was removed; keep only the repo-scoped
-    Playwright CLI wrapper workflow.
-  - orphaned local frontend install/build leftovers were cleaned; only
-    `frontend/.gitkeep` and `ui/.gitkeep` remain in the frontend directories.
+  - tracked `/portfolio` fallback now uses the doorway placard layout and copy.
+  - fallback shell assertions cover the current copy.
 - Portfolio shell route contract is active:
   - `GET /` redirects to `GET /portfolio`.
   - `GET /portfolio` serves local `ui/index.html` only when intentionally
     present, otherwise a tracked in-app about/contact fallback.
   - the tracked fallback currently lives in `api/app_factory.py`:
     - heading: `Krystian Fernando`
-    - one-liner:
-      `AI Research Engineer designing evals around the useful signals models reveal when they fail.`
-    - primary repo CTA remains the hook line:
-      `because one idea turned into a lot of questions`
-    - secondary links are not wired yet; if added, use only peripheral contact
-      links (`LinkedIn`, `Say hi`) below the repo hook, not competing top-right
-      controls.
-    - active visual direction is reset to:
-      - austere
-      - confident
-      - elegant
+    - origin line:
+      `creative director who somehow became an AI research engineer, after one idea came with its own hypothesis.`
+    - research-focus line:
+      `so now i design evals around the useful signals models reveal when they fail.`
+    - method line: `for fun.`
+    - primary repo CTA:
+      `because every signal reshapes the experiment.`
+    - top-right peripheral contact dots are wired to the public GitHub repo and
+      `mailto:hi@krystian.io`.
+    - active visual direction:
+      - austere editorial doorway
+      - centered viewport copy block
+      - right-shifted desktop CTA with left-aligned text
+      - responsive stacked narrow-width fallback
       - single-screen landing only
     - particle-field/WebGL direction is parked for this pass
   - this fallback is acceptable as a tiny doorway; if it becomes the production
