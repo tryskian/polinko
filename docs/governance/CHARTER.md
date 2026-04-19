@@ -63,6 +63,12 @@ OCR-forward reliability loops, and production-ready API foundations.
   - inference-before-inspection is a fail event in this workflow
 - `docs/runtime/RUNBOOK.md` (`Inspect-First Rule (Directed Mode)`) is the
   execution-level authority for this contract.
+- Codex preview contract (persistent):
+  - when sharing local image previews in Codex app responses, always embed
+    them inline with Markdown image syntax using absolute filesystem paths:
+    `![label](/absolute/path/to/image.png)`
+  - do not use plain-text file paths, `file://` URLs, or fenced code blocks for
+    preview images
 - Long-term context reliability depends on evidence chains, not recursive
   summaries:
   - transcripts/screenshots/raw reports are source evidence, not decorative

@@ -55,26 +55,28 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='8' fill='%23262626'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="https://use.typekit.net/yop1tsd.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@200;300;400;500;600;900&display=swap">
   <title>Krystian Fernando</title>
   <style>
     :root {
-      --paper: #000;
-      --ink: #f4f1ea;
-      --palette: #f4f1ea;
-      --quiet: #b3b0a8;
-      --page-inline: clamp(32px, 12.15vw, 166px);
-      --page-block-end: clamp(96px, 16.2svh, 166px);
-      background: var(--paper);
-      color: var(--ink);
-      font-family:
-        "aktiv-grotesk",
-        "Aktiv Grotesk",
+      --paper: #fdfdfd;
+      --ink: #262626;
+      --palette: #262626;
+      --font-main:
+        "Public Sans",
         "Helvetica Neue",
         Helvetica,
         Arial,
         sans-serif;
+      --page-inline: 7.6875rem;
+      --page-block-start: 4.3125rem;
+      --page-block-end: 7.6875rem;
+      --page-inline-end: 38.9375rem;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--font-main);
     }
 
     *,
@@ -87,89 +89,41 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       margin: 0;
       min-height: 100svh;
       background: var(--paper);
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
     .portal {
       min-height: 100svh;
-      position: relative;
-      padding-block: 48px var(--page-block-end);
-      padding-inline: var(--page-inline);
       display: flex;
-      align-items: flex-end;
-    }
-
-    .container,
-    canvas {
-      margin: 0;
-      padding: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .container {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-    }
-
-    canvas {
-      display: block;
-      background: #000;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: var(--page-block-start) var(--page-inline-end) var(--page-block-end) var(--page-inline);
+      position: relative;
     }
 
     main {
-      position: relative;
-      z-index: 2;
-      inline-size: min(100%, 780px);
-    }
-
-    .socials {
-      position: fixed;
-      top: 42px;
-      right: clamp(32px, 5vw, 72px);
-      z-index: 2;
-      display: flex;
-      gap: 18px;
-      align-items: center;
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
+      inline-size: min(100%, 40.6875rem);
     }
 
     a {
       color: inherit;
-      text-decoration: none;
     }
 
-    .socials a {
-      border-bottom: 1px solid transparent;
-      transition:
-        border-color 160ms ease,
-        color 160ms ease;
-    }
-
-    .socials a:hover,
-    .socials a:focus-visible {
-      border-color: currentColor;
-      color: #fff;
+    .because-link:focus-visible {
+      outline: 1px solid currentColor;
+      outline-offset: 6px;
     }
 
     h1 {
-      color: var(--palette, #262626);
-      font-family:
-        "aktiv-grotesk-thin",
-        "Aktiv Grotesk",
-        "Helvetica Neue",
-        Helvetica,
-        Arial,
-        sans-serif;
-      margin: 0 0 23px;
-      font-size: clamp(56px, 5.86vw, 80px);
+      color: var(--palette);
+      font-family: var(--font-main);
+      margin: 0 0 3.3125rem;
+      font-size: 7.5rem;
       font-style: normal;
       font-weight: 200;
-      letter-spacing: 0.15px;
-      line-height: 1;
+      letter-spacing: -0.03125rem;
+      line-height: 0.91;
       max-inline-size: 100%;
       text-transform: capitalize;
       text-wrap: balance;
@@ -183,331 +137,179 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     }
 
     .lede {
-      color: var(--palette, #262626);
-      font-family:
-        "aktiv-grotesk",
-        "Aktiv Grotesk",
-        "Helvetica Neue",
-        Helvetica,
-        Arial,
-        sans-serif;
+      color: var(--palette);
+      font-family: var(--font-main);
       margin: 0;
       max-width: 627px;
-      font-size: clamp(22px, 1.9vw, 26px);
+      font-size: 1.625rem;
       font-style: normal;
-      font-weight: 400;
+      font-weight: 300;
       line-height: 1.28;
       text-wrap: pretty;
     }
 
     .because-link {
-      color: var(--palette, #262626);
-      font-family:
-        "aktiv-grotesk",
-        "Aktiv Grotesk",
-        "Helvetica Neue",
-        Helvetica,
-        Arial,
-        sans-serif;
+      color: var(--palette);
+      display: inline-block;
+      font-family: var(--font-main);
       margin: 0;
-      font-size: clamp(18px, 1.61vw, 22px);
+      position: relative;
+      font-size: 1.625rem;
       font-style: normal;
-      font-weight: 400;
-      line-height: 1.28332;
-      text-decoration-line: underline;
-      text-decoration-thickness: 1px;
-      text-decoration-color: currentColor;
-      text-underline-offset: 0.16em;
+      font-weight: 300;
+      line-height: 1.28;
+      text-decoration: none;
       text-wrap: pretty;
       transition:
-        color 180ms ease,
-        text-decoration-color 180ms ease;
+        color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+        text-decoration-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .because-link:hover,
     .because-link:focus-visible {
-      color: #fff;
+      color: #4a4a4a;
     }
 
-    .because-link::after {
-      content: "arrow_outward";
+    .because-link::before {
+      color: #6b6b6b;
+      content: attr(data-tooltip);
+      font-size: 1rem;
+      font-weight: 500;
+      top: calc(100% + 10px);
+      left: 0;
+      letter-spacing: 0.01em;
+      line-height: 1;
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      text-decoration: none;
+      transform: translateY(-4px);
+      transition:
+        opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+      white-space: nowrap;
+      z-index: 1;
+    }
+
+    .because-link:hover::before,
+    .because-link:focus-visible::before {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .because-text,
+    .link-icon {
+      text-decoration-line: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: transparent;
+      text-underline-offset: 0.16em;
+      transition: text-decoration-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .because-link:hover .because-text,
+    .because-link:hover .link-icon,
+    .because-link:focus-visible .because-text,
+    .because-link:focus-visible .link-icon {
+      text-decoration-color: currentColor;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .because-link,
+      .because-link::before {
+        transition: none;
+      }
+    }
+
+    .sr-only {
+      block-size: 1px;
+      clip: rect(0 0 0 0);
+      clip-path: inset(50%);
+      inline-size: 1px;
+      overflow: hidden;
+      position: absolute;
+      white-space: nowrap;
+    }
+
+    .link-icon {
       display: inline-block;
-      font-family: "Material Symbols Outlined";
-      font-size: 0.95em;
+      font-family:
+        "Apple Symbols",
+        "Segoe UI Symbol",
+        "Noto Sans Symbols 2",
+        "Noto Sans Symbols",
+        sans-serif;
+      font-size: 0.9em;
       font-style: normal;
       font-weight: 400;
       line-height: 1;
-      margin-inline-start: 0.16em;
+      margin-inline-start: 0.22em;
       text-decoration: none;
       text-transform: none;
-      vertical-align: -0.12em;
+      vertical-align: -0.08em;
       white-space: nowrap;
+    }
+
+    @media (max-width: 1180px) {
+      :root {
+        --page-inline: clamp(32px, 10vw, 120px);
+        --page-inline-end: clamp(32px, 18vw, 220px);
+      }
     }
 
     @media (max-width: 760px) {
       :root {
         --page-inline: clamp(32px, 13vw, 56px);
-        --page-block-end: clamp(110px, 15.65svh, 132px);
+        --page-block-start: 32px;
+        --page-block-end: 70px;
+        --page-inline-end: var(--page-inline);
       }
 
       .portal {
-        padding-block-start: 32px;
-      }
-
-      .socials {
-        top: 28px;
-        right: var(--page-inline);
-        gap: 14px;
+        padding-block-start: var(--page-block-start);
+        padding-inline: var(--page-inline);
       }
 
       h1 {
         margin-bottom: 24px;
-        font-size: clamp(56px, 14vw, 64px);
+        font-size: clamp(4rem, 17vw, 4.3125rem);
+        line-height: 0.96;
+      }
+
+      .lede {
+        font-size: 1.25rem;
+        font-weight: 400;
+        line-height: 1.28;
+      }
+
+      .because-link {
+        font-size: 1.25rem;
+        font-weight: 400;
+        line-height: 1.28;
       }
     }
   </style>
 </head>
 <body>
   <div class="portal">
-    <div class="container" aria-hidden="true"></div>
-    <nav class="socials" aria-label="Contact links">
-      <a href="https://github.com/tryskian/polinko">GitHub</a>
-      <a href="https://www.linkedin.com/in/krystianfernando">LinkedIn</a>
-      <a href="mailto:hi@krystian.io">Email</a>
-    </nav>
     <main>
       <h1>Krystian Fernando</h1>
       <div class="bio">
         <p class="lede">
-          Creative AI Research Engineer running an applied design lab to evaluate Human-AI interaction.
+          AI Research Engineer designing evals around the useful signals models reveal when they fail.
         </p>
-        <a class="because-link" href="https://github.com/tryskian/polinko" aria-label="because one idea turned into a lot of questions">
-          because one idea turned into a lot of questions
+        <a
+          class="because-link"
+          href="https://github.com/tryskian/polinko"
+          aria-describedby="repo-link-destination"
+          aria-label="because one idea turned into a lot of questions"
+          data-tooltip="github.com/tryskian/polinko"
+        >
+          <span class="because-text">because one idea turned into a lot of questions.</span> <span class="link-icon" aria-hidden="true">🡭</span>
         </a>
+        <span id="repo-link-destination" class="sr-only">Opens the Polinko repository on GitHub.</span>
       </div>
     </main>
   </div>
-  <script id="vertex-shader" type="x-shader/x-vertex">
-    //
-    // GLSL textureless classic 2D noise "cnoise",
-    // with an RSL-style periodic variant "pnoise".
-    // Author:  Stefan Gustavson (stefan.gustavson@liu.se)
-    // Version: 2011-08-22
-    //
-    // Many thanks to Ian McEwan of Ashima Arts for the
-    // ideas for permutation and gradient selection.
-    //
-    // Copyright (c) 2011 Stefan Gustavson. All rights reserved.
-    // Distributed under the MIT license. See LICENSE file.
-    // https://github.com/ashima/webgl-noise
-    //
-
-    vec4 mod289(vec4 x)
-    {
-      return x - floor(x * (1.0 / 289.0)) * 289.0;
-    }
-
-    vec4 permute(vec4 x)
-    {
-      return mod289(((x*34.0)+1.0)*x);
-    }
-
-    vec4 taylorInvSqrt(vec4 r)
-    {
-      return 1.79284291400159 - 0.85373472095314 * r;
-    }
-
-    vec2 fade(vec2 t) {
-      return t*t*t*(t*(t*6.0-15.0)+10.0);
-    }
-
-    // Classic Perlin noise
-    float cnoise(vec2 P)
-    {
-      vec4 Pi = floor(P.xyxy) + vec4(0.0, 0.0, 1.0, 1.0);
-      vec4 Pf = fract(P.xyxy) - vec4(0.0, 0.0, 1.0, 1.0);
-      Pi = mod289(Pi); // To avoid truncation effects in permutation
-      vec4 ix = Pi.xzxz;
-      vec4 iy = Pi.yyww;
-      vec4 fx = Pf.xzxz;
-      vec4 fy = Pf.yyww;
-
-      vec4 i = permute(permute(ix) + iy);
-
-      vec4 gx = fract(i * (1.0 / 41.0)) * 2.0 - 1.0 ;
-      vec4 gy = abs(gx) - 0.5 ;
-      vec4 tx = floor(gx + 0.5);
-      gx = gx - tx;
-
-      vec2 g00 = vec2(gx.x,gy.x);
-      vec2 g10 = vec2(gx.y,gy.y);
-      vec2 g01 = vec2(gx.z,gy.z);
-      vec2 g11 = vec2(gx.w,gy.w);
-
-      vec4 norm = taylorInvSqrt(vec4(dot(g00, g00), dot(g01, g01), dot(g10, g10), dot(g11, g11)));
-      g00 *= norm.x;
-      g01 *= norm.y;
-      g10 *= norm.z;
-      g11 *= norm.w;
-
-      float n00 = dot(g00, vec2(fx.x, fy.x));
-      float n10 = dot(g10, vec2(fx.y, fy.y));
-      float n01 = dot(g01, vec2(fx.z, fy.z));
-      float n11 = dot(g11, vec2(fx.w, fy.w));
-
-      vec2 fade_xy = fade(Pf.xy);
-      vec2 n_x = mix(vec2(n00, n01), vec2(n10, n11), fade_xy.x);
-      float n_xy = mix(n_x.x, n_x.y, fade_xy.y);
-      return 2.3 * n_xy;
-    }
-
-    float map(float value, float oldMin, float oldMax, float newMin, float newMax) {
-        return newMin + (newMax - newMin) * (value - oldMin) / (oldMax - oldMin);
-    }
-
-    varying vec3 vUv;
-    varying float vTime;
-    varying float vZ;
-    uniform float time;
-    void main()
-    {
-        vUv = position;
-        vTime = time;
-        vec3 newPos = position;
-        vec2 peak = vec2(1.0 - abs(.5 - uv.x), 1.0 - abs(.5 - uv.y));
-        vec2 noise = vec2(
-            map(cnoise(vec2(0.12 * time + uv.x * 9., uv.y * 20.)), 0., 1., -1.4, (peak.x * peak.y * 24.)),
-            map(cnoise(vec2(-0.12 * time + uv.x * 9., uv.y * 20.)), 0., 1., -1.4, 20.)
-        );
-
-        //newPos.x += noise.x * 10.;
-        newPos.z += noise.x * .055 * noise.y;
-        vZ = newPos.z;
-        vec4 mvPosition = modelViewMatrix * vec4( newPos, 1.0 );
-        gl_PointSize = 3.0;
-        gl_Position = projectionMatrix * mvPosition;
-    }
-  </script>
-  <script id="fragment-shader" type="x-shader/x-fragment">
-    varying vec3 vUv;
-    varying float vTime;
-    varying float vZ;
-    uniform sampler2D texture;
-
-    float map(float value, float oldMin, float oldMax, float newMin, float newMax) {
-        return newMin + (newMax - newMin) * (value - oldMin) / (oldMax - oldMin);
-    }
-
-
-    void main()
-    {
-        vec3 colorA = vec3(.6, 0.17, 0.17);
-        vec3 colorB = vec3(0.17, 0.8, .7);
-        //vec3 color = mix(colorA, colorB, vUv.x * vUv.y);
-        float alpha = map(vZ / 2., -1. / 2., 30. / 2., 0.17, 1.);
-        vec3 color = vec3(.5, .5, .6);
-
-        gl_FragColor = vec4( color, alpha);
-        gl_FragColor = gl_FragColor * texture2D( texture, gl_PointCoord );
-    }
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
-  <script>
-    // Adapted from the local WebGL particles + noise displacement reference build.
-    class Scene {
-      constructor(options) {
-        this.$el = options.el;
-        this.time = 0;
-
-        this.bindAll();
-        this.init();
-      }
-
-      bindAll() {
-        this.render = this.render.bind(this);
-        this.resize = this.resize.bind(this);
-      }
-
-      init() {
-        this.textureLoader = new THREE.TextureLoader();
-        this.camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 1, 2000);
-        this.camera.position.z = 680;
-        this.camera.position.y = 200;
-        this.camera.lookAt(new THREE.Vector3(0, 0, 0));
-
-        this.scene = new THREE.Scene();
-
-        this.renderer = new THREE.WebGLRenderer({ alpha: true });
-        this.renderer.setPixelRatio(window.devicePixelRatio);
-        this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.$el.appendChild(this.renderer.domElement);
-
-        this.createParticles();
-        this.bindEvents();
-        this.resize();
-        this.render();
-      }
-
-      createParticles() {
-        const plane = new THREE.PlaneBufferGeometry(900, 1000, 450, 500);
-
-        const textureLoader = new THREE.TextureLoader();
-        textureLoader.crossOrigin = "";
-
-        const material = new THREE.ShaderMaterial({
-          uniforms: {
-            time: { value: 1.0 },
-            texture: { value: textureLoader.load("https://s3-us-west-2.amazonaws.com/s.cdpn.io/1081752/spark1.png") },
-            resolution: { value: new THREE.Vector2() }
-          },
-
-          vertexShader: document.getElementById("vertex-shader").textContent,
-          fragmentShader: document.getElementById("fragment-shader").textContent,
-          blending: THREE.AdditiveBlending,
-          depthTest: false,
-          transparent: true
-        });
-
-        this.particles = new THREE.Points(plane, material);
-        this.particles.rotation.x = this.degToRad(-90);
-
-        this.scene.add(this.particles);
-      }
-
-      bindEvents() {
-        window.addEventListener("resize", this.resize);
-      }
-
-      resize() {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        this.renderer.setSize(w, h);
-        this.camera.aspect = w / h;
-        this.camera.updateProjectionMatrix();
-      }
-
-      moveParticles() {
-        this.particles.material.uniforms.time.value = this.time;
-      }
-
-      render() {
-        requestAnimationFrame(this.render);
-        this.time += .002;
-
-        this.moveParticles();
-        this.renderer.render(this.scene, this.camera);
-      }
-
-      degToRad(angle) {
-        return angle * Math.PI / 180;
-      }
-
-    }
-
-    const scene = new Scene({
-      el: document.querySelector(".container")
-    });
-  </script>
 </body>
 </html>
 """
@@ -3424,12 +3226,12 @@ def create_app(config: AppConfig) -> FastAPI:
     )
     ui_dir = Path(__file__).resolve().parents[1] / "ui"
     portfolio_assets_dir = ui_dir / "assets"
-    portfolio_assets_dir.mkdir(parents=True, exist_ok=True)
-    app.mount(
-        "/assets",
-        StaticFiles(directory=str(portfolio_assets_dir)),
-        name="portfolio-assets",
-    )
+    if portfolio_assets_dir.exists():
+        app.mount(
+            "/assets",
+            StaticFiles(directory=str(portfolio_assets_dir)),
+            name="portfolio-assets",
+        )
 
     @app.middleware("http")
     async def request_logging(request: Request, call_next):
