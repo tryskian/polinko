@@ -295,7 +295,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       <h1>Krystian Fernando</h1>
       <div class="bio">
         <p class="lede">
-          Creative AI Research Engineer building an ongoing full-stack design lab for Human-AI interaction.
+          AI Research Engineer designing evals around the useful signals models reveal when they fail.
         </p>
         <a
           class="because-link"

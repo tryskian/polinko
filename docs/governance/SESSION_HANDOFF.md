@@ -59,11 +59,12 @@ Last updated: 2026-04-18
   - tracked fallback lives in `api/app_factory.py`.
   - current heading: `Krystian Fernando`.
   - current one-liner:
-    `Creative AI Research Engineer running an applied design lab to evaluate Human-AI interaction.`
-  - current CTA links to the public repo:
+    `AI Research Engineer designing evals around the useful signals models reveal when they fail.`
+  - current primary repo CTA remains the hook line:
     `because one idea turned into a lot of questions`.
-  - top-right controls are being reset to icon-only placeholders for this pass
-    (no social wiring required).
+  - secondary links are not wired yet; if added, use only peripheral contact
+    links (`LinkedIn`, `Say hi`) below the repo hook, not competing top-right
+    controls.
   - UI direction is reset and locked for current execution:
     - austere
     - confident

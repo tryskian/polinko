@@ -58,10 +58,12 @@ Last updated: 2026-04-18
   - the tracked fallback currently lives in `api/app_factory.py`:
     - heading: `Krystian Fernando`
     - one-liner:
-      `Creative AI Research Engineer running an applied design lab to evaluate Human-AI interaction.`
-    - CTA: `because one idea turned into a lot of questions`
-    - top-right controls are being reset to icon-only placeholders (no social
-      wiring required for the current pass)
+      `AI Research Engineer designing evals around the useful signals models reveal when they fail.`
+    - primary repo CTA remains the hook line:
+      `because one idea turned into a lot of questions`
+    - secondary links are not wired yet; if added, use only peripheral contact
+      links (`LinkedIn`, `Say hi`) below the repo hook, not competing top-right
+      controls.
     - active visual direction is reset to:
       - austere
       - confident
