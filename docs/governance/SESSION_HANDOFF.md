@@ -130,12 +130,6 @@ Last updated: 2026-04-19
   - for local image previews in assistant responses, embed Markdown images with
     absolute filesystem paths (`![label](/absolute/path.png)`) so previews
     render in-app.
-- Codex session degrangle spec:
-  - `docs/runtime/CODEX_SESSION_DEGRANGLE_SPEC.md`
-  - use it for compact-loop, huge transcript, stale token-count, or malformed
-    `image_url` repair.
-  - active beabs must not rewrite their own open JSONL transcript; a fresh
-    beab should run the repair after the thread is closed.
 
 ## Next Execution Slice
 
@@ -158,8 +152,6 @@ Last updated: 2026-04-19
 
 - Do not duplicate historical decision timelines in this file.
 - Keep command catalogs in `docs/runtime/RUNBOOK.md` only.
-- Keep Codex local session repair procedure in
-  `docs/runtime/CODEX_SESSION_DEGRANGLE_SPEC.md`.
 - Keep durable process/engineering/tooling/runtime/eval rationale in
   `docs/governance/DECISIONS.md` only.
 - Refresh this file in place; do not append daily log sections.

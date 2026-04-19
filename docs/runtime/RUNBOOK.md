@@ -114,18 +114,6 @@
      - `git pull --ff-only`
      - `git status --short` must be empty
 
-## Codex Session Degrangle Routine
-
-1. Use `docs/runtime/CODEX_SESSION_DEGRANGLE_SPEC.md` when a Codex thread is
-   stuck in compact/resume loops or has malformed local transcript payloads.
-2. Do not edit the active thread's own JSONL transcript while Codex has it open
-   for writing.
-3. Default safe pattern:
-   - active beab writes a clean handoff/spec
-   - human closes the active thread
-   - next beab runs the degrangle spec against the closed thread
-4. Always diagnose, back up, repair, and validate in that order.
-
 ## Command Ownership Rule (Reasoning Loops)
 
 1. Imagineer does not run terminal commands as part of normal workflow.
