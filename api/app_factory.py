@@ -55,8 +55,9 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='8' fill='%23262626'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="https://use.typekit.net/yop1tsd.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@200;300;400;500;600;900&display=swap">
   <title>Krystian Fernando</title>
   <style>
     :root {
@@ -64,21 +65,15 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       --ink: #262626;
       --palette: #262626;
       --font-main:
-        "aktiv-grotesk",
-        "Aktiv Grotesk",
+        "Public Sans",
         "Helvetica Neue",
         Helvetica,
         Arial,
         sans-serif;
-      --font-thin:
-        "aktiv-grotesk-thin",
-        "Aktiv Grotesk",
-        "Helvetica Neue",
-        Helvetica,
-        Arial,
-        sans-serif;
-      --page-inline: clamp(32px, 12.15vw, 166px);
-      --page-block-end: clamp(96px, 16.2svh, 166px);
+      --page-inline: 7.6875rem;
+      --page-block-start: 4.3125rem;
+      --page-block-end: 7.6875rem;
+      --page-inline-end: 38.9375rem;
       background: var(--paper);
       color: var(--ink);
       font-family: var(--font-main);
@@ -99,31 +94,37 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     .portal {
       min-height: 100svh;
-      padding-block: 48px var(--page-block-end);
-      padding-inline: var(--page-inline);
       display: flex;
-      align-items: flex-end;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: flex-start;
+      padding: var(--page-block-start) var(--page-inline-end) var(--page-block-end) var(--page-inline);
+      position: relative;
     }
 
     main {
-      inline-size: min(100%, 780px);
+      inline-size: min(100%, 40.6875rem);
     }
 
     a {
       color: inherit;
     }
 
+    .because-link:focus-visible {
+      outline: 1px solid currentColor;
+      outline-offset: 6px;
+    }
+
     h1 {
       color: var(--palette);
-      font-family: var(--font-thin);
-      margin: 0 0 23px;
-      font-size: 5rem;
+      font-family: var(--font-main);
+      margin: 0 0 3.3125rem;
+      font-size: 7.5rem;
       font-style: normal;
       font-weight: 200;
-      leading-trim: both;
-      line-height: normal;
+      letter-spacing: -0.03125rem;
+      line-height: 0.91;
       max-inline-size: 100%;
-      text-edge: cap;
       text-transform: capitalize;
       text-wrap: balance;
     }
@@ -142,7 +143,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       max-width: 627px;
       font-size: 1.625rem;
       font-style: normal;
-      font-weight: 400;
+      font-weight: 300;
       line-height: 1.28;
       text-wrap: pretty;
     }
@@ -155,12 +156,9 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       position: relative;
       font-size: 1.625rem;
       font-style: normal;
-      font-weight: 400;
+      font-weight: 300;
       line-height: 1.28;
-      text-decoration-line: underline;
-      text-decoration-thickness: 1px;
-      text-decoration-color: transparent;
-      text-underline-offset: 0.16em;
+      text-decoration: none;
       text-wrap: pretty;
       transition:
         color 320ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -170,7 +168,6 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     .because-link:hover,
     .because-link:focus-visible {
       color: #4a4a4a;
-      text-decoration-color: currentColor;
     }
 
     .because-link::before {
@@ -200,6 +197,22 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       transform: translateY(0);
     }
 
+    .because-text,
+    .link-icon {
+      text-decoration-line: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: transparent;
+      text-underline-offset: 0.16em;
+      transition: text-decoration-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .because-link:hover .because-text,
+    .because-link:hover .link-icon,
+    .because-link:focus-visible .because-text,
+    .because-link:focus-visible .link-icon {
+      text-decoration-color: currentColor;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .because-link,
       .because-link::before {
@@ -219,31 +232,46 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     .link-icon {
       display: inline-block;
-      font-family: "Material Symbols Outlined";
-      font-size: 0.95em;
+      font-family:
+        "Apple Symbols",
+        "Segoe UI Symbol",
+        "Noto Sans Symbols 2",
+        "Noto Sans Symbols",
+        sans-serif;
+      font-size: 0.9em;
       font-style: normal;
       font-weight: 400;
       line-height: 1;
-      margin-inline-start: 0.16em;
+      margin-inline-start: 0.22em;
       text-decoration: none;
       text-transform: none;
-      vertical-align: -0.12em;
+      vertical-align: -0.08em;
       white-space: nowrap;
+    }
+
+    @media (max-width: 1180px) {
+      :root {
+        --page-inline: clamp(32px, 10vw, 120px);
+        --page-inline-end: clamp(32px, 18vw, 220px);
+      }
     }
 
     @media (max-width: 760px) {
       :root {
         --page-inline: clamp(32px, 13vw, 56px);
-        --page-block-end: clamp(110px, 15.65svh, 132px);
+        --page-block-start: 32px;
+        --page-block-end: 70px;
+        --page-inline-end: var(--page-inline);
       }
 
       .portal {
-        padding-block-start: 32px;
+        padding-block-start: var(--page-block-start);
+        padding-inline: var(--page-inline);
       }
 
       h1 {
         margin-bottom: 24px;
-        font-size: 4.3125rem;
+        font-size: clamp(4rem, 17vw, 4.3125rem);
         line-height: 0.96;
       }
 
@@ -276,7 +304,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
           aria-label="because one idea turned into a lot of questions"
           data-tooltip="github.com/tryskian/polinko"
         >
-          because one idea turned into a lot of questions <span class="link-icon" aria-hidden="true">arrow_outward</span>
+          <span class="because-text">because one idea turned into a lot of questions.</span> <span class="link-icon" aria-hidden="true">🡭</span>
         </a>
         <span id="repo-link-destination" class="sr-only">Opens the Polinko repository on GitHub.</span>
       </div>
