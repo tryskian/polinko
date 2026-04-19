@@ -244,7 +244,7 @@ Eval visualization and surfaces:
   - current fallback mode is a single-screen editorial doorway
   - current copy identifies Krystian Fernando, frames the design-to-research
     path, and links the primary CTA to the public Polinko repo
-  - top-right peripheral contact dots link to GitHub and `hi@krystian.io`
+  - top-right text contact links expose GitHub, LinkedIn, and email
   - public portfolio direction is about/contact; evidence visualizations remain
     repo research instruments
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,

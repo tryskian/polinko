@@ -73,6 +73,12 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
         sans-serif;
       --page-inline: clamp(4.5rem, 8.8vw, 8rem);
       --page-block-start: clamp(3.5rem, 7vh, 5rem);
+      --drawer-ease: cubic-bezier(0.19, 1, 0.22, 1);
+      --drawer-hold: 0ms;
+      --drawer-open-duration: 340ms;
+      --drawer-close-duration: 560ms;
+      --drawer-fade: 1.5rem;
+      --drawer-open-size: 10.75rem;
       background: var(--paper);
       color: var(--ink);
       font-family: var(--font-main);
@@ -99,48 +105,104 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     }
 
     main {
+      bottom: 0;
       inline-size: calc(100% - (var(--page-inline) * 2));
       left: var(--page-inline);
       position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
+      top: 0;
     }
 
     a {
       color: inherit;
     }
 
-    .social-links {
-      display: flex;
-      gap: 2.1rem;
+    .identity-menu {
+      display: grid;
+      justify-items: start;
+      inline-size: max-content;
+      left: var(--page-inline);
       position: absolute;
-      right: clamp(4rem, 7vw, 7.75rem);
-      top: clamp(3rem, 6vh, 4.25rem);
+      top: clamp(4.9rem, 8.5svh, 5.5rem);
+      z-index: 2;
+    }
+
+    .identity-name {
+      color: var(--palette);
+      cursor: pointer;
+      font-family: var(--font-main);
+      font-size: 0.9rem;
+      font-style: normal;
+      font-weight: 550;
+      letter-spacing: 0.17em;
+      line-height: 1;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .identity-name:focus-visible {
+      outline: 1px solid currentColor;
+      outline-offset: 6px;
+    }
+
+    .social-links {
+      display: grid;
+      justify-items: start;
+      gap: 1rem;
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        #000 calc(100% - var(--drawer-fade)),
+        transparent 100%
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        #000 calc(100% - var(--drawer-fade)),
+        transparent 100%
+      );
+      max-block-size: 0;
+      overflow: hidden;
+      pointer-events: none;
+      position: absolute;
+      top: calc(100% + 1.8rem);
+      transition: max-block-size var(--drawer-close-duration) var(--drawer-ease);
+      transition-delay: var(--drawer-hold);
+    }
+
+    .identity-menu:hover .social-links,
+    .identity-menu:focus-within .social-links {
+      max-block-size: var(--drawer-open-size);
+      pointer-events: auto;
+      transition-delay: 0s;
+      transition-duration: var(--drawer-open-duration);
     }
 
     .social-link {
-      block-size: 2.06rem;
-      border-radius: 999px;
-      inline-size: 2.06rem;
+      align-items: center;
+      color: #6b6b6b;
+      display: inline-flex;
+      font-size: 0.9rem;
+      font-weight: 500;
+      justify-content: center;
+      letter-spacing: 0.17em;
+      line-height: 1;
+      margin: -0.45rem -0.12rem;
+      min-block-size: 2rem;
+      padding: 0.45rem 0.12rem;
       position: relative;
-      text-decoration: none;
-    }
-
-    .social-link::before {
-      background: var(--ink);
-      border-radius: inherit;
-      content: "";
-      inset: 0;
-      position: absolute;
+      text-decoration-line: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: transparent;
+      text-underline-offset: 0.18em;
       transition:
-        opacity 220ms ease,
-        transform 220ms ease;
+        color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+        text-decoration-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
-    .social-link:hover::before,
-    .social-link:focus-visible::before {
-      opacity: 0.72;
-      transform: scale(0.9);
+    .social-link:hover,
+    .social-link:focus-visible {
+      color: var(--palette);
+      text-decoration-color: currentColor;
     }
 
     .because-link:focus-visible,
@@ -149,25 +211,16 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       outline-offset: 6px;
     }
 
-    h1 {
-      color: var(--palette);
-      font-family: var(--font-main);
-      margin: 0 0 3.35rem;
-      font-size: 1.64rem;
-      font-style: normal;
-      font-weight: 800;
-      letter-spacing: 0.17em;
-      line-height: 1;
-      max-inline-size: 100%;
-      text-transform: uppercase;
-    }
-
     .bio {
       display: flex;
       flex-direction: column;
-      gap: 2.55rem;
+      gap: 2.1rem;
       align-items: flex-start;
+      bottom: var(--page-inline);
       inline-size: 100%;
+      left: 0;
+      position: absolute;
+      top: auto;
     }
 
     .copy-block {
@@ -180,10 +233,10 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       color: var(--palette);
       font-family: var(--font-main);
       margin: 0;
-      max-width: min(62vw, 53rem);
-      font-size: 2.5rem;
+      max-width: min(70vw, 56rem);
+      font-size: 2.1875rem;
       font-style: normal;
-      font-weight: 400;
+      font-weight: 300;
       letter-spacing: 0;
       line-height: normal;
       text-wrap: pretty;
@@ -199,9 +252,9 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       font-family: var(--font-main);
       margin: 0;
       position: relative;
-      font-size: 3.125rem;
+      font-size: 2.1875rem;
       font-style: normal;
-      font-weight: 600;
+      font-weight: 500;
       letter-spacing: 0;
       line-height: normal;
       text-decoration: none;
@@ -213,41 +266,14 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     .cta-stack {
       display: grid;
-      inline-size: min(46rem, 58vw);
-      margin-left: clamp(12rem, 32vw, 32rem);
-      padding-top: 0.35rem;
+      inline-size: min(83vw, 64rem);
+      margin-left: 0;
+      padding-top: 1rem;
     }
 
     .because-link:hover,
     .because-link:focus-visible {
       color: #4a4a4a;
-    }
-
-    .because-link::before {
-      color: #6b6b6b;
-      content: attr(data-tooltip);
-      font-size: 1rem;
-      font-weight: 500;
-      top: calc(100% + 10px);
-      left: 0;
-      letter-spacing: 0.01em;
-      line-height: 1;
-      opacity: 0;
-      pointer-events: none;
-      position: absolute;
-      text-decoration: none;
-      transform: translateY(-4px);
-      transition:
-        opacity 320ms cubic-bezier(0.22, 1, 0.36, 1),
-        transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
-      white-space: nowrap;
-      z-index: 1;
-    }
-
-    .because-link:hover::before,
-    .because-link:focus-visible::before {
-      opacity: 1;
-      transform: translateY(0);
     }
 
     .because-text,
@@ -268,8 +294,8 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     @media (prefers-reduced-motion: reduce) {
       .because-link,
-      .because-link::before,
-      .social-link::before {
+      .social-links,
+      .social-link {
         transition: none;
       }
     }
@@ -309,17 +335,24 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       }
 
       .copy-line {
-        font-size: clamp(2rem, 3.35vw, 2.5rem);
-        max-width: min(68vw, 48rem);
+        font-size: clamp(1.75rem, 2.9vw, 2.1875rem);
+        max-width: min(74vw, 54rem);
       }
 
       .because-link {
-        font-size: clamp(2.35rem, 4.2vw, 3.125rem);
+        font-size: clamp(1.75rem, 2.9vw, 2.1875rem);
       }
 
       .cta-stack {
-        inline-size: min(42rem, 56vw);
-        margin-left: clamp(9rem, 30vw, 22rem);
+        inline-size: min(82vw, 64rem);
+        margin-left: 0;
+      }
+    }
+
+    @media (min-width: 861px) {
+      .because-link {
+        text-wrap: nowrap;
+        white-space: nowrap;
       }
     }
 
@@ -334,15 +367,14 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
         padding-inline: var(--page-inline);
       }
 
-      .social-links {
-        gap: 1rem;
-        right: var(--page-inline);
+      .identity-menu {
+        left: var(--page-inline);
         top: var(--page-block-start);
       }
 
+      .identity-name,
       .social-link {
-        block-size: 1.55rem;
-        inline-size: 1.55rem;
+        font-size: 1.16rem;
       }
 
       main {
@@ -354,9 +386,8 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
         padding-top: clamp(7rem, 18svh, 11rem);
       }
 
-      h1 {
-        margin-bottom: 2.4rem;
-        font-size: 1.16rem;
+      .bio {
+        position: static;
       }
 
       .bio {
@@ -364,14 +395,14 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       }
 
       .copy-line {
-        font-size: clamp(1.42rem, 5.8vw, 2rem);
+        font-size: clamp(1.3rem, 5.35vw, 1.85rem);
         font-weight: 400;
         line-height: normal;
         max-width: 100%;
       }
 
       .because-link {
-        font-size: clamp(1.72rem, 7.2vw, 2.45rem);
+        font-size: clamp(1.3rem, 5.35vw, 1.85rem);
         line-height: normal;
       }
 
@@ -382,48 +413,49 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     }
 
     @media (max-height: 760px) and (min-width: 861px) {
-      h1 {
-        margin-bottom: 2.4rem;
-      }
-
       .bio {
         gap: 1.85rem;
       }
 
       .copy-line {
-        font-size: 2rem;
+        font-size: 1.85rem;
       }
 
       .because-link {
-        font-size: 2.55rem;
+        font-size: 1.85rem;
       }
     }
   </style>
 </head>
 <body>
   <div class="portal">
-    <nav class="social-links" aria-label="Contact links">
-      <a
-        class="social-link"
-        href="https://github.com/tryskian/polinko"
-        aria-label="Open Polinko on GitHub"
-      ></a>
-      <a
-        class="social-link"
-        href="mailto:hi@krystian.io"
-        aria-label="Email Krystian"
-      ></a>
-    </nav>
+    <div class="identity-menu" aria-label="Contact">
+      <span class="identity-name" tabindex="0">Krystian Fernando</span>
+      <nav class="social-links" aria-label="Contact links">
+        <a
+          class="social-link"
+          href="https://github.com/tryskian"
+          aria-label="Open Krystian's GitHub profile"
+        >github</a>
+        <a
+          class="social-link"
+          href="https://www.linkedin.com/in/krystianfernando"
+          aria-label="Open Krystian Fernando on LinkedIn"
+        >linkedin</a>
+        <a
+          class="social-link"
+          href="mailto:hi@krystian.io"
+          aria-label="Email Krystian"
+        >email</a>
+      </nav>
+    </div>
     <main>
-      <h1>Krystian Fernando</h1>
       <div class="bio">
-        <section class="copy-block" aria-label="Origin">
+        <section class="copy-block" aria-label="Origin and research focus">
           <p class="copy-line">
-            creative director who somehow became an AI research engineer,
+            design director who somehow became an AI research engineer
             after one idea came with its own hypothesis.
           </p>
-        </section>
-        <section class="copy-block" aria-label="Research focus">
           <p class="copy-line">
             so now i design evals around the useful signals models reveal
             when they fail.
@@ -438,7 +470,6 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
             href="https://github.com/tryskian/polinko"
             aria-describedby="repo-link-destination"
             aria-label="because every signal reshapes the experiment"
-            data-tooltip="github.com/tryskian/polinko"
           >
             <span class="because-text">because every signal reshapes the experiment.</span> <span class="link-icon" aria-hidden="true">🡭</span>
           </a>

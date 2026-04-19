@@ -57,18 +57,18 @@ Last updated: 2026-04-19
   - tracked fallback lives in `api/app_factory.py`.
   - current heading: `Krystian Fernando`.
   - current origin line:
-    `creative director who somehow became an AI research engineer, after one idea came with its own hypothesis.`
+    `design director who somehow became an AI research engineer, after one idea came with its own hypothesis.`
   - current research-focus line:
     `so now i design evals around the useful signals models reveal when they fail.`
   - current method line: `for fun.`
   - current primary repo CTA:
     `because every signal reshapes the experiment.`
-  - top-right peripheral contact dots are wired to the public GitHub repo and
+  - top-right text contact links are wired to GitHub, LinkedIn, and
     `mailto:hi@krystian.io`.
   - UI direction is current and locked for this checkpoint:
     - austere editorial doorway
-    - centered viewport copy block
-    - right-shifted desktop CTA with left-aligned text
+    - bottom-anchored desktop copy block
+    - left-rail desktop CTA with body-copy sizing
     - responsive stacked narrow-width fallback
     - single-screen landing only
   - particle-field/WebGL exploration is parked for now.

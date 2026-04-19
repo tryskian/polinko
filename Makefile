@@ -436,7 +436,7 @@ server-daemon:
 			fi; \
 		fi; \
 	fi; \
-	nohup $(PYTHON) -m uvicorn server:app --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" >"$(SERVER_LOG)" 2>&1 & \
+	nohup $(PYTHON) -m uvicorn server:app --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" </dev/null >"$(SERVER_LOG)" 2>&1 & \
 	PID=$$!; \
 	echo "$$PID" >"$(SERVER_PID_FILE)"; \
 	sleep 0.2; \
