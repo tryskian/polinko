@@ -117,15 +117,15 @@ Last updated: 2026-04-19
   - no active generated `ui/index.html` is present
   - if a real frontend returns, edit in `frontend/` and regenerate ignored
     `ui/`; do not hand-edit generated `ui/`
-  - canonical launch command:
-    - `make portfolio` (rebuild + serve + open)
+  - canonical serve command:
+    - `make portfolio` (rebuild + serve + print URL)
     - launch URL includes a `rebuild=<timestamp>` cache-bust query.
-    - default launch uses the repo Playwright session, opens a new tab when
-      possible, and opens a headed Playwright browser when no session is active.
+    - default launch is `none`; it does not open a Playwright or system browser.
     - `make portfolio` restarts the stable no-reload `server-daemon` before
-      opening so embedded fallback HTML updates deterministically.
+      printing the URL so embedded fallback HTML updates deterministically.
     - system-browser launch remains available with
       `make portfolio PORTFOLIO_LAUNCH=system`.
+    - Playwright launch remains available only with `make portfolio-playwright`.
     - `make portfolio-build` no-ops when local frontend source is absent so
       the tracked `/portfolio` fallback remains launchable.
   - `make portfolio-open` alias has been removed.
