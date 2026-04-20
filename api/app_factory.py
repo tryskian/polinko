@@ -64,7 +64,6 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       --paper: #fdfdfd;
       --ink: #262626;
       --muted: #686868;
-      --palette: #262626;
       --font-main:
         "Instrument Sans",
         "Helvetica Neue",
@@ -121,7 +120,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     }
 
     .identity-name {
-      color: var(--palette);
+      color: var(--ink);
       font-family: var(--font-main);
       font-size: 0.9rem;
       font-style: normal;
@@ -156,7 +155,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     }
 
     .copy-line {
-      color: var(--palette);
+      color: var(--ink);
       font-family: var(--font-main);
       margin: 0;
       max-width: min(70vw, 56rem);
@@ -173,7 +172,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     }
 
     .because-link {
-      color: var(--palette);
+      color: var(--ink);
       display: inline-block;
       font-family: var(--font-main);
       margin: 0;
