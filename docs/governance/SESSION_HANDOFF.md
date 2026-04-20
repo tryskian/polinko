@@ -2,7 +2,7 @@
 
 # Session Handoff (Current Only)
 
-Last updated: 2026-04-19
+Last updated: 2026-04-20
 
 ## Startup
 
@@ -42,10 +42,15 @@ Last updated: 2026-04-19
     collaboration, not tooling-first implementation detail
   - the public website should be about/contact and point into the work, not
     recreate the research system
-- Latest merged checkpoint (2026-04-19):
-  - PR #332 merged to `main` through the protected PR flow.
+- Latest merged checkpoint (2026-04-20):
+  - PR #341 merged to `main` through the protected PR flow.
   - required checks passed: `test`, `markdownlint`.
   - local `main` was aligned with `origin/main` after the squash merge.
+  - portfolio fallback workflow is merged:
+    - CTA arrow uses inline SVG instead of a Unicode symbol.
+    - narrow-width fallback copy/layout is adjusted for the current doorway.
+    - `make portfolio` prints a cache-busted URL by default and does not open
+      Playwright or a system browser unless explicitly requested.
   - Netlify production builds from `main` are deterministic via
     `netlify.toml` and `tools/build_portfolio_static.py`.
   - production deploy is live at:
@@ -71,6 +76,12 @@ Last updated: 2026-04-19
   - `GET /portfolio` -> local `ui/index.html` only when intentionally present;
     tracked in-app about/contact fallback otherwise
 - Public portfolio scope is about/contact doorway.
+- Application push status:
+  - initial application push is complete.
+  - do not duplicate-submit overlapping engineering applications for the same
+    cycle; improve public proof surfaces instead.
+  - private application materials/resume exports remain ignored/local, not
+    tracked public repo evidence.
 - Lean portal rule:
   - website = identity and doorway
   - repo = research object, evidence, visuals, notebooks, Mermaid diagrams,
@@ -134,6 +145,9 @@ Last updated: 2026-04-19
   - WebGL/data-viz work remains optional research instrumentation.
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,
     reduced-motion, performance, and direct-inspection fallback.
+  - static D3/SVG evidence diagrams are a valid next repo value-add when placed
+    beside Mermaid diagrams in the public diagrams/evidence lane.
+  - no animation or portfolio wiring is required for that D3 pass.
   - the former local pinned-stage/FPO frontend is no longer active; treat it as
     archived design context unless deliberately restored on a new branch.
   - Mermaid pipeline diagrams in `docs/peanut/refs/llm_pipeline_diagrams.md`
@@ -169,17 +183,12 @@ Last updated: 2026-04-19
 
 ## Next Execution Slice
 
-1. Application push:
-   - use the live site and public repo for applications on 2026-04-20.
-   - submit `https://www.krystian.io/sitemap.xml` in Google Search Console if
-     time permits; do not let SEO chores block applications.
-   - tune copy/spacing only if explicitly requested and truly blocking.
-   - hold visual complexity:
-     - no particle-field/WebGL pass
-     - no multi-section public portfolio UI
-     - no public Sankey/data-viz embedding
-   - if the doorway grows beyond a tiny page, extract the HTML/CSS from
-     `app_factory.py`.
+1. Public proof polish:
+   - add static D3/SVG evidence diagrams beside the Mermaid diagrams when ready.
+   - keep diagrams real-data/real-contract evidence, not decorative portfolio
+     animation.
+   - optional site polish remains small only: social/contact links and a
+     reduced-motion-safe CTA click flourish.
 2. OCR hardening kernels (lockset stability + growth signal quality).
 3. Keep docs aligned via canonical ownership map.
 

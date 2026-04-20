@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-04-19
+Last updated: 2026-04-20
 
 ## Current Truth
 
@@ -45,10 +45,15 @@ Last updated: 2026-04-19
     - understated repo CTA into the public work
     - peripheral contact links only
     - no full portfolio/storytelling UI on the public site right now
-- Latest merged checkpoint is green for 2026-04-19:
-  - PR #332 merged to `main` through the protected PR flow.
+- Latest merged checkpoint is green for 2026-04-20:
+  - PR #341 merged to `main` through the protected PR flow.
   - required checks passed: `test`, `markdownlint`.
   - local `main` was aligned with `origin/main` after the squash merge.
+  - portfolio fallback workflow is merged:
+    - CTA arrow uses inline SVG instead of a Unicode symbol.
+    - narrow-width fallback copy/layout is adjusted for the current doorway.
+    - `make portfolio` prints a cache-busted URL by default and does not open
+      Playwright or a system browser unless explicitly requested.
   - Netlify production builds from `main` are deterministic via
     `netlify.toml` and `tools/build_portfolio_static.py`.
   - deployed production build includes the current doorway, semantic identity
@@ -112,6 +117,12 @@ Last updated: 2026-04-19
       `200` after redirect.
     - do not add manual apex `A 75.2.60.5` while Netlify-managed
       `NETLIFY`/`NETLIFYv6` records are active.
+- Application push:
+  - initial application push is complete.
+  - duplicate overlapping engineering applications are not needed for this
+    cycle unless a clearly distinct role track is selected.
+  - private application forms, resume drafts, and uploadable PDF exports stay
+    local/ignored.
   - frontend source/output directories are placeholders unless deliberately
     restored:
     - `frontend/` is ignored except `frontend/.gitkeep`.
@@ -136,6 +147,10 @@ Last updated: 2026-04-19
   - WebGL/data-viz work remains optional research instrumentation.
   - flat SVG/D3 Sankey or alluvial views remain valid accessibility,
     reduced-motion, performance, and direct-inspection fallbacks.
+  - static D3/SVG evidence diagrams should sit beside Mermaid diagrams in the
+    public diagrams/evidence lane when added.
+  - D3 diagrams should be generated/static evidence artifacts, not interactive
+    or animated portfolio surfaces.
   - repo evidence surfaces must use the same real-data
     `GET /portfolio/sankey-data` payload.
   - the former local pinned-stage/FPO frontend is no longer active; treat it as
@@ -200,19 +215,20 @@ Last updated: 2026-04-19
 ## Active Priorities
 
 1. Portfolio shipping lane:
-   - public doorway is live; keep it stable for the application push:
+   - public doorway is live; keep it stable after the application push:
      - single viewport
      - static identity
      - concise human-facing origin/focus copy
      - understated repo CTA
-   - next milestone is applications on 2026-04-20, using the live site and
-     public repo.
+   - next milestone is repo proof polish, not a portfolio rebuild.
    - avoid portfolio overbuild during this pass:
      - no multi-section storytelling UI
      - no Sankey/data-viz/public evidence surfaces on the landing page
      - no animation-first exploration
    - keep repo evidence visualizations as research instruments, not the public
      portfolio's main burden.
+   - static D3/SVG diagrams beside Mermaid diagrams are the preferred next
+     visual evidence value-add.
    - if the fallback page becomes production, extract it out of the large
      `app_factory.py` HTML string.
    - preserve real-data evidence contracts unless explicitly changing backend
