@@ -175,11 +175,12 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     .identity-name {
       color: var(--ink);
       font-family: var(--font-main);
-      font-size: 0.9rem;
+      font-size: 0.86rem;
       font-style: normal;
-      font-weight: 550;
+      font-weight: 700;
       letter-spacing: 0.17em;
       line-height: 1;
+      margin: 0;
       text-transform: uppercase;
       white-space: nowrap;
     }
@@ -244,7 +245,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     .cta-stack {
       display: grid;
-      gap: 0.65rem;
+      gap: 0;
       inline-size: min(83vw, 64rem);
       margin-left: 0;
       padding-top: 1rem;
@@ -272,31 +273,28 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     }
 
     .repo-tooltip {
-      color: #6b6b6b;
+      color: #747474;
       display: inline-block;
       font-family: var(--font-main);
-      font-size: clamp(1.3rem, 2vw, 1.75rem);
+      font-size: clamp(0.82rem, 1.08vw, 1.02rem);
       font-weight: 500;
       line-height: 1.1;
       opacity: 0;
+      padding-top: 0.65rem;
       pointer-events: none;
-      text-decoration-line: underline;
-      text-decoration-thickness: 1px;
-      text-decoration-color: transparent;
-      text-underline-offset: 0.16em;
       transform: translateY(-0.22rem);
       transition:
         color 320ms cubic-bezier(0.22, 1, 0.36, 1),
         opacity 360ms cubic-bezier(0.22, 1, 0.36, 1),
-        text-decoration-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
         transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    .cta-stack:hover .repo-tooltip,
-    .cta-stack:focus-within .repo-tooltip {
-      color: #4a4a4a;
+    .because-link:hover + .repo-tooltip,
+    .because-link:focus-visible + .repo-tooltip,
+    .repo-tooltip:hover {
+      color: #747474;
       opacity: 1;
-      text-decoration-color: currentColor;
+      pointer-events: auto;
       transform: translateY(0);
     }
 
@@ -380,7 +378,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       }
 
       .identity-name {
-        font-size: 1.16rem;
+        font-size: 1.06rem;
       }
 
       main {
@@ -436,14 +434,14 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 <body>
   <div class="portal">
     <div class="identity-menu">
-      <span class="identity-name">Krystian Fernando</span>
+      <h1 class="identity-name">Krystian Fernando</h1>
     </div>
     <main>
       <div class="bio">
         <section class="copy-block" aria-label="Origin and research focus">
           <p class="copy-line">
             design director who somehow became an AI&nbsp;research engineer
-            after one idea came with its own hypothesis. so now i design evals around the useful signals that models reveal
+            when one idea came with its own hypothesis. so now i design evals around the useful signals that models reveal
             when they fail.
           </p>
         </section>
@@ -455,7 +453,6 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
             class="because-link"
             href="https://github.com/tryskian/polinko"
             aria-describedby="repo-link-destination"
-            aria-label="because every signal reshapes the experiment"
           >
             <span class="because-text">because every signal reshapes the experiment.</span> <span class="link-icon" aria-hidden="true">🡭</span>
           </a>
