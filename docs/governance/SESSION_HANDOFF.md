@@ -14,9 +14,8 @@ Last updated: 2026-04-19
 
 - Backend-first runtime remains canonical.
 - Active local branch for this handoff:
-  - `codex/bigbrain/drop-portfolio-drawer`
-  - contains the current `/portfolio` drawer-removal ship checkpoint
-  - not yet merged back to `main`
+  - `main`
+  - clean and synced with `origin/main`
 - Repo-as-research-project is the portfolio architecture:
   - GitHub repository visibility is public.
   - public GitHub metadata is configured:
@@ -24,7 +23,7 @@ Last updated: 2026-04-19
       alignment through OCR, evals, evidence chains, and runtime tooling.`
     - topics emphasize Python/OpenAI, AI research/safety, human-AI/HCI,
       LLM evaluation, PDF processing, FastAPI, and SQLite.
-    - website URL remains blank until the landing page is live.
+    - website URL should be `https://krystian.io/` once DNS/SSL propagation settles.
   - `main` is protected by the active `polinko` ruleset:
     - PR required
     - required checks: `test`, `markdownlint`
@@ -42,12 +41,16 @@ Last updated: 2026-04-19
     collaboration, not tooling-first implementation detail
   - the public website should be about/contact and point into the work, not
     recreate the research system
-- Latest merged checkpoint (2026-04-19):
-  - PR #324 merged to `main` through the protected PR flow.
+- Latest merged checkpoint (2026-04-20):
+  - PR #330 merged to `main` through the protected PR flow.
   - required checks passed: `test`, `markdownlint`.
   - local `main` was aligned with `origin/main` after the squash merge.
-  - tracked `/portfolio` fallback now uses the doorway placard layout and copy.
-  - fallback shell assertions cover the current copy.
+  - Netlify production builds from `main` are deterministic via
+    `netlify.toml` and `tools/build_portfolio_static.py`.
+  - production deploy is ready at:
+    `https://69e587d4ac1836000802b59d--krystian-io.netlify.app`
+  - generated static output includes SEO identity metadata, `robots.txt`,
+    `sitemap.xml`, and `/portfolio` -> `/` redirect.
 - Portfolio shell route is active:
   - `GET /` -> redirect to `GET /portfolio`
   - `GET /portfolio` -> local `ui/index.html` only when intentionally present;
@@ -79,6 +82,18 @@ Last updated: 2026-04-19
   - the implementation is acceptable as a tiny fallback; if it becomes the
     production website, move it out of the large `app_factory.py` HTML string
     into a dedicated static/template surface.
+- Netlify/domain status:
+  - repo-based Netlify deploys now work from `tryskian/polinko`.
+  - Netlify DNS UI/API records are clean for apex + `www` using managed
+    `NETLIFY`/`NETLIFYv6` records to `krystian-io.netlify.app`.
+  - authoritative NSOne DNS may still show stale Adobe/Fastly `151.101.*`
+    answers for apex/`www` until propagation settles.
+  - do not add manual apex `A 75.2.60.5` while managed Netlify DNS records are
+    active.
+  - after DNS/SSL settles, verify `https://krystian.io/`,
+    `https://krystian.io/robots.txt`, and
+    `https://krystian.io/sitemap.xml`, then submit the sitemap in Google
+    Search Console.
 - Frontend source/build contract is intentionally minimal:
   - `frontend/` is local-only and ignored except `frontend/.gitkeep`
   - `ui/` is local-only and ignored except `ui/.gitkeep`
@@ -138,17 +153,18 @@ Last updated: 2026-04-19
 
 ## Next Execution Slice
 
-1. Portfolio doorway follow-up:
-   - keep current tracked fallback as the live local doorway checkpoint.
-   - validate the no-drawer fallback visually and merge if checks pass.
+1. Portfolio/domain follow-up:
+   - wait for DNS/SSL propagation for `krystian.io` + `www.krystian.io`.
+   - verify canonical production pages and SEO files after DNS resolves to
+     Netlify.
+   - submit `https://krystian.io/sitemap.xml` in Google Search Console.
    - tune copy/spacing only if explicitly requested.
    - hold visual complexity:
      - no particle-field/WebGL pass
      - no multi-section public portfolio UI
      - no public Sankey/data-viz embedding
-   - if keeping fallback as production, extract the HTML/CSS from
+   - if the doorway grows beyond a tiny page, extract the HTML/CSS from
      `app_factory.py`.
-   - preserve backend evidence/data contracts unless explicitly changing them.
 2. OCR hardening kernels (lockset stability + growth signal quality).
 3. Keep docs aligned via canonical ownership map.
 

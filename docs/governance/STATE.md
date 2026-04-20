@@ -16,7 +16,7 @@ Last updated: 2026-04-19
       alignment through OCR, evals, evidence chains, and runtime tooling.`
     - topics emphasize Python/OpenAI, AI research/safety, human-AI/HCI,
       LLM evaluation, PDF processing, FastAPI, and SQLite.
-    - website URL remains blank until the landing page is live.
+    - website URL is `https://krystian.io/` once DNS/SSL propagation settles.
   - `main` is protected by the active `polinko` ruleset:
     - pull request required
     - required checks: `test`, `markdownlint`
@@ -44,13 +44,15 @@ Last updated: 2026-04-19
     - understated repo CTA into the public work
     - peripheral contact links only
     - no full portfolio/storytelling UI on the public site right now
-- Latest merged checkpoint is green for 2026-04-19:
-  - PR #324 merged to `main` through the protected PR flow.
+- Latest merged checkpoint is green for 2026-04-20:
+  - PR #330 merged to `main` through the protected PR flow.
   - required checks passed: `test`, `markdownlint`.
   - local `main` was aligned with `origin/main` after the squash merge.
-  - tracked `/portfolio` fallback now uses the doorway placard layout and copy.
-  - fallback shell assertions cover the current copy.
-- Portfolio shell route contract is active:
+  - Netlify production builds from `main` are deterministic via
+    `netlify.toml` and `tools/build_portfolio_static.py`.
+  - deployed production build includes the current doorway, SEO identity
+    metadata, `robots.txt`, `sitemap.xml`, and `/portfolio` -> `/` redirect.
+- Portfolio shell route contract is active locally:
   - `GET /` redirects to `GET /portfolio`.
   - `GET /portfolio` serves local `ui/index.html` only when intentionally
     present, otherwise a tracked in-app about/contact fallback.
@@ -74,6 +76,26 @@ Last updated: 2026-04-19
     - particle-field/WebGL direction is parked for this pass
   - this fallback is acceptable as a tiny doorway; if it becomes the production
     website, extract it into a dedicated static/template surface.
+  - production Netlify deploy path:
+    - base directory: repo root
+    - build command: `python3 tools/build_portfolio_static.py`
+    - publish directory: `output/netlify`
+    - generated files: `index.html`, `_redirects`, `robots.txt`,
+      `sitemap.xml`
+    - latest verified production deploy permalink:
+      `https://69e587d4ac1836000802b59d--krystian-io.netlify.app`
+  - SEO identity signals are active in the generated doorway:
+    - title: `Krystian Fernando | AI Research Engineer`
+    - canonical: `https://krystian.io/`
+    - meta description, Open Graph, Twitter card metadata
+    - JSON-LD `WebSite` + `Person` structured data reinforcing
+      `Krystian Fernando` and `krystian.io`
+  - DNS/SSL status:
+    - Netlify DNS UI/API records are clean and managed for apex + `www`.
+    - authoritative NSOne responses may still show stale Adobe/Fastly
+      `151.101.*` answers until propagation completes.
+    - do not add manual apex `A 75.2.60.5` while Netlify-managed
+      `NETLIFY`/`NETLIFYv6` records are active.
   - frontend source/output directories are placeholders unless deliberately
     restored:
     - `frontend/` is ignored except `frontend/.gitkeep`.
