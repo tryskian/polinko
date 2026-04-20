@@ -266,9 +266,12 @@ Eval visualization and surfaces:
   - edit source in `frontend/` when the local frontend scaffold is present
   - generate served shell with `make portfolio-build` (writes ignored output to
     `ui/`)
-  - use `make portfolio` for the canonical rebuild + serve + system-browser
-    open workflow when local frontend source is present; `make rebuild` and
-    `make portfolio-rebuild` are aliases for the same human-facing path
+  - use `make portfolio` for the canonical rebuild + serve workflow; it prints
+    a cache-busted URL instead of opening a browser by default
+  - `make rebuild` and `make portfolio-rebuild` are aliases for the same
+    human-facing path
+  - use `make portfolio PORTFOLIO_LAUNCH=system` when you explicitly want the
+    system browser to open
   - use `make portfolio-playwright` only for Codex/debug inspection in the
     repo Playwright session; it opens a Playwright tab instead of using the
     human-facing browser command

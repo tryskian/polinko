@@ -699,15 +699,16 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     - tracked fallback: in-app about/contact HTML when `ui/index.html` is absent
     - build-only command: `make portfolio-build`; it no-ops when local frontend
       source is absent
-    - human launch command: `make portfolio` (aliases: `make rebuild`,
-      `make portfolio-rebuild`) rebuilds, serves, and opens a cache-busted URL
+    - human serve command: `make portfolio` (aliases: `make rebuild`,
+      `make portfolio-rebuild`) rebuilds, serves, and prints a cache-busted URL
       against local frontend output or the tracked fallback
-    - default launch uses the repo Playwright session, opens a new tab when
-      possible, and opens a headed Playwright browser when no session is active
+    - default launch is `none`; it does not open a Playwright or system browser
     - `make portfolio` restarts the stable no-reload `server-daemon` before
-      opening so embedded fallback HTML updates deterministically
+      printing the URL so embedded fallback HTML updates deterministically
     - system-browser launch remains available with
       `make portfolio PORTFOLIO_LAUNCH=system`
+    - Playwright launch remains available only when explicitly requested with
+      `make portfolio-playwright`
   - `ui/` is generated output only; do not hand-edit built files.
 - Playwright CLI snapshots/screenshots:
   - repo wrapper: `make pwcli ARGS="..."`

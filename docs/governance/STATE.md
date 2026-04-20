@@ -119,16 +119,15 @@ Last updated: 2026-04-19
     - no active `frontend/package.json` is present.
     - no active generated `ui/index.html` is present.
   - command surface is simplified:
-    - `make portfolio` is the canonical serve + open workflow.
-    - `make portfolio` opens a cache-busted URL so the browser does not reuse a
-      stale shell bundle.
-    - default launch uses the repo-scoped Playwright session, opens a new tab
-      when possible, and opens a headed Playwright browser when no session is
-      active.
+    - `make portfolio` is the canonical serve workflow.
+    - `make portfolio` prints a cache-busted URL so the browser does not reuse
+      a stale shell bundle.
+    - default launch is `none`; it does not open a Playwright or system browser.
     - `make portfolio` restarts the stable no-reload `server-daemon` before
-      opening so embedded fallback HTML updates deterministically.
+      printing the URL so embedded fallback HTML updates deterministically.
     - system-browser launch remains available with
       `make portfolio PORTFOLIO_LAUNCH=system`.
+    - Playwright launch remains available only with `make portfolio-playwright`.
     - `make portfolio-build` is the canonical build-only workflow and no-ops
       when local frontend source is absent.
     - stale alias `make portfolio-open` has been removed.

@@ -317,21 +317,15 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     .link-icon {
       display: inline-block;
-      font-family:
-        "Apple Symbols",
-        "Segoe UI Symbol",
-        "Noto Sans Symbols 2",
-        "Noto Sans Symbols",
-        sans-serif;
-      font-size: 0.9em;
-      font-style: normal;
-      font-weight: 400;
-      line-height: 1;
+      block-size: 0.78em;
+      inline-size: 0.78em;
       margin-inline-start: 0.22em;
+      stroke: currentColor;
+      stroke-linecap: square;
+      stroke-linejoin: miter;
+      stroke-width: 1.75;
       text-decoration: none;
-      text-transform: none;
       vertical-align: -0.08em;
-      white-space: nowrap;
     }
 
     @media (max-width: 1180px) {
@@ -368,6 +362,11 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       }
 
       .portal {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        min-height: 100svh;
+        padding-block-end: clamp(4rem, 9svh, 5.5rem);
         padding-block-start: var(--page-block-start);
         padding-inline: var(--page-inline);
       }
@@ -378,7 +377,8 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       }
 
       .identity-name {
-        font-size: 1.06rem;
+        font-size: clamp(0.68rem, 2.65vw, 0.9rem);
+        letter-spacing: clamp(0.1em, 2vw, 0.17em);
       }
 
       main {
@@ -387,7 +387,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
         position: relative;
         top: auto;
         transform: none;
-        padding-top: clamp(6.25rem, 15svh, 9rem);
+        padding-top: clamp(7rem, 18svh, 10rem);
       }
 
       .bio {
@@ -399,14 +399,14 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       }
 
       .copy-line {
-        font-size: clamp(1.3rem, 5.35vw, 1.85rem);
+        font-size: clamp(1.48rem, 6.1vw, 2.05rem);
         font-weight: 400;
         line-height: normal;
         max-width: 100%;
       }
 
       .because-link {
-        font-size: clamp(1.3rem, 5.35vw, 1.85rem);
+        font-size: clamp(1.48rem, 6.1vw, 2.05rem);
         line-height: normal;
       }
 
@@ -441,7 +441,10 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
         <section class="copy-block" aria-label="Origin and research focus">
           <p class="copy-line">
             design director who somehow became an AI&nbsp;research engineer
-            when one idea came with its own hypothesis. so now i design evals around the useful signals that models reveal
+            when one idea came with its own hypothesis.
+          </p>
+          <p class="copy-line">
+            so now i design evals around the useful signals that models reveal
             when they fail.
           </p>
         </section>
@@ -454,7 +457,11 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
             href="https://github.com/tryskian/polinko"
             aria-describedby="repo-link-destination"
           >
-            <span class="because-text">because every signal reshapes the experiment.</span> <span class="link-icon" aria-hidden="true">🡭</span>
+            <span class="because-text">because every signal reshapes the experiment.</span>
+            <svg class="link-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+              <path d="M4 12 12 4" fill="none"></path>
+              <path d="M6 4h6v6" fill="none"></path>
+            </svg>
           </a>
           <span class="repo-tooltip" aria-hidden="true">github.com/tryskian/polinko</span>
           <span id="repo-link-destination" class="sr-only">Opens the Polinko repository on GitHub.</span>
