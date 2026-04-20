@@ -382,12 +382,12 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       }
 
       main {
-        left: var(--page-inline);
-        inline-size: calc(100% - (var(--page-inline) * 2));
+        left: 0;
+        inline-size: 100%;
         position: relative;
         top: auto;
         transform: none;
-        padding-top: clamp(7rem, 18svh, 11rem);
+        padding-top: clamp(6.25rem, 15svh, 9rem);
       }
 
       .bio {
