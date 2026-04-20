@@ -117,15 +117,15 @@ OCR-forward reliability loops, and production-ready API foundations.
   - default mode is `paused` (single manual lane).
   - re-enable only with explicit human go/no-go.
 - Collaboration model is `Reasoning Loops`:
-  - imagineer leads hypotheses/theory framing, visual culture shape, and eval
+  - human lead owns hypotheses/theory framing, visual culture shape, and eval
     operations
-  - imagineer + engineer own eval process notes as a human co-reasoning layer
-  - imagineer is not expected to run terminal commands or Git operations
+  - human lead + engineer own eval process notes as a human co-reasoning layer
+  - human lead is not expected to run terminal commands or Git operations
   - engineer leads implementation, tooling/process decisions, validation, and
     execution recommendations
   - engineer executes commands, validations, and branch/PR/merge flow end-to-end
   - auxiliary UI lanes may implement surfaces, but eval policy authority remains
-    with the core engineer/imagineer loop
+    with the core human-lead/engineer loop
 - Human work-management authority is required in co-reasoning:
   - human sets objective, scope boundaries, and acceptance criteria
   - human resolves ambiguous meaning-level trade-offs where no deterministic

@@ -3697,3 +3697,28 @@
   page only needs to orient viewers and point them into the work. A tracked
   fallback keeps fresh clones deterministic without reviving the local-only
   pinned-stage/FPO frontend or turning the public site into another research UI.
+
+## D-227: Adopt human-lead terminology for repo-facing collaboration docs
+
+- Date: `2026-04-20`
+- Category: `collaboration_method`
+- Tags: `reasoning_loops`, `terminology`, `human_ai_collaboration`, `docs_hygiene`
+- Decision:
+  - use `human lead` as the repo-facing term for the human role in
+    `Reasoning Loops`.
+  - reserve `imagineer` as informal/internal language, not tracked governance
+    terminology.
+  - preserve older decision text as historical collaboration record; this
+    decision supersedes the term only, not the underlying responsibility split.
+  - keep the current role split:
+    - human lead owns hypotheses/theory framing, visual culture shape,
+      acceptance criteria, and go/no-go control.
+    - engineer owns implementation, command execution, validation, and
+      branch/PR/merge flow.
+- Validation:
+  - update current procedural docs to use `human lead`.
+  - leave historical `DECISIONS.md` wording auditable.
+- Why: `Imagineer` has external brand specificity and is better kept as
+  informal inside-language. `Human lead` is clearer, neutral, and still
+  preserves the actual collaboration model: human-directed meaning, scope, and
+  acceptance; engineer-executed implementation and validation.
