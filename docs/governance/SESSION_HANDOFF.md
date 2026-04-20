@@ -23,7 +23,8 @@ Last updated: 2026-04-19
       alignment through OCR, evals, evidence chains, and runtime tooling.`
     - topics emphasize Python/OpenAI, AI research/safety, human-AI/HCI,
       LLM evaluation, PDF processing, FastAPI, and SQLite.
-    - website URL should be `https://krystian.io/` once DNS/SSL propagation settles.
+    - website URL is live at `https://krystian.io/`, redirecting to
+      `https://www.krystian.io/`.
   - `main` is protected by the active `polinko` ruleset:
     - PR required
     - required checks: `test`, `markdownlint`
@@ -41,16 +42,30 @@ Last updated: 2026-04-19
     collaboration, not tooling-first implementation detail
   - the public website should be about/contact and point into the work, not
     recreate the research system
-- Latest merged checkpoint (2026-04-20):
-  - PR #330 merged to `main` through the protected PR flow.
+- Latest merged checkpoint (2026-04-19):
+  - PR #332 merged to `main` through the protected PR flow.
   - required checks passed: `test`, `markdownlint`.
   - local `main` was aligned with `origin/main` after the squash merge.
   - Netlify production builds from `main` are deterministic via
     `netlify.toml` and `tools/build_portfolio_static.py`.
-  - production deploy is ready at:
-    `https://69e587d4ac1836000802b59d--krystian-io.netlify.app`
+  - production deploy is live at:
+    `https://www.krystian.io/`
   - generated static output includes SEO identity metadata, `robots.txt`,
     `sitemap.xml`, and `/portfolio` -> `/` redirect.
+  - portfolio accessibility polish is merged:
+    - identity is a semantic `h1`
+    - visible body copy uses paragraphs
+    - CTA remains a real link with visible text as its accessible name
+    - URL destination hint appears on hover/focus and clears WCAG AA contrast
+      at `4.59:1`
+  - public credential incident is contained:
+    - exposed OpenAI-shaped strings were revoked/rotated by the human.
+    - GitHub secret scanning alerts #1 and #2 are resolved as `revoked`.
+    - public archive branches/tags holding the transcript snapshot were
+      deleted.
+    - private `tryskian/polinko-build-snapshot` archive repo was deleted.
+    - local stale archive refs were pruned and the old snapshot commit is no
+      longer present in this clone.
 - Portfolio shell route is active:
   - `GET /` -> redirect to `GET /portfolio`
   - `GET /portfolio` -> local `ui/index.html` only when intentionally present;
@@ -64,11 +79,12 @@ Last updated: 2026-04-19
   - tracked fallback lives in `api/app_factory.py`.
   - current heading: `Krystian Fernando`.
   - current bio line:
-    `design director who somehow became an AI research engineer after one idea came with its own hypothesis. so now i design evals around the useful signals that models reveal when they fail.`
+    `design director who somehow became an AI research engineer when one idea came with its own hypothesis. so now i design evals around the useful signals that models reveal when they fail.`
   - current method line: `for fun.`
   - current primary repo CTA:
     `because every signal reshapes the experiment.`
-  - primary repo CTA exposes a lightweight visible URL tooltip on hover/focus.
+  - primary repo CTA exposes a lightweight visible URL destination hint on
+    hover/focus.
   - contact drawer is intentionally removed for the ship pass; GitHub profile
     contact details carry the secondary contact job.
   - UI direction is current and locked for this checkpoint:
@@ -86,14 +102,14 @@ Last updated: 2026-04-19
   - repo-based Netlify deploys now work from `tryskian/polinko`.
   - Netlify DNS UI/API records are clean for apex + `www` using managed
     `NETLIFY`/`NETLIFYv6` records to `krystian-io.netlify.app`.
-  - authoritative NSOne DNS may still show stale Adobe/Fastly `151.101.*`
-    answers for apex/`www` until propagation settles.
+  - DNS/SSL is live.
+  - `https://krystian.io/` redirects to `https://www.krystian.io/`.
+  - `https://krystian.io/`, `/robots.txt`, and `/sitemap.xml` resolve to
+    `200` after redirect.
   - do not add manual apex `A 75.2.60.5` while managed Netlify DNS records are
     active.
-  - after DNS/SSL settles, verify `https://krystian.io/`,
-    `https://krystian.io/robots.txt`, and
-    `https://krystian.io/sitemap.xml`, then submit the sitemap in Google
-    Search Console.
+  - next optional SEO action: submit `https://www.krystian.io/sitemap.xml` in
+    Google Search Console.
 - Frontend source/build contract is intentionally minimal:
   - `frontend/` is local-only and ignored except `frontend/.gitkeep`
   - `ui/` is local-only and ignored except `ui/.gitkeep`
@@ -153,12 +169,11 @@ Last updated: 2026-04-19
 
 ## Next Execution Slice
 
-1. Portfolio/domain follow-up:
-   - wait for DNS/SSL propagation for `krystian.io` + `www.krystian.io`.
-   - verify canonical production pages and SEO files after DNS resolves to
-     Netlify.
-   - submit `https://krystian.io/sitemap.xml` in Google Search Console.
-   - tune copy/spacing only if explicitly requested.
+1. Application push:
+   - use the live site and public repo for applications on 2026-04-20.
+   - submit `https://www.krystian.io/sitemap.xml` in Google Search Console if
+     time permits; do not let SEO chores block applications.
+   - tune copy/spacing only if explicitly requested and truly blocking.
    - hold visual complexity:
      - no particle-field/WebGL pass
      - no multi-section public portfolio UI
