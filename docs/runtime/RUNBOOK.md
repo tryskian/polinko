@@ -116,7 +116,7 @@
 
 ## Command Ownership Rule (Reasoning Loops)
 
-1. Imagineer does not run terminal commands as part of normal workflow.
+1. Human lead does not run terminal commands as part of normal workflow.
 2. Engineer runs command execution, validation, and Git flow end-to-end.
 3. Human control stays on objective/scope/acceptance and go/no-go decisions.
 4. Execution-first default:
