@@ -15,6 +15,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 APP_FACTORY = REPO_ROOT / "api" / "app_factory.py"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "output" / "netlify"
+CANONICAL_URL = "https://krystian.io/"
 
 
 def _portfolio_html() -> str:
@@ -36,12 +37,34 @@ def main() -> None:
 
     index_path = output_dir / "index.html"
     redirects_path = output_dir / "_redirects"
+    robots_path = output_dir / "robots.txt"
+    sitemap_path = output_dir / "sitemap.xml"
 
     index_path.write_text(_portfolio_html(), encoding="utf-8")
-    redirects_path.write_text("/portfolio /index.html 200\n/* /index.html 200\n", encoding="utf-8")
+    redirects_path.write_text("/portfolio / 301!\n", encoding="utf-8")
+    robots_path.write_text(
+        f"User-agent: *\nAllow: /\nSitemap: {CANONICAL_URL}sitemap.xml\n",
+        encoding="utf-8",
+    )
+    sitemap_path.write_text(
+        "\n".join(
+            [
+                '<?xml version="1.0" encoding="UTF-8"?>',
+                '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+                "  <url>",
+                f"    <loc>{CANONICAL_URL}</loc>",
+                "  </url>",
+                "</urlset>",
+                "",
+            ]
+        ),
+        encoding="utf-8",
+    )
 
     print(f"Wrote {index_path.relative_to(REPO_ROOT)}")
     print(f"Wrote {redirects_path.relative_to(REPO_ROOT)}")
+    print(f"Wrote {robots_path.relative_to(REPO_ROOT)}")
+    print(f"Wrote {sitemap_path.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":
