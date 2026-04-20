@@ -646,14 +646,13 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     copy should be derived separately.
   - current fallback mode is a single-screen doorway placard:
     - heading: `Krystian Fernando`
-    - origin line:
-      `design director who somehow became an AI research engineer after one idea came with its own hypothesis.`
-    - research-focus line:
-      `so now i design evals around the useful signals models reveal when they fail.`
+    - bio line:
+      `design director who somehow became an AI research engineer after one idea came with its own hypothesis. so now i design evals around the useful signals that models reveal when they fail.`
     - method line: `for fun.`
     - repo CTA: `because every signal reshapes the experiment.`
-    - name-triggered hover/focus contact drawer exposes GitHub, LinkedIn, and
-      email
+    - repo CTA exposes a lightweight visible URL tooltip on hover/focus
+    - contact drawer is intentionally removed for the ship pass; contact
+      details are left to the GitHub profile/repo surface
   - desktop layout bottom-anchors the copy block with the bottom margin matching
     the left rail; narrow widths stack the same content responsively.
   - evidence visualizations are repo research instruments, not the public
