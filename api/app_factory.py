@@ -73,12 +73,6 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
         sans-serif;
       --page-inline: clamp(4.5rem, 8.8vw, 8rem);
       --page-block-start: clamp(3.5rem, 7vh, 5rem);
-      --drawer-ease: cubic-bezier(0.19, 1, 0.22, 1);
-      --drawer-hold: 0ms;
-      --drawer-open-duration: 340ms;
-      --drawer-close-duration: 560ms;
-      --drawer-fade: 1.5rem;
-      --drawer-open-size: 10.75rem;
       background: var(--paper);
       color: var(--ink);
       font-family: var(--font-main);
@@ -128,7 +122,6 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     .identity-name {
       color: var(--palette);
-      cursor: pointer;
       font-family: var(--font-main);
       font-size: 0.9rem;
       font-style: normal;
@@ -139,74 +132,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       white-space: nowrap;
     }
 
-    .identity-name:focus-visible {
-      outline: 1px solid currentColor;
-      outline-offset: 6px;
-    }
-
-    .social-links {
-      display: grid;
-      justify-items: start;
-      gap: 1rem;
-      -webkit-mask-image: linear-gradient(
-        to bottom,
-        #000 calc(100% - var(--drawer-fade)),
-        transparent 100%
-      );
-      mask-image: linear-gradient(
-        to bottom,
-        #000 calc(100% - var(--drawer-fade)),
-        transparent 100%
-      );
-      max-block-size: 0;
-      overflow: hidden;
-      pointer-events: none;
-      position: absolute;
-      top: calc(100% + 1.8rem);
-      transition: max-block-size var(--drawer-close-duration) var(--drawer-ease);
-      transition-delay: var(--drawer-hold);
-    }
-
-    .identity-menu:hover .social-links,
-    .identity-menu:focus-within .social-links {
-      max-block-size: var(--drawer-open-size);
-      pointer-events: auto;
-      transition-delay: 0s;
-      transition-duration: var(--drawer-open-duration);
-    }
-
-    .social-link {
-      align-items: center;
-      color: #6b6b6b;
-      display: inline-flex;
-      font-size: 0.9rem;
-      font-weight: 500;
-      justify-content: center;
-      letter-spacing: 0.17em;
-      line-height: 1;
-      margin: -0.45rem -0.12rem;
-      min-block-size: 2rem;
-      padding: 0.45rem 0.12rem;
-      position: relative;
-      text-decoration-line: underline;
-      text-decoration-thickness: 1px;
-      text-decoration-color: transparent;
-      text-underline-offset: 0.18em;
-      transition:
-        color 320ms cubic-bezier(0.22, 1, 0.36, 1),
-        text-decoration-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .social-link:hover,
-    .social-link:focus-visible {
-      color: var(--palette);
-      text-decoration-color: currentColor;
-    }
-
-    .because-link:focus-visible,
-    .social-link:focus-visible {
+    .because-link:focus-visible {
       outline: 1px solid currentColor;
       outline-offset: 6px;
     }
@@ -266,6 +192,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     .cta-stack {
       display: grid;
+      gap: 0.65rem;
       inline-size: min(83vw, 64rem);
       margin-left: 0;
       padding-top: 1rem;
@@ -292,10 +219,38 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       text-decoration-color: currentColor;
     }
 
+    .repo-tooltip {
+      color: #6b6b6b;
+      display: inline-block;
+      font-family: var(--font-main);
+      font-size: clamp(1.3rem, 2vw, 1.75rem);
+      font-weight: 500;
+      line-height: 1.1;
+      opacity: 0;
+      pointer-events: none;
+      text-decoration-line: underline;
+      text-decoration-thickness: 1px;
+      text-decoration-color: transparent;
+      text-underline-offset: 0.16em;
+      transform: translateY(-0.22rem);
+      transition:
+        color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 360ms cubic-bezier(0.22, 1, 0.36, 1),
+        text-decoration-color 320ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .cta-stack:hover .repo-tooltip,
+    .cta-stack:focus-within .repo-tooltip {
+      color: #4a4a4a;
+      opacity: 1;
+      text-decoration-color: currentColor;
+      transform: translateY(0);
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .because-link,
-      .social-links,
-      .social-link {
+      .repo-tooltip {
         transition: none;
       }
     }
@@ -372,8 +327,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
         top: var(--page-block-start);
       }
 
-      .identity-name,
-      .social-link {
+      .identity-name {
         font-size: 1.16rem;
       }
 
@@ -429,35 +383,15 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 </head>
 <body>
   <div class="portal">
-    <div class="identity-menu" aria-label="Contact">
-      <span class="identity-name" tabindex="0">Krystian Fernando</span>
-      <nav class="social-links" aria-label="Contact links">
-        <a
-          class="social-link"
-          href="https://github.com/tryskian"
-          aria-label="Open Krystian's GitHub profile"
-        >github</a>
-        <a
-          class="social-link"
-          href="https://www.linkedin.com/in/krystianfernando"
-          aria-label="Open Krystian Fernando on LinkedIn"
-        >linkedin</a>
-        <a
-          class="social-link"
-          href="mailto:hi@krystian.io"
-          aria-label="Email Krystian"
-        >email</a>
-      </nav>
+    <div class="identity-menu">
+      <span class="identity-name">Krystian Fernando</span>
     </div>
     <main>
       <div class="bio">
         <section class="copy-block" aria-label="Origin and research focus">
           <p class="copy-line">
-            design director who somehow became an AI research engineer
-            after one idea came with its own hypothesis.
-          </p>
-          <p class="copy-line">
-            so now i design evals around the useful signals models reveal
+            design director who somehow became an AI&nbsp;research engineer
+            after one idea came with its own hypothesis. so now i design evals around the useful signals that models reveal
             when they fail.
           </p>
         </section>
@@ -473,6 +407,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
           >
             <span class="because-text">because every signal reshapes the experiment.</span> <span class="link-icon" aria-hidden="true">🡭</span>
           </a>
+          <span class="repo-tooltip" aria-hidden="true">github.com/tryskian/polinko</span>
           <span id="repo-link-destination" class="sr-only">Opens the Polinko repository on GitHub.</span>
         </div>
       </div>

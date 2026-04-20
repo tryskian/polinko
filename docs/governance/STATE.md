@@ -56,18 +56,17 @@ Last updated: 2026-04-19
     present, otherwise a tracked in-app about/contact fallback.
   - the tracked fallback currently lives in `api/app_factory.py`:
     - heading: `Krystian Fernando`
-    - origin line:
-      `design director who somehow became an AI research engineer after one idea came with its own hypothesis.`
-    - research-focus line:
-      `so now i design evals around the useful signals models reveal when they fail.`
+    - bio line:
+      `design director who somehow became an AI research engineer after one idea came with its own hypothesis. so now i design evals around the useful signals that models reveal when they fail.`
     - method line: `for fun.`
     - primary repo CTA:
       `because every signal reshapes the experiment.`
-    - name-triggered hover/focus contact drawer is wired to GitHub, LinkedIn,
-      and `mailto:hi@krystian.io`.
+    - primary repo CTA exposes a lightweight visible URL tooltip on hover/focus.
+    - contact drawer is intentionally removed for the ship pass; GitHub profile
+      contact details carry the secondary contact job.
     - active visual direction:
       - austere editorial doorway
-      - small uppercase identity trigger with soft contact drawer
+      - small uppercase static identity
       - bottom-anchored desktop copy block
       - left-rail desktop CTA with body-copy sizing
       - responsive stacked narrow-width fallback
@@ -166,7 +165,7 @@ Last updated: 2026-04-19
 1. Portfolio shipping lane:
    - ship a minimal public doorway first:
      - single viewport
-     - name-triggered contact drawer
+     - static identity
      - concise human-facing origin/focus copy
      - understated repo CTA
    - avoid portfolio overbuild during this pass:
