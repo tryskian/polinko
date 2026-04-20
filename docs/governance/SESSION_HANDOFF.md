@@ -13,6 +13,10 @@ Last updated: 2026-04-19
 ## Current Snapshot
 
 - Backend-first runtime remains canonical.
+- Active local branch for this handoff:
+  - `codex/bigbrain/portfolio-overlay-polish`
+  - contains the current `/portfolio` contact-drawer/layout polish checkpoint
+  - not yet merged back to `main`
 - Repo-as-research-project is the portfolio architecture:
   - GitHub repository visibility is public.
   - public GitHub metadata is configured:
@@ -57,16 +61,17 @@ Last updated: 2026-04-19
   - tracked fallback lives in `api/app_factory.py`.
   - current heading: `Krystian Fernando`.
   - current origin line:
-    `design director who somehow became an AI research engineer, after one idea came with its own hypothesis.`
+    `design director who somehow became an AI research engineer after one idea came with its own hypothesis.`
   - current research-focus line:
     `so now i design evals around the useful signals models reveal when they fail.`
   - current method line: `for fun.`
   - current primary repo CTA:
     `because every signal reshapes the experiment.`
-  - top-right text contact links are wired to GitHub, LinkedIn, and
-    `mailto:hi@krystian.io`.
+  - name-triggered hover/focus contact drawer is wired to GitHub, LinkedIn,
+    and `mailto:hi@krystian.io`.
   - UI direction is current and locked for this checkpoint:
     - austere editorial doorway
+    - small uppercase identity trigger with soft contact drawer
     - bottom-anchored desktop copy block
     - left-rail desktop CTA with body-copy sizing
     - responsive stacked narrow-width fallback
@@ -136,6 +141,8 @@ Last updated: 2026-04-19
 
 1. Portfolio doorway follow-up:
    - keep current tracked fallback as the live local doorway checkpoint.
+   - decide whether the current contact drawer fade/mask motion is acceptable
+     before merge.
    - tune copy/spacing only if explicitly requested.
    - hold visual complexity:
      - no particle-field/WebGL pass

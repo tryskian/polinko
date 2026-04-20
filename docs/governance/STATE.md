@@ -57,16 +57,17 @@ Last updated: 2026-04-19
   - the tracked fallback currently lives in `api/app_factory.py`:
     - heading: `Krystian Fernando`
     - origin line:
-      `design director who somehow became an AI research engineer, after one idea came with its own hypothesis.`
+      `design director who somehow became an AI research engineer after one idea came with its own hypothesis.`
     - research-focus line:
       `so now i design evals around the useful signals models reveal when they fail.`
     - method line: `for fun.`
     - primary repo CTA:
       `because every signal reshapes the experiment.`
-    - top-right text contact links are wired to GitHub, LinkedIn, and
-      `mailto:hi@krystian.io`.
+    - name-triggered hover/focus contact drawer is wired to GitHub, LinkedIn,
+      and `mailto:hi@krystian.io`.
     - active visual direction:
       - austere editorial doorway
+      - small uppercase identity trigger with soft contact drawer
       - bottom-anchored desktop copy block
       - left-rail desktop CTA with body-copy sizing
       - responsive stacked narrow-width fallback
@@ -165,8 +166,9 @@ Last updated: 2026-04-19
 1. Portfolio shipping lane:
    - ship a minimal public doorway first:
      - single viewport
-     - name + one-line role + concise thesis line
-     - icon-only top-right placeholders
+     - name-triggered contact drawer
+     - concise human-facing origin/focus copy
+     - understated repo CTA
    - avoid portfolio overbuild during this pass:
      - no multi-section storytelling UI
      - no Sankey/data-viz/public evidence surfaces on the landing page

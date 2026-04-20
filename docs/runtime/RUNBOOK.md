@@ -647,12 +647,13 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
   - current fallback mode is a single-screen doorway placard:
     - heading: `Krystian Fernando`
     - origin line:
-      `design director who somehow became an AI research engineer, after one idea came with its own hypothesis.`
+      `design director who somehow became an AI research engineer after one idea came with its own hypothesis.`
     - research-focus line:
       `so now i design evals around the useful signals models reveal when they fail.`
     - method line: `for fun.`
     - repo CTA: `because every signal reshapes the experiment.`
-    - top-right text contact links expose GitHub, LinkedIn, and email
+    - name-triggered hover/focus contact drawer exposes GitHub, LinkedIn, and
+      email
   - desktop layout bottom-anchors the copy block with the bottom margin matching
     the left rail; narrow widths stack the same content responsively.
   - evidence visualizations are repo research instruments, not the public

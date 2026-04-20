@@ -94,7 +94,8 @@
     - `frontend/` and `ui/` are local-only working directories, ignored except
       tracked `.gitkeep` placeholders
     - current tracked fallback is a single-screen editorial doorway:
-      identity copy, primary repo CTA, and peripheral GitHub/email contact dots
+      identity copy, primary repo CTA, and a name-triggered contact drawer for
+      GitHub, LinkedIn, and email
     - evidence visualizations are repo research instruments, not public landing
       page requirements
     - WebGL/data-viz work remains optional; a flat SVG/D3 Sankey or alluvial
