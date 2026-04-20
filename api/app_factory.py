@@ -54,11 +54,64 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Krystian Fernando | AI Research Engineer</title>
+  <meta name="description" content="Krystian Fernando is a design director turned AI research engineer building Polinko, a full-stack research lab for human-AI evaluation and failure-signal analysis.">
+  <meta name="author" content="Krystian Fernando">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://krystian.io/">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='8' fill='%23262626'/%3E%3C/svg%3E">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://krystian.io/">
+  <meta property="og:site_name" content="Krystian Fernando">
+  <meta property="og:title" content="Krystian Fernando | AI Research Engineer">
+  <meta property="og:description" content="Design director turned AI research engineer building Polinko, a full-stack research lab for human-AI evaluation and failure-signal analysis.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Krystian Fernando | AI Research Engineer">
+  <meta name="twitter:description" content="Design director turned AI research engineer building Polinko, a full-stack research lab for human-AI evaluation and failure-signal analysis.">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://krystian.io/#website",
+          "url": "https://krystian.io/",
+          "name": "Krystian Fernando",
+          "alternateName": [
+            "krystian.io",
+            "Krystian.io",
+            "Krystian Fernando AI Research"
+          ],
+          "publisher": {
+            "@id": "https://krystian.io/#person"
+          }
+        },
+        {
+          "@type": "Person",
+          "@id": "https://krystian.io/#person",
+          "name": "Krystian Fernando",
+          "url": "https://krystian.io/",
+          "jobTitle": "AI Research Engineer",
+          "description": "Design director turned AI research engineer studying human-AI interaction through evaluation systems and failure-signal analysis.",
+          "sameAs": [
+            "https://github.com/tryskian",
+            "https://www.linkedin.com/in/krystianfernando/"
+          ],
+          "knowsAbout": [
+            "AI evaluation",
+            "human-AI interaction",
+            "AI safety",
+            "AI alignment",
+            "LLM product design",
+            "OCR reliability"
+          ]
+        }
+      ]
+    }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700;800&display=swap">
-  <title>Krystian Fernando</title>
   <style>
     :root {
       --paper: #fdfdfd;
