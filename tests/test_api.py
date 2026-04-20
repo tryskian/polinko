@@ -103,9 +103,16 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.headers.get("content-type"), "text/html; charset=utf-8")
         self.assertTrue(resp.text.lstrip().lower().startswith("<!doctype html>"))
-        self.assertIn("creative director who somehow became", resp.text)
+        self.assertIn("design director who somehow became", resp.text)
         self.assertIn("so now i design evals around the useful signals", resp.text)
         self.assertIn("because every signal reshapes the experiment.", resp.text)
+        self.assertIn('aria-label="Contact"', resp.text)
+        self.assertIn(">github</a>", resp.text)
+        self.assertIn(">linkedin</a>", resp.text)
+        self.assertIn(">email</a>", resp.text)
+        self.assertIn("https://github.com/tryskian", resp.text)
+        self.assertIn("https://www.linkedin.com/in/krystianfernando", resp.text)
+        self.assertIn("mailto:hi@krystian.io", resp.text)
 
     def test_portfolio_shell_assets_are_served(self) -> None:
         resp = self.client.get("/portfolio")

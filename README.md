@@ -71,8 +71,8 @@ remain ignored via `.gitignore`.
   - tracked fallback: in-app about/contact HTML when `ui/index.html` is absent
   - runtime route: `GET /portfolio`
   - public scope: about/contact doorway
-  - current fallback mode: single-screen editorial doorway with GitHub repo and
-    email contact dots
+  - current fallback mode: single-screen editorial doorway with repo CTA and a
+    name-triggered contact drawer for GitHub, LinkedIn, and email
 
 ## Quick Start
 
@@ -244,7 +244,8 @@ Eval visualization and surfaces:
   - current fallback mode is a single-screen editorial doorway
   - current copy identifies Krystian Fernando, frames the design-to-research
     path, and links the primary CTA to the public Polinko repo
-  - top-right peripheral contact dots link to GitHub and `hi@krystian.io`
+  - name-triggered hover/focus contact drawer exposes GitHub, LinkedIn, and
+    email
   - public portfolio direction is about/contact; evidence visualizations remain
     repo research instruments
   - flat SVG/D3 Sankey or alluvial view remains the accessibility,
