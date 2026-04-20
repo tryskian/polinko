@@ -1,0 +1,3 @@
+[build]
+  command = "python3 tools/build_portfolio_static.py"
+  publish = "output/netlify"
