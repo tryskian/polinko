@@ -157,7 +157,7 @@
    - check Netlify deploy state is `ready`
    - verify `/`, `/robots.txt`, `/sitemap.xml`, and `/portfolio` redirect
    - verify DNS for `krystian.io` and `www.krystian.io` resolves to Netlify
-   - submit `https://krystian.io/sitemap.xml` in Google Search Console after
+   - submit `https://www.krystian.io/sitemap.xml` in Google Search Console after
      DNS/SSL settles
 6. When Netlify DNS uses managed `NETLIFY`/`NETLIFYv6` records, do not add
    manual apex `A 75.2.60.5` records unless deliberately switching away from

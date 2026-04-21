@@ -106,10 +106,10 @@ Last updated: 2026-04-20
       `https://69e587d4ac1836000802b59d--krystian-io.netlify.app`
   - SEO identity signals are active in the generated doorway:
     - title: `Krystian Fernando | AI Research Engineer`
-    - canonical: `https://krystian.io/`
+    - canonical: `https://www.krystian.io/`
     - meta description, Open Graph, Twitter card metadata
     - JSON-LD `WebSite` + `Person` structured data reinforcing
-      `Krystian Fernando` and `krystian.io`
+      `Krystian Fernando` and `www.krystian.io`
   - DNS/SSL status:
     - Netlify DNS/SSL is live for apex + `www`.
     - `https://krystian.io/` redirects to `https://www.krystian.io/`.

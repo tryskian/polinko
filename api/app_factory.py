@@ -58,10 +58,10 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   <meta name="description" content="Krystian Fernando is a design director turned AI research engineer building Polinko, a full-stack research lab for human-AI evaluation and failure-signal analysis.">
   <meta name="author" content="Krystian Fernando">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://krystian.io/">
+  <link rel="canonical" href="https://www.krystian.io/">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='8' fill='%23262626'/%3E%3C/svg%3E">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://krystian.io/">
+  <meta property="og:url" content="https://www.krystian.io/">
   <meta property="og:site_name" content="Krystian Fernando">
   <meta property="og:title" content="Krystian Fernando | AI Research Engineer">
   <meta property="og:description" content="Design director turned AI research engineer building Polinko, a full-stack research lab for human-AI evaluation and failure-signal analysis.">
@@ -74,8 +74,8 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       "@graph": [
         {
           "@type": "WebSite",
-          "@id": "https://krystian.io/#website",
-          "url": "https://krystian.io/",
+          "@id": "https://www.krystian.io/#website",
+          "url": "https://www.krystian.io/",
           "name": "Krystian Fernando",
           "alternateName": [
             "krystian.io",
@@ -83,14 +83,14 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
             "Krystian Fernando AI Research"
           ],
           "publisher": {
-            "@id": "https://krystian.io/#person"
+            "@id": "https://www.krystian.io/#person"
           }
         },
         {
           "@type": "Person",
-          "@id": "https://krystian.io/#person",
+          "@id": "https://www.krystian.io/#person",
           "name": "Krystian Fernando",
-          "url": "https://krystian.io/",
+          "url": "https://www.krystian.io/",
           "jobTitle": "AI Research Engineer",
           "description": "Design director turned AI research engineer studying human-AI interaction through evaluation systems and failure-signal analysis.",
           "sameAs": [
@@ -193,7 +193,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     .bio {
       display: flex;
       flex-direction: column;
-      gap: 2.1rem;
+      gap: clamp(3.05rem, 5.4svh, 4.4rem);
       align-items: flex-start;
       bottom: var(--page-inline);
       inline-size: 100%;
@@ -248,7 +248,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       gap: 0;
       inline-size: min(83vw, 64rem);
       margin-left: 0;
-      padding-top: 1rem;
+      padding-top: 0;
     }
 
     .because-link:hover,
@@ -362,32 +362,34 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       }
 
       .portal {
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
+        display: grid;
+        grid-template-rows: auto 1fr;
         min-height: 100svh;
-        padding-block-end: clamp(4rem, 9svh, 5.5rem);
-        padding-block-start: var(--page-block-start);
+        padding-block-end: clamp(4.25rem, 8svh, 5.5rem);
+        padding-block-start: clamp(4.7rem, 9svh, 6.25rem);
         padding-inline: var(--page-inline);
       }
 
       .identity-menu {
-        left: var(--page-inline);
-        top: var(--page-block-start);
+        left: auto;
+        position: static;
+        top: auto;
       }
 
       .identity-name {
-        font-size: clamp(0.68rem, 2.65vw, 0.9rem);
-        letter-spacing: clamp(0.1em, 2vw, 0.17em);
+        font-size: clamp(0.76rem, 2.95vw, 0.96rem);
+        letter-spacing: clamp(0.11em, 1.75vw, 0.16em);
       }
 
       main {
+        align-items: flex-end;
+        display: flex;
         left: 0;
         inline-size: 100%;
         position: relative;
         top: auto;
         transform: none;
-        padding-top: clamp(7rem, 18svh, 10rem);
+        padding-top: clamp(5rem, 12svh, 8rem);
       }
 
       .bio {
@@ -395,7 +397,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       }
 
       .bio {
-        gap: 2rem;
+        gap: clamp(2.7rem, 5.8svh, 4.15rem);
       }
 
       .copy-line {
