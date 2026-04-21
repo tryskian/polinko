@@ -1,204 +1,98 @@
+<!-- @format -->
+
 # Polinko Charter
 
 ## Mission
 
-Build a reliable GPT-powered assistant with stable tone, persistent memory,
-OCR-forward reliability loops, and production-ready API foundations.
+Build a human-led, AI-assisted research system for evaluating human-AI
+interaction, OCR reliability, and failure signals through inspectable software,
+tests, diagrams, and evidence.
 
-## Product Behaviour Rules
+## Durable Rules
 
-- Prompt authority is `core/prompts.py` (`ACTIVE_PROMPT` / `ACTIVE_PROMPT_VERSION`).
-- Style intent:
-  - Conversational, laid back, witty, resonant, creative
-  - Concise but insightful
-  - UK English
-  - No follow-up questions
-  - No human emotions/traits language
-
-## Engineering Principles
-
-- Keep behaviour stable and backend-first; legacy runtime web UI is archived
-  from active operations.
-- Treat the repository itself as the research project:
-  - tracked README/docs/runtime/eval/governance files remain canonical
-    research documentation
-  - local/private lanes remain local unless explicitly approved for publication
-  - public-facing docs are derived versions, not replacements for canonical
-    research docs
-- Portfolio shell routes are allowed as presentation-only surfaces:
+- Backend-first runtime is canonical:
+  - FastAPI API + CLI are the execution surfaces.
+  - presentation layers must not redefine eval policy.
+- Treat the repository as the research object:
+  - tracked docs/code/tests/evals remain canonical
+  - public-facing docs are derived views, not replacements
+  - local/private lanes stay local unless explicitly approved for publication
+- The public website is a doorway, not the research system:
   - `GET /` redirects to `GET /portfolio`
-  - `GET /portfolio` serves an about/contact doorway by default
-  - the public website should point to the research project, not recreate it
-- Eval direction/orchestration is owned by the core backend lane; UI work is
-  presentation-only and must not redefine eval policy.
-- Preserve prompt continuity through minimal, explicit prompt instructions.
-- Fail fast on config/auth issues.
-- Prefer deterministic, testable backend changes.
-- Keep eval gate semantics strictly binary (`pass`/`fail`) across API, CLI, and
-  tooling.
-- Keep operator notes out of gate logic:
-  - notes are for human review/refinement workflow
-  - notes must not mutate runtime config/prompt wiring by default
-  - behavioural changes come through explicit eval-process updates, validated in
-    the normal quality gates
-- Keep OCR as the primary reliability lane:
-  - lockset lane is release-gating and must remain green
-  - growth lane is fail-tolerant and used to measure pass-from-fail movement
-  - recurring growth execution is batch-first; sync is reserved for interactive probes
-- Rate and budget controls are tracked separately:
-  - throughput limits (`RPM`/`TPM`/queue)
-  - spend/credits (usage + billing)
-- Run `make doctor-env` when local environment behaviour looks suspicious.
-- Run `make quality-gate` before push when backend/prompt/retrieval logic changes.
-- Streamline-first operator rule: keep one canonical make target per workflow action
-  and remove superseded aliases in the same change.
+  - the site should point into the repo/work, not recreate it
+- Eval semantics remain strictly binary:
+  - `pass`/`fail` only
+  - lockset lane is release-gating
+  - growth lane is fail-tolerant and signal-seeking
+- Prefer deterministic, testable changes.
+- Fail fast on config/auth/runtime issues.
+- Keep one canonical command surface per operator action.
+- Inspect evidence before interpretation:
+  - source files, logs, screenshots, transcripts, and reports win over summary
+  - if a named source has not been inspected, do not speak as if it has
+- Preserve evidence chains:
+  - do not replace raw evidence with recursive summaries
+  - archive before delete
 
-## Workflow
+## Working Model
 
-- Inspect before optimise when system intent or provenance is unclear.
-- Inspect-first is mandatory when concrete evidence is provided:
-  - if a source/path/image/log is named, inspect it before interpretation
-  - do not substitute summary/inference for direct inspection
-  - if not yet inspected, state that explicitly and pause claims
-  - inference-before-inspection is a fail event in this workflow
-- `docs/runtime/RUNBOOK.md` (`Inspect-First Rule (Directed Mode)`) is the
-  execution-level authority for this contract.
-- Codex preview contract (persistent):
-  - when sharing local image previews in Codex app responses, always embed
-    them inline with Markdown image syntax using absolute filesystem paths:
-    `![label](/absolute/path/to/image.png)`
-  - do not use plain-text file paths, `file://` URLs, or fenced code blocks for
-    preview images
-- Long-term context reliability depends on evidence chains, not recursive
-  summaries:
-  - transcripts/screenshots/raw reports are source evidence, not decorative
-    archive
-  - decisions encode durable process, engineering/tooling, runtime, and eval
-    governance interpretation
-  - state/handoff files point to current constraints and must not replace or
-    duplicate the underlying evidence trail
-  - do not delete or demote evidence files as a context-cleanup shortcut
-  - if a summary conflicts with source evidence, source evidence wins and the
-    summary must be corrected
-- Human-directed precision takes priority over agent-side summarisation/cleanup.
-- Keep historical eval/runtime context visible through `docs/eval/`; keep active
-  runtime gate semantics binary-only.
-- Fail signal is first-class research data:
-  - pass-only dashboards are insufficient and can be misleading
-  - strict binary gates should expose FAIL pressure directly
-  - manual eval notes remain the human interpretation layer and must not be
-    flattened into gate arithmetic
-- Never delete local files as a first action:
-  - archive first
-  - delete only when explicitly approved as a final cleanup step
-- Beta tracking policy:
-  - track beta eval docs/assets in `docs/eval/beta_1_0/` and
-    `docs/eval/beta_2_0/` for transition traceability
-  - keep raw DB snapshots and confidential internals local-only unless
-    explicitly approved for tracking
-- During eval wiring lock, avoid DB init/refresh flows; allow only archive/reset
-  maintenance commands until spec sign-off
-  (`docs/runtime/RUNBOOK.md` is canonical in this phase).
-- Keep benchmarking product-supportive:
-  - hypothesis benchmarking informs build decisions but does not replace product delivery
-  - use one canonical benchmark spec to control sequencing and confounders
-  - keep benchmark/case-study framing stack-scoped (baseline/advanced/binary),
-    not model-name scoped
-- Engineer owns proactive technical hygiene:
-  - identify drift/gremlin-risk paths early
-  - execute cleanup/validation/doc alignment without waiting for reminders
-  - escalate only when trade-offs or approvals are genuinely required
-  - execute user requests directly by default
-  - use shell-safe PR body workflow:
-    - never pass multiline Markdown directly in `gh pr create --body "..."`
-    - use `--body-file <path>` (preferred) or a quoted heredoc
-    - avoid inline backticks in shell-quoted body strings
-- Automation lane policy:
-  - default mode is `paused` (single manual lane).
-  - re-enable only with explicit human go/no-go.
-- Collaboration model is `Reasoning Loops`:
-  - human lead owns hypotheses/theory framing, visual culture shape, and eval
-    operations
-  - human lead + engineer own eval process notes as a human co-reasoning layer
-  - human lead is not expected to run terminal commands or Git operations
-  - engineer leads implementation, tooling/process decisions, validation, and
-    execution recommendations
-  - engineer executes commands, validations, and branch/PR/merge flow end-to-end
-  - auxiliary UI lanes may implement surfaces, but eval policy authority remains
-    with the core human-lead/engineer loop
-- Human work-management authority is required in co-reasoning:
-  - human sets objective, scope boundaries, and acceptance criteria
-  - human resolves ambiguous meaning-level trade-offs where no deterministic
-    rule exists
-  - human controls go/no-go and next-slice prioritisation
-  - engineer executes proactively inside that control frame
+- Human lead owns:
+  - hypotheses
+  - scope boundaries
+  - acceptance criteria
+  - meaning-level trade-offs
+  - go/no-go decisions
+- Engineer owns:
+  - implementation
+  - validation
+  - Git/branch/PR flow
+  - proactive hygiene/drift cleanup
+  - execution recommendations
+- Default execution model:
+  - feature branch per change set
+  - protected-main PR flow
+  - end-of-day finishes merged and clean on `main`
+- Parallelism rule:
+  - worktrees for parallel code changes
+  - multi-agent only after architecture and acceptance criteria are explicit
 
 ## Documentation Governance
 
-- `docs/governance/DECISIONS.md` is append-only for durable human-AI process,
-  engineering/tooling, runtime/API, dependency/workflow, and eval-governance
-  decisions.
-- Do not append transient visual direction, portfolio taste, daily design
-  exploration, or current implementation notes to `DECISIONS.md`.
-- Running docs are refreshed in place, not appended as historical logs:
-  - `docs/governance/STATE.md` is the current-truth snapshot.
-  - `docs/governance/SESSION_HANDOFF.md` is the next-session operating
-    context.
-  - `docs/runtime/RUNBOOK.md` is procedure and command ownership.
-  - `docs/runtime/ARCHITECTURE.md` is stable system shape and contracts.
-- `docs/peanut/` is the local-only lane for visual references, theory,
-  transcripts, design exploration, and human-facing working notes.
-- Daily startup and end-of-day procedures live in `docs/runtime/RUNBOOK.md`.
+- `docs/governance/DECISIONS.md`
+  - append-only durable decisions
+  - process, engineering/tooling, runtime/API, dependency/workflow, and eval
+    governance only
+- `docs/governance/STATE.md`
+  - current truth
+  - no daily logs
+- `docs/governance/SESSION_HANDOFF.md`
+  - next-session operating context
+  - current only
+- `docs/runtime/RUNBOOK.md`
+  - procedures and command ownership
+- `docs/runtime/ARCHITECTURE.md`
+  - stable system shape and contracts
+- `docs/peanut/`
+  - local-only exploration lane for transcripts, design refs, theory, and
+    working notes
 
-## Core Runtime
+## Current Scope
 
-- CLI runner: `app.py`
-- API entrypoint: `server.py` (FastAPI)
-- API implementation: `api/app_factory.py`
-- Prompt versions: `core/prompts.py`
-- API tests: `tests/test_api.py`
-- Historical eval transition evidence is maintained under
-  `docs/eval/beta_1_0/`.
+- In scope:
+  - local-first backend/runtime work
+  - OCR-forward eval hardening
+  - repo-native evidence/reporting surfaces
+  - lean public doorway pointing into the repo
+  - static D3/SVG evidence diagrams beside Mermaid when added
+- Out of scope for the public site right now:
+  - full portfolio rebuild
+  - animation-first exploration
+  - interactive evidence dashboards as a portfolio burden
+  - presentation-layer changes that alter backend/eval contracts
 
 ## Security / Ops Baseline
 
-- `OPENAI_API_KEY` required at startup.
-- `.env` supports `KEY=value` and quoted `KEY="value"` formats.
-- Backend endpoints do not require `x-api-key`; localhost runtime is the
-  trusted development boundary.
-- `/chat` rate limited (`POLINKO_RATE_LIMIT_PER_MINUTE`) with `Retry-After` header on 429.
-- Structured JSON logs with request IDs in `server.py`.
-
-## Scope (Current)
-
-- In scope: local development, API hardening, test coverage.
-- In scope: retrieval/OCR/file-search reliability and eval hardening.
-- In scope: OCR-forward eval operations (`lockset` + `growth`) with
-  transcript-backed case mining and stability replay.
-- In scope: portfolio presentation shell work as an about/contact doorway to
-  the repo-as-research-project.
-- In scope: local notebook visual analysis for OCR evals (`make notes`).
-- Archived: web UI as an active execution surface; retained only in
-  live-archive references.
-- Paused: cloud deployment automation (removed from repo for now; Azure is the preferred target when resumed).
-- Parked: recover/use the Pol-1 ChatKit-inspired skin from the Beta 1/nautorus
-  archive as a Polinko-owned portfolio chat surface; UI inspiration only, with
-  Polinko backend, vectors, evals, and data contracts remaining canonical.
-- Include later (deferred cookbook track):
-  - see `docs/runtime/RUNBOOK.md` (`Cookbook Queue`)
-- Cookbook priority pin (next integration kernel):
-  - `Vision Fine-tuning on GPT-4o for Visual Question Answering` is first in
-    the cookbook integration sequence.
-- Runtime progress pin (next engineering kernel):
-  - build the integrated manual/eval data surface from `manual_evals.db`
-    (`make manual-evals-db`)
-  - treat current and Beta 1.0 history DBs as import sources only; the
-    app-facing eval surface should be one canonical derived DB with era/source
-    provenance
-  - expose read-only API endpoints for summary + runs + thumbnails + session
-    feedback/checkpoint context
-  - keep UI work presentation-only against that API contract
-  - defer UI styling/interaction iterations until backend kernels are stable
-- Portfolio details, visual direction, IA, and daily design notes belong in
-  running docs, Notion, or `docs/peanut/`, not in this charter unless they
-  change durable engineering/process governance.
+- `OPENAI_API_KEY` is required at startup.
+- Localhost runtime is the trusted development boundary.
+- `/chat` remains rate-limited.
+- Run `make doctor-env` when the environment looks suspicious.

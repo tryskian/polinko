@@ -665,41 +665,18 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
 - `GET /` redirects to `GET /portfolio`.
 - `GET /portfolio` serves local UI shell output when present, otherwise the
   tracked in-app about/contact fallback.
-  - public portfolio scope is an about/contact doorway into the repo-as-research
-    project.
-  - tracked README/docs remain canonical research documentation; public-facing
-    copy should be derived separately.
-  - current fallback mode is a single-screen doorway placard:
-    - heading: `Krystian Fernando`
-    - bio line:
-      `design director who somehow became an AI research engineer after one idea came with its own hypothesis. so now i design evals around the useful signals that models reveal when they fail.`
-    - method line: `for fun.`
-    - repo CTA: `because every signal reshapes the experiment.`
-    - repo CTA exposes a lightweight visible URL tooltip on hover/focus
-    - contact drawer is intentionally removed for the ship pass; contact
-      details are left to the GitHub profile/repo surface
-  - desktop layout bottom-anchors the copy block with the bottom margin matching
-    the left rail; narrow widths stack the same content responsively.
-  - evidence visualizations are repo research instruments, not the public
-    website burden:
-    - WebGL/data-viz work remains optional research instrumentation
-    - DBs, Mermaid diagrams, and eval reports belong in the repo research lane
-  - flat SVG/D3 Sankey or alluvial view remains the accessibility,
-    reduced-motion, performance, and direct-inspection fallback.
-  - the former local pinned-stage/FPO frontend is archived design context unless
-    deliberately restored on a new branch.
-  - if WebGL interaction returns, it should be drag-to-rotate only; do not
-    capture wheel/trackpad gestures inside the canvas.
-  - do not add weird headlines, decorative placeholder copy/cards, invented
-    overlays, fake fallback data, or fake/decorative FPO evidence content to
-    this surface
+  - public website scope remains a lean about/contact doorway into the repo.
+  - tracked docs remain canonical; public-facing copy is derived.
+  - evidence visuals belong in the repo proof lane, not the landing page.
+  - static D3/SVG evidence diagrams beside Mermaid are preferred over new
+    portfolio UI complexity.
   - canonical build flow:
     - local source: `frontend/` (ignored except `frontend/.gitkeep`)
     - local generated output: `ui/` (ignored except `ui/.gitkeep`)
     - tracked fallback: in-app about/contact HTML when `ui/index.html` is absent
     - build-only command: `make portfolio-build`; it no-ops when local frontend
       source is absent
-    - human serve command: `make portfolio` (aliases: `make rebuild`,
+    - canonical serve command: `make portfolio` (aliases: `make rebuild`,
       `make portfolio-rebuild`) rebuilds, serves, and prints a cache-busted URL
       against local frontend output or the tracked fallback
     - default launch is `none`; it does not open a Playwright or system browser

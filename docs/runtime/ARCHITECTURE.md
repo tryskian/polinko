@@ -93,16 +93,11 @@
       in-app about/contact fallback
     - `frontend/` and `ui/` are local-only working directories, ignored except
       tracked `.gitkeep` placeholders
-    - current tracked fallback is a single-screen editorial doorway:
-      identity copy and a primary repo CTA
-    - primary repo CTA exposes a lightweight visible URL tooltip on hover/focus
-    - contact drawer is intentionally out of the ship pass; contact details
-      remain on the GitHub profile/repo surface
-    - evidence visualizations are repo research instruments, not public landing
-      page requirements
-    - WebGL/data-viz work remains optional; a flat SVG/D3 Sankey or alluvial
-      view remains the accessibility, reduced-motion, performance, and
-      direct-inspection fallback if evidence visuals return
+    - public website scope is a lean doorway into the repo, not a recreation of
+      the research system
+    - evidence visuals remain repo research instruments
+    - static SVG/D3 evidence views remain the preferred fallback when those
+      visuals are surfaced
     - no-data behavior must stay visible in any evidence surface that consumes
       `GET /portfolio/sankey-data`
     - the former pinned-stage/FPO frontend is archived design context unless
