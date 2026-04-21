@@ -15,7 +15,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 APP_FACTORY = REPO_ROOT / "api" / "app_factory.py"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "output" / "netlify"
-CANONICAL_URL = "https://krystian.io/"
+CANONICAL_URL = "https://www.krystian.io/"
 
 
 def _portfolio_html() -> str:
