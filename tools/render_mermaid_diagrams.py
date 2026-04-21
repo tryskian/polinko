@@ -12,6 +12,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SOURCE = REPO_ROOT / "docs/public/DIAGRAMS.md"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "docs/public/diagrams"
 MMDC = REPO_ROOT / "node_modules/.bin/mmdc"
+MERMAID_CONFIG = REPO_ROOT / "tools" / "mermaid_config.json"
 
 
 @dataclass(frozen=True)
@@ -66,6 +67,8 @@ def render_mermaid_diagrams(
             "Mermaid CLI is not installed. Run `npm install` to install "
             "`@mermaid-js/mermaid-cli`."
         )
+    if not MERMAID_CONFIG.exists():
+        raise FileNotFoundError(f"Mermaid config not found: {MERMAID_CONFIG}")
 
     diagrams = _extract_diagrams(markdown_path)
     if not diagrams:
@@ -84,8 +87,8 @@ def render_mermaid_diagrams(
                 [
                     str(MMDC),
                     "-q",
-                    "-t",
-                    "neutral",
+                    "-c",
+                    str(MERMAID_CONFIG),
                     "-b",
                     "transparent",
                     "-i",
