@@ -6,7 +6,24 @@ This page collects repo-native diagrams and visual evidence pointers. Canonical
 runtime and eval contracts remain in `docs/runtime/ARCHITECTURE.md` and
 `docs/eval/README.md`.
 
+Static SVG exports generated from this page:
+
+- [Polinko Evidence Sankey (D3)](diagrams/polinko-evidence-sankey.svg)
+- [Baseline LLM Product Pipeline](diagrams/baseline-llm-product-pipeline.svg)
+- [Polinko Binary Eval Loop](diagrams/polinko-binary-eval-loop.svg)
+- [Beta Evidence Map](diagrams/beta-evidence-map.svg)
+
+## Polinko Evidence Sankey (D3)
+
+![Polinko Evidence Sankey](diagrams/polinko-evidence-sankey.svg)
+
+Static D3 Sankey generated from the real `/portfolio/sankey-data` payload. It
+shows how Beta 1.0 manual evals flow through manual outcomes and signal
+classes into the current OCR lane weighting surface.
+
 ## Baseline LLM Product Pipeline
+
+![Baseline LLM Product Pipeline](diagrams/baseline-llm-product-pipeline.svg)
 
 ```mermaid
 flowchart TD
@@ -28,6 +45,8 @@ flowchart TD
 
 ## Polinko Binary Eval Loop
 
+![Polinko Binary Eval Loop](diagrams/polinko-binary-eval-loop.svg)
+
 ```mermaid
 flowchart LR
   A["Source input"] --> B["Runtime output"]
@@ -42,6 +61,8 @@ flowchart LR
 ```
 
 ## Beta Evidence Map
+
+![Beta Evidence Map](diagrams/beta-evidence-map.svg)
 
 ```mermaid
 flowchart LR
