@@ -2,9 +2,14 @@
 
 # Polinko
 
-Polinko is a human-led, AI-assisted research and engineering project. It is a
-repo-native AI evaluation lab with a local-first FastAPI backend, OCR-forward
-reliability loops, binary eval gates, and evidence-first documentation.
+[![CI](https://github.com/tryskian/polinko/actions/workflows/ci.yml/badge.svg)](https://github.com/tryskian/polinko/actions/workflows/ci.yml)
+![Binary Eval](https://img.shields.io/badge/eval-binary_pass%2Ffail-4E79A7)
+![Proof Surface](https://img.shields.io/badge/proof-repo_native-76B7B2)
+
+Polinko exists to make AI failure inspectable enough to act on. It is a
+human-led, AI-assisted, repo-native evaluation lab with a local-first FastAPI
+backend, OCR-forward reliability loops, binary eval gates, and evidence-first
+documentation.
 
 The website is a lightweight doorway into the work. The repository is the
 proof surface.
@@ -19,6 +24,7 @@ path:
 - [Hypothesis](docs/public/HYPOTHESIS.md)
 - [Research](docs/public/RESEARCH.md)
 - [Diagrams](docs/public/DIAGRAMS.md)
+- [Public Proof](docs/public-proof/README.md)
 
 ## What This Repo Is
 

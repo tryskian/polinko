@@ -1,0 +1,28 @@
+{
+  "source_commit": "744f49d2d0b109fb34e67b08357a8ca3e1b3ce89",
+  "source_commit_url": "https://github.com/tryskian/polinko/commit/744f49d2d0b109fb34e67b08357a8ca3e1b3ce89",
+  "curation_policy": "Curated public proof only. Local operational artefacts remain under .local/ and are not auto-promoted.",
+  "artifacts": [
+    {
+      "type": "visual",
+      "label": "Evidence Sankey PNG",
+      "path": "docs/public-proof/polinko-evidence-sankey.png",
+      "source_path": "docs/public/diagrams/polinko-evidence-sankey.svg"
+    },
+    {
+      "type": "eval_report",
+      "label": "OCR binary eval snapshot",
+      "path": "docs/eval/beta_2_0/ocr-20260328-184147.json"
+    },
+    {
+      "type": "eval_report",
+      "label": "Hallucination eval snapshot",
+      "path": "docs/eval/beta_2_0/hallucination-20260328-184216.json"
+    },
+    {
+      "type": "diagram",
+      "label": "Runtime architecture SVG",
+      "path": "docs/runtime/architecture.svg"
+    }
+  ]
+}
