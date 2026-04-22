@@ -6,8 +6,8 @@ Polinko is a human-led, AI-assisted research engineering project for studying
 human-AI interaction through binary evals, OCR reliability, and failure
 signals.
 
-Use this public docs lane to understand the project without reading the full
-working archive first.
+This lane is for readers who want the research and proof surface without
+starting in the operator archive.
 
 ## Read In Order
 

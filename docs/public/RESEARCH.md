@@ -4,8 +4,8 @@
 
 Polinko separates public explanation from working research infrastructure.
 
-Use this note to understand what counts as evidence without needing to read the
-entire operator archive first.
+Use this note to understand what counts as evidence, which beta eras matter,
+and how the repo separates public proof from local working material.
 
 ## Evidence Layers
 

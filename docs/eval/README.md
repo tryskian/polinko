@@ -2,6 +2,19 @@
 
 # Eval Evidence Map
 
+## When to Read This
+
+- Eval-era interpretation:
+  use this when you need to understand how Beta 1.0 and Beta 2.0 relate.
+- Evidence-source tracing:
+  use this when you need to know which local DBs and report lanes power which
+  views.
+- Public-proof context:
+  use this when you need the shortest path from repo eval artefacts to visible
+  diagrams and evidence surfaces.
+
+![Polinko evidence sankey](../public/diagrams/polinko-evidence-sankey.svg)
+
 This directory preserves first-class eval evidence eras. Beta 1.0 and Beta 2.0
 must be interpreted together; Beta 1.0 is not lesser evidence just because its
 shape is older and more manually evaluated.

@@ -2,6 +2,15 @@
 
 # Runbook
 
+## When to Read This
+
+- Startup and environment checks:
+  use this when you need the canonical repo startup path.
+- Debugging or operational recovery:
+  use this when runtime behaviour, eval outputs, or local state look wrong.
+- Procedure lookup:
+  use this when you need the sanctioned command surface instead of memory.
+
 ## Branch, Fork, and Worktree Policy
 
 1. Default workflow is branch-based in the canonical local repo:
