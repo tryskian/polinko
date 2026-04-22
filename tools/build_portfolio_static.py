@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import os
+import shutil
 from pathlib import Path
 
 
@@ -16,15 +17,47 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 APP_FACTORY = REPO_ROOT / "api" / "app_factory.py"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "output" / "netlify"
 CANONICAL_URL = "https://www.krystian.io/"
+FAVICON_SVG_SOURCE = REPO_ROOT / "api" / "static" / "favicon.svg"
 
 
 def _portfolio_html() -> str:
     module = ast.parse(APP_FACTORY.read_text(encoding="utf-8"))
+    simple_constants: dict[str, str] = {}
+    for node in module.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if len(node.targets) != 1 or not isinstance(node.targets[0], ast.Name):
+            continue
+        target_name = node.targets[0].id
+        try:
+            value = ast.literal_eval(node.value)
+        except Exception:
+            continue
+        if isinstance(value, str):
+            simple_constants[target_name] = value
+
     for node in module.body:
         if not isinstance(node, ast.Assign):
             continue
         for target in node.targets:
             if isinstance(target, ast.Name) and target.id == "_PORTFOLIO_FALLBACK_HTML":
+                if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                    return node.value.value
+                if (
+                    isinstance(node.value, ast.Call)
+                    and isinstance(node.value.func, ast.Attribute)
+                    and node.value.func.attr == "replace"
+                    and isinstance(node.value.func.value, ast.Constant)
+                    and isinstance(node.value.func.value.value, str)
+                    and len(node.value.args) == 2
+                ):
+                    old_value = ast.literal_eval(node.value.args[0])
+                    replacement_arg = node.value.args[1]
+                    if isinstance(replacement_arg, ast.Name):
+                        new_value = simple_constants[replacement_arg.id]
+                    else:
+                        new_value = ast.literal_eval(replacement_arg)
+                    return node.value.func.value.value.replace(old_value, new_value)
                 return ast.literal_eval(node.value)
     raise RuntimeError("Could not find _PORTFOLIO_FALLBACK_HTML in api/app_factory.py")
 
@@ -39,6 +72,7 @@ def main() -> None:
     redirects_path = output_dir / "_redirects"
     robots_path = output_dir / "robots.txt"
     sitemap_path = output_dir / "sitemap.xml"
+    favicon_svg_path = output_dir / "favicon.svg"
 
     index_path.write_text(_portfolio_html(), encoding="utf-8")
     redirects_path.write_text("/portfolio / 301!\n", encoding="utf-8")
@@ -60,11 +94,13 @@ def main() -> None:
         ),
         encoding="utf-8",
     )
+    shutil.copyfile(FAVICON_SVG_SOURCE, favicon_svg_path)
 
     print(f"Wrote {index_path.relative_to(REPO_ROOT)}")
     print(f"Wrote {redirects_path.relative_to(REPO_ROOT)}")
     print(f"Wrote {robots_path.relative_to(REPO_ROOT)}")
     print(f"Wrote {sitemap_path.relative_to(REPO_ROOT)}")
+    print(f"Wrote {favicon_svg_path.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":

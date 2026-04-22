@@ -109,9 +109,15 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("Krystian Fernando", resp.text)
         self.assertIn("https://github.com/tryskian/polinko", resp.text)
         self.assertIn("github.com/tryskian/polinko", resp.text)
+        self.assertIn('href="/favicon.svg"', resp.text)
         self.assertNotIn('aria-label="Contact"', resp.text)
         self.assertNotIn("social-links", resp.text)
         self.assertNotIn("mailto:hi@krystian.io", resp.text)
+
+    def test_portfolio_favicons_are_served(self) -> None:
+        svg_resp = self.client.get("/favicon.svg")
+        self.assertEqual(svg_resp.status_code, 200)
+        self.assertEqual(svg_resp.headers.get("content-type"), "image/svg+xml")
 
     def test_portfolio_shell_assets_are_served(self) -> None:
         resp = self.client.get("/portfolio")
