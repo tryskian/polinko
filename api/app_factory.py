@@ -48,6 +48,12 @@ from core.vector_store import VectorMatch, VectorStore
 
 logger = logging.getLogger("polinko.api")
 
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+_PORTFOLIO_FAVICON_SVG = _REPO_ROOT / "api" / "static" / "favicon.svg"
+_PORTFOLIO_DESCRIPTION = (
+    "Krystian Fernando is a design director turned AI research engineer "
+    "designing evals around the useful signals models reveal when they fail."
+)
 
 _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 <html lang="en">
@@ -55,19 +61,19 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Krystian Fernando | AI Research Engineer</title>
-  <meta name="description" content="Krystian Fernando is a design director turned AI research engineer building Polinko, a full-stack research lab for human-AI evaluation and failure-signal analysis.">
+  <meta name="description" content="__PORTFOLIO_DESCRIPTION__">
   <meta name="author" content="Krystian Fernando">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.krystian.io/">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='8' fill='%23262626'/%3E%3C/svg%3E">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.krystian.io/">
   <meta property="og:site_name" content="Krystian Fernando">
   <meta property="og:title" content="Krystian Fernando | AI Research Engineer">
-  <meta property="og:description" content="Design director turned AI research engineer building Polinko, a full-stack research lab for human-AI evaluation and failure-signal analysis.">
+  <meta property="og:description" content="__PORTFOLIO_DESCRIPTION__">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Krystian Fernando | AI Research Engineer">
-  <meta name="twitter:description" content="Design director turned AI research engineer building Polinko, a full-stack research lab for human-AI evaluation and failure-signal analysis.">
+  <meta name="twitter:description" content="__PORTFOLIO_DESCRIPTION__">
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -92,7 +98,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
           "name": "Krystian Fernando",
           "url": "https://www.krystian.io/",
           "jobTitle": "AI Research Engineer",
-          "description": "Design director turned AI research engineer studying human-AI interaction through evaluation systems and failure-signal analysis.",
+          "description": "__PORTFOLIO_DESCRIPTION__",
           "sameAs": [
             "https://github.com/tryskian",
             "https://www.linkedin.com/in/krystianfernando/"
@@ -473,7 +479,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   </div>
 </body>
 </html>
-"""
+""".replace("__PORTFOLIO_DESCRIPTION__", _PORTFOLIO_DESCRIPTION)
 
 
 _LATENCY_BUCKET_EDGES_MS = (10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2000.0)
@@ -3439,6 +3445,12 @@ def create_app(config: AppConfig) -> FastAPI:
     @app.get("/")
     def portfolio_root_redirect() -> RedirectResponse:
         return RedirectResponse(url="/portfolio")
+
+    @app.get("/favicon.svg", include_in_schema=False)
+    def portfolio_favicon_svg() -> FileResponse:
+        if not _PORTFOLIO_FAVICON_SVG.is_file():
+            raise HTTPException(status_code=404, detail="Favicon file not found.")
+        return FileResponse(path=_PORTFOLIO_FAVICON_SVG, media_type="image/svg+xml")
 
     @app.get("/portfolio")
     def portfolio_shell() -> Any:

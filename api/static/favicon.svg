@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="k dot">
+  <rect width="512" height="512" rx="72" fill="#181918"/>
+  <g fill="#25ef70" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="76" font-weight="700" letter-spacing="-4">
+    <text x="70" y="118" xml:space="preserve">oooo           </text>
+    <text x="70" y="176" xml:space="preserve">`888           </text>
+    <text x="70" y="234" xml:space="preserve"> 888  oooo     </text>
+    <text x="70" y="292" xml:space="preserve"> 888 .8P'      </text>
+    <text x="70" y="350" xml:space="preserve"> 888888.       </text>
+    <text x="70" y="408" xml:space="preserve"> 888 `88b.  .o.</text>
+    <text x="70" y="466" xml:space="preserve">o888o o888o Y8P</text>
+  </g>
+</svg>
