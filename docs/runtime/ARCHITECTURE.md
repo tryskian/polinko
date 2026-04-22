@@ -1,5 +1,10 @@
 # Architecture
 
+![Architecture overview](./architecture.svg)
+
+This page is the fast structural map of the repo: start here when you need to
+trace how runtime wiring, data surfaces, and eval evidence fit together.
+
 ## Top-Level Map
 
 - `app.py`

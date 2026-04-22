@@ -4,6 +4,9 @@
 
 Polinko is a human-led research and engineering collaboration.
 
+Use this note when you need the authorship boundary first: who owns the claims,
+how AI is used, and what remains human-judgment work.
+
 The research framework, hypotheses, judgement, evidence selection, and final
 claims are authored by Krystian Fernando. AI systems are used as research and
 engineering instruments inside that process, not as independent authors or

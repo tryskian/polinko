@@ -1,5 +1,32 @@
 # Decisions Log
 
+This file is the durable archive of Polinko's engineering, eval, workflow, and
+publication decisions. Read it as a chronological decision ledger, not as a
+quickstart document.
+
+## How To Use This File
+
+- Need the current rules:
+  start with [docs/governance/CHARTER.md](./CHARTER.md) and
+  [docs/governance/STATE.md](./STATE.md).
+- Need operating procedure:
+  use [docs/runtime/RUNBOOK.md](../runtime/RUNBOOK.md).
+- Need the long-form change history:
+  use this file and scan by era first.
+
+## Era Guide
+
+- `D-001` to `D-014`
+  - initial runtime, repo-structure, and CI baselines
+- `D-015` to `D-058`
+  - eval hardening, governance, collaboration, and early portfolio direction
+- `D-059` to `D-090`
+  - Reasoning Loops, binary cutover, archive cleanup, and active UI retirement
+- `D-091` to `D-189`
+  - transcript-led OCR mining, growth-lane design, and observability tightening
+- `D-193` onward
+  - portfolio/public-proof surface, docs, and ship-week operating choices
+
 ## Taxonomy
 
 - `Category` values:
