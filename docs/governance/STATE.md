@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-04-21
+Last updated: 2026-04-23
 
 ## Current Truth
 
@@ -28,6 +28,11 @@ Last updated: 2026-04-21
     - `robots.txt`
     - `sitemap.xml`
   - canonical URL/SEO metadata should use `https://www.krystian.io/`
+- Public docs/proof surface is cleaner than the initial application push:
+  - `docs/` now has a landing page
+  - architecture has a visual-first entry
+  - README carries badges and a compact public-proof packet link
+  - curated public proof lives under `docs/public-proof/`
 - Portfolio surface remains intentionally lean:
   - single-screen about/contact doorway
   - tracked fallback lives in `api/app_factory.py`
@@ -40,6 +45,8 @@ Last updated: 2026-04-21
   - repo CTA is a real link with a visible destination hint
   - no contact drawer
   - no animation-first/UI-heavy exploration in the public surface
+  - favicon now uses tracked `api/static/favicon.png`
+  - current visible identity line uses `design creative` on the public site
 - Local frontend contract is intentionally minimal:
   - `frontend/` is local-only and ignored except `.gitkeep`
   - `ui/` is local-only and ignored except `.gitkeep`
@@ -51,8 +58,9 @@ Last updated: 2026-04-21
   - `make portfolio-build` no-ops when local frontend source is absent
 - Evidence/visualization lane:
   - Mermaid diagrams remain the structural baseline
-  - static D3/SVG diagrams beside Mermaid are the next visual proof add
-  - D3 diagrams should be real generated evidence artifacts, not portfolio UI
+  - static Mermaid render pipeline is repo-pinned
+  - static D3/SVG diagrams now sit beside Mermaid as real proof artifacts
+  - D3 diagrams should stay real generated evidence artifacts, not portfolio UI
   - no fake placeholder evidence panels
 - Eval lane remains OCR-forward and binary:
   - lockset is release-gating
@@ -71,7 +79,7 @@ Last updated: 2026-04-21
 ## Active Priorities
 
 1. Keep the public doorway stable and credible.
-2. Improve repo proof surfaces, especially static diagrams/evidence visuals.
+2. Keep repo proof surfaces compact, visual, and easy to scan.
 3. Continue OCR reliability work without changing binary gate semantics.
 4. Keep governance/runtime docs aligned and non-duplicative.
 

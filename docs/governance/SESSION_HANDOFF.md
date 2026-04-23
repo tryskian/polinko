@@ -2,7 +2,7 @@
 
 # Session Handoff
 
-Last updated: 2026-04-21
+Last updated: 2026-04-23
 
 ## Startup
 
@@ -23,25 +23,29 @@ Last updated: 2026-04-21
 - Backend/API remains canonical; the website is a doorway only.
 - Public site is live at `https://www.krystian.io/` with apex redirecting.
 - Public repo/docs are the main proof surface.
-- Current in-flight branch for the latest polish/docs work:
-  - `codex/bigbrain/repo-docs-cleanup`
-- Latest local checkpoint on that branch:
-  - `d8d5aee` `Polish portfolio spacing and canonical URL`
-- Governance docs are being trimmed to remove duplication and stale detail:
-  - `CHARTER` = durable rules
-  - `STATE` = current truth
-  - `SESSION_HANDOFF` = next-session operating context
+- README/docs/proof cleanup is merged on `main`:
+  - `#346` docs entrypoints/navigation
+  - `#347` README badges + public proof packet
+- Current in-flight branch:
+  - `codex/bigbrain/favicon-png-swap`
+- Current branch checkpoints:
+  - `72e2333` `Swap portfolio favicon to PNG`
+  - `ab90842` `Update portfolio identity copy`
+- Current site copy and asset state:
+  - public site uses `favicon.png`
+  - visible identity line uses `design creative`
 - OpenAI application push is already complete; do not split into overlapping
   engineering applications this cycle.
+- Local application tailoring work exists under `docs/peanut/` and `output/pdf/`
+  but remains ignored/local-only.
 
 ## Next Slice
 
-1. Finish docs cleanup and merge the current branch.
+1. Merge the current favicon/site-copy branch when ready.
 2. Keep site follow-ups small only:
-   - socials/contact polish
-   - favicon
+   - contact/social placement polish
    - no rebuild
-3. Add static D3/SVG evidence diagrams beside Mermaid when ready.
+3. Continue role-specific local application materials only as needed.
 
 ## Guardrails
 
