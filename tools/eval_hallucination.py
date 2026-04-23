@@ -9,6 +9,7 @@ from typing import Literal
 import requests
 from dotenv import load_dotenv
 from openai import OpenAI
+from pydantic import BaseModel, Field
 
 from tools.eval_gate import resolve_binary_gate
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
@@ -16,27 +17,21 @@ from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
 
 
-_JUDGE_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": [
-        "pass",
-        "score",
-        "risk",
-        "grounding",
-        "notes",
-    ],
-    "properties": {
-        "pass": {"type": "boolean"},
-        "score": {"type": "integer", "minimum": 0, "maximum": 100},
-        "risk": {"type": "string", "enum": ["low", "medium", "high"]},
-        "grounding": {
-            "type": "string",
-            "enum": ["grounded", "partially_grounded", "ungrounded"],
-        },
-        "notes": {"type": "string"},
-    },
-}
+class HallucinationJudgeResponse(BaseModel):
+    pass_: bool = Field(alias="pass")
+    score: int
+    risk: Literal["low", "medium", "high"]
+    grounding: Literal["grounded", "partially_grounded", "ungrounded"]
+    notes: str
+
+    model_config = {
+        "extra": "forbid",
+        "populate_by_name": True,
+    }
+
+    @property
+    def passed(self) -> bool:
+        return self.pass_
 
 _MIN_ACCEPTABLE_SCORE = 5
 EvaluationMode = Literal["judge", "deterministic", "auto"]
@@ -79,30 +74,6 @@ def _request_json(
     except ValueError:
         return {}
     return body if isinstance(body, dict) else {}
-
-
-def _extract_output_text(response: Any) -> str:
-    output_text = getattr(response, "output_text", None)
-    if isinstance(output_text, str) and output_text.strip():
-        return output_text.strip()
-    output = getattr(response, "output", None)
-    if isinstance(output, list):
-        fragments: list[str] = []
-        for item in output:
-            content = getattr(item, "content", None)
-            if not isinstance(content, list):
-                continue
-            for block in content:
-                text = getattr(block, "text", None)
-                if isinstance(text, str) and text.strip():
-                    fragments.append(text.strip())
-                    continue
-                value = getattr(text, "value", None)
-                if isinstance(value, str) and value.strip():
-                    fragments.append(value.strip())
-        if fragments:
-            return "\n".join(fragments)
-    raise RuntimeError("Judge model returned no parseable text output.")
 
 
 def _load_cases(path: Path) -> list[dict[str, Any]]:
@@ -287,24 +258,21 @@ def _judge_case(
         f"forbidden_phrases: {forbidden_text}\n\n"
         f"assistant_answer: {answer}"
     )
-    response = judge_client.responses.create(
+    response = judge_client.responses.parse(
         model=model,
         input=prompt,
-        text={
-            "format": {
-                "type": "json_schema",
-                "name": "hallucination_judge_v1",
-                "strict": True,
-                "schema": _JUDGE_SCHEMA,
-            }
-        },
+        text_format=HallucinationJudgeResponse,
     )
-    payload = json.loads(_extract_output_text(response))
-    if not isinstance(payload, dict):
+    payload = response.output_parsed
+    if payload is None:
         raise RuntimeError("Judge payload must be a JSON object.")
-    if not isinstance(payload.get("pass"), bool):
-        raise RuntimeError("Judge payload missing boolean 'pass'.")
-    return payload
+    return {
+        "pass": payload.passed,
+        "score": payload.score,
+        "risk": payload.risk,
+        "grounding": payload.grounding,
+        "notes": payload.notes,
+    }
 
 
 def _contains_forbidden_phrases(answer: str, forbidden_phrases: list[str]) -> list[str]:

@@ -63,7 +63,7 @@ class ConfigTests(unittest.TestCase):
         self.assertTrue(cfg.vector_exclude_current_session)
         self.assertFalse(cfg.vector_local_embedding_fallback)
         self.assertFalse(cfg.responses_orchestration_enabled)
-        self.assertEqual(cfg.responses_orchestration_model, "gpt-5-chat-latest")
+        self.assertEqual(cfg.responses_orchestration_model, "gpt-5.4")
         self.assertIsNone(cfg.responses_vector_store_id)
         self.assertFalse(cfg.responses_include_web_search)
         self.assertEqual(cfg.responses_history_turn_limit, 12)

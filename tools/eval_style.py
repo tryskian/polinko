@@ -4,11 +4,12 @@ import os
 import re
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import requests
 from dotenv import load_dotenv
 from openai import OpenAI
+from pydantic import BaseModel, Field
 
 from tools.eval_gate import resolve_binary_gate
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
@@ -16,17 +17,20 @@ from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
 
 
-_JUDGE_SCHEMA: dict[str, Any] = {
-    "type": "object",
-    "additionalProperties": False,
-    "required": ["pass", "score", "fit", "notes"],
-    "properties": {
-        "pass": {"type": "boolean"},
-        "score": {"type": "integer", "minimum": 0, "maximum": 100},
-        "fit": {"type": "string", "enum": ["on_style", "mixed", "off_style"]},
-        "notes": {"type": "string"},
-    },
-}
+class StyleJudgeResponse(BaseModel):
+    pass_: bool = Field(alias="pass")
+    score: int
+    fit: Literal["on_style", "mixed", "off_style"]
+    notes: str
+
+    model_config = {
+        "extra": "forbid",
+        "populate_by_name": True,
+    }
+
+    @property
+    def passed(self) -> bool:
+        return self.pass_
 
 
 def _headers() -> dict[str, str]:
@@ -66,13 +70,6 @@ def _request_json(
     except ValueError:
         return {}
     return body if isinstance(body, dict) else {}
-
-
-def _extract_output_text(response: Any) -> str:
-    output_text = getattr(response, "output_text", None)
-    if isinstance(output_text, str) and output_text.strip():
-        return output_text.strip()
-    raise RuntimeError("Judge model returned no parseable text output.")
 
 
 def _word_count(text: str) -> int:
@@ -228,24 +225,20 @@ def _judge_case(
         f"user_query: {case['query']}\n"
         f"assistant_answer: {answer}"
     )
-    response = judge_client.responses.create(
+    response = judge_client.responses.parse(
         model=model,
         input=prompt,
-        text={
-            "format": {
-                "type": "json_schema",
-                "name": "style_judge_v1",
-                "strict": True,
-                "schema": _JUDGE_SCHEMA,
-            }
-        },
+        text_format=StyleJudgeResponse,
     )
-    payload = json.loads(_extract_output_text(response))
-    if not isinstance(payload, dict):
+    payload = response.output_parsed
+    if payload is None:
         raise RuntimeError("Judge payload must be a JSON object.")
-    if not isinstance(payload.get("pass"), bool):
-        raise RuntimeError("Judge payload missing boolean 'pass'.")
-    return payload
+    return {
+        "pass": payload.passed,
+        "score": payload.score,
+        "fit": payload.fit,
+        "notes": payload.notes,
+    }
 
 
 def _resolve_case_status(*, attempt_statuses: list[str], pass_attempts: int, min_pass_attempts: int) -> str:
