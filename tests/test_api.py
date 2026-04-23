@@ -107,8 +107,15 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("so now i design evals around the useful signals that", resp.text)
         self.assertIn("because every signal reshapes the experiment.", resp.text)
         self.assertIn("Krystian Fernando", resp.text)
-        self.assertIn("https://github.com/tryskian/polinko", resp.text)
-        self.assertIn("github.com/tryskian/polinko", resp.text)
+        self.assertIn(
+            "https://github.com/tryskian/polinko/tree/main/docs/research",
+            resp.text,
+        )
+        self.assertIn(
+            "github.com/tryskian/polinko/tree/main/docs/research",
+            resp.text,
+        )
+        self.assertIn("Opens the Polinko research packet on GitHub.", resp.text)
         self.assertIn('href="/favicon.png"', resp.text)
         self.assertNotIn('aria-label="Contact"', resp.text)
         self.assertNotIn("social-links", resp.text)
