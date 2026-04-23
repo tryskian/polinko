@@ -11,7 +11,7 @@ Last updated: 2026-04-23
   - prompt/runtime behavior stays minimal and deterministic.
 - Repo-as-research-project is the active public architecture:
   - repository is public
-  - repo is the proof surface
+  - repo is the research surface
   - website is a lightweight doorway into the work
   - public-facing docs live under `docs/public/`
 - Branch protection on `main` remains active:
@@ -28,11 +28,11 @@ Last updated: 2026-04-23
     - `robots.txt`
     - `sitemap.xml`
   - canonical URL/SEO metadata should use `https://www.krystian.io/`
-- Public docs/proof surface is cleaner than the initial application push:
+- Public docs/research surface is cleaner than the initial application push:
   - `docs/` now has a landing page
   - architecture has a visual-first entry
-  - README carries badges and a compact public-proof packet link
-  - curated public proof lives under `docs/public-proof/`
+  - README carries badges and a compact research packet link
+  - curated research packet lives under `docs/research/`
 - Portfolio surface remains intentionally lean:
   - single-screen about/contact doorway
   - tracked fallback lives in `api/app_factory.py`
@@ -79,7 +79,7 @@ Last updated: 2026-04-23
 ## Active Priorities
 
 1. Keep the public doorway stable and credible.
-2. Keep repo proof surfaces compact, visual, and easy to scan.
+2. Keep repo research surfaces compact, visual, and easy to scan.
 3. Continue OCR reliability work without changing binary gate semantics.
 4. Keep governance/runtime docs aligned and non-duplicative.
 

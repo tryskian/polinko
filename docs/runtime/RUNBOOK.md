@@ -676,7 +676,7 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
   tracked in-app about/contact fallback.
   - public website scope remains a lean about/contact doorway into the repo.
   - tracked docs remain canonical; public-facing copy is derived.
-  - evidence visuals belong in the repo proof lane, not the landing page.
+  - evidence visuals belong in the repo research lane, not the landing page.
   - static D3/SVG evidence diagrams beside Mermaid are preferred over new
     portfolio UI complexity.
   - canonical build flow:

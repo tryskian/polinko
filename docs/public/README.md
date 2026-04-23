@@ -6,7 +6,7 @@ Polinko is a human-led, AI-assisted research engineering project for studying
 human-AI interaction through binary evals, OCR reliability, and failure
 signals.
 
-This lane is for readers who want the research and proof surface without
+This lane is for readers who want the research surface without
 starting in the operator archive.
 
 ## Read In Order
@@ -32,5 +32,5 @@ starting in the operator archive.
 
 ## Boundary
 
-The public website is a doorway. The repository is the portfolio and proof
+The public website is a doorway. The repository is the portfolio and research
 surface.

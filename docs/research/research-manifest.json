@@ -1,12 +1,12 @@
 {
   "source_commit": "744f49d2d0b109fb34e67b08357a8ca3e1b3ce89",
   "source_commit_url": "https://github.com/tryskian/polinko/commit/744f49d2d0b109fb34e67b08357a8ca3e1b3ce89",
-  "curation_policy": "Curated public proof only. Local operational artefacts remain under .local/ and are not auto-promoted.",
+  "curation_policy": "Curated public research only. Local operational artefacts remain under .local/ and are not auto-promoted.",
   "artifacts": [
     {
       "type": "visual",
       "label": "Evidence Sankey PNG",
-      "path": "docs/public-proof/polinko-evidence-sankey.png",
+      "path": "docs/research/polinko-evidence-sankey.png",
       "source_path": "docs/public/diagrams/polinko-evidence-sankey.svg"
     },
     {
