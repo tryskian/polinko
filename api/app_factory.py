@@ -49,7 +49,7 @@ from core.vector_store import VectorMatch, VectorStore
 logger = logging.getLogger("polinko.api")
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
-_PORTFOLIO_FAVICON_SVG = _REPO_ROOT / "api" / "static" / "favicon.svg"
+_PORTFOLIO_FAVICON_PNG = _REPO_ROOT / "api" / "static" / "favicon.png"
 _PORTFOLIO_DESCRIPTION = (
     "Krystian Fernando is a design director turned AI research engineer "
     "designing evals around the useful signals models reveal when they fail."
@@ -65,7 +65,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   <meta name="author" content="Krystian Fernando">
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://www.krystian.io/">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/favicon.png" type="image/png">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.krystian.io/">
   <meta property="og:site_name" content="Krystian Fernando">
@@ -3446,11 +3446,11 @@ def create_app(config: AppConfig) -> FastAPI:
     def portfolio_root_redirect() -> RedirectResponse:
         return RedirectResponse(url="/portfolio")
 
-    @app.get("/favicon.svg", include_in_schema=False)
-    def portfolio_favicon_svg() -> FileResponse:
-        if not _PORTFOLIO_FAVICON_SVG.is_file():
+    @app.get("/favicon.png", include_in_schema=False)
+    def portfolio_favicon_png() -> FileResponse:
+        if not _PORTFOLIO_FAVICON_PNG.is_file():
             raise HTTPException(status_code=404, detail="Favicon file not found.")
-        return FileResponse(path=_PORTFOLIO_FAVICON_SVG, media_type="image/svg+xml")
+        return FileResponse(path=_PORTFOLIO_FAVICON_PNG, media_type="image/png")
 
     @app.get("/portfolio")
     def portfolio_shell() -> Any:
