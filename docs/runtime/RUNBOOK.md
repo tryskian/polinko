@@ -826,7 +826,7 @@ Hash fields in responses:
    - `POLINKO_RESPONSES_ORCHESTRATION_ENABLED=true`
    - `POLINKO_RESPONSES_VECTOR_STORE_ID=vs_...`
 2. Optional settings:
-   - `POLINKO_RESPONSES_MODEL` (default `gpt-5-chat-latest`)
+   - `POLINKO_RESPONSES_MODEL` (default `gpt-5.4`)
    - `POLINKO_RESPONSES_INCLUDE_WEB_SEARCH` (`true`/`false`)
    - `POLINKO_RESPONSES_HISTORY_TURN_LIMIT` (default `12`)
    - `POLINKO_RESPONSES_PDF_INGEST_ENABLED` (`true`/`false`, requires vector

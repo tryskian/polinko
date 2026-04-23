@@ -250,8 +250,8 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     )
     responses_orchestration_enabled = _parse_bool_env("POLINKO_RESPONSES_ORCHESTRATION_ENABLED", False)
     responses_orchestration_model = (
-        (_read_env("POLINKO_RESPONSES_MODEL", "gpt-5-chat-latest") or "gpt-5-chat-latest").strip()
-        or "gpt-5-chat-latest"
+        (_read_env("POLINKO_RESPONSES_MODEL", "gpt-5.4") or "gpt-5.4").strip()
+        or "gpt-5.4"
     )
     raw_responses_vector_store_id = _read_env("POLINKO_RESPONSES_VECTOR_STORE_ID")
     responses_vector_store_id = (

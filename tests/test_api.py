@@ -61,7 +61,7 @@ class PolinkoApiTests(unittest.TestCase):
         deps.vector_store = None
         deps.embedding_client = None
         deps.responses_orchestration_enabled = False
-        deps.responses_orchestration_model = "gpt-5-chat-latest"
+        deps.responses_orchestration_model = "gpt-5.4"
         deps.responses_vector_store_id = None
         deps.responses_include_web_search = False
         deps.responses_history_turn_limit = 12
@@ -1132,7 +1132,7 @@ class PolinkoApiTests(unittest.TestCase):
     def test_chat_success_with_responses_orchestration(self) -> None:
         deps = server.get_runtime_deps()
         deps.responses_orchestration_enabled = True
-        deps.responses_orchestration_model = "gpt-5-chat-latest"
+        deps.responses_orchestration_model = "gpt-5.4"
         deps.responses_vector_store_id = "vs_test_123"
         deps.responses_include_web_search = True
         deps.governance_allow_web_search = True
@@ -1156,7 +1156,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("kwargs", captured)
 
         kwargs = captured["kwargs"]
-        self.assertEqual(kwargs["model"], "gpt-5-chat-latest")
+        self.assertEqual(kwargs["model"], "gpt-5.4")
         self.assertIn("input", kwargs)
         self.assertIn("[USER_MESSAGE]", kwargs["input"])
         tools = kwargs["tools"]
@@ -1195,7 +1195,7 @@ class PolinkoApiTests(unittest.TestCase):
     def test_chat_orchestration_blocks_web_search_when_governed(self) -> None:
         deps = server.get_runtime_deps()
         deps.responses_orchestration_enabled = True
-        deps.responses_orchestration_model = "gpt-5-chat-latest"
+        deps.responses_orchestration_model = "gpt-5.4"
         deps.responses_vector_store_id = "vs_test_block"
         deps.responses_include_web_search = True
         deps.governance_enabled = True
