@@ -22,8 +22,8 @@ Last updated: 2026-04-23
 
 - Backend/API remains canonical; the website is a doorway only.
 - Public site is live at `https://www.krystian.io/` with apex redirecting.
-- Public repo/docs are the main proof surface.
-- README/docs/proof cleanup is merged on `main`:
+- Public repo/docs are the main research surface.
+- README/docs/research cleanup is merged on `main`:
   - `#346` docs entrypoints/navigation
   - `#347` README badges + public proof packet
 - Current in-flight branch:

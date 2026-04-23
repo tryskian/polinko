@@ -25,7 +25,7 @@ quickstart document.
 - `D-091` to `D-189`
   - transcript-led OCR mining, growth-lane design, and observability tightening
 - `D-193` onward
-  - portfolio/public-proof surface, docs, and ship-week operating choices
+  - portfolio/research-packet surface, docs, and ship-week operating choices
 
 ## Taxonomy
 
@@ -3720,7 +3720,7 @@ quickstart document.
   - `make portfolio PORTFOLIO_LAUNCH=playwright`
   - Playwright desktop and mobile snapshots from the rebuilt local route.
   - PR #324 passed required GitHub checks: `test`, `markdownlint`.
-- Why: The repo is the research object and proof surface. The public landing
+- Why: The repo is the research object and research surface. The public landing
   page only needs to orient viewers and point them into the work. A tracked
   fallback keeps fresh clones deterministic without reviving the local-only
   pinned-stage/FPO frontend or turning the public site into another research UI.
