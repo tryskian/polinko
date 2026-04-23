@@ -51,7 +51,7 @@ logger = logging.getLogger("polinko.api")
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _PORTFOLIO_FAVICON_PNG = _REPO_ROOT / "api" / "static" / "favicon.png"
 _PORTFOLIO_DESCRIPTION = (
-    "Krystian Fernando is a design director turned AI research engineer "
+    "Krystian Fernando is a design creative turned AI research engineer "
     "designing evals around the useful signals models reveal when they fail."
 )
 
@@ -448,7 +448,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       <div class="bio">
         <section class="copy-block" aria-label="Origin and research focus">
           <p class="copy-line">
-            design director who somehow became an AI&nbsp;research engineer
+            design creative who somehow became an AI&nbsp;research engineer
             when one idea came with its own hypothesis.
           </p>
           <p class="copy-line">
