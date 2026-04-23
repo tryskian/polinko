@@ -1677,7 +1677,6 @@ def _build_structured_extraction(
     responses_client = deps.responses_client
 
     source_snippet = text[:_STRUCTURED_SOURCE_MAX_CHARS]
-    schema_name, schema_payload = _structured_schema_for_source_type(source_type=source_type)
     prompt = (
         "Return a strict JSON object matching the provided schema. "
         "Preserve metadata values exactly. Improve only preview readability.\n\n"
@@ -1694,25 +1693,14 @@ def _build_structured_extraction(
         f"{source_snippet}"
     )
     try:
-        response = responses_client.responses.create(
+        response = responses_client.responses.parse(
             model=deps.extraction_structured_model,
             input=prompt,
-            text=cast(
-                Any,
-                {
-                    "format": {
-                        "type": "json_schema",
-                        "name": schema_name,
-                        "strict": True,
-                        "schema": schema_payload,
-                    }
-                },
-            ),
+            text_format=ExtractionStructuredResponse,
         )
-        payload = json.loads(_extract_responses_output_text(response))
-        if not isinstance(payload, dict):
+        model_structured = response.output_parsed
+        if model_structured is None:
             raise ValueError("Structured extraction payload must be a JSON object.")
-        model_structured = ExtractionStructuredResponse.model_validate(payload)
         metadata_fields = (
             "schema_version",
             "source_type",

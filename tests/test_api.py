@@ -1,6 +1,5 @@
 import base64
 import hashlib
-import json
 import os
 import re
 import tempfile
@@ -1846,20 +1845,21 @@ class PolinkoApiTests(unittest.TestCase):
         expected_hash = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
 
         class _FakeResponses:
-            def create(self, **kwargs: Any) -> SimpleNamespace:
+            def parse(self, **kwargs: Any) -> SimpleNamespace:
                 captured["kwargs"] = kwargs
-                payload = {
-                    "schema_version": "v1",
-                    "source_type": "ocr",
-                    "source_name": "scan.png",
-                    "mime_type": "image/png",
-                    "text_sha256": expected_hash,
-                    "char_count": len(source_text),
-                    "word_count": 8,
-                    "line_count": 2,
-                    "preview": "Model-tuned preview.",
-                }
-                return SimpleNamespace(output_text=json.dumps(payload))
+                return SimpleNamespace(
+                    output_parsed=app_factory.ExtractionStructuredResponse(
+                        schema_version="v1",
+                        source_type="ocr",
+                        source_name="scan.png",
+                        mime_type="image/png",
+                        text_sha256=expected_hash,
+                        char_count=len(source_text),
+                        word_count=8,
+                        line_count=2,
+                        preview="Model-tuned preview.",
+                    )
+                )
 
         deps.responses_client = SimpleNamespace(responses=_FakeResponses())
 
@@ -1883,12 +1883,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIsNone(run["structured"]["fallback_reason"])
         kwargs = captured["kwargs"]
         self.assertEqual(kwargs["model"], deps.extraction_structured_model)
-        self.assertEqual(kwargs["text"]["format"]["type"], "json_schema")
-        self.assertEqual(kwargs["text"]["format"]["name"], "extraction_structured_ocr_v1")
-        self.assertEqual(
-            kwargs["text"]["format"]["schema"]["properties"]["source_type"]["const"],
-            "ocr",
-        )
+        self.assertIs(kwargs["text_format"], app_factory.ExtractionStructuredResponse)
 
     def test_ocr_structured_falls_back_when_model_output_is_invalid_json(self) -> None:
         deps = server.get_runtime_deps()
@@ -1897,9 +1892,9 @@ class PolinkoApiTests(unittest.TestCase):
         expected_hash = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
 
         class _FakeResponses:
-            def create(self, **kwargs: Any) -> SimpleNamespace:
+            def parse(self, **kwargs: Any) -> SimpleNamespace:
                 del kwargs
-                return SimpleNamespace(output_text="{not-json")
+                raise ValueError("invalid structured payload")
 
         deps.responses_client = SimpleNamespace(responses=_FakeResponses())
         run_resp = self.client.post(
@@ -1930,20 +1925,21 @@ class PolinkoApiTests(unittest.TestCase):
         expected_hash = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
 
         class _FakeResponses:
-            def create(self, **kwargs: Any) -> SimpleNamespace:
+            def parse(self, **kwargs: Any) -> SimpleNamespace:
                 del kwargs
-                payload = {
-                    "schema_version": "v1",
-                    "source_type": "pdf",
-                    "source_name": "wrong-type.pdf",
-                    "mime_type": "application/pdf",
-                    "text_sha256": expected_hash,
-                    "char_count": len(source_text),
-                    "word_count": 6,
-                    "line_count": 1,
-                    "preview": "This should be rejected by OCR schema.",
-                }
-                return SimpleNamespace(output_text=json.dumps(payload))
+                return SimpleNamespace(
+                    output_parsed=app_factory.ExtractionStructuredResponse(
+                        schema_version="v1",
+                        source_type="pdf",
+                        source_name="wrong-type.pdf",
+                        mime_type="application/pdf",
+                        text_sha256=expected_hash,
+                        char_count=len(source_text),
+                        word_count=6,
+                        line_count=1,
+                        preview="This should be rejected by OCR schema.",
+                    )
+                )
 
         deps.responses_client = SimpleNamespace(responses=_FakeResponses())
         run_resp = self.client.post(
@@ -1975,20 +1971,21 @@ class PolinkoApiTests(unittest.TestCase):
         long_preview = "model preview " * 60
 
         class _FakeResponses:
-            def create(self, **kwargs: Any) -> SimpleNamespace:
+            def parse(self, **kwargs: Any) -> SimpleNamespace:
                 del kwargs
-                payload = {
-                    "schema_version": "v1",
-                    "source_type": "ocr",
-                    "source_name": "scan-clamp.png",
-                    "mime_type": "image/png",
-                    "text_sha256": expected_hash,
-                    "char_count": len(source_text),
-                    "word_count": 3,
-                    "line_count": 1,
-                    "preview": long_preview,
-                }
-                return SimpleNamespace(output_text=json.dumps(payload))
+                return SimpleNamespace(
+                    output_parsed=app_factory.ExtractionStructuredResponse(
+                        schema_version="v1",
+                        source_type="ocr",
+                        source_name="scan-clamp.png",
+                        mime_type="image/png",
+                        text_sha256=expected_hash,
+                        char_count=len(source_text),
+                        word_count=3,
+                        line_count=1,
+                        preview=long_preview,
+                    )
+                )
 
         deps.responses_client = SimpleNamespace(responses=_FakeResponses())
         run_resp = self.client.post(
@@ -2019,7 +2016,7 @@ class PolinkoApiTests(unittest.TestCase):
         expected_hash = hashlib.sha256(source_text.encode("utf-8")).hexdigest()
 
         class _FakeResponses:
-            def create(self, **kwargs: Any) -> SimpleNamespace:
+            def parse(self, **kwargs: Any) -> SimpleNamespace:
                 del kwargs
                 raise RuntimeError("unexpected parser failure")
 
@@ -2276,7 +2273,7 @@ class PolinkoApiTests(unittest.TestCase):
                 return SimpleNamespace(data=data)
 
         class _BrokenResponses:
-            def create(self, **kwargs: Any) -> SimpleNamespace:
+            def parse(self, **kwargs: Any) -> SimpleNamespace:
                 del kwargs
                 raise RuntimeError("unexpected structured failure")
 
@@ -2371,20 +2368,21 @@ class PolinkoApiTests(unittest.TestCase):
                 return SimpleNamespace(data=data)
 
         class _FakeResponses:
-            def create(self, **kwargs: Any) -> SimpleNamespace:
+            def parse(self, **kwargs: Any) -> SimpleNamespace:
                 del kwargs
-                payload = {
-                    "schema_version": "v1",
-                    "source_type": "pdf",
-                    "source_name": "invoice.pdf",
-                    "mime_type": "text/plain",
-                    "text_sha256": expected_hash,
-                    "char_count": len(pdf_text),
-                    "word_count": 7,
-                    "line_count": 1,
-                    "preview": "Model suggested non-pdf mime.",
-                }
-                return SimpleNamespace(output_text=json.dumps(payload))
+                return SimpleNamespace(
+                    output_parsed=app_factory.ExtractionStructuredResponse(
+                        schema_version="v1",
+                        source_type="pdf",
+                        source_name="invoice.pdf",
+                        mime_type="text/plain",
+                        text_sha256=expected_hash,
+                        char_count=len(pdf_text),
+                        word_count=7,
+                        line_count=1,
+                        preview="Model suggested non-pdf mime.",
+                    )
+                )
 
         deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
         deps.responses_client = SimpleNamespace(responses=_FakeResponses())
@@ -2430,20 +2428,21 @@ class PolinkoApiTests(unittest.TestCase):
                 return SimpleNamespace(data=data)
 
         class _FakeResponses:
-            def create(self, **kwargs: Any) -> SimpleNamespace:
+            def parse(self, **kwargs: Any) -> SimpleNamespace:
                 captured["kwargs"] = kwargs
-                payload = {
-                    "schema_version": "v1",
-                    "source_type": "pdf",
-                    "source_name": "policy.pdf",
-                    "mime_type": "application/pdf",
-                    "text_sha256": expected_hash,
-                    "char_count": len(pdf_text),
-                    "word_count": 9,
-                    "line_count": 1,
-                    "preview": "PDF preview tuned.",
-                }
-                return SimpleNamespace(output_text=json.dumps(payload))
+                return SimpleNamespace(
+                    output_parsed=app_factory.ExtractionStructuredResponse(
+                        schema_version="v1",
+                        source_type="pdf",
+                        source_name="policy.pdf",
+                        mime_type="application/pdf",
+                        text_sha256=expected_hash,
+                        char_count=len(pdf_text),
+                        word_count=9,
+                        line_count=1,
+                        preview="PDF preview tuned.",
+                    )
+                )
 
         deps.embedding_client = SimpleNamespace(embeddings=_FakeEmbeddings())
         deps.responses_client = SimpleNamespace(responses=_FakeResponses())
@@ -2468,15 +2467,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIsNone(ingest_resp.json()["structured"]["fallback_reason"])
         kwargs = captured["kwargs"]
         self.assertEqual(kwargs["model"], deps.extraction_structured_model)
-        self.assertEqual(kwargs["text"]["format"]["name"], "extraction_structured_pdf_v1")
-        self.assertEqual(
-            kwargs["text"]["format"]["schema"]["properties"]["source_type"]["const"],
-            "pdf",
-        )
-        self.assertEqual(
-            kwargs["text"]["format"]["schema"]["properties"]["mime_type"]["const"],
-            "application/pdf",
-        )
+        self.assertIs(kwargs["text_format"], app_factory.ExtractionStructuredResponse)
 
     def test_pdf_ingest_optionally_indexes_in_responses_vector_store(self) -> None:
         deps = server.get_runtime_deps()
