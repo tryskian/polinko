@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 APP_FACTORY = REPO_ROOT / "api" / "app_factory.py"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "output" / "netlify"
 CANONICAL_URL = "https://www.krystian.io/"
-FAVICON_SVG_SOURCE = REPO_ROOT / "api" / "static" / "favicon.svg"
+FAVICON_PNG_SOURCE = REPO_ROOT / "api" / "static" / "favicon.png"
 
 
 def _portfolio_html() -> str:
@@ -72,7 +72,7 @@ def main() -> None:
     redirects_path = output_dir / "_redirects"
     robots_path = output_dir / "robots.txt"
     sitemap_path = output_dir / "sitemap.xml"
-    favicon_svg_path = output_dir / "favicon.svg"
+    favicon_png_path = output_dir / "favicon.png"
 
     index_path.write_text(_portfolio_html(), encoding="utf-8")
     redirects_path.write_text("/portfolio / 301!\n", encoding="utf-8")
@@ -94,13 +94,13 @@ def main() -> None:
         ),
         encoding="utf-8",
     )
-    shutil.copyfile(FAVICON_SVG_SOURCE, favicon_svg_path)
+    shutil.copyfile(FAVICON_PNG_SOURCE, favicon_png_path)
 
     print(f"Wrote {index_path.relative_to(REPO_ROOT)}")
     print(f"Wrote {redirects_path.relative_to(REPO_ROOT)}")
     print(f"Wrote {robots_path.relative_to(REPO_ROOT)}")
     print(f"Wrote {sitemap_path.relative_to(REPO_ROOT)}")
-    print(f"Wrote {favicon_svg_path.relative_to(REPO_ROOT)}")
+    print(f"Wrote {favicon_png_path.relative_to(REPO_ROOT)}")
 
 
 if __name__ == "__main__":
