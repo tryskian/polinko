@@ -3749,3 +3749,25 @@ quickstart document.
   informal inside-language. `Human lead` is clearer, neutral, and still
   preserves the actual collaboration model: human-directed meaning, scope, and
   acceptance; engineer-executed implementation and validation.
+
+## D-228: Keep OpenAI runtime on typed Responses paths with a current flagship default
+
+- Date: `2026-04-23`
+- Category: `runtime_engineering`
+- Tags: `openai_sdk`, `responses_api`, `structured_outputs`, `gpt_5_4`
+- Decision:
+  - use `responses.parse` for structured extraction and judge-style eval calls
+    instead of manual JSON-schema text parsing.
+  - keep Responses orchestration on the Responses API surface rather than
+    mixing older parsing patterns back into the active runtime.
+  - set `POLINKO_RESPONSES_MODEL` default to `gpt-5.4`, while preserving env
+    override control when a different orchestration temperament is needed.
+- Validation:
+  - `venv/bin/ruff check config.py api/app_factory.py tools/eval_style.py tools/eval_hallucination.py tests/test_api.py tests/test_config.py`
+  - `venv/bin/python -m pytest tests/test_config.py tests/test_api.py -k "responses_orchestration or structured or pdf_ingest or ocr_skill_records_run_and_links_export"`
+  - `make lint-docs`
+  - PR #351
+- Why: The durable migration target is the typed Responses SDK surface, not any
+  one transient chat-model temperament. This keeps Polinko aligned with the
+  current OpenAI API direction, reduces manual parsing glue, and preserves
+  model-choice flexibility behind configuration.
