@@ -15,8 +15,8 @@ that matches the question you are trying to answer.
   [docs/eval/README.md](./eval/README.md)
 - Public research reading path:
   [docs/public/README.md](./public/README.md)
-- Curated proof packet:
-  [docs/public-proof/README.md](./public-proof/README.md)
+- Curated research packet:
+  [docs/research/README.md](./research/README.md)
 - Current governance state:
   [docs/governance/STATE.md](./governance/STATE.md)
 
@@ -28,8 +28,8 @@ that matches the question you are trying to answer.
   - eval evidence eras, retained snapshots, and lane references
 - `public/`
   - curated public-facing research path
-- `public-proof/`
-  - compact proof packet for quick reviewer scanning
+- `research/`
+  - compact research packet for quick reviewer scanning
 - `governance/`
   - charter, current state, handoff, and decisions
 - `peanut/`

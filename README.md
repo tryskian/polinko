@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/tryskian/polinko/actions/workflows/ci.yml/badge.svg)](https://github.com/tryskian/polinko/actions/workflows/ci.yml)
 ![Binary Eval](https://img.shields.io/badge/eval-binary_pass%2Ffail-4E79A7)
-![Proof Surface](https://img.shields.io/badge/proof-repo_native-76B7B2)
+![Research Surface](https://img.shields.io/badge/research-repo_native-76B7B2)
 
 Polinko exists to make AI failure inspectable enough to act on. It is a
 human-led, AI-assisted, repo-native evaluation lab with a local-first FastAPI
@@ -12,7 +12,7 @@ backend, OCR-forward reliability loops, binary eval gates, and evidence-first
 documentation.
 
 The website is a lightweight doorway into the work. The repository is the
-proof surface.
+research surface.
 
 ## Start Here
 
@@ -24,14 +24,14 @@ path:
 - [Hypothesis](docs/public/HYPOTHESIS.md)
 - [Research](docs/public/RESEARCH.md)
 - [Diagrams](docs/public/DIAGRAMS.md)
-- [Public Proof](docs/public-proof/README.md)
+- [Research Packet](docs/research/README.md)
 
 ## What This Repo Is
 
 - Backend-first runtime:
   - FastAPI API + CLI are canonical.
 - Research object:
-  - tracked docs, tests, evals, and diagrams are the main evidence surface.
+  - tracked docs, tests, evals, and diagrams are the main research surface.
 - Public doorway:
   - `https://www.krystian.io/` points into the work; it does not recreate the
     research system.
@@ -106,7 +106,7 @@ Current production URL:
 - Private/local research materials stay untracked by design.
 - `frontend/` and `ui/` are local-only scaffolds unless deliberately restored.
 - Static D3/SVG evidence diagrams should live beside Mermaid diagrams in the
-  repo proof lane, not as portfolio UI.
+  repo research lane, not as portfolio UI.
 
 ## Canonical Docs
 
