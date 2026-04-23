@@ -123,6 +123,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       --paper: #fdfdfd;
       --ink: #262626;
       --muted: #686868;
+      --copy-rhythm: clamp(3.05rem, 5.4svh, 4.4rem);
       --font-main:
         "Instrument Sans",
         "Helvetica Neue",
@@ -199,7 +200,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
     .bio {
       display: flex;
       flex-direction: column;
-      gap: clamp(3.05rem, 5.4svh, 4.4rem);
+      gap: var(--copy-rhythm);
       align-items: flex-start;
       bottom: var(--page-inline);
       inline-size: 100%;
@@ -210,7 +211,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 
     .copy-block {
       display: grid;
-      gap: 0.62rem;
+      gap: var(--copy-rhythm);
       margin: 0;
     }
 
@@ -462,7 +463,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
         <div class="cta-stack">
           <a
             class="because-link"
-            href="https://github.com/tryskian/polinko"
+            href="https://github.com/tryskian/polinko/tree/main/docs/research"
             aria-describedby="repo-link-destination"
           >
             <span class="because-text">because every signal reshapes the experiment.</span>
@@ -471,8 +472,8 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
               <path d="M6 4h6v6" fill="none"></path>
             </svg>
           </a>
-          <span class="repo-tooltip" aria-hidden="true">github.com/tryskian/polinko</span>
-          <span id="repo-link-destination" class="sr-only">Opens the Polinko repository on GitHub.</span>
+          <span class="repo-tooltip" aria-hidden="true">github.com/tryskian/polinko/tree/main/docs/research</span>
+          <span id="repo-link-destination" class="sr-only">Opens the Polinko research packet on GitHub.</span>
         </div>
       </div>
     </main>
