@@ -46,7 +46,8 @@ Last updated: 2026-04-24
   - no contact drawer
   - no animation-first/UI-heavy exploration in the public surface
   - favicon now uses tracked `api/static/favicon.png`
-  - current visible identity line uses `design creative` on the public site
+  - current visible identity line uses `Applied AI Systems Designer` with a
+    `human-AI interaction` focus on the public site
 - Local frontend contract is intentionally minimal:
   - `frontend/` is local-only and ignored except `.gitkeep`
   - `ui/` is local-only and ignored except `.gitkeep`
