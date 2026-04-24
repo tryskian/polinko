@@ -22,8 +22,8 @@ trace how runtime wiring, data surfaces, and eval evidence fit together.
 - `tests/`
   - API/runtime regression tests.
 - `docs/`
-  - Charter, state, decisions, runbook, handoff, operator references, and
-    eval lane references.
+  - Charter, state, decisions, runbook, operator references, and eval lane
+    references.
 
 ## Runtime Flow
 
@@ -142,7 +142,7 @@ trace how runtime wiring, data surfaces, and eval evidence fit together.
 - API endpoints/middleware/specs: `api/`
 - Prompt/runtime behaviour and policy logic: `core/`
 - Eval/report/reference scripts and one-off operators: `tools/`
-- Execution state/decisions/handoff documentation: `docs/`
+- Execution state, decisions, and operator documentation: `docs/`
 - Historical beta transition references: `docs/eval/README.md`
 
 ## Governance Flow
@@ -157,7 +157,7 @@ trace how runtime wiring, data surfaces, and eval evidence fit together.
 - Current-state checkpoints live in `docs/governance/STATE.md` and are
   refreshed in place.
 - Next-session carryover constraints live in
-  `docs/governance/SESSION_HANDOFF.md` and are refreshed in place.
+  `docs/peanut/governance/SESSION_HANDOFF.md` and stay local-only.
 - Visual exploration, theory, transcripts, and human-facing working notes stay
   in the local-only `docs/peanut/` lane.
 - Policy updates are complete only when all relevant surfaces above are aligned.

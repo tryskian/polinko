@@ -65,16 +65,13 @@ tests, diagrams, and evidence.
 - `docs/governance/STATE.md`
   - current truth
   - no daily logs
-- `docs/governance/SESSION_HANDOFF.md`
-  - next-session operating context
-  - current only
 - `docs/runtime/RUNBOOK.md`
   - procedures and command ownership
 - `docs/runtime/ARCHITECTURE.md`
   - stable system shape and contracts
 - `docs/peanut/`
-  - local-only exploration lane for transcripts, design refs, theory, and
-    working notes
+  - local-only exploration lane for transcripts, design refs, theory, working
+    notes, and operator handoff
 
 ## Current Scope
 

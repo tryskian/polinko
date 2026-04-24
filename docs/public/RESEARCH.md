@@ -61,7 +61,7 @@ Working docs stay tracked when they are safe and useful for continuity:
 - governance docs
 - runtime architecture
 - runbook commands
-- state and handoff snapshots
+- tracked state snapshots
 - decision history
 
 Private/local evidence stays untracked unless explicitly promoted:
