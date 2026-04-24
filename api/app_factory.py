@@ -51,8 +51,9 @@ logger = logging.getLogger("polinko.api")
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _PORTFOLIO_FAVICON_PNG = _REPO_ROOT / "api" / "static" / "favicon.png"
 _PORTFOLIO_DESCRIPTION = (
-    "Krystian Fernando is a design creative turned AI research engineer "
-    "designing evals around the useful signals models reveal when they fail."
+    "Krystian Fernando is an applied AI systems designer working in "
+    "human-AI interaction and designing evals around the useful signals "
+    "models reveal when they fail."
 )
 
 _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
@@ -60,7 +61,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Krystian Fernando | AI Research Engineer</title>
+  <title>Krystian Fernando | Applied AI Systems Designer</title>
   <meta name="description" content="__PORTFOLIO_DESCRIPTION__">
   <meta name="author" content="Krystian Fernando">
   <meta name="robots" content="index, follow">
@@ -69,10 +70,10 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.krystian.io/">
   <meta property="og:site_name" content="Krystian Fernando">
-  <meta property="og:title" content="Krystian Fernando | AI Research Engineer">
+  <meta property="og:title" content="Krystian Fernando | Applied AI Systems Designer">
   <meta property="og:description" content="__PORTFOLIO_DESCRIPTION__">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Krystian Fernando | AI Research Engineer">
+  <meta name="twitter:title" content="Krystian Fernando | Applied AI Systems Designer">
   <meta name="twitter:description" content="__PORTFOLIO_DESCRIPTION__">
   <script type="application/ld+json">
     {
@@ -86,7 +87,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
           "alternateName": [
             "krystian.io",
             "Krystian.io",
-            "Krystian Fernando AI Research"
+            "Krystian Fernando Applied AI Systems"
           ],
           "publisher": {
             "@id": "https://www.krystian.io/#person"
@@ -97,7 +98,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
           "@id": "https://www.krystian.io/#person",
           "name": "Krystian Fernando",
           "url": "https://www.krystian.io/",
-          "jobTitle": "AI Research Engineer",
+          "jobTitle": "Applied AI Systems Designer",
           "description": "__PORTFOLIO_DESCRIPTION__",
           "sameAs": [
             "https://github.com/tryskian",
@@ -449,8 +450,8 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       <div class="bio">
         <section class="copy-block" aria-label="Origin and research focus">
           <p class="copy-line">
-            design creative who somehow became an AI&nbsp;research engineer
-            when one idea came with its own hypothesis.
+            applied AI&nbsp;systems designer working in human-AI interaction
+            because one idea came with its own hypothesis.
           </p>
           <p class="copy-line">
             so now i design evals around the useful signals that models reveal
