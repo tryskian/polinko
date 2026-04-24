@@ -3771,3 +3771,26 @@ quickstart document.
   one transient chat-model temperament. This keeps Polinko aligned with the
   current OpenAI API direction, reduces manual parsing glue, and preserves
   model-choice flexibility behind configuration.
+
+## D-229: Keep operator handoff local while preserving tracked public current truth
+
+- Date: `2026-04-24`
+- Category: `evidence_governance`
+- Tags: `governance_surface`, `operator_docs`, `local_only`, `public_docs`
+- Decision:
+  - keep `docs/governance/STATE.md` as the tracked public current-truth surface.
+  - move `SESSION_HANDOFF` out of tracked public docs and into the local-only
+    `docs/peanut/governance/SESSION_HANDOFF.md` lane.
+  - remove public README/docs links to `SESSION_HANDOFF`.
+  - treat the local handoff as operator continuity, not reader-facing project
+    documentation.
+  - keep `tools/check_eod_docs.py` strict for tracked `STATE`, and validate the
+    local handoff only when that local file is present.
+- Validation:
+  - `make lint-docs`
+  - `python tools/check_eod_docs.py --date 2026-04-24`
+- Why: `SESSION_HANDOFF` is an operator continuity surface and drifts quickly
+  into branch-specific or session-specific notes. Keeping it tracked in the
+  public repo exposes internal execution context as if it were project
+  documentation. The tracked repo still needs one concise public current-truth
+  surface, but the per-session handoff belongs in the local operator lane.

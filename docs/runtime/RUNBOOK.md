@@ -48,8 +48,8 @@
 1. Read morning docs in order:
    - `docs/governance/CHARTER.md`
    - `docs/governance/STATE.md`
-   - `docs/governance/SESSION_HANDOFF.md`
    - `docs/runtime/RUNBOOK.md`
+   - local `docs/peanut/governance/SESSION_HANDOFF.md` if present
 2. Confirm execution location:
    - canonical checkout root (`<repo-root>`) or dedicated worktree.
 3. Confirm active branch in this thread:
@@ -96,8 +96,8 @@
    - `make eod-git-check` (`make eod` only)
 5. Purpose:
    - keep local transcript records in consistent rich format
-   - enforce same-day current-truth updates for `STATE` and
-     `SESSION_HANDOFF`
+   - enforce same-day current-truth updates for tracked `STATE` and the local
+     handoff note when present
    - refresh docs for current truth before closeout validation
    - refresh running docs in place rather than appending daily log sections
    - catch build/docs drift before day-close
@@ -199,7 +199,6 @@
    - `docs/runtime/RUNBOOK.md`
    - `docs/governance/STATE.md`
    - `docs/governance/DECISIONS.md`
-   - `docs/governance/SESSION_HANDOFF.md`
 4. Do not use `skip-worktree` for routine workflow; use gitignored local-only
    paths instead.
 5. Any exception to local-only confidentiality must be explicitly approved
@@ -599,10 +598,11 @@ Read-only DB audits remain allowed:
      decision
    - `docs/runtime/RUNBOOK.md`
    - `docs/governance/STATE.md`
-   - `docs/governance/SESSION_HANDOFF.md`
+   - local `docs/peanut/governance/SESSION_HANDOFF.md` when the change affects
+     next-session operator context
    - `docs/runtime/ARCHITECTURE.md` (if operating flow/ownership changes)
 2. Refresh running docs in place; do not append daily log sections to
-   `STATE.md` or `SESSION_HANDOFF.md`.
+   `STATE.md` or the local handoff file.
 3. Do not treat any single doc as sufficient for policy updates.
 4. End-of-day handoff must include any new policy/cutline so next-session
    startup does not drift.

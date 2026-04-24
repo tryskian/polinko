@@ -97,7 +97,7 @@ Current production URL:
 - `tools/` eval and maintenance scripts
 - `tests/` test suite
 - `docs/public/` curated public reading path
-- `docs/governance/` charter, state, handoff, decisions
+- `docs/governance/` charter, state, decisions
 - `docs/runtime/` runbook and architecture
 - `docs/eval/` eval evidence and phase context
 
@@ -112,8 +112,6 @@ Current production URL:
 
 - Rules: [docs/governance/CHARTER.md](docs/governance/CHARTER.md)
 - Current truth: [docs/governance/STATE.md](docs/governance/STATE.md)
-- Next-session context:
-  [docs/governance/SESSION_HANDOFF.md](docs/governance/SESSION_HANDOFF.md)
 - Procedures: [docs/runtime/RUNBOOK.md](docs/runtime/RUNBOOK.md)
 - Structure: [docs/runtime/ARCHITECTURE.md](docs/runtime/ARCHITECTURE.md)
 - Durable history: [docs/governance/DECISIONS.md](docs/governance/DECISIONS.md)

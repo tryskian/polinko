@@ -31,6 +31,6 @@ that matches the question you are trying to answer.
 - `research/`
   - compact research packet for quick reviewer scanning
 - `governance/`
-  - charter, current state, handoff, and decisions
+  - charter, current state, and durable decisions
 - `peanut/`
-  - local-only tumbles, transcripts, and human working notes
+  - local-only tumbles, transcripts, operator handoff, and human working notes

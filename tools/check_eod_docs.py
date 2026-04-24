@@ -7,10 +7,8 @@ import sys
 from pathlib import Path
 
 
-REQUIRED_DOCS = (
-    Path("docs/governance/STATE.md"),
-    Path("docs/governance/SESSION_HANDOFF.md"),
-)
+REQUIRED_DOCS = (Path("docs/governance/STATE.md"),)
+OPTIONAL_LOCAL_DOCS = (Path("docs/peanut/governance/SESSION_HANDOFF.md"),)
 
 
 def parse_args() -> argparse.Namespace:
@@ -35,11 +33,23 @@ def find_last_updated(path: Path) -> str | None:
 def main() -> int:
     args = parse_args()
     failures: list[str] = []
+    checked_docs: list[Path] = []
 
     for path in REQUIRED_DOCS:
+        checked_docs.append(path)
         if not path.exists():
             failures.append(f"{path}: missing required current-truth doc")
             continue
+        actual = find_last_updated(path)
+        if actual != args.date:
+            failures.append(
+                f"{path}: Last updated is {actual or 'missing'}, expected {args.date}"
+            )
+
+    for path in OPTIONAL_LOCAL_DOCS:
+        if not path.exists():
+            continue
+        checked_docs.append(path)
         actual = find_last_updated(path)
         if actual != args.date:
             failures.append(
@@ -52,12 +62,12 @@ def main() -> int:
             print(f"- {failure}", file=sys.stderr)
         print(
             "Update current-truth docs before EOD: docs/governance/STATE.md and "
-            "docs/governance/SESSION_HANDOFF.md",
+            "local docs/peanut/governance/SESSION_HANDOFF.md if present",
             file=sys.stderr,
         )
         return 1
 
-    print(f"eod-docs-check: PASS ({len(REQUIRED_DOCS)} docs updated for {args.date})")
+    print(f"eod-docs-check: PASS ({len(checked_docs)} docs updated for {args.date})")
     return 0
 
 

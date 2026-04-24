@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-04-23
+Last updated: 2026-04-24
 
 ## Current Truth
 
@@ -13,7 +13,7 @@ Last updated: 2026-04-23
   - repository is public
   - repo is the research surface
   - website is a lightweight doorway into the work
-  - public-facing docs live under `docs/public/`
+  - public-facing docs live under `docs/public/` and `docs/research/`
 - Branch protection on `main` remains active:
   - PR required
   - required checks: `test`, `markdownlint`
@@ -74,7 +74,8 @@ Last updated: 2026-04-23
   - private application forms/resume exports remain local and ignored
 - Documentation rule:
   - `DECISIONS` is durable archive
-  - `STATE` and `SESSION_HANDOFF` are current-only and should stay lean
+  - `STATE` is the tracked public current-truth surface
+  - operator handoff stays local in `docs/peanut/governance/SESSION_HANDOFF.md`
 
 ## Active Priorities
 
@@ -87,7 +88,6 @@ Last updated: 2026-04-23
 
 - Rules: `docs/governance/CHARTER.md`
 - Current truth: `docs/governance/STATE.md`
-- Next-session context: `docs/governance/SESSION_HANDOFF.md`
 - Procedures: `docs/runtime/RUNBOOK.md`
 - Structure: `docs/runtime/ARCHITECTURE.md`
 - Durable history: `docs/governance/DECISIONS.md`
