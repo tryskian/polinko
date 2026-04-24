@@ -24,7 +24,7 @@ path:
 - [Hypothesis](docs/public/HYPOTHESIS.md)
 - [Research](docs/public/RESEARCH.md)
 - [Diagrams](docs/public/DIAGRAMS.md)
-- [Research Packet](docs/research/README.md)
+- [Research Surface](docs/research/README.md)
 
 ## What This Repo Is
 

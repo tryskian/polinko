@@ -31,8 +31,8 @@ Last updated: 2026-04-24
 - Public docs/research surface is cleaner than the initial application push:
   - `docs/` now has a landing page
   - architecture has a visual-first entry
-  - README carries badges and a compact research packet link
-  - curated research packet lives under `docs/research/`
+  - README carries badges and a compact research surface link
+  - curated research surface lives under `docs/research/`
 - Portfolio surface remains intentionally lean:
   - single-screen about/contact doorway
   - tracked fallback lives in `api/app_factory.py`

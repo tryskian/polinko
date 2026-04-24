@@ -5,6 +5,19 @@
 Use this directory as the operator and evidence map for Polinko. Pick the path
 that matches the question you are trying to answer.
 
+## Operator Rituals
+
+- Morning startup:
+  say `hi! new day!` and follow
+  [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md#morning-startup-check-codexbeab)
+- Wrap / end of day:
+  say `human time` or `wind down` and follow
+  [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md#end-of-day-routine-codexbeab)
+- Portfolio visual review:
+  use
+  [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md#portfolio-surface--playwright-loop)
+  for `make portfolio-playwright`, `make pwcli`, and screenshot capture
+
 ## Reading Paths
 
 - Runtime structure:
@@ -15,7 +28,7 @@ that matches the question you are trying to answer.
   [docs/eval/README.md](./eval/README.md)
 - Public research reading path:
   [docs/public/README.md](./public/README.md)
-- Curated research packet:
+- Curated research surface:
   [docs/research/README.md](./research/README.md)
 - Current governance state:
   [docs/governance/STATE.md](./governance/STATE.md)
@@ -29,7 +42,7 @@ that matches the question you are trying to answer.
 - `public/`
   - curated public-facing research path
 - `research/`
-  - compact research packet for quick reviewer scanning
+  - compact research surface for quick reviewer scanning
 - `governance/`
   - charter, current state, and durable decisions
 - `peanut/`
