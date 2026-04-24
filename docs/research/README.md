@@ -1,8 +1,8 @@
 <!-- @format -->
 
-# Research Packet
+# Research Surface
 
-This folder is the compact research packet for reviewers who want one visual,
+This folder is the compact research surface for reviewers who want one visual,
 one machine-readable manifest, and direct links into tracked eval evidence.
 
 It is intentionally curated. Polinko keeps local operational artefacts under
@@ -25,7 +25,7 @@ enough to read in public.
 
 ## Reading Rule
 
-Use this folder when you need a fast research packet. Use
+Use this folder when you need a fast research surface. Use
 [docs/eval/README.md](../eval/README.md) and
 [docs/public/README.md](../public/README.md) when you need the broader research
 and evidence context.
