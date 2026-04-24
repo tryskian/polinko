@@ -51,9 +51,9 @@ logger = logging.getLogger("polinko.api")
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _PORTFOLIO_FAVICON_PNG = _REPO_ROOT / "api" / "static" / "favicon.png"
 _PORTFOLIO_DESCRIPTION = (
-    "Krystian Fernando is an applied AI systems designer working in "
-    "human-AI interaction and designing evals around the useful signals "
-    "models reveal when they fail."
+    "Krystian Fernando is a design creative turned applied AI systems "
+    "designer designing evals around the useful signals models reveal when "
+    "they fail."
 )
 
 _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
@@ -450,8 +450,8 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       <div class="bio">
         <section class="copy-block" aria-label="Origin and research focus">
           <p class="copy-line">
-            applied AI&nbsp;systems designer working in human-AI interaction
-            because one idea came with its own hypothesis.
+            design creative who somehow became an applied AI&nbsp;systems
+            designer when one idea came with its own hypothesis.
           </p>
           <p class="copy-line">
             so now i design evals around the useful signals that models reveal
