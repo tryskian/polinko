@@ -695,6 +695,30 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
       `make portfolio PORTFOLIO_LAUNCH=system`
     - Playwright launch remains available only when explicitly requested with
       `make portfolio-playwright`
+  - canonical copy/update flow:
+    - if local `ui/index.html` exists, edit the local frontend source and
+      regenerate ignored `ui/`
+    - if local `ui/index.html` is absent, edit the tracked fallback in
+      `api/app_factory.py`
+    - when tracked fallback copy changes, update the matching assertions in
+      `tests/test_api.py`
+    - if the visible public contract changes, sync
+      `docs/governance/STATE.md`
+    - validate fallback changes with:
+      `venv/bin/python -m pytest tests/test_api.py -k "portfolio_shell or root_redirects_to_portfolio"`
+    - rebuild locally with `make rebuild`
+  - canonical visual-review loop for portfolio edits:
+    - make the copy/layout change first
+    - run the focused fallback test before visual review
+    - rebuild with `make rebuild`
+    - browser verification is required; use
+      `make rebuild PORTFOLIO_LAUNCH=playwright` for the rebuilt route
+    - for explicit visual checks, resize first if needed, then capture with
+      `make pwcli ARGS="snapshot"` or `make pwcli ARGS="screenshot"`
+    - keep captures under
+      `docs/peanut/assets/screenshots/playwright/DD-MM-YY`
+    - use captured screenshots as the review artifact when comparing copy,
+      spacing, and responsive behavior
   - `ui/` is generated output only; do not hand-edit built files.
 - Playwright CLI snapshots/screenshots:
   - repo wrapper: `make pwcli ARGS="..."`
