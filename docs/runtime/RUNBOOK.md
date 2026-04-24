@@ -43,6 +43,19 @@
    - `multi-agent` = extra hands doing bounded subtasks
    - `director` = one final decider before merge
 
+## Operator Rituals
+
+- `hi! new day!`
+  - use this to trigger the morning startup check
+  - read [Morning Startup Check (Codexbeab)](#morning-startup-check-codexbeab)
+- `human time` / `wind down`
+  - use these to trigger end-of-day closeout
+  - read [End-of-Day Routine (Codexbeab)](#end-of-day-routine-codexbeab)
+- portfolio visual review
+  - use [Portfolio Surface / Playwright Loop](#portfolio-surface--playwright-loop)
+    for `make portfolio-playwright`, `make pwcli ARGS="snapshot"`, and local
+    screenshot paths
+
 ## Morning Startup Check (Codexbeab)
 
 1. Read morning docs in order:
@@ -739,6 +752,17 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     bare filenames may be written relative to the command cwd by the CLI
   - this directory is local evidence under the peanut lane; do not use
     `output/playwright/` for portfolio UI captures in this repo.
+
+### Portfolio Surface / Playwright Loop
+
+- use this as the fast operator pointer for portfolio visual review
+- quick commands:
+  - `make portfolio-playwright`
+  - `make pwcli ARGS="snapshot"`
+  - `make pwcli ARGS="screenshot"`
+  - `make playwright-snapshot-dir`
+- full procedure is documented immediately above in the portfolio command and
+  Playwright sections.
 - `GET /portfolio/sankey-data` returns the real-data portfolio evidence
   payload:
   - legacy graph: Beta 1.0 manual feedback rows from `manual_evals.db`
