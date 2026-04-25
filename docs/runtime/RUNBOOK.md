@@ -78,6 +78,21 @@
    - run `make doctor-env`
    - continue with normal startup (`make server-daemon`, `make session-status`)
 
+## Start-of-Day Target
+
+1. Optional command shortcut:
+   - `make day-start`
+   - alias: `make sod`
+2. What it does:
+   - prints the current startup reading order
+   - runs `make doctor-env`
+   - runs `make server-daemon`
+   - runs `make session-status`
+3. What it does not do:
+   - does not replace the `hi! new day!` ritual
+   - does not replace reading the docs
+   - does not change `make eod`, which remains end-of-day only
+
 ## Command Surface Simplification Rule
 
 1. Prefer one canonical make target per operator action.
