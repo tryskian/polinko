@@ -103,7 +103,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(resp.headers.get("content-type"), "text/html; charset=utf-8")
         self.assertTrue(resp.text.lstrip().lower().startswith("<!doctype html>"))
         self.assertIn(
-            "design creative who somehow became an applied AI&nbsp;systems",
+            "creative designer who somehow became an applied AI&nbsp;systems",
             resp.text,
         )
         self.assertIn("so now i design evals around the useful signals that", resp.text)

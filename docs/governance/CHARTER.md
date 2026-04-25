@@ -48,6 +48,12 @@ tests, diagrams, and evidence.
   - Git/branch/PR flow
   - proactive hygiene/drift cleanup
   - execution recommendations
+- OpenAI Codex is the primary repo-local coding agent and engineering
+  collaborator:
+  - implementation, refactoring, validation, code review, and documentation
+    maintenance are actively done with Codex in the loop
+  - human direction remains authoritative for objectives, constraints,
+    interpretation, and publication
 - Default execution model:
   - feature branch per change set
   - protected-main PR flow

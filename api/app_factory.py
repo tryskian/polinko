@@ -450,7 +450,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       <div class="bio">
         <section class="copy-block" aria-label="Origin and research focus">
           <p class="copy-line">
-            design creative who somehow became an applied AI&nbsp;systems
+            creative designer who somehow became an applied AI&nbsp;systems
             designer when one idea came with its own hypothesis.
           </p>
           <p class="copy-line">

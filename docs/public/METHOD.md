@@ -14,10 +14,10 @@ source authority.
 
 ## Tooling Disclosure
 
-Polinko uses OpenAI Codex as a repo-local engineering collaborator for
-implementation, refactoring, validation, and documentation maintenance. OpenAI
-Platform APIs are used where Polinko makes model-backed calls for OCR, evals,
-retrieval, and runtime experiments.
+Polinko uses OpenAI Codex as a repo-local coding agent and engineering
+collaborator for implementation, refactoring, validation, review, and
+documentation maintenance. OpenAI Platform APIs are used where Polinko makes
+model-backed calls for OCR, evals, retrieval, and runtime experiments.
 
 These tools are part of the research-engineering workflow. They do not define
 the research claims, interpret the evidence, or own publication decisions.
@@ -26,7 +26,7 @@ The supporting stack is intentionally inspectable:
 
 | Layer | Tooling | Role |
 | --- | --- | --- |
-| Model collaboration | OpenAI Codex, OpenAI Platform APIs | Repo-local engineering support and model-backed OCR, eval, retrieval, and runtime calls. |
+| Model collaboration | OpenAI Codex, OpenAI Platform APIs | Repo-local coding support plus model-backed OCR, eval, retrieval, and runtime calls. |
 | Runtime surface | FastAPI | Local API surface for assistant, OCR/PDF ingest, retrieval, feedback, and eval workflows. |
 | Evidence stores | SQLite | Local, queryable stores for runtime history, manual evals, vector memory, and evidence inspection. |
 | System maps | Mermaid | Plain-text diagrams for pipelines, eval loops, and research structure. |

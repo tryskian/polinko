@@ -14,6 +14,11 @@ documentation.
 The website is a lightweight doorway into the work. The repository is the
 research surface.
 
+OpenAI Codex is the active coding agent and engineering collaborator in this
+repository. Polinko is built through a human-led, repo-local workflow where
+Krystian sets objectives, constraints, and publication decisions, and Codex
+helps implement, refactor, validate, review, and maintain the system.
+
 ## Start Here
 
 If you are reading Polinko as a research project, start with the curated public
@@ -38,7 +43,10 @@ path:
 - Collaboration model:
   - research direction, evidence interpretation, and publication decisions are
     human-led
-  - OpenAI Codex is used for repo-local engineering collaboration
+  - OpenAI Codex is the primary repo-local coding agent and engineering
+    collaborator
+  - OpenAI Platform APIs power model-backed OCR, eval, retrieval, and runtime
+    calls
 
 ## Quick Start
 
