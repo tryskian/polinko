@@ -295,7 +295,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
     parser.add_argument(
         "--cases",
-        default="docs/eval/cases/style_eval_cases.json",
+        default="docs/eval/beta_2_0/style_eval_cases.json",
         help="Path to style eval cases JSON file.",
     )
     parser.add_argument(

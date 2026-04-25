@@ -15,6 +15,11 @@
       "path": "docs/eval/beta_2_0/ocr-20260328-184147.json"
     },
     {
+      "type": "research_note",
+      "label": "Response behaviour eval snapshot",
+      "path": "docs/research/response-behaviour-20260425.md"
+    },
+    {
       "type": "eval_report",
       "label": "Hallucination eval snapshot",
       "path": "docs/eval/beta_2_0/hallucination-20260328-184216.json"

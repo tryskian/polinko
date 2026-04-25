@@ -19,6 +19,7 @@ enough to read in public.
 ## Representative Tracked Evidence
 
 - [OCR binary eval snapshot](../eval/beta_2_0/ocr-20260328-184147.json)
+- [Response behaviour eval snapshot](./response-behaviour-20260425.md)
 - [Hallucination eval snapshot](../eval/beta_2_0/hallucination-20260328-184216.json)
 - [Architecture diagram](../runtime/architecture.svg)
 - [Public diagrams lane](../public/DIAGRAMS.md)
