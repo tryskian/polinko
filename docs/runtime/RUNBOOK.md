@@ -1282,11 +1282,11 @@ Current policy:
      `python tools/eval_style.py --report-json eval_reports/style-latest.json`
    - one-command report run: `make eval-style-report`
 6. Eval-only phrase fail rules (no runtime behaviour changes):
-   - `docs/eval/cases/style_eval_cases.json` root `global_forbidden_phrases` applies to all
+   - `docs/eval/beta_2_0/style_eval_cases.json` root `global_forbidden_phrases` applies to all
      cases
    - per-case `forbidden_phrases` applies only to that case
    - phrase checks are case-insensitive
-7. Co-reasoning stress cases are included in `docs/eval/cases/style_eval_cases.json` for:
+7. Co-reasoning stress cases are included in `docs/eval/beta_2_0/style_eval_cases.json` for:
    - constraint retention without rigidity
    - meta-level shift handling
    - anti-mimicry style adaptation
@@ -1300,7 +1300,7 @@ Current policy:
 3. Optional timestamped report run:
    - `make eval-ocr-safety-report`
 4. Scope:
-   - case file: `docs/eval/cases/ocr_safety_eval_cases.json`
+   - case file: `docs/eval/beta_2_0/ocr_safety_eval_cases.json`
    - harness: deterministic response-behaviour gate
    - intent: measure OCR-calibration transfer into safety/uncertainty responses
 5. Gate posture:
