@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-04-24
+Last updated: 2026-04-25
 
 ## Current Truth
 
@@ -36,6 +36,8 @@ Last updated: 2026-04-24
   - architecture has a visual-first entry
   - README carries badges and a compact research surface link
   - curated research surface lives under `docs/research/`
+  - README/Charter/State/Method now make Codex collaboration explicit for
+    external readers
 - Portfolio surface remains intentionally lean:
   - single-screen about/contact doorway
   - tracked fallback lives in `api/app_factory.py`
@@ -51,6 +53,9 @@ Last updated: 2026-04-24
   - favicon now uses tracked `api/static/favicon.png`
   - current visible identity line keeps the `creative designer who somehow
     became...` phrasing and swaps in `Applied AI Systems Designer`
+- Operator command surface:
+  - `make day-start` / `make sod` are available as startup shortcuts
+  - `make eod` remains end-of-day only
 - Local frontend contract is intentionally minimal:
   - `frontend/` is local-only and ignored except `.gitkeep`
   - `ui/` is local-only and ignored except `.gitkeep`
