@@ -1,24 +1,39 @@
 # Polinko
 
-Lightweight GPT agent project with:
+Polinko is a full-stack AI research project exploring human-AI alignment through OCR, evals, evidence chains, and runtime tooling.
+
+Built as a human + AI collaboration system with:
 
 - CLI chat runner
 - FastAPI backend
 - Server-side multi-chat history for the web UI
 - Vite chat UI with drawer-based chat switching
 
+## Repository Bio (External / OpenAI Context)
+
+Polinko is a local-first research workspace where a human operator and AI coding agents build together. We use Codex for implementation workflow and the OpenAI API for runtime/eval model operations. Release gates stay deterministic (`PASS`/`FAIL`), while qualitative notes remain available for analysis and learning.
+
+### Current Stack (Explicit)
+
+- Agent workflow: Codex
+- Model/runtime API: OpenAI API
+- Backend: FastAPI
+- Frontend: Vite
+- Storage: SQLite (+ optional vector index)
+
 ## Quickstart
 
 Run these from repo root:
 
-0. `make doctor-env` (optional environment sanity check)
-1. `make server`
-2. `make ui-install`
-3. `make ui-dev`
-4. open `http://127.0.0.1:5173`
-5. `make test`
-6. `make quality-gate` (single pre-push gate; default hallucination mode uses judge)
+0. `make day-start` (or `make eod`) for start-of-day bootstrap: env doctor + caffeinate + server daemon + status
+1. `make dev` (default manual-eval mode: backend only)
+2. `make test`
+3. `make quality-gate` (single pre-push gate; default hallucination mode uses judge)
    - no `OPENAI_API_KEY`? use `make quality-gate-deterministic`
+4. Optional UI (currently on hold):
+   - `make ui-install` (first run only)
+   - `make ui-dev`
+   - open `http://127.0.0.1:5173`
 
 CLI extras:
 
@@ -45,9 +60,9 @@ API client extras (`python tools/client.py`):
 ## Setup
 
 1. Create and activate your virtualenv (or use the existing one in this repo):
-   `source polinko-repositioning-system/bin/activate`
+   `source venv/bin/activate`
    (If you prefer, skip activation and run commands through `make`, which already
-   uses `./polinko-repositioning-system/bin/python`.)
+   uses `./venv/bin/python`.)
 2. Install dependencies:
    `pip install -r requirements.txt`
 3. Copy `.env.example` to `.env` and fill real values.
@@ -147,6 +162,14 @@ Build/refresh the local evidence index artifact:
 - `frontend/` Vite chat UI
 - `tools/` local scripts
 - `docs/` project docs
+
+## Documentation Map (Read in This Order)
+
+1. `docs/CHARTER.md` — mission, behavior rules, and engineering principles.
+2. `docs/STATE.md` — current operating status, constraints, and immediate next actions.
+3. `docs/DECISIONS.md` — decision log with rationale and historical context.
+4. `docs/RUNBOOK.md` — execution workflow, quality gates, and operator commands.
+5. `docs/SESSION_HANDOFF.md` — end-of-day rehydrate brief for next-session continuity.
 
 ## Figma Workflow (MCP)
 

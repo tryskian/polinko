@@ -1,7 +1,5 @@
 PYTHON ?= $(shell \
-	if [ -x ./polinko-repositioning-system/bin/python ] && ./polinko-repositioning-system/bin/python -V >/dev/null 2>&1; then \
-		echo ./polinko-repositioning-system/bin/python; \
-	elif [ -x ./venv/bin/python ] && ./venv/bin/python -V >/dev/null 2>&1; then \
+	if [ -x ./venv/bin/python ] && ./venv/bin/python -V >/dev/null 2>&1; then \
 		echo ./venv/bin/python; \
 	else \
 		echo python3; \
@@ -14,6 +12,7 @@ DEV_HOST ?= 127.0.0.1
 DEV_BACKEND_PORT ?= 8000
 DEV_FRONTEND_PORT ?= 5173
 DEV_AUTOKILL ?= 1
+DEV_WITH_UI ?= 0
 ENV_FILE ?= .env
 K6_BASE_URL ?= http://127.0.0.1:8000
 K6_API_KEY ?= test-server-key
@@ -41,7 +40,7 @@ HUMAN_REFERENCE_SINCE_HOURS ?= 24
 SERVER_PID_FILE ?= /tmp/polinko-server.pid
 SERVER_LOG ?= /tmp/polinko-server.log
 
-.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status test lint-docs doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-stop workbench
+.PHONY: chat server server-daemon server-daemon-stop server-daemon-status session-status day-start sod eod test lint-docs doctor-env caffeinate-on caffeinate-off caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-braintrust eval-hallucination-report eval-style eval-style-report eval-ocr eval-ocr-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-inbox eval-cleanup eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic evidence-index evidence-refresh portfolio-metadata-audit human-reference-db human-reference-latest human-reference-transcripts human-reference-changes ui-install ui-dev ui-build ui-e2e-install ui-e2e docker-build docker-run dev dev-full dev-stop workbench
 
 chat:
 	$(PYTHON) app.py
@@ -134,6 +133,20 @@ session-status:
 	@echo ""
 	@echo "== Keep-awake =="
 	@$(MAKE) --no-print-directory caffeinate-status || true
+
+# Start-of-day bootstrap. Keeps the command short and deterministic.
+day-start:
+	@echo "== Polinko Start-of-Day =="
+	@$(MAKE) --no-print-directory doctor-env
+	@$(MAKE) --no-print-directory caffeinate-on
+	@$(MAKE) --no-print-directory server-daemon
+	@$(MAKE) --no-print-directory session-status || true
+	@echo ""
+	@echo "Next: run 'make ui-dev' in a separate terminal when ready."
+
+# Backward-compatible aliases.
+sod: day-start
+eod: day-start
 
 test:
 	$(PYTHON) -m unittest discover -s tests -p "test_*.py"
@@ -475,10 +488,13 @@ ui-e2e:
 	cd frontend && $(NPM) run test:e2e
 
 dev:
-	@PYTHON_BIN="$(PYTHON)" NPM_BIN="$(NPM)" DEV_HOST="$(DEV_HOST)" DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_FRONTEND_PORT="$(DEV_FRONTEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" bash tools/dev_run.sh
+	@PYTHON_BIN="$(PYTHON)" NPM_BIN="$(NPM)" DEV_HOST="$(DEV_HOST)" DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_FRONTEND_PORT="$(DEV_FRONTEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" DEV_WITH_UI="$(DEV_WITH_UI)" bash tools/dev_run.sh
+
+dev-full:
+	@PYTHON_BIN="$(PYTHON)" NPM_BIN="$(NPM)" DEV_HOST="$(DEV_HOST)" DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_FRONTEND_PORT="$(DEV_FRONTEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" DEV_WITH_UI=1 bash tools/dev_run.sh
 
 dev-stop:
-	@DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_FRONTEND_PORT="$(DEV_FRONTEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" DEV_STOP_ONLY=1 bash tools/dev_run.sh
+	@DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" DEV_FRONTEND_PORT="$(DEV_FRONTEND_PORT)" DEV_AUTOKILL="$(DEV_AUTOKILL)" DEV_WITH_UI=1 DEV_STOP_ONLY=1 bash tools/dev_run.sh
 
 workbench:
 	@echo "Starting portfolio workbench on http://127.0.0.1:$(WORKBENCH_PORT)/workbench.html"

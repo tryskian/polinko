@@ -2,6 +2,20 @@
 
 # Runbook
 
+## Documentation Source of Truth (Operator Order)
+
+1. `docs/CHARTER.md` defines mission, behavior rules, and engineering principles.
+2. `docs/STATE.md` is the canonical "what is true right now" status surface.
+3. `docs/DECISIONS.md` captures why key decisions were made.
+4. `docs/RUNBOOK.md` defines how to execute safely and reproducibly.
+5. `docs/SESSION_HANDOFF.md` is end-of-day continuity only; keep it brief and operational.
+
+## Platform Baseline (Explicit)
+
+1. Primary coding/workflow interface is Codex.
+2. Primary model/runtime provider is the OpenAI API.
+3. OpenAI docs MCP (`https://developers.openai.com/mcp`) is for documentation lookup, while this repository remains implementation source of truth.
+
 ## Branch, Fork, and Worktree Policy
 
 1. Default workflow is branch-based in the canonical local repo:
@@ -33,6 +47,9 @@
    - `worktree` = separate desk with its own files/branch
    - `multi-agent` = extra hands doing bounded subtasks
    - `director` = one final decider before merge
+6. Collaboration posture:
+   - this project is run as a joint human + AI workflow.
+   - human sets architecture and acceptance criteria; AI accelerates implementation and validation loops.
 
 ## Protected Main PR Flow
 
@@ -703,6 +720,27 @@ Current policy:
 
 ## Evidence Triage Lifecycle (FAIL -> PASS)
 
+### Portfolio Process (Canonical)
+
+1. Collect fresh eval outputs first:
+   - `make eval-reports` (or `make eval-reports-parallel`)
+2. Refresh evidence artifacts:
+   - `make evidence-refresh`
+3. Triage inbox/checkpoints:
+   - `make eval-inbox`
+4. Resolve failures with explicit action notes in triage overrides:
+   - `docs/portfolio/raw_evidence/triage_overrides.json`
+5. Re-run affected evals and regenerate evidence:
+   - suite-specific report command (for example `make eval-style-report`)
+6. Re-run metadata audit and confirm closure:
+   - `make portfolio-metadata-audit`
+7. Portfolio readiness criteria:
+   - no unresolved critical FAIL items without `action_taken`
+   - metadata audit is strict-pass
+   - latest run artifacts are timestamped and traceable in index/audit outputs
+
+### Evidence Storage and Audit Details
+
 1. Store evidence artifacts under:
    - `docs/portfolio/raw_evidence/FAIL`
    - `docs/portfolio/raw_evidence/PASS`
@@ -819,19 +857,36 @@ Current policy:
    - transcript json (`.json`)
    - OCR run history json (`.ocr-runs.json`)
 
+## Start-of-Day Bootstrap
+
+1. Run:
+   - `make day-start` (or `make eod`)
+2. What it does:
+   - runs environment doctor
+   - starts/adopts managed `caffeinate` (macOS)
+   - starts/adopts backend server daemon
+   - prints consolidated session status
+3. Then start frontend in a separate terminal:
+   - `make ui-dev`
+4. Alias note:
+   - `make eod` and `make sod` both alias `make day-start`.
+
 ## Dev Startup (Auto Port Hygiene)
 
-1. Start backend + frontend:
+1. Start backend only (default manual-eval mode):
    - `make dev`
-2. Behavior:
-   - preflights ports `8000` (backend) and `5173` (frontend)
-   - stops stale listeners on those ports before launch
-   - starts frontend with strict port binding (`5173`) to avoid drift
-3. Stop listeners only:
+2. Start backend + frontend (when UI work resumes):
+   - `make dev-full`
+3. Behavior:
+   - always preflights backend port `8000`
+   - preflights frontend port `5173` only when `DEV_WITH_UI=1` (or in `dev-stop`)
+   - stops stale listeners on required ports before launch
+4. Stop listeners only:
    - `make dev-stop`
-4. Optional overrides:
+5. Optional overrides:
    - `DEV_AUTOKILL=0 make dev` (fail on non-dev port owners instead of stopping)
-   - `DEV_BACKEND_PORT=9000 DEV_FRONTEND_PORT=5175 make dev`
+   - `DEV_WITH_UI=1 make dev` (same behavior as `make dev-full`)
+   - `DEV_BACKEND_PORT=9000 DEV_FRONTEND_PORT=5175 make dev-full`
 
 ## Common Connection Error
 

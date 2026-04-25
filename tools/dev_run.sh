@@ -8,6 +8,7 @@ DEV_BACKEND_PORT="${DEV_BACKEND_PORT:-8000}"
 DEV_FRONTEND_PORT="${DEV_FRONTEND_PORT:-5173}"
 DEV_AUTOKILL="${DEV_AUTOKILL:-1}"
 DEV_STOP_ONLY="${DEV_STOP_ONLY:-0}"
+DEV_WITH_UI="${DEV_WITH_UI:-0}"
 
 kill_port_listeners() {
   local port="$1"
@@ -51,32 +52,57 @@ kill_port_listeners() {
   fi
 }
 
+HAS_LSOF=1
 if ! command -v lsof >/dev/null 2>&1; then
-  echo "lsof is required for make dev port preflight."
-  exit 1
+  HAS_LSOF=0
+  echo "warning: lsof not found; skipping port preflight."
 fi
 
-kill_port_listeners "${DEV_BACKEND_PORT}"
-kill_port_listeners "${DEV_FRONTEND_PORT}"
+if [[ "${HAS_LSOF}" == "1" ]]; then
+  kill_port_listeners "${DEV_BACKEND_PORT}"
+  if [[ "${DEV_WITH_UI}" == "1" || "${DEV_STOP_ONLY}" == "1" ]]; then
+    kill_port_listeners "${DEV_FRONTEND_PORT}"
+  fi
+fi
 
 if [[ "${DEV_STOP_ONLY}" == "1" ]]; then
+  if [[ "${HAS_LSOF}" == "0" ]]; then
+    echo "No lsof available; skipped listener stop preflight."
+    exit 0
+  fi
   echo "Stopped listeners on ${DEV_BACKEND_PORT} and ${DEV_FRONTEND_PORT}."
   exit 0
 fi
 
-echo "Starting backend (${DEV_BACKEND_PORT}) and frontend (${DEV_FRONTEND_PORT}). Press Ctrl+C to stop both."
+if [[ "${DEV_WITH_UI}" == "1" ]]; then
+  echo "Starting backend (${DEV_BACKEND_PORT}) and frontend (${DEV_FRONTEND_PORT}). Press Ctrl+C to stop both."
+else
+  echo "Starting backend only on ${DEV_BACKEND_PORT} (manual eval mode). Press Ctrl+C to stop."
+fi
 "${PYTHON_BIN}" -m uvicorn server:app --host "${DEV_HOST}" --port "${DEV_BACKEND_PORT}" --reload &
 SERVER_PID=$!
-(
-  cd frontend
-  "${NPM_BIN}" run dev -- --host "${DEV_HOST}" --port "${DEV_FRONTEND_PORT}" --strictPort
-) &
-UI_PID=$!
+UI_PID=""
+if [[ "${DEV_WITH_UI}" == "1" ]]; then
+  (
+    cd frontend
+    "${NPM_BIN}" run dev -- --host "${DEV_HOST}" --port "${DEV_FRONTEND_PORT}" --strictPort
+  ) &
+  UI_PID=$!
+fi
 
 cleanup() {
-  kill "${SERVER_PID}" "${UI_PID}" >/dev/null 2>&1 || true
-  wait "${SERVER_PID}" "${UI_PID}" >/dev/null 2>&1 || true
+  if [[ -n "${UI_PID}" ]]; then
+    kill "${SERVER_PID}" "${UI_PID}" >/dev/null 2>&1 || true
+    wait "${SERVER_PID}" "${UI_PID}" >/dev/null 2>&1 || true
+  else
+    kill "${SERVER_PID}" >/dev/null 2>&1 || true
+    wait "${SERVER_PID}" >/dev/null 2>&1 || true
+  fi
 }
 trap cleanup EXIT INT TERM
 
-wait "${SERVER_PID}" "${UI_PID}"
+if [[ -n "${UI_PID}" ]]; then
+  wait "${SERVER_PID}" "${UI_PID}"
+else
+  wait "${SERVER_PID}"
+fi

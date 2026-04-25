@@ -1,298 +1,43 @@
 <!-- @format -->
 
-# Session Handoff (Rehydrate Brief)
+# Session Handoff (Current State Only)
 
 ## Date
 
-- 2026-03-22
+- Update this at end-of-day only (YYYY-MM-DD).
 
 ## Current Snapshot
 
-- Runtime: FastAPI backend + Vite UI + CLI runner.
-- Prompt behavior stays minimal and aligned to legacy `try.py` style.
-- Optional Responses orchestration path is available behind env flags.
-- Governance and hallucination guardrails are now available behind env flags.
-- Per-scope retrieval tuning is implemented and validated in API flow.
-- Collaboration v1 is live with explicit role handoff endpoints + per-chat handoff timeline.
-- Personalization v1 is live: per-chat retrieval memory scope (`session` or `global`).
-- Personalization scope is now controllable from the web UI header (per active chat).
-- `/chat` now returns `memory_used` retrieval citations when vector context is applied.
-- OCR is feature-flagged:
-  - `POLINKO_OCR_PROVIDER=scaffold` (default fallback)
-  - `POLINKO_OCR_PROVIDER=openai` (real image OCR path)
-- API now includes `/metrics` and chat export with OCR runs.
-- Session/resource cleanup improved by explicitly closing per-request SQLite sessions.
-- Runtime session cleanup hardened with a managed SQLite session wrapper that closes
-  cross-thread connections on `close()`.
-- Retrieval evaluator is now available (`make eval-retrieval`) and currently passes all 12 cases.
-- OCR/PDF structured extraction now fail-open on malformed/unexpected enrichment errors.
-- File-search API now returns backend/fallback classification (`backend`,
-  `fallback_reason`, `candidate_count`) for deterministic client-side diagnostics.
-- Hallucination eval harness now enforces session-local memory scope per case to reduce nondeterministic cross-case leakage.
-- Single-command quality gate is available and passing: `make quality-gate`.
-- Hallucination judge path now supports configurable key env + base URL for
-  OpenAI-compatible judge providers (including Braintrust gateway wiring).
-- Hallucination score threshold is now configurable with
-  `HALLUCINATION_MIN_ACCEPTABLE_SCORE`; calibration helper is available via
-  `make calibrate-hallucination-threshold`.
-- Calibration tie-break now prefers the strictest equal-metric threshold to
-  avoid under-conservative recommendations from all-pass datasets.
-- P2 CLIP experiment scaffolding has started with `make eval-clip-ab` and
-  report artifact mode `make eval-clip-ab-report`.
-- Latest CLIP A/B expanded report (`20260310-125230`) shows positive proxy
-  uplift across 4 image-context cases
-  (`any_rate_delta_proxy_minus_baseline=+1.0`, `errors=0`, `skipped=0`).
-- Latest CLIP readiness pair (2026-03-14) passed and returned explicit `GO`:
-  - `clip-ab-20260315-143219.json`
-  - `clip-ab-20260315-180942.json`
-  - readiness command: `make eval-clip-ab-readiness`
-- Latest targeted CLIP/file-search validation cycle (2026-03-15):
-  - strict style eval: `style-strict-20260315-180637.json` (`11/11` PASS)
-  - file-search report: `file-search-20260315-181109.json` (`5/5` PASS)
-  - targeted API profile checks:
-    `./venv/bin/python -m pytest tests/test_api.py -k "clip_proxy_profile" -q`
-    -> `2 passed`
-  - runtime regression baseline:
-    `make test` -> `154 passed`
-  - drift isolation result:
-    no strict-style drift reproduced in this cycle; treat style drift as a
-    monitored quality signal unless corroborated by runtime/API regressions.
-- Status checkpoint (2026-03-17):
-  - project is in late build-hardening phase (not early scaffold phase)
-  - core runtime + binary eval flow are stable and merged on `main`
-  - remaining work is concentrated in backlog triage, eval UX hardening, and
-    final portfolio evidence packaging
-- CLIP integration go/no-go criterion is now defined and documented
-  (two consecutive runs, `cases_count >= 4`, proxy `any_rate >= 0.90`,
-  delta `>= 0.50`, zero errors/skips).
-- Minimal CLIP integration slice is now live behind explicit feature flag:
-  - `POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED` (default `false`)
-  - `/skills/file_search` accepts
-    `retrieval_profile=clip_proxy_image_only`
-  - disabled profile requests fail fast with `409` for explicit rollback-safe
-    control.
-- Profile behavior is API-tested:
-  - disabled flag -> `409` on `clip_proxy_image_only`
-  - enabled flag -> profile forces image-only retrieval even when request
-    `source_types` includes only `ocr`.
-- Dedicated strict hallucination gate target is available: `make hallucination-gate`.
-- CI includes optional Braintrust hallucination gate wiring when
-  `BRAINTRUST_OPENAI_BASE_URL` (repo var) and `BRAINTRUST_API_KEY`
-  (repo secret) are configured.
-- Docker smoke path is validated (`make docker-build` + `make docker-run` + `/health`).
-- Devcontainer Docker connectivity is now stabilized (Docker-outside-of-Docker
-  and Docker extension UI-side routing), resolving `Containers` pane connection
-  mismatch in remote sessions.
-- Next-session setup reminder: start with a plain-language Docker MCP refresher
-  before config changes (`server` = capability provider, `client` = app allowed
-  to call it, profile `push` = optional sync/share action).
-- Host-side VS Code interpreter warnings were resolved by removing stale
-  workspace interpreter pins to Linux container venv binaries; host sessions
-  now rely on host interpreter auto-discovery/selection.
-- Environment doctor is available for local sanity checks: `make doctor-env`.
-- Evidence indexing now records FAIL lifecycle state (`action_taken`, `status`)
-  and supports optional triage overrides until a linked PASS closes the issue.
-- Portfolio metadata audit is now available via
-  `make portfolio-metadata-audit` for strict evidence/docs metadata checks.
-- Adaptive style-note handling now uses decay-weighted signal, near-duplicate
-  note suppression, and a max of two active notes with
-  `adaptive_style_notes_updated` event logging to avoid model-input
-  over-indexing from repeated guidance.
-- Co-reasoning interaction behaviour is now documented with primary-source and
-  rubric references:
-  - `docs/transcripts/co_reasoning_primary_source_2026-03-10.md`
-  - `docs/research/co_reasoning_eval_reference.md`
-- Style eval cases now include co-reasoning stress scenarios (constraint
-  retention without rigidity, meta-shift handling, anti-mimicry adaptation, and
-  grounding under playful abstraction).
-- Frontend Playwright smoke E2E includes retry-variant lineage coverage
-  (`source_user_message_id` flow), including variant navigation and duplicate
-  user-row prevention assertions.
-- Frontend attachment flow now supports paste-to-attach, client-side
-  downsize/compression, per-chat image persistence across chat switches/reloads,
-  and OCR follow-up turns that reuse the latest persisted image batch when no
-  new image is attached.
-- Frontend chat drawer now includes eval review queue controls:
-  sort (`recent`, `unreviewed`, `fail_ratio`) plus `unreviewed only` filter for
-  faster checkpoint triage.
-- Frontend now includes a quick triage snapshot panel (unreviewed totals,
-  chats-needing-review, high-fail count, priority list) and a header export
-  action for full checkpoint rollup JSON (`Download eval triage rollup`).
-- Eval feedback submissions are append-logged for binary outcomes
-  (`PASS`/`FAIL`) to
-  `docs/portfolio/raw_evidence/INBOX/eval_submissions.jsonl` with inbox monitor
-  command `make eval-inbox`.
-- Eval checkpoint save contract now supports mixed stream persistence:
-  one checkpoint can include both positive and negative rubric streams.
-- Eval UI summary line now renders stream output directly
-  (`pass: ... • fail: ...`) instead of forcing one top-level label.
-- Eval checkpoint rollups now use independent stream counts:
-  `pass_count`, `fail_count`, and `other_count` (neither stream present).
-- Docs hygiene checkpoint (2026-03-21):
-  - deprecated pilot/comms docs are archive-only and no longer referenced in
-    active runbook/state/handoff execution paths
-  - archived docs are hidden from explorer/search for cleaner active workflow
-  - `docs/PEANUT_TOOLING_REF.md` stays visible as the day-to-day tooling guide
-- Raw evidence cleanup checkpoint (2026-03-22):
-  - legacy hybrid/OpenAI eval artifacts were moved out of active
-    `docs/portfolio/raw_evidence` paths into
-    `docs/portfolio/archive/2026-03-22-raw-evidence-legacy`
-  - active evidence wiring remains limited to PASS/FAIL/MIXED/INBOX in
-    `docs/portfolio/raw_evidence`
-  - archive naming now follows date-prefixed convention
-    `docs/portfolio/archive/YYYY-MM-DD-...` for consistency and discoverability
-- Safety certainty checkpoint (2026-03-21):
-  - transcript + peanut-reference note captured in
-    `docs/transcripts/safety_certainty_and_inference_notes_2026-03-21.md`
-    for certainty/inference guardrail framing in future eval review.
-- Anti-collaboration diagnostic checkpoint (2026-03-22):
-  - transcript + structured interpretation captured in
-    `docs/transcripts/anti_collaboration_diagnostic_method_2026-03-22.md`
-  - keeps the “pattern is strategy, not the other way around” framing attached
-    to active reasoning-behavior analysis.
-- Collaboration policy checkpoint (2026-03-21):
-  - architecture + rubric constraints are set via human-directed decisions
-    before agentic parallelization
-  - multi-agent parallelism is used only for bounded tasks with deterministic
-    validation and director-led merge authority
-- Parallel eval report orchestration is now available:
-  - command: `make eval-reports-parallel`
-  - tool: `tools/eval_parallel_orchestrator.py`
-  - output: per-suite reports/logs + consolidated
-    `eval_reports/parallel-<run_id>.json`
-- OpenAI developer docs MCP is now configured for local workflows:
-  - endpoint: `https://developers.openai.com/mcp`
-  - workspace config: `.vscode/mcp.json`
-- Hallucination eval corpus now includes interpersonal motive-guess regression
-  case `cautious_no_relationship_motive_guess` to catch speculative
-  relationship-attribution claims.
-- Branch rules now enforce PR + required checks (`test`, `markdownlint`) on
-  default branch (`main`) while allowing normal push/PR workflow on feature
-  branches.
-- `docs/FIGMA_NODE_TRACKER.md` is now intentionally local-only and gitignored
-  for proprietary/live node-tracking use.
-- Core internal planning docs are now tracked normally in git; local-only
-  material should stay in gitignored files/directories rather than
-  `skip-worktree` overlays.
-- Environment troubleshooting now follows a verification-first, no-guessing
-  policy: verify repo path/mode/branch first, prefer repo-scoped config
-  changes, and do not mutate `~/.zshrc` or global VS Code settings without
-  explicit in-chat approval.
-- Ruff housekeeping is green (`ruff check .`) after preserving
-  `server.Runner` for test patch compatibility and resolving import placement.
-- Mypy housekeeping is now stable and repo-scoped via `mypy.ini`; workspace
-  diagnostics are bound to `venv/bin/mypy` + `--config-file mypy.ini`.
-- Latest audit checkpoint (2026-03-20):
-  - `make doctor-env`: healthy
-  - `make lint-docs`: pass
-  - `ruff check .`: pass
-  - `mypy .`: pass (`58` source files)
-  - `make test`: pass (`175` tests)
-  - tooling import fallback debt removed in eval/pilot helpers
-    (canonical `tools.*` imports only)
-- Dependabot dependency-order note: `openai-agents==0.11.1` (PR `#13`) requires
-  `openai>=2.26.0`; merge PR `#5` (`openai` bump) before retrying PR `#13`.
+- Workflow baseline: Codex for implementation flow + OpenAI API for runtime/eval model operations.
+- Runtime surface: FastAPI backend + Vite UI + CLI runner.
+- Operating model: human-directed architecture and acceptance criteria, AI-accelerated implementation and validation.
+- Gate policy: release decisions are binary (`PASS`/`FAIL`); nuanced interpretation stays in notes/transcripts.
 
-## Latest Local Commit
+## Active Branch and Commit
 
-- `347c015` on `codex/bigbrain/mixed-rubric-streams-20260321`
-- Summary: `feat(eval-ui): support mixed pass/fail rubric streams`
-- Note: direct push to `main` is blocked by branch protections; merge path is
-  PR + required checks.
+- Branch: `<branch_name>`
+- HEAD: `<commit_sha>`
+- Scope summary: `<one-line summary>`
+
+## Working Tree Status
+
+- Dirty files: `<file list or none>`
+- Notes: `<important local-only context>`
 
 ## Key Files To Read First
 
-- `docs/CHARTER.md`
-- `docs/STATE.md`
-- `docs/DECISIONS.md`
-- `api/app_factory.py`
-- `config.py`
-- `tests/test_api.py`
+1. `docs/CHARTER.md`
+2. `docs/STATE.md`
+3. `docs/DECISIONS.md`
+4. `docs/RUNBOOK.md`
 
 ## Quick Validation (Local)
 
-1. `make quality-gate`
-2. `make quality-gate-deterministic` (if judge key is unavailable)
-3. `make hallucination-gate HALLUCINATION_EVAL_MODE=deterministic`
-4. `make doctor-env`
-5. `make eval-inbox`
-6. `cd frontend && npm run build`
-7. `make portfolio-metadata-audit`
-8. `cd frontend && npx playwright test e2e/smoke.spec.js`
-9. `make server` and spot-check `/health`, `/chat`, `/skills/ocr`
-
-## Known Constraint
-
-- No open high-priority runtime constraints currently tracked.
-- Workflow constraint: user-level shell/profile and global editor settings are
-  immutable by default during normal repo troubleshooting.
-- Dependency-management constraint: open Dependabot updates can fail CI when
-  resolver-coupled pins land out of order; verify transitive constraints before
-  merging isolated bump PRs.
-- Session policy constraint: keep-awake is opt-in and request-triggered,
-  managed with `make caffeinate-on`, checked with `make caffeinate-status`,
-  and explicitly stopped at wrap via
-  `make caffeinate-off`.
-- Terminology constraint: when Docker MCP wording is ambiguous, confirm intent
-  in-chat before applying config changes.
+1. `make doctor-env`
+2. `make lint-docs`
+3. `make test`
+4. `make quality-gate-deterministic`
 
 ## Immediate Next Step
 
-- Start fresh eval cycle with the new reset flow:
-  - use reset to clear current UI checkpoint/feedback state and begin clean evals
-  - simplify header eval controls to a compact pill-style submit control while
-    keeping PiP
-  - add base eval prompt presets so manual warm-up prompt writing is optional
-
-## Review Transcript (2026-03-23, pol-3 diff audit)
-
-- Scope reviewed: uncommitted `main` edits in:
-  `api/app_factory.py`, `core/history_store.py`, `tests/test_api.py`,
-  `frontend/index.html`, `frontend/src/main.js`, `frontend/src/style.css`,
-  `frontend/e2e/smoke.spec.js`.
-- Primary finding (medium severity):
-  Playwright mock contract drift in `frontend/e2e/smoke.spec.js` where reset
-  deprecates by default (`payload.deprecate !== false`), which is stricter than
-  backend default request behavior (`deprecate: false` unless server
-  `deprecate_on_reset` is enabled).
-- Keep/fix/revert recommendation from audit:
-  - keep backend reset hardening (`clear_eval_cycle_state`) and associated tests
-  - keep frontend eval UX/preset additions
-  - fix e2e reset mock default to match backend contract (or model server
-    default explicitly in fixture state)
-  - no broad revert requested by audit itself
-- Targeted validation run in-session:
-  - `python3 -m unittest` on reset/deprecate API tests: pass
-  - `npm --prefix frontend run -s test:e2e -- -g "applies base eval prompt presets to the composer|reset starts a clean eval cycle with no prior checkpoint state"`:
-    pass
-- Operator decision at wrap:
-  preserve these findings in handoff, then rewind workspace to pre-commit clean
-  state before continuing new work.
-
-## Peanut Pin (Tomorrow Start)
-
-- Merge watch first:
-  - check open PR/CI status and clear pending conflicts before new work
-- If you want fast human-reference lookup without SQL editor:
-  - `make human-reference-latest`
-  - `make human-reference-transcripts`
-  - `make human-reference-changes`
-- Keep startup lightweight:
-  - confirm repo path + branch + host/devcontainer mode
-  - then continue with the Immediate Next Step above
-
-## Next Session Focus (Lean Agenda)
-
-1. Confirm environment baseline:
-   canonical repo path, host vs devcontainer mode, active branch.
-2. Merge/sync hygiene:
-   ensure docs PR state is settled, then `main` is clean and up to date.
-3. Execute CLIP readiness loop:
-   produce artifacts + readiness decision and store evidence.
-4. Keep local-first runtime + eval execution path as canonical.
-5. Document only material decisions:
-   update `STATE` + `DECISIONS` + `SESSION_HANDOFF` with concise diffs.
-
-## Copy/Paste Rehydrate Prompt
-
-`Read docs/CHARTER.md, docs/STATE.md, docs/DECISIONS.md, and docs/SESSION_HANDOFF.md. In 5 bullets: current state, risks, and next milestone. Before starting implementation, confirm environment/workspace context: canonical repo path is /Users/tryskian/Github/polinko, confirm host vs devcontainer mode, and confirm active git branch. Apply no-guessing controls: prefer repo-scoped edits and do not modify ~/.zshrc or global VS Code settings unless explicitly approved in-chat. Then execute the Immediate Next Step from SESSION_HANDOFF with minimal behavior drift and full test/build validation.`
+- `<single next action>`

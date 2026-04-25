@@ -2,7 +2,7 @@
 
 ## Mission
 
-Build a reliable GPT-powered assistant with stable tone, persistent memory, and production-ready API foundations.
+Build a reliable, local-first human-AI collaboration system for alignment research, with production-grade runtime tooling across OCR, evals, and evidence chains.
 
 ## Product Behaviour Rules
 
@@ -20,6 +20,8 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - Preserve prompt continuity through minimal, explicit prompt instructions.
 - Fail fast on config/auth issues.
 - Prefer deterministic, testable backend changes.
+- Keep release gates binary (`PASS`/`FAIL`) and keep nuanced interpretation in diagnostic artifacts.
+- Treat human judgment and AI execution as a joint workflow: explicit constraints first, implementation second, validation always.
 - Run `make doctor-env` when local environment behavior looks suspicious.
 - Run `make quality-gate` before push when backend/prompt/retrieval logic changes.
 
@@ -30,6 +32,8 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 - API implementation: `api/app_factory.py`
 - Prompt versions: `core/prompts.py`
 - API tests: `tests/test_api.py`
+- Primary workflow tool: Codex
+- Primary model/runtime provider: OpenAI API
 
 ## Security / Ops Baseline
 
@@ -43,6 +47,6 @@ Build a reliable GPT-powered assistant with stable tone, persistent memory, and 
 ## Scope (Current)
 
 - In scope: local development, API hardening, test coverage.
-- In scope: retrieval/OCR/file-search reliability and eval hardening.
+- In scope: retrieval/OCR/file-search reliability, eval hardening, and evidence traceability.
 - Paused: Figma-first UI parity while backend retrieval milestones are being finalized.
 - Paused: cloud deployment automation (removed from repo for now; Azure is the preferred target when resumed).
