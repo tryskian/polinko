@@ -464,7 +464,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
         <div class="cta-stack">
           <a
             class="because-link"
-            href="https://github.com/tryskian/polinko/tree/main/docs/research"
+            href="https://github.com/tryskian/polinko"
             aria-describedby="repo-link-destination"
           >
             <span class="because-text">because every signal reshapes the experiment.</span>
@@ -473,8 +473,8 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
               <path d="M6 4h6v6" fill="none"></path>
             </svg>
           </a>
-          <span class="repo-tooltip" aria-hidden="true">github.com/tryskian/polinko/tree/main/docs/research</span>
-          <span id="repo-link-destination" class="sr-only">Opens the Polinko research packet on GitHub.</span>
+          <span class="repo-tooltip" aria-hidden="true">github.com/tryskian/polinko</span>
+          <span id="repo-link-destination" class="sr-only">Opens the Polinko repository on GitHub.</span>
         </div>
       </div>
     </main>
