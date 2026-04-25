@@ -14,6 +14,9 @@ Last updated: 2026-04-24
   - repo is the research surface
   - website is a lightweight doorway into the work
   - public-facing docs live under `docs/public/` and `docs/research/`
+  - OpenAI Codex is the active repo-local coding agent and engineering
+    collaborator
+  - OpenAI Platform APIs are used for model-backed runtime and eval calls
 - Branch protection on `main` remains active:
   - PR required
   - required checks: `test`, `markdownlint`
@@ -46,7 +49,7 @@ Last updated: 2026-04-24
   - no contact drawer
   - no animation-first/UI-heavy exploration in the public surface
   - favicon now uses tracked `api/static/favicon.png`
-  - current visible identity line keeps the `design creative who somehow
+  - current visible identity line keeps the `creative designer who somehow
     became...` phrasing and swaps in `Applied AI Systems Designer`
 - Local frontend contract is intentionally minimal:
   - `frontend/` is local-only and ignored except `.gitkeep`
