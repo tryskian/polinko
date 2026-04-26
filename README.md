@@ -19,6 +19,10 @@ repository. Polinko is built through a human-led, repo-local workflow where
 Krystian sets objectives, constraints, and publication decisions, and Codex
 helps implement, refactor, validate, review, and maintain the system.
 
+## License
+
+Apache-2.0. See [LICENSE](LICENSE).
+
 ## Start Here
 
 If you are reading Polinko as a research project, start with the curated public

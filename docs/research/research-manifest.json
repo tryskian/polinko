@@ -16,6 +16,11 @@
     },
     {
       "type": "research_note",
+      "label": "OCR safety eval snapshot",
+      "path": "docs/research/ocr-safety-20260425.md"
+    },
+    {
+      "type": "research_note",
       "label": "Response behaviour eval snapshot",
       "path": "docs/research/response-behaviour-20260425.md"
     },
