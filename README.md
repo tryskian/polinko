@@ -6,7 +6,7 @@
 ![Binary Eval](https://img.shields.io/badge/eval-binary_pass%2Ffail-4E79A7)
 ![Research Surface](https://img.shields.io/badge/research-repo_native-76B7B2)
 
-Polinko exists to make AI failure inspectable enough to act on. It is a
+Polinko was built to make AI failure inspectable enough to act on. It is a
 human-led, AI-assisted, repo-native evaluation lab with a local-first FastAPI
 backend, OCR-forward reliability loops, binary eval gates, and evidence-first
 documentation.
