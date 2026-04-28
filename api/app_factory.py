@@ -51,7 +51,7 @@ logger = logging.getLogger("polinko.api")
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _PORTFOLIO_FAVICON_PNG = _REPO_ROOT / "api" / "static" / "favicon.png"
 _PORTFOLIO_DESCRIPTION = (
-    "Krystian Fernando is an applied AI systems designer working in "
+    "Krystian Fernando is an applied AI research engineer working in "
     "human-AI interaction and designing evals around the useful signals "
     "models reveal when they fail."
 )
@@ -61,7 +61,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Krystian Fernando | Applied AI Systems Designer</title>
+  <title>Krystian Fernando | Applied AI Research Engineer</title>
   <meta name="description" content="__PORTFOLIO_DESCRIPTION__">
   <meta name="author" content="Krystian Fernando">
   <meta name="robots" content="index, follow">
@@ -70,10 +70,10 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.krystian.io/">
   <meta property="og:site_name" content="Krystian Fernando">
-  <meta property="og:title" content="Krystian Fernando | Applied AI Systems Designer">
+  <meta property="og:title" content="Krystian Fernando | Applied AI Research Engineer">
   <meta property="og:description" content="__PORTFOLIO_DESCRIPTION__">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Krystian Fernando | Applied AI Systems Designer">
+  <meta name="twitter:title" content="Krystian Fernando | Applied AI Research Engineer">
   <meta name="twitter:description" content="__PORTFOLIO_DESCRIPTION__">
   <script type="application/ld+json">
     {
@@ -87,7 +87,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
           "alternateName": [
             "krystian.io",
             "Krystian.io",
-            "Krystian Fernando Applied AI Systems"
+            "Krystian Fernando Applied AI Research"
           ],
           "publisher": {
             "@id": "https://www.krystian.io/#person"
@@ -98,7 +98,7 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
           "@id": "https://www.krystian.io/#person",
           "name": "Krystian Fernando",
           "url": "https://www.krystian.io/",
-          "jobTitle": "Applied AI Systems Designer",
+          "jobTitle": "Applied AI Research Engineer",
           "description": "__PORTFOLIO_DESCRIPTION__",
           "sameAs": [
             "https://github.com/tryskian",

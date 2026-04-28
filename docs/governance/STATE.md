@@ -52,7 +52,7 @@ Last updated: 2026-04-25
   - no animation-first/UI-heavy exploration in the public surface
   - favicon now uses tracked `api/static/favicon.png`
   - current visible identity line keeps the `creative designer who somehow
-    became...` phrasing and swaps in `Applied AI Systems Designer`
+    became...` phrasing and swaps in `Applied AI Research Engineer`
 - Operator command surface:
   - `make day-start` / `make sod` are available as startup shortcuts
   - `make eod` remains end-of-day only

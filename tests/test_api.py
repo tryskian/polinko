@@ -114,12 +114,12 @@ class PolinkoApiTests(unittest.TestCase):
             resp.text,
         )
         self.assertIn(
-            'content="Krystian Fernando is an applied AI systems designer '
+            'content="Krystian Fernando is an applied AI research engineer '
             "working in human-AI interaction and designing evals around the "
             'useful signals models reveal when they fail."',
             resp.text,
         )
-        self.assertIn('"jobTitle": "Applied AI Systems Designer"', resp.text)
+        self.assertIn('"jobTitle": "Applied AI Research Engineer"', resp.text)
         self.assertIn(
             "github.com/tryskian/polinko",
             resp.text,
