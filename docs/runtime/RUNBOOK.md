@@ -427,14 +427,23 @@ Read-only DB audits remain allowed:
 2. Start keep-awake only when explicitly requested in-session.
 3. Start command:
    - `make caffeinate-on`
+   - optional slot:
+     - `make caffeinate-on CAFFEINATE_SLOT=eval-a`
 4. Verify status:
    - `make caffeinate-status`
+   - status is slot-scoped and also lists all active `caffeinate` PIDs
 5. Stop command at wrap:
    - `make caffeinate-off`
+   - optional slot:
+     - `make caffeinate-off CAFFEINATE_SLOT=eval-a`
 6. Full wrap command (managed + matching unmanaged keep-awake):
    - `make caffeinate-off-all`
-7. `decaffeinated` remains workflow shorthand. The explicit command is
-   `make caffeinate-off`.
+7. Shorthand aliases:
+   - `make caf`
+   - `make decaf`
+8. PID ownership is slot-based:
+   - default slot uses the current terminal when available, otherwise `default`
+   - one slot only stops its own managed PID
 
 ## Docker Build/Run Smoke
 
