@@ -12,6 +12,10 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+from tools.eval_chat_common import create_chat as _shared_create_chat
+from tools.eval_chat_common import default_headers as _shared_headers
+from tools.eval_chat_common import delete_chat as _shared_delete_chat
+from tools.eval_chat_common import preflight as _shared_preflight
 from tools.eval_gate import gate_counts_from_case_results
 from tools.eval_gate import resolve_fail_closed_status
 from tools.eval_ocr_common import load_attachment_input
@@ -179,7 +183,7 @@ def _find_ordered_phrase_index(
 
 
 def _headers() -> dict[str, str]:
-    return {"Content-Type": "application/json"}
+    return _shared_headers()
 
 
 def _request_json(
@@ -336,38 +340,17 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
 def _create_chat(
     base_url: str, headers: dict[str, str], session_id: str, timeout: int
 ) -> None:
-    _request_json(
-        method="POST",
-        base_url=base_url,
-        path="/chats",
-        headers=headers,
-        payload={"session_id": session_id, "title": session_id},
-        timeout=timeout,
-    )
+    _shared_create_chat(base_url, headers, session_id, timeout)
 
 
 def _delete_chat(
     base_url: str, headers: dict[str, str], session_id: str, timeout: int
 ) -> None:
-    _request_json(
-        method="DELETE",
-        base_url=base_url,
-        path=f"/chats/{session_id}",
-        headers=headers,
-        timeout=timeout,
-    )
+    _shared_delete_chat(base_url, headers, session_id, timeout)
 
 
 def _preflight(base_url: str, headers: dict[str, str], timeout: int) -> None:
-    health = _request_json(
-        method="GET",
-        base_url=base_url,
-        path="/health",
-        headers=headers,
-        timeout=timeout,
-    )
-    if str(health.get("status", "")).lower() != "ok":
-        raise RuntimeError(f"GET /health returned unexpected payload: {health}")
+    _shared_preflight(base_url, headers, timeout, check_chats=False)
 
 
 def _ocr(
