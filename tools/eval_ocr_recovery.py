@@ -7,9 +7,13 @@ import time
 from pathlib import Path
 from typing import Any
 
-import requests
 from dotenv import load_dotenv
 
+from tools.eval_chat_common import create_chat as _create_chat
+from tools.eval_chat_common import default_headers as _headers
+from tools.eval_chat_common import delete_chat as _delete_chat
+from tools.eval_chat_common import request_json as _request_json
+from tools.eval_chat_common import send_chat as _send_chat
 from tools.eval_gate import gate_counts_from_case_results
 from tools.eval_gate import resolve_fail_closed_status
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
@@ -19,109 +23,10 @@ from tools.eval_trace_artifacts import build_eval_trace
 _ONE_BY_ONE_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+qW6QAAAAASUVORK5CYII="
 
 
-def _headers() -> dict[str, str]:
-    return {"Content-Type": "application/json"}
-
-
-def _request_json(
-    *,
-    method: str,
-    base_url: str,
-    path: str,
-    headers: dict[str, str],
-    payload: dict[str, Any] | None = None,
-    timeout: int = 90,
-) -> dict[str, Any]:
-    try:
-        response = requests.request(
-            method=method,
-            url=f"{base_url}{path}",
-            headers=headers,
-            json=payload,
-            timeout=timeout,
-        )
-    except requests.RequestException as exc:
-        raise RuntimeError(f"{method} {path} failed: connection error - {exc}") from exc
-
-    if not response.ok:
-        detail = response.text
-        try:
-            body = response.json()
-            if isinstance(body, dict) and "detail" in body:
-                detail = str(body["detail"])
-        except ValueError:
-            pass
-        raise RuntimeError(
-            f"{method} {path} failed: HTTP {response.status_code} - {detail}"
-        )
-
-    try:
-        body = response.json()
-    except ValueError:
-        return {}
-    return body if isinstance(body, dict) else {}
-
-
 def _preflight(base_url: str, headers: dict[str, str], timeout: int) -> None:
-    payload = _request_json(
-        method="GET",
-        base_url=base_url,
-        path="/health",
-        headers=headers,
-        timeout=timeout,
-    )
-    if str(payload.get("status", "")).lower() != "ok":
-        raise RuntimeError(f"GET /health returned unexpected payload: {payload}")
+    from tools.eval_chat_common import preflight as _shared_preflight
 
-
-def _create_chat(
-    base_url: str, headers: dict[str, str], session_id: str, timeout: int
-) -> None:
-    _request_json(
-        method="POST",
-        base_url=base_url,
-        path="/chats",
-        headers=headers,
-        payload={"session_id": session_id, "title": session_id},
-        timeout=timeout,
-    )
-
-
-def _delete_chat(
-    base_url: str, headers: dict[str, str], session_id: str, timeout: int
-) -> None:
-    _request_json(
-        method="DELETE",
-        base_url=base_url,
-        path=f"/chats/{session_id}",
-        headers=headers,
-        timeout=timeout,
-    )
-
-
-def _send_chat(
-    *,
-    base_url: str,
-    headers: dict[str, str],
-    session_id: str,
-    message: str,
-    attachments: list[dict[str, Any]] | None,
-    timeout: int,
-) -> dict[str, Any]:
-    payload: dict[str, Any] = {
-        "session_id": session_id,
-        "message": message,
-    }
-    if attachments:
-        payload["attachments"] = attachments
-    return _request_json(
-        method="POST",
-        base_url=base_url,
-        path="/chat",
-        headers=headers,
-        payload=payload,
-        timeout=timeout,
-    )
+    _shared_preflight(base_url, headers, timeout, check_chats=False)
 
 
 def _load_cases(path: Path) -> list[dict[str, Any]]:
