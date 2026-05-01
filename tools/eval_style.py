@@ -6,12 +6,17 @@ import time
 from pathlib import Path
 from typing import Any, Literal
 
-import requests
 from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
 from core.responses_parse import parse_structured_output
+from tools.eval_chat_common import chat_message as _chat
+from tools.eval_chat_common import create_chat as _create_chat
+from tools.eval_chat_common import default_headers as _headers
+from tools.eval_chat_common import delete_chat as _delete_chat
+from tools.eval_chat_common import preflight as _preflight
+from tools.eval_chat_common import request_json as _request_json
 from tools.eval_gate import resolve_binary_gate
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
@@ -32,46 +37,6 @@ class StyleJudgeResponse(BaseModel):
     @property
     def passed(self) -> bool:
         return self.pass_
-
-
-def _headers() -> dict[str, str]:
-    return {"Content-Type": "application/json"}
-
-
-def _request_json(
-    *,
-    method: str,
-    base_url: str,
-    path: str,
-    headers: dict[str, str],
-    payload: dict[str, Any] | None = None,
-    timeout: int = 60,
-) -> dict[str, Any]:
-    try:
-        response = requests.request(
-            method=method,
-            url=f"{base_url}{path}",
-            headers=headers,
-            json=payload,
-            timeout=timeout,
-        )
-    except requests.RequestException as exc:
-        raise RuntimeError(f"{method} {path} failed: connection error - {exc}") from exc
-    if not response.ok:
-        detail = response.text
-        try:
-            body = response.json()
-            if isinstance(body, dict) and "detail" in body:
-                detail = str(body["detail"])
-        except ValueError:
-            pass
-        raise RuntimeError(f"{method} {path} failed: HTTP {response.status_code} - {detail}")
-    try:
-        body = response.json()
-    except ValueError:
-        return {}
-    return body if isinstance(body, dict) else {}
-
 
 def _word_count(text: str) -> int:
     return len(re.findall(r"\b\w+\b", text))
@@ -138,65 +103,6 @@ def _load_cases(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
             }
         )
     return normalized, global_forbidden_phrases
-
-
-def _create_chat(base_url: str, headers: dict[str, str], session_id: str, timeout: int) -> None:
-    _request_json(
-        method="POST",
-        base_url=base_url,
-        path="/chats",
-        headers=headers,
-        payload={"session_id": session_id, "title": session_id},
-        timeout=timeout,
-    )
-
-
-def _delete_chat(base_url: str, headers: dict[str, str], session_id: str, timeout: int) -> None:
-    _request_json(
-        method="DELETE",
-        base_url=base_url,
-        path=f"/chats/{session_id}",
-        headers=headers,
-        timeout=timeout,
-    )
-
-
-def _chat(
-    *,
-    base_url: str,
-    headers: dict[str, str],
-    session_id: str,
-    message: str,
-    timeout: int,
-) -> dict[str, Any]:
-    return _request_json(
-        method="POST",
-        base_url=base_url,
-        path="/chat",
-        headers=headers,
-        payload={"session_id": session_id, "message": message},
-        timeout=timeout,
-    )
-
-
-def _preflight(base_url: str, headers: dict[str, str], timeout: int) -> None:
-    health = _request_json(
-        method="GET",
-        base_url=base_url,
-        path="/health",
-        headers=headers,
-        timeout=timeout,
-    )
-    status = str(health.get("status", "")).lower()
-    if status != "ok":
-        raise RuntimeError(f"GET /health returned unexpected payload: {health}")
-    _request_json(
-        method="GET",
-        base_url=base_url,
-        path="/chats",
-        headers=headers,
-        timeout=timeout,
-    )
 
 
 def _judge_case(

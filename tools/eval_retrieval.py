@@ -9,15 +9,21 @@ from dotenv import load_dotenv
 
 from tools.eval_gate import gate_counts_from_case_results
 from tools.eval_gate import resolve_fail_closed_status
+from tools.eval_retrieval_common import chat_message as _chat
+from tools.eval_retrieval_common import create_chat as _create_chat
+from tools.eval_retrieval_common import default_headers
+from tools.eval_retrieval_common import delete_chat as _delete_chat
+from tools.eval_retrieval_common import find_expected_citation as _find_expected_citation
+from tools.eval_retrieval_common import has_cross_session_leak as _has_cross_session_leak
+from tools.eval_retrieval_common import load_cases as _load_cases
+from tools.eval_retrieval_common import preflight as _preflight
+from tools.eval_retrieval_common import seed_ocr_memory as _seed_ocr_memory
+from tools.eval_retrieval_common import set_memory_scope as _set_memory_scope
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
 
 RETRYABLE_HTTP_STATUS_CODES = {429, 500, 502, 503, 504}
-
-
-def _headers() -> dict[str, str]:
-    return {"Content-Type": "application/json"}
 
 
 def _request_json(
@@ -83,217 +89,6 @@ def _request_json(
     raise RuntimeError(f"{method} {path} failed: unknown request error")
 
 
-def _normalize_terms(value: Any) -> list[str]:
-    if not isinstance(value, list):
-        return []
-    terms: list[str] = []
-    for item in value:
-        term = str(item).strip().lower()
-        if term:
-            terms.append(term)
-    return terms
-
-
-def _find_expected_citation(
-    *,
-    memory_used: list[dict[str, Any]],
-    seed_session: str,
-    source_type: str,
-    must_include_terms: list[str],
-) -> dict[str, Any] | None:
-    expected_source = source_type.strip().lower()
-    for item in memory_used:
-        if str(item.get("session_id", "")) != seed_session:
-            continue
-        if str(item.get("source_type", "")).strip().lower() != expected_source:
-            continue
-        snippet = str(item.get("snippet", "")).lower()
-        if all(term in snippet for term in must_include_terms):
-            return item
-    return None
-
-
-def _has_cross_session_leak(
-    memory_used: list[dict[str, Any]], seed_session: str
-) -> bool:
-    return any(str(item.get("session_id", "")) == seed_session for item in memory_used)
-
-
-def _load_cases(path: Path) -> list[dict[str, Any]]:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
-        raise RuntimeError("Cases file must be a JSON object.")
-    cases = payload.get("cases")
-    if not isinstance(cases, list) or not cases:
-        raise RuntimeError("Cases file must include a non-empty 'cases' list.")
-    normalized: list[dict[str, Any]] = []
-    for index, case in enumerate(cases, start=1):
-        if not isinstance(case, dict):
-            raise RuntimeError(f"Case #{index} must be an object.")
-        case_id = str(case.get("id", f"case-{index}")).strip()
-        seed_text = str(case.get("seed_text", "")).strip()
-        query = str(case.get("query", "")).strip()
-        source_type = str(case.get("source_type", "ocr")).strip().lower() or "ocr"
-        required_terms = _normalize_terms(case.get("must_include"))
-        if not case_id or not seed_text or not query:
-            raise RuntimeError(
-                f"Case #{index} is missing required fields ('id', 'seed_text', 'query')."
-            )
-        normalized.append(
-            {
-                "id": case_id,
-                "seed_text": seed_text,
-                "query": query,
-                "source_type": source_type,
-                "must_include": required_terms,
-            }
-        )
-    return normalized
-
-
-def _create_chat(
-    base_url: str,
-    headers: dict[str, str],
-    session_id: str,
-    timeout: int,
-    retries: int,
-    retry_delay_ms: int,
-) -> None:
-    _request_json(
-        method="POST",
-        base_url=base_url,
-        path="/chats",
-        headers=headers,
-        payload={"session_id": session_id, "title": session_id},
-        timeout=timeout,
-        retries=retries,
-        retry_delay_ms=retry_delay_ms,
-    )
-
-
-def _delete_chat(
-    base_url: str,
-    headers: dict[str, str],
-    session_id: str,
-    timeout: int,
-    retries: int,
-    retry_delay_ms: int,
-) -> None:
-    _request_json(
-        method="DELETE",
-        base_url=base_url,
-        path=f"/chats/{session_id}",
-        headers=headers,
-        timeout=timeout,
-        retries=retries,
-        retry_delay_ms=retry_delay_ms,
-    )
-
-
-def _set_memory_scope(
-    *,
-    base_url: str,
-    headers: dict[str, str],
-    session_id: str,
-    scope: str,
-    timeout: int,
-    retries: int,
-    retry_delay_ms: int,
-) -> None:
-    _request_json(
-        method="POST",
-        base_url=base_url,
-        path=f"/chats/{session_id}/personalization",
-        headers=headers,
-        payload={"memory_scope": scope},
-        timeout=timeout,
-        retries=retries,
-        retry_delay_ms=retry_delay_ms,
-    )
-
-
-def _seed_ocr_memory(
-    *,
-    base_url: str,
-    headers: dict[str, str],
-    session_id: str,
-    source_name: str,
-    text: str,
-    timeout: int,
-    retries: int,
-    retry_delay_ms: int,
-) -> dict[str, Any]:
-    return _request_json(
-        method="POST",
-        base_url=base_url,
-        path="/skills/ocr",
-        headers=headers,
-        payload={
-            "session_id": session_id,
-            "source_name": source_name,
-            "mime_type": "text/plain",
-            "text_hint": text,
-            "attach_to_chat": False,
-        },
-        timeout=timeout,
-        retries=retries,
-        retry_delay_ms=retry_delay_ms,
-    )
-
-
-def _chat(
-    *,
-    base_url: str,
-    headers: dict[str, str],
-    session_id: str,
-    message: str,
-    timeout: int,
-    retries: int,
-    retry_delay_ms: int,
-) -> dict[str, Any]:
-    return _request_json(
-        method="POST",
-        base_url=base_url,
-        path="/chat",
-        headers=headers,
-        payload={"session_id": session_id, "message": message},
-        timeout=timeout,
-        retries=retries,
-        retry_delay_ms=retry_delay_ms,
-    )
-
-
-def _preflight(
-    base_url: str,
-    headers: dict[str, str],
-    timeout: int,
-    retries: int,
-    retry_delay_ms: int,
-) -> None:
-    health = _request_json(
-        method="GET",
-        base_url=base_url,
-        path="/health",
-        headers=headers,
-        timeout=timeout,
-        retries=retries,
-        retry_delay_ms=retry_delay_ms,
-    )
-    status = str(health.get("status", "")).lower()
-    if status != "ok":
-        raise RuntimeError(f"GET /health returned unexpected payload: {health}")
-
-    _request_json(
-        method="GET",
-        base_url=base_url,
-        path="/chats",
-        headers=headers,
-        timeout=timeout,
-        retries=retries,
-        retry_delay_ms=retry_delay_ms,
-    )
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run retrieval quality checks for global recall and session isolation.",
@@ -305,7 +100,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--cases",
-        default="docs/eval/cases/retrieval_eval_cases.json",
+        default="docs/eval/beta_2_0/retrieval_eval_cases.json",
         help="Path to retrieval eval cases JSON file.",
     )
     parser.add_argument(
@@ -367,7 +162,7 @@ def main() -> int:
     if args.request_retry_delay_ms < 0:
         raise SystemExit("--request-retry-delay-ms must be >= 0")
     run_id = args.run_id.strip() or str(int(time.time()))
-    headers = _headers()
+    headers = default_headers()
 
     print(f"Running retrieval eval on {args.base_url}")
     print(
@@ -376,9 +171,10 @@ def main() -> int:
     )
     try:
         _preflight(
-            args.base_url,
-            headers,
-            args.timeout,
+            request_json=_request_json,
+            base_url=args.base_url,
+            headers=headers,
+            timeout=args.timeout,
             retries=args.request_retries,
             retry_delay_ms=args.request_retry_delay_ms,
         )
@@ -413,22 +209,25 @@ def main() -> int:
         session_leak = False
         try:
             _create_chat(
-                args.base_url,
-                headers,
-                seed_session,
-                args.timeout,
+                request_json=_request_json,
+                base_url=args.base_url,
+                headers=headers,
+                session_id=seed_session,
+                timeout=args.timeout,
                 retries=args.request_retries,
                 retry_delay_ms=args.request_retry_delay_ms,
             )
             _create_chat(
-                args.base_url,
-                headers,
-                target_session,
-                args.timeout,
+                request_json=_request_json,
+                base_url=args.base_url,
+                headers=headers,
+                session_id=target_session,
+                timeout=args.timeout,
                 retries=args.request_retries,
                 retry_delay_ms=args.request_retry_delay_ms,
             )
             _seed_ocr_memory(
+                request_json=_request_json,
                 base_url=args.base_url,
                 headers=headers,
                 session_id=seed_session,
@@ -440,6 +239,7 @@ def main() -> int:
             )
 
             _set_memory_scope(
+                request_json=_request_json,
                 base_url=args.base_url,
                 headers=headers,
                 session_id=target_session,
@@ -449,6 +249,7 @@ def main() -> int:
                 retry_delay_ms=args.request_retry_delay_ms,
             )
             global_chat = _chat(
+                request_json=_request_json,
                 base_url=args.base_url,
                 headers=headers,
                 session_id=target_session,
@@ -481,6 +282,7 @@ def main() -> int:
             global_found = True
 
             _set_memory_scope(
+                request_json=_request_json,
                 base_url=args.base_url,
                 headers=headers,
                 session_id=target_session,
@@ -490,6 +292,7 @@ def main() -> int:
                 retry_delay_ms=args.request_retry_delay_ms,
             )
             session_chat = _chat(
+                request_json=_request_json,
                 base_url=args.base_url,
                 headers=headers,
                 session_id=target_session,
@@ -552,9 +355,10 @@ def main() -> int:
                 for session_id in (seed_session, target_session):
                     try:
                         _delete_chat(
-                            args.base_url,
-                            headers,
-                            session_id,
+                            request_json=_request_json,
+                            base_url=args.base_url,
+                            headers=headers,
+                            session_id=session_id,
                             timeout=args.timeout,
                             retries=args.request_retries,
                             retry_delay_ms=args.request_retry_delay_ms,

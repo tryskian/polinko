@@ -4,9 +4,8 @@
 
 ## Mission
 
-Build a human-led, AI-assisted research system for evaluating human-AI
-interaction, OCR reliability, and failure signals through inspectable software,
-tests, diagrams, and evidence.
+Build a human-led, repo-native research system for inspecting AI behavior
+through failure, OCR reliability, and evidence-preserving evaluation.
 
 ## Durable Rules
 
@@ -24,12 +23,18 @@ tests, diagrams, and evidence.
   - `pass`/`fail` only
   - lockset lane is release-gating
   - growth lane is fail-tolerant and signal-seeking
+- Failure is primary signal:
+  - pass-rate polish must not erase unresolved failure pressure
 - Prefer deterministic, testable changes.
 - Fail fast on config/auth/runtime issues.
 - Keep one canonical command surface per operator action.
 - Inspect evidence before interpretation:
   - source files, logs, screenshots, transcripts, and reports win over summary
   - if a named source has not been inspected, do not speak as if it has
+- Start from meaning before tools:
+  - orient in this order: research, theory, transcripts, tracked docs, then
+    tools/code
+  - do not present guessed momentum as execution efficiency
 - Preserve evidence chains:
   - do not replace raw evidence with recursive summaries
   - archive before delete
@@ -69,8 +74,7 @@ tests, diagrams, and evidence.
   - process, engineering/tooling, runtime/API, dependency/workflow, and eval
     governance only
 - `docs/governance/STATE.md`
-  - current truth
-  - no daily logs
+  - current tracked truth
 - `docs/runtime/RUNBOOK.md`
   - procedures and command ownership
 - `docs/runtime/ARCHITECTURE.md`

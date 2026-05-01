@@ -2,18 +2,20 @@
 
 # Project State
 
-Last updated: 2026-04-25
+Last updated: 2026-05-01
 
 ## Current Truth
 
 - Backend-first runtime remains canonical:
   - FastAPI API + CLI are the execution surfaces.
   - prompt/runtime behavior stays minimal and deterministic.
-- Repo-as-research-project is the active public architecture:
+- Repo-as-research remains the public architecture:
   - repository is public
   - repo is the research surface
-  - website is a lightweight doorway into the work
+  - website is a lightweight doorway
   - public-facing docs live under `docs/public/` and `docs/research/`
+- Human-led collaboration remains explicit:
+  - Krystian owns theory, evidence interpretation, and publication decisions
   - OpenAI Codex is the active repo-local coding agent and engineering
     collaborator
   - OpenAI Platform APIs are used for model-backed runtime and eval calls
@@ -31,13 +33,11 @@ Last updated: 2026-04-25
     - `robots.txt`
     - `sitemap.xml`
   - canonical URL/SEO metadata should use `https://www.krystian.io/`
-- Public docs/research surface is cleaner than the initial application push:
+- Public docs/research surface is now the main explanatory layer:
   - `docs/` now has a landing page
-  - architecture has a visual-first entry
-  - README carries badges and a compact research surface link
+  - root README points into a compact public reading path
   - curated research surface lives under `docs/research/`
-  - README/Charter/State/Method now make Codex collaboration explicit for
-    external readers
+  - Method and Charter make collaboration boundaries explicit
 - Portfolio surface remains intentionally lean:
   - single-screen about/contact doorway
   - tracked fallback lives in `api/app_factory.py`
@@ -75,11 +75,6 @@ Last updated: 2026-04-25
   - growth is fail-tolerant
   - `/viz/pass-fail` is a fail-signal instrument
   - `manual_evals.db` remains the integrated manual-eval warehouse
-- Application state:
-  - initial OpenAI application push is complete
-  - do not duplicate-submit overlapping engineering applications in the same
-    cycle
-  - private application forms/resume exports remain local and ignored
 - Documentation rule:
   - `DECISIONS` is durable archive
   - `STATE` is the tracked public current-truth surface
