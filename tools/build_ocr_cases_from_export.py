@@ -1099,6 +1099,7 @@ def build_from_export(
                 and lane == "typed"
                 and ocr_framing_signal
                 and not positive_signal
+                and correction_overlap_signal
                 and has_multi_token_transcription
                 and len(transcription_anchor_terms) >= 3
             )
