@@ -300,6 +300,16 @@ Read-only DB audits remain allowed:
    - `Developer: Reload Window`
 5. Ensure Problems view is not filtered to active file only.
 
+## Incremental Validation
+
+1. Use compile-only checks for tiny internal seams:
+   - `make pycheck FILES="tools/foo.py tools/bar.py"`
+2. Use one-module tests when only one surface changed:
+   - `make test-one TEST=tests.test_eval_file_search`
+3. Use small batches when a seam spans a few related modules:
+   - `make test-targeted TESTS="tests.test_eval_file_search tests.test_eval_retrieval"`
+4. Use `make test` at checkpoint boundaries.
+
 ## Optional Keep-Awake Session Policy
 
 1. Default state is off (do not run `caffeinate` unless requested).
