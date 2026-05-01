@@ -9,6 +9,7 @@ DOCKER_IMAGE ?= polinko:dev
 DOCKER_PORT ?= 8000
 DEV_HOST ?= 127.0.0.1
 DEV_BACKEND_PORT ?= 8000
+SERVER_READY_TIMEOUT ?= 30
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
 DEV_VIZ_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/viz/pass-fail
 DEV_PORTFOLIO_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/portfolio
@@ -442,9 +443,27 @@ server-daemon:
 	nohup $(PYTHON) -m uvicorn server:app --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" </dev/null >"$(SERVER_LOG)" 2>&1 & \
 	PID=$$!; \
 	echo "$$PID" >"$(SERVER_PID_FILE)"; \
-	sleep 0.2; \
+	READY=0; \
+	for _ in $$(seq 1 $$(( $(SERVER_READY_TIMEOUT) * 2 ))); do \
+		if ! kill -0 "$$PID" 2>/dev/null; then \
+			break; \
+		fi; \
+		if curl -sf "http://$(DEV_HOST):$(DEV_BACKEND_PORT)/health" >/dev/null 2>&1; then \
+			READY=1; \
+			break; \
+		fi; \
+		sleep 0.5; \
+	done; \
 	if kill -0 "$$PID" 2>/dev/null; then \
-		echo "server-daemon started (PID $$PID, log: $(SERVER_LOG))."; \
+		if [ "$$READY" -eq 1 ]; then \
+			echo "server-daemon started (PID $$PID, log: $(SERVER_LOG))."; \
+		else \
+			kill "$$PID" >/dev/null 2>&1 || true; \
+			wait "$$PID" 2>/dev/null || true; \
+			rm -f "$(SERVER_PID_FILE)"; \
+			echo "Failed to start server-daemon within $(SERVER_READY_TIMEOUT)s. Check $(SERVER_LOG)."; \
+			exit 1; \
+		fi; \
 	else \
 		rm -f "$(SERVER_PID_FILE)"; \
 		echo "Failed to start server-daemon. Check $(SERVER_LOG)."; \
