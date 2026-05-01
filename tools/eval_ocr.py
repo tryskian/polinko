@@ -1,5 +1,4 @@
 import argparse
-import base64
 import json
 import os
 import re
@@ -18,7 +17,7 @@ from tools.eval_chat_common import delete_chat as _shared_delete_chat
 from tools.eval_chat_common import preflight as _shared_preflight
 from tools.eval_gate import gate_counts_from_case_results
 from tools.eval_gate import resolve_fail_closed_status
-from tools.eval_ocr_common import load_attachment_input
+from tools.eval_ocr_common import build_ocr_request_input
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
@@ -732,16 +731,13 @@ def main() -> int:
         mime_type = ""
         try:
             _create_chat(args.base_url, headers, session_id, args.timeout)
-            raw_bytes, mime_type, _source_name, _text_hint = load_attachment_input(
+            data_base64, mime_type = build_ocr_request_input(
                 image_path_raw=image_path_value,
-                source_name=case["source_name"],
                 mime_type=case["mime_type"],
-                text_hint=case["text_hint"],
                 placeholder_bytes=b"0",
                 placeholder_mime_type="application/octet-stream",
                 file_fallback_mime_type="application/octet-stream",
             )
-            data_base64 = base64.b64encode(raw_bytes).decode("ascii")
             payload = _ocr_with_retries(
                 base_url=args.base_url,
                 headers=headers,

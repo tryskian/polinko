@@ -58,6 +58,26 @@ def build_data_url(*, raw_bytes: bytes, mime_type: str) -> str:
     return f"data:{mime_type};base64,{payload}"
 
 
+def build_ocr_request_input(
+    *,
+    image_path_raw: str | None,
+    mime_type: str | None,
+    placeholder_bytes: bytes,
+    placeholder_mime_type: str,
+    file_fallback_mime_type: str = "application/octet-stream",
+) -> tuple[str, str]:
+    raw_bytes, resolved_mime_type, _source_name, _text_hint = load_attachment_input(
+        image_path_raw=image_path_raw,
+        source_name=None,
+        mime_type=mime_type,
+        text_hint=None,
+        placeholder_bytes=placeholder_bytes,
+        placeholder_mime_type=placeholder_mime_type,
+        file_fallback_mime_type=file_fallback_mime_type,
+    )
+    return base64.b64encode(raw_bytes).decode("ascii"), resolved_mime_type
+
+
 def build_chat_attachment(
     *,
     data_base64: str,

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from tools.eval_ocr_common import build_chat_attachment
 from tools.eval_ocr_common import build_data_url
+from tools.eval_ocr_common import build_ocr_request_input
 from tools.eval_ocr_common import load_attachment_input
 
 
@@ -68,6 +69,32 @@ class OcrCommonTests(unittest.TestCase):
                 "memory_scope": "global",
             },
         )
+
+    def test_build_ocr_request_input_uses_placeholder_bytes_when_no_image(self) -> None:
+        data_base64, mime_type = build_ocr_request_input(
+            image_path_raw="",
+            mime_type=None,
+            placeholder_bytes=b"0",
+            placeholder_mime_type="application/octet-stream",
+        )
+
+        self.assertEqual(data_base64, "MA==")
+        self.assertEqual(mime_type, "application/octet-stream")
+
+    def test_build_ocr_request_input_reads_file_and_encodes_bytes(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            image_path = Path(tmpdir) / "sample.png"
+            image_path.write_bytes(b"png-bytes")
+
+            data_base64, mime_type = build_ocr_request_input(
+                image_path_raw=str(image_path),
+                mime_type=None,
+                placeholder_bytes=b"0",
+                placeholder_mime_type="application/octet-stream",
+            )
+
+        self.assertEqual(data_base64, "cG5nLWJ5dGVz")
+        self.assertEqual(mime_type, "image/png")
 
 
 if __name__ == "__main__":
