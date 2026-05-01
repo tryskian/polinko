@@ -1,7 +1,6 @@
 import argparse
 import base64
 import json
-import mimetypes
 import os
 import re
 import time
@@ -15,6 +14,7 @@ from dotenv import load_dotenv
 
 from tools.eval_gate import gate_counts_from_case_results
 from tools.eval_gate import resolve_fail_closed_status
+from tools.eval_ocr_common import load_attachment_input
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
@@ -749,20 +749,16 @@ def main() -> int:
         mime_type = ""
         try:
             _create_chat(args.base_url, headers, session_id, args.timeout)
-            if image_path is not None:
-                if not image_path.is_file():
-                    raise RuntimeError(f"image_path does not exist: {image_path}")
-                raw_bytes = image_path.read_bytes()
-            else:
-                # Placeholder payload for text-hint-only deterministic cases.
-                raw_bytes = b"0"
-            data_base64 = base64.b64encode(raw_bytes).decode("ascii")
-            inferred_mime = case["mime_type"] or (
-                mimetypes.guess_type(str(image_path))[0]
-                if image_path is not None
-                else "application/octet-stream"
+            raw_bytes, mime_type, _source_name, _text_hint = load_attachment_input(
+                image_path_raw=image_path_value,
+                source_name=case["source_name"],
+                mime_type=case["mime_type"],
+                text_hint=case["text_hint"],
+                placeholder_bytes=b"0",
+                placeholder_mime_type="application/octet-stream",
+                file_fallback_mime_type="application/octet-stream",
             )
-            mime_type = str(inferred_mime or "application/octet-stream")
+            data_base64 = base64.b64encode(raw_bytes).decode("ascii")
             payload = _ocr_with_retries(
                 base_url=args.base_url,
                 headers=headers,
