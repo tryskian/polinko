@@ -30,6 +30,11 @@ GATE_PORT ?= 8066
 GATE_BASE_URL ?= http://127.0.0.1:$(GATE_PORT)
 GATE_SESSION_DB ?= /tmp/polinko-quality-gate-sessions.db
 GATE_VECTOR_DB ?= /tmp/polinko-quality-gate-vector.db
+SMOKE_PORT ?= 8067
+SMOKE_BASE_URL ?= http://127.0.0.1:$(SMOKE_PORT)
+SMOKE_HISTORY_DB ?= /tmp/polinko-eval-smoke-history.db
+SMOKE_MEMORY_DB ?= /tmp/polinko-eval-smoke-memory.db
+SMOKE_VECTOR_DB ?= /tmp/polinko-eval-smoke-vector.db
 HALLUCINATION_EVAL_MODE ?= judge
 HALLUCINATION_JUDGE_MODEL ?= gpt-4.1-mini
 HALLUCINATION_JUDGE_API_KEY_ENV ?= OPENAI_API_KEY
@@ -139,7 +144,7 @@ REQUIREMENTS_IN ?= requirements.in
 REQUIREMENTS_LOCK ?= requirements.lock
 PIP_TOOLS_VERSION ?= 7.5.3
 
-.PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-docs-check eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test test-one test-targeted pycheck lint-docs mermaid-render d3-render public-diagrams-render transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-docs-check eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test test-one test-targeted pycheck lint-docs mermaid-render d3-render public-diagrams-render transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image api-smoke eval-smoke eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 .PHONY: frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 .PHONY: eod-git-check eod-preflight
 
@@ -965,6 +970,63 @@ eval-clip-ab-readiness:
 
 backfill-eval-traces:
 	$(PYTHON) -m tools.backfill_eval_trace_artifacts
+
+api-smoke:
+	@echo "Running API smoke (fresh local server + small endpoint calls)..."
+	@set -eu; \
+		BASE_URL="$(SMOKE_BASE_URL)"; \
+		rm -f "$(SMOKE_HISTORY_DB)" "$(SMOKE_MEMORY_DB)" "$(SMOKE_VECTOR_DB)"; \
+		POLINKO_HISTORY_DB_PATH="$(SMOKE_HISTORY_DB)" \
+		POLINKO_MEMORY_DB_PATH="$(SMOKE_MEMORY_DB)" \
+		POLINKO_VECTOR_DB_PATH="$(SMOKE_VECTOR_DB)" \
+		POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
+		$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port $(SMOKE_PORT) >/tmp/polinko-api-smoke.log 2>&1 & \
+		SERVER_PID=$$!; \
+		trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
+		READY=0; \
+		for i in $$(seq 1 100); do \
+			if curl -fsS "$$BASE_URL/health" >/dev/null 2>&1; then \
+				READY=1; \
+				break; \
+			fi; \
+			sleep 0.2; \
+		done; \
+		if [ "$$READY" -ne 1 ]; then \
+			echo "Server failed to start. See /tmp/polinko-api-smoke.log"; \
+			exit 1; \
+		fi; \
+		$(PYTHON) -m tools.api_smoke --base-url "$$BASE_URL"; \
+		echo "API smoke passed."
+
+eval-smoke:
+	@echo "Running eval smoke (fresh local server + api smoke + response behaviour + retrieval + file search)..."
+	@set -eu; \
+		BASE_URL="$(SMOKE_BASE_URL)"; \
+		rm -f "$(SMOKE_HISTORY_DB)" "$(SMOKE_MEMORY_DB)" "$(SMOKE_VECTOR_DB)"; \
+		POLINKO_HISTORY_DB_PATH="$(SMOKE_HISTORY_DB)" \
+		POLINKO_MEMORY_DB_PATH="$(SMOKE_MEMORY_DB)" \
+		POLINKO_VECTOR_DB_PATH="$(SMOKE_VECTOR_DB)" \
+		POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
+		$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port $(SMOKE_PORT) >/tmp/polinko-eval-smoke.log 2>&1 & \
+		SERVER_PID=$$!; \
+		trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
+		READY=0; \
+		for i in $$(seq 1 100); do \
+			if curl -fsS "$$BASE_URL/health" >/dev/null 2>&1; then \
+				READY=1; \
+				break; \
+			fi; \
+			sleep 0.2; \
+		done; \
+		if [ "$$READY" -ne 1 ]; then \
+			echo "Server failed to start. See /tmp/polinko-eval-smoke.log"; \
+			exit 1; \
+		fi; \
+		$(PYTHON) -m tools.api_smoke --base-url "$$BASE_URL"; \
+		$(PYTHON) -m tools.eval_response_behaviour --base-url "$$BASE_URL" --strict; \
+		$(PYTHON) -m tools.eval_retrieval --base-url "$$BASE_URL" --request-retries "$(RETRIEVAL_REQUEST_RETRIES)" --request-retry-delay-ms "$(RETRIEVAL_REQUEST_RETRY_DELAY_MS)"; \
+		$(PYTHON) -m tools.eval_file_search --base-url "$$BASE_URL"; \
+		echo "Eval smoke passed."
 
 eval-reports:
 	@$(MAKE) eval-retrieval-report

@@ -309,6 +309,25 @@ Read-only DB audits remain allowed:
 3. Use small batches when a seam spans a few related modules:
    - `make test-targeted TESTS="tests.test_eval_file_search tests.test_eval_retrieval"`
 4. Use `make test` at checkpoint boundaries.
+5. After tooling or runtime changes, run a small live API smoke first:
+   - `make api-smoke`
+6. `make api-smoke` starts a fresh temporary server on its own port and checks:
+   - `GET /health`
+   - `GET /chats`
+   - `POST /chats`
+   - `POST /chats/{session_id}/personalization`
+   - `POST /skills/ocr`
+   - `POST /skills/file_search`
+   - `POST /chat`
+   - `DELETE /chats/{session_id}`
+7. Then run the live eval smoke before moving on:
+   - `make eval-smoke`
+8. `make eval-smoke` starts a fresh temporary server on its own port, runs:
+   - `tools.api_smoke`
+   - `tools.eval_response_behaviour`
+   - `tools.eval_retrieval`
+   - `tools.eval_file_search`
+9. Treat `make api-smoke` + `make eval-smoke` as the default post-change safety path for Polinko.
 
 ## Optional Keep-Awake Session Policy
 
