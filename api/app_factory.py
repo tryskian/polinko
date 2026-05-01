@@ -42,6 +42,7 @@ from core.history_store import (
 )
 from core.prompts import ACTIVE_PROMPT, ACTIVE_PROMPT_VERSION
 from core.rate_limit import SlidingWindowRateLimiter
+from core.responses_parse import parse_structured_output
 from core.runtime import create_agent, create_run_config, create_session
 from core.vector_store import VectorMatch, VectorStore
 
@@ -1694,14 +1695,13 @@ def _build_structured_extraction(
         f"{source_snippet}"
     )
     try:
-        response = responses_client.responses.parse(
+        model_structured = parse_structured_output(
+            responses_client=responses_client,
             model=deps.extraction_structured_model,
             input=prompt,
             text_format=ExtractionStructuredResponse,
+            missing_payload_message="Structured extraction payload must be a JSON object.",
         )
-        model_structured = response.output_parsed
-        if model_structured is None:
-            raise ValueError("Structured extraction payload must be a JSON object.")
         metadata_fields = (
             "schema_version",
             "source_type",

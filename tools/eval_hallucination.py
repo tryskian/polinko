@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
+from core.responses_parse import parse_structured_output
 from tools.eval_gate import resolve_binary_gate
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
@@ -258,14 +259,13 @@ def _judge_case(
         f"forbidden_phrases: {forbidden_text}\n\n"
         f"assistant_answer: {answer}"
     )
-    response = judge_client.responses.parse(
+    payload = parse_structured_output(
+        responses_client=judge_client,
         model=model,
         input=prompt,
         text_format=HallucinationJudgeResponse,
+        missing_payload_message="Judge payload must be a JSON object.",
     )
-    payload = response.output_parsed
-    if payload is None:
-        raise RuntimeError("Judge payload must be a JSON object.")
     return {
         "pass": payload.passed,
         "score": payload.score,
