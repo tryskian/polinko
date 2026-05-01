@@ -11,8 +11,7 @@ human-led, AI-assisted, repo-native evaluation lab with a local-first FastAPI
 backend, OCR-forward reliability loops, binary eval gates, and evidence-first
 documentation.
 
-The website is a lightweight doorway into the work. The repository is the
-research surface.
+The website is a lightweight doorway. The repository is the research surface.
 
 OpenAI Codex is the active coding agent and engineering collaborator in this
 repository. Polinko is built through a human-led, repo-local workflow where
@@ -28,6 +27,7 @@ Apache-2.0. See [LICENSE](LICENSE).
 If you are reading Polinko as a research project, start with the curated public
 path:
 
+- [Polinko in Brief](docs/public/IN_BRIEF.md)
 - [Research Notes](docs/public/README.md)
 - [Method & Authorship](docs/public/METHOD.md)
 - [Hypothesis](docs/public/HYPOTHESIS.md)
@@ -37,20 +37,15 @@ path:
 
 ## What This Repo Is
 
-- Backend-first runtime:
-  - FastAPI API + CLI are canonical.
-- Research object:
-  - tracked docs, tests, evals, and diagrams are the main research surface.
-- Public doorway:
-  - `https://www.krystian.io/` points into the work; it does not recreate the
-    research system.
-- Collaboration model:
-  - research direction, evidence interpretation, and publication decisions are
-    human-led
-  - OpenAI Codex is the primary repo-local coding agent and engineering
-    collaborator
-  - OpenAI Platform APIs power model-backed OCR, eval, retrieval, and runtime
-    calls
+- FastAPI API + CLI are canonical.
+- Tracked docs, tests, evals, and diagrams are the main research surface.
+- `https://www.krystian.io/` points into the work; it does not recreate the
+  research system.
+- Research direction and publication decisions are human-led.
+- OpenAI Codex is the primary repo-local coding agent and engineering
+  collaborator.
+- OpenAI Platform APIs power model-backed OCR, eval, retrieval, and runtime
+  calls.
 
 ## Quick Start
 

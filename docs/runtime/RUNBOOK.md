@@ -4,12 +4,9 @@
 
 ## When to Read This
 
-- Startup and environment checks:
-  use this when you need the canonical repo startup path.
-- Debugging or operational recovery:
-  use this when runtime behaviour, eval outputs, or local state look wrong.
-- Procedure lookup:
-  use this when you need the sanctioned command surface instead of memory.
+- startup and environment checks
+- debugging or operational recovery
+- sanctioned command lookup
 
 ## Branch, Fork, and Worktree Policy
 
@@ -108,14 +105,10 @@
    - `make eod-stop`
    - `make eod-git-check` (`make eod` only)
 5. Purpose:
-   - keep local transcript records in consistent rich format
-   - enforce same-day current-truth updates for tracked `STATE` and the local
-     handoff note when present
-   - refresh docs for current truth before closeout validation
-   - refresh running docs in place rather than appending daily log sections
-   - catch build/docs drift before day-close
-   - enforce merged clean `main` as the only valid EOD repository state
-   - hand off a clean validation state for next startup
+   - keep transcripts consistent
+   - refresh tracked current truth and local handoff when present
+   - catch build/docs drift before closeout
+   - enforce merged clean `main`
 6. Kernel closeout (mandatory):
    - list kernels executed that day (one line per kernel)
    - inspect each kernel against:
@@ -273,126 +266,27 @@ Read-only DB audits remain allowed:
    - keep eval/gate logic server-side and binary
    - do not use fixture mode outputs for quality gate decisions
 
-## OCR-Forward Operating Model
+## OCR Runtime Reference
 
-1. Treat OCR as the primary eval reliability lane.
-2. Run two parallel lane types:
-   - `lockset` lane:
-     - strict release gate, must stay green
-     - currently represented by benchmark subsets
-       (`handwriting`, `typed`, `illustration`)
-   - `growth` lane:
-     - fail-tolerant novel-case lane
-     - used to measure pass-from-fail movement, not to block release directly
-3. Canonical command sequence:
-   - one-shot autonomous kernel (mine -> widen -> stability -> growth -> fail cohort -> focus replay):
-     - `make ocrkernel`
-     - optional explicit export root override:
-       - `make ocrkernel CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+1. OCR is the primary reliability lane.
+2. `lockset` stays release-gating and binary.
+3. `growth` stays fail-tolerant and exploratory.
+4. Use `docs/runtime/OCR_OPERATING_MODEL.md` for the full OCR command surface,
+   output paths, and pressure-tuning knobs.
+5. Normal operator path:
    - mine/build cases:
      - `make ocrmine`
-     - optional explicit override:
-       - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
-     - optional local default export root fallback (when configured outside
-       tracked files):
-       - `CGPT_EXPORT_ROOT_DEFAULT=/abs/path/to/CGPT-DATA-EXPORT`
-   - run widened growth lane (fail-tolerant, batch-first):
-     - `make ocrwiden`
-     - explicit synchronous fallback:
-       - `make ocrwidensync`
-     - optional bounded batch run:
-       - `make ocrwiden OCR_GROWTH_EVAL_OFFSET=0 OCR_GROWTH_EVAL_MAX_CASES=40`
-     - optional timeout-safe slice run (prevents long stalled requests):
-       - `make ocrwiden OCR_GROWTH_EVAL_MAX_CASES=40 OCR_EVAL_TIMEOUT=35 OCR_EVAL_OCR_RETRIES=0`
-     - optional chunked full-window run:
-       - `make ocrwidenall OCR_GROWTH_BATCH_SIZE=40`
-     - retry-tuned chunked run (for transient OCR timeouts):
-       - `make ocrwidenall OCR_GROWTH_BATCH_SIZE=40 OCR_GROWTH_OCR_RETRIES=2 OCR_GROWTH_OCR_RETRY_DELAY_MS=750`
-     - `make ocrstablegrowth`
+   - run the end-to-end kernel when you want the full lane:
+     - `make ocrkernel`
    - run lockset lanes:
      - `make ocrhandbench`
      - `make ocrtypebench`
      - `make ocrillubench`
-   - run stability replays:
-     - `make ocrstablehand`
-     - `make ocrstabletype`
-     - `make ocrstableillu`
-   - compute growth-lane pass-from-fail metrics:
+   - compute growth metrics and focus follow-up:
      - `make ocrgrowth`
-   - materialise stable growth FAIL cohort for next-kernel remediation:
      - `make ocrfails`
-     - cohort is filtered to OCR-framed transcript episodes
-       (`ocr_framing_signal=true`) via
-       `.local/eval_cases/ocr_transcript_cases_review.json`
-     - if cohort is unexpectedly empty, align min-runs with the stability
-       report window (for example `make ocrfails OCR_STABILITY_RUNS=3`) or
-       rerun `make ocrstablegrowth` with the target run count.
-   - run focused replay on fail-derived subset (fast remediation kernel):
-     - build focused cases from cohort:
-       - `make ocrfocuscases`
-     - run focused stability replay:
-       - `make eval-ocr-focus-stability`
-   - one-shot command (metrics + cohort + focused replay):
      - `make ocrfocus`
-     - optional knobs:
-       - `OCR_FOCUS_MAX_CASES=<n>`
-       - `OCR_FOCUS_INCLUDE_FAIL_HISTORY=true|false`
-       - `OCR_FOCUS_RUNS=<n>`
-       - `OCR_FOCUS_CASE_DELAY_MS=<ms>`
-       - `OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS=<ms>`
-       - `OCR_FOCUS_SKIP_RECENT_RATE_LIMIT=true|false`
-       - `OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS=<n>`
-   - transient OCR pressure tuning (all single-run OCR eval targets):
-     - `OCR_EVAL_OCR_RETRIES=2 OCR_EVAL_OCR_RETRY_DELAY_MS=750`
-     - on `HTTP 429`, retries now also honor upstream `Retry-After` when present
-       (effective delay = max of configured delay and header delay)
-     - fail-fast remains:
-       - `OCR_MAX_CONSEC_RATE_LIMIT_ERRORS=3`
-   - all stability replay targets (`make ocrstable*`) now stop remaining runs
-     after the first child report with `aborted_due_to_rate_limit=true` to avoid
-     burning repeated provider-throttled runs without new signal.
-   - focused replay adds preflight backoff guard:
-     - if latest `.local/eval_reports/ocr_focus_stability.json` has recent
-       rate-limit abort, `make eval-ocr-focus-stability` auto-skips within
-       `OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS`.
-4. Local output surfaces:
-   - case sets: `.local/eval_cases/`
-     - growth set: `.local/eval_cases/ocr_transcript_cases_growth.json`
-       - growth rows may include `source_quarantine=true` when mined from known
-         unstable sources under strict high-signal guards
-     - growth fail cohort: `.local/eval_cases/ocr_growth_fail_cohort.json`
-     - growth focus set: `.local/eval_cases/ocr_growth_focus_cases.json`
-   - run/stability reports: `.local/eval_reports/`
-     - growth stability: `.local/eval_reports/ocr_growth_stability.json`
-     - growth batch reports: `.local/eval_reports/ocr_growth_batched_runs/`
-     - growth batch summary:
-       - `.local/eval_reports/ocr_growth_batched_summary.json`
-       - `.local/eval_reports/ocr_growth_batched_summary.md`
-   - growth metrics reports:
-     - `.local/eval_reports/ocr_growth_metrics.json`
-     - `.local/eval_reports/ocr_growth_metrics.md`
-   - growth focus stability report:
-     - `.local/eval_reports/ocr_focus_stability.json`
-   - growth fail cohort report:
-     - `.local/eval_reports/ocr_growth_fail_cohort.md`
-     - includes:
-       - `require_ocr_framing`
-       - `skipped_non_framed`
-       - `skipped_case_map_mismatch`
-         - if non-zero, stability history and current growth case map are from
-           different generations; rerun `make ocrstablegrowth` after refreshing
-           growth cases.
-   - miner summary now includes:
-     - `growth_quarantine_cases_written`
-     - `growth_regex_only_cases_written`
-5. Notebook analysis surface:
-   - `make notes`
-   - offline transcript mining refresh (no live OCR calls):
-     - `make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
-   - full online notebook/eval workflow (includes live OCR eval + stability):
-     - `make ocr-notebook-workflow CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
-   - starter template:
-     - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`
+6. Keep historical beta references out of active runtime gates.
 
 ## Python Diagnostics (Ruff + Mypy)
 
