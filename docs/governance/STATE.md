@@ -54,7 +54,6 @@ Last updated: 2026-04-25
   - current visible identity line keeps the `creative designer who somehow
     became...` phrasing and swaps in `Applied AI Research Engineer`
 - Operator command surface:
-  - `make day-start` / `make sod` are available as startup shortcuts
   - `make eod` remains end-of-day only
 - Local frontend contract is intentionally minimal:
   - `frontend/` is local-only and ignored except `.gitkeep`
