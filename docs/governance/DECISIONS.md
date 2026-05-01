@@ -3794,3 +3794,66 @@ quickstart document.
   public repo exposes internal execution context as if it were project
   documentation. The tracked repo still needs one concise public current-truth
   surface, but the per-session handoff belongs in the local operator lane.
+
+## D-230: Tighten public, runtime, and governance docs to one job per surface
+
+- Date: `2026-05-01`
+- Category: `evidence_governance`
+- Tags: `doc_boundaries`, `public_docs`, `runtime_docs`, `anti_repetition`
+- Decision:
+  - add `docs/public/IN_BRIEF.md` as the short synthesis surface for:
+    - what Polinko is
+    - its governing theory
+    - what makes it distinct
+    - its current instrument set
+  - keep `README.md` and `docs/public/README.md` concise and route readers into
+    the brief and the public method/research documents instead of repeating the
+    same identity copy across surfaces.
+  - keep `docs/runtime/ARCHITECTURE.md` structural only.
+  - keep `docs/runtime/RUNBOOK.md` procedural only.
+  - move the full OCR operating procedure into
+    `docs/runtime/OCR_OPERATING_MODEL.md` instead of embedding that recipe
+    directly inside `RUNBOOK`.
+  - keep tracked docs terse and role-specific; transcript refreshers and local
+    orientation notes remain separate evidence and operator surfaces.
+- Validation:
+  - `make lint-docs`
+  - `git diff --check`
+- Why: The repo had the right ideas, but too many docs were speaking at once.
+  Tighter boundaries reduce comprehension cost, preserve the evidence chain,
+  and keep each tracked document responsible for one job instead of layering
+  identity, theory, procedure, and operator notes together.
+
+## D-231: Human-led live smoke is the runtime safety bar after tooling changes
+
+- Date: `2026-05-01`
+- Category: `workflow_governance`
+- Tags: `live_smoke`, `runtime_safety`, `human_led`, `fresh_server`
+- Decision:
+  - treat live post-change smoke validation as mandatory after tooling or
+    runtime changes.
+  - treat the human lead requirement for those smokes as the governing safety
+    rule; the engineer implements and runs the smoke path, but does not choose
+    to skip it.
+  - prefer fresh isolated smoke servers over long-lived daemon state when
+    establishing runtime truth.
+  - add `make api-smoke` as the first live check for core API wiring.
+  - add `make eval-smoke` as the end-to-end live eval check for:
+    - direct `/chat`
+    - response behaviour
+    - retrieval
+    - file search
+  - keep those smokes isolated with temporary runtime DBs so they validate the
+    actual wiring without relying on stale local daemon state.
+  - keep unit tests and targeted test modules as seam checks, but do not treat
+    them as a substitute for live smokes on runtime-touching changes.
+- Validation:
+  - `make api-smoke`
+  - `make eval-smoke`
+  - `make test-targeted TESTS="tests.test_eval_retrieval tests.test_eval_file_search"`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: A stale daemon can fail for reasons unrelated to the current branch, and
+  passing unit tests can still miss broken runtime wiring. The durable safety
+  bar is a fresh live server proving the actual API, ingest, retrieval, chat,
+  eval, and cleanup graph after each meaningful tooling change.
