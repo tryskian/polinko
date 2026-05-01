@@ -1,40 +1,13 @@
 import argparse
 import time
-from typing import Any
 
-import requests
 from dotenv import load_dotenv
 
-
-def _request_json(
-    *,
-    method: str,
-    base_url: str,
-    path: str,
-    payload: dict[str, Any] | None = None,
-    timeout: int = 90,
-) -> dict[str, Any]:
-    response = requests.request(
-        method=method,
-        url=f"{base_url}{path}",
-        headers={"Content-Type": "application/json"},
-        json=payload,
-        timeout=timeout,
-    )
-    if not response.ok:
-        detail = response.text
-        try:
-            body = response.json()
-        except ValueError:
-            body = None
-        if isinstance(body, dict) and "detail" in body:
-            detail = str(body["detail"])
-        raise RuntimeError(f"{method} {path} failed: HTTP {response.status_code} - {detail}")
-    try:
-        body = response.json()
-    except ValueError:
-        return {}
-    return body if isinstance(body, dict) else {}
+from tools.eval_chat_common import chat_message
+from tools.eval_chat_common import create_chat
+from tools.eval_chat_common import default_headers
+from tools.eval_chat_common import delete_chat
+from tools.eval_chat_common import request_json
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -55,50 +28,49 @@ def main() -> int:
     session_id = f"{args.session_prefix}-{int(time.time())}"
     source_name = f"{session_id}.txt"
     seeded_text = "api smoke alpha beta gamma"
+    headers = default_headers()
 
     print(f"Running API smoke on {args.base_url}")
 
-    health = _request_json(
+    health = request_json(
         method="GET",
         base_url=args.base_url,
         path="/health",
+        headers=headers,
         timeout=args.timeout,
     )
     if str(health.get("status", "")).lower() != "ok":
         raise RuntimeError(f"GET /health returned unexpected payload: {health}")
     print("  PASS /health")
 
-    _request_json(
+    request_json(
         method="GET",
         base_url=args.base_url,
         path="/chats",
+        headers=headers,
         timeout=args.timeout,
     )
     print("  PASS /chats list")
 
-    _request_json(
-        method="POST",
-        base_url=args.base_url,
-        path="/chats",
-        payload={"session_id": session_id, "title": session_id},
-        timeout=args.timeout,
-    )
+    create_chat(args.base_url, headers, session_id, args.timeout)
     print("  PASS /chats create")
 
     try:
-        _request_json(
+        request_json(
             method="POST",
             base_url=args.base_url,
             path=f"/chats/{session_id}/personalization",
+            headers=headers,
             payload={"memory_scope": "session"},
             timeout=args.timeout,
         )
         print("  PASS /personalization")
 
-        _request_json(
+        request_json(
             method="POST",
             base_url=args.base_url,
             path="/skills/ocr",
+            headers=headers,
             payload={
                 "session_id": session_id,
                 "source_name": source_name,
@@ -110,10 +82,11 @@ def main() -> int:
         )
         print("  PASS /skills/ocr")
 
-        search_payload = _request_json(
+        search_payload = request_json(
             method="POST",
             base_url=args.base_url,
             path="/skills/file_search",
+            headers=headers,
             payload={
                 "session_id": session_id,
                 "query": "alpha beta gamma",
@@ -131,11 +104,11 @@ def main() -> int:
             raise RuntimeError("POST /skills/file_search returned unexpected snippet.")
         print("  PASS /skills/file_search")
 
-        chat_payload = _request_json(
-            method="POST",
+        chat_payload = chat_message(
             base_url=args.base_url,
-            path="/chat",
-            payload={"session_id": session_id, "message": "hello"},
+            headers=headers,
+            session_id=session_id,
+            message="hello",
             timeout=args.timeout,
         )
         output = str(chat_payload.get("output", "")).strip()
@@ -144,12 +117,7 @@ def main() -> int:
             raise RuntimeError("POST /chat returned missing output or assistant_message_id.")
         print("  PASS /chat")
     finally:
-        _request_json(
-            method="DELETE",
-            base_url=args.base_url,
-            path=f"/chats/{session_id}",
-            timeout=args.timeout,
-        )
+        delete_chat(args.base_url, headers, session_id, args.timeout)
         print("  PASS /chats delete")
 
     print("API smoke passed.")
