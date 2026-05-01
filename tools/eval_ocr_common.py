@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import mimetypes
 from pathlib import Path
+from typing import Any
 
 ONE_BY_ONE_PNG_BYTES = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+qW6QAAAAASUVORK5CYII="
@@ -55,3 +56,22 @@ def load_attachment_input(
 def build_data_url(*, raw_bytes: bytes, mime_type: str) -> str:
     payload = base64.b64encode(raw_bytes).decode("ascii")
     return f"data:{mime_type};base64,{payload}"
+
+
+def build_chat_attachment(
+    *,
+    data_base64: str,
+    mime_type: str,
+    source_name: str | None,
+    text_hint: str | None,
+    visual_context_hint: str | None,
+    memory_scope: str = "global",
+) -> dict[str, Any]:
+    return {
+        "data_base64": data_base64,
+        "mime_type": mime_type,
+        "source_name": source_name,
+        "text_hint": text_hint,
+        "visual_context_hint": visual_context_hint,
+        "memory_scope": memory_scope,
+    }

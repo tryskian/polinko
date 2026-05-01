@@ -14,6 +14,7 @@ from tools.eval_chat_common import request_json as _request_json
 from tools.eval_chat_common import send_chat as _send_chat
 from tools.eval_gate import gate_counts_from_case_results
 from tools.eval_gate import resolve_fail_closed_status
+from tools.eval_ocr_common import build_chat_attachment
 from tools.eval_ocr_common import ONE_BY_ONE_PNG_BYTES
 from tools.eval_ocr_common import build_data_url
 from tools.eval_ocr_common import load_attachment_input
@@ -273,14 +274,13 @@ def main() -> int:
             visual_context_hint = case["attachment"].get("visual_context_hint")
 
             seed_attachments: list[dict[str, Any]] = [
-                {
-                    "data_base64": data_base64,
-                    "mime_type": mime_type,
-                    "source_name": source_name,
-                    "text_hint": text_hint,
-                    "visual_context_hint": visual_context_hint,
-                    "memory_scope": "global",
-                }
+                build_chat_attachment(
+                    data_base64=data_base64,
+                    mime_type=mime_type,
+                    source_name=source_name,
+                    text_hint=text_hint,
+                    visual_context_hint=visual_context_hint,
+                )
             ]
 
             first_resp = _send_chat(

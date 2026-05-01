@@ -2,6 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from tools.eval_ocr_common import build_chat_attachment
 from tools.eval_ocr_common import build_data_url
 from tools.eval_ocr_common import load_attachment_input
 
@@ -47,6 +48,25 @@ class OcrCommonTests(unittest.TestCase):
         self.assertEqual(
             build_data_url(raw_bytes=b"ab", mime_type="text/plain"),
             "data:text/plain;base64,YWI=",
+        )
+
+    def test_build_chat_attachment_preserves_ocr_attachment_shape(self) -> None:
+        self.assertEqual(
+            build_chat_attachment(
+                data_base64="YWJj",
+                mime_type="image/png",
+                source_name="scan.png",
+                text_hint="hinted text",
+                visual_context_hint="blue awning sign",
+            ),
+            {
+                "data_base64": "YWJj",
+                "mime_type": "image/png",
+                "source_name": "scan.png",
+                "text_hint": "hinted text",
+                "visual_context_hint": "blue awning sign",
+                "memory_scope": "global",
+            },
         )
 
 
