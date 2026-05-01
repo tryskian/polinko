@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import importlib
 import json
 import time
 from pathlib import Path
@@ -9,25 +8,19 @@ from typing import Any
 
 from dotenv import load_dotenv
 
-try:
-    from tools import eval_file_search as _eval_file_search
-except ModuleNotFoundError:
-    _eval_file_search = importlib.import_module("eval_file_search")
-
+from tools.eval_file_search_common import create_chat as _create_chat
+from tools.eval_file_search_common import default_headers as _headers
+from tools.eval_file_search_common import delete_chat as _delete_chat
+from tools.eval_file_search_common import file_search as _file_search
+from tools.eval_file_search_common import find_matching_result as _find_matching_result
+from tools.eval_file_search_common import load_cases as _load_cases
+from tools.eval_file_search_common import preflight as _preflight
+from tools.eval_file_search_common import seed_image_context_memory as _seed_image_context_memory
+from tools.eval_file_search_common import seed_ocr_memory as _seed_ocr_memory
+from tools.eval_file_search_common import seed_pdf_memory as _seed_pdf_memory
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
-
-_create_chat = _eval_file_search._create_chat
-_delete_chat = _eval_file_search._delete_chat
-_file_search = _eval_file_search._file_search
-_find_matching_result = _eval_file_search._find_matching_result
-_headers = _eval_file_search._headers
-_load_cases = _eval_file_search._load_cases
-_preflight = _eval_file_search._preflight
-_seed_image_context_memory = _eval_file_search._seed_image_context_memory
-_seed_ocr_memory = _eval_file_search._seed_ocr_memory
-_seed_pdf_memory = _eval_file_search._seed_pdf_memory
 
 
 def _parse_csv(value: str) -> list[str]:
