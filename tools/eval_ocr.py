@@ -1,7 +1,5 @@
 import argparse
-import base64
 import json
-import mimetypes
 import os
 import re
 import time
@@ -13,8 +11,13 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+from tools.eval_chat_common import create_chat as _shared_create_chat
+from tools.eval_chat_common import default_headers as _shared_headers
+from tools.eval_chat_common import delete_chat as _shared_delete_chat
+from tools.eval_chat_common import preflight as _shared_preflight
 from tools.eval_gate import gate_counts_from_case_results
 from tools.eval_gate import resolve_fail_closed_status
+from tools.eval_ocr_common import build_ocr_request_input
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
@@ -179,7 +182,7 @@ def _find_ordered_phrase_index(
 
 
 def _headers() -> dict[str, str]:
-    return {"Content-Type": "application/json"}
+    return _shared_headers()
 
 
 def _request_json(
@@ -336,38 +339,17 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
 def _create_chat(
     base_url: str, headers: dict[str, str], session_id: str, timeout: int
 ) -> None:
-    _request_json(
-        method="POST",
-        base_url=base_url,
-        path="/chats",
-        headers=headers,
-        payload={"session_id": session_id, "title": session_id},
-        timeout=timeout,
-    )
+    _shared_create_chat(base_url, headers, session_id, timeout)
 
 
 def _delete_chat(
     base_url: str, headers: dict[str, str], session_id: str, timeout: int
 ) -> None:
-    _request_json(
-        method="DELETE",
-        base_url=base_url,
-        path=f"/chats/{session_id}",
-        headers=headers,
-        timeout=timeout,
-    )
+    _shared_delete_chat(base_url, headers, session_id, timeout)
 
 
 def _preflight(base_url: str, headers: dict[str, str], timeout: int) -> None:
-    health = _request_json(
-        method="GET",
-        base_url=base_url,
-        path="/health",
-        headers=headers,
-        timeout=timeout,
-    )
-    if str(health.get("status", "")).lower() != "ok":
-        raise RuntimeError(f"GET /health returned unexpected payload: {health}")
+    _shared_preflight(base_url, headers, timeout, check_chats=False)
 
 
 def _ocr(
@@ -749,20 +731,13 @@ def main() -> int:
         mime_type = ""
         try:
             _create_chat(args.base_url, headers, session_id, args.timeout)
-            if image_path is not None:
-                if not image_path.is_file():
-                    raise RuntimeError(f"image_path does not exist: {image_path}")
-                raw_bytes = image_path.read_bytes()
-            else:
-                # Placeholder payload for text-hint-only deterministic cases.
-                raw_bytes = b"0"
-            data_base64 = base64.b64encode(raw_bytes).decode("ascii")
-            inferred_mime = case["mime_type"] or (
-                mimetypes.guess_type(str(image_path))[0]
-                if image_path is not None
-                else "application/octet-stream"
+            data_base64, mime_type = build_ocr_request_input(
+                image_path_raw=image_path_value,
+                mime_type=case["mime_type"],
+                placeholder_bytes=b"0",
+                placeholder_mime_type="application/octet-stream",
+                file_fallback_mime_type="application/octet-stream",
             )
-            mime_type = str(inferred_mime or "application/octet-stream")
             payload = _ocr_with_retries(
                 base_url=args.base_url,
                 headers=headers,

@@ -1,7 +1,5 @@
 import argparse
-import base64
 import json
-import mimetypes
 import re
 import time
 from pathlib import Path
@@ -16,11 +14,13 @@ from tools.eval_chat_common import request_json as _request_json
 from tools.eval_chat_common import send_chat as _send_chat
 from tools.eval_gate import gate_counts_from_case_results
 from tools.eval_gate import resolve_fail_closed_status
+from tools.eval_ocr_common import build_chat_attachment
+from tools.eval_ocr_common import ONE_BY_ONE_PNG_BYTES
+from tools.eval_ocr_common import build_data_url
+from tools.eval_ocr_common import load_attachment_input
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
-
-_ONE_BY_ONE_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+qW6QAAAAASUVORK5CYII="
 
 
 def _preflight(base_url: str, headers: dict[str, str], timeout: int) -> None:
@@ -171,33 +171,21 @@ def _check_constraints(
 def _read_attachment_payload(
     attachment: dict[str, Any],
 ) -> tuple[str, str, str | None, str | None]:
-    image_path_raw = str(attachment.get("image_path") or "").strip()
-    text_hint = attachment.get("text_hint")
-    source_name = attachment.get("source_name")
-
-    if image_path_raw:
-        image_path = Path(image_path_raw).expanduser()
-        if not image_path.is_file():
-            raise RuntimeError(f"image_path does not exist: {image_path}")
-        raw = image_path.read_bytes()
-        mime_type = str(
-            attachment.get("mime_type")
-            or mimetypes.guess_type(str(image_path))[0]
-            or "application/octet-stream"
-        )
-        if not source_name:
-            source_name = image_path.name
-    else:
-        raw = base64.b64decode(_ONE_BY_ONE_PNG_BASE64)
-        mime_type = str(attachment.get("mime_type") or "image/png")
-        if not source_name:
-            source_name = "ocr-recovery-template.png"
-
+    raw_bytes, mime_type, source_name, text_hint = load_attachment_input(
+        image_path_raw=str(attachment.get("image_path") or "").strip(),
+        source_name=attachment.get("source_name"),
+        mime_type=attachment.get("mime_type"),
+        text_hint=attachment.get("text_hint"),
+        placeholder_bytes=ONE_BY_ONE_PNG_BYTES,
+        placeholder_mime_type="image/png",
+        placeholder_source_name="ocr-recovery-template.png",
+        file_fallback_mime_type="application/octet-stream",
+    )
     return (
-        f"data:{mime_type};base64,{base64.b64encode(raw).decode('ascii')}",
+        build_data_url(raw_bytes=raw_bytes, mime_type=mime_type),
         mime_type,
-        str(source_name or "").strip() or None,
-        str(text_hint).strip() if text_hint else None,
+        source_name,
+        text_hint,
     )
 
 
@@ -286,14 +274,13 @@ def main() -> int:
             visual_context_hint = case["attachment"].get("visual_context_hint")
 
             seed_attachments: list[dict[str, Any]] = [
-                {
-                    "data_base64": data_base64,
-                    "mime_type": mime_type,
-                    "source_name": source_name,
-                    "text_hint": text_hint,
-                    "visual_context_hint": visual_context_hint,
-                    "memory_scope": "global",
-                }
+                build_chat_attachment(
+                    data_base64=data_base64,
+                    mime_type=mime_type,
+                    source_name=source_name,
+                    text_hint=text_hint,
+                    visual_context_hint=visual_context_hint,
+                )
             ]
 
             first_resp = _send_chat(
