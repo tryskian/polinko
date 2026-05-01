@@ -9,7 +9,7 @@ from tools.eval_clip_ab import build_parser
 class ClipABEvalTests(unittest.TestCase):
     def test_build_parser_defaults_to_clip_ab_cases(self) -> None:
         args = build_parser().parse_args([])
-        self.assertEqual(args.cases, "docs/eval/cases/clip_ab_eval_cases.json")
+        self.assertEqual(args.cases, "docs/eval/beta_2_0/clip_ab_eval_cases.json")
 
     def test_parse_csv_normalizes_values(self) -> None:
         self.assertEqual(_parse_csv("image, OCR , pdf"), ["image", "ocr", "pdf"])
