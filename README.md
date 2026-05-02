@@ -12,6 +12,13 @@ through failure, OCR reliability, and evidence-preserving evaluation.
 It is not mainly a website or demo app. The website is a doorway. The
 repository is the research surface.
 
+## Why This Repo Matters
+
+Most AI projects show polished outputs and hide the failure structure.
+Polinko does the opposite: it keeps failure visible enough to inspect,
+evaluate, and act on. That matters anywhere confidence can outrun source
+evidence.
+
 ## Current OCR Read
 
 - transcript-backed growth set: `25/25` stable, `0` flaky
