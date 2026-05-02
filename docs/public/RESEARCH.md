@@ -2,33 +2,23 @@
 
 # Research
 
-Polinko separates public explanation from working research infrastructure.
-
-Use this note to understand what counts as evidence, which beta eras matter,
-and how the repo separates public proof from local working material.
+This note defines what counts as evidence, which beta eras matter, and how
+Polinko separates public proof from working material.
 
 ## Evidence Layers
 
-- Method and authorship boundaries define who owns the claims and how AI
-  assistance is used.
-- Source code and tests show the runtime contract.
-- Eval docs and report schemas show the evidence contract.
-- Beta 1.0 materials preserve the manual/screenshot-backed transition into
-  binary evals.
-- Current OCR binary reports show operational fail/pass pressure.
-- Mermaid diagrams and data-viz surfaces are repo-native visual research
-  instruments.
-- Notebook/query outputs remain local-only unless explicitly curated for public
-  evidence.
+- Method and authorship docs define claim ownership.
+- Source code and tests define the runtime contract.
+- Eval docs and report schemas define the evidence contract.
+- Beta 1.0 materials preserve the transition from manual review to binary evals.
+- Current OCR reports show operational fail/pass pressure.
+- Diagrams are research instruments, not decoration.
+- Notebook/query outputs stay local unless explicitly curated.
 
 ## Beta 1.0
 
-Beta 1.0 is not deprecated evidence. It is the transition layer.
-
-It contains the manual evaluation context that makes the current binary gates
-meaningful. In particular, it preserves OCR and manual-eval evidence from the
-period where Polinko moved from qualitative review toward stricter pass/fail
-semantics.
+Beta 1.0 is the transition layer. It preserves the manual and screenshot-backed
+context that makes the current binary gates meaningful.
 
 Canonical map:
 
@@ -36,11 +26,9 @@ Canonical map:
 
 ## Current / Beta 2.x
 
-Current Polinko uses binary gates as operational eval surfaces.
-
-The strict pass/fail signal is intentionally simple. Diagnostic notes may be
-rich, but release-grade gate arithmetic remains binary so failure pressure
-stays visible.
+Current Polinko uses binary gates as operational eval surfaces. Diagnostic
+notes may be rich, but release-grade gate arithmetic stays binary so failure
+pressure remains visible.
 
 Core surfaces:
 
@@ -50,13 +38,8 @@ Core surfaces:
 
 ## Research Notes vs Working Docs
 
-Research notes are curated explanations derived from the working archive.
-
-The first public layer is [Method & Authorship](METHOD.md): Polinko is
-human-led research, with AI assistance used as inspectable method and
-engineering support.
-
-Working docs stay tracked when they are safe and useful for continuity:
+Tracked public notes are curated. Working material stays tracked only when it is
+safe and useful for continuity:
 
 - governance docs
 - runtime architecture
@@ -76,7 +59,5 @@ Private/local evidence stays untracked unless explicitly promoted:
 
 1. Start with [Hypothesis](HYPOTHESIS.md).
 2. Review [Diagrams](DIAGRAMS.md).
-3. Use [Eval Evidence Map](../eval/README.md) when you need the beta/eval
-   detail.
-4. Use runtime/governance docs only when you need implementation or process
-   specifics.
+3. Use [Eval Evidence Map](../eval/README.md) for beta/eval detail.
+4. Use runtime/governance docs only for implementation or process specifics.
