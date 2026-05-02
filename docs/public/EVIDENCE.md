@@ -36,6 +36,10 @@ Core surfaces:
 - `/viz/pass-fail/data`
 - `/portfolio/sankey-data`
 
+Representative tracked note:
+
+- [OCR representative case](../research/ocr-representative-case.md)
+
 ## Research Notes vs Working Docs
 
 Tracked public notes are curated. Working material stays tracked only when it is

@@ -87,7 +87,7 @@ This page is the structural map of the tracked system. Use
 - `DECISIONS` stores durable decisions.
 - `STATE` stores tracked current truth.
 - `RUNBOOK` owns operator procedure.
-- `OCR_OPERATING_MODEL` owns the OCR eval recipe.
+- `OCR_REFERENCE` owns the OCR eval reference.
 - local `SESSION_HANDOFF` owns next-session carryover.
 - local `docs/peanut/` owns transcripts, theory, and working notes.
 - A policy change is complete only when the affected surfaces agree.

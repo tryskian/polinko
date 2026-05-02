@@ -2,185 +2,77 @@
 
 # Eval Evidence Map
 
-## When to Read This
+This folder is the tracked eval evidence lane.
 
-- Eval-era interpretation:
-  use this when you need to understand how Beta 1.0 and Beta 2.0 relate.
-- Evidence-source tracing:
-  use this when you need to know which local DBs and report lanes power which
-  views.
-- Public-proof context:
-  use this when you need the shortest path from repo eval artefacts to visible
-  diagrams and evidence surfaces.
+Use it when you need:
+
+- beta-era context
+- case files and report snapshots
+- the shortest path from eval artifacts to public proof
 
 ![Polinko evidence sankey](../public/diagrams/polinko-evidence-sankey.svg)
 
-This directory preserves first-class eval evidence eras. Beta 1.0 and Beta 2.0
-must be interpreted together; Beta 1.0 is not lesser evidence just because its
-shape is older and more manually evaluated.
+## Beta Meanings
 
-## Phase Semantics
+- `beta_1_0`
+  - binary-transition era
+  - manual and screenshot-backed evaluation still carries real evidence weight
+- `beta_2_0`
+  - binary-operational era
+  - flatter case/report structure and repeatable eval commands
 
-- `beta_1_0`: binary-transition era.
-- `beta_2_0`: binary-operational era.
+Beta 1.0 and Beta 2.0 should be read together. Beta 1.0 explains the
+transition into binary evals; Beta 2.0 shows the operationalized lane.
 
-Beta 1.0 marks the move from meaningful manual/screenshot-backed evaluation
-toward strict binary eval semantics. Beta 2.0 extends that transition into a
-more structured operational eval stack.
+## Current Canonical Surfaces
 
-## Canonical Eval Surfaces
+- integrated manual-eval warehouse:
+  - `.local/runtime_dbs/active/manual_evals.db`
+  - rebuild with `make manual-evals-db`
+- raw current runtime source:
+  - `.local/runtime_dbs/active/history.db`
+- strict OCR binary gate observability:
+  - `.local/eval_reports/`
+  - `/viz/pass-fail`
+  - `/viz/pass-fail/data`
 
-There should be one app-facing eval database for integrated manual-eval
-analysis and manual-eval UI work:
+Manual evals and strict OCR gate reports answer different questions:
 
-- canonical derived DB: `.local/runtime_dbs/active/manual_evals.db`
-- rebuild command: `make manual-evals-db`
-- current source input: `.local/runtime_dbs/active/history.db`
-- optional Beta 1.0 source input:
-  `.local/legacy_eval/archive_legacy_eval/databases/.polinko_history.db`
+- manual evals capture human judgment and qualitative notes
+- OCR gate reports preserve binary fail pressure
 
-`manual_evals.db` is the integrated eval warehouse. It imports legacy and
-current history sources into one schema with explicit `era`, `source_key`,
-`source_history_db`, `source_session_id`, and `source_run_id` provenance. The
-source DBs remain raw inputs, not separate user-facing eval truths.
+Do not flatten one into the other.
 
-Strict OCR binary gate observability uses the report evidence stream, not the
-manual-eval warehouse:
+## What Is Tracked Here
 
-- primary pass/fail visual source: `.local/eval_reports/`
-- default dashboard/API: `/viz/pass-fail` and `/viz/pass-fail/data`
-- chart mode: `binary_gates`
-- interpretation: FAIL pressure is the research signal; PASS-only summaries are
-  insufficient.
+### Beta 1.0
 
-Manual evals remain first-class evidence, but they answer a different question:
-they capture human judgment and qualitative notes such as factuality, tone,
-whimsy-presented-as-fact, usefulness, and trust. They should not be flattened
-into the strict OCR binary gate chart.
-
-The 2026-04-13 local integrated build contains:
-
-- `beta_1_0`: 69 sessions, 90 OCR runs, 116 manual feedback rows.
-- `current`: 634 sessions, 636 OCR runs, 0 manual feedback rows.
-- total: 703 sessions, 726 OCR runs, 116 feedback rows.
-
-`eval_viz.db` is retired as an app-facing eval database. If an old local copy
-exists, treat it as a legacy cache only; do not wire current UI or analysis
-against it. The 2026-04-13 active local copy was moved to
-`.local/runtime_dbs/archive/retired_eval_viz_20260413/eval_viz.db`.
-
-## Beta 1.0
-
-Documents:
-
-- local full snapshot:
-  `<local-beta-1.0-snapshot>`
-- `docs/eval/beta_1_0/build_snapshot_polinko-incase/docs/`
-- includes archived governance, runbook, state, decisions, research, portfolio,
-  and transcript material from the beta 1.0 build snapshot.
-
-Databases:
-
-- local full snapshot DBs:
-  - `<local-beta-1.0-snapshot>/.polinko_history.db`
-  - `<local-beta-1.0-snapshot>/.polinko_memory.db`
-  - `<local-beta-1.0-snapshot>/.polinko_vector.db`
-- local-only legacy database snapshots may exist under
-  `.local/legacy_eval/archive_legacy_eval/databases/`.
-- these are not tracked in git and should be treated as private/local audit
-  material.
-- Beta 1.0 eval rows should be consumed through the integrated
-  `manual_evals.db` build, not by wiring UI/docs directly to a separate legacy
-  database.
-
-Evals:
-
-- meaningful manual evaluation data in the full snapshot:
-  `<local-beta-1.0-snapshot>`
-- meaningful screenshot-backed/manual OCR evaluation evidence under
-  `docs/eval/beta_1_0/`
-- archived OCR prompts/reports under
-  `docs/eval/beta_1_0/build_snapshot_polinko-incase/docs/`
-- archived eval reports under
-  `docs/eval/beta_1_0/build_snapshot_polinko-incase/eval_reports/`
-- archived raw portfolio evidence under
-  `docs/eval/beta_1_0/build_snapshot_polinko-incase/docs/portfolio/raw_evidence/`
-
-Logic:
-
-- full beta 1.0 runtime/eval logic is preserved locally at
-  `<local-beta-1.0-snapshot>`.
-- archived runtime/API/tooling/test logic under
+- curated historical evidence under `docs/eval/beta_1_0/`
+- archived build snapshot material under
   `docs/eval/beta_1_0/build_snapshot_polinko-incase/`
-- includes earlier OCR, hallucination, retrieval, style, CLIP A/B, evidence
-  indexing, metadata audit, and portfolio tooling paths.
+- role in the public surface:
+  - left-side/legacy evidence for `/portfolio/sankey-data`
 
-Sankey role:
+### Beta 2.0
 
-- left-side/legacy eval-era evidence.
-- records meaningful manual evaluation and the transition into binary eval
-  semantics.
-- provides the contrast that makes Beta 2.0/current eval data meaningful.
-- active portfolio payload source: `GET /portfolio/sankey-data`
-  - consumes Beta 1.0 manual feedback rows through `manual_evals.db`
-  - refuses decorative fallback if the source rows are unavailable
+- active-era case files and report snapshots under `docs/eval/beta_2_0/`
+- includes OCR, OCR recovery, OCR safety, hallucination, retrieval, file
+  search, style, response behaviour, CLIP A/B, and trace artifacts
+- role in the public surface:
+  - right-side/current evidence for `/portfolio/sankey-data`
 
-## Beta 2.0
+## What Stays Local
 
-Documents:
+- live runtime databases under `.local/runtime_dbs/active/`
+- archived runtime databases under `.local/runtime_dbs/archive/`
+- full Beta 1.0 local snapshot databases and runtime state
+- private exports, scratch screenshots, and raw local audit material
 
-- `docs/eval/beta_2_0/`
-- contains active-era case files, trace artifacts, and report snapshots in a
-  flatter structure.
-
-Databases:
-
-- active local runtime databases may exist under `.local/runtime_dbs/active/`.
-- `history.db` is the current raw runtime source input.
-- `manual_evals.db` is the canonical integrated eval warehouse for analysis and
-  UI work.
-- these are local-only and should not be committed unless explicitly approved.
-
-Evals:
-
-- structured report artifacts under `docs/eval/beta_2_0/`
-- includes OCR, OCR recovery, OCR safety, hallucination, retrieval, file search,
-  style, response behaviour, CLIP A/B, and trace artifacts.
-
-Logic:
-
-- current runtime/eval logic lives in the active repo source tree, especially:
-  - `api/`
-  - `core/`
-  - `tools/`
-  - `tests/`
-  - `docs/runtime/`
-  - `docs/governance/`
-
-Sankey role:
-
-- right-side/current eval-era evidence.
-- shows what became structured, operational, and repeatable after the beta 1.0
-  binary transition.
-- active portfolio payload source: `GET /portfolio/sankey-data`
-  - consumes current OCR binary gate cases from `.local/eval_reports/`
-  - treats bridge links as source-side counts, not row-level joins
+Do not commit the full Beta 1.0 snapshot wholesale. Promote only curated
+evidence or explicitly approved artifacts.
 
 ## Interpretation Rule
 
-Do not compare Beta 1.0 and Beta 2.0 only by artifact neatness. Compare them by
-role:
-
-- Beta 1.0 explains the transition logic.
-- Beta 1.0 manual evaluations are meaningful data.
-- Beta 2.0 shows operationalization of that transition.
-- Current eval work extends the operational lane.
-
-Do not treat transcripts, screenshots, or raw eval reports as disposable
-context. They are source evidence. Decision records are the binding
-interpretation layer over that evidence; summaries must not contradict the
-source artifacts they summarize.
-
-Do not commit the full Beta 1.0 snapshot wholesale. It contains local-only
-runtime state, `.env` material, `.git` metadata, editor history, and database
-files. Promote only curated evidence maps or explicitly approved artifacts.
+- compare Beta 1.0 and Beta 2.0 by role, not by artifact neatness
+- treat transcripts, screenshots, and raw reports as source evidence
+- let decisions and public notes interpret the evidence, not replace it
