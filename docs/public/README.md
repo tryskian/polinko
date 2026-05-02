@@ -21,7 +21,7 @@ This is the shortest route through Polinko’s public research surface.
    - claim ownership and AI role
 3. [Hypothesis](HYPOTHESIS.md)
    - what the project is actually testing
-4. [Research](RESEARCH.md)
+4. [Evidence](EVIDENCE.md)
    - what counts as evidence and where it lives
 5. [Diagrams](DIAGRAMS.md)
    - visual structure

@@ -1,4 +1,4 @@
-# OCR Operating Model
+# OCR Reference
 
 This page is the command/reference note for the active OCR eval lane.
 `docs/runtime/RUNBOOK.md` owns operator procedure; this file owns the OCR lane

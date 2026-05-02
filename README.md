@@ -28,7 +28,7 @@ If you are reading Polinko as a research project, use this path:
 - [Polinko in Brief](docs/public/IN_BRIEF.md)
 - [Method & Authorship](docs/public/METHOD.md)
 - [Hypothesis](docs/public/HYPOTHESIS.md)
-- [Research](docs/public/RESEARCH.md)
+- [Evidence](docs/public/EVIDENCE.md)
 - [Diagrams](docs/public/DIAGRAMS.md)
 - [Research Surface](docs/research/README.md)
 

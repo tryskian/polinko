@@ -1,6 +1,6 @@
 <!-- @format -->
 
-# Research
+# Evidence
 
 This note defines what counts as evidence, which beta eras matter, and how
 Polinko separates public proof from working material.
