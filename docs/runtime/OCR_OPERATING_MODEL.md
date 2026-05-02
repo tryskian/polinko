@@ -4,6 +4,17 @@ This page is the command/reference note for the active OCR eval lane.
 `docs/runtime/RUNBOOK.md` owns operator procedure; this file owns the OCR lane
 workflow, output surfaces, and tuning knobs.
 
+## Current Snapshot
+
+- Latest tracked progress note:
+  - [`docs/research/ocr-progress-20260501.md`](../research/ocr-progress-20260501.md)
+- Current full-kernel read on `2026-05-01`:
+  - growth stability: `25/25` stable, `0` flaky
+  - fail cohort: `0` active fail-history cases
+  - focus stability: `16/16` stable, `0` flaky
+- Current remaining OCR research signal:
+  - exploratory output variability, not active fail pressure
+
 ## Lane Model
 
 1. Treat OCR as the primary eval reliability lane.
