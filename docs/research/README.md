@@ -2,12 +2,22 @@
 
 # Research Surface
 
-This folder is the compact research surface for reviewers who want one visual,
-one machine-readable manifest, and direct links into tracked eval evidence.
+This folder is the compact research surface for reviewers who want a current
+OCR snapshot, one machine-readable manifest, and direct links into tracked eval
+evidence.
 
 It is intentionally curated. Polinko keeps local operational artefacts under
 `.local/`; this folder only promotes a small tracked subset that is stable
 enough to read in public.
+
+## Current OCR Snapshot
+
+- latest tracked progress note:
+  - [OCR progress snapshot](./ocr-progress-20260501.md)
+- current full-kernel read on `2026-05-01`:
+  - growth stability: `25/25` stable, `0` flaky
+  - fail-history cohort: `0` active cases
+  - remaining signal: exploratory output variability
 
 ## Included Here
 

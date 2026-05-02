@@ -51,6 +51,15 @@ In short: confidence must not outrun evidence.
 - transcript + structured-insight corpus
 - governance and runbook surfaces that keep the method operational
 
+## Current OCR Read
+
+- latest tracked OCR kernel on `2026-05-01` is green:
+  - transcript-backed growth set: `25/25` stable
+  - fail-history cohort: `0` active cases
+  - remaining signal: exploratory output variability
+- tracked snapshot:
+  - [docs/research/ocr-progress-20260501.md](../research/ocr-progress-20260501.md)
+
 ## One-Sentence Read
 
 Polinko is a fail-first research instrument for studying when model confidence

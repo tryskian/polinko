@@ -18,6 +18,14 @@ repository. Polinko is built through a human-led, repo-local workflow where
 Krystian sets objectives, constraints, and publication decisions, and Codex
 helps implement, refactor, validate, review, and maintain the system.
 
+## Current OCR Read
+
+- transcript-backed growth set: `25/25` stable, `0` flaky
+- fail-history cohort: `0` active cases
+- remaining OCR signal: exploratory output variability
+- latest tracked snapshot:
+  - [docs/research/ocr-progress-20260501.md](docs/research/ocr-progress-20260501.md)
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
@@ -27,8 +35,8 @@ Apache-2.0. See [LICENSE](LICENSE).
 If you are reading Polinko as a research project, start with the curated public
 path:
 
+- [Public Reading Path](docs/public/README.md)
 - [Polinko in Brief](docs/public/IN_BRIEF.md)
-- [Research Notes](docs/public/README.md)
 - [Method & Authorship](docs/public/METHOD.md)
 - [Hypothesis](docs/public/HYPOTHESIS.md)
 - [Research](docs/public/RESEARCH.md)

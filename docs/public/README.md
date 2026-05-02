@@ -2,12 +2,20 @@
 
 # Polinko Public Reading Path
 
-Polinko is a human-led, AI-assisted research engineering project for studying
-human-AI interaction through binary evals, OCR reliability, and failure
-signals.
+Polinko is a human-led, repo-native research surface for inspecting AI
+behavior through failure, OCR reliability, and evidence-preserving evaluation.
 
 This lane is the shortest public route through the repo without dropping into
 the operator archive.
+
+## Current Snapshot
+
+- OCR lane is currently green:
+  - transcript-backed growth set: `25/25` stable
+  - fail-history cohort: `0` active cases
+  - remaining signal: exploratory output variability
+- latest tracked OCR progress note:
+  - [OCR progress snapshot](../research/ocr-progress-20260501.md)
 
 ## Read In Order
 
@@ -27,6 +35,8 @@ the operator archive.
 
 ## If You Need More Detail
 
+- [OCR progress snapshot](../research/ocr-progress-20260501.md)
+  - current OCR status, diagrams, and next signal
 - [Eval Evidence Map](../eval/README.md)
   - beta/eval detail and evidence context
 - [Root README](../../README.md)
