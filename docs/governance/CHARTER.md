@@ -28,6 +28,11 @@ through failure, OCR reliability, and evidence-preserving evaluation.
 - Prefer deterministic, testable changes.
 - Fail fast on config/auth/runtime issues.
 - Keep one canonical command surface per operator action.
+- Treat live smoke on a fresh server as the runtime safety bar after
+  tooling/runtime changes:
+  - `make api-smoke`
+  - `make eval-smoke`
+  - unit tests are seam checks, not substitutes for live wiring proof
 - Inspect evidence before interpretation:
   - source files, logs, screenshots, transcripts, and reports win over summary
   - if a named source has not been inspected, do not speak as if it has
@@ -75,6 +80,8 @@ through failure, OCR reliability, and evidence-preserving evaluation.
     governance only
 - `docs/governance/STATE.md`
   - current tracked truth
+- `docs/research/`
+  - curated dated research notes and progress snapshots
 - `docs/runtime/RUNBOOK.md`
   - procedures and command ownership
 - `docs/runtime/ARCHITECTURE.md`
