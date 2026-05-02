@@ -18,6 +18,7 @@ enough to read in public.
 
 ## Representative Tracked Evidence
 
+- [OCR progress snapshot](./ocr-progress-20260501.md)
 - [OCR binary eval snapshot](../eval/beta_2_0/ocr-20260328-184147.json)
 - [OCR safety eval snapshot](./ocr-safety-20260425.md)
 - [Response behaviour eval snapshot](./response-behaviour-20260425.md)

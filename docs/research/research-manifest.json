@@ -10,6 +10,11 @@
       "source_path": "docs/public/diagrams/polinko-evidence-sankey.svg"
     },
     {
+      "type": "research_note",
+      "label": "OCR progress snapshot",
+      "path": "docs/research/ocr-progress-20260501.md"
+    },
+    {
       "type": "eval_report",
       "label": "OCR binary eval snapshot",
       "path": "docs/eval/beta_2_0/ocr-20260328-184147.json"

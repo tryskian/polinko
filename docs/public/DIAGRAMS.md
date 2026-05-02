@@ -13,6 +13,10 @@ Static SVG exports generated from this page:
 - [Polinko Binary Eval Loop](diagrams/polinko-binary-eval-loop.svg)
 - [Beta Evidence Map](diagrams/beta-evidence-map.svg)
 
+Current dated progress note:
+
+- [OCR Progress Snapshot (2026-05-01)](../research/ocr-progress-20260501.md)
+
 ## Polinko Evidence Sankey (D3)
 
 ![Polinko Evidence Sankey](diagrams/polinko-evidence-sankey.svg)
