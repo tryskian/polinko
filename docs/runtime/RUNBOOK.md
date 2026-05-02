@@ -271,7 +271,7 @@ Read-only DB audits remain allowed:
 1. OCR is the primary reliability lane.
 2. `lockset` stays release-gating and binary.
 3. `growth` stays fail-tolerant and exploratory.
-4. Use `docs/runtime/OCR_OPERATING_MODEL.md` for the full OCR command surface,
+4. Use `docs/runtime/OCR_REFERENCE.md` for the full OCR command surface,
    output paths, and pressure-tuning knobs.
 5. Normal operator path:
    - mine/build cases:

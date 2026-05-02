@@ -2,20 +2,63 @@
 
 # Diagrams
 
-This page collects repo-native diagrams and visual evidence pointers. Canonical
-runtime and eval contracts remain in `docs/runtime/ARCHITECTURE.md` and
-`docs/eval/README.md`.
+This page collects the main repo-native diagrams. Start with the current OCR
+state, then use the method and continuity diagrams below.
 
 Static SVG exports generated from this page:
 
+- [OCR Progress Funnel](diagrams/ocr-progress-funnel.svg)
+- [Current OCR Signal Shape](diagrams/current-ocr-signal-shape.svg)
 - [Polinko Evidence Sankey (D3)](diagrams/polinko-evidence-sankey.svg)
-- [Baseline LLM Product Pipeline](diagrams/baseline-llm-product-pipeline.svg)
 - [Polinko Binary Eval Loop](diagrams/polinko-binary-eval-loop.svg)
 - [Beta Evidence Map](diagrams/beta-evidence-map.svg)
 
 Current dated progress note:
 
 - [OCR Progress Snapshot (2026-05-01)](../research/ocr-progress-20260501.md)
+
+## OCR Progress Funnel
+
+![OCR Progress Funnel](diagrams/ocr-progress-funnel.svg)
+
+```mermaid
+flowchart LR
+  A["Transcript mining\n54 OCR-framed episodes"] --> B["Strict emitted cases\n23"]
+  B --> C["Growth case set\n25"]
+  C --> D["Batched replay\n25/25 pass"]
+  D --> E["Growth stability\n5 runs\n25 stable\n0 flaky"]
+  E --> F["Fail cohort\n0 fail-history cases"]
+  E --> G["Exploratory focus\n16 cases"]
+  G --> H["Focus stability\n3 runs\n16 stable\n0 flaky"]
+
+  classDef source fill:#EEF4FB,stroke:#4E79A7,color:#1F1F1F;
+  classDef bridge fill:#FBF5E8,stroke:#F28E2B,color:#1F1F1F;
+  classDef pass fill:#EEF7EE,stroke:#59A14F,color:#1F1F1F;
+  classDef evidence fill:#EEF7F6,stroke:#76B7B2,color:#1F1F1F;
+
+  class A,B source;
+  class C,D,G bridge;
+  class E,F,H pass;
+```
+
+## Current OCR Signal Shape
+
+![Current OCR Signal Shape](diagrams/current-ocr-signal-shape.svg)
+
+```mermaid
+flowchart TD
+  A["Current OCR growth lane\n2026-05-01"] --> B["Fail pressure\n0 active failing cases"]
+  A --> C["Decision stability\n25/25 growth stable\n16/16 focus stable"]
+  A --> D["Output variability\n16 growth cases\n11 focus cases"]
+  D --> E["Next research kernel\ninspect exploratory variants"]
+
+  classDef pass fill:#EEF7EE,stroke:#59A14F,color:#1F1F1F;
+  classDef bridge fill:#FBF5E8,stroke:#F28E2B,color:#1F1F1F;
+  classDef evidence fill:#EEF7F6,stroke:#76B7B2,color:#1F1F1F;
+
+  class A,B,C pass;
+  class D,E evidence;
+```
 
 ## Polinko Evidence Sankey (D3)
 
@@ -24,36 +67,6 @@ Current dated progress note:
 Static D3 Sankey generated from the real `/portfolio/sankey-data` payload. It
 shows how Beta 1.0 manual evals flow through manual outcomes and signal
 classes into the current OCR lane weighting surface.
-
-## Baseline LLM Product Pipeline
-
-![Baseline LLM Product Pipeline](diagrams/baseline-llm-product-pipeline.svg)
-
-```mermaid
-flowchart TD
-  A["User input"] --> B["Input guardrails"]
-  B --> C["Task / intent router"]
-  C --> D["Context builder"]
-  D --> E["Prompt + policy assembly"]
-  E --> F["Model generation"]
-  F --> G["Output guardrails"]
-  G --> H["Final response"]
-
-  H --> I["Telemetry / event log"]
-  I --> J["Eval events"]
-  I --> K["Feedback events"]
-  J --> L["State / evidence tables"]
-  K --> L
-  L --> D
-
-  classDef source fill:#EEF4FB,stroke:#4E79A7,color:#1F1F1F;
-  classDef bridge fill:#FBF5E8,stroke:#F28E2B,color:#1F1F1F;
-  classDef evidence fill:#EEF7F6,stroke:#76B7B2,color:#1F1F1F;
-
-  class A,D,F,H source;
-  class B,C,E,G bridge;
-  class I,J,K,L evidence;
-```
 
 ## Polinko Binary Eval Loop
 
@@ -109,6 +122,12 @@ flowchart LR
   class B2,R current;
   class P,V evidence;
 ```
+
+## Reference Note
+
+The older baseline product-pipeline diagram is no longer a primary public
+surface. It was useful as category framing, but the current OCR diagrams are
+the more meaningful front-door visual signal.
 
 ## Notebook
 

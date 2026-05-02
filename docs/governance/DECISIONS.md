@@ -3812,7 +3812,7 @@ quickstart document.
   - keep `docs/runtime/ARCHITECTURE.md` structural only.
   - keep `docs/runtime/RUNBOOK.md` procedural only.
   - move the full OCR operating procedure into
-    `docs/runtime/OCR_OPERATING_MODEL.md` instead of embedding that recipe
+    `docs/runtime/OCR_REFERENCE.md` instead of embedding that recipe
     directly inside `RUNBOOK`.
   - keep tracked docs terse and role-specific; transcript refreshers and local
     orientation notes remain separate evidence and operator surfaces.
@@ -3920,7 +3920,7 @@ quickstart document.
   - link the current dated note from:
     - `docs/research/README.md`
     - `docs/public/DIAGRAMS.md`
-    - `docs/runtime/OCR_OPERATING_MODEL.md`
+    - `docs/runtime/OCR_REFERENCE.md`
     - `docs/research/research-manifest.json`
 - Validation:
   - `make ocrkernel CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`

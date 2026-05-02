@@ -2,37 +2,39 @@
 
 # Polinko Public Reading Path
 
-Polinko is a human-led, AI-assisted research engineering project for studying
-human-AI interaction through binary evals, OCR reliability, and failure
-signals.
+This is the shortest route through Polinko’s public research surface.
 
-This lane is the shortest public route through the repo without dropping into
-the operator archive.
+## Current Snapshot
+
+- OCR lane is currently green:
+  - transcript-backed growth set: `25/25` stable
+  - fail-history cohort: `0` active cases
+  - remaining signal: exploratory output variability
+- latest tracked OCR progress note:
+  - [OCR progress snapshot](../research/ocr-progress-20260501.md)
 
 ## Read In Order
 
 1. [Polinko in Brief](IN_BRIEF.md)
-   - what it is, what governs it, what makes it distinct
+   - shortest summary
 2. [Method & Authorship](METHOD.md)
-   - who owns the claims, how AI is used, and where the responsibility
-     boundary sits
+   - claim ownership and AI role
 3. [Hypothesis](HYPOTHESIS.md)
-   - what Polinko is investigating and why failure is treated as the main
-     signal
-4. [Research](RESEARCH.md)
-   - how the evidence is organised across beta eras, eval surfaces, and repo
-     contracts
+   - what the project is actually testing
+4. [Evidence](EVIDENCE.md)
+   - what counts as evidence and where it lives
 5. [Diagrams](DIAGRAMS.md)
-   - visual system maps and evidence structure
+   - visual structure
 
 ## If You Need More Detail
 
+- [OCR progress snapshot](../research/ocr-progress-20260501.md)
+  - current OCR status and diagrams
 - [Eval Evidence Map](../eval/README.md)
-  - beta/eval detail and evidence context
+  - eval context
 - [Root README](../../README.md)
-  - setup, commands, and repo entrypoint
+  - repo entrypoint and commands
 
 ## Boundary
 
-The public website is a doorway. The repository is the portfolio and research
-surface.
+The website is a doorway. The repository is the research surface.

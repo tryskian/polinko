@@ -2,65 +2,32 @@
 
 # Method & Authorship
 
-Polinko is a human-led research and engineering collaboration.
+Polinko is human-led. This note defines who owns the claims, how AI is used,
+and where the responsibility boundary sits.
 
-Use this note when you need the authorship boundary first: who owns the claims,
-how AI is used, and what remains human-judgment work.
+Krystian Fernando owns the research framework, hypotheses, evidence selection,
+judgment, and final claims. AI systems are used as instruments inside that
+process, not as independent authors or source authority.
 
-The research framework, hypotheses, judgement, evidence selection, and final
-claims are authored by Krystian Fernando. AI systems are used as research and
-engineering instruments inside that process, not as independent authors or
-source authority.
-
-## Tooling Disclosure
+## AI Role
 
 Polinko uses OpenAI Codex as a repo-local coding agent and engineering
 collaborator for implementation, refactoring, validation, review, and
 documentation maintenance. OpenAI Platform APIs are used where Polinko makes
 model-backed calls for OCR, evals, retrieval, and runtime experiments.
 
-These tools are part of the research-engineering workflow. They do not define
-the research claims, interpret the evidence, or own publication decisions.
-
-The supporting stack is intentionally inspectable:
-
-| Layer | Tooling | Role |
-| --- | --- | --- |
-| Model collaboration | OpenAI Codex, OpenAI Platform APIs | Repo-local coding support plus model-backed OCR, eval, retrieval, and runtime calls. |
-| Runtime surface | FastAPI | Local API surface for assistant, OCR/PDF ingest, retrieval, feedback, and eval workflows. |
-| Evidence stores | SQLite | Local, queryable stores for runtime history, manual evals, vector memory, and evidence inspection. |
-| System maps | Mermaid | Plain-text diagrams for pipelines, eval loops, and research structure. |
-| Environment | Docker, devcontainers | Portable development and runtime environments. |
-| Validation | Make, pytest, Ruff, mypy, markdownlint, GitHub Actions | Repeatable checks across code, docs, and CI. |
-| Maintenance | Dependency update checks | Keeps dependency drift visible without turning maintenance into manual archaeology. |
-| Inspection | Playwright, Jupyter | Browser-visible verification, visual capture, and local analysis. |
+These tools help implement and inspect the work. They do not define the claims
+or own publication decisions.
 
 ## Collaboration Model
 
-Polinko moves from human research direction to technical implementation:
-
 1. Krystian defines the behavioural objective, constraints, evidence boundary,
    and acceptance criteria.
-2. AI collaborators support structured dialogue, synthesis, reframing, and
-   stress-testing of ideas.
-3. Codex translates approved objectives into technical mechanisms: API
-   surfaces, eval harnesses, retrieval controls, reliability gates, docs, and
-   validation workflows.
+2. AI collaborators support dialogue, synthesis, reframing, and stress-testing.
+3. Codex translates approved objectives into technical mechanisms:
+   implementation, eval harnesses, docs, and validation.
 4. Krystian makes final decisions about interpretation, evidence inclusion,
    exclusion, and publication.
-
-## What AI Does Here
-
-AI assistance is method support:
-
-- structured dialogue
-- synthesis support
-- reframing and stress-testing ideas
-- implementation support
-- organisation support in Notion and repository workflows
-
-AI outputs are treated as artefacts within the research process. They can be
-useful, inspectable, wrong, or rejected.
 
 ## Responsibility Boundary
 

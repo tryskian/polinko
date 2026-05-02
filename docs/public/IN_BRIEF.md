@@ -12,7 +12,7 @@ repository is the research surface.
 
 Polinko is a fail-first research instrument. It uses binary eval gates, OCR
 reliability loops, transcript-backed insight capture, and evidence-preserving
-docs to study when model behavior is grounded and when it drifts.
+docs to study grounded behavior and drift.
 
 ## Governing Theory
 
@@ -36,9 +36,7 @@ In short: confidence must not outrun evidence.
 - Human authorship stays explicit:
   - Krystian owns theory, judgment, and publication decisions.
   - Codex supports implementation, validation, and repo maintenance.
-- Public presentation follows the method:
-  - the website is a doorway
-  - the repo carries the evidence
+- The website is a doorway; the repo carries the evidence.
 
 ## Current Research Instrument Set
 
@@ -50,6 +48,15 @@ In short: confidence must not outrun evidence.
 - Mermaid and D3 evidence diagrams
 - transcript + structured-insight corpus
 - governance and runbook surfaces that keep the method operational
+
+## Current OCR Read
+
+- latest tracked OCR kernel on `2026-05-01` is green:
+  - transcript-backed growth set: `25/25` stable
+  - fail-history cohort: `0` active cases
+  - remaining signal: exploratory output variability
+- tracked snapshot:
+  - [OCR progress snapshot](../research/ocr-progress-20260501.md)
 
 ## One-Sentence Read
 

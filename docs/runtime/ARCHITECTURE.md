@@ -4,7 +4,7 @@
 
 This page is the structural map of the tracked system. Use
 `docs/runtime/RUNBOOK.md` for procedure and
-`docs/runtime/OCR_OPERATING_MODEL.md` for the OCR eval recipe.
+`docs/runtime/OCR_REFERENCE.md` for the OCR eval reference.
 
 ## Top-Level Map
 
@@ -38,7 +38,7 @@ This page is the structural map of the tracked system. Use
 6. OCR is the primary reliability lane:
    - `lockset` is release-gating and binary
    - `growth` is fail-tolerant and used for pass-from-fail learning
-   - detailed commands live in `docs/runtime/OCR_OPERATING_MODEL.md`
+   - detailed commands live in `docs/runtime/OCR_REFERENCE.md`
 
 ## Data Surfaces
 
@@ -87,7 +87,7 @@ This page is the structural map of the tracked system. Use
 - `DECISIONS` stores durable decisions.
 - `STATE` stores tracked current truth.
 - `RUNBOOK` owns operator procedure.
-- `OCR_OPERATING_MODEL` owns the OCR eval recipe.
+- `OCR_REFERENCE` owns the OCR eval reference.
 - local `SESSION_HANDOFF` owns next-session carryover.
 - local `docs/peanut/` owns transcripts, theory, and working notes.
 - A policy change is complete only when the affected surfaces agree.
@@ -99,6 +99,6 @@ This page is the structural map of the tracked system. Use
 - Local API: `make server` or `make server-daemon`
 - Docs lint: `make lint-docs`
 - Wiring spec: `docs/runtime/RUNBOOK.md`
-- OCR lane reference: `docs/runtime/OCR_OPERATING_MODEL.md`
+- OCR lane reference: `docs/runtime/OCR_REFERENCE.md`
 - Runtime DB lifecycle commands are retired during wiring lock.
 - Local eval trace backfill (optional): `make backfill-eval-traces`
