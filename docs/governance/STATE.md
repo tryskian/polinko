@@ -75,6 +75,10 @@ Last updated: 2026-05-01
   - growth is fail-tolerant
   - `/viz/pass-fail` is a fail-signal instrument
   - `manual_evals.db` remains the integrated manual-eval warehouse
+  - current transcript-backed growth set is green:
+    - growth stability: `25/25` stable, `0` flaky
+    - fail-history cohort: `0` active cases
+    - current remaining OCR signal is exploratory output variability
 - Documentation rule:
   - `DECISIONS` is durable archive
   - `STATE` is the tracked public current-truth surface
@@ -84,7 +88,8 @@ Last updated: 2026-05-01
 
 1. Keep the public doorway stable and credible.
 2. Keep repo research surfaces compact, visual, and easy to scan.
-3. Continue OCR reliability work without changing binary gate semantics.
+3. Continue OCR reliability work by inspecting exploratory output variability
+   without changing binary gate semantics.
 4. Keep governance/runtime docs aligned and non-duplicative.
 
 ## Canonical Sources

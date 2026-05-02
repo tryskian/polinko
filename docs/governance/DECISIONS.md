@@ -3857,3 +3857,76 @@ quickstart document.
   passing unit tests can still miss broken runtime wiring. The durable safety
   bar is a fresh live server proving the actual API, ingest, retrieval, chat,
   eval, and cleanup graph after each meaningful tooling change.
+
+## D-232: Wait for `/health` before treating `server-daemon` as ready
+
+- Date: `2026-05-01`
+- Category: `workflow_governance`
+- Tags: `server_daemon`, `readiness`, `operator_surface`, `fail_closed`
+- Decision:
+  - `make server-daemon` must not report success immediately after forking
+    uvicorn.
+  - treat `/health` readiness as the daemon success condition.
+  - if readiness is not reached within the configured timeout:
+    - kill the child process
+    - clean the PID file
+    - fail closed instead of handing OCR commands a stale startup.
+- Validation:
+  - `make server-daemon`
+  - `make server-daemon-status`
+  - `make ocrstable OCR_STABILITY_RUNS=1 OCR_TRANSCRIPT_CASES=docs/eval/beta_2_0/ocr_eval_cases.json`
+  - `make ocrstablegrowth OCR_GROWTH_STABILITY_RUNS=1 OCR_GROWTH_EVAL_MAX_CASES=6`
+- Why: OCR operator commands were able to race a not-yet-ready daemon and fail
+  on `/health` even though startup had already been reported as successful.
+  Readiness polling keeps the operator surface honest and preserves fail-closed
+  behavior.
+
+## D-233: Require correction overlap for askless typed OCR growth promotion
+
+- Date: `2026-05-01`
+- Category: `ocr_hardening`
+- Tags: `ocr_growth`, `typed_lane`, `false_positive_control`, `signal_quality`
+- Decision:
+  - tighten `tools/build_ocr_cases_from_export.py` so askless typed rows no
+    longer promote into OCR growth from OCR framing alone.
+  - require correction-overlap evidence before askless typed rows count as OCR
+    signal.
+  - keep literal OCR asks and stronger typed OCR evidence paths unchanged.
+- Validation:
+  - `python3 -m unittest tests.test_build_ocr_cases_from_export`
+  - `make ocr-cases-from-export CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+  - `make api-smoke`
+  - `make eval-smoke`
+  - `make ocrstable OCR_STABILITY_RUNS=1 OCR_TRANSCRIPT_CASES=docs/eval/beta_2_0/ocr_eval_cases.json`
+  - `make ocrstablegrowth OCR_GROWTH_STABILITY_RUNS=1`
+- Why: typed screenshot/design-review rows were still leaking into the growth
+  lane as OCR signal even when they had no OCR intent and no correction
+  evidence. Requiring overlap removes those false positives without weakening
+  real OCR asks.
+
+## D-234: Track dated OCR progress snapshots as curated research notes
+
+- Date: `2026-05-01`
+- Category: `evidence_governance`
+- Tags: `research_surface`, `ocr_progress`, `diagrams`, `curation`
+- Decision:
+  - keep dated OCR progress notes under `docs/research/` when a full OCR kernel
+    materially changes the current signal picture.
+  - allow those notes to include compact Mermaid progress diagrams when they
+    clarify:
+    - transcript mining funnel
+    - current stability state
+    - the next research signal
+  - link the current dated note from:
+    - `docs/research/README.md`
+    - `docs/public/DIAGRAMS.md`
+    - `docs/runtime/OCR_OPERATING_MODEL.md`
+    - `docs/research/research-manifest.json`
+- Validation:
+  - `make ocrkernel CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: OCR runtime reports are local and operational, while `STATE` stays terse.
+  A dated curated note gives the repo one stable place to reference current OCR
+  progress and progress diagrams without bloating the governance or runtime
+  surfaces.
