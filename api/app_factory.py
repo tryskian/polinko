@@ -451,8 +451,8 @@ _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
       <div class="bio">
         <section class="copy-block" aria-label="Origin and research focus">
           <p class="copy-line">
-            creative designer who somehow became an applied AI&nbsp;systems
-            designer when one idea came with its own hypothesis.
+            creative designer who somehow became an applied AI&nbsp;research
+            engineer when one idea came with its own hypothesis.
           </p>
           <p class="copy-line">
             so now i design evals around the useful signals that models reveal
