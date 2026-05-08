@@ -7,13 +7,19 @@ workflow, output surfaces, and tuning knobs.
 ## Current Snapshot
 
 - Latest tracked progress note:
+  - [`docs/research/ocr-progress-20260508.md`](../research/ocr-progress-20260508.md)
+- Prior tracked progress note:
   - [`docs/research/ocr-progress-20260501.md`](../research/ocr-progress-20260501.md)
-- Current full-kernel read on `2026-05-01`:
+- Current OCR read on `2026-05-08`:
   - growth stability: `25/25` stable, `0` flaky
   - fail cohort: `0` active fail-history cases
   - focus stability: `16/16` stable, `0` flaky
+  - runtime OCR follow-up: parked
 - Current remaining OCR research signal:
-  - exploratory output variability, not active fail pressure
+  - low-pressure exploratory output variability inside stable PASS behavior
+  - if OCR follow-up reopens, it should be case-design-only and start from:
+    - `gx-68844003-002`
+    - `gx-6952d743-021`
 
 ## Lane Model
 

@@ -13,11 +13,14 @@ enough to read in public.
 ## Current OCR Snapshot
 
 - latest tracked progress note:
-  - [OCR progress snapshot](./ocr-progress-20260501.md)
-- current full-kernel read on `2026-05-01`:
+  - [OCR progress snapshot](./ocr-progress-20260508.md)
+- current OCR read on `2026-05-08`:
   - growth stability: `25/25` stable, `0` flaky
   - fail-history cohort: `0` active cases
-  - remaining signal: exploratory output variability
+  - focus stability: `16/16` stable
+  - runtime OCR follow-up: parked
+  - remaining signal: low-pressure exploratory variability and a case-design-only
+    watchlist
 
 ## Included Here
 
@@ -28,7 +31,8 @@ enough to read in public.
 
 ## Representative Tracked Evidence
 
-- [OCR progress snapshot](./ocr-progress-20260501.md)
+- [OCR progress snapshot](./ocr-progress-20260508.md)
+- [Prior OCR progress snapshot](./ocr-progress-20260501.md)
 - [OCR representative case](./ocr-representative-case.md)
 - [OCR binary eval snapshot](../eval/beta_2_0/ocr-20260328-184147.json)
 - [OCR safety eval snapshot](./ocr-safety-20260425.md)

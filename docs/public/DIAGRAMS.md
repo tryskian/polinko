@@ -15,7 +15,8 @@ Static SVG exports generated from this page:
 
 Current dated progress note:
 
-- [OCR Progress Snapshot (2026-05-01)](../research/ocr-progress-20260501.md)
+- [OCR Progress Snapshot (2026-05-08)](../research/ocr-progress-20260508.md)
+- [Prior OCR Progress Snapshot (2026-05-01)](../research/ocr-progress-20260501.md)
 
 ## OCR Progress Funnel
 
@@ -47,17 +48,18 @@ flowchart LR
 
 ```mermaid
 flowchart TD
-  A["Current OCR growth lane\n2026-05-01"] --> B["Fail pressure\n0 active failing cases"]
+  A["Current OCR lane\n2026-05-08"] --> B["Fail pressure\n0 active failing cases"]
   A --> C["Decision stability\n25/25 growth stable\n16/16 focus stable"]
-  A --> D["Output variability\n16 growth cases\n11 focus cases"]
-  D --> E["Next research kernel\ninspect exploratory variants"]
+  A --> D["Exploratory variability\n16 growth cases\n10 focus cases"]
+  D --> E["Runtime OCR\nparked"]
+  D --> F["If OCR reopens\ncase-design-only watchlist\n2 cases"]
 
   classDef pass fill:#EEF7EE,stroke:#59A14F,color:#1F1F1F;
   classDef bridge fill:#FBF5E8,stroke:#F28E2B,color:#1F1F1F;
   classDef evidence fill:#EEF7F6,stroke:#76B7B2,color:#1F1F1F;
 
-  class A,B,C pass;
-  class D,E evidence;
+  class A,B,C,E pass;
+  class D,F evidence;
 ```
 
 ## Polinko Evidence Sankey (D3)

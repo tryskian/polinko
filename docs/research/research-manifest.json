@@ -1,6 +1,6 @@
 {
-  "source_commit": "744f49d2d0b109fb34e67b08357a8ca3e1b3ce89",
-  "source_commit_url": "https://github.com/tryskian/polinko/commit/744f49d2d0b109fb34e67b08357a8ca3e1b3ce89",
+  "source_commit": "3e1df22f74ac27f7d6c9774a88030ae1984dc4d2",
+  "source_commit_url": "https://github.com/tryskian/polinko/commit/3e1df22f74ac27f7d6c9774a88030ae1984dc4d2",
   "curation_policy": "Curated public research only. Local operational artefacts remain under .local/ and are not auto-promoted.",
   "artifacts": [
     {
@@ -12,6 +12,11 @@
     {
       "type": "research_note",
       "label": "OCR progress snapshot",
+      "path": "docs/research/ocr-progress-20260508.md"
+    },
+    {
+      "type": "research_note",
+      "label": "Prior OCR progress snapshot",
       "path": "docs/research/ocr-progress-20260501.md"
     },
     {
