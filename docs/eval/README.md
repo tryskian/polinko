@@ -65,6 +65,7 @@ Do not flatten one into the other.
 
 - live runtime databases under `.local/runtime_dbs/active/`
 - archived runtime databases under `.local/runtime_dbs/archive/`
+- export-mined candidate backlogs under `.local/eval_cases/`
 - full Beta 1.0 local snapshot databases and runtime state
 - private exports, scratch screenshots, and raw local audit material
 

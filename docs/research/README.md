@@ -2,9 +2,9 @@
 
 # Research Surface
 
-This folder is the compact research surface for reviewers who want a current
-OCR snapshot, one machine-readable manifest, and direct links into tracked eval
-evidence.
+This folder is the compact research surface for reviewers who want the current
+OCR state, the broader hypothesis/evidence picture, one machine-readable
+manifest, and direct links into tracked eval evidence.
 
 It is intentionally curated. Polinko keeps local operational artefacts under
 `.local/`; this folder only promotes a small tracked subset that is stable
@@ -22,6 +22,17 @@ enough to read in public.
   - remaining signal: low-pressure exploratory variability and a case-design-only
     watchlist
 
+## Current Non-OCR Read
+
+- latest tracked non-OCR backlog note:
+  - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
+- current read on `2026-05-08`:
+  - OCR is still the most operationalized lane
+  - export-backed evidence now shows broader measurable surfaces beyond OCR
+  - strongest next promotion target: co-reasoning reliability
+  - operator burden remains important, but still thinly surfaced by the first
+    export-mining pass
+
 ## Included Here
 
 - [Research manifest](./research-manifest.json)
@@ -32,6 +43,7 @@ enough to read in public.
 ## Representative Tracked Evidence
 
 - [OCR progress snapshot](./ocr-progress-20260508.md)
+- [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
 - [Prior OCR progress snapshot](./ocr-progress-20260501.md)
 - [OCR representative case](./ocr-representative-case.md)
 - [OCR binary eval snapshot](../eval/beta_2_0/ocr-20260328-184147.json)

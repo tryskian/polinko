@@ -12,16 +12,44 @@ The working question is:
 
 ## What It Studies
 
-Polinko is a local-first evaluation lab for:
+Polinko is a local-first evaluation lab for small, inspectable hypothesis lanes:
 
-- binary pass/fail gates
 - OCR reliability
-- fail-signal observability
-- manual evaluation notes
-- human-AI workflow evidence
+- OCR confidence boundaries around inference and hallucination
+- co-reasoning reliability
+- operator burden under different control surfaces
+- retrieval grounding
+- response-behaviour stability
 
 The implementation, tests, docs, eval reports, and visual research artifacts
 live together so claims can be traced back to source material.
+
+## Current Hypothesis Matrix
+
+- `OCR reliability`
+  - status: operationalized
+  - measured by: OCR, OCR recovery, OCR safety, growth/focus stability, OCR
+    progress notes
+- `OCR confidence helps suppress low-signal inference`
+  - status: partial but actively evidenced
+  - measured by: OCR safety, hallucination evals, and export-backed OCR
+    confidence boundary mining
+- `Co-reasoning reliability can be operationalized as binary eval signal`
+  - status: partial, next promotion target
+  - measured by: style/behaviour surfaces today, plus the new export-backed
+    behaviour backlog
+- `Commentary-heavy response contracts increase operator burden`
+  - status: hypothesis kept, but thinly operationalized
+  - measured by: experiment `R-D`, manual transcript diagnostics, and a small
+    export backlog so far
+- `Retrieval grounding should stay inspectable and source-bound`
+  - status: operationalized
+  - measured by: retrieval and file-search eval suites, plus export-backed
+    retrieval backlog
+- `Failure should stay the main signal across lanes`
+  - status: governing method
+  - measured by: binary gates, fail reports, decisions, and representative
+    research notes
 
 ## What Changed Across Betas
 
