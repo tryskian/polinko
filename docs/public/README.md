@@ -6,14 +6,21 @@ This is the shortest route through Polinko’s public research surface.
 
 ## Current Snapshot
 
-- OCR lane is currently green:
-  - transcript-backed growth set: `25/25` stable
-  - fail-history cohort: `0` active cases
-  - runtime OCR follow-up is parked
-- broader non-OCR lane is now back in scope:
-  - strongest next promotion target: co-reasoning reliability
+- current serious method beta is `Beta 2.2`:
+  - explicit `pass` / `fail` / `evict` gate contract
+  - first-gate contract correctness before richer interpretation
+  - first promoted non-OCR lane is live
+- current method lanes:
+  - OCR method lane is green:
+    - transcript-backed growth set: `25/25` stable
+    - fail-history cohort: `0` active cases
+    - runtime OCR follow-up is parked
+  - co-reasoning reliability is operationalized:
+    - tracked style stress surface: `14/14` pass
   - operator burden remains a real hypothesis, but is still thinly measured
 - latest tracked research notes:
+  - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
+  - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
   - [OCR progress snapshot](../research/ocr-progress-20260508.md)
   - [Behaviour backlog snapshot](../research/behaviour-backlog-20260508.md)
 
@@ -34,6 +41,8 @@ This is the shortest route through Polinko’s public research surface.
 
 - [OCR progress snapshot](../research/ocr-progress-20260508.md)
   - current OCR status and diagrams
+- [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
+  - serious method beta boundary
 - [Behaviour backlog snapshot](../research/behaviour-backlog-20260508.md)
   - current non-OCR mining result
 - [Eval Evidence Map](../eval/README.md)

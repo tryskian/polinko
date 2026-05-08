@@ -22,6 +22,10 @@ Last updated: 2026-05-08
     interpretation
   - thin new lanes can start human-owned and row-local before larger judging
     systems
+- Polinko is now in `Beta 2.2`:
+  - serious method beta
+  - explicit gate contract
+  - first promoted non-OCR lane
 - Human-led collaboration remains explicit:
   - Krystian owns theory, evidence interpretation, and publication decisions
   - OpenAI Codex is the active repo-local coding agent and engineering

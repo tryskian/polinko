@@ -4036,3 +4036,27 @@ quickstart document.
   partially implied. Making it explicit keeps Polinko aligned across lanes,
   prevents fuzzy third-state drift, and makes future thin-lane promotion more
   disciplined.
+
+## D-239: Formalize Beta 2.2 as Polinko's serious method beta
+
+- Date: `2026-05-08`
+- Category: `evidence_governance`
+- Tags: `beta_2_2`, `method_beta`, `co_reasoning`, `eval_contract`, `docs_sync`
+- Decision:
+  - formalize `Beta 2.2` as the current Polinko phase.
+  - define that beta boundary by:
+    - explicit `pass` / `fail` / `evict` gate semantics
+    - first-gate contract correctness before richer interpretation
+    - co-reasoning promoted as the first tracked non-OCR eval lane
+  - treat this as a method beta, not a finished product beta.
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_eval_style`
+  - `./venv/bin/python -m tools.eval_style --base-url http://127.0.0.1:8069 --case-attempts 1 --min-pass-attempts 1`
+  - `make test`
+  - `make api-smoke`
+  - `make eval-smoke`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the repo now has an explicit gate contract, more than one real eval
+  lane, and a promoted non-OCR collaboration surface. That is a meaningful phase
+  shift in method maturity and should be named directly in tracked repo truth.
