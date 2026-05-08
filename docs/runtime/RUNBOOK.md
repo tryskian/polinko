@@ -55,25 +55,18 @@
 
 ## Morning Startup Check (Codexbeab)
 
-1. Read morning docs in order:
-   - `docs/governance/CHARTER.md`
-   - `docs/governance/STATE.md`
-   - `docs/runtime/RUNBOOK.md`
-   - local `docs/peanut/governance/SESSION_HANDOFF.md` if present
-2. Confirm execution location:
-   - canonical checkout root (`<repo-root>`) or dedicated worktree.
-3. Confirm active branch in this thread:
+1. Confirm execution location:
+   - canonical root (`/Users/tryskian/Github/polinko`) or dedicated worktree.
+2. Confirm active branch in this thread:
    - `git branch --show-current`
-4. Start implementation from a feature branch, not `main`:
-   - if on `main`, create/switch to a task branch before code or docs edits.
-   - default branch prefix: `codex/bigbrain/<task-name>`.
-5. If running parallel tracks, keep each track in its own dedicated worktree.
-6. Give the morning peanut breakdown before implementation:
-   - list the kernels for the whole day in bullets.
-   - state the kernel the engineer is starting with.
-7. Only after 1-6:
+3. If running parallel tracks, keep each track in its own dedicated worktree.
+4. Only after 1-3:
    - run `make doctor-env`
-   - continue with normal startup (`make server-daemon`, `make session-status`)
+   - inside Codex, treat `make api-smoke` as the trusted runtime truth
+   - use `make server-daemon` / `make session-status` only as convenience checks
+5. Codex execution caveat:
+   - long-lived detached background processes launched from this execution surface can be reaped later even after a clean startup
+   - do not treat a green `server-daemon` / `session-status` result as stronger evidence than `make api-smoke`
 
 ## Command Surface Simplification Rule
 
@@ -88,28 +81,20 @@
 
 ## End-of-Day Routine (Codexbeab)
 
-1. Trigger phrases from the human:
-   - `human time`
-   - `wind down`
-2. Run pre-merge validation from the feature branch when work is ready for PR:
-   - `make eod-preflight`
-3. After merge and sync back to `main`, run the final end-of-day script:
+1. Run the end-of-day script:
    - `make eod`
-4. Script sequence (deterministic):
+2. Script sequence (deterministic):
    - `make transcript-fix`
    - `make transcript-check`
-   - `make eod-docs-check`
    - `make doctor-env`
    - `make lint-docs`
    - `make test`
    - `make eod-stop`
-   - `make eod-git-check` (`make eod` only)
-5. Purpose:
-   - keep transcripts consistent
-   - refresh tracked current truth and local handoff when present
-   - catch build/docs drift before closeout
-   - enforce merged clean `main`
-6. Kernel closeout (mandatory):
+3. Purpose:
+   - keep local transcript records in consistent rich format
+   - catch build/docs drift before day-close
+   - hand off a clean validation state for next startup
+4. Kernel closeout (mandatory):
    - list kernels executed that day (one line per kernel)
    - inspect each kernel against:
      - intended objective
@@ -120,14 +105,6 @@
      - stale links/paths/reference wiring
    - mark disposition for each kernel:
      - `go`, `rework`, or `park`
-7. Repository closeout (mandatory):
-   - EOD always finishes merged and clean on local `main`, synced with
-     `origin/main`.
-   - commit/push the feature branch, merge through the protected-main PR flow,
-     then:
-     - `git switch main`
-     - `git pull --ff-only`
-     - `git status --short` must be empty
 
 ## Command Ownership Rule (Reasoning Loops)
 
@@ -328,6 +305,8 @@ Read-only DB audits remain allowed:
    - `tools.eval_retrieval`
    - `tools.eval_file_search`
 9. Treat `make api-smoke` + `make eval-smoke` as the default post-change safety path for Polinko.
+10. Inside Codex, prefer these smoke targets over long-lived `server-daemon` checks.
+    - detached background processes can go stale later for execution-surface reasons even when the app itself is healthy
 
 ## Optional Keep-Awake Session Policy
 
