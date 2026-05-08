@@ -7,7 +7,8 @@
 ![Research Surface](https://img.shields.io/badge/research-repo_native-76B7B2)
 
 Polinko is a human-led, repo-native research system for inspecting AI behavior
-through failure, OCR reliability, and evidence-preserving evaluation.
+through failure, OCR reliability, co-reasoning, and evidence-preserving
+evaluation.
 
 It is not mainly a website or demo app. The website is a doorway. The
 repository is the research surface.
@@ -19,13 +20,18 @@ Polinko does the opposite: it keeps failure visible enough to inspect,
 evaluate, and act on. That matters anywhere confidence can outrun source
 evidence.
 
-## Current OCR Read
+## Current Research Read
 
-- transcript-backed growth set: `25/25` stable, `0` flaky
-- fail-history cohort: `0` active cases
-- remaining OCR signal: exploratory output variability
-- latest tracked snapshot:
-  - [docs/research/ocr-progress-20260501.md](docs/research/ocr-progress-20260501.md)
+- OCR lane is green:
+  - transcript-backed growth set: `25/25` stable, `0` flaky
+  - fail-history cohort: `0` active cases
+  - runtime OCR follow-up is parked
+- broader hypothesis lane now reopened from export-backed evidence:
+  - strongest next promotion target: co-reasoning reliability
+  - operator burden remains important but still thinly surfaced
+- latest tracked snapshots:
+  - [docs/research/ocr-progress-20260508.md](docs/research/ocr-progress-20260508.md)
+  - [docs/research/behaviour-backlog-20260508.md](docs/research/behaviour-backlog-20260508.md)
 
 ## Start Here
 
@@ -43,6 +49,7 @@ If you are reading Polinko as a research project, use this path:
 
 - FastAPI API + CLI runtime
 - OCR lockset and growth-lane evals
+- export-backed behaviour backlog mining
 - binary pass/fail evidence surfaces
 - tracked research docs, diagrams, and eval context
 - repo-local engineering and validation workflow

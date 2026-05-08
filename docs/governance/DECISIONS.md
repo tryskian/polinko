@@ -3957,3 +3957,31 @@ quickstart document.
   builder and evaluator removed that seam without changing OCR transport or
   binary gate semantics, and clarified that the remaining pressure belongs to
   case design rather than runtime OCR behavior.
+
+## D-236: Build a separate export-backed behaviour backlog and make co-reasoning the next promotion target
+
+- Date: `2026-05-08`
+- Category: `evidence_governance`
+- Tags: `behaviour_mining`, `hypothesis_matrix`, `co_reasoning`, `operator_burden`, `export_backlog`
+- Decision:
+  - keep OCR transcript mining separate from broader behaviour mining.
+  - add a dedicated local backlog generator:
+    - `tools/build_behaviour_backlog_from_export.py`
+  - mine non-OCR hypothesis candidates from ChatGPT export search text plus the
+    existing behaviour export index instead of trying to stretch the OCR miner.
+  - collapse branch-title variants into conversation families so backlog reads
+    as promotion-ready evidence rather than noisy duplicates.
+  - treat co-reasoning reliability as the next non-OCR promotion target based
+    on the first backlog pass.
+  - keep operator burden as a live hypothesis, but do not promote it yet while
+    the export cue surface remains thin.
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_build_behaviour_backlog_from_export`
+  - `python3 -m tools.build_behaviour_backlog_from_export --export-root /abs/path/to/CGPT-DATA-EXPORT`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the repo had far more transcript evidence than the OCR lane alone was
+  using, but the existing miner only promoted OCR correction signals. A
+  separate backlog keeps the hypothesis lanes explicit, proves that broader
+  export-backed evidence exists, and gives Polinko a deliberate next lane
+  instead of letting OCR remain the default gravity well.

@@ -9,9 +9,13 @@ This is the shortest route through Polinko’s public research surface.
 - OCR lane is currently green:
   - transcript-backed growth set: `25/25` stable
   - fail-history cohort: `0` active cases
-  - remaining signal: exploratory output variability
-- latest tracked OCR progress note:
-  - [OCR progress snapshot](../research/ocr-progress-20260501.md)
+  - runtime OCR follow-up is parked
+- broader non-OCR lane is now back in scope:
+  - strongest next promotion target: co-reasoning reliability
+  - operator burden remains a real hypothesis, but is still thinly measured
+- latest tracked research notes:
+  - [OCR progress snapshot](../research/ocr-progress-20260508.md)
+  - [Behaviour backlog snapshot](../research/behaviour-backlog-20260508.md)
 
 ## Read In Order
 
@@ -28,8 +32,10 @@ This is the shortest route through Polinko’s public research surface.
 
 ## If You Need More Detail
 
-- [OCR progress snapshot](../research/ocr-progress-20260501.md)
+- [OCR progress snapshot](../research/ocr-progress-20260508.md)
   - current OCR status and diagrams
+- [Behaviour backlog snapshot](../research/behaviour-backlog-20260508.md)
+  - current non-OCR mining result
 - [Eval Evidence Map](../eval/README.md)
   - eval context
 - [Root README](../../README.md)
