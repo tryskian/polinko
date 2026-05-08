@@ -16,6 +16,11 @@
     },
     {
       "type": "research_note",
+      "label": "Behaviour backlog snapshot",
+      "path": "docs/research/behaviour-backlog-20260508.md"
+    },
+    {
+      "type": "research_note",
       "label": "Prior OCR progress snapshot",
       "path": "docs/research/ocr-progress-20260501.md"
     },

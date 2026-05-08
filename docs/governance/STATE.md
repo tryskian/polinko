@@ -84,6 +84,17 @@ Last updated: 2026-05-08
     - if OCR follow-up reopens, it should be case-design-only and start from:
       - `gx-68844003-002`
       - `gx-6952d743-021`
+- Broader hypothesis lane is active again:
+  - export-backed behaviour mining now confirms real non-OCR evidence surfaces
+  - current backlog counts:
+    - co-reasoning reliability: `18` conversations / `14` families
+    - operator burden shift: `1` / `1`
+    - hallucination boundary: `33` / `24`
+    - retrieval grounding: `47` / `40`
+    - OCR confidence boundary: `15` / `10`
+  - strongest next promotion target is co-reasoning reliability
+  - operator burden remains a kept hypothesis, but needs stronger cues or
+    manual seed cases before promotion
 - Documentation rule:
   - `DECISIONS` is durable archive
   - `STATE` is the tracked public current-truth surface
@@ -93,9 +104,11 @@ Last updated: 2026-05-08
 
 1. Keep the public doorway stable and credible.
 2. Keep repo research surfaces compact, visual, and easy to scan.
-3. Keep the OCR lane green and reopen it only from the remaining
+3. Promote the next non-OCR lane from the export-backed backlog, starting with
+   co-reasoning reliability.
+4. Keep the OCR lane green and reopen it only from the remaining
    case-design-only watchlist.
-4. Keep governance/runtime docs aligned and non-duplicative.
+5. Keep governance/runtime docs aligned and non-duplicative.
 
 ## Canonical Sources
 
