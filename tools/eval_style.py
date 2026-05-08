@@ -42,6 +42,22 @@ def _word_count(text: str) -> int:
     return len(re.findall(r"\b\w+\b", text))
 
 
+def _normalize_text_for_match(text: str) -> str:
+    normalized = (
+        text.lower()
+        .replace("’", "'")
+        .replace("‘", "'")
+        .replace("`", "'")
+        .replace("“", '"')
+        .replace("”", '"')
+        .replace("‑", "-")
+        .replace("–", "-")
+        .replace("—", "-")
+    )
+    normalized = re.sub(r"\s+", " ", normalized)
+    return normalized.strip()
+
+
 def _normalize_phrase_list(raw: Any, *, field_name: str, case_id: str | None = None) -> list[str]:
     if raw is None:
         return []
@@ -55,6 +71,51 @@ def _normalize_phrase_list(raw: Any, *, field_name: str, case_id: str | None = N
             continue
         phrases.append(phrase.lower())
     return phrases
+
+
+def _normalize_phrase_groups(raw: Any, *, field_name: str, case_id: str | None = None) -> list[list[str]]:
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        where = f"case '{case_id}'" if case_id else "root payload"
+        raise RuntimeError(f"{where} field '{field_name}' must be a list of string lists.")
+    groups: list[list[str]] = []
+    for group in raw:
+        if not isinstance(group, list):
+            where = f"case '{case_id}'" if case_id else "root payload"
+            raise RuntimeError(f"{where} field '{field_name}' must only contain lists.")
+        normalized_group: list[str] = []
+        for value in group:
+            phrase = _normalize_text_for_match(str(value))
+            if phrase:
+                normalized_group.append(phrase)
+        if normalized_group:
+            groups.append(normalized_group)
+    return groups
+
+
+def _contains_forbidden_phrases(answer: str, forbidden_phrases: list[str]) -> list[str]:
+    lowered = _normalize_text_for_match(answer)
+    hits: list[str] = []
+    for phrase in forbidden_phrases:
+        normalized = _normalize_text_for_match(phrase)
+        if normalized and normalized in lowered:
+            hits.append(normalized)
+    return hits
+
+
+def _missing_required_all(answer: str, required_all: list[str]) -> list[str]:
+    lowered = _normalize_text_for_match(answer)
+    return [phrase for phrase in required_all if phrase and phrase not in lowered]
+
+
+def _missing_required_any_groups(answer: str, required_any_groups: list[list[str]]) -> list[list[str]]:
+    lowered = _normalize_text_for_match(answer)
+    missing: list[list[str]] = []
+    for group in required_any_groups:
+        if not any(phrase in lowered for phrase in group):
+            missing.append(group)
+    return missing
 
 
 def _load_cases(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
@@ -99,6 +160,16 @@ def _load_cases(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
                 "query": query,
                 "style_notes": style_notes,
                 "max_words": max_words,
+                "required_all": _normalize_phrase_list(
+                    case.get("required_all"),
+                    field_name="required_all",
+                    case_id=case_id,
+                ),
+                "required_any_groups": _normalize_phrase_groups(
+                    case.get("required_any_groups"),
+                    field_name="required_any_groups",
+                    case_id=case_id,
+                ),
                 "forbidden_phrases": sorted(set(global_forbidden_phrases + case_forbidden_phrases)),
             }
         )
@@ -342,14 +413,21 @@ def main() -> int:
                 notes = str(result.get("notes", "")).strip()
 
                 max_words = case["max_words"]
-                forbidden_hits = [
-                    phrase for phrase in case.get("forbidden_phrases", []) if phrase in answer_lower
-                ]
+                forbidden_hits = _contains_forbidden_phrases(
+                    answer,
+                    case.get("forbidden_phrases", []),
+                )
+                missing_required_all = _missing_required_all(answer, case.get("required_all", []))
+                missing_required_any_groups = _missing_required_any_groups(
+                    answer,
+                    case.get("required_any_groups", []),
+                )
                 word_count_ok = not (isinstance(max_words, int) and wc > max_words)
+                answer_non_empty = bool(answer.strip())
                 decision = resolve_binary_gate(
                     policy_pass=not forbidden_hits,
-                    high_value_alignment_pass=case_pass,
-                    evidence_complete=word_count_ok,
+                    high_value_alignment_pass=case_pass and not missing_required_all and not missing_required_any_groups,
+                    evidence_complete=word_count_ok and answer_non_empty,
                 )
                 case_failed = not decision.passed
 
@@ -364,6 +442,23 @@ def main() -> int:
                         notes = f"{notes} | Contains forbidden phrase(s): {forbidden_text}."
                     else:
                         notes = f"Contains forbidden phrase(s): {forbidden_text}."
+                if missing_required_all:
+                    missing_all_text = ", ".join(missing_required_all)
+                    if notes:
+                        notes = f"{notes} | Missing required phrase(s): {missing_all_text}."
+                    else:
+                        notes = f"Missing required phrase(s): {missing_all_text}."
+                if missing_required_any_groups:
+                    missing_groups_text = "; ".join(" / ".join(group) for group in missing_required_any_groups)
+                    if notes:
+                        notes = f"{notes} | Missing required phrase group(s): {missing_groups_text}."
+                    else:
+                        notes = f"Missing required phrase group(s): {missing_groups_text}."
+                if not answer_non_empty:
+                    if notes:
+                        notes = f"{notes} | Assistant answer was empty."
+                    else:
+                        notes = "Assistant answer was empty."
                 if decision.reasons:
                     reasons_text = "; ".join(decision.reasons)
                     if notes:
@@ -397,6 +492,10 @@ def main() -> int:
                         "error": error_text,
                         "word_count": wc,
                         "forbidden_hits": forbidden_hits,
+                        "missing_required_all": missing_required_all if 'missing_required_all' in locals() else [],
+                        "missing_required_any_groups": (
+                            missing_required_any_groups if 'missing_required_any_groups' in locals() else []
+                        ),
                         "answer": answer,
                     }
                 )
@@ -442,6 +541,10 @@ def main() -> int:
                 "word_count": final_attempt["word_count"],
                 "max_words": max_words,
                 "forbidden_hits": list(final_attempt["forbidden_hits"]),
+                "missing_required_all": list(final_attempt.get("missing_required_all", [])),
+                "missing_required_any_groups": list(
+                    final_attempt.get("missing_required_any_groups", [])
+                ),
                 "query": case["query"],
                 "answer": final_attempt["answer"],
                 "attempts_used": attempts_used,

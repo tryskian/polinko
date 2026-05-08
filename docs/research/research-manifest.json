@@ -21,6 +21,11 @@
     },
     {
       "type": "research_note",
+      "label": "Co-reasoning promotion snapshot",
+      "path": "docs/research/co-reasoning-promotion-20260508.md"
+    },
+    {
+      "type": "research_note",
       "label": "Prior OCR progress snapshot",
       "path": "docs/research/ocr-progress-20260501.md"
     },

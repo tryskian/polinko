@@ -92,7 +92,9 @@ Last updated: 2026-05-08
     - hallucination boundary: `33` / `24`
     - retrieval grounding: `47` / `40`
     - OCR confidence boundary: `15` / `10`
-  - strongest next promotion target is co-reasoning reliability
+  - co-reasoning reliability is now the first promoted non-OCR lane
+  - tracked style stress lane currently passes `14/14` on the live validation
+    pass
   - operator burden remains a kept hypothesis, but needs stronger cues or
     manual seed cases before promotion
 - Documentation rule:
@@ -104,11 +106,12 @@ Last updated: 2026-05-08
 
 1. Keep the public doorway stable and credible.
 2. Keep repo research surfaces compact, visual, and easy to scan.
-3. Promote the next non-OCR lane from the export-backed backlog, starting with
-   co-reasoning reliability.
-4. Keep the OCR lane green and reopen it only from the remaining
+3. Keep the first promoted non-OCR lane stable and visible.
+4. Seed the next thinner collaboration lane deliberately instead of forcing it
+   from weak export cues alone.
+5. Keep the OCR lane green and reopen it only from the remaining
    case-design-only watchlist.
-5. Keep governance/runtime docs aligned and non-duplicative.
+6. Keep governance/runtime docs aligned and non-duplicative.
 
 ## Canonical Sources
 

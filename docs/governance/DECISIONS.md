@@ -3985,3 +3985,30 @@ quickstart document.
   separate backlog keeps the hypothesis lanes explicit, proves that broader
   export-backed evidence exists, and gives Polinko a deliberate next lane
   instead of letting OCR remain the default gravity well.
+
+## D-237: Promote co-reasoning into the tracked style eval lane
+
+- Date: `2026-05-08`
+- Category: `evidence_governance`
+- Tags: `co_reasoning`, `style_eval`, `behaviour_promotion`, `binary_gate`
+- Decision:
+  - keep co-reasoning promotion inside the existing tracked style lane instead
+    of creating a separate eval family first.
+  - add deterministic required-phrase gate support to:
+    - `tools/eval_style.py`
+  - promote export-backed co-reasoning stress cases into:
+    - `docs/eval/beta_2_0/style_eval_cases.json`
+  - tighten the case gates by inspecting live failures and removing brittle
+    over-literal phrase requirements rather than backing out the lane.
+  - treat co-reasoning reliability as the first promoted non-OCR eval lane once
+    the tracked style surface passes cleanly end-to-end.
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_eval_style`
+  - `./venv/bin/python -m tools.eval_style --base-url http://127.0.0.1:8069 --case-attempts 1 --min-pass-attempts 1`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the export backlog proved co-reasoning was the right next non-OCR lane,
+  but the project did not need a brand-new runner to start measuring it.
+  Promoting the lane through tracked style stress cases kept the change small,
+  made the collaboration hypothesis visible in repo truth, and showed that the
+  remaining pressure was in case design rather than missing runtime support.

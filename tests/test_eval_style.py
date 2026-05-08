@@ -2,12 +2,67 @@ import unittest
 
 from tools.eval_style import _build_confidence_counts
 from tools.eval_style import _case_confidence_bucket
+from tools.eval_style import _contains_forbidden_phrases
+from tools.eval_style import _load_cases
+from tools.eval_style import _missing_required_all
+from tools.eval_style import _missing_required_any_groups
+from tools.eval_style import _normalize_text_for_match
 from tools.eval_style import _resolve_case_status
 from tools.eval_style import _should_stop_attempts
 from tools.eval_style import build_parser
+import json
+import tempfile
+from pathlib import Path
 
 
 class StyleEvalTests(unittest.TestCase):
+    def test_normalize_text_for_match_handles_curly_apostrophes_and_dashes(self) -> None:
+        normalized = _normalize_text_for_match("I don’t have real‑time data.")
+        self.assertEqual(normalized, "i don't have real-time data.")
+
+    def test_contains_forbidden_phrases_matches_case_insensitive(self) -> None:
+        hits = _contains_forbidden_phrases("Ready when you are.", ["ready when you are"])
+        self.assertEqual(hits, ["ready when you are"])
+
+    def test_missing_required_all_reports_missing_values(self) -> None:
+        missing = _missing_required_all(
+            "Human-led checks keep the loop grounded.",
+            ["human-led", "checkpoints"],
+        )
+        self.assertEqual(missing, ["checkpoints"])
+
+    def test_missing_required_any_groups_reports_unmatched_group(self) -> None:
+        missing_groups = _missing_required_any_groups(
+            "Tone-matching is useful when it stays grounded.",
+            [["tone-matching", "tone matching"], ["without mimicry", "not mimicry"]],
+        )
+        self.assertEqual(missing_groups, [["without mimicry", "not mimicry"]])
+
+    def test_load_cases_accepts_required_phrase_fields(self) -> None:
+        payload = {
+            "global_forbidden_phrases": ["let me guess"],
+            "cases": [
+                {
+                    "id": "co-reasoning-contract",
+                    "query": "Summarise a working style.",
+                    "style_notes": "Direct.",
+                    "required_all": ["human-led"],
+                    "required_any_groups": [["checkpoints", "feedback"]],
+                    "forbidden_phrases": ["ready when you are"],
+                    "max_words": 50,
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "cases.json"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            cases, global_forbidden = _load_cases(path)
+        self.assertEqual(global_forbidden, ["let me guess"])
+        self.assertEqual(cases[0]["required_all"], ["human-led"])
+        self.assertEqual(cases[0]["required_any_groups"], [["checkpoints", "feedback"]])
+        self.assertIn("ready when you are", cases[0]["forbidden_phrases"])
+        self.assertIn("let me guess", cases[0]["forbidden_phrases"])
+
     def test_build_parser_accepts_attempt_flags(self) -> None:
         args = build_parser().parse_args(
             [
