@@ -35,11 +35,11 @@ live together so claims can be traced back to source material.
   - measured by: OCR safety, hallucination evals, and export-backed OCR
     confidence boundary mining
 - `Co-reasoning reliability can be operationalized as binary eval signal`
-  - status: partial, next promotion target
-  - measured by: style/behaviour surfaces today, plus the new export-backed
-    behaviour backlog
+  - status: operationalized, first promoted non-OCR lane
+  - measured by: tracked style stress cases, live style eval passes, and the
+    export-backed behaviour backlog
 - `Commentary-heavy response contracts increase operator burden`
-  - status: hypothesis kept, but thinly operationalized
+  - status: hypothesis kept, but still thinly operationalized
   - measured by: experiment `R-D`, manual transcript diagnostics, and a small
     export backlog so far
 - `Retrieval grounding should stay inspectable and source-bound`
@@ -59,6 +59,10 @@ live together so claims can be traced back to source material.
   integrated eval surfaces, and repeatable local commands.
 - Beta 2.1 reframes the project as repo-as-research: the website becomes a
   doorway, and the repository carries the evidence.
+- Beta 2.2 formalises the serious method beta:
+  - explicit `pass` / `fail` / `evict` gate contract
+  - first-gate contract correctness before richer interpretation
+  - co-reasoning promoted as the first tracked non-OCR lane
 
 ## Why The Repo Is The Portfolio
 

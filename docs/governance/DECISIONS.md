@@ -3985,3 +3985,78 @@ quickstart document.
   separate backlog keeps the hypothesis lanes explicit, proves that broader
   export-backed evidence exists, and gives Polinko a deliberate next lane
   instead of letting OCR remain the default gravity well.
+
+## D-237: Promote co-reasoning into the tracked style eval lane
+
+- Date: `2026-05-08`
+- Category: `evidence_governance`
+- Tags: `co_reasoning`, `style_eval`, `behaviour_promotion`, `binary_gate`
+- Decision:
+  - keep co-reasoning promotion inside the existing tracked style lane instead
+    of creating a separate eval family first.
+  - add deterministic required-phrase gate support to:
+    - `tools/eval_style.py`
+  - promote export-backed co-reasoning stress cases into:
+    - `docs/eval/beta_2_0/style_eval_cases.json`
+  - tighten the case gates by inspecting live failures and removing brittle
+    over-literal phrase requirements rather than backing out the lane.
+  - treat co-reasoning reliability as the first promoted non-OCR eval lane once
+    the tracked style surface passes cleanly end-to-end.
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_eval_style`
+  - `./venv/bin/python -m tools.eval_style --base-url http://127.0.0.1:8069 --case-attempts 1 --min-pass-attempts 1`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the export backlog proved co-reasoning was the right next non-OCR lane,
+  but the project did not need a brand-new runner to start measuring it.
+  Promoting the lane through tracked style stress cases kept the change small,
+  made the collaboration hypothesis visible in repo truth, and showed that the
+  remaining pressure was in case design rather than missing runtime support.
+
+## D-238: Make the eval gate contract explicit across Polinko docs
+
+- Date: `2026-05-08`
+- Category: `evidence_governance`
+- Tags: `eval_contract`, `pass_fail`, `evict`, `thin_lanes`, `docs_sync`
+- Decision:
+  - make the split-gate contract explicit in tracked Polinko docs:
+    - first gate proves hard contract correctness
+    - later interpretation can enrich but not rewrite the gate
+  - keep release outcomes binary:
+    - `pass`
+    - `fail`
+  - treat `evict` as upstream case correction for malformed, noisy, or
+    known-bad rows instead of a third release state
+  - treat thin new lanes as human-owned row-local evidence first before larger
+    automation
+- Validation:
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the repo already behaved this way in practice, but the contract was only
+  partially implied. Making it explicit keeps Polinko aligned across lanes,
+  prevents fuzzy third-state drift, and makes future thin-lane promotion more
+  disciplined.
+
+## D-239: Formalize Beta 2.2 as Polinko's serious method beta
+
+- Date: `2026-05-08`
+- Category: `evidence_governance`
+- Tags: `beta_2_2`, `method_beta`, `co_reasoning`, `eval_contract`, `docs_sync`
+- Decision:
+  - formalize `Beta 2.2` as the current Polinko phase.
+  - define that beta boundary by:
+    - explicit `pass` / `fail` / `evict` gate semantics
+    - first-gate contract correctness before richer interpretation
+    - co-reasoning promoted as the first tracked non-OCR eval lane
+  - treat this as a method beta, not a finished product beta.
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_eval_style`
+  - `./venv/bin/python -m tools.eval_style --base-url http://127.0.0.1:8069 --case-attempts 1 --min-pass-attempts 1`
+  - `make test`
+  - `make api-smoke`
+  - `make eval-smoke`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the repo now has an explicit gate contract, more than one real eval
+  lane, and a promoted non-OCR collaboration surface. That is a meaningful phase
+  shift in method maturity and should be named directly in tracked repo truth.

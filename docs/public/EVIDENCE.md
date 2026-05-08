@@ -11,9 +11,15 @@ Polinko separates public proof from working material.
 - Source code and tests define the runtime contract.
 - Eval docs and report schemas define the evidence contract.
 - Beta 1.0 materials preserve the transition from manual review to binary evals.
-- Current OCR reports show operational fail/pass pressure.
+- Current eval reports show operational `fail` / `pass` pressure.
 - Diagrams are research instruments, not decoration.
 - Notebook/query outputs stay local unless explicitly curated.
+
+Gate rule:
+
+- first prove contract correctness
+- then interpret the richer meaning
+- `evict` removes bad cases upstream; it does not become a third gate state
 
 ## Beta 1.0
 

@@ -7,8 +7,8 @@
 ![Research Surface](https://img.shields.io/badge/research-repo_native-76B7B2)
 
 Polinko is a human-led, repo-native research system for inspecting AI behavior
-through failure, OCR reliability, co-reasoning, and evidence-preserving
-evaluation.
+through fail-first evaluation, co-reasoning, grounding, operator burden, and
+evidence-preserving method work.
 
 It is not mainly a website or demo app. The website is a doorway. The
 repository is the research surface.
@@ -22,15 +22,25 @@ evidence.
 
 ## Current Research Read
 
-- OCR lane is green:
-  - transcript-backed growth set: `25/25` stable, `0` flaky
-  - fail-history cohort: `0` active cases
-  - runtime OCR follow-up is parked
-- broader hypothesis lane now reopened from export-backed evidence:
-  - strongest next promotion target: co-reasoning reliability
+- current serious method beta is `Beta 2.2`:
+  - explicit `pass` / `fail` / `evict` gate semantics
+  - first-gate contract correctness before richer interpretation
+  - co-reasoning is the first promoted non-OCR eval lane
+- eval contract is explicit across tracked surfaces:
+  - release outcomes stay `pass` / `fail`
+  - `evict` is an upstream case correction, not a third gate state
+  - the first gate proves hard contract correctness before richer interpretation
+- broader hypothesis lane now has a first promoted non-OCR eval surface:
+  - co-reasoning reliability is now operationalized in the tracked style lane:
+    `14/14` pass on the current live pass
   - operator burden remains important but still thinly surfaced
+- current mature method lane is green:
+  - transcript-backed OCR growth set: `25/25` stable, `0` flaky
+  - OCR fail-history cohort: `0` active cases
+  - runtime OCR follow-up is parked
 - latest tracked snapshots:
   - [docs/research/ocr-progress-20260508.md](docs/research/ocr-progress-20260508.md)
+  - [docs/research/co-reasoning-promotion-20260508.md](docs/research/co-reasoning-promotion-20260508.md)
   - [docs/research/behaviour-backlog-20260508.md](docs/research/behaviour-backlog-20260508.md)
 
 ## Start Here

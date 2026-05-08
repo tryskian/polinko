@@ -24,12 +24,15 @@ enough to read in public.
 
 ## Current Non-OCR Read
 
-- latest tracked non-OCR backlog note:
+- latest tracked non-OCR notes:
+  - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
+  - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
   - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
 - current read on `2026-05-08`:
-  - OCR is still the most operationalized lane
-  - export-backed evidence now shows broader measurable surfaces beyond OCR
-  - strongest next promotion target: co-reasoning reliability
+  - current serious method beta is `Beta 2.2`
+  - OCR remains one mature method lane
+  - co-reasoning is now the first promoted non-OCR lane
+  - tracked style stress surface currently passes `14/14` on the live pass
   - operator burden remains important, but still thinly surfaced by the first
     export-mining pass
 
@@ -42,7 +45,9 @@ enough to read in public.
 
 ## Representative Tracked Evidence
 
+- [Beta 2.2 snapshot](./beta-2-2-20260508.md)
 - [OCR progress snapshot](./ocr-progress-20260508.md)
+- [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
 - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
 - [Prior OCR progress snapshot](./ocr-progress-20260501.md)
 - [OCR representative case](./ocr-representative-case.md)

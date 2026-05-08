@@ -43,7 +43,7 @@ Lane counts from the first backlog pass:
 
 The repo does have materially more to evaluate than the current OCR lane.
 
-The strongest next non-OCR promotion target is co-reasoning reliability:
+This backlog is what enabled the first non-OCR promotion into tracked evals:
 
 - it maps directly to an existing project hypothesis
 - it has enough export-backed candidate families to support real case curation
@@ -66,6 +66,6 @@ target there.
 
 - confirmed: Polinko has a real multi-lane export-backed evidence surface
 - confirmed: OCR is not the only mature or mineable lane
-- next promotion target: co-reasoning reliability
+- promoted from this backlog: co-reasoning reliability
 - deferred: operator-burden operationalization until better mining cues or
   manual seed cases are added

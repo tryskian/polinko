@@ -14,6 +14,18 @@ Last updated: 2026-05-08
   - repo is the research surface
   - website is a lightweight doorway
   - public-facing docs live under `docs/public/` and `docs/research/`
+- Eval contract is now explicit across tracked surfaces:
+  - release outcomes stay `pass` / `fail`
+  - `evict` removes malformed, noisy, or known-bad cases upstream instead of
+    becoming a third gate state
+  - the first gate proves hard contract correctness before richer
+    interpretation
+  - thin new lanes can start human-owned and row-local before larger judging
+    systems
+- Polinko is now in `Beta 2.2`:
+  - serious method beta
+  - explicit gate contract
+  - first promoted non-OCR lane
 - Human-led collaboration remains explicit:
   - Krystian owns theory, evidence interpretation, and publication decisions
   - OpenAI Codex is the active repo-local coding agent and engineering
@@ -70,12 +82,14 @@ Last updated: 2026-05-08
   - static D3/SVG diagrams now sit beside Mermaid as real proof artifacts
   - D3 diagrams should stay real generated evidence artifacts, not portfolio UI
   - no fake placeholder evidence panels
-- Eval lane remains OCR-forward and binary:
+- Eval lane remains fail-first and binary across lanes:
   - lockset is release-gating
   - growth is fail-tolerant
-  - `/viz/pass-fail` is a fail-signal instrument
+  - `/viz/pass-fail` is the current OCR-facing fail-signal instrument
   - `manual_evals.db` remains the integrated manual-eval warehouse
-  - current transcript-backed growth set is green:
+  - current promoted non-OCR lane:
+    - co-reasoning reliability passes `14/14` in the tracked style surface
+  - current mature method lane is green:
     - growth stability: `25/25` stable, `0` flaky
     - fail-history cohort: `0` active cases
     - runtime OCR follow-up is currently parked
@@ -92,7 +106,9 @@ Last updated: 2026-05-08
     - hallucination boundary: `33` / `24`
     - retrieval grounding: `47` / `40`
     - OCR confidence boundary: `15` / `10`
-  - strongest next promotion target is co-reasoning reliability
+  - co-reasoning reliability is now the first promoted non-OCR lane
+  - tracked style stress lane currently passes `14/14` on the live validation
+    pass
   - operator burden remains a kept hypothesis, but needs stronger cues or
     manual seed cases before promotion
 - Documentation rule:
@@ -104,11 +120,12 @@ Last updated: 2026-05-08
 
 1. Keep the public doorway stable and credible.
 2. Keep repo research surfaces compact, visual, and easy to scan.
-3. Promote the next non-OCR lane from the export-backed backlog, starting with
-   co-reasoning reliability.
-4. Keep the OCR lane green and reopen it only from the remaining
+3. Keep the first promoted non-OCR lane stable and visible.
+4. Seed the next thinner collaboration lane as a narrow human-owned
+   `pass` / `fail` / `evict` row surface before over-automating it.
+5. Keep the mature OCR method lane green and reopen it only from the remaining
    case-design-only watchlist.
-5. Keep governance/runtime docs aligned and non-duplicative.
+6. Keep governance/runtime docs aligned and non-duplicative.
 
 ## Canonical Sources
 

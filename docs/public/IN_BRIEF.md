@@ -3,7 +3,8 @@
 # Polinko in Brief
 
 Polinko is a human-led, repo-native research lab for inspecting AI behavior
-through failure, OCR reliability, and human-AI collaboration.
+through fail-first evaluation, grounding, co-reasoning, operator burden, and
+human-AI collaboration.
 
 It is not mainly a website or a demo app. The website is a doorway. The
 repository is the research surface.
@@ -49,14 +50,22 @@ In short: confidence must not outrun evidence.
 - transcript + structured-insight corpus
 - governance and runbook surfaces that keep the method operational
 
-## Current OCR Read
+## Current Beta Read
 
-- latest tracked OCR kernel on `2026-05-01` is green:
-  - transcript-backed growth set: `25/25` stable
+- current serious method beta is `Beta 2.2`
+- release outcomes stay binary:
+  - `pass`
+  - `fail`
+- `evict` is upstream case correction, not a third release state
+- co-reasoning is now the first promoted non-OCR lane:
+  - tracked style stress surface: `14/14` pass
+- current mature method lane is still green:
+  - transcript-backed OCR growth set: `25/25` stable
   - fail-history cohort: `0` active cases
-  - remaining signal: exploratory output variability
-- tracked snapshot:
-  - [OCR progress snapshot](../research/ocr-progress-20260501.md)
+- tracked snapshots:
+  - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
+  - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
+  - [OCR progress snapshot](../research/ocr-progress-20260508.md)
 
 ## One-Sentence Read
 
