@@ -105,6 +105,27 @@ class OcrEvalRuleTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(reasons, [])
 
+    def test_must_contain_any_matches_multiline_phrase_tokens(self) -> None:
+        case = self._base_case()
+        case["must_contain_any"] = ["beyond existence"]
+        passed, reasons = _check_case(case, "some\nBEYOND\nEXISTENCE\nINTERCEIVABLE")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
+    def test_must_contain_any_matches_connector_punctuation_phrase_tokens(self) -> None:
+        case = self._base_case()
+        case["must_contain_any"] = ["interceivable vs. perceivable"]
+        passed, reasons = _check_case(case, "INTERCEIVABLE v.s PERCEIVABLE")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
+    def test_must_contain_any_matches_marked_up_phrase_tokens(self) -> None:
+        case = self._base_case()
+        case["must_contain_any"] = ["### Impact on human psyche"]
+        passed, reasons = _check_case(case, "- impact on human psyche\nNAR + DESIGN")
+        self.assertTrue(passed)
+        self.assertEqual(reasons, [])
+
     def test_must_contain_any_allows_single_char_ocr_drift(self) -> None:
         case = self._base_case()
         case["must_contain_any"] = ["chattiest"]
