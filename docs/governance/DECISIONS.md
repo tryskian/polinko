@@ -3930,3 +3930,30 @@ quickstart document.
   A dated curated note gives the repo one stable place to reference current OCR
   progress and progress diagrams without bloating the governance or runtime
   surfaces.
+
+## D-235: Align exploratory OCR phrase probes with evaluator phrase matching
+
+- Date: `2026-05-08`
+- Category: `ocr_hardening`
+- Tags: `exploratory_focus`, `phrase_matching`, `ocr_variability`, `case_design_boundary`
+- Decision:
+  - prefer supported literal multi-token review transcription phrases when
+    deriving exploratory focus overrides.
+  - allow OCR required-phrase checks to match across OCR token breaks and
+    punctuation gaps instead of requiring strict single-line substring matches.
+  - treat the resulting green focus cohort as a park condition for runtime OCR
+    work; any next OCR follow-up should be case-design-only unless new fail
+    pressure appears.
+- Validation:
+  - `make test-targeted TESTS="tests.test_eval_ocr tests.test_build_ocr_growth_fail_cohort"`
+  - `make test`
+  - `make api-smoke`
+  - `make eval-smoke`
+  - `make eval-ocr-focus-stability`
+  - `make ocrfocusreport`
+- Why: The remaining OCR signal was no longer coming from unstable PASS/FAIL
+  decisions. It was coming from a mismatch between exploratory phrase-level
+  focus cues and the evaluator's stricter phrase matching surface. Aligning the
+  builder and evaluator removed that seam without changing OCR transport or
+  binary gate semantics, and clarified that the remaining pressure belongs to
+  case design rather than runtime OCR behavior.

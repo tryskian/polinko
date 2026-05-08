@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-01
+Last updated: 2026-05-08
 
 ## Current Truth
 
@@ -78,7 +78,12 @@ Last updated: 2026-05-01
   - current transcript-backed growth set is green:
     - growth stability: `25/25` stable, `0` flaky
     - fail-history cohort: `0` active cases
-    - current remaining OCR signal is exploratory output variability
+    - runtime OCR follow-up is currently parked
+    - current remaining OCR signal is low-pressure exploratory output
+      variability inside stable PASS behavior
+    - if OCR follow-up reopens, it should be case-design-only and start from:
+      - `gx-68844003-002`
+      - `gx-6952d743-021`
 - Documentation rule:
   - `DECISIONS` is durable archive
   - `STATE` is the tracked public current-truth surface
@@ -88,8 +93,8 @@ Last updated: 2026-05-01
 
 1. Keep the public doorway stable and credible.
 2. Keep repo research surfaces compact, visual, and easy to scan.
-3. Continue OCR reliability work by inspecting exploratory output variability
-   without changing binary gate semantics.
+3. Keep the OCR lane green and reopen it only from the remaining
+   case-design-only watchlist.
 4. Keep governance/runtime docs aligned and non-duplicative.
 
 ## Canonical Sources
