@@ -130,31 +130,6 @@
 6. If direct push returns `GH013`, treat it as expected branch protection
    behaviour and continue via PR flow.
 
-## Netlify Portfolio Publish
-
-1. Production portfolio deploys are repo-based from `tryskian/polinko`.
-2. Netlify build settings:
-   - base directory: repo root
-   - build command: `python3 tools/build_portfolio_static.py`
-   - publish directory: `output/netlify`
-   - functions directory: blank
-3. `tools/build_portfolio_static.py` extracts the tracked FastAPI fallback
-   doorway without importing runtime dependencies.
-4. Generated static files:
-   - `index.html`
-   - `_redirects`
-   - `robots.txt`
-   - `sitemap.xml`
-5. Domain/SEO verification after deploy:
-   - check Netlify deploy state is `ready`
-   - verify `/`, `/robots.txt`, `/sitemap.xml`, and `/portfolio` redirect
-   - verify DNS for `krystian.io` and `www.krystian.io` resolves to Netlify
-   - submit `https://www.krystian.io/sitemap.xml` in Google Search Console after
-     DNS/SSL settles
-6. When Netlify DNS uses managed `NETLIFY`/`NETLIFYv6` records, do not add
-   manual apex `A 75.2.60.5` records unless deliberately switching away from
-   managed Netlify DNS.
-
 ## Repo vs Container Working Modes
 
 1. Canonical source of truth is always:
