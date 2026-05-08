@@ -5,7 +5,8 @@
 ## Mission
 
 Build a human-led, repo-native research system for inspecting AI behavior
-through failure, OCR reliability, and evidence-preserving evaluation.
+through fail-first evaluation, grounding, co-reasoning, operator burden, and
+evidence-preserving method work.
 
 ## Durable Rules
 
@@ -19,12 +20,19 @@ through failure, OCR reliability, and evidence-preserving evaluation.
 - The public website is a doorway, not the research system:
   - `GET /` redirects to `GET /portfolio`
   - the site should point into the repo/work, not recreate it
-- Eval semantics remain strictly binary:
-  - `pass`/`fail` only
+- Eval semantics remain split and strictly binary:
+  - release outcomes are `pass` / `fail` only
+  - the first gate proves hard contract correctness
+  - later judge or interpretive detail must not rewrite the first gate
+  - `evict` is an upstream case correction for malformed, noisy, or known-bad
+    cases; it is not a third release state
   - lockset lane is release-gating
   - growth lane is fail-tolerant and signal-seeking
 - Failure is primary signal:
   - pass-rate polish must not erase unresolved failure pressure
+- Thin lanes should start narrow:
+  - human-owned row-local `pass` / `fail` before larger automation when cues
+    are still weak
 - Prefer deterministic, testable changes.
 - Fail fast on config/auth/runtime issues.
 - Keep one canonical command surface per operator action.
@@ -94,7 +102,10 @@ through failure, OCR reliability, and evidence-preserving evaluation.
 
 - In scope:
   - local-first backend/runtime work
-  - OCR-forward eval hardening
+  - fail-first eval hardening across lanes
+  - OCR confidence work as one method lane
+  - co-reasoning reliability
+  - operator burden measurement
   - repo-native evidence/reporting surfaces
   - lean public doorway pointing into the repo
   - static D3/SVG evidence diagrams beside Mermaid when added

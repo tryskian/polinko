@@ -43,6 +43,15 @@ Manual evals and strict OCR gate reports answer different questions:
 
 Do not flatten one into the other.
 
+## Tracked Gate Contract
+
+- release outcomes stay `pass` / `fail`
+- `evict` is upstream case removal for malformed, noisy, or known-bad rows
+- judge detail and qualitative notes can enrich a report, but they do not create
+  a third gate state
+- thin new lanes can begin as row-local human `pass` / `fail` evidence before
+  larger automation
+
 ## What Is Tracked Here
 
 ### Beta 1.0
@@ -58,6 +67,8 @@ Do not flatten one into the other.
 - active-era case files and report snapshots under `docs/eval/beta_2_0/`
 - includes OCR, OCR recovery, OCR safety, hallucination, retrieval, file
   search, style, response behaviour, CLIP A/B, and trace artifacts
+- current non-OCR promoted lane lives in the tracked style surface for
+  co-reasoning reliability
 - role in the public surface:
   - right-side/current evidence for `/portfolio/sankey-data`
 

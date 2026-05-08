@@ -4012,3 +4012,27 @@ quickstart document.
   Promoting the lane through tracked style stress cases kept the change small,
   made the collaboration hypothesis visible in repo truth, and showed that the
   remaining pressure was in case design rather than missing runtime support.
+
+## D-238: Make the eval gate contract explicit across Polinko docs
+
+- Date: `2026-05-08`
+- Category: `evidence_governance`
+- Tags: `eval_contract`, `pass_fail`, `evict`, `thin_lanes`, `docs_sync`
+- Decision:
+  - make the split-gate contract explicit in tracked Polinko docs:
+    - first gate proves hard contract correctness
+    - later interpretation can enrich but not rewrite the gate
+  - keep release outcomes binary:
+    - `pass`
+    - `fail`
+  - treat `evict` as upstream case correction for malformed, noisy, or
+    known-bad rows instead of a third release state
+  - treat thin new lanes as human-owned row-local evidence first before larger
+    automation
+- Validation:
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the repo already behaved this way in practice, but the contract was only
+  partially implied. Making it explicit keeps Polinko aligned across lanes,
+  prevents fuzzy third-state drift, and makes future thin-lane promotion more
+  disciplined.

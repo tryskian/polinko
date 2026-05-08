@@ -35,10 +35,14 @@ This page is the structural map of the tracked system. Use
    `.local/runtime_dbs/active/`.
 5. `POST /chat` supports deterministic fixture mode for smoke; default remains
    `live`.
-6. OCR is the primary reliability lane:
-   - `lockset` is release-gating and binary
-   - `growth` is fail-tolerant and used for pass-from-fail learning
-   - detailed commands live in `docs/runtime/OCR_REFERENCE.md`
+6. Eval contract stays split and binary:
+   - the first gate proves hard contract correctness
+   - later interpretive detail does not rewrite gate arithmetic
+   - `pass` / `fail` are the only release outcomes
+   - `evict` is upstream case removal, not a third gate state
+   - OCR is one mature method lane; co-reasoning now lives in the tracked style
+     lane
+   - detailed OCR commands live in `docs/runtime/OCR_REFERENCE.md`
 
 ## Data Surfaces
 
@@ -51,7 +55,9 @@ This page is the structural map of the tracked system. Use
     - `message_feedback`
     - `eval_checkpoints`
     - `ocr_runs`
-  - active gate logic is binary-only; non-binary counts are integrity signals.
+  - active gate logic is binary-only; non-binary counts are integrity signals
+  - `evict` belongs to case-design or miner cleanup upstream, not gate
+    arithmetic
 - Integrated manual-eval warehouse:
   - `.local/runtime_dbs/active/manual_evals.db`
   - rebuilt by `make manual-evals-db`
