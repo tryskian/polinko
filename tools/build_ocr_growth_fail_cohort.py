@@ -326,6 +326,25 @@ EXPLORATORY_STOPWORDS = {
     "line",
     "lines",
 }
+REVIEW_PHRASE_STOPWORDS = {
+    "the",
+    "and",
+    "for",
+    "with",
+    "from",
+    "into",
+    "that",
+    "this",
+    "were",
+    "was",
+    "are",
+    "but",
+    "not",
+    "you",
+    "your",
+    "our",
+    "their",
+}
 
 # Keep exploratory order probes compact to avoid brittle tail-token failures
 # that are less diagnostic than head/mid sequence breaks.
@@ -548,10 +567,77 @@ def _filter_terms_to_text_support(*, terms: list[str], text: str) -> list[str]:
     return supported
 
 
+def _ordered_review_phrase_supported_by_text(*, phrase: str, text: str) -> bool:
+    phrase_tokens = [
+        token
+        for token in _tokenise_phrase(phrase)
+        if re.search(r"[a-z]", token)
+        and len(token) >= 3
+        and token not in REVIEW_PHRASE_STOPWORDS
+    ]
+    if len(phrase_tokens) < 2:
+        return False
+
+    text_tokens = _tokenise_phrase(text)
+    pos = -1
+    for token in phrase_tokens:
+        found = False
+        for idx in range(pos + 1, len(text_tokens)):
+            if text_tokens[idx] == token:
+                pos = idx
+                found = True
+                break
+        if not found:
+            return False
+    return True
+
+
+def _derive_literal_review_phrase_terms(
+    *,
+    review_rows: list[dict[str, Any]],
+    text: str,
+) -> list[str]:
+    text_norm = " ".join(str(text).split()).strip().lower()
+    if not text_norm:
+        return []
+
+    out: list[str] = []
+    seen: set[str] = set()
+    for row in review_rows:
+        if not isinstance(row, dict):
+            continue
+        phrases = row.get("transcription_phrases")
+        if not isinstance(phrases, list):
+            continue
+        for item in phrases:
+            phrase = " ".join(str(item).split()).strip()
+            if not phrase:
+                continue
+            lexical_tokens = [
+                token
+                for token in _tokenise_phrase(phrase)
+                if re.search(r"[a-z]", token)
+                and len(token) >= 4
+                and token not in REVIEW_PHRASE_STOPWORDS
+            ]
+            if len(lexical_tokens) < 2:
+                continue
+            phrase_norm = phrase.lower()
+            if phrase_norm in seen:
+                continue
+            if phrase_norm in text_norm or _ordered_review_phrase_supported_by_text(
+                phrase=phrase, text=text
+            ):
+                seen.add(phrase_norm)
+                out.append(phrase)
+    return out
+
+
 def _derive_exploratory_overrides(
     *,
     growth_case: dict[str, Any],
     run_case: dict[str, Any],
+    review_rows: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     effective_any, effective_order = _effective_gate_terms(
         growth_case=growth_case,
@@ -605,7 +691,13 @@ def _derive_exploratory_overrides(
     if len(selected_order) >= 2:
         overrides["must_appear_in_order"] = selected_order
 
-    if effective_any:
+    review_phrase_any = _derive_literal_review_phrase_terms(
+        review_rows=review_rows or [],
+        text=run_extracted_text,
+    )
+    if review_phrase_any:
+        overrides["must_contain_any"] = review_phrase_any[:8]
+    elif effective_any:
         refined_any = _derive_anchor_any_terms(effective_any)
         if run_extracted_text.strip():
             refined_any = _filter_terms_to_text_support(terms=refined_any, text=run_extracted_text)
@@ -1034,6 +1126,7 @@ def build_fail_cohort(
             overrides = _derive_exploratory_overrides(
                 growth_case=growth_case,
                 run_case=run_case,
+                review_rows=linked_review_rows,
             )
             # Keep exploratory probes actionable: they need at least a 2-token
             # ordered gate so we can intentionally stress OCR sequence quality.

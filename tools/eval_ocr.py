@@ -160,6 +160,32 @@ def _contains_near_single_token(*, tokens: list[str], probe: str) -> bool:
     return False
 
 
+def _contains_ordered_phrase_tokens(*, tokens: list[str], probe: str) -> bool:
+    probe_tokens = [
+        token
+        for token in OCR_WORD_TOKEN_RX.findall(_collapse_spaced_letter_words(probe.lower()))
+        if len(token) >= 3
+    ]
+    if len(probe_tokens) < 2:
+        return False
+
+    cursor = 0
+    for probe_token in probe_tokens:
+        found = False
+        while cursor < len(tokens):
+            token = tokens[cursor]
+            if token == probe_token or _contains_near_single_token(
+                tokens=[token], probe=probe_token
+            ):
+                found = True
+                cursor += 1
+                break
+            cursor += 1
+        if not found:
+            return False
+    return True
+
+
 def _find_ordered_phrase_index(
     *,
     haystack: str,
@@ -479,8 +505,14 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
 
     def contains_required(needle: str) -> bool:
         probe = needle if case_sensitive else needle.lower()
-        return contains(needle) or _contains_near_single_token(
-            tokens=haystack_word_tokens, probe=probe
+        return (
+            contains(needle)
+            or _contains_near_single_token(
+                tokens=haystack_word_tokens, probe=probe
+            )
+            or _contains_ordered_phrase_tokens(
+                tokens=haystack_word_tokens, probe=probe
+            )
         )
 
     def contains_word(word: str) -> bool:
