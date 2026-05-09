@@ -124,6 +124,25 @@
       "verdict": "pass",
       "failure_disposition": null,
       "note": "Distinct pass-side exactness anchor; do not treat raw-pull clones as separate evidence just to raise counts."
+    },
+    {
+      "id": "ob-rd-007",
+      "title": "Archive-quoted raw-pull clone should be evicted from distinct row evidence",
+      "source_note": "docs/research/operator-burden-promotion-20260509.md",
+      "source_ids": ["694f2920-5064-8332-99d2-f6093b1173cc"],
+      "task_shape": "archive_quoted_duplicate",
+      "expected_boundary": "A distinct operator-burden row should be grounded in its own task surface rather than inheriting a quoted archive explanation from another conversation.",
+      "observed_pattern": "This candidate matches only because it embeds the same raw-pull explanation already represented elsewhere, so it is duplicate archive text rather than distinct operator-burden evidence.",
+      "dimensions": {
+        "reference_binding": "fail",
+        "operation_fidelity": "fail",
+        "decision_clarity": "fail",
+        "instruction_load": "na",
+        "verification_posture": "fail"
+      },
+      "verdict": "fail",
+      "failure_disposition": "evict",
+      "note": "Evict upstream: duplicate archive quotation, not a distinct lane case."
     }
   ]
 }

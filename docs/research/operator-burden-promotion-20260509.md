@@ -27,16 +27,20 @@ Added to `docs/eval/beta_2_0/operator_burden_rows.json`:
 - `ob-rd-006`
   - `pass`
   - exact-as-provided preference preserved low-burden document handling
+- `ob-rd-007`
+  - `fail`
+  - `evict`
+  - archive-quoted raw-pull clone should be removed from distinct row evidence
 
 ## Current Row Surface
 
 The tracked operator-burden surface now holds:
 
-- rows: `6`
+- rows: `7`
 - pass: `4`
-- fail: `2`
+- fail: `3`
 - retained fail: `2`
-- evict: `0`
+- evict: `1`
 
 ## Read
 
@@ -46,8 +50,10 @@ This is a better thin-lane shape than the initial seed:
 - there is now more than one retained fail anchor
 - the retained fail pressure is still about interpretive or advisory drift, not
   about runtime fragility
-- the remaining raw-pull families are now better treated as duplicate pass
-  evidence, not as rows to promote one by one just to inflate counts
+- the contract now has a real `evict` example instead of only described
+  semantics
+- duplicate archive-quoted raw-pull matches can now be evicted upstream instead
+  of being promoted as fake new evidence
 
 That means the next operator-burden step is still:
 
@@ -70,3 +76,5 @@ It is now a small judged surface with repeated shape:
 - exact retrieval and protocol-lock cases can pass cleanly
 - interpretive drift remains retainable fail pressure when it pulls execution
   away from direct work
+- archive-quoted duplicate matches can be evicted when they are not distinct
+  operator-burden evidence

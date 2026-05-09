@@ -26,6 +26,7 @@ This is the shortest route through Polinko’s public research surface.
   - operator burden now has a seeded row-local surface:
     - `4` pass rows
     - `2` retained fail rows
+    - `1` evicted fail row
     - widened export-backed backlog: `9` conversations / `8` families
 - latest tracked research notes:
   - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)

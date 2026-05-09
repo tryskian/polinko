@@ -39,6 +39,7 @@ enough to read in public.
   - operator burden now has a seeded thin-lane row surface:
     - `4` pass rows
     - `2` retained fail rows
+    - `1` evicted fail row
     - widened export-backed backlog: `9` conversations / `8` families
 
 ## Included Here
