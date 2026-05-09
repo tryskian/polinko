@@ -4153,3 +4153,39 @@ quickstart document.
   live export language. Widening the miner around real transcript control
   contracts moved the lane to `9` conversations / `8` families and made row
   promotion the next credible step.
+
+## D-243: Reclassify the dominant Beta 2.2 stability pressure from style drift to uncertainty boundaries
+
+- Date: `2026-05-09`
+- Category: `evidence_governance`
+- Tags: `beta_2_2`, `stability`, `style_eval`, `uncertainty_boundary`
+- Decision:
+  - treat the former dominant style-gate instability as materially reduced at
+    the broad-gate level.
+  - record the one-hour deterministic soak as:
+    - `21` cycles
+    - `19` pass
+    - `2` fail
+  - treat the first promoted non-OCR lane as broadly stable enough that it no
+    longer drives the beta gate.
+  - reclassify the remaining dominant pressure as uncertainty-boundary
+    behaviour, specifically:
+    - `uncertainty_required_no_relationship_motive_guess`
+    - `explicit_uncertainty_when_context_missing`
+  - keep the style-case anchor widening in the local eval lane and record the
+    tracked repo truth as:
+    - helper coverage for repo-native working-style anchors
+    - a new state/research read that the next kernel is uncertainty-boundary
+      stability, not more style farming
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_eval_style`
+  - `./venv/bin/python -m tools.eval_style --base-url http://127.0.0.1:8077 --strict --case-attempts 3 --min-pass-attempts 2`
+  - `./venv/bin/python -m tools.eval_sidecar run --target quality-gate-deterministic --min-seconds 3600 --runs-dir .local/eval_runs --current-file .local/eval_runs/eval_sidecar_style_gate_current.txt --pid-file /tmp/polinko-eval-sidecar-style-gate.pid`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the earlier hour-long soak was failing mostly because
+  `nonperformative_working_style_contract` was over-constrained on literal
+  anchors. After the style-anchor pass, the broad gate no longer failed on that
+  case. The remaining pressure moved to explicit uncertainty contracts across
+  the response-behaviour and hallucination lanes, which is the more truthful
+  next stability kernel.

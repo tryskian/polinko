@@ -34,6 +34,12 @@ evidence.
 - broader hypothesis lane now has a first promoted non-OCR eval surface:
   - co-reasoning reliability is now operationalized in the tracked style lane:
     `14/14` pass on the current live pass
+  - latest one-hour deterministic beta soak:
+    - `19/21` pass cycles
+    - former dominant style pressure did not recur
+    - remaining failures landed in:
+      - `uncertainty_required_no_relationship_motive_guess`
+      - `explicit_uncertainty_when_context_missing`
   - operator burden now has a seeded row-local evidence surface:
     - `4` pass rows
     - `2` retained fail rows
@@ -47,6 +53,7 @@ evidence.
   - [docs/research/operator-burden-promotion-20260509.md](docs/research/operator-burden-promotion-20260509.md)
   - [docs/research/operator-burden-mining-20260509.md](docs/research/operator-burden-mining-20260509.md)
   - [docs/research/operator-burden-seed-20260509.md](docs/research/operator-burden-seed-20260509.md)
+  - [docs/research/beta-2-2-stability-soak-20260509.md](docs/research/beta-2-2-stability-soak-20260509.md)
   - [docs/research/ocr-progress-20260508.md](docs/research/ocr-progress-20260508.md)
   - [docs/research/co-reasoning-promotion-20260508.md](docs/research/co-reasoning-promotion-20260508.md)
   - [docs/research/behaviour-backlog-20260508.md](docs/research/behaviour-backlog-20260508.md)
