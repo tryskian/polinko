@@ -27,6 +27,7 @@ enough to read in public.
 - latest tracked non-OCR notes:
   - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
   - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
+  - [Uncertainty-boundary stability kernel](./uncertainty-boundary-stability-20260509.md)
   - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
   - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
   - [Operator burden row promotion](./operator-burden-promotion-20260509.md)
@@ -42,6 +43,14 @@ enough to read in public.
   - remaining broad-gate pressure is now:
     - `uncertainty_required_no_relationship_motive_guess`
     - `explicit_uncertainty_when_context_missing`
+  - the next uncertainty-boundary stability kernel has landed tracked matcher
+    fixes and a clean deterministic rerun
+  - the restarted deterministic soak was stopped clean for EOD at:
+    - `14/14` pass cycles
+    - `2695s`
+    - `0` failure signals
+  - the next slice is to complete a full one-hour soak before promoting this to
+    broader state truth
   - operator burden now has a seeded thin-lane row surface:
     - `4` pass rows
     - `2` retained fail rows
@@ -59,6 +68,7 @@ enough to read in public.
 
 - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
 - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
+- [Uncertainty-boundary stability kernel](./uncertainty-boundary-stability-20260509.md)
 - [OCR progress snapshot](./ocr-progress-20260508.md)
 - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
 - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)

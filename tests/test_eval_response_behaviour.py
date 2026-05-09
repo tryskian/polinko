@@ -5,6 +5,7 @@ from tools.eval_response_behaviour import _contains_forbidden_phrases
 from tools.eval_response_behaviour import _missing_required_all
 from tools.eval_response_behaviour import _missing_required_any_groups
 from tools.eval_response_behaviour import _normalize_text_for_match
+from tools.eval_response_behaviour import _phrase_matches_text
 from tools.eval_response_behaviour import _resolve_case_status
 from tools.eval_response_behaviour import _should_stop_attempts
 from tools.eval_response_behaviour import build_parser
@@ -45,6 +46,23 @@ class ResponseBehaviourEvalTests(unittest.TestCase):
             [["cannot verify", "can't verify"], ["do not have live data", "don't have live data"]],
         )
         self.assertEqual(missing_groups, [["do not have live data", "don't have live data"]])
+
+    def test_phrase_matches_text_allows_short_gap_for_multi_token_anchor(self) -> None:
+        self.assertTrue(_phrase_matches_text("I have no saved record of that note.", "no record"))
+
+    def test_missing_required_any_groups_accepts_no_saved_record_variant(self) -> None:
+        missing_groups = _missing_required_any_groups(
+            "No note exists from yesterday in this chat. I have no saved record of any previous note.",
+            [["no record", "no saved note"]],
+        )
+        self.assertEqual(missing_groups, [])
+
+    def test_missing_required_all_accepts_gap_matched_phrase(self) -> None:
+        missing = _missing_required_all(
+            "I do not have enough stored context to verify that.",
+            ["do not have context"],
+        )
+        self.assertEqual(missing, [])
 
     def test_normalize_text_for_match_handles_curly_apostrophes_and_dashes(self) -> None:
         normalized = _normalize_text_for_match("I don’t have real‑time data.")

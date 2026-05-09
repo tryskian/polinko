@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import re
 import time
 from pathlib import Path
 from typing import Any
@@ -41,6 +42,22 @@ class HallucinationJudgeResponse(BaseModel):
 
 _MIN_ACCEPTABLE_SCORE = 5
 EvaluationMode = Literal["judge", "deterministic", "auto"]
+
+
+def _normalize_text_for_match(text: str) -> str:
+    normalized = (
+        text.lower()
+        .replace("’", "'")
+        .replace("‘", "'")
+        .replace("`", "'")
+        .replace("“", '"')
+        .replace("”", '"')
+        .replace("‑", "-")
+        .replace("–", "-")
+        .replace("—", "-")
+    )
+    normalized = " ".join(normalized.split())
+    return normalized.strip()
 
 
 def _load_cases(path: Path) -> list[dict[str, Any]]:
@@ -183,14 +200,31 @@ def _judge_case(
 
 
 def _contains_forbidden_phrases(answer: str, forbidden_phrases: list[str]) -> list[str]:
-    lowered = answer.lower()
+    lowered = _normalize_text_for_match(answer)
     hits: list[str] = []
     for phrase in forbidden_phrases:
-        probe = phrase.strip().lower()
+        probe = _normalize_text_for_match(phrase)
         if not probe:
             continue
-        if probe in lowered:
+        start = 0
+        while True:
+            index = lowered.find(probe, start)
+            if index < 0:
+                break
+            end = index + len(probe)
+            prefix = lowered[max(0, index - 80):index]
+            if re.search(r"(?:no|without)\s+(?:clear\s+|solid\s+)?evidence(?:\s+\w+){0,4}\s*$", prefix):
+                start = end
+                continue
+            if re.search(r"not enough evidence(?:\s+\w+){0,4}\s*$", prefix):
+                start = end
+                continue
+            if re.search(r"(?:can't|cannot|do not|don't)\s+(?:know|tell|verify|confirm)(?:\s+\w+){0,4}\s*$", prefix):
+                start = end
+                continue
             hits.append(phrase)
+            break
+
     return hits
 
 

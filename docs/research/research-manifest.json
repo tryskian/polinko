@@ -26,6 +26,11 @@
     },
     {
       "type": "research_note",
+      "label": "Uncertainty-boundary stability kernel",
+      "path": "docs/research/uncertainty-boundary-stability-20260509.md"
+    },
+    {
+      "type": "research_note",
       "label": "Operator burden mining update",
       "path": "docs/research/operator-burden-mining-20260509.md"
     },
