@@ -4084,3 +4084,30 @@ quickstart document.
   few surfaces after the Beta 2.2 sync. That wording flattened the method. The
   exact contract is stricter: first judge `pass` or `fail`, then decide whether
   a failing row should be retained as lane evidence or evicted upstream.
+
+## D-241: Seed operator burden as a row-local thin lane
+
+- Date: `2026-05-09`
+- Category: `evidence_governance`
+- Tags: `operator_burden`, `thin_lane`, `row_surface`, `retain_evict`
+- Decision:
+  - seed operator burden as a tracked row-local eval surface instead of jumping
+    directly to a larger automated runner.
+  - add tracked rows at:
+    - `docs/eval/beta_2_0/operator_burden_rows.json`
+  - keep the lane contract exact:
+    - first gate: `pass` / `fail`
+    - after `fail`: `retain` / `evict`
+  - seed the lane with one retained fail row and one pass row so the surface
+    has contrast instead of a single anecdote.
+  - add a repo-local validator/report tool:
+    - `tools/report_operator_burden_rows.py`
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_report_operator_burden_rows`
+  - `./venv/bin/python -m tools.report_operator_burden_rows`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: operator burden is a real Polinko hypothesis, but the evidence surface
+  is still thin. A small judged row set is the right first move: it makes the
+  lane real, keeps the contract disciplined, and avoids pretending the miner or
+  runtime support is already rich enough for a bigger automated family.

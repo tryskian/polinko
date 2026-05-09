@@ -34,12 +34,15 @@ evidence.
 - broader hypothesis lane now has a first promoted non-OCR eval surface:
   - co-reasoning reliability is now operationalized in the tracked style lane:
     `14/14` pass on the current live pass
-  - operator burden remains important but still thinly surfaced
+  - operator burden now has a seeded row-local evidence surface:
+    - `1` pass row
+    - `1` retained fail row
 - current mature method lane is green:
   - transcript-backed OCR growth set: `25/25` stable, `0` flaky
   - OCR fail-history cohort: `0` active cases
   - runtime OCR follow-up is parked
 - latest tracked snapshots:
+  - [docs/research/operator-burden-seed-20260509.md](docs/research/operator-burden-seed-20260509.md)
   - [docs/research/ocr-progress-20260508.md](docs/research/ocr-progress-20260508.md)
   - [docs/research/co-reasoning-promotion-20260508.md](docs/research/co-reasoning-promotion-20260508.md)
   - [docs/research/behaviour-backlog-20260508.md](docs/research/behaviour-backlog-20260508.md)

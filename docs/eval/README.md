@@ -73,6 +73,10 @@ Do not flatten one into the other.
   search, style, response behaviour, CLIP A/B, and trace artifacts
 - current non-OCR promoted lane lives in the tracked style surface for
   co-reasoning reliability
+- current thin-lane operator burden surface lives in:
+  - `docs/eval/beta_2_0/operator_burden_rows.json`
+  - summarize with:
+    - `make operator-burden-report`
 - role in the public surface:
   - right-side/current evidence for `/portfolio/sankey-data`
 

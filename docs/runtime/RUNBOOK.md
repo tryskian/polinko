@@ -1212,6 +1212,8 @@ Current policy:
    - after `fail`, use `retain` when the failure is real lane evidence
    - use `evict` to remove malformed or non-evidence rows upstream instead of
      repeatedly re-judging them
+   - current thin-lane command:
+     - `make operator-burden-report`
 8. Keep release output strictly binary; diagnostic detail may be rich, but it
     must not introduce non-binary gate states.
 

@@ -64,6 +64,7 @@ live together so claims can be traced back to source material.
   - explicit post-fail `retain` / `evict` disposition
   - first-gate contract correctness before richer interpretation
   - co-reasoning promoted as the first tracked non-OCR lane
+  - operator burden seeded as the first row-local thin lane
 
 ## Why The Repo Is The Portfolio
 

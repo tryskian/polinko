@@ -31,6 +31,11 @@
     },
     {
       "type": "research_note",
+      "label": "Operator burden seed",
+      "path": "docs/research/operator-burden-seed-20260509.md"
+    },
+    {
+      "type": "research_note",
       "label": "Prior OCR progress snapshot",
       "path": "docs/research/ocr-progress-20260501.md"
     },

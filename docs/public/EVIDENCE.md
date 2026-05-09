@@ -49,6 +49,7 @@ Core surfaces:
 Representative tracked note:
 
 - [OCR representative case](../research/ocr-representative-case.md)
+- [Operator burden seed](../research/operator-burden-seed-20260509.md)
 
 ## Research Notes vs Working Docs
 

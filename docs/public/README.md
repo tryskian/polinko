@@ -18,12 +18,15 @@ This is the shortest route through Polinko’s public research surface.
     - runtime OCR follow-up is parked
   - co-reasoning reliability is operationalized:
     - tracked style stress surface: `14/14` pass
-  - operator burden remains a real hypothesis, but is still thinly measured
+  - operator burden now has a seeded row-local surface:
+    - `1` pass row
+    - `1` retained fail row
 - latest tracked research notes:
   - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
   - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
   - [OCR progress snapshot](../research/ocr-progress-20260508.md)
   - [Behaviour backlog snapshot](../research/behaviour-backlog-20260508.md)
+  - [Operator burden seed](../research/operator-burden-seed-20260509.md)
 
 ## Read In Order
 
@@ -46,6 +49,8 @@ This is the shortest route through Polinko’s public research surface.
   - serious method beta boundary
 - [Behaviour backlog snapshot](../research/behaviour-backlog-20260508.md)
   - current non-OCR mining result
+- [Operator burden seed](../research/operator-burden-seed-20260509.md)
+  - first tracked thin-lane row surface
 - [Eval Evidence Map](../eval/README.md)
   - eval context
 - [Root README](../../README.md)

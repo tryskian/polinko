@@ -113,8 +113,11 @@ Last updated: 2026-05-09
   - co-reasoning reliability is now the first promoted non-OCR lane
   - tracked style stress lane currently passes `14/14` on the live validation
     pass
-  - operator burden remains a kept hypothesis, but needs stronger cues or
-    manual seed cases before promotion
+  - operator burden now has a seeded thin-lane row surface:
+    - tracked rows: `2`
+    - pass rows: `1`
+    - retained fail rows: `1`
+  - operator burden still needs broader cue coverage before larger automation
 - Documentation rule:
   - `DECISIONS` is durable archive
   - `STATE` is the tracked public current-truth surface
@@ -125,9 +128,7 @@ Last updated: 2026-05-09
 1. Keep the public doorway stable and credible.
 2. Keep repo research surfaces compact, visual, and easy to scan.
 3. Keep the first promoted non-OCR lane stable and visible.
-4. Seed the next thinner collaboration lane as a narrow human-owned
-   `pass` / `fail` row surface with explicit post-fail `retain` / `evict`
-   handling before over-automating it.
+4. Expand the seeded operator-burden row surface before over-automating it.
 5. Keep the mature OCR method lane green and reopen it only from the remaining
    case-design-only watchlist.
 6. Keep governance/runtime docs aligned and non-duplicative.
