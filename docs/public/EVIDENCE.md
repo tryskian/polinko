@@ -17,8 +17,13 @@ Polinko separates public proof from working material.
 
 Gate rule:
 
-- first prove contract correctness
+- first prove contract correctness with `pass / fail`
+- if `fail`, decide whether to:
+  - `retain`
+  - `evict`
+- rerun after evictions and judge `pass / fail` again
 - then interpret the richer meaning
+- `retain` keeps the failure as in-scope evidence
 - `evict` removes bad cases upstream; it does not become a third gate state
 
 ## Beta 1.0
@@ -45,6 +50,7 @@ Core surfaces:
 Representative tracked note:
 
 - [OCR representative case](../research/ocr-representative-case.md)
+- [Operator burden seed](../research/operator-burden-seed-20260509.md)
 
 ## Research Notes vs Working Docs
 

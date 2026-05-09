@@ -56,15 +56,28 @@ In short: confidence must not outrun evidence.
 - release outcomes stay binary:
   - `pass`
   - `fail`
+- after `fail`, failure disposition is:
+  - `retain`
+  - `evict`
+- gate stack stays explicit:
+  - `pass / fail`
+  - if `fail`, then `retain / evict`
+  - rerun
+  - `pass / fail`
+- `retain` keeps the failure as in-scope evidence
 - `evict` is upstream case correction, not a third release state
 - co-reasoning is now the first promoted non-OCR lane:
   - tracked style stress surface: `14/14` pass
+- operator burden now has a seeded thin-lane surface:
+  - `1` pass row
+  - `1` retained fail row
 - current mature method lane is still green:
   - transcript-backed OCR growth set: `25/25` stable
   - fail-history cohort: `0` active cases
 - tracked snapshots:
   - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
   - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
+  - [Operator burden seed](../research/operator-burden-seed-20260509.md)
   - [OCR progress snapshot](../research/ocr-progress-20260508.md)
 
 ## One-Sentence Read

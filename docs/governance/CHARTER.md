@@ -24,6 +24,10 @@ evidence-preserving method work.
   - release outcomes are `pass` / `fail` only
   - the first gate proves hard contract correctness
   - later judge or interpretive detail must not rewrite the first gate
+  - after `fail`, failure disposition is:
+    - `retain`
+    - `evict`
+  - `retain` keeps the failure as in-scope evidence in the active lane
   - `evict` is an upstream case correction for malformed, noisy, or known-bad
     cases; it is not a third release state
   - lockset lane is release-gating

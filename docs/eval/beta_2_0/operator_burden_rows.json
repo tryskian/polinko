@@ -1,0 +1,50 @@
+{
+  "lane": "operator_burden",
+  "version": 1,
+  "updated_at": "2026-05-09",
+  "hypothesis_id": "H-001",
+  "contract": {
+    "first_gate": ["pass", "fail"],
+    "post_fail_disposition": ["retain", "evict"]
+  },
+  "rows": [
+    {
+      "id": "ob-rd-001",
+      "title": "Direct mapping collapsed into advisory commentary",
+      "source_note": "docs/research/operator-burden-seed-20260509.md",
+      "source_ids": ["R-D"],
+      "task_shape": "direct_mapping",
+      "expected_boundary": "Match A to B with direct execution, clear binary decision, and no qualitative reframing.",
+      "observed_pattern": "Qualitative critique, hedging, and fuzzy percentages replaced direct mapping.",
+      "dimensions": {
+        "reference_binding": "fail",
+        "operation_fidelity": "fail",
+        "decision_clarity": "fail",
+        "instruction_load": "fail",
+        "verification_posture": "fail"
+      },
+      "verdict": "fail",
+      "failure_disposition": "retain",
+      "note": "Real burden evidence. Keep in the active lane."
+    },
+    {
+      "id": "ob-rd-002",
+      "title": "Sparse-control contract preserved execution clarity",
+      "source_note": "docs/research/operator-burden-seed-20260509.md",
+      "source_ids": ["D-158"],
+      "task_shape": "sparse_control_execution",
+      "expected_boundary": "Objective, hard acceptance checks, and example signals should preserve execution clarity without advisory overload.",
+      "observed_pattern": "Assistant accepted the sparse-control contract and tied execution to objective plus checks instead of adding prescriptive overhead.",
+      "dimensions": {
+        "reference_binding": "pass",
+        "operation_fidelity": "pass",
+        "decision_clarity": "pass",
+        "instruction_load": "pass",
+        "verification_posture": "pass"
+      },
+      "verdict": "pass",
+      "failure_disposition": null,
+      "note": "Pass-side anchor for low-burden execution."
+    }
+  ]
+}

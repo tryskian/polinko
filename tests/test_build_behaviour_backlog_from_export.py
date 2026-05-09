@@ -27,20 +27,44 @@ class BehaviourExportBacklogTests(unittest.TestCase):
         self.assertIn("working_style", result["matched_terms"])
         self.assertGreaterEqual(result["score"], lane.min_score)
 
-    def test_operator_burden_lane_accepts_minimal_control_mapping_case(self) -> None:
+    def test_operator_burden_lane_accepts_raw_pull_execution_contract(self) -> None:
         lane = _lane("operator_burden")
         result = _score_lane(
             lane,
-            title="origin mapping failure",
+            title="raw ledger pull",
             text=(
-                "The minimal-control contract collapsed into advisory commentary. "
-                "Reference binding, operation fidelity, and decision clarity all failed on match A to B."
+                "Recover the exact text segment as a raw pull with no commentary and no rephrasing."
             ),
             tags=["behaviour", "eval"],
         )
         self.assertIsNotNone(result)
-        self.assertIn("minimal_control", result["matched_terms"])
-        self.assertIn("commentary", result["matched_terms"])
+        self.assertIn("raw_pull", result["matched_terms"])
+        self.assertIn("no_commentary", result["matched_terms"])
+
+    def test_operator_burden_lane_accepts_tight_execution_language(self) -> None:
+        lane = _lane("operator_burden")
+        result = _score_lane(
+            lane,
+            title="professor protocol",
+            text=(
+                "Professor protocol is active: tone fixed, syntax-obedient, no commentary, "
+                "no meta-explanations."
+            ),
+            tags=["behaviour"],
+        )
+        self.assertIsNotNone(result)
+        self.assertIn("tone_fixed", result["matched_terms"])
+        self.assertIn("no_commentary", result["matched_terms"])
+
+    def test_operator_burden_lane_rejects_lone_direct_mapping_match(self) -> None:
+        lane = _lane("operator_burden")
+        result = _score_lane(
+            lane,
+            title="origin mapping failure",
+            text="This is a direct mapping task with a visual reference.",
+            tags=["behaviour", "eval"],
+        )
+        self.assertIsNone(result)
 
     def test_ocr_confidence_boundary_requires_ocr_and_boundary_signals(self) -> None:
         lane = _lane("ocr_confidence_boundary")

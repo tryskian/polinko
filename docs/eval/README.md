@@ -46,6 +46,10 @@ Do not flatten one into the other.
 ## Tracked Gate Contract
 
 - release outcomes stay `pass` / `fail`
+- after `fail`, failure disposition is:
+  - `retain`
+  - `evict`
+- `retain` keeps the failure in-scope as lane evidence
 - `evict` is upstream case removal for malformed, noisy, or known-bad rows
 - judge detail and qualitative notes can enrich a report, but they do not create
   a third gate state
@@ -69,6 +73,12 @@ Do not flatten one into the other.
   search, style, response behaviour, CLIP A/B, and trace artifacts
 - current non-OCR promoted lane lives in the tracked style surface for
   co-reasoning reliability
+- current thin-lane operator burden surface lives in:
+  - `docs/eval/beta_2_0/operator_burden_rows.json`
+  - summarize with:
+    - `make operator-burden-report`
+  - widen candidate rows locally with:
+    - `python3 -m tools.build_behaviour_backlog_from_export --export-root /abs/path/to/CGPT-DATA-EXPORT`
 - role in the public surface:
   - right-side/current evidence for `/portfolio/sankey-data`
 

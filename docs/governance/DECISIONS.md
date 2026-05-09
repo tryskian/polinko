@@ -4060,3 +4060,96 @@ quickstart document.
 - Why: the repo now has an explicit gate contract, more than one real eval
   lane, and a promoted non-OCR collaboration surface. That is a meaningful phase
   shift in method maturity and should be named directly in tracked repo truth.
+
+## D-240: Clarify that retain and evict are post-fail dispositions, not first-gate outcomes
+
+- Date: `2026-05-09`
+- Category: `evidence_governance`
+- Tags: `eval_contract`, `retain_evict`, `failure_disposition`, `docs_sync`
+- Decision:
+  - keep the first gate strictly binary:
+    - `pass`
+    - `fail`
+  - after `fail`, require explicit failure disposition:
+    - `retain`
+    - `evict`
+  - treat `retain` as keeping the failure in-scope as active lane evidence
+  - treat `evict` as upstream case or boundary correction before rerun
+  - treat `retain` / `evict` as post-fail handling, not as parallel first-gate
+    outcomes
+- Validation:
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the repo had started using `pass` / `fail` / `evict` as shorthand in a
+  few surfaces after the Beta 2.2 sync. That wording flattened the method. The
+  exact contract is stricter: first judge `pass` or `fail`, then decide whether
+  a failing row should be retained as lane evidence or evicted upstream.
+
+## D-241: Seed operator burden as a row-local thin lane
+
+- Date: `2026-05-09`
+- Category: `evidence_governance`
+- Tags: `operator_burden`, `thin_lane`, `row_surface`, `retain_evict`
+- Decision:
+  - seed operator burden as a tracked row-local eval surface instead of jumping
+    directly to a larger automated runner.
+  - add tracked rows at:
+    - `docs/eval/beta_2_0/operator_burden_rows.json`
+  - keep the lane contract exact:
+    - first gate: `pass` / `fail`
+    - after `fail`: `retain` / `evict`
+  - seed the lane with one retained fail row and one pass row so the surface
+    has contrast instead of a single anecdote.
+  - add a repo-local validator/report tool:
+    - `tools/report_operator_burden_rows.py`
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_report_operator_burden_rows`
+  - `./venv/bin/python -m tools.report_operator_burden_rows`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: operator burden is a real Polinko hypothesis, but the evidence surface
+  is still thin. A small judged row set is the right first move: it makes the
+  lane real, keeps the contract disciplined, and avoids pretending the miner or
+  runtime support is already rich enough for a bigger automated family.
+
+## D-242: Widen operator-burden mining around export-native control-contract language
+
+- Date: `2026-05-09`
+- Category: `evidence_governance`
+- Tags: `operator_burden`, `behaviour_mining`, `control_contract`, `thin_lane`
+- Decision:
+  - widen the operator-burden miner around phrases that actually occur in the
+    export instead of continuing to rely on theory-note wording.
+  - require two signal groups for operator-burden candidates:
+    - an operation/control anchor
+    - a burden/disposition anchor
+  - allow export-native anchors such as:
+    - `raw pull`
+    - `exact text segment`
+    - `direct pulls`
+    - `exactly as provided`
+    - `tone fixed`
+    - `syntax-obedient`
+  - pair them with export-native burden/disposition language such as:
+    - `no commentary`
+    - `no rephrasing`
+    - `no meta-explanations`
+    - `instead of interpreting`
+    - `summarization`
+    - `reinterpretation`
+    - `summary reflex`
+    - `fuzzy`
+    - `qualitative`
+    - `hedging`
+  - stop letting lone `direct mapping` matches qualify as operator-burden
+    evidence.
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_build_behaviour_backlog_from_export`
+  - `python3 -m tools.build_behaviour_backlog_from_export --export-root /Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT --limit-per-lane 10`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the first export-backed operator-burden pass only surfaced `1`
+  conversation family because the cue set reflected local theory notes more than
+  live export language. Widening the miner around real transcript control
+  contracts moved the lane to `9` conversations / `8` families and made row
+  promotion the next credible step.
