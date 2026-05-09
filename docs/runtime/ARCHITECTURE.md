@@ -39,6 +39,10 @@ This page is the structural map of the tracked system. Use
    - the first gate proves hard contract correctness
    - later interpretive detail does not rewrite gate arithmetic
    - `pass` / `fail` are the only release outcomes
+   - after `fail`, failure disposition is:
+     - `retain`
+     - `evict`
+   - `retain` keeps the failure in-scope as lane evidence
    - `evict` is upstream case removal, not a third gate state
    - OCR is one mature method lane; co-reasoning now lives in the tracked style
      lane
@@ -56,6 +60,7 @@ This page is the structural map of the tracked system. Use
     - `eval_checkpoints`
     - `ocr_runs`
   - active gate logic is binary-only; non-binary counts are integrity signals
+  - post-fail `retain` / `evict` belongs outside gate arithmetic
   - `evict` belongs to case-design or miner cleanup upstream, not gate
     arithmetic
 - Integrated manual-eval warehouse:

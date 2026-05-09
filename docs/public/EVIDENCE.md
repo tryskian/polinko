@@ -18,7 +18,11 @@ Polinko separates public proof from working material.
 Gate rule:
 
 - first prove contract correctness
+- then decide, after `fail`, whether to:
+  - `retain`
+  - `evict`
 - then interpret the richer meaning
+- `retain` keeps the failure as in-scope evidence
 - `evict` removes bad cases upstream; it does not become a third gate state
 
 ## Beta 1.0

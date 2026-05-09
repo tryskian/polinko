@@ -4060,3 +4060,27 @@ quickstart document.
 - Why: the repo now has an explicit gate contract, more than one real eval
   lane, and a promoted non-OCR collaboration surface. That is a meaningful phase
   shift in method maturity and should be named directly in tracked repo truth.
+
+## D-240: Clarify that retain and evict are post-fail dispositions, not first-gate outcomes
+
+- Date: `2026-05-09`
+- Category: `evidence_governance`
+- Tags: `eval_contract`, `retain_evict`, `failure_disposition`, `docs_sync`
+- Decision:
+  - keep the first gate strictly binary:
+    - `pass`
+    - `fail`
+  - after `fail`, require explicit failure disposition:
+    - `retain`
+    - `evict`
+  - treat `retain` as keeping the failure in-scope as active lane evidence
+  - treat `evict` as upstream case or boundary correction before rerun
+  - treat `retain` / `evict` as post-fail handling, not as parallel first-gate
+    outcomes
+- Validation:
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the repo had started using `pass` / `fail` / `evict` as shorthand in a
+  few surfaces after the Beta 2.2 sync. That wording flattened the method. The
+  exact contract is stricter: first judge `pass` or `fail`, then decide whether
+  a failing row should be retained as lane evidence or evicted upstream.

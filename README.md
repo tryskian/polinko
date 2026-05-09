@@ -23,7 +23,8 @@ evidence.
 ## Current Research Read
 
 - current serious method beta is `Beta 2.2`:
-  - explicit `pass` / `fail` / `evict` gate semantics
+  - explicit `pass` / `fail` gate semantics
+  - explicit post-fail `retain` / `evict` disposition
   - first-gate contract correctness before richer interpretation
   - co-reasoning is the first promoted non-OCR eval lane
 - eval contract is explicit across tracked surfaces:

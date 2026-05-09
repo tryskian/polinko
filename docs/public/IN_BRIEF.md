@@ -56,6 +56,10 @@ In short: confidence must not outrun evidence.
 - release outcomes stay binary:
   - `pass`
   - `fail`
+- after `fail`, failure disposition is:
+  - `retain`
+  - `evict`
+- `retain` keeps the failure as in-scope evidence
 - `evict` is upstream case correction, not a third release state
 - co-reasoning is now the first promoted non-OCR lane:
   - tracked style stress surface: `14/14` pass

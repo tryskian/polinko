@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-08
+Last updated: 2026-05-09
 
 ## Current Truth
 
@@ -16,6 +16,10 @@ Last updated: 2026-05-08
   - public-facing docs live under `docs/public/` and `docs/research/`
 - Eval contract is now explicit across tracked surfaces:
   - release outcomes stay `pass` / `fail`
+  - after `fail`, failure disposition is:
+    - `retain`
+    - `evict`
+  - `retain` keeps the failure as in-scope evidence in the active lane
   - `evict` removes malformed, noisy, or known-bad cases upstream instead of
     becoming a third gate state
   - the first gate proves hard contract correctness before richer
@@ -122,7 +126,8 @@ Last updated: 2026-05-08
 2. Keep repo research surfaces compact, visual, and easy to scan.
 3. Keep the first promoted non-OCR lane stable and visible.
 4. Seed the next thinner collaboration lane as a narrow human-owned
-   `pass` / `fail` / `evict` row surface before over-automating it.
+   `pass` / `fail` row surface with explicit post-fail `retain` / `evict`
+   handling before over-automating it.
 5. Keep the mature OCR method lane green and reopen it only from the remaining
    case-design-only watchlist.
 6. Keep governance/runtime docs aligned and non-duplicative.

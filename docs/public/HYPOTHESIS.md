@@ -60,7 +60,8 @@ live together so claims can be traced back to source material.
 - Beta 2.1 reframes the project as repo-as-research: the website becomes a
   doorway, and the repository carries the evidence.
 - Beta 2.2 formalises the serious method beta:
-  - explicit `pass` / `fail` / `evict` gate contract
+  - explicit `pass` / `fail` gate contract
+  - explicit post-fail `retain` / `evict` disposition
   - first-gate contract correctness before richer interpretation
   - co-reasoning promoted as the first tracked non-OCR lane
 

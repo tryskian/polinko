@@ -1183,6 +1183,10 @@ Current policy:
 1. Binary outcome model:
    - allowed outcomes: `pass` and `fail` only
    - tags are diagnostic only; outcome drives gate arithmetic
+   - after `fail`, failure disposition is:
+     - `retain`
+     - `evict`
+   - `retain` keeps the failure in-scope as lane evidence
    - `evict` is upstream case correction, not a third gate outcome
 2. Gate split:
    - first gate proves hard contract correctness
@@ -1205,6 +1209,7 @@ Current policy:
 7. Thin-lane rule:
    - when a lane is still sparse or miner cues are weak, start with human-owned
      row-local `pass` / `fail`
+   - after `fail`, use `retain` when the failure is real lane evidence
    - use `evict` to remove malformed or non-evidence rows upstream instead of
      repeatedly re-judging them
 8. Keep release output strictly binary; diagnostic detail may be rich, but it

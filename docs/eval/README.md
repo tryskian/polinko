@@ -46,6 +46,10 @@ Do not flatten one into the other.
 ## Tracked Gate Contract
 
 - release outcomes stay `pass` / `fail`
+- after `fail`, failure disposition is:
+  - `retain`
+  - `evict`
+- `retain` keeps the failure in-scope as lane evidence
 - `evict` is upstream case removal for malformed, noisy, or known-bad rows
 - judge detail and qualitative notes can enrich a report, but they do not create
   a third gate state

@@ -7,7 +7,8 @@ This is the shortest route through Polinko’s public research surface.
 ## Current Snapshot
 
 - current serious method beta is `Beta 2.2`:
-  - explicit `pass` / `fail` / `evict` gate contract
+  - explicit `pass` / `fail` gate contract
+  - explicit post-fail `retain` / `evict` disposition
   - first-gate contract correctness before richer interpretation
   - first promoted non-OCR lane is live
 - current method lanes:
