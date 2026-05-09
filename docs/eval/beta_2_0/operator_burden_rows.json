@@ -45,6 +45,66 @@
       "verdict": "pass",
       "failure_disposition": null,
       "note": "Pass-side anchor for low-burden execution."
+    },
+    {
+      "id": "ob-rd-003",
+      "title": "Raw pull preserved no-commentary retrieval boundary",
+      "source_note": "docs/research/operator-burden-promotion-20260509.md",
+      "source_ids": ["691b7111-0b78-8333-9a6e-b74eb364d92c"],
+      "task_shape": "raw_pull_retrieval",
+      "expected_boundary": "Retrieve the logged entry with no commentary, no edits, and no interpretive rewrite.",
+      "observed_pattern": "Assistant kept the retrieval surface exact by offering raw pull, contextual recall, or index lookup without adding commentary to the selected output mode.",
+      "dimensions": {
+        "reference_binding": "pass",
+        "operation_fidelity": "pass",
+        "decision_clarity": "pass",
+        "instruction_load": "pass",
+        "verification_posture": "pass"
+      },
+      "verdict": "pass",
+      "failure_disposition": null,
+      "note": "Pass-side retrieval anchor for low-burden exact output."
+    },
+    {
+      "id": "ob-rd-004",
+      "title": "Protocol lock preserved no-commentary execution",
+      "source_note": "docs/research/operator-burden-promotion-20260509.md",
+      "source_ids": ["692789c3-3658-8326-bbd5-e44ad4603315"],
+      "task_shape": "protocol_lock_execution",
+      "expected_boundary": "Once the protocol hat is fixed, execution should stay tone-fixed, syntax-obedient, and free of commentary or meta-explanations.",
+      "observed_pattern": "Assistant explicitly locked into no-commentary mode and stayed on the next-instruction surface instead of widening back into explanation.",
+      "dimensions": {
+        "reference_binding": "pass",
+        "operation_fidelity": "pass",
+        "decision_clarity": "pass",
+        "instruction_load": "pass",
+        "verification_posture": "pass"
+      },
+      "verdict": "pass",
+      "failure_disposition": null,
+      "note": "Pass-side protocol anchor for low-burden execution lock."
+    },
+    {
+      "id": "ob-rd-005",
+      "title": "Direct-pull request had to correct interpretive rundown drift",
+      "source_note": "docs/research/operator-burden-promotion-20260509.md",
+      "source_ids": [
+        "6952ca93-fe10-832c-ac1d-1fcf54dd73ed",
+        "695bf688-569c-8326-a209-680ad82f1c17"
+      ],
+      "task_shape": "direct_pull_correction",
+      "expected_boundary": "When the user wants direct pulls, the response should stay on exact retrieval instead of offering an interpretive rundown first.",
+      "observed_pattern": "Assistant opened with a rundown/party framing and the user had to steer it back toward direct pulls instead of interpreting the chat.",
+      "dimensions": {
+        "reference_binding": "fail",
+        "operation_fidelity": "fail",
+        "decision_clarity": "fail",
+        "instruction_load": "fail",
+        "verification_posture": "na"
+      },
+      "verdict": "fail",
+      "failure_disposition": "retain",
+      "note": "Retain as real burden evidence: exact retrieval needed an explicit correction away from interpretation."
     }
   ]
 }
