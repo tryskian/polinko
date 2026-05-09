@@ -38,6 +38,67 @@ class StyleEvalTests(unittest.TestCase):
         )
         self.assertEqual(missing_groups, [["without mimicry", "not mimicry"]])
 
+    def test_missing_required_any_groups_accepts_repo_native_working_style_synonyms(self) -> None:
+        missing_groups = _missing_required_any_groups(
+            "Shared standards and review scope keep the loop legible.",
+            [[
+                "constraints",
+                "constraint",
+                "context",
+                "intent",
+                "scope",
+                "standard",
+                "standards",
+                "ground rules",
+                "ownership",
+                "role",
+                "roles",
+                "clarify",
+                "clarification",
+            ]],
+        )
+        self.assertEqual(missing_groups, [])
+
+    def test_missing_required_any_groups_accepts_traceable_merge_contract_language(self) -> None:
+        missing_groups = _missing_required_any_groups(
+            "Keep change logs traceable. Humans make final merge and scope decisions.",
+            [[
+                "constraints",
+                "constraint",
+                "context",
+                "intent",
+                "scope",
+                "standard",
+                "standards",
+                "ground rules",
+                "ownership",
+                "role",
+                "roles",
+                "clarify",
+                "clarification",
+                "checkpoints",
+                "review",
+                "feedback",
+                "validation",
+                "traceability",
+                "traceable",
+                "checks",
+                "sign-off",
+                "merge",
+                "prompt",
+                "prompts",
+                "template",
+                "templates",
+                "spec",
+                "specs",
+                "format",
+                "formats",
+                "rationale",
+                "assumptions",
+            ]],
+        )
+        self.assertEqual(missing_groups, [])
+
     def test_load_cases_accepts_required_phrase_fields(self) -> None:
         payload = {
             "global_forbidden_phrases": ["let me guess"],
