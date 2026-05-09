@@ -28,6 +28,8 @@ enough to read in public.
   - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
   - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
   - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
+  - [Operator burden row promotion](./operator-burden-promotion-20260509.md)
+  - [Operator burden mining update](./operator-burden-mining-20260509.md)
   - [Operator burden seed](./operator-burden-seed-20260509.md)
 - current read on `2026-05-09`:
   - current serious method beta is `Beta 2.2`
@@ -35,8 +37,8 @@ enough to read in public.
   - co-reasoning is now the first promoted non-OCR lane
   - tracked style stress surface currently passes `14/14` on the live pass
   - operator burden now has a seeded thin-lane row surface:
-    - `1` pass row
-    - `1` retained fail row
+    - `3` pass rows
+    - `2` retained fail rows
     - widened export-backed backlog: `9` conversations / `8` families
 
 ## Included Here
@@ -52,6 +54,7 @@ enough to read in public.
 - [OCR progress snapshot](./ocr-progress-20260508.md)
 - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
 - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
+- [Operator burden row promotion](./operator-burden-promotion-20260509.md)
 - [Operator burden mining update](./operator-burden-mining-20260509.md)
 - [Operator burden seed](./operator-burden-seed-20260509.md)
 - [Prior OCR progress snapshot](./ocr-progress-20260501.md)

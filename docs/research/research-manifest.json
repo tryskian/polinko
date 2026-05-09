@@ -26,6 +26,11 @@
     },
     {
       "type": "research_note",
+      "label": "Operator burden row promotion",
+      "path": "docs/research/operator-burden-promotion-20260509.md"
+    },
+    {
+      "type": "research_note",
       "label": "Beta 2.2 snapshot",
       "path": "docs/research/beta-2-2-20260508.md"
     },

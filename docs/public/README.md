@@ -24,14 +24,15 @@ This is the shortest route through Polinko’s public research surface.
   - co-reasoning reliability is operationalized:
     - tracked style stress surface: `14/14` pass
   - operator burden now has a seeded row-local surface:
-    - `1` pass row
-    - `1` retained fail row
+    - `3` pass rows
+    - `2` retained fail rows
     - widened export-backed backlog: `9` conversations / `8` families
 - latest tracked research notes:
   - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
   - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
   - [OCR progress snapshot](../research/ocr-progress-20260508.md)
   - [Behaviour backlog snapshot](../research/behaviour-backlog-20260508.md)
+  - [Operator burden row promotion](../research/operator-burden-promotion-20260509.md)
   - [Operator burden mining update](../research/operator-burden-mining-20260509.md)
   - [Operator burden seed](../research/operator-burden-seed-20260509.md)
 
@@ -56,6 +57,8 @@ This is the shortest route through Polinko’s public research surface.
   - serious method beta boundary
 - [Behaviour backlog snapshot](../research/behaviour-backlog-20260508.md)
   - current non-OCR mining result
+- [Operator burden row promotion](../research/operator-burden-promotion-20260509.md)
+  - first three export-backed judged additions to the thin lane
 - [Operator burden mining update](../research/operator-burden-mining-20260509.md)
   - export-native cue widening for the thin lane
 - [Operator burden seed](../research/operator-burden-seed-20260509.md)
