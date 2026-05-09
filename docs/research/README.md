@@ -37,6 +37,7 @@ enough to read in public.
   - operator burden now has a seeded thin-lane row surface:
     - `1` pass row
     - `1` retained fail row
+    - widened export-backed backlog: `9` conversations / `8` families
 
 ## Included Here
 
@@ -51,6 +52,7 @@ enough to read in public.
 - [OCR progress snapshot](./ocr-progress-20260508.md)
 - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
 - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
+- [Operator burden mining update](./operator-burden-mining-20260509.md)
 - [Operator burden seed](./operator-burden-seed-20260509.md)
 - [Prior OCR progress snapshot](./ocr-progress-20260501.md)
 - [OCR representative case](./ocr-representative-case.md)

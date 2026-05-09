@@ -77,6 +77,8 @@ Do not flatten one into the other.
   - `docs/eval/beta_2_0/operator_burden_rows.json`
   - summarize with:
     - `make operator-burden-report`
+  - widen candidate rows locally with:
+    - `python3 -m tools.build_behaviour_backlog_from_export --export-root /abs/path/to/CGPT-DATA-EXPORT`
 - role in the public surface:
   - right-side/current evidence for `/portfolio/sankey-data`
 

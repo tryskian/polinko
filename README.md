@@ -37,11 +37,13 @@ evidence.
   - operator burden now has a seeded row-local evidence surface:
     - `1` pass row
     - `1` retained fail row
+    - widened export-backed backlog: `9` conversations / `8` families
 - current mature method lane is green:
   - transcript-backed OCR growth set: `25/25` stable, `0` flaky
   - OCR fail-history cohort: `0` active cases
   - runtime OCR follow-up is parked
 - latest tracked snapshots:
+  - [docs/research/operator-burden-mining-20260509.md](docs/research/operator-burden-mining-20260509.md)
   - [docs/research/operator-burden-seed-20260509.md](docs/research/operator-burden-seed-20260509.md)
   - [docs/research/ocr-progress-20260508.md](docs/research/ocr-progress-20260508.md)
   - [docs/research/co-reasoning-promotion-20260508.md](docs/research/co-reasoning-promotion-20260508.md)

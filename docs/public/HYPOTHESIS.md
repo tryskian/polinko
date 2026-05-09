@@ -39,9 +39,9 @@ live together so claims can be traced back to source material.
   - measured by: tracked style stress cases, live style eval passes, and the
     export-backed behaviour backlog
 - `Commentary-heavy response contracts increase operator burden`
-  - status: hypothesis kept, but still thinly operationalized
-  - measured by: experiment `R-D`, manual transcript diagnostics, and a small
-    export backlog so far
+  - status: thin lane seeded and export-backed backlog widened
+  - measured by: experiment `R-D`, manual transcript diagnostics, the tracked
+    operator-burden row surface, and export-backed control-contract mining
 - `Retrieval grounding should stay inspectable and source-bound`
   - status: operationalized
   - measured by: retrieval and file-search eval suites, plus export-backed
@@ -62,6 +62,11 @@ live together so claims can be traced back to source material.
 - Beta 2.2 formalises the serious method beta:
   - explicit `pass` / `fail` gate contract
   - explicit post-fail `retain` / `evict` disposition
+  - explicit post-fail gate stack:
+    - `pass / fail`
+    - if `fail`, then `retain / evict`
+    - rerun
+    - `pass / fail`
   - first-gate contract correctness before richer interpretation
   - co-reasoning promoted as the first tracked non-OCR lane
   - operator burden seeded as the first row-local thin lane

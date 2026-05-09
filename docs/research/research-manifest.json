@@ -21,6 +21,11 @@
     },
     {
       "type": "research_note",
+      "label": "Operator burden mining update",
+      "path": "docs/research/operator-burden-mining-20260509.md"
+    },
+    {
+      "type": "research_note",
       "label": "Beta 2.2 snapshot",
       "path": "docs/research/beta-2-2-20260508.md"
     },

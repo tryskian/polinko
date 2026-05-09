@@ -19,6 +19,11 @@ Last updated: 2026-05-09
   - after `fail`, failure disposition is:
     - `retain`
     - `evict`
+  - gate stack stays explicit:
+    - `pass / fail`
+    - if `fail`, then `retain / evict`
+    - rerun
+    - `pass / fail`
   - `retain` keeps the failure as in-scope evidence in the active lane
   - `evict` removes malformed, noisy, or known-bad cases upstream instead of
     becoming a third gate state
@@ -106,7 +111,7 @@ Last updated: 2026-05-09
   - export-backed behaviour mining now confirms real non-OCR evidence surfaces
   - current backlog counts:
     - co-reasoning reliability: `18` conversations / `14` families
-    - operator burden shift: `1` / `1`
+    - operator burden shift: `9` / `8`
     - hallucination boundary: `33` / `24`
     - retrieval grounding: `47` / `40`
     - OCR confidence boundary: `15` / `10`
@@ -117,7 +122,8 @@ Last updated: 2026-05-09
     - tracked rows: `2`
     - pass rows: `1`
     - retained fail rows: `1`
-  - operator burden still needs broader cue coverage before larger automation
+  - operator burden now has enough export-backed cue coverage to support row
+    expansion without jumping to larger automation
 - Documentation rule:
   - `DECISIONS` is durable archive
   - `STATE` is the tracked public current-truth surface
@@ -128,7 +134,8 @@ Last updated: 2026-05-09
 1. Keep the public doorway stable and credible.
 2. Keep repo research surfaces compact, visual, and easy to scan.
 3. Keep the first promoted non-OCR lane stable and visible.
-4. Expand the seeded operator-burden row surface before over-automating it.
+4. Promote more operator-burden rows from the widened backlog before
+   over-automating the lane.
 5. Keep the mature OCR method lane green and reopen it only from the remaining
    case-design-only watchlist.
 6. Keep governance/runtime docs aligned and non-duplicative.

@@ -59,6 +59,11 @@ In short: confidence must not outrun evidence.
 - after `fail`, failure disposition is:
   - `retain`
   - `evict`
+- gate stack stays explicit:
+  - `pass / fail`
+  - if `fail`, then `retain / evict`
+  - rerun
+  - `pass / fail`
 - `retain` keeps the failure as in-scope evidence
 - `evict` is upstream case correction, not a third release state
 - co-reasoning is now the first promoted non-OCR lane:

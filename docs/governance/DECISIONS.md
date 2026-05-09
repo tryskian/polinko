@@ -4111,3 +4111,45 @@ quickstart document.
   is still thin. A small judged row set is the right first move: it makes the
   lane real, keeps the contract disciplined, and avoids pretending the miner or
   runtime support is already rich enough for a bigger automated family.
+
+## D-242: Widen operator-burden mining around export-native control-contract language
+
+- Date: `2026-05-09`
+- Category: `evidence_governance`
+- Tags: `operator_burden`, `behaviour_mining`, `control_contract`, `thin_lane`
+- Decision:
+  - widen the operator-burden miner around phrases that actually occur in the
+    export instead of continuing to rely on theory-note wording.
+  - require two signal groups for operator-burden candidates:
+    - an operation/control anchor
+    - a burden/disposition anchor
+  - allow export-native anchors such as:
+    - `raw pull`
+    - `exact text segment`
+    - `direct pulls`
+    - `exactly as provided`
+    - `tone fixed`
+    - `syntax-obedient`
+  - pair them with export-native burden/disposition language such as:
+    - `no commentary`
+    - `no rephrasing`
+    - `no meta-explanations`
+    - `instead of interpreting`
+    - `summarization`
+    - `reinterpretation`
+    - `summary reflex`
+    - `fuzzy`
+    - `qualitative`
+    - `hedging`
+  - stop letting lone `direct mapping` matches qualify as operator-burden
+    evidence.
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_build_behaviour_backlog_from_export`
+  - `python3 -m tools.build_behaviour_backlog_from_export --export-root /Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT --limit-per-lane 10`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the first export-backed operator-burden pass only surfaced `1`
+  conversation family because the cue set reflected local theory notes more than
+  live export language. Widening the miner around real transcript control
+  contracts moved the lane to `9` conversations / `8` families and made row
+  promotion the next credible step.

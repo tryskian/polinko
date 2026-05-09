@@ -66,8 +66,12 @@ It is not a large automated eval family yet.
 - it now has a tracked seed surface with contrast:
   - `1` retained fail row
   - `1` pass row
+- export-backed cue widening now surfaces:
+  - `9` candidate conversations
+  - `8` conversation families
 - the lane is still thin
-- the next work is row expansion and better cue coverage, not bigger automation
+- the next work is row expansion from the widened backlog, not bigger
+  automation
 
 ## Why This Matters
 
