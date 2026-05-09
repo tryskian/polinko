@@ -119,9 +119,10 @@ Last updated: 2026-05-09
   - tracked style stress lane currently passes `14/14` on the live validation
     pass
   - operator burden now has a seeded thin-lane row surface:
-    - tracked rows: `5`
-    - pass rows: `3`
+    - tracked rows: `7`
+    - pass rows: `4`
     - retained fail rows: `2`
+    - evicted fail rows: `1`
   - operator burden now has enough export-backed cue coverage to support row
     expansion without jumping to larger automation
 - Documentation rule:

@@ -206,6 +206,21 @@ def render_markdown(report: dict[str, Any]) -> str:
     else:
         lines.append("- none")
 
+    lines.extend(["", "## Evicted Failures", ""])
+    evicted = report.get("evicted_failures", [])
+    if evicted:
+        for row in evicted:
+            lines.extend(
+                [
+                    f"- `{row['id']}` {row['title']}",
+                    f"  - task shape: `{row['task_shape']}`",
+                    f"  - source: `{row['source_note']}`",
+                    f"  - note: {row['note']}",
+                ]
+            )
+    else:
+        lines.append("- none")
+
     lines.extend(["", "## Dimension Fail Counts", ""])
     dim_counts = report.get("dimension_fail_counts", [])
     if dim_counts:

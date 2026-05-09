@@ -62,6 +62,35 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
         self.assertEqual(report["failure_disposition_counts"]["evict"], 0)
         self.assertEqual(report["retained_failures"][0]["id"], "ob-1")
 
+    def test_build_report_counts_evicted_failure(self) -> None:
+        report = build_report(
+            _payload(
+                [
+                    {
+                        "id": "ob-1",
+                        "title": "evict row",
+                        "source_note": "docs/research/operator-burden-promotion-20260509.md",
+                        "source_ids": ["x-1"],
+                        "task_shape": "duplicate_archive_case",
+                        "expected_boundary": "distinct case",
+                        "observed_pattern": "quoted duplicate",
+                        "dimensions": {
+                            "reference_binding": "fail",
+                            "operation_fidelity": "fail",
+                            "decision_clarity": "fail",
+                        },
+                        "verdict": "fail",
+                        "failure_disposition": "evict",
+                        "note": "throw it out",
+                    }
+                ]
+            )
+        )
+        self.assertEqual(report["verdict_counts"]["fail"], 1)
+        self.assertEqual(report["failure_disposition_counts"]["retain"], 0)
+        self.assertEqual(report["failure_disposition_counts"]["evict"], 1)
+        self.assertEqual(report["evicted_failures"][0]["id"], "ob-1")
+
     def test_build_report_rejects_fail_without_disposition(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "failure_disposition"):
             build_report(
@@ -127,6 +156,30 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
         )
         markdown = render_markdown(report)
         self.assertIn("Retained Failures", markdown)
+        self.assertIn("ob-1", markdown)
+
+    def test_render_markdown_includes_evicted_failures(self) -> None:
+        report = build_report(
+            _payload(
+                [
+                    {
+                        "id": "ob-1",
+                        "title": "evict row",
+                        "source_note": "docs/research/operator-burden-promotion-20260509.md",
+                        "source_ids": ["x-1"],
+                        "task_shape": "duplicate_archive_case",
+                        "expected_boundary": "distinct case",
+                        "observed_pattern": "quoted duplicate",
+                        "dimensions": {"reference_binding": "fail"},
+                        "verdict": "fail",
+                        "failure_disposition": "evict",
+                        "note": "throw it out",
+                    }
+                ]
+            )
+        )
+        markdown = render_markdown(report)
+        self.assertIn("Evicted Failures", markdown)
         self.assertIn("ob-1", markdown)
 
 

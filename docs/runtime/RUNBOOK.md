@@ -79,6 +79,31 @@
    - `make test`
    - `make quality-gate-deterministic` when runtime/eval execution behaviour changed
 
+## Eval Sidecar (Long Soaks)
+
+1. Use the eval sidecar for long stability soaks where you want repeated gate
+   cycles plus a durable status surface.
+2. Start it from a host terminal:
+   - `make eval-sidecar-start`
+3. Check status at any time:
+   - `make eval-sidecar-status`
+4. Request a graceful stop between cycles:
+   - `make eval-sidecar-stop`
+5. Default sidecar target:
+   - `quality-gate-deterministic`
+6. Default minimum runtime:
+   - `3600` seconds
+7. Override examples:
+   - `make eval-sidecar-start EVAL_SIDECAR_TARGET=eval-style`
+   - `make eval-sidecar-start EVAL_SIDECAR_MIN_SECONDS=1800`
+8. Status and cycle artifacts are written under:
+   - `.local/eval_runs/`
+9. Codex caveat:
+   - detached background jobs started from the Codex execution surface can be
+     reaped later
+   - if you need a trustworthy long-lived sidecar, launch it from your own host
+     terminal, not from a Codex background command
+
 ## End-of-Day Routine (Codexbeab)
 
 1. Run the end-of-day script:
