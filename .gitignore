@@ -58,6 +58,7 @@ _virtualenv.py
 .local/visuals/
 .local/dashboard/
 .local/eval_cases/
+.local/eval_runs/
 .local/logs/
 .local/legacy_eval/
 .local_archive/
