@@ -98,6 +98,11 @@ Last updated: 2026-05-09
   - `manual_evals.db` remains the integrated manual-eval warehouse
   - current promoted non-OCR lane:
     - co-reasoning reliability passes `14/14` in the tracked style surface
+    - latest one-hour deterministic beta soak closes at `19/21` pass cycles
+    - former dominant style pressure did not recur in the broad gate
+    - current broad-gate pressure is now:
+      - `uncertainty_required_no_relationship_motive_guess`
+      - `explicit_uncertainty_when_context_missing`
   - current mature method lane is green:
     - growth stability: `25/25` stable, `0` flaky
     - fail-history cohort: `0` active cases
@@ -134,12 +139,15 @@ Last updated: 2026-05-09
 
 1. Keep the public doorway stable and credible.
 2. Keep repo research surfaces compact, visual, and easy to scan.
-3. Keep the first promoted non-OCR lane stable and visible.
-4. Promote more operator-burden rows from the widened backlog before
-   over-automating the lane.
-5. Keep the mature OCR method lane green and reopen it only from the remaining
+3. Take the next narrow stability kernel in the uncertainty boundary:
+   - `uncertainty_required_no_relationship_motive_guess`
+   - `explicit_uncertainty_when_context_missing`
+4. Keep the first promoted non-OCR lane stable and visible.
+5. Promote operator-burden rows deliberately instead of farming pass-side
+   clones or over-automating the lane.
+6. Keep the mature OCR method lane green and reopen it only from the remaining
    case-design-only watchlist.
-6. Keep governance/runtime docs aligned and non-duplicative.
+7. Keep governance/runtime docs aligned and non-duplicative.
 
 ## Canonical Sources
 
