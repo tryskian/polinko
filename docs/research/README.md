@@ -37,7 +37,7 @@ enough to read in public.
   - co-reasoning is now the first promoted non-OCR lane
   - tracked style stress surface currently passes `14/14` on the live pass
   - operator burden now has a seeded thin-lane row surface:
-    - `3` pass rows
+    - `4` pass rows
     - `2` retained fail rows
     - widened export-backed backlog: `9` conversations / `8` families
 

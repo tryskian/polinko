@@ -105,6 +105,25 @@
       "verdict": "fail",
       "failure_disposition": "retain",
       "note": "Retain as real burden evidence: exact retrieval needed an explicit correction away from interpretation."
+    },
+    {
+      "id": "ob-rd-006",
+      "title": "Exact-as-provided preference preserved low-burden document handling",
+      "source_note": "docs/research/operator-burden-promotion-20260509.md",
+      "source_ids": ["c566ec92-3d08-8007-b2ab-8ba510e8e7bd"],
+      "task_shape": "exact_output_preference",
+      "expected_boundary": "Document and file actions should stay exactly as provided, without summarization or reinterpretation drift.",
+      "observed_pattern": "Assistant captured the exactness preference explicitly and kept the response on a controlled boundary instead of widening into looser paraphrase-by-default handling.",
+      "dimensions": {
+        "reference_binding": "pass",
+        "operation_fidelity": "pass",
+        "decision_clarity": "pass",
+        "instruction_load": "pass",
+        "verification_posture": "pass"
+      },
+      "verdict": "pass",
+      "failure_disposition": null,
+      "note": "Distinct pass-side exactness anchor; do not treat raw-pull clones as separate evidence just to raise counts."
     }
   ]
 }

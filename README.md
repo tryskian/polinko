@@ -35,7 +35,7 @@ evidence.
   - co-reasoning reliability is now operationalized in the tracked style lane:
     `14/14` pass on the current live pass
   - operator burden now has a seeded row-local evidence surface:
-    - `3` pass rows
+    - `4` pass rows
     - `2` retained fail rows
     - widened export-backed backlog: `9` conversations / `8` families
 - current mature method lane is green:

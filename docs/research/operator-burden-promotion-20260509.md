@@ -24,13 +24,16 @@ Added to `docs/eval/beta_2_0/operator_burden_rows.json`:
   - `fail`
   - `retain`
   - direct-pull request had to correct interpretive rundown drift
+- `ob-rd-006`
+  - `pass`
+  - exact-as-provided preference preserved low-burden document handling
 
 ## Current Row Surface
 
 The tracked operator-burden surface now holds:
 
-- rows: `5`
-- pass: `3`
+- rows: `6`
+- pass: `4`
 - fail: `2`
 - retained fail: `2`
 - evict: `0`
@@ -43,6 +46,8 @@ This is a better thin-lane shape than the initial seed:
 - there is now more than one retained fail anchor
 - the retained fail pressure is still about interpretive or advisory drift, not
   about runtime fragility
+- the remaining raw-pull families are now better treated as duplicate pass
+  evidence, not as rows to promote one by one just to inflate counts
 
 That means the next operator-burden step is still:
 
