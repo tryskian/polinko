@@ -33,24 +33,20 @@ enough to read in public.
   - [Operator burden row promotion](./operator-burden-promotion-20260509.md)
   - [Operator burden mining update](./operator-burden-mining-20260509.md)
   - [Operator burden seed](./operator-burden-seed-20260509.md)
-- current read on `2026-05-09`:
+- current read on `2026-05-10`:
   - current serious method beta is `Beta 2.2`
   - OCR remains one mature method lane
   - co-reasoning is now the first promoted non-OCR lane
   - tracked style stress surface currently passes `14/14` on the live pass
   - one-hour deterministic beta soak now closes at `19/21` pass cycles
   - former dominant style pressure did not recur in the broad gate
-  - remaining broad-gate pressure is now:
-    - `uncertainty_required_no_relationship_motive_guess`
-    - `explicit_uncertainty_when_context_missing`
-  - the next uncertainty-boundary stability kernel has landed tracked matcher
-    fixes and a clean deterministic rerun
-  - the restarted deterministic soak was stopped clean for EOD at:
-    - `14/14` pass cycles
-    - `2695s`
-    - `0` failure signals
-  - the next slice is to complete a full one-hour soak before promoting this to
-    broader state truth
+  - the uncertainty-boundary stability kernel has now closed cleanly with:
+    - resumed soak total: `3961s`
+    - `21/21` pass cycles
+    - `0` fail cycles
+    - `0` recurring failure signals
+  - broad-gate pressure is no longer concentrated in the uncertainty contracts
+  - current broad gate is holding across style, uncertainty, and co-reasoning
   - operator burden now has a seeded thin-lane row surface:
     - `4` pass rows
     - `2` retained fail rows

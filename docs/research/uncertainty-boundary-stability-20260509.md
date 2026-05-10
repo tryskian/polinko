@@ -47,20 +47,25 @@ part of the tracked repo delta.
 
 ## Current Read
 
-Current checkpoint:
+Current closeout:
 
 - a fresh `make quality-gate-deterministic` rerun passed cleanly
-- a restarted deterministic sidecar soak was then run for `2695s`
-- stopped clean for EOD at:
+- the first deterministic soak segment ran for `2695s` and finished at:
   - `14/14` pass cycles
   - `0` fail cycles
   - `0` recurring failure signals
+- a second deterministic soak segment then ran for `1266s` and finished at:
+  - `7/7` pass cycles
+  - `0` fail cycles
+  - `0` recurring failure signals
+- combined resumed-soak read:
+  - `3961s`
+  - `21/21` pass cycles
+  - `0` fail cycles
+  - `0` recurring failure signals
 
-That is enough to say the uncertainty-boundary kernel is behaving like a real
-stability pass rather than another one-off live green.
-
-It is not yet a full one-hour closure, because the run was stopped early for
-end-of-day wind-down.
+That is enough to treat the uncertainty-boundary kernel as a real stability
+closure rather than another one-off live green.
 
 ## Why This Matters
 
@@ -70,6 +75,5 @@ false pressure:
 - tracked matcher seams that were rejecting correct uncertainty behaviour
 - local case-anchor seams that were too literal for natural co-reasoning output
 
-If the next slice finishes a full one-hour soak cleanly, `Beta 2.2` moves from
-`style pressure retired, uncertainty now dominant` to `broad gate currently
-holding across style, uncertainty, and co-reasoning`.
+`Beta 2.2` now moves from `style pressure retired, uncertainty now dominant` to
+`broad gate currently holding across style, uncertainty, and co-reasoning`.

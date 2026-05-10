@@ -25,7 +25,12 @@ This is the shortest route through Polinko’s public research surface.
     - tracked style stress surface: `14/14` pass
     - one-hour deterministic beta soak: `19/21` pass cycles
     - former dominant style pressure did not recur
-    - remaining broad-gate pressure is now in uncertainty contracts
+  - uncertainty-boundary stability is now closed:
+    - resumed soak total: `3961s`
+    - `21/21` pass cycles
+    - `0` fail cycles
+    - `0` recurring failure signals
+  - current broad gate is holding across style, uncertainty, and co-reasoning
   - operator burden now has a seeded row-local surface:
     - `4` pass rows
     - `2` retained fail rows
@@ -40,6 +45,7 @@ This is the shortest route through Polinko’s public research surface.
   - [Operator burden mining update](../research/operator-burden-mining-20260509.md)
   - [Operator burden seed](../research/operator-burden-seed-20260509.md)
   - [Beta 2.2 stability soak](../research/beta-2-2-stability-soak-20260509.md)
+  - [Uncertainty-boundary stability kernel](../research/uncertainty-boundary-stability-20260509.md)
 
 ## Read In Order
 
@@ -64,11 +70,13 @@ This is the shortest route through Polinko’s public research surface.
   - current non-OCR mining result
 - [Operator burden row promotion](../research/operator-burden-promotion-20260509.md)
   - first three export-backed judged additions to the thin lane
-- [Operator burden mining update](../research/operator-burden-mining-20260509.md)
+  - [Operator burden mining update](../research/operator-burden-mining-20260509.md)
   - export-native cue widening for the thin lane
-- [Operator burden seed](../research/operator-burden-seed-20260509.md)
+  - [Operator burden seed](../research/operator-burden-seed-20260509.md)
   - first tracked thin-lane row surface
-- [Beta 2.2 stability soak](../research/beta-2-2-stability-soak-20260509.md)
+  - [Uncertainty-boundary stability kernel](../research/uncertainty-boundary-stability-20260509.md)
+  - resumed-soak closeout on the broad gate
+  - [Beta 2.2 stability soak](../research/beta-2-2-stability-soak-20260509.md)
   - one-hour deterministic gate read after the style instability pass
 - [Eval Evidence Map](../eval/README.md)
   - eval context

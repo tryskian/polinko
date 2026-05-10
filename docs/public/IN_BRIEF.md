@@ -68,9 +68,14 @@ In short: confidence must not outrun evidence.
 - `evict` is upstream case correction, not a third release state
 - co-reasoning is now the first promoted non-OCR lane:
   - tracked style stress surface: `14/14` pass
+- uncertainty-boundary stability is now closed:
+  - resumed soak total: `3961s`
+  - `21/21` pass cycles
+  - `0` fail cycles
 - operator burden now has a seeded thin-lane surface:
-  - `1` pass row
-  - `1` retained fail row
+  - `4` pass rows
+  - `2` retained fail rows
+  - `1` evicted fail row
 - current mature method lane is still green:
   - transcript-backed OCR growth set: `25/25` stable
   - fail-history cohort: `0` active cases

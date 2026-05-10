@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-09
+Last updated: 2026-05-10
 
 ## Current Truth
 
@@ -75,7 +75,9 @@ Last updated: 2026-05-09
   - current visible identity line keeps the `creative designer who somehow
     became...` phrasing and swaps in `Applied AI Research Engineer`
 - Operator command surface:
-  - `make eod` remains end-of-day only
+  - `make start` is the scripted morning startup pass
+  - `make end` is operational day-close
+  - `make end-git-check` is the final clean-main verification step
 - Local frontend contract is intentionally minimal:
   - `frontend/` is local-only and ignored except `.gitkeep`
   - `ui/` is local-only and ignored except `.gitkeep`
@@ -100,9 +102,12 @@ Last updated: 2026-05-09
     - co-reasoning reliability passes `14/14` in the tracked style surface
     - latest one-hour deterministic beta soak closes at `19/21` pass cycles
     - former dominant style pressure did not recur in the broad gate
-    - current broad-gate pressure is now:
-      - `uncertainty_required_no_relationship_motive_guess`
-      - `explicit_uncertainty_when_context_missing`
+    - uncertainty-boundary stability is now closed with:
+      - resumed soak total: `3961s`
+      - `21/21` pass cycles
+      - `0` fail cycles
+      - `0` recurring failure signals
+    - current broad gate is holding across style, uncertainty, and co-reasoning
   - current mature method lane is green:
     - growth stability: `25/25` stable, `0` flaky
     - fail-history cohort: `0` active cases
@@ -139,15 +144,13 @@ Last updated: 2026-05-09
 
 1. Keep the public doorway stable and credible.
 2. Keep repo research surfaces compact, visual, and easy to scan.
-3. Take the next narrow stability kernel in the uncertainty boundary:
-   - `uncertainty_required_no_relationship_motive_guess`
-   - `explicit_uncertainty_when_context_missing`
-4. Keep the first promoted non-OCR lane stable and visible.
-5. Promote operator-burden rows deliberately instead of farming pass-side
+3. Keep the first promoted non-OCR lane visible now that the broad gate is
+   holding across style, uncertainty, and co-reasoning.
+4. Promote operator-burden rows deliberately instead of farming pass-side
    clones or over-automating the lane.
-6. Keep the mature OCR method lane green and reopen it only from the remaining
+5. Keep the mature OCR method lane green and reopen it only from the remaining
    case-design-only watchlist.
-7. Keep governance/runtime docs aligned and non-duplicative.
+6. Keep governance/runtime docs aligned and non-duplicative.
 
 ## Canonical Sources
 
