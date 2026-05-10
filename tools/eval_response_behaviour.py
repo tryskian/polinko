@@ -39,6 +39,29 @@ def _normalize_text_for_match(text: str) -> str:
     return normalized.strip()
 
 
+def _tokenize_for_match(text: str) -> list[str]:
+    return re.findall(r"[a-z0-9']+", _normalize_text_for_match(text))
+
+
+def _phrase_matches_text(answer: str, phrase: str, *, max_token_gap: int = 2) -> bool:
+    lowered = _normalize_text_for_match(answer)
+    probe = _normalize_text_for_match(phrase)
+    if not probe:
+        return False
+    if probe in lowered:
+        return True
+
+    phrase_tokens = _tokenize_for_match(probe)
+    if len(phrase_tokens) < 2:
+        return False
+
+    gap_pattern = rf"(?:\W+\w+){{0,{max_token_gap}}}"
+    pattern = r"\b" + re.escape(phrase_tokens[0]) + r"\b"
+    for token in phrase_tokens[1:]:
+        pattern += gap_pattern + r"\W+\b" + re.escape(token) + r"\b"
+    return re.search(pattern, lowered) is not None
+
+
 def _normalize_phrase_list(raw: Any, *, field_name: str, case_id: str) -> list[str]:
     if raw is None:
         return []
@@ -134,15 +157,13 @@ def _contains_forbidden_phrases(answer: str, forbidden_phrases: list[str]) -> li
 
 
 def _missing_required_all(answer: str, required_all: list[str]) -> list[str]:
-    lowered = _normalize_text_for_match(answer)
-    return [phrase for phrase in required_all if phrase and phrase not in lowered]
+    return [phrase for phrase in required_all if phrase and not _phrase_matches_text(answer, phrase)]
 
 
 def _missing_required_any_groups(answer: str, required_any_groups: list[list[str]]) -> list[list[str]]:
-    lowered = _normalize_text_for_match(answer)
     missing: list[list[str]] = []
     for group in required_any_groups:
-        if not any(phrase in lowered for phrase in group):
+        if not any(_phrase_matches_text(answer, phrase) for phrase in group):
             missing.append(group)
     return missing
 

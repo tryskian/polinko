@@ -4189,3 +4189,91 @@ quickstart document.
   case. The remaining pressure moved to explicit uncertainty contracts across
   the response-behaviour and hallucination lanes, which is the more truthful
   next stability kernel.
+
+## D-244: Replace the old day-close command surface with `make start`, `make end`, and `make end-git-check`
+
+- Date: `2026-05-10`
+- Category: `workflow_environment`
+- Tags: `operator_rituals`, `command_surface`, `startup_closeout`, `clean_main`
+- Decision:
+  - replace the old operator wording around `make eod` with:
+    - `make start`
+    - `make end`
+    - `make end-git-check`
+  - keep `make start` as the scripted morning pass that:
+    - prints the canonical docs to read
+    - prints workspace context
+    - runs:
+      - `make doctor-env`
+      - `make caffeinate`
+      - `make caffeinate-status`
+      - `make api-smoke`
+  - keep `make end` as operational closeout only:
+    - transcript repair/check
+    - docs/build validation
+    - test validation
+    - background shutdown
+  - make the final clean-main requirement explicit as a separate step:
+    - `make end-git-check`
+    - verifies:
+      - branch is `main`
+      - working tree is clean
+      - local `main` matches `origin/main`
+  - rename the git-check script surface to `tools/check_end_git_clean.sh`
+    instead of leaving a stale `eod` filename behind
+- Validation:
+  - `make start`
+  - `make rituals`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the repo had drifted into a mixed operator vocabulary where the scripted
+  startup did not exist, the day-close surface still carried `eod` language,
+  and the clean-main expectation was remembered socially rather than encoded as
+  a visible command. Splitting `end` from `end-git-check` keeps operational
+  closeout usable on feature branches while still making the final clean-main
+  landing an explicit repo-native check.
+
+## D-245: Close the uncertainty-boundary stability kernel after a clean resumed soak
+
+- Date: `2026-05-10`
+- Category: `evidence_governance`
+- Tags: `beta_2_2`, `uncertainty_boundary`, `stability`, `broad_gate`
+- Decision:
+  - treat the uncertainty-boundary stability kernel as closed at tracked repo
+    truth level.
+  - keep the tracked runtime delta narrow:
+    - response-behaviour matcher accepts short token-gap variants for required
+      phrases
+    - hallucination forbidden-phrase detection ignores clearly negated evidence
+      framing
+  - record the first clean soak segment as:
+    - `2695s`
+    - `14/14` pass cycles
+    - `0` fail cycles
+  - record the resumed completion segment as:
+    - `1266s`
+    - `7/7` pass cycles
+    - `0` fail cycles
+  - record the combined resumed-soak read as:
+    - `3961s`
+    - `21/21` pass cycles
+    - `0` fail cycles
+    - `0` recurring failure signals
+  - retire uncertainty boundary as the active broad-gate pressure point
+  - treat the current broad gate as holding across:
+    - style
+    - uncertainty
+    - co-reasoning
+- Validation:
+  - `make quality-gate-deterministic`
+  - `./venv/bin/python -m tools.eval_sidecar run --target quality-gate-deterministic --min-seconds 1200 --runs-dir .local/eval_runs --current-file .local/eval_runs/eval_sidecar_current_uncertainty_resume.txt --pid-file /tmp/polinko-eval-sidecar-uncertainty-resume.pid`
+  - `make start`
+  - `make rituals`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the earlier uncertainty branch already had the right tracked matcher
+  fixes and a strong stopped soak checkpoint, but it was still short of the
+  explicit one-hour bar. The resumed soak cleared that bar cleanly, which makes
+  the repo truth simpler: uncertainty is no longer the active broad-gate
+  failure story, and visibility can now shift toward showing the current beta
+  as a coherent method surface rather than another live repair lane.

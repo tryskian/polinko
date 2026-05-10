@@ -45,6 +45,8 @@
 - `hi! new day!`
   - use this to trigger the morning startup check
   - read [Morning Startup Check (Codexbeab)](#morning-startup-check-codexbeab)
+  - scripted version: `make start`
+  - quick operator sheet: [Start / End Reference](./START_END_REFERENCE.md)
 - `human time` / `wind down`
   - use these to trigger end-of-day closeout
   - read [End-of-Day Routine (Codexbeab)](#end-of-day-routine-codexbeab)
@@ -61,7 +63,11 @@
    - `git branch --show-current`
 3. If running parallel tracks, keep each track in its own dedicated worktree.
 4. Only after 1-3:
-   - run `make doctor-env`
+   - run `make start` for the full scripted startup, or manually run:
+     - `make doctor-env`
+     - `make caffeinate`
+     - `make caffeinate-status`
+     - `make api-smoke`
    - inside Codex, treat `make api-smoke` as the trusted runtime truth
    - use `make server-daemon` / `make session-status` only as convenience checks
 5. Codex execution caveat:
@@ -107,14 +113,14 @@
 ## End-of-Day Routine (Codexbeab)
 
 1. Run the end-of-day script:
-   - `make eod`
+   - `make end`
 2. Script sequence (deterministic):
    - `make transcript-fix`
    - `make transcript-check`
    - `make doctor-env`
    - `make lint-docs`
    - `make test`
-   - `make eod-stop`
+   - `make end-stop`
 3. Purpose:
    - keep local transcript records in consistent rich format
    - catch build/docs drift before day-close
@@ -130,6 +136,12 @@
      - stale links/paths/reference wiring
    - mark disposition for each kernel:
      - `go`, `rework`, or `park`
+5. Final clean-main check after merge/sync:
+   - `make end-git-check`
+6. `make end-git-check` verifies:
+   - current branch is `main`
+   - working tree is clean
+   - local `main` matches `origin/main`
 
 ## Command Ownership Rule (Reasoning Loops)
 
@@ -203,7 +215,7 @@
    `compaudit` findings) before running evals.
 4. VS Code task startup is now venv-automatic through `make` interpreter
    discovery; manual `source .../activate` chaining is not required for
-   `make server` / `make caffeinate-on`.
+   `make server` / `make caffeinate`.
 
 ## Beta Evidence Reference
 
@@ -313,15 +325,16 @@ Read-only DB audits remain allowed:
 1. Default state is off (do not run `caffeinate` unless requested).
 2. Start keep-awake only when explicitly requested in-session.
 3. Start command:
-   - `make caffeinate-on`
+   - `make caffeinate`
 4. Verify status:
    - `make caffeinate-status`
+   - alias: `make decaffeinate-status`
 5. Stop command at wrap:
-   - `make caffeinate-off`
+   - `make decaffeinate`
 6. Full wrap command (managed + matching unmanaged keep-awake):
    - `make caffeinate-off-all`
 7. `decaffeinated` remains workflow shorthand. The explicit command is
-   `make caffeinate-off`.
+   `make decaffeinate`.
 
 ## Docker Build/Run Smoke
 
@@ -1372,7 +1385,7 @@ Current policy:
 2. Stop backend daemon:
    - `make server-daemon-stop`
 3. Full day-close stop surface:
-   - `make eod-stop`
+   - `make end-stop`
 4. Optional foreground backend run on localhost:
    - `make localhost`
 

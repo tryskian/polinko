@@ -150,7 +150,7 @@ REQUIREMENTS_IN ?= requirements.in
 REQUIREMENTS_LOCK ?= requirements.lock
 PIP_TOOLS_VERSION ?= 7.5.3
 
-.PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate eod eod-stop localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test test-one test-targeted pycheck lint-docs mermaid-render d3-render public-diagrams-render transcript-fix transcript-check doctor-env backend-gate caffeinate-on caffeinate-off caffeinate-off-all caffeinate-status decaffeinate privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image api-smoke eval-smoke eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel eval-sidecar-start eval-sidecar-status eval-sidecar-stop operator-burden-report calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate start end end-stop end-git-check rituals localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test test-one test-targeted pycheck lint-docs mermaid-render d3-render public-diagrams-render transcript-fix transcript-check doctor-env backend-gate caffeinate caffeinate-off-all caffeinate-status decaffeinate decaffeinate-status privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image api-smoke eval-smoke eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel eval-sidecar-start eval-sidecar-status eval-sidecar-stop operator-burden-report calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 .PHONY: frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 chat:
 	$(PYTHON) app.py
@@ -359,14 +359,23 @@ ocr-notebook-workflow:
 
 gate: quality-gate-deterministic
 
-eod:
-	./tools/end_of_day_routine.sh
+start:
+	bash ./tools/start_of_day_routine.sh
 
-eod-stop:
+end:
+	bash ./tools/end_of_day_routine.sh
+
+end-stop:
 	@set -eu; \
 	$(MAKE) --no-print-directory server-daemon-stop || true; \
 	$(MAKE) --no-print-directory caffeinate-off-all || true; \
 	$(MAKE) --no-print-directory session-status || true
+
+end-git-check:
+	bash ./tools/check_end_git_clean.sh
+
+rituals:
+	@cat docs/runtime/START_END_REFERENCE.md
 
 localhost server:
 	$(PYTHON) -m uvicorn server:app --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" --reload
@@ -727,7 +736,7 @@ backend-gate:
 	@$(MAKE) test
 	@$(MAKE) quality-gate-deterministic
 
-caffeinate-on:
+caffeinate:
 	@set -eu; \
 	if [ "$$(uname -s)" != "Darwin" ]; then \
 		echo "caffeinate is macOS-only; skipping."; \
@@ -759,7 +768,7 @@ caffeinate-on:
 		exit 1; \
 	fi
 
-caffeinate-off:
+decaffeinate:
 	@set -eu; \
 	if [ "$$(uname -s)" != "Darwin" ]; then \
 		echo "caffeinate is macOS-only; skipping."; \
@@ -785,7 +794,7 @@ caffeinate-off-all:
 		echo "caffeinate is macOS-only; skipping."; \
 		exit 0; \
 	fi; \
-	$(MAKE) --no-print-directory caffeinate-off || true; \
+	$(MAKE) --no-print-directory decaffeinate || true; \
 	PIDS=$$(pgrep -f "^/usr/bin/caffeinate -d -i -m( |$$)" || true); \
 	if [ -n "$$PIDS" ]; then \
 		for PID in $$PIDS; do \
@@ -815,7 +824,7 @@ caffeinate-status:
 		echo "Managed caffeinate: OFF."; \
 		EXISTING_PID=$$(pgrep -f "^/usr/bin/caffeinate -d -i -m( |$$)" | head -n 1 || true); \
 		if [ -n "$$EXISTING_PID" ]; then \
-			echo "Unmanaged caffeinate detected (PID $$EXISTING_PID); run 'make caffeinate-on' to adopt it."; \
+			echo "Unmanaged caffeinate detected (PID $$EXISTING_PID); run 'make caffeinate' to adopt it."; \
 		fi; \
 	fi; \
 	if command -v rg >/dev/null 2>&1; then \
@@ -824,7 +833,7 @@ caffeinate-status:
 		/usr/bin/pmset -g assertions | grep -nE "PreventUserIdleDisplaySleep|PreventUserIdleSystemSleep|PreventDiskIdle|caffeinate" || true; \
 	fi
 
-decaffeinate: caffeinate-off
+decaffeinate-status: caffeinate-status
 
 privacy-local-on:
 	bash tools/local_privacy_guard.sh apply

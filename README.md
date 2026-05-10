@@ -37,9 +37,12 @@ evidence.
   - latest one-hour deterministic beta soak:
     - `19/21` pass cycles
     - former dominant style pressure did not recur
-    - remaining failures landed in:
-      - `uncertainty_required_no_relationship_motive_guess`
-      - `explicit_uncertainty_when_context_missing`
+  - uncertainty-boundary stability is now closed with:
+    - resumed soak total: `3961s`
+    - `21/21` pass cycles
+    - `0` fail cycles
+    - `0` recurring failure signals
+  - current broad gate is holding across style, uncertainty, and co-reasoning
   - operator burden now has a seeded row-local evidence surface:
     - `4` pass rows
     - `2` retained fail rows
@@ -54,6 +57,7 @@ evidence.
   - [docs/research/operator-burden-mining-20260509.md](docs/research/operator-burden-mining-20260509.md)
   - [docs/research/operator-burden-seed-20260509.md](docs/research/operator-burden-seed-20260509.md)
   - [docs/research/beta-2-2-stability-soak-20260509.md](docs/research/beta-2-2-stability-soak-20260509.md)
+  - [docs/research/uncertainty-boundary-stability-20260509.md](docs/research/uncertainty-boundary-stability-20260509.md)
   - [docs/research/ocr-progress-20260508.md](docs/research/ocr-progress-20260508.md)
   - [docs/research/co-reasoning-promotion-20260508.md](docs/research/co-reasoning-promotion-20260508.md)
   - [docs/research/behaviour-backlog-20260508.md](docs/research/behaviour-backlog-20260508.md)

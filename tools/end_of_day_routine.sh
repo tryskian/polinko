@@ -21,6 +21,6 @@ echo "[eod] 5/6 test"
 make --no-print-directory test
 
 echo "[eod] 6/6 stop background tasks"
-make --no-print-directory eod-stop
+make --no-print-directory end-stop
 
 echo "[eod] done"

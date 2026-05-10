@@ -27,21 +27,26 @@ enough to read in public.
 - latest tracked non-OCR notes:
   - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
   - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
+  - [Uncertainty-boundary stability kernel](./uncertainty-boundary-stability-20260509.md)
   - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
   - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
   - [Operator burden row promotion](./operator-burden-promotion-20260509.md)
   - [Operator burden mining update](./operator-burden-mining-20260509.md)
   - [Operator burden seed](./operator-burden-seed-20260509.md)
-- current read on `2026-05-09`:
+- current read on `2026-05-10`:
   - current serious method beta is `Beta 2.2`
   - OCR remains one mature method lane
   - co-reasoning is now the first promoted non-OCR lane
   - tracked style stress surface currently passes `14/14` on the live pass
   - one-hour deterministic beta soak now closes at `19/21` pass cycles
   - former dominant style pressure did not recur in the broad gate
-  - remaining broad-gate pressure is now:
-    - `uncertainty_required_no_relationship_motive_guess`
-    - `explicit_uncertainty_when_context_missing`
+  - the uncertainty-boundary stability kernel has now closed cleanly with:
+    - resumed soak total: `3961s`
+    - `21/21` pass cycles
+    - `0` fail cycles
+    - `0` recurring failure signals
+  - broad-gate pressure is no longer concentrated in the uncertainty contracts
+  - current broad gate is holding across style, uncertainty, and co-reasoning
   - operator burden now has a seeded thin-lane row surface:
     - `4` pass rows
     - `2` retained fail rows
@@ -59,6 +64,7 @@ enough to read in public.
 
 - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
 - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
+- [Uncertainty-boundary stability kernel](./uncertainty-boundary-stability-20260509.md)
 - [OCR progress snapshot](./ocr-progress-20260508.md)
 - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
 - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
