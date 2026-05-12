@@ -120,7 +120,9 @@
    - `make doctor-env`
    - `make lint-docs`
    - `make test`
-   - `make end-stop`
+   - `make server-daemon-stop`
+   - `make decaffeinate`
+   - `make session-status`
 3. Purpose:
    - keep local transcript records in consistent rich format
    - catch build/docs drift before day-close
@@ -331,7 +333,7 @@ Read-only DB audits remain allowed:
    - alias: `make decaffeinate-status`
 5. Stop command at wrap:
    - `make decaffeinate`
-6. Full wrap command (managed + matching unmanaged keep-awake):
+6. Optional full sweep (managed + matching unmanaged keep-awake):
    - `make caffeinate-off-all`
 7. `decaffeinated` remains workflow shorthand. The explicit command is
    `make decaffeinate`.
@@ -1385,7 +1387,7 @@ Current policy:
 2. Stop backend daemon:
    - `make server-daemon-stop`
 3. Full day-close stop surface:
-   - `make end-stop`
+   - `make end`
 4. Optional foreground backend run on localhost:
    - `make localhost`
 

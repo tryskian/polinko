@@ -47,20 +47,14 @@ make end
 Sequence:
 
 1. Run the generic closeout safety path:
-   - sanity/repair checks
-   - docs/build validation
-   - test validation
+   - artifact repair/check
+   - environment/docs/test validation
    - background-process shutdown
-2. Final shutdown command:
-   - `make end-stop`
-3. Final clean-main check after merge/sync:
+     - `make server-daemon-stop`
+     - `make decaffeinate`
+     - `make session-status`
+2. Final clean-main check after merge/sync:
    - `make end-git-check`
-
-`make end-stop` then runs:
-
-- `make server-daemon-stop`
-- `make caffeinate-off-all`
-- `make session-status`
 
 `make end-git-check` then verifies:
 

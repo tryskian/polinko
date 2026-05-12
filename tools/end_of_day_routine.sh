@@ -21,6 +21,8 @@ echo "[eod] 5/6 test"
 make --no-print-directory test
 
 echo "[eod] 6/6 stop background tasks"
-make --no-print-directory end-stop
+make --no-print-directory server-daemon-stop || true
+make --no-print-directory decaffeinate || true
+make --no-print-directory session-status || true
 
 echo "[eod] done"
