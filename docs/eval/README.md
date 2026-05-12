@@ -83,6 +83,13 @@ Do not flatten one into the other.
   - latest tracked style snapshot:
     - `docs/eval/beta_2_0/style-20260512-185122.json`
     - `14/14` pass
+- current retrieval-grounding surfaces now have fresh tracked snapshots:
+  - retrieval recall:
+    - `docs/eval/beta_2_0/retrieval-20260512-190149.json`
+    - `12/12` pass
+  - file search:
+    - `docs/eval/beta_2_0/file-search-20260512-190149.json`
+    - `5/5` pass
 - current thin-lane operator burden surface lives in:
   - `docs/eval/beta_2_0/operator_burden_rows.json`
   - summarize with:

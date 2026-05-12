@@ -72,6 +72,9 @@ In short: confidence must not outrun evidence.
   - resumed soak total: `3961s`
   - `21/21` pass cycles
   - `0` fail cycles
+- retrieval grounding now has fresh tracked snapshots:
+  - retrieval recall: `12/12` pass
+  - file search: `5/5` pass
 - operator burden now has a seeded thin-lane surface:
   - `4` pass rows
   - `2` retained fail rows
@@ -84,6 +87,7 @@ In short: confidence must not outrun evidence.
   - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
   - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
   - [Co-reasoning signal shape](../research/co-reasoning-signal-shape-20260512.md)
+  - [Retrieval grounding signal shape](../research/retrieval-grounding-signal-shape-20260512.md)
   - [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
   - [Operator burden seed](../research/operator-burden-seed-20260509.md)
   - [OCR progress snapshot](../research/ocr-progress-20260508.md)

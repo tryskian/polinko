@@ -46,6 +46,9 @@ evidence.
     - latest tracked snapshot: `9/9` pass
     - tracked case count: `9`
     - new distinct seams: archive-lore and archive-discipline fabrication
+  - retrieval grounding now has fresh tracked snapshots across both visible branches:
+    - retrieval recall: `12/12` pass
+    - file search: `5/5` pass
   - current broad gate is holding across style, uncertainty, and co-reasoning
   - operator burden now has a seeded row-local evidence surface:
     - `4` pass rows
@@ -66,6 +69,7 @@ evidence.
   - [docs/research/beta-2-2-stability-soak-20260509.md](docs/research/beta-2-2-stability-soak-20260509.md)
   - [docs/research/uncertainty-boundary-stability-20260509.md](docs/research/uncertainty-boundary-stability-20260509.md)
   - [docs/research/hallucination-boundary-promotion-20260512.md](docs/research/hallucination-boundary-promotion-20260512.md)
+  - [docs/research/retrieval-grounding-signal-shape-20260512.md](docs/research/retrieval-grounding-signal-shape-20260512.md)
   - [docs/research/ocr-progress-20260508.md](docs/research/ocr-progress-20260508.md)
   - [docs/research/co-reasoning-promotion-20260508.md](docs/research/co-reasoning-promotion-20260508.md)
   - [docs/research/co-reasoning-signal-shape-20260512.md](docs/research/co-reasoning-signal-shape-20260512.md)

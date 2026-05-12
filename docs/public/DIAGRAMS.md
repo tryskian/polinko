@@ -14,6 +14,7 @@ Static SVG exports generated from this page:
 - [Current OCR Signal Shape](diagrams/current-ocr-signal-shape.svg)
 - [Co-Reasoning Signal Shape](diagrams/co-reasoning-signal-shape.svg)
 - [Operator Burden Signal Shape](diagrams/operator-burden-signal-shape.svg)
+- [Retrieval Grounding Signal Shape](diagrams/retrieval-grounding-signal-shape.svg)
 - [Polinko Evidence Sankey (D3)](diagrams/polinko-evidence-sankey.svg)
 - [Polinko Binary Eval Loop](diagrams/polinko-binary-eval-loop.svg)
 - [Beta Evidence Map](diagrams/beta-evidence-map.svg)
@@ -24,6 +25,7 @@ Current dated progress note:
 - [Co-Reasoning Promotion Snapshot (2026-05-08)](../research/co-reasoning-promotion-20260508.md)
 - [Co-Reasoning Signal Shape (2026-05-12)](../research/co-reasoning-signal-shape-20260512.md)
 - [Operator Burden Signal Shape (2026-05-12)](../research/operator-burden-signal-shape-20260512.md)
+- [Retrieval Grounding Signal Shape (2026-05-12)](../research/retrieval-grounding-signal-shape-20260512.md)
 - [OCR Progress Snapshot (2026-05-08)](../research/ocr-progress-20260508.md)
 - [Prior OCR Progress Snapshot (2026-05-01)](../research/ocr-progress-20260501.md)
 
@@ -176,6 +178,28 @@ flowchart TD
   class A,B pass;
   class C,D fail;
   class E,F,G evidence;
+```
+
+## Retrieval Grounding Signal Shape
+
+![Retrieval Grounding Signal Shape](diagrams/retrieval-grounding-signal-shape.svg)
+
+```mermaid
+flowchart TD
+  A["Retrieval grounding lane\n2026-05-12"] --> B["Retrieval recall branch\n12/12 pass"]
+  A --> C["File-search branch\n5/5 pass"]
+  B --> D["Global recall\n0 miss"]
+  B --> E["Session isolation\n0 leak"]
+  C --> F["Scoped + global hit\n0 miss"]
+  C --> G["Scoped leak boundary\n0 leak"]
+  C --> H["Mixed source methods\nOCR / PDF / image-context"]
+
+  classDef pass fill:#EEF7EE,stroke:#59A14F,color:#1F1F1F;
+  classDef evidence fill:#EEF7F6,stroke:#76B7B2,color:#1F1F1F;
+  classDef bridge fill:#FBF5E8,stroke:#F28E2B,color:#1F1F1F;
+
+  class A,B,C pass;
+  class D,E,F,G,H evidence;
 ```
 
 ## Polinko Evidence Sankey (D3)
