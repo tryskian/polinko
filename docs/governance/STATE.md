@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-10
+Last updated: 2026-05-12
 
 ## Current Truth
 
@@ -42,7 +42,12 @@ Last updated: 2026-05-10
   - OpenAI Platform APIs are used for model-backed runtime and eval calls
 - Branch protection on `main` remains active:
   - PR required
-  - required checks: `test`, `markdownlint`
+  - required checks:
+    - `dependency-review`
+    - `python-security`
+    - `node-security`
+    - `test`
+    - `markdownlint`
   - strict status checks enabled
   - squash-only merge
 - Public site/domain state:

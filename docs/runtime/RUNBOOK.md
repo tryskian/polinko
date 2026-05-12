@@ -161,6 +161,9 @@
 3. Commit locally, then push branch:
    - `git push -u origin <branch-name>`
 4. Open PR to `main` and wait for required checks:
+   - `dependency-review`
+   - `python-security`
+   - `node-security`
    - `test`
    - `markdownlint`
 5. Merge PR, then sync local `main`:
