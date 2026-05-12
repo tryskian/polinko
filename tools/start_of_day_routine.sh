@@ -32,4 +32,8 @@ make --no-print-directory caffeinate-status
 echo "[start] 5/5 api-smoke"
 make --no-print-directory api-smoke
 
-echo "[start] done"
+echo "[start] STOP"
+echo "[start] before any repo action:"
+echo "  1. give the 5-bullet startup read"
+echo "  2. name exactly one active kernel"
+echo "  3. do not branch, search, or edit until that is stated"

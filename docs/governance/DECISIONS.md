@@ -4357,3 +4357,24 @@ quickstart document.
   shapes. Inflating row counts would weaken the lane. The better move is to
   make the existing signal shape visible enough to read directly and wait for a
   genuinely distinct case family before promoting more rows.
+
+## D-249: Make `make start` end with an explicit stop-and-declare gate
+
+- Date: `2026-05-12`
+- Category: `workflow_environment`
+- Tags: `operator_rituals`, `startup`, `discipline`, `single_kernel`
+- Decision:
+  - keep the canonical docs/context printout in `make start`
+  - end the scripted startup pass with an explicit stop instruction:
+    - give the 5-bullet startup read
+    - name exactly one active kernel
+    - do not branch, search, or edit until that is stated
+- Validation:
+  - `bash -n tools/start_of_day_routine.sh`
+  - `make lint-docs`
+  - `make start`
+- Why: the startup drift was not caused by missing docs or missing checks. It
+  was caused by collapsing orientation and execution into one blur after the
+  command finished. The right fix is not removing the startup guidance; it is
+  making the post-start stop sign explicit enough that the one-kernel rule is
+  harder to ignore.
