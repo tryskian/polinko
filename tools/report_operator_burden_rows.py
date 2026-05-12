@@ -119,6 +119,7 @@ def build_report(payload: dict[str, Any]) -> dict[str, Any]:
     verdict_counts: Counter[str] = Counter()
     disposition_counts: Counter[str] = Counter()
     dimension_fail_counts: Counter[str] = Counter()
+    pass_anchors: list[dict[str, Any]] = []
     retained_failures: list[dict[str, Any]] = []
     evicted_failures: list[dict[str, Any]] = []
 
@@ -129,7 +130,9 @@ def build_report(payload: dict[str, Any]) -> dict[str, Any]:
         for dim, status in row["dimensions"].items():
             if status == "fail":
                 dimension_fail_counts[dim] += 1
-        if row["verdict"] == "fail":
+        if row["verdict"] == "pass":
+            pass_anchors.append(row)
+        elif row["verdict"] == "fail":
             if row["failure_disposition"] == "retain":
                 retained_failures.append(row)
             elif row["failure_disposition"] == "evict":
@@ -151,6 +154,16 @@ def build_report(payload: dict[str, Any]) -> dict[str, Any]:
         "dimension_fail_counts": [
             {"dimension": key, "count": count}
             for key, count in dimension_fail_counts.most_common()
+        ],
+        "pass_anchors": [
+            {
+                "id": row["id"],
+                "title": row["title"],
+                "task_shape": row["task_shape"],
+                "source_note": row["source_note"],
+                "note": row["note"],
+            }
+            for row in pass_anchors
         ],
         "retained_failures": [
             {
@@ -189,9 +202,30 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- retained failures: `{report['failure_disposition_counts']['retain']}`",
         f"- evicted failures: `{report['failure_disposition_counts']['evict']}`",
         "",
-        "## Retained Failures",
+        "## Pass Anchors",
         "",
     ]
+    passes = report.get("pass_anchors", [])
+    if passes:
+        for row in passes:
+            lines.extend(
+                [
+                    f"- `{row['id']}` {row['title']}",
+                    f"  - task shape: `{row['task_shape']}`",
+                    f"  - source: `{row['source_note']}`",
+                    f"  - note: {row['note']}",
+                ]
+            )
+    else:
+        lines.append("- none")
+
+    lines.extend(
+        [
+            "",
+        "## Retained Failures",
+        "",
+        ]
+    )
     retained = report.get("retained_failures", [])
     if retained:
         for row in retained:

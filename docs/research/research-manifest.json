@@ -11,6 +11,11 @@
     },
     {
       "type": "research_note",
+      "label": "Operator burden signal shape",
+      "path": "docs/research/operator-burden-signal-shape-20260512.md"
+    },
+    {
+      "type": "research_note",
       "label": "OCR progress snapshot",
       "path": "docs/research/ocr-progress-20260508.md"
     },

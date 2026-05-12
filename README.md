@@ -52,6 +52,8 @@ evidence.
     - `2` retained fail rows
     - `1` evicted fail row
     - widened export-backed backlog: `9` conversations / `8` families
+    - current top backlog slice is duplicate-heavy, so the earned next move is
+      lane visibility rather than row-count inflation
 - current mature method lane is green:
   - transcript-backed OCR growth set: `25/25` stable, `0` flaky
   - OCR fail-history cohort: `0` active cases
@@ -60,6 +62,7 @@ evidence.
   - [docs/research/operator-burden-promotion-20260509.md](docs/research/operator-burden-promotion-20260509.md)
   - [docs/research/operator-burden-mining-20260509.md](docs/research/operator-burden-mining-20260509.md)
   - [docs/research/operator-burden-seed-20260509.md](docs/research/operator-burden-seed-20260509.md)
+  - [docs/research/operator-burden-signal-shape-20260512.md](docs/research/operator-burden-signal-shape-20260512.md)
   - [docs/research/beta-2-2-stability-soak-20260509.md](docs/research/beta-2-2-stability-soak-20260509.md)
   - [docs/research/uncertainty-boundary-stability-20260509.md](docs/research/uncertainty-boundary-stability-20260509.md)
   - [docs/research/hallucination-boundary-promotion-20260512.md](docs/research/hallucination-boundary-promotion-20260512.md)

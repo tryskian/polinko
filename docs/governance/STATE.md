@@ -149,8 +149,10 @@ Last updated: 2026-05-12
     - pass rows: `4`
     - retained fail rows: `2`
     - evicted fail rows: `1`
-  - operator burden now has enough export-backed cue coverage to support row
-    expansion without jumping to larger automation
+  - operator burden now has enough export-backed cue coverage to read the lane
+    shape clearly without jumping to larger automation
+  - the current top export-backed slice is duplicate-heavy and does not
+    presently earn more distinct row promotion
 - Documentation rule:
   - `DECISIONS` is durable archive
   - `STATE` is the tracked public current-truth surface
@@ -162,8 +164,8 @@ Last updated: 2026-05-12
 2. Keep repo research surfaces compact, visual, and easy to scan.
 3. Keep the first promoted non-OCR lane visible now that the broad gate is
    holding across style, uncertainty, and co-reasoning.
-4. Promote operator-burden rows deliberately instead of farming pass-side
-   clones or over-automating the lane.
+4. Keep operator-burden row promotion distinct, visible, and resistant to
+   clone inflation or over-automation.
 5. Keep the mature OCR method lane green and reopen it only from the remaining
    case-design-only watchlist.
 6. Keep governance/runtime docs aligned and non-duplicative.

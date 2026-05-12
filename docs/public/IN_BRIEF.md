@@ -76,12 +76,14 @@ In short: confidence must not outrun evidence.
   - `4` pass rows
   - `2` retained fail rows
   - `1` evicted fail row
+  - current top backlog slice is duplicate-heavy, not fresh row pressure
 - current mature method lane is still green:
   - transcript-backed OCR growth set: `25/25` stable
   - fail-history cohort: `0` active cases
 - tracked snapshots:
   - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
   - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
+  - [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
   - [Operator burden seed](../research/operator-burden-seed-20260509.md)
   - [OCR progress snapshot](../research/ocr-progress-20260508.md)
 

@@ -40,11 +40,14 @@ This is the shortest route through Polinko’s public research surface.
     - `2` retained fail rows
     - `1` evicted fail row
     - widened export-backed backlog: `9` conversations / `8` families
+    - current top backlog slice is duplicate-heavy, so the earned next move is
+      visibility and distinctness control, not more clone rows
 - latest tracked research notes:
   - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
   - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
   - [OCR progress snapshot](../research/ocr-progress-20260508.md)
   - [Behaviour backlog snapshot](../research/behaviour-backlog-20260508.md)
+  - [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
   - [Operator burden row promotion](../research/operator-burden-promotion-20260509.md)
   - [Operator burden mining update](../research/operator-burden-mining-20260509.md)
   - [Operator burden seed](../research/operator-burden-seed-20260509.md)

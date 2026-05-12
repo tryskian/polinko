@@ -54,6 +54,7 @@ into the tracked artifact and promoted note when available.
 Representative tracked note:
 
 - [OCR representative case](../research/ocr-representative-case.md)
+- [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
 - [Operator burden seed](../research/operator-burden-seed-20260509.md)
 - [Hallucination-boundary promotion](../research/hallucination-boundary-promotion-20260512.md)
 
