@@ -31,6 +31,10 @@ Sequence:
    - `make caffeinate`
    - `make caffeinate-status`
    - `make api-smoke`
+4. Stop before repo action:
+   - give the 5-bullet startup read
+   - name exactly one active kernel
+   - do not branch, search, or edit until that is stated
 
 Source of truth:
 
