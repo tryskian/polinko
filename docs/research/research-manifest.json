@@ -11,6 +11,11 @@
     },
     {
       "type": "research_note",
+      "label": "Co-reasoning signal shape",
+      "path": "docs/research/co-reasoning-signal-shape-20260512.md"
+    },
+    {
+      "type": "research_note",
       "label": "Operator burden signal shape",
       "path": "docs/research/operator-burden-signal-shape-20260512.md"
     },
@@ -58,6 +63,11 @@
       "type": "research_note",
       "label": "Co-reasoning promotion snapshot",
       "path": "docs/research/co-reasoning-promotion-20260508.md"
+    },
+    {
+      "type": "eval_report",
+      "label": "Co-reasoning style snapshot",
+      "path": "docs/eval/beta_2_0/style-20260512-185122.json"
     },
     {
       "type": "research_note",

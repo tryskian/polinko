@@ -40,7 +40,7 @@ _TRACKED_LANE_SPECS = (
         "title": "Co-reasoning reliability",
         "note": "Promoted non-OCR lane carried in the tracked style surface.",
         "pattern": "style-[0-9]*.json",
-        "research_note_path": "docs/research/co-reasoning-promotion-20260508.md",
+        "research_note_path": "docs/research/co-reasoning-signal-shape-20260512.md",
     },
     {
         "lane_key": "response_behaviour",

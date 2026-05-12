@@ -67,7 +67,7 @@ In short: confidence must not outrun evidence.
 - `retain` keeps the failure as in-scope evidence
 - `evict` is upstream case correction, not a third release state
 - co-reasoning is now the first promoted non-OCR lane:
-  - tracked style stress surface: `14/14` pass
+  - tracked style stress surface: `14/14` pass in the latest tracked snapshot
 - uncertainty-boundary stability is now closed:
   - resumed soak total: `3961s`
   - `21/21` pass cycles
@@ -83,6 +83,7 @@ In short: confidence must not outrun evidence.
 - tracked snapshots:
   - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
   - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
+  - [Co-reasoning signal shape](../research/co-reasoning-signal-shape-20260512.md)
   - [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
   - [Operator burden seed](../research/operator-burden-seed-20260509.md)
   - [OCR progress snapshot](../research/ocr-progress-20260508.md)

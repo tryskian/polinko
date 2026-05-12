@@ -107,7 +107,7 @@ def _init_tracked_eval_root(path: Path) -> None:
         json.dumps(
             {
                 "run_id": "20260328-184149",
-                "summary": {"total": 11, "passed": 11, "failed": 0},
+                "summary": {"total": 14, "passed": 14, "failed": 0},
                 "cases": [],
                 "generated_at": "2026-03-28T18:41:49Z",
             }
@@ -326,11 +326,11 @@ class EvalVizTests(unittest.TestCase):
             summaries = {row["lane_key"]: row for row in payload["lane_summaries"]}
             self.assertIn("co_reasoning", summaries)
             self.assertIn("operator_burden", summaries)
-            self.assertEqual(summaries["co_reasoning"]["pass"], 11)
+            self.assertEqual(summaries["co_reasoning"]["pass"], 14)
             self.assertEqual(summaries["co_reasoning"]["fail"], 0)
             self.assertIn("/viz/pass-fail/artifact?path=", summaries["co_reasoning"]["source_url"])
             self.assertIn(
-                "docs/research/co-reasoning-promotion-20260508.md",
+                "docs/research/co-reasoning-signal-shape-20260512.md",
                 summaries["co_reasoning"]["research_note_path"],
             )
             self.assertEqual(summaries["operator_burden"]["pass"], 2)

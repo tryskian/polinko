@@ -4378,3 +4378,29 @@ quickstart document.
   command finished. The right fix is not removing the startup guidance; it is
   making the post-start stop sign explicit enough that the one-kernel rule is
   harder to ignore.
+
+## D-250: Refresh the co-reasoning lane as a current tracked signal surface
+
+- Date: `2026-05-12`
+- Category: `evidence_governance`
+- Tags: `co_reasoning`, `style_lane`, `tracked_snapshot`, `visibility`
+- Decision:
+  - promote a fresh tracked style snapshot for the co-reasoning lane at
+    `14/14` pass
+  - point the evidence console and public docs at a new co-reasoning
+    signal-shape note instead of only the original promotion snapshot
+  - add a public diagram that shows the current internal shape of the lane:
+    - baseline style/control surface
+    - promoted co-reasoning stress surface
+    - working-style boundary surface
+- Validation:
+  - fresh live style eval on an isolated local server
+  - `./venv/bin/python -m unittest tests.test_eval_viz`
+  - `python3 -m tools.render_mermaid_diagrams`
+  - `make api-smoke`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: co-reasoning was already the first promoted non-OCR lane in repo truth,
+  but the visible tracked artifact was stale at the older `11/11` shape. The
+  lane needed a current tracked snapshot and a clearer public signal surface so
+  it reads as an active proof lane rather than a historical promotion event.

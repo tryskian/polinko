@@ -33,7 +33,7 @@ evidence.
   - the first gate proves hard contract correctness before richer interpretation
 - broader hypothesis lane now has a first promoted non-OCR eval surface:
   - co-reasoning reliability is now operationalized in the tracked style lane:
-    `14/14` pass on the current live pass
+    `14/14` pass in the latest tracked snapshot
   - latest one-hour deterministic beta soak:
     - `19/21` pass cycles
     - former dominant style pressure did not recur
@@ -68,6 +68,7 @@ evidence.
   - [docs/research/hallucination-boundary-promotion-20260512.md](docs/research/hallucination-boundary-promotion-20260512.md)
   - [docs/research/ocr-progress-20260508.md](docs/research/ocr-progress-20260508.md)
   - [docs/research/co-reasoning-promotion-20260508.md](docs/research/co-reasoning-promotion-20260508.md)
+  - [docs/research/co-reasoning-signal-shape-20260512.md](docs/research/co-reasoning-signal-shape-20260512.md)
   - [docs/research/behaviour-backlog-20260508.md](docs/research/behaviour-backlog-20260508.md)
 
 ## Start Here

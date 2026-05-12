@@ -25,6 +25,7 @@ enough to read in public.
 ## Current Non-OCR Read
 
 - latest tracked non-OCR notes:
+  - [Co-reasoning signal shape](./co-reasoning-signal-shape-20260512.md)
   - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
   - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
   - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
@@ -39,7 +40,7 @@ enough to read in public.
   - current serious method beta is `Beta 2.2`
   - OCR remains one mature method lane
   - co-reasoning is now the first promoted non-OCR lane
-  - tracked style stress surface currently passes `14/14` on the live pass
+  - tracked style stress surface now closes `14/14` in the latest tracked snapshot
   - one-hour deterministic beta soak now closes at `19/21` pass cycles
   - former dominant style pressure did not recur in the broad gate
   - the uncertainty-boundary stability kernel has now closed cleanly with:
@@ -71,6 +72,7 @@ enough to read in public.
 ## Representative Tracked Evidence
 
 - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
+- [Co-reasoning signal shape](./co-reasoning-signal-shape-20260512.md)
 - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
 - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
 - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)

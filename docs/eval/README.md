@@ -80,6 +80,9 @@ Do not flatten one into the other.
   not auto-promoted into the tracked beta surface
 - current non-OCR promoted lane lives in the tracked style surface for
   co-reasoning reliability
+  - latest tracked style snapshot:
+    - `docs/eval/beta_2_0/style-20260512-185122.json`
+    - `14/14` pass
 - current thin-lane operator burden surface lives in:
   - `docs/eval/beta_2_0/operator_burden_rows.json`
   - summarize with:
