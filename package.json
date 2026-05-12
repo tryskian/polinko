@@ -11,6 +11,6 @@
     "d3": "7.9.0",
     "d3-sankey": "0.12.3",
     "jsdom": "29.0.2",
-    "markdownlint-cli2": "0.21.0"
+    "markdownlint-cli2": "0.22.1"
   }
 }
