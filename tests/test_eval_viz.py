@@ -328,10 +328,19 @@ class EvalVizTests(unittest.TestCase):
             self.assertIn("operator_burden", summaries)
             self.assertEqual(summaries["co_reasoning"]["pass"], 11)
             self.assertEqual(summaries["co_reasoning"]["fail"], 0)
+            self.assertIn("/viz/pass-fail/artifact?path=", summaries["co_reasoning"]["source_url"])
+            self.assertIn(
+                "docs/research/co-reasoning-promotion-20260508.md",
+                summaries["co_reasoning"]["research_note_path"],
+            )
             self.assertEqual(summaries["operator_burden"]["pass"], 2)
             self.assertEqual(summaries["operator_burden"]["fail"], 2)
             self.assertEqual(summaries["operator_burden"]["retain"], 1)
             self.assertEqual(summaries["operator_burden"]["evict"], 1)
+            self.assertIn(
+                "docs/research/operator-burden-promotion-20260509.md",
+                summaries["operator_burden"]["research_note_path"],
+            )
 
     def test_html_contains_live_viz_markup(self) -> None:
         html = render_pass_fail_viz_html(refresh_ms=2500, chart_max_points=20)
@@ -345,6 +354,8 @@ class EvalVizTests(unittest.TestCase):
         self.assertIn('id="laneSummaries"', html)
         self.assertIn("Tracked Lane Snapshots", html)
         self.assertIn("lane-card-state", html)
+        self.assertIn("lane-card-links", html)
+        self.assertIn("lane-card-link", html)
         self.assertIn("bucketed binary gate report history", html)
         self.assertIn("bucketed manual eval outcome history", html)
         self.assertIn("bucketed active-lane mix history", html)

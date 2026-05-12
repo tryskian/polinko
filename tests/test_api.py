@@ -161,6 +161,21 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("bridge", payload["graphs"])
         self.assertIn("current", payload["graphs"])
 
+    def test_pass_fail_artifact_route_serves_tracked_eval_file(self) -> None:
+        resp = self.client.get(
+            "/viz/pass-fail/artifact",
+            params={"path": "docs/eval/README.md"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn("text/markdown", resp.headers.get("content-type", ""))
+
+    def test_pass_fail_artifact_route_blocks_paths_outside_allowed_roots(self) -> None:
+        resp = self.client.get(
+            "/viz/pass-fail/artifact",
+            params={"path": "README.md"},
+        )
+        self.assertEqual(resp.status_code, 403)
+
     def test_manual_evals_surface_endpoint_returns_payload_shape(self) -> None:
         resp = self.client.get(
             "/manual-evals/surface",
