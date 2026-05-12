@@ -60,6 +60,7 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
         self.assertEqual(report["verdict_counts"]["fail"], 1)
         self.assertEqual(report["failure_disposition_counts"]["retain"], 1)
         self.assertEqual(report["failure_disposition_counts"]["evict"], 0)
+        self.assertEqual(report["pass_anchors"][0]["id"], "ob-2")
         self.assertEqual(report["retained_failures"][0]["id"], "ob-1")
 
     def test_build_report_counts_evicted_failure(self) -> None:
@@ -156,6 +157,30 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
         )
         markdown = render_markdown(report)
         self.assertIn("Retained Failures", markdown)
+        self.assertIn("ob-1", markdown)
+
+    def test_render_markdown_includes_pass_anchors(self) -> None:
+        report = build_report(
+            _payload(
+                [
+                    {
+                        "id": "ob-1",
+                        "title": "pass row",
+                        "source_note": "docs/research/operator-burden-seed-20260509.md",
+                        "source_ids": ["D-158"],
+                        "task_shape": "sparse_control_execution",
+                        "expected_boundary": "objective + checks",
+                        "observed_pattern": "stayed clear",
+                        "dimensions": {"reference_binding": "pass"},
+                        "verdict": "pass",
+                        "failure_disposition": None,
+                        "note": "good row",
+                    }
+                ]
+            )
+        )
+        markdown = render_markdown(report)
+        self.assertIn("Pass Anchors", markdown)
         self.assertIn("ob-1", markdown)
 
     def test_render_markdown_includes_evicted_failures(self) -> None:

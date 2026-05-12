@@ -12,6 +12,7 @@ Static SVG exports generated from this page:
 - [Polinko Post-Fail Gate Stack](diagrams/polinko-post-fail-gate-stack.svg)
 - [OCR Progress Funnel](diagrams/ocr-progress-funnel.svg)
 - [Current OCR Signal Shape](diagrams/current-ocr-signal-shape.svg)
+- [Operator Burden Signal Shape](diagrams/operator-burden-signal-shape.svg)
 - [Polinko Evidence Sankey (D3)](diagrams/polinko-evidence-sankey.svg)
 - [Polinko Binary Eval Loop](diagrams/polinko-binary-eval-loop.svg)
 - [Beta Evidence Map](diagrams/beta-evidence-map.svg)
@@ -20,6 +21,7 @@ Current dated progress note:
 
 - [Beta 2.2 Snapshot (2026-05-08)](../research/beta-2-2-20260508.md)
 - [Co-Reasoning Promotion Snapshot (2026-05-08)](../research/co-reasoning-promotion-20260508.md)
+- [Operator Burden Signal Shape (2026-05-12)](../research/operator-burden-signal-shape-20260512.md)
 - [OCR Progress Snapshot (2026-05-08)](../research/ocr-progress-20260508.md)
 - [Prior OCR Progress Snapshot (2026-05-01)](../research/ocr-progress-20260501.md)
 
@@ -126,6 +128,29 @@ flowchart TD
 
   class A,B,C,E pass;
   class D,F evidence;
+```
+
+## Operator Burden Signal Shape
+
+![Operator Burden Signal Shape](diagrams/operator-burden-signal-shape.svg)
+
+```mermaid
+flowchart TD
+  A["Operator burden lane\n2026-05-12"] --> B["Pass anchors\n4 rows"]
+  A --> C["Retained fail pressure\n2 rows\ninterpretive / advisory drift"]
+  A --> D["Evicted duplicate pressure\n1 row\narchive-quoted clone"]
+  A --> E["Backlog read\n9 conversations\n8 families"]
+  E --> F["Current top slice is duplicate-heavy"]
+  F --> G["No new row promotion earned\nwait for distinct task shape or improve visibility"]
+
+  classDef pass fill:#EEF7EE,stroke:#59A14F,color:#1F1F1F;
+  classDef fail fill:#FBEEEE,stroke:#E15759,color:#1F1F1F;
+  classDef evidence fill:#EEF7F6,stroke:#76B7B2,color:#1F1F1F;
+  classDef bridge fill:#FBF5E8,stroke:#F28E2B,color:#1F1F1F;
+
+  class A,B pass;
+  class C,D fail;
+  class E,F,G evidence;
 ```
 
 ## Polinko Evidence Sankey (D3)

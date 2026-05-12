@@ -25,6 +25,7 @@ enough to read in public.
 ## Current Non-OCR Read
 
 - latest tracked non-OCR notes:
+  - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
   - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
   - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
   - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
@@ -57,6 +58,8 @@ enough to read in public.
     - `2` retained fail rows
     - `1` evicted fail row
     - widened export-backed backlog: `9` conversations / `8` families
+    - current top backlog slice is duplicate-heavy and does not presently earn
+      more distinct row promotion
 
 ## Included Here
 
@@ -68,6 +71,7 @@ enough to read in public.
 ## Representative Tracked Evidence
 
 - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
+- [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
 - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
 - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
 - [Uncertainty-boundary stability kernel](./uncertainty-boundary-stability-20260509.md)

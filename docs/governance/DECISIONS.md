@@ -4332,3 +4332,28 @@ quickstart document.
   repo had drifted away from the older single-command closeout feel of
   `make end`, so folding the helper back into `make end` restores a cleaner
   public ritual without changing the separate clean-main check.
+
+## D-248: Treat duplicate-heavy operator-burden backlog slices as a visibility trigger, not row inflation pressure
+
+- Date: `2026-05-12`
+- Category: `evidence_governance`
+- Tags: `operator_burden`, `thin_lane`, `visibility`, `distinctness`
+- Decision:
+  - stop promoting operator-burden rows from a backlog slice once the visible
+    top candidates collapse back into already-represented family shapes
+  - use the next kernel to improve lane legibility instead:
+    - pass anchors
+    - retained failures
+    - evictions
+    - explicit duplicate-heavy backlog read
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_report_operator_burden_rows`
+  - `make operator-burden-report`
+  - `python3 -m tools.render_mermaid_diagrams`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the current operator-burden slice still has real backlog volume, but the
+  top candidates mostly map back to already-tracked rows rather than new task
+  shapes. Inflating row counts would weaken the lane. The better move is to
+  make the existing signal shape visible enough to read directly and wait for a
+  genuinely distinct case family before promoting more rows.
