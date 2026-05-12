@@ -101,8 +101,11 @@ Last updated: 2026-05-12
 - Eval lane remains fail-first and binary across lanes:
   - lockset is release-gating
   - growth is fail-tolerant
-  - `/viz/pass-fail` is the current OCR-facing fail-signal instrument
-  - `manual_evals.db` remains the integrated manual-eval warehouse
+  - `/viz/pass-fail` is the current live fail-signal instrument:
+    - live chart stays on the active window
+    - tracked lane cards keep the wider multi-lane surface visible
+    - lane cards now link directly to the tracked artifact and promoted note
+    - `manual_evals.db` remains the integrated manual-eval warehouse
   - dependency security is now a first-class repo gate:
     - PR dependency review blocks vulnerable dependency diffs
     - CI audits locked Python and Node dependency surfaces

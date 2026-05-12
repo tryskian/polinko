@@ -42,6 +42,9 @@ Manual evals and strict OCR gate reports answer different questions:
 - OCR gate reports preserve binary fail pressure
 - `/viz/pass-fail` keeps the live chart on the active window and uses tracked
   eval files to keep the wider lane map visible below it
+- tracked lane cards now expose direct links to:
+  - the underlying tracked artifact
+  - the promoted research note when that lane has one
 
 Do not flatten one into the other.
 

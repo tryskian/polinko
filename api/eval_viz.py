@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 _REPORT_SUBDIRS = (
     "ocr_focus_runs",
@@ -32,24 +33,28 @@ _TRACKED_LANE_SPECS = (
         "title": "OCR strict gate",
         "note": "Tracked binary gate snapshot for the mature OCR lane.",
         "pattern": "ocr-[0-9]*.json",
+        "research_note_path": "docs/research/ocr-progress-20260508.md",
     },
     {
         "lane_key": "co_reasoning",
         "title": "Co-reasoning reliability",
         "note": "Promoted non-OCR lane carried in the tracked style surface.",
         "pattern": "style-[0-9]*.json",
+        "research_note_path": "docs/research/co-reasoning-promotion-20260508.md",
     },
     {
         "lane_key": "response_behaviour",
         "title": "Response behaviour",
         "note": "Explicit uncertainty and claim-discipline gate snapshot.",
         "pattern": "response-behaviour-[0-9]*.json",
+        "research_note_path": "docs/research/response-behaviour-20260425.md",
     },
     {
         "lane_key": "hallucination_boundary",
         "title": "Hallucination boundary",
         "note": "Grounding and uncertainty boundary snapshot.",
         "pattern": "hallucination-[0-9]*.json",
+        "research_note_path": "docs/research/hallucination-boundary-promotion-20260512.md",
     },
     {
         "lane_key": "retrieval_grounding",
@@ -286,6 +291,10 @@ def _tracked_updated_at(report: dict[str, Any], path: Path) -> str:
     return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def _artifact_url(path: str) -> str:
+    return f"/viz/pass-fail/artifact?path={quote(path)}"
+
+
 def _tracked_report_counts(report: dict[str, Any]) -> tuple[int, int, int, int, int]:
     summary = report.get("summary")
     summary_dict = summary if isinstance(summary, dict) else {}
@@ -334,6 +343,11 @@ def _build_tracked_lane_summaries(tracked_eval_root: Path | None) -> list[dict[s
                 "updated_at": _tracked_updated_at(report, path),
                 "run_id": str(report.get("run_id") or "").strip(),
                 "source": str(path),
+                "source_url": _artifact_url(str(path)),
+                "research_note_path": spec.get("research_note_path", ""),
+                "research_note_url": _artifact_url(str(spec["research_note_path"]))
+                if spec.get("research_note_path")
+                else "",
             }
         )
 
@@ -382,6 +396,9 @@ def _build_tracked_lane_summaries(tracked_eval_root: Path | None) -> list[dict[s
                 "updated_at": _tracked_updated_at(operator_burden, operator_burden_path),
                 "run_id": "",
                 "source": str(operator_burden_path),
+                "source_url": _artifact_url(str(operator_burden_path)),
+                "research_note_path": "docs/research/operator-burden-promotion-20260509.md",
+                "research_note_url": _artifact_url("docs/research/operator-burden-promotion-20260509.md"),
             }
         )
 
@@ -1448,6 +1465,24 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       color: var(--muted);
     }
 
+    .lane-card-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .lane-card-link {
+      font-size: 0.76rem;
+      color: var(--ink);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 0.18em;
+    }
+
+    .lane-card-link:hover {
+      color: var(--accent);
+    }
+
     .lane-empty {
       display: none;
       margin-top: 14px;
@@ -2085,10 +2120,24 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
         const state = computeLaneSnapshotState(lane);
         const note = escapeHtml(shorten(lane?.note || '', 140));
         const source = escapeHtml(leafName(lane?.source || ''));
+        const sourceUrl = String(lane?.source_url || '').trim();
+        const researchNotePath = String(lane?.research_note_path || '').trim();
+        const researchNoteUrl = String(lane?.research_note_url || '').trim();
         const runId = String(lane?.run_id || '').trim();
         const sourceLine = runId
           ? `${source}${source && runId ? ' · ' : ''}${escapeHtml(runId)}`
           : source || '(tracked)';
+        const linkParts = [];
+        if (sourceUrl) {
+          linkParts.push(`<a class="lane-card-link" href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">Artifact</a>`);
+        }
+        if (researchNoteUrl) {
+          const noteLabel = leafName(researchNotePath) || 'Research note';
+          linkParts.push(`<a class="lane-card-link" href="${escapeHtml(researchNoteUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(noteLabel)}</a>`);
+        }
+        const links = linkParts.length
+          ? `<div class="lane-card-links">${linkParts.join('')}</div>`
+          : '';
         return `
           <article class="lane-card">
             <div class="lane-card-head">
@@ -2100,6 +2149,7 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
             <div class="lane-card-metric">${escapeHtml(primary)}</div>
             <div class="lane-card-detail">${escapeHtml(detail)}</div>
             <div class="lane-card-source">${sourceLine}</div>
+            ${links}
           </article>
         `;
       }).join('');

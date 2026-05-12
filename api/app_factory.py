@@ -51,6 +51,11 @@ logger = logging.getLogger("polinko.api")
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 _PORTFOLIO_FAVICON_PNG = _REPO_ROOT / "api" / "static" / "favicon.png"
+_VIZ_ARTIFACT_ALLOWED_ROOTS = (
+    _REPO_ROOT / "docs" / "eval",
+    _REPO_ROOT / "docs" / "research",
+    _REPO_ROOT / "docs" / "public" / "diagrams",
+)
 _PORTFOLIO_DESCRIPTION = (
     "Krystian Fernando is an applied AI research engineer working in "
     "human-AI interaction and designing evals around the useful signals "
@@ -3484,6 +3489,27 @@ def create_app(config: AppConfig) -> FastAPI:
             raise HTTPException(status_code=400, detail="Unsupported image type.")
         if not resolved.is_file():
             raise HTTPException(status_code=404, detail="Image file not found.")
+
+        return FileResponse(path=resolved)
+
+    @app.get("/viz/pass-fail/artifact")
+    def pass_fail_viz_artifact(path: str) -> FileResponse:
+        requested = Path(path).expanduser()
+        if not requested.is_absolute():
+            resolved = (_REPO_ROOT / requested).resolve()
+        else:
+            resolved = requested.resolve()
+
+        if not resolved.is_file():
+            raise HTTPException(status_code=404, detail="Artifact file not found.")
+
+        allowed = any(root == resolved or root in resolved.parents for root in _VIZ_ARTIFACT_ALLOWED_ROOTS)
+        if not allowed:
+            raise HTTPException(status_code=403, detail="Artifact path is outside the tracked viz surface.")
+
+        allowed_suffixes = {".json", ".md", ".svg", ".png", ".jpg", ".jpeg", ".webp"}
+        if resolved.suffix.lower() not in allowed_suffixes:
+            raise HTTPException(status_code=400, detail="Unsupported artifact type.")
 
         return FileResponse(path=resolved)
 
