@@ -4455,3 +4455,28 @@ quickstart document.
   drifted away from the actual `0-10` judge scale. The lane needed a current
   visible signal surface and an explicit score contract so future runs cannot
   accidentally manufacture false failures through bad threshold inputs.
+
+## D-253: Refresh response behaviour as a current two-branch signal surface
+
+- Date: `2026-05-12`
+- Category: `evidence_governance`
+- Tags: `response_behaviour`, `tracked_snapshot`, `visibility`, `interaction_shape`
+- Decision:
+  - promote a fresh tracked response-behaviour snapshot at `7/7` pass
+  - add a response-behaviour signal-shape note and public diagram
+  - point the evidence console at the new response-behaviour signal note
+  - make the lane shape explicit as:
+    - verification and uncertainty boundaries
+    - interaction-shape boundaries
+- Validation:
+  - fresh live response-behaviour eval on isolated local server -> `7/7` pass
+  - `./venv/bin/python -m unittest tests.test_eval_response_behaviour tests.test_eval_viz`
+  - `python3 -m tools.render_mermaid_diagrams`
+  - `make api-smoke`
+  - `make lint-docs`
+  - `make test`
+  - `git diff --check`
+- Why: the response-behaviour lane was green but still anchored to an older
+  April snapshot note. The lane needed a current tracked artifact and a clearer
+  public structure so it reads as a live proof surface instead of inherited
+  baseline infrastructure.

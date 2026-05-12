@@ -50,7 +50,10 @@ evidence.
   - retrieval grounding now has fresh tracked snapshots across both visible branches:
     - retrieval recall: `12/12` pass
     - file search: `5/5` pass
-  - current broad gate is holding across style, uncertainty, and co-reasoning
+  - response behaviour now has a fresh current tracked snapshot:
+    - latest tracked snapshot: `7/7` pass
+    - current signal-shape surface is now explicit
+  - current broad gate is holding across style, uncertainty, co-reasoning, and response behaviour
   - operator burden now has a seeded row-local evidence surface:
     - `4` pass rows
     - `2` retained fail rows
@@ -72,6 +75,7 @@ evidence.
   - [docs/research/hallucination-boundary-promotion-20260512.md](docs/research/hallucination-boundary-promotion-20260512.md)
   - [docs/research/hallucination-boundary-signal-shape-20260512.md](docs/research/hallucination-boundary-signal-shape-20260512.md)
   - [docs/research/retrieval-grounding-signal-shape-20260512.md](docs/research/retrieval-grounding-signal-shape-20260512.md)
+  - [docs/research/response-behaviour-signal-shape-20260512.md](docs/research/response-behaviour-signal-shape-20260512.md)
   - [docs/research/ocr-progress-20260508.md](docs/research/ocr-progress-20260508.md)
   - [docs/research/co-reasoning-promotion-20260508.md](docs/research/co-reasoning-promotion-20260508.md)
   - [docs/research/co-reasoning-signal-shape-20260512.md](docs/research/co-reasoning-signal-shape-20260512.md)

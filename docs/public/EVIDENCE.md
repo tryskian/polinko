@@ -55,6 +55,7 @@ Representative tracked note:
 
 - [OCR representative case](../research/ocr-representative-case.md)
 - [Co-reasoning signal shape](../research/co-reasoning-signal-shape-20260512.md)
+- [Response-behaviour signal shape](../research/response-behaviour-signal-shape-20260512.md)
 - [Hallucination-boundary signal shape](../research/hallucination-boundary-signal-shape-20260512.md)
 - [Retrieval grounding signal shape](../research/retrieval-grounding-signal-shape-20260512.md)
 - [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)

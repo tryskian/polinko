@@ -96,6 +96,12 @@ Do not flatten one into the other.
   - score contract:
     - judge score range: `0-10`
     - current minimum acceptable score: `5`
+- current response-behaviour surface now has a fresh tracked snapshot:
+  - `docs/eval/beta_2_0/response-behaviour-20260512-195350.json`
+  - `7/7` pass
+  - current lane shape:
+    - verification and uncertainty boundaries
+    - interaction-shape boundaries
 - current thin-lane operator burden surface lives in:
   - `docs/eval/beta_2_0/operator_burden_rows.json`
   - summarize with:

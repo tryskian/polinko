@@ -114,6 +114,17 @@ def _init_tracked_eval_root(path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    (path / "response-behaviour-20260512-195350.json").write_text(
+        json.dumps(
+            {
+                "run_id": "20260512-195350",
+                "summary": {"total": 7, "passed": 7, "failed": 0},
+                "cases": [],
+                "generated_at": "2026-05-12T19:53:50Z",
+            }
+        ),
+        encoding="utf-8",
+    )
     (path / "retrieval-20260328-184111.json").write_text(
         json.dumps(
             {
@@ -198,7 +209,7 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["points"][-1]["illustration"], 1)
             self.assertEqual(payload["evals"][0]["lane"], "illustration")
             self.assertEqual(payload["evals"][0]["outcome"], "ERROR")
-            self.assertEqual(len(payload["lane_summaries"]), 5)
+            self.assertEqual(len(payload["lane_summaries"]), 6)
 
     def test_payload_can_filter_eval_rows_by_run_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -359,6 +370,7 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["runs_total"], 0)
             summaries = {row["lane_key"]: row for row in payload["lane_summaries"]}
             self.assertIn("co_reasoning", summaries)
+            self.assertIn("response_behaviour", summaries)
             self.assertIn("hallucination_boundary", summaries)
             self.assertIn("operator_burden", summaries)
             self.assertEqual(summaries["co_reasoning"]["pass"], 14)
@@ -368,6 +380,12 @@ class EvalVizTests(unittest.TestCase):
                 "docs/research/co-reasoning-signal-shape-20260512.md",
                 summaries["co_reasoning"]["research_note_path"],
             )
+            self.assertIn(
+                "docs/research/response-behaviour-signal-shape-20260512.md",
+                summaries["response_behaviour"]["research_note_path"],
+            )
+            self.assertEqual(summaries["response_behaviour"]["pass"], 7)
+            self.assertEqual(summaries["response_behaviour"]["fail"], 0)
             self.assertIn(
                 "docs/research/hallucination-boundary-signal-shape-20260512.md",
                 summaries["hallucination_boundary"]["research_note_path"],

@@ -26,6 +26,7 @@ enough to read in public.
 
 - latest tracked non-OCR notes:
   - [Co-reasoning signal shape](./co-reasoning-signal-shape-20260512.md)
+  - [Response-behaviour signal shape](./response-behaviour-signal-shape-20260512.md)
   - [Hallucination-boundary signal shape](./hallucination-boundary-signal-shape-20260512.md)
   - [Retrieval grounding signal shape](./retrieval-grounding-signal-shape-20260512.md)
   - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
@@ -58,8 +59,11 @@ enough to read in public.
   - retrieval grounding now has fresh tracked snapshots across both visible branches:
     - retrieval recall: `12/12` pass
     - file search: `5/5` pass
+  - response behaviour now has a fresh current tracked snapshot:
+    - latest tracked snapshot: `7/7` pass
+    - current signal-shape surface is now explicit
   - broad-gate pressure is no longer concentrated in the uncertainty contracts
-  - current broad gate is holding across style, uncertainty, and co-reasoning
+  - current broad gate is holding across style, uncertainty, co-reasoning, and response behaviour
   - operator burden now has a seeded thin-lane row surface:
     - `4` pass rows
     - `2` retained fail rows
@@ -79,6 +83,7 @@ enough to read in public.
 
 - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
 - [Hallucination-boundary signal shape](./hallucination-boundary-signal-shape-20260512.md)
+- [Response-behaviour signal shape](./response-behaviour-signal-shape-20260512.md)
 - [Co-reasoning signal shape](./co-reasoning-signal-shape-20260512.md)
 - [Retrieval grounding signal shape](./retrieval-grounding-signal-shape-20260512.md)
 - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
@@ -96,6 +101,7 @@ enough to read in public.
 - [OCR binary eval snapshot](../eval/beta_2_0/ocr-20260328-184147.json)
 - [OCR safety eval snapshot](./ocr-safety-20260425.md)
 - [Response behaviour eval snapshot](./response-behaviour-20260425.md)
+- [Response behaviour tracked snapshot](../eval/beta_2_0/response-behaviour-20260512-195350.json)
 - [Hallucination eval snapshot](../eval/beta_2_0/hallucination-20260512-191438.json)
 - [Retrieval eval snapshot](../eval/beta_2_0/retrieval-20260512-190149.json)
 - [File-search eval snapshot](../eval/beta_2_0/file-search-20260512-190149.json)

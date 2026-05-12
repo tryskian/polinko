@@ -47,7 +47,7 @@ _TRACKED_LANE_SPECS = (
         "title": "Response behaviour",
         "note": "Explicit uncertainty and claim-discipline gate snapshot.",
         "pattern": "response-behaviour-[0-9]*.json",
-        "research_note_path": "docs/research/response-behaviour-20260425.md",
+        "research_note_path": "docs/research/response-behaviour-signal-shape-20260512.md",
     },
     {
         "lane_key": "hallucination_boundary",
