@@ -111,7 +111,7 @@ Last updated: 2026-05-12
     - CI audits locked Python and Node dependency surfaces
     - CI rejects `requirements.in` / `requirements.lock` drift
   - current promoted non-OCR lane:
-    - co-reasoning reliability passes `14/14` in the tracked style surface
+    - co-reasoning reliability now closes `14/14` in the latest tracked style snapshot
     - latest one-hour deterministic beta soak closes at `19/21` pass cycles
     - former dominant style pressure did not recur in the broad gate
     - uncertainty-boundary stability is now closed with:
@@ -142,8 +142,7 @@ Last updated: 2026-05-12
     - retrieval grounding: `47` / `40`
     - OCR confidence boundary: `15` / `10`
   - co-reasoning reliability is now the first promoted non-OCR lane
-  - tracked style stress lane currently passes `14/14` on the live validation
-    pass
+  - tracked style stress lane now has a current tracked snapshot at `14/14`
   - operator burden now has a seeded thin-lane row surface:
     - tracked rows: `7`
     - pass rows: `4`

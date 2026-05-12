@@ -22,7 +22,7 @@ This is the shortest route through Polinko’s public research surface.
     - fail-history cohort: `0` active cases
     - runtime OCR follow-up is parked
   - co-reasoning reliability is operationalized:
-    - tracked style stress surface: `14/14` pass
+    - tracked style stress surface: `14/14` pass in the latest tracked snapshot
     - one-hour deterministic beta soak: `19/21` pass cycles
     - former dominant style pressure did not recur
   - uncertainty-boundary stability is now closed:
@@ -45,6 +45,7 @@ This is the shortest route through Polinko’s public research surface.
 - latest tracked research notes:
   - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
   - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
+  - [Co-reasoning signal shape](../research/co-reasoning-signal-shape-20260512.md)
   - [OCR progress snapshot](../research/ocr-progress-20260508.md)
   - [Behaviour backlog snapshot](../research/behaviour-backlog-20260508.md)
   - [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
