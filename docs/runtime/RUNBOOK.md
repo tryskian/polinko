@@ -336,9 +336,7 @@ Read-only DB audits remain allowed:
    - alias: `make decaffeinate-status`
 5. Stop command at wrap:
    - `make decaffeinate`
-6. Optional full sweep (managed + matching unmanaged keep-awake):
-   - `make caffeinate-off-all`
-7. `decaffeinated` remains workflow shorthand. The explicit command is
+6. `decaffeinated` remains workflow shorthand. The explicit command is
    `make decaffeinate`.
 
 ## Docker Build/Run Smoke

@@ -1338,7 +1338,7 @@ quickstart document.
     - `make transcript-fix` (`tools/fix_transcripts.py`)
     - `make transcript-check` (`tools/validate_transcripts.py`)
   - add one-command day-close routine:
-    - `make eod` (`tools/end_of_day_routine.sh`)
+    - `make end` (`tools/end_of_day_routine.sh`)
   - day-close routine order is deterministic:
     1) transcript-fix
     2) transcript-check
@@ -1725,11 +1725,11 @@ quickstart document.
 
 - Date: `2026-04-02`
 - Category: `runtime_ops`
-- Tags: `eod`, `task_hygiene`, `server`, `caffeinate`
+- Tags: `end`, `task_hygiene`, `server`, `caffeinate`
 - Decision:
-  - extend `make eod` to include explicit shutdown step (`make eod-stop`) after
+  - extend `make end` to include explicit shutdown step (`make end-stop`) after
     validation checks
-  - add `make eod-stop` to stop runtime background processes:
+  - add `make end-stop` to stop runtime background processes:
     - `make server-daemon-stop`
     - `make caffeinate-off-all`
   - add `make caffeinate-off-all` to stop both managed and matching unmanaged
@@ -3517,28 +3517,28 @@ quickstart document.
   constraints, makes plausible but wrong implementations more likely, and can
   directly contradict the fail-signal research hypothesis.
 
-## D-219: Make current-truth doc freshness part of EOD
+## D-219: Make current-truth doc freshness part of end
 
 - Date: `2026-04-13`
 - Category: `workflow_governance`
-- Tags: `eod`, `docs`, `handoff`, `state`, `drift_control`
+- Tags: `end`, `docs`, `handoff`, `state`, `drift_control`
 - Decision:
-  - add `make eod-docs-check` to the end-of-day routine.
+  - add `make end-docs-check` to the end-of-day routine.
   - require `docs/governance/STATE.md` and
     `docs/governance/SESSION_HANDOFF.md` to carry today's `Last updated`
-    marker before `make eod` can complete.
+    marker before `make end` can complete.
   - keep the check non-mutating; the operator/agent must update current-truth
     docs deliberately before closeout.
   - run the docs freshness gate before environment/doc lint/test steps in
     `tools/end_of_day_routine.sh`.
 - Validation:
-  - `make eod-docs-check`
+  - `make end-docs-check`
   - `make lint-docs`
-  - `./venv/bin/python -m py_compile tools/check_eod_docs.py`
+  - `./venv/bin/python -m py_compile tools/check_end_docs.py`
   - `bash -n tools/end_of_day_routine.sh`
-  - `make eod`
+  - `make end`
 - Why: Day-close reliability depends on current-truth docs being updated before
-  handoff. A deterministic EOD gate prevents successful closeout with stale
+  handoff. A deterministic end gate prevents successful closeout with stale
   `STATE` or `SESSION_HANDOFF` summaries while preserving the evidence-chain
   rule that summaries must be updated intentionally, not generated as a
   substitute for source evidence.
@@ -3784,11 +3784,11 @@ quickstart document.
   - remove public README/docs links to `SESSION_HANDOFF`.
   - treat the local handoff as operator continuity, not reader-facing project
     documentation.
-  - keep `tools/check_eod_docs.py` strict for tracked `STATE`, and validate the
+  - keep `tools/check_end_docs.py` strict for tracked `STATE`, and validate the
     local handoff only when that local file is present.
 - Validation:
   - `make lint-docs`
-  - `python tools/check_eod_docs.py --date 2026-04-24`
+  - `python tools/check_end_docs.py --date 2026-04-24`
 - Why: `SESSION_HANDOFF` is an operator continuity surface and drifts quickly
   into branch-specific or session-specific notes. Keeping it tracked in the
   public repo exposes internal execution context as if it were project
@@ -4196,7 +4196,7 @@ quickstart document.
 - Category: `workflow_environment`
 - Tags: `operator_rituals`, `command_surface`, `startup_closeout`, `clean_main`
 - Decision:
-  - replace the old operator wording around `make eod` with:
+  - replace the old operator wording around `make end` with:
     - `make start`
     - `make end`
     - `make end-git-check`
@@ -4220,14 +4220,15 @@ quickstart document.
       - working tree is clean
       - local `main` matches `origin/main`
   - rename the git-check script surface to `tools/check_end_git_clean.sh`
-    instead of leaving a stale `eod` filename behind
+    instead of leaving a stale older filename behind
 - Validation:
   - `make start`
   - `make rituals`
   - `make lint-docs`
   - `git diff --check`
 - Why: the repo had drifted into a mixed operator vocabulary where the scripted
-  startup did not exist, the day-close surface still carried `eod` language,
+  startup did not exist, the day-close surface still carried older day-close
+  language,
   and the clean-main expectation was remembered socially rather than encoded as
   a visible command. Splitting `end` from `end-git-check` keeps operational
   closeout usable on feature branches while still making the final clean-main
@@ -4322,8 +4323,6 @@ quickstart document.
     - `make session-status`
   - keep `make end-git-check` separate for the final post-merge clean-main
     verification
-  - keep `make caffeinate-off-all` available only as an explicit manual sweep
-    for matching unmanaged `caffeinate` processes
 - Validation:
   - `bash -n tools/end_of_day_routine.sh`
   - `make lint-docs`
@@ -4331,5 +4330,5 @@ quickstart document.
 - Why: after narrowing closeout away from the broad global `caffeinate` sweep,
   the remaining `end-stop` helper no longer carried its own operator value. The
   repo had drifted away from the older single-command closeout feel of
-  `make eod`, so folding the helper back into `make end` restores a cleaner
+  `make end`, so folding the helper back into `make end` restores a cleaner
   public ritual without changing the separate clean-main check.

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BRANCH="${EOD_GIT_BRANCH:-main}"
-REMOTE="${EOD_GIT_REMOTE:-origin}"
+BRANCH="${END_GIT_BRANCH:-main}"
+REMOTE="${END_GIT_REMOTE:-origin}"
 
 fail() {
 	echo "end-git-check: FAIL" >&2

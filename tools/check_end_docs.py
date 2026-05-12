@@ -13,7 +13,7 @@ OPTIONAL_LOCAL_DOCS = (Path("docs/peanut/governance/SESSION_HANDOFF.md"),)
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Check that current-truth EOD docs were refreshed today."
+        description="Check that current-truth end docs were refreshed today."
     )
     parser.add_argument(
         "--date",
@@ -24,7 +24,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def find_last_updated(path: Path) -> str | None:
-    match = re.search(r"^Last updated:\s*(\d{4}-\d{2}-\d{2})\s*$", path.read_text(), re.MULTILINE)
+    match = re.search(
+        r"^Last updated:\s*(\d{4}-\d{2}-\d{2})\s*$", path.read_text(), re.MULTILINE
+    )
     if match is None:
         return None
     return match.group(1)
@@ -57,17 +59,17 @@ def main() -> int:
             )
 
     if failures:
-        print("eod-docs-check: FAIL", file=sys.stderr)
+        print("end-docs-check: FAIL", file=sys.stderr)
         for failure in failures:
             print(f"- {failure}", file=sys.stderr)
         print(
-            "Update current-truth docs before EOD: docs/governance/STATE.md and "
+            "Update current-truth docs before end: docs/governance/STATE.md and "
             "local docs/peanut/governance/SESSION_HANDOFF.md if present",
             file=sys.stderr,
         )
         return 1
 
-    print(f"eod-docs-check: PASS ({len(checked_docs)} docs updated for {args.date})")
+    print(f"end-docs-check: PASS ({len(checked_docs)} docs updated for {args.date})")
     return 0
 
 
