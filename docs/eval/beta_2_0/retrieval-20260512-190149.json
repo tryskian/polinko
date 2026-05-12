@@ -1,0 +1,247 @@
+{
+  "run_id": "20260512-190149",
+  "base_url": "http://127.0.0.1:8067",
+  "cases_path": "docs/eval/beta_2_0/retrieval_eval_cases.json",
+  "summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "global_miss": 0,
+    "leak": 0,
+    "errors": 0,
+    "gate_passed": 12,
+    "gate_failed": 0
+  },
+  "failures": [],
+  "cases": [
+    {
+      "id": "aurora_lattice",
+      "seed_session": "retrieval-eval-20260512-190149-seed-aurora_lattice",
+      "target_session": "retrieval-eval-20260512-190149-target-aurora_lattice",
+      "source_type": "ocr",
+      "must_include": [
+        "aurora lattice",
+        "prism anchors"
+      ],
+      "query": "What keeps the aurora lattice from drifting?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    },
+    {
+      "id": "cedar_loop",
+      "seed_session": "retrieval-eval-20260512-190149-seed-cedar_loop",
+      "target_session": "retrieval-eval-20260512-190149-target-cedar_loop",
+      "source_type": "ocr",
+      "must_include": [
+        "cedar loop",
+        "triad checkpoints"
+      ],
+      "query": "Which controls keep cedar loop rehearsal stable?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    },
+    {
+      "id": "delta_forge",
+      "seed_session": "retrieval-eval-20260512-190149-seed-delta_forge",
+      "target_session": "retrieval-eval-20260512-190149-target-delta_forge",
+      "source_type": "ocr",
+      "must_include": [
+        "delta forge",
+        "lineage-safe"
+      ],
+      "query": "How does delta forge keep notebook lineage safe?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    },
+    {
+      "id": "nimbus_grid",
+      "seed_session": "retrieval-eval-20260512-190149-seed-nimbus_grid",
+      "target_session": "retrieval-eval-20260512-190149-target-nimbus_grid",
+      "source_type": "ocr",
+      "must_include": [
+        "nimbus grid",
+        "source snapshots"
+      ],
+      "query": "What does nimbus grid attach to anomaly scores first?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    },
+    {
+      "id": "opal_trace",
+      "seed_session": "retrieval-eval-20260512-190149-seed-opal_trace",
+      "target_session": "retrieval-eval-20260512-190149-target-opal_trace",
+      "source_type": "ocr",
+      "must_include": [
+        "opal trace",
+        "verifier hashes"
+      ],
+      "query": "What does opal trace mode store with timestamp fences?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    },
+    {
+      "id": "quill_matrix",
+      "seed_session": "retrieval-eval-20260512-190149-seed-quill_matrix",
+      "target_session": "retrieval-eval-20260512-190149-target-quill_matrix",
+      "source_type": "ocr",
+      "must_include": [
+        "quill matrix",
+        "concrete snippets"
+      ],
+      "query": "What does quill matrix retrieval favor in ambiguous situations?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    },
+    {
+      "id": "raven_bridge",
+      "seed_session": "retrieval-eval-20260512-190149-seed-raven_bridge",
+      "target_session": "retrieval-eval-20260512-190149-target-raven_bridge",
+      "source_type": "ocr",
+      "must_include": [
+        "raven bridge",
+        "independent signals"
+      ],
+      "query": "When does raven bridge allow speculative joins?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    },
+    {
+      "id": "solstice_map",
+      "seed_session": "retrieval-eval-20260512-190149-seed-solstice_map",
+      "target_session": "retrieval-eval-20260512-190149-target-solstice_map",
+      "source_type": "ocr",
+      "must_include": [
+        "solstice map",
+        "intent pivots"
+      ],
+      "query": "How does solstice map indexing chunk long records?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    },
+    {
+      "id": "tide_kernel",
+      "seed_session": "retrieval-eval-20260512-190149-seed-tide_kernel",
+      "target_session": "retrieval-eval-20260512-190149-target-tide_kernel",
+      "source_type": "ocr",
+      "must_include": [
+        "tide kernel",
+        "evidence freshness"
+      ],
+      "query": "When does tide kernel retrieval lower confidence?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    },
+    {
+      "id": "umbra_ledger",
+      "seed_session": "retrieval-eval-20260512-190149-seed-umbra_ledger",
+      "target_session": "retrieval-eval-20260512-190149-target-umbra_ledger",
+      "source_type": "ocr",
+      "must_include": [
+        "umbra ledger",
+        "delta records"
+      ],
+      "query": "How are corrections handled in umbra ledger notes?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    },
+    {
+      "id": "vector_orchard",
+      "seed_session": "retrieval-eval-20260512-190149-seed-vector_orchard",
+      "target_session": "retrieval-eval-20260512-190149-target-vector_orchard",
+      "source_type": "ocr",
+      "must_include": [
+        "vector orchard",
+        "token overlap"
+      ],
+      "query": "How does vector orchard search rank results?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    },
+    {
+      "id": "willow_guard",
+      "seed_session": "retrieval-eval-20260512-190149-seed-willow_guard",
+      "target_session": "retrieval-eval-20260512-190149-target-willow_guard",
+      "source_type": "ocr",
+      "must_include": [
+        "willow guardrails",
+        "retrieved memory"
+      ],
+      "query": "When do willow guardrails require citations?",
+      "status": "PASS",
+      "detail": "global recall + session isolation",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "global_citation_found": true,
+      "session_scope_leak": false,
+      "global_memory_count": 1
+    }
+  ],
+  "generated_at": 1778626959
+}

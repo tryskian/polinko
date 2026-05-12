@@ -61,12 +61,14 @@ _TRACKED_LANE_SPECS = (
         "title": "Retrieval grounding",
         "note": "Grounding and no-leak retrieval gate snapshot.",
         "pattern": "retrieval-[0-9]*.json",
+        "research_note_path": "docs/research/retrieval-grounding-signal-shape-20260512.md",
     },
     {
         "lane_key": "file_search",
         "title": "File search",
         "note": "Scoped file-search retrieval and leak boundary snapshot.",
         "pattern": "file-search-[0-9]*.json",
+        "research_note_path": "docs/research/retrieval-grounding-signal-shape-20260512.md",
     },
 )
 _CAMERA_IMAGE_NAME_RX = re.compile(r"(?:^|[-_])(img|dsc)[_-]\d{3,}", re.IGNORECASE)

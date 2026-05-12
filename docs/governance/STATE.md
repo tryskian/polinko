@@ -123,6 +123,9 @@ Last updated: 2026-05-12
       - latest tracked snapshot: `9/9` pass
       - tracked case count: `9`
       - new distinct seams: archive-lore and archive-discipline fabrication
+    - retrieval grounding now has fresh tracked snapshots across both visible branches:
+      - retrieval recall: `12/12` pass
+      - file search: `5/5` pass
     - current broad gate is holding across style, uncertainty, and co-reasoning
   - current mature method lane is green:
     - growth stability: `25/25` stable, `0` flaky

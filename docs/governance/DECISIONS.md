@@ -4404,3 +4404,28 @@ quickstart document.
   but the visible tracked artifact was stale at the older `11/11` shape. The
   lane needed a current tracked snapshot and a clearer public signal surface so
   it reads as an active proof lane rather than a historical promotion event.
+
+## D-251: Refresh retrieval grounding as a current two-branch signal surface
+
+- Date: `2026-05-12`
+- Category: `evidence_governance`
+- Tags: `retrieval`, `file_search`, `tracked_snapshot`, `visibility`
+- Decision:
+  - promote fresh tracked retrieval and file-search snapshots on one shared run
+  - add a retrieval-grounding signal-shape note and public diagram
+  - point both the retrieval and file-search console cards at the same current
+    retrieval-grounding note
+- Validation:
+  - fresh live retrieval eval on isolated local server -> `12/12` pass
+  - fresh live file-search eval on isolated local server -> `5/5` pass
+  - `./venv/bin/python -m unittest tests.test_eval_viz`
+  - `python3 -m tools.render_mermaid_diagrams`
+  - `make api-smoke`
+  - `make test`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: retrieval grounding was green but visually quiet. The lane needed
+  current dated artifacts and a clearer surface showing that Polinko is
+  enforcing two different grounding boundaries:
+  memory-style recall with session isolation, and scoped/global file-search
+  recall without distractor leaks.

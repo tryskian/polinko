@@ -11,6 +11,11 @@
     },
     {
       "type": "research_note",
+      "label": "Retrieval grounding signal shape",
+      "path": "docs/research/retrieval-grounding-signal-shape-20260512.md"
+    },
+    {
+      "type": "research_note",
       "label": "Co-reasoning signal shape",
       "path": "docs/research/co-reasoning-signal-shape-20260512.md"
     },
@@ -33,6 +38,16 @@
       "type": "research_note",
       "label": "Hallucination-boundary promotion",
       "path": "docs/research/hallucination-boundary-promotion-20260512.md"
+    },
+    {
+      "type": "eval_report",
+      "label": "Retrieval grounding snapshot",
+      "path": "docs/eval/beta_2_0/retrieval-20260512-190149.json"
+    },
+    {
+      "type": "eval_report",
+      "label": "File-search grounding snapshot",
+      "path": "docs/eval/beta_2_0/file-search-20260512-190149.json"
     },
     {
       "type": "research_note",

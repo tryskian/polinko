@@ -114,6 +114,28 @@ def _init_tracked_eval_root(path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    (path / "retrieval-20260328-184111.json").write_text(
+        json.dumps(
+            {
+                "run_id": "20260328-184111",
+                "summary": {"total": 12, "passed": 12, "failed": 0},
+                "cases": [],
+                "generated_at": "2026-03-28T18:41:11Z",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (path / "file-search-20260328-184143.json").write_text(
+        json.dumps(
+            {
+                "run_id": "20260328-184143",
+                "summary": {"total": 5, "passed": 5, "failed": 0},
+                "cases": [],
+                "generated_at": "2026-03-28T18:41:43Z",
+            }
+        ),
+        encoding="utf-8",
+    )
     (path / "operator_burden_rows.json").write_text(
         json.dumps(
             {
@@ -164,7 +186,7 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["points"][-1]["illustration"], 1)
             self.assertEqual(payload["evals"][0]["lane"], "illustration")
             self.assertEqual(payload["evals"][0]["outcome"], "ERROR")
-            self.assertEqual(len(payload["lane_summaries"]), 2)
+            self.assertEqual(len(payload["lane_summaries"]), 4)
 
     def test_payload_can_filter_eval_rows_by_run_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -332,6 +354,14 @@ class EvalVizTests(unittest.TestCase):
             self.assertIn(
                 "docs/research/co-reasoning-signal-shape-20260512.md",
                 summaries["co_reasoning"]["research_note_path"],
+            )
+            self.assertIn(
+                "docs/research/retrieval-grounding-signal-shape-20260512.md",
+                summaries["retrieval_grounding"]["research_note_path"],
+            )
+            self.assertIn(
+                "docs/research/retrieval-grounding-signal-shape-20260512.md",
+                summaries["file_search"]["research_note_path"],
             )
             self.assertEqual(summaries["operator_burden"]["pass"], 2)
             self.assertEqual(summaries["operator_burden"]["fail"], 2)
