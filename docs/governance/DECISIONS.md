@@ -4277,3 +4277,33 @@ quickstart document.
   the repo truth simpler: uncertainty is no longer the active broad-gate
   failure story, and visibility can now shift toward showing the current beta
   as a coherent method surface rather than another live repair lane.
+
+## D-246: Make dependency security a required repo gate
+
+- Date: `2026-05-12`
+- Category: `security_governance`
+- Tags: `dependency_review`, `dependabot`, `lockfiles`, `ci`
+- Decision:
+  - add a dedicated PR `dependency-review` workflow using GitHub's dependency
+    review action
+  - fail that review on `moderate` or higher vulnerabilities across both:
+    - `runtime`
+    - `development`
+  - add CI audit jobs for:
+    - locked Python dependencies
+    - locked Node dependencies
+  - make Python lock drift a failing CI condition by recompiling
+    `requirements.lock` from `requirements.in` and diffing the result
+  - expand Dependabot coverage to include `npm` alongside `pip` and
+    `github-actions`
+- Validation:
+  - `make start`
+  - `make test`
+  - `git diff --check`
+  - GitHub Actions on the new workflow surface
+- Why: the repo had background Dependabot alerting but not a real merge gate
+  for vulnerable dependency diffs, and it had already proven that direct-manifest
+  bumps could land without the corresponding lockfile refresh. After the API
+  secret leak tightened the security bar, dependency review, lock-surface audit,
+  and lockfile consistency needed to become explicit required checks instead of
+  social expectations.

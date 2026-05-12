@@ -32,3 +32,34 @@ jobs:
           OPENAI_API_KEY: sk-test-key-123456789012345
           POLINKO_SERVER_API_KEY: test-server-key
         run: make test PYTHON=python
+
+  python-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Install audit and locked deps
+        run: |
+          python -m pip install --upgrade pip pip-audit
+          pip install -r requirements.lock
+      - name: Audit locked Python dependencies
+        run: pip-audit -r requirements.lock
+      - name: Verify requirements.lock matches requirements.in
+        run: |
+          pip-compile --allow-unsafe --output-file=requirements.lock --strip-extras requirements.in
+          git diff --exit-code -- requirements.lock
+
+  node-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: "npm"
+      - name: Install Node dependencies
+        run: npm ci
+      - name: Audit Node dependencies
+        run: npm audit --audit-level=moderate
