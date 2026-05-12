@@ -5,7 +5,7 @@ openai-agents==0.10.4
 python-dotenv==1.2.2
 requests==2.34.0
 pypdf==6.10.2
-Pillow==12.0.0
+Pillow==12.2.0
 mypy==1.20.1
 pre-commit==4.5.1
 ruff==0.15.11
