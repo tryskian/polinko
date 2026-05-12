@@ -4307,3 +4307,29 @@ quickstart document.
   secret leak tightened the security bar, dependency review, lock-surface audit,
   and lockfile consistency needed to become explicit required checks instead of
   social expectations.
+
+## D-247: Collapse the public day-close surface back to `make end`
+
+- Date: `2026-05-12`
+- Category: `workflow_environment`
+- Tags: `operator_rituals`, `command_surface`, `closeout`, `caffeinate`
+- Decision:
+  - keep `make end` as the single public operational closeout command
+  - remove `make end-stop` from the public command surface
+  - have `tools/end_of_day_routine.sh` run shutdown directly:
+    - `make server-daemon-stop`
+    - `make decaffeinate`
+    - `make session-status`
+  - keep `make end-git-check` separate for the final post-merge clean-main
+    verification
+  - keep `make caffeinate-off-all` available only as an explicit manual sweep
+    for matching unmanaged `caffeinate` processes
+- Validation:
+  - `bash -n tools/end_of_day_routine.sh`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: after narrowing closeout away from the broad global `caffeinate` sweep,
+  the remaining `end-stop` helper no longer carried its own operator value. The
+  repo had drifted away from the older single-command closeout feel of
+  `make eod`, so folding the helper back into `make end` restores a cleaner
+  public ritual without changing the separate clean-main check.
