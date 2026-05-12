@@ -26,6 +26,11 @@
     },
     {
       "type": "research_note",
+      "label": "Hallucination-boundary signal shape",
+      "path": "docs/research/hallucination-boundary-signal-shape-20260512.md"
+    },
+    {
+      "type": "research_note",
       "label": "OCR progress snapshot",
       "path": "docs/research/ocr-progress-20260508.md"
     },
@@ -112,7 +117,7 @@
     {
       "type": "eval_report",
       "label": "Hallucination eval snapshot",
-      "path": "docs/eval/beta_2_0/hallucination-20260512-180408.json"
+      "path": "docs/eval/beta_2_0/hallucination-20260512-191438.json"
     },
     {
       "type": "diagram",

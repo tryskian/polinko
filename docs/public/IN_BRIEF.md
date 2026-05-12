@@ -75,6 +75,10 @@ In short: confidence must not outrun evidence.
 - retrieval grounding now has fresh tracked snapshots:
   - retrieval recall: `12/12` pass
   - file search: `5/5` pass
+- tracked hallucination-boundary coverage is now visibly shaped:
+  - latest tracked snapshot: `9/9` pass
+  - evidence-required branch: `3` cases
+  - uncertainty-required branch: `6` cases
 - operator burden now has a seeded thin-lane surface:
   - `4` pass rows
   - `2` retained fail rows
@@ -87,6 +91,7 @@ In short: confidence must not outrun evidence.
   - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
   - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
   - [Co-reasoning signal shape](../research/co-reasoning-signal-shape-20260512.md)
+  - [Hallucination-boundary signal shape](../research/hallucination-boundary-signal-shape-20260512.md)
   - [Retrieval grounding signal shape](../research/retrieval-grounding-signal-shape-20260512.md)
   - [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
   - [Operator burden seed](../research/operator-burden-seed-20260509.md)

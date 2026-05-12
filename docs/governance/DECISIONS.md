@@ -4429,3 +4429,29 @@ quickstart document.
   enforcing two different grounding boundaries:
   memory-style recall with session isolation, and scoped/global file-search
   recall without distractor leaks.
+
+## D-252: Refresh hallucination boundary as a current two-branch signal surface
+
+- Date: `2026-05-12`
+- Category: `evidence_governance`
+- Tags: `hallucination`, `tracked_snapshot`, `visibility`, `score_contract`
+- Decision:
+  - promote a fresh tracked hallucination snapshot at `9/9` pass
+  - add a hallucination-boundary signal-shape note and public diagram
+  - point the evidence console at the new signal note instead of only the
+    earlier promotion writeup
+  - tighten the hallucination judge-score contract to the actual `0-10` scale
+    with `5` as the active minimum acceptable score
+- Validation:
+  - `./venv/bin/python -m unittest tests.test_eval_hallucination`
+  - fresh live hallucination eval on isolated local server -> `9/9` pass
+  - `./venv/bin/python -m unittest tests.test_eval_viz`
+  - `python3 -m tools.render_mermaid_diagrams`
+  - `make api-smoke`
+  - `make lint-docs`
+  - `git diff --check`
+- Why: the hallucination lane was green but still read mostly as a promotion
+  note. The fresh run also exposed that the documented threshold examples had
+  drifted away from the actual `0-10` judge scale. The lane needed a current
+  visible signal surface and an explicit score contract so future runs cannot
+  accidentally manufacture false failures through bad threshold inputs.

@@ -123,6 +123,7 @@ Last updated: 2026-05-12
       - latest tracked snapshot: `9/9` pass
       - tracked case count: `9`
       - new distinct seams: archive-lore and archive-discipline fabrication
+      - current signal-shape surface is now explicit
     - retrieval grounding now has fresh tracked snapshots across both visible branches:
       - retrieval recall: `12/12` pass
       - file search: `5/5` pass
