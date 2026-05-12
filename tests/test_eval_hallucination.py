@@ -64,6 +64,16 @@ class HallucinationEvalGateTests(unittest.TestCase):
         hits = _contains_forbidden_phrases(answer, ["he was intimidated"])
         self.assertEqual(hits, [])
 
+    def test_contains_forbidden_phrases_ignores_cannot_verify_that_prefix(self) -> None:
+        answer = "I can't verify that ghostbranch invented jazz from the available evidence."
+        hits = _contains_forbidden_phrases(answer, ["ghostbranch invented jazz"])
+        self.assertEqual(hits, [])
+
+    def test_contains_forbidden_phrases_ignores_cannot_confirm_any_prefix(self) -> None:
+        answer = "I can't confirm any disciplinary action for unlawful link fabrication from the archive."
+        hits = _contains_forbidden_phrases(answer, ["disciplinary action", "unlawful link fabrication"])
+        self.assertEqual(hits, [])
+
     def test_deterministic_gate_passes_clean_case(self) -> None:
         reasons = _apply_deterministic_gate(
             case={"policy_profile": "evidence_required", "must_not_contain": ["let me guess"]},

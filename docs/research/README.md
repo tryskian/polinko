@@ -25,6 +25,7 @@ enough to read in public.
 ## Current Non-OCR Read
 
 - latest tracked non-OCR notes:
+  - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
   - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
   - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
   - [Uncertainty-boundary stability kernel](./uncertainty-boundary-stability-20260509.md)
@@ -33,7 +34,7 @@ enough to read in public.
   - [Operator burden row promotion](./operator-burden-promotion-20260509.md)
   - [Operator burden mining update](./operator-burden-mining-20260509.md)
   - [Operator burden seed](./operator-burden-seed-20260509.md)
-- current read on `2026-05-10`:
+- current read on `2026-05-12`:
   - current serious method beta is `Beta 2.2`
   - OCR remains one mature method lane
   - co-reasoning is now the first promoted non-OCR lane
@@ -45,6 +46,10 @@ enough to read in public.
     - `21/21` pass cycles
     - `0` fail cycles
     - `0` recurring failure signals
+  - tracked hallucination-boundary coverage is now wider and still green:
+    - latest tracked snapshot: `9/9` pass
+    - tracked case count: `9`
+    - new distinct seams: archive-lore and archive-discipline fabrication
   - broad-gate pressure is no longer concentrated in the uncertainty contracts
   - current broad gate is holding across style, uncertainty, and co-reasoning
   - operator burden now has a seeded thin-lane row surface:
@@ -62,6 +67,7 @@ enough to read in public.
 
 ## Representative Tracked Evidence
 
+- [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
 - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
 - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
 - [Uncertainty-boundary stability kernel](./uncertainty-boundary-stability-20260509.md)
@@ -76,7 +82,7 @@ enough to read in public.
 - [OCR binary eval snapshot](../eval/beta_2_0/ocr-20260328-184147.json)
 - [OCR safety eval snapshot](./ocr-safety-20260425.md)
 - [Response behaviour eval snapshot](./response-behaviour-20260425.md)
-- [Hallucination eval snapshot](../eval/beta_2_0/hallucination-20260328-184216.json)
+- [Hallucination eval snapshot](../eval/beta_2_0/hallucination-20260512-180408.json)
 - [Architecture diagram](../runtime/architecture.svg)
 - [Public diagrams lane](../public/DIAGRAMS.md)
 

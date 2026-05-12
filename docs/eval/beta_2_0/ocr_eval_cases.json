@@ -1,0 +1,59 @@
+{
+  "cases": [
+    {
+      "id": "ocr_verbatim_smoke",
+      "text_hint": "Line one\nLine two",
+      "transcription_mode": "verbatim",
+      "must_contain": ["Line one", "Line two"],
+      "must_not_contain": ["[OCR scaffold]"],
+      "must_not_contain_words": ["likely", "probably", "guess"],
+      "min_chars": 10
+    },
+    {
+      "id": "ocr_normalized_smoke",
+      "text_hint": "alpha   beta\n\n   gamma",
+      "transcription_mode": "normalized",
+      "must_contain": ["alpha beta", "gamma"],
+      "must_not_contain": ["  ", "\n\n"],
+      "must_not_match_regex": ["\\s{2,}"],
+      "min_chars": 8
+    },
+    {
+      "id": "ocr_crossout_replacement_order",
+      "text_hint": "WE [CROSSED_OUT:UNDERSTAND] PERCEIVE\nTHE 3D THROUGH\nA 4D LENS",
+      "transcription_mode": "verbatim",
+      "must_appear_in_order": ["WE", "[CROSSED_OUT:UNDERSTAND]", "PERCEIVE", "THE 3D THROUGH", "A 4D LENS"],
+      "must_match_regex": ["\\[CROSSED_OUT:[^\\]]+\\]\\s+PERCEIVE"],
+      "must_not_contain_words": ["likely", "probably", "guess"],
+      "min_chars": 20
+    },
+    {
+      "id": "ocr_arrow_literal_symbol",
+      "text_hint": "-> PLENUM",
+      "transcription_mode": "verbatim",
+      "must_contain": ["-> PLENUM"],
+      "must_not_contain_words": ["is"],
+      "min_chars": 6
+    },
+    {
+      "id": "ocr_no_alternative_guess_listing",
+      "text_hint": "gyrus",
+      "transcription_mode": "verbatim",
+      "must_contain": ["gyrus"],
+      "must_not_match_regex": [
+        "\"[^\"]+\"\\s+or\\s+\"[^\"]+\"",
+        "\\b(?:likely|probably|maybe|appears to be|guess)\\b"
+      ],
+      "must_not_contain_words": ["smilus", "sulcus", "opryess", "cypress"],
+      "min_chars": 5
+    },
+    {
+      "id": "ocr_no_caretaker_style",
+      "text_hint": "PERCEIVE",
+      "transcription_mode": "verbatim",
+      "must_contain": ["PERCEIVE"],
+      "must_not_contain_words": ["cheers", "vibes", "buddy", "friend"],
+      "min_chars": 7
+    }
+  ]
+}

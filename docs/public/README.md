@@ -30,6 +30,10 @@ This is the shortest route through Polinko’s public research surface.
     - `21/21` pass cycles
     - `0` fail cycles
     - `0` recurring failure signals
+  - tracked hallucination-boundary coverage is now wider and still green:
+    - latest tracked snapshot: `9/9` pass
+    - tracked case count: `9`
+    - new distinct seams: archive-lore and archive-discipline fabrication
   - current broad gate is holding across style, uncertainty, and co-reasoning
   - operator burden now has a seeded row-local surface:
     - `4` pass rows
@@ -46,6 +50,7 @@ This is the shortest route through Polinko’s public research surface.
   - [Operator burden seed](../research/operator-burden-seed-20260509.md)
   - [Beta 2.2 stability soak](../research/beta-2-2-stability-soak-20260509.md)
   - [Uncertainty-boundary stability kernel](../research/uncertainty-boundary-stability-20260509.md)
+  - [Hallucination-boundary promotion](../research/hallucination-boundary-promotion-20260512.md)
 
 ## Read In Order
 

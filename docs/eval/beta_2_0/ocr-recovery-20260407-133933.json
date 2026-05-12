@@ -1,0 +1,130 @@
+{
+  "run_id": "20260407-133933",
+  "base_url": "http://127.0.0.1:8000",
+  "cases_path": "docs/eval/cases/ocr_recovery_eval_cases.json",
+  "summary": {
+    "total": 3,
+    "passed": 3,
+    "failed": 0,
+    "errors": 0,
+    "gate_passed": 3,
+    "gate_failed": 0
+  },
+  "cases": [
+    {
+      "id": "phi_ambiguity_recovery_template",
+      "session_id": "ocr-recovery-eval-20260407-133933-01",
+      "status": "PASS",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "labeling_guidance": {
+        "outcome": "partial",
+        "pass_tags": [
+          "policy_pass",
+          "high_value_alignment",
+          "evidence_complete"
+        ],
+        "fail_tags": [
+          "policy_fail",
+          "high_value_miss",
+          "evidence_incomplete"
+        ],
+        "note": "High recovery quality after ambiguity; unstable initial OCR-to-claim mapping."
+      },
+      "steps": [
+        {
+          "step_id": "seed_ambiguity_response",
+          "prompt": "What Greek letter is this?",
+          "assistant": "Based on the looped upper stroke, it most likely represents **phi (φ)**, though it could be mistaken for **tau (τ)** in some handwriting styles.",
+          "status": "PASS",
+          "reasons": []
+        },
+        {
+          "step_id": "contextual_recovery",
+          "prompt": "Context: this is a handwritten phi from my research documentation. Re-check and answer with only the letter name.",
+          "assistant": "phi",
+          "status": "PASS",
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "id": "phi_overlay_contradiction_reset_template",
+      "session_id": "ocr-recovery-eval-20260407-133933-02",
+      "status": "PASS",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "labeling_guidance": {
+        "outcome": "partial",
+        "pass_tags": [
+          "policy_pass",
+          "high_value_alignment",
+          "evidence_complete"
+        ],
+        "fail_tags": [
+          "policy_fail",
+          "high_value_miss",
+          "evidence_incomplete"
+        ],
+        "note": "Tests contradiction reset when prior guess is explicitly negated by the operator."
+      },
+      "steps": [
+        {
+          "step_id": "seed_guess",
+          "prompt": "OCR this handwritten Greek letter.",
+          "assistant": "[OCR]\nhandwritten greek letter with looped stem, easy to confuse as tau",
+          "status": "PASS",
+          "reasons": []
+        },
+        {
+          "step_id": "negative_anchor_recheck",
+          "prompt": "Not tau. Re-check from the image evidence only and answer with just the letter name.",
+          "assistant": "phi",
+          "status": "PASS",
+          "reasons": []
+        }
+      ]
+    },
+    {
+      "id": "phi_memory_carryover_reset_template",
+      "session_id": "ocr-recovery-eval-20260407-133933-03",
+      "status": "PASS",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "labeling_guidance": {
+        "outcome": "partial",
+        "pass_tags": [
+          "policy_pass",
+          "high_value_alignment",
+          "evidence_complete"
+        ],
+        "fail_tags": [
+          "policy_fail",
+          "high_value_miss",
+          "evidence_incomplete"
+        ],
+        "note": "Tests stale-memory suppression and fresh read after contradiction cue."
+      },
+      "steps": [
+        {
+          "step_id": "initial_answer",
+          "prompt": "What letter is in this image?",
+          "assistant": "The letter is Greek **phi (φ)**, though its looped stroke might resemble **tau (τ)** in some handwriting styles.",
+          "status": "PASS",
+          "reasons": []
+        },
+        {
+          "step_id": "fresh_read_after_correction",
+          "prompt": "Previous guess can be wrong due to stale memory. Ignore prior output, re-read the image, and return only the correct letter name.",
+          "assistant": "phi (φ)",
+          "status": "PASS",
+          "reasons": []
+        }
+      ]
+    }
+  ],
+  "generated_at": 1775583585
+}
