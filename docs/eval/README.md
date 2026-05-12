@@ -90,6 +90,12 @@ Do not flatten one into the other.
   - file search:
     - `docs/eval/beta_2_0/file-search-20260512-190149.json`
     - `5/5` pass
+- current hallucination-boundary surface now has a fresh tracked snapshot:
+  - `docs/eval/beta_2_0/hallucination-20260512-191438.json`
+  - `9/9` pass
+  - score contract:
+    - judge score range: `0-10`
+    - current minimum acceptable score: `5`
 - current thin-lane operator burden surface lives in:
   - `docs/eval/beta_2_0/operator_burden_rows.json`
   - summarize with:

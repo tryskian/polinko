@@ -13,6 +13,7 @@ Static SVG exports generated from this page:
 - [OCR Progress Funnel](diagrams/ocr-progress-funnel.svg)
 - [Current OCR Signal Shape](diagrams/current-ocr-signal-shape.svg)
 - [Co-Reasoning Signal Shape](diagrams/co-reasoning-signal-shape.svg)
+- [Hallucination-Boundary Signal Shape](diagrams/hallucination-boundary-signal-shape.svg)
 - [Operator Burden Signal Shape](diagrams/operator-burden-signal-shape.svg)
 - [Retrieval Grounding Signal Shape](diagrams/retrieval-grounding-signal-shape.svg)
 - [Polinko Evidence Sankey (D3)](diagrams/polinko-evidence-sankey.svg)
@@ -24,6 +25,7 @@ Current dated progress note:
 - [Beta 2.2 Snapshot (2026-05-08)](../research/beta-2-2-20260508.md)
 - [Co-Reasoning Promotion Snapshot (2026-05-08)](../research/co-reasoning-promotion-20260508.md)
 - [Co-Reasoning Signal Shape (2026-05-12)](../research/co-reasoning-signal-shape-20260512.md)
+- [Hallucination-Boundary Signal Shape (2026-05-12)](../research/hallucination-boundary-signal-shape-20260512.md)
 - [Operator Burden Signal Shape (2026-05-12)](../research/operator-burden-signal-shape-20260512.md)
 - [Retrieval Grounding Signal Shape (2026-05-12)](../research/retrieval-grounding-signal-shape-20260512.md)
 - [OCR Progress Snapshot (2026-05-08)](../research/ocr-progress-20260508.md)
@@ -155,6 +157,29 @@ flowchart TD
   class A,B,H pass;
   class C,D,E bridge;
   class F,G evidence;
+```
+
+## Hallucination-Boundary Signal Shape
+
+![Hallucination-Boundary Signal Shape](diagrams/hallucination-boundary-signal-shape.svg)
+
+```mermaid
+flowchart TD
+  A["Hallucination boundary lane\n2026-05-12"] --> B["Tracked snapshot\n9/9 pass\nlow risk only"]
+  A --> C["Evidence-required branch\n3/3 pass"]
+  A --> D["Uncertainty-required branch\n6/6 pass"]
+  C --> E["Invoice total\npolicy join\ncitation guardrails"]
+  D --> F["No financial / legal / event fabrication"]
+  D --> G["No motive guess / archive lore / archive discipline fabrication"]
+  B --> H["Judge-score contract\n0-10 scale\nthreshold >= 5"]
+
+  classDef pass fill:#EEF7EE,stroke:#59A14F,color:#1F1F1F;
+  classDef evidence fill:#EEF7F6,stroke:#76B7B2,color:#1F1F1F;
+  classDef bridge fill:#FBF5E8,stroke:#F28E2B,color:#1F1F1F;
+
+  class A,B pass;
+  class C,D bridge;
+  class E,F,G,H evidence;
 ```
 
 ## Operator Burden Signal Shape

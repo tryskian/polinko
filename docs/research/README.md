@@ -26,6 +26,7 @@ enough to read in public.
 
 - latest tracked non-OCR notes:
   - [Co-reasoning signal shape](./co-reasoning-signal-shape-20260512.md)
+  - [Hallucination-boundary signal shape](./hallucination-boundary-signal-shape-20260512.md)
   - [Retrieval grounding signal shape](./retrieval-grounding-signal-shape-20260512.md)
   - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
   - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
@@ -53,6 +54,7 @@ enough to read in public.
     - latest tracked snapshot: `9/9` pass
     - tracked case count: `9`
     - new distinct seams: archive-lore and archive-discipline fabrication
+    - current signal-shape surface is now explicit
   - retrieval grounding now has fresh tracked snapshots across both visible branches:
     - retrieval recall: `12/12` pass
     - file search: `5/5` pass
@@ -76,6 +78,7 @@ enough to read in public.
 ## Representative Tracked Evidence
 
 - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
+- [Hallucination-boundary signal shape](./hallucination-boundary-signal-shape-20260512.md)
 - [Co-reasoning signal shape](./co-reasoning-signal-shape-20260512.md)
 - [Retrieval grounding signal shape](./retrieval-grounding-signal-shape-20260512.md)
 - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
@@ -93,7 +96,7 @@ enough to read in public.
 - [OCR binary eval snapshot](../eval/beta_2_0/ocr-20260328-184147.json)
 - [OCR safety eval snapshot](./ocr-safety-20260425.md)
 - [Response behaviour eval snapshot](./response-behaviour-20260425.md)
-- [Hallucination eval snapshot](../eval/beta_2_0/hallucination-20260512-180408.json)
+- [Hallucination eval snapshot](../eval/beta_2_0/hallucination-20260512-191438.json)
 - [Retrieval eval snapshot](../eval/beta_2_0/retrieval-20260512-190149.json)
 - [File-search eval snapshot](../eval/beta_2_0/file-search-20260512-190149.json)
 - [Architecture diagram](../runtime/architecture.svg)

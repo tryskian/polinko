@@ -136,6 +136,18 @@ def _init_tracked_eval_root(path: Path) -> None:
         ),
         encoding="utf-8",
     )
+    (path / "hallucination-20260512-191438.json").write_text(
+        json.dumps(
+            {
+                "run_id": "20260512-191438",
+                "passed": 9,
+                "failed": 0,
+                "risk_counts": {"low": 9, "medium": 0, "high": 0},
+                "cases": [],
+            }
+        ),
+        encoding="utf-8",
+    )
     (path / "operator_burden_rows.json").write_text(
         json.dumps(
             {
@@ -186,7 +198,7 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["points"][-1]["illustration"], 1)
             self.assertEqual(payload["evals"][0]["lane"], "illustration")
             self.assertEqual(payload["evals"][0]["outcome"], "ERROR")
-            self.assertEqual(len(payload["lane_summaries"]), 4)
+            self.assertEqual(len(payload["lane_summaries"]), 5)
 
     def test_payload_can_filter_eval_rows_by_run_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -347,6 +359,7 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["runs_total"], 0)
             summaries = {row["lane_key"]: row for row in payload["lane_summaries"]}
             self.assertIn("co_reasoning", summaries)
+            self.assertIn("hallucination_boundary", summaries)
             self.assertIn("operator_burden", summaries)
             self.assertEqual(summaries["co_reasoning"]["pass"], 14)
             self.assertEqual(summaries["co_reasoning"]["fail"], 0)
@@ -355,6 +368,12 @@ class EvalVizTests(unittest.TestCase):
                 "docs/research/co-reasoning-signal-shape-20260512.md",
                 summaries["co_reasoning"]["research_note_path"],
             )
+            self.assertIn(
+                "docs/research/hallucination-boundary-signal-shape-20260512.md",
+                summaries["hallucination_boundary"]["research_note_path"],
+            )
+            self.assertEqual(summaries["hallucination_boundary"]["pass"], 9)
+            self.assertEqual(summaries["hallucination_boundary"]["fail"], 0)
             self.assertIn(
                 "docs/research/retrieval-grounding-signal-shape-20260512.md",
                 summaries["retrieval_grounding"]["research_note_path"],

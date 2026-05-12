@@ -54,7 +54,7 @@ _TRACKED_LANE_SPECS = (
         "title": "Hallucination boundary",
         "note": "Grounding and uncertainty boundary snapshot.",
         "pattern": "hallucination-[0-9]*.json",
-        "research_note_path": "docs/research/hallucination-boundary-promotion-20260512.md",
+        "research_note_path": "docs/research/hallucination-boundary-signal-shape-20260512.md",
     },
     {
         "lane_key": "retrieval_grounding",

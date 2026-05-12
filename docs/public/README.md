@@ -34,6 +34,7 @@ This is the shortest route through Polinko’s public research surface.
     - latest tracked snapshot: `9/9` pass
     - tracked case count: `9`
     - new distinct seams: archive-lore and archive-discipline fabrication
+    - current signal-shape surface is now explicit
   - retrieval grounding now has fresh tracked snapshots across both visible branches:
     - retrieval recall: `12/12` pass
     - file search: `5/5` pass
@@ -49,6 +50,7 @@ This is the shortest route through Polinko’s public research surface.
   - [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
   - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
   - [Co-reasoning signal shape](../research/co-reasoning-signal-shape-20260512.md)
+  - [Hallucination-boundary signal shape](../research/hallucination-boundary-signal-shape-20260512.md)
   - [Retrieval grounding signal shape](../research/retrieval-grounding-signal-shape-20260512.md)
   - [OCR progress snapshot](../research/ocr-progress-20260508.md)
   - [Behaviour backlog snapshot](../research/behaviour-backlog-20260508.md)
