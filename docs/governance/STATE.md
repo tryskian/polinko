@@ -98,6 +98,10 @@ Last updated: 2026-05-10
   - growth is fail-tolerant
   - `/viz/pass-fail` is the current OCR-facing fail-signal instrument
   - `manual_evals.db` remains the integrated manual-eval warehouse
+  - dependency security is now a first-class repo gate:
+    - PR dependency review blocks vulnerable dependency diffs
+    - CI audits locked Python and Node dependency surfaces
+    - CI rejects `requirements.in` / `requirements.lock` drift
   - current promoted non-OCR lane:
     - co-reasoning reliability passes `14/14` in the tracked style surface
     - latest one-hour deterministic beta soak closes at `19/21` pass cycles

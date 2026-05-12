@@ -147,7 +147,7 @@ python-dotenv==1.2.2
     # via
     #   -r requirements.in
     #   pydantic-settings
-python-multipart==0.0.26
+python-multipart==0.0.28
     # via mcp
 pyyaml==6.0.3
     # via
@@ -198,7 +198,7 @@ typing-inspection==0.4.2
     #   mcp
     #   pydantic
     #   pydantic-settings
-urllib3==2.6.3
+urllib3==2.7.0
     # via
     #   requests
     #   types-requests
@@ -214,7 +214,7 @@ yamllint==1.38.0
     # via -r requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==26.0.1
+pip==26.1.1
     # via pip-tools
 setuptools==82.0.1
     # via pip-tools
