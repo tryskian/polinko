@@ -1,0 +1,220 @@
+{
+  "run_id": "20260328-184147",
+  "base_url": "http://127.0.0.1:8000",
+  "cases_path": "docs/ocr_eval_cases.json",
+  "strict": false,
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0,
+    "errors": 0,
+    "gate_passed": 6,
+    "gate_failed": 0
+  },
+  "cases": [
+    {
+      "id": "ocr_verbatim_smoke",
+      "session_id": "ocr-eval-20260328-184147-01",
+      "status": "PASS",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "image_path": null,
+      "source_name": "ocr_verbatim_smoke",
+      "mime_type": "application/octet-stream",
+      "transcription_mode": "verbatim",
+      "text_hint_present": true,
+      "visual_context_hint_present": false,
+      "must_contain": [
+        "Line one",
+        "Line two"
+      ],
+      "must_contain_any": [],
+      "must_not_contain": [
+        "[OCR scaffold]"
+      ],
+      "must_not_contain_words": [
+        "likely",
+        "probably",
+        "guess"
+      ],
+      "must_appear_in_order": [],
+      "must_match_regex": [],
+      "must_not_match_regex": [],
+      "min_chars": 10,
+      "max_chars": null,
+      "char_count": 17,
+      "reasons": [],
+      "extracted_text": "Line one\nLine two"
+    },
+    {
+      "id": "ocr_normalized_smoke",
+      "session_id": "ocr-eval-20260328-184147-02",
+      "status": "PASS",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "image_path": null,
+      "source_name": "ocr_normalized_smoke",
+      "mime_type": "application/octet-stream",
+      "transcription_mode": "normalized",
+      "text_hint_present": true,
+      "visual_context_hint_present": false,
+      "must_contain": [
+        "alpha beta",
+        "gamma"
+      ],
+      "must_contain_any": [],
+      "must_not_contain": [],
+      "must_not_contain_words": [],
+      "must_appear_in_order": [],
+      "must_match_regex": [],
+      "must_not_match_regex": [
+        "\\s{2,}"
+      ],
+      "min_chars": 8,
+      "max_chars": null,
+      "char_count": 16,
+      "reasons": [],
+      "extracted_text": "alpha beta\ngamma"
+    },
+    {
+      "id": "ocr_crossout_replacement_order",
+      "session_id": "ocr-eval-20260328-184147-03",
+      "status": "PASS",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "image_path": null,
+      "source_name": "ocr_crossout_replacement_order",
+      "mime_type": "application/octet-stream",
+      "transcription_mode": "verbatim",
+      "text_hint_present": true,
+      "visual_context_hint_present": false,
+      "must_contain": [],
+      "must_contain_any": [],
+      "must_not_contain": [],
+      "must_not_contain_words": [
+        "likely",
+        "probably",
+        "guess"
+      ],
+      "must_appear_in_order": [
+        "WE",
+        "[CROSSED_OUT:UNDERSTAND]",
+        "PERCEIVE",
+        "THE 3D THROUGH",
+        "A 4D LENS"
+      ],
+      "must_match_regex": [
+        "\\[CROSSED_OUT:[^\\]]+\\]\\s+PERCEIVE"
+      ],
+      "must_not_match_regex": [],
+      "min_chars": 20,
+      "max_chars": null,
+      "char_count": 61,
+      "reasons": [],
+      "extracted_text": "WE [CROSSED_OUT:UNDERSTAND] PERCEIVE\nTHE 3D THROUGH\nA 4D LENS"
+    },
+    {
+      "id": "ocr_arrow_literal_symbol",
+      "session_id": "ocr-eval-20260328-184147-04",
+      "status": "PASS",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "image_path": null,
+      "source_name": "ocr_arrow_literal_symbol",
+      "mime_type": "application/octet-stream",
+      "transcription_mode": "verbatim",
+      "text_hint_present": true,
+      "visual_context_hint_present": false,
+      "must_contain": [
+        "-> PLENUM"
+      ],
+      "must_contain_any": [],
+      "must_not_contain": [],
+      "must_not_contain_words": [
+        "is"
+      ],
+      "must_appear_in_order": [],
+      "must_match_regex": [],
+      "must_not_match_regex": [],
+      "min_chars": 6,
+      "max_chars": null,
+      "char_count": 9,
+      "reasons": [],
+      "extracted_text": "-> PLENUM"
+    },
+    {
+      "id": "ocr_no_alternative_guess_listing",
+      "session_id": "ocr-eval-20260328-184147-05",
+      "status": "PASS",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "image_path": null,
+      "source_name": "ocr_no_alternative_guess_listing",
+      "mime_type": "application/octet-stream",
+      "transcription_mode": "verbatim",
+      "text_hint_present": true,
+      "visual_context_hint_present": false,
+      "must_contain": [
+        "gyrus"
+      ],
+      "must_contain_any": [],
+      "must_not_contain": [],
+      "must_not_contain_words": [
+        "smilus",
+        "sulcus",
+        "opryess",
+        "cypress"
+      ],
+      "must_appear_in_order": [],
+      "must_match_regex": [],
+      "must_not_match_regex": [
+        "\"[^\"]+\"\\s+or\\s+\"[^\"]+\"",
+        "\\b(?:likely|probably|maybe|appears to be|guess)\\b"
+      ],
+      "min_chars": 5,
+      "max_chars": null,
+      "char_count": 5,
+      "reasons": [],
+      "extracted_text": "gyrus"
+    },
+    {
+      "id": "ocr_no_caretaker_style",
+      "session_id": "ocr-eval-20260328-184147-06",
+      "status": "PASS",
+      "error": "",
+      "gate_outcome": "pass",
+      "gate_reasons": [],
+      "image_path": null,
+      "source_name": "ocr_no_caretaker_style",
+      "mime_type": "application/octet-stream",
+      "transcription_mode": "verbatim",
+      "text_hint_present": true,
+      "visual_context_hint_present": false,
+      "must_contain": [
+        "PERCEIVE"
+      ],
+      "must_contain_any": [],
+      "must_not_contain": [],
+      "must_not_contain_words": [
+        "cheers",
+        "vibes",
+        "buddy",
+        "friend"
+      ],
+      "must_appear_in_order": [],
+      "must_match_regex": [],
+      "must_not_match_regex": [],
+      "min_chars": 7,
+      "max_chars": null,
+      "char_count": 8,
+      "reasons": [],
+      "extracted_text": "PERCEIVE"
+    }
+  ],
+  "generated_at": 1774737709
+}

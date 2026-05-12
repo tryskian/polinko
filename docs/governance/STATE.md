@@ -116,6 +116,10 @@ Last updated: 2026-05-12
       - `21/21` pass cycles
       - `0` fail cycles
       - `0` recurring failure signals
+    - tracked hallucination-boundary coverage is now wider and still green:
+      - latest tracked snapshot: `9/9` pass
+      - tracked case count: `9`
+      - new distinct seams: archive-lore and archive-discipline fabrication
     - current broad gate is holding across style, uncertainty, and co-reasoning
   - current mature method lane is green:
     - growth stability: `25/25` stable, `0` flaky

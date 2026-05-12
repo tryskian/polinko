@@ -75,6 +75,10 @@ docs/peanut/**
 docs/eval/**
 !docs/eval/.gitkeep
 !docs/eval/README.md
+!docs/eval/beta_2_0/
+!docs/eval/beta_2_0/*.json
+docs/eval/beta_2_0/*debug*.json
+docs/eval/beta_2_0/*.jsonl
 
 # Local legacy coordination/planning docs (archived/deprecated)
 .archive/live_archive/legacy_coordination/

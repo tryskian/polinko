@@ -21,6 +21,11 @@
     },
     {
       "type": "research_note",
+      "label": "Hallucination-boundary promotion",
+      "path": "docs/research/hallucination-boundary-promotion-20260512.md"
+    },
+    {
+      "type": "research_note",
       "label": "Beta 2.2 stability soak",
       "path": "docs/research/beta-2-2-stability-soak-20260509.md"
     },
@@ -77,7 +82,7 @@
     {
       "type": "eval_report",
       "label": "Hallucination eval snapshot",
-      "path": "docs/eval/beta_2_0/hallucination-20260328-184216.json"
+      "path": "docs/eval/beta_2_0/hallucination-20260512-180408.json"
     },
     {
       "type": "diagram",

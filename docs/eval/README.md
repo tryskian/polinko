@@ -72,7 +72,9 @@ Do not flatten one into the other.
 
 - active-era case files and report snapshots under `docs/eval/beta_2_0/`
 - includes OCR, OCR recovery, OCR safety, hallucination, retrieval, file
-  search, style, response behaviour, CLIP A/B, and trace artifacts
+  search, style, response behaviour, CLIP A/B, and operator burden
+- append-only eval trace artifacts stay local under `eval_reports/`; they are
+  not auto-promoted into the tracked beta surface
 - current non-OCR promoted lane lives in the tracked style surface for
   co-reasoning reliability
 - current thin-lane operator burden surface lives in:
