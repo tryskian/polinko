@@ -47,6 +47,9 @@ Core surfaces:
 - `/viz/pass-fail/data`
 - `/portfolio/sankey-data`
 
+`/viz/pass-fail` keeps the chart on the active live window and uses tracked
+eval artifacts to surface the broader lane map underneath it.
+
 Representative tracked note:
 
 - [OCR representative case](../research/ocr-representative-case.md)
