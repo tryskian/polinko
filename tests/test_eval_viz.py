@@ -101,13 +101,44 @@ def _init_viz_history_db(path: Path, *, include_feedback: bool = False) -> None:
         conn.commit()
 
 
+def _init_tracked_eval_root(path: Path) -> None:
+    path.mkdir(parents=True, exist_ok=True)
+    (path / "style-20260328-184149.json").write_text(
+        json.dumps(
+            {
+                "run_id": "20260328-184149",
+                "summary": {"total": 11, "passed": 11, "failed": 0},
+                "cases": [],
+                "generated_at": "2026-03-28T18:41:49Z",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (path / "operator_burden_rows.json").write_text(
+        json.dumps(
+            {
+                "updated_at": "2026-05-09",
+                "rows": [
+                    {"verdict": "pass"},
+                    {"verdict": "pass"},
+                    {"verdict": "fail", "failure_disposition": "retain"},
+                    {"verdict": "fail", "failure_disposition": "evict"},
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 class EvalVizTests(unittest.TestCase):
     def test_payload_uses_manual_evals_db_for_points_and_rows(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             history_db = root / "history.db"
             manual_db = root / "manual_evals.db"
+            tracked_root = root / "tracked"
             _init_viz_history_db(history_db)
+            _init_tracked_eval_root(tracked_root)
             build_manual_evals_db(
                 history_db=history_db,
                 output_db=manual_db,
@@ -118,6 +149,7 @@ class EvalVizTests(unittest.TestCase):
                 db_path=manual_db,
                 max_evals=10,
                 max_history_runs=50,
+                tracked_eval_root=tracked_root,
             )
 
             self.assertEqual(payload["chart_mode"], "ocr_lanes")
@@ -132,13 +164,16 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["points"][-1]["illustration"], 1)
             self.assertEqual(payload["evals"][0]["lane"], "illustration")
             self.assertEqual(payload["evals"][0]["outcome"], "ERROR")
+            self.assertEqual(len(payload["lane_summaries"]), 2)
 
     def test_payload_can_filter_eval_rows_by_run_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             history_db = root / "history.db"
             manual_db = root / "manual_evals.db"
+            tracked_root = root / "tracked"
             _init_viz_history_db(history_db, include_feedback=True)
+            _init_tracked_eval_root(tracked_root)
             build_manual_evals_db(
                 history_db=history_db,
                 output_db=manual_db,
@@ -150,6 +185,7 @@ class EvalVizTests(unittest.TestCase):
                 max_evals=10,
                 max_history_runs=50,
                 run_id="ocr-2",
+                tracked_eval_root=tracked_root,
             )
 
             self.assertEqual(payload["chart_mode"], "ocr_lanes")
@@ -164,7 +200,9 @@ class EvalVizTests(unittest.TestCase):
             root = Path(tmp_dir)
             history_db = root / "history.db"
             manual_db = root / "manual_evals.db"
+            tracked_root = root / "tracked"
             _init_viz_history_db(history_db, include_feedback=True)
+            _init_tracked_eval_root(tracked_root)
             with sqlite3.connect(history_db) as conn:
                 conn.executemany(
                     """
@@ -191,6 +229,7 @@ class EvalVizTests(unittest.TestCase):
                 db_path=manual_db,
                 max_evals=10,
                 max_history_runs=50,
+                tracked_eval_root=tracked_root,
             )
 
             self.assertEqual(payload["chart_mode"], "feedback")
@@ -237,7 +276,11 @@ class EvalVizTests(unittest.TestCase):
             (stability_dir / "1711000000-r1.json").write_text(json.dumps(first), encoding="utf-8")
             (growth_dir / "1711003600-r1.json").write_text(json.dumps(second), encoding="utf-8")
 
-            payload = build_pass_fail_viz_payload(report_root=root, max_evals=10)
+            payload = build_pass_fail_viz_payload(
+                report_root=root,
+                max_evals=10,
+                tracked_eval_root=root / "tracked",
+            )
             self.assertEqual(payload["chart_mode"], "binary_gates")
             self.assertEqual(payload["runs_total"], 2)
             self.assertEqual(payload["summary"]["run_id"], "1711003600-r1")
@@ -257,11 +300,38 @@ class EvalVizTests(unittest.TestCase):
 
     def test_payload_without_reports_has_safe_defaults(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
-            payload = build_pass_fail_viz_payload(report_root=Path(tmp_dir))
+            root = Path(tmp_dir)
+            payload = build_pass_fail_viz_payload(
+                report_root=root,
+                tracked_eval_root=root / "tracked",
+            )
             self.assertEqual(payload["runs_total"], 0)
             self.assertEqual(payload["summary"]["pass"], 0)
             self.assertEqual(payload["summary"]["fail"], 0)
             self.assertEqual(payload["evals"], [])
+            self.assertEqual(payload["lane_summaries"], [])
+
+    def test_payload_includes_tracked_lane_summaries(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            tracked_root = root / "tracked"
+            _init_tracked_eval_root(tracked_root)
+
+            payload = build_pass_fail_viz_payload(
+                report_root=root,
+                tracked_eval_root=tracked_root,
+            )
+
+            self.assertEqual(payload["runs_total"], 0)
+            summaries = {row["lane_key"]: row for row in payload["lane_summaries"]}
+            self.assertIn("co_reasoning", summaries)
+            self.assertIn("operator_burden", summaries)
+            self.assertEqual(summaries["co_reasoning"]["pass"], 11)
+            self.assertEqual(summaries["co_reasoning"]["fail"], 0)
+            self.assertEqual(summaries["operator_burden"]["pass"], 2)
+            self.assertEqual(summaries["operator_burden"]["fail"], 2)
+            self.assertEqual(summaries["operator_burden"]["retain"], 1)
+            self.assertEqual(summaries["operator_burden"]["evict"], 1)
 
     def test_html_contains_live_viz_markup(self) -> None:
         html = render_pass_fail_viz_html(refresh_ms=2500, chart_max_points=20)
@@ -272,20 +342,23 @@ class EvalVizTests(unittest.TestCase):
         self.assertIn('id="latestMix"', html)
         self.assertIn('id="windowLabel"', html)
         self.assertIn('id="chartTip"', html)
+        self.assertIn('id="laneSummaries"', html)
+        self.assertIn("Tracked Lane Snapshots", html)
+        self.assertIn("lane-card-state", html)
         self.assertIn("bucketed binary gate report history", html)
         self.assertIn("bucketed manual eval outcome history", html)
-        self.assertIn("bucketed OCR lane history", html)
+        self.assertIn("bucketed active-lane mix history", html)
         self.assertIn("function clipId(runId)", html)
         self.assertIn("function bucketPoints(points, desiredBuckets = DEFAULT_MAX_CHART_POINTS)", html)
         self.assertIn("function computeFailState(rate, total)", html)
         self.assertIn("function sumPoints(points)", html)
         self.assertIn("Latest Bucket", html)
-        self.assertIn("OCR binary gate outcomes", html)
-        self.assertIn("Evaluated OCR outcomes", html)
-        self.assertIn("Recent OCR mix", html)
+        self.assertIn("Current strict gate window", html)
+        self.assertIn("Current evaluated window", html)
+        self.assertIn("Recent active-lane mix", html)
         self.assertIn("0 fail · 0 pass", html)
-        self.assertIn("fail rate in binary gate window", html)
-        self.assertIn("fail/partial rate in evaluated OCR window", html)
+        self.assertIn("fail rate in live gate window", html)
+        self.assertIn("fail/partial rate in evaluated window", html)
         self.assertIn("chart_mode", html)
         self.assertIn("--lane-handwriting", html)
         self.assertIn("const REFRESH_MS = 2500;", html)

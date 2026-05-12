@@ -19,12 +19,51 @@ _REPORT_SUBDIRS = (
 _RUN_ID_TIMESTAMP_RE = re.compile(r"^(?P<epoch>\d{9,})-r\d+$")
 _BINARY_GATE_REPORT_ROOT = Path(".local/eval_reports")
 _MANUAL_EVALS_DB_PATH = Path(".local/runtime_dbs/active/manual_evals.db")
+_TRACKED_EVAL_ROOT = Path("docs/eval/beta_2_0")
 _OCR_LANES = ("typed", "handwriting", "illustration")
 _LANE_LABELS = {
     "typed": "text",
     "handwriting": "handwriting",
     "illustration": "illustration",
 }
+_TRACKED_LANE_SPECS = (
+    {
+        "lane_key": "ocr",
+        "title": "OCR strict gate",
+        "note": "Tracked binary gate snapshot for the mature OCR lane.",
+        "pattern": "ocr-[0-9]*.json",
+    },
+    {
+        "lane_key": "co_reasoning",
+        "title": "Co-reasoning reliability",
+        "note": "Promoted non-OCR lane carried in the tracked style surface.",
+        "pattern": "style-[0-9]*.json",
+    },
+    {
+        "lane_key": "response_behaviour",
+        "title": "Response behaviour",
+        "note": "Explicit uncertainty and claim-discipline gate snapshot.",
+        "pattern": "response-behaviour-[0-9]*.json",
+    },
+    {
+        "lane_key": "hallucination_boundary",
+        "title": "Hallucination boundary",
+        "note": "Grounding and uncertainty boundary snapshot.",
+        "pattern": "hallucination-[0-9]*.json",
+    },
+    {
+        "lane_key": "retrieval_grounding",
+        "title": "Retrieval grounding",
+        "note": "Grounding and no-leak retrieval gate snapshot.",
+        "pattern": "retrieval-[0-9]*.json",
+    },
+    {
+        "lane_key": "file_search",
+        "title": "File search",
+        "note": "Scoped file-search retrieval and leak boundary snapshot.",
+        "pattern": "file-search-[0-9]*.json",
+    },
+)
 _CAMERA_IMAGE_NAME_RX = re.compile(r"(?:^|[-_])(img|dsc)[_-]\d{3,}", re.IGNORECASE)
 _SCREENSHOT_NAME_RX = re.compile(r"(?:^|[-_])screenshot(?:[-_]|$)", re.IGNORECASE)
 _ILLUSTRATION_NAME_HINT_RX = re.compile(
@@ -52,6 +91,13 @@ def _load_json(path: Path) -> dict[str, Any] | None:
     if not isinstance(payload, dict):
         return None
     return payload
+
+
+def _latest_matching_json(root: Path, pattern: str) -> Path | None:
+    candidates = sorted(path for path in root.glob(pattern) if path.is_file())
+    if not candidates:
+        return None
+    return candidates[-1]
 
 
 def _timestamp_ms(report: dict[str, Any], path: Path) -> int:
@@ -225,6 +271,127 @@ def _unixish_to_timestamp_ms(value: Any) -> int:
     if raw and raw < 10_000_000_000:
         return raw * 1000
     return raw
+
+
+def _tracked_updated_at(report: dict[str, Any], path: Path) -> str:
+    for key in ("updated_at", "generated_at"):
+        value = str(report.get(key) or "").strip()
+        if value:
+            return value
+
+    timestamp_unix = _safe_int(report.get("timestamp_unix"))
+    if timestamp_unix > 0:
+        return datetime.fromtimestamp(timestamp_unix, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _tracked_report_counts(report: dict[str, Any]) -> tuple[int, int, int, int, int]:
+    summary = report.get("summary")
+    summary_dict = summary if isinstance(summary, dict) else {}
+    cases = report.get("cases")
+    case_list = cases if isinstance(cases, list) else []
+
+    passed = _safe_int(summary_dict.get("passed", summary_dict.get("gate_passed", report.get("passed"))))
+    failed = _safe_int(summary_dict.get("failed", summary_dict.get("gate_failed", report.get("failed"))))
+    partial = _safe_int(summary_dict.get("partial", report.get("partial")))
+    errors = _safe_int(summary_dict.get("errors", report.get("errors")))
+    total = _safe_int(summary_dict.get("total", report.get("total_cases", report.get("total"))))
+
+    if total <= 0:
+        total = max(passed + failed + partial + errors, len(case_list))
+    if total < passed + failed + partial + errors:
+        total = passed + failed + partial + errors
+
+    return passed, failed, partial, errors, total
+
+
+def _build_tracked_lane_summaries(tracked_eval_root: Path | None) -> list[dict[str, Any]]:
+    if tracked_eval_root is None or not tracked_eval_root.is_dir():
+        return []
+
+    summaries: list[dict[str, Any]] = []
+
+    for spec in _TRACKED_LANE_SPECS:
+        path = _latest_matching_json(tracked_eval_root, spec["pattern"])
+        if path is None:
+            continue
+        report = _load_json(path)
+        if report is None:
+            continue
+        passed, failed, partial, errors, total = _tracked_report_counts(report)
+        summaries.append(
+            {
+                "lane_key": spec["lane_key"],
+                "title": spec["title"],
+                "note": spec["note"],
+                "kind": "tracked_report",
+                "pass": passed,
+                "fail": failed,
+                "partial": partial,
+                "errors": errors,
+                "total": total,
+                "updated_at": _tracked_updated_at(report, path),
+                "run_id": str(report.get("run_id") or "").strip(),
+                "source": str(path),
+            }
+        )
+
+    operator_burden_path = tracked_eval_root / "operator_burden_rows.json"
+    operator_burden = _load_json(operator_burden_path)
+    if operator_burden is not None:
+        rows = operator_burden.get("rows")
+        row_list = rows if isinstance(rows, list) else []
+        passed = sum(
+            1
+            for row in row_list
+            if isinstance(row, dict) and str(row.get("verdict") or "").strip().lower() == "pass"
+        )
+        failed = sum(
+            1
+            for row in row_list
+            if isinstance(row, dict) and str(row.get("verdict") or "").strip().lower() == "fail"
+        )
+        retain = sum(
+            1
+            for row in row_list
+            if isinstance(row, dict)
+            and str(row.get("verdict") or "").strip().lower() == "fail"
+            and str(row.get("failure_disposition") or "").strip().lower() == "retain"
+        )
+        evict = sum(
+            1
+            for row in row_list
+            if isinstance(row, dict)
+            and str(row.get("verdict") or "").strip().lower() == "fail"
+            and str(row.get("failure_disposition") or "").strip().lower() == "evict"
+        )
+        summaries.append(
+            {
+                "lane_key": "operator_burden",
+                "title": "Operator burden",
+                "note": "Thin judged lane with post-fail retain and evict handling.",
+                "kind": "row_lane",
+                "pass": passed,
+                "fail": failed,
+                "partial": 0,
+                "errors": 0,
+                "total": len(row_list),
+                "retain": retain,
+                "evict": evict,
+                "updated_at": _tracked_updated_at(operator_burden, operator_burden_path),
+                "run_id": "",
+                "source": str(operator_burden_path),
+            }
+        )
+
+    return summaries
+
+
+def _attach_lane_summaries(payload: dict[str, Any], tracked_eval_root: Path | None) -> dict[str, Any]:
+    enriched = dict(payload)
+    enriched["lane_summaries"] = _build_tracked_lane_summaries(tracked_eval_root)
+    return enriched
 
 
 def _status_counts(status: str) -> tuple[int, int, int]:
@@ -830,6 +997,7 @@ def build_pass_fail_viz_payload(
     history_db_path: Path | None = None,
     max_history_runs: int = 120,
     run_id: str | None = None,
+    tracked_eval_root: Path | None = _TRACKED_EVAL_ROOT,
 ) -> dict[str, Any]:
     _ = history_db_path
     if report_root is not None:
@@ -840,15 +1008,15 @@ def build_pass_fail_viz_payload(
             run_id=run_id,
         )
         if payload is not None:
-            return payload
-        return {
+            return _attach_lane_summaries(payload, tracked_eval_root)
+        return _attach_lane_summaries({
             "updated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "summary": _default_point(),
             "summary_points": [],
             "points": [],
             "runs_total": 0,
             "evals": [],
-        }
+        }, tracked_eval_root)
 
     if db_path is None:
         payload = _build_payload_from_binary_gate_reports(
@@ -858,7 +1026,7 @@ def build_pass_fail_viz_payload(
             run_id=run_id,
         )
         if payload is not None:
-            return payload
+            return _attach_lane_summaries(payload, tracked_eval_root)
 
     effective_db_path = db_path if db_path is not None else _MANUAL_EVALS_DB_PATH
     if report_root is None:
@@ -873,15 +1041,15 @@ def build_pass_fail_viz_payload(
             else None
         )
         if payload is not None:
-            return payload
-        return {
+            return _attach_lane_summaries(payload, tracked_eval_root)
+        return _attach_lane_summaries({
             "updated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "summary": _default_point(),
             "summary_points": [],
             "points": [],
             "runs_total": 0,
             "evals": [],
-        }
+        }, tracked_eval_root)
 
 
 def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20) -> str:
@@ -1184,6 +1352,111 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       text-align: center;
     }
 
+    .lane-panel {
+      padding: 22px 22px 20px;
+    }
+
+    .lane-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .lane-card {
+      padding: 14px 15px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.52);
+      border: 1px solid rgba(84, 67, 49, 0.08);
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      min-height: 148px;
+    }
+
+    .lane-card-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .lane-card-title {
+      font-size: 0.96rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .lane-card-updated {
+      font-size: 0.72rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .lane-card-note {
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .lane-card-state {
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      background: rgba(23, 20, 19, 0.06);
+      color: var(--ink);
+    }
+
+    .lane-card-state::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--other);
+    }
+
+    .lane-card-state[data-state="steady"]::before {
+      background: var(--pass);
+    }
+
+    .lane-card-state[data-state="watching"]::before {
+      background: var(--error);
+    }
+
+    .lane-card-state[data-state="rough"]::before {
+      background: var(--fail);
+    }
+
+    .lane-card-metric {
+      font-size: 1.18rem;
+      line-height: 1.1;
+      font-weight: 650;
+      color: var(--ink);
+    }
+
+    .lane-card-detail,
+    .lane-card-source {
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+
+    .lane-empty {
+      display: none;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      position: relative;
+      z-index: 1;
+    }
+
     .eval-panel {
       margin-top: 18px;
       border-top: 1px solid var(--line);
@@ -1354,8 +1627,9 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
         <div class="eyebrow">Polinko Eval Pulse</div>
         <h1>See the balance move.</h1>
         <p>
-          A live instrument panel for OCR binary gate outcomes.
-          Deep detail stays in the database; this page is just the heartbeat.
+          A live window for the active eval lane, with tracked snapshots from
+          the wider evidence map. Deep detail stays in the database; this page
+          is the heartbeat and the lane overview.
         </p>
       </div>
 
@@ -1369,11 +1643,25 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       </div>
     </section>
 
+    <section class="panel lane-panel">
+      <div class="panel-top">
+        <div>
+          <h2 class="panel-title">Tracked Lane Snapshots</h2>
+          <p class="panel-subtitle">
+            The chart stays on the active window. These cards keep the broader
+            Polinko evidence surface visible from tracked eval artifacts.
+          </p>
+        </div>
+      </div>
+      <div class="lane-grid" id="laneSummaries"></div>
+      <div class="lane-empty" id="laneEmpty">No tracked lane snapshots yet.</div>
+    </section>
+
     <section class="panel">
       <div class="panel-top">
         <div>
-          <h2 class="panel-title" id="chartTitle">OCR binary gate outcomes</h2>
-          <p class="panel-subtitle" id="chartSubtitle">Bucketed strict PASS/FAIL gate reports with FAIL visible.</p>
+          <h2 class="panel-title" id="chartTitle">Current strict gate window</h2>
+          <p class="panel-subtitle" id="chartSubtitle">Bucketed PASS/FAIL gate reports from the active lane with FAIL visible.</p>
           <div class="legend" id="chartLegend" aria-label="chart legend">
             <span class="legend-item"><span class="legend-swatch" style="background: var(--fail)"></span>fail</span>
             <span class="legend-item"><span class="legend-swatch" style="background: var(--pass)"></span>pass</span>
@@ -1419,7 +1707,7 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
             <div class="poll-status" id="pollStatus">update mode: post-batch/manual</div>
           </div>
         </div>
-        <div class="eval-subtitle">fail-first binary gate rows · observed OCR text · source path</div>
+        <div class="eval-subtitle" id="evalSubtitle">fail-first gate rows · observed output · source path</div>
         <div class="eval-table-wrap">
           <table class="eval-table">
             <thead>
@@ -1464,6 +1752,9 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
     const refreshNowEl = document.getElementById('refreshNow');
     const evalRowsEl = document.getElementById('evalRows');
     const evalEmptyEl = document.getElementById('evalEmpty');
+    const evalSubtitleEl = document.getElementById('evalSubtitle');
+    const laneSummariesEl = document.getElementById('laneSummaries');
+    const laneEmptyEl = document.getElementById('laneEmpty');
 
     function setPollStatus(text, mode = '') {
       if (!pollStatusEl) return;
@@ -1496,6 +1787,22 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       if (!value) return '(none)';
       const bits = value.split('/');
       return bits[bits.length - 1] || value;
+    }
+
+    function formatLaneSnapshotUpdated(value) {
+      if (!value) return 'updated n/a';
+      const direct = new Date(value);
+      if (!Number.isNaN(direct.getTime())) {
+        return `updated ${direct.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
+      }
+      const numeric = Number(value);
+      if (!Number.isNaN(numeric) && numeric > 0) {
+        const date = new Date(numeric < 10_000_000_000 ? numeric * 1000 : numeric);
+        if (!Number.isNaN(date.getTime())) {
+          return `updated ${date.toLocaleDateString([], { month: 'short', day: 'numeric' })}`;
+        }
+      }
+      return `updated ${String(value)}`;
     }
 
     function normalizePoint(point, fallbackIndex = 0) {
@@ -1627,6 +1934,15 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       return { key: 'steady', label: 'mostly clean' };
     }
 
+    function computeLaneSnapshotState(lane) {
+      const total = Number(lane?.total || 0);
+      const fail = Number(lane?.fail || 0);
+      const partial = Number(lane?.partial || 0);
+      const errors = Number(lane?.errors || 0);
+      const pressure = total > 0 ? (fail + partial + errors) / total : 0;
+      return computeFailState(pressure, total);
+    }
+
     function sumPoints(points) {
       return points.reduce((acc, point) => ({
         pass: acc.pass + point.pass,
@@ -1670,32 +1986,41 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
         : computeHealthState(latestSummary.passRate, latestSummary.total);
 
       if (isBinaryGateMode) {
-        chartTitleEl.textContent = 'OCR binary gate outcomes';
-        chartSubtitleEl.textContent = 'Bucketed strict PASS/FAIL gate reports; FAIL is the signal to inspect.';
-        metricLabelEl.textContent = 'fail rate in binary gate window';
+        chartTitleEl.textContent = 'Current strict gate window';
+        chartSubtitleEl.textContent = 'Bucketed PASS/FAIL gate reports from the active lane; FAIL is the signal to inspect.';
+        metricLabelEl.textContent = 'fail rate in live gate window';
         latestMixLabelEl.textContent = 'Current Signal';
-        windowCopyEl.textContent = 'bucketed binary gate report history';
+        windowCopyEl.textContent = 'bucketed strict gate history';
+        if (evalSubtitleEl) {
+          evalSubtitleEl.textContent = 'fail-first gate rows · observed output · source path';
+        }
         setLegend([
           { label: 'fail', color: 'var(--fail)' },
           { label: 'pass', color: 'var(--pass)' },
         ]);
       } else if (isFeedbackMode) {
-        chartTitleEl.textContent = 'Evaluated OCR outcomes';
-        chartSubtitleEl.textContent = 'Bucketed manual eval feedback; FAIL/PARTIAL are the signal to inspect.';
-        metricLabelEl.textContent = 'fail/partial rate in evaluated OCR window';
+        chartTitleEl.textContent = 'Current evaluated window';
+        chartSubtitleEl.textContent = 'Bucketed manual eval outcomes from the active lane; FAIL/PARTIAL are the signal to inspect.';
+        metricLabelEl.textContent = 'fail/partial rate in evaluated window';
         latestMixLabelEl.textContent = 'Current Signal';
         windowCopyEl.textContent = 'bucketed manual eval outcome history';
+        if (evalSubtitleEl) {
+          evalSubtitleEl.textContent = 'fail-first feedback rows · observed output · source path';
+        }
         setLegend([
           { label: 'fail', color: 'var(--fail)' },
           { label: 'partial', color: 'var(--error)' },
           { label: 'pass', color: 'var(--pass)' },
         ]);
       } else {
-        chartTitleEl.textContent = 'Recent OCR mix';
-        chartSubtitleEl.textContent = 'Bucketed OCR runs stacked by lane across the recent window.';
+        chartTitleEl.textContent = 'Recent active-lane mix';
+        chartSubtitleEl.textContent = 'Bucketed live runs stacked by lane across the recent window.';
         metricLabelEl.textContent = 'pass rate right now';
         latestMixLabelEl.textContent = 'Current Mix';
-        windowCopyEl.textContent = 'bucketed OCR lane history';
+        windowCopyEl.textContent = 'bucketed active-lane mix history';
+        if (evalSubtitleEl) {
+          evalSubtitleEl.textContent = 'latest evaluated rows · observed output · source path';
+        }
         setLegend([
           { label: 'text', color: 'var(--lane-text)' },
           { label: 'handwriting', color: 'var(--lane-handwriting)' },
@@ -1726,13 +2051,58 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       windowLabelEl.textContent = rawPoints.length
         ? (
             isBinaryGateMode
-              ? `Last ${rawPoints.length} binary gate reports · ${bucketedPoints.length} buckets`
+              ? `Last ${rawPoints.length} live gate reports · ${bucketedPoints.length} buckets`
               : isFeedbackMode
-                ? `Last ${rawPoints.length} evaluated OCR outcomes · ${bucketedPoints.length} buckets`
-              : `Last ${rawPoints.length} OCR runs · ${bucketedPoints.length} buckets`
+                ? `Last ${rawPoints.length} evaluated outcomes · ${bucketedPoints.length} buckets`
+              : `Last ${rawPoints.length} live runs · ${bucketedPoints.length} buckets`
           )
-        : (isBinaryGateMode ? 'Waiting for binary gate reports' : isFeedbackMode ? 'Waiting for manual feedback' : 'Waiting for OCR runs');
+        : (isBinaryGateMode ? 'Waiting for live gate reports' : isFeedbackMode ? 'Waiting for manual feedback' : 'Waiting for active-lane runs');
       updatedEl.textContent = formatTimestamp(payload.updated_at || latestBucket.timestamp_ms);
+    }
+
+    function renderLaneSummaries(payload) {
+      const lanes = Array.isArray(payload?.lane_summaries) ? payload.lane_summaries : [];
+      if (!laneSummariesEl || !laneEmptyEl) return;
+      if (!lanes.length) {
+        laneSummariesEl.innerHTML = '';
+        laneEmptyEl.style.display = 'block';
+        return;
+      }
+      laneEmptyEl.style.display = 'none';
+      laneSummariesEl.innerHTML = lanes.map(lane => {
+        const pass = Number(lane?.pass || 0);
+        const fail = Number(lane?.fail || 0);
+        const partial = Number(lane?.partial || 0);
+        const errors = Number(lane?.errors || 0);
+        const retain = Number(lane?.retain || 0);
+        const evict = Number(lane?.evict || 0);
+        const primary = partial > 0 || errors > 0
+          ? `${pass} pass · ${fail} fail · ${partial + errors} other`
+          : `${pass} pass · ${fail} fail`;
+        const detail = retain > 0 || evict > 0
+          ? `${retain} retain · ${evict} evict`
+          : `${Number(lane?.total || 0)} total`;
+        const state = computeLaneSnapshotState(lane);
+        const note = escapeHtml(shorten(lane?.note || '', 140));
+        const source = escapeHtml(leafName(lane?.source || ''));
+        const runId = String(lane?.run_id || '').trim();
+        const sourceLine = runId
+          ? `${source}${source && runId ? ' · ' : ''}${escapeHtml(runId)}`
+          : source || '(tracked)';
+        return `
+          <article class="lane-card">
+            <div class="lane-card-head">
+              <div class="lane-card-title">${escapeHtml(lane?.title || 'Lane')}</div>
+              <div class="lane-card-updated">${escapeHtml(formatLaneSnapshotUpdated(lane?.updated_at || ''))}</div>
+            </div>
+            <div class="lane-card-state" data-state="${escapeHtml(state.key)}">${escapeHtml(state.label)}</div>
+            <div class="lane-card-note">${note || '(no note)'}</div>
+            <div class="lane-card-metric">${escapeHtml(primary)}</div>
+            <div class="lane-card-detail">${escapeHtml(detail)}</div>
+            <div class="lane-card-source">${sourceLine}</div>
+          </article>
+        `;
+      }).join('');
     }
 
     function renderChart(payload) {
@@ -1746,7 +2116,7 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       const points = bucketPoints(allPoints, state.chartMaxPoints);
 
       if (!points.length) {
-        root.innerHTML = '<div class="muted" style="padding:12px">No runs yet. Execute OCR evals, then refresh.</div>';
+        root.innerHTML = '<div class="muted" style="padding:12px">No eval runs yet. Execute evals, then refresh.</div>';
         tip.style.display = 'none';
         return;
       }
@@ -1934,6 +2304,7 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
         const payload = await res.json();
         state.payload = payload;
         renderSummary(payload);
+        renderLaneSummaries(payload);
         renderChart(payload);
         renderEvals(payload);
         setPollStatus('update mode: post-batch/manual');

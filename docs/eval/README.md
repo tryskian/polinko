@@ -31,7 +31,7 @@ transition into binary evals; Beta 2.0 shows the operationalized lane.
   - rebuild with `make manual-evals-db`
 - raw current runtime source:
   - `.local/runtime_dbs/active/history.db`
-- strict OCR binary gate observability:
+- live strict-gate observability plus tracked lane snapshots:
   - `.local/eval_reports/`
   - `/viz/pass-fail`
   - `/viz/pass-fail/data`
@@ -40,6 +40,8 @@ Manual evals and strict OCR gate reports answer different questions:
 
 - manual evals capture human judgment and qualitative notes
 - OCR gate reports preserve binary fail pressure
+- `/viz/pass-fail` keeps the live chart on the active window and uses tracked
+  eval files to keep the wider lane map visible below it
 
 Do not flatten one into the other.
 
