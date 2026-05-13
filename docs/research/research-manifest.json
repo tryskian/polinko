@@ -31,6 +31,11 @@
     },
     {
       "type": "research_note",
+      "label": "Response-behaviour signal shape",
+      "path": "docs/research/response-behaviour-signal-shape-20260512.md"
+    },
+    {
+      "type": "research_note",
       "label": "OCR progress snapshot",
       "path": "docs/research/ocr-progress-20260508.md"
     },
@@ -113,6 +118,11 @@
       "type": "research_note",
       "label": "Response behaviour eval snapshot",
       "path": "docs/research/response-behaviour-20260425.md"
+    },
+    {
+      "type": "eval_report",
+      "label": "Response-behaviour snapshot",
+      "path": "docs/eval/beta_2_0/response-behaviour-20260512-195350.json"
     },
     {
       "type": "eval_report",

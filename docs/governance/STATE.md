@@ -127,7 +127,10 @@ Last updated: 2026-05-12
     - retrieval grounding now has fresh tracked snapshots across both visible branches:
       - retrieval recall: `12/12` pass
       - file search: `5/5` pass
-    - current broad gate is holding across style, uncertainty, and co-reasoning
+    - response behaviour now has a fresh current tracked snapshot:
+      - latest tracked snapshot: `7/7` pass
+      - current signal-shape surface is now explicit
+    - current broad gate is holding across style, uncertainty, co-reasoning, and response behaviour
   - current mature method lane is green:
     - growth stability: `25/25` stable, `0` flaky
     - fail-history cohort: `0` active cases
@@ -166,7 +169,7 @@ Last updated: 2026-05-12
 1. Keep the public doorway stable and credible.
 2. Keep repo research surfaces compact, visual, and easy to scan.
 3. Keep the first promoted non-OCR lane visible now that the broad gate is
-   holding across style, uncertainty, and co-reasoning.
+   holding across style, uncertainty, co-reasoning, and response behaviour.
 4. Keep operator-burden row promotion distinct, visible, and resistant to
    clone inflation or over-automation.
 5. Keep the mature OCR method lane green and reopen it only from the remaining
