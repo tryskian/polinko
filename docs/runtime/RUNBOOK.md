@@ -395,6 +395,13 @@ Read-only DB audits remain allowed:
 3. Install and run `pre-commit`:
    - `make precommit-install`
    - `make precommit-run`
+   - the active hook surface stays fast and repo-native:
+     - merge-conflict check
+     - EOF / trailing-whitespace hygiene
+     - `make lint-docs`
+   - keep Python hygiene available as explicit repo commands:
+     - `make ruff-check`
+     - `make ruff-format-check`
 4. Run CI workflow locally with `act`:
    - list jobs: `make act-list`
    - run CI workflow: `make act-ci`

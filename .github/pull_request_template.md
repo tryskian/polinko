@@ -1,7 +1,7 @@
 ## Summary
-- 
-- 
-- 
+-
+-
+-
 
 ## Scope
 - Type: docs | backend | eval | infra | workflow
@@ -14,4 +14,4 @@
 
 ## Notes
 - Risks / follow-ups:
-  - 
+  -
