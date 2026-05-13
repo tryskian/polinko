@@ -25,10 +25,6 @@ enough to read in public.
 ## Current Non-OCR Read
 
 - latest tracked non-OCR notes:
-  - [Co-reasoning signal shape](./co-reasoning-signal-shape-20260512.md)
-  - [Response-behaviour signal shape](./response-behaviour-signal-shape-20260512.md)
-  - [Hallucination-boundary signal shape](./hallucination-boundary-signal-shape-20260512.md)
-  - [Retrieval grounding signal shape](./retrieval-grounding-signal-shape-20260512.md)
   - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
   - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
   - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
@@ -43,7 +39,7 @@ enough to read in public.
   - current serious method beta is `Beta 2.2`
   - OCR remains one mature method lane
   - co-reasoning is now the first promoted non-OCR lane
-  - tracked style stress surface now closes `14/14` in the latest tracked snapshot
+  - tracked style stress surface currently passes `14/14` on the live pass
   - one-hour deterministic beta soak now closes at `19/21` pass cycles
   - former dominant style pressure did not recur in the broad gate
   - the uncertainty-boundary stability kernel has now closed cleanly with:
@@ -55,15 +51,8 @@ enough to read in public.
     - latest tracked snapshot: `9/9` pass
     - tracked case count: `9`
     - new distinct seams: archive-lore and archive-discipline fabrication
-    - current signal-shape surface is now explicit
-  - retrieval grounding now has fresh tracked snapshots across both visible branches:
-    - retrieval recall: `12/12` pass
-    - file search: `5/5` pass
-  - response behaviour now has a fresh current tracked snapshot:
-    - latest tracked snapshot: `7/7` pass
-    - current signal-shape surface is now explicit
   - broad-gate pressure is no longer concentrated in the uncertainty contracts
-  - current broad gate is holding across style, uncertainty, co-reasoning, and response behaviour
+  - current broad gate is holding across style, uncertainty, and co-reasoning
   - operator burden now has a seeded thin-lane row surface:
     - `4` pass rows
     - `2` retained fail rows
@@ -82,10 +71,6 @@ enough to read in public.
 ## Representative Tracked Evidence
 
 - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
-- [Hallucination-boundary signal shape](./hallucination-boundary-signal-shape-20260512.md)
-- [Response-behaviour signal shape](./response-behaviour-signal-shape-20260512.md)
-- [Co-reasoning signal shape](./co-reasoning-signal-shape-20260512.md)
-- [Retrieval grounding signal shape](./retrieval-grounding-signal-shape-20260512.md)
 - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
 - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
 - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
@@ -101,10 +86,7 @@ enough to read in public.
 - [OCR binary eval snapshot](../eval/beta_2_0/ocr-20260328-184147.json)
 - [OCR safety eval snapshot](./ocr-safety-20260425.md)
 - [Response behaviour eval snapshot](./response-behaviour-20260425.md)
-- [Response behaviour tracked snapshot](../eval/beta_2_0/response-behaviour-20260512-195350.json)
-- [Hallucination eval snapshot](../eval/beta_2_0/hallucination-20260512-191438.json)
-- [Retrieval eval snapshot](../eval/beta_2_0/retrieval-20260512-190149.json)
-- [File-search eval snapshot](../eval/beta_2_0/file-search-20260512-190149.json)
+- [Hallucination eval snapshot](../eval/beta_2_0/hallucination-20260512-180408.json)
 - [Architecture diagram](../runtime/architecture.svg)
 - [Public diagrams lane](../public/DIAGRAMS.md)
 

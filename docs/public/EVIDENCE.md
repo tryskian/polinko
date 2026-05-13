@@ -49,17 +49,11 @@ Core surfaces:
 
 `/viz/pass-fail` keeps the chart on the active live window and uses tracked
 eval artifacts to surface the broader lane map underneath it, with direct links
-into the tracked artifact and promoted note when available. The tracked strip
-also surfaces lane rollup counts and per-lane focus cues so the broader proof
-surface is readable without opening every file first.
+into the tracked artifact and promoted note when available.
 
 Representative tracked note:
 
 - [OCR representative case](../research/ocr-representative-case.md)
-- [Co-reasoning signal shape](../research/co-reasoning-signal-shape-20260512.md)
-- [Response-behaviour signal shape](../research/response-behaviour-signal-shape-20260512.md)
-- [Hallucination-boundary signal shape](../research/hallucination-boundary-signal-shape-20260512.md)
-- [Retrieval grounding signal shape](../research/retrieval-grounding-signal-shape-20260512.md)
 - [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
 - [Operator burden seed](../research/operator-burden-seed-20260509.md)
 - [Hallucination-boundary promotion](../research/hallucination-boundary-promotion-20260512.md)

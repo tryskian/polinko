@@ -11,28 +11,8 @@
     },
     {
       "type": "research_note",
-      "label": "Retrieval grounding signal shape",
-      "path": "docs/research/retrieval-grounding-signal-shape-20260512.md"
-    },
-    {
-      "type": "research_note",
-      "label": "Co-reasoning signal shape",
-      "path": "docs/research/co-reasoning-signal-shape-20260512.md"
-    },
-    {
-      "type": "research_note",
       "label": "Operator burden signal shape",
       "path": "docs/research/operator-burden-signal-shape-20260512.md"
-    },
-    {
-      "type": "research_note",
-      "label": "Hallucination-boundary signal shape",
-      "path": "docs/research/hallucination-boundary-signal-shape-20260512.md"
-    },
-    {
-      "type": "research_note",
-      "label": "Response-behaviour signal shape",
-      "path": "docs/research/response-behaviour-signal-shape-20260512.md"
     },
     {
       "type": "research_note",
@@ -48,16 +28,6 @@
       "type": "research_note",
       "label": "Hallucination-boundary promotion",
       "path": "docs/research/hallucination-boundary-promotion-20260512.md"
-    },
-    {
-      "type": "eval_report",
-      "label": "Retrieval grounding snapshot",
-      "path": "docs/eval/beta_2_0/retrieval-20260512-190149.json"
-    },
-    {
-      "type": "eval_report",
-      "label": "File-search grounding snapshot",
-      "path": "docs/eval/beta_2_0/file-search-20260512-190149.json"
     },
     {
       "type": "research_note",
@@ -90,11 +60,6 @@
       "path": "docs/research/co-reasoning-promotion-20260508.md"
     },
     {
-      "type": "eval_report",
-      "label": "Co-reasoning style snapshot",
-      "path": "docs/eval/beta_2_0/style-20260512-185122.json"
-    },
-    {
       "type": "research_note",
       "label": "Operator burden seed",
       "path": "docs/research/operator-burden-seed-20260509.md"
@@ -121,13 +86,8 @@
     },
     {
       "type": "eval_report",
-      "label": "Response-behaviour snapshot",
-      "path": "docs/eval/beta_2_0/response-behaviour-20260512-195350.json"
-    },
-    {
-      "type": "eval_report",
       "label": "Hallucination eval snapshot",
-      "path": "docs/eval/beta_2_0/hallucination-20260512-191438.json"
+      "path": "docs/eval/beta_2_0/hallucination-20260512-180408.json"
     },
     {
       "type": "diagram",

@@ -41,13 +41,13 @@ class HallucinationEvalGateTests(unittest.TestCase):
                 "--evaluation-mode",
                 "judge",
                 "--min-acceptable-score",
-                "5",
+                "70",
             ]
         )
         self.assertEqual(args.judge_api_key_env, "JUDGE_API_KEY")
         self.assertEqual(args.judge_base_url, "https://judge.example/v1")
         self.assertEqual(args.evaluation_mode, "judge")
-        self.assertEqual(args.min_acceptable_score, 5)
+        self.assertEqual(args.min_acceptable_score, 70)
 
     def test_contains_forbidden_phrases_matches_case_insensitive(self) -> None:
         answer = "This includes a Let Me Guess phrase."
@@ -133,12 +133,12 @@ class HallucinationEvalGateTests(unittest.TestCase):
         reasons = _apply_deterministic_gate(
             case={"policy_profile": "uncertainty_required", "must_not_contain": []},
             answer="Concise grounded answer.",
-            score=6,
+            score=65,
             risk="low",
             grounding="grounded",
-            min_acceptable_score=7,
+            min_acceptable_score=70,
         )
-        self.assertIn("score below minimum threshold (6 < 7)", reasons)
+        self.assertIn("score below minimum threshold (65 < 70)", reasons)
 
     def test_deterministic_assessment_evidence_required_needs_memory(self) -> None:
         result = _deterministic_assessment(

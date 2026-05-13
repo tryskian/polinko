@@ -107,54 +107,9 @@ def _init_tracked_eval_root(path: Path) -> None:
         json.dumps(
             {
                 "run_id": "20260328-184149",
-                "summary": {"total": 14, "passed": 14, "failed": 0},
+                "summary": {"total": 11, "passed": 11, "failed": 0},
                 "cases": [],
                 "generated_at": "2026-03-28T18:41:49Z",
-            }
-        ),
-        encoding="utf-8",
-    )
-    (path / "response-behaviour-20260512-195350.json").write_text(
-        json.dumps(
-            {
-                "run_id": "20260512-195350",
-                "summary": {"total": 7, "passed": 7, "failed": 0},
-                "cases": [],
-                "generated_at": "2026-05-12T19:53:50Z",
-            }
-        ),
-        encoding="utf-8",
-    )
-    (path / "retrieval-20260328-184111.json").write_text(
-        json.dumps(
-            {
-                "run_id": "20260328-184111",
-                "summary": {"total": 12, "passed": 12, "failed": 0},
-                "cases": [],
-                "generated_at": "2026-03-28T18:41:11Z",
-            }
-        ),
-        encoding="utf-8",
-    )
-    (path / "file-search-20260328-184143.json").write_text(
-        json.dumps(
-            {
-                "run_id": "20260328-184143",
-                "summary": {"total": 5, "passed": 5, "failed": 0},
-                "cases": [],
-                "generated_at": "2026-03-28T18:41:43Z",
-            }
-        ),
-        encoding="utf-8",
-    )
-    (path / "hallucination-20260512-191438.json").write_text(
-        json.dumps(
-            {
-                "run_id": "20260512-191438",
-                "passed": 9,
-                "failed": 0,
-                "risk_counts": {"low": 9, "medium": 0, "high": 0},
-                "cases": [],
             }
         ),
         encoding="utf-8",
@@ -209,7 +164,7 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["points"][-1]["illustration"], 1)
             self.assertEqual(payload["evals"][0]["lane"], "illustration")
             self.assertEqual(payload["evals"][0]["outcome"], "ERROR")
-            self.assertEqual(len(payload["lane_summaries"]), 6)
+            self.assertEqual(len(payload["lane_summaries"]), 2)
 
     def test_payload_can_filter_eval_rows_by_run_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -370,52 +325,18 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["runs_total"], 0)
             summaries = {row["lane_key"]: row for row in payload["lane_summaries"]}
             self.assertIn("co_reasoning", summaries)
-            self.assertIn("response_behaviour", summaries)
-            self.assertIn("hallucination_boundary", summaries)
             self.assertIn("operator_burden", summaries)
-            self.assertEqual(summaries["co_reasoning"]["pass"], 14)
+            self.assertEqual(summaries["co_reasoning"]["pass"], 11)
             self.assertEqual(summaries["co_reasoning"]["fail"], 0)
             self.assertIn("/viz/pass-fail/artifact?path=", summaries["co_reasoning"]["source_url"])
             self.assertIn(
-                "docs/research/co-reasoning-signal-shape-20260512.md",
+                "docs/research/co-reasoning-promotion-20260508.md",
                 summaries["co_reasoning"]["research_note_path"],
-            )
-            self.assertEqual(
-                summaries["co_reasoning"]["focus"],
-                ["constraint retention", "mode shift", "anti-mimicry"],
-            )
-            self.assertIn(
-                "docs/research/response-behaviour-signal-shape-20260512.md",
-                summaries["response_behaviour"]["research_note_path"],
-            )
-            self.assertEqual(summaries["response_behaviour"]["pass"], 7)
-            self.assertEqual(summaries["response_behaviour"]["fail"], 0)
-            self.assertEqual(
-                summaries["response_behaviour"]["focus"],
-                ["uncertainty", "claim discipline", "interaction shape"],
-            )
-            self.assertIn(
-                "docs/research/hallucination-boundary-signal-shape-20260512.md",
-                summaries["hallucination_boundary"]["research_note_path"],
-            )
-            self.assertEqual(summaries["hallucination_boundary"]["pass"], 9)
-            self.assertEqual(summaries["hallucination_boundary"]["fail"], 0)
-            self.assertIn(
-                "docs/research/retrieval-grounding-signal-shape-20260512.md",
-                summaries["retrieval_grounding"]["research_note_path"],
-            )
-            self.assertIn(
-                "docs/research/retrieval-grounding-signal-shape-20260512.md",
-                summaries["file_search"]["research_note_path"],
             )
             self.assertEqual(summaries["operator_burden"]["pass"], 2)
             self.assertEqual(summaries["operator_burden"]["fail"], 2)
             self.assertEqual(summaries["operator_burden"]["retain"], 1)
             self.assertEqual(summaries["operator_burden"]["evict"], 1)
-            self.assertEqual(
-                summaries["operator_burden"]["focus"],
-                ["pass anchors", "retain/evict", "duplicate-heavy backlog"],
-            )
             self.assertIn(
                 "docs/research/operator-burden-promotion-20260509.md",
                 summaries["operator_burden"]["research_note_path"],
@@ -431,18 +352,10 @@ class EvalVizTests(unittest.TestCase):
         self.assertIn('id="windowLabel"', html)
         self.assertIn('id="chartTip"', html)
         self.assertIn('id="laneSummaries"', html)
-        self.assertIn('id="laneTrackedCount"', html)
-        self.assertIn('id="laneCleanCount"', html)
-        self.assertIn('id="lanePressureCount"', html)
-        self.assertIn('id="laneRowCount"', html)
         self.assertIn("Tracked Lane Snapshots", html)
-        self.assertIn("fully clean", html)
-        self.assertIn("pressure lanes", html)
         self.assertIn("lane-card-state", html)
-        self.assertIn("lane-card-focus-chip", html)
         self.assertIn("lane-card-links", html)
         self.assertIn("lane-card-link", html)
-        self.assertIn("Signal note", html)
         self.assertIn("bucketed binary gate report history", html)
         self.assertIn("bucketed manual eval outcome history", html)
         self.assertIn("bucketed active-lane mix history", html)

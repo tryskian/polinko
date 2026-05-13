@@ -33,7 +33,7 @@ evidence.
   - the first gate proves hard contract correctness before richer interpretation
 - broader hypothesis lane now has a first promoted non-OCR eval surface:
   - co-reasoning reliability is now operationalized in the tracked style lane:
-    `14/14` pass in the latest tracked snapshot
+    `14/14` pass on the current live pass
   - latest one-hour deterministic beta soak:
     - `19/21` pass cycles
     - former dominant style pressure did not recur
@@ -46,14 +46,7 @@ evidence.
     - latest tracked snapshot: `9/9` pass
     - tracked case count: `9`
     - new distinct seams: archive-lore and archive-discipline fabrication
-    - current signal-shape surface is now explicit
-  - retrieval grounding now has fresh tracked snapshots across both visible branches:
-    - retrieval recall: `12/12` pass
-    - file search: `5/5` pass
-  - response behaviour now has a fresh current tracked snapshot:
-    - latest tracked snapshot: `7/7` pass
-    - current signal-shape surface is now explicit
-  - current broad gate is holding across style, uncertainty, co-reasoning, and response behaviour
+  - current broad gate is holding across style, uncertainty, and co-reasoning
   - operator burden now has a seeded row-local evidence surface:
     - `4` pass rows
     - `2` retained fail rows
@@ -73,12 +66,8 @@ evidence.
   - [docs/research/beta-2-2-stability-soak-20260509.md](docs/research/beta-2-2-stability-soak-20260509.md)
   - [docs/research/uncertainty-boundary-stability-20260509.md](docs/research/uncertainty-boundary-stability-20260509.md)
   - [docs/research/hallucination-boundary-promotion-20260512.md](docs/research/hallucination-boundary-promotion-20260512.md)
-  - [docs/research/hallucination-boundary-signal-shape-20260512.md](docs/research/hallucination-boundary-signal-shape-20260512.md)
-  - [docs/research/retrieval-grounding-signal-shape-20260512.md](docs/research/retrieval-grounding-signal-shape-20260512.md)
-  - [docs/research/response-behaviour-signal-shape-20260512.md](docs/research/response-behaviour-signal-shape-20260512.md)
   - [docs/research/ocr-progress-20260508.md](docs/research/ocr-progress-20260508.md)
   - [docs/research/co-reasoning-promotion-20260508.md](docs/research/co-reasoning-promotion-20260508.md)
-  - [docs/research/co-reasoning-signal-shape-20260512.md](docs/research/co-reasoning-signal-shape-20260512.md)
   - [docs/research/behaviour-backlog-20260508.md](docs/research/behaviour-backlog-20260508.md)
 
 ## Start Here
