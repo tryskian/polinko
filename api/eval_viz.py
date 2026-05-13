@@ -34,6 +34,7 @@ _TRACKED_LANE_SPECS = (
         "note": "Tracked binary gate snapshot for the mature OCR lane.",
         "pattern": "ocr-[0-9]*.json",
         "research_note_path": "docs/research/ocr-progress-20260508.md",
+        "focus": ["typed text", "handwriting", "illustration"],
     },
     {
         "lane_key": "co_reasoning",
@@ -41,6 +42,7 @@ _TRACKED_LANE_SPECS = (
         "note": "Promoted non-OCR lane carried in the tracked style surface.",
         "pattern": "style-[0-9]*.json",
         "research_note_path": "docs/research/co-reasoning-signal-shape-20260512.md",
+        "focus": ["constraint retention", "mode shift", "anti-mimicry"],
     },
     {
         "lane_key": "response_behaviour",
@@ -48,6 +50,7 @@ _TRACKED_LANE_SPECS = (
         "note": "Explicit uncertainty and claim-discipline gate snapshot.",
         "pattern": "response-behaviour-[0-9]*.json",
         "research_note_path": "docs/research/response-behaviour-signal-shape-20260512.md",
+        "focus": ["uncertainty", "claim discipline", "interaction shape"],
     },
     {
         "lane_key": "hallucination_boundary",
@@ -55,6 +58,7 @@ _TRACKED_LANE_SPECS = (
         "note": "Grounding and uncertainty boundary snapshot.",
         "pattern": "hallucination-[0-9]*.json",
         "research_note_path": "docs/research/hallucination-boundary-signal-shape-20260512.md",
+        "focus": ["evidence required", "uncertainty required", "no fabrication"],
     },
     {
         "lane_key": "retrieval_grounding",
@@ -62,6 +66,7 @@ _TRACKED_LANE_SPECS = (
         "note": "Grounding and no-leak retrieval gate snapshot.",
         "pattern": "retrieval-[0-9]*.json",
         "research_note_path": "docs/research/retrieval-grounding-signal-shape-20260512.md",
+        "focus": ["global recall", "session isolation", "source-bound recall"],
     },
     {
         "lane_key": "file_search",
@@ -69,6 +74,7 @@ _TRACKED_LANE_SPECS = (
         "note": "Scoped file-search retrieval and leak boundary snapshot.",
         "pattern": "file-search-[0-9]*.json",
         "research_note_path": "docs/research/retrieval-grounding-signal-shape-20260512.md",
+        "focus": ["scoped hit", "leak boundary", "mixed source methods"],
     },
 )
 _CAMERA_IMAGE_NAME_RX = re.compile(r"(?:^|[-_])(img|dsc)[_-]\d{3,}", re.IGNORECASE)
@@ -350,6 +356,7 @@ def _build_tracked_lane_summaries(tracked_eval_root: Path | None) -> list[dict[s
                 "research_note_url": _artifact_url(str(spec["research_note_path"]))
                 if spec.get("research_note_path")
                 else "",
+                "focus": list(spec.get("focus", [])),
             }
         )
 
@@ -401,6 +408,7 @@ def _build_tracked_lane_summaries(tracked_eval_root: Path | None) -> list[dict[s
                 "source_url": _artifact_url(str(operator_burden_path)),
                 "research_note_path": "docs/research/operator-burden-promotion-20260509.md",
                 "research_note_url": _artifact_url("docs/research/operator-burden-promotion-20260509.md"),
+                "focus": ["pass anchors", "retain/evict", "duplicate-heavy backlog"],
             }
         )
 
@@ -1384,6 +1392,37 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       z-index: 1;
     }
 
+    .lane-rollup {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .lane-rollup-card {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(250, 244, 235, 0.76);
+      border: 1px solid rgba(84, 67, 49, 0.08);
+    }
+
+    .lane-rollup-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .lane-rollup-value {
+      font-size: 1.18rem;
+      line-height: 1.1;
+      font-weight: 650;
+      color: var(--ink);
+    }
+
     .lane-card {
       padding: 14px 15px;
       border-radius: 20px;
@@ -1459,6 +1498,29 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       line-height: 1.1;
       font-weight: 650;
       color: var(--ink);
+    }
+
+    .lane-card-secondary {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .lane-card-focus {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .lane-card-focus-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(118, 183, 178, 0.12);
+      border: 1px solid rgba(118, 183, 178, 0.16);
+      color: #36585b;
+      font-size: 0.72rem;
+      line-height: 1.15;
     }
 
     .lane-card-detail,
@@ -1690,6 +1752,24 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
           </p>
         </div>
       </div>
+      <div class="lane-rollup" id="laneRollup">
+        <div class="lane-rollup-card">
+          <div class="lane-rollup-label">tracked lanes</div>
+          <div class="lane-rollup-value" id="laneTrackedCount">0</div>
+        </div>
+        <div class="lane-rollup-card">
+          <div class="lane-rollup-label">fully clean</div>
+          <div class="lane-rollup-value" id="laneCleanCount">0</div>
+        </div>
+        <div class="lane-rollup-card">
+          <div class="lane-rollup-label">pressure lanes</div>
+          <div class="lane-rollup-value" id="lanePressureCount">0</div>
+        </div>
+        <div class="lane-rollup-card">
+          <div class="lane-rollup-label">row lanes</div>
+          <div class="lane-rollup-value" id="laneRowCount">0</div>
+        </div>
+      </div>
       <div class="lane-grid" id="laneSummaries"></div>
       <div class="lane-empty" id="laneEmpty">No tracked lane snapshots yet.</div>
     </section>
@@ -1792,6 +1872,10 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
     const evalSubtitleEl = document.getElementById('evalSubtitle');
     const laneSummariesEl = document.getElementById('laneSummaries');
     const laneEmptyEl = document.getElementById('laneEmpty');
+    const laneTrackedCountEl = document.getElementById('laneTrackedCount');
+    const laneCleanCountEl = document.getElementById('laneCleanCount');
+    const lanePressureCountEl = document.getElementById('lanePressureCount');
+    const laneRowCountEl = document.getElementById('laneRowCount');
 
     function setPollStatus(text, mode = '') {
       if (!pollStatusEl) return;
@@ -2100,6 +2184,24 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
     function renderLaneSummaries(payload) {
       const lanes = Array.isArray(payload?.lane_summaries) ? payload.lane_summaries : [];
       if (!laneSummariesEl || !laneEmptyEl) return;
+      if (laneTrackedCountEl) {
+        laneTrackedCountEl.textContent = String(lanes.length);
+      }
+      if (laneCleanCountEl) {
+        laneCleanCountEl.textContent = String(
+          lanes.filter(lane => computeLaneSnapshotState(lane).key === 'steady').length
+        );
+      }
+      if (lanePressureCountEl) {
+        lanePressureCountEl.textContent = String(
+          lanes.filter(lane => computeLaneSnapshotState(lane).key !== 'steady').length
+        );
+      }
+      if (laneRowCountEl) {
+        laneRowCountEl.textContent = String(
+          lanes.filter(lane => String(lane?.kind || '') === 'row_lane').length
+        );
+      }
       if (!lanes.length) {
         laneSummariesEl.innerHTML = '';
         laneEmptyEl.style.display = 'block';
@@ -2113,29 +2215,36 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
         const errors = Number(lane?.errors || 0);
         const retain = Number(lane?.retain || 0);
         const evict = Number(lane?.evict || 0);
-        const primary = partial > 0 || errors > 0
-          ? `${pass} pass · ${fail} fail · ${partial + errors} other`
-          : `${pass} pass · ${fail} fail`;
         const detail = retain > 0 || evict > 0
           ? `${retain} retain · ${evict} evict`
           : `${Number(lane?.total || 0)} total`;
+        const ratio = Number(lane?.total || 0) > 0
+          ? `${pass}/${Number(lane?.total || 0)} pass`
+          : `${pass} pass`;
+        const secondary = partial > 0 || errors > 0
+          ? `${fail} fail · ${partial + errors} other`
+          : `${fail} fail`;
+        const kindLabel = String(lane?.kind || '') === 'row_lane' ? 'row lane' : 'tracked snapshot';
         const state = computeLaneSnapshotState(lane);
         const note = escapeHtml(shorten(lane?.note || '', 140));
         const source = escapeHtml(leafName(lane?.source || ''));
         const sourceUrl = String(lane?.source_url || '').trim();
         const researchNotePath = String(lane?.research_note_path || '').trim();
         const researchNoteUrl = String(lane?.research_note_url || '').trim();
+        const focus = Array.isArray(lane?.focus) ? lane.focus : [];
         const runId = String(lane?.run_id || '').trim();
         const sourceLine = runId
           ? `${source}${source && runId ? ' · ' : ''}${escapeHtml(runId)}`
           : source || '(tracked)';
+        const focusHtml = focus.length
+          ? `<div class="lane-card-focus">${focus.map(item => `<span class="lane-card-focus-chip">${escapeHtml(item)}</span>`).join('')}</div>`
+          : '';
         const linkParts = [];
         if (sourceUrl) {
           linkParts.push(`<a class="lane-card-link" href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener noreferrer">Artifact</a>`);
         }
         if (researchNoteUrl) {
-          const noteLabel = leafName(researchNotePath) || 'Research note';
-          linkParts.push(`<a class="lane-card-link" href="${escapeHtml(researchNoteUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(noteLabel)}</a>`);
+          linkParts.push(`<a class="lane-card-link" href="${escapeHtml(researchNoteUrl)}" target="_blank" rel="noopener noreferrer">Signal note</a>`);
         }
         const links = linkParts.length
           ? `<div class="lane-card-links">${linkParts.join('')}</div>`
@@ -2148,7 +2257,10 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
             </div>
             <div class="lane-card-state" data-state="${escapeHtml(state.key)}">${escapeHtml(state.label)}</div>
             <div class="lane-card-note">${note || '(no note)'}</div>
-            <div class="lane-card-metric">${escapeHtml(primary)}</div>
+            ${focusHtml}
+            <div class="lane-card-metric">${escapeHtml(ratio)}</div>
+            <div class="lane-card-secondary">${escapeHtml(kindLabel)}</div>
+            <div class="lane-card-detail">${escapeHtml(secondary)}</div>
             <div class="lane-card-detail">${escapeHtml(detail)}</div>
             <div class="lane-card-source">${sourceLine}</div>
             ${links}
