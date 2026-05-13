@@ -222,7 +222,7 @@
      available.
 3. Resolve actionable issues (missing imports, interpreter mismatch, or
    `compaudit` findings) before running evals.
-4. VS Code task startup is now venv-automatic through `make` interpreter
+4. VS Code task startup is now repo-env automatic through `make` interpreter
    discovery; manual `source .../activate` chaining is not required for
    `make server` / `make caffeinate`.
 
@@ -289,8 +289,8 @@ Read-only DB audits remain allowed:
 ## Python Diagnostics (Ruff + Mypy)
 
 1. Use repo-local tools for deterministic output:
-   - `venv/bin/ruff check .`
-   - `venv/bin/mypy . --config-file mypy.ini`
+   - `.venv/bin/ruff check .`
+   - `.venv/bin/mypy . --config-file mypy.ini`
 2. `mypy.ini` is the canonical type-check config for this repo.
 3. VS Code should use workspace-wide diagnostics (not only active file).
 4. If Problems panel looks stale after config changes:
@@ -434,7 +434,7 @@ Read-only DB audits remain allowed:
 
 1. Do not pin a host VS Code interpreter to a devcontainer-created venv path
    if that venv was built inside Linux.
-   - Example bad host pin: `/Users/.../polinko-repositioning-system/bin/python`
+   - Example bad host pin: `/workspaces/polinko/.venv/bin/python3.14`
    - Symptom: `Could not resolve interpreter path` / `Unable to handle .../bin/python`
 2. Root cause:
    - host macOS cannot execute Linux ELF binaries (`exec format error`).
@@ -443,7 +443,7 @@ Read-only DB audits remain allowed:
      interpreter (for example `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3`).
 4. On devcontainer mode:
    - use container interpreter paths only (for example
-     `${containerWorkspaceFolder}/venv/bin/python3`).
+     `${containerWorkspaceFolder}/.venv/bin/python3.14`).
 5. If warnings persist:
    - remove stale `python.defaultInterpreterPath` entries from local workspace
      settings/workspace files.
@@ -640,7 +640,7 @@ UI adapter spec is maintained in this runbook section (chat + eval API shape).
     - if the visible public contract changes, sync
       `docs/governance/STATE.md`
     - validate fallback changes with:
-      `venv/bin/python -m pytest tests/test_api.py -k "portfolio_shell or root_redirects_to_portfolio"`
+      `.venv/bin/python3.14 -m pytest tests/test_api.py -k "portfolio_shell or root_redirects_to_portfolio"`
     - rebuild locally with `make rebuild`
   - canonical visual-review loop for portfolio edits:
     - make the copy/layout change first

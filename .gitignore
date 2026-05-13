@@ -19,10 +19,8 @@ __pycache__/
 .coverage.*
 htmlcov/
 
-# Local virtual environments (choose one runtime, keep all untracked)
-venv
-virtualenv_name
-polinko-repositioning-system
+# Local virtual environment
+.venv
 
 # Node (if added later)
 node_modules/

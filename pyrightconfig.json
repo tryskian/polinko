@@ -1,6 +1,6 @@
 {
   "venvPath": ".",
-  "venv": "polinko-repositioning-system",
+  "venv": ".venv",
   "include": [
     "config.py",
     "app.py",

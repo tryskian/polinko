@@ -4378,3 +4378,35 @@ quickstart document.
   command finished. The right fix is not removing the startup guidance; it is
   making the post-start stop sign explicit enough that the one-kernel rule is
   harder to ignore.
+
+## D-250: Standardize Polinko on one canonical local Python environment
+
+- Date: `2026-05-13`
+- Category: `workflow_environment`
+- Tags: `python_env`, `tooling`, `editor_surface`, `repo_hygiene`
+- Decision:
+  - treat this config/kernel update as human-led:
+    - the human lead set the direction and canonical env contract
+    - Codex executed, formalized, and validated the repo changes
+  - standardize the canonical local repo environment on `.venv`
+  - retire legacy local env aliases from the active config contract:
+    - `venv`
+    - `virtualenv_name`
+    - `polinko-repositioning-system`
+  - point tracked Python tooling surfaces at the same canonical env:
+    - `Makefile`
+    - `pyrightconfig.json`
+    - `mypy.ini`
+    - current `RUNBOOK` commands
+  - when local workspace/editor settings are present, they should point to
+    `${workspaceFolder}/.venv/bin/python3.14`
+- Validation:
+  - `make session-status`
+  - `make test-targeted TESTS='tests.test_api'`
+  - `git diff --check`
+- Why: Polinko had drifted into multiple local environment names and leftover
+  alias references, which made editor behavior, terminal activation, and
+  operator commands harder to reason about than the actual runtime required.
+  The repo only needed one local Python env. Collapsing onto `.venv` makes the
+  toolchain, docs, and workspace behavior legible again without changing the
+  repo's runtime contract.

@@ -1,6 +1,9 @@
+VENV ?= .venv
 PYTHON ?= $(shell \
-	if [ -x ./venv/bin/python ] && ./venv/bin/python -V >/dev/null 2>&1; then \
-		echo ./venv/bin/python; \
+	if [ -x ./$(VENV)/bin/python3.14 ] && ./$(VENV)/bin/python3.14 -V >/dev/null 2>&1; then \
+		echo ./$(VENV)/bin/python3.14; \
+	elif [ -x ./$(VENV)/bin/python ] && ./$(VENV)/bin/python -V >/dev/null 2>&1; then \
+		echo ./$(VENV)/bin/python; \
 	else \
 		echo python3; \
 	fi)
@@ -157,12 +160,10 @@ chat:
 
 venv env:
 	@set -eu; \
-	if [ -f ./venv/bin/activate ]; then \
-		ACTIVATE_PATH="./venv/bin/activate"; \
-	elif [ -f ./polinko-repositioning-system/bin/activate ]; then \
-		ACTIVATE_PATH="./polinko-repositioning-system/bin/activate"; \
+	if [ -f ./.venv/bin/activate ]; then \
+		ACTIVATE_PATH="./.venv/bin/activate"; \
 	else \
-		echo "No local activation script found (checked ./venv/bin/activate and ./polinko-repositioning-system/bin/activate)."; \
+		echo "No local activation script found (checked ./.venv/bin/activate)."; \
 		exit 1; \
 	fi; \
 	echo "Opening shell with virtual environment: $$ACTIVATE_PATH"; \
