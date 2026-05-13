@@ -111,7 +111,7 @@ Last updated: 2026-05-12
     - CI audits locked Python and Node dependency surfaces
     - CI rejects `requirements.in` / `requirements.lock` drift
   - current promoted non-OCR lane:
-    - co-reasoning reliability now closes `14/14` in the latest tracked style snapshot
+    - co-reasoning reliability passes `14/14` in the tracked style surface
     - latest one-hour deterministic beta soak closes at `19/21` pass cycles
     - former dominant style pressure did not recur in the broad gate
     - uncertainty-boundary stability is now closed with:
@@ -123,14 +123,7 @@ Last updated: 2026-05-12
       - latest tracked snapshot: `9/9` pass
       - tracked case count: `9`
       - new distinct seams: archive-lore and archive-discipline fabrication
-      - current signal-shape surface is now explicit
-    - retrieval grounding now has fresh tracked snapshots across both visible branches:
-      - retrieval recall: `12/12` pass
-      - file search: `5/5` pass
-    - response behaviour now has a fresh current tracked snapshot:
-      - latest tracked snapshot: `7/7` pass
-      - current signal-shape surface is now explicit
-    - current broad gate is holding across style, uncertainty, co-reasoning, and response behaviour
+    - current broad gate is holding across style, uncertainty, and co-reasoning
   - current mature method lane is green:
     - growth stability: `25/25` stable, `0` flaky
     - fail-history cohort: `0` active cases
@@ -149,7 +142,8 @@ Last updated: 2026-05-12
     - retrieval grounding: `47` / `40`
     - OCR confidence boundary: `15` / `10`
   - co-reasoning reliability is now the first promoted non-OCR lane
-  - tracked style stress lane now has a current tracked snapshot at `14/14`
+  - tracked style stress lane currently passes `14/14` on the live validation
+    pass
   - operator burden now has a seeded thin-lane row surface:
     - tracked rows: `7`
     - pass rows: `4`
@@ -169,7 +163,7 @@ Last updated: 2026-05-12
 1. Keep the public doorway stable and credible.
 2. Keep repo research surfaces compact, visual, and easy to scan.
 3. Keep the first promoted non-OCR lane visible now that the broad gate is
-   holding across style, uncertainty, co-reasoning, and response behaviour.
+   holding across style, uncertainty, and co-reasoning.
 4. Keep operator-burden row promotion distinct, visible, and resistant to
    clone inflation or over-automation.
 5. Keep the mature OCR method lane green and reopen it only from the remaining

@@ -876,7 +876,7 @@ Hash fields in responses:
    - `make quality-gate GATE_PORT=8099`
    - `make quality-gate GATE_BASE_URL=http://127.0.0.1:8099`
    - `make quality-gate HALLUCINATION_EVAL_MODE=deterministic`
-   - `make quality-gate HALLUCINATION_MIN_ACCEPTABLE_SCORE=5`
+   - `make quality-gate HALLUCINATION_MIN_ACCEPTABLE_SCORE=70`
 6. Note: `make quality-gate` sets
    `POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true` for the temporary gate server
    to reduce transient embedding API flakes.
@@ -892,7 +892,7 @@ Hash fields in responses:
    - `python tools/eval_hallucination.py --evaluation-mode judge`
    - `python tools/eval_hallucination.py --evaluation-mode deterministic`
    - `python tools/eval_hallucination.py --evaluation-mode auto`
-   - `python tools/eval_hallucination.py --min-acceptable-score 5`
+   - `python tools/eval_hallucination.py --min-acceptable-score 70`
 
 ## Run Retrieval Eval
 

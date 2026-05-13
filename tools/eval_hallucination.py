@@ -26,7 +26,7 @@ from tools.eval_trace_artifacts import build_eval_trace
 
 class HallucinationJudgeResponse(BaseModel):
     pass_: bool = Field(alias="pass")
-    score: int = Field(ge=0, le=10)
+    score: int
     risk: Literal["low", "medium", "high"]
     grounding: Literal["grounded", "partially_grounded", "ungrounded"]
     notes: str
@@ -41,7 +41,6 @@ class HallucinationJudgeResponse(BaseModel):
         return self.pass_
 
 _MIN_ACCEPTABLE_SCORE = 5
-_MAX_ACCEPTABLE_SCORE = 10
 EvaluationMode = Literal["judge", "deterministic", "auto"]
 
 
@@ -367,7 +366,7 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=_MIN_ACCEPTABLE_SCORE,
         help=(
-            "Minimum acceptable judge score (0-10) for case pass. "
+            "Minimum acceptable judge score (0-100) for case pass. "
             f"Default: {_MIN_ACCEPTABLE_SCORE}."
         ),
     )
@@ -396,10 +395,8 @@ def main() -> int:
     if not cases_path.exists():
         raise SystemExit(f"Cases file not found: {cases_path}")
     cases = _load_cases(cases_path)
-    if args.min_acceptable_score < 0 or args.min_acceptable_score > _MAX_ACCEPTABLE_SCORE:
-        raise SystemExit(
-            f"--min-acceptable-score must be between 0 and {_MAX_ACCEPTABLE_SCORE}."
-        )
+    if args.min_acceptable_score < 0 or args.min_acceptable_score > 100:
+        raise SystemExit("--min-acceptable-score must be between 0 and 100.")
 
     requested_mode: EvaluationMode = args.evaluation_mode
     judge_client: OpenAI | None = None
