@@ -4438,3 +4438,37 @@ quickstart document.
   the main env contract is fixed. The hook surface should be as legible as the
   rest of the repo, but it should not smuggle in a surprise whole-repo Python
   formatting migration as part of the same kernel.
+
+## D-252: Put the startup reading cue in the final `STOP` block
+
+- Date: `2026-05-13`
+- Category: `workflow_environment`
+- Tags: `operator_surface`, `startup`, `session_ops`, `repo_hygiene`
+- Provenance: `human-led operator decision with implementation decision`
+- Decision:
+  - treat this startup-ritual refinement as human-led:
+    - the human lead set the operator expectation
+    - Codex executed, formalized, and validated the repo-facing update
+  - keep `make start` in two explicit phases:
+    - machine context, environment checks, wake-lock, and API smoke first
+    - docs read, startup read, and kernel declaration in the final `STOP`
+      block
+  - keep the canonical docs list inside the final `STOP` block instead of
+    front-loading it before startup validation
+  - keep the startup-read expectation explicit:
+    - give the 5-bullet startup read
+    - name exactly one active kernel
+    - do not branch, search, or edit until that is stated
+  - when the start routine changes, sync all three surfaces in the same kernel:
+    - `tools/start_of_day_routine.sh`
+    - `docs/runtime/START_END_REFERENCE.md`
+    - `docs/runtime/RUNBOOK.md`
+- Validation:
+  - `make start`
+  - `bash -n tools/start_of_day_routine.sh`
+  - `git diff --check`
+- Why: Polinko already had an explicit `STOP` gate, but the docs list was still
+  sitting above the machine checks instead of inside the place where the
+  operator is meant to pause and declare the next kernel. Moving the reading
+  cue into the final stop sign makes the ritual more legible without changing
+  the underlying startup safety path.
