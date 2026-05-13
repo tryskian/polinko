@@ -1,6 +1,9 @@
+VENV ?= .venv
 PYTHON ?= $(shell \
-	if [ -x ./venv/bin/python ] && ./venv/bin/python -V >/dev/null 2>&1; then \
-		echo ./venv/bin/python; \
+	if [ -x ./$(VENV)/bin/python3.14 ] && ./$(VENV)/bin/python3.14 -V >/dev/null 2>&1; then \
+		echo ./$(VENV)/bin/python3.14; \
+	elif [ -x ./$(VENV)/bin/python ] && ./$(VENV)/bin/python -V >/dev/null 2>&1; then \
+		echo ./$(VENV)/bin/python; \
 	else \
 		echo python3; \
 	fi)
@@ -150,19 +153,17 @@ REQUIREMENTS_IN ?= requirements.in
 REQUIREMENTS_LOCK ?= requirements.lock
 PIP_TOOLS_VERSION ?= 7.5.3
 
-.PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate start end end-git-check rituals localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test test-one test-targeted pycheck lint-docs mermaid-render d3-render public-diagrams-render transcript-fix transcript-check doctor-env backend-gate caffeinate caffeinate-status decaffeinate decaffeinate-status privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image api-smoke eval-smoke eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel eval-sidecar-start eval-sidecar-status eval-sidecar-stop operator-burden-report calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate start end end-git-check rituals localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test test-one test-targeted pycheck ruff-check ruff-format-check lint-docs mermaid-render d3-render public-diagrams-render transcript-fix transcript-check doctor-env backend-gate caffeinate caffeinate-status decaffeinate decaffeinate-status privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image api-smoke eval-smoke eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel eval-sidecar-start eval-sidecar-status eval-sidecar-stop operator-burden-report calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 .PHONY: frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 chat:
 	$(PYTHON) app.py
 
 venv env:
 	@set -eu; \
-	if [ -f ./venv/bin/activate ]; then \
-		ACTIVATE_PATH="./venv/bin/activate"; \
-	elif [ -f ./polinko-repositioning-system/bin/activate ]; then \
-		ACTIVATE_PATH="./polinko-repositioning-system/bin/activate"; \
+	if [ -f ./.venv/bin/activate ]; then \
+		ACTIVATE_PATH="./.venv/bin/activate"; \
 	else \
-		echo "No local activation script found (checked ./venv/bin/activate and ./polinko-repositioning-system/bin/activate)."; \
+		echo "No local activation script found (checked ./.venv/bin/activate)."; \
 		exit 1; \
 	fi; \
 	echo "Opening shell with virtual environment: $$ACTIVATE_PATH"; \
@@ -702,6 +703,12 @@ pycheck:
 	fi; \
 	python3 -m py_compile $(FILES)
 
+ruff-check:
+	$(PYTHON) -m ruff check .
+
+ruff-format-check:
+	$(PYTHON) -m ruff format --check .
+
 lint-docs:
 	npm run lint:docs
 
@@ -820,7 +827,7 @@ privacy-local-off:
 	bash tools/local_privacy_guard.sh clear
 
 precommit-install:
-	$(PYTHON) -m pip install pre-commit
+	$(PYTHON) -m pre_commit install --install-hooks --hook-type pre-commit
 
 precommit-run:
 	$(PYTHON) -m pre_commit run --all-files

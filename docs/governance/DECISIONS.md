@@ -4378,3 +4378,63 @@ quickstart document.
   command finished. The right fix is not removing the startup guidance; it is
   making the post-start stop sign explicit enough that the one-kernel rule is
   harder to ignore.
+
+## D-250: Standardize Polinko on one canonical local Python environment
+
+- Date: `2026-05-13`
+- Category: `workflow_environment`
+- Tags: `python_env`, `tooling`, `editor_surface`, `repo_hygiene`
+- Decision:
+  - treat this config/kernel update as human-led:
+    - the human lead set the direction and canonical env contract
+    - Codex executed, formalized, and validated the repo changes
+  - standardize the canonical local repo environment on `.venv`
+  - retire legacy local env aliases from the active config contract:
+    - `venv`
+    - `virtualenv_name`
+    - `polinko-repositioning-system`
+  - point tracked Python tooling surfaces at the same canonical env:
+    - `Makefile`
+    - `pyrightconfig.json`
+    - `mypy.ini`
+    - current `RUNBOOK` commands
+  - when local workspace/editor settings are present, they should point to
+    `${workspaceFolder}/.venv/bin/python3.14`
+- Validation:
+  - `make session-status`
+  - `make test-targeted TESTS='tests.test_api'`
+  - `git diff --check`
+- Why: Polinko had drifted into multiple local environment names and leftover
+  alias references, which made editor behavior, terminal activation, and
+  operator commands harder to reason about than the actual runtime required.
+  The repo only needed one local Python env. Collapsing onto `.venv` makes the
+  toolchain, docs, and workspace behavior legible again without changing the
+  repo's runtime contract.
+
+## D-251: Keep Polinko repo hooks native to the repo and the canonical env
+
+- Date: `2026-05-13`
+- Category: `workflow_environment`
+- Tags: `pre_commit`, `tooling`, `repo_hygiene`, `python_env`
+- Provenance: `human-led method decision with implementation decision`
+- Decision:
+  - treat this hook-surface refresh as human-led:
+    - the human lead set the direction for the standards pass
+    - Codex executed, formalized, and validated the repo-facing update
+  - keep tracked `pre-commit` hooks running through the canonical local env
+  - remove stale direct env pins from the hook surface
+  - keep the active hook surface focused on fast local hygiene:
+    - merge-conflict detection
+    - EOF / trailing-whitespace cleanup
+    - docs linting
+  - keep repo-wide Python hygiene available as explicit native repo commands:
+    - `make ruff-check`
+    - `make ruff-format-check`
+  - keep docs lint inside the hook surface with:
+    - `make lint-docs`
+- Why: Once Polinko collapsed onto `.venv`, the remaining hook drift was the
+  old `./venv/bin/python` pin inside `.pre-commit-config.yaml`. That is the
+  kind of standards drift that quietly reintroduces alias confusion even after
+  the main env contract is fixed. The hook surface should be as legible as the
+  rest of the repo, but it should not smuggle in a surprise whole-repo Python
+  formatting migration as part of the same kernel.
