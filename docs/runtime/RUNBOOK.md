@@ -68,13 +68,20 @@
      - `make caffeinate`
      - `make caffeinate-status`
      - `make api-smoke`
+5. Read the local instruction surface from the final `STOP` block in `make start`:
+   - `docs/governance/CHARTER.md`
+   - `docs/governance/STATE.md`
+   - `docs/governance/DECISIONS.md`
+   - `docs/runtime/RUNBOOK.md`
+   - `docs/runtime/ARCHITECTURE.md`
+   - local `docs/peanut/governance/SESSION_HANDOFF.md` if present
    - inside Codex, treat `make api-smoke` as the trusted runtime truth
    - use `make server-daemon` / `make session-status` only as convenience checks
-5. After `make start`, before any repo action:
+6. After `make start`, before any repo action:
    - give the 5-bullet startup read
    - name exactly one active kernel
    - do not branch, search, or edit until that is stated
-6. Codex execution caveat:
+7. Codex execution caveat:
    - long-lived detached background processes launched from this execution surface can be reaped later even after a clean startup
    - do not treat a green `server-daemon` / `session-status` result as stronger evidence than `make api-smoke`
 

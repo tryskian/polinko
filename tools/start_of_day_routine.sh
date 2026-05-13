@@ -5,16 +5,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 echo "[start] starting morning routine in: $ROOT_DIR"
-echo "[start] read these docs:"
-echo "  - docs/governance/CHARTER.md"
-echo "  - docs/governance/STATE.md"
-echo "  - docs/governance/DECISIONS.md"
-echo "  - docs/runtime/RUNBOOK.md"
-echo "  - docs/runtime/ARCHITECTURE.md"
-if [ -f "docs/peanut/governance/SESSION_HANDOFF.md" ]; then
-  echo "  - docs/peanut/governance/SESSION_HANDOFF.md"
-fi
-
 echo "[start] 1/5 workspace context"
 printf 'repo root: %s\n' "$ROOT_DIR"
 printf 'branch: %s\n' "$(git branch --show-current)"
@@ -33,6 +23,15 @@ echo "[start] 5/5 api-smoke"
 make --no-print-directory api-smoke
 
 echo "[start] STOP"
+echo "[start] read these docs:"
+echo "  - docs/governance/CHARTER.md"
+echo "  - docs/governance/STATE.md"
+echo "  - docs/governance/DECISIONS.md"
+echo "  - docs/runtime/RUNBOOK.md"
+echo "  - docs/runtime/ARCHITECTURE.md"
+if [ -f "docs/peanut/governance/SESSION_HANDOFF.md" ]; then
+  echo "  - docs/peanut/governance/SESSION_HANDOFF.md"
+fi
 echo "[start] before any repo action:"
 echo "  1. give the 5-bullet startup read"
 echo "  2. name exactly one active kernel"
