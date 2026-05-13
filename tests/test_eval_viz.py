@@ -380,12 +380,20 @@ class EvalVizTests(unittest.TestCase):
                 "docs/research/co-reasoning-signal-shape-20260512.md",
                 summaries["co_reasoning"]["research_note_path"],
             )
+            self.assertEqual(
+                summaries["co_reasoning"]["focus"],
+                ["constraint retention", "mode shift", "anti-mimicry"],
+            )
             self.assertIn(
                 "docs/research/response-behaviour-signal-shape-20260512.md",
                 summaries["response_behaviour"]["research_note_path"],
             )
             self.assertEqual(summaries["response_behaviour"]["pass"], 7)
             self.assertEqual(summaries["response_behaviour"]["fail"], 0)
+            self.assertEqual(
+                summaries["response_behaviour"]["focus"],
+                ["uncertainty", "claim discipline", "interaction shape"],
+            )
             self.assertIn(
                 "docs/research/hallucination-boundary-signal-shape-20260512.md",
                 summaries["hallucination_boundary"]["research_note_path"],
@@ -404,6 +412,10 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(summaries["operator_burden"]["fail"], 2)
             self.assertEqual(summaries["operator_burden"]["retain"], 1)
             self.assertEqual(summaries["operator_burden"]["evict"], 1)
+            self.assertEqual(
+                summaries["operator_burden"]["focus"],
+                ["pass anchors", "retain/evict", "duplicate-heavy backlog"],
+            )
             self.assertIn(
                 "docs/research/operator-burden-promotion-20260509.md",
                 summaries["operator_burden"]["research_note_path"],
@@ -419,10 +431,18 @@ class EvalVizTests(unittest.TestCase):
         self.assertIn('id="windowLabel"', html)
         self.assertIn('id="chartTip"', html)
         self.assertIn('id="laneSummaries"', html)
+        self.assertIn('id="laneTrackedCount"', html)
+        self.assertIn('id="laneCleanCount"', html)
+        self.assertIn('id="lanePressureCount"', html)
+        self.assertIn('id="laneRowCount"', html)
         self.assertIn("Tracked Lane Snapshots", html)
+        self.assertIn("fully clean", html)
+        self.assertIn("pressure lanes", html)
         self.assertIn("lane-card-state", html)
+        self.assertIn("lane-card-focus-chip", html)
         self.assertIn("lane-card-links", html)
         self.assertIn("lane-card-link", html)
+        self.assertIn("Signal note", html)
         self.assertIn("bucketed binary gate report history", html)
         self.assertIn("bucketed manual eval outcome history", html)
         self.assertIn("bucketed active-lane mix history", html)
