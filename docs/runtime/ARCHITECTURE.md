@@ -105,6 +105,15 @@ This page is the structural map of the tracked system. Use
 
 ## Operational Commands
 
+- Startup ritual: `make start`
+- Day-close routine: `make end`
+- Branch-local closeout validation: `make end-preflight`
+- Clean-main closeout gate: `make end-git-check`
+- Managed wake lock:
+  - `make caffeinate`
+  - `make caffeinate-status`
+  - `make decaffeinate-status`
+  - `make decaffeinate`
 - Env sanity: `make doctor-env`
 - Backend tests: `make test`
 - Local API: `make server` or `make server-daemon`
