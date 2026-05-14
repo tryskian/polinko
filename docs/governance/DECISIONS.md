@@ -4472,3 +4472,40 @@ quickstart document.
   operator is meant to pause and declare the next kernel. Moving the reading
   cue into the final stop sign makes the ritual more legible without changing
   the underlying startup safety path.
+
+## D-253: Align the full start/end operator surface across the repo family
+
+- Date: `2026-05-14`
+- Category: `workflow_environment`
+- Tags: `operator_surface`, `start_end`, `wake_lock`, `repo_family`
+- Provenance: `human-led operator decision with implementation decision`
+- Decision:
+  - align Polinko with the shared repo-family operator target contract:
+    - `make start`
+    - `make end`
+    - `make end-preflight`
+    - `make end-git-check`
+    - `make caffeinate`
+    - `make caffeinate-status`
+    - `make decaffeinate-status`
+    - `make decaffeinate`
+    - `make doctor-env`
+    - `make session-status`
+    - `make rituals`
+  - make `make end` enforce clean synced `main`
+  - make `make end-preflight` available for branch-local validation before
+    clean-main enforcement
+  - make managed wake-lock handling PID-owned:
+    - repo-managed PIDs may be stopped by the repo
+    - unmanaged `caffeinate` processes are reported but not adopted or stopped
+- Validation:
+  - shared target matrix check
+  - `bash -n tools/start_of_day_routine.sh tools/end_of_day_routine.sh`
+  - `make doctor-env`
+  - `make lint-docs`
+  - `make test`
+  - `make end-git-check` on synced `main`
+- Why: Polinko, Probaboracle, Scorey, and Huemiliator needed the same boring
+  operator shape so startup, wake-lock ownership, preflight, and clean-main
+  closeout mean the same thing everywhere without resurrecting stale aliases or
+  unsafe PID adoption.

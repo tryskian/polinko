@@ -115,6 +115,9 @@ open a browser by default.
 ## Core Commands
 
 ```bash
+make start
+make end-preflight
+make end-git-check
 make server
 make portfolio
 make test

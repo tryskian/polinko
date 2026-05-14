@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-12
+Last updated: 2026-05-14
 
 ## Current Truth
 
@@ -81,8 +81,19 @@ Last updated: 2026-05-12
     became...` phrasing and swaps in `Applied AI Research Engineer`
 - Operator command surface:
   - `make start` is the scripted morning startup pass
+  - `make start` runs `doctor-env`, managed `caffeinate`,
+    `caffeinate-status`, and `api-smoke`, then stops for the startup read and
+    one-kernel declaration
   - `make end` is operational day-close
+  - `make end-preflight` runs the validation/background-stop path before a
+    branch is ready for clean-main enforcement
   - `make end-git-check` is the final clean-main verification step
+  - managed wake-lock commands are explicit:
+    - `make caffeinate`
+    - `make caffeinate-status`
+    - `make decaffeinate-status`
+    - `make decaffeinate`
+  - unmanaged `caffeinate` processes are reported but not adopted or stopped
 - Local frontend contract is intentionally minimal:
   - `frontend/` is local-only and ignored except `.gitkeep`
   - `ui/` is local-only and ignored except `.gitkeep`
@@ -183,3 +194,4 @@ Last updated: 2026-05-12
 - `make doctor-env`
 - `make lint-docs`
 - `make test`
+- `make end-git-check` after merge/sync

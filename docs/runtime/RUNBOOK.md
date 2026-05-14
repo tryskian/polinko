@@ -339,17 +339,18 @@ Read-only DB audits remain allowed:
 10. Inside Codex, prefer these smoke targets over long-lived `server-daemon` checks.
     - detached background processes can go stale later for execution-surface reasons even when the app itself is healthy
 
-## Optional Keep-Awake Session Policy
+## Managed Keep-Awake Session Policy
 
-1. Default state is off (do not run `caffeinate` unless requested).
-2. Start keep-awake only when explicitly requested in-session.
-3. Start command:
+1. `make start` starts or confirms Polinko's managed wake lock as part of the
+   normal operator startup routine.
+2. Manual start command:
    - `make caffeinate`
-4. Verify status:
+3. Verify status:
    - `make caffeinate-status`
    - alias: `make decaffeinate-status`
-5. Stop command at wrap:
+4. Stop command at wrap:
    - `make decaffeinate`
+5. Unmanaged `caffeinate` processes are reported but never adopted or stopped.
 6. `decaffeinated` remains workflow shorthand. The explicit command is
    `make decaffeinate`.
 
