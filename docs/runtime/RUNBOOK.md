@@ -224,7 +224,8 @@
 
 1. Run `make doctor-env`.
 2. Review warnings:
-   - `VIRTUAL_ENV is not set` is expected when using `make`.
+   - `VIRTUAL_ENV` should point at the active repo venv when `make doctor-env`
+     resolves a repo interpreter.
    - `python` is not on PATH is informational when only `python3` is
      available.
 3. Resolve actionable issues (missing imports, interpreter mismatch, or
