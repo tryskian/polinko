@@ -11,9 +11,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_VENV = ROOT / "polinko-repositioning-system"
-EXPECTED_PYTHON = EXPECTED_VENV / "bin" / "python"
-ALT_EXPECTED_PYTHON = ROOT / "venv" / "bin" / "python"
+PREFERRED_VENV_NAMES = (".venv", "venv", "polinko-repositioning-system")
+PREFERRED_PYTHON_NAMES = ("python3.14", "python3", "python")
 
 
 def _ok(message: str) -> None:
@@ -39,23 +38,51 @@ def _is_runnable_python(path: Path) -> bool:
     return proc.returncode == 0
 
 
+def _expected_python_candidates(active_venv: str | None) -> list[Path]:
+    roots: list[Path] = []
+    seen: set[Path] = set()
+
+    if active_venv:
+        roots.append(Path(active_venv).expanduser())
+    roots.extend(ROOT / name for name in PREFERRED_VENV_NAMES)
+
+    candidates: list[Path] = []
+    for root in roots:
+        normalized_root = root.resolve()
+        if normalized_root in seen:
+            continue
+        seen.add(normalized_root)
+        for python_name in PREFERRED_PYTHON_NAMES:
+            candidates.append(normalized_root / "bin" / python_name)
+    return candidates
+
+
 def _check_interpreter() -> int:
     issues = 0
     current_raw = Path(sys.executable)
     current = current_raw.resolve()
-    expected_candidates = [EXPECTED_PYTHON, ALT_EXPECTED_PYTHON]
+    active_venv = os.environ.get("VIRTUAL_ENV")
+    expected_candidates = _expected_python_candidates(active_venv)
     runnable_candidates = [path for path in expected_candidates if _is_runnable_python(path)]
 
     if runnable_candidates:
-        expected_raw = runnable_candidates[0]
-        expected = expected_raw.resolve()
-        if current == expected:
+        matching_candidate = next(
+            (
+                path
+                for path in runnable_candidates
+                if current_raw.resolve() == path.resolve() or current_raw == path
+            ),
+            None,
+        )
+        if matching_candidate is not None:
             _ok(f"Interpreter: {current_raw} (resolved: {current})")
         else:
+            expected_raw = runnable_candidates[0]
+            expected = expected_raw.resolve()
             issues += 1
             _warn(f"Interpreter mismatch: {current_raw} (resolved: {current})")
             _warn(f"Expected: {expected_raw} (resolved: {expected})")
-            _warn("Use: source polinko-repositioning-system/bin/activate")
+            _warn(f"Use: source {expected_raw.parent / 'activate'}")
     else:
         _warn(
             "No runnable project venv interpreter found "
@@ -63,7 +90,6 @@ def _check_interpreter() -> int:
         )
         _ok(f"Using host interpreter: {current_raw} (resolved: {current})")
 
-    active_venv = os.environ.get("VIRTUAL_ENV")
     if active_venv:
         _ok(f"VIRTUAL_ENV={active_venv}")
     else:

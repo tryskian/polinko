@@ -728,8 +728,18 @@ transcript-check:
 
 doctor-env:
 	@set -eu; \
-	ACTIVE_VENV="$$(dirname "$(PYTHON)")/.."; \
-	VIRTUAL_ENV="$$ACTIVE_VENV" PATH="$$ACTIVE_VENV/bin:$$PATH" "$(PYTHON)" -m tools.doctor_env
+	PYTHON_PATH="$(PYTHON)"; \
+	ACTIVE_VENV=""; \
+	case "$$PYTHON_PATH" in \
+		*/bin/python|*/bin/python3|*/bin/python3.*) \
+			ACTIVE_VENV="$$(cd "$$(dirname "$$PYTHON_PATH")/.." && pwd)"; \
+			;; \
+	esac; \
+	if [ -n "$$ACTIVE_VENV" ]; then \
+		VIRTUAL_ENV="$$ACTIVE_VENV" PATH="$$ACTIVE_VENV/bin:$$PATH" "$$PYTHON_PATH" -m tools.doctor_env; \
+	else \
+		"$$PYTHON_PATH" -m tools.doctor_env; \
+	fi
 
 backend-gate:
 	@echo "Running backend gate (doctor + tests + deterministic quality gate)..."
