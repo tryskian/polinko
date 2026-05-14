@@ -125,6 +125,8 @@
 
 1. Run the end-of-day script:
    - `make end`
+   - use `make end-preflight` before merge when the branch is not ready for
+     clean-main enforcement
 2. Script sequence (deterministic):
    - `make transcript-fix`
    - `make transcript-check`

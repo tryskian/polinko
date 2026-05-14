@@ -40,6 +40,11 @@ Source of truth:
 
 - [tools/start_of_day_routine.sh](../../tools/start_of_day_routine.sh)
 
+Wake-lock rule:
+
+- `make caffeinate` records only this repo's managed PID
+- unmanaged `caffeinate` processes are reported but never adopted or stopped
+
 ## End
 
 Command:
@@ -59,6 +64,12 @@ Sequence:
      - `make session-status`
 2. Final clean-main check after merge/sync:
    - `make end-git-check`
+
+Preflight:
+
+- `make end-preflight`
+- runs the validation and background-stop path without requiring clean synced
+  `main`
 
 `make end-git-check` then verifies:
 
