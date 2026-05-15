@@ -25,16 +25,14 @@ Sequence:
    - `make caffeinate-status`
    - `make api-smoke`
 3. Stop before repo action:
-   - print the canonical docs to read:
-     - `docs/governance/CHARTER.md`
-     - `docs/governance/STATE.md`
-     - `docs/governance/DECISIONS.md`
-     - `docs/runtime/RUNBOOK.md`
-     - `docs/runtime/ARCHITECTURE.md`
-     - local `docs/peanut/governance/SESSION_HANDOFF.md` if present
-   - give the 5-bullet startup read
-   - name exactly one active kernel
-   - do not branch, search, or edit until that is stated
+   - print the canonical rehydrate prompt
+   - the prompt tells the agent to:
+     - read `CHARTER`, `STATE`, `DECISIONS`, `RUNBOOK`, `ARCHITECTURE`, and local `SESSION_HANDOFF` if present
+     - return 5 bullets covering current state, risks, and next kernel
+     - confirm repo path, host vs devcontainer mode, active branch, and whether the thread is on clean `main` or a feature branch
+     - apply the no-guessing controls
+     - run one active kernel at a time
+     - execute the `Next Slice` from `SESSION_HANDOFF` with full validation
 
 Source of truth:
 
@@ -57,6 +55,8 @@ Sequence:
 
 1. Run the generic closeout safety path:
    - artifact repair/check
+   - tracked path leak check
+   - local path leak audit
    - environment/docs/test validation
    - background-process shutdown
      - `make server-daemon-stop`

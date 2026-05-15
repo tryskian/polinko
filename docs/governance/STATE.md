@@ -82,11 +82,12 @@ Last updated: 2026-05-14
 - Operator command surface:
   - `make start` is the scripted morning startup pass
   - `make start` runs `doctor-env`, managed `caffeinate`,
-    `caffeinate-status`, and `api-smoke`, then stops for the startup read and
-    one-kernel declaration
+    `caffeinate-status`, and `api-smoke`, then prints the canonical
+    rehydrate prompt
   - `make end` is operational day-close
-  - `make end-preflight` runs the validation/background-stop path before a
-    branch is ready for clean-main enforcement
+  - `make end-preflight` runs transcript repair/check, `doctor-env`, tracked
+    path leak check, local path leak audit, docs/test validation, and the
+    background-stop path before a branch is ready for clean-main enforcement
   - `make end-git-check` is the final clean-main verification step
   - managed wake-lock commands are explicit:
     - `make caffeinate`

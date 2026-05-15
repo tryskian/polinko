@@ -2326,9 +2326,8 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
         const observed = escapeHtml(shorten(row?.observed || '(none)', 220));
         const pathValue = String(row?.image_path || '').trim();
         const pathLeaf = escapeHtml(leafName(pathValue));
-        const fullPath = escapeHtml(pathValue || '(none)');
         const pathCell = pathValue
-          ? `<a class="eval-path" href="file://${encodeURI(pathValue)}" title="${fullPath}">${pathLeaf}</a>`
+          ? `<span class="eval-path" title="local path hidden">${pathLeaf || '(image)'}</span>`
           : `<span class="eval-path">(none)</span>`;
         return `
           <tr>

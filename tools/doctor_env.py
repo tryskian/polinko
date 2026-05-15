@@ -141,7 +141,7 @@ def _check_compaudit() -> int:
         _warn("zsh reports insecure completion directories:")
         for line in output.splitlines():
             _warn(f"  {line}")
-        _warn("Fix with: chmod g-w /opt/homebrew/share/zsh /opt/homebrew/share/zsh/site-functions")
+        _warn("Fix by removing group-write permissions from the reported completion directories.")
     else:
         _ok("zsh compaudit: clean")
     return issues

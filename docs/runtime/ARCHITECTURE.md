@@ -115,6 +115,9 @@ This page is the structural map of the tracked system. Use
   - `make decaffeinate-status`
   - `make decaffeinate`
 - Env sanity: `make doctor-env`
+- Path leak guards:
+  - `make path-leak-check`
+  - `make path-leak-audit-local`
 - Backend tests: `make test`
 - Local API: `make server` or `make server-daemon`
 - Docs lint: `make lint-docs`

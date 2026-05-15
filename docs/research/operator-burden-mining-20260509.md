@@ -17,7 +17,7 @@ The goal was simple:
 
 - Tool: `python3 -m tools.build_behaviour_backlog_from_export`
 - Export root:
-  - `/Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT`
+  - `"$EXPORT_ROOT"`
 - Validator:
   - `./venv/bin/python -m unittest tests.test_build_behaviour_backlog_from_export`
 
