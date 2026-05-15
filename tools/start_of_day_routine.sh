@@ -22,17 +22,17 @@ make --no-print-directory caffeinate-status
 echo "[start] 5/5 api-smoke"
 make --no-print-directory api-smoke
 
-echo "[start] STOP"
-echo "[start] read these docs:"
-echo "  - docs/governance/CHARTER.md"
-echo "  - docs/governance/STATE.md"
-echo "  - docs/governance/DECISIONS.md"
-echo "  - docs/runtime/RUNBOOK.md"
-echo "  - docs/runtime/ARCHITECTURE.md"
-if [ -f "docs/peanut/governance/SESSION_HANDOFF.md" ]; then
-  echo "  - docs/peanut/governance/SESSION_HANDOFF.md"
-fi
-echo "[start] before any repo action:"
-echo "  1. give the 5-bullet startup read"
-echo "  2. name exactly one active kernel"
-echo "  3. do not branch, search, or edit until that is stated"
+echo "[start] REHYDRATE PROMPT"
+cat <<'EOF'
+Read docs/governance/CHARTER.md, docs/governance/STATE.md, docs/governance/DECISIONS.md, docs/runtime/RUNBOOK.md, docs/runtime/ARCHITECTURE.md, and local docs/peanut/governance/SESSION_HANDOFF.md if present.
+
+In 5 bullets: current state, risks, and next kernel.
+
+Before starting implementation, confirm environment/workspace context: canonical repo path is /abs/path/to/polinko, confirm host vs devcontainer mode, confirm active git branch, and say whether the thread is on clean main or a feature branch.
+
+Apply no-guessing controls: prefer repo-scoped edits and do not modify user shell profile file or global VS Code settings unless explicitly approved in-chat.
+
+Run in one active kernel at a time.
+
+Then execute the Next Slice from SESSION_HANDOFF with minimal behavior drift and full validation.
+EOF

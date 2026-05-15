@@ -4145,7 +4145,7 @@ quickstart document.
     evidence.
 - Validation:
   - `./venv/bin/python -m unittest tests.test_build_behaviour_backlog_from_export`
-  - `python3 -m tools.build_behaviour_backlog_from_export --export-root /Users/tryskian/Library/CloudStorage/Dropbox/CGPT-DATA-EXPORT --limit-per-lane 10`
+  - `python3 -m tools.build_behaviour_backlog_from_export --export-root "$EXPORT_ROOT" --limit-per-lane 10`
   - `make lint-docs`
   - `git diff --check`
 - Why: the first export-backed operator-burden pass only surfaced `1`
@@ -4509,3 +4509,42 @@ quickstart document.
   operator shape so startup, wake-lock ownership, preflight, and clean-main
   closeout mean the same thing everywhere without resurrecting stale aliases or
   unsafe PID adoption.
+
+## D-254: Keep `make start` mechanical and move the agent contract into one canonical rehydrate prompt
+
+- Date: `2026-05-15`
+- Category: `workflow_environment`
+- Tags: `operator_surface`, `startup`, `rehydrate_prompt`, `single_kernel`
+- Provenance: `human-led operator decision with implementation decision`
+- Decision:
+  - keep `make start` as a mechanical bootstrap only:
+    - workspace context
+    - `make doctor-env`
+    - `make caffeinate`
+    - `make caffeinate-status`
+    - `make api-smoke`
+  - replace the old end-of-start bullet instructions with one canonical
+    rehydrate prompt
+  - the rehydrate prompt must tell the agent to:
+    - read `CHARTER`, `STATE`, `DECISIONS`, `RUNBOOK`, `ARCHITECTURE`, and
+      local `SESSION_HANDOFF` if present
+    - return 5 bullets covering current state, risks, and next kernel
+    - confirm repo path, host vs devcontainer mode, active branch, and whether
+      the thread is on clean `main` or a feature branch
+    - apply the no-guessing controls
+    - run one active kernel at a time
+    - execute the `Next Slice` from `SESSION_HANDOFF` with full validation
+  - when this prompt changes, sync these surfaces in the same kernel:
+    - `tools/start_of_day_routine.sh`
+    - `docs/runtime/START_END_REFERENCE.md`
+    - `docs/runtime/RUNBOOK.md`
+    - `docs/governance/STATE.md`
+- Validation:
+  - `bash -n tools/start_of_day_routine.sh`
+  - `make start`
+  - `make lint-docs`
+- Why: the startup ritual drift was no longer about missing checks. It was
+  about scripting more and more of the agent behavior into `make start` until
+  the useful part got buried. The bootstrap should stay dumb and short. The
+  real contract should live in one readable rehydrate prompt that the agent
+  executes autonomously.

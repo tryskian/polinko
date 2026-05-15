@@ -58,7 +58,7 @@
 ## Morning Startup Check (Codexbeab)
 
 1. Confirm execution location:
-   - canonical root (`/Users/tryskian/Github/polinko`) or dedicated worktree.
+   - canonical repo root (this checkout) or dedicated worktree.
 2. Confirm active branch in this thread:
    - `git branch --show-current`
 3. If running parallel tracks, keep each track in its own dedicated worktree.
@@ -68,19 +68,21 @@
      - `make caffeinate`
      - `make caffeinate-status`
      - `make api-smoke`
-5. Read the local instruction surface from the final `STOP` block in `make start`:
-   - `docs/governance/CHARTER.md`
-   - `docs/governance/STATE.md`
-   - `docs/governance/DECISIONS.md`
-   - `docs/runtime/RUNBOOK.md`
-   - `docs/runtime/ARCHITECTURE.md`
-   - local `docs/peanut/governance/SESSION_HANDOFF.md` if present
+5. Read the canonical rehydrate prompt printed at the end of `make start`.
+   - it tells the agent to read:
+     - `docs/governance/CHARTER.md`
+     - `docs/governance/STATE.md`
+     - `docs/governance/DECISIONS.md`
+     - `docs/runtime/RUNBOOK.md`
+     - `docs/runtime/ARCHITECTURE.md`
+     - local `docs/peanut/governance/SESSION_HANDOFF.md` if present
+   - it tells the agent to return 5 bullets covering current state, risks, and next kernel
+   - it requires explicit environment/workspace confirmation before implementation
+   - it applies the no-guessing controls and the one-active-kernel rule
+   - it tells the agent to execute the `Next Slice` from `SESSION_HANDOFF` with full validation
    - inside Codex, treat `make api-smoke` as the trusted runtime truth
    - use `make server-daemon` / `make session-status` only as convenience checks
-6. After `make start`, before any repo action:
-   - give the 5-bullet startup read
-   - name exactly one active kernel
-   - do not branch, search, or edit until that is stated
+6. After `make start`, follow the rehydrate prompt before any repo action.
 7. Codex execution caveat:
    - long-lived detached background processes launched from this execution surface can be reaped later even after a clean startup
    - do not treat a green `server-daemon` / `session-status` result as stronger evidence than `make api-smoke`
@@ -386,7 +388,7 @@ Read-only DB audits remain allowed:
 1. OpenAI docs MCP endpoint:
    - `https://developers.openai.com/mcp`
 2. Local wiring targets:
-   - user-level Codex config (`~/.codex/config.toml`)
+   - user-level Codex config (`home Codex config`)
    - workspace config (`.vscode/mcp.json`)
 3. Active rule:
    - use OpenAI docs MCP for documentation lookup
@@ -452,13 +454,13 @@ Read-only DB audits remain allowed:
 
 1. Do not pin a host VS Code interpreter to a devcontainer-created venv path
    if that venv was built inside Linux.
-   - Example bad host pin: `/workspaces/polinko/.venv/bin/python3.14`
+   - Example bad host pin: `<devcontainer-workspace>/.venv/bin/python3.14`
    - Symptom: `Could not resolve interpreter path` / `Unable to handle .../bin/python`
 2. Root cause:
    - host macOS cannot execute Linux ELF binaries (`exec format error`).
 3. On host mode:
    - prefer Python extension auto-discovery, or explicitly select a macOS
-     interpreter (for example `/Library/Frameworks/Python.framework/Versions/3.14/bin/python3`).
+     interpreter that lives in this checkout or resolves from the host shell.
 4. On devcontainer mode:
    - use container interpreter paths only (for example
      `${containerWorkspaceFolder}/.venv/bin/python3.14`).
@@ -479,8 +481,8 @@ Read-only DB audits remain allowed:
    - repo scripts/Make targets
 3. Do not modify user-level shell/profile or global editor config without
    explicit approval in-chat:
-   - `~/.zshrc`, `~/.zprofile`, `~/.bashrc`
-   - `~/Library/Application Support/Code/User/settings.json`
+   - `.zshrc`, `.zprofile`, `.bashrc`, `.bash_profile`
+   - `global VS Code user settings file`
 4. Do not introduce auto-start shell hooks (for example `chpwd` +
    `make server`) unless explicitly requested and documented in the repo.
 5. If a rogue/accidental agent change is suspected, run triage in this order:

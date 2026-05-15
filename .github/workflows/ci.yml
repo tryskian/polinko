@@ -9,6 +9,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Check tracked path leaks
+        run: python -m tools.path_leak_check --scope tracked
       - name: Lint Markdown
         uses: DavidAnson/markdownlint-cli2-action@v20
         with:
