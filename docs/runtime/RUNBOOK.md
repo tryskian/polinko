@@ -18,7 +18,7 @@ Use this doc for operator procedure.
 ## Branch, Worktree, and Scope Policy
 
 1. Canonical repo root is:
-   - `/Users/tryskian/Github/polinko`
+   - `/abs/path/to/polinko`
 2. Default workflow is one feature branch per change set:
    - `git switch -c codex/bigbrain/<task-name>`
 3. Start edits from a feature branch.
