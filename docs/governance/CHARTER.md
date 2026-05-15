@@ -11,50 +11,28 @@ evidence-preserving method work.
 ## Durable Rules
 
 - Backend-first runtime is canonical:
-  - FastAPI API + CLI are the execution surfaces.
-  - presentation layers must not redefine eval policy.
+  - FastAPI API + CLI are the execution surfaces
+  - presentation layers stay aligned with backend and eval policy
 - Treat the repository as the research object:
-  - tracked docs/code/tests/evals remain canonical
-  - public-facing docs are derived views, not replacements
-  - local/private lanes stay local unless explicitly approved for publication
-- The public website is a doorway, not the research system:
+  - tracked docs, code, tests, and reports are canonical truth
+  - public-facing writing is the derived publication layer from repo truth
+  - local/private lanes stay local, with explicit approval for any wider scope
+- The public website is a doorway into the research system:
   - `GET /` redirects to `GET /portfolio`
-  - the site should point into the repo/work, not recreate it
-- Eval semantics remain split and strictly binary:
-  - release outcomes are `pass` / `fail` only
-  - the first gate proves hard contract correctness
-  - later judge or interpretive detail must not rewrite the first gate
-  - after `fail`, failure disposition is:
-    - `retain`
-    - `evict`
-  - `retain` keeps the failure as in-scope evidence in the active lane
-  - `evict` is an upstream case correction for malformed, noisy, or known-bad
-    cases; it is not a third release state
-  - lockset lane is release-gating
-  - growth lane is fail-tolerant and signal-seeking
+  - the public surface points into the work
+- Eval semantics remain binary:
+  - release outcomes are `pass` / `fail`
+  - after `fail`, failure disposition is `retain` / `evict`
+  - `retain` keeps the failure as active evidence
+  - `evict` removes malformed or stale cases upstream
 - Failure is primary signal:
-  - pass-rate polish must not erase unresolved failure pressure
-- Thin lanes should start narrow:
-  - human-owned row-local `pass` / `fail` before larger automation when cues
-    are still weak
+  - pass-rate reporting keeps unresolved failure pressure visible
 - Prefer deterministic, testable changes.
-- Fail fast on config/auth/runtime issues.
-- Keep one canonical command surface per operator action.
-- Treat live smoke on a fresh server as the runtime safety bar after
-  tooling/runtime changes:
-  - `make api-smoke`
-  - `make eval-smoke`
-  - unit tests are seam checks, not substitutes for live wiring proof
-- Inspect evidence before interpretation:
-  - source files, logs, screenshots, transcripts, and reports win over summary
-  - if a named source has not been inspected, do not speak as if it has
-- Start from meaning before tools:
-  - orient in this order: research, theory, transcripts, tracked docs, then
-    tools/code
-  - do not present guessed momentum as execution efficiency
+- Fail fast on config, auth, and runtime issues.
+- Inspect evidence before interpretation.
 - Preserve evidence chains:
-  - do not replace raw evidence with recursive summaries
   - archive before delete
+  - keep summaries anchored to raw evidence
 
 ## Working Model
 
@@ -67,19 +45,15 @@ evidence-preserving method work.
 - Engineer owns:
   - implementation
   - validation
-  - Git/branch/PR flow
-  - proactive hygiene/drift cleanup
+  - Git and PR flow
+  - proactive hygiene
   - execution recommendations
 - OpenAI Codex is the primary repo-local coding agent and engineering
-  collaborator:
-  - implementation, refactoring, validation, code review, and documentation
-    maintenance are actively done with Codex in the loop
-  - human direction remains authoritative for objectives, constraints,
-    interpretation, and publication
+  collaborator.
 - Default execution model:
-  - feature branch per change set
+  - one feature branch per change set
   - protected-main PR flow
-  - end-of-day finishes merged and clean on `main`
+  - clean synced `main` as the tracked stop state
 - Parallelism rule:
   - worktrees for parallel code changes
   - multi-agent only after architecture and acceptance criteria are explicit
@@ -88,36 +62,29 @@ evidence-preserving method work.
 
 - `docs/governance/DECISIONS.md`
   - append-only durable decisions
-  - process, engineering/tooling, runtime/API, dependency/workflow, and eval
-    governance only
 - `docs/governance/STATE.md`
-  - current tracked truth
-- `docs/research/`
-  - curated dated research notes and progress snapshots
+  - tracked current truth
 - `docs/runtime/RUNBOOK.md`
-  - procedures and command ownership
+  - operator procedure
 - `docs/runtime/ARCHITECTURE.md`
-  - stable system shape and contracts
+  - stable system shape
+- `docs/research/`
+  - curated tracked research notes
 - `docs/peanut/`
-  - local-only exploration lane for transcripts, design refs, theory, working
-    notes, and operator handoff
+  - local-only exploration lane
 
 ## Current Scope
 
-- In scope:
-  - local-first backend/runtime work
-  - fail-first eval hardening across lanes
-  - OCR confidence work as one method lane
-  - co-reasoning reliability
-  - operator burden measurement
-  - repo-native evidence/reporting surfaces
-  - lean public doorway pointing into the repo
-  - static D3/SVG evidence diagrams beside Mermaid when added
-- Out of scope for the public site right now:
-  - full portfolio rebuild
-  - animation-first exploration
-  - interactive evidence dashboards as a portfolio burden
-  - presentation-layer changes that alter backend/eval contracts
+- Local-first backend and runtime work
+- Fail-first eval hardening across lanes
+- Co-reasoning reliability
+- Operator burden measurement
+- Repo-native evidence and reporting surfaces
+- Lean public doorway pointing into the repo
+- Public site focus:
+  - single clear doorway
+  - stable identity surface
+  - direct path into the repo and research docs
 
 ## Security / Ops Baseline
 
