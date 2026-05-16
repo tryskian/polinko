@@ -32,6 +32,8 @@ evidence.
 - uncertainty-boundary and hallucination-boundary surfaces are currently green
 - operator burden is the active thin lane:
   - active because it is still producing distinct evidence pressure
+- the research surface remains open:
+  - current lane status is explicit, but further exploration is still active
 
 ## Start Here
 

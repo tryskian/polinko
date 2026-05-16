@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-15
+Last updated: 2026-05-16
 
 ## Current Truth
 
@@ -29,6 +29,7 @@ Last updated: 2026-05-15
     response-behaviour surfaces are operationalized
   - operator burden remains the active thin lane
   - no additional non-OCR lane currently meets promotion criteria
+  - the lane map is current, and the research surface remains open
   - OCR remains one mature method lane inside the broader project
 - Branch protection on `main` remains active:
   - PR required
@@ -50,6 +51,8 @@ Last updated: 2026-05-15
    and distinct lane signal.
 5. Keep mature method lanes green and reopen parked lanes only from clear
    evidence.
+6. Keep exploring new seams without forcing promotion before the signal earns
+   it.
 
 ## Canonical Sources
 
