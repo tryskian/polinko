@@ -39,7 +39,8 @@ live together so claims can be traced back to source material.
   - measured by: tracked style stress cases, live style eval passes, and the
     export-backed behaviour backlog
 - `Commentary-heavy response contracts increase operator burden`
-  - status: thin lane seeded and export-backed backlog widened
+  - status: thin lane seeded; keep thin until a distinct recurring seam changes
+    the method surface
   - measured by: experiment `R-D`, manual transcript diagnostics, the tracked
     operator-burden row surface, and export-backed control-contract mining
 - `Retrieval grounding should stay inspectable and source-bound`
@@ -59,7 +60,7 @@ live together so claims can be traced back to source material.
   integrated eval surfaces, and repeatable local commands.
 - Beta 2.1 reframes the project as repo-as-research: the website becomes a
   doorway, and the repository carries the evidence.
-- Beta 2.2 formalises the serious method beta:
+- Beta 2.2 formalises the method beta:
   - explicit `pass` / `fail` gate contract
   - explicit post-fail `retain` / `evict` disposition
   - explicit post-fail gate stack:
@@ -70,6 +71,10 @@ live together so claims can be traced back to source material.
   - first-gate contract correctness before richer interpretation
   - co-reasoning promoted as the first tracked non-OCR lane
   - operator burden seeded as the first row-local thin lane
+  - future non-OCR promotion requires:
+    - distinct task-shape pressure
+    - recurring seam shape
+    - real method consequence
 
 ## Why The Repo Is The Portfolio
 

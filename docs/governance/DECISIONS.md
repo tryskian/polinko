@@ -145,3 +145,14 @@ or branch history instead.
   - tracked `CHARTER.md`: `37 insertions`, `70 deletions`
   - local `SESSION_HANDOFF.md`: `38 insertions`, `93 deletions`
   - tracked `DECISIONS.md`: `101 insertions`, `4504 deletions`
+
+## D-010: Thin non-OCR lanes promote only on distinct recurring method signal
+
+- Date: `2026-05-16`
+- Category: `research_experiment`
+- Tags: `non_ocr`, `lane_promotion`, `thin_lane`, `signal_quality`
+- Decision: Keep thinner non-OCR lanes in row-local or export-backed form until
+  they show distinct task-shape pressure, recurring seam shape, and a real
+  method consequence.
+- Why: This keeps duplicate-heavy backlog from being mistaken for progress and
+  makes promoted lanes earn tracked surface area.
