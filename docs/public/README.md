@@ -31,17 +31,17 @@ This is the shortest route through Polinko’s public research surface.
 
 - [Beta 2.2 snapshot](../research/beta_2_2_2026-05-08.md)
   - method boundary and current gate
-- [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
+- [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-2026-05-08.md)
   - first promoted non-OCR lane
-- [OCR progress snapshot](../research/ocr-progress-20260508.md)
+- [OCR progress snapshot](../research/ocr-progress-2026-05-08.md)
   - mature green lane
-- [Hallucination-boundary promotion](../research/hallucination-boundary-promotion-20260512.md)
+- [Hallucination-boundary promotion](../research/hallucination-boundary-promotion-2026-05-12.md)
   - wider green coverage
 - [Retrieval grounding snapshot](../research/retrieval-grounding-2026-03-28.md)
   - operationalized retrieval and file-search proof
 - [Response-behaviour stability snapshot](../research/response-behaviour-stability-2026-04-25.md)
   - operationalized directness and bounded-claim proof
-- [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
+- [Operator burden signal shape](../research/operator-burden-signal-shape-2026-05-12.md)
   - active thin-lane evidence shape
 - [Research Surface](../research/README.md)
   - compact tracked research map

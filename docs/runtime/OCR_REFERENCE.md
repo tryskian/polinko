@@ -7,9 +7,9 @@ workflow, output surfaces, and tuning knobs.
 ## Current Snapshot
 
 - Latest tracked progress note:
-  - [`docs/research/ocr-progress-20260508.md`](../research/ocr-progress-20260508.md)
+  - [`docs/research/ocr-progress-2026-05-08.md`](../research/ocr-progress-2026-05-08.md)
 - Prior tracked progress note:
-  - [`docs/research/ocr-progress-20260501.md`](../research/ocr-progress-20260501.md)
+  - [`docs/research/ocr-progress-2026-05-01.md`](../research/ocr-progress-2026-05-01.md)
 - Current OCR read on `2026-05-08`:
   - growth stability: `25/25` stable, `0` flaky
   - fail cohort: `0` active fail-history cases

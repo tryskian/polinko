@@ -56,9 +56,9 @@ Representative tracked note:
 - [OCR representative case](../research/ocr-representative-case.md)
 - [Retrieval grounding snapshot](../research/retrieval-grounding-2026-03-28.md)
 - [Response-behaviour stability snapshot](../research/response-behaviour-stability-2026-04-25.md)
-- [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
-- [Operator burden seed](../research/operator-burden-seed-20260509.md)
-- [Hallucination-boundary promotion](../research/hallucination-boundary-promotion-20260512.md)
+- [Operator burden signal shape](../research/operator-burden-signal-shape-2026-05-12.md)
+- [Operator burden seed](../research/operator-burden-seed-2026-05-09.md)
+- [Hallucination-boundary promotion](../research/hallucination-boundary-promotion-2026-05-12.md)
 
 ## Research Notes vs Working Docs
 

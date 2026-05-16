@@ -33,40 +33,42 @@ _TRACKED_LANE_SPECS = (
         "title": "OCR strict gate",
         "note": "Tracked binary gate snapshot for the mature OCR lane.",
         "pattern": "ocr-[0-9]*.json",
-        "research_note_path": "docs/research/ocr-progress-20260508.md",
+        "research_note_path": "docs/research/ocr-progress-2026-05-08.md",
     },
     {
         "lane_key": "co_reasoning",
         "title": "Co-reasoning reliability",
         "note": "Promoted non-OCR lane carried in the tracked style surface.",
         "pattern": "style-[0-9]*.json",
-        "research_note_path": "docs/research/co-reasoning-promotion-20260508.md",
+        "research_note_path": "docs/research/co-reasoning-promotion-2026-05-08.md",
     },
     {
         "lane_key": "response_behaviour",
         "title": "Response behaviour",
         "note": "Explicit uncertainty and claim-discipline gate snapshot.",
         "pattern": "response-behaviour-[0-9]*.json",
-        "research_note_path": "docs/research/response-behaviour-20260425.md",
+        "research_note_path": "docs/research/response-behaviour-stability-2026-04-25.md",
     },
     {
         "lane_key": "hallucination_boundary",
         "title": "Hallucination boundary",
         "note": "Grounding and uncertainty boundary snapshot.",
         "pattern": "hallucination-[0-9]*.json",
-        "research_note_path": "docs/research/hallucination-boundary-promotion-20260512.md",
+        "research_note_path": "docs/research/hallucination-boundary-promotion-2026-05-12.md",
     },
     {
         "lane_key": "retrieval_grounding",
         "title": "Retrieval grounding",
         "note": "Grounding and no-leak retrieval gate snapshot.",
         "pattern": "retrieval-[0-9]*.json",
+        "research_note_path": "docs/research/retrieval-grounding-2026-03-28.md",
     },
     {
         "lane_key": "file_search",
         "title": "File search",
         "note": "Scoped file-search retrieval and leak boundary snapshot.",
         "pattern": "file-search-[0-9]*.json",
+        "research_note_path": "docs/research/retrieval-grounding-2026-03-28.md",
     },
 )
 _CAMERA_IMAGE_NAME_RX = re.compile(r"(?:^|[-_])(img|dsc)[_-]\d{3,}", re.IGNORECASE)
@@ -397,8 +399,8 @@ def _build_tracked_lane_summaries(tracked_eval_root: Path | None) -> list[dict[s
                 "run_id": "",
                 "source": str(operator_burden_path),
                 "source_url": _artifact_url(str(operator_burden_path)),
-                "research_note_path": "docs/research/operator-burden-promotion-20260509.md",
-                "research_note_url": _artifact_url("docs/research/operator-burden-promotion-20260509.md"),
+                "research_note_path": "docs/research/operator-burden-promotion-2026-05-09.md",
+                "research_note_url": _artifact_url("docs/research/operator-burden-promotion-2026-05-09.md"),
             }
         )
 

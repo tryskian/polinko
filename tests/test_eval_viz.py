@@ -330,7 +330,7 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(summaries["co_reasoning"]["fail"], 0)
             self.assertIn("/viz/pass-fail/artifact?path=", summaries["co_reasoning"]["source_url"])
             self.assertIn(
-                "docs/research/co-reasoning-promotion-20260508.md",
+                "docs/research/co-reasoning-promotion-2026-05-08.md",
                 summaries["co_reasoning"]["research_note_path"],
             )
             self.assertEqual(summaries["operator_burden"]["pass"], 2)
@@ -338,7 +338,7 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(summaries["operator_burden"]["retain"], 1)
             self.assertEqual(summaries["operator_burden"]["evict"], 1)
             self.assertIn(
-                "docs/research/operator-burden-promotion-20260509.md",
+                "docs/research/operator-burden-promotion-2026-05-09.md",
                 summaries["operator_burden"]["research_note_path"],
             )
 

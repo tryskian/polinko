@@ -20,10 +20,10 @@ Static SVG exports generated from this page:
 Current dated progress note:
 
 - [Beta 2.2 Snapshot (2026-05-08)](../research/beta_2_2_2026-05-08.md)
-- [Co-Reasoning Promotion Snapshot (2026-05-08)](../research/co-reasoning-promotion-20260508.md)
-- [Operator Burden Signal Shape (2026-05-12)](../research/operator-burden-signal-shape-20260512.md)
-- [OCR Progress Snapshot (2026-05-08)](../research/ocr-progress-20260508.md)
-- [Prior OCR Progress Snapshot (2026-05-01)](../research/ocr-progress-20260501.md)
+- [Co-Reasoning Promotion Snapshot (2026-05-08)](../research/co-reasoning-promotion-2026-05-08.md)
+- [Operator Burden Signal Shape (2026-05-12)](../research/operator-burden-signal-shape-2026-05-12.md)
+- [OCR Progress Snapshot (2026-05-08)](../research/ocr-progress-2026-05-08.md)
+- [Prior OCR Progress Snapshot (2026-05-01)](../research/ocr-progress-2026-05-01.md)
 
 ## Polinko Eval Contract
 

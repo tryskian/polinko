@@ -53,25 +53,25 @@ enough to read in public.
 
 - method boundary:
   - [Beta 2.2 snapshot](./beta_2_2_2026-05-08.md)
-  - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
-  - [Uncertainty-boundary stability](./uncertainty-boundary-stability-20260509.md)
+  - [Beta 2.2 stability soak](./beta-2-2-stability-soak-2026-05-09.md)
+  - [Uncertainty-boundary stability](./uncertainty-boundary-stability-2026-05-09.md)
 - mature green lane:
-  - [OCR progress snapshot](./ocr-progress-20260508.md)
+  - [OCR progress snapshot](./ocr-progress-2026-05-08.md)
   - [OCR representative case](./ocr-representative-case.md)
 - promoted non-OCR lane:
-  - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
-  - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
+  - [Co-reasoning promotion snapshot](./co-reasoning-promotion-2026-05-08.md)
+  - [Hallucination-boundary promotion](./hallucination-boundary-promotion-2026-05-12.md)
 - operationalized support lanes:
   - [Retrieval grounding snapshot](./retrieval-grounding-2026-03-28.md)
   - [Response-behaviour stability snapshot](./response-behaviour-stability-2026-04-25.md)
   - [Eval evidence map](../eval/README.md)
 - active thin lane:
-  - [Operator burden seed](./operator-burden-seed-20260509.md)
-  - [Operator burden row promotion](./operator-burden-promotion-20260509.md)
-  - [Operator burden mining update](./operator-burden-mining-20260509.md)
-  - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
+  - [Operator burden seed](./operator-burden-seed-2026-05-09.md)
+  - [Operator burden row promotion](./operator-burden-promotion-2026-05-09.md)
+  - [Operator burden mining update](./operator-burden-mining-2026-05-09.md)
+  - [Operator burden signal shape](./operator-burden-signal-shape-2026-05-12.md)
 - backlog context:
-  - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
+  - [Behaviour backlog snapshot](./behaviour-backlog-2026-05-08.md)
 
 ## Included Here
 
