@@ -20,7 +20,7 @@ evidence.
 
 ## Current Research Read
 
-- `Beta 2.2` is the current serious method beta:
+- `Beta 2.2` is the current method beta:
   - release outcomes stay `pass` / `fail`
   - post-fail disposition stays `retain` / `evict`
   - the first gate proves contract correctness before richer interpretation

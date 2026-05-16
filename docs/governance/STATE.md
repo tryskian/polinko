@@ -22,7 +22,7 @@ Last updated: 2026-05-15
   - after `fail`, failure disposition is `retain` / `evict`
   - `retain` keeps the failure as active evidence
   - `evict` removes malformed or stale cases upstream
-- Polinko is in a serious method beta:
+- Polinko is in a method beta:
   - fail-first evaluation is the active posture
   - co-reasoning is the first promoted non-OCR lane
   - OCR remains one mature method lane inside the broader project

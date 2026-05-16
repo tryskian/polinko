@@ -6,7 +6,7 @@ This is the shortest route through Polinko’s public research surface.
 
 ## Current Snapshot
 
-- `Beta 2.2` is the active serious method beta:
+- `Beta 2.2` is the current method beta:
   - release outcomes stay `pass` / `fail`
   - post-fail disposition stays `retain` / `evict`
   - the first gate proves contract correctness before richer interpretation
@@ -28,7 +28,7 @@ This is the shortest route through Polinko’s public research surface.
 
 ## If You Need Research Next
 
-- [Beta 2.2 snapshot](../research/beta-2-2-20260508.md)
+- [Beta 2.2 snapshot](../research/beta_2_2_2026-05-08.md)
   - method boundary and current gate
 - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
   - first promoted non-OCR lane

@@ -12,7 +12,7 @@ enough to read in public.
 
 ## Current Read
 
-- `Beta 2.2` is the current serious method beta:
+- `Beta 2.2` is the current method beta:
   - release outcomes stay `pass` / `fail`
   - post-fail disposition stays `retain` / `evict`
   - the first gate proves contract correctness before richer interpretation
@@ -35,7 +35,7 @@ enough to read in public.
 ## Tracked Notes By Role
 
 - method boundary:
-  - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
+  - [Beta 2.2 snapshot](./beta_2_2_2026-05-08.md)
   - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
   - [Uncertainty-boundary stability](./uncertainty-boundary-stability-20260509.md)
 - mature green lane:
