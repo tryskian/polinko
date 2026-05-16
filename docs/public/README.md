@@ -14,6 +14,7 @@ This is the shortest route through Polinko’s public research surface.
   - stable and parked
 - co-reasoning is the first promoted non-OCR lane:
   - promoted through tracked style and soak evidence
+- retrieval and response-behaviour surfaces are operationalized
 - uncertainty-boundary and hallucination-boundary surfaces are currently green
 - operator burden is the active thin lane:
   - distinct evidence is present, but the lane is still narrow
@@ -36,6 +37,10 @@ This is the shortest route through Polinko’s public research surface.
   - mature green lane
 - [Hallucination-boundary promotion](../research/hallucination-boundary-promotion-20260512.md)
   - wider green coverage
+- [Retrieval grounding snapshot](../research/retrieval-grounding-2026-03-28.md)
+  - operationalized retrieval and file-search proof
+- [Response-behaviour stability snapshot](../research/response-behaviour-stability-2026-04-25.md)
+  - operationalized directness and bounded-claim proof
 - [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
   - active thin-lane evidence shape
 - [Research Surface](../research/README.md)

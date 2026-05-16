@@ -28,6 +28,7 @@ evidence.
   - stable and parked
 - co-reasoning is the first promoted non-OCR lane:
   - promoted through tracked style and soak evidence
+- retrieval and response-behaviour surfaces are operationalized
 - uncertainty-boundary and hallucination-boundary surfaces are currently green
 - operator burden is the active thin lane:
   - active because it is still producing distinct evidence pressure

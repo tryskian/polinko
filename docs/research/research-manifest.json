@@ -76,13 +76,18 @@
     },
     {
       "type": "research_note",
+      "label": "Retrieval grounding snapshot",
+      "path": "docs/research/retrieval-grounding-2026-03-28.md"
+    },
+    {
+      "type": "research_note",
       "label": "OCR safety eval snapshot",
       "path": "docs/research/ocr-safety-20260425.md"
     },
     {
       "type": "research_note",
-      "label": "Response behaviour eval snapshot",
-      "path": "docs/research/response-behaviour-20260425.md"
+      "label": "Response-behaviour stability snapshot",
+      "path": "docs/research/response-behaviour-stability-2026-04-25.md"
     },
     {
       "type": "eval_report",

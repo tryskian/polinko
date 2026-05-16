@@ -45,12 +45,12 @@ live together so claims can be traced back to source material.
     operator-burden row surface, and export-backed control-contract mining
 - `Retrieval grounding should stay inspectable and source-bound`
   - status: operationalized
-  - measured by: retrieval and file-search eval suites, plus export-backed
-    retrieval backlog
+  - measured by: retrieval and file-search eval suites, the tracked retrieval
+    grounding snapshot, plus export-backed retrieval backlog
 - `Response-behaviour stability should stay direct and source-bound`
   - status: operationalized
-  - measured by: response-behaviour eval suite and the tracked response
-    behaviour snapshot
+  - measured by: response-behaviour eval suite and the tracked
+    response-behaviour stability snapshot
 - `Failure should stay the main signal across lanes`
   - status: governing method
   - measured by: binary gates, fail reports, decisions, and representative
