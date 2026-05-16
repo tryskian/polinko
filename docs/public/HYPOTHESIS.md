@@ -17,7 +17,7 @@ Polinko is a local-first evaluation lab for small, inspectable hypothesis lanes:
 - OCR reliability
 - OCR confidence boundaries around inference and hallucination
 - co-reasoning reliability
-- language-eval pulse design under fail pressure
+- pulse design under fail pressure
 - operator burden under different control surfaces
 - retrieval grounding
 - response-behaviour stability
@@ -40,10 +40,11 @@ live together so claims can be traced back to source material.
   - status: promoted, first tracked non-OCR lane
   - measured by: tracked style stress cases, live style eval passes, and the
     export-backed behaviour backlog
-- `Language evals may stabilize more honestly as bounded pulses`
+- `Bounded pulses may stabilize non-OCR evals more honestly`
   - status: hypothesis-only
-  - measured by: future short language pulses where the run is the binary unit
-    and rows act as anchors, counted seams, or excluded noise
+  - measured by: future short pulses where the run is the binary unit and
+    rows act as anchors, counted seams, or excluded noise under a visible
+    exclusion trail
 - `Commentary-heavy response contracts increase operator burden`
   - status: thin lane
   - measured by: experiment `R-D`, manual transcript diagnostics, the tracked

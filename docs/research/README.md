@@ -75,7 +75,7 @@ enough to read in public.
   - [Operator burden mining update](./operator-burden-mining-2026-05-09.md)
   - [Operator burden signal shape](./operator-burden-signal-shape-2026-05-12.md)
 - hypothesis-only next lane:
-  - [Language pulse hypothesis](./language-pulse-hypothesis-2026-05-16.md)
+  - [Fail-pressure pulse hypothesis](./fail-pressure-pulse-hypothesis-2026-05-16.md)
 - backlog context:
   - [Behaviour backlog snapshot](./behaviour-backlog-2026-05-08.md)
 
