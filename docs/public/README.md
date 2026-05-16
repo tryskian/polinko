@@ -18,6 +18,9 @@ This is the shortest route through Polinko’s public research surface.
 - uncertainty-boundary and hallucination-boundary surfaces are currently green
 - operator burden is the active thin lane:
   - distinct evidence is present, but the lane is still narrow
+- the research surface remains open:
+  - current proof is stable enough to read, and more exploration is still in
+    play
 
 ## Read In Order
 

@@ -35,6 +35,8 @@ enough to read in public.
   - `2` retained fail rows
   - `1` evicted fail row
   - widened backlog: `9` conversations / `8` families
+- the current lane map is explicit:
+  - it is a live research surface, not a closed or finished method claim
 
 ## Non-OCR Lane Inventory
 
