@@ -3,15 +3,13 @@
 # Polinko
 
 [![CI](https://github.com/tryskian/polinko/actions/workflows/ci.yml/badge.svg)](https://github.com/tryskian/polinko/actions/workflows/ci.yml)
-![Binary Eval](https://img.shields.io/badge/eval-binary_pass%2Ffail-4E79A7)
+![Eval Contract](https://img.shields.io/badge/eval-pass%2Ffail_%2B_retain%2Fevict-4E79A7)
 ![Research Surface](https://img.shields.io/badge/research-repo_native-76B7B2)
 
 Polinko is a human-led, repo-native research system for inspecting AI behavior
-through fail-first evaluation, co-reasoning, grounding, operator burden, and
-evidence-preserving method work.
+through fail-first evaluation and evidence-preserving method work.
 
-It is not mainly a website or demo app. The website is a doorway. The
-repository is the research surface.
+The website is a doorway. The repository is the research surface.
 
 ## Why This Repo Matters
 
@@ -22,53 +20,17 @@ evidence.
 
 ## Current Research Read
 
-- current serious method beta is `Beta 2.2`:
-  - explicit `pass` / `fail` gate semantics
-  - explicit post-fail `retain` / `evict` disposition
-  - first-gate contract correctness before richer interpretation
-  - co-reasoning is the first promoted non-OCR eval lane
-- eval contract is explicit across tracked surfaces:
+- `Beta 2.2` is the current serious method beta:
   - release outcomes stay `pass` / `fail`
-  - `evict` is an upstream case correction, not a third gate state
-  - the first gate proves hard contract correctness before richer interpretation
-- broader hypothesis lane now has a first promoted non-OCR eval surface:
-  - co-reasoning reliability is now operationalized in the tracked style lane:
-    `14/14` pass on the current live pass
-  - latest one-hour deterministic beta soak:
-    - `19/21` pass cycles
-    - former dominant style pressure did not recur
-  - uncertainty-boundary stability is now closed with:
-    - resumed soak total: `3961s`
-    - `21/21` pass cycles
-    - `0` fail cycles
-    - `0` recurring failure signals
-  - tracked hallucination-boundary coverage is now wider and still green:
-    - latest tracked snapshot: `9/9` pass
-    - tracked case count: `9`
-    - new distinct seams: archive-lore and archive-discipline fabrication
-  - current broad gate is holding across style, uncertainty, and co-reasoning
-  - operator burden now has a seeded row-local evidence surface:
-    - `4` pass rows
-    - `2` retained fail rows
-    - `1` evicted fail row
-    - widened export-backed backlog: `9` conversations / `8` families
-    - current top backlog slice is duplicate-heavy, so the earned next move is
-      lane visibility rather than row-count inflation
-- current mature method lane is green:
-  - transcript-backed OCR growth set: `25/25` stable, `0` flaky
-  - OCR fail-history cohort: `0` active cases
-  - runtime OCR follow-up is parked
-- latest tracked snapshots:
-  - [docs/research/operator-burden-promotion-20260509.md](docs/research/operator-burden-promotion-20260509.md)
-  - [docs/research/operator-burden-mining-20260509.md](docs/research/operator-burden-mining-20260509.md)
-  - [docs/research/operator-burden-seed-20260509.md](docs/research/operator-burden-seed-20260509.md)
-  - [docs/research/operator-burden-signal-shape-20260512.md](docs/research/operator-burden-signal-shape-20260512.md)
-  - [docs/research/beta-2-2-stability-soak-20260509.md](docs/research/beta-2-2-stability-soak-20260509.md)
-  - [docs/research/uncertainty-boundary-stability-20260509.md](docs/research/uncertainty-boundary-stability-20260509.md)
-  - [docs/research/hallucination-boundary-promotion-20260512.md](docs/research/hallucination-boundary-promotion-20260512.md)
-  - [docs/research/ocr-progress-20260508.md](docs/research/ocr-progress-20260508.md)
-  - [docs/research/co-reasoning-promotion-20260508.md](docs/research/co-reasoning-promotion-20260508.md)
-  - [docs/research/behaviour-backlog-20260508.md](docs/research/behaviour-backlog-20260508.md)
+  - post-fail disposition stays `retain` / `evict`
+  - the first gate proves contract correctness before richer interpretation
+- OCR is the mature green lane:
+  - stable and parked
+- co-reasoning is the first promoted non-OCR lane:
+  - promoted through tracked style and soak evidence
+- uncertainty-boundary and hallucination-boundary surfaces are currently green
+- operator burden is the active thin lane:
+  - active because it is still producing distinct evidence pressure
 
 ## Start Here
 
@@ -82,12 +44,21 @@ If you are reading Polinko as a research project, use this path:
 - [Diagrams](docs/public/DIAGRAMS.md)
 - [Research Surface](docs/research/README.md)
 
+## Current Tracked Reads
+
+- [Beta 2.2 stability soak](docs/research/beta-2-2-stability-soak-20260509.md)
+- [Uncertainty-boundary stability](docs/research/uncertainty-boundary-stability-20260509.md)
+- [Hallucination-boundary promotion](docs/research/hallucination-boundary-promotion-20260512.md)
+- [Co-reasoning promotion](docs/research/co-reasoning-promotion-20260508.md)
+- [Operator burden signal shape](docs/research/operator-burden-signal-shape-20260512.md)
+- [OCR progress snapshot](docs/research/ocr-progress-20260508.md)
+
 ## What Lives Here
 
 - FastAPI API + CLI runtime
-- OCR lockset and growth-lane evals
+- fail-first eval surfaces
+- OCR and non-OCR method lanes
 - export-backed behaviour backlog mining
-- binary pass/fail evidence surfaces
 - tracked research docs, diagrams, and eval context
 - repo-local engineering and validation workflow
 
@@ -112,22 +83,6 @@ make portfolio
 `make portfolio` rebuilds/serves and prints a cache-busted URL. It does not
 open a browser by default.
 
-## Core Commands
-
-```bash
-make start
-make end-preflight
-make end-git-check
-make server
-make portfolio
-make test
-make lint-docs
-make quality-gate
-make chat
-```
-
-Operator procedure lives in [docs/runtime/RUNBOOK.md](docs/runtime/RUNBOOK.md).
-
 ## Repo Map
 
 - `api/` API implementation
@@ -139,13 +94,12 @@ Operator procedure lives in [docs/runtime/RUNBOOK.md](docs/runtime/RUNBOOK.md).
 - `docs/runtime/` runbook and architecture
 - `docs/eval/` eval evidence and phase context
 
-## Canonical Docs
+## Operator Surface
 
-- Rules: [docs/governance/CHARTER.md](docs/governance/CHARTER.md)
-- Current truth: [docs/governance/STATE.md](docs/governance/STATE.md)
-- Procedures: [docs/runtime/RUNBOOK.md](docs/runtime/RUNBOOK.md)
-- Structure: [docs/runtime/ARCHITECTURE.md](docs/runtime/ARCHITECTURE.md)
-- Durable history: [docs/governance/DECISIONS.md](docs/governance/DECISIONS.md)
+- procedure: [docs/runtime/RUNBOOK.md](docs/runtime/RUNBOOK.md)
+- current truth: [docs/governance/STATE.md](docs/governance/STATE.md)
+- structure: [docs/runtime/ARCHITECTURE.md](docs/runtime/ARCHITECTURE.md)
+- decisions: [docs/governance/DECISIONS.md](docs/governance/DECISIONS.md)
 
 ## Production
 
