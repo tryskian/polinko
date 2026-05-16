@@ -67,6 +67,7 @@ OCR_TRANSCRIPT_REVIEW ?= .local/eval_cases/ocr_transcript_cases_review.json
 OCR_TRANSCRIPT_REVIEW_PREV ?= .local/eval_cases/ocr_transcript_cases_review_prev.json
 OCR_TRANSCRIPT_DELTA_MD ?= .local/eval_cases/ocr_transcript_cases_delta.md
 OCR_TRANSCRIPT_DELTA_JSON ?= .local/eval_cases/ocr_transcript_cases_delta.json
+OCR_GENERALIZATION_CANDIDATES ?= .local/eval_cases/ocr_generalization_candidates.json
 OCR_HANDWRITING_BENCHMARK_TOP_K ?= 6
 OCR_HANDWRITING_BENCHMARK_MIN_ANCHORS ?= 3
 OCR_TYPED_BENCHMARK_TOP_K ?= 8
@@ -1175,6 +1176,7 @@ ocr-cases-from-export:
 		--output-cases-typed "$(OCR_TRANSCRIPT_CASES_TYPED)" \
 		--output-cases-illustration "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" \
 		--output-review "$(OCR_TRANSCRIPT_REVIEW)" \
+		--output-generalization-candidates "$(OCR_GENERALIZATION_CANDIDATES)" \
 		--max-growth-cases "$(OCR_GROWTH_MAX_CASES)" $(OCR_CASES_FROM_EXPORT_ARGS); \
 			$(MAKE) --no-print-directory ocr-handwriting-benchmark-cases; \
 			$(MAKE) --no-print-directory ocr-typed-benchmark-cases; \

@@ -2995,6 +2995,96 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["episodes"], 0)
             self.assertEqual(summary["skipped_low_confidence"], 0)
 
+    def test_build_surfaces_same_conversation_unmined_generalization_candidates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            export_root = Path(tmp_dir) / "export"
+            conversations = export_root / "conversations"
+            assets = export_root / "assets"
+            conversations.mkdir(parents=True, exist_ok=True)
+            assets.mkdir(parents=True, exist_ok=True)
+
+            primary_name = "IMG_9001.JPG"
+            extra_name = "supplemental-ledger-page.png"
+            (assets / primary_name).write_bytes(b"not-a-real-image")
+            (assets / extra_name).write_bytes(b"not-a-real-image")
+
+            conversation = {
+                "conversation_id": "conv-generalization-gap",
+                "title": "mixed ocr intake",
+                "mapping": {
+                    "1": {
+                        "message": {
+                            "create_time": 1,
+                            "author": {"role": "user"},
+                            "content": {"parts": ["can you read this notebook page?"]},
+                            "metadata": {"attachments": [{"name": primary_name, "id": "file_primary"}]},
+                        }
+                    },
+                    "2": {
+                        "message": {
+                            "create_time": 2,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["it reads: spiral field ledger"]},
+                            "metadata": {},
+                        }
+                    },
+                    "3": {
+                        "message": {
+                            "create_time": 3,
+                            "author": {"role": "user"},
+                            "content": {
+                                "parts": [
+                                    "we can scan every insight later and distill it into a ledger"
+                                ]
+                            },
+                            "metadata": {"attachments": [{"name": extra_name, "id": "file_extra"}]},
+                        }
+                    },
+                    "4": {
+                        "message": {
+                            "create_time": 4,
+                            "author": {"role": "assistant"},
+                            "content": {"parts": ["yes, that can become one continuous ledger block"]},
+                            "metadata": {},
+                        }
+                    },
+                },
+            }
+            (conversations / "conversation-generalization-gap.json").write_text(
+                json.dumps(conversation),
+                encoding="utf-8",
+            )
+
+            output_cases = Path(tmp_dir) / "cases_all.json"
+            output_growth = Path(tmp_dir) / "cases_growth.json"
+            output_handwriting = Path(tmp_dir) / "cases_handwriting.json"
+            output_typed = Path(tmp_dir) / "cases_typed.json"
+            output_illustration = Path(tmp_dir) / "cases_illustration.json"
+            output_review = Path(tmp_dir) / "review.json"
+            output_generalization = Path(tmp_dir) / "generalization.json"
+
+            summary = build_from_export(
+                export_root,
+                output_cases=output_cases,
+                output_cases_growth=output_growth,
+                output_cases_handwriting=output_handwriting,
+                output_cases_typed=output_typed,
+                output_cases_illustration=output_illustration,
+                output_review=output_review,
+                output_generalization_candidates=output_generalization,
+                max_cases=50,
+                max_growth_cases=50,
+            )
+
+            self.assertEqual(summary["episodes"], 1)
+            self.assertEqual(summary["generalization_candidates_written"], 1)
+            self.assertEqual(summary["same_conversation_unmined_candidates"], 1)
+            generalization = json.loads(output_generalization.read_text(encoding="utf-8"))
+            self.assertEqual(generalization["summary"]["same_conversation_unmined"], 1)
+            candidate = generalization["candidates"][0]
+            self.assertEqual(candidate["source_name"], extra_name)
+            self.assertEqual(candidate["intake_reason"], "same_conversation_unmined")
+
 
 if __name__ == "__main__":
     unittest.main()

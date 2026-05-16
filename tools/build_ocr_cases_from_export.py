@@ -10,6 +10,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from tools.index_cgpt_export import (
+    IMAGE_SUFFIXES as EXPORT_IMAGE_SUFFIXES,
+    _conversation_tags,
+    _ocr_priority_score,
+    _search_index_by_id,
+)
+
 OCR_INTENT_PATTERN = (
     r"what does (this|it) say|what(?:'s| is) written|can you read|read (?:this|it)(?!\s+and\s+weep)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew[\s-]?drop\b|\b(?:scribbles?|squibbles?|scrumbles?)\s+(?:and|&)\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratch(?:ed)?\s+out\b|\bcross(?:ed|ing)?\s+out\b|\bstrike[\s-]?through\b|\bstrikethrough\b"
 )
@@ -216,6 +223,11 @@ NEGATED_OCR_FRAMING_RX = re.compile(
     r"\bno\s+ocr\b|\bnot\s+ocr\b|\bwithout\s+ocr\b|\bno\s+transcri(?:ption|be\w*)\b",
     re.IGNORECASE,
 )
+
+GENERALIZATION_REASON_ORDER = {
+    "same_conversation_unmined": 0,
+    "ocr_tagged_without_episode": 1,
+}
 
 ASSET_TOKEN_RE = re.compile(r"^(file[_-][^-]+)", re.IGNORECASE)
 CODE_BLOCK_RX = re.compile(r"```(?:[^\n`]*)\n?(.*?)```", re.DOTALL)
@@ -848,6 +860,7 @@ def build_from_export(
     output_cases_typed: Path,
     output_cases_illustration: Path,
     output_review: Path,
+    output_generalization_candidates: Path | None = None,
     max_cases: int,
     max_growth_cases: int = 600,
     include_title_regex: str = "",
@@ -862,12 +875,14 @@ def build_from_export(
 ) -> dict[str, int]:
     conversations_dir = export_root / "conversations"
     assets_dir = export_root / "assets"
+    search_index_js = conversations_dir / "html" / "search_index.js"
     if not conversations_dir.is_dir():
         raise RuntimeError(f"Missing conversations directory: {conversations_dir}")
     if not assets_dir.is_dir():
         raise RuntimeError(f"Missing assets directory: {assets_dir}")
 
     by_name, by_token = _asset_indexes(assets_dir)
+    search_by_id = _search_index_by_id(search_index_js) if search_index_js.is_file() else {}
     if include_lanes is not None:
         include_lanes = {lane.strip().lower() for lane in include_lanes if lane.strip()}
         invalid_lanes = sorted(lane for lane in include_lanes if lane not in VALID_LANES)
@@ -910,6 +925,10 @@ def build_from_export(
     review_rows: list[dict[str, Any]] = []
     cases: list[dict[str, Any]] = []
     growth_cases: list[dict[str, Any]] = []
+    generalization_candidates: list[dict[str, Any]] = []
+    conversation_attachments: dict[str, dict[str, Any]] = {}
+    review_conversation_ids: set[str] = set()
+    review_image_paths: set[str] = set()
     seen_case_paths: set[str] = set()
     seen_growth_case_paths: set[str] = set()
     skipped_low_confidence = 0
@@ -938,7 +957,10 @@ def build_from_export(
     for conversation_path in conversation_files:
         convo = _load_json(conversation_path)
         conversation_id = str(convo.get("conversation_id", "")).strip() or conversation_path.stem
-        title = str(convo.get("title", "")).strip()
+        search_meta = search_by_id.get(conversation_id, {})
+        title = str(convo.get("title", "")).strip() or str(search_meta.get("title", "")).strip()
+        search_text = str(search_meta.get("text", ""))
+        conversation_tags = _conversation_tags(title, search_text)
         if include_conversation_rx and not include_conversation_rx.search(conversation_id):
             skipped_filtered_conversations += 1
             continue
@@ -970,6 +992,46 @@ def build_from_export(
         for idx, msg in enumerate(seq):
             if msg.role != "user" or not msg.attachments:
                 continue
+            for attachment in msg.attachments:
+                attachment_paths = _resolve_asset_paths(
+                    attachment,
+                    by_name=by_name,
+                    by_token=by_token,
+                )
+                asset_name = str(attachment.get("name", "")).strip()
+                asset_id = str(attachment.get("id", "")).strip()
+                width = attachment.get("width")
+                height = attachment.get("height")
+                size = attachment.get("size")
+                for attachment_path in attachment_paths:
+                    candidate_path = Path(attachment_path)
+                    if candidate_path.suffix.lower() not in EXPORT_IMAGE_SUFFIXES:
+                        continue
+                    if not candidate_path.is_file():
+                        continue
+                    conversation_attachments.setdefault(
+                        attachment_path,
+                        {
+                            "conversation_id": conversation_id,
+                            "conversation_title": title,
+                            "conversation_tags": conversation_tags,
+                            "image_path": attachment_path,
+                            "source_name": candidate_path.name,
+                            "asset_name": asset_name,
+                            "asset_id": asset_id,
+                            "size": size,
+                            "width": width,
+                            "height": height,
+                            "ask_text": msg.text,
+                            "priority_score": _ocr_priority_score(
+                                title=title,
+                                asset_name=asset_name,
+                                tags=conversation_tags,
+                                width=width if isinstance(width, int) else None,
+                                height=height if isinstance(height, int) else None,
+                            ),
+                        },
+                    )
             ask_signal = bool(ASK_RX.search(msg.text))
 
             assistant_text = ""
@@ -1010,13 +1072,46 @@ def build_from_export(
             transcription_phrases_raw, had_code_block = _extract_transcribed_lines(assistant_text)
             resolved_paths: list[str] = []
             for attachment in msg.attachments:
-                resolved_paths.extend(
-                    _resolve_asset_paths(
-                        attachment,
-                        by_name=by_name,
-                        by_token=by_token,
-                    )
+                attachment_paths = _resolve_asset_paths(
+                    attachment,
+                    by_name=by_name,
+                    by_token=by_token,
                 )
+                resolved_paths.extend(attachment_paths)
+                asset_name = str(attachment.get("name", "")).strip()
+                asset_id = str(attachment.get("id", "")).strip()
+                width = attachment.get("width")
+                height = attachment.get("height")
+                size = attachment.get("size")
+                for attachment_path in attachment_paths:
+                    candidate_path = Path(attachment_path)
+                    if candidate_path.suffix.lower() not in EXPORT_IMAGE_SUFFIXES:
+                        continue
+                    if not candidate_path.is_file():
+                        continue
+                    conversation_attachments.setdefault(
+                        attachment_path,
+                        {
+                            "conversation_id": conversation_id,
+                            "conversation_title": title,
+                            "conversation_tags": conversation_tags,
+                            "image_path": attachment_path,
+                            "source_name": candidate_path.name,
+                            "asset_name": asset_name,
+                            "asset_id": asset_id,
+                            "size": size,
+                            "width": width,
+                            "height": height,
+                            "ask_text": msg.text,
+                            "priority_score": _ocr_priority_score(
+                                title=title,
+                                asset_name=asset_name,
+                                tags=conversation_tags,
+                                width=width if isinstance(width, int) else None,
+                                height=height if isinstance(height, int) else None,
+                            ),
+                        },
+                    )
             resolved_paths = list(dict.fromkeys(resolved_paths))
             image_path = resolved_paths[0] if resolved_paths else ""
             if not image_path:
@@ -1244,6 +1339,8 @@ def build_from_export(
                     "lane": lane,
                 }
             )
+            review_conversation_ids.add(conversation_id)
+            review_image_paths.add(image_path)
 
             growth_anchor_terms = anchor_terms[:]
             growth_ordered_terms = ordered_phrase_fallback[:]
@@ -1374,6 +1471,52 @@ def build_from_export(
         if len(cases) >= max_cases:
             break
 
+    generalization_reason_counts = {
+        "same_conversation_unmined": 0,
+        "ocr_tagged_without_episode": 0,
+    }
+    for row in conversation_attachments.values():
+        image_path = str(row.get("image_path", ""))
+        if not image_path or image_path in review_image_paths:
+            continue
+        conversation_id = str(row.get("conversation_id", ""))
+        conversation_tags = list(row.get("conversation_tags") or [])
+        intake_reason = ""
+        if conversation_id in review_conversation_ids:
+            intake_reason = "same_conversation_unmined"
+        elif "ocr" in conversation_tags:
+            intake_reason = "ocr_tagged_without_episode"
+        else:
+            continue
+        generalization_reason_counts[intake_reason] += 1
+        generalization_candidates.append(
+            {
+                "conversation_id": conversation_id,
+                "conversation_title": str(row.get("conversation_title", "")),
+                "conversation_tags": conversation_tags,
+                "image_path": image_path,
+                "source_name": str(row.get("source_name", "")),
+                "asset_name": str(row.get("asset_name", "")),
+                "asset_id": str(row.get("asset_id", "")),
+                "size": row.get("size"),
+                "width": row.get("width"),
+                "height": row.get("height"),
+                "ask_text": str(row.get("ask_text", "")),
+                "priority_score": int(row.get("priority_score", 0)),
+                "intake_reason": intake_reason,
+            }
+        )
+    generalization_candidates.sort(
+        key=lambda row: (
+            GENERALIZATION_REASON_ORDER.get(str(row.get("intake_reason", "")), 99),
+            -int(row.get("priority_score", 0)),
+            str(row.get("conversation_title", "")).lower(),
+            str(row.get("source_name", "")).lower(),
+        )
+    )
+    for idx, row in enumerate(generalization_candidates, start=1):
+        row["candidate_id"] = f"gc-{str(row.get('conversation_id', 'unknown'))[:8]}-{idx:04d}"
+
     review_rows.sort(
         key=lambda row: (
             0 if row["signal_strength"] == "high" else 1 if row["signal_strength"] == "medium" else 2,
@@ -1485,6 +1628,22 @@ def build_from_export(
             "episodes": review_rows,
         },
     )
+    if output_generalization_candidates is not None:
+        _write_json(
+            output_generalization_candidates,
+            {
+                "summary": {
+                    "candidates_total": len(generalization_candidates),
+                    "same_conversation_unmined": generalization_reason_counts[
+                        "same_conversation_unmined"
+                    ],
+                    "ocr_tagged_without_episode": generalization_reason_counts[
+                        "ocr_tagged_without_episode"
+                    ],
+                },
+                "candidates": generalization_candidates,
+            },
+        )
 
     high = sum(1 for row in review_rows if row["signal_strength"] == "high")
     medium = sum(1 for row in review_rows if row["signal_strength"] == "medium")
@@ -1513,6 +1672,13 @@ def build_from_export(
         "skipped_duplicate_image_path": skipped_duplicate_image_path,
         "skipped_insufficient_anchor_terms": skipped_insufficient_anchor_terms,
         "skipped_unstable_source": skipped_unstable_source,
+        "generalization_candidates_written": len(generalization_candidates),
+        "same_conversation_unmined_candidates": generalization_reason_counts[
+            "same_conversation_unmined"
+        ],
+        "ocr_tagged_without_episode_candidates": generalization_reason_counts[
+            "ocr_tagged_without_episode"
+        ],
     }
 
 
@@ -1554,6 +1720,11 @@ def parse_args() -> argparse.Namespace:
         "--output-review",
         default=".local/eval_cases/ocr_transcript_cases_review.json",
         help="Output JSON path for mined episode review data (all lanes).",
+    )
+    parser.add_argument(
+        "--output-generalization-candidates",
+        default=".local/eval_cases/ocr_generalization_candidates.json",
+        help="Output JSON path for OCR-ready generalization candidates outside transcript-mined episodes.",
     )
     parser.add_argument(
         "--max-cases",
@@ -1644,6 +1815,9 @@ def main() -> int:
         output_cases_typed=Path(args.output_cases_typed).expanduser().resolve(),
         output_cases_illustration=Path(args.output_cases_illustration).expanduser().resolve(),
         output_review=Path(args.output_review).expanduser().resolve(),
+        output_generalization_candidates=Path(
+            args.output_generalization_candidates
+        ).expanduser().resolve(),
         max_cases=int(args.max_cases),
         max_growth_cases=int(args.max_growth_cases),
         include_title_regex=str(args.include_title_regex or ""),
@@ -1680,6 +1854,9 @@ def main() -> int:
         "skipped_duplicate_image_path",
         "skipped_insufficient_anchor_terms",
         "skipped_unstable_source",
+        "generalization_candidates_written",
+        "same_conversation_unmined_candidates",
+        "ocr_tagged_without_episode_candidates",
     ):
         print(f"{key}={summary[key]}")
     return 0

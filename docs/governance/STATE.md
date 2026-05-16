@@ -31,8 +31,10 @@ Last updated: 2026-05-16
   - no additional non-OCR lane currently meets promotion criteria
   - the lane map is current, and the research surface remains open
   - OCR remains one mature method lane inside the broader project
-  - OCR is stabilized on the current image set, with generalization pressure
-    as the next kernel
+  - OCR is stabilized on the current image set, with broader
+    generalization pressure as the next kernel
+  - OCR intake now uses transcript-mined episodes plus OCR-ready
+    generalization candidates
 - Branch protection on `main` remains active:
   - PR required
   - strict status checks enabled

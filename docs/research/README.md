@@ -15,7 +15,8 @@ enough to read in public.
 - `Beta 2.3` is the current method beta:
   - release outcomes stay `pass` / `fail`
   - post-fail disposition stays `retain` / `evict`
-  - OCR now moves into transcript-mined generalization pressure
+  - OCR now moves into broader generalization pressure
+  - intake now combines transcript-mined episodes with OCR-ready candidates
 - OCR is the mature green lane:
   - growth stability: `25/25` stable, `0` flaky
   - fail-history cohort: `0` active cases

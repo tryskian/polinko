@@ -115,6 +115,11 @@ workflow, output surfaces, and tuning knobs.
      - `.local/eval_cases/ocr_transcript_cases_growth.json`
      - growth rows may include `source_quarantine=true` when mined from known
        unstable sources under strict high-signal guards
+   - generalization candidates:
+     - `.local/eval_cases/ocr_generalization_candidates.json`
+     - OCR-ready assets that were not admitted into transcript-mined OCR
+       episodes
+     - used to widen Beta 2.3 intake beyond correction-shaped transcript asks
    - growth fail cohort:
      - `.local/eval_cases/ocr_growth_fail_cohort.json`
    - growth focus set:
@@ -144,6 +149,7 @@ workflow, output surfaces, and tuning knobs.
 6. Miner summary includes:
    - `growth_quarantine_cases_written`
    - `growth_regex_only_cases_written`
+   - `generalization_candidates_written`
 
 ## Notebook and Offline Analysis
 

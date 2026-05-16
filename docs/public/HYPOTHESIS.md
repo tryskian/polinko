@@ -89,6 +89,7 @@ live together so claims can be traced back to source material.
 - Beta 2.3 carries the OCR lane into fresh generalization pressure:
   - stabilized same-image OCR is the starting base
   - transcript mining now refreshes the OCR data surface
+  - OCR-ready candidates widen intake beyond transcript-shaped asks
   - OCR failures now use explicit `retain` / `evict` case governance
   - the lane now tests transfer under harder visual conditions
 
