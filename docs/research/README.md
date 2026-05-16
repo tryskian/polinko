@@ -26,6 +26,10 @@ enough to read in public.
 - the broad gate is holding across:
   - uncertainty-boundary stability: `21/21` pass cycles, `0` fail cycles
   - hallucination-boundary coverage: `9/9` pass across `9` tracked cases
+- operationalized support lanes are holding:
+  - retrieval grounding: `12/12` retrieval pass, `5/5` file-search pass
+  - response-behaviour stability: `7/7` pass with one recovered first-pass
+    wobble
 - operator burden is the active thin lane:
   - `4` pass rows
   - `2` retained fail rows
@@ -58,7 +62,8 @@ enough to read in public.
   - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
   - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
 - operationalized support lanes:
-  - [Response behaviour eval snapshot](./response-behaviour-20260425.md)
+  - [Retrieval grounding snapshot](./retrieval-grounding-2026-03-28.md)
+  - [Response-behaviour stability snapshot](./response-behaviour-stability-2026-04-25.md)
   - [Eval evidence map](../eval/README.md)
 - active thin lane:
   - [Operator burden seed](./operator-burden-seed-20260509.md)
