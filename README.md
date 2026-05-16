@@ -47,12 +47,12 @@ If you are reading Polinko as a research project, use this path:
 
 ## Current Tracked Reads
 
-- [Beta 2.2 stability soak](docs/research/beta-2-2-stability-soak-20260509.md)
-- [Uncertainty-boundary stability](docs/research/uncertainty-boundary-stability-20260509.md)
-- [Hallucination-boundary promotion](docs/research/hallucination-boundary-promotion-20260512.md)
-- [Co-reasoning promotion](docs/research/co-reasoning-promotion-20260508.md)
-- [Operator burden signal shape](docs/research/operator-burden-signal-shape-20260512.md)
-- [OCR progress snapshot](docs/research/ocr-progress-20260508.md)
+- [Beta 2.2 stability soak](docs/research/beta-2-2-stability-soak-2026-05-09.md)
+- [Uncertainty-boundary stability](docs/research/uncertainty-boundary-stability-2026-05-09.md)
+- [Hallucination-boundary promotion](docs/research/hallucination-boundary-promotion-2026-05-12.md)
+- [Co-reasoning promotion](docs/research/co-reasoning-promotion-2026-05-08.md)
+- [Operator burden signal shape](docs/research/operator-burden-signal-shape-2026-05-12.md)
+- [OCR progress snapshot](docs/research/ocr-progress-2026-05-08.md)
 
 ## What Lives Here
 

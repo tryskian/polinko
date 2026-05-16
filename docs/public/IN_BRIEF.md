@@ -82,10 +82,10 @@ In short: confidence must not outrun evidence.
   - fail-history cohort: `0` active cases
 - tracked snapshots:
   - [Beta 2.2 snapshot](../research/beta_2_2_2026-05-08.md)
-  - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-20260508.md)
-  - [Operator burden signal shape](../research/operator-burden-signal-shape-20260512.md)
-  - [Operator burden seed](../research/operator-burden-seed-20260509.md)
-  - [OCR progress snapshot](../research/ocr-progress-20260508.md)
+  - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-2026-05-08.md)
+  - [Operator burden signal shape](../research/operator-burden-signal-shape-2026-05-12.md)
+  - [Operator burden seed](../research/operator-burden-seed-2026-05-09.md)
+  - [OCR progress snapshot](../research/ocr-progress-2026-05-08.md)
 
 ## One-Sentence Read
 

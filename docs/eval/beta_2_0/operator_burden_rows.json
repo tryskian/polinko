@@ -11,7 +11,7 @@
     {
       "id": "ob-rd-001",
       "title": "Direct mapping collapsed into advisory commentary",
-      "source_note": "docs/research/operator-burden-seed-20260509.md",
+      "source_note": "docs/research/operator-burden-seed-2026-05-09.md",
       "source_ids": ["R-D"],
       "task_shape": "direct_mapping",
       "expected_boundary": "Match A to B with direct execution, clear binary decision, and no qualitative reframing.",
@@ -30,7 +30,7 @@
     {
       "id": "ob-rd-002",
       "title": "Sparse-control contract preserved execution clarity",
-      "source_note": "docs/research/operator-burden-seed-20260509.md",
+      "source_note": "docs/research/operator-burden-seed-2026-05-09.md",
       "source_ids": ["D-158"],
       "task_shape": "sparse_control_execution",
       "expected_boundary": "Objective, hard acceptance checks, and example signals should preserve execution clarity without advisory overload.",
@@ -49,7 +49,7 @@
     {
       "id": "ob-rd-003",
       "title": "Raw pull preserved no-commentary retrieval boundary",
-      "source_note": "docs/research/operator-burden-promotion-20260509.md",
+      "source_note": "docs/research/operator-burden-promotion-2026-05-09.md",
       "source_ids": ["691b7111-0b78-8333-9a6e-b74eb364d92c"],
       "task_shape": "raw_pull_retrieval",
       "expected_boundary": "Retrieve the logged entry with no commentary, no edits, and no interpretive rewrite.",
@@ -68,7 +68,7 @@
     {
       "id": "ob-rd-004",
       "title": "Protocol lock preserved no-commentary execution",
-      "source_note": "docs/research/operator-burden-promotion-20260509.md",
+      "source_note": "docs/research/operator-burden-promotion-2026-05-09.md",
       "source_ids": ["692789c3-3658-8326-bbd5-e44ad4603315"],
       "task_shape": "protocol_lock_execution",
       "expected_boundary": "Once the protocol hat is fixed, execution should stay tone-fixed, syntax-obedient, and free of commentary or meta-explanations.",
@@ -87,7 +87,7 @@
     {
       "id": "ob-rd-005",
       "title": "Direct-pull request had to correct interpretive rundown drift",
-      "source_note": "docs/research/operator-burden-promotion-20260509.md",
+      "source_note": "docs/research/operator-burden-promotion-2026-05-09.md",
       "source_ids": [
         "6952ca93-fe10-832c-ac1d-1fcf54dd73ed",
         "695bf688-569c-8326-a209-680ad82f1c17"
@@ -109,7 +109,7 @@
     {
       "id": "ob-rd-006",
       "title": "Exact-as-provided preference preserved low-burden document handling",
-      "source_note": "docs/research/operator-burden-promotion-20260509.md",
+      "source_note": "docs/research/operator-burden-promotion-2026-05-09.md",
       "source_ids": ["c566ec92-3d08-8007-b2ab-8ba510e8e7bd"],
       "task_shape": "exact_output_preference",
       "expected_boundary": "Document and file actions should stay exactly as provided, without summarization or reinterpretation drift.",
@@ -128,7 +128,7 @@
     {
       "id": "ob-rd-007",
       "title": "Archive-quoted raw-pull clone should be evicted from distinct row evidence",
-      "source_note": "docs/research/operator-burden-promotion-20260509.md",
+      "source_note": "docs/research/operator-burden-promotion-2026-05-09.md",
       "source_ids": ["694f2920-5064-8332-99d2-f6093b1173cc"],
       "task_shape": "archive_quoted_duplicate",
       "expected_boundary": "A distinct operator-burden row should be grounded in its own task surface rather than inheriting a quoted archive explanation from another conversation.",

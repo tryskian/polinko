@@ -12,42 +12,42 @@
     {
       "type": "research_note",
       "label": "Operator burden signal shape",
-      "path": "docs/research/operator-burden-signal-shape-20260512.md"
+      "path": "docs/research/operator-burden-signal-shape-2026-05-12.md"
     },
     {
       "type": "research_note",
       "label": "OCR progress snapshot",
-      "path": "docs/research/ocr-progress-20260508.md"
+      "path": "docs/research/ocr-progress-2026-05-08.md"
     },
     {
       "type": "research_note",
       "label": "Behaviour backlog snapshot",
-      "path": "docs/research/behaviour-backlog-20260508.md"
+      "path": "docs/research/behaviour-backlog-2026-05-08.md"
     },
     {
       "type": "research_note",
       "label": "Hallucination-boundary promotion",
-      "path": "docs/research/hallucination-boundary-promotion-20260512.md"
+      "path": "docs/research/hallucination-boundary-promotion-2026-05-12.md"
     },
     {
       "type": "research_note",
       "label": "Beta 2.2 stability soak",
-      "path": "docs/research/beta-2-2-stability-soak-20260509.md"
+      "path": "docs/research/beta-2-2-stability-soak-2026-05-09.md"
     },
     {
       "type": "research_note",
       "label": "Uncertainty-boundary stability kernel",
-      "path": "docs/research/uncertainty-boundary-stability-20260509.md"
+      "path": "docs/research/uncertainty-boundary-stability-2026-05-09.md"
     },
     {
       "type": "research_note",
       "label": "Operator burden mining update",
-      "path": "docs/research/operator-burden-mining-20260509.md"
+      "path": "docs/research/operator-burden-mining-2026-05-09.md"
     },
     {
       "type": "research_note",
       "label": "Operator burden row promotion",
-      "path": "docs/research/operator-burden-promotion-20260509.md"
+      "path": "docs/research/operator-burden-promotion-2026-05-09.md"
     },
     {
       "type": "research_note",
@@ -57,17 +57,17 @@
     {
       "type": "research_note",
       "label": "Co-reasoning promotion snapshot",
-      "path": "docs/research/co-reasoning-promotion-20260508.md"
+      "path": "docs/research/co-reasoning-promotion-2026-05-08.md"
     },
     {
       "type": "research_note",
       "label": "Operator burden seed",
-      "path": "docs/research/operator-burden-seed-20260509.md"
+      "path": "docs/research/operator-burden-seed-2026-05-09.md"
     },
     {
       "type": "research_note",
       "label": "Prior OCR progress snapshot",
-      "path": "docs/research/ocr-progress-20260501.md"
+      "path": "docs/research/ocr-progress-2026-05-01.md"
     },
     {
       "type": "eval_report",
@@ -82,7 +82,7 @@
     {
       "type": "research_note",
       "label": "OCR safety eval snapshot",
-      "path": "docs/research/ocr-safety-20260425.md"
+      "path": "docs/research/ocr-safety-2026-04-25.md"
     },
     {
       "type": "research_note",

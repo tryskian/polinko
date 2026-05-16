@@ -21,7 +21,7 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
                     {
                         "id": "ob-1",
                         "title": "fail row",
-                        "source_note": "docs/research/operator-burden-seed-20260509.md",
+                        "source_note": "docs/research/operator-burden-seed-2026-05-09.md",
                         "source_ids": ["R-D"],
                         "task_shape": "direct_mapping",
                         "expected_boundary": "direct execution",
@@ -38,7 +38,7 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
                     {
                         "id": "ob-2",
                         "title": "pass row",
-                        "source_note": "docs/research/operator-burden-seed-20260509.md",
+                        "source_note": "docs/research/operator-burden-seed-2026-05-09.md",
                         "source_ids": ["D-158"],
                         "task_shape": "sparse_control_execution",
                         "expected_boundary": "objective + checks",
@@ -70,7 +70,7 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
                     {
                         "id": "ob-1",
                         "title": "evict row",
-                        "source_note": "docs/research/operator-burden-promotion-20260509.md",
+                        "source_note": "docs/research/operator-burden-promotion-2026-05-09.md",
                         "source_ids": ["x-1"],
                         "task_shape": "duplicate_archive_case",
                         "expected_boundary": "distinct case",
@@ -100,7 +100,7 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
                         {
                             "id": "ob-1",
                             "title": "fail row",
-                            "source_note": "docs/research/operator-burden-seed-20260509.md",
+                            "source_note": "docs/research/operator-burden-seed-2026-05-09.md",
                             "source_ids": ["R-D"],
                             "task_shape": "direct_mapping",
                             "expected_boundary": "direct execution",
@@ -121,7 +121,7 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
                         {
                             "id": "ob-1",
                             "title": "pass row",
-                            "source_note": "docs/research/operator-burden-seed-20260509.md",
+                            "source_note": "docs/research/operator-burden-seed-2026-05-09.md",
                             "source_ids": ["D-158"],
                             "task_shape": "sparse_control_execution",
                             "expected_boundary": "objective + checks",
@@ -142,7 +142,7 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
                     {
                         "id": "ob-1",
                         "title": "fail row",
-                        "source_note": "docs/research/operator-burden-seed-20260509.md",
+                        "source_note": "docs/research/operator-burden-seed-2026-05-09.md",
                         "source_ids": ["R-D"],
                         "task_shape": "direct_mapping",
                         "expected_boundary": "direct execution",
@@ -166,7 +166,7 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
                     {
                         "id": "ob-1",
                         "title": "pass row",
-                        "source_note": "docs/research/operator-burden-seed-20260509.md",
+                        "source_note": "docs/research/operator-burden-seed-2026-05-09.md",
                         "source_ids": ["D-158"],
                         "task_shape": "sparse_control_execution",
                         "expected_boundary": "objective + checks",
@@ -190,7 +190,7 @@ class OperatorBurdenRowsReportTests(unittest.TestCase):
                     {
                         "id": "ob-1",
                         "title": "evict row",
-                        "source_note": "docs/research/operator-burden-promotion-20260509.md",
+                        "source_note": "docs/research/operator-burden-promotion-2026-05-09.md",
                         "source_ids": ["x-1"],
                         "task_shape": "duplicate_archive_case",
                         "expected_boundary": "distinct case",
