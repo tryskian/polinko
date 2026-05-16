@@ -1,6 +1,6 @@
 {
-  "source_commit": "3e1df22f74ac27f7d6c9774a88030ae1984dc4d2",
-  "source_commit_url": "https://github.com/tryskian/polinko/commit/3e1df22f74ac27f7d6c9774a88030ae1984dc4d2",
+  "source_commit": "e42f319a35c417b58040ff777e46b5ee51d0499d",
+  "source_commit_url": "https://github.com/tryskian/polinko/commit/e42f319a35c417b58040ff777e46b5ee51d0499d",
   "curation_policy": "Curated public research only. Local operational artefacts remain under .local/ and are not auto-promoted.",
   "artifacts": [
     {
@@ -8,6 +8,11 @@
       "label": "Evidence Sankey PNG",
       "path": "docs/research/polinko-evidence-sankey.png",
       "source_path": "docs/public/diagrams/polinko-evidence-sankey.svg"
+    },
+    {
+      "type": "research_note",
+      "label": "Beta 2.3 snapshot",
+      "path": "docs/research/beta_2_3_2026-05-16.md"
     },
     {
       "type": "research_note",

@@ -20,12 +20,13 @@ evidence.
 
 ## Current Research Read
 
-- `Beta 2.2` is the current method beta:
+- `Beta 2.3` is the current method beta:
   - release outcomes stay `pass` / `fail`
   - post-fail disposition stays `retain` / `evict`
-  - the first gate proves contract correctness before richer interpretation
+  - OCR now moves into transcript-mined generalization pressure
 - OCR is the mature green lane:
-  - stable and parked
+  - stabilized on the current image set
+  - generalization pressure is next
 - co-reasoning is the first promoted non-OCR lane:
   - promoted through tracked style and soak evidence
 - retrieval and response-behaviour surfaces are operationalized
@@ -49,6 +50,7 @@ If you are reading Polinko as a research project, use this path:
 
 ## Current Tracked Reads
 
+- [Beta 2.3 snapshot](docs/research/beta_2_3_2026-05-16.md)
 - [Beta 2.2 stability soak](docs/research/beta-2-2-stability-soak-2026-05-09.md)
 - [Uncertainty-boundary stability](docs/research/uncertainty-boundary-stability-2026-05-09.md)
 - [Hallucination-boundary promotion](docs/research/hallucination-boundary-promotion-2026-05-12.md)

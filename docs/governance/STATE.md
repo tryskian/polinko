@@ -31,6 +31,8 @@ Last updated: 2026-05-16
   - no additional non-OCR lane currently meets promotion criteria
   - the lane map is current, and the research surface remains open
   - OCR remains one mature method lane inside the broader project
+  - OCR is stabilized on the current image set, with generalization pressure
+    as the next kernel
 - Branch protection on `main` remains active:
   - PR required
   - strict status checks enabled
@@ -49,8 +51,7 @@ Last updated: 2026-05-16
 3. Keep the promoted non-OCR lane visible as the broader proof surface grows.
 4. Keep operator-burden and related thin-lane work grounded in real evidence
    and distinct lane signal.
-5. Keep mature method lanes green and reopen parked lanes only from clear
-   evidence.
+5. Keep OCR moving from current-set stability into generalization pressure.
 6. Keep exploring new seams without forcing promotion before the signal earns
    it.
 
