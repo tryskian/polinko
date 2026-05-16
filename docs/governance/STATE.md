@@ -25,6 +25,10 @@ Last updated: 2026-05-15
 - Polinko is in a method beta:
   - fail-first evaluation is the active posture
   - co-reasoning is the first promoted non-OCR lane
+  - uncertainty-boundary, hallucination-boundary, retrieval, and
+    response-behaviour surfaces are operationalized
+  - operator burden remains the active thin lane
+  - no additional non-OCR lane currently meets promotion criteria
   - OCR remains one mature method lane inside the broader project
 - Branch protection on `main` remains active:
   - PR required
