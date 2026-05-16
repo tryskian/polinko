@@ -3,63 +3,54 @@
 # Research Surface
 
 This folder is the compact research surface for reviewers who want the current
-OCR state, the broader hypothesis/evidence picture, one machine-readable
-manifest, and direct links into tracked eval evidence.
+method read, one machine-readable manifest, and direct links into tracked eval
+evidence.
 
 It is intentionally curated. Polinko keeps local operational artefacts under
 `.local/`; this folder only promotes a small tracked subset that is stable
 enough to read in public.
 
-## Current OCR Snapshot
+## Current Read
 
-- latest tracked progress note:
-  - [OCR progress snapshot](./ocr-progress-20260508.md)
-- current OCR read on `2026-05-08`:
+- `Beta 2.2` is the current serious method beta:
+  - release outcomes stay `pass` / `fail`
+  - post-fail disposition stays `retain` / `evict`
+  - the first gate proves contract correctness before richer interpretation
+- OCR is the mature green lane:
   - growth stability: `25/25` stable, `0` flaky
   - fail-history cohort: `0` active cases
-  - focus stability: `16/16` stable
   - runtime OCR follow-up: parked
-  - remaining signal: low-pressure exploratory variability and a case-design-only
-    watchlist
+- co-reasoning is the first promoted non-OCR lane:
+  - tracked style pass: `14/14`
+  - one-hour deterministic soak: `19/21` pass cycles
+- the broad gate is holding across:
+  - uncertainty-boundary stability: `21/21` pass cycles, `0` fail cycles
+  - hallucination-boundary coverage: `9/9` pass across `9` tracked cases
+- operator burden is the active thin lane:
+  - `4` pass rows
+  - `2` retained fail rows
+  - `1` evicted fail row
+  - widened backlog: `9` conversations / `8` families
 
-## Current Non-OCR Read
+## Tracked Notes By Role
 
-- latest tracked non-OCR notes:
-  - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
-  - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
+- method boundary:
   - [Beta 2.2 snapshot](./beta-2-2-20260508.md)
   - [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
-  - [Uncertainty-boundary stability kernel](./uncertainty-boundary-stability-20260509.md)
+  - [Uncertainty-boundary stability](./uncertainty-boundary-stability-20260509.md)
+- mature green lane:
+  - [OCR progress snapshot](./ocr-progress-20260508.md)
+  - [OCR representative case](./ocr-representative-case.md)
+- promoted non-OCR lane:
   - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
-  - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
+  - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
+- active thin lane:
+  - [Operator burden seed](./operator-burden-seed-20260509.md)
   - [Operator burden row promotion](./operator-burden-promotion-20260509.md)
   - [Operator burden mining update](./operator-burden-mining-20260509.md)
-  - [Operator burden seed](./operator-burden-seed-20260509.md)
-- current read on `2026-05-12`:
-  - current serious method beta is `Beta 2.2`
-  - OCR remains one mature method lane
-  - co-reasoning is now the first promoted non-OCR lane
-  - tracked style stress surface currently passes `14/14` on the live pass
-  - one-hour deterministic beta soak now closes at `19/21` pass cycles
-  - former dominant style pressure did not recur in the broad gate
-  - the uncertainty-boundary stability kernel has now closed cleanly with:
-    - resumed soak total: `3961s`
-    - `21/21` pass cycles
-    - `0` fail cycles
-    - `0` recurring failure signals
-  - tracked hallucination-boundary coverage is now wider and still green:
-    - latest tracked snapshot: `9/9` pass
-    - tracked case count: `9`
-    - new distinct seams: archive-lore and archive-discipline fabrication
-  - broad-gate pressure is no longer concentrated in the uncertainty contracts
-  - current broad gate is holding across style, uncertainty, and co-reasoning
-  - operator burden now has a seeded thin-lane row surface:
-    - `4` pass rows
-    - `2` retained fail rows
-    - `1` evicted fail row
-    - widened export-backed backlog: `9` conversations / `8` families
-    - current top backlog slice is duplicate-heavy and does not presently earn
-      more distinct row promotion
+  - [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
+- backlog context:
+  - [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
 
 ## Included Here
 
@@ -67,28 +58,6 @@ enough to read in public.
   - source commit, curation rule, and evidence pointers
 - [Evidence Sankey PNG](./polinko-evidence-sankey.png)
   - quick visual research surface for beta continuity and current OCR lanes
-
-## Representative Tracked Evidence
-
-- [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
-- [Operator burden signal shape](./operator-burden-signal-shape-20260512.md)
-- [Beta 2.2 snapshot](./beta-2-2-20260508.md)
-- [Beta 2.2 stability soak](./beta-2-2-stability-soak-20260509.md)
-- [Uncertainty-boundary stability kernel](./uncertainty-boundary-stability-20260509.md)
-- [OCR progress snapshot](./ocr-progress-20260508.md)
-- [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
-- [Behaviour backlog snapshot](./behaviour-backlog-20260508.md)
-- [Operator burden row promotion](./operator-burden-promotion-20260509.md)
-- [Operator burden mining update](./operator-burden-mining-20260509.md)
-- [Operator burden seed](./operator-burden-seed-20260509.md)
-- [Prior OCR progress snapshot](./ocr-progress-20260501.md)
-- [OCR representative case](./ocr-representative-case.md)
-- [OCR binary eval snapshot](../eval/beta_2_0/ocr-20260328-184147.json)
-- [OCR safety eval snapshot](./ocr-safety-20260425.md)
-- [Response behaviour eval snapshot](./response-behaviour-20260425.md)
-- [Hallucination eval snapshot](../eval/beta_2_0/hallucination-20260512-180408.json)
-- [Architecture diagram](../runtime/architecture.svg)
-- [Public diagrams lane](../public/DIAGRAMS.md)
 
 ## Reading Rule
 
