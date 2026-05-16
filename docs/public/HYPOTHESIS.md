@@ -31,22 +31,26 @@ live together so claims can be traced back to source material.
   - measured by: OCR, OCR recovery, OCR safety, growth/focus stability, OCR
     progress notes
 - `OCR confidence helps suppress low-signal inference`
-  - status: partial but actively evidenced
+  - status: operationalized through uncertainty-boundary and
+    hallucination-boundary coverage
   - measured by: OCR safety, hallucination evals, and export-backed OCR
     confidence boundary mining
 - `Co-reasoning reliability can be operationalized as binary eval signal`
-  - status: operationalized, first promoted non-OCR lane
+  - status: promoted, first tracked non-OCR lane
   - measured by: tracked style stress cases, live style eval passes, and the
     export-backed behaviour backlog
 - `Commentary-heavy response contracts increase operator burden`
-  - status: thin lane seeded; keep thin until a distinct recurring seam changes
-    the method surface
+  - status: thin lane
   - measured by: experiment `R-D`, manual transcript diagnostics, the tracked
     operator-burden row surface, and export-backed control-contract mining
 - `Retrieval grounding should stay inspectable and source-bound`
   - status: operationalized
   - measured by: retrieval and file-search eval suites, plus export-backed
     retrieval backlog
+- `Response-behaviour stability should stay direct and source-bound`
+  - status: operationalized
+  - measured by: response-behaviour eval suite and the tracked response
+    behaviour snapshot
 - `Failure should stay the main signal across lanes`
   - status: governing method
   - measured by: binary gates, fail reports, decisions, and representative
@@ -75,6 +79,7 @@ live together so claims can be traced back to source material.
     - distinct task-shape pressure
     - recurring seam shape
     - real method consequence
+  - no additional non-OCR lane currently meets that threshold
 
 ## Why The Repo Is The Portfolio
 

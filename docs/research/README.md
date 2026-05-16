@@ -32,6 +32,19 @@ enough to read in public.
   - `1` evicted fail row
   - widened backlog: `9` conversations / `8` families
 
+## Non-OCR Lane Inventory
+
+- promoted:
+  - co-reasoning reliability
+- operationalized:
+  - uncertainty-boundary and hallucination-boundary coverage
+  - retrieval grounding
+  - response-behaviour stability
+- thin:
+  - operator burden
+- current promotion read:
+  - no additional non-OCR lane currently meets promotion criteria
+
 ## Tracked Notes By Role
 
 - method boundary:
@@ -44,6 +57,9 @@ enough to read in public.
 - promoted non-OCR lane:
   - [Co-reasoning promotion snapshot](./co-reasoning-promotion-20260508.md)
   - [Hallucination-boundary promotion](./hallucination-boundary-promotion-20260512.md)
+- operationalized support lanes:
+  - [Response behaviour eval snapshot](./response-behaviour-20260425.md)
+  - [Eval evidence map](../eval/README.md)
 - active thin lane:
   - [Operator burden seed](./operator-burden-seed-20260509.md)
   - [Operator burden row promotion](./operator-burden-promotion-20260509.md)
