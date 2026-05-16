@@ -156,3 +156,14 @@ or branch history instead.
   method consequence.
 - Why: This keeps duplicate-heavy backlog from being mistaken for progress and
   makes promoted lanes earn tracked surface area.
+
+## D-011: Stabilized OCR surfaces advance by generalization pressure
+
+- Date: `2026-05-16`
+- Category: `research_experiment`
+- Tags: `ocr`, `generalization`, `stability`, `signal_quality`
+- Decision: Once OCR is stabilized on the current image set, the next OCR
+  kernel should apply generalization pressure through new visual conditions
+  under the same eval contract.
+- Why: Same-image stability is a real method gain, but it does not justify a
+  broader claim until the lane holds under changed image conditions.

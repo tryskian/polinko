@@ -52,7 +52,7 @@ In short: confidence must not outrun evidence.
 
 ## Current Beta Read
 
-- current method beta is `Beta 2.2`
+- current method beta is `Beta 2.3`
 - release outcomes stay binary:
   - `pass`
   - `fail`
@@ -80,7 +80,10 @@ In short: confidence must not outrun evidence.
 - current mature method lane is still green:
   - transcript-backed OCR growth set: `25/25` stable
   - fail-history cohort: `0` active cases
+  - current image set is stabilized
+  - transcript-mined generalization pressure is next
 - tracked snapshots:
+  - [Beta 2.3 snapshot](../research/beta_2_3_2026-05-16.md)
   - [Beta 2.2 snapshot](../research/beta_2_2_2026-05-08.md)
   - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-2026-05-08.md)
   - [Operator burden signal shape](../research/operator-burden-signal-shape-2026-05-12.md)

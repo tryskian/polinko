@@ -6,12 +6,13 @@ This is the shortest route through Polinko’s public research surface.
 
 ## Current Snapshot
 
-- `Beta 2.2` is the current method beta:
+- `Beta 2.3` is the current method beta:
   - release outcomes stay `pass` / `fail`
   - post-fail disposition stays `retain` / `evict`
-  - the first gate proves contract correctness before richer interpretation
+  - OCR now moves into transcript-mined generalization pressure
 - OCR is the mature green lane:
-  - stable and parked
+  - stabilized on the current image set
+  - generalization pressure is next
 - co-reasoning is the first promoted non-OCR lane:
   - promoted through tracked style and soak evidence
 - retrieval and response-behaviour surfaces are operationalized
@@ -32,8 +33,8 @@ This is the shortest route through Polinko’s public research surface.
 
 ## If You Need Research Next
 
-- [Beta 2.2 snapshot](../research/beta_2_2_2026-05-08.md)
-  - method boundary and current gate
+- [Beta 2.3 snapshot](../research/beta_2_3_2026-05-16.md)
+  - current OCR boundary and case-governance step
 - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-2026-05-08.md)
   - first promoted non-OCR lane
 - [OCR progress snapshot](../research/ocr-progress-2026-05-08.md)

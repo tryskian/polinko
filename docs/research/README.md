@@ -12,14 +12,15 @@ enough to read in public.
 
 ## Current Read
 
-- `Beta 2.2` is the current method beta:
+- `Beta 2.3` is the current method beta:
   - release outcomes stay `pass` / `fail`
   - post-fail disposition stays `retain` / `evict`
-  - the first gate proves contract correctness before richer interpretation
+  - OCR now moves into transcript-mined generalization pressure
 - OCR is the mature green lane:
   - growth stability: `25/25` stable, `0` flaky
   - fail-history cohort: `0` active cases
-  - runtime OCR follow-up: parked
+  - current image set is stabilized
+  - generalization pressure is next
 - co-reasoning is the first promoted non-OCR lane:
   - tracked style pass: `14/14`
   - one-hour deterministic soak: `19/21` pass cycles
@@ -54,6 +55,7 @@ enough to read in public.
 ## Tracked Notes By Role
 
 - method boundary:
+  - [Beta 2.3 snapshot](./beta_2_3_2026-05-16.md)
   - [Beta 2.2 snapshot](./beta_2_2_2026-05-08.md)
   - [Beta 2.2 stability soak](./beta-2-2-stability-soak-2026-05-09.md)
   - [Uncertainty-boundary stability](./uncertainty-boundary-stability-2026-05-09.md)
