@@ -11,6 +11,11 @@
     },
     {
       "type": "research_note",
+      "label": "Language pulse hypothesis",
+      "path": "docs/research/language-pulse-hypothesis-2026-05-16.md"
+    },
+    {
+      "type": "research_note",
       "label": "Beta 2.3 snapshot",
       "path": "docs/research/beta_2_3_2026-05-16.md"
     },
