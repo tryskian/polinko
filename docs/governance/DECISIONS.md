@@ -167,3 +167,16 @@ or branch history instead.
   under the same eval contract.
 - Why: Same-image stability is a real method gain, but it does not justify a
   broader claim until the lane holds under changed image conditions.
+
+## D-012: OCR generalization intake uses both transcript and OCR-ready sources
+
+- Date: `2026-05-16`
+- Category: `research_experiment`
+- Tags: `ocr`, `generalization`, `intake`, `candidate_curation`
+- Decision: Beta 2.3 OCR intake now combines transcript-mined OCR episodes
+  with a separate OCR-ready generalization candidate surface, then cuts a
+  bounded review slice from that wider pool.
+- Why: A failed mining attempt showed that transcript-only intake could hide a
+  real OCR-ready image when the surrounding exchange was not phrased as a
+  transcription task. The method needed a second intake surface so broader OCR
+  pressure stays visible instead of disappearing behind the older miner gate.

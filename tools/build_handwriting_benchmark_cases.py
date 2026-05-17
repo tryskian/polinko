@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from tools.ocr_export_refs import to_repo_ref
+
 
 SIGNAL_STRENGTH_RANK = {"high": 2, "medium": 1, "low": 0}
 
@@ -144,8 +146,8 @@ def build_lane_benchmark_cases(
     output_payload = {
         "cases": selected,
         "metadata": {
-            "source_review": str(review_path),
-            "source_lane_cases": str(lane_cases_path),
+            "source_review": to_repo_ref(review_path),
+            "source_lane_cases": to_repo_ref(lane_cases_path),
             "lane": lane,
             "top_k": top_k,
             "min_anchor_terms": min_anchor_terms,

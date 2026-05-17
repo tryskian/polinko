@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from tools.ocr_export_refs import to_repo_ref
+
 
 SIGNAL_STRENGTH_LEVELS = ("high", "medium", "low")
 ACTIONABLE_EMIT_STATUSES = (
@@ -250,8 +252,8 @@ def build_delta_report(
 
     report = {
         "generated_at": generated_at,
-        "current_review_path": str(current_review_path),
-        "previous_review_path": str(previous_review_path) if previous_review_path else "",
+        "current_review_path": to_repo_ref(current_review_path),
+        "previous_review_path": to_repo_ref(previous_review_path) if previous_review_path else "",
         "totals": {
             "before": {
                 "episodes": _summary_metric(previous_payload, "episodes"),
