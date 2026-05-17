@@ -20,10 +20,11 @@ evidence-preserving method work.
 - The public website is a doorway into the research system:
   - `GET /` redirects to `GET /portfolio`
   - the public surface points into the work
-- Eval semantics remain binary:
-  - release outcomes are `pass` / `fail`
-  - after `fail`, failure disposition is `retain` / `evict`
-  - `retain` keeps the failure as active evidence
+- Eval semantics stay scoped:
+  - OCR case outcomes are `pass` / `fail`
+  - broader manual and non-OCR lanes may still use `retain` / `evict` after
+    `fail` as upstream case curation
+  - `retain` keeps that broader failure pressure as active evidence
   - `evict` removes malformed or stale cases upstream
 - Failure is primary signal:
   - pass-rate reporting keeps unresolved failure pressure visible

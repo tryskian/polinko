@@ -7,9 +7,9 @@ This is the shortest route through Polinko’s public research surface.
 ## Current Snapshot
 
 - `Beta 2.3` is the current method beta:
-  - release outcomes stay `pass` / `fail`
-  - post-fail disposition stays `retain` / `evict`
+  - OCR case outcomes stay `pass` / `fail`
   - OCR now moves into transcript-mined generalization pressure
+  - OCR-ready candidates widen intake before eval
 - OCR is the mature green lane:
   - stabilized on the current image set
   - generalization pressure is next
@@ -34,7 +34,7 @@ This is the shortest route through Polinko’s public research surface.
 ## If You Need Research Next
 
 - [Beta 2.3 snapshot](../research/beta_2_3_2026-05-16.md)
-  - current OCR boundary and case-governance step
+  - current OCR boundary and strict `PASS / FAIL` case contract
 - [Co-reasoning promotion snapshot](../research/co-reasoning-promotion-2026-05-08.md)
   - first promoted non-OCR lane
 - [OCR progress snapshot](../research/ocr-progress-2026-05-08.md)
