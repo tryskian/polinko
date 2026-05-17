@@ -120,6 +120,7 @@ Use this doc for operator procedure.
 3. Merge through the protected-main PR flow.
 4. After merge, switch back to `main` and pull fast-forward only.
 5. Run closeout checks:
+   - `make end-docs-check`
    - `make decaffeinate`
    - `make decaffeinate-status`
    - `make end-git-check`
@@ -146,6 +147,8 @@ Use this doc for operator procedure.
 
 - `make doctor-env`
   - environment health check
+- `make end-docs-check`
+  - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make caffeinate`
   - start repo-managed wake lock
 - `make caffeinate-status`

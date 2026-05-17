@@ -55,6 +55,7 @@ Sequence:
 
 1. Run the generic closeout safety path:
    - artifact repair/check
+   - current-truth freshness check
    - tracked path leak check
    - local path leak audit
    - environment/docs/test validation
@@ -80,5 +81,6 @@ Preflight:
 Source of truth:
 
 - [tools/end_of_day_routine.sh](../../tools/end_of_day_routine.sh)
+- [tools/check_end_docs.py](../../tools/check_end_docs.py)
 - [tools/check_end_git_clean.sh](../../tools/check_end_git_clean.sh)
 - [Makefile](../../Makefile)
