@@ -6,67 +6,68 @@
 ![Eval Contract](https://img.shields.io/badge/eval-pass%2Ffail-4E79A7)
 ![Research Surface](https://img.shields.io/badge/research-repo_native-76B7B2)
 
-Polinko is a human-led, repo-native research system for inspecting AI behavior
-through fail-first evaluation and evidence-preserving method work.
+Polinko is a human-led research system for inspecting AI behavior through
+fail-first evaluation, evidence-preserving method work, and repo-native
+publishing.
 
 The website is a doorway. The repository is the research surface.
 
-## Why This Repo Matters
+## Why This Exists
 
-Most AI projects show polished outputs and hide the failure structure.
-Polinko does the opposite: it keeps failure visible enough to inspect,
-evaluate, and act on. That matters anywhere confidence can outrun source
-evidence.
+Most AI projects foreground polished outputs and hide the failure structure.
+Polinko keeps failure visible enough to inspect, classify, and improve. That
+matters anywhere confidence can outrun source evidence.
 
-## Current Research Read
+The method is intentionally small and strict: preserve the artifact, decide
+`pass` or `fail`, retain useful failures, evict noise, and let the tracked
+evidence change the next run.
 
-- `Beta 2.3` is the current method beta:
-  - OCR case outcomes stay `pass` / `fail`
-  - OCR now moves into broader generalization pressure
-  - intake now combines transcript-mined episodes with OCR-ready candidates
-    before eval
-- OCR is the mature green lane:
-  - stabilized on the current image set
-  - generalization pressure is next
-- co-reasoning is the first promoted non-OCR lane:
-  - promoted through tracked style and soak evidence
-- retrieval and response-behaviour surfaces are operationalized
-- uncertainty-boundary and hallucination-boundary surfaces are currently green
-- operator burden is the active thin lane:
-  - active because it is still producing distinct evidence pressure
-- the research surface remains open:
-  - current lane status is explicit, but further exploration is still active
+## Current Read
+
+`Beta 2.3` is the current method beta.
+
+The active read is:
+
+- OCR is the mature green lane, stabilized on the current image set and moving
+  into broader generalization pressure.
+- Co-reasoning is the first promoted non-OCR lane, supported by tracked style
+  and soak evidence.
+- Retrieval, response behaviour, uncertainty boundary, and hallucination
+  boundary are operationalized support surfaces.
+- Operator burden is the active thin lane because it is still producing
+  distinct evidence pressure.
+- The research surface is open: current lane status is explicit, but the method
+  claim is still under pressure.
+
+For the maintained research map, start with
+[docs/research/README.md](docs/research/README.md).
 
 ## Start Here
 
-If you are reading Polinko as a research project, use this path:
+Use the public path when you want the shortest reviewer-facing read:
 
-- [Public Reading Path](docs/public/README.md)
 - [Polinko in Brief](docs/public/IN_BRIEF.md)
 - [Method & Authorship](docs/public/METHOD.md)
 - [Hypothesis](docs/public/HYPOTHESIS.md)
 - [Evidence](docs/public/EVIDENCE.md)
 - [Diagrams](docs/public/DIAGRAMS.md)
-- [Research Surface](docs/research/README.md)
 
-## Current Tracked Reads
+Use the operator path when you need to run, inspect, or change the system:
 
-- [Beta 2.3 snapshot](docs/research/beta_2_3_2026-05-16.md)
-- [Beta 2.2 stability soak](docs/research/beta-2-2-stability-soak-2026-05-09.md)
-- [Uncertainty-boundary stability](docs/research/uncertainty-boundary-stability-2026-05-09.md)
-- [Hallucination-boundary promotion](docs/research/hallucination-boundary-promotion-2026-05-12.md)
-- [Co-reasoning promotion](docs/research/co-reasoning-promotion-2026-05-08.md)
-- [Operator burden signal shape](docs/research/operator-burden-signal-shape-2026-05-12.md)
-- [OCR progress snapshot](docs/research/ocr-progress-2026-05-08.md)
+- [Docs Map](docs/README.md)
+- [Runbook](docs/runtime/RUNBOOK.md)
+- [Architecture](docs/runtime/ARCHITECTURE.md)
+- [Current State](docs/governance/STATE.md)
+- [Decisions](docs/governance/DECISIONS.md)
 
 ## What Lives Here
 
-- FastAPI API + CLI runtime
-- fail-first eval surfaces
+- FastAPI API and CLI runtime
+- Fail-first eval surfaces
 - OCR and non-OCR method lanes
-- export-backed behaviour backlog mining
-- tracked research docs, diagrams, and eval context
-- repo-local engineering and validation workflow
+- Export-backed behaviour backlog mining
+- Tracked research docs, diagrams, and eval context
+- Repo-local engineering and validation workflow
 
 ## Quick Start
 
@@ -80,37 +81,17 @@ make server
 
 Open `http://127.0.0.1:8000/docs`.
 
-Portfolio doorway:
-
-```bash
-make portfolio
-```
-
-`make portfolio` rebuilds/serves and prints a cache-busted URL. It does not
-open a browser by default.
-
 ## Repo Map
 
-- `api/` API implementation
-- `core/` runtime logic
-- `tools/` eval and maintenance scripts
-- `tests/` test suite
-- `docs/public/` curated public reading path
-- `docs/governance/` charter, state, decisions
-- `docs/runtime/` runbook and architecture
-- `docs/eval/` eval evidence and phase context
-
-## Operator Surface
-
-- procedure: [docs/runtime/RUNBOOK.md](docs/runtime/RUNBOOK.md)
-- current truth: [docs/governance/STATE.md](docs/governance/STATE.md)
-- structure: [docs/runtime/ARCHITECTURE.md](docs/runtime/ARCHITECTURE.md)
-- decisions: [docs/governance/DECISIONS.md](docs/governance/DECISIONS.md)
-
-## Production
-
-- [www.krystian.io](https://www.krystian.io/)
-- `GET /` redirects to `GET /portfolio`
+- `api/` contains the API implementation.
+- `core/` contains runtime logic.
+- `tools/` contains eval and maintenance scripts.
+- `tests/` contains the test suite.
+- `docs/public/` contains the curated public reading path.
+- `docs/research/` contains the compact research surface.
+- `docs/eval/` contains eval evidence and phase context.
+- `docs/governance/` contains charter, state, and decisions.
+- `docs/runtime/` contains runbook and architecture.
 
 ## License
 
