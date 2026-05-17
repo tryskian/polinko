@@ -16,6 +16,7 @@ from tools.index_cgpt_export import (
     _ocr_priority_score,
     _search_index_by_id,
 )
+from tools.ocr_export_refs import to_export_ref
 
 OCR_INTENT_PATTERN = (
     r"what does (this|it) say|what(?:'s| is) written|can you read|read (?:this|it)(?!\s+and\s+weep)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew[\s-]?drop\b|\b(?:scribbles?|squibbles?|scrumbles?)\s+(?:and|&)\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratch(?:ed)?\s+out\b|\bcross(?:ed|ing)?\s+out\b|\bstrike[\s-]?through\b|\bstrikethrough\b"
@@ -1304,8 +1305,8 @@ def build_from_export(
                     "candidate_id": f"cv-{conversation_id[:8]}-{len(review_rows)+1:03d}",
                     "conversation_id": conversation_id,
                     "conversation_title": title,
-                    "conversation_json": str(conversation_path),
-                    "image_path": image_path,
+                    "conversation_json": to_export_ref(conversation_path, export_root=export_root),
+                    "image_path": to_export_ref(image_path, export_root=export_root),
                     "source_name": source_name,
                     "ask_text": msg.text,
                     "query_text": msg.text,
@@ -1419,7 +1420,7 @@ def build_from_export(
                 growth_cases.append(
                     {
                         "id": growth_case_id,
-                        "image_path": image_path,
+                        "image_path": to_export_ref(image_path, export_root=export_root),
                         "source_name": source_name,
                         "lane": lane,
                         "transcription_mode": "verbatim",
@@ -1454,7 +1455,7 @@ def build_from_export(
             cases.append(
                 {
                     "id": case_id,
-                    "image_path": image_path,
+                    "image_path": to_export_ref(image_path, export_root=export_root),
                     "source_name": source_name,
                     "lane": lane,
                     "transcription_mode": "verbatim",
@@ -1494,7 +1495,7 @@ def build_from_export(
                 "conversation_id": conversation_id,
                 "conversation_title": str(row.get("conversation_title", "")),
                 "conversation_tags": conversation_tags,
-                "image_path": image_path,
+                "image_path": to_export_ref(image_path, export_root=export_root),
                 "source_name": str(row.get("source_name", "")),
                 "asset_name": str(row.get("asset_name", "")),
                 "asset_id": str(row.get("asset_id", "")),

@@ -5,6 +5,8 @@ import mimetypes
 from pathlib import Path
 from typing import Any
 
+from tools.ocr_export_refs import resolve_export_ref
+
 ONE_BY_ONE_PNG_BYTES = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+qW6QAAAAASUVORK5CYII="
 )
@@ -26,7 +28,7 @@ def load_attachment_input(
     text_hint_value = str(text_hint).strip() if text_hint else None
 
     if image_path_value:
-        image_path = Path(image_path_value).expanduser()
+        image_path = resolve_export_ref(image_path_value)
         if not image_path.is_file():
             raise RuntimeError(f"image_path does not exist: {image_path}")
         raw_bytes = image_path.read_bytes()

@@ -68,6 +68,10 @@ OCR_TRANSCRIPT_REVIEW_PREV ?= .local/eval_cases/ocr_transcript_cases_review_prev
 OCR_TRANSCRIPT_DELTA_MD ?= .local/eval_cases/ocr_transcript_cases_delta.md
 OCR_TRANSCRIPT_DELTA_JSON ?= .local/eval_cases/ocr_transcript_cases_delta.json
 OCR_GENERALIZATION_CANDIDATES ?= .local/eval_cases/ocr_generalization_candidates.json
+OCR_GENERALIZATION_REVIEW ?= .local/eval_cases/ocr_generalization_review.json
+OCR_GENERALIZATION_REVIEW_MAX_CASES ?= 24
+OCR_GENERALIZATION_REVIEW_MAX_PER_CONVERSATION ?= 2
+OCR_GENERALIZATION_REVIEW_INCLUDE_IDS ?=
 OCR_HANDWRITING_BENCHMARK_TOP_K ?= 6
 OCR_HANDWRITING_BENCHMARK_MIN_ANCHORS ?= 3
 OCR_TYPED_BENCHMARK_TOP_K ?= 8
@@ -154,7 +158,7 @@ REQUIREMENTS_IN ?= requirements.in
 REQUIREMENTS_LOCK ?= requirements.lock
 PIP_TOOLS_VERSION ?= 7.5.3
 
-.PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta nulls runtime-null-audit ocr-data ocr-notebook-workflow gate start end end-preflight end-git-check rituals localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test test-one test-targeted pycheck ruff-check ruff-format-check lint-docs mermaid-render d3-render public-diagrams-render transcript-fix transcript-check doctor-env path-leak-check path-leak-audit-local backend-gate caffeinate caffeinate-status decaffeinate decaffeinate-status privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image api-smoke eval-smoke eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel eval-sidecar-start eval-sidecar-status eval-sidecar-stop operator-burden-report calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
+.PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta ocr-generalization-review nulls runtime-null-audit ocr-data ocr-notebook-workflow gate start end end-preflight end-git-check rituals localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test test-one test-targeted pycheck ruff-check ruff-format-check lint-docs mermaid-render d3-render public-diagrams-render transcript-fix transcript-check doctor-env path-leak-check path-leak-audit-local backend-gate caffeinate caffeinate-status decaffeinate decaffeinate-status privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image api-smoke eval-smoke eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel eval-sidecar-start eval-sidecar-status eval-sidecar-stop operator-burden-report calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 .PHONY: frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 chat:
 	$(PYTHON) app.py
@@ -341,6 +345,7 @@ ocr-data:
 	fi; \
 	$(MAKE) --no-print-directory doctor-env; \
 	$(MAKE) --no-print-directory ocrmine CGPT_EXPORT_ROOT="$$EXPORT_ROOT"; \
+	$(MAKE) --no-print-directory ocr-generalization-review; \
 	$(MAKE) --no-print-directory ocrdelta
 
 ocr-notebook-workflow:
@@ -1200,6 +1205,20 @@ ocr-handwriting-benchmark-cases:
 		--output-cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" \
 		--top-k "$(OCR_HANDWRITING_BENCHMARK_TOP_K)" \
 		--min-anchor-terms "$(OCR_HANDWRITING_BENCHMARK_MIN_ANCHORS)"
+
+ocr-generalization-review:
+	@set -eu; \
+	if [ ! -f "$(OCR_GENERALIZATION_CANDIDATES)" ]; then \
+		echo "OCR generalization candidates not found: $(OCR_GENERALIZATION_CANDIDATES)"; \
+		echo "Run: make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"; \
+		exit 1; \
+	fi; \
+	$(PYTHON) -m tools.build_ocr_generalization_review \
+		--candidates "$(OCR_GENERALIZATION_CANDIDATES)" \
+		--output-review "$(OCR_GENERALIZATION_REVIEW)" \
+		--max-cases "$(OCR_GENERALIZATION_REVIEW_MAX_CASES)" \
+		--max-per-conversation "$(OCR_GENERALIZATION_REVIEW_MAX_PER_CONVERSATION)" \
+		--include-candidate-ids "$(OCR_GENERALIZATION_REVIEW_INCLUDE_IDS)"
 
 ocr-typed-benchmark-cases:
 	@set -eu; \

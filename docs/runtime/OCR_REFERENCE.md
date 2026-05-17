@@ -44,6 +44,10 @@ workflow, output surfaces, and tuning knobs.
      - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
    - optional local default export-root fallback:
      - `CGPT_EXPORT_ROOT_DEFAULT=/abs/path/to/CGPT-DATA-EXPORT`
+   - bounded generalization review slice:
+     - `make ocr-generalization-review`
+     - optional pinned include:
+       - `make ocr-generalization-review OCR_GENERALIZATION_REVIEW_INCLUDE_IDS=<candidate-id>`
 3. Run the widened growth lane:
    - `make ocrwiden`
    - synchronous fallback:
@@ -120,6 +124,9 @@ workflow, output surfaces, and tuning knobs.
      - OCR-ready assets that were not admitted into transcript-mined OCR
        episodes
      - used to widen Beta 2.3 intake beyond correction-shaped transcript asks
+   - bounded generalization review:
+     - `.local/eval_cases/ocr_generalization_review.json`
+     - lane-balanced local review slice from the wider candidate surface
    - growth fail cohort:
      - `.local/eval_cases/ocr_growth_fail_cohort.json`
    - growth focus set:
