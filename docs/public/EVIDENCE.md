@@ -45,7 +45,7 @@ Core surfaces:
 
 - `/viz/pass-fail`
 - `/viz/pass-fail/data`
-- `/portfolio/sankey-data`
+- tracked evidence Sankey payload
 
 `/viz/pass-fail` keeps the chart on the active live window and uses tracked
 eval artifacts to surface the broader lane map underneath it, with direct links

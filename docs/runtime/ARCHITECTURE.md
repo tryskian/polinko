@@ -10,7 +10,7 @@ This page is the structural map of the tracked system.
 ## Top-Level Map
 
 - `app.py`
-  - CLI chat entrypoint
+  - CLI chat entrypoint; stale but retained
 - `server.py`
   - FastAPI API entrypoint
 - `config.py`
@@ -34,8 +34,8 @@ This page is the structural map of the tracked system.
 4. request execution delegates into `core/` runtime and persistence modules
 5. runtime history and eval state write to local SQLite stores under
    `.local/runtime_dbs/active/`
-6. `POST /chat` supports deterministic fixture mode for smoke; default remains
-   `live`
+6. `POST /chat` is stale but retained; it supports deterministic fixture mode
+   for smoke, and default remains `live`
 7. active gate semantics stay scoped:
    - OCR case outcomes are `pass` / `fail`
    - broader manual and non-OCR lanes may still use `retain` / `evict` after
@@ -57,8 +57,8 @@ This page is the structural map of the tracked system.
   - `.local/eval_reports/`
 - local eval cases and artefacts:
   - `.local/eval_cases/`
-- portfolio evidence surface:
-  - `GET /portfolio/sankey-data`
+- evidence diagram payload:
+  - built from the Sankey payload generator
   - bridges Beta 1.0 manual feedback with current OCR report counts
 
 ## Placement Rules
@@ -73,6 +73,8 @@ This page is the structural map of the tracked system.
   - `docs/`
 - private transcripts and working notes:
   - local `docs/peanut/`
+- private portfolio mockups and screenshots:
+  - local `docs/peanut/assets/tumbles/portfolio/`
 - historical beta references:
   - `docs/eval/`
 

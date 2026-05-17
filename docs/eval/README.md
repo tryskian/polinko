@@ -69,8 +69,8 @@ Do not flatten one into the other.
 - curated historical evidence under `docs/eval/beta_1_0/`
 - archived build snapshot material under
   `docs/eval/beta_1_0/build_snapshot_polinko-incase/`
-- role in the public surface:
-  - left-side/legacy evidence for `/portfolio/sankey-data`
+- role in the evidence map:
+  - left-side/legacy evidence for the Sankey payload
 
 ### Beta 2.0
 
@@ -91,8 +91,8 @@ Do not flatten one into the other.
       - evicted failures
   - widen candidate rows locally with:
     - `python3 -m tools.build_behaviour_backlog_from_export --export-root /abs/path/to/CGPT-DATA-EXPORT`
-- role in the public surface:
-  - right-side/current evidence for `/portfolio/sankey-data`
+- role in the evidence map:
+  - right-side/current evidence for the Sankey payload
 
 ## What Stays Local
 

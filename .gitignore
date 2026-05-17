@@ -70,6 +70,10 @@ polinko.code-workspace
 # Local peanut knowledge lane (confidential/local-only)
 docs/peanut/**
 !docs/peanut/.gitkeep
+!docs/peanut/assets/
+!docs/peanut/assets/tumbles/
+!docs/peanut/assets/tumbles/portfolio/
+!docs/peanut/assets/tumbles/portfolio/.gitkeep
 docs/eval/**
 !docs/eval/.gitkeep
 !docs/eval/README.md

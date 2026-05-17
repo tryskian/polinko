@@ -157,9 +157,9 @@ flowchart TD
 
 ![Polinko Evidence Sankey](diagrams/polinko-evidence-sankey.svg)
 
-Static D3 Sankey generated from the real `/portfolio/sankey-data` payload. It
-shows how Beta 1.0 manual evals flow through manual outcomes and signal
-classes into the current OCR lane weighting surface.
+Static D3 Sankey generated from tracked eval evidence. It shows how Beta 1.0
+manual evals flow through manual outcomes and signal classes into the current
+OCR lane weighting surface.
 
 ## Polinko Binary Eval Loop
 
@@ -201,7 +201,7 @@ flowchart LR
 
   B1 --> W["manual_evals.db"]
   B2 --> R[".local/eval_reports/"]
-  W --> P["/portfolio/sankey-data"]
+  W --> P["Evidence Sankey payload"]
   R --> P
   P --> V["Repo visuals: Sankey, diagrams, curated notebooks"]
 

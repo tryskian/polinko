@@ -131,7 +131,7 @@ svg
   .attr("font-family", "Arial, Helvetica, sans-serif")
   .attr("font-size", 12)
   .text(
-    `Static D3 Sankey generated from /portfolio/sankey-data • ${payload.summary.legacy_signal_mentions} tagged signal mentions`
+    `Static D3 Sankey generated from tracked eval evidence • ${payload.summary.legacy_signal_mentions} tagged signal mentions`
   );
 
 svg
