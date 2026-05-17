@@ -3,7 +3,7 @@
 # Polinko
 
 [![CI](https://github.com/tryskian/polinko/actions/workflows/ci.yml/badge.svg)](https://github.com/tryskian/polinko/actions/workflows/ci.yml)
-![Eval Contract](https://img.shields.io/badge/eval-pass%2Ffail_%2B_retain%2Fevict-4E79A7)
+![Eval Contract](https://img.shields.io/badge/eval-pass%2Ffail-4E79A7)
 ![Research Surface](https://img.shields.io/badge/research-repo_native-76B7B2)
 
 Polinko is a human-led, repo-native research system for inspecting AI behavior
@@ -21,10 +21,10 @@ evidence.
 ## Current Research Read
 
 - `Beta 2.3` is the current method beta:
-  - release outcomes stay `pass` / `fail`
-  - post-fail disposition stays `retain` / `evict`
+  - OCR case outcomes stay `pass` / `fail`
   - OCR now moves into broader generalization pressure
   - intake now combines transcript-mined episodes with OCR-ready candidates
+    before eval
 - OCR is the mature green lane:
   - stabilized on the current image set
   - generalization pressure is next

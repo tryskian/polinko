@@ -50,14 +50,15 @@ Do not flatten one into the other.
 
 ## Tracked Gate Contract
 
-- release outcomes stay `pass` / `fail`
-- after `fail`, failure disposition is:
-  - `retain`
-  - `evict`
-- `retain` keeps the failure in-scope as lane evidence
-- `evict` is upstream case removal for malformed, noisy, or known-bad rows
-- judge detail and qualitative notes can enrich a report, but they do not create
-  a third gate state
+- OCR gate reports stay strictly `pass` / `fail`
+- OCR candidate cleanup happens upstream of eval:
+  - malformed candidates
+  - duplicate candidates
+  - known-bad inputs
+- non-OCR lanes can still use richer staged or thin-lane method surfaces where
+  the research question is not simple extraction correctness
+- judge detail and qualitative notes can enrich a report, but they do not
+  create a third OCR gate state
 - thin new lanes can begin as row-local human `pass` / `fail` evidence before
   larger automation
 

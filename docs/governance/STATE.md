@@ -19,9 +19,8 @@ Last updated: 2026-05-16
   - the portfolio shell remains intentionally lean
 - The eval contract is explicit and binary:
   - release outcomes are `pass` / `fail`
-  - after `fail`, failure disposition is `retain` / `evict`
-  - `retain` keeps the failure as active evidence
-  - `evict` removes malformed or stale cases upstream
+  - OCR case judgment remains `pass` / `fail`
+  - OCR-ready candidate cleanup happens upstream of OCR judgment
 - Polinko is in a method beta:
   - fail-first evaluation is the active posture
   - co-reasoning is the first promoted non-OCR lane
@@ -35,6 +34,7 @@ Last updated: 2026-05-16
     generalization pressure as the next kernel
   - OCR intake now uses transcript-mined episodes plus OCR-ready
     generalization candidates
+  - OCR verdicts stay `pass` / `fail` under that broader intake
 - Branch protection on `main` remains active:
   - PR required
   - strict status checks enabled

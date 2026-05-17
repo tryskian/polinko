@@ -57,15 +57,17 @@ or branch history instead.
 - Why: This keeps the source of truth stable and prevents publication surfaces
   from drifting into fake authority.
 
-## D-003: Eval release outcomes stay binary
+## D-003: Binary release gate stays primary
 
 - Date: `2026-05-15`
 - Category: `eval_quality`
 - Tags: `binary_gate`, `retain_evict`, `lane_contract`
-- Decision: Release outcomes remain `pass` / `fail`, and after `fail` the
-  only allowed failure dispositions are `retain` or `evict`.
-- Why: This keeps the gate legible while preserving a clean distinction
-  between release judgment and upstream case handling.
+- Decision: Release outcomes remain `pass` / `fail`. Broader manual and
+  non-OCR lanes may still use `retain` / `evict` after `fail` as upstream case
+  curation, but OCR case judgment stays strict `PASS / FAIL` per `D-013`.
+- Why: This keeps the release gate legible while preserving a clean
+  distinction between binary judgment and the narrower curation surfaces that
+  still matter outside OCR.
 
 ## D-004: Failure is primary signal
 
@@ -180,3 +182,16 @@ or branch history instead.
   real OCR-ready image when the surrounding exchange was not phrased as a
   transcription task. The method needed a second intake surface so broader OCR
   pressure stays visible instead of disappearing behind the older miner gate.
+
+## D-013: OCR case judgment stays strictly PASS / FAIL
+
+- Date: `2026-05-16`
+- Category: `research_experiment`
+- Tags: `ocr`, `pass_fail`, `generalization`, `candidate_curation`
+- Decision: Keep OCR case judgment strictly `PASS / FAIL`, even under broader
+  generalization pressure. Use OCR-ready candidate curation upstream of eval,
+  not as a second verdict layer inside OCR.
+- Why: For OCR, the research signal is whether the extraction is right or
+  wrong. That strict binary has already yielded high-signal results. Broader
+  intake is useful, but it should widen the candidate surface before eval
+  rather than muddy the OCR verdict contract itself.

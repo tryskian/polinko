@@ -36,9 +36,10 @@ This page is the structural map of the tracked system.
    `.local/runtime_dbs/active/`
 6. `POST /chat` supports deterministic fixture mode for smoke; default remains
    `live`
-7. active gate semantics remain binary:
-   - release outcomes are `pass` / `fail`
-   - after `fail`, failure disposition is `retain` / `evict`
+7. active gate semantics stay scoped:
+   - OCR case outcomes are `pass` / `fail`
+   - broader manual and non-OCR lanes may still use `retain` / `evict` after
+     `fail` as upstream case curation
 
 ## Data Surfaces
 
