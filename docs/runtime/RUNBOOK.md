@@ -119,13 +119,13 @@ Use this doc for operator procedure.
 2. Package the branch when the kernel is ready.
 3. Merge through the protected-main PR flow.
 4. After merge, switch back to `main` and pull fast-forward only.
-5. Run closeout checks:
+5. Run the literal closeout routine:
+   - `make end`
+6. If you need doc freshness or clean-main verification as standalone checks, run:
    - `make end-docs-check`
-   - `make decaffeinate`
-   - `make decaffeinate-status`
    - `make end-git-check`
-6. Update tracked current truth and local handoff before stopping.
-7. End state must be:
+7. Update tracked current truth and local handoff before stopping.
+8. End state must be:
    - merged
    - clean local `main`
    - synced with `origin/main`
@@ -147,8 +147,6 @@ Use this doc for operator procedure.
 
 - `make doctor-env`
   - environment health check
-- `make end-docs-check`
-  - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make caffeinate`
   - start repo-managed wake lock
 - `make caffeinate-status`
@@ -159,6 +157,13 @@ Use this doc for operator procedure.
   - report closeout wake-lock status
 - `make api-smoke`
   - live backend smoke check
+- `make end`
+  - literal legacy closeout routine plus security gate: transcript fix/check,
+    doctor, docs lint, tests, security checks, and stop background tasks
+- `make end-docs-check`
+  - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
+- `make security-checks`
+  - local Python and Node dependency audits
 - `make lint-docs`
   - docs lint
 - `make test`

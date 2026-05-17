@@ -45,7 +45,7 @@ Last updated: 2026-05-17
   - `RUNBOOK` holds operator procedure
   - `ARCHITECTURE` holds stable system shape
   - local `SESSION_HANDOFF` holds the active slice
-  - `make end` now includes `make end-docs-check` before closeout
+  - `make end` now mirrors the legacy `make eod` closeout routine directly
 
 ## Active Priorities
 
@@ -79,5 +79,7 @@ Last updated: 2026-05-17
 - `make api-smoke`
 - `make lint-docs`
 - `make test`
-- `make end-docs-check`
+- `make security-checks`
+- `make end`
+- `make end-docs-check` when validating current-truth freshness explicitly
 - `make end-git-check` after merge and sync

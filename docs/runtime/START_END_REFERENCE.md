@@ -53,34 +53,42 @@ make end
 
 Sequence:
 
-1. Run the generic closeout safety path:
-   - artifact repair/check
-   - current-truth freshness check
-   - tracked path leak check
-   - local path leak audit
-   - environment/docs/test validation
-   - background-process shutdown
+1. Run transcript repair:
+   - `make transcript-fix`
+2. Validate curated transcripts:
+   - `make transcript-check`
+3. Verify the environment:
+   - `make doctor-env`
+4. Lint docs:
+   - `make lint-docs`
+5. Run tests:
+   - `make test`
+6. Run dependency security checks:
+   - `make security-checks`
+7. Stop background tasks:
+   - `make eod-stop`
      - `make server-daemon-stop`
-     - `make decaffeinate`
+     - `make caffeinate-off-all`
      - `make session-status`
-2. Final clean-main check after merge/sync:
-   - `make end-git-check`
 
 Preflight:
 
 - `make end-preflight`
-- runs the validation and background-stop path without requiring clean synced
-  `main`
+- runs the same literal closeout routine as `make end`
 
-`make end-git-check` then verifies:
+Explicit companion checks:
 
-- current branch is `main`
-- working tree is clean
-- local `main` is synced with `origin/main`
+- `make end-docs-check`
+  - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
+- `make security-checks`
+  - runs local Python and Node dependency audits
+- `make end-git-check`
+  - verifies current branch is `main`
+  - verifies the working tree is clean
+  - verifies local `main` is synced with `origin/main`
 
 Source of truth:
 
 - [tools/end_of_day_routine.sh](../../tools/end_of_day_routine.sh)
-- [tools/check_end_docs.py](../../tools/check_end_docs.py)
 - [tools/check_end_git_clean.sh](../../tools/check_end_git_clean.sh)
 - [Makefile](../../Makefile)
