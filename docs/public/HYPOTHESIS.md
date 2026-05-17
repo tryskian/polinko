@@ -93,7 +93,7 @@ live together so claims can be traced back to source material.
   - OCR failures now use explicit `retain` / `evict` case governance
   - the lane now tests transfer under harder visual conditions
 
-## Why The Repo Is The Portfolio
+## Why The Repo Is The Surface
 
 The work is not just the final UI. The work is the evidence system:
 

@@ -17,9 +17,10 @@ evidence-preserving method work.
   - tracked docs, code, tests, and reports are canonical truth
   - public-facing writing is the derived publication layer from repo truth
   - local/private lanes stay local, with explicit approval for any wider scope
-- The public website is a doorway into the research system:
-  - `GET /` redirects to `GET /portfolio`
-  - the public surface points into the work
+- Public-facing surfaces are derived from repo truth:
+  - the repository remains the canonical research surface
+  - local portfolio commands, mockups, and screenshots stay private unless
+    explicitly promoted
 - Eval semantics stay scoped:
   - OCR case outcomes are `pass` / `fail`
   - broader manual and non-OCR lanes may still use `retain` / `evict` after

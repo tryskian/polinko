@@ -9,14 +9,18 @@ Last updated: 2026-05-17
 - Backend-first runtime remains canonical:
   - FastAPI API + CLI are the execution surfaces
   - prompt and runtime behaviour stay minimal and deterministic
+  - CLI/API chat is stale but retained; it is still needed and should not be
+    removed without a replacement decision
 - The repository is the research object:
   - tracked docs, code, tests, and reports are canonical truth
   - public-facing writing is the derived publication layer from repo truth
   - local/private material stays in `docs/peanut/`
-- The public website remains a doorway into the work:
-  - `GET /` redirects to `GET /portfolio`
-  - the public surface points into the work
-  - the portfolio shell remains intentionally lean
+- Public-facing surfaces remain derived from repo truth:
+  - the root README now points to public research docs, not local portfolio
+    commands
+  - private portfolio mockups and screenshots stay in `docs/peanut/`
+  - promotion from private portfolio work to public docs requires explicit
+    approval
 - The eval contract is explicit and binary:
   - release outcomes are `pass` / `fail`
   - OCR case judgment remains `pass` / `fail`

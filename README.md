@@ -5,6 +5,10 @@
 [![CI](https://github.com/tryskian/polinko/actions/workflows/ci.yml/badge.svg)](https://github.com/tryskian/polinko/actions/workflows/ci.yml)
 ![Eval Contract](https://img.shields.io/badge/eval-pass%2Ffail-4E79A7)
 ![Research Surface](https://img.shields.io/badge/research-repo_native-76B7B2)
+![Maintenance](https://img.shields.io/badge/maintenance-in%20progress-F28E2B)
+
+> **Maintenance in progress.** Documentation and research surfaces are being
+> standardized before this repo is shared as a stable reference.
 
 Polinko is a human-led research system for inspecting AI behavior through
 fail-first evaluation, evidence-preserving method work, and repo-native

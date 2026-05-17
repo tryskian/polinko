@@ -20,7 +20,7 @@ def main() -> None:
     payload = build_portfolio_sankey_payload(max_reports=120)
     if not payload.get("available"):
         raise RuntimeError(
-            "Portfolio Sankey payload is unavailable; cannot render public D3 Sankey."
+            "Evidence Sankey payload is unavailable; cannot render public D3 Sankey."
         )
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)

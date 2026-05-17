@@ -13,10 +13,11 @@ that matches the question you are trying to answer.
 - Wrap / end of day:
   say `human time` or `wind down` and follow
   [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md#end-of-day-routine-codexbeab)
-- Portfolio visual review:
-  use
-  [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md#portfolio-surface--playwright-loop)
-  for `make portfolio-playwright`, `make pwcli`, and screenshot capture
+- Retained chat runtime:
+  `make chat` and `POST /chat` are stale but still needed; do not prune them
+  as dead surfaces.
+- Private portfolio mockups and screenshots stay in `docs/peanut/` unless
+  explicitly promoted.
 
 ## Reading Paths
 
