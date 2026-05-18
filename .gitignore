@@ -25,10 +25,7 @@ htmlcov/
 # Node (if added later)
 node_modules/
 dist/
-# Local frontend source; keep only the directory placeholder tracked.
-frontend/**
-!frontend/.gitkeep
-ui/**
+# Portfolio frontend source and served UI are tracked.
 frontend/test-results/
 frontend/playwright-report/
 *.log
