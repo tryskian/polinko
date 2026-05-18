@@ -1,6 +1,5 @@
 import "./styles.css";
-import { gsap } from "gsap";
-import { Observer } from "gsap/Observer";
+import { gsap, Observer } from "gsap/all";
 import {
   Color,
   Mesh,
