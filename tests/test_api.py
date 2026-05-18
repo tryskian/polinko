@@ -102,33 +102,14 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertEqual(resp.headers.get("content-type"), "text/html; charset=utf-8")
         self.assertTrue(resp.text.lstrip().lower().startswith("<!doctype html>"))
-        self.assertIn(
-            "creative designer who somehow became an applied AI&nbsp;research",
-            resp.text,
-        )
-        self.assertIn("so now i design evals around the useful signals that", resp.text)
-        self.assertIn("because every signal reshapes the experiment.", resp.text)
-        self.assertIn("Krystian Fernando", resp.text)
-        self.assertIn(
-            "https://github.com/tryskian/polinko",
-            resp.text,
-        )
-        self.assertIn(
-            'content="Krystian Fernando is an applied AI research engineer '
-            "working in human-AI interaction and designing evals around the "
-            'useful signals models reveal when they fail."',
-            resp.text,
-        )
-        self.assertIn('"jobTitle": "Applied AI Research Engineer"', resp.text)
-        self.assertIn(
-            "github.com/tryskian/polinko",
-            resp.text,
-        )
-        self.assertIn("Opens the Polinko repository on GitHub.", resp.text)
-        self.assertIn('href="/favicon.png"', resp.text)
-        self.assertNotIn('aria-label="Contact"', resp.text)
-        self.assertNotIn("social-links", resp.text)
-        self.assertNotIn("mailto:hi@krystian.io", resp.text)
+        self.assertIn("<title>POLINKOfolio Interface Board</title>", resp.text)
+        self.assertIn('<canvas id="webgl-stage" aria-hidden="true"></canvas>', resp.text)
+        self.assertIn('aria-label="Portfolio interface layout board"', resp.text)
+        self.assertIn('id="evidence-map"', resp.text)
+        self.assertIn('href="/assets/', resp.text)
+        self.assertIn('src="/assets/', resp.text)
+        self.assertIn("pipeline-fpo", resp.text)
+        self.assertIn("stacked-evidence-map-fpo", resp.text)
 
     def test_portfolio_favicons_are_served(self) -> None:
         png_resp = self.client.get("/favicon.png")
