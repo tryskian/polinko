@@ -429,3 +429,17 @@ or branch history instead.
 - Why: Target families now live in focused includes. Moving shared defaults
   into a config include removes the last large root-file block without
   changing operator or CI command names.
+
+## D-032: Make portfolio naming canonical while preserving frontend aliases
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `portfolio`, `frontend`, `aliases`, `ia`
+- Decision: Make `PORTFOLIO_APP_DIR` default directly to `apps/portfolio/`
+  and add `make portfolio-install` as the canonical install target. Preserve
+  `FRONTEND_DIR`, `make portfolio-app-install`, `make frontend-install`, and
+  `make frontend-build` as compatibility aliases.
+- Why: The physical source and static directories now have explicit names.
+  The command/config surface should foreground portfolio ownership while
+  keeping older operator commands and overrides working during the beta
+  cleanup.
