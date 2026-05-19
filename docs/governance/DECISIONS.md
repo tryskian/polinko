@@ -242,3 +242,16 @@ or branch history instead.
   default command. Making the default explicit preserves the existing
   no-argument `make` behavior while letting CI and other target families move
   independently.
+
+## D-018: Extract Makefile families through include files
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `modularity`, `ci`, `dependencies`
+- Decision: Move coherent Make target families into `makefiles/*.mk` fragments,
+  starting with build, dependency, CI, and security targets in
+  `makefiles/build.mk`.
+- Why: The root Makefile should stay as the operator router and shared variable
+  surface while large recipe families move into focused include files. This
+  keeps target names stable for operators and CI while reducing root-file size
+  and making later family-level refactors easier to review.
