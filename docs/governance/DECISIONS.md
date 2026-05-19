@@ -406,3 +406,14 @@ or branch history instead.
   rather than surface ownership. The new paths make portfolio source and
   private mockups explicit while leaving browser and operator entrypoints
   unchanged.
+
+## D-030: Keep lifecycle aliases as target aliases
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `lifecycle`, `aliases`, `operator_surface`
+- Decision: Keep `end` as the canonical closeout target and make `eod` and
+  `end-preflight` dependency aliases. Keep keep-awake aliases pointed at their
+  canonical targets instead of repeating recursive recipes.
+- Why: Operator command names stay stable, while the Makefile has one recipe
+  source for each lifecycle action.

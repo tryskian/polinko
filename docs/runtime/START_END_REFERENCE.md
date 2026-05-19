@@ -51,6 +51,11 @@ Command:
 make end
 ```
 
+Aliases:
+
+- `make eod`
+- `make end-preflight`
+
 Sequence:
 
 1. Run transcript repair:

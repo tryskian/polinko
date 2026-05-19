@@ -75,6 +75,14 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("portfolio-mockups", targets)
         self.assertIn("pwcli", targets)
 
+    def test_lifecycle_aliases_delegate_to_canonical_targets(self) -> None:
+        text = _makefile_contract_text()
+
+        self.assertRegex(text, r"(?m)^eod end-preflight:\s*end$")
+        self.assertRegex(text, r"(?m)^caffeinate-on:\s*caffeinate$")
+        self.assertRegex(text, r"(?m)^caffeinate-off:\s*decaffeinate$")
+        self.assertRegex(text, r"(?m)^decaffeinate-status:\s*caffeinate-status$")
+
     def test_eval_entrypoints_stay_phony(self) -> None:
         targets = set(_phony_targets())
 
