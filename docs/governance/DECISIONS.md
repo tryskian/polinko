@@ -390,3 +390,19 @@ or branch history instead.
 - Why: The pulse shape did not work properly as a stable research surface. The
   next beta needs evidence rollup that preserves manual evals and row/case
   judgment without forcing a pulse-level verdict.
+
+## D-029: Move portfolio source into a named app path
+
+- Date: `2026-05-19`
+- Category: `architecture`
+- Tags: `ia`, `portfolio`, `frontend`, `mockups`, `refactor`
+- Decision: Move the Vite portfolio source app from `frontend/` to
+  `apps/portfolio/`, and move private portfolio mockup placeholders from
+  `docs/peanut/assets/tumbles/portfolio/` to
+  `docs/peanut/assets/portfolio-mockups/`. Keep `/portfolio`, `/assets`,
+  `make portfolio`, `make portfolio-build`, `make frontend-build`, and
+  `make portfolio-mockups` stable.
+- Why: `frontend/` and the old mockup path described implementation shape
+  rather than surface ownership. The new paths make portfolio source and
+  private mockups explicit while leaving browser and operator entrypoints
+  unchanged.
