@@ -29,11 +29,7 @@ start:
 end:
 	bash ./tools/end_of_day_routine.sh
 
-eod:
-	bash ./tools/end_of_day_routine.sh
-
-end-preflight:
-	bash ./tools/end_of_day_routine.sh
+eod end-preflight: end
 
 end-git-check:
 	bash ./tools/check_end_git_clean.sh
@@ -257,11 +253,9 @@ caffeinate:
 		exit 1; \
 	fi
 
-caffeinate-on:
-	@$(MAKE) --no-print-directory caffeinate
+caffeinate-on: caffeinate
 
-caffeinate-off:
-	@$(MAKE) --no-print-directory decaffeinate
+caffeinate-off: decaffeinate
 
 caffeinate-off-all:
 	@set -eu; \
