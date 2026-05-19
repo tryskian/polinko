@@ -6,7 +6,7 @@ This is the shortest route through Polinko’s public research surface.
 
 ## Current Snapshot
 
-- `Beta 2.3` is the current method beta:
+- `Beta 2.3` is the frozen method snapshot for next-beta work:
   - OCR case outcomes stay `pass` / `fail`
   - OCR now moves into transcript-mined generalization pressure
   - OCR-ready candidates widen intake before eval

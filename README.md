@@ -28,7 +28,7 @@ evidence change the next run.
 
 ## Current Read
 
-`Beta 2.3` is the current method beta.
+`Beta 2.3` is the frozen method snapshot for the next beta boundary.
 
 The active read is:
 

@@ -3,7 +3,7 @@
 # Diagrams
 
 This page collects the main repo-native diagrams. Start with the eval contract
-and current beta boundary, then use the lane-specific and continuity diagrams
+and frozen beta boundary, then use the lane-specific and continuity diagrams
 below.
 
 Static SVG exports generated from this page:
@@ -19,6 +19,7 @@ Static SVG exports generated from this page:
 
 Current dated progress note:
 
+- [Beta 2.3 Eval Snapshot](../eval/beta_2_3/README.md)
 - [Beta 2.3 Snapshot (2026-05-16)](../research/beta_2_3_2026-05-16.md)
 - [Co-Reasoning Promotion Snapshot (2026-05-08)](../research/co-reasoning-promotion-2026-05-08.md)
 - [Operator Burden Signal Shape (2026-05-12)](../research/operator-burden-signal-shape-2026-05-12.md)

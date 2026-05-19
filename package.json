@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Repo-root tooling for docs/dev checks",
   "scripts": {
-    "lint:docs": "markdownlint-cli2 README.md docs/**/*.md"
+    "lint:docs": "markdownlint-cli2 README.md docs/**/*.md docs/eval/beta_*/README.md"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "11.14.0",

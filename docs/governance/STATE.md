@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-17
+Last updated: 2026-05-19
 
 ## Current Truth
 
@@ -25,8 +25,9 @@ Last updated: 2026-05-17
   - release outcomes are `pass` / `fail`
   - OCR case judgment remains `pass` / `fail`
   - OCR-ready candidate cleanup happens upstream of OCR judgment
-- Polinko is in a method beta:
+- Polinko is entering the next method beta from a frozen Beta 2.3 snapshot:
   - fail-first evaluation is the active posture
+  - Beta 2.3 evidence is frozen under `docs/eval/beta_2_3/`
   - co-reasoning is the first promoted non-OCR lane
   - uncertainty-boundary, hallucination-boundary, retrieval, and
     response-behaviour surfaces are operationalized
@@ -59,7 +60,8 @@ Last updated: 2026-05-17
 4. Keep operator-burden and related thin-lane work grounded in real evidence
    and distinct lane signal.
 5. Keep OCR moving from current-set stability into generalization pressure.
-6. Keep exploring new seams without forcing promotion before the signal earns
+6. Keep cleanup/refactor work anchored to the frozen Beta 2.3 baseline.
+7. Keep exploring new seams without forcing promotion before the signal earns
    it.
 
 ## Canonical Sources

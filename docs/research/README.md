@@ -12,7 +12,8 @@ enough to read in public.
 
 ## Current Read
 
-- `Beta 2.3` is the current method beta:
+- `Beta 2.3` is the frozen baseline for the next method beta:
+  - eval snapshot now lives under `docs/eval/beta_2_3/`
   - release outcomes stay `pass` / `fail`
   - post-fail disposition stays `retain` / `evict`
   - OCR now moves into broader generalization pressure
@@ -56,6 +57,7 @@ enough to read in public.
 ## Tracked Notes By Role
 
 - method boundary:
+  - [Beta 2.3 eval snapshot](../eval/beta_2_3/README.md)
   - [Beta 2.3 snapshot](./beta_2_3_2026-05-16.md)
   - [Beta 2.2 snapshot](./beta_2_2_2026-05-08.md)
   - [Beta 2.2 stability soak](./beta-2-2-stability-soak-2026-05-09.md)
