@@ -28,12 +28,16 @@ evidence change the next run.
 
 ## Current Read
 
-`Beta 2.3` is the frozen method snapshot for the next beta boundary.
+`Beta 2.3` is the frozen method snapshot. `pre-Beta 2.4` is now staged
+as the next research-model contract before new evidence is cut.
 
 The active read is:
 
 - OCR is the mature green lane, stabilized on the current image set and moving
   into broader generalization pressure.
+- The next research-model question is whether bounded pulses can carry
+  run-level `PASS` / `FAIL` while preserving row evidence and manual-eval
+  source artifacts.
 - Co-reasoning is the first promoted non-OCR lane, supported by tracked style
   and soak evidence.
 - Retrieval, response behaviour, uncertainty boundary, and hallucination

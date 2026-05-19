@@ -360,3 +360,17 @@ or branch history instead.
 - Why: The output directory is deployable public static content, not source
   UI. Moving it under `public/portfolio/` makes the runtime role explicit while
   preserving operator and browser-facing entrypoints.
+
+## D-027: Stage pre-Beta 2.4 as the research model contract
+
+- Date: `2026-05-19`
+- Category: `evidence_governance`
+- Tags: `pre_beta`, `research_model`, `fail_pressure`, `manual_evals`,
+  `pulse`
+- Decision: Stage `pre-Beta 2.4` as the next method contract. OCR remains
+  case-level `pass` / `fail` under generalization pressure. Non-OCR lanes may
+  use bounded pulse-level `PASS` / `FAIL` with row evidence labels, while
+  manual eval and chat workbench sources remain canonical evidence inputs.
+- Why: Beta 2.3 froze lane evidence before cleanup. The next beta needs a
+  named contract for how evidence rolls up from source artifacts to row labels,
+  pulse verdicts, and eventual method claims.

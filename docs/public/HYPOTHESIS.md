@@ -41,10 +41,10 @@ live together so claims can be traced back to source material.
   - measured by: tracked style stress cases, live style eval passes, and the
     export-backed behaviour backlog
 - `Bounded pulses may stabilize non-OCR evals more honestly`
-  - status: hypothesis-only
-  - measured by: future short pulses where the run is the binary unit and
-    rows act as anchors, counted seams, or excluded noise under a visible
-    exclusion trail
+  - status: staged for pre-Beta 2.4
+  - measured by: short pulses where the run is the binary unit and rows act
+    as anchors, counted seams, or excluded noise under a visible exclusion
+    trail
 - `Commentary-heavy response contracts increase operator burden`
   - status: thin lane
   - measured by: experiment `R-D`, manual transcript diagnostics, the tracked
@@ -92,6 +92,10 @@ live together so claims can be traced back to source material.
   - OCR-ready candidates widen intake beyond transcript-shaped asks
   - OCR failures now use explicit `retain` / `evict` case governance
   - the lane now tests transfer under harder visual conditions
+- pre-Beta 2.4 stages the next research-model contract:
+  - OCR stays case-level `pass` / `fail`
+  - bounded non-OCR pulses can carry run-level `PASS` / `FAIL`
+  - row evidence stays inspectable before any pulse-level claim is promoted
 
 ## Why The Repo Is The Surface
 

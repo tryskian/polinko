@@ -18,6 +18,12 @@ enough to read in public.
   - post-fail disposition stays `retain` / `evict`
   - OCR now moves into broader generalization pressure
   - intake now combines transcript-mined episodes with OCR-ready candidates
+- `pre-Beta 2.4` is staged as the next research-model contract:
+  - bounded non-OCR pulses can use run-level `PASS` / `FAIL`
+  - row evidence stays visible as `anchor`, `counted seam`, or
+    `excluded noise`
+  - manual evals and chat workbench artifacts remain source evidence
+  - no new evidence folder is cut until the first real pulse exists
 - OCR is the mature green lane:
   - growth stability: `25/25` stable, `0` flaky
   - fail-history cohort: `0` active cases
@@ -57,6 +63,7 @@ enough to read in public.
 ## Tracked Notes By Role
 
 - method boundary:
+  - [Pre-Beta 2.4 research model contract](./pre-beta-2-4-research-model-contract-2026-05-19.md)
   - [Beta 2.3 eval snapshot](../eval/beta_2_3/README.md)
   - [Beta 2.3 snapshot](./beta_2_3_2026-05-16.md)
   - [Beta 2.2 snapshot](./beta_2_2_2026-05-08.md)
@@ -77,7 +84,7 @@ enough to read in public.
   - [Operator burden row promotion](./operator-burden-promotion-2026-05-09.md)
   - [Operator burden mining update](./operator-burden-mining-2026-05-09.md)
   - [Operator burden signal shape](./operator-burden-signal-shape-2026-05-12.md)
-- hypothesis-only next lane:
+- staged next lane:
   - [Fail-pressure pulse hypothesis](./fail-pressure-pulse-hypothesis-2026-05-16.md)
 - backlog context:
   - [Behaviour backlog snapshot](./behaviour-backlog-2026-05-08.md)

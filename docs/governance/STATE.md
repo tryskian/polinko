@@ -32,6 +32,11 @@ Last updated: 2026-05-19
 - Polinko is entering the next method beta from a frozen Beta 2.3 snapshot:
   - fail-first evaluation is the active posture
   - Beta 2.3 evidence is frozen under `docs/eval/beta_2_3/`
+  - `pre-Beta 2.4` is staged as the next research-model contract
+  - bounded non-OCR pulses may use run-level `PASS` / `FAIL` while rows
+    remain evidence labels
+  - manual evals, `/chat`, `/chats/*`, and runtime history remain source
+    evidence for that contract
   - co-reasoning is the first promoted non-OCR lane
   - uncertainty-boundary, hallucination-boundary, retrieval, and
     response-behaviour surfaces are operationalized
