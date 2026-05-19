@@ -281,3 +281,16 @@ or branch history instead.
   dedicated runtime include keeps start/end and local machine controls visible
   while letting the root Makefile stay focused on shared variables, includes,
   and the remaining families still awaiting extraction.
+
+## D-021: Keep local product surfaces in a dedicated include
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `portfolio`, `manual_evals`, `notebooks`, `modularity`
+- Decision: Move notebook, manual eval database, portfolio/frontend,
+  portfolio mockup, and Playwright helper targets into
+  `makefiles/surfaces.mk` while keeping their public target names unchanged.
+- Why: These targets operate local product and evaluation surfaces rather than
+  build, validation, runtime lifecycle, or research eval logic. A dedicated
+  surfaces include keeps manual eval and portfolio workflows active and visible
+  while reducing root Makefile load without renaming directories yet.

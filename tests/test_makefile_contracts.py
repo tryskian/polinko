@@ -40,6 +40,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/build\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/checks\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/runtime\.mk$")
+        self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/surfaces\.mk$")
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -68,6 +69,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("caffeinate", targets)
         self.assertIn("manual-evals-db", targets)
         self.assertIn("manualdb", targets)
+        self.assertIn("portfolio", targets)
+        self.assertIn("portfolio-mockups", targets)
+        self.assertIn("pwcli", targets)
 
 
 if __name__ == "__main__":
