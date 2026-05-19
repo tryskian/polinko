@@ -14,6 +14,11 @@
       "path": "docs/eval/beta_2_3/research_snapshot_manifest.json"
     },
     {
+      "type": "research_note",
+      "label": "Pre-Beta 2.4 research model contract",
+      "path": "docs/research/pre-beta-2-4-research-model-contract-2026-05-19.md"
+    },
+    {
       "type": "visual",
       "label": "Evidence Sankey PNG",
       "path": "docs/research/polinko-evidence-sankey.png",
