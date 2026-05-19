@@ -8,11 +8,12 @@ rename kernel. It is intentionally about path roles, not visual direction.
 ## Current Paths
 
 - `frontend/`
+  - Current default for `PORTFOLIO_APP_DIR`.
   - Vite source app for the public portfolio doorway.
   - Builds into the tracked static output directory.
-  - Used by `FRONTEND_DIR`, `portfolio-build`, `frontend-build`, and
-    `tools/build_portfolio_static.py`.
+  - `FRONTEND_DIR` remains a compatibility override for the same path.
 - `ui/`
+  - Current default for `PORTFOLIO_STATIC_DIR`.
   - Tracked static build output for the portfolio doorway.
   - Served by FastAPI:
     - `/portfolio` returns `ui/index.html`.
@@ -24,6 +25,21 @@ rename kernel. It is intentionally about path roles, not visual direction.
 - `docs/peanut/assets/tumbles/portfolio/`
   - Private local portfolio mockup lane.
   - Stays private unless explicitly promoted.
+
+## Current Path Contract
+
+- `PORTFOLIO_APP_DIR` names the Vite source app path.
+- `FRONTEND_DIR` remains supported as the legacy default for
+  `PORTFOLIO_APP_DIR`.
+- `PORTFOLIO_STATIC_DIR` names the tracked static output path.
+- `POLINKO_PORTFOLIO_APP_DIR` carries the source path into Python build
+  helpers.
+- `POLINKO_PORTFOLIO_STATIC_DIR` carries the static output path into Vite,
+  Python build helpers, and FastAPI serving.
+- Public target names stay stable:
+  - `make portfolio`
+  - `make portfolio-build`
+  - `make frontend-build`
 
 ## Target Names
 
@@ -41,15 +57,13 @@ rename kernel. It is intentionally about path roles, not visual direction.
 
 ## Move Order
 
-1. Introduce explicit `PORTFOLIO_APP_DIR` and `PORTFOLIO_STATIC_DIR` variables
-   while keeping the current paths.
-2. Move `ui/` to `public/portfolio/` and update FastAPI static serving,
+1. Move `ui/` to `public/portfolio/` and update FastAPI static serving,
    Netlify build copy, and Vite output.
-3. Move `frontend/` to `apps/portfolio/` and update Make, Vite, npm, and
+2. Move `frontend/` to `apps/portfolio/` and update Make, Vite, npm, and
    build-script references.
-4. Move private mockups from `docs/peanut/assets/tumbles/portfolio/` to
+3. Move private mockups from `docs/peanut/assets/tumbles/portfolio/` to
    `docs/peanut/assets/portfolio-mockups/`.
-5. Keep public routes and operator target names stable during the moves:
+4. Keep public routes and operator target names stable during the moves:
    - `/portfolio`
    - `/assets`
    - `make portfolio`

@@ -1,12 +1,14 @@
 import { defineConfig } from "vite";
 import path from "node:path";
 
-const uiDir = path.resolve(process.cwd(), "../ui");
+const portfolioStaticDir = process.env.POLINKO_PORTFOLIO_STATIC_DIR
+  ? path.resolve(__dirname, "..", process.env.POLINKO_PORTFOLIO_STATIC_DIR)
+  : path.resolve(__dirname, "../ui");
 
 export default defineConfig({
   root: __dirname,
   build: {
-    outDir: uiDir,
+    outDir: portfolioStaticDir,
     emptyOutDir: true,
     chunkSizeWarningLimit: 650,
     rollupOptions: {

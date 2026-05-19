@@ -31,8 +31,10 @@ This page is the structural map of the tracked system.
   - governance, runtime references, and research docs
 - `frontend/`
   - current Vite source app for the public portfolio doorway
+  - default `PORTFOLIO_APP_DIR`
 - `ui/`
   - current tracked static build output served by `/portfolio`
+  - default `PORTFOLIO_STATIC_DIR`
 
 ## Runtime Flow
 

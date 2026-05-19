@@ -3,6 +3,7 @@ import binascii
 import hashlib
 import json
 import logging
+import os
 import re
 import sqlite3
 import time
@@ -61,6 +62,15 @@ _PORTFOLIO_DESCRIPTION = (
     "human-AI interaction and designing evals around the useful signals "
     "models reveal when they fail."
 )
+
+
+def _repo_path_from_env(env_name: str, default_relative_path: str) -> Path:
+    raw_path = os.environ.get(env_name) or default_relative_path
+    path = Path(raw_path).expanduser()
+    if path.is_absolute():
+        return path
+    return _REPO_ROOT / path
+
 
 _PORTFOLIO_FALLBACK_HTML = """<!doctype html>
 <html lang="en">
@@ -3386,8 +3396,8 @@ def create_app(config: AppConfig) -> FastAPI:
         run_config=create_run_config(store=True),
         agent=create_agent(),
     )
-    ui_dir = Path(__file__).resolve().parents[1] / "ui"
-    portfolio_assets_dir = ui_dir / "assets"
+    portfolio_static_dir = _repo_path_from_env("POLINKO_PORTFOLIO_STATIC_DIR", "ui")
+    portfolio_assets_dir = portfolio_static_dir / "assets"
     if portfolio_assets_dir.exists():
         app.mount(
             "/assets",
@@ -3449,7 +3459,7 @@ def create_app(config: AppConfig) -> FastAPI:
 
     @app.get("/portfolio")
     def portfolio_shell() -> Any:
-        shell_path = ui_dir / "index.html"
+        shell_path = portfolio_static_dir / "index.html"
         if not shell_path.is_file():
             return HTMLResponse(content=_PORTFOLIO_FALLBACK_HTML)
         return FileResponse(path=shell_path)

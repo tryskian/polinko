@@ -25,15 +25,31 @@ class SurfaceIaContractTests(unittest.TestCase):
 
     def test_current_portfolio_source_output_and_server_paths_align(self) -> None:
         makefile = _read("Makefile")
+        surfaces_make = _read("makefiles/surfaces.mk")
         vite_config = _read("frontend/vite.config.js")
         static_builder = _read("tools/build_portfolio_static.py")
         app_factory = _read("api/app_factory.py")
 
         self.assertIn("FRONTEND_DIR ?= frontend", makefile)
-        self.assertIn('path.resolve(process.cwd(), "../ui")', vite_config)
-        self.assertIn('FRONTEND_DIR = REPO_ROOT / "frontend"', static_builder)
-        self.assertIn('UI_DIR = REPO_ROOT / "ui"', static_builder)
-        self.assertIn('/ "ui"', app_factory)
+        self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", makefile)
+        self.assertIn("PORTFOLIO_STATIC_DIR ?= ui", makefile)
+        self.assertIn("$(PORTFOLIO_APP_DIR)/package.json", surfaces_make)
+        self.assertIn("POLINKO_PORTFOLIO_STATIC_DIR", surfaces_make)
+        self.assertIn("$(PORTFOLIO_STATIC_DIR)", surfaces_make)
+        self.assertIn("POLINKO_PORTFOLIO_STATIC_DIR", vite_config)
+        self.assertIn('path.resolve(__dirname, "../ui")', vite_config)
+        self.assertIn(
+            'PORTFOLIO_APP_DIR = _repo_path_from_env("POLINKO_PORTFOLIO_APP_DIR", "frontend")',
+            static_builder,
+        )
+        self.assertIn(
+            'PORTFOLIO_STATIC_DIR = _repo_path_from_env("POLINKO_PORTFOLIO_STATIC_DIR", "ui")',
+            static_builder,
+        )
+        self.assertIn(
+            'portfolio_static_dir = _repo_path_from_env("POLINKO_PORTFOLIO_STATIC_DIR", "ui")',
+            app_factory,
+        )
 
 
 if __name__ == "__main__":

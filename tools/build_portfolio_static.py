@@ -1,4 +1,4 @@
-"""Build the public portfolio doorway from the tracked frontend shell."""
+"""Build the public portfolio doorway from the tracked source app."""
 
 from __future__ import annotations
 
@@ -9,24 +9,44 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-FRONTEND_DIR = REPO_ROOT / "frontend"
-UI_DIR = REPO_ROOT / "ui"
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "output" / "netlify"
 
 
-def _run(*args: str) -> None:
-    subprocess.run(args, cwd=REPO_ROOT, check=True)
+def _repo_path_from_env(env_name: str, default_relative_path: str) -> Path:
+    raw_path = os.environ.get(env_name) or default_relative_path
+    path = Path(raw_path).expanduser()
+    if path.is_absolute():
+        return path
+    return REPO_ROOT / path
 
 
-def _rebuild_frontend() -> None:
-    _run("npm", "--prefix", str(FRONTEND_DIR), "install")
-    _run("npm", "--prefix", str(FRONTEND_DIR), "run", "build")
+PORTFOLIO_APP_DIR = _repo_path_from_env("POLINKO_PORTFOLIO_APP_DIR", "frontend")
+PORTFOLIO_STATIC_DIR = _repo_path_from_env("POLINKO_PORTFOLIO_STATIC_DIR", "ui")
 
 
-def _copy_ui(output_dir: Path) -> None:
+def _run(*args: str, env: dict[str, str] | None = None) -> None:
+    subprocess.run(args, cwd=REPO_ROOT, check=True, env=env)
+
+
+def _display_path(path: Path) -> Path:
+    try:
+        return path.relative_to(REPO_ROOT)
+    except ValueError:
+        return path
+
+
+def _rebuild_portfolio_app() -> None:
+    build_env = os.environ.copy()
+    build_env.setdefault("POLINKO_PORTFOLIO_STATIC_DIR", str(PORTFOLIO_STATIC_DIR))
+
+    _run("npm", "--prefix", str(PORTFOLIO_APP_DIR), "install")
+    _run("npm", "--prefix", str(PORTFOLIO_APP_DIR), "run", "build", env=build_env)
+
+
+def _copy_static(output_dir: Path) -> None:
     if output_dir.exists():
         shutil.rmtree(output_dir)
-    shutil.copytree(UI_DIR, output_dir)
+    shutil.copytree(PORTFOLIO_STATIC_DIR, output_dir)
 
 
 def _write_redirects(output_dir: Path) -> None:
@@ -38,15 +58,16 @@ def _write_redirects(output_dir: Path) -> None:
 
 
 def main() -> None:
-    output_dir = Path(os.environ.get("POLINKO_PORTFOLIO_OUTPUT_DIR", DEFAULT_OUTPUT_DIR))
-    if not output_dir.is_absolute():
-        output_dir = REPO_ROOT / output_dir
+    output_dir = _repo_path_from_env(
+        "POLINKO_PORTFOLIO_OUTPUT_DIR",
+        str(DEFAULT_OUTPUT_DIR.relative_to(REPO_ROOT)),
+    )
 
-    _rebuild_frontend()
-    _copy_ui(output_dir)
+    _rebuild_portfolio_app()
+    _copy_static(output_dir)
     _write_redirects(output_dir)
 
-    print(f"Built tracked UI into {output_dir.relative_to(REPO_ROOT)}")
+    print(f"Built tracked portfolio static assets into {_display_path(output_dir)}")
 
 
 if __name__ == "__main__":
