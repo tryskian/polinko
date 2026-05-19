@@ -36,9 +36,10 @@ class MakefileContractTests(unittest.TestCase):
     def test_default_goal_is_chat(self) -> None:
         self.assertRegex(_makefile_text(), r"(?m)^\.DEFAULT_GOAL\s*:=\s*chat$")
 
-    def test_build_and_check_targets_are_extracted_through_includes(self) -> None:
+    def test_target_families_are_extracted_through_includes(self) -> None:
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/build\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/checks\.mk$")
+        self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/runtime\.mk$")
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -63,6 +64,8 @@ class MakefileContractTests(unittest.TestCase):
 
         self.assertIn("ci", targets)
         self.assertIn("chat", targets)
+        self.assertIn("server-daemon", targets)
+        self.assertIn("caffeinate", targets)
         self.assertIn("manual-evals-db", targets)
         self.assertIn("manualdb", targets)
 
