@@ -168,5 +168,8 @@ Use this doc for operator procedure.
   - docs lint
 - `make test`
   - test suite
+- `make ci`
+  - local aggregate of the named GitHub CI job targets:
+    `ci-docs`, `ci-test`, `ci-python-security`, and `ci-node-security`
 - `make end-git-check`
   - clean-main closeout check

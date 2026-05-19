@@ -218,3 +218,15 @@ or branch history instead.
 - Why: Entry points are part of the repo information architecture. Normalizing
   them first lets later refactors work from clear runtime boundaries without
   changing API behaviour.
+
+## D-016: Route GitHub CI through named Make targets
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `ci`, `validation`, `parity`
+- Decision: Represent each required GitHub CI job with a named Make target
+  (`ci-docs`, `ci-test`, `ci-python-security`, `ci-node-security`) and have
+  Actions call those targets instead of duplicating command bodies.
+- Why: The Makefile is currently the operator command router. Giving CI the
+  same named entrypoints reduces drift between local validation and protected
+  branch checks before larger Makefile decomposition starts.
