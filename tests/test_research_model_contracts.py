@@ -23,18 +23,24 @@ class ResearchModelContractTests(unittest.TestCase):
             "`Beta 2.3`",
             "`pre-Beta 2.4`",
             "docs/eval/beta_2_3/",
+            "not being carried forward",
+            "source-first research claims",
             "`POST /chat`",
             "`/chats/*`",
             "`.local/runtime_dbs/active/manual_evals.db`",
             "`.local/runtime_dbs/active/history.db`",
-            "`anchor`",
-            "`counted seam`",
-            "`excluded noise`",
-            "`PASS` / `FAIL`",
             "`pass` / `fail`",
+            "Pulse-level verdicts are not canonical rollups",
             "docs/eval/beta_2_4/",
         ):
             self.assertIn(expected, contract)
+
+        for rejected in (
+            "Non-OCR research pulses can use run-level",
+            "final pulse verdict",
+            "source artifact to row label to pulse verdict",
+        ):
+            self.assertNotIn(rejected, contract)
 
     def test_current_truth_surfaces_name_the_staged_contract(self) -> None:
         for path in (
@@ -45,6 +51,18 @@ class ResearchModelContractTests(unittest.TestCase):
             "docs/public/HYPOTHESIS.md",
         ):
             self.assertIn("pre-Beta 2.4", _read(path), path)
+
+    def test_current_truth_surfaces_reject_pulse_carry_forward(self) -> None:
+        expectations = {
+            "README.md": "pulse path is not being carried forward",
+            "docs/research/README.md": "pulse hypothesis is not being carried forward",
+            "docs/eval/README.md": "pulse hypothesis is not being carried forward",
+            "docs/governance/STATE.md": "pulse hypothesis is not being carried forward",
+            "docs/public/HYPOTHESIS.md": "pulses are not carried forward",
+        }
+
+        for path, expected in expectations.items():
+            self.assertIn(expected, _read(path), path)
 
     def test_research_index_and_manifest_include_the_contract(self) -> None:
         research_index = _read("docs/research/README.md")
@@ -58,6 +76,30 @@ class ResearchModelContractTests(unittest.TestCase):
         artifact_paths = {artifact["path"] for artifact in manifest["artifacts"]}
 
         self.assertIn(CONTRACT_PATH, artifact_paths)
+
+        labels = {artifact["label"] for artifact in manifest["artifacts"]}
+        self.assertIn(
+            "Fail-pressure pulse hypothesis (not carried forward)",
+            labels,
+        )
+
+    def test_fail_pressure_pulse_hypothesis_is_historical(self) -> None:
+        pulse_hypothesis = _read(
+            "docs/research/fail-pressure-pulse-hypothesis-2026-05-16.md"
+        )
+        normalized = " ".join(pulse_hypothesis.split())
+
+        self.assertIn("Current disposition: `not carried forward`", pulse_hypothesis)
+        self.assertIn("not the pre-Beta 2.4 forward path", normalized)
+
+    def test_decision_log_supersedes_the_pulse_contract(self) -> None:
+        decisions = _read("docs/governance/DECISIONS.md")
+
+        self.assertIn("Current disposition: Superseded by `D-028`.", decisions)
+        self.assertIn(
+            "## D-028: Do not carry fail-pressure pulses into pre-Beta 2.4",
+            decisions,
+        )
 
     def test_eval_map_keeps_manual_chat_sources_canonical(self) -> None:
         eval_map = _read("docs/eval/README.md")

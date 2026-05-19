@@ -4,6 +4,12 @@
 
 Date: `2026-05-16`
 
+Current disposition: `not carried forward`
+
+This hypothesis is retained as historical method evidence. It is not the
+pre-Beta 2.4 forward path because the pulse shape did not work properly as a
+stable research surface.
+
 ## Boundary
 
 This is a hypothesis-only method note for non-OCR evals.

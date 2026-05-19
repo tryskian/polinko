@@ -374,3 +374,19 @@ or branch history instead.
 - Why: Beta 2.3 froze lane evidence before cleanup. The next beta needs a
   named contract for how evidence rolls up from source artifacts to row labels,
   pulse verdicts, and eventual method claims.
+- Current disposition: Superseded by `D-028`.
+
+## D-028: Do not carry fail-pressure pulses into pre-Beta 2.4
+
+- Date: `2026-05-19`
+- Category: `evidence_governance`
+- Tags: `pre_beta`, `research_model`, `fail_pressure`, `manual_evals`,
+  `source_first`
+- Decision: Treat the fail-pressure pulse hypothesis as historical method
+  evidence, not the pre-Beta 2.4 forward path. Pre-Beta 2.4 stays
+  source-first: active chat workbench artifacts, manual eval rows, row/case
+  judgments, exclusions, and lane summaries carry the research model before
+  any method claim is promoted.
+- Why: The pulse shape did not work properly as a stable research surface. The
+  next beta needs evidence rollup that preserves manual evals and row/case
+  judgment without forcing a pulse-level verdict.

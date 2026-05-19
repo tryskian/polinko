@@ -27,15 +27,15 @@ Use it when you need:
     material promoted only after explicit curation
 - `pre-Beta 2.4`
   - staged research-model contract before the next evidence folder is cut
-  - bounded non-OCR pulses may carry run-level `PASS` / `FAIL`
-  - rows remain evidence labels such as `anchor`, `counted seam`, and
-    `excluded noise`
+  - the fail-pressure pulse hypothesis is not being carried forward
+  - row and case evidence remain source-bound before lane-level summaries
   - manual evals and chat workbench sources stay canonical inputs
 
 Beta 1.0, Beta 2.0, Beta 2.3, and pre-Beta 2.4 should be read by role.
 Beta 1.0 explains the transition into binary evals. Beta 2.0 shows the
 operationalized lane. Beta 2.3 freezes the current method read before the
-next beta work starts. Pre-Beta 2.4 names the next research-model contract.
+next beta work starts. Pre-Beta 2.4 names the next source-first
+research-model contract.
 
 ## Current Canonical Surfaces
 
