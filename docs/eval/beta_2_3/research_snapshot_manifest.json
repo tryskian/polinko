@@ -1,0 +1,77 @@
+{
+  "snapshot": {
+    "beta": "2.3",
+    "status": "frozen_baseline_for_next_beta",
+    "snapshot_date": "2026-05-19",
+    "source_boundary_date": "2026-05-16",
+    "source_commit": "642be28b1c4caad333965a629ddd9bd4d8b11332",
+    "source_commit_url": "https://github.com/tryskian/polinko/commit/642be28b1c4caad333965a629ddd9bd4d8b11332"
+  },
+  "summary": {
+    "ocr_growth_stability": "25/25 stable",
+    "ocr_focus_stability": "16/16 stable",
+    "active_fail_history_cohort": 0,
+    "promoted_non_ocr_lane": "co-reasoning",
+    "active_thin_lane": "operator burden",
+    "hypothesis_only_next_lane": "fail-pressure pulse"
+  },
+  "tracked_sources": [
+    {
+      "type": "research_note",
+      "label": "Beta 2.3 snapshot",
+      "path": "docs/research/beta_2_3_2026-05-16.md"
+    },
+    {
+      "type": "research_note",
+      "label": "Fail-pressure pulse hypothesis",
+      "path": "docs/research/fail-pressure-pulse-hypothesis-2026-05-16.md"
+    },
+    {
+      "type": "research_note",
+      "label": "OCR progress snapshot",
+      "path": "docs/research/ocr-progress-2026-05-08.md"
+    },
+    {
+      "type": "research_note",
+      "label": "Co-reasoning promotion snapshot",
+      "path": "docs/research/co-reasoning-promotion-2026-05-08.md"
+    },
+    {
+      "type": "research_note",
+      "label": "Operator burden signal shape",
+      "path": "docs/research/operator-burden-signal-shape-2026-05-12.md"
+    },
+    {
+      "type": "eval_evidence",
+      "label": "Beta 2.0 operational evidence files",
+      "path": "docs/eval/beta_2_0/"
+    }
+  ],
+  "local_source_summaries": [
+    {
+      "type": "local_candidate_review",
+      "label": "OCR generalization review",
+      "local_path": ".local/eval_cases/ocr_generalization_review.json",
+      "generated_at": "2026-05-17T00:43:52Z",
+      "source_candidates": 2248,
+      "selected_cases": 24,
+      "lane_counts": {
+        "illustration": 9,
+        "handwriting": 8,
+        "typed": 7
+      },
+      "intake_reason_counts": {
+        "same_conversation_unmined": 24
+      }
+    },
+    {
+      "type": "local_candidate_pool",
+      "label": "OCR generalization candidates",
+      "local_path": ".local/eval_cases/ocr_generalization_candidates.json",
+      "candidates_total": 2248,
+      "same_conversation_unmined": 1722,
+      "ocr_tagged_without_episode": 526
+    }
+  ],
+  "promotion_rule": "Promote curated summaries and selected public artifacts into docs/eval; keep raw export-derived material local until explicitly curated."
+}

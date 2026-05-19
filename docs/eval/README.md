@@ -20,9 +20,15 @@ Use it when you need:
 - `beta_2_0`
   - binary-operational era
   - flatter case/report structure and repeatable eval commands
+- `beta_2_3`
+  - frozen method-boundary snapshot for next-beta cleanup
+  - OCR generalization pressure starts from the stabilized current-image base
+  - tracked summary points to curated notes and evidence, with raw export
+    material promoted only after explicit curation
 
-Beta 1.0 and Beta 2.0 should be read together. Beta 1.0 explains the
-transition into binary evals; Beta 2.0 shows the operationalized lane.
+Beta 1.0, Beta 2.0, and Beta 2.3 should be read by role. Beta 1.0 explains
+the transition into binary evals. Beta 2.0 shows the operationalized lane.
+Beta 2.3 freezes the current method read before the next beta work starts.
 
 ## Current Canonical Surfaces
 
@@ -93,6 +99,19 @@ Do not flatten one into the other.
     - `python3 -m tools.build_behaviour_backlog_from_export --export-root /abs/path/to/CGPT-DATA-EXPORT`
 - role in the evidence map:
   - right-side/current evidence for the Sankey payload
+
+### Beta 2.3
+
+- frozen method-boundary snapshot under `docs/eval/beta_2_3/`
+- source boundary:
+  - `2026-05-16`
+- snapshot role:
+  - preserve the current Beta 2.3 read before broad cleanup/refactor work
+  - record high-level OCR generalization intake counts
+  - point to the tracked research notes and prior operational evidence files
+- entry points:
+  - [Beta 2.3 eval snapshot](./beta_2_3/README.md)
+  - [Beta 2.3 snapshot manifest](./beta_2_3/research_snapshot_manifest.json)
 
 ## What Stays Local
 

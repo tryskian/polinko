@@ -195,3 +195,14 @@ or branch history instead.
   wrong. That strict binary has already yielded high-signal results. Broader
   intake is useful, but it should widen the candidate surface before eval
   rather than muddy the OCR verdict contract itself.
+
+## D-014: Freeze beta evidence before broad cleanup
+
+- Date: `2026-05-19`
+- Category: `evidence_governance`
+- Tags: `beta_snapshot`, `eval_evidence`, `docs_sync`, `cleanup`
+- Decision: When a method beta becomes the baseline for next-beta work, freeze
+  its curated research and evidence read under `docs/eval/<beta>/` before broad
+  refactor or cleanup work starts.
+- Why: This gives cleanup work a stable evidence baseline and keeps current
+  truth readable after the live research surface moves on.

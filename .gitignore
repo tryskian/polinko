@@ -78,6 +78,9 @@ docs/eval/**
 !docs/eval/beta_2_0/*.json
 docs/eval/beta_2_0/*debug*.json
 docs/eval/beta_2_0/*.jsonl
+!docs/eval/beta_2_3/
+!docs/eval/beta_2_3/README.md
+!docs/eval/beta_2_3/*.json
 
 # Local legacy coordination/planning docs (archived/deprecated)
 .archive/live_archive/legacy_coordination/

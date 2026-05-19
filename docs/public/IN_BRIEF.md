@@ -52,7 +52,7 @@ In short: confidence must not outrun evidence.
 
 ## Current Beta Read
 
-- current method beta is `Beta 2.3`
+- frozen beta snapshot is `Beta 2.3`
 - release outcomes stay binary:
   - `pass`
   - `fail`
