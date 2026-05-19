@@ -41,6 +41,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/checks\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/runtime\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/surfaces\.mk$")
+        self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/evals\.mk$")
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -72,6 +73,18 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("portfolio", targets)
         self.assertIn("portfolio-mockups", targets)
         self.assertIn("pwcli", targets)
+
+    def test_eval_entrypoints_stay_phony(self) -> None:
+        targets = set(_phony_targets())
+
+        self.assertIn("api-smoke", targets)
+        self.assertIn("eval-smoke", targets)
+        self.assertIn("quality-gate", targets)
+        self.assertIn("quality-gate-deterministic", targets)
+        self.assertIn("ocrmine", targets)
+        self.assertIn("ocrkernel", targets)
+        self.assertIn("eval-sidecar-start", targets)
+        self.assertIn("eval-ocr-transcript-cases-growth-batched", targets)
 
 
 if __name__ == "__main__":
