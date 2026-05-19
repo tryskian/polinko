@@ -42,6 +42,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/runtime\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/surfaces\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/evals\.mk$")
+        self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/ops\.mk$")
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -85,6 +86,15 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("ocrkernel", targets)
         self.assertIn("eval-sidecar-start", targets)
         self.assertIn("eval-ocr-transcript-cases-growth-batched", targets)
+
+    def test_external_check_entrypoints_stay_phony(self) -> None:
+        targets = set(_phony_targets())
+
+        self.assertIn("k6-chat-smoke", targets)
+        self.assertIn("trivy-fs", targets)
+        self.assertIn("trivy-image", targets)
+        self.assertIn("docker-build", targets)
+        self.assertIn("docker-run", targets)
 
 
 if __name__ == "__main__":

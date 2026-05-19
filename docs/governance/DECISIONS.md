@@ -307,3 +307,16 @@ or branch history instead.
   surfaces. A dedicated include keeps that contract visible as one family
   without mixing it into the root shared variable surface or non-eval
   container/performance checks.
+
+## D-023: Keep external ops checks in a dedicated include
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `ops`, `containers`, `modularity`
+- Decision: Move external smoke, container build/run, and filesystem/container
+  scan targets into `makefiles/ops.mk` while keeping their public target names
+  unchanged.
+- Why: These targets depend on external operator tooling such as `k6`, Trivy,
+  and Docker. A dedicated ops include keeps those optional checks available
+  without leaving recipe bodies in the root Makefile after the build, check,
+  runtime, product-surface, and eval families have been extracted.
