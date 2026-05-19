@@ -168,6 +168,9 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("summary", payload)
         self.assertIn("sessions", payload)
         self.assertIn("runs", payload)
+        self.assertIn("source_first", payload)
+        self.assertEqual(payload["source_first"]["contract"]["rollup_unit"], "lane_summary")
+        self.assertEqual(payload["source_first"]["contract"]["rejected_rollup"], "pulse_verdict")
 
     def test_api_key_is_not_required_for_core_endpoints(self) -> None:
         chat_resp = self.client.post(

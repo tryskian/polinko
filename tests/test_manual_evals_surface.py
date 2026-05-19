@@ -49,6 +49,14 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             self.assertEqual(payload["summary"]["ocr_runs"], 1)
             self.assertEqual(len(payload["sessions"]), 1)
             self.assertEqual(len(payload["runs"]), 1)
+            self.assertEqual(
+                payload["source_first"]["contract"]["chain"],
+                ["source_artifact", "row_or_case_judgment", "lane_summary"],
+            )
+            self.assertEqual(
+                payload["source_first"]["contract"]["rejected_rollup"],
+                "pulse_verdict",
+            )
             run = payload["runs"][0]
             self.assertEqual(run["run_id"], "ocr-1")
             self.assertEqual(run["source_run_id"], "ocr-1")
@@ -64,6 +72,41 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             self.assertIn(image["status"], {"thumbnail_ready", "resolved_no_pillow", "thumbnail_error"})
             if image["status"] == "thumbnail_ready":
                 self.assertTrue(str(image["thumbnail_data_url"]).startswith("data:image/png;base64,"))
+
+    def test_source_first_payload_links_feedback_to_source_artifact(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            history_db = root / "history.db"
+            output_db = root / "manual_evals.db"
+
+            _init_history_db(history_db, feedback_outcome="FAIL")
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                include_thumbnails=False,
+            )
+
+            payload = build_manual_evals_surface_payload(
+                db_path=output_db,
+                max_runs=20,
+                max_sessions=10,
+            )
+
+            source_first = payload["source_first"]
+            self.assertEqual(source_first["judgments"]["manual_feedback"]["total"], 1)
+            self.assertEqual(source_first["judgments"]["manual_feedback"]["fail"], 1)
+            self.assertEqual(source_first["judgments"]["manual_feedback"]["closed"], 1)
+            self.assertEqual(source_first["lane_summaries"][0]["lane"], "manual_feedback")
+            self.assertEqual(source_first["lane_summaries"][0]["rollup_unit"], "lane_summary")
+            self.assertEqual(len(source_first["evidence_rows"]), 1)
+
+            evidence_row = source_first["evidence_rows"][0]
+            self.assertEqual(evidence_row["row_kind"], "manual_feedback")
+            self.assertEqual(evidence_row["source_artifact"]["type"], "chat_message")
+            self.assertEqual(evidence_row["source_artifact"]["message_id"], "m-result-1")
+            self.assertEqual(evidence_row["judgment"]["unit"], "row")
+            self.assertEqual(evidence_row["judgment"]["outcome"], "fail")
+            self.assertEqual(evidence_row["linked_case"]["source_run_id"], "ocr-1")
 
 
 if __name__ == "__main__":
