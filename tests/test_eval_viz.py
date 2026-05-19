@@ -165,6 +165,10 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["evals"][0]["lane"], "illustration")
             self.assertEqual(payload["evals"][0]["outcome"], "ERROR")
             self.assertEqual(len(payload["lane_summaries"]), 2)
+            self.assertEqual(payload["source_first"]["contract"]["rollup_unit"], "lane_summary")
+            self.assertEqual(payload["source_first"]["source_artifacts"]["sessions"], 1)
+            self.assertEqual(payload["source_first"]["source_artifacts"]["ocr_runs"], 3)
+            self.assertEqual(payload["source_first"]["judgments"]["manual_feedback"]["total"], 0)
 
     def test_payload_can_filter_eval_rows_by_run_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -234,6 +238,12 @@ class EvalVizTests(unittest.TestCase):
 
             self.assertEqual(payload["chart_mode"], "feedback")
             self.assertEqual(payload["runs_total"], 3)
+            self.assertEqual(payload["source_first"]["judgments"]["manual_feedback"]["total"], 3)
+            self.assertEqual(len(payload["source_first"]["evidence_rows"]), 3)
+            self.assertEqual(
+                payload["source_first"]["evidence_rows"][0]["row_kind"],
+                "manual_feedback",
+            )
             self.assertEqual(Counter(point["outcome"] for point in payload["points"]), {
                 "PASS": 1,
                 "FAIL": 1,
@@ -310,6 +320,8 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["summary"]["fail"], 0)
             self.assertEqual(payload["evals"], [])
             self.assertEqual(payload["lane_summaries"], [])
+            self.assertEqual(payload["source_first"]["contract"]["rejected_rollup"], "pulse_verdict")
+            self.assertEqual(payload["source_first"]["source_artifacts"]["sessions"], 0)
 
     def test_payload_includes_tracked_lane_summaries(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -345,6 +357,7 @@ class EvalVizTests(unittest.TestCase):
     def test_html_contains_live_viz_markup(self) -> None:
         html = render_pass_fail_viz_html(refresh_ms=2500, chart_max_points=20)
         self.assertIn("Polinko Eval Pulse", html)
+        self.assertIn('href="/favicon.png"', html)
         self.assertIn("See the balance move.", html)
         self.assertIn('id="passRate"', html)
         self.assertIn('id="healthState"', html)
@@ -352,6 +365,10 @@ class EvalVizTests(unittest.TestCase):
         self.assertIn('id="windowLabel"', html)
         self.assertIn('id="chartTip"', html)
         self.assertIn('id="laneSummaries"', html)
+        self.assertIn('id="sourceChain"', html)
+        self.assertIn('id="sourceMetrics"', html)
+        self.assertIn('id="sourceEvidenceRows"', html)
+        self.assertIn("Source Evidence Chain", html)
         self.assertIn("Tracked Lane Snapshots", html)
         self.assertIn("lane-card-state", html)
         self.assertIn("lane-card-links", html)
@@ -363,6 +380,8 @@ class EvalVizTests(unittest.TestCase):
         self.assertIn("function bucketPoints(points, desiredBuckets = DEFAULT_MAX_CHART_POINTS)", html)
         self.assertIn("function computeFailState(rate, total)", html)
         self.assertIn("function sumPoints(points)", html)
+        self.assertIn("function renderSourceFirst(payload)", html)
+        self.assertIn("source_artifact", html)
         self.assertIn("Latest Bucket", html)
         self.assertIn("Current strict gate window", html)
         self.assertIn("Current evaluated window", html)
