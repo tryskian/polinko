@@ -160,9 +160,57 @@ REQUIREMENTS_IN ?= requirements.in
 REQUIREMENTS_LOCK ?= requirements.lock
 PIP_TOOLS_VERSION ?= 7.5.3
 
-.PHONY: ci ci-docs ci-test ci-python-security ci-node-security deps-lock-check python-security-check node-security-check
-.PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta ocr-generalization-review nulls runtime-null-audit ocr-data ocr-notebook-workflow gate start end eod end-preflight end-git-check end-docs-check eod-stop rituals localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test test-one test-targeted pycheck ruff-check ruff-format-check lint-docs mermaid-render d3-render public-diagrams-render transcript-fix transcript-check doctor-env path-leak-check path-leak-audit-local backend-gate security-checks caffeinate caffeinate-on caffeinate-status caffeinate-off caffeinate-off-all decaffeinate decaffeinate-status privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image api-smoke eval-smoke eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel eval-sidecar-start eval-sidecar-status eval-sidecar-stop operator-burden-report calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
-.PHONY: frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
+.DEFAULT_GOAL := chat
+
+# Build, dependency, and CI checks.
+.PHONY: ci ci-docs ci-test ci-python-security ci-node-security
+.PHONY: deps-install deps-lock deps-lock-check
+.PHONY: python-security-check node-security-check security-checks
+.PHONY: test test-one test-targeted pycheck ruff-check ruff-format-check lint-docs backend-gate
+.PHONY: path-leak-check path-leak-audit-local precommit-install precommit-run act-list act-ci
+
+# Operator lifecycle and runtime entrypoints.
+.PHONY: chat venv env gate start end eod end-preflight end-git-check end-docs-check eod-stop rituals
+.PHONY: localhost server server-daemon server-daemon-stop server-daemon-status session-status
+.PHONY: docs open-api-docs open-limits open-usage open-billing open-cost-console viz
+.PHONY: caffeinate caffeinate-on caffeinate-status caffeinate-off caffeinate-off-all decaffeinate decaffeinate-status
+.PHONY: privacy-local-on privacy-local-status privacy-local-off
+
+# Docs, notebooks, manual evals, diagrams, and local UI surfaces.
+.PHONY: notebook-setup notebook nb notes manual-evals-db manualdb
+.PHONY: mermaid-render d3-render public-diagrams-render transcript-fix transcript-check doctor-env
+.PHONY: frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
+.PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
+
+# Evaluation aliases and benchmark runners.
+.PHONY: ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog
+.PHONY: ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu
+.PHONY: ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel
+.PHONY: ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta
+.PHONY: nulls runtime-null-audit ocr-data ocr-notebook-workflow ocr-generalization-review
+.PHONY: eval-smoke eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report
+.PHONY: eval-hallucination eval-hallucination-deterministic eval-hallucination-report
+.PHONY: eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report
+.PHONY: eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report
+.PHONY: eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report
+.PHONY: eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel
+.PHONY: eval-sidecar-start eval-sidecar-status eval-sidecar-stop operator-burden-report
+.PHONY: calibrate-hallucination-threshold backfill-eval-traces hallucination-gate
+.PHONY: quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export
+.PHONY: ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases
+.PHONY: ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth
+.PHONY: eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort
+.PHONY: eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns
+.PHONY: eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark
+.PHONY: eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark
+.PHONY: eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark
+.PHONY: eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth
+.PHONY: eval-ocr-transcript-stability-handwriting-benchmark
+.PHONY: eval-ocr-transcript-stability-typed-benchmark
+.PHONY: eval-ocr-transcript-stability-illustration-benchmark
+
+# External smoke and container checks.
+.PHONY: k6-chat-smoke trivy-fs trivy-image api-smoke docker-build docker-run
 ci: ci-docs ci-test ci-python-security ci-node-security
 
 ci-docs: path-leak-check lint-docs
@@ -223,7 +271,6 @@ notebook nb notes:
 		$(PYTHON) -m jupyter lab --notebook-dir="$(NOTEBOOK_DIR_ABS)" "$(NOTEBOOK_DIR_ABS)"; \
 	fi
 
-.PHONY: manual-evals-db manualdb
 manual-evals-db manualdb:
 	$(PYTHON) -m tools.build_manual_evals_db \
 		--optional-history-source beta_1_0=.local/legacy_eval/archive_legacy_eval/databases/.polinko_history.db \
