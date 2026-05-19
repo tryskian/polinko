@@ -294,3 +294,16 @@ or branch history instead.
   build, validation, runtime lifecycle, or research eval logic. A dedicated
   surfaces include keeps manual eval and portfolio workflows active and visible
   while reducing root Makefile load without renaming directories yet.
+
+## D-022: Keep eval and quality gates in a dedicated include
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `evals`, `quality_gate`, `modularity`
+- Decision: Move OCR mining aliases, eval runners, API/eval smoke, eval
+  sidecar, hallucination gate, and quality-gate targets into
+  `makefiles/evals.mk` while keeping their public target names unchanged.
+- Why: Eval and quality-gate targets are active research and release-pressure
+  surfaces. A dedicated include keeps that contract visible as one family
+  without mixing it into the root shared variable surface or non-eval
+  container/performance checks.
