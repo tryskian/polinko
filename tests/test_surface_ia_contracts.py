@@ -33,15 +33,17 @@ class SurfaceIaContractTests(unittest.TestCase):
 
     def test_current_portfolio_source_output_and_server_paths_align(self) -> None:
         makefile = _read("Makefile")
+        make_config = _read("makefiles/config.mk")
         surfaces_make = _read("makefiles/surfaces.mk")
         vite_config = _read("apps/portfolio/vite.config.js")
         static_builder = _read("tools/build_portfolio_static.py")
         app_factory = _read("api/app_factory.py")
 
-        self.assertIn("FRONTEND_DIR ?= apps/portfolio", makefile)
-        self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", makefile)
-        self.assertIn("PORTFOLIO_STATIC_DIR ?= public/portfolio", makefile)
-        self.assertIn("PORTFOLIO_MOCKUP_DIR ?= docs/peanut/assets/portfolio-mockups", makefile)
+        self.assertIn("include makefiles/config.mk", makefile)
+        self.assertIn("FRONTEND_DIR ?= apps/portfolio", make_config)
+        self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", make_config)
+        self.assertIn("PORTFOLIO_STATIC_DIR ?= public/portfolio", make_config)
+        self.assertIn("PORTFOLIO_MOCKUP_DIR ?= docs/peanut/assets/portfolio-mockups", make_config)
         self.assertIn("portfolio-app-install:", surfaces_make)
         self.assertIn("frontend-install: portfolio-app-install", surfaces_make)
         self.assertIn("$(PORTFOLIO_APP_DIR)/package.json", surfaces_make)
