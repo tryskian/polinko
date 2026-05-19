@@ -417,3 +417,15 @@ or branch history instead.
   canonical targets instead of repeating recursive recipes.
 - Why: Operator command names stay stable, while the Makefile has one recipe
   source for each lifecycle action.
+
+## D-031: Keep shared Make configuration in a config include
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `config`, `modularity`, `operator_surface`
+- Decision: Move shared Make variables into `makefiles/config.mk`, loaded
+  before the target-family includes, while keeping root `Makefile` focused on
+  the default goal and include order.
+- Why: Target families now live in focused includes. Moving shared defaults
+  into a config include removes the last large root-file block without
+  changing operator or CI command names.

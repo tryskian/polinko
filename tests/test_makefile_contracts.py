@@ -6,6 +6,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MAKEFILE = REPO_ROOT / "Makefile"
+MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 
 
 def _makefile_text() -> str:
@@ -43,6 +44,22 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/surfaces\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/evals\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/ops\.mk$")
+
+    def test_shared_config_is_extracted_before_target_families(self) -> None:
+        root_text = _makefile_text()
+        config_text = MAKE_CONFIG.read_text(encoding="utf-8")
+
+        self.assertLess(
+            root_text.index("include makefiles/config.mk"),
+            root_text.index("include makefiles/build.mk"),
+        )
+        self.assertIsNone(
+            re.search(r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)", root_text)
+        )
+        self.assertIn("PYTHON ?=", config_text)
+        self.assertIn("CLI_ENTRYPOINT ?= main.py", config_text)
+        self.assertIn("ASGI_APP ?= server:app", config_text)
+        self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", config_text)
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
