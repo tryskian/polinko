@@ -268,3 +268,16 @@ or branch history instead.
   build targets. A dedicated checks include keeps that contract visible without
   burying it in the root operator router or mixing it into dependency/security
   recipes.
+
+## D-020: Keep runtime controls in an operator include
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `runtime`, `operator_surface`, `modularity`
+- Decision: Move CLI, lifecycle, server-daemon, browser-open, status,
+  keep-awake, and local privacy targets into `makefiles/runtime.mk` while
+  keeping their public target names unchanged.
+- Why: Runtime controls are an operator surface, not eval or build logic. A
+  dedicated runtime include keeps start/end and local machine controls visible
+  while letting the root Makefile stay focused on shared variables, includes,
+  and the remaining families still awaiting extraction.
