@@ -32,7 +32,7 @@ This page is the structural map of the tracked system.
 - `frontend/`
   - current Vite source app for the public portfolio doorway
   - default `PORTFOLIO_APP_DIR`
-- `ui/`
+- `public/portfolio/`
   - current tracked static build output served by `/portfolio`
   - default `PORTFOLIO_STATIC_DIR`
 

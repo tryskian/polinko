@@ -21,7 +21,10 @@ def _repo_path_from_env(env_name: str, default_relative_path: str) -> Path:
 
 
 PORTFOLIO_APP_DIR = _repo_path_from_env("POLINKO_PORTFOLIO_APP_DIR", "frontend")
-PORTFOLIO_STATIC_DIR = _repo_path_from_env("POLINKO_PORTFOLIO_STATIC_DIR", "ui")
+PORTFOLIO_STATIC_DIR = _repo_path_from_env(
+    "POLINKO_PORTFOLIO_STATIC_DIR",
+    "public/portfolio",
+)
 
 
 def _run(*args: str, env: dict[str, str] | None = None) -> None:

@@ -347,3 +347,16 @@ or branch history instead.
 - Why: The next directory moves should be mechanical path changes, not coupled
   runtime rewrites. Naming source and output responsibilities first keeps the
   portfolio build, FastAPI static serving, and Netlify helper aligned.
+
+## D-026: Move tracked portfolio output under public
+
+- Date: `2026-05-19`
+- Category: `architecture`
+- Tags: `ia`, `portfolio`, `static_assets`, `public`, `refactor`
+- Decision: Move the tracked portfolio static output from `ui/` to
+  `public/portfolio/`, and make `PORTFOLIO_STATIC_DIR` default to that path.
+  Keep `/portfolio`, `/assets`, `make portfolio`, `make portfolio-build`, and
+  `make frontend-build` stable.
+- Why: The output directory is deployable public static content, not source
+  UI. Moving it under `public/portfolio/` makes the runtime role explicit while
+  preserving operator and browser-facing entrypoints.
