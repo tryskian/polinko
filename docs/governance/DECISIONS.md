@@ -230,3 +230,15 @@ or branch history instead.
 - Why: The Makefile is currently the operator command router. Giving CI the
   same named entrypoints reduces drift between local validation and protected
   branch checks before larger Makefile decomposition starts.
+
+## D-017: Preserve the default Make entrypoint explicitly
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `entrypoints`, `operator_surface`, `refactor`
+- Decision: Declare `.DEFAULT_GOAL := chat` and keep phony declarations grouped
+  by target family as the Makefile is refactored.
+- Why: Large Makefiles should not rely on target ordering to define their
+  default command. Making the default explicit preserves the existing
+  no-argument `make` behavior while letting CI and other target families move
+  independently.
