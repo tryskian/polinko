@@ -12,6 +12,8 @@ DOCKER_IMAGE ?= polinko:dev
 DOCKER_PORT ?= 8000
 DEV_HOST ?= 127.0.0.1
 DEV_BACKEND_PORT ?= 8000
+CLI_ENTRYPOINT ?= main.py
+ASGI_APP ?= server:app
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
 DEV_VIZ_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/viz/pass-fail
 DEV_PORTFOLIO_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/portfolio
@@ -161,7 +163,7 @@ PIP_TOOLS_VERSION ?= 7.5.3
 .PHONY: chat venv env deps-install deps-lock notebook-setup notebook nb notes viz ocrindex ocrmine ocrminehand ocrminetype ocrmineillu ocrminehigh ocrminelow ocrminebacklog ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta ocr-generalization-review nulls runtime-null-audit ocr-data ocr-notebook-workflow gate start end eod end-preflight end-git-check end-docs-check eod-stop rituals localhost server server-daemon server-daemon-stop server-daemon-status docs open-api-docs open-limits open-usage open-billing open-cost-console session-status test test-one test-targeted pycheck ruff-check ruff-format-check lint-docs mermaid-render d3-render public-diagrams-render transcript-fix transcript-check doctor-env path-leak-check path-leak-audit-local backend-gate security-checks caffeinate caffeinate-on caffeinate-status caffeinate-off caffeinate-off-all decaffeinate decaffeinate-status privacy-local-on privacy-local-status privacy-local-off precommit-install precommit-run act-list act-ci k6-chat-smoke trivy-fs trivy-image api-smoke eval-smoke eval-retrieval eval-retrieval-report eval-file-search eval-file-search-report eval-hallucination eval-hallucination-deterministic eval-hallucination-report eval-style eval-style-report eval-response-behaviour eval-response-behaviour-report eval-ocr-safety eval-ocr-safety-report eval-ocr eval-ocr-report eval-ocr-handwriting eval-ocr-handwriting-report eval-ocr-recovery eval-ocr-recovery-report eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel eval-sidecar-start eval-sidecar-status eval-sidecar-stop operator-burden-report calibrate-hallucination-threshold backfill-eval-traces hallucination-gate quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort eval-ocr-focus-cases eval-ocr-focus-stability eval-ocr-focus-fail-patterns eval-ocr-transcript-cases-handwriting eval-ocr-transcript-cases-handwriting-benchmark eval-ocr-transcript-cases-typed eval-ocr-transcript-cases-typed-benchmark eval-ocr-transcript-cases-illustration eval-ocr-transcript-cases-illustration-benchmark eval-ocr-transcript-stability eval-ocr-transcript-stability-growth eval-ocr-transcript-growth eval-ocr-transcript-stability-handwriting-benchmark eval-ocr-transcript-stability-typed-benchmark eval-ocr-transcript-stability-illustration-benchmark docker-build docker-run
 .PHONY: frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 chat:
-	$(PYTHON) app.py
+	$(PYTHON) $(CLI_ENTRYPOINT)
 
 venv env:
 	@set -eu; \
@@ -391,7 +393,7 @@ rituals:
 	@cat docs/runtime/START_END_REFERENCE.md
 
 localhost server:
-	$(PYTHON) -m uvicorn server:app --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" --reload
+	$(PYTHON) -m uvicorn $(ASGI_APP) --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" --reload
 
 server-daemon:
 	@set -eu; \
@@ -417,17 +419,17 @@ server-daemon:
 				CANDIDATE_CMD=$$(ps -o command= -p "$$CANDIDATE_PID" 2>/dev/null || true); \
 				CHECK_PID="$$CANDIDATE_PID"; \
 				CHECK_CMD="$$CANDIDATE_CMD"; \
-				if ! echo "$$CHECK_CMD" | grep -q "uvicorn server:app"; then \
+				if ! echo "$$CHECK_CMD" | grep -Fq "uvicorn $(ASGI_APP)"; then \
 					PARENT_PID=$$(ps -o ppid= -p "$$CANDIDATE_PID" 2>/dev/null | tr -d ' ' || true); \
 					if [ -n "$$PARENT_PID" ]; then \
 						PARENT_CMD=$$(ps -o command= -p "$$PARENT_PID" 2>/dev/null || true); \
-						if echo "$$PARENT_CMD" | grep -q "uvicorn server:app"; then \
+						if echo "$$PARENT_CMD" | grep -Fq "uvicorn $(ASGI_APP)"; then \
 							CHECK_PID="$$PARENT_PID"; \
 							CHECK_CMD="$$PARENT_CMD"; \
 						fi; \
 					fi; \
 				fi; \
-				if echo "$$CHECK_CMD" | grep -q "uvicorn server:app"; then \
+				if echo "$$CHECK_CMD" | grep -Fq "uvicorn $(ASGI_APP)"; then \
 					POLINKO_PID="$$CHECK_PID"; \
 					POLINKO_CMD="$$CHECK_CMD"; \
 					break; \
@@ -456,7 +458,7 @@ server-daemon:
 			fi; \
 		fi; \
 	fi; \
-	nohup $(PYTHON) -m uvicorn server:app --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" --reload >"$(SERVER_LOG)" 2>&1 & \
+	nohup $(PYTHON) -m uvicorn $(ASGI_APP) --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" --reload >"$(SERVER_LOG)" 2>&1 & \
 	PID=$$!; \
 	echo "$$PID" >"$(SERVER_PID_FILE)"; \
 	sleep 0.2; \
@@ -1026,7 +1028,7 @@ api-smoke:
 		POLINKO_MEMORY_DB_PATH="$(SMOKE_MEMORY_DB)" \
 		POLINKO_VECTOR_DB_PATH="$(SMOKE_VECTOR_DB)" \
 		POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
-		$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port $(SMOKE_PORT) >/tmp/polinko-api-smoke.log 2>&1 & \
+		$(PYTHON) -m uvicorn $(ASGI_APP) --host 127.0.0.1 --port $(SMOKE_PORT) >/tmp/polinko-api-smoke.log 2>&1 & \
 		SERVER_PID=$$!; \
 		trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
 		READY=0; \
@@ -1053,7 +1055,7 @@ eval-smoke:
 		POLINKO_MEMORY_DB_PATH="$(SMOKE_MEMORY_DB)" \
 		POLINKO_VECTOR_DB_PATH="$(SMOKE_VECTOR_DB)" \
 		POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
-		$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port $(SMOKE_PORT) >/tmp/polinko-eval-smoke.log 2>&1 & \
+		$(PYTHON) -m uvicorn $(ASGI_APP) --host 127.0.0.1 --port $(SMOKE_PORT) >/tmp/polinko-eval-smoke.log 2>&1 & \
 		SERVER_PID=$$!; \
 		trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
 		READY=0; \
@@ -1124,7 +1126,7 @@ hallucination-gate:
 	POLINKO_SESSION_DB_PATH="$(GATE_SESSION_DB)" \
 	POLINKO_VECTOR_DB_PATH="$(GATE_VECTOR_DB)" \
 	POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
-	$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port $(GATE_PORT) >/tmp/polinko-hallucination-gate.log 2>&1 & \
+	$(PYTHON) -m uvicorn $(ASGI_APP) --host 127.0.0.1 --port $(GATE_PORT) >/tmp/polinko-hallucination-gate.log 2>&1 & \
 	SERVER_PID=$$!; \
 	trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
 	READY=0; \
@@ -1150,7 +1152,7 @@ quality-gate:
 	POLINKO_SESSION_DB_PATH="$(GATE_SESSION_DB)" \
 	POLINKO_VECTOR_DB_PATH="$(GATE_VECTOR_DB)" \
 	POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
-	$(PYTHON) -m uvicorn server:app --host 127.0.0.1 --port $(GATE_PORT) >/tmp/polinko-quality-gate.log 2>&1 & \
+	$(PYTHON) -m uvicorn $(ASGI_APP) --host 127.0.0.1 --port $(GATE_PORT) >/tmp/polinko-quality-gate.log 2>&1 & \
 	SERVER_PID=$$!; \
 	trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
 	READY=0; \

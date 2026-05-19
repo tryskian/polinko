@@ -3,6 +3,7 @@
   "venv": ".venv",
   "include": [
     "config.py",
+    "main.py",
     "app.py",
     "api",
     "core",

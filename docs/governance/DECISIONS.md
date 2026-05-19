@@ -206,3 +206,15 @@ or branch history instead.
   refactor or cleanup work starts.
 - Why: This gives cleanup work a stable evidence baseline and keeps current
   truth readable after the live research surface moves on.
+
+## D-015: Normalize the CLI entrypoint before deeper refactors
+
+- Date: `2026-05-19`
+- Category: `architecture`
+- Tags: `entrypoints`, `ia`, `build`, `cli`
+- Decision: Make `main.py` the canonical CLI chat entrypoint, keep `server.py`
+  as the FastAPI ASGI entrypoint, and retain `app.py` only as a compatibility
+  launcher while build and docs surfaces converge on the new name.
+- Why: Entry points are part of the repo information architecture. Normalizing
+  them first lets later refactors work from clear runtime boundaries without
+  changing API behaviour.
