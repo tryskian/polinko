@@ -1,4 +1,5 @@
 import importlib
+from pathlib import Path
 import unittest
 
 
@@ -13,6 +14,23 @@ class EntrypointTests(unittest.TestCase):
         legacy_app = importlib.import_module("app")
 
         self.assertIs(legacy_app.main, cli_main.main)
+
+    def test_cli_interpreter_fallback_prefers_current_local_venv(self) -> None:
+        cli_main = importlib.import_module("main")
+        project_root = Path(cli_main.__file__).resolve().parent
+
+        self.assertEqual(
+            cli_main._project_python_candidates()[:3],
+            [
+                project_root / ".venv" / "bin" / "python3.14",
+                project_root / ".venv" / "bin" / "python",
+                project_root / ".venv" / "bin" / "python3",
+            ],
+        )
+        self.assertIn(
+            project_root / "polinko-repositioning-system" / "bin" / "python",
+            cli_main._project_python_candidates(),
+        )
 
 
 if __name__ == "__main__":

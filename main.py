@@ -8,6 +8,26 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+_PROJECT_ROOT = Path(__file__).resolve().parent
+_PROJECT_VENV_NAMES = (".venv", "venv", "polinko-repositioning-system")
+_PROJECT_PYTHON_BINARIES = ("python3.14", "python", "python3")
+
+
+def _project_python_candidates() -> list[Path]:
+    return [
+        _PROJECT_ROOT / venv_name / "bin" / python_name
+        for venv_name in _PROJECT_VENV_NAMES
+        for python_name in _PROJECT_PYTHON_BINARIES
+    ]
+
+
+def _first_existing_project_python() -> Path | None:
+    for candidate in _project_python_candidates():
+        if candidate.exists():
+            return candidate
+    return None
+
+
 Runner: Any
 APIConnectionError: type[Exception]
 APIStatusError: type[Exception]
@@ -32,17 +52,27 @@ try:
     from core.runtime import create_agent, create_run_config, create_session
 except ModuleNotFoundError as exc:
     # If launched with the wrong interpreter, restart with the project virtualenv python.
-    project_venv = Path(__file__).resolve().parent / "polinko-repositioning-system"
-    project_python = project_venv / "bin" / "python"
+    project_python = _first_existing_project_python()
     current_prefix = Path(sys.prefix).resolve()
-    if project_python.exists() and current_prefix != project_venv.resolve():
+    project_venv = project_python.parents[1].resolve() if project_python else None
+    if project_python is not None and current_prefix != project_venv:
         os.execv(str(project_python), [str(project_python), __file__, *sys.argv[1:]])
 
     missing = exc.name or "a required package"
+    python_hint = (
+        project_python.relative_to(_PROJECT_ROOT)
+        if project_python is not None
+        else Path(_PROJECT_VENV_NAMES[0]) / "bin" / _PROJECT_PYTHON_BINARIES[0]
+    )
+    activate_hint = (
+        project_venv.relative_to(_PROJECT_ROOT)
+        if project_venv is not None
+        else Path(_PROJECT_VENV_NAMES[0])
+    )
     raise SystemExit(
         f"Missing dependency: {missing}. "
-        "Use the project interpreter at polinko-repositioning-system/bin/python "
-        "or run: source polinko-repositioning-system/bin/activate"
+        f"Use the project interpreter at {python_hint} "
+        f"or run: source {activate_hint}/bin/activate"
     ) from exc
 
 from core.prompts import ACTIVE_PROMPT_VERSION  # noqa: E402
