@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -10,11 +11,62 @@ _MANUAL_EVALS_DB_PATH = Path(".local/runtime_dbs/active/manual_evals.db")
 _FILE_UPLOAD_PREFIX_RE = re.compile(r"^file[-_][^-_]+[-_](.+)$", re.IGNORECASE)
 
 
+def _empty_source_first_payload() -> dict[str, Any]:
+    return {
+        "contract": {
+            "chain": [
+                "source_artifact",
+                "row_or_case_judgment",
+                "lane_summary",
+            ],
+            "rollup_unit": "lane_summary",
+            "rejected_rollup": "pulse_verdict",
+        },
+        "source_artifacts": {
+            "history_sources": 0,
+            "sessions": 0,
+            "feedback": 0,
+            "checkpoints": 0,
+            "ocr_runs": 0,
+            "image_assets": 0,
+        },
+        "judgments": {
+            "manual_feedback": {
+                "total": 0,
+                "pass": 0,
+                "fail": 0,
+                "other": 0,
+                "open": 0,
+                "closed": 0,
+            },
+            "checkpoints": {
+                "total": 0,
+                "covered_rows": 0,
+                "pass": 0,
+                "fail": 0,
+                "other": 0,
+            },
+        },
+        "lane_summaries": [],
+        "evidence_rows": [],
+    }
+
+
 def _normalize_text(value: Any, *, max_chars: int = 520) -> str:
     text = " ".join(str(value or "").split())
     if len(text) <= max_chars:
         return text
     return text[: max_chars - 1] + "..."
+
+
+def _parse_json_list(value: Any) -> list[str]:
+    try:
+        parsed = json.loads(str(value or "[]"))
+    except (TypeError, ValueError):
+        return []
+    if not isinstance(parsed, list):
+        return []
+    return [str(item).strip() for item in parsed if str(item).strip()]
 
 
 def _load_metadata(conn: sqlite3.Connection) -> dict[str, str]:
@@ -39,6 +91,13 @@ def _safe_count(conn: sqlite3.Connection, table_name: str) -> int:
     return int(row["c"] or 0) if row is not None else 0
 
 
+def _safe_int(value: Any) -> int:
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def _table_columns(conn: sqlite3.Connection, table_name: str) -> set[str]:
     try:
         rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
@@ -58,6 +117,281 @@ def _column_or_default(
         prefix = f"{table_alias}." if table_alias else ""
         return f"{prefix}{column_name} AS {column_name}"
     return f"{default_sql} AS {column_name}"
+
+
+def _outcome_key(value: Any) -> str:
+    normalized = str(value or "").strip().lower()
+    if normalized == "pass":
+        return "pass"
+    if normalized == "fail":
+        return "fail"
+    return "other"
+
+
+def _source_count_from_metadata(metadata: dict[str, str]) -> int:
+    source_count = _safe_int(metadata.get("source_count"))
+    if source_count:
+        return source_count
+    raw_counts = metadata.get("source_counts_json", "")
+    if not raw_counts:
+        return 0
+    try:
+        parsed = json.loads(raw_counts)
+    except (TypeError, ValueError):
+        return 0
+    if isinstance(parsed, dict):
+        return len(parsed)
+    if isinstance(parsed, list):
+        return len(parsed)
+    return 0
+
+
+def _source_artifact_counts(
+    *,
+    metadata: dict[str, str],
+    summary: dict[str, int],
+) -> dict[str, int]:
+    return {
+        "history_sources": _source_count_from_metadata(metadata),
+        "sessions": int(summary["sessions"]),
+        "feedback": int(summary["feedback"]),
+        "checkpoints": int(summary["checkpoints"]),
+        "ocr_runs": int(summary["ocr_runs"]),
+        "image_assets": int(summary["image_assets"]),
+    }
+
+
+def _load_manual_feedback_judgment_counts(conn: sqlite3.Connection) -> dict[str, int]:
+    counts = {
+        "total": 0,
+        "pass": 0,
+        "fail": 0,
+        "other": 0,
+        "open": 0,
+        "closed": 0,
+    }
+    try:
+        rows = conn.execute(
+            """
+            SELECT
+              lower(outcome) AS outcome,
+              lower(status) AS status,
+              COUNT(*) AS c
+            FROM feedback
+            GROUP BY lower(outcome), lower(status)
+            """
+        ).fetchall()
+    except sqlite3.Error:
+        return counts
+
+    for row in rows:
+        count = _safe_int(row["c"])
+        counts["total"] += count
+        counts[_outcome_key(row["outcome"])] += count
+        status = str(row["status"] or "").strip().lower()
+        if status == "open":
+            counts["open"] += count
+        elif status in {"closed", "logged"}:
+            counts["closed"] += count
+    return counts
+
+
+def _load_checkpoint_judgment_counts(conn: sqlite3.Connection) -> dict[str, int]:
+    try:
+        row = conn.execute(
+            """
+            SELECT
+              COUNT(*) AS total,
+              COALESCE(SUM(total_count), 0) AS covered_rows,
+              COALESCE(SUM(pass_count), 0) AS pass,
+              COALESCE(SUM(fail_count), 0) AS fail,
+              COALESCE(SUM(other_count), 0) AS other
+            FROM checkpoints
+            """
+        ).fetchone()
+    except sqlite3.Error:
+        row = None
+
+    return {
+        "total": _safe_int(row["total"]) if row else 0,
+        "covered_rows": _safe_int(row["covered_rows"]) if row else 0,
+        "pass": _safe_int(row["pass"]) if row else 0,
+        "fail": _safe_int(row["fail"]) if row else 0,
+        "other": _safe_int(row["other"]) if row else 0,
+    }
+
+
+def _load_source_labels(conn: sqlite3.Connection, table_name: str) -> list[str]:
+    if table_name not in {"feedback", "ocr_runs"}:
+        return []
+    try:
+        rows = conn.execute(
+            f"""
+            SELECT source_label, COUNT(*) AS c
+            FROM {table_name}
+            GROUP BY source_label
+            ORDER BY source_label
+            """
+        ).fetchall()
+    except sqlite3.Error:
+        return []
+    return [
+        str(row["source_label"] or "")
+        for row in rows
+        if str(row["source_label"] or "").strip()
+    ]
+
+
+def _source_first_lane_summaries(
+    conn: sqlite3.Connection,
+    *,
+    manual_feedback: dict[str, int],
+    summary: dict[str, int],
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "lane": "manual_feedback",
+            "rollup_unit": "lane_summary",
+            "rows": manual_feedback["total"],
+            "pass": manual_feedback["pass"],
+            "fail": manual_feedback["fail"],
+            "other": manual_feedback["other"],
+            "source_labels": _load_source_labels(conn, "feedback"),
+        },
+        {
+            "lane": "ocr_cases",
+            "rollup_unit": "lane_summary",
+            "rows": int(summary["ocr_runs"]),
+            "source_labels": _load_source_labels(conn, "ocr_runs"),
+        },
+    ]
+
+
+def _load_source_first_evidence_rows(
+    conn: sqlite3.Connection,
+    *,
+    max_rows: int,
+) -> list[dict[str, Any]]:
+    try:
+        rows = conn.execute(
+            """
+            WITH latest_ocr AS (
+              SELECT *
+              FROM (
+                SELECT
+                  r.*,
+                  ROW_NUMBER() OVER (
+                    PARTITION BY r.session_id
+                    ORDER BY r.created_at DESC, r.id DESC
+                  ) AS rn
+                FROM ocr_runs r
+              )
+              WHERE rn = 1
+            )
+            SELECT
+              f.id,
+              f.era,
+              f.source_label,
+              f.source_history_db,
+              f.source_session_id,
+              f.session_id,
+              f.message_id,
+              f.outcome,
+              f.tags_json,
+              f.note,
+              f.recommended_action,
+              f.action_taken,
+              f.status,
+              f.created_at,
+              f.updated_at,
+              s.title,
+              latest_ocr.run_id,
+              latest_ocr.source_run_id,
+              latest_ocr.source_name,
+              latest_ocr.status AS ocr_status,
+              latest_ocr.extracted_text
+            FROM feedback f
+            JOIN sessions s ON s.session_id = f.session_id
+            LEFT JOIN latest_ocr ON latest_ocr.session_id = f.session_id
+            ORDER BY f.updated_at DESC, f.id DESC
+            LIMIT ?
+            """,
+            (max(1, min(max_rows, 300)),),
+        ).fetchall()
+    except sqlite3.Error:
+        return []
+
+    return [
+        {
+            "row_kind": "manual_feedback",
+            "row_id": f"feedback-{row['id']}",
+            "era": str(row["era"] or ""),
+            "source_label": str(row["source_label"] or ""),
+            "source_artifact": {
+                "type": "chat_message",
+                "history_db": str(row["source_history_db"] or ""),
+                "session_id": str(row["session_id"] or ""),
+                "source_session_id": str(row["source_session_id"] or ""),
+                "message_id": str(row["message_id"] or ""),
+                "title": _normalize_text(row["title"], max_chars=160),
+            },
+            "judgment": {
+                "unit": "row",
+                "outcome": str(row["outcome"] or "").strip().lower(),
+                "status": str(row["status"] or ""),
+                "tags": _parse_json_list(row["tags_json"]),
+                "note": _normalize_text(row["note"], max_chars=260),
+                "recommended_action": _normalize_text(
+                    row["recommended_action"],
+                    max_chars=180,
+                ),
+                "action_taken": _normalize_text(row["action_taken"], max_chars=180),
+                "created_at": int(row["created_at"] or 0),
+                "updated_at": int(row["updated_at"] or 0),
+            },
+            "linked_case": {
+                "type": "ocr_run",
+                "run_id": str(row["run_id"] or ""),
+                "source_run_id": str(row["source_run_id"] or ""),
+                "source_name": str(row["source_name"] or ""),
+                "status": str(row["ocr_status"] or ""),
+                "observed_text_preview": _normalize_text(
+                    row["extracted_text"],
+                    max_chars=220,
+                ),
+            },
+        }
+        for row in rows
+    ]
+
+
+def _load_source_first_payload(
+    conn: sqlite3.Connection,
+    *,
+    metadata: dict[str, str],
+    summary: dict[str, int],
+    max_rows: int,
+) -> dict[str, Any]:
+    payload = _empty_source_first_payload()
+    manual_feedback = _load_manual_feedback_judgment_counts(conn)
+    payload["source_artifacts"] = _source_artifact_counts(
+        metadata=metadata,
+        summary=summary,
+    )
+    payload["judgments"] = {
+        "manual_feedback": manual_feedback,
+        "checkpoints": _load_checkpoint_judgment_counts(conn),
+    }
+    payload["lane_summaries"] = _source_first_lane_summaries(
+        conn,
+        manual_feedback=manual_feedback,
+        summary=summary,
+    )
+    payload["evidence_rows"] = _load_source_first_evidence_rows(
+        conn,
+        max_rows=max_rows,
+    )
+    return payload
 
 
 def _load_sessions(conn: sqlite3.Connection, *, max_sessions: int) -> list[dict[str, Any]]:
@@ -254,6 +588,7 @@ def build_manual_evals_surface_payload(
             },
             "sessions": [],
             "runs": [],
+            "source_first": _empty_source_first_payload(),
             "metadata": {},
         }
 
@@ -275,6 +610,7 @@ def build_manual_evals_surface_payload(
             },
             "sessions": [],
             "runs": [],
+            "source_first": _empty_source_first_payload(),
             "metadata": {},
         }
 
@@ -299,6 +635,13 @@ def build_manual_evals_surface_payload(
     except sqlite3.Error:
         summary["thumbnails_ready"] = 0
 
+    source_first = _load_source_first_payload(
+        conn,
+        metadata=metadata,
+        summary=summary,
+        max_rows=max_runs,
+    )
+
     conn.close()
 
     updated_at = metadata.get("generated_at_utc")
@@ -312,5 +655,6 @@ def build_manual_evals_surface_payload(
         "summary": summary,
         "sessions": sessions,
         "runs": runs,
+        "source_first": source_first,
         "metadata": metadata,
     }
