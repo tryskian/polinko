@@ -333,3 +333,17 @@ or branch history instead.
   names with different runtime responsibilities. Mapping the roles first keeps
   the later move sequence reviewable and protects the chat workbench and manual
   eval routes from being swept into a portfolio rename.
+
+## D-025: Name portfolio source and static directories explicitly
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `ia`, `portfolio`, `makefile`, `static_assets`, `refactor`
+- Decision: Introduce `PORTFOLIO_APP_DIR` and `PORTFOLIO_STATIC_DIR`, backed
+  by `POLINKO_PORTFOLIO_APP_DIR` and `POLINKO_PORTFOLIO_STATIC_DIR` for Python
+  and Vite surfaces, while preserving the current `frontend/` and `ui/` paths
+  and public target names. Keep `FRONTEND_DIR` as a legacy override feeding the
+  new source-app default.
+- Why: The next directory moves should be mechanical path changes, not coupled
+  runtime rewrites. Naming source and output responsibilities first keeps the
+  portfolio build, FastAPI static serving, and Netlify helper aligned.

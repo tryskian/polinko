@@ -22,20 +22,20 @@ manual-evals-db manualdb:
 
 frontend-install:
 	@set -eu; \
-	if [ ! -f "$(FRONTEND_DIR)/package.json" ]; then \
-		echo "Frontend source not present at $(FRONTEND_DIR)/package.json; skipping npm install."; \
+	if [ ! -f "$(PORTFOLIO_APP_DIR)/package.json" ]; then \
+		echo "Portfolio app source not present at $(PORTFOLIO_APP_DIR)/package.json; skipping npm install."; \
 		exit 0; \
 	fi; \
-	npm --prefix "$(FRONTEND_DIR)" install
+	npm --prefix "$(PORTFOLIO_APP_DIR)" install
 
 portfolio-build:
 	@set -eu; \
-	if [ ! -f "$(FRONTEND_DIR)/package.json" ]; then \
-		echo "Frontend source not present at $(FRONTEND_DIR)/package.json; using tracked /portfolio fallback."; \
+	if [ ! -f "$(PORTFOLIO_APP_DIR)/package.json" ]; then \
+		echo "Portfolio app source not present at $(PORTFOLIO_APP_DIR)/package.json; using tracked /portfolio fallback."; \
 		exit 0; \
 	fi; \
 	$(MAKE) --no-print-directory frontend-install; \
-	npm --prefix "$(FRONTEND_DIR)" run build
+	POLINKO_PORTFOLIO_STATIC_DIR="$(abspath $(PORTFOLIO_STATIC_DIR))" npm --prefix "$(PORTFOLIO_APP_DIR)" run build
 
 frontend-build: portfolio-build
 
