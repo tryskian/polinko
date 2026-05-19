@@ -22,7 +22,10 @@ Last updated: 2026-05-19
 - Public-facing surfaces remain derived from repo truth:
   - the root README now points to public research docs, not local portfolio
     commands
+  - portfolio source lives under `apps/portfolio/`, while tracked static output
+    stays under `public/portfolio/`
   - private portfolio mockups and screenshots stay in `docs/peanut/`
+  - private portfolio mockups use `docs/peanut/assets/portfolio-mockups/`
   - promotion from private portfolio work to public docs requires explicit
     approval
 - The eval contract is explicit and binary:

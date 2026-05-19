@@ -1,6 +1,6 @@
 # Notebooks, manual eval DBs, portfolio, and local browser surface targets.
 .PHONY: notebook-setup notebook nb notes manual-evals-db manualdb
-.PHONY: frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
+.PHONY: portfolio-app-install frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
 .PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 
 notebook-setup:
@@ -20,7 +20,7 @@ manual-evals-db manualdb:
 		--history-source current=.local/runtime_dbs/active/history.db \
 		--include-eval-sessions
 
-frontend-install:
+portfolio-app-install:
 	@set -eu; \
 	if [ ! -f "$(PORTFOLIO_APP_DIR)/package.json" ]; then \
 		echo "Portfolio app source not present at $(PORTFOLIO_APP_DIR)/package.json; skipping npm install."; \
@@ -28,13 +28,15 @@ frontend-install:
 	fi; \
 	npm --prefix "$(PORTFOLIO_APP_DIR)" install
 
+frontend-install: portfolio-app-install
+
 portfolio-build:
 	@set -eu; \
 	if [ ! -f "$(PORTFOLIO_APP_DIR)/package.json" ]; then \
 		echo "Portfolio app source not present at $(PORTFOLIO_APP_DIR)/package.json; using tracked /portfolio fallback."; \
 		exit 0; \
 	fi; \
-	$(MAKE) --no-print-directory frontend-install; \
+	$(MAKE) --no-print-directory portfolio-app-install; \
 	POLINKO_PORTFOLIO_STATIC_DIR="$(abspath $(PORTFOLIO_STATIC_DIR))" npm --prefix "$(PORTFOLIO_APP_DIR)" run build
 
 frontend-build: portfolio-build

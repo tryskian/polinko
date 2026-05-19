@@ -1,9 +1,10 @@
 import { defineConfig } from "vite";
 import path from "node:path";
 
+const repoRoot = path.resolve(__dirname, "../..");
 const portfolioStaticDir = process.env.POLINKO_PORTFOLIO_STATIC_DIR
-  ? path.resolve(__dirname, "..", process.env.POLINKO_PORTFOLIO_STATIC_DIR)
-  : path.resolve(__dirname, "../public/portfolio");
+  ? path.resolve(repoRoot, process.env.POLINKO_PORTFOLIO_STATIC_DIR)
+  : path.resolve(repoRoot, "public/portfolio");
 
 export default defineConfig({
   root: __dirname,

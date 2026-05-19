@@ -23,28 +23,34 @@ class SurfaceIaContractTests(unittest.TestCase):
         ):
             self.assertIn(path, surface_ia)
 
-    def test_tracked_portfolio_static_output_lives_under_public_portfolio(self) -> None:
+    def test_ambiguous_legacy_surface_paths_are_not_active_directories(self) -> None:
+        self.assertFalse((REPO_ROOT / "frontend").exists())
         self.assertFalse((REPO_ROOT / "ui").exists())
+
+    def test_tracked_portfolio_static_output_lives_under_public_portfolio(self) -> None:
         self.assertTrue((REPO_ROOT / "public" / "portfolio" / "index.html").is_file())
         self.assertTrue((REPO_ROOT / "public" / "portfolio" / "assets").is_dir())
 
     def test_current_portfolio_source_output_and_server_paths_align(self) -> None:
         makefile = _read("Makefile")
         surfaces_make = _read("makefiles/surfaces.mk")
-        vite_config = _read("frontend/vite.config.js")
+        vite_config = _read("apps/portfolio/vite.config.js")
         static_builder = _read("tools/build_portfolio_static.py")
         app_factory = _read("api/app_factory.py")
 
-        self.assertIn("FRONTEND_DIR ?= frontend", makefile)
+        self.assertIn("FRONTEND_DIR ?= apps/portfolio", makefile)
         self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", makefile)
         self.assertIn("PORTFOLIO_STATIC_DIR ?= public/portfolio", makefile)
+        self.assertIn("PORTFOLIO_MOCKUP_DIR ?= docs/peanut/assets/portfolio-mockups", makefile)
+        self.assertIn("portfolio-app-install:", surfaces_make)
+        self.assertIn("frontend-install: portfolio-app-install", surfaces_make)
         self.assertIn("$(PORTFOLIO_APP_DIR)/package.json", surfaces_make)
         self.assertIn("POLINKO_PORTFOLIO_STATIC_DIR", surfaces_make)
         self.assertIn("$(PORTFOLIO_STATIC_DIR)", surfaces_make)
         self.assertIn("POLINKO_PORTFOLIO_STATIC_DIR", vite_config)
-        self.assertIn('path.resolve(__dirname, "../public/portfolio")', vite_config)
+        self.assertIn('path.resolve(repoRoot, "public/portfolio")', vite_config)
         self.assertIn(
-            'PORTFOLIO_APP_DIR = _repo_path_from_env("POLINKO_PORTFOLIO_APP_DIR", "frontend")',
+            'PORTFOLIO_APP_DIR = _repo_path_from_env("POLINKO_PORTFOLIO_APP_DIR", "apps/portfolio")',
             static_builder,
         )
         self.assertIn(

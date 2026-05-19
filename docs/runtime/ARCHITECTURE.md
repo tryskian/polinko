@@ -29,7 +29,7 @@ This page is the structural map of the tracked system.
   - API and runtime regression tests
 - `docs/`
   - governance, runtime references, and research docs
-- `frontend/`
+- `apps/portfolio/`
   - current Vite source app for the public portfolio doorway
   - default `PORTFOLIO_APP_DIR`
 - `public/portfolio/`
@@ -89,7 +89,7 @@ This page is the structural map of the tracked system.
 - private transcripts and working notes:
   - local `docs/peanut/`
 - private portfolio mockups and screenshots:
-  - local `docs/peanut/assets/tumbles/portfolio/`
+  - local `docs/peanut/assets/portfolio-mockups/`
 - web surface source/output naming:
   - `docs/runtime/SURFACE_IA.md`
 - historical beta references:
