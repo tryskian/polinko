@@ -3,7 +3,7 @@ import path from "node:path";
 
 const portfolioStaticDir = process.env.POLINKO_PORTFOLIO_STATIC_DIR
   ? path.resolve(__dirname, "..", process.env.POLINKO_PORTFOLIO_STATIC_DIR)
-  : path.resolve(__dirname, "../ui");
+  : path.resolve(__dirname, "../public/portfolio");
 
 export default defineConfig({
   root: __dirname,

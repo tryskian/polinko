@@ -3396,7 +3396,10 @@ def create_app(config: AppConfig) -> FastAPI:
         run_config=create_run_config(store=True),
         agent=create_agent(),
     )
-    portfolio_static_dir = _repo_path_from_env("POLINKO_PORTFOLIO_STATIC_DIR", "ui")
+    portfolio_static_dir = _repo_path_from_env(
+        "POLINKO_PORTFOLIO_STATIC_DIR",
+        "public/portfolio",
+    )
     portfolio_assets_dir = portfolio_static_dir / "assets"
     if portfolio_assets_dir.exists():
         app.mount(

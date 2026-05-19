@@ -16,12 +16,17 @@ class SurfaceIaContractTests(unittest.TestCase):
         for path in (
             "frontend/",
             "ui/",
-            "docs/peanut/assets/tumbles/portfolio/",
             "apps/portfolio/",
             "public/portfolio/",
+            "docs/peanut/assets/tumbles/portfolio/",
             "docs/peanut/assets/portfolio-mockups/",
         ):
             self.assertIn(path, surface_ia)
+
+    def test_tracked_portfolio_static_output_lives_under_public_portfolio(self) -> None:
+        self.assertFalse((REPO_ROOT / "ui").exists())
+        self.assertTrue((REPO_ROOT / "public" / "portfolio" / "index.html").is_file())
+        self.assertTrue((REPO_ROOT / "public" / "portfolio" / "assets").is_dir())
 
     def test_current_portfolio_source_output_and_server_paths_align(self) -> None:
         makefile = _read("Makefile")
@@ -32,22 +37,22 @@ class SurfaceIaContractTests(unittest.TestCase):
 
         self.assertIn("FRONTEND_DIR ?= frontend", makefile)
         self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", makefile)
-        self.assertIn("PORTFOLIO_STATIC_DIR ?= ui", makefile)
+        self.assertIn("PORTFOLIO_STATIC_DIR ?= public/portfolio", makefile)
         self.assertIn("$(PORTFOLIO_APP_DIR)/package.json", surfaces_make)
         self.assertIn("POLINKO_PORTFOLIO_STATIC_DIR", surfaces_make)
         self.assertIn("$(PORTFOLIO_STATIC_DIR)", surfaces_make)
         self.assertIn("POLINKO_PORTFOLIO_STATIC_DIR", vite_config)
-        self.assertIn('path.resolve(__dirname, "../ui")', vite_config)
+        self.assertIn('path.resolve(__dirname, "../public/portfolio")', vite_config)
         self.assertIn(
             'PORTFOLIO_APP_DIR = _repo_path_from_env("POLINKO_PORTFOLIO_APP_DIR", "frontend")',
             static_builder,
         )
         self.assertIn(
-            'PORTFOLIO_STATIC_DIR = _repo_path_from_env("POLINKO_PORTFOLIO_STATIC_DIR", "ui")',
+            '"public/portfolio"',
             static_builder,
         )
         self.assertIn(
-            'portfolio_static_dir = _repo_path_from_env("POLINKO_PORTFOLIO_STATIC_DIR", "ui")',
+            '"public/portfolio"',
             app_factory,
         )
 
