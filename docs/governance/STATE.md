@@ -33,8 +33,8 @@ Last updated: 2026-05-19
   - fail-first evaluation is the active posture
   - Beta 2.3 evidence is frozen under `docs/eval/beta_2_3/`
   - `pre-Beta 2.4` is staged as the next research-model contract
-  - bounded non-OCR pulses may use run-level `PASS` / `FAIL` while rows
-    remain evidence labels
+  - the fail-pressure pulse hypothesis is not being carried forward
+  - non-OCR lanes stay source-first rather than pulse-verdict-first
   - manual evals, `/chat`, `/chats/*`, and runtime history remain source
     evidence for that contract
   - co-reasoning is the first promoted non-OCR lane

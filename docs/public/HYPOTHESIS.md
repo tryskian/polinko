@@ -17,7 +17,7 @@ Polinko is a local-first evaluation lab for small, inspectable hypothesis lanes:
 - OCR reliability
 - OCR confidence boundaries around inference and hallucination
 - co-reasoning reliability
-- pulse design under fail pressure
+- source-first research-model evidence
 - operator burden under different control surfaces
 - retrieval grounding
 - response-behaviour stability
@@ -40,11 +40,10 @@ live together so claims can be traced back to source material.
   - status: promoted, first tracked non-OCR lane
   - measured by: tracked style stress cases, live style eval passes, and the
     export-backed behaviour backlog
-- `Bounded pulses may stabilize non-OCR evals more honestly`
+- `Source-first evidence can carry non-OCR method claims`
   - status: staged for pre-Beta 2.4
-  - measured by: short pulses where the run is the binary unit and rows act
-    as anchors, counted seams, or excluded noise under a visible exclusion
-    trail
+  - measured by: active chat workbench evidence, manual eval rows, tracked
+    row/case judgments, exclusions, and lane summaries
 - `Commentary-heavy response contracts increase operator burden`
   - status: thin lane
   - measured by: experiment `R-D`, manual transcript diagnostics, the tracked
@@ -94,8 +93,9 @@ live together so claims can be traced back to source material.
   - the lane now tests transfer under harder visual conditions
 - pre-Beta 2.4 stages the next research-model contract:
   - OCR stays case-level `pass` / `fail`
-  - bounded non-OCR pulses can carry run-level `PASS` / `FAIL`
-  - row evidence stays inspectable before any pulse-level claim is promoted
+  - fail-pressure pulses are not carried forward as the method shape
+  - row and case evidence stay inspectable before any lane-level claim is
+    promoted
 
 ## Why The Repo Is The Surface
 

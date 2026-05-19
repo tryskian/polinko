@@ -35,9 +35,9 @@ The active read is:
 
 - OCR is the mature green lane, stabilized on the current image set and moving
   into broader generalization pressure.
-- The next research-model question is whether bounded pulses can carry
-  run-level `PASS` / `FAIL` while preserving row evidence and manual-eval
-  source artifacts.
+- The fail-pressure pulse path is not being carried forward; the next
+  research-model question is how source artifacts, row/case judgment, manual
+  evals, and lane summaries can carry claims.
 - Co-reasoning is the first promoted non-OCR lane, supported by tracked style
   and soak evidence.
 - Retrieval, response behaviour, uncertainty boundary, and hallucination
