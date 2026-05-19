@@ -11,7 +11,7 @@ _MANUAL_EVALS_DB_PATH = Path(".local/runtime_dbs/active/manual_evals.db")
 _FILE_UPLOAD_PREFIX_RE = re.compile(r"^file[-_][^-_]+[-_](.+)$", re.IGNORECASE)
 
 
-def _empty_source_first_payload() -> dict[str, Any]:
+def empty_source_first_payload() -> dict[str, Any]:
     return {
         "contract": {
             "chain": [
@@ -372,7 +372,7 @@ def _load_source_first_payload(
     summary: dict[str, int],
     max_rows: int,
 ) -> dict[str, Any]:
-    payload = _empty_source_first_payload()
+    payload = empty_source_first_payload()
     manual_feedback = _load_manual_feedback_judgment_counts(conn)
     payload["source_artifacts"] = _source_artifact_counts(
         metadata=metadata,
@@ -588,7 +588,7 @@ def build_manual_evals_surface_payload(
             },
             "sessions": [],
             "runs": [],
-            "source_first": _empty_source_first_payload(),
+            "source_first": empty_source_first_payload(),
             "metadata": {},
         }
 
@@ -610,7 +610,7 @@ def build_manual_evals_surface_payload(
             },
             "sessions": [],
             "runs": [],
-            "source_first": _empty_source_first_payload(),
+            "source_first": empty_source_first_payload(),
             "metadata": {},
         }
 

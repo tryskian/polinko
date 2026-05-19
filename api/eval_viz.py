@@ -8,6 +8,11 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import quote
 
+from api.manual_evals_surface import (
+    build_manual_evals_surface_payload,
+    empty_source_first_payload,
+)
+
 _REPORT_SUBDIRS = (
     "ocr_focus_runs",
     "ocr_growth_batched_runs",
@@ -410,6 +415,29 @@ def _build_tracked_lane_summaries(tracked_eval_root: Path | None) -> list[dict[s
 def _attach_lane_summaries(payload: dict[str, Any], tracked_eval_root: Path | None) -> dict[str, Any]:
     enriched = dict(payload)
     enriched["lane_summaries"] = _build_tracked_lane_summaries(tracked_eval_root)
+    return enriched
+
+
+def _attach_source_first(
+    payload: dict[str, Any],
+    db_path: Path | None,
+    *,
+    max_rows: int,
+) -> dict[str, Any]:
+    enriched = dict(payload)
+    if db_path is None:
+        enriched["source_first"] = empty_source_first_payload()
+        return enriched
+
+    surface_payload = build_manual_evals_surface_payload(
+        db_path=db_path,
+        max_runs=max(1, min(max_rows, 300)),
+        max_sessions=20,
+    )
+    source_first = surface_payload.get("source_first")
+    enriched["source_first"] = (
+        source_first if isinstance(source_first, dict) else empty_source_first_payload()
+    )
     return enriched
 
 
@@ -1019,6 +1047,7 @@ def build_pass_fail_viz_payload(
     tracked_eval_root: Path | None = _TRACKED_EVAL_ROOT,
 ) -> dict[str, Any]:
     _ = history_db_path
+    effective_db_path = db_path if db_path is not None else _MANUAL_EVALS_DB_PATH
     if report_root is not None:
         payload = _build_payload_from_binary_gate_reports(
             report_root,
@@ -1027,15 +1056,25 @@ def build_pass_fail_viz_payload(
             run_id=run_id,
         )
         if payload is not None:
-            return _attach_lane_summaries(payload, tracked_eval_root)
-        return _attach_lane_summaries({
-            "updated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "summary": _default_point(),
-            "summary_points": [],
-            "points": [],
-            "runs_total": 0,
-            "evals": [],
-        }, tracked_eval_root)
+            return _attach_lane_summaries(
+                _attach_source_first(payload, None, max_rows=max_history_runs),
+                tracked_eval_root,
+            )
+        return _attach_lane_summaries(
+            _attach_source_first(
+                {
+                    "updated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "summary": _default_point(),
+                    "summary_points": [],
+                    "points": [],
+                    "runs_total": 0,
+                    "evals": [],
+                },
+                None,
+                max_rows=max_history_runs,
+            ),
+            tracked_eval_root,
+        )
 
     if db_path is None:
         payload = _build_payload_from_binary_gate_reports(
@@ -1045,9 +1084,11 @@ def build_pass_fail_viz_payload(
             run_id=run_id,
         )
         if payload is not None:
-            return _attach_lane_summaries(payload, tracked_eval_root)
+            return _attach_lane_summaries(
+                _attach_source_first(payload, effective_db_path, max_rows=max_history_runs),
+                tracked_eval_root,
+            )
 
-    effective_db_path = db_path if db_path is not None else _MANUAL_EVALS_DB_PATH
     if report_root is None:
         payload = (
             _build_payload_from_manual_evals_db(
@@ -1060,15 +1101,25 @@ def build_pass_fail_viz_payload(
             else None
         )
         if payload is not None:
-            return _attach_lane_summaries(payload, tracked_eval_root)
-        return _attach_lane_summaries({
-            "updated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "summary": _default_point(),
-            "summary_points": [],
-            "points": [],
-            "runs_total": 0,
-            "evals": [],
-        }, tracked_eval_root)
+            return _attach_lane_summaries(
+                _attach_source_first(payload, effective_db_path, max_rows=max_history_runs),
+                tracked_eval_root,
+            )
+        return _attach_lane_summaries(
+            _attach_source_first(
+                {
+                    "updated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "summary": _default_point(),
+                    "summary_points": [],
+                    "points": [],
+                    "runs_total": 0,
+                    "evals": [],
+                },
+                effective_db_path,
+                max_rows=max_history_runs,
+            ),
+            tracked_eval_root,
+        )
 
 
 def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20) -> str:
@@ -1077,6 +1128,7 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
   <title>Polinko Eval Pulse</title>
   <style>
     :root {
@@ -1494,6 +1546,181 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       z-index: 1;
     }
 
+    .source-panel {
+      padding: 22px 22px 20px;
+    }
+
+    .source-chain {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .source-node {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.56);
+      border: 1px solid rgba(84, 67, 49, 0.1);
+      font-size: 0.8rem;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .source-arrow {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .source-card {
+      padding: 12px 13px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(84, 67, 49, 0.08);
+      min-width: 0;
+    }
+
+    .source-card-label {
+      display: block;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .source-card-value {
+      display: block;
+      font-size: 1rem;
+      line-height: 1.25;
+      font-weight: 650;
+      color: var(--ink);
+    }
+
+    .source-card-detail {
+      display: block;
+      margin-top: 5px;
+      font-size: 0.76rem;
+      color: var(--muted);
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .source-lanes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .source-lane-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(23, 20, 19, 0.05);
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .source-table-wrap {
+      margin-top: 14px;
+      max-height: 32vh;
+      overflow: auto;
+      border-radius: 8px;
+      border: 1px solid rgba(84, 67, 49, 0.12);
+      background: rgba(255, 255, 255, 0.48);
+      position: relative;
+      z-index: 1;
+    }
+
+    table.source-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      line-height: 1.35;
+    }
+
+    .source-table th,
+    .source-table td {
+      text-align: left;
+      vertical-align: top;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(84, 67, 49, 0.1);
+    }
+
+    .source-table th {
+      position: sticky;
+      top: 0;
+      background: rgba(244, 241, 233, 0.96);
+      color: var(--ink-soft);
+      font-weight: 600;
+      z-index: 1;
+    }
+
+    .source-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .source-outcome {
+      display: inline-block;
+      min-width: 44px;
+      text-align: center;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    .source-outcome.pass {
+      color: #114735;
+      background: rgba(45, 109, 62, 0.16);
+    }
+
+    .source-outcome.fail {
+      color: #7a1d18;
+      background: rgba(198, 58, 49, 0.15);
+    }
+
+    .source-outcome.other {
+      color: #5f4317;
+      background: rgba(166, 122, 49, 0.16);
+    }
+
+    .source-clip {
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .source-empty {
+      padding: 14px 12px;
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
     .eval-panel {
       margin-top: 18px;
       border-top: 1px solid var(--line);
@@ -1694,6 +1921,34 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       <div class="lane-empty" id="laneEmpty">No tracked lane snapshots yet.</div>
     </section>
 
+    <section class="panel source-panel">
+      <div class="panel-top">
+        <div>
+          <h2 class="panel-title">Source Evidence Chain</h2>
+          <p class="panel-subtitle" id="sourceFirstSubtitle">
+            source artifacts · row judgments · lane summaries
+          </p>
+        </div>
+      </div>
+      <div class="source-chain" id="sourceChain"></div>
+      <div class="source-grid" id="sourceMetrics"></div>
+      <div class="source-lanes" id="sourceLanes"></div>
+      <div class="source-table-wrap">
+        <table class="source-table">
+          <thead>
+            <tr>
+              <th>judgment</th>
+              <th>source artifact</th>
+              <th>note</th>
+              <th>linked case</th>
+            </tr>
+          </thead>
+          <tbody id="sourceEvidenceRows"></tbody>
+        </table>
+        <div class="source-empty" id="sourceEvidenceEmpty">No source evidence rows yet.</div>
+      </div>
+    </section>
+
     <section class="panel">
       <div class="panel-top">
         <div>
@@ -1792,6 +2047,12 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
     const evalSubtitleEl = document.getElementById('evalSubtitle');
     const laneSummariesEl = document.getElementById('laneSummaries');
     const laneEmptyEl = document.getElementById('laneEmpty');
+    const sourceFirstSubtitleEl = document.getElementById('sourceFirstSubtitle');
+    const sourceChainEl = document.getElementById('sourceChain');
+    const sourceMetricsEl = document.getElementById('sourceMetrics');
+    const sourceLanesEl = document.getElementById('sourceLanes');
+    const sourceEvidenceRowsEl = document.getElementById('sourceEvidenceRows');
+    const sourceEvidenceEmptyEl = document.getElementById('sourceEvidenceEmpty');
 
     function setPollStatus(text, mode = '') {
       if (!pollStatusEl) return;
@@ -2157,6 +2418,147 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       }).join('');
     }
 
+    function sourceContractLabel(value) {
+      const labels = {
+        source_artifact: 'source artifact',
+        row_or_case_judgment: 'row/case judgment',
+        lane_summary: 'lane summary',
+        pulse_verdict: 'pulse verdict',
+      };
+      return labels[value] || String(value || '').replaceAll('_', ' ');
+    }
+
+    function sourceMetricCard(label, value, detail = '') {
+      return `
+        <div class="source-card">
+          <span class="source-card-label">${escapeHtml(label)}</span>
+          <span class="source-card-value">${escapeHtml(value)}</span>
+          <span class="source-card-detail">${escapeHtml(detail)}</span>
+        </div>
+      `;
+    }
+
+    function sourceOutcomeClass(outcome) {
+      const normalized = String(outcome || '').trim().toLowerCase();
+      if (normalized === 'pass') return 'pass';
+      if (normalized === 'fail') return 'fail';
+      return 'other';
+    }
+
+    function renderSourceFirst(payload) {
+      const sourceFirst = payload?.source_first || {};
+      const contract = sourceFirst.contract || {};
+      const artifacts = sourceFirst.source_artifacts || {};
+      const manualFeedback = sourceFirst.judgments?.manual_feedback || {};
+      const checkpoints = sourceFirst.judgments?.checkpoints || {};
+      const lanes = Array.isArray(sourceFirst.lane_summaries)
+        ? sourceFirst.lane_summaries
+        : [];
+      const rows = Array.isArray(sourceFirst.evidence_rows)
+        ? sourceFirst.evidence_rows.slice(0, 12)
+        : [];
+
+      if (sourceFirstSubtitleEl) {
+        sourceFirstSubtitleEl.textContent = [
+          `${Number(artifacts.history_sources || 0)} history sources`,
+          `${Number(artifacts.feedback || 0)} feedback rows`,
+          `${Number(artifacts.ocr_runs || 0)} OCR runs`,
+          `rollup: ${sourceContractLabel(contract.rollup_unit || 'lane_summary')}`,
+        ].join(' · ');
+      }
+
+      if (sourceChainEl) {
+        const chain = Array.isArray(contract.chain) && contract.chain.length
+          ? contract.chain
+          : ['source_artifact', 'row_or_case_judgment', 'lane_summary'];
+        sourceChainEl.innerHTML = chain.map((item, index) => {
+          const arrow = index < chain.length - 1
+            ? '<span class="source-arrow" aria-hidden="true">&rarr;</span>'
+            : '';
+          return `<span class="source-node">${escapeHtml(sourceContractLabel(item))}</span>${arrow}`;
+        }).join('');
+      }
+
+      if (sourceMetricsEl) {
+        sourceMetricsEl.innerHTML = [
+          sourceMetricCard(
+            'artifacts',
+            `${Number(artifacts.sessions || 0)} sessions`,
+            `${Number(artifacts.ocr_runs || 0)} OCR runs · ${Number(artifacts.image_assets || 0)} images`,
+          ),
+          sourceMetricCard(
+            'manual judgments',
+            `${Number(manualFeedback.total || 0)} rows`,
+            `${Number(manualFeedback.pass || 0)} pass · ${Number(manualFeedback.fail || 0)} fail · ${Number(manualFeedback.other || 0)} other`,
+          ),
+          sourceMetricCard(
+            'open work',
+            `${Number(manualFeedback.open || 0)} open`,
+            `${Number(manualFeedback.closed || 0)} closed`,
+          ),
+          sourceMetricCard(
+            'checkpoints',
+            `${Number(checkpoints.total || 0)} checkpoints`,
+            `${Number(checkpoints.covered_rows || 0)} covered rows`,
+          ),
+        ].join('');
+      }
+
+      if (sourceLanesEl) {
+        sourceLanesEl.innerHTML = lanes.map(lane => {
+          const laneName = sourceContractLabel(lane?.lane || 'lane');
+          const rowsTotal = Number(lane?.rows || lane?.total || 0);
+          const pass = Number(lane?.pass || 0);
+          const fail = Number(lane?.fail || 0);
+          const other = Number(lane?.other || 0);
+          const detail = pass || fail || other
+            ? `${pass} pass · ${fail} fail · ${other} other`
+            : `${rowsTotal} rows`;
+          return `<span class="source-lane-pill">${escapeHtml(laneName)} · ${escapeHtml(detail)}</span>`;
+        }).join('');
+      }
+
+      if (!sourceEvidenceRowsEl || !sourceEvidenceEmptyEl) return;
+      if (!rows.length) {
+        sourceEvidenceRowsEl.innerHTML = '';
+        sourceEvidenceEmptyEl.style.display = 'block';
+        return;
+      }
+      sourceEvidenceEmptyEl.style.display = 'none';
+      sourceEvidenceRowsEl.innerHTML = rows.map(row => {
+        const judgment = row?.judgment || {};
+        const artifact = row?.source_artifact || {};
+        const linkedCase = row?.linked_case || {};
+        const outcome = String(judgment.outcome || 'other').toUpperCase();
+        const outcomeClass = sourceOutcomeClass(outcome);
+        const artifactTitle = shorten(artifact.title || artifact.message_id || artifact.session_id || '(source)', 90);
+        const artifactMeta = [
+          artifact.message_id ? `message ${artifact.message_id}` : '',
+          artifact.source_session_id ? `session ${artifact.source_session_id}` : '',
+        ].filter(Boolean).join(' · ');
+        const note = shorten(
+          judgment.note || judgment.recommended_action || judgment.action_taken || '(none)',
+          190,
+        );
+        const caseId = linkedCase.source_run_id || linkedCase.run_id || '(none)';
+        const casePreview = shorten(linkedCase.observed_text_preview || linkedCase.source_name || '', 150);
+        return `
+          <tr>
+            <td><span class="source-outcome ${outcomeClass}">${escapeHtml(outcome)}</span></td>
+            <td>
+              <span class="source-clip" title="${escapeHtml(artifactTitle)}">${escapeHtml(artifactTitle)}</span>
+              <br><span class="source-card-detail">${escapeHtml(artifactMeta || row?.source_label || '(source)')}</span>
+            </td>
+            <td><span class="source-clip" title="${escapeHtml(note)}">${escapeHtml(note)}</span></td>
+            <td>
+              <span class="source-clip">${escapeHtml(caseId)}</span>
+              <br><span class="source-card-detail">${escapeHtml(casePreview || '(no OCR preview)')}</span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
     function renderChart(payload) {
       const root = document.getElementById('chart');
       root.innerHTML = '';
@@ -2356,6 +2758,7 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
         state.payload = payload;
         renderSummary(payload);
         renderLaneSummaries(payload);
+        renderSourceFirst(payload);
         renderChart(payload);
         renderEvals(payload);
         setPollStatus('update mode: post-batch/manual');
