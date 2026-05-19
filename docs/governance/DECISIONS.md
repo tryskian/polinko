@@ -255,3 +255,16 @@ or branch history instead.
   surface while large recipe families move into focused include files. This
   keeps target names stable for operators and CI while reducing root-file size
   and making later family-level refactors easier to review.
+
+## D-019: Keep validation targets in a checks include
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `validation`, `checks`, `modularity`
+- Decision: Move local validation, transcript, docs-render, path-leak,
+  pre-commit, and `act` check targets into `makefiles/checks.mk` while keeping
+  their public target names unchanged.
+- Why: Validation targets are shared by local operator routines and CI-backed
+  build targets. A dedicated checks include keeps that contract visible without
+  burying it in the root operator router or mixing it into dependency/security
+  recipes.
