@@ -6,6 +6,8 @@ This page is the structural map of the tracked system.
 
 - Use `docs/runtime/RUNBOOK.md` for operator procedure.
 - Use `docs/runtime/OCR_REFERENCE.md` for the OCR lane reference.
+- Use `docs/runtime/SURFACE_IA.md` for web surface path roles and planned
+  directory renames.
 
 ## Top-Level Map
 
@@ -27,6 +29,10 @@ This page is the structural map of the tracked system.
   - API and runtime regression tests
 - `docs/`
   - governance, runtime references, and research docs
+- `frontend/`
+  - current Vite source app for the public portfolio doorway
+- `ui/`
+  - current tracked static build output served by `/portfolio`
 
 ## Runtime Flow
 
@@ -82,6 +88,8 @@ This page is the structural map of the tracked system.
   - local `docs/peanut/`
 - private portfolio mockups and screenshots:
   - local `docs/peanut/assets/tumbles/portfolio/`
+- web surface source/output naming:
+  - `docs/runtime/SURFACE_IA.md`
 - historical beta references:
   - `docs/eval/`
 

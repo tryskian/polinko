@@ -10,6 +10,8 @@ Use this doc for operator procedure.
   - durable rules and role split
 - `docs/runtime/ARCHITECTURE.md`
   - stable system shape
+- `docs/runtime/SURFACE_IA.md`
+  - web surface path roles and planned directory renames
 - `docs/governance/STATE.md`
   - tracked current truth
 - local `docs/peanut/governance/SESSION_HANDOFF.md`

@@ -320,3 +320,16 @@ or branch history instead.
   and Docker. A dedicated ops include keeps those optional checks available
   without leaving recipe bodies in the root Makefile after the build, check,
   runtime, product-surface, and eval families have been extracted.
+
+## D-024: Map surface directories before renaming them
+
+- Date: `2026-05-19`
+- Category: `architecture`
+- Tags: `ia`, `portfolio`, `frontend`, `static_assets`, `refactor`
+- Decision: Record the current and target roles for portfolio source, static
+  output, public routes, and private mockup assets in
+  `docs/runtime/SURFACE_IA.md` before moving directories.
+- Why: `frontend/`, `ui/`, and the private portfolio mockup path are ambiguous
+  names with different runtime responsibilities. Mapping the roles first keeps
+  the later move sequence reviewable and protects the chat workbench and manual
+  eval routes from being swept into a portfolio rename.
