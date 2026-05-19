@@ -90,6 +90,7 @@ Last updated: 2026-05-19
 - `make lint-docs`
 - `make test`
 - `make security-checks`
+- `make ci` when checking the local equivalent of GitHub CI job targets
 - `make end`
 - `make end-docs-check` when validating current-truth freshness explicitly
 - `make end-git-check` after merge and sync
