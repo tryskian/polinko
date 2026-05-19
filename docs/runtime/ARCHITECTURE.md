@@ -9,10 +9,12 @@ This page is the structural map of the tracked system.
 
 ## Top-Level Map
 
+- `main.py`
+  - operator CLI chat entrypoint
 - `app.py`
-  - CLI chat entrypoint; stale but retained
+  - compatibility launcher for older CLI calls
 - `server.py`
-  - FastAPI API entrypoint
+  - FastAPI API and chat workbench entrypoint
 - `config.py`
   - environment loading and validation
 - `api/`
@@ -34,20 +36,25 @@ This page is the structural map of the tracked system.
 4. request execution delegates into `core/` runtime and persistence modules
 5. runtime history and eval state write to local SQLite stores under
    `.local/runtime_dbs/active/`
-6. `POST /chat` is stale but retained; it supports deterministic fixture mode
-   for smoke, and default remains `live`
+6. `POST /chat` and `/chats/*` are active chat workbench and manual-eval
+   surfaces; deterministic fixture mode supports smoke tests, and default
+   remains `live`
 7. active gate semantics stay scoped:
    - OCR case outcomes are `pass` / `fail`
    - broader manual and non-OCR lanes may still use `retain` / `evict` after
      `fail` as upstream case curation
+8. CLI chat runs through `main.py`; `app.py` only forwards legacy launches to
+   that entrypoint.
 
 ## Data Surfaces
 
 - live runtime DBs:
   - `.local/runtime_dbs/active/`
-- runtime and eval history:
+- runtime, workbench, and eval history:
   - `.local/runtime_dbs/active/history.db`
   - key tables:
+    - `chats`
+    - `messages`
     - `message_feedback`
     - `eval_checkpoints`
     - `ocr_runs`

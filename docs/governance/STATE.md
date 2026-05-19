@@ -7,10 +7,14 @@ Last updated: 2026-05-19
 ## Current Truth
 
 - Backend-first runtime remains canonical:
-  - FastAPI API + CLI are the execution surfaces
+  - FastAPI API + chat workbench endpoints are active execution and manual-eval
+    surfaces
+  - CLI chat runs through `main.py`
+  - `app.py` remains only as a compatibility launcher during the entrypoint
+    migration
   - prompt and runtime behaviour stay minimal and deterministic
-  - CLI/API chat is stale but retained; it is still needed and should not be
-    removed without a replacement decision
+  - `/chat` and `/chats/*` remain active because they feed manual evals,
+    feedback, checkpoints, exports, and runtime history
 - The repository is the research object:
   - tracked docs, code, tests, and reports are canonical truth
   - public-facing writing is the derived publication layer from repo truth

@@ -35,6 +35,10 @@ Beta 2.3 freezes the current method read before the next beta work starts.
 - integrated manual-eval warehouse:
   - `.local/runtime_dbs/active/manual_evals.db`
   - rebuild with `make manual-evals-db`
+- active chat workbench source:
+  - `POST /chat`
+  - `/chats/*`
+  - includes feedback, checkpoints, notes, exports, and personalization rows
 - raw current runtime source:
   - `.local/runtime_dbs/active/history.db`
 - live strict-gate observability plus tracked lane snapshots:
@@ -44,7 +48,8 @@ Beta 2.3 freezes the current method read before the next beta work starts.
 
 Manual evals and strict OCR gate reports answer different questions:
 
-- manual evals capture human judgment and qualitative notes
+- manual evals capture human judgment and qualitative notes from the active
+  chat workbench
 - OCR gate reports preserve binary fail pressure
 - `/viz/pass-fail` keeps the live chart on the active window and uses tracked
   eval files to keep the wider lane map visible below it
