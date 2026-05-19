@@ -18,8 +18,12 @@ ASGI_APP ?= server:app
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
 DEV_VIZ_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/viz/pass-fail
 DEV_PORTFOLIO_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/portfolio
-FRONTEND_DIR ?= apps/portfolio
+ifneq ($(origin FRONTEND_DIR), undefined)
 PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)
+else
+PORTFOLIO_APP_DIR ?= apps/portfolio
+endif
+FRONTEND_DIR ?= $(PORTFOLIO_APP_DIR)
 PORTFOLIO_STATIC_DIR ?= public/portfolio
 PORTFOLIO_MOCKUP_DIR ?= docs/peanut/assets/portfolio-mockups
 PORTFOLIO_MOCKUP_PORT ?= 8765

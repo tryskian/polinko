@@ -59,7 +59,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("PYTHON ?=", config_text)
         self.assertIn("CLI_ENTRYPOINT ?= main.py", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
+        self.assertIn("PORTFOLIO_APP_DIR ?= apps/portfolio", config_text)
         self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", config_text)
+        self.assertIn("FRONTEND_DIR ?= $(PORTFOLIO_APP_DIR)", config_text)
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -99,6 +101,53 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^caffeinate-on:\s*caffeinate$")
         self.assertRegex(text, r"(?m)^caffeinate-off:\s*decaffeinate$")
         self.assertRegex(text, r"(?m)^decaffeinate-status:\s*caffeinate-status$")
+
+    def test_frontend_surface_names_are_aliases_for_portfolio_targets(self) -> None:
+        text = _makefile_contract_text()
+
+        self.assertRegex(text, r"(?m)^portfolio-app-install frontend-install:\s*portfolio-install$")
+        self.assertRegex(text, r"(?m)^frontend-build:\s*portfolio-build$")
+
+    def test_portfolio_app_dir_is_canonical_but_legacy_frontend_override_still_works(self) -> None:
+        legacy_result = subprocess.run(
+            ["make", "-n", "portfolio-build", "FRONTEND_DIR=legacy-app"],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        canonical_result = subprocess.run(
+            [
+                "make",
+                "-n",
+                "portfolio-build",
+                "FRONTEND_DIR=legacy-app",
+                "PORTFOLIO_APP_DIR=canonical-app",
+            ],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertIn("legacy-app/package.json", legacy_result.stdout)
+        self.assertIn('npm --prefix "legacy-app"', legacy_result.stdout)
+        self.assertIn("canonical-app/package.json", canonical_result.stdout)
+        self.assertIn('npm --prefix "canonical-app"', canonical_result.stdout)
+        self.assertNotIn("legacy-app/package.json", canonical_result.stdout)
+
+    def test_portfolio_build_dry_run_does_not_execute_vite_build(self) -> None:
+        result = subprocess.run(
+            ["make", "-n", "portfolio-build"],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertIn('npm --prefix "apps/portfolio" run build', result.stdout)
+        self.assertNotIn("vite v", result.stdout + result.stderr)
+        self.assertNotIn("built in", result.stdout + result.stderr)
 
     def test_eval_entrypoints_stay_phony(self) -> None:
         targets = set(_phony_targets())

@@ -11,7 +11,7 @@ refactor. It is intentionally about path roles, not visual direction.
   - Current default for `PORTFOLIO_APP_DIR`.
   - Vite source app for the public portfolio doorway.
   - Builds into the tracked static output directory.
-  - `FRONTEND_DIR` remains a legacy compatibility alias for the same path.
+  - `FRONTEND_DIR` remains a legacy compatibility override for the same path.
 - `public/portfolio/`
   - Current default for `PORTFOLIO_STATIC_DIR`.
   - Tracked static build output for the portfolio doorway.
@@ -29,8 +29,8 @@ refactor. It is intentionally about path roles, not visual direction.
 ## Current Path Contract
 
 - `PORTFOLIO_APP_DIR` names the Vite source app path.
-- `FRONTEND_DIR` remains supported as the legacy compatibility alias for
-  `PORTFOLIO_APP_DIR`.
+- `FRONTEND_DIR` remains supported as a legacy override feeding
+  `PORTFOLIO_APP_DIR` when the canonical variable is not set directly.
 - `PORTFOLIO_STATIC_DIR` names the tracked static output path.
 - `POLINKO_PORTFOLIO_APP_DIR` carries the source path into Python build
   helpers.
@@ -42,8 +42,12 @@ refactor. It is intentionally about path roles, not visual direction.
   portfolio source.
 - Public target names stay stable:
   - `make portfolio`
+  - `make portfolio-install`
   - `make portfolio-build`
-  - `make frontend-build`
+  - legacy aliases:
+    - `make portfolio-app-install`
+    - `make frontend-install`
+    - `make frontend-build`
 
 ## Completed Renames
 
@@ -62,7 +66,10 @@ refactor. It is intentionally about path roles, not visual direction.
   - `/portfolio`
   - `/assets`
   - `make portfolio`
+  - `make portfolio-install`
   - `make portfolio-build`
+  - `make portfolio-app-install`
+  - `make frontend-install`
   - `make frontend-build`
   - `make portfolio-mockups`
 
