@@ -60,6 +60,28 @@ refactor. It is intentionally about path roles, not visual direction.
   - Rationale: the path should say what the assets are and keep the private
     lane obvious.
 
+## Manual Eval Workbench
+
+The manual eval workbench is the human-judged research workspace, not an
+automated eval runner and not the discarded run-level rollup path.
+
+It includes:
+
+- notebooks launched by:
+  - `make notes`
+  - `make notebook`
+  - `make nb`
+- local evidence databases:
+  - `.local/runtime_dbs/active/manual_evals.db`
+  - `.local/runtime_dbs/active/history.db`
+- chat-facing manual eval surfaces:
+  - `POST /chat`
+  - `/chats/*`
+- feedback, checkpoints, notes, exports, and runtime history
+
+Automated eval reports, strict OCR gates, and tracked beta snapshots remain
+separate eval evidence lanes.
+
 ## Stability Contract
 
 - Public routes and operator target names stay stable:
@@ -75,7 +97,7 @@ refactor. It is intentionally about path roles, not visual direction.
 
 ## Guardrails
 
-- Do not move chat workbench routes as part of this surface rename.
+- Do not move chat-facing manual eval routes as part of this surface rename.
 - Do not delete tracked static output unless a replacement deploy output is
   already served and tested.
 - Do not promote private `docs/peanut/` mockups into public docs without an

@@ -7,14 +7,15 @@ Last updated: 2026-05-20
 ## Current Truth
 
 - Backend-first runtime remains canonical:
-  - FastAPI API + chat workbench endpoints are active execution and manual-eval
-    surfaces
+  - FastAPI API + chat-facing manual eval workbench endpoints are active
+    execution and manual-eval surfaces
   - CLI chat runs through `main.py`
   - `app.py` remains only as a compatibility launcher during the entrypoint
     migration
   - prompt and runtime behaviour stay minimal and deterministic
-  - `/chat` and `/chats/*` remain active because they feed manual evals,
-    feedback, checkpoints, exports, and runtime history
+  - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active
+    because they feed manual evals, feedback, checkpoints, exports, and
+    runtime history
 - The repository is the research object:
   - tracked docs, code, tests, and reports are canonical truth
   - public-facing writing is the derived publication layer from repo truth
@@ -38,8 +39,9 @@ Last updated: 2026-05-20
   - `pre-Beta 2.4` is staged as the next research-model contract
   - the discarded run-level rollup hypothesis is not being carried forward
   - non-OCR lanes stay source-first rather than run-verdict-first
-  - manual evals, `/chat`, `/chats/*`, and runtime history remain source
-    evidence for that contract
+  - the manual eval workbench, including notebooks, local evidence databases,
+    `/chat`, `/chats/*`, and runtime history, remains source evidence for that
+    contract
   - co-reasoning is the first promoted non-OCR lane
   - uncertainty-boundary, hallucination-boundary, retrieval, and
     response-behaviour surfaces are operationalized

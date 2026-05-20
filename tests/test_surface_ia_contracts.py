@@ -40,6 +40,23 @@ class SurfaceIaContractTests(unittest.TestCase):
         ):
             self.assertIn(path, surface_ia)
 
+    def test_manual_eval_workbench_scope_is_documented(self) -> None:
+        surface_ia = _read("docs/runtime/SURFACE_IA.md")
+
+        for expected in (
+            "The manual eval workbench is the human-judged research workspace",
+            "`make notes`",
+            "`make notebook`",
+            "`make nb`",
+            "`.local/runtime_dbs/active/manual_evals.db`",
+            "`.local/runtime_dbs/active/history.db`",
+            "`POST /chat`",
+            "`/chats/*`",
+            "Automated eval reports, strict OCR gates, and tracked beta snapshots",
+            "Do not move chat-facing manual eval routes",
+        ):
+            self.assertIn(expected, surface_ia)
+
     def test_ambiguous_legacy_surface_paths_are_not_active_directories(self) -> None:
         self.assertFalse((REPO_ROOT / "frontend").exists())
         self.assertFalse((REPO_ROOT / "ui").exists())

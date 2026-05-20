@@ -553,5 +553,19 @@ or branch history instead.
   expose broken run-level rollup fields as rejected active contract members.
 - Why: The discarded rollup shape collided with eval runs and made the
   workbench contract look like it still had an active alternate method. The
-  live workbench should preserve manual evals and chat evidence without
+  live workbench should preserve manual eval workbench evidence without
   carrying that method residue forward.
+
+## D-042: Name the manual eval workbench as the human-judged workspace
+
+- Date: `2026-05-20`
+- Category: `surface_ia`
+- Tags: `manual_evals`, `notebooks`, `databases`, `workbench`, `ia`
+- Decision: Use `manual eval workbench` for the human-judged research
+  workspace. It includes notebooks, local evidence databases, chat artifacts,
+  feedback, checkpoints, notes, exports, and runtime history. Automated eval
+  reports and strict OCR gates stay separate eval evidence lanes.
+- Why: The active manual workflow uses notebooks and databases as well as chat
+  artifacts. Naming the full workspace prevents the workbench from being
+  mistaken for either a chat-only surface or the discarded run-level rollup
+  path.

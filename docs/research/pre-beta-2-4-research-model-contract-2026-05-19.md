@@ -28,7 +28,8 @@ workbench as source material.
 - OCR post-fail handling can still use `retain` / `evict` case governance.
 - Non-OCR lanes stay source-first:
   - manual eval judgment
-  - chat workbench evidence
+  - manual eval workbench evidence from notebooks, local evidence databases,
+    and chat artifacts
   - row-local or case-local `pass` / `fail` where binary judgment is earned
   - qualitative notes where the lane is still thin
 - Run-level verdicts are not canonical rollups for pre-Beta 2.4.
@@ -46,6 +47,7 @@ The research model has four layers:
 
 Canonical source surfaces include:
 
+- notebooks launched by `make notes`, `make notebook`, and `make nb`
 - `POST /chat`
 - `/chats/*`
 - `.local/runtime_dbs/active/manual_evals.db`
