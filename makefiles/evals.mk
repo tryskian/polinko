@@ -567,12 +567,7 @@ eval-ocr-transcript-growth:
 		echo "Run: make ocrstablegrowth"; \
 		exit 1; \
 	fi; \
-	$(PYTHON) -m tools.eval_ocr_growth_metrics \
-		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
-		--runs-dir "$(OCR_GROWTH_STABILITY_REPORT_DIR)" \
-		--output-json "$(OCR_GROWTH_METRICS_OUTPUT)" \
-		--output-markdown "$(OCR_GROWTH_METRICS_MARKDOWN)" \
-		--limit-runs "$(OCR_GROWTH_LIMIT_RUNS)"
+	$(OCR_REPORT_BUILDER_ENV) bash "$(OCR_REPORT_BUILDER_SCRIPT)" growth-metrics
 
 eval-ocr-growth-fail-cohort:
 	@set -eu; \
@@ -591,25 +586,7 @@ eval-ocr-growth-fail-cohort:
 		echo "Run: make ocrmine"; \
 		exit 1; \
 	fi; \
-	FAIL_COHORT_ARGS="--min-runs $(OCR_FAIL_COHORT_MIN_RUNS)"; \
-	if [ "$(OCR_FAIL_COHORT_INCLUDE_UNSTABLE)" = "true" ]; then \
-		FAIL_COHORT_ARGS="$$FAIL_COHORT_ARGS --include-unstable"; \
-	fi; \
-	if [ "$(OCR_FAIL_COHORT_REQUIRE_OCR_FRAMING)" = "true" ]; then \
-		FAIL_COHORT_ARGS="$$FAIL_COHORT_ARGS --require-ocr-framing"; \
-	fi; \
-	if [ "$(OCR_FAIL_COHORT_INCLUDE_EXPLORATORY)" = "true" ]; then \
-		FAIL_COHORT_ARGS="$$FAIL_COHORT_ARGS --include-exploratory"; \
-	fi; \
-	FAIL_COHORT_ARGS="$$FAIL_COHORT_ARGS --exploratory-max-cases $(OCR_FAIL_COHORT_EXPLORATORY_MAX_CASES)"; \
-	$(PYTHON) -m tools.build_ocr_growth_fail_cohort \
-		--stability-report "$(OCR_GROWTH_STABILITY_OUTPUT)" \
-		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
-		--metrics "$(OCR_GROWTH_METRICS_OUTPUT)" \
-		--review "$(OCR_TRANSCRIPT_REVIEW)" \
-		--output-json "$(OCR_GROWTH_FAIL_COHORT_JSON)" \
-		--output-markdown "$(OCR_GROWTH_FAIL_COHORT_MARKDOWN)" \
-		$$FAIL_COHORT_ARGS
+	$(OCR_REPORT_BUILDER_ENV) bash "$(OCR_REPORT_BUILDER_SCRIPT)" growth-fail-cohort
 
 eval-ocr-focus-cases:
 	@set -eu; \
@@ -623,19 +600,7 @@ eval-ocr-focus-cases:
 		echo "Run: make ocrmine"; \
 		exit 1; \
 	fi; \
-	FOCUS_ARGS=""; \
-	if [ "$(OCR_FOCUS_INCLUDE_FAIL_HISTORY)" = "false" ]; then \
-		FOCUS_ARGS="--exclude-fail-history"; \
-	fi; \
-	if [ "$(OCR_FOCUS_INCLUDE_EXPLORATORY)" = "false" ]; then \
-		FOCUS_ARGS="$$FOCUS_ARGS --exclude-exploratory"; \
-	fi; \
-	$(PYTHON) -m tools.build_ocr_focus_cases \
-		--cohort "$(OCR_GROWTH_FAIL_COHORT_JSON)" \
-		--source-cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
-		--output-cases "$(OCR_FOCUS_CASES_JSON)" \
-		--max-cases "$(OCR_FOCUS_MAX_CASES)" \
-		$$FOCUS_ARGS
+	$(OCR_REPORT_BUILDER_ENV) bash "$(OCR_REPORT_BUILDER_SCRIPT)" focus-cases
 
 eval-ocr-focus-stability:
 	@set -eu; \
@@ -670,11 +635,7 @@ eval-ocr-focus-fail-patterns:
 		echo "Run: make ocrfocuscases"; \
 		exit 1; \
 	fi; \
-	$(PYTHON) -m tools.report_ocr_focus_fail_patterns \
-		--stability-report "$(OCR_FOCUS_OUTPUT)" \
-		--focus-cases "$(OCR_FOCUS_CASES_JSON)" \
-		--output-json "$(OCR_FOCUS_FAIL_PATTERNS_JSON)" \
-		--output-markdown "$(OCR_FOCUS_FAIL_PATTERNS_MD)"
+	$(OCR_REPORT_BUILDER_ENV) bash "$(OCR_REPORT_BUILDER_SCRIPT)" focus-fail-patterns
 
 eval-ocr-transcript-stability-growth:
 	@set -eu; \
