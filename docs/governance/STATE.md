@@ -10,7 +10,7 @@ Last updated: 2026-05-20
   - FastAPI API + chat-facing manual eval workbench endpoints are active
     execution and manual-eval surfaces
   - CLI chat runs through `main.py`
-  - `app.py` remains only as a compatibility launcher during the entrypoint
+  - `app.py` remains only as a lazy compatibility shim during the entrypoint
     migration
   - prompt and runtime behaviour stay minimal and deterministic
   - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active

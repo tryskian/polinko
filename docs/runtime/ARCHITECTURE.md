@@ -14,7 +14,7 @@ This page is the structural map of the tracked system.
 - `main.py`
   - operator CLI chat entrypoint
 - `app.py`
-  - compatibility launcher for older CLI calls
+  - lazy compatibility shim for older CLI calls
 - `server.py`
   - FastAPI API and chat-facing manual eval workbench entrypoint
 - `config.py`
@@ -58,8 +58,8 @@ This page is the structural map of the tracked system.
    - OCR case outcomes are `pass` / `fail`
    - broader manual and non-OCR lanes may still use `retain` / `evict` after
      `fail` as upstream case curation
-8. CLI chat runs through `main.py`; `app.py` only forwards legacy launches to
-   that entrypoint.
+8. CLI chat runs through `main.py`; `app.py` only lazily forwards legacy
+   launches to that entrypoint.
 
 ## Data Surfaces
 

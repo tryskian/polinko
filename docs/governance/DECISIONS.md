@@ -569,3 +569,16 @@ or branch history instead.
   artifacts. Naming the full workspace prevents the workbench from being
   mistaken for either a chat-only surface or the discarded run-level rollup
   path.
+
+## D-043: Freeze app.py as a lazy compatibility shim
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `entrypoints`, `cli`, `compatibility`, `ia`
+- Decision: Keep `main.py` as the canonical CLI entrypoint and keep `app.py`
+  only as a lazy compatibility shim for legacy `python app.py` launches.
+  Importing `app` must not import or initialize the full CLI runtime.
+- Why: The repo has converged on `main.py` and `make chat` for active operator
+  use, but removing `app.py` would break older local scripts. A lazy shim keeps
+  backward compatibility without preserving `app.py` as an active runtime
+  surface.
