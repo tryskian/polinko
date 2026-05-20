@@ -29,6 +29,7 @@ EVAL_REPORT_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_report.sh"
 EVAL_REPORTS_PARALLEL_RUNNER_SCRIPT = (
     REPO_ROOT / "tools" / "run_eval_reports_parallel.sh"
 )
+EVAL_SIDECAR_START_SCRIPT = REPO_ROOT / "tools" / "run_eval_sidecar_start.sh"
 LOCAL_EVAL_GATE_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_local_eval_gate.sh"
 OCR_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_cases.sh"
 OCR_HANDWRITING_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_handwriting.sh"
@@ -183,6 +184,11 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("EVAL_REPORTS_PARALLEL_RUNNER_ENV =", config_text)
+        self.assertIn(
+            "EVAL_SIDECAR_START_SCRIPT ?= ./tools/run_eval_sidecar_start.sh",
+            config_text,
+        )
+        self.assertIn("EVAL_SIDECAR_START_ENV =", config_text)
         self.assertIn(
             "LOCAL_EVAL_GATE_RUNNER_SCRIPT ?= ./tools/run_local_eval_gate.sh",
             config_text,
@@ -356,6 +362,7 @@ class MakefileContractTests(unittest.TestCase):
             'bash "$(EVAL_REPORTS_PARALLEL_RUNNER_SCRIPT)"',
             text,
         )
+        self.assertIn('bash "$(EVAL_SIDECAR_START_SCRIPT)"', text)
         for suite in (
             "retrieval",
             "file-search",
@@ -484,6 +491,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("eval_reports/ocr-recovery-$$RUN_ID.json", text)
         self.assertNotIn("eval_reports/clip-ab-$$RUN_ID.json", text)
         self.assertNotIn("tools.eval_parallel_orchestrator", text)
+        self.assertNotIn("nohup $(PYTHON) -m tools.eval_sidecar run", text)
+        self.assertNotIn("PID=$$!", text)
         self.assertNotIn("$(PYTHON) -m tools.eval_ocr_growth_metrics", text)
         self.assertNotIn("$(PYTHON) -m tools.build_ocr_growth_fail_cohort", text)
         self.assertNotIn("$(PYTHON) -m tools.build_ocr_focus_cases", text)
@@ -523,6 +532,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(EVAL_REPORT_RUNNER_SCRIPT.is_file())
         self.assertTrue(EVAL_REPORTS_PARALLEL_RUNNER_SCRIPT.is_file())
+        self.assertTrue(EVAL_SIDECAR_START_SCRIPT.is_file())
         self.assertTrue(LOCAL_EVAL_GATE_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_EVAL_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_HANDWRITING_EVAL_RUNNER_SCRIPT.is_file())
@@ -545,6 +555,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(os.access(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_REPORT_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_REPORTS_PARALLEL_RUNNER_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(EVAL_SIDECAR_START_SCRIPT, os.X_OK))
         self.assertTrue(os.access(LOCAL_EVAL_GATE_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_EVAL_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_HANDWRITING_EVAL_RUNNER_SCRIPT, os.X_OK))
