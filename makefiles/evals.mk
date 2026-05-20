@@ -510,8 +510,7 @@ eval-ocr-transcript-cases:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(OCR_EVAL_RUNNER_ENV) bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)"
 
 eval-ocr-transcript-cases-growth:
 	@set -eu; \
@@ -544,48 +543,42 @@ eval-ocr-transcript-cases-handwriting:
 	PYTHON="$(PYTHON)"; \
 	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
 	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" "Transcript handwriting OCR cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript handwriting OCR cases available yet; skipping eval."; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(OCR_EVAL_RUNNER_ENV) bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING)"
 
 eval-ocr-transcript-cases-handwriting-benchmark:
 	@set -eu; \
 	PYTHON="$(PYTHON)"; \
 	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
 	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" "Transcript handwriting benchmark OCR cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript handwriting benchmark OCR cases available yet; skipping eval."; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(OCR_EVAL_RUNNER_ENV) bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"
 
 eval-ocr-transcript-cases-typed:
 	@set -eu; \
 	PYTHON="$(PYTHON)"; \
 	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
 	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_TYPED)" "Transcript typed OCR cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript typed OCR cases available yet; skipping eval."; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_TYPED)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(OCR_EVAL_RUNNER_ENV) bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_TYPED)"
 
 eval-ocr-transcript-cases-typed-benchmark:
 	@set -eu; \
 	PYTHON="$(PYTHON)"; \
 	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
 	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" "Transcript typed benchmark OCR cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript typed benchmark OCR cases available yet; skipping eval."; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(OCR_EVAL_RUNNER_ENV) bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)"
 
 eval-ocr-transcript-cases-illustration:
 	@set -eu; \
 	PYTHON="$(PYTHON)"; \
 	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
 	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" "Transcript illustration OCR cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript illustration OCR cases available yet; skipping eval."; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(OCR_EVAL_RUNNER_ENV) bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)"
 
 eval-ocr-transcript-cases-illustration-benchmark:
 	@set -eu; \
 	PYTHON="$(PYTHON)"; \
 	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
 	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" "Transcript illustration benchmark OCR cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript illustration benchmark OCR cases available yet; skipping eval."; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(OCR_EVAL_RUNNER_ENV) bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)"
 
 eval-ocr-transcript-stability:
 	@set -eu; \
