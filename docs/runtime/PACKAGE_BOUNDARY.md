@@ -16,7 +16,8 @@ Tracked root runtime compatibility modules:
 - `app.py`
   - lazy compatibility shim for legacy `python app.py`
 - `server.py`
-  - FastAPI ASGI entrypoint
+  - compatibility shim for `uvicorn server:app`
+  - forwards module identity to `polinko.asgi`
 - `config.py`
   - compatibility shim for legacy `from config import ...` imports
   - re-exports `AppConfig` and `load_config` from `polinko.config`
@@ -43,6 +44,8 @@ Tracked packaging rail:
   - editable-install package identity
 - `src/polinko/cli.py`
   - canonical CLI chat implementation
+- `src/polinko/asgi.py`
+  - canonical ASGI app construction and runtime-deps access
 - `src/polinko/config.py`
   - canonical environment loading and validation implementation
 - `src/polinko/api/`
@@ -73,6 +76,8 @@ Target placement:
   - canonical CLI chat implementation
 - `polinko-chat`
   - installed console-script entrypoint for the packaged CLI
+- `src/polinko/asgi.py`
+  - canonical ASGI app construction
 - root `server.py`
   - remains the stable ASGI launcher for `uvicorn server:app`
 - root `app.py`
@@ -87,6 +92,7 @@ Target placement:
 2. Keep active runtime imports on `polinko.*`.
 3. Keep `main.py`, `server.py`, and `app.py` as compatibility launchers during
    the import rewrite.
+   - root `server.py` currently forwards to `polinko.asgi`
 4. Move or split `tools/` only after runtime imports and tests are stable.
 5. Add a console-script entrypoint for the CLI before removing any root launcher.
    - current console script: `polinko-chat`

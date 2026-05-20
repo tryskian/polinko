@@ -95,8 +95,8 @@ Open `http://127.0.0.1:8000/docs`.
 
 - `src/polinko/cli.py` contains the packaged CLI chat implementation; `make
   chat`, `polinko-chat`, and root `main.py` launch it.
-- `server.py` exposes the FastAPI ASGI app and chat-facing manual eval
-  workbench endpoints.
+- `src/polinko/asgi.py` constructs the FastAPI ASGI app and chat-facing manual
+  eval workbench endpoints; root `server.py` preserves `uvicorn server:app`.
 - `pyproject.toml` and `src/polinko/` provide the editable-install rail for the
   runtime package.
 - `src/polinko/config.py` contains the canonical config implementation; root

@@ -663,3 +663,18 @@ or branch history instead.
   Moving the CLI implementation into the package keeps the root entrypoint
   layer thin while preserving existing operator commands and legacy direct
   launches.
+
+## D-050: Package ASGI app construction behind server compatibility
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `python`, `asgi`, `entrypoints`, `src_layout`, `compatibility`
+- Decision: Make `src/polinko/asgi.py` the canonical ASGI app construction
+  module and keep root `server.py` as a compatibility shim for `uvicorn
+  server:app`. The shim forwards module identity to `polinko.asgi` so existing
+  tests and local scripts can keep using `server.app`, `server.Runner`, and
+  `server.get_runtime_deps()`.
+- Why: The API implementation is already packaged under `polinko.api`. Moving
+  ASGI construction into the package removes another active runtime body from
+  the repo root without changing the protected server import string or manual
+  eval workbench behavior.

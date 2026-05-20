@@ -1,4 +1,5 @@
 import importlib
+import os
 from pathlib import Path
 import sys
 import types
@@ -90,6 +91,16 @@ class EntrypointTests(unittest.TestCase):
                 sys.modules.pop("main", None)
 
         self.assertEqual(called, ["main"])
+
+    def test_server_compatibility_shim_forwards_to_packaged_asgi(self) -> None:
+        os.environ.setdefault("OPENAI_API_KEY", "sk-test-key-123456789012345")
+        server = importlib.import_module("server")
+        asgi = importlib.import_module("polinko.asgi")
+
+        self.assertIs(server, asgi)
+        self.assertIs(server.app, asgi.app)
+        self.assertTrue(callable(server.get_runtime_deps))
+        self.assertIs(server.runtime_deps, server.get_runtime_deps())
 
     def test_cli_interpreter_fallback_prefers_current_local_venv(self) -> None:
         cli_main = importlib.import_module("main")

@@ -21,8 +21,11 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "compatibility launcher for `python main.py`",
             "`app.py`",
             "`server.py`",
+            "compatibility shim for `uvicorn server:app`",
             "`src/polinko/cli.py`",
             "canonical CLI chat implementation",
+            "`src/polinko/asgi.py`",
+            "canonical ASGI app construction",
             "`polinko-chat`",
             "`config.py`",
             "re-exports `AppConfig` and `load_config` from `polinko.config`",
@@ -76,11 +79,16 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "## D-049: Package the CLI implementation behind stable launchers",
             decisions,
         )
+        self.assertIn(
+            "## D-050: Package ASGI app construction behind server compatibility",
+            decisions,
+        )
 
     def test_runtime_modules_are_moved_with_root_compatibility_shims(self) -> None:
         package_root = REPO_ROOT / "src" / "polinko"
 
         self.assertTrue((package_root / "__init__.py").is_file())
+        self.assertTrue((package_root / "asgi.py").is_file())
         self.assertTrue((package_root / "cli.py").is_file())
         self.assertTrue((package_root / "config.py").is_file())
         self.assertTrue((package_root / "api" / "__init__.py").is_file())
@@ -109,6 +117,10 @@ class PackageBoundaryContractTests(unittest.TestCase):
             import_module("core.runtime"),
             import_module("polinko.core.runtime"),
         )
+
+        legacy_server = _read("server.py")
+        self.assertIn('import_module("polinko.asgi")', legacy_server)
+        self.assertIn("sys.modules[__name__] = _module", legacy_server)
 
     def test_current_root_runtime_modules_are_explicit(self) -> None:
         tracked_python = subprocess.check_output(
