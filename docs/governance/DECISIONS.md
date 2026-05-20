@@ -826,3 +826,16 @@ or branch history instead.
 - Why: The package boundary is stable enough to audit, but deleting root
   compatibility based on cleanliness alone would risk operator, container, or
   local legacy workflows. Readiness should be proved surface-by-surface.
+
+## D-061: Retire the legacy root app.py launcher
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `entrypoints`, `compatibility`, `cli`, `package_boundary`
+- Decision: Remove root `app.py` after the deprecation/removal preflight found
+  no active tracked code caller and no focused local ignored-lane launcher
+  usage. CLI chat launchers are `make chat`, `python -m polinko.cli`,
+  `polinko-chat`, and root `main.py`.
+- Why: Keeping a compatibility launcher with no observed caller preserves
+  ambiguity at the repo root. Removing it tightens the package-boundary surface
+  while leaving the active CLI and `server:app` operator paths unchanged.
