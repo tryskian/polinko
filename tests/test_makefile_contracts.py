@@ -9,6 +9,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 MAKEFILE = REPO_ROOT / "Makefile"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
+OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
+EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 
 
 def _makefile_text() -> str:
@@ -64,6 +66,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("PORTFOLIO_APP_DIR ?= apps/portfolio", config_text)
         self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", config_text)
         self.assertIn("FRONTEND_DIR ?= $(PORTFOLIO_APP_DIR)", config_text)
+        self.assertIn("OCR_WORKFLOW_SCRIPT ?= ./tools/run_ocr_workflow.sh", config_text)
+        self.assertIn(
+            "EVAL_SERVER_DAEMON_SCRIPT ?= ./tools/ensure_eval_server_daemon.sh",
+            config_text,
+        )
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -130,17 +137,25 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("$(MAKE)", text)
         self.assertRegex(
             text,
-            r"(?m)^ocrkernel:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tCGPT_EXPORT_ROOT_DEFAULT=\"\$\(CGPT_EXPORT_ROOT_DEFAULT\)\" \\\n\t\tbash ./tools/ocr_workflow\.sh ocrkernel$",
+            r"(?m)^ocrkernel:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tCGPT_EXPORT_ROOT_DEFAULT=\"\$\(CGPT_EXPORT_ROOT_DEFAULT\)\" \\\n\t\tbash \"\$\(OCR_WORKFLOW_SCRIPT\)\" ocrkernel$",
         )
         self.assertRegex(
             text,
-            r"(?m)^ocr-data:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tCGPT_EXPORT_ROOT_DEFAULT=\"\$\(CGPT_EXPORT_ROOT_DEFAULT\)\" \\\n\t\tbash ./tools/ocr_workflow\.sh ocr-data$",
+            r"(?m)^ocr-data:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tCGPT_EXPORT_ROOT_DEFAULT=\"\$\(CGPT_EXPORT_ROOT_DEFAULT\)\" \\\n\t\tbash \"\$\(OCR_WORKFLOW_SCRIPT\)\" ocr-data$",
         )
         self.assertRegex(
             text,
-            r"(?m)^ocr-notebook-workflow:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tbash ./tools/ocr_workflow\.sh ocr-notebook-workflow$",
+            r"(?m)^ocr-notebook-workflow:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tbash \"\$\(OCR_WORKFLOW_SCRIPT\)\" ocr-notebook-workflow$",
         )
-        self.assertIn("bash ./tools/ensure_server_daemon.sh", text)
+        self.assertIn('bash "$(EVAL_SERVER_DAEMON_SCRIPT)"', text)
+
+    def test_eval_helper_scripts_are_named_for_their_roles(self) -> None:
+        self.assertTrue(OCR_WORKFLOW_SCRIPT.is_file())
+        self.assertTrue(EVAL_SERVER_DAEMON_SCRIPT.is_file())
+        self.assertTrue(os.access(OCR_WORKFLOW_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(EVAL_SERVER_DAEMON_SCRIPT, os.X_OK))
+        self.assertFalse((REPO_ROOT / "tools" / "ocr_workflow.sh").exists())
+        self.assertFalse((REPO_ROOT / "tools" / "ensure_server_daemon.sh").exists())
 
     def test_frontend_surface_names_are_aliases_for_portfolio_targets(self) -> None:
         text = _makefile_contract_text()
@@ -226,7 +241,7 @@ class MakefileContractTests(unittest.TestCase):
         env["CGPT_EXPORT_ROOT_DEFAULT"] = ""
 
         result = subprocess.run(
-            ["bash", "tools/ocr_workflow.sh", "ocr-data"],
+            ["bash", str(OCR_WORKFLOW_SCRIPT.relative_to(REPO_ROOT)), "ocr-data"],
             cwd=REPO_ROOT,
             check=False,
             capture_output=True,

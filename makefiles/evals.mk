@@ -81,7 +81,7 @@ ocrfocus: ocrgrowth ocrfails ocrfocuscases eval-ocr-focus-stability ocrfocusrepo
 ocrkernel:
 	@CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
 		CGPT_EXPORT_ROOT_DEFAULT="$(CGPT_EXPORT_ROOT_DEFAULT)" \
-		bash ./tools/ocr_workflow.sh ocrkernel
+		bash "$(OCR_WORKFLOW_SCRIPT)" ocrkernel
 
 ocrhandbench: eval-ocr-transcript-cases-handwriting-benchmark
 
@@ -105,11 +105,11 @@ runtime-null-audit:
 ocr-data:
 	@CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
 		CGPT_EXPORT_ROOT_DEFAULT="$(CGPT_EXPORT_ROOT_DEFAULT)" \
-		bash ./tools/ocr_workflow.sh ocr-data
+		bash "$(OCR_WORKFLOW_SCRIPT)" ocr-data
 
 ocr-notebook-workflow:
 	@CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
-		bash ./tools/ocr_workflow.sh ocr-notebook-workflow
+		bash "$(OCR_WORKFLOW_SCRIPT)" ocr-notebook-workflow
 
 eval-retrieval:
 	$(PYTHON) -m tools.eval_retrieval \
@@ -510,7 +510,7 @@ eval-ocr-transcript-cases:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-growth:
@@ -525,7 +525,7 @@ eval-ocr-transcript-cases-growth:
 		echo "No transcript OCR growth cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 	PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" --show-text --offset "$(OCR_GROWTH_EVAL_OFFSET)" --max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-growth-batched:
@@ -540,7 +540,7 @@ eval-ocr-transcript-cases-growth-batched:
 		echo "No transcript OCR growth cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 	PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr_batched \
 		--base-url "http://127.0.0.1:8000" \
 		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
@@ -565,7 +565,7 @@ eval-ocr-transcript-cases-handwriting:
 		echo "No transcript handwriting OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-handwriting-benchmark:
@@ -580,7 +580,7 @@ eval-ocr-transcript-cases-handwriting-benchmark:
 		echo "No transcript handwriting benchmark OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-typed:
@@ -595,7 +595,7 @@ eval-ocr-transcript-cases-typed:
 		echo "No transcript typed OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_TYPED)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-typed-benchmark:
@@ -610,7 +610,7 @@ eval-ocr-transcript-cases-typed-benchmark:
 		echo "No transcript typed benchmark OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-illustration:
@@ -625,7 +625,7 @@ eval-ocr-transcript-cases-illustration:
 		echo "No transcript illustration OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-illustration-benchmark:
@@ -640,7 +640,7 @@ eval-ocr-transcript-cases-illustration-benchmark:
 		echo "No transcript illustration benchmark OCR cases available yet; skipping eval."; \
 		exit 0; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-stability:
@@ -650,7 +650,7 @@ eval-ocr-transcript-stability:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 		PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr_stability \
 			--base-url "http://127.0.0.1:8000" \
 			--cases "$(OCR_TRANSCRIPT_CASES)" \
@@ -774,7 +774,7 @@ eval-ocr-focus-stability:
 			exit 0; \
 		fi; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 		$(PYTHON) -m tools.eval_ocr_stability \
 			--base-url "http://127.0.0.1:8000" \
 			--cases "$(OCR_FOCUS_CASES_JSON)" \
@@ -825,7 +825,7 @@ eval-ocr-transcript-stability-growth:
 		OUTPUT_JSON=".local/eval_reports/ocr_growth_stability.slice-offset$(OCR_GROWTH_EVAL_OFFSET)-max$(OCR_GROWTH_EVAL_MAX_CASES).json"; \
 		echo "Using sliced growth stability output: $$OUTPUT_JSON"; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 			PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr_stability \
 				--base-url "http://127.0.0.1:8000" \
 				--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
@@ -854,7 +854,7 @@ eval-ocr-transcript-stability-handwriting-benchmark:
 		echo "No transcript handwriting benchmark OCR cases available yet; skipping stability run."; \
 		exit 0; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 			$(PYTHON) -m tools.eval_ocr_stability \
 				--base-url "http://127.0.0.1:8000" \
 				--cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" \
@@ -882,7 +882,7 @@ eval-ocr-transcript-stability-typed-benchmark:
 		echo "No transcript typed benchmark OCR cases available yet; skipping stability run."; \
 		exit 0; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 			$(PYTHON) -m tools.eval_ocr_stability \
 				--base-url "http://127.0.0.1:8000" \
 				--cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" \
@@ -910,7 +910,7 @@ eval-ocr-transcript-stability-illustration-benchmark:
 		echo "No transcript illustration benchmark OCR cases available yet; skipping stability run."; \
 		exit 0; \
 	fi; \
-	bash ./tools/ensure_server_daemon.sh; \
+	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
 			$(PYTHON) -m tools.eval_ocr_stability \
 				--base-url "http://127.0.0.1:8000" \
 				--cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" \
