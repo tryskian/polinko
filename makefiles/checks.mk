@@ -1,5 +1,5 @@
 # Local validation and check targets.
-.PHONY: test test-one test-targeted pycheck ruff-check ruff-format-check lint-docs backend-gate
+.PHONY: test test-one test-targeted pycheck ruff-check ruff-format-check lint-docs backend-gate backend-gate-start
 .PHONY: path-leak-check path-leak-audit-local precommit-install precommit-run act-list act-ci
 .PHONY: mermaid-render d3-render public-diagrams-render transcript-fix transcript-check end-docs-check doctor-env
 
@@ -77,11 +77,10 @@ path-leak-check:
 path-leak-audit-local:
 	$(PYTHON) -m tools.path_leak_check --scope local
 
-backend-gate:
+backend-gate: backend-gate-start doctor-env test quality-gate-deterministic
+
+backend-gate-start:
 	@echo "Running backend gate (doctor + tests + deterministic quality gate)..."
-	@$(MAKE) doctor-env
-	@$(MAKE) test
-	@$(MAKE) quality-gate-deterministic
 
 precommit-install:
 	$(PYTHON) -m pre_commit install --install-hooks --hook-type pre-commit

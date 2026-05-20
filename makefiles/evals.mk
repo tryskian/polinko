@@ -12,7 +12,7 @@
 .PHONY: eval-clip-ab eval-clip-ab-report eval-clip-ab-readiness eval-reports eval-reports-parallel
 .PHONY: eval-sidecar-start eval-sidecar-status eval-sidecar-stop operator-burden-report
 .PHONY: calibrate-hallucination-threshold backfill-eval-traces hallucination-gate
-.PHONY: quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export
+.PHONY: quality-gate quality-gate-deterministic cgpt-export-index ocr-cases-from-export ocr-cases-from-export-build
 .PHONY: ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases
 .PHONY: ocr-transcript-delta eval-ocr-transcript-cases eval-ocr-transcript-cases-growth
 .PHONY: eval-ocr-transcript-cases-growth-batched eval-ocr-growth-fail-cohort
@@ -30,41 +30,23 @@ ocrindex: cgpt-export-index
 
 ocrmine: ocr-cases-from-export
 
-ocrminehand:
-	@set -eu; \
-	$(MAKE) --no-print-directory ocr-cases-from-export \
-		CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
-		OCR_CASES_FROM_EXPORT_ARGS='--include-lanes handwriting'
+ocrminehand: OCR_CASES_FROM_EXPORT_ARGS = --include-lanes handwriting
+ocrminehand: ocr-cases-from-export
 
-ocrminetype:
-	@set -eu; \
-	$(MAKE) --no-print-directory ocr-cases-from-export \
-		CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
-		OCR_CASES_FROM_EXPORT_ARGS='--include-lanes typed'
+ocrminetype: OCR_CASES_FROM_EXPORT_ARGS = --include-lanes typed
+ocrminetype: ocr-cases-from-export
 
-ocrmineillu:
-	@set -eu; \
-	$(MAKE) --no-print-directory ocr-cases-from-export \
-		CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
-		OCR_CASES_FROM_EXPORT_ARGS='--include-lanes illustration'
+ocrmineillu: OCR_CASES_FROM_EXPORT_ARGS = --include-lanes illustration
+ocrmineillu: ocr-cases-from-export
 
-ocrminehigh:
-	@set -eu; \
-	$(MAKE) --no-print-directory ocr-cases-from-export \
-		CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
-		OCR_CASES_FROM_EXPORT_ARGS='--include-signal-strengths high'
+ocrminehigh: OCR_CASES_FROM_EXPORT_ARGS = --include-signal-strengths high
+ocrminehigh: ocr-cases-from-export
 
-ocrminelow:
-	@set -eu; \
-	$(MAKE) --no-print-directory ocr-cases-from-export \
-		CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
-		OCR_CASES_FROM_EXPORT_ARGS='--include-signal-strengths low'
+ocrminelow: OCR_CASES_FROM_EXPORT_ARGS = --include-signal-strengths low
+ocrminelow: ocr-cases-from-export
 
-ocrminebacklog:
-	@set -eu; \
-	$(MAKE) --no-print-directory ocr-cases-from-export \
-		CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \
-		OCR_CASES_FROM_EXPORT_ARGS='--include-emit-statuses skipped_low_confidence'
+ocrminebacklog: OCR_CASES_FROM_EXPORT_ARGS = --include-emit-statuses skipped_low_confidence
+ocrminebacklog: ocr-cases-from-export
 
 ocrall: eval-ocr-transcript-cases
 
@@ -94,13 +76,7 @@ ocrfocuscases: eval-ocr-focus-cases
 
 ocrfocusreport: eval-ocr-focus-fail-patterns
 
-ocrfocus:
-	@set -eu; \
-	$(MAKE) --no-print-directory ocrgrowth; \
-	$(MAKE) --no-print-directory ocrfails; \
-	$(MAKE) --no-print-directory ocrfocuscases; \
-	$(MAKE) --no-print-directory eval-ocr-focus-stability; \
-	$(MAKE) --no-print-directory ocrfocusreport
+ocrfocus: ocrgrowth ocrfails ocrfocuscases eval-ocr-focus-stability ocrfocusreport
 
 ocrkernel:
 	@set -eu; \
@@ -347,14 +323,7 @@ eval-smoke:
 		$(PYTHON) -m tools.eval_file_search --base-url "$$BASE_URL"; \
 		echo "Eval smoke passed."
 
-eval-reports:
-	@$(MAKE) eval-retrieval-report
-	@$(MAKE) eval-file-search-report
-	@$(MAKE) eval-ocr-report
-	@$(MAKE) eval-style-report
-	@$(MAKE) eval-response-behaviour-report
-	@$(MAKE) eval-ocr-safety-report
-	@$(MAKE) eval-hallucination-report
+eval-reports: eval-retrieval-report eval-file-search-report eval-ocr-report eval-style-report eval-response-behaviour-report eval-ocr-safety-report eval-hallucination-report
 
 eval-reports-parallel:
 	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
@@ -447,8 +416,10 @@ quality-gate:
 	$(PYTHON) -m tools.eval_hallucination --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"; \
 	echo "Quality gate passed."
 
-quality-gate-deterministic:
-	@$(MAKE) quality-gate HALLUCINATION_EVAL_MODE=deterministic STYLE_CASE_ATTEMPTS=3 STYLE_MIN_PASS_ATTEMPTS=2
+quality-gate-deterministic: HALLUCINATION_EVAL_MODE = deterministic
+quality-gate-deterministic: STYLE_CASE_ATTEMPTS = 3
+quality-gate-deterministic: STYLE_MIN_PASS_ATTEMPTS = 2
+quality-gate-deterministic: quality-gate
 
 cgpt-export-index:
 	@set -eu; \
@@ -468,7 +439,9 @@ cgpt-export-index:
 	fi; \
 	$(PYTHON) -m tools.index_cgpt_export --export-root "$$EXPORT_ROOT" --output-dir "$(CGPT_EXPORT_OUTPUT_DIR)"
 
-ocr-cases-from-export:
+ocr-cases-from-export: ocr-cases-from-export-build ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta
+
+ocr-cases-from-export-build:
 	@set -eu; \
 	EXPORT_ROOT="$(CGPT_EXPORT_ROOT)"; \
 	if [ -z "$$EXPORT_ROOT" ]; then \
@@ -496,11 +469,7 @@ ocr-cases-from-export:
 		--output-cases-illustration "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)" \
 		--output-review "$(OCR_TRANSCRIPT_REVIEW)" \
 		--output-generalization-candidates "$(OCR_GENERALIZATION_CANDIDATES)" \
-		--max-growth-cases "$(OCR_GROWTH_MAX_CASES)" $(OCR_CASES_FROM_EXPORT_ARGS); \
-			$(MAKE) --no-print-directory ocr-handwriting-benchmark-cases; \
-			$(MAKE) --no-print-directory ocr-typed-benchmark-cases; \
-			$(MAKE) --no-print-directory ocr-illustration-benchmark-cases; \
-		$(MAKE) --no-print-directory ocr-transcript-delta
+		--max-growth-cases "$(OCR_GROWTH_MAX_CASES)" $(OCR_CASES_FROM_EXPORT_ARGS)
 
 ocr-handwriting-benchmark-cases:
 	@set -eu; \
