@@ -1,4 +1,5 @@
 import base64
+import json
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -55,8 +56,12 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
                 ["source_artifact", "row_or_case_judgment", "lane_summary"],
             )
             self.assertEqual(
-                payload["source_first"]["contract"]["rejected_rollup"],
-                "pulse_verdict",
+                payload["source_first"]["contract"]["promotion_gate"],
+                "repeated_lane_signal",
+            )
+            self.assertNotIn("rejected_rollup", payload["source_first"]["contract"])
+            self.assertNotIn(
+                "pulse", json.dumps(payload["source_first"]["contract"]).lower()
             )
             exclusions = {
                 row["key"]: row for row in payload["source_first"]["exclusions"]

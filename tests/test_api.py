@@ -1,5 +1,6 @@
 import base64
 import hashlib
+import json
 import os
 import re
 import tempfile
@@ -180,7 +181,12 @@ class PolinkoApiTests(unittest.TestCase):
             payload["source_first"]["contract"]["rollup_unit"], "lane_summary"
         )
         self.assertEqual(
-            payload["source_first"]["contract"]["rejected_rollup"], "pulse_verdict"
+            payload["source_first"]["contract"]["promotion_gate"],
+            "repeated_lane_signal",
+        )
+        self.assertNotIn("rejected_rollup", payload["source_first"]["contract"])
+        self.assertNotIn(
+            "pulse", json.dumps(payload["source_first"]["contract"]).lower()
         )
 
     def test_api_key_is_not_required_for_core_endpoints(self) -> None:

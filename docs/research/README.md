@@ -19,7 +19,7 @@ enough to read in public.
   - OCR now moves into broader generalization pressure
   - intake now combines transcript-mined episodes with OCR-ready candidates
 - `pre-Beta 2.4` is staged as the next research-model contract:
-  - the fail-pressure pulse hypothesis is not being carried forward
+  - the discarded run-level rollup hypothesis is not being carried forward
   - row and case evidence stay visible before lane-level summaries
   - manual evals and chat workbench artifacts remain source evidence
   - no new evidence folder is cut until real evidence exists

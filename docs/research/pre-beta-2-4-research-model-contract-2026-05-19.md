@@ -14,9 +14,9 @@ Status: `staged`
 `pre-Beta 2.4` names the next research-model contract before new evidence is
 cut. The first evidence folder is cut when real evidence exists.
 
-The fail-pressure pulse hypothesis is not being carried forward as the next
-method. It remains historical negative evidence because the pulse shape did not
-work properly as a stable research surface.
+The discarded run-level rollup hypothesis from `2026-05-16` is not being
+carried forward as the next method. It remains historical negative evidence
+because that shape did not work properly as a stable research surface.
 
 The active question is whether Polinko can move from lane snapshots to
 source-first research claims while preserving row evidence and the manual eval
@@ -31,7 +31,7 @@ workbench as source material.
   - chat workbench evidence
   - row-local or case-local `pass` / `fail` where binary judgment is earned
   - qualitative notes where the lane is still thin
-- Pulse-level verdicts are not canonical rollups for pre-Beta 2.4.
+- Run-level verdicts are not canonical rollups for pre-Beta 2.4.
 - Any promotion claim must stay traceable to source artifacts, row/case
   judgment, and repeated lane signal.
 
@@ -55,7 +55,7 @@ Canonical source surfaces include:
 
 The staged contract sits above these sources and keeps them canonical. It does
 not replace the workbench, flatten manual evals, or convert thin lanes into
-pulse verdicts.
+run-level verdicts.
 
 ## First Kernel Shape
 
