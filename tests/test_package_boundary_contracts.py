@@ -20,12 +20,12 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "`app.py`",
             "`server.py`",
             "`config.py`",
-            "The future import package should be `polinko` under `src/polinko/`.",
+            "The future runtime import package should be `polinko` under `src/polinko/`.",
             "`src/polinko/config.py`",
             "`src/polinko/api/`",
             "`src/polinko/core/`",
             "root `tools/`",
-            "Do not move files into `src/polinko/` in this preflight kernel.",
+            "Do not move runtime modules into `src/polinko/`",
             "Do not change ASGI import compatibility for `server:app`.",
         ):
             self.assertIn(expected, boundary)
@@ -38,16 +38,25 @@ class PackageBoundaryContractTests(unittest.TestCase):
 
         self.assertIn("docs/runtime/PACKAGE_BOUNDARY.md", architecture)
         self.assertIn("`PACKAGE_BOUNDARY`", architecture)
-        self.assertIn("package-boundary preflight is documented", state)
+        self.assertIn("package-boundary migration contract is documented", state)
         self.assertIn("`PACKAGE_BOUNDARY` holds the Python", state)
         self.assertIn("docs/runtime/PACKAGE_BOUNDARY.md", docs_index)
         self.assertIn(
             "## D-044: Preflight the Python package boundary before moving imports",
             decisions,
         )
+        self.assertIn(
+            "## D-045: Add the editable-install rail before moving runtime imports",
+            decisions,
+        )
 
-    def test_preflight_does_not_create_partial_src_package(self) -> None:
-        self.assertFalse((REPO_ROOT / "src" / "polinko").exists())
+    def test_packaging_rail_does_not_move_runtime_modules(self) -> None:
+        package_root = REPO_ROOT / "src" / "polinko"
+
+        self.assertTrue((package_root / "__init__.py").is_file())
+        self.assertFalse((package_root / "config.py").exists())
+        self.assertFalse((package_root / "api").exists())
+        self.assertFalse((package_root / "core").exists())
 
     def test_current_root_runtime_modules_are_explicit(self) -> None:
         tracked_python = subprocess.check_output(

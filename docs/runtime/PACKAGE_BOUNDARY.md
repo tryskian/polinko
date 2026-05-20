@@ -2,8 +2,8 @@
 
 # Python Package Boundary
 
-This page records the package-boundary preflight for the beta refactor. It is a
-contract for the next source-layout move, not the move itself.
+This page records the package-boundary migration contract for the beta refactor.
+The packaging rail exists now; the runtime import move has not happened yet.
 
 ## Current Tracked Shape
 
@@ -29,9 +29,19 @@ Tracked runtime packages currently live at the repo root:
 - `tools/`
   - repo-local operator, eval, report, render, and maintenance commands
 
+Tracked packaging rail:
+
+- `pyproject.toml`
+  - package metadata and `src` layout configuration
+- `src/polinko/__init__.py`
+  - editable-install package identity only
+  - no runtime modules have moved into the package yet
+- `tools/check_package_install.py`
+  - verifies editable-install metadata and package import identity
+
 ## Target Package Shape
 
-The future import package should be `polinko` under `src/polinko/`.
+The future runtime import package should be `polinko` under `src/polinko/`.
 
 Target placement:
 
@@ -53,7 +63,7 @@ Target placement:
 
 ## Migration Order
 
-1. Add packaging metadata and editable-install coverage for `src/polinko/`.
+1. Keep packaging metadata and editable-install coverage green.
 2. Move `config.py`, `api/`, and `core/` under `src/polinko/`.
 3. Rewrite internal imports to `polinko.*`.
 4. Keep `main.py`, `server.py`, and `app.py` as compatibility launchers during
@@ -63,7 +73,8 @@ Target placement:
 
 ## Guardrails
 
-- Do not move files into `src/polinko/` in this preflight kernel.
+- Do not move runtime modules into `src/polinko/` before the editable-install
+  rail is green.
 - Do not change public operator commands:
   - `make chat`
   - `make server`
@@ -79,6 +90,7 @@ Target placement:
 
 Before any future package-boundary move lands:
 
+- `make package-install-check` passes
 - focused entrypoint tests pass
 - focused API smoke tests pass
 - full unit suite passes

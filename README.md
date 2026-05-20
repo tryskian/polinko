@@ -96,6 +96,8 @@ Open `http://127.0.0.1:8000/docs`.
 - `main.py` runs the CLI chat entrypoint.
 - `server.py` exposes the FastAPI ASGI app and chat-facing manual eval
   workbench endpoints.
+- `pyproject.toml` and `src/polinko/` provide the editable-install rail for the
+  future runtime package move.
 - `api/` contains the API implementation.
 - `core/` contains runtime logic.
 - `tools/` contains eval and maintenance scripts.

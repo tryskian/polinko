@@ -24,7 +24,7 @@ that matches the question you are trying to answer.
 
 - Runtime structure:
   [docs/runtime/ARCHITECTURE.md](./runtime/ARCHITECTURE.md)
-- Python package-boundary preflight:
+- Python package boundary and install rail:
   [docs/runtime/PACKAGE_BOUNDARY.md](./runtime/PACKAGE_BOUNDARY.md)
 - Procedures and operator commands:
   [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md)
@@ -40,7 +40,7 @@ that matches the question you are trying to answer.
 ## Directory Map
 
 - `runtime/`
-  - architecture, package-boundary preflight, runbook, and operational procedure
+  - architecture, package-boundary contract, runbook, and operational procedure
 - `eval/`
   - eval evidence eras, retained snapshots, and lane references
 - `public/`

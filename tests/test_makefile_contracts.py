@@ -271,7 +271,9 @@ class MakefileContractTests(unittest.TestCase):
         targets = set(_phony_targets())
 
         self.assertIn("ci", targets)
+        self.assertIn("ci-package", targets)
         self.assertIn("ci-python-style", targets)
+        self.assertIn("package-install-check", targets)
         self.assertIn("chat", targets)
         self.assertIn("server-daemon", targets)
         self.assertIn("caffeinate", targets)
@@ -774,7 +776,7 @@ class MakefileContractTests(unittest.TestCase):
 
         self.assertRegex(
             text,
-            r"(?m)^ci:\s*ci-docs ci-python-style ci-test ci-python-security ci-node-security$",
+            r"(?m)^ci:\s*ci-docs ci-python-style ci-package ci-test ci-python-security ci-node-security$",
         )
         self.assertRegex(
             text,

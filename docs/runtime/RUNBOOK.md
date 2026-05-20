@@ -117,6 +117,7 @@ Use this doc for operator procedure.
    - `make doctor-env`
    - `make ci-python-style`
    - `make lint-docs`
+   - `make package-install-check`
    - `make test`
    - `git diff --check`
 2. Package the branch when the kernel is ready.
@@ -167,6 +168,9 @@ Use this doc for operator procedure.
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make security-checks`
   - local Python, root Node, and portfolio Node dependency audits
+- `make package-install-check`
+  - install the root package editable without dependencies and verify package
+    metadata/import identity
 - `make lint-docs`
   - docs lint
 - `make ruff-check`
