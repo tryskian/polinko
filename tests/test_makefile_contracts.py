@@ -13,6 +13,7 @@ OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
 OCR_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_cases.sh"
+OCR_STABILITY_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_stability.sh"
 
 
 def _makefile_text() -> str:
@@ -76,6 +77,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("EVAL_CASE_GUARD_SCRIPT ?= ./tools/eval_case_guard.sh", config_text)
         self.assertIn("OCR_EVAL_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_cases.sh", config_text)
         self.assertIn("OCR_EVAL_RUNNER_ENV =", config_text)
+        self.assertIn(
+            "OCR_STABILITY_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_stability.sh",
+            config_text,
+        )
+        self.assertIn("OCR_STABILITY_RUNNER_ENV =", config_text)
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -151,8 +157,24 @@ class MakefileContractTests(unittest.TestCase):
             'bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING)"',
             text,
         )
+        self.assertIn(
+            'bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)"',
+            text,
+        )
+        self.assertIn(
+            'bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_FOCUS_CASES_JSON)"',
+            text,
+        )
+        self.assertIn(
+            'bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"',
+            text,
+        )
         self.assertNotIn(
             '$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" --strict',
+            text,
+        )
+        self.assertNotIn(
+            '$(PYTHON) -m tools.eval_ocr_stability \\\n\t\t\t\t--base-url "http://127.0.0.1:8000" \\\n\t\t\t\t--cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"',
             text,
         )
         self.assertRegex(
@@ -174,10 +196,12 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(EVAL_SERVER_DAEMON_SCRIPT.is_file())
         self.assertTrue(EVAL_CASE_GUARD_SCRIPT.is_file())
         self.assertTrue(OCR_EVAL_RUNNER_SCRIPT.is_file())
+        self.assertTrue(OCR_STABILITY_RUNNER_SCRIPT.is_file())
         self.assertTrue(os.access(OCR_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_SERVER_DAEMON_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_CASE_GUARD_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_EVAL_RUNNER_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_STABILITY_RUNNER_SCRIPT, os.X_OK))
         self.assertFalse((REPO_ROOT / "tools" / "ocr_workflow.sh").exists())
         self.assertFalse((REPO_ROOT / "tools" / "ensure_server_daemon.sh").exists())
 
