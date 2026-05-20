@@ -179,5 +179,14 @@ Use this doc for operator procedure.
   - local aggregate of the named GitHub CI job targets:
     `ci-docs`, `ci-python-style`, `ci-test`, `ci-python-security`, and
     `ci-node-security`
+- `make openai-account-summary`
+  - print OpenAI organization costs and usage from the Admin API
+  - requires `OPENAI_ADMIN_KEY` or `OPENAI_ADMIN_KEY_ENV=<env_name>`
+- `make openai-costs`
+  - print OpenAI organization cost totals
+- `make openai-usage`
+  - print OpenAI organization usage totals
+- `make openai-limits OPENAI_PROJECT_ID=<project_id>`
+  - print OpenAI project rate limits
 - `make end-git-check`
   - clean-main closeout check

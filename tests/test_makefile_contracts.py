@@ -11,6 +11,7 @@ MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
+OPENAI_ACCOUNT_SCRIPT = REPO_ROOT / "tools" / "openai_account_summary.py"
 SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "run_server_daemon.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
@@ -131,6 +132,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("PYTHON ?=", config_text)
         self.assertIn("CLI_ENTRYPOINT ?= main.py", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
+        self.assertIn(
+            "OPENAI_ACCOUNT_SCRIPT ?= ./tools/openai_account_summary.py", config_text
+        )
+        self.assertIn("OPENAI_ACCOUNT_ENV =", config_text)
         self.assertIn("CAFFEINATE_SCRIPT ?= ./tools/manage_caffeinate.sh", config_text)
         self.assertIn("CAFFEINATE_ENV =", config_text)
         self.assertIn(
@@ -270,6 +275,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("chat", targets)
         self.assertIn("server-daemon", targets)
         self.assertIn("caffeinate", targets)
+        self.assertIn("openai-account-summary", targets)
+        self.assertIn("openai-costs", targets)
+        self.assertIn("openai-usage", targets)
+        self.assertIn("openai-limits", targets)
         self.assertIn("manual-evals-db", targets)
         self.assertIn("manualdb", targets)
         self.assertIn("portfolio", targets)
@@ -298,9 +307,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertRegex(text, r"(?m)^docs:\s*open-api-docs$")
         self.assertRegex(text, r"(?m)^open-api-docs:\s*server-daemon$")
-        self.assertRegex(
-            text, r"(?m)^open-cost-console:\s*open-limits open-usage open-billing$"
-        )
+        self.assertRegex(text, r"(?m)^open-limits:\s*openai-limits$")
+        self.assertRegex(text, r"(?m)^open-usage:\s*openai-usage$")
+        self.assertRegex(text, r"(?m)^open-billing:\s*openai-costs$")
+        self.assertRegex(text, r"(?m)^open-cost-console:\s*openai-account-summary$")
         self.assertRegex(text, r"(?m)^viz:\s*server-daemon$")
         self.assertRegex(
             text, r"(?m)^portfolio:\s*portfolio-build server-daemon-stop server-daemon$"
@@ -534,9 +544,14 @@ class MakefileContractTests(unittest.TestCase):
         text = _makefile_contract_text()
 
         self.assertTrue(CAFFEINATE_SCRIPT.is_file())
+        self.assertTrue(OPENAI_ACCOUNT_SCRIPT.is_file())
         self.assertTrue(SERVER_DAEMON_SCRIPT.is_file())
         self.assertTrue(os.access(CAFFEINATE_SCRIPT, os.X_OK))
         self.assertTrue(os.access(SERVER_DAEMON_SCRIPT, os.X_OK))
+        self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" summary', text)
+        self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" costs', text)
+        self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" usage', text)
+        self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" limits', text)
         self.assertIn('bash "$(CAFFEINATE_SCRIPT)" start', text)
         self.assertIn('bash "$(CAFFEINATE_SCRIPT)" stop', text)
         self.assertIn('bash "$(CAFFEINATE_SCRIPT)" stop-all', text)
@@ -701,6 +716,14 @@ class MakefileContractTests(unittest.TestCase):
             "portfolio-playwright",
             "open-api-docs",
             "viz",
+            "openai-account-summary",
+            "openai-costs",
+            "openai-usage",
+            "openai-limits",
+            "open-cost-console",
+            "open-usage",
+            "open-billing",
+            "open-limits",
             "caffeinate",
             "caffeinate-status",
             "caffeinate-off-all",

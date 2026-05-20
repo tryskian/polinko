@@ -1,7 +1,9 @@
 # Operator lifecycle, runtime, and local machine targets.
 .PHONY: chat venv env gate start end eod end-preflight end-git-check eod-stop rituals
 .PHONY: localhost server server-daemon server-daemon-stop server-daemon-status session-status
-.PHONY: docs open-api-docs open-limits open-usage open-billing open-cost-console viz
+.PHONY: docs open-api-docs viz
+.PHONY: openai-account-summary openai-costs openai-usage openai-limits
+.PHONY: open-limits open-usage open-billing open-cost-console
 .PHONY: caffeinate caffeinate-on caffeinate-status caffeinate-off caffeinate-off-all decaffeinate decaffeinate-status
 .PHONY: privacy-local-on privacy-local-status privacy-local-off
 
@@ -87,43 +89,25 @@ open-api-docs: server-daemon
 
 docs: open-api-docs
 
-open-limits:
-	@set -eu; \
-	URL="$(OPENAI_LIMITS_URL)"; \
-	if command -v open >/dev/null 2>&1; then \
-		open "$$URL"; \
-	elif command -v xdg-open >/dev/null 2>&1; then \
-		xdg-open "$$URL" >/dev/null 2>&1 || true; \
-	else \
-		echo "Open this URL in your browser: $$URL"; \
-	fi; \
-	echo "OpenAI limits URL: $$URL"
+openai-account-summary:
+	@$(OPENAI_ACCOUNT_ENV) "$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" summary
 
-open-usage:
-	@set -eu; \
-	URL="$(OPENAI_USAGE_URL)"; \
-	if command -v open >/dev/null 2>&1; then \
-		open "$$URL"; \
-	elif command -v xdg-open >/dev/null 2>&1; then \
-		xdg-open "$$URL" >/dev/null 2>&1 || true; \
-	else \
-		echo "Open this URL in your browser: $$URL"; \
-	fi; \
-	echo "OpenAI usage URL: $$URL"
+openai-costs:
+	@$(OPENAI_ACCOUNT_ENV) "$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" costs
 
-open-billing:
-	@set -eu; \
-	URL="$(OPENAI_BILLING_URL)"; \
-	if command -v open >/dev/null 2>&1; then \
-		open "$$URL"; \
-	elif command -v xdg-open >/dev/null 2>&1; then \
-		xdg-open "$$URL" >/dev/null 2>&1 || true; \
-	else \
-		echo "Open this URL in your browser: $$URL"; \
-	fi; \
-	echo "OpenAI billing URL: $$URL"
+openai-usage:
+	@$(OPENAI_ACCOUNT_ENV) "$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" usage
 
-open-cost-console: open-limits open-usage open-billing
+openai-limits:
+	@$(OPENAI_ACCOUNT_ENV) "$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" limits
+
+open-limits: openai-limits
+
+open-usage: openai-usage
+
+open-billing: openai-costs
+
+open-cost-console: openai-account-summary
 
 viz: server-daemon
 	@set -eu; \
