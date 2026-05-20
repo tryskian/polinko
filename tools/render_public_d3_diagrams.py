@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from api.portfolio_sankey import build_portfolio_sankey_payload
+from polinko.api.portfolio_sankey import build_portfolio_sankey_payload
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

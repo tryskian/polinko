@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from api.portfolio_sankey import build_portfolio_sankey_payload
+from polinko.api.portfolio_sankey import build_portfolio_sankey_payload
 
 
 def _init_manual_evals_db(path: Path) -> None:

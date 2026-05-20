@@ -5,7 +5,7 @@ import unittest
 from collections import Counter
 from pathlib import Path
 
-from api.eval_viz import build_pass_fail_viz_payload, render_pass_fail_viz_html
+from polinko.api.eval_viz import build_pass_fail_viz_payload, render_pass_fail_viz_html
 from tools.build_manual_evals_db import build_manual_evals_db
 
 

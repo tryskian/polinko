@@ -1,7 +1,7 @@
 from agents import Runner  # noqa: F401
 from typing import cast
 
-from api.app_factory import RuntimeDeps, create_app
+from polinko.api.app_factory import RuntimeDeps, create_app
 from polinko.config import load_config
 
 

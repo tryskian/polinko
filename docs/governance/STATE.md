@@ -12,11 +12,12 @@ Last updated: 2026-05-20
   - CLI chat runs through `main.py`
   - `app.py` remains only as a lazy compatibility shim during the entrypoint
     migration
-  - Python package-boundary migration contract is documented; `config` is now
-    the first runtime module under `src/polinko/`
+  - Python package-boundary migration contract is documented; `config` and API
+    implementation now live under `src/polinko/`
   - `pyproject.toml` and the minimal `src/polinko/` scaffold now provide the
     editable-install rail for the future package move
-  - root `config.py` remains as a compatibility shim for legacy imports
+  - root `config.py` and root `api/` remain as compatibility shims for legacy
+    imports
   - prompt and runtime behaviour stay minimal and deterministic
   - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active
     because they feed manual evals, feedback, checkpoints, exports, and

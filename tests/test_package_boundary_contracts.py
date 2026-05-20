@@ -1,3 +1,4 @@
+from importlib import import_module
 import subprocess
 import unittest
 from pathlib import Path
@@ -21,6 +22,8 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "`server.py`",
             "`config.py`",
             "re-exports `AppConfig` and `load_config` from `polinko.config`",
+            "`api/`",
+            "compatibility shims for legacy `api.*` imports",
             "The future runtime import package should be `polinko` under `src/polinko/`.",
             "`src/polinko/config.py`",
             "`src/polinko/api/`",
@@ -54,13 +57,19 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "## D-046: Move config into the Python package first",
             decisions,
         )
+        self.assertIn(
+            "## D-047: Move API implementation into the Python package",
+            decisions,
+        )
 
-    def test_config_is_moved_but_api_and_core_remain_rooted(self) -> None:
+    def test_config_and_api_are_moved_but_core_remains_rooted(self) -> None:
         package_root = REPO_ROOT / "src" / "polinko"
 
         self.assertTrue((package_root / "__init__.py").is_file())
         self.assertTrue((package_root / "config.py").is_file())
-        self.assertFalse((package_root / "api").exists())
+        self.assertTrue((package_root / "api" / "__init__.py").is_file())
+        self.assertTrue((package_root / "api" / "app_factory.py").is_file())
+        self.assertTrue((package_root / "api" / "static" / "favicon.png").is_file())
         self.assertFalse((package_root / "core").exists())
 
         legacy_config = _read("config.py")
@@ -68,6 +77,13 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "from polinko.config import AppConfig, load_config", legacy_config
         )
         self.assertIn('__all__ = ["AppConfig", "load_config"]', legacy_config)
+
+        legacy_api = _read("api/app_factory.py")
+        self.assertIn('import_module("polinko.api.app_factory")', legacy_api)
+        self.assertIs(
+            import_module("api.app_factory"),
+            import_module("polinko.api.app_factory"),
+        )
 
     def test_current_root_runtime_modules_are_explicit(self) -> None:
         tracked_python = subprocess.check_output(

@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-from api.manual_evals_surface import build_manual_evals_surface_payload
+from polinko.api.manual_evals_surface import build_manual_evals_surface_payload
 from tools.build_manual_evals_db import build_manual_evals_db
 from tests.test_build_manual_evals_db import _init_history_db
 

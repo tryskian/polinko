@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from importlib import metadata
+from importlib.util import find_spec
 
 import polinko
 from polinko.config import AppConfig, load_config
@@ -20,6 +21,8 @@ def main() -> None:
         raise SystemExit("polinko.config.load_config is not callable")
     if AppConfig.__name__ != "AppConfig":
         raise SystemExit("polinko.config.AppConfig is not importable")
+    if find_spec("polinko.api.app_factory") is None:
+        raise SystemExit("polinko.api.app_factory is not discoverable")
 
 
 if __name__ == "__main__":

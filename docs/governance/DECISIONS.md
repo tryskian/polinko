@@ -621,3 +621,17 @@ or branch history instead.
 - Why: Config is the narrowest runtime boundary to move first. It proves the
   package path in real runtime code while preserving older local imports during
   the broader `api/` and `core/` migration.
+
+## D-047: Move API implementation into the Python package
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `python`, `api`, `src_layout`, `compatibility`
+- Decision: Make `src/polinko/api/` the canonical API implementation package
+  and keep root `api/` as compatibility shims for legacy `api.*` imports.
+  Active runtime imports use `polinko.api.*`.
+- Why: The API package is the next runtime boundary after config. Moving it
+  proves app construction, manual eval workbench routes, public portfolio
+  helpers, and packaged API static assets through the source-layout import path
+  while preserving older scripts and tests during the remaining `core/`
+  migration.
