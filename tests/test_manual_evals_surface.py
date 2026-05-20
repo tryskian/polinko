@@ -20,6 +20,7 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
         self.assertFalse(payload["available"])
         self.assertEqual(payload["summary"]["ocr_runs"], 0)
         self.assertEqual(payload["runs"], [])
+        self.assertEqual(payload["source_first"]["exclusions"], [])
 
     def test_returns_runs_sessions_and_image_preview_fields(self) -> None:
         with TemporaryDirectory() as tmpdir:
@@ -56,6 +57,16 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             self.assertEqual(
                 payload["source_first"]["contract"]["rejected_rollup"],
                 "pulse_verdict",
+            )
+            exclusions = {
+                row["key"]: row for row in payload["source_first"]["exclusions"]
+            }
+            self.assertEqual(exclusions["ocr_without_manual_feedback"]["count"], 1)
+            self.assertEqual(exclusions["session_without_judgment"]["count"], 1)
+            self.assertEqual(exclusions["open_manual_feedback"]["count"], 0)
+            self.assertIn(
+                "row-level manual judgment",
+                exclusions["ocr_without_manual_feedback"]["reason"],
             )
             run = payload["runs"][0]
             self.assertEqual(run["run_id"], "ocr-1")
@@ -98,6 +109,9 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             self.assertEqual(source_first["judgments"]["manual_feedback"]["closed"], 1)
             self.assertEqual(source_first["lane_summaries"][0]["lane"], "manual_feedback")
             self.assertEqual(source_first["lane_summaries"][0]["rollup_unit"], "lane_summary")
+            exclusions = {row["key"]: row for row in source_first["exclusions"]}
+            self.assertEqual(exclusions["ocr_without_manual_feedback"]["count"], 0)
+            self.assertEqual(exclusions["session_without_judgment"]["count"], 0)
             self.assertEqual(len(source_first["evidence_rows"]), 1)
 
             evidence_row = source_first["evidence_rows"][0]

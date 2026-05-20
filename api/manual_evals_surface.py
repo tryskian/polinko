@@ -48,6 +48,7 @@ def empty_source_first_payload() -> dict[str, Any]:
             },
         },
         "lane_summaries": [],
+        "exclusions": [],
         "evidence_rows": [],
     }
 
@@ -89,6 +90,14 @@ def _safe_count(conn: sqlite3.Connection, table_name: str) -> int:
     except sqlite3.Error:
         return 0
     return int(row["c"] or 0) if row is not None else 0
+
+
+def _safe_query_int(conn: sqlite3.Connection, query: str) -> int:
+    try:
+        row = conn.execute(query).fetchone()
+    except sqlite3.Error:
+        return 0
+    return _safe_int(row["c"]) if row is not None else 0
 
 
 def _safe_int(value: Any) -> int:
@@ -267,6 +276,105 @@ def _source_first_lane_summaries(
     ]
 
 
+def _source_first_exclusion(
+    *,
+    key: str,
+    label: str,
+    count: int,
+    reason: str,
+    promotion_effect: str,
+) -> dict[str, Any]:
+    return {
+        "key": key,
+        "label": label,
+        "count": max(0, int(count)),
+        "reason": reason,
+        "promotion_effect": promotion_effect,
+    }
+
+
+def _load_source_first_exclusions(
+    conn: sqlite3.Connection,
+    *,
+    manual_feedback: dict[str, int],
+) -> list[dict[str, Any]]:
+    ocr_without_manual_feedback = _safe_query_int(
+        conn,
+        """
+        SELECT COUNT(*) AS c
+        FROM ocr_runs r
+        LEFT JOIN feedback f
+          ON f.session_id = r.session_id
+         AND f.message_id = r.result_message_id
+        WHERE r.result_message_id IS NULL
+           OR f.id IS NULL
+        """,
+    )
+    sessions_without_judgment = _safe_query_int(
+        conn,
+        """
+        SELECT COUNT(*) AS c
+        FROM sessions s
+        LEFT JOIN (
+          SELECT session_id, COUNT(*) AS c
+          FROM feedback
+          GROUP BY session_id
+        ) fb ON fb.session_id = s.session_id
+        LEFT JOIN (
+          SELECT session_id, COUNT(*) AS c
+          FROM checkpoints
+          GROUP BY session_id
+        ) cp ON cp.session_id = s.session_id
+        WHERE COALESCE(fb.c, 0) = 0
+          AND COALESCE(cp.c, 0) = 0
+        """,
+    )
+    checkpoint_rows_without_feedback = _safe_query_int(
+        conn,
+        """
+        SELECT COALESCE(SUM(c.total_count), 0) AS c
+        FROM checkpoints c
+        LEFT JOIN (
+          SELECT session_id, COUNT(*) AS c
+          FROM feedback
+          GROUP BY session_id
+        ) fb ON fb.session_id = c.session_id
+        WHERE COALESCE(fb.c, 0) = 0
+        """,
+    )
+
+    return [
+        _source_first_exclusion(
+            key="ocr_without_manual_feedback",
+            label="OCR run without manual feedback",
+            count=ocr_without_manual_feedback,
+            reason="source artifact exists without a row-level manual judgment",
+            promotion_effect="not promotion evidence until a row/case judgment exists",
+        ),
+        _source_first_exclusion(
+            key="session_without_judgment",
+            label="Session without judgment",
+            count=sessions_without_judgment,
+            reason="chat workbench context exists without feedback or checkpoint coverage",
+            promotion_effect="usable as source context, not as a lane summary input",
+        ),
+        _source_first_exclusion(
+            key="open_manual_feedback",
+            label="Open manual feedback",
+            count=manual_feedback["open"],
+            reason="manual judgment is still open",
+            promotion_effect="not promotion evidence until closed or logged",
+        ),
+        _source_first_exclusion(
+            key="checkpoint_without_feedback_rows",
+            label="Checkpoint rows without feedback",
+            count=checkpoint_rows_without_feedback,
+            reason="aggregate checkpoint coverage lacks row-level manual feedback",
+            promotion_effect="kept as context, not row evidence",
+        ),
+    ]
+
+
 def _load_source_first_evidence_rows(
     conn: sqlite3.Connection,
     *,
@@ -386,6 +494,10 @@ def _load_source_first_payload(
         conn,
         manual_feedback=manual_feedback,
         summary=summary,
+    )
+    payload["exclusions"] = _load_source_first_exclusions(
+        conn,
+        manual_feedback=manual_feedback,
     )
     payload["evidence_rows"] = _load_source_first_evidence_rows(
         conn,
