@@ -47,8 +47,11 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "re-exports `AppConfig` and `load_config` from `polinko.config`",
             "`api/`",
             "compatibility shims for legacy `api.*` imports",
+            "explicit `__all__` list for supported legacy",
+            "`from api import ...` imports",
             "`core/`",
             "compatibility shims for legacy `core.*` imports",
+            "`from core import ...` imports",
             "The future runtime import package should be `polinko` under `src/polinko/`.",
             "`src/polinko/config.py`",
             "`src/polinko/api/`",
@@ -88,6 +91,8 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertIn("docs/runtime/PACKAGE_BOUNDARY.md", architecture)
         self.assertIn("`PACKAGE_BOUNDARY`", architecture)
         self.assertIn("package-boundary migration contract is documented", state)
+        self.assertIn("root `api/` and `core/` shim packages", state)
+        self.assertIn("`from api import ...` and `from core import ...`", state)
         self.assertIn("`PACKAGE_BOUNDARY` holds the Python", state)
         self.assertIn("docs/runtime/PACKAGE_BOUNDARY.md", docs_index)
         self.assertIn(
@@ -167,6 +172,11 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertIs(legacy_config.AppConfig, packaged_config.AppConfig)
         self.assertIs(legacy_config.load_config, packaged_config.load_config)
 
+        legacy_api_package = import_module("api")
+        legacy_core_package = import_module("core")
+        self.assertEqual(legacy_api_package.__all__, list(LEGACY_API_SHIMS))
+        self.assertEqual(legacy_core_package.__all__, list(LEGACY_CORE_SHIMS))
+
         for module_name in LEGACY_API_SHIMS:
             self.assertIs(
                 import_module(f"api.{module_name}"),
@@ -176,6 +186,22 @@ class PackageBoundaryContractTests(unittest.TestCase):
         for module_name in LEGACY_CORE_SHIMS:
             self.assertIs(
                 import_module(f"core.{module_name}"),
+                import_module(f"polinko.core.{module_name}"),
+            )
+
+    def test_root_package_shims_support_legacy_fromlist_imports(self) -> None:
+        legacy_api_package = __import__("api", fromlist=list(LEGACY_API_SHIMS))
+        legacy_core_package = __import__("core", fromlist=list(LEGACY_CORE_SHIMS))
+
+        for module_name in LEGACY_API_SHIMS:
+            self.assertIs(
+                getattr(legacy_api_package, module_name),
+                import_module(f"polinko.api.{module_name}"),
+            )
+
+        for module_name in LEGACY_CORE_SHIMS:
+            self.assertIs(
+                getattr(legacy_core_package, module_name),
                 import_module(f"polinko.core.{module_name}"),
             )
 
