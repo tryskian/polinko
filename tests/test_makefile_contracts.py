@@ -18,6 +18,7 @@ OCR_STABILITY_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_stability.sh"
 OCR_GROWTH_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_cases.sh"
 OCR_GROWTH_BATCH_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_batched.sh"
 OCR_GROWTH_STABILITY_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_stability.sh"
+OCR_REPORT_BUILDER_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_builder.sh"
 
 
 def _makefile_text() -> str:
@@ -101,6 +102,8 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("OCR_GROWTH_RUNNER_ENV =", config_text)
+        self.assertIn("OCR_REPORT_BUILDER_SCRIPT ?= ./tools/run_ocr_report_builder.sh", config_text)
+        self.assertIn("OCR_REPORT_BUILDER_ENV =", config_text)
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -215,6 +218,16 @@ class MakefileContractTests(unittest.TestCase):
             'bash "$(OCR_GROWTH_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
             text,
         )
+        for suite in (
+            "growth-metrics",
+            "growth-fail-cohort",
+            "focus-cases",
+            "focus-fail-patterns",
+        ):
+            self.assertIn(
+                f'bash "$(OCR_REPORT_BUILDER_SCRIPT)" {suite}',
+                text,
+            )
         self.assertNotIn(
             '$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" --strict',
             text,
@@ -237,6 +250,12 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("eval_reports/ocr-$$RUN_ID.json", text)
         self.assertNotIn("eval_reports/ocr-recovery-$$RUN_ID.json", text)
         self.assertNotIn("eval_reports/clip-ab-$$RUN_ID.json", text)
+        self.assertNotIn("$(PYTHON) -m tools.eval_ocr_growth_metrics", text)
+        self.assertNotIn("$(PYTHON) -m tools.build_ocr_growth_fail_cohort", text)
+        self.assertNotIn("$(PYTHON) -m tools.build_ocr_focus_cases", text)
+        self.assertNotIn("$(PYTHON) -m tools.report_ocr_focus_fail_patterns", text)
+        self.assertNotIn("FAIL_COHORT_ARGS=", text)
+        self.assertNotIn("FOCUS_ARGS=", text)
         self.assertRegex(
             text,
             r"(?m)^ocrkernel:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tCGPT_EXPORT_ROOT_DEFAULT=\"\$\(CGPT_EXPORT_ROOT_DEFAULT\)\" \\\n\t\tbash \"\$\(OCR_WORKFLOW_SCRIPT\)\" ocrkernel$",
@@ -261,6 +280,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(OCR_GROWTH_EVAL_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_GROWTH_BATCH_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_GROWTH_STABILITY_RUNNER_SCRIPT.is_file())
+        self.assertTrue(OCR_REPORT_BUILDER_SCRIPT.is_file())
         self.assertTrue(os.access(OCR_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_SERVER_DAEMON_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_CASE_GUARD_SCRIPT, os.X_OK))
@@ -270,6 +290,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(os.access(OCR_GROWTH_EVAL_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GROWTH_BATCH_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GROWTH_STABILITY_RUNNER_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_REPORT_BUILDER_SCRIPT, os.X_OK))
         for script in (
             OCR_EVAL_RUNNER_SCRIPT,
             OCR_STABILITY_RUNNER_SCRIPT,
