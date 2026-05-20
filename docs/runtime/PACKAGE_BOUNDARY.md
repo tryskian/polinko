@@ -11,7 +11,8 @@ are under `src/polinko/`.
 Tracked root runtime compatibility modules:
 
 - `main.py`
-  - canonical CLI chat entrypoint
+  - compatibility launcher for `python main.py`
+  - preserves project-virtualenv restart hints for direct launches
 - `app.py`
   - lazy compatibility shim for legacy `python app.py`
 - `server.py`
@@ -36,9 +37,12 @@ Tracked packaging rail:
 
 - `pyproject.toml`
   - package metadata and `src` layout configuration
+  - installs the `polinko-chat` console script
   - includes packaged API static assets under `polinko.api`
 - `src/polinko/__init__.py`
   - editable-install package identity
+- `src/polinko/cli.py`
+  - canonical CLI chat implementation
 - `src/polinko/config.py`
   - canonical environment loading and validation implementation
 - `src/polinko/api/`
@@ -64,7 +68,11 @@ Target placement:
 - `src/polinko/core/`
   - migrated from root `core/`
 - root `main.py`
-  - remains a thin CLI launcher until a console-script entrypoint replaces it
+  - remains a thin compatibility launcher for direct `python main.py` usage
+- `src/polinko/cli.py`
+  - canonical CLI chat implementation
+- `polinko-chat`
+  - installed console-script entrypoint for the packaged CLI
 - root `server.py`
   - remains the stable ASGI launcher for `uvicorn server:app`
 - root `app.py`
@@ -81,6 +89,7 @@ Target placement:
    the import rewrite.
 4. Move or split `tools/` only after runtime imports and tests are stable.
 5. Add a console-script entrypoint for the CLI before removing any root launcher.
+   - current console script: `polinko-chat`
 
 ## Guardrails
 
@@ -94,6 +103,7 @@ Target placement:
   have moved off `core.*` imports.
 - Do not change public operator commands:
   - `make chat`
+  - `polinko-chat`
   - `make server`
   - `make localhost`
   - `make server-daemon`

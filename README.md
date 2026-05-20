@@ -93,7 +93,8 @@ Open `http://127.0.0.1:8000/docs`.
 
 ## Repo Map
 
-- `main.py` runs the CLI chat entrypoint.
+- `src/polinko/cli.py` contains the packaged CLI chat implementation; `make
+  chat`, `polinko-chat`, and root `main.py` launch it.
 - `server.py` exposes the FastAPI ASGI app and chat-facing manual eval
   workbench endpoints.
 - `pyproject.toml` and `src/polinko/` provide the editable-install rail for the

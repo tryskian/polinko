@@ -9,7 +9,8 @@ Last updated: 2026-05-20
 - Backend-first runtime remains canonical:
   - FastAPI API + chat-facing manual eval workbench endpoints are active
     execution and manual-eval surfaces
-  - CLI chat runs through `main.py`
+  - CLI chat implementation lives in `src/polinko/cli.py`
+  - `make chat`, `polinko-chat`, and root `main.py` launch the packaged CLI
   - `app.py` remains only as a lazy compatibility shim during the entrypoint
     migration
   - Python package-boundary migration contract is documented; `config`, API,

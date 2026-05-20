@@ -22,6 +22,9 @@ classifiers = [
 # Runtime and development dependencies remain locked through requirements.in
 # and requirements.lock until the dependency policy changes.
 
+[project.scripts]
+polinko-chat = "polinko.cli:main"
+
 [tool.setuptools]
 package-dir = { "" = "src" }
 

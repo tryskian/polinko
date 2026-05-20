@@ -1,7 +1,7 @@
 """Compatibility shim for legacy ``python app.py`` CLI launches.
 
-New code should call ``main.py`` or ``make chat``. This module stays lazy so
-importing ``app`` does not load the full CLI runtime.
+New code should call ``make chat`` or ``polinko-chat``. This module stays lazy
+so importing ``app`` does not load the full CLI runtime.
 """
 
 __all__ = ["main"]

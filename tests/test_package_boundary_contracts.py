@@ -18,8 +18,12 @@ class PackageBoundaryContractTests(unittest.TestCase):
         for expected in (
             "Tracked root runtime compatibility modules",
             "`main.py`",
+            "compatibility launcher for `python main.py`",
             "`app.py`",
             "`server.py`",
+            "`src/polinko/cli.py`",
+            "canonical CLI chat implementation",
+            "`polinko-chat`",
             "`config.py`",
             "re-exports `AppConfig` and `load_config` from `polinko.config`",
             "`api/`",
@@ -31,6 +35,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "`src/polinko/api/`",
             "`src/polinko/core/`",
             "root `tools/`",
+            "current console script: `polinko-chat`",
             "Do not move runtime modules into `src/polinko/`",
             "Do not change ASGI import compatibility for `server:app`.",
         ):
@@ -67,11 +72,16 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "## D-048: Move core runtime into the Python package",
             decisions,
         )
+        self.assertIn(
+            "## D-049: Package the CLI implementation behind stable launchers",
+            decisions,
+        )
 
     def test_runtime_modules_are_moved_with_root_compatibility_shims(self) -> None:
         package_root = REPO_ROOT / "src" / "polinko"
 
         self.assertTrue((package_root / "__init__.py").is_file())
+        self.assertTrue((package_root / "cli.py").is_file())
         self.assertTrue((package_root / "config.py").is_file())
         self.assertTrue((package_root / "api" / "__init__.py").is_file())
         self.assertTrue((package_root / "api" / "app_factory.py").is_file())

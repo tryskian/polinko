@@ -11,6 +11,49 @@ class EntrypointTests(unittest.TestCase):
 
         self.assertTrue(callable(cli_main.main))
 
+    def test_packaged_cli_imports_without_running_loop(self) -> None:
+        cli = importlib.import_module("polinko.cli")
+
+        self.assertTrue(callable(cli.main))
+        self.assertTrue(callable(cli.export_transcript))
+
+    def test_root_main_import_does_not_load_packaged_cli_runtime(self) -> None:
+        original_main = sys.modules.pop("main", None)
+        original_cli = sys.modules.pop("polinko.cli", None)
+        try:
+            cli_main = importlib.import_module("main")
+
+            self.assertNotIn("polinko.cli", sys.modules)
+            self.assertEqual(cli_main.__all__, ["main"])
+        finally:
+            sys.modules.pop("main", None)
+            if original_main is not None:
+                sys.modules["main"] = original_main
+            if original_cli is not None:
+                sys.modules["polinko.cli"] = original_cli
+
+    def test_root_main_launcher_forwards_to_packaged_cli(self) -> None:
+        cli_main = importlib.import_module("main")
+        original_cli = sys.modules.get("polinko.cli")
+        called = []
+        fake_cli = types.ModuleType("polinko.cli")
+
+        def run_main() -> None:
+            called.append("cli")
+
+        fake_cli.main = run_main
+        sys.modules["polinko.cli"] = fake_cli
+
+        try:
+            cli_main.main()
+        finally:
+            if original_cli is not None:
+                sys.modules["polinko.cli"] = original_cli
+            else:
+                sys.modules.pop("polinko.cli", None)
+
+        self.assertEqual(called, ["cli"])
+
     def test_legacy_app_import_does_not_load_cli_runtime(self) -> None:
         original_app = sys.modules.pop("app", None)
         original_main = sys.modules.pop("main", None)

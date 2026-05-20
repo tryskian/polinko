@@ -648,3 +648,18 @@ or branch history instead.
   rate limiting, response parsing, and vector-store helpers. Moving it after
   config and API completes the runtime package boundary while preserving older
   local scripts and tests until the root compatibility layer can be retired.
+
+## D-049: Package the CLI implementation behind stable launchers
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `python`, `cli`, `entrypoints`, `src_layout`, `compatibility`
+- Decision: Make `src/polinko/cli.py` the canonical CLI chat implementation,
+  add the `polinko-chat` console script, and keep root `main.py` plus `app.py`
+  as compatibility launchers. `make chat` runs the packaged CLI with
+  `python -m polinko.cli`; `server.py` remains the stable `server:app` ASGI
+  surface.
+- Why: The runtime package boundary is now stable for config, API, and core.
+  Moving the CLI implementation into the package keeps the root entrypoint
+  layer thin while preserving existing operator commands and legacy direct
+  launches.

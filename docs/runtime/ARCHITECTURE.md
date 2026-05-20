@@ -14,7 +14,7 @@ This page is the structural map of the tracked system.
 ## Top-Level Map
 
 - `main.py`
-  - operator CLI chat entrypoint
+  - compatibility launcher for direct CLI chat calls
 - `app.py`
   - lazy compatibility shim for older CLI calls
 - `server.py`
@@ -25,6 +25,8 @@ This page is the structural map of the tracked system.
   - Python package metadata and `src` layout configuration
 - `src/polinko/`
   - editable-install runtime package boundary
+- `src/polinko/cli.py`
+  - canonical CLI chat implementation
 - `src/polinko/config.py`
   - canonical environment loading and validation implementation
 - `src/polinko/api/`
@@ -72,8 +74,9 @@ This page is the structural map of the tracked system.
    - OCR case outcomes are `pass` / `fail`
    - broader manual and non-OCR lanes may still use `retain` / `evict` after
      `fail` as upstream case curation
-8. CLI chat runs through `main.py`; `app.py` only lazily forwards legacy
-   launches to that entrypoint.
+8. CLI chat implementation runs through `polinko.cli`; `make chat`,
+   `polinko-chat`, root `main.py`, and legacy `app.py` launch that packaged
+   entrypoint.
 
 ## Data Surfaces
 
