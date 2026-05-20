@@ -9,24 +9,7 @@ eval-smoke:
 	@$(LOCAL_EVAL_GATE_RUNNER_ENV) bash "$(LOCAL_EVAL_GATE_RUNNER_SCRIPT)" eval-smoke
 
 eval-sidecar-start:
-	@set -eu; \
-	if [ -f "$(EVAL_SIDECAR_PID_FILE)" ]; then \
-		PID=$$(cat "$(EVAL_SIDECAR_PID_FILE)" 2>/dev/null || true); \
-		if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
-			echo "eval-sidecar already running (PID $$PID)."; \
-			exit 0; \
-		fi; \
-		rm -f "$(EVAL_SIDECAR_PID_FILE)"; \
-	fi; \
-	nohup $(PYTHON) -m tools.eval_sidecar run --target "$(EVAL_SIDECAR_TARGET)" --min-seconds "$(EVAL_SIDECAR_MIN_SECONDS)" --runs-dir "$(EVAL_SIDECAR_RUNS_DIR)" --pid-file "$(EVAL_SIDECAR_PID_FILE)" --current-file "$(EVAL_SIDECAR_CURRENT_FILE)" >"$(EVAL_SIDECAR_LOG)" 2>&1 & \
-	PID=$$!; \
-	sleep 0.2; \
-	if kill -0 "$$PID" 2>/dev/null; then \
-		echo "eval-sidecar started (PID $$PID, log: $(EVAL_SIDECAR_LOG))."; \
-	else \
-		echo "Failed to start eval-sidecar. Check $(EVAL_SIDECAR_LOG)."; \
-		exit 1; \
-	fi
+	@$(EVAL_SIDECAR_START_ENV) bash "$(EVAL_SIDECAR_START_SCRIPT)"
 
 eval-sidecar-status:
 	$(PYTHON) -m tools.eval_sidecar status --current-file "$(EVAL_SIDECAR_CURRENT_FILE)" --pid-file "$(EVAL_SIDECAR_PID_FILE)"
