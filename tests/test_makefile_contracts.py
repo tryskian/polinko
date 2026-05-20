@@ -12,6 +12,7 @@ MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
+OCR_GUARDED_CASE_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_guarded_ocr_case_eval.sh"
 EVAL_REPORT_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_report.sh"
 LOCAL_EVAL_GATE_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_local_eval_gate.sh"
 OCR_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_cases.sh"
@@ -117,6 +118,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "EVAL_CASE_GUARD_SCRIPT ?= ./tools/eval_case_guard.sh", config_text
         )
+        self.assertIn(
+            "OCR_GUARDED_CASE_RUNNER_SCRIPT ?= ./tools/run_guarded_ocr_case_eval.sh",
+            config_text,
+        )
+        self.assertIn("OCR_GUARDED_CASE_RUNNER_ENV =", config_text)
         self.assertIn(
             "EVAL_REPORT_RUNNER_SCRIPT ?= ./tools/run_eval_report.sh", config_text
         )
@@ -241,11 +247,14 @@ class MakefileContractTests(unittest.TestCase):
     def test_eval_workflow_orchestration_delegates_to_scripts(self) -> None:
         text = _makefile_source_text(MAKE_EVALS)
         guard_text = EVAL_CASE_GUARD_SCRIPT.read_text(encoding="utf-8")
+        guarded_runner_text = OCR_GUARDED_CASE_RUNNER_SCRIPT.read_text(encoding="utf-8")
 
         self.assertNotIn("$(MAKE)", text)
         self.assertNotIn("import json,pathlib", text)
         self.assertNotIn("CASE_COUNT=", text)
         self.assertIn("tools.count_eval_cases", guard_text)
+        self.assertIn("eval_case_guard_or_exit", guarded_runner_text)
+        self.assertIn('bash "$(OCR_GUARDED_CASE_RUNNER_SCRIPT)"', text)
         for suite in (
             "retrieval",
             "file-search",
@@ -261,8 +270,16 @@ class MakefileContractTests(unittest.TestCase):
                 f'bash "$(EVAL_REPORT_RUNNER_SCRIPT)" {suite}',
                 text,
             )
-        self.assertIn('eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_GROWTH)"', text)
         self.assertIn('eval_case_guard_or_exit "$(OCR_FOCUS_CASES_JSON)"', text)
+        for moved_cases in (
+            "OCR_TRANSCRIPT_CASES_HANDWRITING",
+            "OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK",
+            "OCR_TRANSCRIPT_CASES_TYPED",
+            "OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK",
+            "OCR_TRANSCRIPT_CASES_ILLUSTRATION",
+            "OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK",
+        ):
+            self.assertNotIn(f'eval_case_guard_or_exit "$({moved_cases})"', text)
         self.assertIn(
             'bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)"', text
         )
@@ -363,6 +380,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(OCR_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(EVAL_SERVER_DAEMON_SCRIPT.is_file())
         self.assertTrue(EVAL_CASE_GUARD_SCRIPT.is_file())
+        self.assertTrue(OCR_GUARDED_CASE_RUNNER_SCRIPT.is_file())
         self.assertTrue(EVAL_REPORT_RUNNER_SCRIPT.is_file())
         self.assertTrue(LOCAL_EVAL_GATE_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_EVAL_RUNNER_SCRIPT.is_file())
@@ -374,6 +392,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(os.access(OCR_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_SERVER_DAEMON_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_CASE_GUARD_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_GUARDED_CASE_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_REPORT_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(LOCAL_EVAL_GATE_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_EVAL_RUNNER_SCRIPT, os.X_OK))
@@ -392,6 +411,9 @@ class MakefileContractTests(unittest.TestCase):
             script_text = script.read_text(encoding="utf-8")
             self.assertIn("EVAL_SERVER_DAEMON_SCRIPT", script_text)
             self.assertIn('bash "$server_daemon_script"', script_text)
+        guarded_runner_text = OCR_GUARDED_CASE_RUNNER_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("EVAL_CASE_GUARD_SCRIPT", guarded_runner_text)
+        self.assertIn('exec "$@"', guarded_runner_text)
         self.assertFalse((REPO_ROOT / "tools" / "ocr_workflow.sh").exists())
         self.assertFalse((REPO_ROOT / "tools" / "ensure_server_daemon.sh").exists())
 

@@ -8,6 +8,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
+GUARDED_SCRIPT = REPO_ROOT / "tools" / "run_guarded_ocr_case_eval.sh"
 
 
 def _run_guard(cases_path: Path) -> subprocess.CompletedProcess[str]:
@@ -21,6 +22,29 @@ def _run_guard(cases_path: Path) -> subprocess.CompletedProcess[str]:
     )
     return subprocess.run(
         ["/bin/sh", "-c", script],
+        capture_output=True,
+        cwd=REPO_ROOT,
+        env=env,
+        text=True,
+    )
+
+
+def _run_guarded_runner(cases_path: Path) -> subprocess.CompletedProcess[str]:
+    env = os.environ.copy()
+    env["PYTHON"] = sys.executable
+    return subprocess.run(
+        [
+            "/bin/sh",
+            str(GUARDED_SCRIPT.relative_to(REPO_ROOT)),
+            str(cases_path),
+            "Cases not found",
+            "Run: make ocrmine",
+            "No cases available",
+            "--",
+            "/bin/sh",
+            "-c",
+            'echo "after guarded runner"',
+        ],
         capture_output=True,
         cwd=REPO_ROOT,
         env=env,
@@ -67,6 +91,27 @@ class EvalCaseGuardTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 2)
         self.assertIn("Source this helper", result.stderr)
+
+    def test_guarded_runner_executes_command_after_non_empty_cases(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            cases_path = Path(tmp) / "cases.json"
+            cases_path.write_text('{"cases": [{"id": "a"}]}', encoding="utf-8")
+
+            result = _run_guarded_runner(cases_path)
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.strip(), "after guarded runner")
+
+    def test_guarded_runner_skips_command_after_empty_cases(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            cases_path = Path(tmp) / "cases.json"
+            cases_path.write_text('{"cases": []}', encoding="utf-8")
+
+            result = _run_guarded_runner(cases_path)
+
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout.strip(), "No cases available")
+        self.assertNotIn("after guarded runner", result.stdout)
 
 
 if __name__ == "__main__":
