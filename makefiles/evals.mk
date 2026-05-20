@@ -200,61 +200,10 @@ backfill-eval-traces:
 	$(PYTHON) -m tools.backfill_eval_trace_artifacts
 
 api-smoke:
-	@echo "Running API smoke (fresh local server + small endpoint calls)..."
-	@set -eu; \
-		BASE_URL="$(SMOKE_BASE_URL)"; \
-		rm -f "$(SMOKE_HISTORY_DB)" "$(SMOKE_MEMORY_DB)" "$(SMOKE_VECTOR_DB)"; \
-		POLINKO_HISTORY_DB_PATH="$(SMOKE_HISTORY_DB)" \
-		POLINKO_MEMORY_DB_PATH="$(SMOKE_MEMORY_DB)" \
-		POLINKO_VECTOR_DB_PATH="$(SMOKE_VECTOR_DB)" \
-		POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
-		$(PYTHON) -m uvicorn $(ASGI_APP) --host 127.0.0.1 --port $(SMOKE_PORT) >/tmp/polinko-api-smoke.log 2>&1 & \
-		SERVER_PID=$$!; \
-		trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
-		READY=0; \
-		for i in $$(seq 1 100); do \
-			if curl -fsS "$$BASE_URL/health" >/dev/null 2>&1; then \
-				READY=1; \
-				break; \
-			fi; \
-			sleep 0.2; \
-		done; \
-		if [ "$$READY" -ne 1 ]; then \
-			echo "Server failed to start. See /tmp/polinko-api-smoke.log"; \
-			exit 1; \
-		fi; \
-		$(PYTHON) -m tools.api_smoke --base-url "$$BASE_URL"; \
-		echo "API smoke passed."
+	@$(LOCAL_EVAL_GATE_RUNNER_ENV) bash "$(LOCAL_EVAL_GATE_RUNNER_SCRIPT)" api-smoke
 
 eval-smoke:
-	@echo "Running eval smoke (fresh local server + api smoke + response behaviour + retrieval + file search)..."
-	@set -eu; \
-		BASE_URL="$(SMOKE_BASE_URL)"; \
-		rm -f "$(SMOKE_HISTORY_DB)" "$(SMOKE_MEMORY_DB)" "$(SMOKE_VECTOR_DB)"; \
-		POLINKO_HISTORY_DB_PATH="$(SMOKE_HISTORY_DB)" \
-		POLINKO_MEMORY_DB_PATH="$(SMOKE_MEMORY_DB)" \
-		POLINKO_VECTOR_DB_PATH="$(SMOKE_VECTOR_DB)" \
-		POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
-		$(PYTHON) -m uvicorn $(ASGI_APP) --host 127.0.0.1 --port $(SMOKE_PORT) >/tmp/polinko-eval-smoke.log 2>&1 & \
-		SERVER_PID=$$!; \
-		trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
-		READY=0; \
-		for i in $$(seq 1 100); do \
-			if curl -fsS "$$BASE_URL/health" >/dev/null 2>&1; then \
-				READY=1; \
-				break; \
-			fi; \
-			sleep 0.2; \
-		done; \
-		if [ "$$READY" -ne 1 ]; then \
-			echo "Server failed to start. See /tmp/polinko-eval-smoke.log"; \
-			exit 1; \
-		fi; \
-		$(PYTHON) -m tools.api_smoke --base-url "$$BASE_URL"; \
-		$(PYTHON) -m tools.eval_response_behaviour --base-url "$$BASE_URL" --strict; \
-		$(PYTHON) -m tools.eval_retrieval --base-url "$$BASE_URL" --request-retries "$(RETRIEVAL_REQUEST_RETRIES)" --request-retry-delay-ms "$(RETRIEVAL_REQUEST_RETRY_DELAY_MS)"; \
-		$(PYTHON) -m tools.eval_file_search --base-url "$$BASE_URL"; \
-		echo "Eval smoke passed."
+	@$(LOCAL_EVAL_GATE_RUNNER_ENV) bash "$(LOCAL_EVAL_GATE_RUNNER_SCRIPT)" eval-smoke
 
 eval-reports: eval-retrieval-report eval-file-search-report eval-ocr-report eval-style-report eval-response-behaviour-report eval-ocr-safety-report eval-hallucination-report
 
@@ -292,62 +241,10 @@ operator-burden-report:
 	$(PYTHON) -m tools.report_operator_burden_rows
 
 hallucination-gate:
-	@echo "Running hallucination gate..."
-	@set -eu; \
-	BASE_URL="$(GATE_BASE_URL)"; \
-	rm -f "$(GATE_SESSION_DB)" "$(GATE_VECTOR_DB)"; \
-	POLINKO_SESSION_DB_PATH="$(GATE_SESSION_DB)" \
-	POLINKO_VECTOR_DB_PATH="$(GATE_VECTOR_DB)" \
-	POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
-	$(PYTHON) -m uvicorn $(ASGI_APP) --host 127.0.0.1 --port $(GATE_PORT) >/tmp/polinko-hallucination-gate.log 2>&1 & \
-	SERVER_PID=$$!; \
-	trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
-	READY=0; \
-	for i in $$(seq 1 100); do \
-		if curl -fsS "$$BASE_URL/health" >/dev/null 2>&1; then \
-			READY=1; \
-			break; \
-		fi; \
-		sleep 0.2; \
-	done; \
-	if [ "$$READY" -ne 1 ]; then \
-		echo "Server failed to start. See /tmp/polinko-hallucination-gate.log"; \
-		exit 1; \
-	fi; \
-	$(PYTHON) -m tools.eval_hallucination --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"; \
-	echo "Hallucination gate passed."
+	@$(LOCAL_EVAL_GATE_RUNNER_ENV) bash "$(LOCAL_EVAL_GATE_RUNNER_SCRIPT)" hallucination-gate
 
 quality-gate:
-	@echo "Running quality gate (tests + retrieval eval + file-search eval + OCR eval + style eval + response-behaviour eval + hallucination eval)..."
-	@set -eu; \
-	BASE_URL="$(GATE_BASE_URL)"; \
-	rm -f "$(GATE_SESSION_DB)" "$(GATE_VECTOR_DB)"; \
-	POLINKO_SESSION_DB_PATH="$(GATE_SESSION_DB)" \
-	POLINKO_VECTOR_DB_PATH="$(GATE_VECTOR_DB)" \
-	POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
-	$(PYTHON) -m uvicorn $(ASGI_APP) --host 127.0.0.1 --port $(GATE_PORT) >/tmp/polinko-quality-gate.log 2>&1 & \
-	SERVER_PID=$$!; \
-	trap 'kill $$SERVER_PID 2>/dev/null || true' EXIT INT TERM; \
-	READY=0; \
-	for i in $$(seq 1 100); do \
-		if curl -fsS "$$BASE_URL/health" >/dev/null 2>&1; then \
-			READY=1; \
-			break; \
-		fi; \
-		sleep 0.2; \
-	done; \
-	if [ "$$READY" -ne 1 ]; then \
-		echo "Server failed to start. See /tmp/polinko-quality-gate.log"; \
-		exit 1; \
-	fi; \
-	$(PYTHON) -m unittest discover -s tests -p "test_*.py"; \
-	$(PYTHON) -m tools.eval_retrieval --base-url "$$BASE_URL" --request-retries "$(RETRIEVAL_REQUEST_RETRIES)" --request-retry-delay-ms "$(RETRIEVAL_REQUEST_RETRY_DELAY_MS)"; \
-	$(PYTHON) -m tools.eval_file_search --base-url "$$BASE_URL"; \
-	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --base-url "$$BASE_URL" --strict --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"; \
-	$(PYTHON) -m tools.eval_style --base-url "$$BASE_URL" --strict --case-attempts "$(STYLE_CASE_ATTEMPTS)" --min-pass-attempts "$(STYLE_MIN_PASS_ATTEMPTS)"; \
-	$(PYTHON) -m tools.eval_response_behaviour --base-url "$$BASE_URL" --strict; \
-	$(PYTHON) -m tools.eval_hallucination --base-url "$$BASE_URL" --strict --evaluation-mode "$(HALLUCINATION_EVAL_MODE)" --judge-model "$(HALLUCINATION_JUDGE_MODEL)" --judge-api-key-env "$(HALLUCINATION_JUDGE_API_KEY_ENV)" --judge-base-url "$(HALLUCINATION_JUDGE_BASE_URL)" --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"; \
-	echo "Quality gate passed."
+	@$(LOCAL_EVAL_GATE_RUNNER_ENV) bash "$(LOCAL_EVAL_GATE_RUNNER_SCRIPT)" quality-gate
 
 quality-gate-deterministic: HALLUCINATION_EVAL_MODE = deterministic
 quality-gate-deterministic: STYLE_CASE_ATTEMPTS = 3
