@@ -159,6 +159,7 @@ EVAL_SIDECAR_RUNS_DIR ?= .local/eval_runs
 EVAL_SIDECAR_CURRENT_FILE ?= $(EVAL_SIDECAR_RUNS_DIR)/eval_sidecar_current.txt
 OCR_WORKFLOW_SCRIPT ?= ./tools/run_ocr_workflow.sh
 EVAL_SERVER_DAEMON_SCRIPT ?= ./tools/ensure_eval_server_daemon.sh
+EVAL_CASE_GUARD_SCRIPT ?= ./tools/eval_case_guard.sh
 PORTFOLIO_MOCKUP_PID_FILE ?= /tmp/polinko-portfolio-mockups.pid
 PORTFOLIO_MOCKUP_LOG ?= /tmp/polinko-portfolio-mockups.log
 PLAYWRIGHT_SNAPSHOT_BASE_DIR ?= docs/peanut/assets/screenshots/playwright
