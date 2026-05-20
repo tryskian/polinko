@@ -529,3 +529,15 @@ or branch history instead.
 - Why: PyJWT is only present transitively through `mcp`, and Polinko has no
   direct JWT use. A narrow ignore keeps closeout usable while preserving failure
   pressure for any other dependency advisory.
+
+## D-040: Keep dev environment setup aligned with canonical paths
+
+- Date: `2026-05-20`
+- Category: `build_system`
+- Tags: `devcontainer`, `dependencies`, `portfolio`, `lockfiles`
+- Decision: Devcontainer setup, portfolio install/build targets, and Node
+  dependency checks use `.venv`, `apps/portfolio/`, lockfile-first `npm ci`,
+  and explicit root plus portfolio audit/update coverage.
+- Why: The repo no longer uses `frontend/` or a custom-named repositioning
+  virtualenv as active setup surfaces. Aligning setup with canonical paths keeps
+  local, container, and CI dependency behavior deterministic.

@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 _PROJECT_ROOT = Path(__file__).resolve().parent
-_PROJECT_VENV_NAMES = (".venv", "venv", "polinko-repositioning-system")
+_PROJECT_VENV_NAMES = (".venv", "venv")
 _PROJECT_PYTHON_BINARIES = ("python3.14", "python", "python3")
 
 

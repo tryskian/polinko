@@ -1,5 +1,5 @@
 ignores:
-  - "docs/peanut/transcripts/**/*.md"
+  - "docs/peanut/**/*.md"
 
 config:
   MD013: false

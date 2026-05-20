@@ -1,0 +1,78 @@
+import json
+import unittest
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _read(relative_path: str) -> str:
+    return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+
+
+class DependencyHygieneTests(unittest.TestCase):
+    def test_devcontainer_setup_uses_canonical_paths(self) -> None:
+        devcontainer = json.loads(_read(".devcontainer/devcontainer.json"))
+        vscode = devcontainer["customizations"]["vscode"]
+        extensions = {extension.lower() for extension in vscode["extensions"]}
+        payload = json.dumps(devcontainer)
+
+        self.assertEqual(
+            devcontainer["postCreateCommand"], "bash ./tools/setup_devcontainer.sh"
+        )
+        self.assertEqual(
+            vscode["settings"]["python.defaultInterpreterPath"],
+            "${containerWorkspaceFolder}/.venv/bin/python3",
+        )
+        self.assertNotIn("frontend/package.json", payload)
+        self.assertNotIn("polinko-repositioning-system", payload)
+        self.assertNotIn("vue.volar", extensions)
+
+    def test_devcontainer_setup_script_uses_locked_root_and_portfolio_deps(
+        self,
+    ) -> None:
+        script = _read("tools/setup_devcontainer.sh")
+
+        self.assertIn('venv_dir="${POLINKO_DEVCONTAINER_VENV_DIR:-.venv}"', script)
+        self.assertIn("requirements.lock", script)
+        self.assertIn("npm ci --no-audit --no-fund", script)
+        self.assertIn(
+            'portfolio_app_dir="${POLINKO_DEVCONTAINER_PORTFOLIO_APP_DIR:-apps/portfolio}"',
+            script,
+        )
+        self.assertIn(
+            'npm --prefix "$portfolio_app_dir" ci --no-audit --no-fund', script
+        )
+        self.assertNotIn("frontend", script)
+        self.assertNotIn("polinko-repositioning-system", script)
+
+    def test_runtime_venv_candidates_exclude_retired_custom_name(self) -> None:
+        main_text = _read("main.py")
+        doctor_text = _read("tools/doctor_env.py")
+
+        self.assertIn('_PROJECT_VENV_NAMES = (".venv", "venv")', main_text)
+        self.assertIn('PREFERRED_VENV_NAMES = (".venv", "venv")', doctor_text)
+        self.assertNotIn("polinko-repositioning-system", main_text)
+        self.assertNotIn("polinko-repositioning-system", doctor_text)
+
+    def test_node_security_covers_root_and_portfolio_locks(self) -> None:
+        build_make = _read("makefiles/build.mk")
+        dependabot = _read(".github/dependabot.yml")
+
+        self.assertIn("npm audit --audit-level=moderate", build_make)
+        self.assertIn(
+            'npm --prefix "$(PORTFOLIO_APP_DIR)" audit --audit-level=moderate',
+            build_make,
+        )
+        self.assertIn('directory: "/"', dependabot)
+        self.assertIn('directory: "/apps/portfolio"', dependabot)
+
+    def test_markdownlint_ignores_private_peanut_lane(self) -> None:
+        markdownlint = _read(".markdownlint-cli2.yaml")
+
+        self.assertIn('"docs/peanut/**/*.md"', markdownlint)
+        self.assertNotIn("docs/peanut/transcripts/**/*.md", markdownlint)
+
+
+if __name__ == "__main__":
+    unittest.main()

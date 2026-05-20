@@ -27,9 +27,8 @@ class EntrypointTests(unittest.TestCase):
                 project_root / ".venv" / "bin" / "python3",
             ],
         )
-        self.assertIn(
-            project_root / "polinko-repositioning-system" / "bin" / "python",
-            cli_main._project_python_candidates(),
+        self.assertNotIn(
+            "polinko-repositioning-system", str(cli_main._project_python_candidates())
         )
 
 

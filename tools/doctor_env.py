@@ -11,7 +11,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PREFERRED_VENV_NAMES = (".venv", "venv", "polinko-repositioning-system")
+PREFERRED_VENV_NAMES = (".venv", "venv")
 PREFERRED_PYTHON_NAMES = ("python3.14", "python3", "python")
 
 

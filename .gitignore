@@ -21,13 +21,14 @@ htmlcov/
 
 # Local virtual environment
 .venv
+venv/
 
-# Node (if added later)
+# Node and local build artifacts
 node_modules/
 dist/
-# Portfolio frontend source and served UI are tracked.
-frontend/test-results/
-frontend/playwright-report/
+# Portfolio source and served static output are tracked.
+apps/portfolio/test-results/
+apps/portfolio/playwright-report/
 *.log
 npm-debug.log*
 yarn-debug.log*
