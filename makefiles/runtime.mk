@@ -145,98 +145,20 @@ session-status:
 	@$(MAKE) --no-print-directory caffeinate-status || true
 
 caffeinate:
-	@set -eu; \
-	if [ "$$(uname -s)" != "Darwin" ]; then \
-		echo "caffeinate is macOS-only; skipping."; \
-		exit 0; \
-	fi; \
-	if [ -f "$(CAFFEINATE_PID_FILE)" ]; then \
-		PID=$$(cat "$(CAFFEINATE_PID_FILE)" 2>/dev/null || true); \
-		if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
-			echo "caffeinate already running (PID $$PID)."; \
-			exit 0; \
-		fi; \
-		rm -f "$(CAFFEINATE_PID_FILE)"; \
-	fi; \
-	nohup $(CAFFEINATE_CMD) >"$(CAFFEINATE_LOG)" 2>&1 & \
-	PID=$$!; \
-	echo "$$PID" >"$(CAFFEINATE_PID_FILE)"; \
-	sleep 0.1; \
-	if kill -0 "$$PID" 2>/dev/null; then \
-		echo "caffeinate started (PID $$PID)."; \
-	else \
-		rm -f "$(CAFFEINATE_PID_FILE)"; \
-		echo "Failed to start caffeinate."; \
-		exit 1; \
-	fi
+	@$(CAFFEINATE_ENV) bash "$(CAFFEINATE_SCRIPT)" start
 
 caffeinate-on: caffeinate
 
 caffeinate-off: decaffeinate
 
 caffeinate-off-all: caffeinate-off
-	@set -eu; \
-	if [ "$$(uname -s)" != "Darwin" ]; then \
-		echo "caffeinate is macOS-only; skipping."; \
-		exit 0; \
-	fi; \
-	PIDS=$$(pgrep -f "^/usr/bin/caffeinate -d -i -m( |$$)" || true); \
-	if [ -n "$$PIDS" ]; then \
-		for PID in $$PIDS; do \
-			kill "$$PID" 2>/dev/null || true; \
-		done; \
-		sleep 0.1; \
-		echo "Stopped matching caffeinate processes: $$PIDS"; \
-	else \
-		echo "No matching caffeinate processes running."; \
-	fi; \
-	rm -f "$(CAFFEINATE_PID_FILE)"
+	@$(CAFFEINATE_ENV) bash "$(CAFFEINATE_SCRIPT)" stop-all
 
 decaffeinate:
-	@set -eu; \
-	if [ "$$(uname -s)" != "Darwin" ]; then \
-		echo "caffeinate is macOS-only; skipping."; \
-		exit 0; \
-	fi; \
-	if [ ! -f "$(CAFFEINATE_PID_FILE)" ]; then \
-		echo "No managed caffeinate PID file found."; \
-		exit 0; \
-	fi; \
-	PID=$$(cat "$(CAFFEINATE_PID_FILE)" 2>/dev/null || true); \
-	if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
-		kill "$$PID"; \
-		sleep 0.1; \
-		echo "caffeinate stopped (PID $$PID)."; \
-	else \
-		echo "Stale PID file found; cleaning up."; \
-	fi; \
-	rm -f "$(CAFFEINATE_PID_FILE)"
+	@$(CAFFEINATE_ENV) bash "$(CAFFEINATE_SCRIPT)" stop
 
 caffeinate-status:
-	@set -eu; \
-	if [ "$$(uname -s)" != "Darwin" ]; then \
-		echo "caffeinate status is only available on macOS."; \
-		exit 0; \
-	fi; \
-	if [ -f "$(CAFFEINATE_PID_FILE)" ]; then \
-		PID=$$(cat "$(CAFFEINATE_PID_FILE)" 2>/dev/null || true); \
-		if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
-			echo "Managed caffeinate: RUNNING (PID $$PID)."; \
-		else \
-			echo "Managed caffeinate: STALE PID file."; \
-		fi; \
-	else \
-		echo "Managed caffeinate: OFF."; \
-		EXISTING_PID=$$(pgrep -f "^/usr/bin/caffeinate -d -i -m( |$$)" | head -n 1 || true); \
-		if [ -n "$$EXISTING_PID" ]; then \
-			echo "Unmanaged caffeinate detected (PID $$EXISTING_PID); not owned by this repo."; \
-		fi; \
-	fi; \
-	if command -v rg >/dev/null 2>&1; then \
-		/usr/bin/pmset -g assertions | rg -n "PreventUserIdleDisplaySleep|PreventUserIdleSystemSleep|PreventDiskIdle|caffeinate" || true; \
-	else \
-		/usr/bin/pmset -g assertions | grep -nE "PreventUserIdleDisplaySleep|PreventUserIdleSystemSleep|PreventDiskIdle|caffeinate" || true; \
-	fi
+	@$(CAFFEINATE_ENV) bash "$(CAFFEINATE_SCRIPT)" status
 
 decaffeinate-status: caffeinate-status
 
