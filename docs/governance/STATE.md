@@ -81,11 +81,15 @@ Last updated: 2026-05-20
   - squash-only merge
 - Development setup and dependency gates are aligned to canonical paths:
   - devcontainer setup creates `.venv`
+  - devcontainer VS Code settings use repo-owned Ruff and mypy tooling from
+    `.venv`
   - Python dependencies use `requirements.in` plus generated
     `requirements.txt`, matching pip-tools and Dependabot conventions
   - portfolio Node setup uses `apps/portfolio/`
   - root and portfolio npm locks both have audit and Dependabot coverage
   - portfolio installs prefer `npm ci` when a lockfile is present
+  - pre-commit runs lightweight repo-owned Ruff and markdownlint checks, while
+    mypy remains a CI/closeout gate and Pyright remains advisory
 - The type-check gate is explicit and scoped:
   - `make type-check` runs mypy against active `src/` and `tools/` Python
     code

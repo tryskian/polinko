@@ -24,9 +24,33 @@ class DependencyHygieneTests(unittest.TestCase):
             vscode["settings"]["python.defaultInterpreterPath"],
             "${containerWorkspaceFolder}/.venv/bin/python3",
         )
+        self.assertEqual(vscode["settings"]["python.testing.pytestEnabled"], False)
+        self.assertEqual(vscode["settings"]["python.testing.unittestEnabled"], True)
+        self.assertEqual(
+            vscode["settings"]["ruff.path"],
+            ["${containerWorkspaceFolder}/.venv/bin/ruff"],
+        )
+        self.assertEqual(
+            vscode["settings"]["mypy-type-checker.path"],
+            ["${containerWorkspaceFolder}/.venv/bin/python", "-m", "mypy"],
+        )
+        self.assertEqual(
+            vscode["settings"]["mypy-type-checker.args"],
+            ["--config-file", "mypy.ini"],
+        )
+        self.assertIn(
+            "**/apps/portfolio/node_modules/**",
+            vscode["settings"]["python.analysis.exclude"],
+        )
+        self.assertIn(
+            "**/docs/peanut/**",
+            vscode["settings"]["markdownlint.ignore"],
+        )
         self.assertNotIn("frontend/package.json", payload)
         self.assertNotIn("polinko-repositioning-system", payload)
         self.assertNotIn("vue.volar", extensions)
+        self.assertNotIn("ms-python.isort", extensions)
+        self.assertNotIn("ms-pyright.pyright", extensions)
 
     def test_devcontainer_setup_script_uses_locked_root_and_portfolio_deps(
         self,
@@ -79,6 +103,19 @@ class DependencyHygieneTests(unittest.TestCase):
         )
         self.assertIn('directory: "/"', dependabot)
         self.assertIn('directory: "/apps/portfolio"', dependabot)
+
+    def test_precommit_uses_repo_owned_lightweight_style_and_doc_checks(self) -> None:
+        precommit = _read(".pre-commit-config.yaml")
+
+        self.assertIn("exclude: ^(docs/peanut/|public/portfolio/assets/)", precommit)
+        self.assertIn("id: polinko-ruff-check", precommit)
+        self.assertIn("entry: make ruff-check", precommit)
+        self.assertIn("id: polinko-ruff-format-check", precommit)
+        self.assertIn("entry: make ruff-format-check", precommit)
+        self.assertIn("id: polinko-markdownlint-docs", precommit)
+        self.assertIn("entry: make lint-docs", precommit)
+        self.assertNotIn("isort", precommit)
+        self.assertNotIn("black", precommit)
 
     def test_markdownlint_ignores_private_peanut_lane(self) -> None:
         markdownlint = _read(".markdownlint-cli2.yaml")
