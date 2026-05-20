@@ -3,7 +3,7 @@
 # Python Package Boundary
 
 This page records the package-boundary migration contract for the beta refactor.
-The packaging rail exists now; `config` is the first runtime module moved under
+The packaging rail exists now; `config` and the API implementation are under
 `src/polinko/`.
 
 ## Current Tracked Shape
@@ -19,12 +19,12 @@ Tracked root runtime compatibility modules:
 - `config.py`
   - compatibility shim for legacy `from config import ...` imports
   - re-exports `AppConfig` and `load_config` from `polinko.config`
+- `api/`
+  - compatibility shims for legacy `api.*` imports
+  - forwards module identity to `polinko.api.*`
 
 Tracked runtime packages currently live at the repo root:
 
-- `api/`
-  - HTTP routes, middleware, app factory, manual-eval surfaces, and public
-    portfolio data helpers
 - `core/`
   - prompt, runtime, history, rate-limit, response parsing, and vector-store
     logic
@@ -39,6 +39,9 @@ Tracked packaging rail:
   - editable-install package identity
 - `src/polinko/config.py`
   - canonical environment loading and validation implementation
+- `src/polinko/api/`
+  - canonical HTTP routes, middleware, app factory, manual-eval surfaces, public
+    portfolio data helpers, and packaged API static assets
 - `tools/check_package_install.py`
   - verifies editable-install metadata and package import identity
 
@@ -67,7 +70,7 @@ Target placement:
 ## Migration Order
 
 1. Keep packaging metadata and editable-install coverage green.
-2. Move `api/` and `core/` under `src/polinko/`.
+2. Move `core/` under `src/polinko/`.
 3. Rewrite remaining internal imports to `polinko.*`.
 4. Keep `main.py`, `server.py`, and `app.py` as compatibility launchers during
    the import rewrite.
@@ -80,6 +83,8 @@ Target placement:
   rail is green.
 - Keep root `config.py` as a compatibility shim until older local scripts have
   moved off `from config import ...`.
+- Keep root `api/` as compatibility shims until older local tests and scripts
+  have moved off `api.*` imports.
 - Do not change public operator commands:
   - `make chat`
   - `make server`

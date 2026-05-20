@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="880" height="260" viewBox="0 0 880 260" role="img" aria-labelledby="title desc">
   <title id="title">Polinko runtime architecture overview</title>
-  <desc id="desc">A high-level flow from server and packaged config into the FastAPI app factory, runtime core, binary eval reports, and public evidence surfaces.</desc>
+  <desc id="desc">A high-level flow from server and packaged config/API into the FastAPI app factory, runtime core, binary eval reports, and public evidence surfaces.</desc>
   <defs>
     <style>
       .bg { fill: #ffffff; }
@@ -25,8 +25,8 @@
   <text class="sub" x="104" y="206" text-anchor="middle">env + validation</text>
 
   <rect class="box" x="252" y="92" width="170" height="74" fill="#fbf5e8" stroke="#f28e2b" />
-  <text class="label" x="337" y="122" text-anchor="middle">app_factory</text>
-  <text class="sub" x="337" y="144" text-anchor="middle">routes + middleware</text>
+  <text class="label" x="337" y="122" text-anchor="middle">polinko.api</text>
+  <text class="sub" x="337" y="144" text-anchor="middle">routes + app factory</text>
 
   <rect class="box" x="490" y="92" width="182" height="74" fill="#eef7f6" stroke="#76b7b2" />
   <text class="label" x="581" y="122" text-anchor="middle">core/ runtime</text>

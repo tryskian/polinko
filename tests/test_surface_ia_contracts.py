@@ -71,7 +71,7 @@ class SurfaceIaContractTests(unittest.TestCase):
         surfaces_make = _read("makefiles/surfaces.mk")
         vite_config = _read("apps/portfolio/vite.config.js")
         static_builder = _read("tools/build_portfolio_static.py")
-        app_factory = _read("api/app_factory.py")
+        app_factory = _read("src/polinko/api/app_factory.py")
 
         self.assertIn("include makefiles/config.mk", makefile)
         self.assertIn("PORTFOLIO_APP_DIR ?= apps/portfolio", make_config)

@@ -17,8 +17,8 @@ from openai import (
     AuthenticationError,
     RateLimitError,
 )
-from api.app_factory import create_runtime_metrics
-from api import app_factory
+from polinko.api.app_factory import create_runtime_metrics
+from polinko.api import app_factory
 from core.history_store import ChatHistoryStore
 from core.history_store import MessageFeedback
 from core.prompts import ACTIVE_PROMPT_VERSION
@@ -1086,11 +1086,11 @@ class PolinkoApiTests(unittest.TestCase):
 
         with (
             patch(
-                "api.app_factory._extract_text",
+                "polinko.api.app_factory._extract_text",
                 side_effect=AssertionError("should not re-extract OCR text"),
             ),
             patch(
-                "api.app_factory._extract_image_context",
+                "polinko.api.app_factory._extract_image_context",
                 side_effect=AssertionError(
                     "should not re-run image context extraction"
                 ),
@@ -1906,7 +1906,7 @@ class PolinkoApiTests(unittest.TestCase):
     def test_ocr_skill_rejects_oversized_payload(self) -> None:
         raw_bytes = b"A" * 64
         payload_b64 = base64.b64encode(raw_bytes).decode("ascii")
-        with patch("api.app_factory._OCR_MAX_BYTES", 32):
+        with patch("polinko.api.app_factory._OCR_MAX_BYTES", 32):
             run_resp = self.client.post(
                 "/skills/ocr",
                 headers={"x-api-key": "test-server-key"},
@@ -2384,7 +2384,8 @@ class PolinkoApiTests(unittest.TestCase):
         )
         payload_b64 = base64.b64encode(b"%PDF-1.7 fake-payload").decode("ascii")
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes", return_value=pdf_text
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
+            return_value=pdf_text,
         ):
             ingest_resp = self.client.post(
                 "/skills/pdf_ingest",
@@ -2466,7 +2467,8 @@ class PolinkoApiTests(unittest.TestCase):
         expected_hash = hashlib.sha256(pdf_text.encode("utf-8")).hexdigest()
         payload_b64 = base64.b64encode(b"%PDF-1.7 fake-payload").decode("ascii")
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes", return_value=pdf_text
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
+            return_value=pdf_text,
         ):
             ingest_resp = self.client.post(
                 "/skills/pdf_ingest",
@@ -2523,7 +2525,8 @@ class PolinkoApiTests(unittest.TestCase):
             "attach_to_chat": False,
         }
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes", return_value=pdf_text
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
+            return_value=pdf_text,
         ):
             first_resp = self.client.post(
                 "/skills/pdf_ingest",
@@ -2536,7 +2539,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertGreater(vector_count_after_first, 0)
 
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes",
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
             side_effect=AssertionError("should not re-extract"),
         ):
             second_resp = self.client.post(
@@ -2591,7 +2594,8 @@ class PolinkoApiTests(unittest.TestCase):
 
         payload_b64 = base64.b64encode(b"%PDF-1.7 fake-payload").decode("ascii")
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes", return_value=pdf_text
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
+            return_value=pdf_text,
         ):
             ingest_resp = self.client.post(
                 "/skills/pdf_ingest",
@@ -2659,7 +2663,8 @@ class PolinkoApiTests(unittest.TestCase):
 
         payload_b64 = base64.b64encode(b"%PDF-1.7 fake-payload").decode("ascii")
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes", return_value=pdf_text
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
+            return_value=pdf_text,
         ):
             ingest_resp = self.client.post(
                 "/skills/pdf_ingest",
@@ -2721,7 +2726,7 @@ class PolinkoApiTests(unittest.TestCase):
         payload = b"%PDF-1.7 fake-payload-for-responses"
         payload_b64 = base64.b64encode(payload).decode("ascii")
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes",
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
             return_value="PDF text for indexing",
         ):
             resp = self.client.post(
@@ -2776,7 +2781,7 @@ class PolinkoApiTests(unittest.TestCase):
         payload = b"%PDF-1.7 fake-payload-for-responses-failure"
         payload_b64 = base64.b64encode(payload).decode("ascii")
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes",
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
             return_value="PDF text for indexing",
         ):
             resp = self.client.post(
@@ -2871,7 +2876,7 @@ class PolinkoApiTests(unittest.TestCase):
                 )
 
                 with patch(
-                    "api.app_factory._extract_text_from_pdf_bytes",
+                    "polinko.api.app_factory._extract_text_from_pdf_bytes",
                     return_value="PDF text for indexing",
                 ):
                     resp = self.client.post(
@@ -2925,7 +2930,7 @@ class PolinkoApiTests(unittest.TestCase):
         payload = b"%PDF-1.7 fake-payload-for-responses-missing-file-id"
         payload_b64 = base64.b64encode(payload).decode("ascii")
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes",
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
             return_value="PDF text for indexing",
         ):
             resp = self.client.post(
@@ -2974,7 +2979,7 @@ class PolinkoApiTests(unittest.TestCase):
         payload = b"%PDF-1.7 fake-payload-for-responses-not-configured"
         payload_b64 = base64.b64encode(payload).decode("ascii")
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes",
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
             return_value="PDF text for indexing",
         ):
             resp = self.client.post(
@@ -3025,7 +3030,7 @@ class PolinkoApiTests(unittest.TestCase):
         )
 
         payload_b64 = base64.b64encode(b"%PDF" + (b"A" * 64)).decode("ascii")
-        with patch("api.app_factory._PDF_MAX_BYTES", 32):
+        with patch("polinko.api.app_factory._PDF_MAX_BYTES", 32):
             resp = self.client.post(
                 "/skills/pdf_ingest",
                 headers={"x-api-key": "test-server-key"},
@@ -3230,7 +3235,7 @@ class PolinkoApiTests(unittest.TestCase):
 
         payload_b64 = base64.b64encode(b"%PDF-1.7 fake-policy").decode("ascii")
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes",
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
             return_value="Policy update: joins require two independent signals.",
         ):
             ingest_resp = self.client.post(
@@ -3377,7 +3382,7 @@ class PolinkoApiTests(unittest.TestCase):
 
         payload_b64 = base64.b64encode(b"%PDF-1.7 fallback-policy").decode("ascii")
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes",
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
             return_value="Policy joins require two independent signals before approval.",
         ):
             ingest_resp = self.client.post(
@@ -3482,7 +3487,7 @@ class PolinkoApiTests(unittest.TestCase):
             "ascii"
         )
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes",
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
             return_value="Policy joins require two independent signals before approval.",
         ):
             ingest_resp = self.client.post(
@@ -3547,7 +3552,7 @@ class PolinkoApiTests(unittest.TestCase):
 
         payload_b64 = base64.b64encode(b"%PDF-1.7 fallback-policy-map").decode("ascii")
         with patch(
-            "api.app_factory._extract_text_from_pdf_bytes",
+            "polinko.api.app_factory._extract_text_from_pdf_bytes",
             return_value="Policy joins require two independent signals before approval.",
         ):
             ingest_resp = self.client.post(
@@ -4164,7 +4169,7 @@ class PolinkoApiTests(unittest.TestCase):
         def _capture_event(event_name: str, **kwargs: Any) -> None:
             events.append((event_name, kwargs))
 
-        with patch("api.app_factory._log_event", new=_capture_event):
+        with patch("polinko.api.app_factory._log_event", new=_capture_event):
             with self._stub_runner("style followup"):
                 third_chat_resp = self.client.post(
                     "/chat",

@@ -27,8 +27,10 @@ This page is the structural map of the tracked system.
   - editable-install package scaffold and first runtime package boundary
 - `src/polinko/config.py`
   - canonical environment loading and validation implementation
-- `api/`
+- `src/polinko/api/`
   - HTTP layer, route spec, middleware, and wiring
+- `api/`
+  - compatibility shims for older `api.*` imports
 - `core/`
   - runtime logic, prompting, session/history, and retrieval helpers
 - `tools/`
@@ -55,8 +57,8 @@ This page is the structural map of the tracked system.
 ## Runtime Flow
 
 1. `server.py` loads config from `polinko.config`.
-2. `server.py` creates the FastAPI app through `api.app_factory`.
-3. `api/` wires routes, middleware, and runtime dependencies.
+2. `server.py` creates the FastAPI app through `polinko.api.app_factory`.
+3. `src/polinko/api/` wires routes, middleware, and runtime dependencies.
 4. request execution delegates into `core/` runtime and persistence modules
 5. runtime history and eval state write to local SQLite stores under
    `.local/runtime_dbs/active/`
@@ -99,7 +101,8 @@ This page is the structural map of the tracked system.
 ## Placement Rules
 
 - API endpoints, middleware, and specs:
-  - `api/`
+  - `src/polinko/api/`
+  - root `api/` stays compatibility-only during the package-boundary migration
 - prompt and runtime behaviour:
   - `core/`
 - eval, report, and local operator scripts:

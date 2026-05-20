@@ -100,7 +100,8 @@ Open `http://127.0.0.1:8000/docs`.
   runtime package move.
 - `src/polinko/config.py` contains the canonical config implementation; root
   `config.py` is a compatibility shim.
-- `api/` contains the API implementation.
+- `src/polinko/api/` contains the canonical API implementation; root `api/`
+  contains compatibility shims.
 - `core/` contains runtime logic.
 - `tools/` contains eval and maintenance scripts.
 - `tests/` contains the test suite.
