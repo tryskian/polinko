@@ -43,15 +43,22 @@ class PathLeakCheckTests(unittest.TestCase):
 
     def test_tracked_files_filters_binary_like_suffixes(self) -> None:
         git_output = b"docs/ok.md\x00docs/skip.png\x00"
-        proc = subprocess.CompletedProcess(args=["git", "ls-files", "-z"], returncode=0, stdout=git_output)
+        proc = subprocess.CompletedProcess(
+            args=["git", "ls-files", "-z"], returncode=0, stdout=git_output
+        )
         with mock.patch("tools.path_leak_check.subprocess.run", return_value=proc):
             files = path_leak_check._tracked_files()
 
-        self.assertEqual([path.relative_to(path_leak_check.ROOT).as_posix() for path in files], ["docs/ok.md"])
+        self.assertEqual(
+            [path.relative_to(path_leak_check.ROOT).as_posix() for path in files],
+            ["docs/ok.md"],
+        )
 
     def test_main_fails_when_tracked_leak_found(self) -> None:
         fake_file = path_leak_check.ROOT / "docs" / "sample.md"
-        with mock.patch("tools.path_leak_check._tracked_files", return_value=[fake_file]):
+        with mock.patch(
+            "tools.path_leak_check._tracked_files", return_value=[fake_file]
+        ):
             with mock.patch(
                 "tools.path_leak_check._scan_paths",
                 return_value=["docs/sample.md:1: macos-home: /Users/alice/secret"],

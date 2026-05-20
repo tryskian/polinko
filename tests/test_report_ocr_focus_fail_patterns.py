@@ -14,7 +14,9 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
                     "pass_runs": 0,
                     "error_runs": 0,
                     "pass_rate": 0.0,
-                    "sample_reasons": ["missing ordered phrase: 'focus' after offset 20"],
+                    "sample_reasons": [
+                        "missing ordered phrase: 'focus' after offset 20"
+                    ],
                     "text_variant_count": 1,
                     "char_count_span": 0,
                 },
@@ -34,7 +36,9 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
                     "pass_runs": 0,
                     "error_runs": 0,
                     "pass_rate": 0.0,
-                    "sample_reasons": ["missing ordered phrase: 'engineering' after offset 0"],
+                    "sample_reasons": [
+                        "missing ordered phrase: 'engineering' after offset 0"
+                    ],
                     "text_variant_count": 2,
                     "char_count_span": 3,
                 },
@@ -48,7 +52,11 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
                 "source_name": "focus-note.jpeg",
                 "image_path": "/tmp/focus-note.jpeg",
             },
-            "gx-2": {"id": "gx-2", "lane": "typed", "must_appear_in_order": ["origin", "binary"]},
+            "gx-2": {
+                "id": "gx-2",
+                "lane": "typed",
+                "must_appear_in_order": ["origin", "binary"],
+            },
             "gx-3": {
                 "id": "gx-3",
                 "lane": "typed",
@@ -119,15 +127,27 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
         self.assertEqual(failing_case_ids, ["gx-1", "gx-3"])
         self.assertEqual(report["failing_cases"][0]["top_missing_phrase"], "focus")
         self.assertEqual(report["failing_cases"][0]["top_missing_offset"], 20)
-        self.assertEqual(report["failing_cases"][0]["top_missing_offset_bucket"], "mid_sequence")
-        self.assertEqual(report["failing_cases"][0]["top_missing_sequence_position_bucket"], "head")
+        self.assertEqual(
+            report["failing_cases"][0]["top_missing_offset_bucket"], "mid_sequence"
+        )
+        self.assertEqual(
+            report["failing_cases"][0]["top_missing_sequence_position_bucket"], "head"
+        )
         self.assertEqual(report["failing_cases"][0]["top_missing_sequence_index"], 0)
         self.assertEqual(report["failing_cases"][0]["source_name"], "focus-note.jpeg")
-        self.assertEqual(report["failing_cases"][0]["image_path"], "/tmp/focus-note.jpeg")
-        self.assertEqual(report["failing_cases"][1]["top_missing_phrase"], "engineering")
+        self.assertEqual(
+            report["failing_cases"][0]["image_path"], "/tmp/focus-note.jpeg"
+        )
+        self.assertEqual(
+            report["failing_cases"][1]["top_missing_phrase"], "engineering"
+        )
         self.assertEqual(report["failing_cases"][1]["top_missing_offset"], 0)
-        self.assertEqual(report["failing_cases"][1]["top_missing_offset_bucket"], "at_start")
-        self.assertEqual(report["failing_cases"][1]["top_missing_sequence_position_bucket"], "tail")
+        self.assertEqual(
+            report["failing_cases"][1]["top_missing_offset_bucket"], "at_start"
+        )
+        self.assertEqual(
+            report["failing_cases"][1]["top_missing_sequence_position_bucket"], "tail"
+        )
         self.assertEqual(report["failing_cases"][1]["top_missing_sequence_index"], 1)
         self.assertEqual(report["failing_cases"][1]["source_name"], "eng-note.jpeg")
         self.assertEqual(report["failing_cases"][1]["image_path"], "/tmp/eng-note.jpeg")
@@ -193,7 +213,9 @@ class ReportOcrFocusFailPatternsTests(unittest.TestCase):
             },
         )
 
-    def test_build_report_prefers_backoff_hint_when_rate_limit_pressure_present(self) -> None:
+    def test_build_report_prefers_backoff_hint_when_rate_limit_pressure_present(
+        self,
+    ) -> None:
         stability_payload: dict[str, Any] = {
             "cases": [
                 {

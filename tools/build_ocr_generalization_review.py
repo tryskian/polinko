@@ -109,13 +109,19 @@ def build_review(
             return False
         conversation_id = str(row.get("conversation_id", ""))
         if selection_reason != "pinned_include":
-            if max_per_conversation > 0 and selected_per_conversation.get(conversation_id, 0) >= max_per_conversation:
+            if (
+                max_per_conversation > 0
+                and selected_per_conversation.get(conversation_id, 0)
+                >= max_per_conversation
+            ):
                 return False
         enriched = dict(row)
         enriched["selection_reason"] = selection_reason
         selected.append(enriched)
         selected_ids.add(candidate_id)
-        selected_per_conversation[conversation_id] = selected_per_conversation.get(conversation_id, 0) + 1
+        selected_per_conversation[conversation_id] = (
+            selected_per_conversation.get(conversation_id, 0) + 1
+        )
         return True
 
     for candidate_id in sorted(include_candidate_ids):
@@ -124,11 +130,15 @@ def build_review(
             continue
         add_row(row, selection_reason="pinned_include")
 
-    remaining = [row for row in rows if str(row.get("candidate_id", "")) not in selected_ids]
+    remaining = [
+        row for row in rows if str(row.get("candidate_id", "")) not in selected_ids
+    ]
     remaining.sort(key=_candidate_sort_key, reverse=True)
 
     lanes_in_order = ["handwriting", "illustration", "typed", "unknown"]
-    lane_buckets: dict[str, list[dict[str, Any]]] = {lane: [] for lane in lanes_in_order}
+    lane_buckets: dict[str, list[dict[str, Any]]] = {
+        lane: [] for lane in lanes_in_order
+    }
     for row in remaining:
         lane = str(row.get("lane_hint", "")).strip().lower() or "unknown"
         lane_buckets.setdefault(lane, []).append(row)
@@ -216,7 +226,9 @@ def main() -> int:
         if token.strip()
     }
     payload = build_review(
-        candidates_payload=_load_json_object(Path(args.candidates).expanduser().resolve()),
+        candidates_payload=_load_json_object(
+            Path(args.candidates).expanduser().resolve()
+        ),
         max_cases=int(args.max_cases),
         max_per_conversation=int(args.max_per_conversation),
         include_candidate_ids=include_candidate_ids,
@@ -229,7 +241,9 @@ def main() -> int:
     print(f"selected_cases={payload['summary']['selected_cases']}")
     print(f"max_cases={payload['summary']['max_cases']}")
     print(f"max_per_conversation={payload['summary']['max_per_conversation']}")
-    print(f"pinned_includes_requested={payload['summary']['pinned_includes_requested']}")
+    print(
+        f"pinned_includes_requested={payload['summary']['pinned_includes_requested']}"
+    )
     print(f"output={output_path}")
     return 0
 

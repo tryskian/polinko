@@ -12,9 +12,24 @@ from tools.eval_ocr_growth_metrics import build_growth_report
 class OcrGrowthMetricsTests(unittest.TestCase):
     def test_build_growth_report_computes_pass_from_fail_metrics(self) -> None:
         case_map = {
-            "c1": CaseMetadata(case_id="c1", lane="handwriting", source_name="c1.png", image_path="/tmp/c1.png"),
-            "c2": CaseMetadata(case_id="c2", lane="typed", source_name="c2.png", image_path="/tmp/c2.png"),
-            "c3": CaseMetadata(case_id="c3", lane="illustration", source_name="c3.png", image_path="/tmp/c3.png"),
+            "c1": CaseMetadata(
+                case_id="c1",
+                lane="handwriting",
+                source_name="c1.png",
+                image_path="/tmp/c1.png",
+            ),
+            "c2": CaseMetadata(
+                case_id="c2",
+                lane="typed",
+                source_name="c2.png",
+                image_path="/tmp/c2.png",
+            ),
+            "c3": CaseMetadata(
+                case_id="c3",
+                lane="illustration",
+                source_name="c3.png",
+                image_path="/tmp/c3.png",
+            ),
         }
         runs = [
             RunReport(
@@ -29,7 +44,9 @@ class OcrGrowthMetricsTests(unittest.TestCase):
             ),
         ]
 
-        report = build_growth_report(case_map=case_map, run_reports=runs, now_epoch=2100)
+        report = build_growth_report(
+            case_map=case_map, run_reports=runs, now_epoch=2100
+        )
         metrics = report["metrics"]
         self.assertEqual(report["runs_total"], 2)
         self.assertEqual(report["cases_total"], 3)
@@ -47,13 +64,25 @@ class OcrGrowthMetricsTests(unittest.TestCase):
 
         lane_metrics = report["lane_metrics"]
         self.assertIn("handwriting", lane_metrics)
-        self.assertEqual(lane_metrics["handwriting"]["fail_to_pass_conversion_rate"], 1.0)
+        self.assertEqual(
+            lane_metrics["handwriting"]["fail_to_pass_conversion_rate"], 1.0
+        )
         self.assertEqual(lane_metrics["illustration"]["unresolved_fail_cases"], 1)
 
     def test_build_growth_report_captures_error_first_coverage_gap(self) -> None:
         case_map = {
-            "c1": CaseMetadata(case_id="c1", lane="handwriting", source_name="c1.png", image_path="/tmp/c1.png"),
-            "c2": CaseMetadata(case_id="c2", lane="typed", source_name="c2.png", image_path="/tmp/c2.png"),
+            "c1": CaseMetadata(
+                case_id="c1",
+                lane="handwriting",
+                source_name="c1.png",
+                image_path="/tmp/c1.png",
+            ),
+            "c2": CaseMetadata(
+                case_id="c2",
+                lane="typed",
+                source_name="c2.png",
+                image_path="/tmp/c2.png",
+            ),
         }
         runs = [
             RunReport(
@@ -63,7 +92,9 @@ class OcrGrowthMetricsTests(unittest.TestCase):
             )
         ]
 
-        report = build_growth_report(case_map=case_map, run_reports=runs, now_epoch=1100)
+        report = build_growth_report(
+            case_map=case_map, run_reports=runs, now_epoch=1100
+        )
         metrics = report["metrics"]
         self.assertEqual(metrics["cases"], 2)
         self.assertEqual(metrics["first_decision_cases"], 1)
@@ -114,7 +145,9 @@ class OcrGrowthMetricsTests(unittest.TestCase):
                 # Matching uses cwd-relative resolution for report cases_path.
                 # Keep cwd scoped to the temp fixture to avoid host-path coupling.
                 os.chdir(tmp)
-                rows = _collect_run_reports(runs_dir=runs_dir, expected_cases_path=cases_a.resolve())
+                rows = _collect_run_reports(
+                    runs_dir=runs_dir, expected_cases_path=cases_a.resolve()
+                )
             finally:
                 os.chdir(previous_cwd)
 

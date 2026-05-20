@@ -63,7 +63,9 @@ def _check_interpreter() -> int:
     current = current_raw.resolve()
     active_venv = os.environ.get("VIRTUAL_ENV")
     expected_candidates = _expected_python_candidates(active_venv)
-    runnable_candidates = [path for path in expected_candidates if _is_runnable_python(path)]
+    runnable_candidates = [
+        path for path in expected_candidates if _is_runnable_python(path)
+    ]
 
     if runnable_candidates:
         matching_candidate = next(
@@ -93,7 +95,9 @@ def _check_interpreter() -> int:
     if active_venv:
         _ok(f"VIRTUAL_ENV={active_venv}")
     else:
-        _warn("VIRTUAL_ENV is not set (ok when running via make with explicit interpreter)")
+        _warn(
+            "VIRTUAL_ENV is not set (ok when running via make with explicit interpreter)"
+        )
 
     python_on_path = shutil.which("python")
     if python_on_path:
@@ -141,7 +145,9 @@ def _check_compaudit() -> int:
         _warn("zsh reports insecure completion directories:")
         for line in output.splitlines():
             _warn(f"  {line}")
-        _warn("Fix by removing group-write permissions from the reported completion directories.")
+        _warn(
+            "Fix by removing group-write permissions from the reported completion directories."
+        )
     else:
         _ok("zsh compaudit: clean")
     return issues

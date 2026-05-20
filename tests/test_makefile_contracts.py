@@ -18,7 +18,9 @@ OCR_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_cases.sh"
 OCR_STABILITY_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_stability.sh"
 OCR_GROWTH_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_cases.sh"
 OCR_GROWTH_BATCH_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_batched.sh"
-OCR_GROWTH_STABILITY_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_stability.sh"
+OCR_GROWTH_STABILITY_RUNNER_SCRIPT = (
+    REPO_ROOT / "tools" / "run_eval_ocr_growth_stability.sh"
+)
 OCR_REPORT_BUILDER_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_builder.sh"
 
 
@@ -66,9 +68,7 @@ class MakefileContractTests(unittest.TestCase):
             root_text.index("include makefiles/config.mk"),
             root_text.index("include makefiles/build.mk"),
         )
-        self.assertIsNone(
-            re.search(r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)", root_text)
-        )
+        self.assertIsNone(re.search(r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)", root_text))
         self.assertIn("PYTHON ?=", config_text)
         self.assertIn("CLI_ENTRYPOINT ?= main.py", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
@@ -80,15 +80,21 @@ class MakefileContractTests(unittest.TestCase):
             "EVAL_SERVER_DAEMON_SCRIPT ?= ./tools/ensure_eval_server_daemon.sh",
             config_text,
         )
-        self.assertIn("EVAL_CASE_GUARD_SCRIPT ?= ./tools/eval_case_guard.sh", config_text)
-        self.assertIn("EVAL_REPORT_RUNNER_SCRIPT ?= ./tools/run_eval_report.sh", config_text)
+        self.assertIn(
+            "EVAL_CASE_GUARD_SCRIPT ?= ./tools/eval_case_guard.sh", config_text
+        )
+        self.assertIn(
+            "EVAL_REPORT_RUNNER_SCRIPT ?= ./tools/run_eval_report.sh", config_text
+        )
         self.assertIn("EVAL_REPORT_RUNNER_ENV =", config_text)
         self.assertIn(
             "LOCAL_EVAL_GATE_RUNNER_SCRIPT ?= ./tools/run_local_eval_gate.sh",
             config_text,
         )
         self.assertIn("LOCAL_EVAL_GATE_RUNNER_ENV =", config_text)
-        self.assertIn("OCR_EVAL_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_cases.sh", config_text)
+        self.assertIn(
+            "OCR_EVAL_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_cases.sh", config_text
+        )
         self.assertIn("OCR_EVAL_RUNNER_ENV =", config_text)
         self.assertIn(
             "OCR_STABILITY_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_stability.sh",
@@ -108,7 +114,10 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("OCR_GROWTH_RUNNER_ENV =", config_text)
-        self.assertIn("OCR_REPORT_BUILDER_SCRIPT ?= ./tools/run_ocr_report_builder.sh", config_text)
+        self.assertIn(
+            "OCR_REPORT_BUILDER_SCRIPT ?= ./tools/run_ocr_report_builder.sh",
+            config_text,
+        )
         self.assertIn("OCR_REPORT_BUILDER_ENV =", config_text)
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
@@ -146,7 +155,10 @@ class MakefileContractTests(unittest.TestCase):
         text = _makefile_contract_text()
 
         self.assertRegex(text, r"(?m)^eod end-preflight:\s*end$")
-        self.assertRegex(text, r"(?m)^eod-stop:\s*server-daemon-stop caffeinate-off-all session-status$")
+        self.assertRegex(
+            text,
+            r"(?m)^eod-stop:\s*server-daemon-stop caffeinate-off-all session-status$",
+        )
         self.assertRegex(text, r"(?m)^caffeinate-on:\s*caffeinate$")
         self.assertRegex(text, r"(?m)^caffeinate-off:\s*decaffeinate$")
         self.assertRegex(text, r"(?m)^caffeinate-off-all:\s*caffeinate-off$")
@@ -155,19 +167,40 @@ class MakefileContractTests(unittest.TestCase):
     def test_operator_wrappers_use_dependency_edges_for_internal_chains(self) -> None:
         text = _makefile_contract_text()
 
-        self.assertRegex(text, r"(?m)^backend-gate:\s*backend-gate-start doctor-env test quality-gate-deterministic$")
+        self.assertRegex(
+            text,
+            r"(?m)^backend-gate:\s*backend-gate-start doctor-env test quality-gate-deterministic$",
+        )
         self.assertRegex(text, r"(?m)^docs:\s*open-api-docs$")
         self.assertRegex(text, r"(?m)^open-api-docs:\s*server-daemon$")
-        self.assertRegex(text, r"(?m)^open-cost-console:\s*open-limits open-usage open-billing$")
+        self.assertRegex(
+            text, r"(?m)^open-cost-console:\s*open-limits open-usage open-billing$"
+        )
         self.assertRegex(text, r"(?m)^viz:\s*server-daemon$")
-        self.assertRegex(text, r"(?m)^portfolio:\s*portfolio-build server-daemon-stop server-daemon$")
-        self.assertRegex(text, r"(?m)^portfolio-playwright:\s*PORTFOLIO_LAUNCH\s*=\s*playwright$")
+        self.assertRegex(
+            text, r"(?m)^portfolio:\s*portfolio-build server-daemon-stop server-daemon$"
+        )
+        self.assertRegex(
+            text, r"(?m)^portfolio-playwright:\s*PORTFOLIO_LAUNCH\s*=\s*playwright$"
+        )
         self.assertRegex(text, r"(?m)^portfolio-playwright:\s*portfolio$")
-        self.assertRegex(text, r"(?m)^eval-reports:\s*eval-retrieval-report eval-file-search-report eval-ocr-report eval-style-report eval-response-behaviour-report eval-ocr-safety-report eval-hallucination-report$")
-        self.assertRegex(text, r"(?m)^quality-gate-deterministic:\s*HALLUCINATION_EVAL_MODE\s*=\s*deterministic$")
+        self.assertRegex(
+            text,
+            r"(?m)^eval-reports:\s*eval-retrieval-report eval-file-search-report eval-ocr-report eval-style-report eval-response-behaviour-report eval-ocr-safety-report eval-hallucination-report$",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^quality-gate-deterministic:\s*HALLUCINATION_EVAL_MODE\s*=\s*deterministic$",
+        )
         self.assertRegex(text, r"(?m)^quality-gate-deterministic:\s*quality-gate$")
-        self.assertRegex(text, r"(?m)^ocr-cases-from-export:\s*ocr-cases-from-export-build ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta$")
-        self.assertRegex(text, r"(?m)^ocrminehand:\s*OCR_CASES_FROM_EXPORT_ARGS\s*=\s*--include-lanes handwriting$")
+        self.assertRegex(
+            text,
+            r"(?m)^ocr-cases-from-export:\s*ocr-cases-from-export-build ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta$",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^ocrminehand:\s*OCR_CASES_FROM_EXPORT_ARGS\s*=\s*--include-lanes handwriting$",
+        )
         self.assertRegex(text, r"(?m)^ocrminehand:\s*ocr-cases-from-export$")
 
     def test_eval_workflow_orchestration_delegates_to_scripts(self) -> None:
@@ -195,7 +228,9 @@ class MakefileContractTests(unittest.TestCase):
             )
         self.assertIn('eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_GROWTH)"', text)
         self.assertIn('eval_case_guard_or_exit "$(OCR_FOCUS_CASES_JSON)"', text)
-        self.assertIn('bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)"', text)
+        self.assertIn(
+            'bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)"', text
+        )
         self.assertIn(
             'bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING)"',
             text,
@@ -329,10 +364,14 @@ class MakefileContractTests(unittest.TestCase):
     def test_frontend_surface_names_are_aliases_for_portfolio_targets(self) -> None:
         text = _makefile_contract_text()
 
-        self.assertRegex(text, r"(?m)^portfolio-app-install frontend-install:\s*portfolio-install$")
+        self.assertRegex(
+            text, r"(?m)^portfolio-app-install frontend-install:\s*portfolio-install$"
+        )
         self.assertRegex(text, r"(?m)^frontend-build:\s*portfolio-build$")
 
-    def test_portfolio_app_dir_is_canonical_but_legacy_frontend_override_still_works(self) -> None:
+    def test_portfolio_app_dir_is_canonical_but_legacy_frontend_override_still_works(
+        self,
+    ) -> None:
         legacy_result = subprocess.run(
             ["make", "-n", "portfolio-build", "FRONTEND_DIR=legacy-app"],
             cwd=REPO_ROOT,
@@ -373,7 +412,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("vite v", result.stdout + result.stderr)
         self.assertNotIn("built in", result.stdout + result.stderr)
 
-    def test_operator_wrapper_dry_runs_resolve_without_recursive_variable_errors(self) -> None:
+    def test_operator_wrapper_dry_runs_resolve_without_recursive_variable_errors(
+        self,
+    ) -> None:
         for target in (
             "portfolio",
             "portfolio-playwright",

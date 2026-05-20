@@ -11,9 +11,15 @@ from tools.eval_chat_common import request_json
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run a small live API smoke against Polinko.")
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
-    parser.add_argument("--timeout", type=int, default=90, help="HTTP timeout in seconds.")
+    parser = argparse.ArgumentParser(
+        description="Run a small live API smoke against Polinko."
+    )
+    parser.add_argument(
+        "--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL."
+    )
+    parser.add_argument(
+        "--timeout", type=int, default=90, help="HTTP timeout in seconds."
+    )
     parser.add_argument(
         "--session-prefix",
         default="api-smoke",
@@ -114,7 +120,9 @@ def main() -> int:
         output = str(chat_payload.get("output", "")).strip()
         assistant_message_id = str(chat_payload.get("assistant_message_id", "")).strip()
         if not output or not assistant_message_id:
-            raise RuntimeError("POST /chat returned missing output or assistant_message_id.")
+            raise RuntimeError(
+                "POST /chat returned missing output or assistant_message_id."
+            )
         print("  PASS /chat")
     finally:
         delete_chat(args.base_url, headers, session_id, args.timeout)

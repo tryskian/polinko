@@ -11,7 +11,9 @@ class ShouldSkipOcrRunTests(unittest.TestCase):
                 {"summary": {"aborted_due_to_rate_limit": True}},
             ],
         }
-        self.assertTrue(should_skip(payload=payload, backoff_seconds=300, now_epoch=1_200))
+        self.assertTrue(
+            should_skip(payload=payload, backoff_seconds=300, now_epoch=1_200)
+        )
 
     def test_do_not_skip_when_backoff_elapsed(self) -> None:
         payload = {
@@ -20,7 +22,9 @@ class ShouldSkipOcrRunTests(unittest.TestCase):
                 {"summary": {"aborted_due_to_rate_limit": True}},
             ],
         }
-        self.assertFalse(should_skip(payload=payload, backoff_seconds=300, now_epoch=1_400))
+        self.assertFalse(
+            should_skip(payload=payload, backoff_seconds=300, now_epoch=1_400)
+        )
 
     def test_do_not_skip_without_rate_limit_abort(self) -> None:
         payload = {
@@ -29,21 +33,27 @@ class ShouldSkipOcrRunTests(unittest.TestCase):
                 {"summary": {"aborted_due_to_rate_limit": False}},
             ],
         }
-        self.assertFalse(should_skip(payload=payload, backoff_seconds=300, now_epoch=1_100))
+        self.assertFalse(
+            should_skip(payload=payload, backoff_seconds=300, now_epoch=1_100)
+        )
 
     def test_skip_when_recent_summary_rate_limit_abort_runs(self) -> None:
         payload = {
             "generated_at": 1_000,
             "summary": {"rate_limit_abort_runs": 1},
         }
-        self.assertTrue(should_skip(payload=payload, backoff_seconds=300, now_epoch=1_200))
+        self.assertTrue(
+            should_skip(payload=payload, backoff_seconds=300, now_epoch=1_200)
+        )
 
     def test_skip_when_recent_summary_rate_limited_cases(self) -> None:
         payload = {
             "generated_at": 1_000,
             "summary": {"rate_limited_cases": 2},
         }
-        self.assertTrue(should_skip(payload=payload, backoff_seconds=300, now_epoch=1_200))
+        self.assertTrue(
+            should_skip(payload=payload, backoff_seconds=300, now_epoch=1_200)
+        )
 
     def test_do_not_skip_when_generated_at_missing(self) -> None:
         payload = {
@@ -51,7 +61,9 @@ class ShouldSkipOcrRunTests(unittest.TestCase):
                 {"summary": {"aborted_due_to_rate_limit": True}},
             ],
         }
-        self.assertFalse(should_skip(payload=payload, backoff_seconds=300, now_epoch=1_100))
+        self.assertFalse(
+            should_skip(payload=payload, backoff_seconds=300, now_epoch=1_100)
+        )
 
 
 if __name__ == "__main__":

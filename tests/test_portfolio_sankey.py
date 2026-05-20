@@ -123,7 +123,11 @@ def _init_manual_evals_db(path: Path) -> None:
             (
                 3,
                 "PARTIAL",
-                {"positive": [], "negative": ["style_mismatch"], "all": ["style_mismatch"]},
+                {
+                    "positive": [],
+                    "negative": ["style_mismatch"],
+                    "all": ["style_mismatch"],
+                },
                 "voice was off",
                 190,
             ),
@@ -185,7 +189,9 @@ def _write_binary_reports(root: Path) -> None:
             },
         ],
     }
-    (report_dir / "ocr-1711000000-r01.json").write_text(json.dumps(report), encoding="utf-8")
+    (report_dir / "ocr-1711000000-r01.json").write_text(
+        json.dumps(report), encoding="utf-8"
+    )
 
 
 class PortfolioSankeyTests(unittest.TestCase):
@@ -224,7 +230,9 @@ class PortfolioSankeyTests(unittest.TestCase):
             self.assertEqual(payload["summary"]["current_binary_cases"], 4)
             self.assertEqual(payload["summary"]["current_binary_reports"], 1)
             self.assertEqual(payload["sources"]["legacy"]["outcome_counts"]["FAIL"], 1)
-            self.assertEqual(payload["sources"]["legacy"]["signal_counts"]["ocr_signal"], 2)
+            self.assertEqual(
+                payload["sources"]["legacy"]["signal_counts"]["ocr_signal"], 2
+            )
             self.assertEqual(payload["sources"]["current"]["lane_counts"]["text"], 2)
             self.assertEqual(payload["sources"]["current"]["outcome_counts"]["FAIL"], 2)
 
@@ -268,7 +276,9 @@ class PortfolioSankeyTests(unittest.TestCase):
                 all(link["kind"] == "bridge_signal_to_lane" for link in bridge_links)
             )
             self.assertTrue(
-                all(link["source"].startswith("bridge_signal_") for link in bridge_links)
+                all(
+                    link["source"].startswith("bridge_signal_") for link in bridge_links
+                )
             )
             self.assertTrue(
                 all(link["target"].startswith("bridge_lane_") for link in bridge_links)

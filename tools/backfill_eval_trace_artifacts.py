@@ -20,9 +20,7 @@ from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
 from tools.eval_trace_artifacts import build_eval_trace
 
-DEFAULT_SUBMISSIONS_JSONL = Path(
-    "eval_reports/eval_submissions.jsonl"
-)
+DEFAULT_SUBMISSIONS_JSONL = Path("eval_reports/eval_submissions.jsonl")
 
 
 def _parse_bool(value: str | bool | None) -> bool:

@@ -113,7 +113,10 @@ class ClipABReadinessTests(unittest.TestCase):
                 min_delta=0.5,
             )
 
-            self.assertEqual([item.run_id for item in evaluations], ["20260310-123934", "20260310-125230"])
+            self.assertEqual(
+                [item.run_id for item in evaluations],
+                ["20260310-123934", "20260310-125230"],
+            )
 
     def test_cli_returns_go_for_two_consecutive_passing_reports(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -41,7 +40,10 @@ class EvalSidecarTests(unittest.TestCase):
             _failure_counter(failures),
             [
                 {"signal": "nonperformative_working_style_contract", "count": 2},
-                {"signal": "uncertainty_required_no_relationship_motive_guess", "count": 1},
+                {
+                    "signal": "uncertainty_required_no_relationship_motive_guess",
+                    "count": 1,
+                },
             ],
         )
 

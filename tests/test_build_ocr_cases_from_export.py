@@ -43,31 +43,47 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertIsNotNone(ASK_RX.search("newdrop can your binareyes read this?"))
 
     def test_ask_regex_matches_scribbles_and_bibbles_variant(self) -> None:
-        self.assertIsNotNone(ASK_RX.search("can you still OCR my scribbles and bibbles?"))
+        self.assertIsNotNone(
+            ASK_RX.search("can you still OCR my scribbles and bibbles?")
+        )
 
     def test_ask_regex_matches_scribbles_ampersand_bibbles_variant(self) -> None:
         self.assertIsNotNone(ASK_RX.search("can you still OCR my scribbles & bibbles?"))
 
     def test_ask_regex_matches_scrumbles_and_bibbles_variant(self) -> None:
-        self.assertIsNotNone(ASK_RX.search("can you still OCR my scrumbles and bibbles?"))
+        self.assertIsNotNone(
+            ASK_RX.search("can you still OCR my scrumbles and bibbles?")
+        )
 
     def test_ask_regex_matches_squibbles_and_bibbles_variant(self) -> None:
-        self.assertIsNotNone(ASK_RX.search("can you still OCR my squibbles and bibbles?"))
+        self.assertIsNotNone(
+            ASK_RX.search("can you still OCR my squibbles and bibbles?")
+        )
 
     def test_ask_regex_matches_peanut_cursive_variant(self) -> None:
-        self.assertIsNotNone(ASK_RX.search("this one is peanut cursive from my notebook"))
+        self.assertIsNotNone(
+            ASK_RX.search("this one is peanut cursive from my notebook")
+        )
 
     def test_ask_regex_matches_scratched_out_variant(self) -> None:
-        self.assertIsNotNone(ASK_RX.search("this line is scratched out, can you still read it?"))
+        self.assertIsNotNone(
+            ASK_RX.search("this line is scratched out, can you still read it?")
+        )
 
     def test_ask_regex_matches_scratch_out_variant(self) -> None:
-        self.assertIsNotNone(ASK_RX.search("this line is scratch out but still ocrable"))
+        self.assertIsNotNone(
+            ASK_RX.search("this line is scratch out but still ocrable")
+        )
 
     def test_ask_regex_matches_crossed_out_variant(self) -> None:
-        self.assertIsNotNone(ASK_RX.search("this line is crossed out, can you still read it?"))
+        self.assertIsNotNone(
+            ASK_RX.search("this line is crossed out, can you still read it?")
+        )
 
     def test_ask_regex_matches_strikethrough_variant(self) -> None:
-        self.assertIsNotNone(ASK_RX.search("did another strikethrough for focus on this one"))
+        self.assertIsNotNone(
+            ASK_RX.search("did another strikethrough for focus on this one")
+        )
 
     def test_ask_regex_does_not_match_read_it_and_weep_idiom(self) -> None:
         self.assertIsNone(ASK_RX.search("read it and weep binch!"))
@@ -90,7 +106,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
     def test_phrase_filter_rejects_control_and_path_artifacts(self) -> None:
         self.assertFalse(_is_ocr_like_phrase("imagegenview"))
         self.assertFalse(_is_ocr_like_phrase("/mnt/data/file-abc123-IMG_7750.jpeg"))
-        self.assertFalse(_is_ocr_like_phrase("assets/file-abc123/Screenshot_2026-03-29.png"))
+        self.assertFalse(
+            _is_ocr_like_phrase("assets/file-abc123/Screenshot_2026-03-29.png")
+        )
         self.assertFalse(_is_ocr_like_phrase(r"C:\Users\me\Downloads\ocr_note.png"))
         self.assertTrue(_is_ocr_like_phrase("there seems to be something stirring"))
 
@@ -113,7 +131,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertNotIn("tumbl", anchors)
 
     def test_expand_anchor_variants_avoids_overstemming_core_words(self) -> None:
-        anchors = _expand_anchor_variants(["focus", "abacus", "process", "analysis", "classes", "sparks"])
+        anchors = _expand_anchor_variants(
+            ["focus", "abacus", "process", "analysis", "classes", "sparks"]
+        )
         self.assertIn("focus", anchors)
         self.assertIn("abacus", anchors)
         self.assertIn("process", anchors)
@@ -308,7 +328,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         self.assertEqual(ordered, [])
 
     def test_ordered_terms_keep_non_ui_trailing_sequence(self) -> None:
-        ordered = _ordered_terms_for_phrases(["Restore Deleted Spectral Branch Phenomenon"])
+        ordered = _ordered_terms_for_phrases(
+            ["Restore Deleted Spectral Branch Phenomenon"]
+        )
         self.assertEqual(ordered, ["branch", "phenomenon"])
 
     def test_regex_patterns_drop_ui_not_found_phrase(self) -> None:
@@ -319,8 +341,12 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
         patterns = _regex_patterns_for_phrases(["chat html"])
         self.assertEqual(patterns, [])
 
-    def test_ordered_terms_supported_by_anchors_singularizes_plural_when_available(self) -> None:
-        ordered = _ordered_terms_supported_by_anchors(["folds", "within"], ["fold", "within"])
+    def test_ordered_terms_supported_by_anchors_singularizes_plural_when_available(
+        self,
+    ) -> None:
+        ordered = _ordered_terms_supported_by_anchors(
+            ["folds", "within"], ["fold", "within"]
+        )
         self.assertEqual(ordered, ["fold", "within"])
 
     def test_build_promotes_medium_with_framing_signal(self) -> None:
@@ -341,15 +367,27 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                         "message": {
                             "create_time": 1,
                             "author": {"role": "user"},
-                            "content": {"parts": ["can you transcribe this cursive note with binareyes?"]},
-                            "metadata": {"attachments": [{"name": "img_001.jpg", "id": "file_abc"}]},
+                            "content": {
+                                "parts": [
+                                    "can you transcribe this cursive note with binareyes?"
+                                ]
+                            },
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_001.jpg", "id": "file_abc"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ['yes — binareyes locked on. it reads, *"Alpha spiral field"*']},
+                            "content": {
+                                "parts": [
+                                    'yes — binareyes locked on. it reads, *"Alpha spiral field"*'
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -379,7 +417,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["medium_signal_strength"], 1)
             self.assertEqual(summary["cases_written"], 1)
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "medium")
             self.assertEqual(review["confidence"], "medium")
             self.assertEqual(review["selected_confidence"], "medium")
@@ -399,7 +439,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             (assets / "img_001.jpg").write_bytes(b"not-a-real-image")
             (assets / "img_002.jpg").write_bytes(b"not-a-real-image")
 
-            def make_conversation(conversation_id: str, title: str, image_name: str) -> dict[str, object]:
+            def make_conversation(
+                conversation_id: str, title: str, image_name: str
+            ) -> dict[str, object]:
                 return {
                     "conversation_id": conversation_id,
                     "title": title,
@@ -409,14 +451,23 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                                 "create_time": 1,
                                 "author": {"role": "user"},
                                 "content": {"parts": ["can you transcribe this note?"]},
-                                "metadata": {"attachments": [{"name": image_name, "id": f"file_{conversation_id}"}]},
+                                "metadata": {
+                                    "attachments": [
+                                        {
+                                            "name": image_name,
+                                            "id": f"file_{conversation_id}",
+                                        }
+                                    ]
+                                },
                             }
                         },
                         "2": {
                             "message": {
                                 "create_time": 2,
                                 "author": {"role": "assistant"},
-                                "content": {"parts": ['it reads: "alpha spiral field"']},
+                                "content": {
+                                    "parts": ['it reads: "alpha spiral field"']
+                                },
                                 "metadata": {},
                             }
                         },
@@ -424,11 +475,15 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 }
 
             (conversations / "conv_focus.json").write_text(
-                json.dumps(make_conversation("conv-focus", "Focus Session", "img_001.jpg")),
+                json.dumps(
+                    make_conversation("conv-focus", "Focus Session", "img_001.jpg")
+                ),
                 encoding="utf-8",
             )
             (conversations / "conv_misc.json").write_text(
-                json.dumps(make_conversation("conv-misc", "Misc Session", "img_002.jpg")),
+                json.dumps(
+                    make_conversation("conv-misc", "Misc Session", "img_002.jpg")
+                ),
                 encoding="utf-8",
             )
 
@@ -455,7 +510,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             review = json.loads(output_review.read_text(encoding="utf-8"))
             self.assertEqual(review["summary"]["skipped_filtered_conversations"], 1)
             self.assertEqual(len(review["episodes"]), 1)
-            self.assertEqual(review["episodes"][0]["conversation_title"], "Focus Session")
+            self.assertEqual(
+                review["episodes"][0]["conversation_title"], "Focus Session"
+            )
 
     def test_build_respects_include_conversation_regex(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -467,7 +524,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             (assets / "img_001.jpg").write_bytes(b"not-a-real-image")
             (assets / "img_002.jpg").write_bytes(b"not-a-real-image")
 
-            def make_conversation(conversation_id: str, image_name: str) -> dict[str, object]:
+            def make_conversation(
+                conversation_id: str, image_name: str
+            ) -> dict[str, object]:
                 return {
                     "conversation_id": conversation_id,
                     "title": "OCR Session",
@@ -477,14 +536,23 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                                 "create_time": 1,
                                 "author": {"role": "user"},
                                 "content": {"parts": ["can you transcribe this note?"]},
-                                "metadata": {"attachments": [{"name": image_name, "id": f"file_{conversation_id}"}]},
+                                "metadata": {
+                                    "attachments": [
+                                        {
+                                            "name": image_name,
+                                            "id": f"file_{conversation_id}",
+                                        }
+                                    ]
+                                },
                             }
                         },
                         "2": {
                             "message": {
                                 "create_time": 2,
                                 "author": {"role": "assistant"},
-                                "content": {"parts": ['it reads: "alpha spiral field"']},
+                                "content": {
+                                    "parts": ['it reads: "alpha spiral field"']
+                                },
                                 "metadata": {},
                             }
                         },
@@ -543,7 +611,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this note?"]},
-                            "metadata": {"attachments": [{"name": "img_001.jpg", "id": "file_lane_a"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_001.jpg", "id": "file_lane_a"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -564,10 +636,15 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                         "message": {
                             "create_time": 1,
                             "author": {"role": "user"},
-                            "content": {"parts": ["can you transcribe this screenshot text?"]},
+                            "content": {
+                                "parts": ["can you transcribe this screenshot text?"]
+                            },
                             "metadata": {
                                 "attachments": [
-                                    {"name": "Screenshot_2026-03-29.png", "id": "file_lane_b"}
+                                    {
+                                        "name": "Screenshot_2026-03-29.png",
+                                        "id": "file_lane_b",
+                                    }
                                 ]
                             },
                         }
@@ -634,7 +711,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this note?"]},
-                            "metadata": {"attachments": [{"name": "img_001.jpg", "id": "file_lane_invalid"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_001.jpg", "id": "file_lane_invalid"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -670,7 +751,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                     include_lanes={"typed", "sketch"},
                 )
 
-    def test_build_respects_include_signal_strengths_and_counts_filtered_episodes(self) -> None:
+    def test_build_respects_include_signal_strengths_and_counts_filtered_episodes(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -689,14 +772,22 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this exactly?"]},
-                            "metadata": {"attachments": [{"name": "img_high.jpg", "id": "file_signal_high"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_high.jpg", "id": "file_signal_high"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ["Here's the OCR:\n- alpha spiral field\n- tensor matrix ledger"]},
+                            "content": {
+                                "parts": [
+                                    "Here's the OCR:\n- alpha spiral field\n- tensor matrix ledger"
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -711,14 +802,25 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this exactly?"]},
-                            "metadata": {"attachments": [{"name": "img_medium.jpg", "id": "file_signal_medium"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {
+                                        "name": "img_medium.jpg",
+                                        "id": "file_signal_medium",
+                                    }
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ["- alpha spiral field\n- tensor matrix ledger\n- delta mapping"]},
+                            "content": {
+                                "parts": [
+                                    "- alpha spiral field\n- tensor matrix ledger\n- delta mapping"
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -760,7 +862,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(len(review["episodes"]), 1)
             self.assertEqual(review["episodes"][0]["signal_strength"], "high")
 
-    def test_build_respects_include_emit_statuses_and_counts_filtered_episodes(self) -> None:
+    def test_build_respects_include_emit_statuses_and_counts_filtered_episodes(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -779,14 +883,22 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this exactly?"]},
-                            "metadata": {"attachments": [{"name": "img_emitted.jpg", "id": "file_emit_ok"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_emitted.jpg", "id": "file_emit_ok"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ["Here's the OCR:\n- alpha spiral field\n- tensor matrix ledger"]},
+                            "content": {
+                                "parts": [
+                                    "Here's the OCR:\n- alpha spiral field\n- tensor matrix ledger"
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -801,7 +913,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this?"]},
-                            "metadata": {"attachments": [{"name": "img_low.jpg", "id": "file_emit_low"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_low.jpg", "id": "file_emit_low"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -848,9 +964,13 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             review = json.loads(output_review.read_text(encoding="utf-8"))
             self.assertEqual(review["summary"]["skipped_filtered_episodes"], 1)
             self.assertEqual(len(review["episodes"]), 1)
-            self.assertEqual(review["episodes"][0]["emit_status"], "skipped_low_confidence")
+            self.assertEqual(
+                review["episodes"][0]["emit_status"], "skipped_low_confidence"
+            )
 
-    def test_build_respects_include_source_regex_and_counts_filtered_episodes(self) -> None:
+    def test_build_respects_include_source_regex_and_counts_filtered_episodes(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -860,7 +980,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             (assets / "IMG_7001.jpg").write_bytes(b"not-a-real-image")
             (assets / "Screenshot_2026-03-29.png").write_bytes(b"not-a-real-image")
 
-            def make_conversation(conversation_id: str, image_name: str) -> dict[str, object]:
+            def make_conversation(
+                conversation_id: str, image_name: str
+            ) -> dict[str, object]:
                 return {
                     "conversation_id": conversation_id,
                     "title": "OCR Session",
@@ -870,14 +992,23 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                                 "create_time": 1,
                                 "author": {"role": "user"},
                                 "content": {"parts": ["can you transcribe this note?"]},
-                                "metadata": {"attachments": [{"name": image_name, "id": f"file_{conversation_id}"}]},
+                                "metadata": {
+                                    "attachments": [
+                                        {
+                                            "name": image_name,
+                                            "id": f"file_{conversation_id}",
+                                        }
+                                    ]
+                                },
                             }
                         },
                         "2": {
                             "message": {
                                 "create_time": 2,
                                 "author": {"role": "assistant"},
-                                "content": {"parts": ['it reads: "alpha spiral field"']},
+                                "content": {
+                                    "parts": ['it reads: "alpha spiral field"']
+                                },
                                 "metadata": {},
                             }
                         },
@@ -889,7 +1020,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (conversations / "conv_typed.json").write_text(
-                json.dumps(make_conversation("conv-typed-001", "Screenshot_2026-03-29.png")),
+                json.dumps(
+                    make_conversation("conv-typed-001", "Screenshot_2026-03-29.png")
+                ),
                 encoding="utf-8",
             )
 
@@ -1071,15 +1204,21 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["typed_cases_written"], 1)
             self.assertEqual(summary["growth_cases_written"], 1)
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["lane"], "typed")
             self.assertEqual(review["signal_strength"], "high")
             self.assertTrue(review["ocr_framing_signal"])
             self.assertTrue(review["correction_signal"])
             self.assertTrue(review["correction_overlap_signal"])
-            self.assertEqual(len(json.loads(output_growth.read_text(encoding="utf-8"))["cases"]), 1)
+            self.assertEqual(
+                len(json.loads(output_growth.read_text(encoding="utf-8"))["cases"]), 1
+            )
 
-    def test_build_promotes_medium_with_literal_intent_and_strong_anchor_phrases(self) -> None:
+    def test_build_promotes_medium_with_literal_intent_and_strong_anchor_phrases(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -1098,14 +1237,22 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this exactly?"]},
-                            "metadata": {"attachments": [{"name": "img_010.jpg", "id": "file_strong"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_010.jpg", "id": "file_strong"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ["- alpha spiral field\n- tensor matrix ledger\n- delta mapping"]},
+                            "content": {
+                                "parts": [
+                                    "- alpha spiral field\n- tensor matrix ledger\n- delta mapping"
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -1135,12 +1282,16 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["medium_signal_strength"], 1)
             self.assertEqual(summary["cases_written"], 1)
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "medium")
             self.assertTrue(review["ocr_literal_intent_signal"])
             self.assertFalse(review["ocr_framing_signal"])
 
-    def test_build_promotes_high_with_literal_framed_multi_phrase_transcription(self) -> None:
+    def test_build_promotes_high_with_literal_framed_multi_phrase_transcription(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -1159,7 +1310,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this exactly?"]},
-                            "metadata": {"attachments": [{"name": "img_013.jpg", "id": "file_high"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_013.jpg", "id": "file_high"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -1200,12 +1355,16 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["high_signal_strength"], 1)
             self.assertEqual(summary["cases_written"], 1)
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "high")
             self.assertTrue(review["ocr_literal_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
 
-    def test_build_emits_high_signal_strength_when_correction_phrase_is_numeric_only(self) -> None:
+    def test_build_emits_high_signal_strength_when_correction_phrase_is_numeric_only(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -1224,7 +1383,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["please OCR this note exactly"]},
-                            "metadata": {"attachments": [{"name": "img_014.jpg", "id": "file_high_numeric"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_014.jpg", "id": "file_high_numeric"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -1272,7 +1435,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["cases_written"], 1)
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertIn(review["signal_strength"], {"high", "medium"})
             self.assertEqual(review["emit_status"], "emitted")
             self.assertGreaterEqual(review["anchor_terms_count"], 3)
@@ -1296,14 +1461,22 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this?"]},
-                            "metadata": {"attachments": [{"name": "img_015.jpg", "id": "file_late_corr"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_015.jpg", "id": "file_late_corr"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ["Here's the OCR:\n- WISHING YOU\n- PEACEFUL WINTER LIGHT"]},
+                            "content": {
+                                "parts": [
+                                    "Here's the OCR:\n- WISHING YOU\n- PEACEFUL WINTER LIGHT"
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -1327,7 +1500,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                         "message": {
                             "create_time": 5,
                             "author": {"role": "user"},
-                            "content": {"parts": ['correction: "done keep like receive simple fade wreath star"']},
+                            "content": {
+                                "parts": [
+                                    'correction: "done keep like receive simple fade wreath star"'
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -1356,7 +1533,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["cases_written"], 1)
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertTrue(review["correction_signal"])
             self.assertFalse(review["correction_overlap_signal"])
             self.assertEqual(review["emit_status"], "emitted")
@@ -1382,7 +1561,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this exactly?"]},
-                            "metadata": {"attachments": [{"name": "img_011.jpg", "id": "file_weak"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_011.jpg", "id": "file_weak"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -1419,7 +1602,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["cases_written"], 0)
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "low")
             self.assertTrue(review["ocr_literal_intent_signal"])
             self.assertFalse(review["ocr_framing_signal"])
@@ -1446,7 +1631,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this exactly?"]},
-                            "metadata": {"attachments": [{"name": "img_017.jpg", "id": "file_growth_low"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_017.jpg", "id": "file_growth_low"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -1491,7 +1680,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(growth_cases[0]["id"], "gx-conv-gro-001")
             self.assertEqual(growth_cases[0]["lane"], "handwriting")
 
-    def test_build_does_not_widen_growth_lane_for_framed_low_confidence_without_intent(self) -> None:
+    def test_build_does_not_widen_growth_lane_for_framed_low_confidence_without_intent(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -1510,14 +1701,20 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["thoughts?"]},
-                            "metadata": {"attachments": [{"name": "img_018.png", "id": "file_growth_frame"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_018.png", "id": "file_growth_frame"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ["Here is the OCR:\n- Delta bridge ledger"]},
+                            "content": {
+                                "parts": ["Here is the OCR:\n- Delta bridge ledger"]
+                            },
                             "metadata": {},
                         }
                     },
@@ -1553,12 +1750,16 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             growth_cases = growth_payload["cases"]
             self.assertEqual(len(growth_cases), 0)
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "low")
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
 
-    def test_build_does_not_widen_growth_lane_for_correction_without_ocr_intent(self) -> None:
+    def test_build_does_not_widen_growth_lane_for_correction_without_ocr_intent(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -1577,14 +1778,22 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["thoughts on this concept sketch?"]},
-                            "metadata": {"attachments": [{"name": "img_020.png", "id": "file_growth_corr"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_020.png", "id": "file_growth_corr"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ["it reads: human perception, machine cognition"]},
+                            "content": {
+                                "parts": [
+                                    "it reads: human perception, machine cognition"
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -1598,7 +1807,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                     },
                 },
             }
-            (conversations / "conversation-growth-correction-no-intent.json").write_text(
+            (
+                conversations / "conversation-growth-correction-no-intent.json"
+            ).write_text(
                 json.dumps(conversation),
                 encoding="utf-8",
             )
@@ -1628,7 +1839,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             growth_payload = json.loads(output_growth.read_text(encoding="utf-8"))
             self.assertEqual(growth_payload["cases"], [])
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "low")
             self.assertFalse(review["ocr_intent_signal"])
             self.assertTrue(review["correction_signal"])
@@ -1653,7 +1866,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["maybe even this!"]},
-                            "metadata": {"attachments": [{"name": "img_021.png", "id": "file_overlap_corr"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_021.png", "id": "file_overlap_corr"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -1673,13 +1890,19 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                         "message": {
                             "create_time": 3,
                             "author": {"role": "user"},
-                            "content": {"parts": ["the title reads \"the mirror blinked back\" when only then is stylized"]},
+                            "content": {
+                                "parts": [
+                                    'the title reads "the mirror blinked back" when only then is stylized'
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
                 },
             }
-            (conversations / "conversation-overlap-correction-no-intent.json").write_text(
+            (
+                conversations / "conversation-overlap-correction-no-intent.json"
+            ).write_text(
                 json.dumps(conversation),
                 encoding="utf-8",
             )
@@ -1706,7 +1929,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["cases_written"], 0)
             self.assertEqual(summary["growth_cases_written"], 0)
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "low")
             self.assertEqual(review["emit_status"], "skipped_low_confidence")
             self.assertFalse(review["ocr_intent_signal"])
@@ -1733,14 +1958,22 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this exactly?"]},
-                            "metadata": {"attachments": [{"name": "img_019.png", "id": "file_growth_regex"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_019.png", "id": "file_growth_regex"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ["Here is the OCR:\n- central circle grid wave"]},
+                            "content": {
+                                "parts": [
+                                    "Here is the OCR:\n- central circle grid wave"
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -1799,14 +2032,20 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you transcribe this?"]},
-                            "metadata": {"attachments": [{"name": "img_012.jpg", "id": "file_token_list"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_012.jpg", "id": "file_token_list"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ["- certex\n- vertex\n- cortex\n- vortices"]},
+                            "content": {
+                                "parts": ["- certex\n- vertex\n- cortex\n- vortices"]
+                            },
                             "metadata": {},
                         }
                     },
@@ -1836,7 +2075,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["cases_written"], 0)
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "low")
             self.assertTrue(review["ocr_literal_intent_signal"])
             self.assertFalse(review["ocr_framing_signal"])
@@ -1860,7 +2101,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["what does this say?"]},
-                            "metadata": {"attachments": [{"name": "img_002.jpg", "id": "file_xyz"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_002.jpg", "id": "file_xyz"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -1905,7 +2150,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["cases_written"], 0)
 
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "low")
             self.assertTrue(review["positive_signal"])
             self.assertFalse(review["ocr_framing_signal"])
@@ -1933,7 +2180,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                                     "i started teaching myself cursive from a workbook so i practiced occasionally in my notes"
                                 ]
                             },
-                            "metadata": {"attachments": [{"name": "img_003.jpg", "id": "file_ghi"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_003.jpg", "id": "file_ghi"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -1992,15 +2243,25 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                         "message": {
                             "create_time": 1,
                             "author": {"role": "user"},
-                            "content": {"parts": ["can ur binareyes read this diagram text?"]},
-                            "metadata": {"attachments": [{"name": "diagram_001.png", "id": "file_jkl"}]},
+                            "content": {
+                                "parts": ["can ur binareyes read this diagram text?"]
+                            },
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "diagram_001.png", "id": "file_jkl"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ['**graph paper maps x, y** and **physics maps x, y, z**']},
+                            "content": {
+                                "parts": [
+                                    "**graph paper maps x, y** and **physics maps x, y, z**"
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -2032,7 +2293,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             cases_payload = json.loads(output_cases.read_text(encoding="utf-8"))
             self.assertIn("summary", cases_payload)
             self.assertEqual(cases_payload["summary"]["cases_total"], 1)
-            self.assertEqual(cases_payload["summary"]["lane_case_counts"]["illustration"], 1)
+            self.assertEqual(
+                cases_payload["summary"]["lane_case_counts"]["illustration"], 1
+            )
             case = cases_payload["cases"][0]
             self.assertEqual(case["lane"], "illustration")
 
@@ -2059,14 +2322,20 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                                     'one update: first word is "insight". you read it as "weight". can you transcribe this image again?'
                                 ]
                             },
-                            "metadata": {"attachments": [{"name": "img_010.jpg", "id": "file_ask"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_010.jpg", "id": "file_ask"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ['it reads: "insight — abacus method"']},
+                            "content": {
+                                "parts": ['it reads: "insight — abacus method"']
+                            },
                             "metadata": {},
                         }
                     },
@@ -2096,7 +2365,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["high_signal_strength"], 0)
             self.assertEqual(summary["medium_signal_strength"], 1)
             self.assertEqual(summary["handwriting_cases_written"], 1)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "medium")
             self.assertIn("insight", [p.lower() for p in review["correction_phrases"]])
             self.assertIn("abacus method", " ".join(review["chosen_phrases"]).lower())
@@ -2120,7 +2391,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you OCR this screenshot?"]},
-                            "metadata": {"attachments": [{"name": "screenshot_001.png", "id": "file_noise"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "screenshot_001.png", "id": "file_noise"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -2172,7 +2447,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["cases_written"], 0)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "low")
             self.assertFalse(review["ocr_framing_signal"])
             self.assertEqual(review["correction_phrases"], [])
@@ -2201,7 +2478,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                                     "lol beab. ur binaries aren't talking to ur binareyes but that's ok!"
                                 ]
                             },
-                            "metadata": {"attachments": [{"name": "dropdown_001.png", "id": "file_dropdown"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "dropdown_001.png", "id": "file_dropdown"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -2221,9 +2502,7 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 3,
                             "author": {"role": "user"},
                             "content": {
-                                "parts": [
-                                    "the personal org is safe to delete"
-                                ]
+                                "parts": ["the personal org is safe to delete"]
                             },
                             "metadata": {},
                         }
@@ -2254,7 +2533,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["cases_written"], 0)
             self.assertEqual(summary["episodes"], 0)
 
-    def test_build_promotes_non_literal_intent_when_correction_phrase_present(self) -> None:
+    def test_build_promotes_non_literal_intent_when_correction_phrase_present(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -2273,11 +2554,13 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {
-                                "parts": [
-                                    "lol bully! not bull-fly! binareyes"
+                                "parts": ["lol bully! not bull-fly! binareyes"]
+                            },
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "img_900.jpg", "id": "file_900"}
                                 ]
                             },
-                            "metadata": {"attachments": [{"name": "img_900.jpg", "id": "file_900"}]},
                         }
                     },
                     "2": {
@@ -2313,12 +2596,16 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["medium_signal_strength"], 1)
             self.assertEqual(summary["cases_written"], 1)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "medium")
             self.assertTrue(review["ocr_intent_signal"])
             self.assertFalse(review["ocr_literal_intent_signal"])
 
-    def test_build_keeps_askless_handwriting_low_without_correction_signal(self) -> None:
+    def test_build_keeps_askless_handwriting_low_without_correction_signal(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -2337,7 +2624,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["new notebook page from today"]},
-                            "metadata": {"attachments": [{"name": "IMG_2001.jpg", "id": "file_askless_hand"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "IMG_2001.jpg", "id": "file_askless_hand"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -2380,13 +2671,17 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["handwriting_cases_written"], 0)
             self.assertEqual(summary["growth_cases_written"], 0)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "low")
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
             self.assertFalse(review["correction_signal"])
             self.assertFalse(review["correction_overlap_signal"])
-            self.assertEqual(json.loads(output_growth.read_text(encoding="utf-8"))["cases"], [])
+            self.assertEqual(
+                json.loads(output_growth.read_text(encoding="utf-8"))["cases"], []
+            )
 
     def test_build_promotes_markup_handwriting_with_framed_transcription(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -2406,8 +2701,16 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                         "message": {
                             "create_time": 1,
                             "author": {"role": "user"},
-                            "content": {"parts": ["Did another strikethrough for focus on this one :)"]},
-                            "metadata": {"attachments": [{"name": "IMG_2004.jpg", "id": "file_markup_hand"}]},
+                            "content": {
+                                "parts": [
+                                    "Did another strikethrough for focus on this one :)"
+                                ]
+                            },
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "IMG_2004.jpg", "id": "file_markup_hand"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -2449,13 +2752,17 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["medium_signal_strength"], 1)
             self.assertEqual(summary["handwriting_cases_written"], 1)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "medium")
             self.assertTrue(review["ocr_intent_signal"])
             self.assertFalse(review["ocr_literal_intent_signal"])
             self.assertTrue(review["ocr_framing_signal"])
 
-    def test_build_promotes_askless_handwriting_with_followup_correction_signal(self) -> None:
+    def test_build_promotes_askless_handwriting_with_followup_correction_signal(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -2474,7 +2781,14 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["new notebook page from today"]},
-                            "metadata": {"attachments": [{"name": "IMG_2002.jpg", "id": "file_askless_hand_correction"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {
+                                        "name": "IMG_2002.jpg",
+                                        "id": "file_askless_hand_correction",
+                                    }
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -2493,7 +2807,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                         "message": {
                             "create_time": 3,
                             "author": {"role": "user"},
-                            "content": {"parts": ["correction: it says alpha spiral field"]},
+                            "content": {
+                                "parts": ["correction: it says alpha spiral field"]
+                            },
                             "metadata": {},
                         }
                     },
@@ -2525,14 +2841,20 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["high_signal_strength"], 1)
             self.assertEqual(summary["handwriting_cases_written"], 1)
             self.assertEqual(summary["growth_cases_written"], 1)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "high")
             self.assertTrue(review["ocr_framing_signal"])
             self.assertTrue(review["correction_signal"])
             self.assertTrue(review["correction_overlap_signal"])
-            self.assertEqual(len(json.loads(output_growth.read_text(encoding="utf-8"))["cases"]), 1)
+            self.assertEqual(
+                len(json.loads(output_growth.read_text(encoding="utf-8"))["cases"]), 1
+            )
 
-    def test_build_keeps_askless_handwriting_low_with_non_overlapping_correction(self) -> None:
+    def test_build_keeps_askless_handwriting_low_with_non_overlapping_correction(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -2551,7 +2873,14 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["new notebook page from today"]},
-                            "metadata": {"attachments": [{"name": "IMG_2003.jpg", "id": "file_askless_hand_no_overlap"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {
+                                        "name": "IMG_2003.jpg",
+                                        "id": "file_askless_hand_no_overlap",
+                                    }
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -2576,7 +2905,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                     },
                 },
             }
-            (conversations / "conversation-askless-hand-correction-no-overlap.json").write_text(
+            (
+                conversations / "conversation-askless-hand-correction-no-overlap.json"
+            ).write_text(
                 json.dumps(conversation),
                 encoding="utf-8",
             )
@@ -2599,7 +2930,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["medium_signal_strength"], 0)
             self.assertEqual(summary["handwriting_cases_written"], 0)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["signal_strength"], "low")
             self.assertTrue(review["ocr_framing_signal"])
             self.assertTrue(review["correction_signal"])
@@ -2624,14 +2957,22 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can u see with your binareyes?"]},
-                            "metadata": {"attachments": [{"name": "tiny_001.png", "id": "file_tiny"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": "tiny_001.png", "id": "file_tiny"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ['it reads: "There seems to be something - stirring."']},
+                            "content": {
+                                "parts": [
+                                    'it reads: "There seems to be something - stirring."'
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -2663,9 +3004,16 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["skipped_insufficient_anchor_terms"], 0)
             review_payload = json.loads(output_review.read_text(encoding="utf-8"))
             self.assertEqual(review_payload["summary"]["episodes"], 1)
-            self.assertEqual(review_payload["summary"]["emit_status_counts"]["emitted"], 1)
+            self.assertEqual(
+                review_payload["summary"]["emit_status_counts"]["emitted"], 1
+            )
             review = review_payload["episodes"][0]
-            self.assertEqual(review_payload["summary"]["lane_emit_status_counts"][review["lane"]]["emitted"], 1)
+            self.assertEqual(
+                review_payload["summary"]["lane_emit_status_counts"][review["lane"]][
+                    "emitted"
+                ],
+                1,
+            )
             self.assertEqual(review["emit_status"], "emitted")
             self.assertEqual(review["anchor_terms_count"], 1)
             self.assertEqual(review["anchor_terms"], ["stirring"])
@@ -2693,7 +3041,12 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "author": {"role": "user"},
                             "content": {"parts": ["can u see with your binareyes?"]},
                             "metadata": {
-                                "attachments": [{"name": "tiny_growth_001.png", "id": "file_tiny_growth"}]
+                                "attachments": [
+                                    {
+                                        "name": "tiny_growth_001.png",
+                                        "id": "file_tiny_growth",
+                                    }
+                                ]
                             },
                         }
                     },
@@ -2701,7 +3054,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ['it reads: "There seems to be something - stirring."']},
+                            "content": {
+                                "parts": [
+                                    'it reads: "There seems to be something - stirring."'
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -2733,7 +3090,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["cases_written"], 1)
             self.assertEqual(summary["growth_cases_written"], 1)
-            growth_case = json.loads(output_growth.read_text(encoding="utf-8"))["cases"][0]
+            growth_case = json.loads(output_growth.read_text(encoding="utf-8"))[
+                "cases"
+            ][0]
             self.assertEqual(growth_case["must_contain_any"], ["stirring"])
             self.assertEqual(growth_case["must_appear_in_order"], [])
             self.assertEqual(growth_case["must_match_regex"], [])
@@ -2758,8 +3117,16 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                         "message": {
                             "create_time": 1,
                             "author": {"role": "user"},
-                            "content": {"parts": ["can you read this handwritten notebook note?"]},
-                            "metadata": {"attachments": [{"name": unstable_name, "id": "file_unstable"}]},
+                            "content": {
+                                "parts": [
+                                    "can you read this handwritten notebook note?"
+                                ]
+                            },
+                            "metadata": {
+                                "attachments": [
+                                    {"name": unstable_name, "id": "file_unstable"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -2799,7 +3166,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["cases_written"], 0)
             self.assertEqual(summary["skipped_unstable_source"], 1)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["emit_status"], "skipped_unstable_source")
             self.assertEqual(review["source_name"], unstable_name)
 
@@ -2823,7 +3192,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you read this?"]},
-                            "metadata": {"attachments": [{"name": unstable_name, "id": "file_unstable_typed"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": unstable_name, "id": "file_unstable_typed"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -2859,7 +3232,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
 
             self.assertEqual(summary["cases_written"], 0)
             self.assertEqual(summary["skipped_unstable_source"], 1)
-            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][0]
+            review = json.loads(output_review.read_text(encoding="utf-8"))["episodes"][
+                0
+            ]
             self.assertEqual(review["emit_status"], "skipped_unstable_source")
             self.assertEqual(review["source_name"], unstable_name)
 
@@ -2883,7 +3258,14 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you read this?"]},
-                            "metadata": {"attachments": [{"name": unstable_name, "id": "file_unstable_growth"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {
+                                        "name": unstable_name,
+                                        "id": "file_unstable_growth",
+                                    }
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -2891,7 +3273,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 2,
                             "author": {"role": "assistant"},
                             "content": {
-                                "parts": ["it reads: word bull-fly\nma’am, let the plot breathe.\nword bully"]
+                                "parts": [
+                                    "it reads: word bull-fly\nma’am, let the plot breathe.\nword bully"
+                                ]
                             },
                             "metadata": {},
                         }
@@ -2933,7 +3317,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["skipped_unstable_source"], 1)
             self.assertEqual(summary["growth_cases_written"], 1)
             self.assertEqual(summary["growth_quarantine_cases_written"], 1)
-            growth_cases = json.loads(output_growth.read_text(encoding="utf-8"))["cases"]
+            growth_cases = json.loads(output_growth.read_text(encoding="utf-8"))[
+                "cases"
+            ]
             self.assertEqual(len(growth_cases), 1)
             self.assertTrue(growth_cases[0]["source_quarantine"])
 
@@ -2956,15 +3342,27 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                         "message": {
                             "create_time": 1,
                             "author": {"role": "user"},
-                            "content": {"parts": ['`beab init "Operation Polinko"` with binareyes']},
-                            "metadata": {"attachments": [{"name": image_name, "id": "file_nocorr"}]},
+                            "content": {
+                                "parts": [
+                                    '`beab init "Operation Polinko"` with binareyes'
+                                ]
+                            },
+                            "metadata": {
+                                "attachments": [
+                                    {"name": image_name, "id": "file_nocorr"}
+                                ]
+                            },
                         }
                     },
                     "2": {
                         "message": {
                             "create_time": 2,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ["No OCR output here; this is org settings guidance only."]},
+                            "content": {
+                                "parts": [
+                                    "No OCR output here; this is org settings guidance only."
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -2995,7 +3393,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["episodes"], 0)
             self.assertEqual(summary["skipped_low_confidence"], 0)
 
-    def test_build_surfaces_same_conversation_unmined_generalization_candidates(self) -> None:
+    def test_build_surfaces_same_conversation_unmined_generalization_candidates(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             export_root = Path(tmp_dir) / "export"
             conversations = export_root / "conversations"
@@ -3017,7 +3417,11 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                             "create_time": 1,
                             "author": {"role": "user"},
                             "content": {"parts": ["can you read this notebook page?"]},
-                            "metadata": {"attachments": [{"name": primary_name, "id": "file_primary"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": primary_name, "id": "file_primary"}
+                                ]
+                            },
                         }
                     },
                     "2": {
@@ -3037,14 +3441,22 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
                                     "we can scan every insight later and distill it into a ledger"
                                 ]
                             },
-                            "metadata": {"attachments": [{"name": extra_name, "id": "file_extra"}]},
+                            "metadata": {
+                                "attachments": [
+                                    {"name": extra_name, "id": "file_extra"}
+                                ]
+                            },
                         }
                     },
                     "4": {
                         "message": {
                             "create_time": 4,
                             "author": {"role": "assistant"},
-                            "content": {"parts": ["yes, that can become one continuous ledger block"]},
+                            "content": {
+                                "parts": [
+                                    "yes, that can become one continuous ledger block"
+                                ]
+                            },
                             "metadata": {},
                         }
                     },
@@ -3079,7 +3491,9 @@ class OcrCaseMiningHeuristicsTests(unittest.TestCase):
             self.assertEqual(summary["episodes"], 1)
             self.assertEqual(summary["generalization_candidates_written"], 1)
             self.assertEqual(summary["same_conversation_unmined_candidates"], 1)
-            generalization = json.loads(output_generalization.read_text(encoding="utf-8"))
+            generalization = json.loads(
+                output_generalization.read_text(encoding="utf-8")
+            )
             self.assertEqual(generalization["summary"]["same_conversation_unmined"], 1)
             candidate = generalization["candidates"][0]
             self.assertEqual(candidate["source_name"], extra_name)

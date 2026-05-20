@@ -13,8 +13,12 @@ from tools.eval_retrieval_common import chat_message as _chat
 from tools.eval_retrieval_common import create_chat as _create_chat
 from tools.eval_retrieval_common import default_headers
 from tools.eval_retrieval_common import delete_chat as _delete_chat
-from tools.eval_retrieval_common import find_expected_citation as _find_expected_citation
-from tools.eval_retrieval_common import has_cross_session_leak as _has_cross_session_leak
+from tools.eval_retrieval_common import (
+    find_expected_citation as _find_expected_citation,
+)
+from tools.eval_retrieval_common import (
+    has_cross_session_leak as _has_cross_session_leak,
+)
 from tools.eval_retrieval_common import load_cases as _load_cases
 from tools.eval_retrieval_common import preflight as _preflight
 from tools.eval_retrieval_common import seed_ocr_memory as _seed_ocr_memory

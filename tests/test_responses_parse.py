@@ -54,7 +54,9 @@ class ResponsesParseTests(unittest.TestCase):
                 del kwargs
                 return SimpleNamespace(output_parsed=_WrongPayload(other="nope"))
 
-        with self.assertRaisesRegex(RuntimeError, "Structured payload must be _Payload"):
+        with self.assertRaisesRegex(
+            RuntimeError, "Structured payload must be _Payload"
+        ):
             parse_structured_output(
                 responses_client=SimpleNamespace(responses=_FakeResponses()),
                 model="gpt-test",

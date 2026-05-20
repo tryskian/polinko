@@ -20,7 +20,9 @@ class BatchPlan:
     max_cases: int
 
 
-def _plan_batches(*, total_cases: int, offset: int, max_cases: int, batch_size: int) -> list[BatchPlan]:
+def _plan_batches(
+    *, total_cases: int, offset: int, max_cases: int, batch_size: int
+) -> list[BatchPlan]:
     if total_cases < 0:
         raise RuntimeError("total_cases must be >= 0.")
     if offset < 0:
@@ -88,16 +90,24 @@ def _build_markdown_summary(payload: dict[str, Any]) -> str:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run OCR eval in deterministic batches.")
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
+    parser = argparse.ArgumentParser(
+        description="Run OCR eval in deterministic batches."
+    )
+    parser.add_argument(
+        "--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL."
+    )
     parser.add_argument(
         "--cases",
         default=".local/eval_cases/ocr_transcript_cases_growth.json",
         help="Path to OCR cases JSON file.",
     )
     parser.add_argument("--batch-size", type=int, default=40, help="Cases per batch.")
-    parser.add_argument("--offset", type=int, default=0, help="Global offset into cases.")
-    parser.add_argument("--max-cases", type=int, default=0, help="Global case cap (0 = all).")
+    parser.add_argument(
+        "--offset", type=int, default=0, help="Global offset into cases."
+    )
+    parser.add_argument(
+        "--max-cases", type=int, default=0, help="Global case cap (0 = all)."
+    )
     parser.add_argument(
         "--report-dir",
         default=".local/eval_reports/ocr_growth_batched_runs",
@@ -113,8 +123,14 @@ def build_parser() -> argparse.ArgumentParser:
         default=".local/eval_reports/ocr_growth_batched_summary.md",
         help="Path for aggregate summary markdown.",
     )
-    parser.add_argument("--session-prefix", default="ocr-growth-batch", help="Session prefix for eval_ocr.")
-    parser.add_argument("--timeout", type=int, default=90, help="HTTP timeout passed to eval_ocr.")
+    parser.add_argument(
+        "--session-prefix",
+        default="ocr-growth-batch",
+        help="Session prefix for eval_ocr.",
+    )
+    parser.add_argument(
+        "--timeout", type=int, default=90, help="HTTP timeout passed to eval_ocr."
+    )
     parser.add_argument(
         "--ocr-retries",
         type=int,
@@ -127,9 +143,15 @@ def build_parser() -> argparse.ArgumentParser:
         default=750,
         help="Delay between OCR retries passed to eval_ocr.",
     )
-    parser.add_argument("--show-text", action="store_true", help="Forward --show-text to eval_ocr.")
-    parser.add_argument("--keep-chats", action="store_true", help="Forward --keep-chats to eval_ocr.")
-    parser.add_argument("--strict", action="store_true", help="Exit non-zero when any case fails.")
+    parser.add_argument(
+        "--show-text", action="store_true", help="Forward --show-text to eval_ocr."
+    )
+    parser.add_argument(
+        "--keep-chats", action="store_true", help="Forward --keep-chats to eval_ocr."
+    )
+    parser.add_argument(
+        "--strict", action="store_true", help="Exit non-zero when any case fails."
+    )
     return parser
 
 
@@ -301,8 +323,12 @@ def main() -> int:
         "batches": batch_rows,
     }
 
-    output_json.write_text(json.dumps(summary_payload, ensure_ascii=False, indent=2), encoding="utf-8")
-    output_markdown.write_text(_build_markdown_summary(summary_payload), encoding="utf-8")
+    output_json.write_text(
+        json.dumps(summary_payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    output_markdown.write_text(
+        _build_markdown_summary(summary_payload), encoding="utf-8"
+    )
 
     print("\nBatched OCR summary")
     print(f"  Batches: {completed_batches}/{len(batches)} completed")

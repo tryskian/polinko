@@ -38,7 +38,9 @@ def resolve_export_ref(pathish: str | Path, *, export_root: Path | None = None) 
     path = Path(value).expanduser()
     if path.is_absolute():
         return path.resolve()
-    return ((export_root or current_export_root()).expanduser().resolve() / path).resolve()
+    return (
+        (export_root or current_export_root()).expanduser().resolve() / path
+    ).resolve()
 
 
 def to_repo_ref(pathish: str | Path, *, repo_root: Path = ROOT) -> str:

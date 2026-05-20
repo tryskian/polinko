@@ -23,11 +23,18 @@ class DoctorEnvTests(unittest.TestCase):
         stdout = io.StringIO()
 
         with patch.object(doctor_env.sys, "executable", str(current_python)):
-            with patch.dict("os.environ", {"VIRTUAL_ENV": str(doctor_env.ROOT / ".venv")}, clear=True):
+            with patch.dict(
+                "os.environ",
+                {"VIRTUAL_ENV": str(doctor_env.ROOT / ".venv")},
+                clear=True,
+            ):
                 with patch("tools.doctor_env._is_runnable_python") as is_runnable:
-                    with patch("tools.doctor_env.shutil.which", return_value=str(current_python)):
-                        is_runnable.side_effect = (
-                            lambda path: path.parent.parent == doctor_env.ROOT / ".venv"
+                    with patch(
+                        "tools.doctor_env.shutil.which",
+                        return_value=str(current_python),
+                    ):
+                        is_runnable.side_effect = lambda path: (
+                            path.parent.parent == doctor_env.ROOT / ".venv"
                         )
                         with redirect_stdout(stdout):
                             issues = doctor_env._check_interpreter()
@@ -43,11 +50,18 @@ class DoctorEnvTests(unittest.TestCase):
         current_python = Path("/usr/bin/python3")
 
         with patch.object(doctor_env.sys, "executable", str(current_python)):
-            with patch.dict("os.environ", {"VIRTUAL_ENV": str(doctor_env.ROOT / ".venv")}, clear=True):
+            with patch.dict(
+                "os.environ",
+                {"VIRTUAL_ENV": str(doctor_env.ROOT / ".venv")},
+                clear=True,
+            ):
                 with patch("tools.doctor_env._is_runnable_python") as is_runnable:
-                    with patch("tools.doctor_env.shutil.which", return_value=str(current_python)):
-                        is_runnable.side_effect = (
-                            lambda path: path.parent.parent == doctor_env.ROOT / ".venv"
+                    with patch(
+                        "tools.doctor_env.shutil.which",
+                        return_value=str(current_python),
+                    ):
+                        is_runnable.side_effect = lambda path: (
+                            path.parent.parent == doctor_env.ROOT / ".venv"
                         )
                         with redirect_stdout(stdout):
                             issues = doctor_env._check_interpreter()

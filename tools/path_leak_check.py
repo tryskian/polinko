@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import re
 import subprocess
-import sys
 from pathlib import Path
 from typing import Iterable
 
@@ -28,9 +27,7 @@ ALLOWLIST_PATHS = {
     Path("tests/test_path_leak_check.py"),
 }
 
-ALLOWLIST_PREFIXES = (
-    Path("docs/peanut/transcripts"),
-)
+ALLOWLIST_PREFIXES = (Path("docs/peanut/transcripts"),)
 
 SKIP_SUFFIXES = {
     ".db",
@@ -129,7 +126,9 @@ def _scan_paths(paths: Iterable[Path]) -> list[str]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Fail on local path leaks in repo text surfaces.")
+    parser = argparse.ArgumentParser(
+        description="Fail on local path leaks in repo text surfaces."
+    )
     parser.add_argument(
         "--scope",
         choices=(TRACKED_SCOPE, LOCAL_SCOPE),

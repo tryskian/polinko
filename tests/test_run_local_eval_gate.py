@@ -103,7 +103,9 @@ exit "${CURL_EXIT:-0}"
         )
         return env, python_args
 
-    def _run_suite(self, suite: str, env: dict[str, str]) -> subprocess.CompletedProcess[str]:
+    def _run_suite(
+        self, suite: str, env: dict[str, str]
+    ) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             ["bash", str(RUNNER_SCRIPT.relative_to(REPO_ROOT)), suite],
             cwd=REPO_ROOT,
@@ -163,7 +165,12 @@ exit "${CURL_EXIT:-0}"
                         "--request-retry-delay-ms",
                         "321",
                     ],
-                    ["-m", "tools.eval_file_search", "--base-url", "http://127.0.0.1:9991"],
+                    [
+                        "-m",
+                        "tools.eval_file_search",
+                        "--base-url",
+                        "http://127.0.0.1:9991",
+                    ],
                 ],
                 "hallucination-gate": [
                     [
@@ -214,7 +221,12 @@ exit "${CURL_EXIT:-0}"
                         "--request-retry-delay-ms",
                         "321",
                     ],
-                    ["-m", "tools.eval_file_search", "--base-url", "http://127.0.0.1:9992"],
+                    [
+                        "-m",
+                        "tools.eval_file_search",
+                        "--base-url",
+                        "http://127.0.0.1:9992",
+                    ],
                     [
                         "-m",
                         "tools.eval_ocr",
@@ -285,7 +297,9 @@ exit "${CURL_EXIT:-0}"
             result = self._run_suite("api-smoke", env)
 
             self.assertEqual(result.returncode, 1)
-            self.assertIn("Server failed to start. See /tmp/polinko-api-smoke.log", result.stdout)
+            self.assertIn(
+                "Server failed to start. See /tmp/polinko-api-smoke.log", result.stdout
+            )
             self.assertEqual(
                 self._read_calls(python_args),
                 [

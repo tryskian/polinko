@@ -91,7 +91,9 @@ def _validate_openai_api_key(openai_api_key: str | None) -> str:
             "If CI eval fails, also set the GitHub Actions secret OPENAI_API_KEY."
         )
     if not normalized_key.startswith("sk-"):
-        raise RuntimeError("OPENAI_API_KEY appears invalid (expected it to start with 'sk-').")
+        raise RuntimeError(
+            "OPENAI_API_KEY appears invalid (expected it to start with 'sk-')."
+        )
     if len(normalized_key) < 20:
         raise RuntimeError("OPENAI_API_KEY appears too short; check your .env value.")
     if _looks_like_placeholder(normalized_key):
@@ -127,7 +129,9 @@ def _parse_int_env(name: str, default: int, *, minimum: int = 0) -> int:
     return value
 
 
-def _parse_float_env(name: str, default: float, *, minimum: float = 0.0, maximum: float = 1.0) -> float:
+def _parse_float_env(
+    name: str, default: float, *, minimum: float = 0.0, maximum: float = 1.0
+) -> float:
     raw = _read_env(name)
     if raw is None or not raw.strip():
         value = default
@@ -152,7 +156,9 @@ def _validate_personalization_memory_scope(value: str | None) -> str:
     normalized = (value or "global").strip().lower()
     if normalized in {"session", "global"}:
         return normalized
-    raise RuntimeError("POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE must be one of: session, global.")
+    raise RuntimeError(
+        "POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE must be one of: session, global."
+    )
 
 
 def _validate_chat_harness_mode(value: str | None) -> Literal["live", "fixture"]:
@@ -161,7 +167,9 @@ def _validate_chat_harness_mode(value: str | None) -> Literal["live", "fixture"]
         return "live"
     if normalized == "fixture":
         return "fixture"
-    raise RuntimeError("POLINKO_CHAT_HARNESS_DEFAULT_MODE must be one of: live, fixture.")
+    raise RuntimeError(
+        "POLINKO_CHAT_HARNESS_DEFAULT_MODE must be one of: live, fixture."
+    )
 
 
 def load_config(dotenv_path: str = ".env") -> AppConfig:
@@ -183,12 +191,12 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     try:
         rate_limit_per_minute = int(raw_rate_limit)
     except ValueError as exc:
-        raise RuntimeError(
-            "POLINKO_RATE_LIMIT_PER_MINUTE must be an integer."
-        ) from exc
+        raise RuntimeError("POLINKO_RATE_LIMIT_PER_MINUTE must be an integer.") from exc
     deprecate_on_reset = _parse_bool_env("POLINKO_DEPRECATE_ON_RESET", True)
     ocr_provider = _validate_ocr_provider(_read_env("POLINKO_OCR_PROVIDER"))
-    ocr_model = (_read_env("POLINKO_OCR_MODEL", "gpt-4.1-mini") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
+    ocr_model = (
+        _read_env("POLINKO_OCR_MODEL", "gpt-4.1-mini") or "gpt-4.1-mini"
+    ).strip() or "gpt-4.1-mini"
     ocr_prompt = (
         (
             _read_env(
@@ -223,13 +231,19 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         or ".local/runtime_dbs/active/vector.db"
     )
     vector_embedding_model = (
-        (_read_env("POLINKO_VECTOR_EMBEDDING_MODEL", "text-embedding-3-small") or "text-embedding-3-small").strip()
+        _read_env("POLINKO_VECTOR_EMBEDDING_MODEL", "text-embedding-3-small")
         or "text-embedding-3-small"
-    )
+    ).strip() or "text-embedding-3-small"
     vector_top_k = _parse_int_env("POLINKO_VECTOR_TOP_K", 2, minimum=1)
-    vector_top_k_global = _parse_int_env("POLINKO_VECTOR_TOP_K_GLOBAL", vector_top_k, minimum=1)
-    vector_top_k_session = _parse_int_env("POLINKO_VECTOR_TOP_K_SESSION", vector_top_k, minimum=1)
-    vector_min_similarity = _parse_float_env("POLINKO_VECTOR_MIN_SIMILARITY", 0.40, minimum=0.0, maximum=1.0)
+    vector_top_k_global = _parse_int_env(
+        "POLINKO_VECTOR_TOP_K_GLOBAL", vector_top_k, minimum=1
+    )
+    vector_top_k_session = _parse_int_env(
+        "POLINKO_VECTOR_TOP_K_SESSION", vector_top_k, minimum=1
+    )
+    vector_min_similarity = _parse_float_env(
+        "POLINKO_VECTOR_MIN_SIMILARITY", 0.40, minimum=0.0, maximum=1.0
+    )
     vector_min_similarity_global = _parse_float_env(
         "POLINKO_VECTOR_MIN_SIMILARITY_GLOBAL",
         vector_min_similarity,
@@ -243,38 +257,55 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         maximum=1.0,
     )
     vector_max_chars = _parse_int_env("POLINKO_VECTOR_MAX_CHARS", 220, minimum=80)
-    vector_exclude_current_session = _parse_bool_env("POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION", True)
+    vector_exclude_current_session = _parse_bool_env(
+        "POLINKO_VECTOR_EXCLUDE_CURRENT_SESSION", True
+    )
     vector_local_embedding_fallback = _parse_bool_env(
         "POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK",
         False,
     )
-    responses_orchestration_enabled = _parse_bool_env("POLINKO_RESPONSES_ORCHESTRATION_ENABLED", False)
-    responses_orchestration_model = (
-        (_read_env("POLINKO_RESPONSES_MODEL", "gpt-5.4") or "gpt-5.4").strip()
-        or "gpt-5.4"
+    responses_orchestration_enabled = _parse_bool_env(
+        "POLINKO_RESPONSES_ORCHESTRATION_ENABLED", False
     )
+    responses_orchestration_model = (
+        _read_env("POLINKO_RESPONSES_MODEL", "gpt-5.4") or "gpt-5.4"
+    ).strip() or "gpt-5.4"
     raw_responses_vector_store_id = _read_env("POLINKO_RESPONSES_VECTOR_STORE_ID")
     responses_vector_store_id = (
         raw_responses_vector_store_id.strip()
         if raw_responses_vector_store_id and raw_responses_vector_store_id.strip()
         else None
     )
-    responses_include_web_search = _parse_bool_env("POLINKO_RESPONSES_INCLUDE_WEB_SEARCH", False)
-    responses_history_turn_limit = _parse_int_env("POLINKO_RESPONSES_HISTORY_TURN_LIMIT", 12, minimum=1)
-    responses_pdf_ingest_enabled = _parse_bool_env("POLINKO_RESPONSES_PDF_INGEST_ENABLED", False)
-    extraction_structured_enabled = _parse_bool_env("POLINKO_EXTRACTION_STRUCTURED_ENABLED", False)
-    extraction_structured_model = (
-        (_read_env("POLINKO_EXTRACTION_STRUCTURED_MODEL", "gpt-4.1-mini") or "gpt-4.1-mini").strip()
-        or "gpt-4.1-mini"
+    responses_include_web_search = _parse_bool_env(
+        "POLINKO_RESPONSES_INCLUDE_WEB_SEARCH", False
     )
+    responses_history_turn_limit = _parse_int_env(
+        "POLINKO_RESPONSES_HISTORY_TURN_LIMIT", 12, minimum=1
+    )
+    responses_pdf_ingest_enabled = _parse_bool_env(
+        "POLINKO_RESPONSES_PDF_INGEST_ENABLED", False
+    )
+    extraction_structured_enabled = _parse_bool_env(
+        "POLINKO_EXTRACTION_STRUCTURED_ENABLED", False
+    )
+    extraction_structured_model = (
+        _read_env("POLINKO_EXTRACTION_STRUCTURED_MODEL", "gpt-4.1-mini")
+        or "gpt-4.1-mini"
+    ).strip() or "gpt-4.1-mini"
     governance_enabled = _parse_bool_env("POLINKO_GOVERNANCE_ENABLED", True)
-    governance_allow_web_search = _parse_bool_env("POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH", False)
+    governance_allow_web_search = _parse_bool_env(
+        "POLINKO_GOVERNANCE_ALLOW_WEB_SEARCH", False
+    )
     governance_log_only = _parse_bool_env("POLINKO_GOVERNANCE_LOG_ONLY", False)
-    hallucination_guardrails_enabled = _parse_bool_env("POLINKO_HALLUCINATION_GUARDRAILS_ENABLED", True)
+    hallucination_guardrails_enabled = _parse_bool_env(
+        "POLINKO_HALLUCINATION_GUARDRAILS_ENABLED", True
+    )
     personalization_default_memory_scope = _validate_personalization_memory_scope(
         _read_env("POLINKO_PERSONALIZATION_DEFAULT_MEMORY_SCOPE", "global")
     )
-    clip_proxy_file_search_enabled = _parse_bool_env("POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED", False)
+    clip_proxy_file_search_enabled = _parse_bool_env(
+        "POLINKO_CLIP_PROXY_FILE_SEARCH_ENABLED", False
+    )
     chat_harness_default_mode = _validate_chat_harness_mode(
         _read_env("POLINKO_CHAT_HARNESS_DEFAULT_MODE", "live")
     )

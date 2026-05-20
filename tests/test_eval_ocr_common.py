@@ -9,7 +9,9 @@ from tools.eval_ocr_common import load_attachment_input
 
 
 class OcrCommonTests(unittest.TestCase):
-    def test_load_attachment_input_uses_placeholder_defaults_without_image(self) -> None:
+    def test_load_attachment_input_uses_placeholder_defaults_without_image(
+        self,
+    ) -> None:
         raw_bytes, mime_type, source_name, text_hint = load_attachment_input(
             image_path_raw="",
             source_name="",

@@ -29,7 +29,9 @@ class AuditRuntimeNullsTests(unittest.TestCase):
                 conn.execute("INSERT INTO message_vectors VALUES ('m1', 'chat')")
                 conn.execute("INSERT INTO message_vectors VALUES ('', 'attachment')")
                 conn.execute("INSERT INTO message_vectors VALUES (NULL, 'attachment')")
-                conn.execute("INSERT INTO message_vectors VALUES ('att:1', 'attachment')")
+                conn.execute(
+                    "INSERT INTO message_vectors VALUES ('att:1', 'attachment')"
+                )
                 conn.commit()
 
             report = build_report(history_db=history_db, vector_db=vector_db)

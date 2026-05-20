@@ -50,7 +50,9 @@ class EvalTraceArtifactTests(unittest.TestCase):
                 run_id="run-b",
                 tool_name="tools/eval_file_search.py",
                 source_artifacts={"report_json": "b.json"},
-                gate_outcomes=[{"name": "file_search", "passed": False, "detail": "bad"}],
+                gate_outcomes=[
+                    {"name": "file_search", "passed": False, "detail": "bad"}
+                ],
                 summary={"total": 1, "passed": 0, "failed": 1},
             )
 

@@ -261,7 +261,9 @@ def main() -> int:
                     }
                 )
 
-    ordered = sorted(suite_results, key=lambda item: suites.index(str(item.get("suite", ""))))
+    ordered = sorted(
+        suite_results, key=lambda item: suites.index(str(item.get("suite", "")))
+    )
     overall_pass = all(bool(item.get("passed")) for item in ordered)
     elapsed_seconds = round(time.time() - started, 2)
 
@@ -296,7 +298,9 @@ def main() -> int:
         "suite_results": ordered,
         "generated_at_unix": int(time.time()),
     }
-    output_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    output_path.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
     print(f"\nConsolidated report: {output_path}")
     print(f"Overall: {'PASS' if overall_pass else 'FAIL'}")
 

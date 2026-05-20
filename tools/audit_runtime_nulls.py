@@ -41,7 +41,9 @@ def _history_metrics(path: Path) -> dict[str, int]:
 def _vector_metrics(path: Path) -> dict[str, int]:
     with sqlite3.connect(path) as conn:
         return {
-            "message_vectors_total": _count_query(conn, "SELECT COUNT(*) FROM message_vectors"),
+            "message_vectors_total": _count_query(
+                conn, "SELECT COUNT(*) FROM message_vectors"
+            ),
             "message_id_null": _count_query(
                 conn,
                 "SELECT COUNT(*) FROM message_vectors WHERE message_id IS NULL OR trim(message_id) = ''",
@@ -114,7 +116,9 @@ def build_report(*, history_db: Path, vector_db: Path) -> dict[str, Any]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Audit high-signal runtime NULL surfaces.")
+    parser = argparse.ArgumentParser(
+        description="Audit high-signal runtime NULL surfaces."
+    )
     parser.add_argument(
         "--history-db",
         default=".local/runtime_dbs/active/history.db",
@@ -154,14 +158,22 @@ def main() -> int:
 
     report = build_report(history_db=history_db, vector_db=vector_db)
     output_json.parent.mkdir(parents=True, exist_ok=True)
-    output_json.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    output_json.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     output_markdown.write_text(_render_markdown(report), encoding="utf-8")
 
     print("Runtime NULL audit")
     print(f"  history ocr_runs_total: {report['history']['ocr_runs_total']}")
-    print(f"  history both_message_ids_null: {report['history']['both_message_ids_null']}")
-    print(f"  vector message_vectors_total: {report['vector']['message_vectors_total']}")
-    print(f"  vector non_chat_message_id_null: {report['vector']['non_chat_message_id_null']}")
+    print(
+        f"  history both_message_ids_null: {report['history']['both_message_ids_null']}"
+    )
+    print(
+        f"  vector message_vectors_total: {report['vector']['message_vectors_total']}"
+    )
+    print(
+        f"  vector non_chat_message_id_null: {report['vector']['non_chat_message_id_null']}"
+    )
     print(f"  json: {output_json}")
     print(f"  markdown: {output_markdown}")
     return 0

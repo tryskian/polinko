@@ -100,7 +100,9 @@ def _evaluate_report(
     if cases_count < min_cases:
         reasons.append(f"cases_count {cases_count} < {min_cases}")
     if proxy_any_rate < min_proxy_any_rate:
-        reasons.append(f"proxy any_rate {proxy_any_rate:.3f} < {min_proxy_any_rate:.3f}")
+        reasons.append(
+            f"proxy any_rate {proxy_any_rate:.3f} < {min_proxy_any_rate:.3f}"
+        )
     if delta < min_delta:
         reasons.append(f"delta {delta:+.3f} < {min_delta:+.3f}")
     if baseline_errors != 0:

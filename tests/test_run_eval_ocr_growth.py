@@ -31,8 +31,8 @@ def _stub_env(tmp_path: Path) -> tuple[dict[str, str], Path, Path, Path]:
     _write_executable(
         python_script,
         (
-            '#!/usr/bin/env sh\n'
-            'set -eu\n'
+            "#!/usr/bin/env sh\n"
+            "set -eu\n"
             '[ -f "$SERVER_MARKER" ] || exit 7\n'
             'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
             'printf "%s\\n" "${PYTHONUNBUFFERED:-}" > "$PYTHON_ENV"\n'

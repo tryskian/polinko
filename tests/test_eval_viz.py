@@ -81,9 +81,30 @@ def _init_viz_history_db(path: Path, *, include_feedback: bool = False) -> None:
             ) VALUES (?, 'chat-1', ?, ?, NULL, NULL, ?, ?, ?)
             """,
             [
-                ("ocr-1", "Screenshot-1.png", "image/png", "ok", "hello world", 1774901000000),
-                ("ocr-2", "IMG_0001.jpeg", "image/jpeg", "ok", "notes on paper", 1774902000000),
-                ("ocr-3", "diagram-card.png", "image/png", "error", "NODE\nEDGE\nGRAPH", 1774903000000),
+                (
+                    "ocr-1",
+                    "Screenshot-1.png",
+                    "image/png",
+                    "ok",
+                    "hello world",
+                    1774901000000,
+                ),
+                (
+                    "ocr-2",
+                    "IMG_0001.jpeg",
+                    "image/jpeg",
+                    "ok",
+                    "notes on paper",
+                    1774902000000,
+                ),
+                (
+                    "ocr-3",
+                    "diagram-card.png",
+                    "image/png",
+                    "error",
+                    "NODE\nEDGE\nGRAPH",
+                    1774903000000,
+                ),
             ],
         )
         if include_feedback:
@@ -165,11 +186,17 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["evals"][0]["lane"], "illustration")
             self.assertEqual(payload["evals"][0]["outcome"], "ERROR")
             self.assertEqual(len(payload["lane_summaries"]), 2)
-            self.assertEqual(payload["source_first"]["contract"]["rollup_unit"], "lane_summary")
+            self.assertEqual(
+                payload["source_first"]["contract"]["rollup_unit"], "lane_summary"
+            )
             self.assertEqual(payload["source_first"]["source_artifacts"]["sessions"], 1)
             self.assertEqual(payload["source_first"]["source_artifacts"]["ocr_runs"], 3)
-            self.assertEqual(payload["source_first"]["judgments"]["manual_feedback"]["total"], 0)
-            exclusions = {row["key"]: row for row in payload["source_first"]["exclusions"]}
+            self.assertEqual(
+                payload["source_first"]["judgments"]["manual_feedback"]["total"], 0
+            )
+            exclusions = {
+                row["key"]: row for row in payload["source_first"]["exclusions"]
+            }
             self.assertEqual(exclusions["ocr_without_manual_feedback"]["count"], 3)
             self.assertEqual(exclusions["session_without_judgment"]["count"], 1)
 
@@ -221,8 +248,20 @@ class EvalVizTests(unittest.TestCase):
                     )
                     """,
                     [
-                        ("m-result-2", "FAIL", "missed handwriting context", 1774902700000, 1774902800000),
-                        ("m-result-3", "PARTIAL", "illustration text was incomplete", 1774902900000, 1774903000000),
+                        (
+                            "m-result-2",
+                            "FAIL",
+                            "missed handwriting context",
+                            1774902700000,
+                            1774902800000,
+                        ),
+                        (
+                            "m-result-3",
+                            "PARTIAL",
+                            "illustration text was incomplete",
+                            1774902900000,
+                            1774903000000,
+                        ),
                     ],
                 )
                 conn.commit()
@@ -241,17 +280,22 @@ class EvalVizTests(unittest.TestCase):
 
             self.assertEqual(payload["chart_mode"], "feedback")
             self.assertEqual(payload["runs_total"], 3)
-            self.assertEqual(payload["source_first"]["judgments"]["manual_feedback"]["total"], 3)
+            self.assertEqual(
+                payload["source_first"]["judgments"]["manual_feedback"]["total"], 3
+            )
             self.assertEqual(len(payload["source_first"]["evidence_rows"]), 3)
             self.assertEqual(
                 payload["source_first"]["evidence_rows"][0]["row_kind"],
                 "manual_feedback",
             )
-            self.assertEqual(Counter(point["outcome"] for point in payload["points"]), {
-                "PASS": 1,
-                "FAIL": 1,
-                "PARTIAL": 1,
-            })
+            self.assertEqual(
+                Counter(point["outcome"] for point in payload["points"]),
+                {
+                    "PASS": 1,
+                    "FAIL": 1,
+                    "PARTIAL": 1,
+                },
+            )
             self.assertEqual(payload["evals"][0]["outcome"], "FAIL")
             self.assertIn("missed handwriting context", payload["evals"][0]["expected"])
 
@@ -286,8 +330,12 @@ class EvalVizTests(unittest.TestCase):
                 ],
             }
 
-            (stability_dir / "1711000000-r1.json").write_text(json.dumps(first), encoding="utf-8")
-            (growth_dir / "1711003600-r1.json").write_text(json.dumps(second), encoding="utf-8")
+            (stability_dir / "1711000000-r1.json").write_text(
+                json.dumps(first), encoding="utf-8"
+            )
+            (growth_dir / "1711003600-r1.json").write_text(
+                json.dumps(second), encoding="utf-8"
+            )
 
             payload = build_pass_fail_viz_payload(
                 report_root=root,
@@ -323,7 +371,9 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["summary"]["fail"], 0)
             self.assertEqual(payload["evals"], [])
             self.assertEqual(payload["lane_summaries"], [])
-            self.assertEqual(payload["source_first"]["contract"]["rejected_rollup"], "pulse_verdict")
+            self.assertEqual(
+                payload["source_first"]["contract"]["rejected_rollup"], "pulse_verdict"
+            )
             self.assertEqual(payload["source_first"]["source_artifacts"]["sessions"], 0)
             self.assertEqual(payload["source_first"]["exclusions"], [])
 
@@ -344,7 +394,9 @@ class EvalVizTests(unittest.TestCase):
             self.assertIn("operator_burden", summaries)
             self.assertEqual(summaries["co_reasoning"]["pass"], 11)
             self.assertEqual(summaries["co_reasoning"]["fail"], 0)
-            self.assertIn("/viz/pass-fail/artifact?path=", summaries["co_reasoning"]["source_url"])
+            self.assertIn(
+                "/viz/pass-fail/artifact?path=", summaries["co_reasoning"]["source_url"]
+            )
             self.assertIn(
                 "docs/research/co-reasoning-promotion-2026-05-08.md",
                 summaries["co_reasoning"]["research_note_path"],
@@ -383,7 +435,10 @@ class EvalVizTests(unittest.TestCase):
         self.assertIn("bucketed manual eval outcome history", html)
         self.assertIn("bucketed active-lane mix history", html)
         self.assertIn("function clipId(runId)", html)
-        self.assertIn("function bucketPoints(points, desiredBuckets = DEFAULT_MAX_CHART_POINTS)", html)
+        self.assertIn(
+            "function bucketPoints(points, desiredBuckets = DEFAULT_MAX_CHART_POINTS)",
+            html,
+        )
         self.assertIn("function computeFailState(rate, total)", html)
         self.assertIn("function sumPoints(points)", html)
         self.assertIn("function renderSourceFirst(payload)", html)

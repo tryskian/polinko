@@ -179,10 +179,16 @@ class BuildManualEvalsDbTests(unittest.TestCase):
                 ).fetchone()
                 assert asset is not None
                 status = str(asset["status"])
-                self.assertIn(status, {"thumbnail_ready", "resolved_no_pillow", "thumbnail_error"})
+                self.assertIn(
+                    status, {"thumbnail_ready", "resolved_no_pillow", "thumbnail_error"}
+                )
                 if status == "thumbnail_ready":
                     self.assertGreater(len(bytes(asset["thumbnail_png"])), 0)
-                    self.assertTrue(str(asset["thumbnail_data_url"]).startswith("data:image/png;base64,"))
+                    self.assertTrue(
+                        str(asset["thumbnail_data_url"]).startswith(
+                            "data:image/png;base64,"
+                        )
+                    )
                     self.assertGreater(int(asset["thumbnail_width"]), 0)
                     self.assertGreater(int(asset["thumbnail_height"]), 0)
                     self.assertGreater(result["thumbnails_ready"], 0)
@@ -215,15 +221,22 @@ class BuildManualEvalsDbTests(unittest.TestCase):
                 sessions = conn.execute(
                     "SELECT session_id, era, source_session_id FROM sessions ORDER BY era"
                 ).fetchall()
-                self.assertEqual([str(row["source_session_id"]) for row in sessions], ["chat-1", "chat-1"])
-                self.assertEqual([str(row["era"]) for row in sessions], ["beta_1_0", "current"])
+                self.assertEqual(
+                    [str(row["source_session_id"]) for row in sessions],
+                    ["chat-1", "chat-1"],
+                )
+                self.assertEqual(
+                    [str(row["era"]) for row in sessions], ["beta_1_0", "current"]
+                )
                 self.assertEqual(str(sessions[0]["session_id"]), "beta_1_0:chat-1")
                 self.assertEqual(str(sessions[1]["session_id"]), "current:chat-1")
 
                 runs = conn.execute(
                     "SELECT run_id, source_run_id, era FROM ocr_runs ORDER BY era"
                 ).fetchall()
-                self.assertEqual([str(row["source_run_id"]) for row in runs], ["ocr-1", "ocr-1"])
+                self.assertEqual(
+                    [str(row["source_run_id"]) for row in runs], ["ocr-1", "ocr-1"]
+                )
                 self.assertEqual(str(runs[0]["run_id"]), "beta_1_0:ocr-1")
                 self.assertEqual(str(runs[1]["run_id"]), "current:ocr-1")
 

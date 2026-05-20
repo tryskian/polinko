@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import base64
 import mimetypes
-from pathlib import Path
 from typing import Any
 
 from tools.ocr_export_refs import resolve_export_ref
@@ -46,7 +45,9 @@ def load_attachment_input(
         )
 
     resolved_mime_type = str(mime_type or placeholder_mime_type)
-    resolved_source_name = source_name_value or str(placeholder_source_name or "").strip()
+    resolved_source_name = (
+        source_name_value or str(placeholder_source_name or "").strip()
+    )
     return (
         placeholder_bytes,
         resolved_mime_type,

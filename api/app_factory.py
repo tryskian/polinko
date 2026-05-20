@@ -526,7 +526,7 @@ _OCR_UNCERTAINTY_CUE_PHRASES = (
     "illegible",
 )
 _OCR_QUOTED_ALTERNATIVES_RE = re.compile(
-    r'[\"“][^\"”]{1,80}[\"”]\s*(?:or|/)\s*[\"“][^\"”]{1,80}[\"”]',
+    r"[\"“][^\"”]{1,80}[\"”]\s*(?:or|/)\s*[\"“][^\"”]{1,80}[\"”]",
     flags=re.IGNORECASE,
 )
 _FILE_SEARCH_DEFAULT_SOURCE_TYPES = ("ocr",)
@@ -711,7 +711,9 @@ def _latency_bucket_label(duration_ms: float) -> str:
     return "gt_2000ms"
 
 
-def _structured_schema_for_source_type(source_type: str) -> tuple[str, dict[str, object]]:
+def _structured_schema_for_source_type(
+    source_type: str,
+) -> tuple[str, dict[str, object]]:
     normalized = source_type.strip().lower()
     if normalized == "ocr":
         return ("extraction_structured_ocr_v1", _EXTRACTION_STRUCTURED_OCR_JSON_SCHEMA)
@@ -738,7 +740,9 @@ def create_runtime_metrics() -> RuntimeMetrics:
     )
 
 
-def _record_metrics(metrics: RuntimeMetrics, status_code: int, duration_ms: float) -> None:
+def _record_metrics(
+    metrics: RuntimeMetrics, status_code: int, duration_ms: float
+) -> None:
     status_key = str(status_code)
     metrics.requests_total += 1
     metrics.status_counts[status_key] = metrics.status_counts.get(status_key, 0) + 1
@@ -802,18 +806,24 @@ class RuntimeDeps:
 
 
 class ChatAttachment(BaseModel):
-    data_base64: str = Field(..., min_length=1, description="Attachment payload as data URL or base64.")
+    data_base64: str = Field(
+        ..., min_length=1, description="Attachment payload as data URL or base64."
+    )
     source_name: str | None = Field(default=None, max_length=255)
     mime_type: str | None = Field(default=None, max_length=120)
     text_hint: str | None = None
     visual_context_hint: str | None = None
-    transcription_mode: str = Field(default=_OCR_TRANSCRIPTION_MODE_VERBATIM, pattern="^(verbatim|normalized)$")
+    transcription_mode: str = Field(
+        default=_OCR_TRANSCRIPTION_MODE_VERBATIM, pattern="^(verbatim|normalized)$"
+    )
     memory_scope: str = Field(default="session", pattern="^(global|session)$")
 
 
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, description="User message.")
-    session_id: str | None = Field(default=None, min_length=1, description="Conversation session ID.")
+    session_id: str | None = Field(
+        default=None, min_length=1, description="Conversation session ID."
+    )
     attachments: list[ChatAttachment] = Field(default_factory=list)
     source_user_message_id: str | None = Field(
         default=None,
@@ -1008,7 +1018,9 @@ class OcrRequest(BaseModel):
     text_hint: str | None = None
     visual_context_hint: str | None = None
     source_message_id: str | None = None
-    transcription_mode: str = Field(default=_OCR_TRANSCRIPTION_MODE_VERBATIM, pattern="^(verbatim|normalized)$")
+    transcription_mode: str = Field(
+        default=_OCR_TRANSCRIPTION_MODE_VERBATIM, pattern="^(verbatim|normalized)$"
+    )
     memory_scope: str = Field(default="session", pattern="^(global|session)$")
     attach_to_chat: bool = True
 
@@ -1133,7 +1145,9 @@ def _client_identifier(request: Request, session_id: str, principal: str | None)
 
 def _enforce_rate_limit(request: Request, identifier: str) -> None:
     deps = _runtime_deps(request.app)
-    retry_after = deps.rate_limiter.consume(identifier, limit_per_minute=deps.rate_limit_per_minute)
+    retry_after = deps.rate_limiter.consume(
+        identifier, limit_per_minute=deps.rate_limit_per_minute
+    )
     if retry_after is not None:
         raise HTTPException(
             status_code=429,
@@ -1159,7 +1173,9 @@ def _close_session(session: Session) -> None:
 def _resolve_chat_memory_scope(*, deps: RuntimeDeps, session_id: str) -> str:
     settings = deps.history_store.get_personalization(session_id=session_id)
     if settings is None:
-        return _normalize_memory_scope(deps.personalization_default_memory_scope, default="global")
+        return _normalize_memory_scope(
+            deps.personalization_default_memory_scope, default="global"
+        )
     return _normalize_memory_scope(settings.memory_scope, default="global")
 
 
@@ -1176,7 +1192,9 @@ def _build_fixture_chat_output(*, message: str, fixture_output: str | None) -> s
     return f"[fixture] deterministic response for: {prompt}"
 
 
-def _chat_summary_response(summary: ChatSummary, *, deps: RuntimeDeps) -> ChatSummaryResponse:
+def _chat_summary_response(
+    summary: ChatSummary, *, deps: RuntimeDeps
+) -> ChatSummaryResponse:
     memory_scope = _resolve_chat_memory_scope(deps=deps, session_id=summary.session_id)
     return ChatSummaryResponse(
         session_id=summary.session_id,
@@ -1280,7 +1298,9 @@ def _normalize_feedback_tags(
     normalized_positive = _normalize_feedback_tag_list(positive_tags)
     normalized_negative = _normalize_feedback_tag_list(negative_tags)
 
-    invalid_positive = [tag for tag in normalized_positive if tag not in _FEEDBACK_POSITIVE_TAGS]
+    invalid_positive = [
+        tag for tag in normalized_positive if tag not in _FEEDBACK_POSITIVE_TAGS
+    ]
     if invalid_positive:
         invalid_text = ", ".join(invalid_positive)
         allowed_text = ", ".join(sorted(_FEEDBACK_POSITIVE_TAGS))
@@ -1288,7 +1308,9 @@ def _normalize_feedback_tags(
             status_code=400,
             detail=f"Unsupported positive reason tag(s): {invalid_text}. Allowed: {allowed_text}.",
         )
-    invalid_negative = [tag for tag in normalized_negative if tag not in _FEEDBACK_NEGATIVE_TAGS]
+    invalid_negative = [
+        tag for tag in normalized_negative if tag not in _FEEDBACK_NEGATIVE_TAGS
+    ]
     if invalid_negative:
         invalid_text = ", ".join(invalid_negative)
         allowed_text = ", ".join(sorted(_FEEDBACK_NEGATIVE_TAGS))
@@ -1299,9 +1321,14 @@ def _normalize_feedback_tags(
 
     if outcome == "pass":
         if not normalized_positive:
-            raise HTTPException(status_code=400, detail="Pass requires at least one positive reason tag.")
+            raise HTTPException(
+                status_code=400,
+                detail="Pass requires at least one positive reason tag.",
+            )
         disallowed_negative = [
-            tag for tag in normalized_negative if tag not in _FEEDBACK_PASS_SOFT_NEGATIVE_TAGS
+            tag
+            for tag in normalized_negative
+            if tag not in _FEEDBACK_PASS_SOFT_NEGATIVE_TAGS
         ]
         if disallowed_negative:
             disallowed_text = ", ".join(disallowed_negative)
@@ -1311,7 +1338,10 @@ def _normalize_feedback_tags(
             )
     elif outcome == "fail":
         if not normalized_negative:
-            raise HTTPException(status_code=400, detail="Fail requires at least one negative reason tag.")
+            raise HTTPException(
+                status_code=400,
+                detail="Fail requires at least one negative reason tag.",
+            )
     normalized_tags = list(dict.fromkeys(normalized_positive + normalized_negative))
     return normalized_positive, normalized_negative, normalized_tags
 
@@ -1344,7 +1374,9 @@ def _feedback_status_for_outcome(outcome: str) -> str:
     return "closed" if outcome == "pass" else "open"
 
 
-def _summarize_feedback_streams(entries: list[MessageFeedback]) -> tuple[int, int, int, int]:
+def _summarize_feedback_streams(
+    entries: list[MessageFeedback],
+) -> tuple[int, int, int, int]:
     total_count = len(entries)
     pass_count = 0
     fail_count = 0
@@ -1412,7 +1444,8 @@ def _derive_adaptive_style_notes(feedback_entries: list[MessageFeedback]) -> lis
     style_entries = [
         entry
         for entry in feedback_entries[:_ADAPTIVE_STYLE_FEEDBACK_WINDOW]
-        if "style" in entry.positive_tags and "style_mismatch" not in entry.negative_tags
+        if "style" in entry.positive_tags
+        and "style_mismatch" not in entry.negative_tags
     ]
     if not style_entries:
         return []
@@ -1459,7 +1492,10 @@ def _derive_adaptive_style_notes(feedback_entries: list[MessageFeedback]) -> lis
                 "Soft style target: keep replies concise (usually 1-3 sentences), vivid, and continuity-first.",
             )
         )
-    if risk_weight >= _ADAPTIVE_STYLE_RISK_WEIGHT_THRESHOLD and recovered_weight < risk_weight:
+    if (
+        risk_weight >= _ADAPTIVE_STYLE_RISK_WEIGHT_THRESHOLD
+        and recovered_weight < risk_weight
+    ):
         scored_candidates.append(
             (
                 risk_weight,
@@ -1477,7 +1513,10 @@ def _derive_adaptive_style_notes(feedback_entries: list[MessageFeedback]) -> lis
     scored_candidates.sort(key=lambda item: item[0], reverse=True)
     selected: list[str] = []
     for _score, note in scored_candidates:
-        if _append_unique_note(selected, note) and len(selected) >= _ADAPTIVE_STYLE_MAX_ACTIVE_NOTES:
+        if (
+            _append_unique_note(selected, note)
+            and len(selected) >= _ADAPTIVE_STYLE_MAX_ACTIVE_NOTES
+        ):
             break
     return selected
 
@@ -1503,7 +1542,9 @@ def _build_ingest_dedup_key(
         "operation": operation,
         **payload,
     }
-    canonical = json.dumps(canonical_payload, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    canonical = json.dumps(
+        canonical_payload, sort_keys=True, ensure_ascii=False, separators=(",", ":")
+    )
     return f"{operation}:{hashlib.sha256(canonical.encode('utf-8')).hexdigest()}"
 
 
@@ -1610,7 +1651,9 @@ def _display_session_id(*, session_id: str, metadata: dict[str, Any]) -> str:
     return session_id
 
 
-def _memory_citation_response(item: VectorMatch, *, max_chars: int) -> MemoryCitationResponse:
+def _memory_citation_response(
+    item: VectorMatch, *, max_chars: int
+) -> MemoryCitationResponse:
     metadata = dict(item.metadata)
     return MemoryCitationResponse(
         vector_id=item.vector_id,
@@ -1670,8 +1713,12 @@ def _build_structured_extraction(
     principal: str | None = None,
 ) -> ExtractionStructuredResponse:
     normalized = text.replace("\r\n", "\n").replace("\r", "\n")
-    lines = [line for line in (chunk.strip() for chunk in normalized.split("\n")) if line]
-    compact_preview = _normalize_preview_text(normalized, max_chars=_STRUCTURED_PREVIEW_MAX_CHARS)
+    lines = [
+        line for line in (chunk.strip() for chunk in normalized.split("\n")) if line
+    ]
+    compact_preview = _normalize_preview_text(
+        normalized, max_chars=_STRUCTURED_PREVIEW_MAX_CHARS
+    )
     base = ExtractionStructuredResponse(
         schema_version="v1",
         source_type=source_type,
@@ -1748,7 +1795,9 @@ def _build_structured_extraction(
                     "fallback_reason": "metadata_mismatch",
                 }
             )
-        preview = _normalize_preview_text(model_structured.preview, max_chars=_STRUCTURED_PREVIEW_MAX_CHARS)
+        preview = _normalize_preview_text(
+            model_structured.preview, max_chars=_STRUCTURED_PREVIEW_MAX_CHARS
+        )
         if not preview:
             preview = base.preview
         _log_event(
@@ -1812,7 +1861,9 @@ def _build_structured_extraction(
         )
 
 
-def _collaboration_state_response(state: CollaborationState) -> CollaborationStateResponse:
+def _collaboration_state_response(
+    state: CollaborationState,
+) -> CollaborationStateResponse:
     return CollaborationStateResponse(
         session_id=state.session_id,
         active_agent_id=state.active_agent_id,
@@ -1823,7 +1874,9 @@ def _collaboration_state_response(state: CollaborationState) -> CollaborationSta
     )
 
 
-def _collaboration_handoff_response(handoff: CollaborationHandoff) -> CollaborationHandoffResponse:
+def _collaboration_handoff_response(
+    handoff: CollaborationHandoff,
+) -> CollaborationHandoffResponse:
     return CollaborationHandoffResponse(
         handoff_id=handoff.handoff_id,
         session_id=handoff.session_id,
@@ -1853,7 +1906,9 @@ def _build_collaboration_note(state: CollaborationState | None) -> str | None:
     return "\n".join(lines)
 
 
-def _personalization_response(settings: PersonalizationSettings) -> PersonalizationResponse:
+def _personalization_response(
+    settings: PersonalizationSettings,
+) -> PersonalizationResponse:
     return PersonalizationResponse(
         session_id=settings.session_id,
         memory_scope=settings.memory_scope,
@@ -1862,7 +1917,9 @@ def _personalization_response(settings: PersonalizationSettings) -> Personalizat
     )
 
 
-def _render_markdown_transcript(session_id: str, messages: list[ChatMessageResponse]) -> str:
+def _render_markdown_transcript(
+    session_id: str, messages: list[ChatMessageResponse]
+) -> str:
     lines: list[str] = [f"# Transcript: {session_id}", ""]
     for message in messages:
         lines.append(f"## {message.role.capitalize()}")
@@ -1892,9 +1949,13 @@ def _decode_base64_payload(req: OcrRequest) -> tuple[bytes, str | None]:
     try:
         decoded = base64.b64decode(raw_data, validate=True)
     except (binascii.Error, ValueError) as exc:
-        raise HTTPException(status_code=422, detail="Invalid data_base64 payload.") from exc
+        raise HTTPException(
+            status_code=422, detail="Invalid data_base64 payload."
+        ) from exc
     if not decoded:
-        raise HTTPException(status_code=422, detail="data_base64 payload decoded to empty content.")
+        raise HTTPException(
+            status_code=422, detail="data_base64 payload decoded to empty content."
+        )
     if len(decoded) > _OCR_MAX_BYTES:
         raise HTTPException(
             status_code=413,
@@ -1922,9 +1983,13 @@ def _decode_pdf_payload(req: PdfIngestRequest) -> tuple[bytes, str | None]:
     try:
         decoded = base64.b64decode(raw_data, validate=True)
     except (binascii.Error, ValueError) as exc:
-        raise HTTPException(status_code=422, detail="Invalid data_base64 payload.") from exc
+        raise HTTPException(
+            status_code=422, detail="Invalid data_base64 payload."
+        ) from exc
     if not decoded:
-        raise HTTPException(status_code=422, detail="data_base64 payload decoded to empty content.")
+        raise HTTPException(
+            status_code=422, detail="data_base64 payload decoded to empty content."
+        )
     if len(decoded) > _PDF_MAX_BYTES:
         raise HTTPException(
             status_code=413,
@@ -1946,7 +2011,9 @@ def _extract_text_from_pdf_bytes(payload: bytes) -> str:
     try:
         reader = PdfReader(BytesIO(payload))
     except Exception as exc:
-        raise HTTPException(status_code=422, detail="Invalid or unreadable PDF payload.") from exc
+        raise HTTPException(
+            status_code=422, detail="Invalid or unreadable PDF payload."
+        ) from exc
 
     parts: list[str] = []
     for page in reader.pages:
@@ -2148,7 +2215,10 @@ def _coerce_literal_ocr_output(text: str) -> str:
     if not raw:
         return ""
 
-    lines = [line.strip() for line in raw.replace("\r\n", "\n").replace("\r", "\n").split("\n")]
+    lines = [
+        line.strip()
+        for line in raw.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    ]
     kept: list[str] = []
     preface_kept: list[str] = []
 
@@ -2239,7 +2309,10 @@ def _apply_ocr_uncertainty_safety(text: str) -> str:
     raw = text.strip()
     if not raw:
         return raw
-    lines = [line.strip() for line in raw.replace("\r\n", "\n").replace("\r", "\n").split("\n")]
+    lines = [
+        line.strip()
+        for line in raw.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    ]
     normalized_lines: list[str] = []
     for line in lines:
         if not line:
@@ -2269,7 +2342,10 @@ def _scaffold_extract_text(req: OcrRequest) -> tuple[str, str]:
     text = decoded.decode("utf-8", errors="ignore").strip()
     if text:
         return _apply_ocr_transcription_mode(text, mode), "ok"
-    return "[OCR scaffold] Binary payload received. Connect OCR engine for text extraction.", "stub"
+    return (
+        "[OCR scaffold] Binary payload received. Connect OCR engine for text extraction.",
+        "stub",
+    )
 
 
 def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, str]:
@@ -2286,7 +2362,9 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
         )
 
     if deps.ocr_client is None:
-        raise HTTPException(status_code=503, detail="OCR provider client is not configured.")
+        raise HTTPException(
+            status_code=503, detail="OCR provider client is not configured."
+        )
 
     data_url = f"data:{mime_type};base64,{base64.b64encode(decoded).decode('ascii')}"
     ocr_input = cast(
@@ -2295,7 +2373,10 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
             {
                 "role": "user",
                 "content": [
-                    {"type": "input_text", "text": _ocr_prompt_for_mode(deps.ocr_prompt, mode)},
+                    {
+                        "type": "input_text",
+                        "text": _ocr_prompt_for_mode(deps.ocr_prompt, mode),
+                    },
                     {"type": "input_image", "image_url": data_url},
                 ],
             }
@@ -2308,9 +2389,13 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
             temperature=_OCR_TEMPERATURE,
         )
     except AuthenticationError as exc:
-        raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
+        raise HTTPException(
+            status_code=401, detail="Authentication failed. Check OPENAI_API_KEY."
+        ) from exc
     except RateLimitError as exc:
-        retry_after = _retry_after_header_value(exc, _OCR_RETRY_AFTER_RATE_LIMIT_SECONDS)
+        retry_after = _retry_after_header_value(
+            exc, _OCR_RETRY_AFTER_RATE_LIMIT_SECONDS
+        )
         raise HTTPException(
             status_code=429,
             detail="OCR rate limit reached. Try again shortly.",
@@ -2324,7 +2409,9 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
         ) from exc
     except APIStatusError as exc:
         if exc.status_code == 429:
-            retry_after = _retry_after_header_value(exc, _OCR_RETRY_AFTER_RATE_LIMIT_SECONDS)
+            retry_after = _retry_after_header_value(
+                exc, _OCR_RETRY_AFTER_RATE_LIMIT_SECONDS
+            )
             raise HTTPException(
                 status_code=429,
                 detail="OCR rate limit reached. Try again shortly.",
@@ -2336,15 +2423,21 @@ def _extract_text_with_openai(req: OcrRequest, deps: RuntimeDeps) -> tuple[str, 
                 detail="OpenAI OCR rejected the image payload. Verify format and size.",
             ) from exc
         if exc.status_code in {401, 403}:
-            raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
+            raise HTTPException(
+                status_code=401, detail="Authentication failed. Check OPENAI_API_KEY."
+            ) from exc
         if 500 <= exc.status_code <= 599:
-            retry_after = _retry_after_header_value(exc, _OCR_RETRY_AFTER_TRANSIENT_SECONDS)
+            retry_after = _retry_after_header_value(
+                exc, _OCR_RETRY_AFTER_TRANSIENT_SECONDS
+            )
             raise HTTPException(
                 status_code=503,
                 detail=f"OpenAI OCR is temporarily unavailable ({exc.status_code}).",
                 headers={"Retry-After": retry_after},
             ) from exc
-        raise HTTPException(status_code=502, detail=f"OpenAI OCR error ({exc.status_code}).") from exc
+        raise HTTPException(
+            status_code=502, detail=f"OpenAI OCR error ({exc.status_code})."
+        ) from exc
 
     output_text = getattr(response, "output_text", None)
     if isinstance(output_text, str) and output_text.strip():
@@ -2508,8 +2601,7 @@ def _compose_model_input(
             "- Treat [ocr], [pdf], and [image] snippets as grounding evidence; do not contradict them.\n"
             "- Treat [chat] snippets as prior conversational context/style, not external facts.\n"
             "- If evidence is limited, stay cautious rather than inventing specifics.\n"
-            "- Never mention retrieval.\n"
-            + "\n".join(memory_lines)
+            "- Never mention retrieval.\n" + "\n".join(memory_lines)
         )
 
     merged_notes: list[str] = []
@@ -2532,19 +2624,24 @@ def _compose_model_input(
     return "\n\n".join(segments)
 
 
-def _compose_attachment_context_segment(attachment_context_blocks: list[str] | None) -> str | None:
+def _compose_attachment_context_segment(
+    attachment_context_blocks: list[str] | None,
+) -> str | None:
     if not attachment_context_blocks:
         return None
-    clean = [block.strip() for block in attachment_context_blocks if block and block.strip()]
+    clean = [
+        block.strip() for block in attachment_context_blocks if block and block.strip()
+    ]
     if not clean:
         return None
-    numbered = [f"[ATTACHMENT_{idx}]\n{block}" for idx, block in enumerate(clean, start=1)]
+    numbered = [
+        f"[ATTACHMENT_{idx}]\n{block}" for idx, block in enumerate(clean, start=1)
+    ]
     return (
         "[ATTACHMENT_CONTEXT: OCR/image context extracted from user attachments for this turn.]\n"
         "- Treat this as grounding evidence when relevant.\n"
         "- If uncertain, stay explicit about uncertainty.\n"
-        "- Never mention this block.\n"
-        + "\n\n".join(numbered)
+        "- Never mention this block.\n" + "\n\n".join(numbered)
     )
 
 
@@ -2561,7 +2658,10 @@ def _is_low_confidence_ocr_text(value: str) -> bool:
     if compact.lower() == "[ocr] no text detected.":
         return True
 
-    lines = [line.strip() for line in compact.replace("\r\n", "\n").replace("\r", "\n").split("\n")]
+    lines = [
+        line.strip()
+        for line in compact.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    ]
     non_empty = [line for line in lines if line]
     if not non_empty:
         return True
@@ -2595,7 +2695,9 @@ def _embed_texts(texts: list[str], deps: RuntimeDeps) -> list[list[float]]:
             error_type=type(exc).__name__,
         )
     except APIStatusError as exc:
-        if not deps.vector_local_embedding_fallback or not (500 <= exc.status_code <= 599):
+        if not deps.vector_local_embedding_fallback or not (
+            500 <= exc.status_code <= 599
+        ):
             raise
         _log_event(
             "vector_embedding_fallback",
@@ -2675,7 +2777,9 @@ def _retrieve_memory(
     try:
         query_vector = _embed_texts([query], deps)[0]
     except Exception as exc:
-        _log_event("vector_search_error", session_id=session_id, error_type=type(exc).__name__)
+        _log_event(
+            "vector_search_error", session_id=session_id, error_type=type(exc).__name__
+        )
         return []
     normalized_scope = memory_scope.strip().lower()
     include_session_id: str | None = None
@@ -2726,7 +2830,9 @@ def _index_assistant_output(
             created_at=created_at,
         )
     except Exception as exc:
-        _log_event("vector_index_error", session_id=session_id, error_type=type(exc).__name__)
+        _log_event(
+            "vector_index_error", session_id=session_id, error_type=type(exc).__name__
+        )
 
 
 def _index_ocr_output(
@@ -2807,7 +2913,9 @@ def _index_ocr_output(
         )
 
 
-def _normalize_file_search_source_types(source_types: list[str] | None) -> tuple[str, ...]:
+def _normalize_file_search_source_types(
+    source_types: list[str] | None,
+) -> tuple[str, ...]:
     if not source_types:
         return _FILE_SEARCH_DEFAULT_SOURCE_TYPES
     normalized: list[str] = []
@@ -2817,7 +2925,13 @@ def _normalize_file_search_source_types(source_types: list[str] | None) -> tuple
             normalized.append(value)
     if not normalized:
         return _FILE_SEARCH_DEFAULT_SOURCE_TYPES
-    invalid = sorted({value for value in normalized if value not in _FILE_SEARCH_ALLOWED_SOURCE_TYPES})
+    invalid = sorted(
+        {
+            value
+            for value in normalized
+            if value not in _FILE_SEARCH_ALLOWED_SOURCE_TYPES
+        }
+    )
     if invalid:
         raise HTTPException(
             status_code=422,
@@ -2875,7 +2989,9 @@ def _keyword_overlap_score(query_tokens: list[str], content: str) -> float:
     return score
 
 
-def _file_search_snippet(content: str, query_tokens: list[str], *, max_chars: int = 240) -> str:
+def _file_search_snippet(
+    content: str, query_tokens: list[str], *, max_chars: int = 240
+) -> str:
     compact = " ".join(content.split())
     if len(compact) <= max_chars:
         return compact
@@ -2901,7 +3017,9 @@ def _file_search_snippet(content: str, query_tokens: list[str], *, max_chars: in
     return snippet
 
 
-def _responses_file_search_enabled(deps: RuntimeDeps, source_types: tuple[str, ...]) -> bool:
+def _responses_file_search_enabled(
+    deps: RuntimeDeps, source_types: tuple[str, ...]
+) -> bool:
     return (
         "pdf" in source_types
         and deps.responses_pdf_ingest_enabled
@@ -2967,7 +3085,9 @@ def _responses_file_search(
             continue
 
         stored_session = attributes.get("session_id")
-        stored_session_text = str(stored_session).strip() if stored_session is not None else ""
+        stored_session_text = (
+            str(stored_session).strip() if stored_session is not None else ""
+        )
         if session_filter and stored_session_text != session_filter:
             continue
 
@@ -3020,7 +3140,9 @@ def _responses_file_search(
 
 
 def _recent_chat_context_for_responses(messages: list[Any], turn_limit: int) -> str:
-    visible = [msg for msg in messages if getattr(msg, "role", "") in {"user", "assistant"}]
+    visible = [
+        msg for msg in messages if getattr(msg, "role", "") in {"user", "assistant"}
+    ]
     if not visible:
         return ""
     max_messages = max(1, turn_limit * 2)
@@ -3146,7 +3268,9 @@ def _looks_like_ocr_request(query_text: str) -> bool:
         return True
     # Short follow-up queries around an active image context are often OCR requests.
     token_count = len(lowered.split())
-    if token_count <= 7 and any(token in token_set for token in ("word", "text", "say", "read")):
+    if token_count <= 7 and any(
+        token in token_set for token in ("word", "text", "say", "read")
+    ):
         return True
     return False
 
@@ -3171,7 +3295,9 @@ def _looks_like_ocr_followup_without_new_image(query_text: str) -> bool:
         r"\bread again\b",
         r"\bretry ocr\b",
     )
-    return any(re.search(pattern, lowered) is not None for pattern in explicit_retry_patterns)
+    return any(
+        re.search(pattern, lowered) is not None for pattern in explicit_retry_patterns
+    )
 
 
 def _looks_like_ocr_correction_without_new_image(query_text: str) -> bool:
@@ -3190,7 +3316,9 @@ def _looks_like_ocr_correction_without_new_image(query_text: str) -> bool:
     return False
 
 
-def _has_recent_ocr_activity(*, deps: RuntimeDeps, session_id: str, max_age_seconds: int = 600) -> bool:
+def _has_recent_ocr_activity(
+    *, deps: RuntimeDeps, session_id: str, max_age_seconds: int = 600
+) -> bool:
     runs = deps.history_store.list_ocr_runs(session_id=session_id, limit=1)
     if not runs:
         return False
@@ -3227,7 +3355,9 @@ def _resolve_responses_tools(
     principal: str | None,
 ) -> list[dict[str, Any]]:
     if not deps.responses_vector_store_id:
-        raise RuntimeError("Responses orchestration requires POLINKO_RESPONSES_VECTOR_STORE_ID.")
+        raise RuntimeError(
+            "Responses orchestration requires POLINKO_RESPONSES_VECTOR_STORE_ID."
+        )
     tools: list[dict[str, Any]] = [
         {
             "type": "file_search",
@@ -3236,8 +3366,16 @@ def _resolve_responses_tools(
     ]
     if not deps.responses_include_web_search:
         return tools
-    if not deps.governance_enabled or deps.governance_allow_web_search or deps.governance_log_only:
-        if deps.governance_enabled and deps.governance_log_only and not deps.governance_allow_web_search:
+    if (
+        not deps.governance_enabled
+        or deps.governance_allow_web_search
+        or deps.governance_log_only
+    ):
+        if (
+            deps.governance_enabled
+            and deps.governance_log_only
+            and not deps.governance_allow_web_search
+        ):
             _log_event(
                 "governance_tool_violation_logged",
                 request_id=request_id,
@@ -3271,7 +3409,9 @@ def _chat_with_responses_orchestration(
     collaboration_note: str | None = None,
 ) -> tuple[str, int]:
     if deps.responses_client is None:
-        raise RuntimeError("Responses orchestration is enabled, but no client is configured.")
+        raise RuntimeError(
+            "Responses orchestration is enabled, but no client is configured."
+        )
     responses_client = deps.responses_client
     history_messages = deps.history_store.list_messages(session_id=session_id)
     history_context = _recent_chat_context_for_responses(
@@ -3322,7 +3462,9 @@ def _chat_with_responses_orchestration(
 def _metrics_response(metrics: RuntimeMetrics) -> MetricsResponse:
     avg_latency_ms = 0.0
     if metrics.requests_total > 0:
-        avg_latency_ms = round(metrics.cumulative_duration_ms / metrics.requests_total, 2)
+        avg_latency_ms = round(
+            metrics.cumulative_duration_ms / metrics.requests_total, 2
+        )
     uptime_seconds = round(max(0.0, time.perf_counter() - metrics.started_monotonic), 2)
     return MetricsResponse(
         started_at_ms=metrics.started_at_ms,
@@ -3336,7 +3478,9 @@ def _metrics_response(metrics: RuntimeMetrics) -> MetricsResponse:
 
 
 def create_app(config: AppConfig) -> FastAPI:
-    logging.basicConfig(level=getattr(logging, config.log_level, logging.INFO), format="%(message)s")
+    logging.basicConfig(
+        level=getattr(logging, config.log_level, logging.INFO), format="%(message)s"
+    )
 
     shared_openai_client = OpenAI(api_key=config.openai_api_key)
     app = FastAPI(title="Polinko Agent API", version="0.1.0")
@@ -3367,7 +3511,9 @@ def create_app(config: AppConfig) -> FastAPI:
         vector_exclude_current_session=config.vector_exclude_current_session,
         vector_local_embedding_fallback=config.vector_local_embedding_fallback,
         vector_embedding_model=config.vector_embedding_model,
-        vector_store=VectorStore(config.vector_db_path) if config.vector_enabled else None,
+        vector_store=VectorStore(config.vector_db_path)
+        if config.vector_enabled
+        else None,
         embedding_client=shared_openai_client if config.vector_enabled else None,
         responses_orchestration_enabled=config.responses_orchestration_enabled,
         responses_orchestration_model=config.responses_orchestration_model,
@@ -3431,7 +3577,9 @@ def create_app(config: AppConfig) -> FastAPI:
 
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
         deps = _runtime_deps(request.app)
-        _record_metrics(deps.metrics, status_code=response.status_code, duration_ms=duration_ms)
+        _record_metrics(
+            deps.metrics, status_code=response.status_code, duration_ms=duration_ms
+        )
         response.headers["x-request-id"] = request_id
         _log_event(
             "http_request",
@@ -3482,7 +3630,9 @@ def create_app(config: AppConfig) -> FastAPI:
         )
 
     @app.get("/viz/pass-fail/data")
-    def pass_fail_viz_data(max_evals: int = 180, run_id: str | None = None) -> dict[str, Any]:
+    def pass_fail_viz_data(
+        max_evals: int = 180, run_id: str | None = None
+    ) -> dict[str, Any]:
         return build_pass_fail_viz_payload(
             max_evals=max(1, min(max_evals, 500)),
             run_id=(run_id or "").strip() or None,
@@ -3496,7 +3646,16 @@ def create_app(config: AppConfig) -> FastAPI:
         else:
             resolved = resolved.resolve()
 
-        allowed_suffixes = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".heic", ".heif"}
+        allowed_suffixes = {
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".webp",
+            ".gif",
+            ".bmp",
+            ".heic",
+            ".heif",
+        }
         suffix = resolved.suffix.lower()
         if suffix not in allowed_suffixes:
             raise HTTPException(status_code=400, detail="Unsupported image type.")
@@ -3516,9 +3675,15 @@ def create_app(config: AppConfig) -> FastAPI:
         if not resolved.is_file():
             raise HTTPException(status_code=404, detail="Artifact file not found.")
 
-        allowed = any(root == resolved or root in resolved.parents for root in _VIZ_ARTIFACT_ALLOWED_ROOTS)
+        allowed = any(
+            root == resolved or root in resolved.parents
+            for root in _VIZ_ARTIFACT_ALLOWED_ROOTS
+        )
         if not allowed:
-            raise HTTPException(status_code=403, detail="Artifact path is outside the tracked viz surface.")
+            raise HTTPException(
+                status_code=403,
+                detail="Artifact path is outside the tracked viz surface.",
+            )
 
         allowed_suffixes = {".json", ".md", ".svg", ".png", ".jpg", ".jpeg", ".webp"}
         if resolved.suffix.lower() not in allowed_suffixes:
@@ -3527,7 +3692,9 @@ def create_app(config: AppConfig) -> FastAPI:
         return FileResponse(path=resolved)
 
     @app.get("/manual-evals/surface")
-    def manual_evals_surface(max_runs: int = 180, max_sessions: int = 60) -> dict[str, Any]:
+    def manual_evals_surface(
+        max_runs: int = 180, max_sessions: int = 60
+    ) -> dict[str, Any]:
         return build_manual_evals_surface_payload(
             max_runs=max(1, min(max_runs, 800)),
             max_sessions=max(1, min(max_sessions, 300)),
@@ -3543,7 +3710,9 @@ def create_app(config: AppConfig) -> FastAPI:
         deps = _runtime_deps(request.app)
         summaries = [
             _chat_summary_response(summary, deps=deps)
-            for summary in deps.history_store.list_chats(include_deprecated=include_deprecated)
+            for summary in deps.history_store.list_chats(
+                include_deprecated=include_deprecated
+            )
         ]
         return ChatsResponse(chats=summaries)
 
@@ -3590,11 +3759,19 @@ def create_app(config: AppConfig) -> FastAPI:
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
             raise HTTPException(status_code=404, detail="Chat not found.")
-        if not deps.history_store.message_exists(session_id=session_id, message_id=req.message_id):
-            raise HTTPException(status_code=404, detail="message_id not found in this chat.")
-        message_role = deps.history_store.get_message_role(session_id=session_id, message_id=req.message_id)
+        if not deps.history_store.message_exists(
+            session_id=session_id, message_id=req.message_id
+        ):
+            raise HTTPException(
+                status_code=404, detail="message_id not found in this chat."
+            )
+        message_role = deps.history_store.get_message_role(
+            session_id=session_id, message_id=req.message_id
+        )
         if message_role != "assistant":
-            raise HTTPException(status_code=400, detail="Only assistant messages can be evaluated.")
+            raise HTTPException(
+                status_code=400, detail="Only assistant messages can be evaluated."
+            )
         outcome = _normalize_feedback_outcome(req.outcome)
         positive_tags, negative_tags, tags = _normalize_feedback_tags(
             outcome=outcome,
@@ -3602,7 +3779,11 @@ def create_app(config: AppConfig) -> FastAPI:
             negative_tags=req.negative_tags,
         )
         note = req.note.strip() if req.note is not None and req.note.strip() else None
-        action_taken = req.action_taken.strip() if req.action_taken is not None and req.action_taken.strip() else None
+        action_taken = (
+            req.action_taken.strip()
+            if req.action_taken is not None and req.action_taken.strip()
+            else None
+        )
         recommended_action = _suggest_feedback_action(
             outcome=outcome,
             positive_tags=positive_tags,
@@ -3635,8 +3816,13 @@ def create_app(config: AppConfig) -> FastAPI:
         )
         return _message_feedback_response(saved)
 
-    @app.get("/chats/{session_id}/feedback/checkpoints", response_model=ChatEvalCheckpointsResponse)
-    def list_eval_checkpoints(session_id: str, request: Request) -> ChatEvalCheckpointsResponse:
+    @app.get(
+        "/chats/{session_id}/feedback/checkpoints",
+        response_model=ChatEvalCheckpointsResponse,
+    )
+    def list_eval_checkpoints(
+        session_id: str, request: Request
+    ) -> ChatEvalCheckpointsResponse:
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
@@ -3645,10 +3831,17 @@ def create_app(config: AppConfig) -> FastAPI:
             _eval_checkpoint_response(item)
             for item in deps.history_store.list_eval_checkpoints(session_id=session_id)
         ]
-        return ChatEvalCheckpointsResponse(session_id=session_id, checkpoints=checkpoints)
+        return ChatEvalCheckpointsResponse(
+            session_id=session_id, checkpoints=checkpoints
+        )
 
-    @app.post("/chats/{session_id}/feedback/checkpoints", response_model=EvalCheckpointResponse)
-    def submit_eval_checkpoint(session_id: str, request: Request) -> EvalCheckpointResponse:
+    @app.post(
+        "/chats/{session_id}/feedback/checkpoints",
+        response_model=EvalCheckpointResponse,
+    )
+    def submit_eval_checkpoint(
+        session_id: str, request: Request
+    ) -> EvalCheckpointResponse:
         principal = None
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
@@ -3656,8 +3849,12 @@ def create_app(config: AppConfig) -> FastAPI:
             raise HTTPException(status_code=404, detail="Chat not found.")
         entries = deps.history_store.list_message_feedback(session_id=session_id)
         if not entries:
-            raise HTTPException(status_code=400, detail="No saved evals in this chat yet.")
-        total_count, pass_count, fail_count, non_binary_count = _summarize_feedback_streams(entries)
+            raise HTTPException(
+                status_code=400, detail="No saved evals in this chat yet."
+            )
+        total_count, pass_count, fail_count, non_binary_count = (
+            _summarize_feedback_streams(entries)
+        )
         if non_binary_count > 0:
             raise HTTPException(
                 status_code=500,
@@ -3690,7 +3887,9 @@ def create_app(config: AppConfig) -> FastAPI:
         return _eval_checkpoint_response(saved)
 
     @app.get("/chats/{session_id}/export", response_model=ChatExportResponse)
-    def export_chat(session_id: str, request: Request, include_markdown: bool = False) -> ChatExportResponse:
+    def export_chat(
+        session_id: str, request: Request, include_markdown: bool = False
+    ) -> ChatExportResponse:
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
@@ -3700,8 +3899,15 @@ def create_app(config: AppConfig) -> FastAPI:
             _chat_message_response(message)
             for message in deps.history_store.list_messages(session_id=session_id)
         ]
-        ocr_runs = [_ocr_run_response(run) for run in deps.history_store.list_ocr_runs(session_id=session_id)]
-        markdown = _render_markdown_transcript(session_id, messages) if include_markdown else None
+        ocr_runs = [
+            _ocr_run_response(run)
+            for run in deps.history_store.list_ocr_runs(session_id=session_id)
+        ]
+        markdown = (
+            _render_markdown_transcript(session_id, messages)
+            if include_markdown
+            else None
+        )
         return ChatExportResponse(
             session_id=session_id,
             title=chat.title,
@@ -3732,7 +3938,9 @@ def create_app(config: AppConfig) -> FastAPI:
             session_id=session_id,
             message_id=req.source_message_id,
         ):
-            raise HTTPException(status_code=404, detail="source_message_id not found in this chat.")
+            raise HTTPException(
+                status_code=404, detail="source_message_id not found in this chat."
+            )
         dedup_key = _build_ocr_dedup_key(
             req=req,
             deps=deps,
@@ -3769,9 +3977,13 @@ def create_app(config: AppConfig) -> FastAPI:
                     provider=deps.ocr_provider,
                     status=cached_run.status,
                     chars=len(cached_run.extracted_text),
-                    memory_scope=_normalize_memory_scope(req.memory_scope, default="session"),
+                    memory_scope=_normalize_memory_scope(
+                        req.memory_scope, default="session"
+                    ),
                     index_session_id=index_session_id,
-                    vector_chunks=len(_chunk_text_for_vectors(cached_run.extracted_text)),
+                    vector_chunks=len(
+                        _chunk_text_for_vectors(cached_run.extracted_text)
+                    ),
                     dedup_hit=True,
                 )
                 return cached_response
@@ -3917,13 +4129,17 @@ def create_app(config: AppConfig) -> FastAPI:
             session_id=session_id,
             message_id=req.source_message_id,
         ):
-            raise HTTPException(status_code=404, detail="source_message_id not found in this chat.")
+            raise HTTPException(
+                status_code=404, detail="source_message_id not found in this chat."
+            )
 
         decoded, detected_mime = _decode_pdf_payload(req)
         resolved_mime = (detected_mime or "").strip().lower()
         name_hint = (req.source_name or "").strip().lower()
         if resolved_mime and resolved_mime != "application/pdf":
-            raise HTTPException(status_code=422, detail="PDF ingest expects application/pdf payload.")
+            raise HTTPException(
+                status_code=422, detail="PDF ingest expects application/pdf payload."
+            )
         if not resolved_mime and not name_hint.endswith(".pdf"):
             raise HTTPException(
                 status_code=422,
@@ -3980,17 +4196,30 @@ def create_app(config: AppConfig) -> FastAPI:
 
         chunks = _chunk_text_for_vectors(extracted_text)
         if not chunks:
-            raise HTTPException(status_code=422, detail="No extractable text found in PDF.")
+            raise HTTPException(
+                status_code=422, detail="No extractable text found in PDF."
+            )
         try:
             embeddings = _embed_texts(chunks, deps)
         except AuthenticationError as exc:
-            raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
+            raise HTTPException(
+                status_code=401, detail="Authentication failed. Check OPENAI_API_KEY."
+            ) from exc
         except RateLimitError as exc:
-            raise HTTPException(status_code=429, detail="Rate limit reached. Try PDF ingest again shortly.") from exc
+            raise HTTPException(
+                status_code=429,
+                detail="Rate limit reached. Try PDF ingest again shortly.",
+            ) from exc
         except APIConnectionError as exc:
-            raise HTTPException(status_code=503, detail="Connection error reaching OpenAI embeddings API.") from exc
+            raise HTTPException(
+                status_code=503,
+                detail="Connection error reaching OpenAI embeddings API.",
+            ) from exc
         except APIStatusError as exc:
-            raise HTTPException(status_code=502, detail=f"OpenAI embeddings API error ({exc.status_code}).") from exc
+            raise HTTPException(
+                status_code=502,
+                detail=f"OpenAI embeddings API error ({exc.status_code}).",
+            ) from exc
 
         ingest_id = f"pdf-{uuid.uuid4().hex[:12]}"
         created_at = int(time.time() * 1000)
@@ -4028,7 +4257,11 @@ def create_app(config: AppConfig) -> FastAPI:
             source_name=req.source_name,
             dedup_hit=False,
         )
-        responses_index_status, responses_index_reason, responses_vector_store_file_id = _index_pdf_in_responses_vector_store(
+        (
+            responses_index_status,
+            responses_index_reason,
+            responses_vector_store_file_id,
+        ) = _index_pdf_in_responses_vector_store(
             deps=deps,
             request_id=getattr(request.state, "request_id", None),
             session_id=session_id,
@@ -4196,13 +4429,24 @@ def create_app(config: AppConfig) -> FastAPI:
         try:
             query_vector = _embed_texts([query], deps)[0]
         except AuthenticationError as exc:
-            raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
+            raise HTTPException(
+                status_code=401, detail="Authentication failed. Check OPENAI_API_KEY."
+            ) from exc
         except RateLimitError as exc:
-            raise HTTPException(status_code=429, detail="Rate limit reached. Try file search again shortly.") from exc
+            raise HTTPException(
+                status_code=429,
+                detail="Rate limit reached. Try file search again shortly.",
+            ) from exc
         except APIConnectionError as exc:
-            raise HTTPException(status_code=503, detail="Connection error reaching OpenAI embeddings API.") from exc
+            raise HTTPException(
+                status_code=503,
+                detail="Connection error reaching OpenAI embeddings API.",
+            ) from exc
         except APIStatusError as exc:
-            raise HTTPException(status_code=502, detail=f"OpenAI embeddings API error ({exc.status_code}).") from exc
+            raise HTTPException(
+                status_code=502,
+                detail=f"OpenAI embeddings API error ({exc.status_code}).",
+            ) from exc
 
         candidates = deps.vector_store.search(
             query_embedding=query_vector,
@@ -4219,7 +4463,9 @@ def create_app(config: AppConfig) -> FastAPI:
             score = (candidate.similarity * 0.78) + (keyword_score * 0.22)
             ranked.append((score, candidate.similarity, keyword_score, candidate))
 
-        ranked.sort(key=lambda item: (item[0], item[1], item[3].created_at), reverse=True)
+        ranked.sort(
+            key=lambda item: (item[0], item[1], item[3].created_at), reverse=True
+        )
         top = ranked[: req.limit]
 
         matches = [
@@ -4262,10 +4508,14 @@ def create_app(config: AppConfig) -> FastAPI:
         )
 
     @app.patch("/chats/{session_id}", response_model=ChatSummaryResponse)
-    def rename_chat(session_id: str, req: RenameChatRequest, request: Request) -> ChatSummaryResponse:
+    def rename_chat(
+        session_id: str, req: RenameChatRequest, request: Request
+    ) -> ChatSummaryResponse:
         deps = _runtime_deps(request.app)
         try:
-            summary = deps.history_store.rename_chat(session_id=session_id, title=req.title)
+            summary = deps.history_store.rename_chat(
+                session_id=session_id, title=req.title
+            )
         except KeyError as exc:
             raise HTTPException(status_code=404, detail="Chat not found.") from exc
         return _chat_summary_response(summary, deps=deps)
@@ -4301,10 +4551,14 @@ def create_app(config: AppConfig) -> FastAPI:
     def add_note(session_id: str, req: NoteRequest, request: Request) -> dict[str, str]:
         deps = _runtime_deps(request.app)
         deps.history_store.ensure_chat(session_id=session_id)
-        deps.history_store.append_message(session_id=session_id, role="note", content=req.note.strip())
+        deps.history_store.append_message(
+            session_id=session_id, role="note", content=req.note.strip()
+        )
         return {"status": "ok", "session_id": session_id}
 
-    @app.post("/chats/{session_id}/personalization", response_model=PersonalizationResponse)
+    @app.post(
+        "/chats/{session_id}/personalization", response_model=PersonalizationResponse
+    )
     def set_chat_personalization(
         session_id: str,
         req: PersonalizationRequest,
@@ -4314,7 +4568,9 @@ def create_app(config: AppConfig) -> FastAPI:
         deps = _runtime_deps(request.app)
         chat = deps.history_store.ensure_chat(session_id=session_id)
         if chat.status == "deprecated":
-            raise HTTPException(status_code=409, detail="Chat is deprecated and cannot be personalized.")
+            raise HTTPException(
+                status_code=409, detail="Chat is deprecated and cannot be personalized."
+            )
         try:
             settings = deps.history_store.set_personalization(
                 session_id=session_id,
@@ -4332,8 +4588,12 @@ def create_app(config: AppConfig) -> FastAPI:
         )
         return _personalization_response(settings)
 
-    @app.get("/chats/{session_id}/personalization", response_model=PersonalizationResponse)
-    def get_chat_personalization(session_id: str, request: Request) -> PersonalizationResponse:
+    @app.get(
+        "/chats/{session_id}/personalization", response_model=PersonalizationResponse
+    )
+    def get_chat_personalization(
+        session_id: str, request: Request
+    ) -> PersonalizationResponse:
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
@@ -4350,21 +4610,28 @@ def create_app(config: AppConfig) -> FastAPI:
         return _personalization_response(settings)
 
     @app.get("/chats/{session_id}/collaboration", response_model=CollaborationResponse)
-    def get_chat_collaboration(session_id: str, request: Request, limit: int = 20) -> CollaborationResponse:
+    def get_chat_collaboration(
+        session_id: str, request: Request, limit: int = 20
+    ) -> CollaborationResponse:
         deps = _runtime_deps(request.app)
         chat = deps.history_store.get_chat(session_id=session_id)
         if chat is None:
             raise HTTPException(status_code=404, detail="Chat not found.")
         handoff_limit = max(1, min(limit, 100))
         state = deps.history_store.get_collaboration_state(session_id=session_id)
-        handoffs = deps.history_store.list_handoffs(session_id=session_id, limit=handoff_limit)
+        handoffs = deps.history_store.list_handoffs(
+            session_id=session_id, limit=handoff_limit
+        )
         return CollaborationResponse(
             session_id=session_id,
             active=_collaboration_state_response(state) if state is not None else None,
             handoffs=[_collaboration_handoff_response(item) for item in handoffs],
         )
 
-    @app.post("/chats/{session_id}/collaboration/handoff", response_model=CollaborationResponse)
+    @app.post(
+        "/chats/{session_id}/collaboration/handoff",
+        response_model=CollaborationResponse,
+    )
     def handoff_chat_collaboration(
         session_id: str,
         req: CollaborationHandoffRequest,
@@ -4374,7 +4641,10 @@ def create_app(config: AppConfig) -> FastAPI:
         deps = _runtime_deps(request.app)
         chat = deps.history_store.ensure_chat(session_id=session_id)
         if chat.status == "deprecated":
-            raise HTTPException(status_code=409, detail="Chat is deprecated and cannot receive handoffs.")
+            raise HTTPException(
+                status_code=409,
+                detail="Chat is deprecated and cannot receive handoffs.",
+            )
         state, handoff = deps.history_store.handoff_collaboration(
             session_id=session_id,
             to_agent_id=req.to_agent_id,
@@ -4418,13 +4688,19 @@ def create_app(config: AppConfig) -> FastAPI:
                 session_id=session_id,
                 message_id=source_user_message_id,
             ):
-                raise HTTPException(status_code=404, detail="source_user_message_id not found in this chat.")
+                raise HTTPException(
+                    status_code=404,
+                    detail="source_user_message_id not found in this chat.",
+                )
             source_role = deps.history_store.get_message_role(
                 session_id=session_id,
                 message_id=source_user_message_id,
             )
             if source_role != "user":
-                raise HTTPException(status_code=400, detail="source_user_message_id must reference a user message.")
+                raise HTTPException(
+                    status_code=400,
+                    detail="source_user_message_id must reference a user message.",
+                )
         limiter_id = _client_identifier(request, session_id, principal)
         try:
             _enforce_rate_limit(request, limiter_id)
@@ -4447,7 +4723,9 @@ def create_app(config: AppConfig) -> FastAPI:
             adaptive_style_notes = _derive_adaptive_style_notes(
                 deps.history_store.list_message_feedback(session_id=session_id)
             )
-            previous_adaptive_signature = deps.adaptive_note_signatures.get(session_id, tuple())
+            previous_adaptive_signature = deps.adaptive_note_signatures.get(
+                session_id, tuple()
+            )
             next_adaptive_signature = tuple(adaptive_style_notes)
             if next_adaptive_signature != previous_adaptive_signature:
                 previous_set = set(previous_adaptive_signature)
@@ -4457,20 +4735,32 @@ def create_app(config: AppConfig) -> FastAPI:
                     request_id=request_id,
                     session_id=session_id,
                     principal=principal,
-                    added_notes=[note for note in adaptive_style_notes if note not in previous_set],
-                    removed_notes=[note for note in previous_adaptive_signature if note not in next_set],
+                    added_notes=[
+                        note
+                        for note in adaptive_style_notes
+                        if note not in previous_set
+                    ],
+                    removed_notes=[
+                        note
+                        for note in previous_adaptive_signature
+                        if note not in next_set
+                    ],
                     active_count=len(adaptive_style_notes),
                 )
                 deps.adaptive_note_signatures[session_id] = next_adaptive_signature
             for note in adaptive_style_notes:
                 _append_unique_note(notes, note)
-            personalization = deps.history_store.get_personalization(session_id=session_id)
+            personalization = deps.history_store.get_personalization(
+                session_id=session_id
+            )
             memory_scope = (
                 personalization.memory_scope
                 if personalization is not None
                 else deps.personalization_default_memory_scope
             )
-            collaboration_state = deps.history_store.get_collaboration_state(session_id=session_id)
+            collaboration_state = deps.history_store.get_collaboration_state(
+                session_id=session_id
+            )
             collaboration_note = _build_collaboration_note(collaboration_state)
             pipeline = "runner"
             orchestration_tools = 0
@@ -4518,7 +4808,9 @@ def create_app(config: AppConfig) -> FastAPI:
                         )
                         if cached_payload is not None:
                             try:
-                                cached_response = OcrResponse.model_validate(cached_payload)
+                                cached_response = OcrResponse.model_validate(
+                                    cached_payload
+                                )
                             except Exception:
                                 _log_event(
                                     "chat_attachment_ocr_dedup_payload_invalid",
@@ -4530,7 +4822,9 @@ def create_app(config: AppConfig) -> FastAPI:
                                 dedup_hit = True
                                 cached_run = cached_response.run
                                 extracted_text = cached_run.extracted_text
-                                visual_context = (cached_run.visual_context or "").strip() or None
+                                visual_context = (
+                                    cached_run.visual_context or ""
+                                ).strip() or None
                                 run_id = cached_run.run_id
                                 run_status = cached_run.status
                                 run_source_name = cached_run.source_name
@@ -4591,15 +4885,21 @@ def create_app(config: AppConfig) -> FastAPI:
                             run_status = run.status
                             run_source_name = run.source_name
 
-                        source_label = (ocr_req.source_name or f"attachment_{idx}").strip()
+                        source_label = (
+                            ocr_req.source_name or f"attachment_{idx}"
+                        ).strip()
                         attachment_ocr_texts.append((source_label, extracted_text))
                         context_parts: list[str] = []
                         text_for_context = extracted_text.strip()
                         if _has_meaningful_ocr_text(text_for_context):
-                            context_parts.append(f"[OCR_TEXT • {source_label}]\n{text_for_context}")
+                            context_parts.append(
+                                f"[OCR_TEXT • {source_label}]\n{text_for_context}"
+                            )
                         visual_for_context = (visual_context or "").strip()
                         if visual_for_context:
-                            context_parts.append(f"[IMAGE_CONTEXT • {source_label}]\n{visual_for_context}")
+                            context_parts.append(
+                                f"[IMAGE_CONTEXT • {source_label}]\n{visual_for_context}"
+                            )
                         if context_parts:
                             attachment_context_blocks.append("\n\n".join(context_parts))
                             attachment_evidence_count += 1
@@ -4613,16 +4913,25 @@ def create_app(config: AppConfig) -> FastAPI:
                             source_name=run_source_name,
                             status=run_status,
                             chars=len(extracted_text),
-                            memory_scope=_normalize_memory_scope(ocr_req.memory_scope, default="session"),
+                            memory_scope=_normalize_memory_scope(
+                                ocr_req.memory_scope, default="session"
+                            ),
                             index_session_id=index_session_id,
                             dedup_hit=dedup_hit,
                         )
 
                 if harness_mode != "fixture":
-                    has_recent_ocr = _has_recent_ocr_activity(deps=deps, session_id=session_id)
+                    has_recent_ocr = _has_recent_ocr_activity(
+                        deps=deps, session_id=session_id
+                    )
                     if req.attachments and _looks_like_ocr_request(req.message):
-                        output_text = _build_attachment_literal_reply(attachment_ocr_texts)
-                    elif not req.attachments and _looks_like_ocr_followup_without_new_image(req.message):
+                        output_text = _build_attachment_literal_reply(
+                            attachment_ocr_texts
+                        )
+                    elif (
+                        not req.attachments
+                        and _looks_like_ocr_followup_without_new_image(req.message)
+                    ):
                         output_text = _OCR_STRICT_NO_NEW_IMAGE_REPLY
                     elif (
                         not req.attachments
@@ -4637,16 +4946,18 @@ def create_app(config: AppConfig) -> FastAPI:
                             query_text=req.message,
                             evidence_count=attachment_evidence_count,
                         )
-                        output_text, orchestration_tools = _chat_with_responses_orchestration(
-                            deps=deps,
-                            request_id=request_id,
-                            principal=principal,
-                            session_id=session_id,
-                            user_message=req.message,
-                            notes=notes,
-                            attachment_context_blocks=attachment_context_blocks,
-                            guardrail_note=guardrail_note,
-                            collaboration_note=collaboration_note,
+                        output_text, orchestration_tools = (
+                            _chat_with_responses_orchestration(
+                                deps=deps,
+                                request_id=request_id,
+                                principal=principal,
+                                session_id=session_id,
+                                user_message=req.message,
+                                notes=notes,
+                                attachment_context_blocks=attachment_context_blocks,
+                                guardrail_note=guardrail_note,
+                                collaboration_note=collaboration_note,
+                            )
                         )
                     else:
                         retrieved_memory = _retrieve_memory(
@@ -4658,7 +4969,8 @@ def create_app(config: AppConfig) -> FastAPI:
                         guardrail_note = _build_hallucination_guardrail_note(
                             deps=deps,
                             query_text=req.message,
-                            evidence_count=len(retrieved_memory) + attachment_evidence_count,
+                            evidence_count=len(retrieved_memory)
+                            + attachment_evidence_count,
                         )
                         model_input = _compose_model_input(
                             user_message=req.message,
@@ -4670,7 +4982,8 @@ def create_app(config: AppConfig) -> FastAPI:
                             collaboration_note=collaboration_note,
                         )
                         low_evidence_reply = _low_evidence_factual_reply(
-                            req.message, len(retrieved_memory) + attachment_evidence_count
+                            req.message,
+                            len(retrieved_memory) + attachment_evidence_count,
                         )
                         if low_evidence_reply is not None:
                             output_text = low_evidence_reply
@@ -4694,7 +5007,10 @@ def create_app(config: AppConfig) -> FastAPI:
                     error_type="AuthenticationError",
                     pipeline=pipeline,
                 )
-                raise HTTPException(status_code=401, detail="Authentication failed. Check OPENAI_API_KEY.") from exc
+                raise HTTPException(
+                    status_code=401,
+                    detail="Authentication failed. Check OPENAI_API_KEY.",
+                ) from exc
             except RateLimitError as exc:
                 _log_event(
                     "chat_error",
@@ -4703,7 +5019,9 @@ def create_app(config: AppConfig) -> FastAPI:
                     error_type="RateLimitError",
                     pipeline=pipeline,
                 )
-                raise HTTPException(status_code=429, detail="Rate limit reached. Try again shortly.") from exc
+                raise HTTPException(
+                    status_code=429, detail="Rate limit reached. Try again shortly."
+                ) from exc
             except APIConnectionError as exc:
                 _log_event(
                     "chat_error",
@@ -4712,7 +5030,9 @@ def create_app(config: AppConfig) -> FastAPI:
                     error_type="APIConnectionError",
                     pipeline=pipeline,
                 )
-                raise HTTPException(status_code=503, detail="Connection error reaching OpenAI API.") from exc
+                raise HTTPException(
+                    status_code=503, detail="Connection error reaching OpenAI API."
+                ) from exc
             except APIStatusError as exc:
                 _log_event(
                     "chat_error",
@@ -4722,7 +5042,9 @@ def create_app(config: AppConfig) -> FastAPI:
                     status_code=exc.status_code,
                     pipeline=pipeline,
                 )
-                raise HTTPException(status_code=502, detail=f"OpenAI API error ({exc.status_code}).") from exc
+                raise HTTPException(
+                    status_code=502, detail=f"OpenAI API error ({exc.status_code})."
+                ) from exc
             except RuntimeError as exc:
                 _log_event(
                     "chat_error",
@@ -4734,7 +5056,9 @@ def create_app(config: AppConfig) -> FastAPI:
                 raise HTTPException(status_code=503, detail=str(exc)) from exc
 
             if source_user_message_id is None:
-                deps.history_store.append_message(session_id=session_id, role="user", content=req.message)
+                deps.history_store.append_message(
+                    session_id=session_id, role="user", content=req.message
+                )
             assistant_message = deps.history_store.append_message(
                 session_id=session_id,
                 role="assistant",
@@ -4763,7 +5087,9 @@ def create_app(config: AppConfig) -> FastAPI:
                 memory_used=[
                     _memory_citation_response(
                         item,
-                        max_chars=min(deps.vector_max_chars, _CHAT_MEMORY_CITATION_MAX_CHARS),
+                        max_chars=min(
+                            deps.vector_max_chars, _CHAT_MEMORY_CITATION_MAX_CHARS
+                        ),
                     )
                     for item in retrieved_memory
                 ],
@@ -4785,7 +5111,9 @@ def create_app(config: AppConfig) -> FastAPI:
                 guardrail_applied=guardrail_note is not None,
                 collaboration_applied=collaboration_note is not None,
                 active_collaborator=(
-                    collaboration_state.active_agent_id if collaboration_state is not None else None
+                    collaboration_state.active_agent_id
+                    if collaboration_state is not None
+                    else None
                 ),
                 pipeline=pipeline,
                 orchestration_tools=orchestration_tools,

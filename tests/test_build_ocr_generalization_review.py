@@ -107,7 +107,11 @@ class OcrGeneralizationReviewTests(unittest.TestCase):
 
         selected_ids = [row["candidate_id"] for row in review["selected_candidates"]]
         self.assertIn("c-pin", selected_ids)
-        pinned_row = next(row for row in review["selected_candidates"] if row["candidate_id"] == "c-pin")
+        pinned_row = next(
+            row
+            for row in review["selected_candidates"]
+            if row["candidate_id"] == "c-pin"
+        )
         self.assertEqual(pinned_row["selection_reason"], "pinned_include")
 
 

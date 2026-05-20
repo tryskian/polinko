@@ -65,7 +65,9 @@ def _normalize_family_title(title: str) -> str:
     return re.sub(r"^Branch\s+·\s+", "", value, flags=re.IGNORECASE).strip() or value
 
 
-def _conversation_lookup(conversation_rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+def _conversation_lookup(
+    conversation_rows: list[dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
     lookup: dict[str, dict[str, Any]] = {}
     for row in conversation_rows:
         conversation_id = str(row.get("conversation_id", "")).strip()
@@ -127,7 +129,9 @@ LANE_DEFINITIONS: tuple[LaneDefinition, ...] = (
                 SignalPattern("no_commentary", r"\bno commentary\b"),
                 SignalPattern("no_rephrasing", r"\bno rephrasing\b"),
                 SignalPattern("no_meta_explanations", r"\bno meta-explanations\b"),
-                SignalPattern("instead_of_interpreting", r"\binstead of interpreting\b"),
+                SignalPattern(
+                    "instead_of_interpreting", r"\binstead of interpreting\b"
+                ),
                 SignalPattern("summarization", r"\bsummari[sz]ation\b"),
                 SignalPattern("reinterpretation", r"\breinterpretation\b"),
                 SignalPattern("summary_reflex", r"\bsummary reflex\b"),
@@ -161,7 +165,9 @@ LANE_DEFINITIONS: tuple[LaneDefinition, ...] = (
                 SignalPattern("explicit_uncertainty", r"\bexplicit uncertainty\b"),
                 SignalPattern("fabricated", r"\bfabricat(?:ed|ion)\b"),
                 SignalPattern("invented", r"\binvent(?:ed|ion)\b"),
-                SignalPattern("certainty_outruns_evidence", r"\bcertainty outruns evidence\b"),
+                SignalPattern(
+                    "certainty_outruns_evidence", r"\bcertainty outruns evidence\b"
+                ),
                 SignalPattern("evidence_boundary", r"\bevidence boundar(?:y|ies)\b"),
                 SignalPattern("low_signal_inference", r"\blow signal inference\b"),
             ),
@@ -219,7 +225,9 @@ LANE_DEFINITIONS: tuple[LaneDefinition, ...] = (
                 SignalPattern("unsupported_claim", r"\bunsupported claims?\b"),
                 SignalPattern("grounding_gap", r"\bgrounding gap\b"),
                 SignalPattern("explicit_uncertainty", r"\bexplicit uncertainty\b"),
-                SignalPattern("certainty_outruns_evidence", r"\bcertainty outruns evidence\b"),
+                SignalPattern(
+                    "certainty_outruns_evidence", r"\bcertainty outruns evidence\b"
+                ),
                 SignalPattern("low_signal_inference", r"\blow signal inference\b"),
                 SignalPattern("inference", r"\binference\b"),
                 SignalPattern("source_evidence", r"\bsource evidence\b"),
@@ -237,11 +245,15 @@ LANE_DEFINITIONS: tuple[LaneDefinition, ...] = (
 )
 
 
-def _match_patterns(text: str, patterns: tuple[SignalPattern, ...]) -> list[SignalPattern]:
+def _match_patterns(
+    text: str, patterns: tuple[SignalPattern, ...]
+) -> list[SignalPattern]:
     return [pattern for pattern in patterns if pattern.regex.search(text)]
 
 
-def _extract_snippet(text: str, patterns: list[SignalPattern], *, radius: int = 120) -> str:
+def _extract_snippet(
+    text: str, patterns: list[SignalPattern], *, radius: int = 120
+) -> str:
     compact = _normalize_whitespace(text)
     if not compact:
         return ""
@@ -328,8 +340,12 @@ def build_backlog(
                     "preferred_tag_hits": lane_score["preferred_tag_hits"],
                     "snippet": lane_score["snippet"],
                     "tags": tags,
-                    "attachment_count": int(conversation_meta.get("attachment_count", 0)),
-                    "has_attachment": bool(conversation_meta.get("has_attachment", False)),
+                    "attachment_count": int(
+                        conversation_meta.get("attachment_count", 0)
+                    ),
+                    "has_attachment": bool(
+                        conversation_meta.get("has_attachment", False)
+                    ),
                     "already_tagged": bool(conversation_meta),
                 }
             )
@@ -369,13 +385,19 @@ def build_backlog(
             family_entry["conversation_ids"].append(candidate["conversation_id"])
             if candidate["title"] not in family_entry["titles"]:
                 family_entry["titles"].append(candidate["title"])
-            family_entry["score"] = max(int(family_entry["score"]), int(candidate["score"]))
+            family_entry["score"] = max(
+                int(family_entry["score"]), int(candidate["score"])
+            )
             family_entry["attachment_count"] = max(
                 int(family_entry["attachment_count"]),
                 int(candidate["attachment_count"]),
             )
-            family_entry["has_attachment"] = family_entry["has_attachment"] or candidate["has_attachment"]
-            family_entry["already_tagged"] = family_entry["already_tagged"] or candidate["already_tagged"]
+            family_entry["has_attachment"] = (
+                family_entry["has_attachment"] or candidate["has_attachment"]
+            )
+            family_entry["already_tagged"] = (
+                family_entry["already_tagged"] or candidate["already_tagged"]
+            )
             for tag in candidate["tags"]:
                 if tag not in family_entry["tags"]:
                     family_entry["tags"].append(tag)
@@ -450,7 +472,9 @@ def _markdown_report(backlog: dict[str, Any]) -> str:
             lines.append(
                 f"- `{candidate['family_title']}` | score=`{candidate['score']}` | variants=`{candidate['variant_count']}` | attachments=`{candidate['attachment_count']}` | tags=`{tags}`"
             )
-            lines.append(f"  - conversation_ids: `{', '.join(candidate['conversation_ids'][:5])}`")
+            lines.append(
+                f"  - conversation_ids: `{', '.join(candidate['conversation_ids'][:5])}`"
+            )
             if candidate.get("titles"):
                 lines.append(f"  - titles: `{', '.join(candidate['titles'][:3])}`")
             lines.append(f"  - matched: `{matched}`")
@@ -501,7 +525,9 @@ def main() -> int:
     output_json = Path(args.output_json).expanduser().resolve()
     output_md = Path(args.output_md).expanduser().resolve()
 
-    search_rows = _search_index_rows(export_root / "conversations" / "html" / "search_index.js")
+    search_rows = _search_index_rows(
+        export_root / "conversations" / "html" / "search_index.js"
+    )
     conversation_rows = _load_json(conversation_index_path)
     backlog = build_backlog(
         search_rows=search_rows,

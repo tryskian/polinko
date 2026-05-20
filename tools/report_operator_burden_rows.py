@@ -45,13 +45,17 @@ def _require_non_empty_string(row: dict[str, Any], key: str) -> str:
 def _validate_dimensions(row: dict[str, Any]) -> dict[str, str]:
     raw = row.get("dimensions")
     if not isinstance(raw, dict) or not raw:
-        raise RuntimeError(f"Row {row.get('id', '<missing id>')}: missing 'dimensions' object")
+        raise RuntimeError(
+            f"Row {row.get('id', '<missing id>')}: missing 'dimensions' object"
+        )
     out: dict[str, str] = {}
     for key, value in raw.items():
         dim = str(key).strip()
         status = str(value).strip().lower()
         if not dim:
-            raise RuntimeError(f"Row {row.get('id', '<missing id>')}: empty dimension key")
+            raise RuntimeError(
+                f"Row {row.get('id', '<missing id>')}: empty dimension key"
+            )
         if status not in ALLOWED_DIMENSION_VALUES:
             raise RuntimeError(
                 f"Row {row.get('id', '<missing id>')}: invalid dimension value for '{dim}': {value!r}"
@@ -80,17 +84,29 @@ def _validate_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
             raise RuntimeError(f"Row {row_id}: invalid verdict {verdict!r}")
 
         disposition_raw = raw.get("failure_disposition")
-        disposition = str(disposition_raw).strip().lower() if disposition_raw is not None else None
+        disposition = (
+            str(disposition_raw).strip().lower()
+            if disposition_raw is not None
+            else None
+        )
         if verdict == "fail":
             if disposition not in ALLOWED_DISPOSITIONS:
-                raise RuntimeError(f"Row {row_id}: failing rows require failure_disposition retain|evict")
+                raise RuntimeError(
+                    f"Row {row_id}: failing rows require failure_disposition retain|evict"
+                )
         else:
             if disposition is not None:
-                raise RuntimeError(f"Row {row_id}: passing rows must not set failure_disposition")
+                raise RuntimeError(
+                    f"Row {row_id}: passing rows must not set failure_disposition"
+                )
 
         source_ids = raw.get("source_ids")
-        if not isinstance(source_ids, list) or not all(str(item).strip() for item in source_ids):
-            raise RuntimeError(f"Row {row_id}: 'source_ids' must be a non-empty string list")
+        if not isinstance(source_ids, list) or not all(
+            str(item).strip() for item in source_ids
+        ):
+            raise RuntimeError(
+                f"Row {row_id}: 'source_ids' must be a non-empty string list"
+            )
 
         normalized.append(
             {
@@ -99,7 +115,9 @@ def _validate_rows(payload: dict[str, Any]) -> list[dict[str, Any]]:
                 "source_note": _require_non_empty_string(raw, "source_note"),
                 "source_ids": [str(item).strip() for item in source_ids],
                 "task_shape": _require_non_empty_string(raw, "task_shape"),
-                "expected_boundary": _require_non_empty_string(raw, "expected_boundary"),
+                "expected_boundary": _require_non_empty_string(
+                    raw, "expected_boundary"
+                ),
                 "observed_pattern": _require_non_empty_string(raw, "observed_pattern"),
                 "dimensions": _validate_dimensions(raw),
                 "verdict": verdict,
@@ -222,8 +240,8 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines.extend(
         [
             "",
-        "## Retained Failures",
-        "",
+            "## Retained Failures",
+            "",
         ]
     )
     retained = report.get("retained_failures", [])
@@ -267,9 +285,17 @@ def render_markdown(report: dict[str, Any]) -> str:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rows", default=str(DEFAULT_ROWS_PATH), help="Path to operator-burden row JSON.")
-    parser.add_argument("--output-json", default=str(DEFAULT_OUTPUT_JSON), help="Path to summary JSON.")
-    parser.add_argument("--output-md", default=str(DEFAULT_OUTPUT_MD), help="Path to summary markdown.")
+    parser.add_argument(
+        "--rows",
+        default=str(DEFAULT_ROWS_PATH),
+        help="Path to operator-burden row JSON.",
+    )
+    parser.add_argument(
+        "--output-json", default=str(DEFAULT_OUTPUT_JSON), help="Path to summary JSON."
+    )
+    parser.add_argument(
+        "--output-md", default=str(DEFAULT_OUTPUT_MD), help="Path to summary markdown."
+    )
     return parser
 
 

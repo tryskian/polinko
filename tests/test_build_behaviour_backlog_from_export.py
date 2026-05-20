@@ -15,7 +15,9 @@ def _lane(slug: str):
 
 
 class BehaviourExportBacklogTests(unittest.TestCase):
-    def test_co_reasoning_lane_accepts_working_style_and_constraint_language(self) -> None:
+    def test_co_reasoning_lane_accepts_working_style_and_constraint_language(
+        self,
+    ) -> None:
         lane = _lane("co_reasoning")
         result = _score_lane(
             lane,
@@ -94,7 +96,9 @@ class BehaviourExportBacklogTests(unittest.TestCase):
             "explicit uncertainty should hold when confidence outruns evidence "
             "omega closing words"
         )
-        snippet = _extract_snippet(text, [SignalPattern("explicit_uncertainty", r"\bexplicit uncertainty\b")])
+        snippet = _extract_snippet(
+            text, [SignalPattern("explicit_uncertainty", r"\bexplicit uncertainty\b")]
+        )
         self.assertIn("explicit uncertainty", snippet)
         self.assertIn("confidence outruns evidence", snippet)
 
@@ -120,9 +124,19 @@ class BehaviourExportBacklogTests(unittest.TestCase):
                 "has_attachment": True,
             }
         ]
-        backlog = build_backlog(search_rows=search_rows, conversation_rows=conversation_rows, limit_per_lane=10)
-        co_reasoning = next(lane for lane in backlog["lanes"] if lane["lane"] == "co_reasoning")
-        ocr_boundary = next(lane for lane in backlog["lanes"] if lane["lane"] == "ocr_confidence_boundary")
+        backlog = build_backlog(
+            search_rows=search_rows,
+            conversation_rows=conversation_rows,
+            limit_per_lane=10,
+        )
+        co_reasoning = next(
+            lane for lane in backlog["lanes"] if lane["lane"] == "co_reasoning"
+        )
+        ocr_boundary = next(
+            lane
+            for lane in backlog["lanes"]
+            if lane["lane"] == "ocr_confidence_boundary"
+        )
 
         self.assertEqual(co_reasoning["candidate_count"], 1)
         self.assertEqual(co_reasoning["family_count"], 1)
@@ -130,7 +144,9 @@ class BehaviourExportBacklogTests(unittest.TestCase):
         self.assertEqual(ocr_boundary["candidate_count"], 1)
         self.assertTrue(ocr_boundary["candidates"][0]["already_tagged"])
 
-    def test_build_backlog_collapses_branch_title_variants_into_one_family(self) -> None:
+    def test_build_backlog_collapses_branch_title_variants_into_one_family(
+        self,
+    ) -> None:
         search_rows = [
             {
                 "id": "c-1",
@@ -159,8 +175,14 @@ class BehaviourExportBacklogTests(unittest.TestCase):
                 "has_attachment": True,
             },
         ]
-        backlog = build_backlog(search_rows=search_rows, conversation_rows=conversation_rows, limit_per_lane=10)
-        co_reasoning = next(lane for lane in backlog["lanes"] if lane["lane"] == "co_reasoning")
+        backlog = build_backlog(
+            search_rows=search_rows,
+            conversation_rows=conversation_rows,
+            limit_per_lane=10,
+        )
+        co_reasoning = next(
+            lane for lane in backlog["lanes"] if lane["lane"] == "co_reasoning"
+        )
         self.assertEqual(co_reasoning["candidate_count"], 2)
         self.assertEqual(co_reasoning["family_count"], 1)
         self.assertEqual(co_reasoning["candidates"][0]["family_title"], "ORG-241225")

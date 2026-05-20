@@ -30,7 +30,9 @@ class ResponseBehaviourEvalTests(unittest.TestCase):
 
     def test_contains_forbidden_phrases_matches_case_insensitive(self) -> None:
         answer = "Done and pushed the change."
-        hits = _contains_forbidden_phrases(answer, ["done and pushed", "i updated the readme"])
+        hits = _contains_forbidden_phrases(
+            answer, ["done and pushed", "i updated the readme"]
+        )
         self.assertEqual(hits, ["done and pushed"])
 
     def test_missing_required_all_reports_missing_values(self) -> None:
@@ -43,12 +45,19 @@ class ResponseBehaviourEvalTests(unittest.TestCase):
     def test_missing_required_any_groups_reports_unmatched_group(self) -> None:
         missing_groups = _missing_required_any_groups(
             "I cannot verify this from current context.",
-            [["cannot verify", "can't verify"], ["do not have live data", "don't have live data"]],
+            [
+                ["cannot verify", "can't verify"],
+                ["do not have live data", "don't have live data"],
+            ],
         )
-        self.assertEqual(missing_groups, [["do not have live data", "don't have live data"]])
+        self.assertEqual(
+            missing_groups, [["do not have live data", "don't have live data"]]
+        )
 
     def test_phrase_matches_text_allows_short_gap_for_multi_token_anchor(self) -> None:
-        self.assertTrue(_phrase_matches_text("I have no saved record of that note.", "no record"))
+        self.assertTrue(
+            _phrase_matches_text("I have no saved record of that note.", "no record")
+        )
 
     def test_missing_required_any_groups_accepts_no_saved_record_variant(self) -> None:
         missing_groups = _missing_required_any_groups(
@@ -64,7 +73,9 @@ class ResponseBehaviourEvalTests(unittest.TestCase):
         )
         self.assertEqual(missing, [])
 
-    def test_normalize_text_for_match_handles_curly_apostrophes_and_dashes(self) -> None:
+    def test_normalize_text_for_match_handles_curly_apostrophes_and_dashes(
+        self,
+    ) -> None:
         normalized = _normalize_text_for_match("I don’t have real‑time data.")
         self.assertEqual(normalized, "i don't have real-time data.")
 
@@ -94,7 +105,12 @@ class ResponseBehaviourEvalTests(unittest.TestCase):
             answer="I can definitely confirm that.",
         )
         self.assertFalse(result["pass"])
-        self.assertTrue(any("missing required_any_groups" in reason for reason in result["fail_reasons"]))
+        self.assertTrue(
+            any(
+                "missing required_any_groups" in reason
+                for reason in result["fail_reasons"]
+            )
+        )
 
     def test_deterministic_gate_fails_forbidden_phrase(self) -> None:
         case = {
@@ -122,7 +138,9 @@ class ResponseBehaviourEvalTests(unittest.TestCase):
             answer="One two three four five.",
         )
         self.assertFalse(result["pass"])
-        self.assertTrue(any("word count" in reason for reason in result["fail_reasons"]))
+        self.assertTrue(
+            any("word count" in reason for reason in result["fail_reasons"])
+        )
 
     def test_resolve_case_status_pass_when_min_passes_met(self) -> None:
         status = _resolve_case_status(

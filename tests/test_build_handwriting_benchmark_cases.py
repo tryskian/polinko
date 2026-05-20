@@ -48,13 +48,27 @@ class BuildHandwritingBenchmarkCasesTests(unittest.TestCase):
             }
             handwriting_cases_payload = {
                 "cases": [
-                    {"id": "h1", "image_path": "/tmp/a.png", "must_contain_any": ["one", "two", "three"]},
-                    {"id": "h2", "image_path": "/tmp/b.png", "must_contain_any": ["one", "two", "three", "four"]},
-                    {"id": "h3", "image_path": "/tmp/c.png", "must_contain_any": ["one", "two", "three", "four"]},
+                    {
+                        "id": "h1",
+                        "image_path": "/tmp/a.png",
+                        "must_contain_any": ["one", "two", "three"],
+                    },
+                    {
+                        "id": "h2",
+                        "image_path": "/tmp/b.png",
+                        "must_contain_any": ["one", "two", "three", "four"],
+                    },
+                    {
+                        "id": "h3",
+                        "image_path": "/tmp/c.png",
+                        "must_contain_any": ["one", "two", "three", "four"],
+                    },
                 ]
             }
             review_path.write_text(json.dumps(review_payload), encoding="utf-8")
-            handwriting_cases_path.write_text(json.dumps(handwriting_cases_payload), encoding="utf-8")
+            handwriting_cases_path.write_text(
+                json.dumps(handwriting_cases_payload), encoding="utf-8"
+            )
 
             summary = build_handwriting_benchmark_cases(
                 review_path=review_path,
@@ -93,11 +107,17 @@ class BuildHandwritingBenchmarkCasesTests(unittest.TestCase):
             }
             handwriting_cases_payload = {
                 "cases": [
-                    {"id": "h-top", "image_path": "/tmp/top.png", "must_contain_any": ["one", "two"]},
+                    {
+                        "id": "h-top",
+                        "image_path": "/tmp/top.png",
+                        "must_contain_any": ["one", "two"],
+                    },
                 ]
             }
             review_path.write_text(json.dumps(review_payload), encoding="utf-8")
-            handwriting_cases_path.write_text(json.dumps(handwriting_cases_payload), encoding="utf-8")
+            handwriting_cases_path.write_text(
+                json.dumps(handwriting_cases_payload), encoding="utf-8"
+            )
 
             summary = build_handwriting_benchmark_cases(
                 review_path=review_path,
@@ -143,8 +163,16 @@ class BuildHandwritingBenchmarkCasesTests(unittest.TestCase):
             }
             lane_cases_payload = {
                 "cases": [
-                    {"id": "t1", "image_path": "/tmp/t1.png", "must_contain_any": ["one", "two", "three"]},
-                    {"id": "h1", "image_path": "/tmp/h1.png", "must_contain_any": ["one", "two", "three"]},
+                    {
+                        "id": "t1",
+                        "image_path": "/tmp/t1.png",
+                        "must_contain_any": ["one", "two", "three"],
+                    },
+                    {
+                        "id": "h1",
+                        "image_path": "/tmp/h1.png",
+                        "must_contain_any": ["one", "two", "three"],
+                    },
                 ]
             }
             review_path.write_text(json.dumps(review_payload), encoding="utf-8")
@@ -164,7 +192,9 @@ class BuildHandwritingBenchmarkCasesTests(unittest.TestCase):
             output = json.loads(output_cases_path.read_text(encoding="utf-8"))
             self.assertEqual([case["id"] for case in output["cases"]], ["t1"])
 
-    def test_lane_builder_skips_non_overlapping_chosen_vs_transcription_phrases(self) -> None:
+    def test_lane_builder_skips_non_overlapping_chosen_vs_transcription_phrases(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
             review_path = root / "review.json"
@@ -193,14 +223,25 @@ class BuildHandwritingBenchmarkCasesTests(unittest.TestCase):
                         "ocr_framing_signal": True,
                         "anchor_terms_count": 4,
                         "chosen_phrases": ["alpha spiral field"],
-                        "transcription_phrases": ["alpha spiral field", "tensor mapping"],
+                        "transcription_phrases": [
+                            "alpha spiral field",
+                            "tensor mapping",
+                        ],
                     },
                 ]
             }
             lane_cases_payload = {
                 "cases": [
-                    {"id": "a", "image_path": "/tmp/a.png", "must_contain_any": ["one", "two", "three"]},
-                    {"id": "b", "image_path": "/tmp/b.png", "must_contain_any": ["one", "two", "three"]},
+                    {
+                        "id": "a",
+                        "image_path": "/tmp/a.png",
+                        "must_contain_any": ["one", "two", "three"],
+                    },
+                    {
+                        "id": "b",
+                        "image_path": "/tmp/b.png",
+                        "must_contain_any": ["one", "two", "three"],
+                    },
                 ]
             }
             review_path.write_text(json.dumps(review_payload), encoding="utf-8")

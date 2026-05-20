@@ -5,9 +5,9 @@ import json
 from pathlib import Path
 from typing import Any
 
-from tools.eval_chat_common import create_chat
-from tools.eval_chat_common import default_headers
-from tools.eval_chat_common import delete_chat
+from tools.eval_chat_common import create_chat as create_chat
+from tools.eval_chat_common import default_headers as default_headers
+from tools.eval_chat_common import delete_chat as delete_chat
 from tools.eval_chat_common import preflight as _chat_preflight
 from tools.eval_chat_common import request_json
 
@@ -41,7 +41,9 @@ def load_cases(path: Path) -> list[dict[str, Any]]:
         seed_method = str(case.get("seed_method", "ocr")).strip().lower() or "ocr"
         source_type = str(case.get("source_type", "ocr")).strip().lower() or "ocr"
         must_include = normalize_terms(case.get("must_include"))
-        source_name = str(case.get("source_name", f"{case_id}.txt")).strip() or f"{case_id}.txt"
+        source_name = (
+            str(case.get("source_name", f"{case_id}.txt")).strip() or f"{case_id}.txt"
+        )
         if not case_id or not seed_text or not query:
             raise RuntimeError(
                 f"Case #{index} is missing required fields ('id', 'seed_text', 'query')."
@@ -68,6 +70,8 @@ def load_cases(path: Path) -> list[dict[str, Any]]:
             }
         )
     return normalized
+
+
 def seed_ocr_memory(
     *,
     base_url: str,
@@ -109,7 +113,9 @@ def _build_minimal_pdf_bytes(text: str) -> bytes:
             b"3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
             b"/Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\nendobj\n"
         ),
-        b"4 0 obj\n<< /Length " + str(len(content_bytes)).encode("ascii") + b" >>\nstream\n"
+        b"4 0 obj\n<< /Length "
+        + str(len(content_bytes)).encode("ascii")
+        + b" >>\nstream\n"
         + content_bytes
         + b"endstream\nendobj\n",
         b"5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n",
@@ -153,7 +159,9 @@ def seed_pdf_memory(
         headers=headers,
         payload={
             "session_id": session_id,
-            "source_name": source_name if source_name.lower().endswith(".pdf") else f"{source_name}.pdf",
+            "source_name": source_name
+            if source_name.lower().endswith(".pdf")
+            else f"{source_name}.pdf",
             "mime_type": "application/pdf",
             "data_base64": payload_b64,
             "attach_to_chat": False,
@@ -162,9 +170,7 @@ def seed_pdf_memory(
     )
 
 
-_ONE_BY_ONE_PNG_BASE64 = (
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO8B9wAAAABJRU5ErkJggg=="
-)
+_ONE_BY_ONE_PNG_BASE64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO8B9wAAAABJRU5ErkJggg=="
 
 
 def seed_image_context_memory(
@@ -184,7 +190,9 @@ def seed_image_context_memory(
         headers=headers,
         payload={
             "session_id": session_id,
-            "source_name": source_name if source_name.lower().endswith(".png") else f"{source_name}.png",
+            "source_name": source_name
+            if source_name.lower().endswith(".png")
+            else f"{source_name}.png",
             "mime_type": "image/png",
             "data_base64": _ONE_BY_ONE_PNG_BASE64,
             "text_hint": text_hint,

@@ -182,7 +182,8 @@ def build_report(
                 "pass_rate": float(row.get("pass_rate", 0.0) or 0.0),
                 "text_variant_count": int(row.get("text_variant_count", 0) or 0),
                 "char_count_span": int(row.get("char_count_span", 0) or 0),
-                "focus_source": str(focus_case.get("focus_source", "")).strip() or "unknown",
+                "focus_source": str(focus_case.get("focus_source", "")).strip()
+                or "unknown",
                 "source_name": str(focus_case.get("source_name", "")).strip(),
                 "image_path": str(focus_case.get("image_path", "")).strip(),
                 "order_preview": _preview_order(ordered_terms),
@@ -217,13 +218,17 @@ def build_report(
         growth_summary = growth_fail_cohort_payload.get("summary")
         if isinstance(growth_summary, dict):
             rate_limited_cases = int(growth_summary.get("rate_limited_cases", 0) or 0)
-            rate_limit_abort_runs = int(growth_summary.get("rate_limit_abort_runs", 0) or 0)
+            rate_limit_abort_runs = int(
+                growth_summary.get("rate_limit_abort_runs", 0) or 0
+            )
     rate_limit_pressure = bool(rate_limited_cases > 0 or rate_limit_abort_runs > 0)
 
     summary = {
         "cases_total": total_cases,
         "failing_cases": len(failing_case_rows),
-        "failing_case_rate": round((len(failing_case_rows) / total_cases) if total_cases else 0.0, 4),
+        "failing_case_rate": round(
+            (len(failing_case_rows) / total_cases) if total_cases else 0.0, 4
+        ),
         "rate_limit_pressure": rate_limit_pressure,
         "rate_limited_cases": rate_limited_cases,
         "rate_limit_abort_runs": rate_limit_abort_runs,
@@ -320,16 +325,30 @@ def build_report(
     }
 
 
-def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_cases: Path) -> str:
+def _render_markdown(
+    *, report: dict[str, Any], stability_report: Path, focus_cases: Path
+) -> str:
     summary = report["summary"]
-    lane_summary = summary.get("lane_summary") if isinstance(summary.get("lane_summary"), dict) else {}
+    lane_summary = (
+        summary.get("lane_summary")
+        if isinstance(summary.get("lane_summary"), dict)
+        else {}
+    )
     top_missing = (
         summary.get("top_missing_ordered_phrases")
         if isinstance(summary.get("top_missing_ordered_phrases"), list)
         else []
     )
-    top_reasons = summary.get("top_reasons") if isinstance(summary.get("top_reasons"), list) else []
-    failing_cases = report.get("failing_cases") if isinstance(report.get("failing_cases"), list) else []
+    top_reasons = (
+        summary.get("top_reasons")
+        if isinstance(summary.get("top_reasons"), list)
+        else []
+    )
+    failing_cases = (
+        report.get("failing_cases")
+        if isinstance(report.get("failing_cases"), list)
+        else []
+    )
 
     lines: list[str] = []
     lines.append("# OCR Focus Fail Patterns")
@@ -345,9 +364,15 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
     lines.append(f"| cases_total | {summary['cases_total']} |")
     lines.append(f"| failing_cases | {summary['failing_cases']} |")
     lines.append(f"| failing_case_rate | {summary['failing_case_rate']:.4f} |")
-    lines.append(f"| rate_limit_pressure | {bool(summary.get('rate_limit_pressure', False))} |")
-    lines.append(f"| rate_limited_cases | {int(summary.get('rate_limited_cases', 0) or 0)} |")
-    lines.append(f"| rate_limit_abort_runs | {int(summary.get('rate_limit_abort_runs', 0) or 0)} |")
+    lines.append(
+        f"| rate_limit_pressure | {bool(summary.get('rate_limit_pressure', False))} |"
+    )
+    lines.append(
+        f"| rate_limited_cases | {int(summary.get('rate_limited_cases', 0) or 0)} |"
+    )
+    lines.append(
+        f"| rate_limit_abort_runs | {int(summary.get('rate_limit_abort_runs', 0) or 0)} |"
+    )
     lines.append("")
 
     if lane_summary:
@@ -484,11 +509,11 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, focus_ca
             missing_phrase = str(row.get("top_missing_phrase", "")).replace("|", "\\|")
             missing_offset = row.get("top_missing_offset")
             missing_offset_value = (
-                str(int(missing_offset))
-                if isinstance(missing_offset, int)
-                else "-"
+                str(int(missing_offset)) if isinstance(missing_offset, int) else "-"
             )
-            missing_offset_bucket = str(row.get("top_missing_offset_bucket", "unknown")).replace("|", "\\|")
+            missing_offset_bucket = str(
+                row.get("top_missing_offset_bucket", "unknown")
+            ).replace("|", "\\|")
             missing_sequence_bucket = str(
                 row.get("top_missing_sequence_position_bucket", "unknown")
             ).replace("|", "\\|")
@@ -559,7 +584,9 @@ def main() -> int:
     growth_fail_cohort_payload: dict[str, Any] | None = None
     if growth_fail_cohort.is_file():
         maybe_cohort = _load_json_object(growth_fail_cohort)
-        growth_fail_cohort_payload = maybe_cohort if isinstance(maybe_cohort, dict) else None
+        growth_fail_cohort_payload = (
+            maybe_cohort if isinstance(maybe_cohort, dict) else None
+        )
     report = build_report(
         stability_payload=stability_payload,
         focus_case_map=focus_case_map,
@@ -569,7 +596,9 @@ def main() -> int:
     report["focus_cases_path"] = str(focus_cases)
 
     output_json.parent.mkdir(parents=True, exist_ok=True)
-    output_json.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    output_json.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     markdown = _render_markdown(
         report=report,
