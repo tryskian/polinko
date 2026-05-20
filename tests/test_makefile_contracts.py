@@ -11,6 +11,7 @@ MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
+EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
 
 
 def _makefile_text() -> str:
@@ -71,6 +72,7 @@ class MakefileContractTests(unittest.TestCase):
             "EVAL_SERVER_DAEMON_SCRIPT ?= ./tools/ensure_eval_server_daemon.sh",
             config_text,
         )
+        self.assertIn("EVAL_CASE_GUARD_SCRIPT ?= ./tools/eval_case_guard.sh", config_text)
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -133,10 +135,14 @@ class MakefileContractTests(unittest.TestCase):
 
     def test_eval_workflow_orchestration_delegates_to_scripts(self) -> None:
         text = MAKE_EVALS.read_text(encoding="utf-8")
+        guard_text = EVAL_CASE_GUARD_SCRIPT.read_text(encoding="utf-8")
 
         self.assertNotIn("$(MAKE)", text)
         self.assertNotIn("import json,pathlib", text)
-        self.assertIn("tools.count_eval_cases", text)
+        self.assertNotIn("CASE_COUNT=", text)
+        self.assertIn("tools.count_eval_cases", guard_text)
+        self.assertIn('eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_GROWTH)"', text)
+        self.assertIn('eval_case_guard_or_exit "$(OCR_FOCUS_CASES_JSON)"', text)
         self.assertRegex(
             text,
             r"(?m)^ocrkernel:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tCGPT_EXPORT_ROOT_DEFAULT=\"\$\(CGPT_EXPORT_ROOT_DEFAULT\)\" \\\n\t\tbash \"\$\(OCR_WORKFLOW_SCRIPT\)\" ocrkernel$",
@@ -154,8 +160,10 @@ class MakefileContractTests(unittest.TestCase):
     def test_eval_helper_scripts_are_named_for_their_roles(self) -> None:
         self.assertTrue(OCR_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(EVAL_SERVER_DAEMON_SCRIPT.is_file())
+        self.assertTrue(EVAL_CASE_GUARD_SCRIPT.is_file())
         self.assertTrue(os.access(OCR_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_SERVER_DAEMON_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(EVAL_CASE_GUARD_SCRIPT, os.X_OK))
         self.assertFalse((REPO_ROOT / "tools" / "ocr_workflow.sh").exists())
         self.assertFalse((REPO_ROOT / "tools" / "ensure_server_daemon.sh").exists())
 
