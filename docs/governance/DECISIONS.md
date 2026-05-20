@@ -480,3 +480,15 @@ or branch history instead.
   local `make end` closeout routine.
 - Why: The formatter baseline is only durable if the standard local and remote
   gates reject style drift before broad refactor work continues.
+
+## D-036: Split Make configuration by responsibility
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `config`, `modularity`, `ia`
+- Decision: Keep `makefiles/config.mk` as the stable shared configuration
+  entrypoint, but move family-specific defaults into focused
+  `makefiles/config/*.mk` includes.
+- Why: The root Makefile and target-family includes are already decomposed.
+  Splitting the remaining config monolith makes ownership clearer while
+  preserving the public Make target and override contract.
