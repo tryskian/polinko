@@ -24,9 +24,13 @@ Tracked root runtime compatibility modules:
 - `api/`
   - compatibility shims for legacy `api.*` imports
   - forwards module identity to `polinko.api.*`
+  - exposes an explicit `__all__` list for supported legacy
+    `from api import ...` imports
 - `core/`
   - compatibility shims for legacy `core.*` imports
   - forwards module identity to `polinko.core.*`
+  - exposes an explicit `__all__` list for supported legacy
+    `from core import ...` imports
 
 Tracked runtime packages currently live under `src/polinko/`; repo-local tools
 remain rooted:
@@ -73,8 +77,8 @@ Current audit result:
 | `app.py` | legacy `python app.py` launcher with lazy import behavior | local legacy callers have moved to `make chat`, `python -m polinko.cli`, or `polinko-chat` |
 | `server.py` | stable `server:app` ASGI string used by Make defaults, server-daemon, local eval gates, Docker, and older scripts | operator, Docker, and eval defaults have an approved replacement ASGI string |
 | `config.py` | legacy `from config import ...` imports | older local scripts have moved to `polinko.config` |
-| `api/` | legacy `api.*` imports | older local scripts have moved to `polinko.api.*` |
-| `core/` | legacy `core.*` imports | older local scripts have moved to `polinko.core.*` |
+| `api/` | legacy `api.*` imports and supported `from api import ...` submodule imports | older local scripts have moved to `polinko.api.*` |
+| `core/` | legacy `core.*` imports and supported `from core import ...` submodule imports | older local scripts have moved to `polinko.core.*` |
 
 ## Target Package Shape
 

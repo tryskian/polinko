@@ -23,6 +23,8 @@ Last updated: 2026-05-20
     shims for legacy imports
   - the root compatibility audit confirms active `src/` and `tools/` Python
     imports use `polinko.*`, while root shims stay compatibility-only
+  - root `api/` and `core/` shim packages expose explicit supported legacy
+    `from api import ...` and `from core import ...` submodule imports
   - prompt and runtime behaviour stay minimal and deterministic
   - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active
     because they feed manual evals, feedback, checkpoints, exports, and
