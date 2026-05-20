@@ -1,7 +1,7 @@
 # Operator lifecycle, runtime, and local machine targets.
 .PHONY: chat venv env gate start end eod end-preflight end-git-check eod-stop rituals
 .PHONY: localhost server server-daemon server-daemon-stop server-daemon-status session-status
-.PHONY: docs open-api-docs viz
+.PHONY: docs docs-open open-api-docs open-api-docs-browser viz viz-open open-viz
 .PHONY: openai-account-summary openai-costs openai-usage openai-limits
 .PHONY: open-limits open-usage open-billing open-cost-console
 .PHONY: caffeinate caffeinate-on caffeinate-status caffeinate-off caffeinate-off-all decaffeinate decaffeinate-status
@@ -78,6 +78,27 @@ server-daemon-status:
 open-api-docs: server-daemon
 	@set -eu; \
 	URL="$(DEV_API_DOCS_URL)"; \
+	case "$(LOCAL_BROWSER_LAUNCH)" in none|system) ;; \
+		*) echo "Invalid LOCAL_BROWSER_LAUNCH='$(LOCAL_BROWSER_LAUNCH)' (expected none or system)."; exit 2 ;; \
+	esac; \
+	echo "API docs URL: $$URL"
+ifeq ($(LOCAL_BROWSER_LAUNCH),system)
+	@set -eu; \
+	URL="$(DEV_API_DOCS_URL)"; \
+	if command -v open >/dev/null 2>&1; then \
+		open "$$URL"; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open "$$URL" >/dev/null 2>&1 || true; \
+	else \
+		echo "Open this URL in your browser: $$URL"; \
+	fi
+endif
+
+docs: open-api-docs
+
+docs-open open-api-docs-browser: server-daemon
+	@set -eu; \
+	URL="$(DEV_API_DOCS_URL)"; \
 	if command -v open >/dev/null 2>&1; then \
 		open "$$URL"; \
 	elif command -v xdg-open >/dev/null 2>&1; then \
@@ -86,8 +107,6 @@ open-api-docs: server-daemon
 		echo "Open this URL in your browser: $$URL"; \
 	fi; \
 	echo "API docs URL: $$URL"
-
-docs: open-api-docs
 
 openai-account-summary:
 	@$(OPENAI_ACCOUNT_ENV) "$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" summary
@@ -110,6 +129,25 @@ open-billing: openai-costs
 open-cost-console: openai-account-summary
 
 viz: server-daemon
+	@set -eu; \
+	URL="$(DEV_VIZ_URL)"; \
+	case "$(LOCAL_BROWSER_LAUNCH)" in none|system) ;; \
+		*) echo "Invalid LOCAL_BROWSER_LAUNCH='$(LOCAL_BROWSER_LAUNCH)' (expected none or system)."; exit 2 ;; \
+	esac; \
+	echo "PASS/FAIL viz URL: $$URL"
+ifeq ($(LOCAL_BROWSER_LAUNCH),system)
+	@set -eu; \
+	URL="$(DEV_VIZ_URL)"; \
+	if command -v open >/dev/null 2>&1; then \
+		open "$$URL"; \
+	elif command -v xdg-open >/dev/null 2>&1; then \
+		xdg-open "$$URL" >/dev/null 2>&1 || true; \
+	else \
+		echo "Open this URL in your browser: $$URL"; \
+	fi
+endif
+
+viz-open open-viz: server-daemon
 	@set -eu; \
 	URL="$(DEV_VIZ_URL)"; \
 	if command -v open >/dev/null 2>&1; then \

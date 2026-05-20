@@ -162,6 +162,16 @@ Use this doc for operator procedure.
   - report closeout wake-lock status
 - `make api-smoke`
   - live backend smoke check
+- `make docs`
+  - start or reuse the local server and print the API docs URL
+- `make docs-open`
+  - start or reuse the local server and launch the API docs URL in the system
+    browser
+- `make viz`
+  - start or reuse the local server and print the PASS/FAIL viz URL
+- `make viz-open`
+  - start or reuse the local server and launch the PASS/FAIL viz URL in the
+    system browser
 - `make end`
   - literal legacy closeout routine plus security gate: transcript fix/check,
     doctor, Python style/type checks, docs lint, tests, security checks, and

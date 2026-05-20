@@ -132,6 +132,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("PYTHON ?=", config_text)
         self.assertIn("CLI_ENTRYPOINT ?= -m polinko.cli", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
+        self.assertIn("LOCAL_BROWSER_LAUNCH ?= none", config_text)
         self.assertIn(
             "OPENAI_ACCOUNT_SCRIPT ?= ./tools/openai_account_summary.py", config_text
         )
@@ -310,11 +311,15 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertRegex(text, r"(?m)^docs:\s*open-api-docs$")
         self.assertRegex(text, r"(?m)^open-api-docs:\s*server-daemon$")
+        self.assertRegex(
+            text, r"(?m)^docs-open open-api-docs-browser:\s*server-daemon$"
+        )
         self.assertRegex(text, r"(?m)^open-limits:\s*openai-limits$")
         self.assertRegex(text, r"(?m)^open-usage:\s*openai-usage$")
         self.assertRegex(text, r"(?m)^open-billing:\s*openai-costs$")
         self.assertRegex(text, r"(?m)^open-cost-console:\s*openai-account-summary$")
         self.assertRegex(text, r"(?m)^viz:\s*server-daemon$")
+        self.assertRegex(text, r"(?m)^viz-open open-viz:\s*server-daemon$")
         self.assertRegex(
             text, r"(?m)^portfolio:\s*portfolio-build server-daemon-stop server-daemon$"
         )
@@ -712,6 +717,44 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('npm --prefix "canonical-app"', canonical_result.stdout)
         self.assertNotIn("legacy-app/package.json", canonical_result.stdout)
 
+    def test_local_url_targets_do_not_launch_a_browser_by_default(self) -> None:
+        for target, expected_label in (
+            ("docs", "API docs URL"),
+            ("viz", "PASS/FAIL viz URL"),
+        ):
+            with self.subTest(target=target):
+                result = subprocess.run(
+                    ["make", "-n", target],
+                    cwd=REPO_ROOT,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertIn(expected_label, result.stdout)
+                self.assertNotIn('open "$URL"', result.stdout)
+                self.assertNotIn("xdg-open", result.stdout)
+
+    def test_local_url_targets_require_explicit_browser_launch(self) -> None:
+        cases = (
+            (["docs-open"], "docs-open"),
+            (["viz-open"], "viz-open"),
+            (["docs", "LOCAL_BROWSER_LAUNCH=system"], "docs with launch override"),
+            (["viz", "LOCAL_BROWSER_LAUNCH=system"], "viz with launch override"),
+        )
+        for args, label in cases:
+            with self.subTest(target=label):
+                result = subprocess.run(
+                    ["make", "-n", *args],
+                    cwd=REPO_ROOT,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertIn('open "$URL"', result.stdout)
+                self.assertIn("xdg-open", result.stdout)
+
     def test_portfolio_build_dry_run_does_not_execute_vite_build(self) -> None:
         result = subprocess.run(
             ["make", "-n", "portfolio-build"],
@@ -732,7 +775,11 @@ class MakefileContractTests(unittest.TestCase):
             "portfolio",
             "portfolio-playwright",
             "open-api-docs",
+            "open-api-docs-browser",
+            "docs-open",
             "viz",
+            "viz-open",
+            "open-viz",
             "openai-account-summary",
             "openai-costs",
             "openai-usage",

@@ -86,10 +86,11 @@ make deps-install
 cp .env.example .env
 # set OPENAI_API_KEY in .env
 make doctor-env
-make server
+make docs
 ```
 
-Open `http://127.0.0.1:8000/docs`.
+This prints the local API docs URL. Use `make docs-open` only when you want to
+launch the system browser.
 
 ## Repo Map
 

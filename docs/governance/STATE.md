@@ -109,6 +109,10 @@ Last updated: 2026-05-20
     child session through the configured Python launcher
   - `make caffeinate-status`, `make decaffeinate`, and `make end` operate on
     the repo-owned PID without adopting unrelated user wake-lock processes
+  - local URL helpers such as `make docs`, `make open-api-docs`, and
+    `make viz` print the target URL by default instead of launching a browser
+  - explicit browser launch remains available through `make docs-open`,
+    `make open-api-docs-browser`, `make viz-open`, and `make open-viz`
 - Documentation roles are explicit:
   - `CHARTER` holds durable rules
   - `STATE` holds tracked current truth

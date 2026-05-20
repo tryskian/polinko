@@ -795,3 +795,18 @@ or branch history instead.
   should be repo-owned rather than dependent on a global install. Keeping it
   advisory avoids adding a second required type gate while still making the
   editor surface reproducible.
+
+## D-059: Keep local URL helpers non-launching by default
+
+- Date: `2026-05-20`
+- Category: `workflow_environment`
+- Tags: `browser_launch`, `make`, `operator_targets`, `local_runtime`
+- Human-led: The human lead asked to avoid browser-launching workflows because
+  running Codex and VS Code together is already CPU-heavy on the local machine.
+- Decision: `make docs`, `make open-api-docs`, and `make viz` print local URLs
+  by default. Browser launch is explicit through `make docs-open`,
+  `make open-api-docs-browser`, `make viz-open`, `make open-viz`, or
+  `LOCAL_BROWSER_LAUNCH=system`.
+- Why: URL printing preserves operator access without forcing a browser process
+  into every local inspection flow. Explicit launch aliases keep the old
+  capability available when it is intentionally needed.
