@@ -20,7 +20,7 @@ classifiers = [
 ]
 
 # Runtime and development dependencies remain locked through requirements.in
-# and requirements.lock until the dependency policy changes.
+# and requirements.txt until the dependency policy changes.
 
 [project.scripts]
 polinko-chat = "polinko.cli:main"

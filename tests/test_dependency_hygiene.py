@@ -34,7 +34,7 @@ class DependencyHygieneTests(unittest.TestCase):
         script = _read("tools/setup_devcontainer.sh")
 
         self.assertIn('venv_dir="${POLINKO_DEVCONTAINER_VENV_DIR:-.venv}"', script)
-        self.assertIn("requirements.lock", script)
+        self.assertIn("requirements.txt", script)
         self.assertIn("npm ci --no-audit --no-fund", script)
         self.assertIn(
             'portfolio_app_dir="${POLINKO_DEVCONTAINER_PORTFOLIO_APP_DIR:-apps/portfolio}"',
@@ -45,6 +45,19 @@ class DependencyHygieneTests(unittest.TestCase):
         )
         self.assertNotIn("frontend", script)
         self.assertNotIn("polinko-repositioning-system", script)
+
+    def test_python_lockfile_uses_dependabot_visible_pip_tools_convention(
+        self,
+    ) -> None:
+        build_config = _read("makefiles/config/build.mk")
+        workflow = _read(".github/workflows/ci.yml")
+        lockfile = _read("requirements.txt")
+
+        self.assertIn("REQUIREMENTS_IN ?= requirements.in", build_config)
+        self.assertIn("REQUIREMENTS_LOCK ?= requirements.txt", build_config)
+        self.assertIn("pip install -r requirements.txt", workflow)
+        self.assertIn("--output-file=requirements.txt", lockfile)
+        self.assertFalse((REPO_ROOT / "requirements.lock").exists())
 
     def test_runtime_venv_candidates_exclude_retired_custom_name(self) -> None:
         main_text = _read("main.py")
