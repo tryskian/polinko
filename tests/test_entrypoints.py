@@ -55,43 +55,6 @@ class EntrypointTests(unittest.TestCase):
 
         self.assertEqual(called, ["cli"])
 
-    def test_legacy_app_import_does_not_load_cli_runtime(self) -> None:
-        original_app = sys.modules.pop("app", None)
-        original_main = sys.modules.pop("main", None)
-        try:
-            legacy_app = importlib.import_module("app")
-
-            self.assertNotIn("main", sys.modules)
-            self.assertEqual(legacy_app.__all__, ["main"])
-        finally:
-            sys.modules.pop("app", None)
-            if original_app is not None:
-                sys.modules["app"] = original_app
-            if original_main is not None:
-                sys.modules["main"] = original_main
-
-    def test_legacy_app_launcher_forwards_to_main(self) -> None:
-        legacy_app = importlib.import_module("app")
-        original_main = sys.modules.get("main")
-        called = []
-        fake_main = types.ModuleType("main")
-
-        def run_main() -> None:
-            called.append("main")
-
-        fake_main.main = run_main
-        sys.modules["main"] = fake_main
-
-        try:
-            legacy_app.main()
-        finally:
-            if original_main is not None:
-                sys.modules["main"] = original_main
-            else:
-                sys.modules.pop("main", None)
-
-        self.assertEqual(called, ["main"])
-
     def test_server_compatibility_shim_forwards_to_packaged_asgi(self) -> None:
         os.environ.setdefault("OPENAI_API_KEY", "sk-test-key-123456789012345")
         server = importlib.import_module("server")

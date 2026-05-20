@@ -13,8 +13,9 @@ Last updated: 2026-05-20
   - root `server.py` remains the `uvicorn server:app` compatibility shim
   - CLI chat implementation lives in `src/polinko/cli.py`
   - `make chat`, `polinko-chat`, and root `main.py` launch the packaged CLI
-  - `app.py` remains only as a lazy compatibility shim during the entrypoint
-    migration
+  - legacy root `app.py` has been retired after the deprecation/removal
+    preflight found no active tracked or focused local ignored-lane launcher
+    usage
   - Python package-boundary migration contract is documented; `config`, API,
     and core runtime implementation now live under `src/polinko/`
   - `pyproject.toml` and `src/polinko/` provide the editable-install rail for
@@ -28,9 +29,8 @@ Last updated: 2026-05-20
   - the root shim readiness audit records `server.py` as not retirement-ready
     while `server:app` remains active in Docker, Make defaults, server-daemon,
     and local eval gates
-  - `app.py` is the closest root launcher to retirement because tracked active
-    code has no caller beyond the shim and compatibility tests, but removal
-    still requires a separate deprecation/removal kernel
+  - `app.py` is retired; remaining root launcher/shim retirement work stays
+    surface-specific and must preserve manual eval and operator workflows
   - prompt and runtime behaviour stay minimal and deterministic
   - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active
     because they feed manual evals, feedback, checkpoints, exports, and

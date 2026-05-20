@@ -15,8 +15,6 @@ This page is the structural map of the tracked system.
 
 - `main.py`
   - compatibility launcher for direct CLI chat calls
-- `app.py`
-  - lazy compatibility shim for older CLI calls
 - `server.py`
   - compatibility shim for `uvicorn server:app`
 - `config.py`
@@ -81,8 +79,8 @@ This page is the structural map of the tracked system.
    - broader manual and non-OCR lanes may still use `retain` / `evict` after
      `fail` as upstream case curation
 9. CLI chat implementation runs through `polinko.cli`; `make chat`,
-   `polinko-chat`, root `main.py`, and legacy `app.py` launch that packaged
-   entrypoint.
+   `polinko-chat`, and root `main.py` launch that packaged entrypoint. The
+   legacy root `app.py` launcher is retired.
 
 ## Data Surfaces
 

@@ -35,7 +35,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "Tracked root runtime compatibility modules",
             "`main.py`",
             "compatibility launcher for `python main.py`",
-            "`app.py`",
+            "legacy root `app.py` launcher has been retired",
             "`server.py`",
             "compatibility shim for `uvicorn server:app`",
             "`src/polinko/cli.py`",
@@ -70,11 +70,11 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "## Compatibility Audit",
             "active runtime and tool imports should use `polinko.*`",
             "root compatibility imports are allowed only in the tracked shim layer",
-            "do not delete compatibility launchers or shims in this audit kernel",
+            "compatibility launcher and shim retirement must happen through",
             "active `server:app` references still exist in Docker",
-            "`app.py` has no active tracked code caller",
+            "legacy `app.py` launcher is retired",
             "### Readiness Snapshot: 2026-05-20",
-            "closest to retirement",
+            "retired in a separate deprecation/removal kernel",
             "not retirement-ready",
             "`server.py`",
             "Make defaults, server-daemon, local eval gates, Docker",
@@ -134,6 +134,10 @@ class PackageBoundaryContractTests(unittest.TestCase):
         )
         self.assertIn(
             "## D-060: Audit root shim retirement readiness before deletion",
+            decisions,
+        )
+        self.assertIn(
+            "## D-061: Retire the legacy root app.py launcher",
             decisions,
         )
 
@@ -220,9 +224,12 @@ class PackageBoundaryContractTests(unittest.TestCase):
             cwd=REPO_ROOT,
             text=True,
         ).splitlines()
-        root_modules = sorted(path for path in tracked_python if "/" not in path)
+        existing_python = [
+            path for path in tracked_python if (REPO_ROOT / path).exists()
+        ]
+        root_modules = sorted(path for path in existing_python if "/" not in path)
 
-        self.assertEqual(root_modules, ["app.py", "config.py", "main.py", "server.py"])
+        self.assertEqual(root_modules, ["config.py", "main.py", "server.py"])
 
     def test_active_source_and_tool_imports_use_packaged_runtime(self) -> None:
         tracked_python = subprocess.check_output(
@@ -264,6 +271,8 @@ class PackageBoundaryContractTests(unittest.TestCase):
         violations = []
 
         for relative_path in tracked_python:
+            if not (REPO_ROOT / relative_path).exists():
+                continue
             if relative_path in allowed_paths:
                 continue
             source = _read(relative_path)
@@ -295,7 +304,9 @@ class PackageBoundaryContractTests(unittest.TestCase):
             with self.subTest(relative_path=relative_path):
                 self.assertIn(expected, _read(relative_path))
 
-    def test_legacy_app_launcher_has_no_active_tracked_code_callers(self) -> None:
+    def test_legacy_app_launcher_is_retired_after_preflight(self) -> None:
+        self.assertFalse((REPO_ROOT / "app.py").exists())
+
         tracked_files = subprocess.check_output(
             ["git", "ls-files"],
             cwd=REPO_ROOT,
