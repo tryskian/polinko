@@ -39,6 +39,7 @@ OCR_GROWTH_STABILITY_RUNNER_SCRIPT = (
 )
 OCR_REPORT_BUILDER_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_builder.sh"
 OCR_REPORT_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_workflow.sh"
+OCR_INTAKE_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_intake_workflow.sh"
 
 
 def _makefile_text() -> str:
@@ -127,6 +128,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", config_text)
         self.assertIn("FRONTEND_DIR ?= $(PORTFOLIO_APP_DIR)", config_text)
         self.assertIn("OCR_WORKFLOW_SCRIPT ?= ./tools/run_ocr_workflow.sh", config_text)
+        self.assertIn(
+            "OCR_INTAKE_WORKFLOW_SCRIPT ?= ./tools/run_ocr_intake_workflow.sh",
+            config_text,
+        )
+        self.assertIn("OCR_INTAKE_WORKFLOW_ENV =", config_text)
         self.assertIn(
             "EVAL_SERVER_DAEMON_SCRIPT ?= ./tools/ensure_eval_server_daemon.sh",
             config_text,
@@ -319,6 +325,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("OCR_GROWTH_BATCH_RUNNER_SCRIPT", growth_case_workflow_text)
         self.assertIn("eval_case_guard_or_exit", focus_workflow_text)
         self.assertIn("eval_case_guard_or_exit", growth_workflow_text)
+        self.assertIn('bash "$(OCR_INTAKE_WORKFLOW_SCRIPT)"', text)
         self.assertNotIn('bash "$(OCR_GUARDED_CASE_RUNNER_SCRIPT)"', text)
         self.assertIn('bash "$(OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT)"', text)
         self.assertIn('bash "$(OCR_GROWTH_CASE_WORKFLOW_SCRIPT)"', text)
@@ -397,6 +404,21 @@ class MakefileContractTests(unittest.TestCase):
                 f'bash "$(OCR_REPORT_WORKFLOW_SCRIPT)" {suite}',
                 text,
             )
+        for suite in (
+            "export-index",
+            "cases-from-export-build",
+            "generalization-review",
+            "transcript-delta",
+        ):
+            self.assertIn(
+                f'bash "$(OCR_INTAKE_WORKFLOW_SCRIPT)" {suite}',
+                text,
+            )
+        for lane in ("handwriting", "typed", "illustration"):
+            self.assertIn(
+                f'bash "$(OCR_INTAKE_WORKFLOW_SCRIPT)" benchmark {lane}',
+                text,
+            )
         self.assertNotIn(
             '$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" --strict',
             text,
@@ -439,6 +461,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("$(PYTHON) -m tools.build_ocr_growth_fail_cohort", text)
         self.assertNotIn("$(PYTHON) -m tools.build_ocr_focus_cases", text)
         self.assertNotIn("$(PYTHON) -m tools.report_ocr_focus_fail_patterns", text)
+        self.assertNotIn("$(PYTHON) -m tools.index_cgpt_export", text)
+        self.assertNotIn("$(PYTHON) -m tools.build_ocr_cases_from_export", text)
+        self.assertNotIn("$(PYTHON) -m tools.build_handwriting_benchmark_cases", text)
+        self.assertNotIn("$(PYTHON) -m tools.build_ocr_generalization_review", text)
+        self.assertNotIn("$(PYTHON) -m tools.report_ocr_case_mining_delta", text)
         self.assertNotIn("FAIL_COHORT_ARGS=", text)
         self.assertNotIn("FOCUS_ARGS=", text)
         self.assertNotIn("$(PYTHON) -m uvicorn $(ASGI_APP)", text)
@@ -477,7 +504,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(OCR_GROWTH_STABILITY_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_REPORT_BUILDER_SCRIPT.is_file())
         self.assertTrue(OCR_REPORT_WORKFLOW_SCRIPT.is_file())
+        self.assertTrue(OCR_INTAKE_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(os.access(OCR_WORKFLOW_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_INTAKE_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_SERVER_DAEMON_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_CASE_GUARD_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GUARDED_CASE_RUNNER_SCRIPT, os.X_OK))
@@ -531,6 +560,11 @@ class MakefileContractTests(unittest.TestCase):
         report_workflow_text = OCR_REPORT_WORKFLOW_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("OCR_REPORT_BUILDER_SCRIPT", report_workflow_text)
         self.assertIn('exec bash "$report_builder_script"', report_workflow_text)
+        intake_workflow_text = OCR_INTAKE_WORKFLOW_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("tools.build_ocr_cases_from_export", intake_workflow_text)
+        self.assertIn("tools.build_handwriting_benchmark_cases", intake_workflow_text)
+        self.assertIn("tools.build_ocr_generalization_review", intake_workflow_text)
+        self.assertIn("tools.report_ocr_case_mining_delta", intake_workflow_text)
         for script in (
             OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT,
             OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT,
@@ -603,7 +637,12 @@ class MakefileContractTests(unittest.TestCase):
             "caffeinate-off-all",
             "eod-stop",
             "backend-gate",
+            "cgpt-export-index",
+            "ocr-cases-from-export-build",
             "ocrminehand",
+            "ocr-handwriting-benchmark-cases",
+            "ocr-generalization-review",
+            "ocr-transcript-delta",
             "ocrkernel",
             "ocr-data",
             "ocr-notebook-workflow",
