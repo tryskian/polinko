@@ -4,15 +4,20 @@ import json
 import os
 import sys
 import time
+from collections.abc import Callable
 from typing import Any
 import urllib.error
 import urllib.parse
 import urllib.request
 
+DotenvLoader = Callable[..., bool]
+
 try:
-    from dotenv import load_dotenv
+    from dotenv import load_dotenv as _load_dotenv
 except ImportError:  # pragma: no cover - dotenv is part of the app env.
-    load_dotenv = None
+    load_dotenv: DotenvLoader | None = None
+else:
+    load_dotenv = _load_dotenv
 
 
 API_BASE_URL = "https://api.openai.com/v1"

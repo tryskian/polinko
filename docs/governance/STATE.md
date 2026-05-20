@@ -86,6 +86,13 @@ Last updated: 2026-05-20
   - portfolio Node setup uses `apps/portfolio/`
   - root and portfolio npm locks both have audit and Dependabot coverage
   - portfolio installs prefer `npm ci` when a lockfile is present
+- The type-check gate is explicit and scoped:
+  - `make type-check` runs mypy against active `src/` and `tools/` Python
+    code
+  - frozen eval snapshots, local `docs/peanut` material, and untyped tests are
+    excluded from the type-check gate
+  - `make ci-python-type-check`, GitHub CI, and `make end` enforce the same
+    scoped mypy surface
 - Test and runtime resource hygiene is explicit:
   - sqlite connections are closed through explicit lifecycle handling
   - tests reject direct `with sqlite3.connect(...)` usage so Python 3.14
@@ -140,6 +147,7 @@ Last updated: 2026-05-20
 - `make ruff-format-check`
 - `make lint-docs`
 - `make package-install-check`
+- `make type-check`
 - `make test`
 - `make security-checks`
 - `make ci` when checking the local equivalent of GitHub CI job targets

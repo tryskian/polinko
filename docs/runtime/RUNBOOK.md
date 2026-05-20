@@ -116,6 +116,7 @@ Use this doc for operator procedure.
 1. Finish branch-local validation before merge:
    - `make doctor-env`
    - `make ci-python-style`
+   - `make type-check`
    - `make lint-docs`
    - `make package-install-check`
    - `make test`
@@ -163,7 +164,8 @@ Use this doc for operator procedure.
   - live backend smoke check
 - `make end`
   - literal legacy closeout routine plus security gate: transcript fix/check,
-    doctor, docs lint, tests, security checks, and stop background tasks
+    doctor, Python style/type checks, docs lint, tests, security checks, and
+    stop background tasks
 - `make end-docs-check`
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make security-checks`
@@ -177,12 +179,14 @@ Use this doc for operator procedure.
   - Python lint
 - `make ruff-format-check`
   - Python format check
+- `make type-check`
+  - mypy check for active `src/` and `tools/` Python surfaces
 - `make test`
   - test suite
 - `make ci`
   - local aggregate of the named GitHub CI job targets:
-    `ci-docs`, `ci-python-style`, `ci-test`, `ci-python-security`, and
-    `ci-node-security`
+    `ci-docs`, `ci-python-style`, `ci-python-type-check`, `ci-test`,
+    `ci-python-security`, and `ci-node-security`
 - `make openai-account-summary`
   - print OpenAI organization costs and usage from the Admin API
   - requires `OPENAI_ADMIN_KEY` or `OPENAI_ADMIN_KEY_ENV=<env_name>`

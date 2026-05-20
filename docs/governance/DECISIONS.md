@@ -767,3 +767,18 @@ or branch history instead.
   made Dependabot PRs update only the input file while Polinko's CI correctly
   rejected the stale compiled output. The standard naming preserves strict
   lockfile validation without requiring a weaker security gate.
+
+## D-057: Enforce a scoped Python type-check gate
+
+- Date: `2026-05-20`
+- Category: `build_validation`
+- Tags: `mypy`, `ci`, `make`, `python`, `type_checking`
+- Decision: Add `make type-check` and `make ci-python-type-check` as the
+  canonical mypy gate for active `src/` and `tools/` Python surfaces. Exclude
+  frozen eval snapshots, local `docs/peanut` material, and tests from the
+  typed gate, and run the gate in GitHub CI plus `make end`.
+- Why: The mypy 2.1 upgrade was safe, but the repo had no enforceable
+  type-check surface: repo-wide invocation collided with frozen eval snapshots,
+  while active `src`/`tools` code had existing type drift. A scoped gate matches
+  the package-boundary refactor and catches real runtime/tooling drift without
+  treating archived evidence as live source.

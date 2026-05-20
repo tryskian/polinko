@@ -631,18 +631,20 @@ def build_manual_evals_db(
             return raw
         return f"{source.source_key}:{raw}"
 
-    for source in loaded_sources:
-        for row in source.sessions:
+    for loaded_source in loaded_sources:
+        for row in loaded_source.sessions:
             source_session_id = str(row["session_id"])
-            session_id = output_text_key(source, source_session_id)
-            session_id_by_source[(source.source_key, source_session_id)] = session_id
+            session_id = output_text_key(loaded_source, source_session_id)
+            session_id_by_source[(loaded_source.source_key, source_session_id)] = (
+                session_id
+            )
             sessions.append(
                 {
                     "session_id": session_id,
-                    "era": source.era,
-                    "source_key": source.source_key,
-                    "source_label": source.label,
-                    "source_history_db": str(source.history_db),
+                    "era": loaded_source.era,
+                    "source_key": loaded_source.source_key,
+                    "source_label": loaded_source.label,
+                    "source_history_db": str(loaded_source.history_db),
                     "source_session_id": source_session_id,
                     "title": str(row["title"] or ""),
                     "status": str(row["status"] or "active"),
@@ -675,20 +677,20 @@ def build_manual_evals_db(
                 }
             )
 
-        for row in source.feedback:
+        for row in loaded_source.feedback:
             source_session_id = str(row["session_id"])
             session_id = session_id_by_source.get(
-                (source.source_key, source_session_id),
-                output_text_key(source, source_session_id),
+                (loaded_source.source_key, source_session_id),
+                output_text_key(loaded_source, source_session_id),
             )
             feedback.append(
                 {
                     "id": len(feedback) + 1,
                     "source_id": int(row["id"]),
-                    "era": source.era,
-                    "source_key": source.source_key,
-                    "source_label": source.label,
-                    "source_history_db": str(source.history_db),
+                    "era": loaded_source.era,
+                    "source_key": loaded_source.source_key,
+                    "source_label": loaded_source.label,
+                    "source_history_db": str(loaded_source.history_db),
                     "source_session_id": source_session_id,
                     "session_id": session_id,
                     "message_id": str(row["message_id"]),
@@ -711,22 +713,24 @@ def build_manual_evals_db(
                 }
             )
 
-        for row in source.checkpoints:
+        for row in loaded_source.checkpoints:
             source_session_id = str(row["session_id"])
             session_id = session_id_by_source.get(
-                (source.source_key, source_session_id),
-                output_text_key(source, source_session_id),
+                (loaded_source.source_key, source_session_id),
+                output_text_key(loaded_source, source_session_id),
             )
             checkpoints.append(
                 {
                     "id": len(checkpoints) + 1,
                     "source_id": int(row["id"]),
-                    "era": source.era,
-                    "source_key": source.source_key,
-                    "source_label": source.label,
-                    "source_history_db": str(source.history_db),
+                    "era": loaded_source.era,
+                    "source_key": loaded_source.source_key,
+                    "source_label": loaded_source.label,
+                    "source_history_db": str(loaded_source.history_db),
                     "source_session_id": source_session_id,
-                    "checkpoint_id": output_text_key(source, row["checkpoint_id"]),
+                    "checkpoint_id": output_text_key(
+                        loaded_source, row["checkpoint_id"]
+                    ),
                     "session_id": session_id,
                     "total_count": int(row["total_count"] or 0),
                     "pass_count": int(row["pass_count"] or 0),
@@ -736,24 +740,24 @@ def build_manual_evals_db(
                 }
             )
 
-        for row in source.ocr_runs:
+        for row in loaded_source.ocr_runs:
             source_session_id = str(row["session_id"] or "")
             source_run_id = str(row["run_id"] or "")
             session_id = session_id_by_source.get(
-                (source.source_key, source_session_id),
-                output_text_key(source, source_session_id),
+                (loaded_source.source_key, source_session_id),
+                output_text_key(loaded_source, source_session_id),
             )
             ocr_runs.append(
                 {
                     "id": len(ocr_runs) + 1,
                     "source_id": int(row["id"]),
                     "source_run_id": source_run_id,
-                    "era": source.era,
-                    "source_key": source.source_key,
-                    "source_label": source.label,
-                    "source_history_db": str(source.history_db),
+                    "era": loaded_source.era,
+                    "source_key": loaded_source.source_key,
+                    "source_label": loaded_source.label,
+                    "source_history_db": str(loaded_source.history_db),
                     "source_session_id": source_session_id,
-                    "run_id": output_text_key(source, source_run_id),
+                    "run_id": output_text_key(loaded_source, source_run_id),
                     "session_id": session_id,
                     "source_name": (
                         str(row["source_name"])
