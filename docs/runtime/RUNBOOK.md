@@ -166,7 +166,7 @@ Use this doc for operator procedure.
 - `make end-docs-check`
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make security-checks`
-  - local Python and Node dependency audits
+  - local Python, root Node, and portfolio Node dependency audits
 - `make lint-docs`
   - docs lint
 - `make ruff-check`

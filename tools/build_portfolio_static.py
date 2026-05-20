@@ -42,7 +42,17 @@ def _rebuild_portfolio_app() -> None:
     build_env = os.environ.copy()
     build_env.setdefault("POLINKO_PORTFOLIO_STATIC_DIR", str(PORTFOLIO_STATIC_DIR))
 
-    _run("npm", "--prefix", str(PORTFOLIO_APP_DIR), "install")
+    if (PORTFOLIO_APP_DIR / "package-lock.json").is_file():
+        _run("npm", "--prefix", str(PORTFOLIO_APP_DIR), "ci", "--no-audit", "--no-fund")
+    else:
+        _run(
+            "npm",
+            "--prefix",
+            str(PORTFOLIO_APP_DIR),
+            "install",
+            "--no-audit",
+            "--no-fund",
+        )
     _run("npm", "--prefix", str(PORTFOLIO_APP_DIR), "run", "build", env=build_env)
 
 

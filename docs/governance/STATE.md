@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-19
+Last updated: 2026-05-20
 
 ## Current Truth
 
@@ -56,6 +56,11 @@ Last updated: 2026-05-19
   - PR required
   - strict status checks enabled
   - squash-only merge
+- Development setup and dependency gates are aligned to canonical paths:
+  - devcontainer setup creates `.venv`
+  - portfolio Node setup uses `apps/portfolio/`
+  - root and portfolio npm locks both have audit and Dependabot coverage
+  - portfolio installs prefer `npm ci` when a lockfile is present
 - Documentation roles are explicit:
   - `CHARTER` holds durable rules
   - `STATE` holds tracked current truth
