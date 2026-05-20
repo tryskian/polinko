@@ -27,6 +27,10 @@ This page is the structural map of the tracked system.
   - local operators, evals, reports, and renderers
 - `tests/`
   - API and runtime regression tests
+- `Makefile`
+  - root operator target router and include order
+- `makefiles/`
+  - focused Make target families and configuration includes
 - `docs/`
   - governance, runtime references, and research docs
 - `apps/portfolio/`

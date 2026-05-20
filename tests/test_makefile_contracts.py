@@ -28,13 +28,24 @@ def _makefile_text() -> str:
     return MAKEFILE.read_text(encoding="utf-8")
 
 
-def _makefile_contract_text() -> str:
-    root_text = _makefile_text()
-    source_texts = [root_text]
-    for match in re.finditer(r"^include\s+(.+)$", root_text, re.MULTILINE):
+def _makefile_source_text(path: Path, seen: set[Path] | None = None) -> str:
+    if seen is None:
+        seen = set()
+    resolved_path = path.resolve()
+    if resolved_path in seen:
+        return ""
+    seen.add(resolved_path)
+
+    text = path.read_text(encoding="utf-8")
+    source_texts = [text]
+    for match in re.finditer(r"^include\s+(.+)$", text, re.MULTILINE):
         for include_path in match.group(1).split():
-            source_texts.append((REPO_ROOT / include_path).read_text(encoding="utf-8"))
+            source_texts.append(_makefile_source_text(REPO_ROOT / include_path, seen))
     return "\n".join(source_texts)
+
+
+def _makefile_contract_text() -> str:
+    return _makefile_source_text(MAKEFILE)
 
 
 def _phony_targets() -> list[str]:
@@ -62,13 +73,23 @@ class MakefileContractTests(unittest.TestCase):
 
     def test_shared_config_is_extracted_before_target_families(self) -> None:
         root_text = _makefile_text()
-        config_text = MAKE_CONFIG.read_text(encoding="utf-8")
+        config_entry_text = MAKE_CONFIG.read_text(encoding="utf-8")
+        config_text = _makefile_contract_text()
 
         self.assertLess(
             root_text.index("include makefiles/config.mk"),
             root_text.index("include makefiles/build.mk"),
         )
         self.assertIsNone(re.search(r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)", root_text))
+        self.assertIsNone(
+            re.search(r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)", config_entry_text)
+        )
+        self.assertIn("include makefiles/config/base.mk", config_entry_text)
+        self.assertIn("include makefiles/config/runtime.mk", config_entry_text)
+        self.assertIn("include makefiles/config/surfaces.mk", config_entry_text)
+        self.assertIn("include makefiles/config/evals.mk", config_entry_text)
+        self.assertIn("include makefiles/config/ops.mk", config_entry_text)
+        self.assertIn("include makefiles/config/build.mk", config_entry_text)
         self.assertIn("PYTHON ?=", config_text)
         self.assertIn("CLI_ENTRYPOINT ?= main.py", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
