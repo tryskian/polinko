@@ -31,6 +31,10 @@ Last updated: 2026-05-20
   - tracked docs, code, tests, and reports are canonical truth
   - public-facing writing is the derived publication layer from repo truth
   - local/private material stays in `docs/peanut/`
+- Refactor method is human-led:
+  - the human lead owns scope, method, acceptance, and go/no-go decisions
+  - Codex owns implementation, validation, Git/PR flow, and hygiene execution
+  - cleanup proceeds one kernel at a time from clean synced `main`
 - Public-facing surfaces remain derived from repo truth:
   - the root README now points to public research docs, not local portfolio
     commands
