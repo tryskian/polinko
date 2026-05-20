@@ -733,3 +733,21 @@ or branch history instead.
 - Why: `frontend` and `ui` describe implementation shape, not surface
   ownership. Keeping aliases avoids breaking older commands while preventing
   stale names from re-entering active docs and generated artifacts.
+
+## D-055: Record the refactor method as human-led
+
+- Date: `2026-05-20`
+- Category: `governance`
+- Tags: `human_led`, `refactor`, `method`, `decision_log`, `kernel_flow`
+- Human-led: The human lead made the scope decision to refactor Polinko after
+  freezing the Beta 2.3 evidence baseline, using a one-kernel-at-a-time method
+  that preserves manual eval workbench behavior and validates each kernel
+  through PR, merge, and closeout gates.
+- Decision: Decision entries that materially shape method, scope, acceptance,
+  or go/no-go should preserve the human-led source of that decision. Engineering
+  implementation details can remain in the ordinary `Decision` / `Why` form
+  when they do not change the human-led method boundary.
+- Why: The refactor is not an agent-discovered cleanup project; it is a
+  human-led method choice with Codex executing implementation, validation, and
+  Git flow. Recording that authorship keeps the governance ledger aligned with
+  the charter working model.

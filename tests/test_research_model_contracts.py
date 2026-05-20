@@ -125,6 +125,31 @@ class ResearchModelContractTests(unittest.TestCase):
             decisions,
         )
 
+    def test_decision_log_records_human_led_refactor_method(self) -> None:
+        decisions = _read("docs/governance/DECISIONS.md")
+        state = _read("docs/governance/STATE.md")
+        normalized_decisions = " ".join(decisions.split())
+
+        for expected in (
+            "## D-055: Record the refactor method as human-led",
+            "- Human-led:",
+            "The human lead made the scope decision to refactor Polinko",
+            "one-kernel-at-a-time method",
+        ):
+            self.assertIn(expected, decisions)
+
+        self.assertIn(
+            "Codex executing implementation, validation, and Git flow",
+            normalized_decisions,
+        )
+
+        for expected in (
+            "Refactor method is human-led",
+            "the human lead owns scope, method, acceptance, and go/no-go decisions",
+            "cleanup proceeds one kernel at a time from clean synced `main`",
+        ):
+            self.assertIn(expected, state)
+
     def test_eval_map_keeps_manual_eval_workbench_sources_canonical(self) -> None:
         eval_map = _read("docs/eval/README.md")
 
