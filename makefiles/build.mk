@@ -1,13 +1,16 @@
 # Build, dependency, and CI checks.
-.PHONY: ci ci-docs ci-python-style ci-test ci-python-security ci-node-security
+.PHONY: ci ci-docs ci-python-style ci-package ci-test ci-python-security ci-node-security
 .PHONY: deps-install deps-lock deps-lock-check
+.PHONY: package-install-check
 .PHONY: python-security-check node-security-check security-checks
 
-ci: ci-docs ci-python-style ci-test ci-python-security ci-node-security
+ci: ci-docs ci-python-style ci-package ci-test ci-python-security ci-node-security
 
 ci-docs: path-leak-check lint-docs
 
 ci-python-style: ruff-check ruff-format-check
+
+ci-package: package-install-check
 
 ci-test: test
 
@@ -37,6 +40,10 @@ deps-lock-check:
 		--strip-extras \
 		"$(REQUIREMENTS_IN)"
 	git diff --exit-code -- "$(REQUIREMENTS_LOCK)"
+
+package-install-check:
+	$(PYTHON) -m pip install --no-build-isolation --no-deps -e .
+	$(PYTHON) tools/check_package_install.py
 
 python-security-check:
 	$(PYTHON) -m pip_audit -r "$(REQUIREMENTS_LOCK)" $(PIP_AUDIT_ARGS)

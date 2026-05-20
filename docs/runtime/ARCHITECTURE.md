@@ -9,7 +9,7 @@ This page is the structural map of the tracked system.
 - Use `docs/runtime/SURFACE_IA.md` for web surface path roles and planned
   directory renames.
 - Use `docs/runtime/PACKAGE_BOUNDARY.md` for the Python package-boundary
-  preflight and future `src/polinko/` move.
+  migration contract and future runtime import move.
 
 ## Top-Level Map
 
@@ -21,12 +21,18 @@ This page is the structural map of the tracked system.
   - FastAPI API and chat-facing manual eval workbench entrypoint
 - `config.py`
   - environment loading and validation
+- `pyproject.toml`
+  - Python package metadata and `src` layout configuration
+- `src/polinko/`
+  - editable-install package scaffold
+  - currently contains package identity only
 - `api/`
   - HTTP layer, route spec, middleware, and wiring
 - `core/`
   - runtime logic, prompting, session/history, and retrieval helpers
 - `tools/`
   - local operators, evals, reports, and renderers
+  - includes `tools/check_package_install.py` for editable-install validation
 - `tests/`
   - API and runtime regression tests
 - `Makefile`

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "polinko"
+dynamic = ["version"]
+description = "Repo-native research system for fail-first AI behavior evaluation."
+readme = "README.md"
+requires-python = ">=3.14"
+license = "Apache-2.0"
+authors = [{ name = "tryskian" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Framework :: FastAPI",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# Runtime and development dependencies remain locked through requirements.in
+# and requirements.lock until the runtime package move is complete.
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["polinko*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "polinko.__version__" }
+
+[tool.ruff]
+target-version = "py313"

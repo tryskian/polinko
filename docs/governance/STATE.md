@@ -12,8 +12,10 @@ Last updated: 2026-05-20
   - CLI chat runs through `main.py`
   - `app.py` remains only as a lazy compatibility shim during the entrypoint
     migration
-  - Python package-boundary preflight is documented; no runtime imports have
-    moved under `src/polinko/` yet
+  - Python package-boundary migration contract is documented; no runtime imports
+    have moved under `src/polinko/` yet
+  - `pyproject.toml` and the minimal `src/polinko/` scaffold now provide the
+    editable-install rail for the future package move
   - prompt and runtime behaviour stay minimal and deterministic
   - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active
     because they feed manual evals, feedback, checkpoints, exports, and
@@ -70,7 +72,8 @@ Last updated: 2026-05-20
   - `STATE` holds tracked current truth
   - `RUNBOOK` holds operator procedure
   - `ARCHITECTURE` holds stable system shape
-  - `PACKAGE_BOUNDARY` holds the Python package-boundary preflight
+  - `PACKAGE_BOUNDARY` holds the Python package-boundary migration contract
+  - `make package-install-check` verifies the editable-install rail
   - local `SESSION_HANDOFF` holds the active slice
   - `make end` now mirrors the legacy `make eod` closeout routine directly
 
@@ -108,6 +111,7 @@ Last updated: 2026-05-20
 - `make ruff-check`
 - `make ruff-format-check`
 - `make lint-docs`
+- `make package-install-check`
 - `make test`
 - `make security-checks`
 - `make ci` when checking the local equivalent of GitHub CI job targets

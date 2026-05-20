@@ -596,3 +596,16 @@ or branch history instead.
 - Why: Moving the import tree without an explicit boundary would risk broad
   behavior drift across the API, CLI, eval scripts, and tests. The preflight
   gives the next kernel a reviewed target shape before any file move happens.
+
+## D-045: Add the editable-install rail before moving runtime imports
+
+- Date: `2026-05-20`
+- Category: `build_system`
+- Tags: `python`, `packaging`, `src_layout`, `editable_install`
+- Decision: Add `pyproject.toml`, a minimal `src/polinko/` package scaffold,
+  and `make package-install-check` before moving `config.py`, `api/`, or
+  `core/` under the package namespace. CI exercises the editable install in
+  the Python test job.
+- Why: The source-layout move needs a working package install path before
+  imports are rewritten. Keeping the scaffold identity-only gives the next
+  kernel an install rail without changing runtime behavior.
