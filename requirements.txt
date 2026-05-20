@@ -15,6 +15,8 @@ anyio==4.13.0
     #   openai
     #   sse-starlette
     #   starlette
+ast-serialize==0.5.0
+    # via mypy
 attrs==26.1.0
     # via
     #   jsonschema
@@ -77,11 +79,11 @@ jsonschema==4.26.0
     # via mcp
 jsonschema-specifications==2025.9.1
     # via jsonschema
-librt==0.9.0
+librt==0.11.0
     # via mypy
 mcp==1.27.0
     # via openai-agents
-mypy==1.20.1
+mypy==2.1.0
     # via -r requirements.in
 mypy-extensions==1.1.0
     # via mypy
