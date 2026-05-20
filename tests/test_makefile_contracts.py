@@ -29,6 +29,7 @@ OCR_GROWTH_STABILITY_RUNNER_SCRIPT = (
     REPO_ROOT / "tools" / "run_eval_ocr_growth_stability.sh"
 )
 OCR_REPORT_BUILDER_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_builder.sh"
+OCR_REPORT_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_workflow.sh"
 
 
 def _makefile_text() -> str:
@@ -175,6 +176,11 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("OCR_REPORT_BUILDER_ENV =", config_text)
+        self.assertIn(
+            "OCR_REPORT_WORKFLOW_SCRIPT ?= ./tools/run_ocr_report_workflow.sh",
+            config_text,
+        )
+        self.assertIn("OCR_REPORT_WORKFLOW_ENV =", config_text)
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -352,7 +358,7 @@ class MakefileContractTests(unittest.TestCase):
             "focus-fail-patterns",
         ):
             self.assertIn(
-                f'bash "$(OCR_REPORT_BUILDER_SCRIPT)" {suite}',
+                f'bash "$(OCR_REPORT_WORKFLOW_SCRIPT)" {suite}',
                 text,
             )
         self.assertNotIn(
@@ -415,6 +421,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(OCR_GROWTH_BATCH_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_GROWTH_STABILITY_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_REPORT_BUILDER_SCRIPT.is_file())
+        self.assertTrue(OCR_REPORT_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(os.access(OCR_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_SERVER_DAEMON_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_CASE_GUARD_SCRIPT, os.X_OK))
@@ -429,6 +436,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(os.access(OCR_GROWTH_BATCH_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GROWTH_STABILITY_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_REPORT_BUILDER_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_REPORT_WORKFLOW_SCRIPT, os.X_OK))
         for script in (
             OCR_EVAL_RUNNER_SCRIPT,
             OCR_STABILITY_RUNNER_SCRIPT,
@@ -442,6 +450,9 @@ class MakefileContractTests(unittest.TestCase):
         guarded_runner_text = OCR_GUARDED_CASE_RUNNER_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("EVAL_CASE_GUARD_SCRIPT", guarded_runner_text)
         self.assertIn('exec "$@"', guarded_runner_text)
+        report_workflow_text = OCR_REPORT_WORKFLOW_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("OCR_REPORT_BUILDER_SCRIPT", report_workflow_text)
+        self.assertIn('exec bash "$report_builder_script"', report_workflow_text)
         for script in (
             OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT,
             OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT,
@@ -520,7 +531,11 @@ class MakefileContractTests(unittest.TestCase):
             "ocr-notebook-workflow",
             "eval-ocr-transcript-cases",
             "eval-ocr-transcript-stability",
+            "eval-ocr-transcript-growth",
+            "eval-ocr-growth-fail-cohort",
+            "eval-ocr-focus-cases",
             "eval-ocr-focus-stability",
+            "eval-ocr-focus-fail-patterns",
             "ci-python-style",
         ):
             with self.subTest(target=target):

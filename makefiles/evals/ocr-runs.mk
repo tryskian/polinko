@@ -117,68 +117,19 @@ eval-ocr-transcript-stability:
 	OCR_STABILITY_PYTHONUNBUFFERED=1 $(OCR_STABILITY_RUNNER_ENV) bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)" "$(OCR_STABILITY_RUNS)" "$(OCR_STABILITY_OCR_RETRIES)" "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" "$(OCR_STABILITY_CASE_DELAY_MS)" "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" "$(OCR_STABILITY_REPORT_DIR)" "$(OCR_STABILITY_OUTPUT)"
 
 eval-ocr-transcript-growth:
-	@set -eu; \
-	if [ ! -f "$(OCR_TRANSCRIPT_CASES_GROWTH)" ]; then \
-		echo "Transcript OCR growth cases not found: $(OCR_TRANSCRIPT_CASES_GROWTH)"; \
-		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
-		exit 1; \
-	fi; \
-	if [ ! -d "$(OCR_GROWTH_STABILITY_REPORT_DIR)" ]; then \
-		echo "OCR growth runs dir not found: $(OCR_GROWTH_STABILITY_REPORT_DIR)"; \
-		echo "Run: make ocrstablegrowth"; \
-		exit 1; \
-	fi; \
-	$(OCR_REPORT_BUILDER_ENV) bash "$(OCR_REPORT_BUILDER_SCRIPT)" growth-metrics
+	@$(OCR_REPORT_WORKFLOW_ENV) bash "$(OCR_REPORT_WORKFLOW_SCRIPT)" growth-metrics
 
 eval-ocr-growth-fail-cohort:
-	@set -eu; \
-	if [ ! -f "$(OCR_GROWTH_STABILITY_OUTPUT)" ]; then \
-		echo "OCR growth stability report not found: $(OCR_GROWTH_STABILITY_OUTPUT)"; \
-		echo "Run: make ocrstablegrowth"; \
-		exit 1; \
-	fi; \
-	if [ ! -f "$(OCR_TRANSCRIPT_CASES_GROWTH)" ]; then \
-		echo "Transcript OCR growth cases not found: $(OCR_TRANSCRIPT_CASES_GROWTH)"; \
-		echo "Run: make ocrmine"; \
-		exit 1; \
-	fi; \
-	if [ ! -f "$(OCR_TRANSCRIPT_REVIEW)" ]; then \
-		echo "Transcript OCR review report not found: $(OCR_TRANSCRIPT_REVIEW)"; \
-		echo "Run: make ocrmine"; \
-		exit 1; \
-	fi; \
-	$(OCR_REPORT_BUILDER_ENV) bash "$(OCR_REPORT_BUILDER_SCRIPT)" growth-fail-cohort
+	@$(OCR_REPORT_WORKFLOW_ENV) bash "$(OCR_REPORT_WORKFLOW_SCRIPT)" growth-fail-cohort
 
 eval-ocr-focus-cases:
-	@set -eu; \
-	if [ ! -f "$(OCR_GROWTH_FAIL_COHORT_JSON)" ]; then \
-		echo "OCR growth fail cohort not found: $(OCR_GROWTH_FAIL_COHORT_JSON)"; \
-		echo "Run: make ocrfails"; \
-		exit 1; \
-	fi; \
-	if [ ! -f "$(OCR_TRANSCRIPT_CASES_GROWTH)" ]; then \
-		echo "Transcript OCR growth cases not found: $(OCR_TRANSCRIPT_CASES_GROWTH)"; \
-		echo "Run: make ocrmine"; \
-		exit 1; \
-	fi; \
-	$(OCR_REPORT_BUILDER_ENV) bash "$(OCR_REPORT_BUILDER_SCRIPT)" focus-cases
+	@$(OCR_REPORT_WORKFLOW_ENV) bash "$(OCR_REPORT_WORKFLOW_SCRIPT)" focus-cases
 
 eval-ocr-focus-stability:
 	@$(OCR_FOCUS_STABILITY_WORKFLOW_ENV) bash "$(OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT)"
 
 eval-ocr-focus-fail-patterns:
-	@set -eu; \
-	if [ ! -f "$(OCR_FOCUS_OUTPUT)" ]; then \
-		echo "OCR focus stability report not found: $(OCR_FOCUS_OUTPUT)"; \
-		echo "Run: make eval-ocr-focus-stability"; \
-		exit 1; \
-	fi; \
-	if [ ! -f "$(OCR_FOCUS_CASES_JSON)" ]; then \
-		echo "OCR focus cases not found: $(OCR_FOCUS_CASES_JSON)"; \
-		echo "Run: make ocrfocuscases"; \
-		exit 1; \
-	fi; \
-	$(OCR_REPORT_BUILDER_ENV) bash "$(OCR_REPORT_BUILDER_SCRIPT)" focus-fail-patterns
+	@$(OCR_REPORT_WORKFLOW_ENV) bash "$(OCR_REPORT_WORKFLOW_SCRIPT)" focus-fail-patterns
 
 eval-ocr-transcript-stability-growth:
 	@$(OCR_GROWTH_STABILITY_WORKFLOW_ENV) bash "$(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT)"
