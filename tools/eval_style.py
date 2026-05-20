@@ -407,6 +407,8 @@ def main() -> int:
             judge_pass: bool | None = None
             notes = ""
             forbidden_hits: list[str] = []
+            missing_required_all: list[str] = []
+            missing_required_any_groups: list[list[str]] = []
             error_text: str | None = None
             status_text = "PASS"
             try:
@@ -419,7 +421,6 @@ def main() -> int:
                     timeout=args.timeout,
                 )
                 answer = str(chat_payload.get("output", "")).strip()
-                answer_lower = answer.lower()
                 wc = _word_count(answer)
                 result = _judge_case(
                     judge_client=judge_client,
@@ -528,14 +529,8 @@ def main() -> int:
                         "error": error_text,
                         "word_count": wc,
                         "forbidden_hits": forbidden_hits,
-                        "missing_required_all": missing_required_all
-                        if "missing_required_all" in locals()
-                        else [],
-                        "missing_required_any_groups": (
-                            missing_required_any_groups
-                            if "missing_required_any_groups" in locals()
-                            else []
-                        ),
+                        "missing_required_all": missing_required_all,
+                        "missing_required_any_groups": missing_required_any_groups,
                         "answer": answer,
                     }
                 )

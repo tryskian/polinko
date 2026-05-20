@@ -494,28 +494,32 @@ def _bridge_graph(legacy: dict[str, Any], current: dict[str, Any]) -> dict[str, 
 
     if isinstance(signal_counts, dict):
         for signal, raw_count in sorted(signal_counts.items()):
+            signal_key = str(signal)
             count = int(raw_count or 0)
             if count <= 0:
                 continue
-            node_id = f"bridge_signal_{signal}"
+            node_id = f"bridge_signal_{signal_key}"
             nodes.append(
                 _node(
                     node_id,
-                    _SIGNAL_LABELS.get(signal, signal.replace("_", " ").title()),
+                    _SIGNAL_LABELS.get(
+                        signal_key, signal_key.replace("_", " ").title()
+                    ),
                     "legacy_signal",
                 )
             )
 
     if isinstance(lane_counts, dict):
         for lane, raw_count in sorted(lane_counts.items()):
+            lane_key = str(lane)
             count = int(raw_count or 0)
             if count <= 0:
                 continue
-            node_id = f"bridge_lane_{lane}"
+            node_id = f"bridge_lane_{lane_key}"
             nodes.append(
                 _node(
                     node_id,
-                    _LANE_LABELS.get(lane, lane.replace("_", " ").title()),
+                    _LANE_LABELS.get(lane_key, lane_key.replace("_", " ").title()),
                     "current_lane",
                 )
             )

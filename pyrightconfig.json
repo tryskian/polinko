@@ -2,14 +2,13 @@
   "venvPath": ".",
   "venv": ".venv",
   "include": [
-    "config.py",
-    "main.py",
-    "app.py",
-    "api",
-    "core",
     "src",
-    "tools",
-    "server.py",
-    "tests/test_api.py"
+    "tools"
+  ],
+  "exclude": [
+    ".venv",
+    "docs/eval",
+    "docs/peanut",
+    "tests"
   ]
 }
