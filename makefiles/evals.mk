@@ -520,7 +520,7 @@ eval-ocr-transcript-cases-growth:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_GROWTH)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_GROWTH)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript OCR growth cases available yet; skipping eval."; \
 		exit 0; \
@@ -535,7 +535,7 @@ eval-ocr-transcript-cases-growth-batched:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_GROWTH)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_GROWTH)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript OCR growth cases available yet; skipping eval."; \
 		exit 0; \
@@ -560,7 +560,7 @@ eval-ocr-transcript-cases-handwriting:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_HANDWRITING)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript handwriting OCR cases available yet; skipping eval."; \
 		exit 0; \
@@ -575,7 +575,7 @@ eval-ocr-transcript-cases-handwriting-benchmark:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript handwriting benchmark OCR cases available yet; skipping eval."; \
 		exit 0; \
@@ -590,7 +590,7 @@ eval-ocr-transcript-cases-typed:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_TYPED)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_TYPED)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript typed OCR cases available yet; skipping eval."; \
 		exit 0; \
@@ -605,7 +605,7 @@ eval-ocr-transcript-cases-typed-benchmark:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript typed benchmark OCR cases available yet; skipping eval."; \
 		exit 0; \
@@ -620,7 +620,7 @@ eval-ocr-transcript-cases-illustration:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript illustration OCR cases available yet; skipping eval."; \
 		exit 0; \
@@ -635,7 +635,7 @@ eval-ocr-transcript-cases-illustration-benchmark:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript illustration benchmark OCR cases available yet; skipping eval."; \
 		exit 0; \
@@ -755,7 +755,7 @@ eval-ocr-focus-stability:
 		echo "Run: make ocrfocuscases"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_FOCUS_CASES_JSON)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_FOCUS_CASES_JSON)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No OCR focus cases available; skipping focus stability run."; \
 		exit 0; \
@@ -815,7 +815,7 @@ eval-ocr-transcript-stability-growth:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_GROWTH)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_GROWTH)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript OCR growth cases available yet; skipping stability run."; \
 		exit 0; \
@@ -849,7 +849,7 @@ eval-ocr-transcript-stability-handwriting-benchmark:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript handwriting benchmark OCR cases available yet; skipping stability run."; \
 		exit 0; \
@@ -877,7 +877,7 @@ eval-ocr-transcript-stability-typed-benchmark:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript typed benchmark OCR cases available yet; skipping stability run."; \
 		exit 0; \
@@ -905,7 +905,7 @@ eval-ocr-transcript-stability-illustration-benchmark:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	CASE_COUNT=$$($(PYTHON) -c 'import json,pathlib; p=pathlib.Path("$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)"); d=json.loads(p.read_text()); print(len(d.get("cases", [])))'); \
+	CASE_COUNT=$$($(PYTHON) -m tools.count_eval_cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)"); \
 	if [ "$$CASE_COUNT" -eq 0 ]; then \
 		echo "No transcript illustration benchmark OCR cases available yet; skipping stability run."; \
 		exit 0; \
