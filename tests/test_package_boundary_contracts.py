@@ -24,6 +24,8 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "re-exports `AppConfig` and `load_config` from `polinko.config`",
             "`api/`",
             "compatibility shims for legacy `api.*` imports",
+            "`core/`",
+            "compatibility shims for legacy `core.*` imports",
             "The future runtime import package should be `polinko` under `src/polinko/`.",
             "`src/polinko/config.py`",
             "`src/polinko/api/`",
@@ -61,8 +63,12 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "## D-047: Move API implementation into the Python package",
             decisions,
         )
+        self.assertIn(
+            "## D-048: Move core runtime into the Python package",
+            decisions,
+        )
 
-    def test_config_and_api_are_moved_but_core_remains_rooted(self) -> None:
+    def test_runtime_modules_are_moved_with_root_compatibility_shims(self) -> None:
         package_root = REPO_ROOT / "src" / "polinko"
 
         self.assertTrue((package_root / "__init__.py").is_file())
@@ -70,7 +76,9 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertTrue((package_root / "api" / "__init__.py").is_file())
         self.assertTrue((package_root / "api" / "app_factory.py").is_file())
         self.assertTrue((package_root / "api" / "static" / "favicon.png").is_file())
-        self.assertFalse((package_root / "core").exists())
+        self.assertTrue((package_root / "core" / "__init__.py").is_file())
+        self.assertTrue((package_root / "core" / "runtime.py").is_file())
+        self.assertTrue((package_root / "core" / "history_store.py").is_file())
 
         legacy_config = _read("config.py")
         self.assertIn(
@@ -83,6 +91,13 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertIs(
             import_module("api.app_factory"),
             import_module("polinko.api.app_factory"),
+        )
+
+        legacy_core = _read("core/runtime.py")
+        self.assertIn('import_module("polinko.core.runtime")', legacy_core)
+        self.assertIs(
+            import_module("core.runtime"),
+            import_module("polinko.core.runtime"),
         )
 
     def test_current_root_runtime_modules_are_explicit(self) -> None:

@@ -3,8 +3,8 @@
 # Python Package Boundary
 
 This page records the package-boundary migration contract for the beta refactor.
-The packaging rail exists now; `config` and the API implementation are under
-`src/polinko/`.
+The packaging rail exists now; `config`, API, and core runtime implementation
+are under `src/polinko/`.
 
 ## Current Tracked Shape
 
@@ -22,12 +22,13 @@ Tracked root runtime compatibility modules:
 - `api/`
   - compatibility shims for legacy `api.*` imports
   - forwards module identity to `polinko.api.*`
-
-Tracked runtime packages currently live at the repo root:
-
 - `core/`
-  - prompt, runtime, history, rate-limit, response parsing, and vector-store
-    logic
+  - compatibility shims for legacy `core.*` imports
+  - forwards module identity to `polinko.core.*`
+
+Tracked runtime packages currently live under `src/polinko/`; repo-local tools
+remain rooted:
+
 - `tools/`
   - repo-local operator, eval, report, render, and maintenance commands
 
@@ -35,6 +36,7 @@ Tracked packaging rail:
 
 - `pyproject.toml`
   - package metadata and `src` layout configuration
+  - includes packaged API static assets under `polinko.api`
 - `src/polinko/__init__.py`
   - editable-install package identity
 - `src/polinko/config.py`
@@ -42,8 +44,12 @@ Tracked packaging rail:
 - `src/polinko/api/`
   - canonical HTTP routes, middleware, app factory, manual-eval surfaces, public
     portfolio data helpers, and packaged API static assets
+- `src/polinko/core/`
+  - canonical prompt, runtime, history, rate-limit, response parsing, and
+    vector-store logic
 - `tools/check_package_install.py`
-  - verifies editable-install metadata and package import identity
+  - verifies editable-install metadata, package import identity, and packaged
+    API static assets
 
 ## Target Package Shape
 
@@ -64,18 +70,17 @@ Target placement:
 - root `app.py`
   - remains only as the legacy lazy shim while local scripts still need it
 - root `tools/`
-  - remains repo-local operator tooling until the runtime package move is
-    complete
+  - remains repo-local operator tooling unless a later tooling split is
+    explicitly approved
 
 ## Migration Order
 
 1. Keep packaging metadata and editable-install coverage green.
-2. Move `core/` under `src/polinko/`.
-3. Rewrite remaining internal imports to `polinko.*`.
-4. Keep `main.py`, `server.py`, and `app.py` as compatibility launchers during
+2. Keep active runtime imports on `polinko.*`.
+3. Keep `main.py`, `server.py`, and `app.py` as compatibility launchers during
    the import rewrite.
-5. Move or split `tools/` only after runtime imports and tests are stable.
-6. Add a console-script entrypoint for the CLI before removing any root launcher.
+4. Move or split `tools/` only after runtime imports and tests are stable.
+5. Add a console-script entrypoint for the CLI before removing any root launcher.
 
 ## Guardrails
 
@@ -85,6 +90,8 @@ Target placement:
   moved off `from config import ...`.
 - Keep root `api/` as compatibility shims until older local tests and scripts
   have moved off `api.*` imports.
+- Keep root `core/` as compatibility shims until older local tests and scripts
+  have moved off `core.*` imports.
 - Do not change public operator commands:
   - `make chat`
   - `make server`
@@ -93,8 +100,8 @@ Target placement:
 - Do not change ASGI import compatibility for `server:app`.
 - Do not delete `app.py` while legacy `python app.py` compatibility is still
   documented.
-- Do not package `tools/` into the runtime app before the core import boundary
-  is stable.
+- Do not package `tools/` into the runtime app before runtime imports and
+  compatibility shims are stable.
 
 ## Validation
 

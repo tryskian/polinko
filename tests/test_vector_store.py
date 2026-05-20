@@ -3,7 +3,7 @@ import sqlite3
 import tempfile
 import unittest
 
-from core.vector_store import VectorStore
+from polinko.core.vector_store import VectorStore
 
 
 class VectorStoreTests(unittest.TestCase):

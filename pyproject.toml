@@ -20,7 +20,7 @@ classifiers = [
 ]
 
 # Runtime and development dependencies remain locked through requirements.in
-# and requirements.lock until the runtime package move is complete.
+# and requirements.lock until the dependency policy changes.
 
 [tool.setuptools]
 package-dir = { "" = "src" }
@@ -28,6 +28,9 @@ package-dir = { "" = "src" }
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["polinko*"]
+
+[tool.setuptools.package-data]
+"polinko.api" = ["static/*.png"]
 
 [tool.setuptools.dynamic]
 version = { attr = "polinko.__version__" }

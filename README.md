@@ -97,12 +97,13 @@ Open `http://127.0.0.1:8000/docs`.
 - `server.py` exposes the FastAPI ASGI app and chat-facing manual eval
   workbench endpoints.
 - `pyproject.toml` and `src/polinko/` provide the editable-install rail for the
-  runtime package move.
+  runtime package.
 - `src/polinko/config.py` contains the canonical config implementation; root
   `config.py` is a compatibility shim.
 - `src/polinko/api/` contains the canonical API implementation; root `api/`
   contains compatibility shims.
-- `core/` contains runtime logic.
+- `src/polinko/core/` contains canonical runtime logic; root `core/` contains
+  compatibility shims.
 - `tools/` contains eval and maintenance scripts.
 - `tests/` contains the test suite.
 - `docs/public/` contains the curated public reading path.

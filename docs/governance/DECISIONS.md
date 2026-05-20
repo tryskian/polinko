@@ -635,3 +635,16 @@ or branch history instead.
   helpers, and packaged API static assets through the source-layout import path
   while preserving older scripts and tests during the remaining `core/`
   migration.
+
+## D-048: Move core runtime into the Python package
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `python`, `core`, `src_layout`, `compatibility`
+- Decision: Make `src/polinko/core/` the canonical core runtime package and
+  keep root `core/` as compatibility shims for legacy `core.*` imports. Active
+  runtime imports use `polinko.core.*`.
+- Why: Core contains the runtime behaviour, prompt versioning, persistence,
+  rate limiting, response parsing, and vector-store helpers. Moving it after
+  config and API completes the runtime package boundary while preserving older
+  local scripts and tests until the root compatibility layer can be retired.

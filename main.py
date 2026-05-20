@@ -48,8 +48,8 @@ try:
         RateLimitError,
     )
     from polinko.config import load_config
-    from core.history_store import ChatHistoryStore
-    from core.runtime import create_agent, create_run_config, create_session
+    from polinko.core.history_store import ChatHistoryStore
+    from polinko.core.runtime import create_agent, create_run_config, create_session
 except ModuleNotFoundError as exc:
     # If launched with the wrong interpreter, restart with the project virtualenv python.
     project_python = _first_existing_project_python()
@@ -75,7 +75,7 @@ except ModuleNotFoundError as exc:
         f"or run: source {activate_hint}/bin/activate"
     ) from exc
 
-from core.prompts import ACTIVE_PROMPT_VERSION  # noqa: E402
+from polinko.core.prompts import ACTIVE_PROMPT_VERSION  # noqa: E402
 
 
 def _safe_session_slug(value: str) -> str:

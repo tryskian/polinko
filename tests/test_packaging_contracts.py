@@ -33,13 +33,16 @@ class PackagingContractTests(unittest.TestCase):
         self.assertEqual(package_find["where"], ["src"])
         self.assertEqual(package_find["include"], ["polinko*"])
 
+        package_data = pyproject["tool"]["setuptools"]["package-data"]
+        self.assertEqual(package_data["polinko.api"], ["static/*.png"])
+
         dynamic = pyproject["tool"]["setuptools"]["dynamic"]
         self.assertEqual(dynamic["version"], {"attr": "polinko.__version__"})
 
         ruff = pyproject["tool"]["ruff"]
         self.assertEqual(ruff["target-version"], "py313")
 
-    def test_package_scaffold_has_config_and_api_boundaries(self) -> None:
+    def test_package_scaffold_has_runtime_boundaries(self) -> None:
         package_root = REPO_ROOT / "src" / "polinko"
         init_text = _read("src/polinko/__init__.py")
 
@@ -48,8 +51,10 @@ class PackagingContractTests(unittest.TestCase):
         self.assertTrue((package_root / "api" / "__init__.py").is_file())
         self.assertTrue((package_root / "api" / "app_factory.py").is_file())
         self.assertTrue((package_root / "api" / "static" / "favicon.png").is_file())
+        self.assertTrue((package_root / "core" / "__init__.py").is_file())
+        self.assertTrue((package_root / "core" / "runtime.py").is_file())
+        self.assertTrue((package_root / "core" / "history_store.py").is_file())
         self.assertIn('__version__ = "0.0.0"', init_text)
-        self.assertFalse((package_root / "core").exists())
 
     def test_editable_install_check_is_named_and_ci_exercised(self) -> None:
         build_make = _read("makefiles/build.mk")
@@ -68,6 +73,8 @@ class PackagingContractTests(unittest.TestCase):
             "from polinko.config import AppConfig, load_config", install_check
         )
         self.assertIn('find_spec("polinko.api.app_factory")', install_check)
+        self.assertIn('find_spec("polinko.core.runtime")', install_check)
+        self.assertIn('resources.files("polinko.api")', install_check)
         self.assertIn('"src"', pyright_config)
 
 

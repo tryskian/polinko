@@ -33,7 +33,7 @@ from polinko.api.eval_viz import (
 )
 from polinko.api.manual_evals_surface import build_manual_evals_surface_payload
 from polinko.api.portfolio_sankey import build_portfolio_sankey_payload
-from core.history_store import (
+from polinko.core.history_store import (
     ChatHistoryStore,
     ChatSummary,
     OcrRun,
@@ -44,11 +44,11 @@ from core.history_store import (
     MessageFeedback,
     DEFAULT_CHAT_TITLE,
 )
-from core.prompts import ACTIVE_PROMPT, ACTIVE_PROMPT_VERSION
-from core.rate_limit import SlidingWindowRateLimiter
-from core.responses_parse import parse_structured_output
-from core.runtime import create_agent, create_run_config, create_session
-from core.vector_store import VectorMatch, VectorStore
+from polinko.core.prompts import ACTIVE_PROMPT, ACTIVE_PROMPT_VERSION
+from polinko.core.rate_limit import SlidingWindowRateLimiter
+from polinko.core.responses_parse import parse_structured_output
+from polinko.core.runtime import create_agent, create_run_config, create_session
+from polinko.core.vector_store import VectorMatch, VectorStore
 
 
 logger = logging.getLogger("polinko.api")

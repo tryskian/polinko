@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from importlib import metadata
+from importlib import metadata, resources
 from importlib.util import find_spec
 
 import polinko
@@ -23,6 +23,10 @@ def main() -> None:
         raise SystemExit("polinko.config.AppConfig is not importable")
     if find_spec("polinko.api.app_factory") is None:
         raise SystemExit("polinko.api.app_factory is not discoverable")
+    if find_spec("polinko.core.runtime") is None:
+        raise SystemExit("polinko.core.runtime is not discoverable")
+    if not resources.files("polinko.api").joinpath("static/favicon.png").is_file():
+        raise SystemExit("polinko.api static favicon is not packaged")
 
 
 if __name__ == "__main__":
