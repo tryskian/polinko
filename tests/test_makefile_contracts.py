@@ -127,6 +127,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("PORTFOLIO_APP_DIR ?= apps/portfolio", config_text)
         self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", config_text)
         self.assertIn("FRONTEND_DIR ?= $(PORTFOLIO_APP_DIR)", config_text)
+        self.assertIn("PIP_AUDIT_IGNORED_VULNS ?= PYSEC-2025-183", config_text)
+        self.assertIn(
+            "PIP_AUDIT_ARGS = $(foreach vuln,$(PIP_AUDIT_IGNORED_VULNS),--ignore-vuln $(vuln))",
+            config_text,
+        )
         self.assertIn("OCR_WORKFLOW_SCRIPT ?= ./tools/run_ocr_workflow.sh", config_text)
         self.assertIn(
             "OCR_INTAKE_WORKFLOW_SCRIPT ?= ./tools/run_ocr_intake_workflow.sh",
@@ -690,6 +695,14 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("python-style:", workflow_text)
         self.assertIn("make ci-python-style PYTHON=python", workflow_text)
+
+    def test_python_security_gate_keeps_narrow_no_fix_audit_exception(self) -> None:
+        text = _makefile_contract_text()
+
+        self.assertIn('$(PYTHON) -m pip_audit -r "$(REQUIREMENTS_LOCK)"', text)
+        self.assertIn("$(PIP_AUDIT_ARGS)", text)
+        self.assertIn("PYSEC-2025-183 / CVE-2025-45768", text)
+        self.assertNotIn("--ignore-vuln CVE-", text)
 
     def test_ocr_workflow_script_preserves_export_root_guard(self) -> None:
         env = os.environ.copy()

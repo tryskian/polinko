@@ -39,7 +39,7 @@ deps-lock-check:
 	git diff --exit-code -- "$(REQUIREMENTS_LOCK)"
 
 python-security-check:
-	$(PYTHON) -m pip_audit -r "$(REQUIREMENTS_LOCK)"
+	$(PYTHON) -m pip_audit -r "$(REQUIREMENTS_LOCK)" $(PIP_AUDIT_ARGS)
 
 node-security-check:
 	npm audit --audit-level=moderate

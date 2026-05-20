@@ -516,3 +516,16 @@ or branch history instead.
 - Why: Report targets need shell-controlled file and directory checks before
   builder execution. Keeping that control flow in a script makes the OCR Make
   fragment smaller while preserving dry-run visibility and failure guidance.
+
+## D-039: Keep no-fix audit exceptions narrow and visible
+
+- Date: `2026-05-20`
+- Category: `security`
+- Tags: `pip-audit`, `dependencies`, `pyjwt`, `no-fix`
+- Decision: Keep the Python dependency audit gate active, but explicitly ignore
+  `PYSEC-2025-183` / `CVE-2025-45768` while it remains a disputed PyJWT
+  advisory with no released fixed version. Keep the exception as a named
+  Make-config value rather than hiding or disabling `pip-audit`.
+- Why: PyJWT is only present transitively through `mcp`, and Polinko has no
+  direct JWT use. A narrow ignore keeps closeout usable while preserving failure
+  pressure for any other dependency advisory.
