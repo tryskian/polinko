@@ -1641,6 +1641,11 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       font-size: 0.78rem;
     }
 
+    .source-exclusion-pill {
+      background: rgba(142, 76, 39, 0.09);
+      color: #7d452d;
+    }
+
     .source-table-wrap {
       margin-top: 14px;
       max-height: 32vh;
@@ -2454,6 +2459,20 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
       const lanes = Array.isArray(sourceFirst.lane_summaries)
         ? sourceFirst.lane_summaries
         : [];
+      const exclusions = Array.isArray(sourceFirst.exclusions)
+        ? sourceFirst.exclusions
+        : [];
+      const activeExclusions = exclusions.filter(item => Number(item?.count || 0) > 0);
+      const exclusionTotal = exclusions.reduce(
+        (total, item) => total + Number(item?.count || 0),
+        0,
+      );
+      const exclusionDetail = activeExclusions.length
+        ? activeExclusions.slice(0, 3).map(item => {
+          const label = sourceContractLabel(item?.key || item?.label || 'exclusion');
+          return `${label}: ${Number(item?.count || 0)}`;
+        }).join(' · ')
+        : '0 active exclusions';
       const rows = Array.isArray(sourceFirst.evidence_rows)
         ? sourceFirst.evidence_rows.slice(0, 12)
         : [];
@@ -2501,11 +2520,16 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
             `${Number(checkpoints.total || 0)} checkpoints`,
             `${Number(checkpoints.covered_rows || 0)} covered rows`,
           ),
+          sourceMetricCard(
+            'explicit exclusions',
+            `${exclusionTotal} rows`,
+            exclusionDetail,
+          ),
         ].join('');
       }
 
       if (sourceLanesEl) {
-        sourceLanesEl.innerHTML = lanes.map(lane => {
+        const lanePills = lanes.map(lane => {
           const laneName = sourceContractLabel(lane?.lane || 'lane');
           const rowsTotal = Number(lane?.rows || lane?.total || 0);
           const pass = Number(lane?.pass || 0);
@@ -2515,7 +2539,15 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
             ? `${pass} pass · ${fail} fail · ${other} other`
             : `${rowsTotal} rows`;
           return `<span class="source-lane-pill">${escapeHtml(laneName)} · ${escapeHtml(detail)}</span>`;
-        }).join('');
+        });
+        const exclusionPills = activeExclusions.map(item => {
+          const label = sourceContractLabel(item?.key || item?.label || 'exclusion');
+          const reason = String(item?.reason || '').trim();
+          const promotionEffect = String(item?.promotion_effect || '').trim();
+          const title = [reason, promotionEffect].filter(Boolean).join(' · ');
+          return `<span class="source-lane-pill source-exclusion-pill" title="${escapeHtml(title)}">excluded: ${escapeHtml(label)} · ${Number(item?.count || 0)}</span>`;
+        });
+        sourceLanesEl.innerHTML = [...lanePills, ...exclusionPills].join('');
       }
 
       if (!sourceEvidenceRowsEl || !sourceEvidenceEmptyEl) return;

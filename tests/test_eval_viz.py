@@ -169,6 +169,9 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["source_first"]["source_artifacts"]["sessions"], 1)
             self.assertEqual(payload["source_first"]["source_artifacts"]["ocr_runs"], 3)
             self.assertEqual(payload["source_first"]["judgments"]["manual_feedback"]["total"], 0)
+            exclusions = {row["key"]: row for row in payload["source_first"]["exclusions"]}
+            self.assertEqual(exclusions["ocr_without_manual_feedback"]["count"], 3)
+            self.assertEqual(exclusions["session_without_judgment"]["count"], 1)
 
     def test_payload_can_filter_eval_rows_by_run_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -322,6 +325,7 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["lane_summaries"], [])
             self.assertEqual(payload["source_first"]["contract"]["rejected_rollup"], "pulse_verdict")
             self.assertEqual(payload["source_first"]["source_artifacts"]["sessions"], 0)
+            self.assertEqual(payload["source_first"]["exclusions"], [])
 
     def test_payload_includes_tracked_lane_summaries(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -369,6 +373,8 @@ class EvalVizTests(unittest.TestCase):
         self.assertIn('id="sourceMetrics"', html)
         self.assertIn('id="sourceEvidenceRows"', html)
         self.assertIn("Source Evidence Chain", html)
+        self.assertIn("explicit exclusions", html)
+        self.assertIn("source-exclusion-pill", html)
         self.assertIn("Tracked Lane Snapshots", html)
         self.assertIn("lane-card-state", html)
         self.assertIn("lane-card-links", html)
