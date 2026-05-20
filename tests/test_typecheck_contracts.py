@@ -1,3 +1,4 @@
+import json
 import unittest
 from pathlib import Path
 
@@ -31,6 +32,24 @@ class TypecheckContractTests(unittest.TestCase):
         self.assertIn("python-type-check:", ci_workflow)
         self.assertIn("ci-python-type-check", closeout)
         self.assertIn("make type-check", state)
+
+    def test_pyright_is_repo_owned_advisory_editor_check(self) -> None:
+        package = json.loads(_read("package.json"))
+        checks_makefile = _read("makefiles/checks.mk")
+        build_makefile = _read("makefiles/build.mk")
+        ci_workflow = _read(".github/workflows/ci.yml")
+        state = _read("docs/governance/STATE.md")
+
+        self.assertEqual(package["devDependencies"]["pyright"], "1.1.409")
+        self.assertEqual(
+            package["scripts"]["typecheck:pyright"],
+            "pyright --project pyrightconfig.json",
+        )
+        self.assertIn("pyright-check:", checks_makefile)
+        self.assertIn("npm run typecheck:pyright", checks_makefile)
+        self.assertNotIn("ci-pyright", build_makefile)
+        self.assertNotIn("pyright-check", ci_workflow)
+        self.assertIn("advisory/editor check", state)
 
 
 if __name__ == "__main__":
