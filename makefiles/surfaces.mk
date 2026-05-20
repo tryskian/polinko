@@ -1,4 +1,4 @@
-# Notebooks, manual eval DBs, portfolio, and local browser surface targets.
+# Manual eval workbench, portfolio, and local browser surface targets.
 .PHONY: notebook-setup notebook nb notes manual-evals-db manualdb
 .PHONY: portfolio-install portfolio-app-install frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
 .PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir

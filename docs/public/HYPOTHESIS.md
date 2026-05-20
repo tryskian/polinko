@@ -42,8 +42,8 @@ live together so claims can be traced back to source material.
     export-backed behaviour backlog
 - `Source-first evidence can carry non-OCR method claims`
   - status: staged for pre-Beta 2.4
-  - measured by: active chat workbench evidence, manual eval rows, tracked
-    row/case judgments, exclusions, and lane summaries
+  - measured by: manual eval workbench evidence, notebooks, local evidence
+    databases, tracked row/case judgments, exclusions, and lane summaries
 - `Commentary-heavy response contracts increase operator burden`
   - status: thin lane
   - measured by: experiment `R-D`, manual transcript diagnostics, the tracked

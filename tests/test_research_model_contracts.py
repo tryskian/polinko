@@ -23,8 +23,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "docs/eval/beta_2_3/",
             "discarded run-level rollup hypothesis",
             "source-first research claims",
+            "manual eval workbench evidence from notebooks",
             "`POST /chat`",
             "`/chats/*`",
+            "notebooks launched by `make notes`, `make notebook`, and `make nb`",
             "`.local/runtime_dbs/active/manual_evals.db`",
             "`.local/runtime_dbs/active/history.db`",
             "`pass` / `fail`",
@@ -123,14 +125,18 @@ class ResearchModelContractTests(unittest.TestCase):
             decisions,
         )
 
-    def test_eval_map_keeps_manual_chat_sources_canonical(self) -> None:
+    def test_eval_map_keeps_manual_eval_workbench_sources_canonical(self) -> None:
         eval_map = _read("docs/eval/README.md")
 
         for expected in (
+            "The manual eval workbench is the human-judged research workspace",
+            "`make notes`",
+            "aliases: `make notebook`, `make nb`",
             "`POST /chat`",
             "`/chats/*`",
             "`.local/runtime_dbs/active/manual_evals.db`",
-            "manual evals and chat workbench sources stay canonical inputs",
+            "manual eval workbench sources stay canonical inputs",
+            "run-level verdicts are not canonical rollups for the active manual eval",
         ):
             self.assertIn(expected, eval_map)
 

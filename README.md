@@ -71,7 +71,8 @@ Use the operator path when you need to run, inspect, or change the system:
 ## What Lives Here
 
 - FastAPI API and CLI runtime
-- Active chat workbench and manual-eval endpoints
+- Manual eval workbench: notebooks, local evidence databases, chat artifacts,
+  feedback, checkpoints, and exports
 - Fail-first eval surfaces
 - OCR and non-OCR method lanes
 - Export-backed behaviour backlog mining
@@ -93,7 +94,8 @@ Open `http://127.0.0.1:8000/docs`.
 ## Repo Map
 
 - `main.py` runs the CLI chat entrypoint.
-- `server.py` exposes the FastAPI ASGI app and chat workbench endpoints.
+- `server.py` exposes the FastAPI ASGI app and chat-facing manual eval
+  workbench endpoints.
 - `api/` contains the API implementation.
 - `core/` contains runtime logic.
 - `tools/` contains eval and maintenance scripts.

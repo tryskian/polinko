@@ -16,7 +16,7 @@ This page is the structural map of the tracked system.
 - `app.py`
   - compatibility launcher for older CLI calls
 - `server.py`
-  - FastAPI API and chat workbench entrypoint
+  - FastAPI API and chat-facing manual eval workbench entrypoint
 - `config.py`
   - environment loading and validation
 - `api/`
@@ -51,7 +51,7 @@ This page is the structural map of the tracked system.
 4. request execution delegates into `core/` runtime and persistence modules
 5. runtime history and eval state write to local SQLite stores under
    `.local/runtime_dbs/active/`
-6. `POST /chat` and `/chats/*` are active chat workbench and manual-eval
+6. `POST /chat` and `/chats/*` are active chat-facing manual eval workbench
    surfaces; deterministic fixture mode supports smoke tests, and default
    remains `live`
 7. active gate semantics stay scoped:
@@ -65,6 +65,10 @@ This page is the structural map of the tracked system.
 
 - live runtime DBs:
   - `.local/runtime_dbs/active/`
+- manual eval workbench:
+  - notebooks launched by `make notes`, `make notebook`, and `make nb`
+  - local evidence databases
+  - chat artifacts, feedback, checkpoints, notes, exports, and runtime history
 - runtime, workbench, and eval history:
   - `.local/runtime_dbs/active/history.db`
   - key tables:

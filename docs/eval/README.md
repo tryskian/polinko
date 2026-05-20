@@ -29,7 +29,7 @@ Use it when you need:
   - staged research-model contract before the next evidence folder is cut
   - the discarded run-level rollup hypothesis is not being carried forward
   - row and case evidence remain source-bound before lane-level summaries
-  - manual evals and chat workbench sources stay canonical inputs
+  - manual eval workbench sources stay canonical inputs
 
 Beta 1.0, Beta 2.0, Beta 2.3, and pre-Beta 2.4 should be read by role.
 Beta 1.0 explains the transition into binary evals. Beta 2.0 shows the
@@ -39,10 +39,17 @@ research-model contract.
 
 ## Current Canonical Surfaces
 
+The manual eval workbench is the human-judged research workspace. It includes
+notebooks, local evidence databases, chat artifacts, feedback, checkpoints,
+notes, exports, and runtime history.
+
+- notebook workspace:
+  - `make notes`
+  - aliases: `make notebook`, `make nb`
 - integrated manual-eval warehouse:
   - `.local/runtime_dbs/active/manual_evals.db`
   - rebuild with `make manual-evals-db`
-- active chat workbench source:
+- active chat artifacts:
   - `POST /chat`
   - `/chats/*`
   - includes feedback, checkpoints, notes, exports, and personalization rows
@@ -55,8 +62,8 @@ research-model contract.
 
 Manual evals and strict OCR gate reports answer different questions:
 
-- manual evals capture human judgment and qualitative notes from the active
-  chat workbench
+- manual evals capture human judgment and qualitative notes from the manual
+  eval workbench
 - OCR gate reports preserve binary fail pressure
 - `/viz/pass-fail` keeps the live chart on the active window and uses tracked
   eval files to keep the wider lane map visible below it
@@ -79,7 +86,8 @@ Do not flatten one into the other.
   create a third OCR gate state
 - thin new lanes can begin as row-local human `pass` / `fail` evidence before
   larger automation
-- run-level verdicts are not canonical rollups for the active eval workbench
+- run-level verdicts are not canonical rollups for the active manual eval
+  workbench
 
 ## What Is Tracked Here
 

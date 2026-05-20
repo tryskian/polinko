@@ -13,9 +13,10 @@ that matches the question you are trying to answer.
 - Wrap / end of day:
   say `human time` or `wind down` and follow
   [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md#end-of-day-routine-codexbeab)
-- Retained chat runtime:
-  `make chat` and `POST /chat` are active manual-eval/workbench surfaces; do
-  not prune them as dead surfaces.
+- Manual eval workbench:
+  notebooks, local evidence databases, `make chat`, `POST /chat`, and
+  `/chats/*` are active manual-eval surfaces; do not prune them as dead
+  surfaces.
 - Private portfolio mockups and screenshots stay in `docs/peanut/` unless
   explicitly promoted.
 

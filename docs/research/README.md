@@ -21,7 +21,8 @@ enough to read in public.
 - `pre-Beta 2.4` is staged as the next research-model contract:
   - the discarded run-level rollup hypothesis is not being carried forward
   - row and case evidence stay visible before lane-level summaries
-  - manual evals and chat workbench artifacts remain source evidence
+  - manual eval workbench sources remain evidence, including notebooks,
+    databases, chat artifacts, feedback, and checkpoints
   - no new evidence folder is cut until real evidence exists
 - OCR is the mature green lane:
   - growth stability: `25/25` stable, `0` flaky
