@@ -135,6 +135,8 @@ class MakefileContractTests(unittest.TestCase):
         text = MAKE_EVALS.read_text(encoding="utf-8")
 
         self.assertNotIn("$(MAKE)", text)
+        self.assertNotIn("import json,pathlib", text)
+        self.assertIn("tools.count_eval_cases", text)
         self.assertRegex(
             text,
             r"(?m)^ocrkernel:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tCGPT_EXPORT_ROOT_DEFAULT=\"\$\(CGPT_EXPORT_ROOT_DEFAULT\)\" \\\n\t\tbash \"\$\(OCR_WORKFLOW_SCRIPT\)\" ocrkernel$",
