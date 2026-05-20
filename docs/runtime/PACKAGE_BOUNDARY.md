@@ -70,6 +70,10 @@ Current audit result:
 - root compatibility imports are allowed only in the tracked shim layer and
   focused legacy-contract tests
 - do not delete compatibility launchers or shims in this audit kernel
+- active `server:app` references still exist in Docker, Make runtime defaults,
+  server-daemon startup, and local eval gate startup
+- `app.py` has no active tracked code caller outside its own compatibility
+  shim and tests, but remains documented legacy CLI compatibility
 
 | Compatibility surface | Required by active references | Retire only after |
 | --- | --- | --- |
@@ -79,6 +83,20 @@ Current audit result:
 | `config.py` | legacy `from config import ...` imports | older local scripts have moved to `polinko.config` |
 | `api/` | legacy `api.*` imports and supported `from api import ...` submodule imports | older local scripts have moved to `polinko.api.*` |
 | `core/` | legacy `core.*` imports and supported `from core import ...` submodule imports | older local scripts have moved to `polinko.core.*` |
+
+### Readiness Snapshot: 2026-05-20
+
+This snapshot records the current retirement posture after the root-shim
+reference audit.
+
+| Surface | Current evidence | Retirement posture |
+| --- | --- | --- |
+| `main.py` | root CLI launcher is still a stable direct operator entrypoint and preserves project-venv restart hints | keep until direct `python main.py` launches are intentionally deprecated |
+| `app.py` | no active tracked code caller beyond the shim and compatibility tests; docs still name legacy `python app.py` compatibility | closest to retirement, but remove only through an explicit deprecation/removal kernel |
+| `server.py` | `server:app` remains the default ASGI string in Make, Docker, server-daemon, and local eval gates | not retirement-ready |
+| `config.py` | active `src/` and `tools/` imports use `polinko.config`; legacy root imports remain confined to focused compatibility tests | keep until local legacy import support is intentionally dropped |
+| `api/` | active `src/` and `tools/` imports use `polinko.api.*`; legacy root imports remain confined to focused compatibility tests | keep until local legacy import support is intentionally dropped |
+| `core/` | active `src/` and `tools/` imports use `polinko.core.*`; legacy root imports remain confined to focused compatibility tests | keep until local legacy import support is intentionally dropped |
 
 ## Target Package Shape
 

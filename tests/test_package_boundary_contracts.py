@@ -71,6 +71,11 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "active runtime and tool imports should use `polinko.*`",
             "root compatibility imports are allowed only in the tracked shim layer",
             "do not delete compatibility launchers or shims in this audit kernel",
+            "active `server:app` references still exist in Docker",
+            "`app.py` has no active tracked code caller",
+            "### Readiness Snapshot: 2026-05-20",
+            "closest to retirement",
+            "not retirement-ready",
             "`server.py`",
             "Make defaults, server-daemon, local eval gates, Docker",
             "`config.py`",
@@ -125,6 +130,10 @@ class PackageBoundaryContractTests(unittest.TestCase):
         )
         self.assertIn(
             "## D-051: Keep audited root shims compatibility-only",
+            decisions,
+        )
+        self.assertIn(
+            "## D-060: Audit root shim retirement readiness before deletion",
             decisions,
         )
 
@@ -241,6 +250,83 @@ class PackageBoundaryContractTests(unittest.TestCase):
                         violations.append(f"{relative_path}:{node.lineno}")
 
         self.assertEqual(violations, [])
+
+    def test_legacy_root_imports_stay_confined_to_compatibility_tests(self) -> None:
+        tracked_python = subprocess.check_output(
+            ["git", "ls-files", "*.py"],
+            cwd=REPO_ROOT,
+            text=True,
+        ).splitlines()
+        allowed_paths = {
+            "tests/test_config.py",
+            "tests/test_package_boundary_contracts.py",
+        }
+        violations = []
+
+        for relative_path in tracked_python:
+            if relative_path in allowed_paths:
+                continue
+            source = _read(relative_path)
+            tree = ast.parse(source, filename=relative_path)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        root_name = alias.name.split(".", maxsplit=1)[0]
+                        if root_name in LEGACY_ROOT_IMPORTS:
+                            violations.append(f"{relative_path}:{node.lineno}")
+                elif isinstance(node, ast.ImportFrom) and node.module is not None:
+                    root_name = node.module.split(".", maxsplit=1)[0]
+                    if root_name in LEGACY_ROOT_IMPORTS:
+                        violations.append(f"{relative_path}:{node.lineno}")
+
+        self.assertEqual(violations, [])
+
+    def test_server_shim_still_has_active_operator_and_container_references(
+        self,
+    ) -> None:
+        expected_refs = {
+            "Dockerfile": '"server:app"',
+            "makefiles/config/runtime.mk": "ASGI_APP ?= server:app",
+            "tools/run_server_daemon.sh": "asgi_app=${ASGI_APP:-server:app}",
+            "tools/run_local_eval_gate.sh": "asgi_app=${ASGI_APP:-server:app}",
+        }
+
+        for relative_path, expected in expected_refs.items():
+            with self.subTest(relative_path=relative_path):
+                self.assertIn(expected, _read(relative_path))
+
+    def test_legacy_app_launcher_has_no_active_tracked_code_callers(self) -> None:
+        tracked_files = subprocess.check_output(
+            ["git", "ls-files"],
+            cwd=REPO_ROOT,
+            text=True,
+        ).splitlines()
+        active_extensions = {".py", ".sh", ".mk"}
+        active_paths = [
+            path
+            for path in tracked_files
+            if Path(path).suffix in active_extensions
+            or path in {"Makefile", "Dockerfile", "pyproject.toml"}
+        ]
+        allowed_paths = {
+            "app.py",
+            "docs/governance/DECISIONS.md",
+            "docs/governance/STATE.md",
+            "docs/runtime/ARCHITECTURE.md",
+            "docs/runtime/PACKAGE_BOUNDARY.md",
+            "tests/test_entrypoints.py",
+            "tests/test_package_boundary_contracts.py",
+        }
+        mentions = []
+
+        for relative_path in active_paths:
+            if relative_path in allowed_paths:
+                continue
+            source = _read(relative_path)
+            if "python app.py" in source or 'import_module("app")' in source:
+                mentions.append(relative_path)
+
+        self.assertEqual(mentions, [])
 
 
 if __name__ == "__main__":

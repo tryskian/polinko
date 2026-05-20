@@ -810,3 +810,19 @@ or branch history instead.
 - Why: URL printing preserves operator access without forcing a browser process
   into every local inspection flow. Explicit launch aliases keep the old
   capability available when it is intentionally needed.
+
+## D-060: Audit root shim retirement readiness before deletion
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `package_boundary`, `compatibility`, `root_shims`, `asgi`, `refactor`
+- Decision: Treat root launchers and shim packages as an audited compatibility
+  layer until each surface has explicit retirement evidence. `server.py`
+  remains not retirement-ready while `server:app` is active in Docker, Make
+  defaults, server-daemon, and local eval gates. `app.py` is closest to
+  retirement because tracked active code has no caller beyond the shim and
+  compatibility tests, but deletion still requires a separate deprecation or
+  removal kernel.
+- Why: The package boundary is stable enough to audit, but deleting root
+  compatibility based on cleanliness alone would risk operator, container, or
+  local legacy workflows. Readiness should be proved surface-by-surface.
