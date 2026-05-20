@@ -109,6 +109,7 @@ This page is the structural map of the tracked system.
 
 ## Placement Rules
 
+- active `src/` and `tools/` Python imports use `polinko.*`
 - API endpoints, middleware, and specs:
   - `src/polinko/api/`
   - root `api/` stays compatibility-only during the package-boundary migration

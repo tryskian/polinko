@@ -678,3 +678,18 @@ or branch history instead.
   ASGI construction into the package removes another active runtime body from
   the repo root without changing the protected server import string or manual
   eval workbench behavior.
+
+## D-051: Keep audited root shims compatibility-only
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `python`, `package_boundary`, `compatibility`, `imports`
+- Decision: Keep root `main.py`, `app.py`, `server.py`, `config.py`, `api/`,
+  and `core/` as an audited compatibility layer. Active `src/` and `tools/`
+  Python imports use `polinko.*`; future shim retirement requires a separate
+  approved kernel after operator defaults and legacy local callers are
+  accounted for.
+- Why: The runtime package boundary is stable, but direct CLI launches,
+  `server:app`, and legacy local imports still protect operator and eval
+  workflows. An explicit audit keeps compatibility visible without allowing
+  active code to drift back to root imports.

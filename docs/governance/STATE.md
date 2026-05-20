@@ -21,6 +21,8 @@ Last updated: 2026-05-20
     the runtime package
   - root `config.py`, root `api/`, and root `core/` remain as compatibility
     shims for legacy imports
+  - the root compatibility audit confirms active `src/` and `tools/` Python
+    imports use `polinko.*`, while root shims stay compatibility-only
   - prompt and runtime behaviour stay minimal and deterministic
   - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active
     because they feed manual evals, feedback, checkpoints, exports, and

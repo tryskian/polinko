@@ -58,6 +58,24 @@ Tracked packaging rail:
   - verifies editable-install metadata, package import identity, and packaged
     API static assets
 
+## Compatibility Audit
+
+Current audit result:
+
+- active runtime and tool imports should use `polinko.*`
+- root compatibility imports are allowed only in the tracked shim layer and
+  focused legacy-contract tests
+- do not delete compatibility launchers or shims in this audit kernel
+
+| Compatibility surface | Required by active references | Retire only after |
+| --- | --- | --- |
+| `main.py` | stable direct `python main.py` launcher and project-venv restart hints | direct root CLI launches are no longer supported |
+| `app.py` | legacy `python app.py` launcher with lazy import behavior | local legacy callers have moved to `make chat`, `python -m polinko.cli`, or `polinko-chat` |
+| `server.py` | stable `server:app` ASGI string used by Make defaults, server-daemon, local eval gates, Docker, and older scripts | operator, Docker, and eval defaults have an approved replacement ASGI string |
+| `config.py` | legacy `from config import ...` imports | older local scripts have moved to `polinko.config` |
+| `api/` | legacy `api.*` imports | older local scripts have moved to `polinko.api.*` |
+| `core/` | legacy `core.*` imports | older local scripts have moved to `polinko.core.*` |
+
 ## Target Package Shape
 
 The future runtime import package should be `polinko` under `src/polinko/`.
