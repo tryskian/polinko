@@ -24,6 +24,7 @@ class PackagingContractTests(unittest.TestCase):
         self.assertEqual(project["dynamic"], ["version"])
         self.assertEqual(project["requires-python"], ">=3.14")
         self.assertEqual(project["license"], "Apache-2.0")
+        self.assertEqual(project["scripts"], {"polinko-chat": "polinko.cli:main"})
         self.assertNotIn("dependencies", project)
 
         setuptools = pyproject["tool"]["setuptools"]
@@ -47,6 +48,7 @@ class PackagingContractTests(unittest.TestCase):
         init_text = _read("src/polinko/__init__.py")
 
         self.assertTrue((package_root / "__init__.py").is_file())
+        self.assertTrue((package_root / "cli.py").is_file())
         self.assertTrue((package_root / "config.py").is_file())
         self.assertTrue((package_root / "api" / "__init__.py").is_file())
         self.assertTrue((package_root / "api" / "app_factory.py").is_file())
@@ -74,7 +76,10 @@ class PackagingContractTests(unittest.TestCase):
         )
         self.assertIn('find_spec("polinko.api.app_factory")', install_check)
         self.assertIn('find_spec("polinko.core.runtime")', install_check)
+        self.assertIn('find_spec("polinko.cli")', install_check)
         self.assertIn('resources.files("polinko.api")', install_check)
+        self.assertIn('metadata.entry_points(group="console_scripts")', install_check)
+        self.assertIn('"polinko-chat"', install_check)
         self.assertIn('"src"', pyright_config)
 
 

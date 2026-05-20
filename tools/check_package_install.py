@@ -25,8 +25,16 @@ def main() -> None:
         raise SystemExit("polinko.api.app_factory is not discoverable")
     if find_spec("polinko.core.runtime") is None:
         raise SystemExit("polinko.core.runtime is not discoverable")
+    if find_spec("polinko.cli") is None:
+        raise SystemExit("polinko.cli is not discoverable")
     if not resources.files("polinko.api").joinpath("static/favicon.png").is_file():
         raise SystemExit("polinko.api static favicon is not packaged")
+    scripts = metadata.entry_points(group="console_scripts")
+    if not any(
+        entry_point.name == "polinko-chat" and entry_point.value == "polinko.cli:main"
+        for entry_point in scripts
+    ):
+        raise SystemExit("polinko-chat console script is not installed")
 
 
 if __name__ == "__main__":

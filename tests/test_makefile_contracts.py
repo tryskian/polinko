@@ -130,7 +130,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("include makefiles/config/ops.mk", config_entry_text)
         self.assertIn("include makefiles/config/build.mk", config_entry_text)
         self.assertIn("PYTHON ?=", config_text)
-        self.assertIn("CLI_ENTRYPOINT ?= main.py", config_text)
+        self.assertIn("CLI_ENTRYPOINT ?= -m polinko.cli", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
         self.assertIn(
             "OPENAI_ACCOUNT_SCRIPT ?= ./tools/openai_account_summary.py", config_text
@@ -260,7 +260,7 @@ class MakefileContractTests(unittest.TestCase):
 
         lines = result.stdout.splitlines()
         self.assertTrue(lines)
-        self.assertTrue(any("main.py" in line for line in lines), lines)
+        self.assertTrue(any("-m polinko.cli" in line for line in lines), lines)
 
     def test_phony_targets_are_unique(self) -> None:
         targets = _phony_targets()
