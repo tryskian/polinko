@@ -609,3 +609,15 @@ or branch history instead.
 - Why: The source-layout move needs a working package install path before
   imports are rewritten. Keeping the scaffold identity-only gives the next
   kernel an install rail without changing runtime behavior.
+
+## D-046: Move config into the Python package first
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `python`, `config`, `src_layout`, `compatibility`
+- Decision: Make `src/polinko/config.py` the canonical config implementation
+  and keep root `config.py` as a compatibility shim that re-exports
+  `AppConfig` and `load_config`. Active runtime imports use `polinko.config`.
+- Why: Config is the narrowest runtime boundary to move first. It proves the
+  package path in real runtime code while preserving older local imports during
+  the broader `api/` and `core/` migration.

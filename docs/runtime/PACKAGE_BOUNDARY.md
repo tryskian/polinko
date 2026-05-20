@@ -3,11 +3,12 @@
 # Python Package Boundary
 
 This page records the package-boundary migration contract for the beta refactor.
-The packaging rail exists now; the runtime import move has not happened yet.
+The packaging rail exists now; `config` is the first runtime module moved under
+`src/polinko/`.
 
 ## Current Tracked Shape
 
-Tracked runtime Python currently has four root modules:
+Tracked root runtime compatibility modules:
 
 - `main.py`
   - canonical CLI chat entrypoint
@@ -16,7 +17,8 @@ Tracked runtime Python currently has four root modules:
 - `server.py`
   - FastAPI ASGI entrypoint
 - `config.py`
-  - environment loading and validation
+  - compatibility shim for legacy `from config import ...` imports
+  - re-exports `AppConfig` and `load_config` from `polinko.config`
 
 Tracked runtime packages currently live at the repo root:
 
@@ -34,8 +36,9 @@ Tracked packaging rail:
 - `pyproject.toml`
   - package metadata and `src` layout configuration
 - `src/polinko/__init__.py`
-  - editable-install package identity only
-  - no runtime modules have moved into the package yet
+  - editable-install package identity
+- `src/polinko/config.py`
+  - canonical environment loading and validation implementation
 - `tools/check_package_install.py`
   - verifies editable-install metadata and package import identity
 
@@ -64,8 +67,8 @@ Target placement:
 ## Migration Order
 
 1. Keep packaging metadata and editable-install coverage green.
-2. Move `config.py`, `api/`, and `core/` under `src/polinko/`.
-3. Rewrite internal imports to `polinko.*`.
+2. Move `api/` and `core/` under `src/polinko/`.
+3. Rewrite remaining internal imports to `polinko.*`.
 4. Keep `main.py`, `server.py`, and `app.py` as compatibility launchers during
    the import rewrite.
 5. Move or split `tools/` only after runtime imports and tests are stable.
@@ -75,6 +78,8 @@ Target placement:
 
 - Do not move runtime modules into `src/polinko/` before the editable-install
   rail is green.
+- Keep root `config.py` as a compatibility shim until older local scripts have
+  moved off `from config import ...`.
 - Do not change public operator commands:
   - `make chat`
   - `make server`
