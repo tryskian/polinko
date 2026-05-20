@@ -6,8 +6,8 @@ This page is the structural map of the tracked system.
 
 - Use `docs/runtime/RUNBOOK.md` for operator procedure.
 - Use `docs/runtime/OCR_REFERENCE.md` for the OCR lane reference.
-- Use `docs/runtime/SURFACE_IA.md` for web surface path roles and planned
-  directory renames.
+- Use `docs/runtime/SURFACE_IA.md` for web surface path roles, manual eval
+  workbench naming, and legacy compatibility aliases.
 - Use `docs/runtime/PACKAGE_BOUNDARY.md` for the Python package-boundary
   migration contract and compatibility layer.
 
@@ -59,6 +59,9 @@ This page is the structural map of the tracked system.
 - `public/portfolio/`
   - current tracked static build output served by `/portfolio`
   - default `PORTFOLIO_STATIC_DIR`
+- `frontend/` and `ui/`
+  - retired web surface directory names
+  - legacy Make/config aliases remain compatibility-only where documented
 
 ## Runtime Flow
 
@@ -126,6 +129,9 @@ This page is the structural map of the tracked system.
   - local `docs/peanut/assets/portfolio-mockups/`
 - web surface source/output naming:
   - `docs/runtime/SURFACE_IA.md`
+- manual eval workbench trace naming:
+  - `manual_eval_workbench/eval_submission`
+  - `manual_eval_workbench_submission`
 - Python package-boundary migration contract:
   - `docs/runtime/PACKAGE_BOUNDARY.md`
 - historical beta references:

@@ -719,3 +719,17 @@ or branch history instead.
 - Why: Non-interactive host shells can clean up ordinary background children
   when the command session exits. A detached session lets status and closeout
   observe and stop the same repo-owned wake-lock process reliably.
+
+## D-054: Treat frontend and UI names as legacy compatibility only
+
+- Date: `2026-05-20`
+- Category: `surface_ia`
+- Tags: `portfolio`, `frontend`, `manual_evals`, `compatibility`, `ia`
+- Decision: New surface references use portfolio app/static and manual eval
+  workbench names. `FRONTEND_DIR`, `make portfolio-app-install`,
+  `make frontend-install`, and `make frontend-build` remain compatibility
+  aliases only, with canonical portfolio targets preferred. New eval trace
+  artifacts use `manual_eval_workbench/...` labels instead of `ui/...`.
+- Why: `frontend` and `ui` describe implementation shape, not surface
+  ownership. Keeping aliases avoids breaking older commands while preventing
+  stale names from re-entering active docs and generated artifacts.

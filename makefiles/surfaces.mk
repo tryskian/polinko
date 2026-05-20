@@ -33,6 +33,7 @@ portfolio-install:
 	fi
 
 portfolio-app-install frontend-install: portfolio-install
+	@echo "Legacy alias: use make portfolio-install."
 
 portfolio-build: portfolio-install
 	@set -eu; \
@@ -43,6 +44,7 @@ portfolio-build: portfolio-install
 	POLINKO_PORTFOLIO_STATIC_DIR="$(abspath $(PORTFOLIO_STATIC_DIR))" npm --prefix "$(PORTFOLIO_APP_DIR)" run build
 
 frontend-build: portfolio-build
+	@echo "Legacy alias: use make portfolio-build."
 
 portfolio: portfolio-build server-daemon-stop server-daemon
 	@set -eu; \

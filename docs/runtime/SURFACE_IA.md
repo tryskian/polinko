@@ -2,7 +2,7 @@
 
 # Surface IA
 
-This page maps the web and portfolio-adjacent directory names during the beta
+This page maps web, portfolio, and manual eval workbench names during the beta
 refactor. It is intentionally about path roles, not visual direction.
 
 ## Current Paths
@@ -11,7 +11,7 @@ refactor. It is intentionally about path roles, not visual direction.
   - Current default for `PORTFOLIO_APP_DIR`.
   - Vite source app for the public portfolio doorway.
   - Builds into the tracked static output directory.
-  - `FRONTEND_DIR` remains a legacy compatibility override for the same path.
+  - `FRONTEND_DIR` is a legacy compatibility override only.
 - `public/portfolio/`
   - Current default for `PORTFOLIO_STATIC_DIR`.
   - Tracked static build output for the portfolio doorway.
@@ -29,13 +29,14 @@ refactor. It is intentionally about path roles, not visual direction.
 ## Current Path Contract
 
 - `PORTFOLIO_APP_DIR` names the Vite source app path.
-- `FRONTEND_DIR` remains supported as a legacy override feeding
-  `PORTFOLIO_APP_DIR` when the canonical variable is not set directly.
 - `PORTFOLIO_STATIC_DIR` names the tracked static output path.
 - `POLINKO_PORTFOLIO_APP_DIR` carries the source path into Python build
   helpers.
 - `POLINKO_PORTFOLIO_STATIC_DIR` carries the static output path into Vite,
   Python build helpers, and FastAPI serving.
+- `FRONTEND_DIR` remains supported as a legacy override feeding
+  `PORTFOLIO_APP_DIR` when the canonical variable is not set directly.
+  New docs, scripts, and operators should prefer `PORTFOLIO_APP_DIR`.
 - `ui/` was the old tracked static output path. Do not reintroduce it for
   portfolio output.
 - `frontend/` was the old Vite source app path. Do not reintroduce it for
@@ -44,10 +45,10 @@ refactor. It is intentionally about path roles, not visual direction.
   - `make portfolio`
   - `make portfolio-install`
   - `make portfolio-build`
-  - legacy aliases:
-    - `make portfolio-app-install`
-    - `make frontend-install`
-    - `make frontend-build`
+- Legacy aliases remain runnable but are compatibility-only:
+  - `make portfolio-app-install`
+  - `make frontend-install`
+  - `make frontend-build`
 
 ## Completed Renames
 
@@ -82,18 +83,26 @@ It includes:
 Automated eval reports, strict OCR gates, and tracked beta snapshots remain
 separate eval evidence lanes.
 
+Generated trace artifacts from workbench submissions use manual-eval workbench
+names:
+
+- tool name: `manual_eval_workbench/eval_submission`
+- trace type: `manual_eval_workbench_submission`
+
 ## Stability Contract
 
-- Public routes and operator target names stay stable:
+- Public routes and canonical operator target names stay stable:
   - `/portfolio`
   - `/assets`
   - `make portfolio`
   - `make portfolio-install`
   - `make portfolio-build`
+  - `make portfolio-mockups`
+- Compatibility aliases stay runnable during the migration but should not be
+  used as new IA names:
   - `make portfolio-app-install`
   - `make frontend-install`
   - `make frontend-build`
-  - `make portfolio-mockups`
 
 ## Guardrails
 
@@ -102,3 +111,5 @@ separate eval evidence lanes.
   already served and tested.
 - Do not promote private `docs/peanut/` mockups into public docs without an
   explicit promotion decision.
+- Do not introduce new generated artifacts or docs that name the manual eval
+  workbench as `ui`.

@@ -663,13 +663,24 @@ class MakefileContractTests(unittest.TestCase):
         self.assertFalse((REPO_ROOT / "tools" / "ocr_workflow.sh").exists())
         self.assertFalse((REPO_ROOT / "tools" / "ensure_server_daemon.sh").exists())
 
-    def test_frontend_surface_names_are_aliases_for_portfolio_targets(self) -> None:
+    def test_frontend_surface_names_are_legacy_portfolio_aliases(self) -> None:
         text = _makefile_contract_text()
 
         self.assertRegex(
-            text, r"(?m)^portfolio-app-install frontend-install:\s*portfolio-install$"
+            text,
+            (
+                r"(?m)^portfolio-app-install frontend-install:"
+                r"\s*portfolio-install\n"
+                r"\t@echo \"Legacy alias: use make portfolio-install\.\"$"
+            ),
         )
-        self.assertRegex(text, r"(?m)^frontend-build:\s*portfolio-build$")
+        self.assertRegex(
+            text,
+            (
+                r"(?m)^frontend-build:\s*portfolio-build\n"
+                r"\t@echo \"Legacy alias: use make portfolio-build\.\"$"
+            ),
+        )
 
     def test_portfolio_app_dir_is_canonical_but_legacy_frontend_override_still_works(
         self,
