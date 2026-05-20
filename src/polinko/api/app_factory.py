@@ -4783,6 +4783,7 @@ def create_app(config: AppConfig) -> FastAPI:
             attachment_ocr_texts: list[tuple[str, str]] = []
             guardrail_note: str | None = None
             harness_mode = req.harness_mode or deps.chat_harness_default_mode
+            output_text = ""
             try:
                 if harness_mode == "fixture":
                     pipeline = "fixture"
@@ -4818,6 +4819,11 @@ def create_app(config: AppConfig) -> FastAPI:
                             dedup_key=dedup_key,
                             operation="ocr",
                         )
+                        extracted_text = ""
+                        visual_context: str | None = None
+                        run_id = ""
+                        run_status = ""
+                        run_source_name = ocr_req.source_name
                         if cached_payload is not None:
                             try:
                                 cached_response = OcrResponse.model_validate(
