@@ -10,6 +10,7 @@ MAKEFILE = REPO_ROOT / "Makefile"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
+CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
 SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "run_server_daemon.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
@@ -130,6 +131,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("PYTHON ?=", config_text)
         self.assertIn("CLI_ENTRYPOINT ?= main.py", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
+        self.assertIn("CAFFEINATE_SCRIPT ?= ./tools/manage_caffeinate.sh", config_text)
+        self.assertIn("CAFFEINATE_ENV =", config_text)
         self.assertIn(
             "SERVER_DAEMON_SCRIPT ?= ./tools/run_server_daemon.sh", config_text
         )
@@ -530,9 +533,18 @@ class MakefileContractTests(unittest.TestCase):
     def test_runtime_helper_scripts_are_named_for_their_roles(self) -> None:
         text = _makefile_contract_text()
 
+        self.assertTrue(CAFFEINATE_SCRIPT.is_file())
         self.assertTrue(SERVER_DAEMON_SCRIPT.is_file())
+        self.assertTrue(os.access(CAFFEINATE_SCRIPT, os.X_OK))
         self.assertTrue(os.access(SERVER_DAEMON_SCRIPT, os.X_OK))
+        self.assertIn('bash "$(CAFFEINATE_SCRIPT)" start', text)
+        self.assertIn('bash "$(CAFFEINATE_SCRIPT)" stop', text)
+        self.assertIn('bash "$(CAFFEINATE_SCRIPT)" stop-all', text)
+        self.assertIn('bash "$(CAFFEINATE_SCRIPT)" status', text)
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)"', text)
+        self.assertNotIn("nohup $(CAFFEINATE_CMD)", text)
+        self.assertNotIn('pgrep -f "^/usr/bin/caffeinate -d -i -m', text)
+        self.assertNotIn("/usr/bin/pmset -g assertions", text)
 
     def test_eval_helper_scripts_are_named_for_their_roles(self) -> None:
         self.assertTrue(OCR_WORKFLOW_SCRIPT.is_file())
@@ -689,6 +701,8 @@ class MakefileContractTests(unittest.TestCase):
             "portfolio-playwright",
             "open-api-docs",
             "viz",
+            "caffeinate",
+            "caffeinate-status",
             "caffeinate-off-all",
             "eod-stop",
             "backend-gate",
