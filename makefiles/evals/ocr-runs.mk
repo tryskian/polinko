@@ -11,13 +11,7 @@
 .PHONY: eval-ocr-transcript-stability-illustration-benchmark
 
 eval-ocr-transcript-cases:
-	@set -eu; \
-	if [ ! -f "$(OCR_TRANSCRIPT_CASES)" ]; then \
-		echo "Transcript OCR cases not found: $(OCR_TRANSCRIPT_CASES)"; \
-		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
-		exit 1; \
-	fi; \
-	$(OCR_EVAL_RUNNER_ENV) bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)"
+	@$(OCR_BASE_TRANSCRIPT_WORKFLOW_ENV) bash "$(OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT)" cases
 
 eval-ocr-transcript-cases-growth:
 	@$(OCR_GUARDED_CASE_RUNNER_ENV) \
@@ -108,13 +102,7 @@ eval-ocr-transcript-cases-illustration-benchmark:
 		bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)"
 
 eval-ocr-transcript-stability:
-	@set -eu; \
-	if [ ! -f "$(OCR_TRANSCRIPT_CASES)" ]; then \
-		echo "Transcript OCR cases not found: $(OCR_TRANSCRIPT_CASES)"; \
-		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
-		exit 1; \
-	fi; \
-	OCR_STABILITY_PYTHONUNBUFFERED=1 $(OCR_STABILITY_RUNNER_ENV) bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)" "$(OCR_STABILITY_RUNS)" "$(OCR_STABILITY_OCR_RETRIES)" "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" "$(OCR_STABILITY_CASE_DELAY_MS)" "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" "$(OCR_STABILITY_REPORT_DIR)" "$(OCR_STABILITY_OUTPUT)"
+	@$(OCR_BASE_TRANSCRIPT_WORKFLOW_ENV) bash "$(OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT)" stability
 
 eval-ocr-transcript-growth:
 	@$(OCR_REPORT_WORKFLOW_ENV) bash "$(OCR_REPORT_WORKFLOW_SCRIPT)" growth-metrics

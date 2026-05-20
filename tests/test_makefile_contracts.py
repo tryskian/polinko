@@ -13,6 +13,9 @@ OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
 OCR_GUARDED_CASE_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_guarded_ocr_case_eval.sh"
+OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT = (
+    REPO_ROOT / "tools" / "run_ocr_base_transcript_workflow.sh"
+)
 OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT = (
     REPO_ROOT / "tools" / "run_ocr_focus_stability_workflow.sh"
 )
@@ -130,6 +133,11 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("OCR_GUARDED_CASE_RUNNER_ENV =", config_text)
+        self.assertIn(
+            "OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT ?= ./tools/run_ocr_base_transcript_workflow.sh",
+            config_text,
+        )
+        self.assertIn("OCR_BASE_TRANSCRIPT_WORKFLOW_ENV =", config_text)
         self.assertIn(
             "OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT ?= ./tools/run_ocr_focus_stability_workflow.sh",
             config_text,
@@ -306,6 +314,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("OCR_FOCUS_SKIP_RECENT_RATE_LIMIT", text)
         self.assertNotIn("OUTPUT_JSON=", text)
         for moved_cases in (
+            "OCR_TRANSCRIPT_CASES",
             "OCR_TRANSCRIPT_CASES_HANDWRITING",
             "OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK",
             "OCR_TRANSCRIPT_CASES_TYPED",
@@ -314,15 +323,13 @@ class MakefileContractTests(unittest.TestCase):
             "OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK",
         ):
             self.assertNotIn(f'eval_case_guard_or_exit "$({moved_cases})"', text)
-        self.assertIn(
-            'bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)"', text
-        )
+        self.assertIn('bash "$(OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT)" cases', text)
         self.assertIn(
             'bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING)"',
             text,
         )
         self.assertIn(
-            'bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)"',
+            'bash "$(OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT)" stability',
             text,
         )
         self.assertIn(
@@ -411,6 +418,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(EVAL_SERVER_DAEMON_SCRIPT.is_file())
         self.assertTrue(EVAL_CASE_GUARD_SCRIPT.is_file())
         self.assertTrue(OCR_GUARDED_CASE_RUNNER_SCRIPT.is_file())
+        self.assertTrue(OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(EVAL_REPORT_RUNNER_SCRIPT.is_file())
@@ -426,6 +434,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(os.access(EVAL_SERVER_DAEMON_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_CASE_GUARD_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GUARDED_CASE_RUNNER_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_REPORT_RUNNER_SCRIPT, os.X_OK))
@@ -450,6 +459,12 @@ class MakefileContractTests(unittest.TestCase):
         guarded_runner_text = OCR_GUARDED_CASE_RUNNER_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("EVAL_CASE_GUARD_SCRIPT", guarded_runner_text)
         self.assertIn('exec "$@"', guarded_runner_text)
+        base_transcript_workflow_text = OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT.read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("OCR_EVAL_RUNNER_SCRIPT", base_transcript_workflow_text)
+        self.assertIn("OCR_STABILITY_RUNNER_SCRIPT", base_transcript_workflow_text)
+        self.assertIn('exec bash "$eval_runner_script"', base_transcript_workflow_text)
         report_workflow_text = OCR_REPORT_WORKFLOW_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("OCR_REPORT_BUILDER_SCRIPT", report_workflow_text)
         self.assertIn('exec bash "$report_builder_script"', report_workflow_text)
