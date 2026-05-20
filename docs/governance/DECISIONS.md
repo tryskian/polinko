@@ -492,3 +492,15 @@ or branch history instead.
 - Why: The root Makefile and target-family includes are already decomposed.
   Splitting the remaining config monolith makes ownership clearer while
   preserving the public Make target and override contract.
+
+## D-037: Split eval Make targets by role
+
+- Date: `2026-05-20`
+- Category: `build_system`
+- Tags: `makefile`, `evals`, `modularity`, `ia`
+- Decision: Keep `makefiles/evals.mk` as the stable eval-family entrypoint,
+  but move aliases, core eval suites, gates, OCR intake, and OCR runner targets
+  into focused `makefiles/evals/*.mk` includes.
+- Why: Eval targets are active research surfaces. Splitting the large eval
+  target file by role keeps the command contract visible while making future
+  research-lane changes smaller and easier to validate.

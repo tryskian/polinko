@@ -71,6 +71,19 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/evals\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/ops\.mk$")
 
+    def test_eval_targets_are_extracted_through_role_includes(self) -> None:
+        evals_entry_text = MAKE_EVALS.read_text(encoding="utf-8")
+
+        self.assertIn("include makefiles/evals/aliases.mk", evals_entry_text)
+        self.assertIn("include makefiles/evals/core.mk", evals_entry_text)
+        self.assertIn("include makefiles/evals/gates.mk", evals_entry_text)
+        self.assertIn("include makefiles/evals/ocr-intake.mk", evals_entry_text)
+        self.assertIn("include makefiles/evals/ocr-runs.mk", evals_entry_text)
+        self.assertIn("ocrkernel:", _makefile_contract_text())
+        self.assertIn(
+            "eval-ocr-transcript-stability-growth:", _makefile_contract_text()
+        )
+
     def test_shared_config_is_extracted_before_target_families(self) -> None:
         root_text = _makefile_text()
         config_entry_text = MAKE_CONFIG.read_text(encoding="utf-8")
@@ -226,7 +239,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^ocrminehand:\s*ocr-cases-from-export$")
 
     def test_eval_workflow_orchestration_delegates_to_scripts(self) -> None:
-        text = MAKE_EVALS.read_text(encoding="utf-8")
+        text = _makefile_source_text(MAKE_EVALS)
         guard_text = EVAL_CASE_GUARD_SCRIPT.read_text(encoding="utf-8")
 
         self.assertNotIn("$(MAKE)", text)
@@ -329,10 +342,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("$(PYTHON) -m tools.report_ocr_focus_fail_patterns", text)
         self.assertNotIn("FAIL_COHORT_ARGS=", text)
         self.assertNotIn("FOCUS_ARGS=", text)
-        evals_text = MAKE_EVALS.read_text(encoding="utf-8")
-        self.assertNotIn("$(PYTHON) -m uvicorn $(ASGI_APP)", evals_text)
-        self.assertNotIn('curl -fsS "$$BASE_URL/health"', evals_text)
-        self.assertNotIn("SERVER_PID=$$!", evals_text)
+        self.assertNotIn("$(PYTHON) -m uvicorn $(ASGI_APP)", text)
+        self.assertNotIn('curl -fsS "$$BASE_URL/health"', text)
+        self.assertNotIn("SERVER_PID=$$!", text)
         self.assertRegex(
             text,
             r"(?m)^ocrkernel:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tCGPT_EXPORT_ROOT_DEFAULT=\"\$\(CGPT_EXPORT_ROOT_DEFAULT\)\" \\\n\t\tbash \"\$\(OCR_WORKFLOW_SCRIPT\)\" ocrkernel$",

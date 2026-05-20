@@ -31,6 +31,9 @@ This page is the structural map of the tracked system.
   - root operator target router and include order
 - `makefiles/`
   - focused Make target families and configuration includes
+- `makefiles/evals/`
+  - eval target fragments for aliases, core suites, gates, OCR intake, and OCR
+    runners
 - `docs/`
   - governance, runtime references, and research docs
 - `apps/portfolio/`
