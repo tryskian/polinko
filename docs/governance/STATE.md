@@ -12,6 +12,8 @@ Last updated: 2026-05-20
   - CLI chat runs through `main.py`
   - `app.py` remains only as a lazy compatibility shim during the entrypoint
     migration
+  - Python package-boundary preflight is documented; no runtime imports have
+    moved under `src/polinko/` yet
   - prompt and runtime behaviour stay minimal and deterministic
   - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active
     because they feed manual evals, feedback, checkpoints, exports, and
@@ -68,6 +70,7 @@ Last updated: 2026-05-20
   - `STATE` holds tracked current truth
   - `RUNBOOK` holds operator procedure
   - `ARCHITECTURE` holds stable system shape
+  - `PACKAGE_BOUNDARY` holds the Python package-boundary preflight
   - local `SESSION_HANDOFF` holds the active slice
   - `make end` now mirrors the legacy `make eod` closeout routine directly
 

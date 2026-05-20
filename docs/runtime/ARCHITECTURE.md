@@ -8,6 +8,8 @@ This page is the structural map of the tracked system.
 - Use `docs/runtime/OCR_REFERENCE.md` for the OCR lane reference.
 - Use `docs/runtime/SURFACE_IA.md` for web surface path roles and planned
   directory renames.
+- Use `docs/runtime/PACKAGE_BOUNDARY.md` for the Python package-boundary
+  preflight and future `src/polinko/` move.
 
 ## Top-Level Map
 
@@ -103,6 +105,8 @@ This page is the structural map of the tracked system.
   - local `docs/peanut/assets/portfolio-mockups/`
 - web surface source/output naming:
   - `docs/runtime/SURFACE_IA.md`
+- Python package-boundary preflight:
+  - `docs/runtime/PACKAGE_BOUNDARY.md`
 - historical beta references:
   - `docs/eval/`
 
@@ -118,6 +122,8 @@ This page is the structural map of the tracked system.
   - operator procedure
 - `OCR_REFERENCE`
   - OCR eval lane reference
+- `PACKAGE_BOUNDARY`
+  - Python package-boundary preflight
 - local `SESSION_HANDOFF`
   - active slice and next-session carryover
 
