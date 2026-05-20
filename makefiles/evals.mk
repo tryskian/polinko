@@ -517,26 +517,14 @@ eval-ocr-transcript-cases-growth:
 	PYTHON="$(PYTHON)"; \
 	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
 	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_GROWTH)" "Transcript OCR growth cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript OCR growth cases available yet; skipping eval."; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-	PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" --show-text --offset "$(OCR_GROWTH_EVAL_OFFSET)" --max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	$(OCR_GROWTH_RUNNER_ENV) bash "$(OCR_GROWTH_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)" "$(OCR_EVAL_TIMEOUT)" "$(OCR_GROWTH_EVAL_OFFSET)" "$(OCR_GROWTH_EVAL_MAX_CASES)" "$(OCR_EVAL_OCR_RETRIES)" "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
 
 eval-ocr-transcript-cases-growth-batched:
 	@set -eu; \
 	PYTHON="$(PYTHON)"; \
 	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
 	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_GROWTH)" "Transcript OCR growth cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript OCR growth cases available yet; skipping eval."; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-	PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr_batched \
-		--base-url "http://127.0.0.1:8000" \
-		--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
-		--batch-size "$(OCR_GROWTH_BATCH_SIZE)" \
-		--ocr-retries "$(OCR_GROWTH_OCR_RETRIES)" \
-		--ocr-retry-delay-ms "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" \
-		--offset "$(OCR_GROWTH_EVAL_OFFSET)" \
-		--max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" \
-		--report-dir "$(OCR_GROWTH_BATCH_REPORT_DIR)" \
-		--output-json "$(OCR_GROWTH_BATCH_SUMMARY_JSON)" \
-		--output-markdown "$(OCR_GROWTH_BATCH_SUMMARY_MD)"
+	$(OCR_GROWTH_RUNNER_ENV) bash "$(OCR_GROWTH_BATCH_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)" "$(OCR_GROWTH_BATCH_SIZE)" "$(OCR_GROWTH_OCR_RETRIES)" "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" "$(OCR_GROWTH_EVAL_OFFSET)" "$(OCR_GROWTH_EVAL_MAX_CASES)" "$(OCR_GROWTH_BATCH_REPORT_DIR)" "$(OCR_GROWTH_BATCH_SUMMARY_JSON)" "$(OCR_GROWTH_BATCH_SUMMARY_MD)"
 
 eval-ocr-transcript-cases-handwriting:
 	@set -eu; \
@@ -720,22 +708,7 @@ eval-ocr-transcript-stability-growth:
 		OUTPUT_JSON=".local/eval_reports/ocr_growth_stability.slice-offset$(OCR_GROWTH_EVAL_OFFSET)-max$(OCR_GROWTH_EVAL_MAX_CASES).json"; \
 		echo "Using sliced growth stability output: $$OUTPUT_JSON"; \
 	fi; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-			PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr_stability \
-				--base-url "http://127.0.0.1:8000" \
-				--cases "$(OCR_TRANSCRIPT_CASES_GROWTH)" \
-				--runs "$(OCR_GROWTH_STABILITY_RUNS)" \
-				--offset "$(OCR_GROWTH_EVAL_OFFSET)" \
-				--max-cases "$(OCR_GROWTH_EVAL_MAX_CASES)" \
-			--timeout "$(OCR_EVAL_TIMEOUT)" \
-			--ocr-retries "$(OCR_GROWTH_OCR_RETRIES)" \
-			--ocr-retry-delay-ms "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" \
-			--case-delay-ms "$(OCR_GROWTH_CASE_DELAY_MS)" \
-			--rate-limit-cooldown-ms "$(OCR_GROWTH_RATE_LIMIT_COOLDOWN_MS)" \
-			--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-			--stop-on-rate-limit-abort \
-			--report-dir "$(OCR_GROWTH_STABILITY_REPORT_DIR)" \
-			--output-json "$$OUTPUT_JSON"
+	$(OCR_GROWTH_RUNNER_ENV) bash "$(OCR_GROWTH_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)" "$(OCR_GROWTH_STABILITY_RUNS)" "$(OCR_GROWTH_EVAL_OFFSET)" "$(OCR_GROWTH_EVAL_MAX_CASES)" "$(OCR_EVAL_TIMEOUT)" "$(OCR_GROWTH_OCR_RETRIES)" "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" "$(OCR_GROWTH_CASE_DELAY_MS)" "$(OCR_GROWTH_RATE_LIMIT_COOLDOWN_MS)" "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" "$(OCR_GROWTH_STABILITY_REPORT_DIR)" "$$OUTPUT_JSON"
 
 eval-ocr-transcript-stability-handwriting-benchmark:
 	@set -eu; \

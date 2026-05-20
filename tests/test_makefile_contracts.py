@@ -14,6 +14,9 @@ EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
 OCR_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_cases.sh"
 OCR_STABILITY_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_stability.sh"
+OCR_GROWTH_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_cases.sh"
+OCR_GROWTH_BATCH_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_batched.sh"
+OCR_GROWTH_STABILITY_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_stability.sh"
 
 
 def _makefile_text() -> str:
@@ -82,6 +85,19 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("OCR_STABILITY_RUNNER_ENV =", config_text)
+        self.assertIn(
+            "OCR_GROWTH_EVAL_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_growth_cases.sh",
+            config_text,
+        )
+        self.assertIn(
+            "OCR_GROWTH_BATCH_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_growth_batched.sh",
+            config_text,
+        )
+        self.assertIn(
+            "OCR_GROWTH_STABILITY_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_growth_stability.sh",
+            config_text,
+        )
+        self.assertIn("OCR_GROWTH_RUNNER_ENV =", config_text)
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -169,10 +185,27 @@ class MakefileContractTests(unittest.TestCase):
             'bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"',
             text,
         )
+        self.assertIn(
+            'bash "$(OCR_GROWTH_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
+            text,
+        )
+        self.assertIn(
+            'bash "$(OCR_GROWTH_BATCH_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
+            text,
+        )
+        self.assertIn(
+            'bash "$(OCR_GROWTH_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
+            text,
+        )
         self.assertNotIn(
             '$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" --strict',
             text,
         )
+        self.assertNotIn(
+            'PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
+            text,
+        )
+        self.assertNotIn("$(PYTHON) -m tools.eval_ocr_batched", text)
         self.assertNotIn(
             '$(PYTHON) -m tools.eval_ocr_stability \\\n\t\t\t\t--base-url "http://127.0.0.1:8000" \\\n\t\t\t\t--cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"',
             text,
@@ -189,7 +222,7 @@ class MakefileContractTests(unittest.TestCase):
             text,
             r"(?m)^ocr-notebook-workflow:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tbash \"\$\(OCR_WORKFLOW_SCRIPT\)\" ocr-notebook-workflow$",
         )
-        self.assertIn('bash "$(EVAL_SERVER_DAEMON_SCRIPT)"', text)
+        self.assertNotIn('bash "$(EVAL_SERVER_DAEMON_SCRIPT)"', text)
 
     def test_eval_helper_scripts_are_named_for_their_roles(self) -> None:
         self.assertTrue(OCR_WORKFLOW_SCRIPT.is_file())
@@ -197,11 +230,27 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(EVAL_CASE_GUARD_SCRIPT.is_file())
         self.assertTrue(OCR_EVAL_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_STABILITY_RUNNER_SCRIPT.is_file())
+        self.assertTrue(OCR_GROWTH_EVAL_RUNNER_SCRIPT.is_file())
+        self.assertTrue(OCR_GROWTH_BATCH_RUNNER_SCRIPT.is_file())
+        self.assertTrue(OCR_GROWTH_STABILITY_RUNNER_SCRIPT.is_file())
         self.assertTrue(os.access(OCR_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_SERVER_DAEMON_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_CASE_GUARD_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_EVAL_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_STABILITY_RUNNER_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_GROWTH_EVAL_RUNNER_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_GROWTH_BATCH_RUNNER_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_GROWTH_STABILITY_RUNNER_SCRIPT, os.X_OK))
+        for script in (
+            OCR_EVAL_RUNNER_SCRIPT,
+            OCR_STABILITY_RUNNER_SCRIPT,
+            OCR_GROWTH_EVAL_RUNNER_SCRIPT,
+            OCR_GROWTH_BATCH_RUNNER_SCRIPT,
+            OCR_GROWTH_STABILITY_RUNNER_SCRIPT,
+        ):
+            script_text = script.read_text(encoding="utf-8")
+            self.assertIn("EVAL_SERVER_DAEMON_SCRIPT", script_text)
+            self.assertIn('bash "$server_daemon_script"', script_text)
         self.assertFalse((REPO_ROOT / "tools" / "ocr_workflow.sh").exists())
         self.assertFalse((REPO_ROOT / "tools" / "ensure_server_daemon.sh").exists())
 
