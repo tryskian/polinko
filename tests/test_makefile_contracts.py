@@ -13,6 +13,12 @@ OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
 OCR_GUARDED_CASE_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_guarded_ocr_case_eval.sh"
+OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT = (
+    REPO_ROOT / "tools" / "run_ocr_focus_stability_workflow.sh"
+)
+OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT = (
+    REPO_ROOT / "tools" / "run_ocr_growth_stability_workflow.sh"
+)
 EVAL_REPORT_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_report.sh"
 LOCAL_EVAL_GATE_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_local_eval_gate.sh"
 OCR_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_cases.sh"
@@ -123,6 +129,16 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("OCR_GUARDED_CASE_RUNNER_ENV =", config_text)
+        self.assertIn(
+            "OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT ?= ./tools/run_ocr_focus_stability_workflow.sh",
+            config_text,
+        )
+        self.assertIn("OCR_FOCUS_STABILITY_WORKFLOW_ENV =", config_text)
+        self.assertIn(
+            "OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT ?= ./tools/run_ocr_growth_stability_workflow.sh",
+            config_text,
+        )
+        self.assertIn("OCR_GROWTH_STABILITY_WORKFLOW_ENV =", config_text)
         self.assertIn(
             "EVAL_REPORT_RUNNER_SCRIPT ?= ./tools/run_eval_report.sh", config_text
         )
@@ -248,13 +264,23 @@ class MakefileContractTests(unittest.TestCase):
         text = _makefile_source_text(MAKE_EVALS)
         guard_text = EVAL_CASE_GUARD_SCRIPT.read_text(encoding="utf-8")
         guarded_runner_text = OCR_GUARDED_CASE_RUNNER_SCRIPT.read_text(encoding="utf-8")
+        focus_workflow_text = OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT.read_text(
+            encoding="utf-8"
+        )
+        growth_workflow_text = OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT.read_text(
+            encoding="utf-8"
+        )
 
         self.assertNotIn("$(MAKE)", text)
         self.assertNotIn("import json,pathlib", text)
         self.assertNotIn("CASE_COUNT=", text)
         self.assertIn("tools.count_eval_cases", guard_text)
         self.assertIn("eval_case_guard_or_exit", guarded_runner_text)
+        self.assertIn("eval_case_guard_or_exit", focus_workflow_text)
+        self.assertIn("eval_case_guard_or_exit", growth_workflow_text)
         self.assertIn('bash "$(OCR_GUARDED_CASE_RUNNER_SCRIPT)"', text)
+        self.assertIn('bash "$(OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT)"', text)
+        self.assertIn('bash "$(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT)"', text)
         for suite in (
             "retrieval",
             "file-search",
@@ -270,7 +296,9 @@ class MakefileContractTests(unittest.TestCase):
                 f'bash "$(EVAL_REPORT_RUNNER_SCRIPT)" {suite}',
                 text,
             )
-        self.assertIn('eval_case_guard_or_exit "$(OCR_FOCUS_CASES_JSON)"', text)
+        self.assertNotIn("eval_case_guard_or_exit", text)
+        self.assertNotIn("OCR_FOCUS_SKIP_RECENT_RATE_LIMIT", text)
+        self.assertNotIn("OUTPUT_JSON=", text)
         for moved_cases in (
             "OCR_TRANSCRIPT_CASES_HANDWRITING",
             "OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK",
@@ -292,10 +320,6 @@ class MakefileContractTests(unittest.TestCase):
             text,
         )
         self.assertIn(
-            'bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_FOCUS_CASES_JSON)"',
-            text,
-        )
-        self.assertIn(
             'bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"',
             text,
         )
@@ -307,7 +331,7 @@ class MakefileContractTests(unittest.TestCase):
             'bash "$(OCR_GROWTH_BATCH_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
             text,
         )
-        self.assertIn(
+        self.assertNotIn(
             'bash "$(OCR_GROWTH_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
             text,
         )
@@ -381,6 +405,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(EVAL_SERVER_DAEMON_SCRIPT.is_file())
         self.assertTrue(EVAL_CASE_GUARD_SCRIPT.is_file())
         self.assertTrue(OCR_GUARDED_CASE_RUNNER_SCRIPT.is_file())
+        self.assertTrue(OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT.is_file())
+        self.assertTrue(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(EVAL_REPORT_RUNNER_SCRIPT.is_file())
         self.assertTrue(LOCAL_EVAL_GATE_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_EVAL_RUNNER_SCRIPT.is_file())
@@ -393,6 +419,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(os.access(EVAL_SERVER_DAEMON_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_CASE_GUARD_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GUARDED_CASE_RUNNER_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_REPORT_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(LOCAL_EVAL_GATE_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_EVAL_RUNNER_SCRIPT, os.X_OK))
@@ -414,6 +442,13 @@ class MakefileContractTests(unittest.TestCase):
         guarded_runner_text = OCR_GUARDED_CASE_RUNNER_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("EVAL_CASE_GUARD_SCRIPT", guarded_runner_text)
         self.assertIn('exec "$@"', guarded_runner_text)
+        for script in (
+            OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT,
+            OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT,
+        ):
+            script_text = script.read_text(encoding="utf-8")
+            self.assertIn("EVAL_CASE_GUARD_SCRIPT", script_text)
+            self.assertIn('exec bash "', script_text)
         self.assertFalse((REPO_ROOT / "tools" / "ocr_workflow.sh").exists())
         self.assertFalse((REPO_ROOT / "tools" / "ensure_server_daemon.sh").exists())
 

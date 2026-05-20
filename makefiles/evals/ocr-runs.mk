@@ -164,25 +164,7 @@ eval-ocr-focus-cases:
 	$(OCR_REPORT_BUILDER_ENV) bash "$(OCR_REPORT_BUILDER_SCRIPT)" focus-cases
 
 eval-ocr-focus-stability:
-	@set -eu; \
-	PYTHON="$(PYTHON)"; \
-	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
-	eval_case_guard_or_exit "$(OCR_FOCUS_CASES_JSON)" "OCR focus cases not found" "Run: make ocrfocuscases" "No OCR focus cases available; skipping focus stability run."; \
-	if [ "$(OCR_FOCUS_SKIP_RECENT_RATE_LIMIT)" = "true" ] && [ -f "$(OCR_FOCUS_OUTPUT)" ]; then \
-		SKIP=$$($(PYTHON) -m tools.should_skip_ocr_run --report "$(OCR_FOCUS_OUTPUT)" --backoff-seconds "$(OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS)"); \
-		if [ "$$SKIP" = "1" ]; then \
-			echo "Skipping focus stability replay: recent rate-limit abort is still within backoff window ($(OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS)s)."; \
-			exit 0; \
-		fi; \
-	fi; \
-	if [ "$(OCR_FOCUS_SKIP_RECENT_RATE_LIMIT)" = "true" ] && [ -f "$(OCR_GROWTH_FAIL_COHORT_JSON)" ]; then \
-		SKIP=$$($(PYTHON) -m tools.should_skip_ocr_run --report "$(OCR_GROWTH_FAIL_COHORT_JSON)" --backoff-seconds "$(OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS)"); \
-		if [ "$$SKIP" = "1" ]; then \
-			echo "Skipping focus stability replay: recent growth fail cohort shows active rate-limit pressure (backoff $(OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS)s)."; \
-			exit 0; \
-		fi; \
-	fi; \
-	$(OCR_STABILITY_RUNNER_ENV) bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_FOCUS_CASES_JSON)" "$(OCR_FOCUS_RUNS)" "$(OCR_FOCUS_OCR_RETRIES)" "$(OCR_FOCUS_OCR_RETRY_DELAY_MS)" "$(OCR_FOCUS_CASE_DELAY_MS)" "$(OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS)" "$(OCR_FOCUS_REPORT_DIR)" "$(OCR_FOCUS_OUTPUT)"
+	@$(OCR_FOCUS_STABILITY_WORKFLOW_ENV) bash "$(OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT)"
 
 eval-ocr-focus-fail-patterns:
 	@set -eu; \
@@ -199,16 +181,7 @@ eval-ocr-focus-fail-patterns:
 	$(OCR_REPORT_BUILDER_ENV) bash "$(OCR_REPORT_BUILDER_SCRIPT)" focus-fail-patterns
 
 eval-ocr-transcript-stability-growth:
-	@set -eu; \
-	PYTHON="$(PYTHON)"; \
-	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
-	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_GROWTH)" "Transcript OCR growth cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript OCR growth cases available yet; skipping stability run."; \
-	OUTPUT_JSON="$(OCR_GROWTH_STABILITY_OUTPUT)"; \
-	if [ "$(OCR_GROWTH_EVAL_OFFSET)" -gt 0 ] || [ "$(OCR_GROWTH_EVAL_MAX_CASES)" -gt 0 ]; then \
-		OUTPUT_JSON=".local/eval_reports/ocr_growth_stability.slice-offset$(OCR_GROWTH_EVAL_OFFSET)-max$(OCR_GROWTH_EVAL_MAX_CASES).json"; \
-		echo "Using sliced growth stability output: $$OUTPUT_JSON"; \
-	fi; \
-	$(OCR_GROWTH_RUNNER_ENV) bash "$(OCR_GROWTH_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)" "$(OCR_GROWTH_STABILITY_RUNS)" "$(OCR_GROWTH_EVAL_OFFSET)" "$(OCR_GROWTH_EVAL_MAX_CASES)" "$(OCR_EVAL_TIMEOUT)" "$(OCR_GROWTH_OCR_RETRIES)" "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" "$(OCR_GROWTH_CASE_DELAY_MS)" "$(OCR_GROWTH_RATE_LIMIT_COOLDOWN_MS)" "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" "$(OCR_GROWTH_STABILITY_REPORT_DIR)" "$$OUTPUT_JSON"
+	@$(OCR_GROWTH_STABILITY_WORKFLOW_ENV) bash "$(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT)"
 
 eval-ocr-transcript-stability-handwriting-benchmark:
 	@$(OCR_GUARDED_CASE_RUNNER_ENV) \
