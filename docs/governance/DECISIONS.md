@@ -582,3 +582,17 @@ or branch history instead.
   use, but removing `app.py` would break older local scripts. A lazy shim keeps
   backward compatibility without preserving `app.py` as an active runtime
   surface.
+
+## D-044: Preflight the Python package boundary before moving imports
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `python`, `package_boundary`, `src_layout`, `imports`
+- Decision: Treat `src/polinko/` as the target runtime package shape, but keep
+  this kernel as a preflight only. Root `main.py`, `server.py`, and `app.py`
+  stay compatibility launchers while `config.py`, `api/`, and `core/` are the
+  future runtime-package move set. Root `tools/` remains repo-local operator
+  tooling until runtime imports are stable.
+- Why: Moving the import tree without an explicit boundary would risk broad
+  behavior drift across the API, CLI, eval scripts, and tests. The preflight
+  gives the next kernel a reviewed target shape before any file move happens.
