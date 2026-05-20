@@ -58,7 +58,11 @@ def _iter_candidates(review_payload: dict[str, Any], *, lane: str) -> list[Candi
             continue
         if "ocr_framing_signal" in row and not bool(row.get("ocr_framing_signal")):
             continue
-        signal_strength = str(row.get("signal_strength", row.get("confidence", "low"))).strip().lower()
+        signal_strength = (
+            str(row.get("signal_strength", row.get("confidence", "low")))
+            .strip()
+            .lower()
+        )
         if SIGNAL_STRENGTH_RANK.get(signal_strength, 0) <= 0:
             continue
         chosen_phrases = [

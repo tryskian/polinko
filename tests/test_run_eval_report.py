@@ -48,7 +48,9 @@ class RunEvalReportTests(unittest.TestCase):
                 }
             )
 
-            report = lambda name: str(report_dir / f"{name}-run-123.json")
+            def report(name: str) -> str:
+                return str(report_dir / f"{name}-run-123.json")
+
             expectations = {
                 "retrieval": [
                     "-m",
@@ -182,7 +184,8 @@ class RunEvalReportTests(unittest.TestCase):
 
                 self.assertEqual(result.returncode, 2)
                 self.assertTrue(
-                    "Usage:" in result.stderr or "Unknown eval report suite" in result.stderr
+                    "Usage:" in result.stderr
+                    or "Unknown eval report suite" in result.stderr
                 )
 
 

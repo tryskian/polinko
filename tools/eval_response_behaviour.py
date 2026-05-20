@@ -12,7 +12,6 @@ from tools.eval_chat_common import create_chat as _create_chat
 from tools.eval_chat_common import default_headers as _headers
 from tools.eval_chat_common import delete_chat as _delete_chat
 from tools.eval_chat_common import preflight as _preflight
-from tools.eval_chat_common import request_json as _request_json
 from tools.eval_gate import resolve_binary_gate
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
@@ -66,7 +65,9 @@ def _normalize_phrase_list(raw: Any, *, field_name: str, case_id: str) -> list[s
     if raw is None:
         return []
     if not isinstance(raw, list):
-        raise RuntimeError(f"Case '{case_id}' field '{field_name}' must be a list of strings.")
+        raise RuntimeError(
+            f"Case '{case_id}' field '{field_name}' must be a list of strings."
+        )
     normalized: list[str] = []
     for value in raw:
         phrase = _normalize_text_for_match(str(value))
@@ -75,15 +76,21 @@ def _normalize_phrase_list(raw: Any, *, field_name: str, case_id: str) -> list[s
     return normalized
 
 
-def _normalize_phrase_groups(raw: Any, *, field_name: str, case_id: str) -> list[list[str]]:
+def _normalize_phrase_groups(
+    raw: Any, *, field_name: str, case_id: str
+) -> list[list[str]]:
     if raw is None:
         return []
     if not isinstance(raw, list):
-        raise RuntimeError(f"Case '{case_id}' field '{field_name}' must be a list of string lists.")
+        raise RuntimeError(
+            f"Case '{case_id}' field '{field_name}' must be a list of string lists."
+        )
     groups: list[list[str]] = []
     for group in raw:
         if not isinstance(group, list):
-            raise RuntimeError(f"Case '{case_id}' field '{field_name}' must only contain lists.")
+            raise RuntimeError(
+                f"Case '{case_id}' field '{field_name}' must only contain lists."
+            )
         normalized_group: list[str] = []
         for value in group:
             phrase = _normalize_text_for_match(str(value))
@@ -94,7 +101,9 @@ def _normalize_phrase_groups(raw: Any, *, field_name: str, case_id: str) -> list
     return groups
 
 
-def _load_cases(path: Path, *, default_case_prefix: str = "response-behaviour") -> list[dict[str, Any]]:
+def _load_cases(
+    path: Path, *, default_case_prefix: str = "response-behaviour"
+) -> list[dict[str, Any]]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise RuntimeError("Cases file must be a JSON object.")
@@ -109,7 +118,9 @@ def _load_cases(path: Path, *, default_case_prefix: str = "response-behaviour") 
         case_id = str(case.get("id", f"{default_case_prefix}-{index}")).strip()
         query = str(case.get("query", "")).strip()
         if not case_id or not query:
-            raise RuntimeError(f"Case #{index} must include non-empty 'id' and 'query'.")
+            raise RuntimeError(
+                f"Case #{index} must include non-empty 'id' and 'query'."
+            )
 
         max_words_raw = case.get("max_words")
         max_words: int | None = None
@@ -157,10 +168,16 @@ def _contains_forbidden_phrases(answer: str, forbidden_phrases: list[str]) -> li
 
 
 def _missing_required_all(answer: str, required_all: list[str]) -> list[str]:
-    return [phrase for phrase in required_all if phrase and not _phrase_matches_text(answer, phrase)]
+    return [
+        phrase
+        for phrase in required_all
+        if phrase and not _phrase_matches_text(answer, phrase)
+    ]
 
 
-def _missing_required_any_groups(answer: str, required_any_groups: list[list[str]]) -> list[list[str]]:
+def _missing_required_any_groups(
+    answer: str, required_any_groups: list[list[str]]
+) -> list[list[str]]:
     missing: list[list[str]] = []
     for group in required_any_groups:
         if not any(_phrase_matches_text(answer, phrase) for phrase in group):
@@ -175,7 +192,9 @@ def _apply_deterministic_gate(
 ) -> dict[str, Any]:
     forbidden_hits = _contains_forbidden_phrases(answer, case["must_not_contain"])
     missing_all = _missing_required_all(answer, case["required_all"])
-    missing_any_groups = _missing_required_any_groups(answer, case["required_any_groups"])
+    missing_any_groups = _missing_required_any_groups(
+        answer, case["required_any_groups"]
+    )
     word_count = _word_count(answer)
     max_words = case["max_words"]
     word_count_ok = not isinstance(max_words, int) or word_count <= max_words
@@ -249,7 +268,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run deterministic response-behaviour eval over /chat outputs.",
     )
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
+    parser.add_argument(
+        "--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL."
+    )
     parser.add_argument(
         "--cases",
         default="docs/eval/beta_2_0/response_behaviour_eval_cases.json",
@@ -270,7 +291,9 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Optional run id suffix. Defaults to current epoch seconds.",
     )
-    parser.add_argument("--timeout", type=int, default=90, help="HTTP timeout in seconds.")
+    parser.add_argument(
+        "--timeout", type=int, default=90, help="HTTP timeout in seconds."
+    )
     parser.add_argument(
         "--case-attempts",
         type=int,
@@ -353,7 +376,9 @@ def main() -> int:
         for attempt in range(1, args.case_attempts + 1):
             session_base = f"{args.session_prefix}-{run_id}-{case['id']}"
             session_id = (
-                session_base if args.case_attempts == 1 else f"{session_base}-a{attempt:02d}"
+                session_base
+                if args.case_attempts == 1
+                else f"{session_base}-a{attempt:02d}"
             )
             status_text = "PASS"
             answer = ""
@@ -386,7 +411,10 @@ def main() -> int:
                         f"words={assessment['word_count']}"
                     )
                 else:
-                    joined = "; ".join(assessment["fail_reasons"]) or "deterministic gate failed"
+                    joined = (
+                        "; ".join(assessment["fail_reasons"])
+                        or "deterministic gate failed"
+                    )
                     print(
                         f"  FAIL attempt={attempt}/{args.case_attempts} "
                         f"words={assessment['word_count']} reasons={joined}"
@@ -430,7 +458,9 @@ def main() -> int:
             attempt_results[-1],
         )
         final_assessment = (
-            final_attempt["assessment"] if isinstance(final_attempt.get("assessment"), dict) else {}
+            final_attempt["assessment"]
+            if isinstance(final_attempt.get("assessment"), dict)
+            else {}
         )
         final_reasons = (
             list(final_assessment.get("fail_reasons", []))
@@ -443,7 +473,11 @@ def main() -> int:
             error_text = str(final_attempt.get("error") or "unknown error")
             failures.append(f"{case['id']}: error - {error_text}")
         else:
-            joined = "; ".join(final_reasons) if final_reasons else "deterministic gate failed"
+            joined = (
+                "; ".join(final_reasons)
+                if final_reasons
+                else "deterministic gate failed"
+            )
             failures.append(f"{case['id']}: {joined}")
 
         case_results.append(
@@ -456,7 +490,9 @@ def main() -> int:
                 "gate_outcome": str(final_assessment.get("gate_outcome", "fail")),
                 "word_count": int(final_assessment.get("word_count", 0)),
                 "forbidden_hits": list(final_assessment.get("forbidden_hits", [])),
-                "missing_required_all": list(final_assessment.get("missing_required_all", [])),
+                "missing_required_all": list(
+                    final_assessment.get("missing_required_all", [])
+                ),
                 "missing_required_any_groups": list(
                     final_assessment.get("missing_required_any_groups", [])
                 ),
@@ -494,7 +530,9 @@ def main() -> int:
             "cases": case_results,
             "generated_at": int(time.time()),
         }
-        report_path.write_text(json.dumps(report_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        report_path.write_text(
+            json.dumps(report_payload, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         print(f"Report written: {report_path}")
         trace_jsonl = str(args.trace_jsonl or "").strip()
         if trace_jsonl:

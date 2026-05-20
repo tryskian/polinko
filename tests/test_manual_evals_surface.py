@@ -80,9 +80,16 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             image = run["image"]
             self.assertTrue(str(image["source_filename"]).endswith("image1.png"))
             self.assertEqual(image["display_filename"], "image1.png")
-            self.assertIn(image["status"], {"thumbnail_ready", "resolved_no_pillow", "thumbnail_error"})
+            self.assertIn(
+                image["status"],
+                {"thumbnail_ready", "resolved_no_pillow", "thumbnail_error"},
+            )
             if image["status"] == "thumbnail_ready":
-                self.assertTrue(str(image["thumbnail_data_url"]).startswith("data:image/png;base64,"))
+                self.assertTrue(
+                    str(image["thumbnail_data_url"]).startswith(
+                        "data:image/png;base64,"
+                    )
+                )
 
     def test_source_first_payload_links_feedback_to_source_artifact(self) -> None:
         with TemporaryDirectory() as tmpdir:
@@ -107,8 +114,12 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             self.assertEqual(source_first["judgments"]["manual_feedback"]["total"], 1)
             self.assertEqual(source_first["judgments"]["manual_feedback"]["fail"], 1)
             self.assertEqual(source_first["judgments"]["manual_feedback"]["closed"], 1)
-            self.assertEqual(source_first["lane_summaries"][0]["lane"], "manual_feedback")
-            self.assertEqual(source_first["lane_summaries"][0]["rollup_unit"], "lane_summary")
+            self.assertEqual(
+                source_first["lane_summaries"][0]["lane"], "manual_feedback"
+            )
+            self.assertEqual(
+                source_first["lane_summaries"][0]["rollup_unit"], "lane_summary"
+            )
             exclusions = {row["key"]: row for row in source_first["exclusions"]}
             self.assertEqual(exclusions["ocr_without_manual_feedback"]["count"], 0)
             self.assertEqual(exclusions["session_without_judgment"]["count"], 0)
@@ -117,7 +128,9 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             evidence_row = source_first["evidence_rows"][0]
             self.assertEqual(evidence_row["row_kind"], "manual_feedback")
             self.assertEqual(evidence_row["source_artifact"]["type"], "chat_message")
-            self.assertEqual(evidence_row["source_artifact"]["message_id"], "m-result-1")
+            self.assertEqual(
+                evidence_row["source_artifact"]["message_id"], "m-result-1"
+            )
             self.assertEqual(evidence_row["judgment"]["unit"], "row")
             self.assertEqual(evidence_row["judgment"]["outcome"], "fail")
             self.assertEqual(evidence_row["linked_case"]["source_run_id"], "ocr-1")

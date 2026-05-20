@@ -165,7 +165,9 @@ def run_sidecar(args: argparse.Namespace) -> int:
             "pid": os.getpid(),
             "started_at": started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "updated_at": _utc_iso(),
-            "completed_at": _utc_iso() if state in {"completed", "failed", "stopped"} else None,
+            "completed_at": _utc_iso()
+            if state in {"completed", "failed", "stopped"}
+            else None,
             "elapsed_seconds": int(time.time() - started_at.timestamp()),
             "min_seconds": args.min_seconds,
             "cycles_completed": cycles_completed,
@@ -199,7 +201,10 @@ def run_sidecar(args: argparse.Namespace) -> int:
         current_cycle += 1
         cycle_dir = run_dir / f"cycle-{current_cycle}"
         cycle_dir.mkdir(parents=True, exist_ok=True)
-        _append_line(summary_log, f"=== cycle {current_cycle} start {_utc_iso()} elapsed={elapsed}s ===")
+        _append_line(
+            summary_log,
+            f"=== cycle {current_cycle} start {_utc_iso()} elapsed={elapsed}s ===",
+        )
         write_status()
         cycle_started = time.time()
         log_path = cycle_dir / "command.log"
@@ -285,12 +290,18 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument("--current-file", type=Path, default=DEFAULT_CURRENT_FILE)
     run_parser.set_defaults(func=run_sidecar)
 
-    status_parser = subparsers.add_parser("status", help="Show current eval sidecar status.")
-    status_parser.add_argument("--current-file", type=Path, default=DEFAULT_CURRENT_FILE)
+    status_parser = subparsers.add_parser(
+        "status", help="Show current eval sidecar status."
+    )
+    status_parser.add_argument(
+        "--current-file", type=Path, default=DEFAULT_CURRENT_FILE
+    )
     status_parser.add_argument("--pid-file", type=Path, default=DEFAULT_PID_FILE)
     status_parser.set_defaults(func=status_sidecar)
 
-    stop_parser = subparsers.add_parser("stop", help="Request that the current eval sidecar stop.")
+    stop_parser = subparsers.add_parser(
+        "stop", help="Request that the current eval sidecar stop."
+    )
     stop_parser.add_argument("--current-file", type=Path, default=DEFAULT_CURRENT_FILE)
     stop_parser.add_argument("--pid-file", type=Path, default=DEFAULT_PID_FILE)
     stop_parser.set_defaults(func=stop_sidecar)

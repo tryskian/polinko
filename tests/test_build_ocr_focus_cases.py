@@ -164,7 +164,9 @@ class BuildOcrFocusCasesTests(unittest.TestCase):
         self.assertEqual(selected["focus_source"], "exploratory")
         self.assertEqual(selected["must_appear_in_order"], ["gyro", "folds", "within"])
         self.assertEqual(selected["min_chars"], 17)
-        self.assertEqual(selected["focus_override_keys"], ["min_chars", "must_appear_in_order"])
+        self.assertEqual(
+            selected["focus_override_keys"], ["min_chars", "must_appear_in_order"]
+        )
 
     def test_unknown_lane_backfills_from_cohort_row(self) -> None:
         cohort_payload = {

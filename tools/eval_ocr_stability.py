@@ -338,7 +338,9 @@ def main() -> int:
         run_reports.append(payload)
         raw_summary = payload.get("summary")
         summary: dict[str, Any] = raw_summary if isinstance(raw_summary, dict) else {}
-        aborted_due_to_rate_limit = bool(summary.get("aborted_due_to_rate_limit", False))
+        aborted_due_to_rate_limit = bool(
+            summary.get("aborted_due_to_rate_limit", False)
+        )
         total = int(summary.get("total", 0) or 0)
         passed = int(summary.get("passed", 0) or 0)
         failed = int(summary.get("failed", 0) or 0)

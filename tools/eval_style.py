@@ -16,7 +16,6 @@ from tools.eval_chat_common import create_chat as _create_chat
 from tools.eval_chat_common import default_headers as _headers
 from tools.eval_chat_common import delete_chat as _delete_chat
 from tools.eval_chat_common import preflight as _preflight
-from tools.eval_chat_common import request_json as _request_json
 from tools.eval_gate import resolve_binary_gate
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
 from tools.eval_trace_artifacts import append_eval_trace
@@ -38,6 +37,7 @@ class StyleJudgeResponse(BaseModel):
     def passed(self) -> bool:
         return self.pass_
 
+
 def _word_count(text: str) -> int:
     return len(re.findall(r"\b\w+\b", text))
 
@@ -58,7 +58,9 @@ def _normalize_text_for_match(text: str) -> str:
     return normalized.strip()
 
 
-def _normalize_phrase_list(raw: Any, *, field_name: str, case_id: str | None = None) -> list[str]:
+def _normalize_phrase_list(
+    raw: Any, *, field_name: str, case_id: str | None = None
+) -> list[str]:
     if raw is None:
         return []
     if not isinstance(raw, list):
@@ -73,12 +75,16 @@ def _normalize_phrase_list(raw: Any, *, field_name: str, case_id: str | None = N
     return phrases
 
 
-def _normalize_phrase_groups(raw: Any, *, field_name: str, case_id: str | None = None) -> list[list[str]]:
+def _normalize_phrase_groups(
+    raw: Any, *, field_name: str, case_id: str | None = None
+) -> list[list[str]]:
     if raw is None:
         return []
     if not isinstance(raw, list):
         where = f"case '{case_id}'" if case_id else "root payload"
-        raise RuntimeError(f"{where} field '{field_name}' must be a list of string lists.")
+        raise RuntimeError(
+            f"{where} field '{field_name}' must be a list of string lists."
+        )
     groups: list[list[str]] = []
     for group in raw:
         if not isinstance(group, list):
@@ -109,7 +115,9 @@ def _missing_required_all(answer: str, required_all: list[str]) -> list[str]:
     return [phrase for phrase in required_all if phrase and phrase not in lowered]
 
 
-def _missing_required_any_groups(answer: str, required_any_groups: list[list[str]]) -> list[list[str]]:
+def _missing_required_any_groups(
+    answer: str, required_any_groups: list[list[str]]
+) -> list[list[str]]:
     lowered = _normalize_text_for_match(answer)
     missing: list[list[str]] = []
     for group in required_any_groups:
@@ -153,7 +161,9 @@ def _load_cases(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
                 raise RuntimeError(f"Case '{case_id}' max_words must be > 0.")
             max_words = parsed
         if not case_id or not query:
-            raise RuntimeError(f"Case #{index} must include non-empty 'id' and 'query'.")
+            raise RuntimeError(
+                f"Case #{index} must include non-empty 'id' and 'query'."
+            )
         normalized.append(
             {
                 "id": case_id,
@@ -170,7 +180,9 @@ def _load_cases(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
                     field_name="required_any_groups",
                     case_id=case_id,
                 ),
-                "forbidden_phrases": sorted(set(global_forbidden_phrases + case_forbidden_phrases)),
+                "forbidden_phrases": sorted(
+                    set(global_forbidden_phrases + case_forbidden_phrases)
+                ),
             }
         )
     return normalized, global_forbidden_phrases
@@ -218,7 +230,9 @@ def _judge_case(
     }
 
 
-def _resolve_case_status(*, attempt_statuses: list[str], pass_attempts: int, min_pass_attempts: int) -> str:
+def _resolve_case_status(
+    *, attempt_statuses: list[str], pass_attempts: int, min_pass_attempts: int
+) -> str:
     if pass_attempts >= min_pass_attempts:
         return "PASS"
     if any(status == "FAIL" for status in attempt_statuses):
@@ -251,7 +265,9 @@ def _case_confidence_bucket(
         return "low"
     if attempts_used <= 0:
         return "low"
-    if pass_attempts == attempts_used and all(status == "PASS" for status in attempt_statuses):
+    if pass_attempts == attempts_used and all(
+        status == "PASS" for status in attempt_statuses
+    ):
         return "high"
     return "medium"
 
@@ -269,7 +285,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run style/tone eval over /chat outputs with an LLM judge.",
     )
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
+    parser.add_argument(
+        "--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL."
+    )
     parser.add_argument(
         "--cases",
         default="docs/eval/beta_2_0/style_eval_cases.json",
@@ -285,7 +303,9 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Optional run id suffix. Defaults to current epoch seconds.",
     )
-    parser.add_argument("--timeout", type=int, default=90, help="HTTP timeout in seconds.")
+    parser.add_argument(
+        "--timeout", type=int, default=90, help="HTTP timeout in seconds."
+    )
     parser.add_argument(
         "--judge-model",
         default="gpt-4.1-mini",
@@ -375,7 +395,9 @@ def main() -> int:
 
         for attempt in range(1, args.case_attempts + 1):
             session_id = (
-                session_base if args.case_attempts == 1 else f"{session_base}-a{attempt:02d}"
+                session_base
+                if args.case_attempts == 1
+                else f"{session_base}-a{attempt:02d}"
             )
             session_ids.append(session_id)
             answer = ""
@@ -417,7 +439,9 @@ def main() -> int:
                     answer,
                     case.get("forbidden_phrases", []),
                 )
-                missing_required_all = _missing_required_all(answer, case.get("required_all", []))
+                missing_required_all = _missing_required_all(
+                    answer, case.get("required_all", [])
+                )
                 missing_required_any_groups = _missing_required_any_groups(
                     answer,
                     case.get("required_any_groups", []),
@@ -426,7 +450,9 @@ def main() -> int:
                 answer_non_empty = bool(answer.strip())
                 decision = resolve_binary_gate(
                     policy_pass=not forbidden_hits,
-                    high_value_alignment_pass=case_pass and not missing_required_all and not missing_required_any_groups,
+                    high_value_alignment_pass=case_pass
+                    and not missing_required_all
+                    and not missing_required_any_groups,
                     evidence_complete=word_count_ok and answer_non_empty,
                 )
                 case_failed = not decision.passed
@@ -439,21 +465,29 @@ def main() -> int:
                 if forbidden_hits:
                     forbidden_text = ", ".join(forbidden_hits)
                     if notes:
-                        notes = f"{notes} | Contains forbidden phrase(s): {forbidden_text}."
+                        notes = (
+                            f"{notes} | Contains forbidden phrase(s): {forbidden_text}."
+                        )
                     else:
                         notes = f"Contains forbidden phrase(s): {forbidden_text}."
                 if missing_required_all:
                     missing_all_text = ", ".join(missing_required_all)
                     if notes:
-                        notes = f"{notes} | Missing required phrase(s): {missing_all_text}."
+                        notes = (
+                            f"{notes} | Missing required phrase(s): {missing_all_text}."
+                        )
                     else:
                         notes = f"Missing required phrase(s): {missing_all_text}."
                 if missing_required_any_groups:
-                    missing_groups_text = "; ".join(" / ".join(group) for group in missing_required_any_groups)
+                    missing_groups_text = "; ".join(
+                        " / ".join(group) for group in missing_required_any_groups
+                    )
                     if notes:
                         notes = f"{notes} | Missing required phrase group(s): {missing_groups_text}."
                     else:
-                        notes = f"Missing required phrase group(s): {missing_groups_text}."
+                        notes = (
+                            f"Missing required phrase group(s): {missing_groups_text}."
+                        )
                 if not answer_non_empty:
                     if notes:
                         notes = f"{notes} | Assistant answer was empty."
@@ -478,7 +512,9 @@ def main() -> int:
             except Exception as exc:
                 status_text = "ERROR"
                 error_text = str(exc)
-                print(f"[ERROR] {case['id']} attempt={attempt}/{args.case_attempts}: {exc}")
+                print(
+                    f"[ERROR] {case['id']} attempt={attempt}/{args.case_attempts}: {exc}"
+                )
             finally:
                 attempt_statuses.append(status_text)
                 attempt_results.append(
@@ -492,9 +528,13 @@ def main() -> int:
                         "error": error_text,
                         "word_count": wc,
                         "forbidden_hits": forbidden_hits,
-                        "missing_required_all": missing_required_all if 'missing_required_all' in locals() else [],
+                        "missing_required_all": missing_required_all
+                        if "missing_required_all" in locals()
+                        else [],
                         "missing_required_any_groups": (
-                            missing_required_any_groups if 'missing_required_any_groups' in locals() else []
+                            missing_required_any_groups
+                            if "missing_required_any_groups" in locals()
+                            else []
                         ),
                         "answer": answer,
                     }
@@ -541,7 +581,9 @@ def main() -> int:
                 "word_count": final_attempt["word_count"],
                 "max_words": max_words,
                 "forbidden_hits": list(final_attempt["forbidden_hits"]),
-                "missing_required_all": list(final_attempt.get("missing_required_all", [])),
+                "missing_required_all": list(
+                    final_attempt.get("missing_required_all", [])
+                ),
                 "missing_required_any_groups": list(
                     final_attempt.get("missing_required_any_groups", [])
                 ),
@@ -597,7 +639,9 @@ def main() -> int:
             "cases": case_results,
             "generated_at": int(time.time()),
         }
-        report_path.write_text(json.dumps(report_payload, ensure_ascii=False, indent=2), encoding="utf-8")
+        report_path.write_text(
+            json.dumps(report_payload, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
         print(f"  Report: {report_path}")
         trace_jsonl = str(args.trace_jsonl or "").strip()
         if trace_jsonl:

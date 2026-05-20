@@ -48,7 +48,9 @@ def _count_signal_strength(payload: dict[str, Any]) -> dict[str, int]:
     for row in episodes:
         if not isinstance(row, dict):
             continue
-        signal_strength = str(row.get("signal_strength", row.get("confidence", ""))).strip().lower()
+        signal_strength = (
+            str(row.get("signal_strength", row.get("confidence", ""))).strip().lower()
+        )
         if signal_strength in counts:
             counts[signal_strength] += 1
     return counts
@@ -63,7 +65,9 @@ def _count_lane_signal_strength(payload: dict[str, Any]) -> dict[str, dict[str, 
         if not isinstance(row, dict):
             continue
         lane = str(row.get("lane", "unknown")).strip() or "unknown"
-        signal_strength = str(row.get("signal_strength", row.get("confidence", ""))).strip().lower()
+        signal_strength = (
+            str(row.get("signal_strength", row.get("confidence", ""))).strip().lower()
+        )
         if signal_strength not in SIGNAL_STRENGTH_LEVELS:
             continue
         bucket = counts.setdefault(lane, {level: 0 for level in SIGNAL_STRENGTH_LEVELS})
@@ -100,7 +104,9 @@ def _md_cell(value: Any) -> str:
     return text.replace("|", r"\|").replace("\n", " ")
 
 
-def _extract_actionable_backlog(payload: dict[str, Any], *, max_items: int) -> list[dict[str, Any]]:
+def _extract_actionable_backlog(
+    payload: dict[str, Any], *, max_items: int
+) -> list[dict[str, Any]]:
     episodes = payload.get("episodes")
     if not isinstance(episodes, list):
         return []
@@ -112,7 +118,11 @@ def _extract_actionable_backlog(payload: dict[str, Any], *, max_items: int) -> l
         if emit_status not in ACTIONABLE_EMIT_STATUSES:
             continue
         anchor_terms = row.get("anchor_terms")
-        anchor_count = len(anchor_terms) if isinstance(anchor_terms, list) else int(row.get("anchor_terms_count", 0) or 0)
+        anchor_count = (
+            len(anchor_terms)
+            if isinstance(anchor_terms, list)
+            else int(row.get("anchor_terms_count", 0) or 0)
+        )
         ordered_terms = row.get("ordered_terms")
         ordered_count = len(ordered_terms) if isinstance(ordered_terms, list) else 0
         chosen_phrases = row.get("chosen_phrases")
@@ -125,27 +135,43 @@ def _extract_actionable_backlog(payload: dict[str, Any], *, max_items: int) -> l
                 or row.get("correction_signal")
                 or row.get("correction_overlap_signal")
             )
-            has_anchor_potential = bool(anchor_count > 0 or ordered_count > 0 or chosen_count > 0)
+            has_anchor_potential = bool(
+                anchor_count > 0 or ordered_count > 0 or chosen_count > 0
+            )
             if not has_actionable_ocr_intent or not has_anchor_potential:
                 continue
-        source_name = str(row.get("source_name", "")).strip() or Path(str(row.get("image_path", "")).strip()).name
-        if emit_status == "skipped_unstable_source" and source_name.lower() in KNOWN_QUARANTINED_UNSTABLE_SOURCES:
+        source_name = (
+            str(row.get("source_name", "")).strip()
+            or Path(str(row.get("image_path", "")).strip()).name
+        )
+        if (
+            emit_status == "skipped_unstable_source"
+            and source_name.lower() in KNOWN_QUARANTINED_UNSTABLE_SOURCES
+        ):
             # Known quarantined sources are intentionally excluded from
             # base-case remediation; keep backlog focused on actionable rows.
             continue
-        signal_strength = str(row.get("signal_strength", row.get("confidence", "low"))).strip().lower()
+        signal_strength = (
+            str(row.get("signal_strength", row.get("confidence", "low")))
+            .strip()
+            .lower()
+        )
         if signal_strength not in SIGNAL_STRENGTH_LEVELS:
             signal_strength = "low"
         chosen_preview = ""
         if isinstance(chosen_phrases, list) and chosen_phrases:
-            chosen_preview = _single_line(" | ".join(str(item) for item in chosen_phrases[:3]), max_chars=140)
+            chosen_preview = _single_line(
+                " | ".join(str(item) for item in chosen_phrases[:3]), max_chars=140
+            )
         image_path = str(row.get("image_path", "")).strip()
         source_name = source_name or Path(image_path).name
         rows.append(
             {
                 "emit_status": emit_status,
                 "conversation_id": str(row.get("conversation_id", "")).strip(),
-                "conversation_title": _single_line(row.get("conversation_title", ""), max_chars=70),
+                "conversation_title": _single_line(
+                    row.get("conversation_title", ""), max_chars=70
+                ),
                 "lane": str(row.get("lane", "unknown")).strip() or "unknown",
                 "signal_strength": signal_strength,
                 "anchor_terms_count": anchor_count,
@@ -201,23 +227,31 @@ def _render_markdown(*, report: dict[str, Any]) -> str:
     lines.append("")
     lines.append("## Lane by Signal Strength")
     lines.append("")
-    lines.append("| lane | high (before) | high (after) | delta | medium (before) | medium (after) | delta | low (before) | low (after) | delta |")
+    lines.append(
+        "| lane | high (before) | high (after) | delta | medium (before) | medium (after) | delta | low (before) | low (after) | delta |"
+    )
     lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for lane in report["lanes"]:
-        before_bucket = report["lane_signal_strength"]["before"].get(lane, {level: 0 for level in SIGNAL_STRENGTH_LEVELS})
-        after_bucket = report["lane_signal_strength"]["after"].get(lane, {level: 0 for level in SIGNAL_STRENGTH_LEVELS})
+        before_bucket = report["lane_signal_strength"]["before"].get(
+            lane, {level: 0 for level in SIGNAL_STRENGTH_LEVELS}
+        )
+        after_bucket = report["lane_signal_strength"]["after"].get(
+            lane, {level: 0 for level in SIGNAL_STRENGTH_LEVELS}
+        )
         hb, ha = int(before_bucket["high"]), int(after_bucket["high"])
         mb, ma = int(before_bucket["medium"]), int(after_bucket["medium"])
         lb, la = int(before_bucket["low"]), int(after_bucket["low"])
         lines.append(
-            f"| {lane} | {hb} | {ha} | {ha-hb:+d} | {mb} | {ma} | {ma-mb:+d} | {lb} | {la} | {la-lb:+d} |"
+            f"| {lane} | {hb} | {ha} | {ha - hb:+d} | {mb} | {ma} | {ma - mb:+d} | {lb} | {la} | {la - lb:+d} |"
         )
     lines.append("")
     backlog_rows = report.get("actionable_backlog")
     if isinstance(backlog_rows, list) and backlog_rows:
         lines.append("## Actionable Skipped Episodes")
         lines.append("")
-        lines.append("| rank | status | lane | signal_strength | anchors | source | image_path | ask excerpt | chosen preview |")
+        lines.append(
+            "| rank | status | lane | signal_strength | anchors | source | image_path | ask excerpt | chosen preview |"
+        )
         lines.append("|---:|---|---|---|---:|---|---|---|---|")
         for idx, row in enumerate(backlog_rows, start=1):
             lines.append(
@@ -247,27 +281,43 @@ def build_delta_report(
     after_signal_strength = _count_signal_strength(current_payload)
     before_lane_signal_strength = _count_lane_signal_strength(previous_payload)
     after_lane_signal_strength = _count_lane_signal_strength(current_payload)
-    lanes = sorted(set(before_lane_signal_strength.keys()) | set(after_lane_signal_strength.keys()))
+    lanes = sorted(
+        set(before_lane_signal_strength.keys()) | set(after_lane_signal_strength.keys())
+    )
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     report = {
         "generated_at": generated_at,
         "current_review_path": to_repo_ref(current_review_path),
-        "previous_review_path": to_repo_ref(previous_review_path) if previous_review_path else "",
+        "previous_review_path": to_repo_ref(previous_review_path)
+        if previous_review_path
+        else "",
         "totals": {
             "before": {
                 "episodes": _summary_metric(previous_payload, "episodes"),
                 "emitted_cases": _emit_status_count(previous_payload, "emitted"),
-                "skipped_low_confidence": _emit_status_count(previous_payload, "skipped_low_confidence"),
-                "skipped_duplicate_image_path": _emit_status_count(previous_payload, "skipped_duplicate_image_path"),
-                "skipped_unstable_source": _emit_status_count(previous_payload, "skipped_unstable_source"),
+                "skipped_low_confidence": _emit_status_count(
+                    previous_payload, "skipped_low_confidence"
+                ),
+                "skipped_duplicate_image_path": _emit_status_count(
+                    previous_payload, "skipped_duplicate_image_path"
+                ),
+                "skipped_unstable_source": _emit_status_count(
+                    previous_payload, "skipped_unstable_source"
+                ),
             },
             "after": {
                 "episodes": _summary_metric(current_payload, "episodes"),
                 "emitted_cases": _emit_status_count(current_payload, "emitted"),
-                "skipped_low_confidence": _emit_status_count(current_payload, "skipped_low_confidence"),
-                "skipped_duplicate_image_path": _emit_status_count(current_payload, "skipped_duplicate_image_path"),
-                "skipped_unstable_source": _emit_status_count(current_payload, "skipped_unstable_source"),
+                "skipped_low_confidence": _emit_status_count(
+                    current_payload, "skipped_low_confidence"
+                ),
+                "skipped_duplicate_image_path": _emit_status_count(
+                    current_payload, "skipped_duplicate_image_path"
+                ),
+                "skipped_unstable_source": _emit_status_count(
+                    current_payload, "skipped_unstable_source"
+                ),
             },
         },
         "signal_strength": {
@@ -286,7 +336,9 @@ def build_delta_report(
     }
 
     output_json_path.parent.mkdir(parents=True, exist_ok=True)
-    output_json_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    output_json_path.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     markdown = _render_markdown(report=report)
     output_markdown_path.parent.mkdir(parents=True, exist_ok=True)
     output_markdown_path.write_text(markdown, encoding="utf-8")
@@ -329,7 +381,9 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
     resolved_previous_path = Path(args.previous_review).expanduser().resolve()
-    previous_path: Path | None = resolved_previous_path if resolved_previous_path.is_file() else None
+    previous_path: Path | None = (
+        resolved_previous_path if resolved_previous_path.is_file() else None
+    )
     report = build_delta_report(
         current_review_path=Path(args.current_review).expanduser().resolve(),
         previous_review_path=previous_path,

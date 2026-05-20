@@ -36,7 +36,9 @@ def request_json(
                 detail = str(body["detail"])
         except ValueError:
             pass
-        raise RuntimeError(f"{method} {path} failed: HTTP {response.status_code} - {detail}")
+        raise RuntimeError(
+            f"{method} {path} failed: HTTP {response.status_code} - {detail}"
+        )
     try:
         body = response.json()
     except ValueError:
@@ -44,7 +46,9 @@ def request_json(
     return body if isinstance(body, dict) else {}
 
 
-def create_chat(base_url: str, headers: dict[str, str], session_id: str, timeout: int) -> None:
+def create_chat(
+    base_url: str, headers: dict[str, str], session_id: str, timeout: int
+) -> None:
     request_json(
         method="POST",
         base_url=base_url,
@@ -55,7 +59,9 @@ def create_chat(base_url: str, headers: dict[str, str], session_id: str, timeout
     )
 
 
-def delete_chat(base_url: str, headers: dict[str, str], session_id: str, timeout: int) -> None:
+def delete_chat(
+    base_url: str, headers: dict[str, str], session_id: str, timeout: int
+) -> None:
     request_json(
         method="DELETE",
         base_url=base_url,

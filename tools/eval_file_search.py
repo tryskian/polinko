@@ -13,7 +13,9 @@ from tools.eval_file_search_common import file_search as _file_search
 from tools.eval_file_search_common import find_matching_result as _find_matching_result
 from tools.eval_file_search_common import load_cases as _load_cases
 from tools.eval_file_search_common import preflight as _preflight
-from tools.eval_file_search_common import seed_image_context_memory as _seed_image_context_memory
+from tools.eval_file_search_common import (
+    seed_image_context_memory as _seed_image_context_memory,
+)
 from tools.eval_file_search_common import seed_ocr_memory as _seed_ocr_memory
 from tools.eval_file_search_common import seed_pdf_memory as _seed_pdf_memory
 from tools.eval_gate import gate_counts_from_case_results
@@ -27,7 +29,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run file_search reliability checks for scoped and global lookup behavior.",
     )
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
+    parser.add_argument(
+        "--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL."
+    )
     parser.add_argument(
         "--cases",
         default="docs/eval/beta_2_0/file_search_eval_cases.json",
@@ -43,7 +47,9 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Optional run id suffix. Defaults to current epoch seconds.",
     )
-    parser.add_argument("--timeout", type=int, default=90, help="HTTP timeout in seconds.")
+    parser.add_argument(
+        "--timeout", type=int, default=90, help="HTTP timeout in seconds."
+    )
     parser.add_argument(
         "--keep-chats",
         action="store_true",
@@ -81,7 +87,9 @@ def main() -> int:
         print(f"Preflight failed: {exc}")
         print("Checks:")
         print("  - Is `make server` running on the expected base URL?")
-        print("  - Is vector memory enabled on the running server (`POLINKO_VECTOR_ENABLED=true`)?")
+        print(
+            "  - Is vector memory enabled on the running server (`POLINKO_VECTOR_ENABLED=true`)?"
+        )
         return 1
 
     passes = 0
@@ -180,7 +188,8 @@ def main() -> int:
                 )
 
             leaked = any(
-                isinstance(item, dict) and str(item.get("session_id", "")) != seed_session
+                isinstance(item, dict)
+                and str(item.get("session_id", "")) != seed_session
                 for item in scoped
             )
             if leaked:

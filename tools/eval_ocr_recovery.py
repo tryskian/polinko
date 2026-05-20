@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 from tools.eval_chat_common import create_chat as _create_chat
 from tools.eval_chat_common import default_headers as _headers
 from tools.eval_chat_common import delete_chat as _delete_chat
-from tools.eval_chat_common import request_json as _request_json
 from tools.eval_chat_common import send_chat as _send_chat
 from tools.eval_gate import gate_counts_from_case_results
 from tools.eval_gate import resolve_fail_closed_status

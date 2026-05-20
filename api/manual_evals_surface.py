@@ -506,7 +506,9 @@ def _load_source_first_payload(
     return payload
 
 
-def _load_sessions(conn: sqlite3.Connection, *, max_sessions: int) -> list[dict[str, Any]]:
+def _load_sessions(
+    conn: sqlite3.Connection, *, max_sessions: int
+) -> list[dict[str, Any]]:
     session_columns = _table_columns(conn, "sessions")
     try:
         rows = conn.execute(
@@ -544,23 +546,33 @@ def _load_sessions(conn: sqlite3.Connection, *, max_sessions: int) -> list[dict[
                 "session_id": str(row["session_id"] or ""),
                 "era": str(row["era"] or "current"),
                 "source_label": str(row["source_label"] or ""),
-                "source_session_id": str(row["source_session_id"] or row["session_id"] or ""),
+                "source_session_id": str(
+                    row["source_session_id"] or row["session_id"] or ""
+                ),
                 "title": str(row["title"] or ""),
                 "status": str(row["status"] or ""),
                 "created_at": int(row["created_at"] or 0),
                 "updated_at": int(row["updated_at"] or 0),
-                "deprecated_at": int(row["deprecated_at"]) if row["deprecated_at"] is not None else None,
+                "deprecated_at": int(row["deprecated_at"])
+                if row["deprecated_at"] is not None
+                else None,
                 "message_count": int(row["message_count"] or 0),
                 "feedback_count": int(row["feedback_count"] or 0),
                 "checkpoint_count": int(row["checkpoint_count"] or 0),
                 "ocr_runs_count": int(row["ocr_runs_count"] or 0),
                 "last_feedback_at": (
-                    int(row["last_feedback_at"]) if row["last_feedback_at"] is not None else None
+                    int(row["last_feedback_at"])
+                    if row["last_feedback_at"] is not None
+                    else None
                 ),
                 "last_checkpoint_at": (
-                    int(row["last_checkpoint_at"]) if row["last_checkpoint_at"] is not None else None
+                    int(row["last_checkpoint_at"])
+                    if row["last_checkpoint_at"] is not None
+                    else None
                 ),
-                "last_ocr_at": int(row["last_ocr_at"]) if row["last_ocr_at"] is not None else None,
+                "last_ocr_at": int(row["last_ocr_at"])
+                if row["last_ocr_at"] is not None
+                else None,
             }
         )
     return sessions
@@ -643,21 +655,31 @@ def _load_runs(conn: sqlite3.Connection, *, max_runs: int) -> list[dict[str, Any
                 "era": str(row["era"] or "current"),
                 "source_label": str(row["source_label"] or ""),
                 "session_id": str(row["session_id"] or ""),
-                "source_session_id": str(row["source_session_id"] or row["session_id"] or ""),
+                "source_session_id": str(
+                    row["source_session_id"] or row["session_id"] or ""
+                ),
                 "source_name": str(row["source_name"] or ""),
                 "mime_type": str(row["mime_type"] or ""),
                 "status": str(row["status"] or ""),
                 "created_at": int(row["created_at"] or 0),
                 "observed_text": _normalize_text(row["extracted_text"], max_chars=700),
-                "observed_text_preview": _normalize_text(row["extracted_text"], max_chars=220),
+                "observed_text_preview": _normalize_text(
+                    row["extracted_text"], max_chars=220
+                ),
                 "image": {
-                    "image_asset_id": int(row["image_asset_id"] or 0) if row["image_asset_id"] is not None else None,
+                    "image_asset_id": int(row["image_asset_id"] or 0)
+                    if row["image_asset_id"] is not None
+                    else None,
                     "source_filename": source_filename,
                     "display_filename": display_filename,
                     "resolved_path": str(row["resolved_path"] or ""),
                     "thumbnail_data_url": str(row["thumbnail_data_url"] or ""),
-                    "thumbnail_width": int(row["thumbnail_width"] or 0) if row["thumbnail_width"] is not None else None,
-                    "thumbnail_height": int(row["thumbnail_height"] or 0) if row["thumbnail_height"] is not None else None,
+                    "thumbnail_width": int(row["thumbnail_width"] or 0)
+                    if row["thumbnail_width"] is not None
+                    else None,
+                    "thumbnail_height": int(row["thumbnail_height"] or 0)
+                    if row["thumbnail_height"] is not None
+                    else None,
                     "status": str(row["image_status"] or ""),
                     "error": str(row["image_error"] or ""),
                 },
@@ -666,11 +688,15 @@ def _load_runs(conn: sqlite3.Connection, *, max_runs: int) -> list[dict[str, Any
                     "feedback_pass_count": int(row["feedback_pass_count"] or 0),
                     "feedback_fail_count": int(row["feedback_fail_count"] or 0),
                     "last_feedback_at": (
-                        int(row["last_feedback_at"]) if row["last_feedback_at"] is not None else None
+                        int(row["last_feedback_at"])
+                        if row["last_feedback_at"] is not None
+                        else None
                     ),
                     "checkpoint_count": int(row["checkpoint_count"] or 0),
                     "last_checkpoint_at": (
-                        int(row["last_checkpoint_at"]) if row["last_checkpoint_at"] is not None else None
+                        int(row["last_checkpoint_at"])
+                        if row["last_checkpoint_at"] is not None
+                        else None
                     ),
                 },
             }

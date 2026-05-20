@@ -162,13 +162,17 @@ def _is_no_text_marker_variants(row: dict[str, Any]) -> bool:
             marker_variants += 1
             continue
         # Ignore tiny non-alphanumeric symbol probes alongside a marker.
-        if len(text) <= 2 and not any(char.isascii() and char.isalnum() for char in text):
+        if len(text) <= 2 and not any(
+            char.isascii() and char.isalnum() for char in text
+        ):
             continue
         return False
     return marker_variants > 0
 
 
-def _is_symbol_only_tiny_variants(row: dict[str, Any], *, sample_reasons: list[str]) -> bool:
+def _is_symbol_only_tiny_variants(
+    row: dict[str, Any], *, sample_reasons: list[str]
+) -> bool:
     reasons_text = " | ".join(sample_reasons).lower()
     if "text too short" not in reasons_text:
         return False
@@ -194,7 +198,9 @@ def _is_symbol_only_tiny_variants(row: dict[str, Any], *, sample_reasons: list[s
     return True
 
 
-def _is_single_char_tiny_output(row: dict[str, Any], *, sample_reasons: list[str]) -> bool:
+def _is_single_char_tiny_output(
+    row: dict[str, Any], *, sample_reasons: list[str]
+) -> bool:
     reasons_text = " | ".join(sample_reasons).lower()
     if "text too short" not in reasons_text:
         return False
@@ -212,7 +218,9 @@ def _is_single_char_tiny_output(row: dict[str, Any], *, sample_reasons: list[str
     return all(len(text) <= 1 for text in variants)
 
 
-def _non_actionable_skip_reason(*, row: dict[str, Any], sample_reasons: list[str]) -> str:
+def _non_actionable_skip_reason(
+    *, row: dict[str, Any], sample_reasons: list[str]
+) -> str:
     for reason in sample_reasons:
         if NON_ACTIONABLE_REASON_RX.search(reason):
             return "no_text_detected_or_illegible"
@@ -436,13 +444,19 @@ def _derive_order_tokens_from_text(
         ordered_tokens.append(token)
 
     if preferred_tokens:
-        preferred = [tok for tok in ordered_tokens if _canonical_probe_token(tok) in preferred_tokens]
+        preferred = [
+            tok
+            for tok in ordered_tokens
+            if _canonical_probe_token(tok) in preferred_tokens
+        ]
         collapsed_preferred = _drop_prefix_stem_terms(preferred)
         if len(collapsed_preferred) >= 3:
             # Heading tokens at the very start are often less stable across OCR
             # variants; prefer later preferred anchors when available.
             late_preferred = [
-                tok for tok in collapsed_preferred if int(token_first_index.get(tok, 999)) >= 2
+                tok
+                for tok in collapsed_preferred
+                if int(token_first_index.get(tok, 999)) >= 2
             ]
             collapsed_late_preferred = _drop_prefix_stem_terms(late_preferred)
             if len(collapsed_late_preferred) >= 2:
@@ -685,7 +699,9 @@ def _derive_exploratory_overrides(
     if len(selected_order) > EXPLORATORY_ORDER_MAX_TERMS:
         selected_order = selected_order[:EXPLORATORY_ORDER_MAX_TERMS]
     if run_extracted_text.strip():
-        selected_order = _filter_terms_to_text_support(terms=selected_order, text=run_extracted_text)
+        selected_order = _filter_terms_to_text_support(
+            terms=selected_order, text=run_extracted_text
+        )
 
     overrides: dict[str, Any] = {}
     if len(selected_order) >= 2:
@@ -700,16 +716,22 @@ def _derive_exploratory_overrides(
     elif effective_any:
         refined_any = _derive_anchor_any_terms(effective_any)
         if run_extracted_text.strip():
-            refined_any = _filter_terms_to_text_support(terms=refined_any, text=run_extracted_text)
+            refined_any = _filter_terms_to_text_support(
+                terms=refined_any, text=run_extracted_text
+            )
         if refined_any:
             overrides["must_contain_any"] = refined_any[:8]
 
     try:
-        base_min_chars = int(run_case.get("min_chars") or growth_case.get("min_chars") or 0)
+        base_min_chars = int(
+            run_case.get("min_chars") or growth_case.get("min_chars") or 0
+        )
     except (TypeError, ValueError):
         base_min_chars = 0
     if base_min_chars > 0:
-        overrides["min_chars"] = max(base_min_chars, int(round(base_min_chars * 1.15)), 12)
+        overrides["min_chars"] = max(
+            base_min_chars, int(round(base_min_chars * 1.15)), 12
+        )
     elif selected_order:
         overrides["min_chars"] = max(10, sum(len(term) for term in selected_order))
     return overrides
@@ -880,7 +902,12 @@ def build_fail_cohort(
             or str(growth_case.get("image_path", "")).strip()
         )
         growth_image_path = str(growth_case.get("image_path", "")).strip()
-        if run_case_map and growth_image_path and image_path and growth_image_path != image_path:
+        if (
+            run_case_map
+            and growth_image_path
+            and image_path
+            and growth_image_path != image_path
+        ):
             skipped_case_map_mismatch += 1
             continue
         linked_review_rows = review_index.get(image_path, [])
@@ -893,7 +920,9 @@ def build_fail_cohort(
             if review_lane_counts:
                 lane = review_lane_counts.most_common(1)[0][0]
         framing_episode_count = sum(
-            1 for review_row in linked_review_rows if bool(review_row.get("ocr_framing_signal", False))
+            1
+            for review_row in linked_review_rows
+            if bool(review_row.get("ocr_framing_signal", False))
         )
         if require_ocr_framing and framing_episode_count <= 0:
             skipped_non_framed += 1
@@ -916,7 +945,9 @@ def build_fail_cohort(
             growth_case=growth_case,
             run_case=run_case,
         )
-        gate_probe_summary = _format_gate_probe(effective_must_any, effective_must_order)
+        gate_probe_summary = _format_gate_probe(
+            effective_must_any, effective_must_order
+        )
         case_reason_patterns: Counter[str] = Counter()
 
         for reason in sample_reasons:
@@ -1001,7 +1032,9 @@ def build_fail_cohort(
             "pass_rate": float(row.get("pass_rate", 0.0) or 0.0),
             "decision_stable": decision_stable,
             "always_fail": always_fail,
-            "statuses": row.get("statuses") if isinstance(row.get("statuses"), list) else [],
+            "statuses": row.get("statuses")
+            if isinstance(row.get("statuses"), list)
+            else [],
             "sample_reasons": sample_reasons,
             "failure_patterns": sorted(case_reason_patterns.keys()),
             "primary_failure_pattern": primary_failure_pattern,
@@ -1033,7 +1066,9 @@ def build_fail_cohort(
         error_runs = int(row.get("error_runs", 0) or 0)
         raw_statuses = row.get("statuses")
         statuses = raw_statuses if isinstance(raw_statuses, list) else []
-        has_only_error_statuses = bool(statuses) and all(str(item).upper() == "ERROR" for item in statuses)
+        has_only_error_statuses = bool(statuses) and all(
+            str(item).upper() == "ERROR" for item in statuses
+        )
         if observed_runs <= 0:
             continue
         if pass_runs > 0 or fail_runs > 0 or error_runs <= 0:
@@ -1054,11 +1089,18 @@ def build_fail_cohort(
             or str(growth_case.get("image_path", "")).strip()
         )
         growth_image_path = str(growth_case.get("image_path", "")).strip()
-        if run_case_map and growth_image_path and image_path and growth_image_path != image_path:
+        if (
+            run_case_map
+            and growth_image_path
+            and image_path
+            and growth_image_path != image_path
+        ):
             continue
         linked_review_rows = review_index.get(image_path, [])
         framing_episode_count = sum(
-            1 for review_row in linked_review_rows if bool(review_row.get("ocr_framing_signal", False))
+            1
+            for review_row in linked_review_rows
+            if bool(review_row.get("ocr_framing_signal", False))
         )
 
         rate_limited_cases.append(
@@ -1114,11 +1156,18 @@ def build_fail_cohort(
                 or str(growth_case.get("image_path", "")).strip()
             )
             growth_image_path = str(growth_case.get("image_path", "")).strip()
-            if run_case_map and growth_image_path and image_path and growth_image_path != image_path:
+            if (
+                run_case_map
+                and growth_image_path
+                and image_path
+                and growth_image_path != image_path
+            ):
                 continue
             linked_review_rows = review_index.get(image_path, [])
             framing_episode_count = sum(
-                1 for review_row in linked_review_rows if bool(review_row.get("ocr_framing_signal", False))
+                1
+                for review_row in linked_review_rows
+                if bool(review_row.get("ocr_framing_signal", False))
             )
             if require_ocr_framing and framing_episode_count <= 0:
                 continue
@@ -1137,7 +1186,9 @@ def build_fail_cohort(
                 growth_case=growth_case,
                 run_case=run_case,
             )
-            gate_probe_summary = _format_gate_probe(effective_must_any, effective_must_order)
+            gate_probe_summary = _format_gate_probe(
+                effective_must_any, effective_must_order
+            )
             score = (
                 lane_priority.get(lane, 0) * 1_000_000
                 + int(row.get("text_variant_count", 0) or 0) * 10_000
@@ -1162,7 +1213,9 @@ def build_fail_cohort(
                         "always_fail": bool(row.get("always_fail", False)),
                         "primary_failure_pattern": "exploratory_stress_probe",
                         "failure_patterns": ["exploratory_stress_probe"],
-                        "text_variant_count": int(row.get("text_variant_count", 0) or 0),
+                        "text_variant_count": int(
+                            row.get("text_variant_count", 0) or 0
+                        ),
                         "char_count_span": int(row.get("char_count_span", 0) or 0),
                         "effective_must_contain_any": effective_must_any,
                         "effective_must_appear_in_order": effective_must_order,
@@ -1196,7 +1249,9 @@ def build_fail_cohort(
             item["id"],
         )
     )
-    exploratory_cases.sort(key=lambda item: (str(item.get("lane", "")), str(item.get("id", ""))))
+    exploratory_cases.sort(
+        key=lambda item: (str(item.get("lane", "")), str(item.get("id", "")))
+    )
     rate_limited_cases.sort(key=lambda item: (item["lane"], item["id"]))
 
     summary = {
@@ -1220,7 +1275,9 @@ def build_fail_cohort(
         "lane_counts": dict(sorted(lane_counts.items())),
         "fail_history_lane_counts": dict(sorted(fail_history_lane_counts.items())),
         "exploratory_lane_counts": dict(sorted(exploratory_lane_counts.items())),
-        "non_actionable_reason_counts": dict(sorted(non_actionable_reason_counts.items())),
+        "non_actionable_reason_counts": dict(
+            sorted(non_actionable_reason_counts.items())
+        ),
         "top_reasons": [
             {"reason": reason, "count": count}
             for reason, count in reason_counts.most_common(10)
@@ -1238,7 +1295,9 @@ def build_fail_cohort(
     }
 
 
-def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_cases: Path) -> str:
+def _render_markdown(
+    *, report: dict[str, Any], stability_report: Path, growth_cases: Path
+) -> str:
     summary = report["summary"]
     selected = report["cases"]
     fail_history_cases = (
@@ -1252,9 +1311,15 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
         else []
     )
     rate_limited_cases = (
-        report.get("rate_limited_cases") if isinstance(report.get("rate_limited_cases"), list) else []
+        report.get("rate_limited_cases")
+        if isinstance(report.get("rate_limited_cases"), list)
+        else []
     )
-    top_reasons = summary.get("top_reasons") if isinstance(summary.get("top_reasons"), list) else []
+    top_reasons = (
+        summary.get("top_reasons")
+        if isinstance(summary.get("top_reasons"), list)
+        else []
+    )
 
     lines: list[str] = []
     lines.append("# OCR Growth Fail Cohort")
@@ -1283,7 +1348,9 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
     lines.append(f"| exploratory_max_cases | {summary['exploratory_max_cases']} |")
     lines.append(f"| skipped_non_framed | {summary['skipped_non_framed']} |")
     lines.append(f"| skipped_non_actionable | {summary['skipped_non_actionable']} |")
-    lines.append(f"| skipped_case_map_mismatch | {summary['skipped_case_map_mismatch']} |")
+    lines.append(
+        f"| skipped_case_map_mismatch | {summary['skipped_case_map_mismatch']} |"
+    )
     lines.append("")
 
     lane_counts = summary.get("lane_counts")
@@ -1362,8 +1429,14 @@ def _render_markdown(*, report: dict[str, Any], stability_report: Path, growth_c
             case_id = str(row.get("id", ""))
             lane = str(row.get("lane", ""))
             gate_probe = str(row.get("gate_probe_summary", "-")).replace("|", "\\|")
-            focus_overrides = row.get("focus_overrides") if isinstance(row.get("focus_overrides"), dict) else {}
-            order_override = _preview_terms(_string_list(focus_overrides.get("must_appear_in_order")), limit=4)
+            focus_overrides = (
+                row.get("focus_overrides")
+                if isinstance(row.get("focus_overrides"), dict)
+                else {}
+            )
+            order_override = _preview_terms(
+                _string_list(focus_overrides.get("must_appear_in_order")), limit=4
+            )
             min_chars_override = int(focus_overrides.get("min_chars", 0) or 0)
             observed = int(row.get("observed_runs", 0) or 0)
             source_name = str(row.get("source_name", "")).replace("|", "\\|")
@@ -1569,7 +1642,9 @@ def main() -> int:
     report["review_path"] = str(review_path)
 
     output_json.parent.mkdir(parents=True, exist_ok=True)
-    output_json.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    output_json.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
 
     markdown = _render_markdown(
         report=report,

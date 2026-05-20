@@ -32,8 +32,8 @@ class RunEvalOcrStabilityTests(unittest.TestCase):
             _write_executable(
                 python_script,
                 (
-                    '#!/usr/bin/env sh\n'
-                    'set -eu\n'
+                    "#!/usr/bin/env sh\n"
+                    "set -eu\n"
                     '[ -f "$SERVER_MARKER" ] || exit 7\n'
                     'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
                     'printf "%s\\n" "${PYTHONUNBUFFERED:-}" > "$PYTHON_ENV"\n'

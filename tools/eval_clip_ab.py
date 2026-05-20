@@ -15,7 +15,9 @@ from tools.eval_file_search_common import file_search as _file_search
 from tools.eval_file_search_common import find_matching_result as _find_matching_result
 from tools.eval_file_search_common import load_cases as _load_cases
 from tools.eval_file_search_common import preflight as _preflight
-from tools.eval_file_search_common import seed_image_context_memory as _seed_image_context_memory
+from tools.eval_file_search_common import (
+    seed_image_context_memory as _seed_image_context_memory,
+)
 from tools.eval_file_search_common import seed_ocr_memory as _seed_ocr_memory
 from tools.eval_file_search_common import seed_pdf_memory as _seed_pdf_memory
 from tools.eval_trace_artifacts import DEFAULT_TRACE_JSONL
@@ -140,7 +142,9 @@ def build_parser() -> argparse.ArgumentParser:
             "image-prioritized proxy arm."
         ),
     )
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
+    parser.add_argument(
+        "--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL."
+    )
     parser.add_argument(
         "--cases",
         default="docs/eval/beta_2_0/clip_ab_eval_cases.json",
@@ -161,8 +165,12 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Optional run id suffix. Defaults to current epoch seconds.",
     )
-    parser.add_argument("--timeout", type=int, default=90, help="HTTP timeout in seconds.")
-    parser.add_argument("--limit", type=int, default=5, help="file_search result limit per arm.")
+    parser.add_argument(
+        "--timeout", type=int, default=90, help="HTTP timeout in seconds."
+    )
+    parser.add_argument(
+        "--limit", type=int, default=5, help="file_search result limit per arm."
+    )
     parser.add_argument(
         "--keep-chats",
         action="store_true",
@@ -208,7 +216,9 @@ def main() -> int:
     run_id = args.run_id.strip() or str(int(time.time()))
 
     print(f"Running CLIP A/B scaffold on {args.base_url}")
-    print(f"Cases: {len(cases)} | source_types={sorted(include_types)} | run_id={run_id}")
+    print(
+        f"Cases: {len(cases)} | source_types={sorted(include_types)} | run_id={run_id}"
+    )
     try:
         _preflight(args.base_url, headers, args.timeout)
     except Exception as exc:
@@ -247,7 +257,9 @@ def main() -> int:
                     limit=args.limit,
                     timeout=args.timeout,
                 )
-                normalized_matches = [item for item in matches if isinstance(item, dict)]
+                normalized_matches = [
+                    item for item in matches if isinstance(item, dict)
+                ]
                 any_hit = _find_matching_result(
                     matches=normalized_matches,
                     expected_session=seed_session,
@@ -267,9 +279,15 @@ def main() -> int:
                         "source_types": arm_source_types,
                         "top1_hit": top1_hit,
                         "any_hit": any_hit is not None,
-                        "top_score": normalized_matches[0].get("score") if normalized_matches else None,
-                        "top_source_type": normalized_matches[0].get("source_type") if normalized_matches else None,
-                        "top_session_id": normalized_matches[0].get("session_id") if normalized_matches else None,
+                        "top_score": normalized_matches[0].get("score")
+                        if normalized_matches
+                        else None,
+                        "top_source_type": normalized_matches[0].get("source_type")
+                        if normalized_matches
+                        else None,
+                        "top_session_id": normalized_matches[0].get("session_id")
+                        if normalized_matches
+                        else None,
                     }
                 )
                 print(

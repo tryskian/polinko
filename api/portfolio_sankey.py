@@ -50,7 +50,9 @@ def _empty_graph(graph_id: str, label: str) -> dict[str, Any]:
     }
 
 
-def _empty_payload(*, manual_db_path: Path, report_root: Path, reason: str) -> dict[str, Any]:
+def _empty_payload(
+    *, manual_db_path: Path, report_root: Path, reason: str
+) -> dict[str, Any]:
     return {
         "available": False,
         "mode": "no_data",
@@ -90,7 +92,9 @@ def _empty_payload(*, manual_db_path: Path, report_root: Path, reason: str) -> d
     }
 
 
-def _safe_count(conn: sqlite3.Connection, table_name: str, *, era: str | None = None) -> int:
+def _safe_count(
+    conn: sqlite3.Connection, table_name: str, *, era: str | None = None
+) -> int:
     try:
         if era is None:
             row = conn.execute(f"SELECT COUNT(*) AS c FROM {table_name}").fetchone()
@@ -151,7 +155,12 @@ def _signal_category(tag: str) -> str:
         return "grounding"
     if "halluc" in normalized or "confab" in normalized or "fact" in normalized:
         return "hallucination_risk"
-    if "style" in normalized or "voice" in normalized or "tone" in normalized or "whims" in normalized:
+    if (
+        "style" in normalized
+        or "voice" in normalized
+        or "tone" in normalized
+        or "whims" in normalized
+    ):
         return "style_voice"
     if "retry" in normalized or "recover" in normalized:
         return "recovery"
@@ -208,7 +217,9 @@ def _legacy_manual_eval_surface(db_path: Path) -> dict[str, Any]:
         outcome = _normalize_outcome(row["outcome"])
         outcome_counts[outcome] += 1
 
-        categories = sorted({_signal_category(tag) for tag in _tags_from_json(row["tags_json"])})
+        categories = sorted(
+            {_signal_category(tag) for tag in _tags_from_json(row["tags_json"])}
+        )
         if not categories:
             categories = ["general_eval"]
 
@@ -235,7 +246,9 @@ def _legacy_manual_eval_surface(db_path: Path) -> dict[str, Any]:
     }
 
 
-def _current_binary_gate_surface(report_root: Path, *, max_reports: int) -> dict[str, Any]:
+def _current_binary_gate_surface(
+    report_root: Path, *, max_reports: int
+) -> dict[str, Any]:
     payload = build_pass_fail_viz_payload(
         report_root=report_root,
         max_evals=50_000,
@@ -262,7 +275,10 @@ def _current_binary_gate_surface(report_root: Path, *, max_reports: int) -> dict
         if not isinstance(row, dict):
             continue
         outcome = _normalize_outcome(row.get("outcome"))
-        lane = str(row.get("lane") or row.get("source_name") or "other").strip().lower() or "other"
+        lane = (
+            str(row.get("lane") or row.get("source_name") or "other").strip().lower()
+            or "other"
+        )
         if lane == "typed":
             lane = "text"
         if lane not in {"text", "handwriting", "illustration"}:
@@ -293,7 +309,9 @@ def _node(node_id: str, label: str, group: str) -> dict[str, str]:
     }
 
 
-def _link(source: str, target: str, value: int, *, kind: str, provenance: str) -> dict[str, Any]:
+def _link(
+    source: str, target: str, value: int, *, kind: str, provenance: str
+) -> dict[str, Any]:
     return {
         "source": source,
         "target": target,
@@ -308,29 +326,27 @@ def _allocate_count_by_weights(total: int, weights: dict[str, int]) -> dict[str,
         return {}
 
     positive_weights = {
-        key: int(weight)
-        for key, weight in weights.items()
-        if int(weight or 0) > 0
+        key: int(weight) for key, weight in weights.items() if int(weight or 0) > 0
     }
     if not positive_weights:
         return {}
 
     weight_total = sum(positive_weights.values())
     raw_allocations = {
-        key: (total * weight) / weight_total
-        for key, weight in positive_weights.items()
+        key: (total * weight) / weight_total for key, weight in positive_weights.items()
     }
-    allocations = {
-        key: int(value)
-        for key, value in raw_allocations.items()
-    }
+    allocations = {key: int(value) for key, value in raw_allocations.items()}
     remainder = total - sum(allocations.values())
     if remainder <= 0:
         return {key: value for key, value in allocations.items() if value > 0}
 
     ranked_remainders = sorted(
         raw_allocations,
-        key=lambda key: (raw_allocations[key] - allocations[key], positive_weights[key], key),
+        key=lambda key: (
+            raw_allocations[key] - allocations[key],
+            positive_weights[key],
+            key,
+        ),
         reverse=True,
     )
     for key in ranked_remainders[:remainder]:
@@ -370,7 +386,11 @@ def _legacy_graph(legacy: dict[str, Any]) -> dict[str, Any]:
 
     for outcome, count in sorted(outcome_totals.items()):
         label = _OUTCOME_LABELS.get(outcome, outcome.title())
-        nodes.append(_node(f"legacy_outcome_{outcome.lower()}", f"Manual {label}", "legacy_outcome"))
+        nodes.append(
+            _node(
+                f"legacy_outcome_{outcome.lower()}", f"Manual {label}", "legacy_outcome"
+            )
+        )
         links.append(
             _link(
                 "legacy_manual_feedback",
@@ -400,7 +420,9 @@ def _legacy_graph(legacy: dict[str, Any]) -> dict[str, Any]:
 
 
 def _current_graph(current: dict[str, Any]) -> dict[str, Any]:
-    nodes = [_node("current_binary_reports", "Current OCR binary gates", "current_source")]
+    nodes = [
+        _node("current_binary_reports", "Current OCR binary gates", "current_source")
+    ]
     links: list[dict[str, Any]] = []
 
     lane_outcome_counts = current.get("lane_outcome_counts", {})
@@ -448,7 +470,11 @@ def _current_graph(current: dict[str, Any]) -> dict[str, Any]:
 
     for outcome in sorted(outcome_nodes):
         label = _OUTCOME_LABELS.get(outcome, outcome.title())
-        nodes.append(_node(f"current_outcome_{outcome.lower()}", f"Gate {label}", "current_outcome"))
+        nodes.append(
+            _node(
+                f"current_outcome_{outcome.lower()}", f"Gate {label}", "current_outcome"
+            )
+        )
 
     return {
         "id": "current",
@@ -500,10 +526,11 @@ def _bridge_graph(legacy: dict[str, Any], current: dict[str, Any]) -> dict[str, 
             if signal_count <= 0:
                 continue
             lane_weights = {
-                lane: int(lane_counts.get(lane, 0) or 0)
-                for lane in _BRIDGE_OCR_LANES
+                lane: int(lane_counts.get(lane, 0) or 0) for lane in _BRIDGE_OCR_LANES
             }
-            for lane, count in sorted(_allocate_count_by_weights(signal_count, lane_weights).items()):
+            for lane, count in sorted(
+                _allocate_count_by_weights(signal_count, lane_weights).items()
+            ):
                 links.append(
                     _link(
                         f"bridge_signal_{signal}",
@@ -529,8 +556,12 @@ def build_portfolio_sankey_payload(
     report_root: Path | None = None,
     max_reports: int = 120,
 ) -> dict[str, Any]:
-    target_manual_db = manual_db_path if manual_db_path is not None else _MANUAL_EVALS_DB_PATH
-    target_report_root = report_root if report_root is not None else _BINARY_GATE_REPORT_ROOT
+    target_manual_db = (
+        manual_db_path if manual_db_path is not None else _MANUAL_EVALS_DB_PATH
+    )
+    target_report_root = (
+        report_root if report_root is not None else _BINARY_GATE_REPORT_ROOT
+    )
 
     legacy = _legacy_manual_eval_surface(target_manual_db)
     current = _current_binary_gate_surface(target_report_root, max_reports=max_reports)
@@ -547,7 +578,9 @@ def build_portfolio_sankey_payload(
             reason="Missing required real data: " + ", ".join(missing),
         )
 
-    updated_at = current.get("updated_at") or datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    updated_at = current.get("updated_at") or datetime.now(tz=timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
     return {
         "available": True,
         "mode": "real_data",

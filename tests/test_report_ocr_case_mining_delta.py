@@ -61,7 +61,9 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
             self.assertEqual(report["totals"]["after"]["emitted_cases"], 2)
             self.assertEqual(report["signal_strength"]["before"]["medium"], 1)
             self.assertEqual(report["signal_strength"]["after"]["high"], 1)
-            self.assertEqual(report["lane_signal_strength"]["after"]["handwriting"]["high"], 1)
+            self.assertEqual(
+                report["lane_signal_strength"]["after"]["handwriting"]["high"], 1
+            )
             self.assertIn("typed", report["lanes"])
             self.assertTrue(out_md.is_file())
             self.assertTrue(out_json.is_file())
@@ -221,8 +223,12 @@ class ReportOcrCaseMiningDeltaTests(unittest.TestCase):
             self.assertIn("/tmp/file_b.png", markdown)
             self.assertNotIn("/tmp/file_c.png", markdown)
             self.assertNotIn("/tmp/file_d.png", markdown)
-            self.assertNotIn("/tmp/file_0000000047f871f7af65c1ce3955cc2e-sanitized.png", markdown)
-            self.assertNotIn("/tmp/file_00000000b01871fdac46c44584b95d6a-sanitized.png", markdown)
+            self.assertNotIn(
+                "/tmp/file_0000000047f871f7af65c1ce3955cc2e-sanitized.png", markdown
+            )
+            self.assertNotIn(
+                "/tmp/file_00000000b01871fdac46c44584b95d6a-sanitized.png", markdown
+            )
 
 
 if __name__ == "__main__":

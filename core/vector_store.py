@@ -114,7 +114,8 @@ class VectorStore:
 
     def _ensure_columns(self, conn: sqlite3.Connection) -> None:
         columns = {
-            row["name"] for row in conn.execute("PRAGMA table_info(message_vectors);").fetchall()
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(message_vectors);").fetchall()
         }
         if "source_type" not in columns:
             conn.execute(
@@ -315,9 +316,15 @@ class VectorStore:
                     vector_id=str(row["vector_id"]),
                     session_id=str(row["session_id"]),
                     role=str(row["role"]),
-                    message_id=str(row["message_id"]) if row["message_id"] is not None else None,
-                    source_type=str(row["source_type"]) if row["source_type"] is not None else "chat",
-                    source_ref=str(row["source_ref"]) if row["source_ref"] is not None else None,
+                    message_id=str(row["message_id"])
+                    if row["message_id"] is not None
+                    else None,
+                    source_type=str(row["source_type"])
+                    if row["source_type"] is not None
+                    else "chat",
+                    source_ref=str(row["source_ref"])
+                    if row["source_ref"] is not None
+                    else None,
                     metadata=metadata,
                     content=str(row["content"]),
                     created_at=int(row["created_at"]),

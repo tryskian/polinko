@@ -44,9 +44,13 @@ class SurfaceIaContractTests(unittest.TestCase):
         self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", make_config)
         self.assertIn("FRONTEND_DIR ?= $(PORTFOLIO_APP_DIR)", make_config)
         self.assertIn("PORTFOLIO_STATIC_DIR ?= public/portfolio", make_config)
-        self.assertIn("PORTFOLIO_MOCKUP_DIR ?= docs/peanut/assets/portfolio-mockups", make_config)
+        self.assertIn(
+            "PORTFOLIO_MOCKUP_DIR ?= docs/peanut/assets/portfolio-mockups", make_config
+        )
         self.assertIn("portfolio-install:", surfaces_make)
-        self.assertIn("portfolio-app-install frontend-install: portfolio-install", surfaces_make)
+        self.assertIn(
+            "portfolio-app-install frontend-install: portfolio-install", surfaces_make
+        )
         self.assertIn("$(PORTFOLIO_APP_DIR)/package.json", surfaces_make)
         self.assertIn("POLINKO_PORTFOLIO_STATIC_DIR", surfaces_make)
         self.assertIn("$(PORTFOLIO_STATIC_DIR)", surfaces_make)

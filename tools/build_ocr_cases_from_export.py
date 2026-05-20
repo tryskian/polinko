@@ -18,9 +18,7 @@ from tools.index_cgpt_export import (
 )
 from tools.ocr_export_refs import to_export_ref
 
-OCR_INTENT_PATTERN = (
-    r"what does (this|it) say|what(?:'s| is) written|can you read|read (?:this|it)(?!\s+and\s+weep)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew[\s-]?drop\b|\b(?:scribbles?|squibbles?|scrumbles?)\s+(?:and|&)\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratch(?:ed)?\s+out\b|\bcross(?:ed|ing)?\s+out\b|\bstrike[\s-]?through\b|\bstrikethrough\b"
-)
+OCR_INTENT_PATTERN = r"what does (this|it) say|what(?:'s| is) written|can you read|read (?:this|it)(?!\s+and\s+weep)|\btranscrib\w*|\bocr\b|\bocr(?:[-\s]?able)?\b|\bbinareyes\b|\bnew[\s-]?drop\b|\b(?:scribbles?|squibbles?|scrumbles?)\s+(?:and|&)\s+bibbles?\b|\bpeanut\s+cursive\b|\bscratch(?:ed)?\s+out\b|\bcross(?:ed|ing)?\s+out\b|\bstrike[\s-]?through\b|\bstrikethrough\b"
 ASK_RX = re.compile(OCR_INTENT_PATTERN, re.IGNORECASE)
 OCR_MARKUP_INTENT_RX = re.compile(
     r"\bscratch(?:ed)?\s+out\b|\bcross(?:ed|ing)?\s+out\b|\bstrike[\s-]?through\b|\bstrikethrough\b",
@@ -377,8 +375,10 @@ def _to_msg(message: dict[str, Any]) -> Msg:
     parts = content.get("parts") if isinstance(content, dict) else []
     if not isinstance(parts, list):
         parts = []
-    text = html.unescape(" ".join(part for part in parts if isinstance(part, str)).strip())
-    attachments = ((message.get("metadata") or {}).get("attachments") or [])
+    text = html.unescape(
+        " ".join(part for part in parts if isinstance(part, str)).strip()
+    )
+    attachments = (message.get("metadata") or {}).get("attachments") or []
     if not isinstance(attachments, list):
         attachments = []
     return Msg(
@@ -430,7 +430,11 @@ def _extract_candidate_phrases(text: str) -> list[str]:
     # that we want to preserve as anchor candidates.
     marker_matches = ENTRY_NUMERIC_MARKER_RX.findall(text)
     for marker in marker_matches:
-        tokens = [token for token in re.findall(r"\d{3,8}", marker) if _is_entry_numeric_token(token)]
+        tokens = [
+            token
+            for token in re.findall(r"\d{3,8}", marker)
+            if _is_entry_numeric_token(token)
+        ]
         if not tokens:
             continue
         phrases.append(" ".join(tokens))
@@ -483,7 +487,10 @@ def _phrases_overlap(left: list[str], right: list[str]) -> bool:
 def _has_correction_signal(text: str) -> bool:
     return bool(
         CORRECTION_RX.search(text)
-        or (NOT_CORRECTION_CONTEXT_RX.search(text) and NOT_CORRECTION_PAIR_RX.search(text))
+        or (
+            NOT_CORRECTION_CONTEXT_RX.search(text)
+            and NOT_CORRECTION_PAIR_RX.search(text)
+        )
     )
 
 
@@ -494,7 +501,8 @@ def _is_compact_24h_time_token(token: str) -> bool:
 def _is_entry_numeric_token(token: str) -> bool:
     cleaned = token.strip()
     return bool(
-        _is_compact_24h_time_token(cleaned) or COMPACT_YEAR_SUFFIX_DATE_RX.fullmatch(cleaned)
+        _is_compact_24h_time_token(cleaned)
+        or COMPACT_YEAR_SUFFIX_DATE_RX.fullmatch(cleaned)
     )
 
 
@@ -617,10 +625,14 @@ def _is_ocr_like_phrase(text: str) -> bool:
         token = alpha_words[0]
         if len(token) < 4 or token in ANCHOR_STOPWORDS or token in ANCHOR_META_WORDS:
             return False
-    if len(alpha_words) == 2 and all(token in ANCHOR_STOPWORDS for token in alpha_words):
+    if len(alpha_words) == 2 and all(
+        token in ANCHOR_STOPWORDS for token in alpha_words
+    ):
         return False
     if len(alpha_words) >= 5:
-        stopword_ratio = sum(1 for word in alpha_words if word in ANCHOR_STOPWORDS) / len(alpha_words)
+        stopword_ratio = sum(
+            1 for word in alpha_words if word in ANCHOR_STOPWORDS
+        ) / len(alpha_words)
         if stopword_ratio > 0.55:
             return False
     alnum = sum(ch.isalnum() for ch in value)
@@ -642,10 +654,14 @@ def _classify_lane(
 ) -> str:
     symbolic_chars = [ch for ch in assistant_text if ch.isalpha()]
     if symbolic_chars:
-        hieroglyph_count = sum(1 for ch in symbolic_chars if 0x13000 <= ord(ch) <= 0x1342F)
+        hieroglyph_count = sum(
+            1 for ch in symbolic_chars if 0x13000 <= ord(ch) <= 0x1342F
+        )
         ascii_letters = sum(1 for ch in symbolic_chars if "a" <= ch.lower() <= "z")
         non_ascii_letter_ratio = 1.0 - (ascii_letters / len(symbolic_chars))
-        if hieroglyph_count >= 3 or (len(symbolic_chars) >= 8 and non_ascii_letter_ratio >= 0.65):
+        if hieroglyph_count >= 3 or (
+            len(symbolic_chars) >= 8 and non_ascii_letter_ratio >= 0.65
+        ):
             return "illustration"
 
     haystack = "\n".join([ask_text, title, *followups])
@@ -657,7 +673,10 @@ def _classify_lane(
         return "typed"
 
     source_name = Path(image_path).name.lower()
-    if any(marker in source_name for marker in ("diagram", "sketch", "drawing", "doodle", "flowchart", "graph")):
+    if any(
+        marker in source_name
+        for marker in ("diagram", "sketch", "drawing", "doodle", "flowchart", "graph")
+    ):
         return "illustration"
     if CAMERA_IMAGE_NAME_RX.search(source_name):
         return "handwriting"
@@ -703,7 +722,9 @@ def _regex_patterns_for_phrases(phrases: list[str]) -> list[str]:
         if merged_tokens != tokens and len(merged_tokens) >= 2:
             token_patterns.append(merged_tokens)
         for token_list in token_patterns:
-            pattern = r"\b" + r"\W*".join(re.escape(token) for token in token_list) + r"\b"
+            pattern = (
+                r"\b" + r"\W*".join(re.escape(token) for token in token_list) + r"\b"
+            )
             if pattern in seen:
                 continue
             seen.add(pattern)
@@ -794,7 +815,11 @@ def _expand_anchor_variants(anchors: list[str]) -> list[str]:
                 variants.append(token[:-2])
             else:
                 variants.append(token[:-1])
-        elif token.endswith("s") and len(token) > 3 and not token.endswith(("us", "ss", "is", "ics")):
+        elif (
+            token.endswith("s")
+            and len(token) > 3
+            and not token.endswith(("us", "ss", "is", "ics"))
+        ):
             variants.append(token[:-1])
         for variant in variants:
             value = variant.strip()
@@ -807,7 +832,9 @@ def _expand_anchor_variants(anchors: list[str]) -> list[str]:
     return expanded
 
 
-def _ordered_terms_supported_by_anchors(ordered_terms: list[str], anchors: list[str]) -> list[str]:
+def _ordered_terms_supported_by_anchors(
+    ordered_terms: list[str], anchors: list[str]
+) -> list[str]:
     """Keep ordered terms only when they are backed by anchor constraints."""
     if not ordered_terms or not anchors:
         return []
@@ -883,10 +910,14 @@ def build_from_export(
         raise RuntimeError(f"Missing assets directory: {assets_dir}")
 
     by_name, by_token = _asset_indexes(assets_dir)
-    search_by_id = _search_index_by_id(search_index_js) if search_index_js.is_file() else {}
+    search_by_id = (
+        _search_index_by_id(search_index_js) if search_index_js.is_file() else {}
+    )
     if include_lanes is not None:
         include_lanes = {lane.strip().lower() for lane in include_lanes if lane.strip()}
-        invalid_lanes = sorted(lane for lane in include_lanes if lane not in VALID_LANES)
+        invalid_lanes = sorted(
+            lane for lane in include_lanes if lane not in VALID_LANES
+        )
         if invalid_lanes:
             raise ValueError(
                 "Invalid lane filters: "
@@ -896,10 +927,14 @@ def build_from_export(
             )
     if include_signal_strengths is not None:
         include_signal_strengths = {
-            strength.strip().lower() for strength in include_signal_strengths if strength.strip()
+            strength.strip().lower()
+            for strength in include_signal_strengths
+            if strength.strip()
         }
         invalid_signal_strengths = sorted(
-            strength for strength in include_signal_strengths if strength not in VALID_SIGNAL_STRENGTHS
+            strength
+            for strength in include_signal_strengths
+            if strength not in VALID_SIGNAL_STRENGTHS
         )
         if invalid_signal_strengths:
             raise ValueError(
@@ -913,7 +948,9 @@ def build_from_export(
             status.strip().lower() for status in include_emit_statuses if status.strip()
         }
         invalid_emit_statuses = sorted(
-            status for status in include_emit_statuses if status not in VALID_EMIT_STATUSES
+            status
+            for status in include_emit_statuses
+            if status not in VALID_EMIT_STATUSES
         )
         if invalid_emit_statuses:
             raise ValueError(
@@ -941,28 +978,51 @@ def build_from_export(
     growth_quarantine_cases_written = 0
     growth_regex_only_cases_written = 0
 
-    include_title_rx = re.compile(include_title_regex, re.IGNORECASE) if include_title_regex else None
-    exclude_title_rx = re.compile(exclude_title_regex, re.IGNORECASE) if exclude_title_regex else None
+    include_title_rx = (
+        re.compile(include_title_regex, re.IGNORECASE) if include_title_regex else None
+    )
+    exclude_title_rx = (
+        re.compile(exclude_title_regex, re.IGNORECASE) if exclude_title_regex else None
+    )
     include_conversation_rx = (
-        re.compile(include_conversation_regex, re.IGNORECASE) if include_conversation_regex else None
+        re.compile(include_conversation_regex, re.IGNORECASE)
+        if include_conversation_regex
+        else None
     )
     exclude_conversation_rx = (
-        re.compile(exclude_conversation_regex, re.IGNORECASE) if exclude_conversation_regex else None
+        re.compile(exclude_conversation_regex, re.IGNORECASE)
+        if exclude_conversation_regex
+        else None
     )
-    include_source_rx = re.compile(include_source_regex, re.IGNORECASE) if include_source_regex else None
-    exclude_source_rx = re.compile(exclude_source_regex, re.IGNORECASE) if exclude_source_regex else None
+    include_source_rx = (
+        re.compile(include_source_regex, re.IGNORECASE)
+        if include_source_regex
+        else None
+    )
+    exclude_source_rx = (
+        re.compile(exclude_source_regex, re.IGNORECASE)
+        if exclude_source_regex
+        else None
+    )
 
     conversation_files = sorted(conversations_dir.glob("*.json"))
     skipped_filtered_conversations = 0
     skipped_filtered_episodes = 0
     for conversation_path in conversation_files:
         convo = _load_json(conversation_path)
-        conversation_id = str(convo.get("conversation_id", "")).strip() or conversation_path.stem
+        conversation_id = (
+            str(convo.get("conversation_id", "")).strip() or conversation_path.stem
+        )
         search_meta = search_by_id.get(conversation_id, {})
-        title = str(convo.get("title", "")).strip() or str(search_meta.get("title", "")).strip()
+        title = (
+            str(convo.get("title", "")).strip()
+            or str(search_meta.get("title", "")).strip()
+        )
         search_text = str(search_meta.get("text", ""))
         conversation_tags = _conversation_tags(title, search_text)
-        if include_conversation_rx and not include_conversation_rx.search(conversation_id):
+        if include_conversation_rx and not include_conversation_rx.search(
+            conversation_id
+        ):
             skipped_filtered_conversations += 1
             continue
         if exclude_conversation_rx and exclude_conversation_rx.search(conversation_id):
@@ -1059,7 +1119,9 @@ def build_from_export(
                     positive_signal = True
                 if _has_correction_signal(probe.text):
                     followup_correction_signal = True
-                    followup_correction_phrases.extend(_extract_candidate_phrases(probe.text))
+                    followup_correction_phrases.extend(
+                        _extract_candidate_phrases(probe.text)
+                    )
 
             if not assistant_text:
                 continue
@@ -1070,7 +1132,9 @@ def build_from_export(
             if not ask_signal and not askless_candidate_signal:
                 continue
 
-            transcription_phrases_raw, had_code_block = _extract_transcribed_lines(assistant_text)
+            transcription_phrases_raw, had_code_block = _extract_transcribed_lines(
+                assistant_text
+            )
             resolved_paths: list[str] = []
             for attachment in msg.attachments:
                 attachment_paths = _resolve_asset_paths(
@@ -1146,22 +1210,34 @@ def build_from_export(
             ocr_literal_intent_signal = bool(
                 OCR_LITERAL_INTENT_RX.search(ask_followup_text)
             )
-            ocr_framing_signal = bool(OCR_FRAMING_RX.search(assistant_text)) and not bool(
-                NEGATED_OCR_FRAMING_RX.search(assistant_text)
-            )
+            ocr_framing_signal = bool(
+                OCR_FRAMING_RX.search(assistant_text)
+            ) and not bool(NEGATED_OCR_FRAMING_RX.search(assistant_text))
 
             signal_strength = "low"
             chosen_phrases: list[str] = []
-            followup_correction_phrases = [p for p in followup_correction_phrases if _is_ocr_like_phrase(p)]
+            followup_correction_phrases = [
+                p for p in followup_correction_phrases if _is_ocr_like_phrase(p)
+            ]
             followup_correction_phrases = _dedupe_phrases(followup_correction_phrases)
-            ask_correction_phrases = [p for p in ask_correction_phrases if _is_ocr_like_phrase(p)]
+            ask_correction_phrases = [
+                p for p in ask_correction_phrases if _is_ocr_like_phrase(p)
+            ]
             ask_correction_phrases = _dedupe_phrases(ask_correction_phrases)
-            correction_phrases = _dedupe_phrases(followup_correction_phrases + ask_correction_phrases)
-            transcription_phrases = [p for p in transcription_phrases_raw if _is_ocr_like_phrase(p)]
-            correction_overlap_signal = _phrases_overlap(correction_phrases[:5], transcription_phrases[:5])
+            correction_phrases = _dedupe_phrases(
+                followup_correction_phrases + ask_correction_phrases
+            )
+            transcription_phrases = [
+                p for p in transcription_phrases_raw if _is_ocr_like_phrase(p)
+            ]
+            correction_overlap_signal = _phrases_overlap(
+                correction_phrases[:5], transcription_phrases[:5]
+            )
             # Treat correction as meaningful only when we extracted OCR-like phrase content.
             correction_signal = bool(correction_phrases)
-            transcription_anchor_terms = _anchor_terms_for_phrases(transcription_phrases[:5])
+            transcription_anchor_terms = _anchor_terms_for_phrases(
+                transcription_phrases[:5]
+            )
             has_multi_token_transcription = any(
                 len(_phrase_tokens(phrase)) >= 2 for phrase in transcription_phrases[:5]
             )
@@ -1227,16 +1303,22 @@ def build_from_export(
                     or (ocr_intent_signal and ocr_framing_signal)
                 )
             )
-            medium_intent_signal = ocr_literal_intent_signal or askless_handwriting_signal or (
-                ocr_intent_signal
-                and (
-                    strong_illustration_phrase_signal
-                    or correction_signal
-                    or askless_handwriting_signal
+            medium_intent_signal = (
+                ocr_literal_intent_signal
+                or askless_handwriting_signal
+                or (
+                    ocr_intent_signal
+                    and (
+                        strong_illustration_phrase_signal
+                        or correction_signal
+                        or askless_handwriting_signal
+                    )
                 )
             )
             medium_intent_signal = (
-                medium_intent_signal or askless_typed_signal or ask_markup_handwriting_signal
+                medium_intent_signal
+                or askless_typed_signal
+                or ask_markup_handwriting_signal
             )
             if high_correction_signal:
                 signal_strength = "high"
@@ -1257,7 +1339,10 @@ def build_from_export(
             ):
                 signal_strength = "medium"
                 chosen_phrases = transcription_phrases[:5]
-            if include_signal_strengths is not None and signal_strength not in include_signal_strengths:
+            if (
+                include_signal_strengths is not None
+                and signal_strength not in include_signal_strengths
+            ):
                 skipped_filtered_episodes += 1
                 continue
             anchor_source_phrases = chosen_phrases[:]
@@ -1272,8 +1357,12 @@ def build_from_export(
                 anchor_source_phrases = _dedupe_phrases(
                     [*anchor_source_phrases[:5], *transcription_phrases[:3]]
                 )
-            anchor_terms = _expand_anchor_variants(_anchor_terms_for_phrases(anchor_source_phrases)[:8])
-            ordered_terms = _ordered_terms_for_phrases(transcription_phrases_raw[:1])[:4]
+            anchor_terms = _expand_anchor_variants(
+                _anchor_terms_for_phrases(anchor_source_phrases)[:8]
+            )
+            ordered_terms = _ordered_terms_for_phrases(transcription_phrases_raw[:1])[
+                :4
+            ]
             ordered_phrase_fallback = ordered_terms if len(anchor_terms) < 3 else []
             low_signal_strength_has_ocr_signal = bool(
                 ocr_literal_intent_signal
@@ -1296,22 +1385,29 @@ def build_from_export(
                 emit_status = "skipped_insufficient_anchor_terms"
             else:
                 emit_status = "emitted"
-            if include_emit_statuses is not None and emit_status not in include_emit_statuses:
+            if (
+                include_emit_statuses is not None
+                and emit_status not in include_emit_statuses
+            ):
                 skipped_filtered_episodes += 1
                 continue
 
             review_rows.append(
                 {
-                    "candidate_id": f"cv-{conversation_id[:8]}-{len(review_rows)+1:03d}",
+                    "candidate_id": f"cv-{conversation_id[:8]}-{len(review_rows) + 1:03d}",
                     "conversation_id": conversation_id,
                     "conversation_title": title,
-                    "conversation_json": to_export_ref(conversation_path, export_root=export_root),
+                    "conversation_json": to_export_ref(
+                        conversation_path, export_root=export_root
+                    ),
                     "image_path": to_export_ref(image_path, export_root=export_root),
                     "source_name": source_name,
                     "ask_text": msg.text,
                     "query_text": msg.text,
                     "assistant_text": assistant_text,
-                    "expected_text": transcription_phrases[0] if transcription_phrases else "",
+                    "expected_text": transcription_phrases[0]
+                    if transcription_phrases
+                    else "",
                     "followup_user_messages": followups[:5],
                     "positive_signal": positive_signal,
                     "correction_signal": correction_signal,
@@ -1350,7 +1446,9 @@ def build_from_export(
                     _anchor_terms_for_phrases(transcription_phrases[:3])[:8]
                 )
             if not growth_ordered_terms:
-                growth_ordered_terms = _ordered_terms_for_phrases(transcription_phrases_raw[:1])[:4]
+                growth_ordered_terms = _ordered_terms_for_phrases(
+                    transcription_phrases_raw[:1]
+                )[:4]
             growth_ordered_terms = _ordered_terms_supported_by_anchors(
                 growth_ordered_terms,
                 growth_anchor_terms,
@@ -1360,7 +1458,9 @@ def build_from_export(
                 # Regex constraints are the most brittle gate in OCR growth cases.
                 # Keep them only as a fallback when we have no anchor or ordered
                 # constraints, and cap to a single compact pattern.
-                growth_regex_patterns = _regex_patterns_for_phrases(transcription_phrases[:3])[:1]
+                growth_regex_patterns = _regex_patterns_for_phrases(
+                    transcription_phrases[:3]
+                )[:1]
 
             growth_emit_status = emit_status in {
                 "emitted",
@@ -1379,7 +1479,10 @@ def build_from_export(
                         ocr_literal_intent_signal
                         or askless_handwriting_signal
                         or askless_typed_signal
-                        or (ocr_intent_signal and (correction_signal or ocr_framing_signal))
+                        or (
+                            ocr_intent_signal
+                            and (correction_signal or ocr_framing_signal)
+                        )
                     )
                 )
             if emit_status == "skipped_unstable_source":
@@ -1416,11 +1519,13 @@ def build_from_export(
                 and image_path not in seen_growth_case_paths
                 and len(growth_cases) < max_growth_cases
             ):
-                growth_case_id = f"gx-{conversation_id[:8]}-{len(growth_cases)+1:03d}"
+                growth_case_id = f"gx-{conversation_id[:8]}-{len(growth_cases) + 1:03d}"
                 growth_cases.append(
                     {
                         "id": growth_case_id,
-                        "image_path": to_export_ref(image_path, export_root=export_root),
+                        "image_path": to_export_ref(
+                            image_path, export_root=export_root
+                        ),
                         "source_name": source_name,
                         "lane": lane,
                         "transcription_mode": "verbatim",
@@ -1448,7 +1553,7 @@ def build_from_export(
             if emit_status == "skipped_unstable_source":
                 skipped_unstable_source += 1
                 continue
-            case_id = f"tx-{conversation_id[:8]}-{len(cases)+1:03d}"
+            case_id = f"tx-{conversation_id[:8]}-{len(cases) + 1:03d}"
             if emit_status == "skipped_insufficient_anchor_terms":
                 skipped_insufficient_anchor_terms += 1
                 continue
@@ -1516,11 +1621,17 @@ def build_from_export(
         )
     )
     for idx, row in enumerate(generalization_candidates, start=1):
-        row["candidate_id"] = f"gc-{str(row.get('conversation_id', 'unknown'))[:8]}-{idx:04d}"
+        row["candidate_id"] = (
+            f"gc-{str(row.get('conversation_id', 'unknown'))[:8]}-{idx:04d}"
+        )
 
     review_rows.sort(
         key=lambda row: (
-            0 if row["signal_strength"] == "high" else 1 if row["signal_strength"] == "medium" else 2,
+            0
+            if row["signal_strength"] == "high"
+            else 1
+            if row["signal_strength"] == "medium"
+            else 2,
             row["conversation_title"].lower(),
             row["image_path"],
         )
@@ -1534,7 +1645,9 @@ def build_from_export(
         signal_strength = str(row.get("signal_strength", row.get("confidence", "low")))
         lane = str(row.get("lane", "typed"))
         emit_status = str(row.get("emit_status", "skipped_low_confidence"))
-        signal_strength_counts[signal_strength] = signal_strength_counts.get(signal_strength, 0) + 1
+        signal_strength_counts[signal_strength] = (
+            signal_strength_counts.get(signal_strength, 0) + 1
+        )
         lane_counts[lane] = lane_counts.get(lane, 0) + 1
         emit_status_counts[emit_status] = emit_status_counts.get(emit_status, 0) + 1
         lane_bucket = lane_emit_status_counts.setdefault(lane, {})
@@ -1543,9 +1656,13 @@ def build_from_export(
     handwriting_cases = [case for case in cases if case.get("lane") == "handwriting"]
     typed_cases = [case for case in cases if case.get("lane") == "typed"]
     illustration_cases = [case for case in cases if case.get("lane") == "illustration"]
-    growth_handwriting_cases = [case for case in growth_cases if case.get("lane") == "handwriting"]
+    growth_handwriting_cases = [
+        case for case in growth_cases if case.get("lane") == "handwriting"
+    ]
     growth_typed_cases = [case for case in growth_cases if case.get("lane") == "typed"]
-    growth_illustration_cases = [case for case in growth_cases if case.get("lane") == "illustration"]
+    growth_illustration_cases = [
+        case for case in growth_cases if case.get("lane") == "illustration"
+    ]
     cases_summary = {
         "conversation_files": len(conversation_files),
         "episodes": len(review_rows),
@@ -1812,13 +1929,17 @@ def main() -> int:
         Path(args.export_root).expanduser().resolve(),
         output_cases=Path(args.output_cases).expanduser().resolve(),
         output_cases_growth=Path(args.output_cases_growth).expanduser().resolve(),
-        output_cases_handwriting=Path(args.output_cases_handwriting).expanduser().resolve(),
+        output_cases_handwriting=Path(args.output_cases_handwriting)
+        .expanduser()
+        .resolve(),
         output_cases_typed=Path(args.output_cases_typed).expanduser().resolve(),
-        output_cases_illustration=Path(args.output_cases_illustration).expanduser().resolve(),
+        output_cases_illustration=Path(args.output_cases_illustration)
+        .expanduser()
+        .resolve(),
         output_review=Path(args.output_review).expanduser().resolve(),
-        output_generalization_candidates=Path(
-            args.output_generalization_candidates
-        ).expanduser().resolve(),
+        output_generalization_candidates=Path(args.output_generalization_candidates)
+        .expanduser()
+        .resolve(),
         max_cases=int(args.max_cases),
         max_growth_cases=int(args.max_growth_cases),
         include_title_regex=str(args.include_title_regex or ""),

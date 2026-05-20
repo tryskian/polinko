@@ -153,7 +153,9 @@ def _build_filename_index(
     return index
 
 
-def _resolve_source_path(source_name: str, filename_index: dict[str, Path]) -> Path | None:
+def _resolve_source_path(
+    source_name: str, filename_index: dict[str, Path]
+) -> Path | None:
     for candidate in _source_filename_candidates(source_name):
         match = filename_index.get(candidate.casefold())
         if match is not None:
@@ -167,7 +169,9 @@ def _build_thumbnail(path: Path, *, size: int) -> tuple[bytes, int, int]:
 
     with PILImageModule.open(path) as image:
         # Preserve transparency where available.
-        working_image = image.convert("RGBA") if image.mode not in ("RGB", "RGBA") else image.copy()
+        working_image = (
+            image.convert("RGBA") if image.mode not in ("RGB", "RGBA") else image.copy()
+        )
         resampling_enum = getattr(PILImageModule, "Resampling", None)
         resample = (
             resampling_enum.LANCZOS
@@ -440,16 +444,26 @@ def _prepare_image_assets(
     thumbnail_size: int,
     enable_thumbnails: bool,
 ) -> tuple[list[tuple[Any, ...]], dict[str, int], dict[str, int]]:
-    source_names = sorted({str(row["source_name"] or "").strip() for row in ocr_runs if str(row["source_name"] or "").strip()})
-    if not source_names:
-        return [], {}, {
-            "image_assets": 0,
-            "image_resolved": 0,
-            "image_missing": 0,
-            "thumbnails_ready": 0,
-            "thumbnails_skipped": 0,
-            "thumbnails_error": 0,
+    source_names = sorted(
+        {
+            str(row["source_name"] or "").strip()
+            for row in ocr_runs
+            if str(row["source_name"] or "").strip()
         }
+    )
+    if not source_names:
+        return (
+            [],
+            {},
+            {
+                "image_assets": 0,
+                "image_resolved": 0,
+                "image_missing": 0,
+                "thumbnails_ready": 0,
+                "thumbnails_skipped": 0,
+                "thumbnails_error": 0,
+            },
+        )
 
     target_filenames: list[str] = []
     for source_name in source_names:
@@ -475,7 +489,9 @@ def _prepare_image_assets(
         resolved_path = _resolve_source_path(source_name, filename_index)
         resolved_path_text = str(resolved_path) if resolved_path is not None else None
         mime_type = (
-            mimetypes.guess_type(resolved_path_text or source_filename or "", strict=False)[0]
+            mimetypes.guess_type(
+                resolved_path_text or source_filename or "", strict=False
+            )[0]
             if (resolved_path_text or source_filename)
             else None
         )
@@ -511,10 +527,9 @@ def _prepare_image_assets(
                         resolved_path,
                         size=thumbnail_size,
                     )
-                    thumbnail_data_url = (
-                        "data:image/png;base64,"
-                        + base64.b64encode(thumbnail_png).decode("ascii")
-                    )
+                    thumbnail_data_url = "data:image/png;base64," + base64.b64encode(
+                        thumbnail_png
+                    ).decode("ascii")
                     status = "thumbnail_ready"
                     stats["thumbnails_ready"] += 1
                 except (OSError, PILUnidentifiedImageError, RuntimeError) as exc:
@@ -555,7 +570,9 @@ def build_manual_evals_db(
     include_thumbnails: bool = True,
     history_sources: Sequence[HistorySource] | None = None,
 ) -> dict[str, int]:
-    source_specs = list(history_sources or [HistorySource(era="current", history_db=history_db)])
+    source_specs = list(
+        history_sources or [HistorySource(era="current", history_db=history_db)]
+    )
     loaded_sources: list[LoadedHistorySource] = []
     source_key_counts: dict[str, int] = {}
 
@@ -582,10 +599,18 @@ def build_manual_evals_db(
                 source_key=source_key,
                 label=source.display_label,
                 history_db=source_path,
-                sessions=_read_sessions(history_conn, exclude_prefixes=exclude_prefixes),
-                feedback=_read_feedback(history_conn, exclude_prefixes=exclude_prefixes),
-                checkpoints=_read_checkpoints(history_conn, exclude_prefixes=exclude_prefixes),
-                ocr_runs=_read_ocr_runs(history_conn, exclude_prefixes=exclude_prefixes),
+                sessions=_read_sessions(
+                    history_conn, exclude_prefixes=exclude_prefixes
+                ),
+                feedback=_read_feedback(
+                    history_conn, exclude_prefixes=exclude_prefixes
+                ),
+                checkpoints=_read_checkpoints(
+                    history_conn, exclude_prefixes=exclude_prefixes
+                ),
+                ocr_runs=_read_ocr_runs(
+                    history_conn, exclude_prefixes=exclude_prefixes
+                ),
             )
         )
         history_conn.close()
@@ -624,14 +649,18 @@ def build_manual_evals_db(
                     "created_at": int(row["created_at"] or 0),
                     "updated_at": int(row["updated_at"] or 0),
                     "deprecated_at": (
-                        int(row["deprecated_at"]) if row["deprecated_at"] is not None else None
+                        int(row["deprecated_at"])
+                        if row["deprecated_at"] is not None
+                        else None
                     ),
                     "message_count": int(row["message_count"] or 0),
                     "feedback_count": int(row["feedback_count"] or 0),
                     "checkpoint_count": int(row["checkpoint_count"] or 0),
                     "ocr_runs_count": int(row["ocr_runs_count"] or 0),
                     "last_feedback_at": (
-                        int(row["last_feedback_at"]) if row["last_feedback_at"] is not None else None
+                        int(row["last_feedback_at"])
+                        if row["last_feedback_at"] is not None
+                        else None
                     ),
                     "last_checkpoint_at": (
                         int(row["last_checkpoint_at"])
@@ -639,7 +668,9 @@ def build_manual_evals_db(
                         else None
                     ),
                     "last_ocr_at": (
-                        int(row["last_ocr_at"]) if row["last_ocr_at"] is not None else None
+                        int(row["last_ocr_at"])
+                        if row["last_ocr_at"] is not None
+                        else None
                     ),
                 }
             )
@@ -670,7 +701,9 @@ def build_manual_evals_db(
                         else None
                     ),
                     "action_taken": (
-                        str(row["action_taken"]) if row["action_taken"] is not None else None
+                        str(row["action_taken"])
+                        if row["action_taken"] is not None
+                        else None
                     ),
                     "status": str(row["status"] or ""),
                     "created_at": int(row["created_at"] or 0),
@@ -723,9 +756,13 @@ def build_manual_evals_db(
                     "run_id": output_text_key(source, source_run_id),
                     "session_id": session_id,
                     "source_name": (
-                        str(row["source_name"]) if row["source_name"] is not None else None
+                        str(row["source_name"])
+                        if row["source_name"] is not None
+                        else None
                     ),
-                    "mime_type": str(row["mime_type"]) if row["mime_type"] is not None else None,
+                    "mime_type": str(row["mime_type"])
+                    if row["mime_type"] is not None
+                    else None,
                     "source_message_id": (
                         str(row["source_message_id"])
                         if row["source_message_id"] is not None
@@ -909,13 +946,20 @@ def build_manual_evals_db(
         for source in loaded_sources
     }
     metadata = {
-        "generated_at_utc": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at_utc": datetime.now(tz=timezone.utc).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        ),
         "source_history_db": str(loaded_sources[0].history_db),
-        "source_history_dbs_json": json.dumps(list(source_counts.values()), ensure_ascii=False),
+        "source_history_dbs_json": json.dumps(
+            list(source_counts.values()), ensure_ascii=False
+        ),
         "source_counts_json": json.dumps(source_counts, ensure_ascii=False),
         "source_count": str(len(loaded_sources)),
         "exclude_prefixes_json": json.dumps(normalized_prefixes, ensure_ascii=False),
-        "image_roots_json": json.dumps([str(root) for root in _normalize_image_roots(image_roots)], ensure_ascii=False),
+        "image_roots_json": json.dumps(
+            [str(root) for root in _normalize_image_roots(image_roots)],
+            ensure_ascii=False,
+        ),
         "sessions_count": str(len(sessions)),
         "feedback_count": str(len(feedback)),
         "checkpoints_count": str(len(checkpoints)),
@@ -1026,9 +1070,13 @@ def main() -> int:
     if args.include_eval_sessions:
         prefixes = []
     else:
-        prefixes = custom_prefixes if custom_prefixes else list(DEFAULT_EXCLUDE_PREFIXES)
+        prefixes = (
+            custom_prefixes if custom_prefixes else list(DEFAULT_EXCLUDE_PREFIXES)
+        )
     custom_image_roots = _normalize_image_roots(args.image_root)
-    image_roots = custom_image_roots if custom_image_roots else list(DEFAULT_IMAGE_ROOTS)
+    image_roots = (
+        custom_image_roots if custom_image_roots else list(DEFAULT_IMAGE_ROOTS)
+    )
     history_sources = [
         _parse_history_source_spec(value, optional=False)
         for value in args.history_source

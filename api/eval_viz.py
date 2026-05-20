@@ -150,13 +150,17 @@ def _safe_int(value: Any, *, default: int = 0) -> int:
 
 
 def _case_binary_outcome(case: dict[str, Any]) -> str:
-    raw = str(
-        case.get("gate_outcome")
-        or case.get("binary_outcome")
-        or case.get("outcome")
-        or case.get("status")
-        or ""
-    ).strip().lower()
+    raw = (
+        str(
+            case.get("gate_outcome")
+            or case.get("binary_outcome")
+            or case.get("outcome")
+            or case.get("status")
+            or ""
+        )
+        .strip()
+        .lower()
+    )
     if raw in {"pass", "passed", "ok", "success"}:
         return "pass"
     if raw in {"fail", "failed", "error"}:
@@ -183,17 +187,31 @@ def _case_lane(case: dict[str, Any], *, suite: str) -> str:
 
     return _classify_ocr_history_lane(
         source_name=str(case.get("source_name") or case.get("image_path") or ""),
-        extracted_text=str(case.get("extracted_text") or case.get("observed_text") or ""),
+        extracted_text=str(
+            case.get("extracted_text") or case.get("observed_text") or ""
+        ),
     )
 
 
 def _expected_for_case(case: dict[str, Any]) -> str:
-    must_contain = [str(item).strip() for item in case.get("must_contain", []) if str(item).strip()]
-    must_contain_any = [str(item).strip() for item in case.get("must_contain_any", []) if str(item).strip()]
-    must_appear_in_order = [
-        str(item).strip() for item in case.get("must_appear_in_order", []) if str(item).strip()
+    must_contain = [
+        str(item).strip() for item in case.get("must_contain", []) if str(item).strip()
     ]
-    must_match_regex = [str(item).strip() for item in case.get("must_match_regex", []) if str(item).strip()]
+    must_contain_any = [
+        str(item).strip()
+        for item in case.get("must_contain_any", [])
+        if str(item).strip()
+    ]
+    must_appear_in_order = [
+        str(item).strip()
+        for item in case.get("must_appear_in_order", [])
+        if str(item).strip()
+    ]
+    must_match_regex = [
+        str(item).strip()
+        for item in case.get("must_match_regex", [])
+        if str(item).strip()
+    ]
 
     expected_parts: list[str] = []
     if must_contain:
@@ -236,7 +254,9 @@ def _binary_gate_expected_for_case(case: dict[str, Any]) -> str:
 def _default_point(*, timestamp_ms: int | None = None) -> dict[str, Any]:
     return {
         "run_id": "n/a",
-        "timestamp_ms": int(timestamp_ms or datetime.now(tz=timezone.utc).timestamp() * 1000),
+        "timestamp_ms": int(
+            timestamp_ms or datetime.now(tz=timezone.utc).timestamp() * 1000
+        ),
         "label": "n/a",
         "pass": 0,
         "fail": 0,
@@ -253,7 +273,9 @@ def _classify_ocr_history_lane(*, source_name: str, extracted_text: str) -> str:
     basename = Path(source_name or "").name.lower()
     sample = (extracted_text or "")[:1200]
 
-    if _ILLUSTRATION_NAME_HINT_RX.search(basename) or _ILLUSTRATION_TEXT_HINT_RX.search(sample):
+    if _ILLUSTRATION_NAME_HINT_RX.search(basename) or _ILLUSTRATION_TEXT_HINT_RX.search(
+        sample
+    ):
         return "illustration"
 
     lines = [line.strip() for line in sample.splitlines() if line.strip()]
@@ -261,8 +283,10 @@ def _classify_ocr_history_lane(*, source_name: str, extracted_text: str) -> str:
     uppercase_lines = sum(
         1 for line in lines if any(ch.isalpha() for ch in line) and line.upper() == line
     )
-    if len(lines) >= 4 and short_lines >= 4 and (
-        uppercase_lines >= 2 or short_lines / max(len(lines), 1) >= 0.7
+    if (
+        len(lines) >= 4
+        and short_lines >= 4
+        and (uppercase_lines >= 2 or short_lines / max(len(lines), 1) >= 0.7)
     ):
         return "illustration"
 
@@ -293,9 +317,13 @@ def _tracked_updated_at(report: dict[str, Any], path: Path) -> str:
 
     timestamp_unix = _safe_int(report.get("timestamp_unix"))
     if timestamp_unix > 0:
-        return datetime.fromtimestamp(timestamp_unix, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        return datetime.fromtimestamp(timestamp_unix, tz=timezone.utc).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
 
-    return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.fromtimestamp(path.stat().st_mtime, tz=timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
 
 
 def _artifact_url(path: str) -> str:
@@ -308,11 +336,21 @@ def _tracked_report_counts(report: dict[str, Any]) -> tuple[int, int, int, int, 
     cases = report.get("cases")
     case_list = cases if isinstance(cases, list) else []
 
-    passed = _safe_int(summary_dict.get("passed", summary_dict.get("gate_passed", report.get("passed"))))
-    failed = _safe_int(summary_dict.get("failed", summary_dict.get("gate_failed", report.get("failed"))))
+    passed = _safe_int(
+        summary_dict.get(
+            "passed", summary_dict.get("gate_passed", report.get("passed"))
+        )
+    )
+    failed = _safe_int(
+        summary_dict.get(
+            "failed", summary_dict.get("gate_failed", report.get("failed"))
+        )
+    )
     partial = _safe_int(summary_dict.get("partial", report.get("partial")))
     errors = _safe_int(summary_dict.get("errors", report.get("errors")))
-    total = _safe_int(summary_dict.get("total", report.get("total_cases", report.get("total"))))
+    total = _safe_int(
+        summary_dict.get("total", report.get("total_cases", report.get("total")))
+    )
 
     if total <= 0:
         total = max(passed + failed + partial + errors, len(case_list))
@@ -322,7 +360,9 @@ def _tracked_report_counts(report: dict[str, Any]) -> tuple[int, int, int, int, 
     return passed, failed, partial, errors, total
 
 
-def _build_tracked_lane_summaries(tracked_eval_root: Path | None) -> list[dict[str, Any]]:
+def _build_tracked_lane_summaries(
+    tracked_eval_root: Path | None,
+) -> list[dict[str, Any]]:
     if tracked_eval_root is None or not tracked_eval_root.is_dir():
         return []
 
@@ -366,12 +406,14 @@ def _build_tracked_lane_summaries(tracked_eval_root: Path | None) -> list[dict[s
         passed = sum(
             1
             for row in row_list
-            if isinstance(row, dict) and str(row.get("verdict") or "").strip().lower() == "pass"
+            if isinstance(row, dict)
+            and str(row.get("verdict") or "").strip().lower() == "pass"
         )
         failed = sum(
             1
             for row in row_list
-            if isinstance(row, dict) and str(row.get("verdict") or "").strip().lower() == "fail"
+            if isinstance(row, dict)
+            and str(row.get("verdict") or "").strip().lower() == "fail"
         )
         retain = sum(
             1
@@ -400,19 +442,25 @@ def _build_tracked_lane_summaries(tracked_eval_root: Path | None) -> list[dict[s
                 "total": len(row_list),
                 "retain": retain,
                 "evict": evict,
-                "updated_at": _tracked_updated_at(operator_burden, operator_burden_path),
+                "updated_at": _tracked_updated_at(
+                    operator_burden, operator_burden_path
+                ),
                 "run_id": "",
                 "source": str(operator_burden_path),
                 "source_url": _artifact_url(str(operator_burden_path)),
                 "research_note_path": "docs/research/operator-burden-promotion-2026-05-09.md",
-                "research_note_url": _artifact_url("docs/research/operator-burden-promotion-2026-05-09.md"),
+                "research_note_url": _artifact_url(
+                    "docs/research/operator-burden-promotion-2026-05-09.md"
+                ),
             }
         )
 
     return summaries
 
 
-def _attach_lane_summaries(payload: dict[str, Any], tracked_eval_root: Path | None) -> dict[str, Any]:
+def _attach_lane_summaries(
+    payload: dict[str, Any], tracked_eval_root: Path | None
+) -> dict[str, Any]:
     enriched = dict(payload)
     enriched["lane_summaries"] = _build_tracked_lane_summaries(tracked_eval_root)
     return enriched
@@ -701,7 +749,9 @@ def _build_payload_from_manual_evals_db(
         source_name = str(row["source_name"] or "").strip()
         source_path = str(row["resolved_path"] or "").strip()
         source_filename = str(row["source_filename"] or "").strip()
-        title = str(row["title"] or row["source_session_id"] or row["session_id"]).strip()
+        title = str(
+            row["title"] or row["source_session_id"] or row["session_id"]
+        ).strip()
         item = source_filename or Path(source_name).name or title
         run_id_value = str(row["run_id"] or f"feedback-{row['id']}").strip()
         feedback_points.append(
@@ -729,20 +779,26 @@ def _build_payload_from_manual_evals_db(
                 "item": item,
                 "outcome": outcome,
                 "expected": note or "(manual feedback)",
-                "observed": _normalize_text(row["extracted_text"] or title, max_chars=520),
+                "observed": _normalize_text(
+                    row["extracted_text"] or title, max_chars=520
+                ),
                 "source_name": lane,
                 "image_path": source_path or source_name,
                 "lane": lane,
                 "era": str(row["era"] or ""),
                 "run_id": run_id_value,
                 "source_run_id": str(row["source_run_id"] or run_id_value),
-                "source_session_id": str(row["source_session_id"] or row["session_id"] or ""),
+                "source_session_id": str(
+                    row["source_session_id"] or row["session_id"] or ""
+                ),
             }
         )
 
     feedback_eval_rows.sort(
         key=lambda row: (
-            {"FAIL": 0, "PARTIAL": 1, "ERROR": 2, "PASS": 3}.get(str(row["outcome"]), 4),
+            {"FAIL": 0, "PARTIAL": 1, "ERROR": 2, "PASS": 3}.get(
+                str(row["outcome"]), 4
+            ),
             str(row["row_key"]),
         )
     )
@@ -808,9 +864,15 @@ def _build_payload_from_manual_evals_db(
         source_path = str(row["resolved_path"] or "").strip()
         source_filename = str(row["source_filename"] or "").strip()
         extracted_text = str(row["extracted_text"] or "")
-        lane_key = _classify_ocr_history_lane(source_name=source_name, extracted_text=extracted_text)
+        lane_key = _classify_ocr_history_lane(
+            source_name=source_name, extracted_text=extracted_text
+        )
         lane = _LANE_LABELS.get(lane_key, "other")
-        item = source_filename or Path(source_name).name or str(row["source_run_id"] or row["run_id"])
+        item = (
+            source_filename
+            or Path(source_name).name
+            or str(row["source_run_id"] or row["run_id"])
+        )
         row_key = f"{row['run_id']}::{source_path or source_name or index}"
         eval_rows.append(
             {
@@ -925,9 +987,14 @@ def _build_payload_from_binary_gate_reports(
             handwriting_count += 1 if lane_key == "handwriting" else 0
             illustration_count += 1 if lane_key == "illustration" else 0
             lane = _LANE_LABELS.get(lane_key, "other")
-            item = str(raw_case.get("id") or raw_case.get("case_id") or "").strip() or "(unknown)"
+            item = (
+                str(raw_case.get("id") or raw_case.get("case_id") or "").strip()
+                or "(unknown)"
+            )
             source_name = str(raw_case.get("source_name") or "").strip()
-            image_path = str(raw_case.get("image_path") or raw_case.get("source_path") or "").strip()
+            image_path = str(
+                raw_case.get("image_path") or raw_case.get("source_path") or ""
+            ).strip()
             row_key = f"{report_run_id}::{item}::{source_name or image_path or index}"
             case_rows.append(
                 {
@@ -936,7 +1003,9 @@ def _build_payload_from_binary_gate_reports(
                     "outcome": outcome.upper(),
                     "expected": _binary_gate_expected_for_case(raw_case),
                     "observed": _normalize_text(
-                        raw_case.get("extracted_text") or raw_case.get("observed_text") or "",
+                        raw_case.get("extracted_text")
+                        or raw_case.get("observed_text")
+                        or "",
                         max_chars=520,
                     ),
                     "source_name": lane,
@@ -960,7 +1029,10 @@ def _build_payload_from_binary_gate_reports(
             default=case_fail,
         )
         total = _safe_int(
-            summary_dict.get("attempted", summary_dict.get("total_selected", summary_dict.get("total"))),
+            summary_dict.get(
+                "attempted",
+                summary_dict.get("total_selected", summary_dict.get("total")),
+            ),
             default=passed + failed,
         )
         if total < passed + failed:
@@ -1063,7 +1135,9 @@ def build_pass_fail_viz_payload(
         return _attach_lane_summaries(
             _attach_source_first(
                 {
-                    "updated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "updated_at": datetime.now(tz=timezone.utc).strftime(
+                        "%Y-%m-%dT%H:%M:%SZ"
+                    ),
                     "summary": _default_point(),
                     "summary_points": [],
                     "points": [],
@@ -1085,7 +1159,9 @@ def build_pass_fail_viz_payload(
         )
         if payload is not None:
             return _attach_lane_summaries(
-                _attach_source_first(payload, effective_db_path, max_rows=max_history_runs),
+                _attach_source_first(
+                    payload, effective_db_path, max_rows=max_history_runs
+                ),
                 tracked_eval_root,
             )
 
@@ -1102,13 +1178,17 @@ def build_pass_fail_viz_payload(
         )
         if payload is not None:
             return _attach_lane_summaries(
-                _attach_source_first(payload, effective_db_path, max_rows=max_history_runs),
+                _attach_source_first(
+                    payload, effective_db_path, max_rows=max_history_runs
+                ),
                 tracked_eval_root,
             )
         return _attach_lane_summaries(
             _attach_source_first(
                 {
-                    "updated_at": datetime.now(tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "updated_at": datetime.now(tz=timezone.utc).strftime(
+                        "%Y-%m-%dT%H:%M:%SZ"
+                    ),
                     "summary": _default_point(),
                     "summary_points": [],
                     "points": [],
@@ -1122,7 +1202,9 @@ def build_pass_fail_viz_payload(
         )
 
 
-def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20) -> str:
+def render_pass_fail_viz_html(
+    refresh_ms: int = 4000, chart_max_points: int = 20
+) -> str:
     html = """<!doctype html>
 <html lang="en">
 <head>
@@ -2813,7 +2895,6 @@ def render_pass_fail_viz_html(refresh_ms: int = 4000, chart_max_points: int = 20
 </body>
 </html>
 """
-    return (
-        html.replace("__REFRESH_MS__", str(int(refresh_ms)))
-        .replace("__DEFAULT_MAX_CHART_POINTS__", str(int(chart_max_points)))
+    return html.replace("__REFRESH_MS__", str(int(refresh_ms))).replace(
+        "__DEFAULT_MAX_CHART_POINTS__", str(int(chart_max_points))
     )

@@ -18,7 +18,9 @@ class OcrExportRefsTests(unittest.TestCase):
 
             ref = to_export_ref(image_path, export_root=export_root)
             self.assertEqual(ref, "assets/sample.png")
-            self.assertEqual(resolve_export_ref(ref, export_root=export_root), image_path.resolve())
+            self.assertEqual(
+                resolve_export_ref(ref, export_root=export_root), image_path.resolve()
+            )
 
     def test_resolve_export_ref_uses_env_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -30,7 +32,9 @@ class OcrExportRefsTests(unittest.TestCase):
             old = os.environ.get("CGPT_EXPORT_ROOT")
             os.environ["CGPT_EXPORT_ROOT"] = str(export_root)
             try:
-                self.assertEqual(resolve_export_ref("assets/sample.png"), image_path.resolve())
+                self.assertEqual(
+                    resolve_export_ref("assets/sample.png"), image_path.resolve()
+                )
             finally:
                 if old is None:
                     os.environ.pop("CGPT_EXPORT_ROOT", None)

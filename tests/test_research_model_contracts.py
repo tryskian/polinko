@@ -4,9 +4,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-CONTRACT_PATH = (
-    "docs/research/pre-beta-2-4-research-model-contract-2026-05-19.md"
-)
+CONTRACT_PATH = "docs/research/pre-beta-2-4-research-model-contract-2026-05-19.md"
 
 
 def _read(relative_path: str) -> str:

@@ -187,7 +187,9 @@ def _run_metrics_for_cases(
 
     unresolved_oldest = max(unresolved_ages_hours) if unresolved_ages_hours else 0.0
     unresolved_median = median(unresolved_ages_hours) if unresolved_ages_hours else 0.0
-    median_runs_to_pass = float(median(runs_to_pass_values)) if runs_to_pass_values else 0.0
+    median_runs_to_pass = (
+        float(median(runs_to_pass_values)) if runs_to_pass_values else 0.0
+    )
     decision_status_total = pass_status_total + fail_status_total
 
     return {
@@ -205,7 +207,9 @@ def _run_metrics_for_cases(
         "first_pass_fail_rate": _format_rate(first_fail_cases, first_decision_cases),
         "fail_first_cases": fail_first_cases,
         "fail_to_pass_cases": fail_to_pass_cases,
-        "fail_to_pass_conversion_rate": _format_rate(fail_to_pass_cases, fail_first_cases),
+        "fail_to_pass_conversion_rate": _format_rate(
+            fail_to_pass_cases, fail_first_cases
+        ),
         "median_runs_to_pass": round(median_runs_to_pass, 3),
         "unresolved_fail_cases": len(unresolved_ages_hours),
         "unresolved_fail_age": round(unresolved_oldest, 3),
@@ -272,7 +276,9 @@ def build_growth_report(
 
         unresolved_fail_age_hours = 0.0
         if ever_fail and not ever_pass and isinstance(first_fail_epoch, int):
-            unresolved_fail_age_hours = max(0.0, (now_epoch - first_fail_epoch) / 3600.0)
+            unresolved_fail_age_hours = max(
+                0.0, (now_epoch - first_fail_epoch) / 3600.0
+            )
 
         case_summaries.append(
             {
@@ -298,12 +304,16 @@ def build_growth_report(
             }
         )
 
-    global_metrics = _run_metrics_for_cases(summaries=case_summaries, now_epoch=now_epoch)
+    global_metrics = _run_metrics_for_cases(
+        summaries=case_summaries, now_epoch=now_epoch
+    )
 
     lane_metrics: dict[str, dict[str, Any]] = {}
     for lane in sorted({row["lane"] for row in case_summaries}):
         lane_rows = [row for row in case_summaries if row["lane"] == lane]
-        lane_metrics[lane] = _run_metrics_for_cases(summaries=lane_rows, now_epoch=now_epoch)
+        lane_metrics[lane] = _run_metrics_for_cases(
+            summaries=lane_rows, now_epoch=now_epoch
+        )
 
     return {
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -338,14 +348,18 @@ def _render_markdown(
     lines.append("|---|---:|")
     lines.append(f"| runs_total | {report['runs_total']} |")
     lines.append(f"| cases_total | {report['cases_total']} |")
-    lines.append(f"| decision_coverage_rate | {metrics['decision_coverage_rate']:.4f} |")
+    lines.append(
+        f"| decision_coverage_rate | {metrics['decision_coverage_rate']:.4f} |"
+    )
     lines.append(f"| decision_run_rate | {metrics['decision_run_rate']:.4f} |")
     lines.append(f"| pass_run_rate | {metrics['pass_run_rate']:.4f} |")
     lines.append(f"| fail_run_rate | {metrics['fail_run_rate']:.4f} |")
     lines.append(f"| error_run_rate | {metrics['error_run_rate']:.4f} |")
     lines.append(f"| first_error_rate | {metrics['first_error_rate']:.4f} |")
     lines.append(f"| first_pass_fail_rate | {metrics['first_pass_fail_rate']:.4f} |")
-    lines.append(f"| fail_to_pass_conversion_rate | {metrics['fail_to_pass_conversion_rate']:.4f} |")
+    lines.append(
+        f"| fail_to_pass_conversion_rate | {metrics['fail_to_pass_conversion_rate']:.4f} |"
+    )
     lines.append(f"| median_runs_to_pass | {metrics['median_runs_to_pass']} |")
     lines.append(
         f"| unresolved_fail_age ({metrics['unresolved_fail_age_unit']}) | {metrics['unresolved_fail_age']} |"
@@ -354,7 +368,9 @@ def _render_markdown(
     lines.append("")
     lines.append("## Per Lane")
     lines.append("")
-    lines.append("| lane | cases | decision_coverage_rate | decision_run_rate | pass_run_rate | fail_run_rate | error_run_rate | first_error_rate | first_pass_fail_rate | fail_to_pass_conversion_rate | median_runs_to_pass | unresolved_fail_age (hours) |")
+    lines.append(
+        "| lane | cases | decision_coverage_rate | decision_run_rate | pass_run_rate | fail_run_rate | error_run_rate | first_error_rate | first_pass_fail_rate | fail_to_pass_conversion_rate | median_runs_to_pass | unresolved_fail_age (hours) |"
+    )
     lines.append("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for lane in sorted(lane_metrics.keys()):
         item = lane_metrics[lane]
@@ -374,7 +390,10 @@ def _render_markdown(
         if bool(row.get("ever_fail", False)) and not bool(row.get("ever_pass", False))
     ]
     if unresolved:
-        unresolved.sort(key=lambda row: float(row.get("unresolved_fail_age_hours", 0.0)), reverse=True)
+        unresolved.sort(
+            key=lambda row: float(row.get("unresolved_fail_age_hours", 0.0)),
+            reverse=True,
+        )
         lines.append("## Unresolved Fails")
         lines.append("")
         lines.append("| case_id | lane | age_hours | source_name | image_path |")
@@ -464,7 +483,9 @@ def main() -> int:
     report["limit_runs"] = int(args.limit_runs)
 
     output_json.parent.mkdir(parents=True, exist_ok=True)
-    output_json.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    output_json.write_text(
+        json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     markdown = _render_markdown(report=report, cases_path=cases_path, runs_dir=runs_dir)
     output_markdown.parent.mkdir(parents=True, exist_ok=True)
     output_markdown.write_text(markdown, encoding="utf-8")
@@ -476,7 +497,9 @@ def main() -> int:
     print(f"  decision_coverage_rate: {metrics['decision_coverage_rate']:.4f}")
     print(f"  first_error_rate: {metrics['first_error_rate']:.4f}")
     print(f"  first_pass_fail_rate: {metrics['first_pass_fail_rate']:.4f}")
-    print(f"  fail_to_pass_conversion_rate: {metrics['fail_to_pass_conversion_rate']:.4f}")
+    print(
+        f"  fail_to_pass_conversion_rate: {metrics['fail_to_pass_conversion_rate']:.4f}"
+    )
     print(f"  median_runs_to_pass: {metrics['median_runs_to_pass']}")
     print(
         f"  unresolved_fail_age ({metrics['unresolved_fail_age_unit']}): "

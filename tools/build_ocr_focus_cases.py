@@ -185,7 +185,9 @@ def build_focus_cases(
             for key, value in focus_overrides.items():
                 merged[key] = value
             if focus_overrides:
-                merged["focus_override_keys"] = sorted(str(key) for key in focus_overrides.keys())
+                merged["focus_override_keys"] = sorted(
+                    str(key) for key in focus_overrides.keys()
+                )
             merged["focus_source"] = source_bucket
 
         found.append(merged)

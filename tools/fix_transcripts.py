@@ -31,7 +31,10 @@ def curated_transcript_files(root: Path) -> list[Path]:
 def ensure_core_sections(lines: list[str]) -> tuple[list[str], bool]:
     changed = False
 
-    if not any(line.startswith("## Structured Insights (Assistant Interpretation)") for line in lines):
+    if not any(
+        line.startswith("## Structured Insights (Assistant Interpretation)")
+        for line in lines
+    ):
         # Insert insights section at end when missing.
         if lines and lines[-1] != "":
             lines.append("")
@@ -65,7 +68,10 @@ def ensure_core_sections(lines: list[str]) -> tuple[list[str], bool]:
     h3_count = sum(1 for line in block if line.startswith("### "))
 
     inserts: list[str] = []
-    if "### Distilled Signal" not in block_text and "### Distilled Concept" not in block_text:
+    if (
+        "### Distilled Signal" not in block_text
+        and "### Distilled Concept" not in block_text
+    ):
         inserts.extend(
             [
                 "",

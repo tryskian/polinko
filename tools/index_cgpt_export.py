@@ -175,9 +175,14 @@ def build_indexes(export_root: Path, output_dir: Path) -> dict[str, int]:
     conversation_files = sorted(conversations_dir.glob("*.json"))
     for conversation_path in conversation_files:
         convo = _load_json(conversation_path)
-        conversation_id = str(convo.get("conversation_id", "")).strip() or conversation_path.stem
+        conversation_id = (
+            str(convo.get("conversation_id", "")).strip() or conversation_path.stem
+        )
         search_meta = search_by_id.get(conversation_id, {})
-        title = str(convo.get("title", "")).strip() or str(search_meta.get("title", "")).strip()
+        title = (
+            str(convo.get("title", "")).strip()
+            or str(search_meta.get("title", "")).strip()
+        )
         search_text = str(search_meta.get("text", ""))
         tags = _conversation_tags(title, search_text)
         mapping = convo.get("mapping") or {}
@@ -198,7 +203,7 @@ def build_indexes(export_root: Path, output_dir: Path) -> dict[str, int]:
                 continue
 
             message_id = message.get("id")
-            message_role = ((message.get("author") or {}).get("role") or "")
+            message_role = (message.get("author") or {}).get("role") or ""
             message_create_time = message.get("create_time")
 
             for attachment in attachment_rows:
@@ -206,7 +211,9 @@ def build_indexes(export_root: Path, output_dir: Path) -> dict[str, int]:
                     continue
                 asset_id = str(attachment.get("id", "")).strip()
                 asset_name = str(attachment.get("name", "")).strip()
-                resolved_paths = _resolve_asset_paths(asset_name, asset_id, by_name, by_token)
+                resolved_paths = _resolve_asset_paths(
+                    asset_name, asset_id, by_name, by_token
+                )
                 attachments.append(
                     {
                         "conversation_id": conversation_id,
@@ -276,7 +283,9 @@ def build_indexes(export_root: Path, output_dir: Path) -> dict[str, int]:
     )
 
     tagged_ids = {row["conversation_id"] for row in tagged_conversations}
-    tagged_attachments = [row for row in attachments if row["conversation_id"] in tagged_ids]
+    tagged_attachments = [
+        row for row in attachments if row["conversation_id"] in tagged_ids
+    ]
 
     ocr_ready: list[dict[str, Any]] = []
     for row in tagged_attachments:

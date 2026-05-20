@@ -12,7 +12,9 @@ from tools.eval_hallucination import build_parser
 class HallucinationEvalGateTests(unittest.TestCase):
     def test_resolve_judge_client_returns_none_when_env_key_missing(self) -> None:
         with patch.dict("os.environ", {}, clear=True):
-            client, api_key = _resolve_judge_client(api_key_env="JUDGE_API_KEY", base_url="")
+            client, api_key = _resolve_judge_client(
+                api_key_env="JUDGE_API_KEY", base_url=""
+            )
         self.assertIsNone(client)
         self.assertIsNone(api_key)
 
@@ -59,24 +61,33 @@ class HallucinationEvalGateTests(unittest.TestCase):
         hits = _contains_forbidden_phrases(answer, ["he was intimidated"])
         self.assertEqual(hits, [])
 
-    def test_contains_forbidden_phrases_ignores_not_enough_evidence_prefix(self) -> None:
+    def test_contains_forbidden_phrases_ignores_not_enough_evidence_prefix(
+        self,
+    ) -> None:
         answer = "There's not enough evidence to say he was intimidated."
         hits = _contains_forbidden_phrases(answer, ["he was intimidated"])
         self.assertEqual(hits, [])
 
     def test_contains_forbidden_phrases_ignores_cannot_verify_that_prefix(self) -> None:
-        answer = "I can't verify that ghostbranch invented jazz from the available evidence."
+        answer = (
+            "I can't verify that ghostbranch invented jazz from the available evidence."
+        )
         hits = _contains_forbidden_phrases(answer, ["ghostbranch invented jazz"])
         self.assertEqual(hits, [])
 
     def test_contains_forbidden_phrases_ignores_cannot_confirm_any_prefix(self) -> None:
         answer = "I can't confirm any disciplinary action for unlawful link fabrication from the archive."
-        hits = _contains_forbidden_phrases(answer, ["disciplinary action", "unlawful link fabrication"])
+        hits = _contains_forbidden_phrases(
+            answer, ["disciplinary action", "unlawful link fabrication"]
+        )
         self.assertEqual(hits, [])
 
     def test_deterministic_gate_passes_clean_case(self) -> None:
         reasons = _apply_deterministic_gate(
-            case={"policy_profile": "evidence_required", "must_not_contain": ["let me guess"]},
+            case={
+                "policy_profile": "evidence_required",
+                "must_not_contain": ["let me guess"],
+            },
             answer="Answer grounded in available evidence.",
             score=_MIN_ACCEPTABLE_SCORE,
             risk="low",
@@ -87,14 +98,19 @@ class HallucinationEvalGateTests(unittest.TestCase):
 
     def test_deterministic_gate_fails_forbidden_phrase(self) -> None:
         reasons = _apply_deterministic_gate(
-            case={"policy_profile": "uncertainty_required", "must_not_contain": ["let me guess"]},
+            case={
+                "policy_profile": "uncertainty_required",
+                "must_not_contain": ["let me guess"],
+            },
             answer="Let me guess, maybe this happened.",
             score=9,
             risk="low",
             grounding="grounded",
             min_acceptable_score=_MIN_ACCEPTABLE_SCORE,
         )
-        self.assertTrue(any("contains forbidden phrases" in reason for reason in reasons))
+        self.assertTrue(
+            any("contains forbidden phrases" in reason for reason in reasons)
+        )
 
     def test_deterministic_gate_fails_high_risk(self) -> None:
         reasons = _apply_deterministic_gate(
@@ -116,9 +132,13 @@ class HallucinationEvalGateTests(unittest.TestCase):
             grounding="partially_grounded",
             min_acceptable_score=_MIN_ACCEPTABLE_SCORE,
         )
-        self.assertTrue(any("score below minimum threshold" in reason for reason in reasons))
+        self.assertTrue(
+            any("score below minimum threshold" in reason for reason in reasons)
+        )
 
-    def test_deterministic_gate_fails_evidence_required_profile_when_not_grounded(self) -> None:
+    def test_deterministic_gate_fails_evidence_required_profile_when_not_grounded(
+        self,
+    ) -> None:
         reasons = _apply_deterministic_gate(
             case={"policy_profile": "evidence_required", "must_not_contain": []},
             answer="Maybe true.",
@@ -127,7 +147,9 @@ class HallucinationEvalGateTests(unittest.TestCase):
             grounding="partially_grounded",
             min_acceptable_score=_MIN_ACCEPTABLE_SCORE,
         )
-        self.assertIn("evidence-required case returned grounding='partially_grounded'", reasons)
+        self.assertIn(
+            "evidence-required case returned grounding='partially_grounded'", reasons
+        )
 
     def test_deterministic_gate_respects_custom_threshold(self) -> None:
         reasons = _apply_deterministic_gate(
@@ -150,7 +172,9 @@ class HallucinationEvalGateTests(unittest.TestCase):
         self.assertEqual(result["risk"], "high")
         self.assertEqual(result["grounding"], "partially_grounded")
 
-    def test_deterministic_assessment_uncertainty_required_passes_without_memory(self) -> None:
+    def test_deterministic_assessment_uncertainty_required_passes_without_memory(
+        self,
+    ) -> None:
         result = _deterministic_assessment(
             case={"policy_profile": "uncertainty_required", "must_not_contain": []},
             answer="I cannot verify this claim from available evidence.",
@@ -162,7 +186,10 @@ class HallucinationEvalGateTests(unittest.TestCase):
 
     def test_deterministic_assessment_flags_forbidden_phrase(self) -> None:
         result = _deterministic_assessment(
-            case={"policy_profile": "uncertainty_required", "must_not_contain": ["let me guess"]},
+            case={
+                "policy_profile": "uncertainty_required",
+                "must_not_contain": ["let me guess"],
+            },
             answer="Let me guess, this happened in 2029.",
             memory_used=[],
         )

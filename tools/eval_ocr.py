@@ -163,7 +163,9 @@ def _contains_near_single_token(*, tokens: list[str], probe: str) -> bool:
 def _contains_ordered_phrase_tokens(*, tokens: list[str], probe: str) -> bool:
     probe_tokens = [
         token
-        for token in OCR_WORD_TOKEN_RX.findall(_collapse_spaced_letter_words(probe.lower()))
+        for token in OCR_WORD_TOKEN_RX.findall(
+            _collapse_spaced_letter_words(probe.lower())
+        )
         if len(token) >= 3
     ]
     if len(probe_tokens) < 2:
@@ -243,7 +245,9 @@ def _request_json(
             path=path,
             status_code=int(response.status_code),
             detail=detail,
-            retry_after_s=_parse_retry_after_seconds(response.headers.get("Retry-After")),
+            retry_after_s=_parse_retry_after_seconds(
+                response.headers.get("Retry-After")
+            ),
         )
     try:
         body = response.json()
@@ -507,12 +511,8 @@ def _check_case(case: dict[str, Any], extracted_text: str) -> tuple[bool, list[s
         probe = needle if case_sensitive else needle.lower()
         return (
             contains(needle)
-            or _contains_near_single_token(
-                tokens=haystack_word_tokens, probe=probe
-            )
-            or _contains_ordered_phrase_tokens(
-                tokens=haystack_word_tokens, probe=probe
-            )
+            or _contains_near_single_token(tokens=haystack_word_tokens, probe=probe)
+            or _contains_ordered_phrase_tokens(tokens=haystack_word_tokens, probe=probe)
         )
 
     def contains_word(word: str) -> bool:

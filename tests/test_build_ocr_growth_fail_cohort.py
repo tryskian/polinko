@@ -85,8 +85,12 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertEqual(report["summary"]["fail_to_pass_cases"], 1)
         self.assertEqual(report["summary"]["lane_counts"], {"handwriting": 1})
         self.assertEqual(report["summary"]["fail_history_lane_counts"], {"typed": 1})
-        self.assertEqual(report["summary"]["failure_pattern_counts"].get("ordered_phrase_missing"), 1)
-        self.assertEqual(report["summary"]["failure_pattern_counts"].get("recovered_after_fail"), 1)
+        self.assertEqual(
+            report["summary"]["failure_pattern_counts"].get("ordered_phrase_missing"), 1
+        )
+        self.assertEqual(
+            report["summary"]["failure_pattern_counts"].get("recovered_after_fail"), 1
+        )
         self.assertEqual(len(report["cases"]), 1)
         selected = report["cases"][0]
         self.assertEqual(selected["id"], "gx-1")
@@ -406,8 +410,20 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             },
         }
         metrics_map = {
-            "gx-1": {"id": "gx-1", "observed_runs": 1, "pass_runs": 1, "fail_runs": 0, "error_runs": 0},
-            "gx-2": {"id": "gx-2", "observed_runs": 2, "pass_runs": 0, "fail_runs": 2, "error_runs": 0},
+            "gx-1": {
+                "id": "gx-1",
+                "observed_runs": 1,
+                "pass_runs": 1,
+                "fail_runs": 0,
+                "error_runs": 0,
+            },
+            "gx-2": {
+                "id": "gx-2",
+                "observed_runs": 2,
+                "pass_runs": 0,
+                "fail_runs": 2,
+                "error_runs": 0,
+            },
         }
 
         report = build_fail_cohort(
@@ -425,10 +441,16 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         self.assertEqual(report["summary"]["cases_total"], 2)
         self.assertEqual(report["summary"]["selected_fail_cases"], 1)
         self.assertEqual(report["cases"][0]["id"], "gx-2")
-        self.assertEqual(report["cases"][0]["primary_failure_pattern"], "persistent_fail")
-        self.assertEqual(report["summary"]["failure_pattern_counts"], {"persistent_fail": 1})
+        self.assertEqual(
+            report["cases"][0]["primary_failure_pattern"], "persistent_fail"
+        )
+        self.assertEqual(
+            report["summary"]["failure_pattern_counts"], {"persistent_fail": 1}
+        )
 
-    def test_fallback_pattern_prefers_ordered_proxy_when_gate_fields_exist(self) -> None:
+    def test_fallback_pattern_prefers_ordered_proxy_when_gate_fields_exist(
+        self,
+    ) -> None:
         stability_payload = {
             "cases": [
                 {
@@ -467,7 +489,10 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
         )
 
         self.assertEqual(report["summary"]["selected_fail_cases"], 1)
-        self.assertEqual(report["cases"][0]["primary_failure_pattern"], "ordered_phrase_missing_proxy")
+        self.assertEqual(
+            report["cases"][0]["primary_failure_pattern"],
+            "ordered_phrase_missing_proxy",
+        )
         self.assertEqual(
             report["summary"]["failure_pattern_counts"],
             {"ordered_phrase_missing_proxy": 1},
@@ -535,7 +560,13 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
     def test_load_run_case_map_accepts_repo_relative_report_path(self) -> None:
         with TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
-            run_report_path = tmp / ".local" / "eval_reports" / "ocr_growth_stability_runs" / "r1.json"
+            run_report_path = (
+                tmp
+                / ".local"
+                / "eval_reports"
+                / "ocr_growth_stability_runs"
+                / "r1.json"
+            )
             run_report_path.parent.mkdir(parents=True, exist_ok=True)
             run_report_path.write_text(
                 """{
@@ -553,7 +584,9 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
                     }
                 ]
             }
-            stability_report_path = tmp / ".local" / "eval_reports" / "ocr_growth_stability.json"
+            stability_report_path = (
+                tmp / ".local" / "eval_reports" / "ocr_growth_stability.json"
+            )
             stability_report_path.parent.mkdir(parents=True, exist_ok=True)
             stability_report_path.write_text("{}", encoding="utf-8")
 
@@ -621,16 +654,22 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
 
         self.assertEqual(report["summary"]["selected_fail_cases"], 0)
         self.assertEqual(report["summary"]["exploratory_cases"], 1)
-        self.assertEqual(report["summary"]["exploratory_lane_counts"], {"handwriting": 1})
+        self.assertEqual(
+            report["summary"]["exploratory_lane_counts"], {"handwriting": 1}
+        )
         exploratory = report["exploratory_cases"][0]
         self.assertEqual(exploratory["id"], "gx-pass-1")
-        self.assertEqual(exploratory["primary_failure_pattern"], "exploratory_stress_probe")
+        self.assertEqual(
+            exploratory["primary_failure_pattern"], "exploratory_stress_probe"
+        )
         overrides = exploratory.get("focus_overrides")
         self.assertIsInstance(overrides, dict)
         self.assertGreaterEqual(len(overrides.get("must_appear_in_order", [])), 2)
         self.assertGreater(int(overrides.get("min_chars", 0) or 0), 0)
 
-    def test_exploratory_prefers_anchor_derived_order_over_stale_source_order(self) -> None:
+    def test_exploratory_prefers_anchor_derived_order_over_stale_source_order(
+        self,
+    ) -> None:
         stability_payload = {
             "cases": [
                 {
@@ -681,7 +720,9 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             ["field", "measurable"],
         )
 
-    def test_exploratory_prefers_run_extracted_tokens_over_anchor_guess_tokens(self) -> None:
+    def test_exploratory_prefers_run_extracted_tokens_over_anchor_guess_tokens(
+        self,
+    ) -> None:
         stability_payload = {
             "cases": [
                 {
@@ -717,7 +758,9 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             }
         }
         review_index = {
-            "/tmp/sample-pass-ocr-order.png": [{"ocr_framing_signal": True, "lane": "typed"}]
+            "/tmp/sample-pass-ocr-order.png": [
+                {"ocr_framing_signal": True, "lane": "typed"}
+            ]
         }
 
         report = build_fail_cohort(
@@ -741,7 +784,9 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             ["impact", "human"],
         )
 
-    def test_exploratory_prefers_existing_order_when_run_text_tokens_are_too_short(self) -> None:
+    def test_exploratory_prefers_existing_order_when_run_text_tokens_are_too_short(
+        self,
+    ) -> None:
         stability_payload = {
             "cases": [
                 {
@@ -828,7 +873,9 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             }
         }
         review_index = {
-            "/tmp/sample-pass-3.png": [{"ocr_framing_signal": True, "lane": "illustration"}]
+            "/tmp/sample-pass-3.png": [
+                {"ocr_framing_signal": True, "lane": "illustration"}
+            ]
         }
 
         report = build_fail_cohort(
@@ -997,7 +1044,9 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             }
         }
         review_index = {
-            "/tmp/sample-pass-4.png": [{"ocr_framing_signal": True, "lane": "handwriting"}]
+            "/tmp/sample-pass-4.png": [
+                {"ocr_framing_signal": True, "lane": "handwriting"}
+            ]
         }
 
         report = build_fail_cohort(
@@ -1056,7 +1105,9 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             }
         }
         review_index = {
-            "/tmp/sample-pass-filter-any.png": [{"ocr_framing_signal": True, "lane": "typed"}]
+            "/tmp/sample-pass-filter-any.png": [
+                {"ocr_framing_signal": True, "lane": "typed"}
+            ]
         }
 
         report = build_fail_cohort(
@@ -1259,7 +1310,9 @@ class OcrGrowthFailCohortTests(unittest.TestCase):
             }
         }
         review_index = {
-            "/tmp/sample-pass-late-order.png": [{"ocr_framing_signal": True, "lane": "typed"}]
+            "/tmp/sample-pass-late-order.png": [
+                {"ocr_framing_signal": True, "lane": "typed"}
+            ]
         }
 
         report = build_fail_cohort(

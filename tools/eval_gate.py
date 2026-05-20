@@ -35,7 +35,9 @@ def resolve_binary_gate(
         reasons.append(overrides.get("policy_pass", "policy gate failed"))
     if not high_value_alignment_pass:
         reasons.append(
-            overrides.get("high_value_alignment_pass", "high-value alignment gate failed")
+            overrides.get(
+                "high_value_alignment_pass", "high-value alignment gate failed"
+            )
         )
     if not evidence_complete:
         reasons.append(

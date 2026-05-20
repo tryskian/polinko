@@ -40,6 +40,7 @@ class HallucinationJudgeResponse(BaseModel):
     def passed(self) -> bool:
         return self.pass_
 
+
 _MIN_ACCEPTABLE_SCORE = 5
 EvaluationMode = Literal["judge", "deterministic", "auto"]
 
@@ -74,7 +75,11 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
         case_id = str(case.get("id", f"case-{index}")).strip()
         query = str(case.get("query", "")).strip()
         policy_profile = str(case.get("policy_profile", "")).strip().lower()
-        if not case_id or not query or policy_profile not in {"evidence_required", "uncertainty_required"}:
+        if (
+            not case_id
+            or not query
+            or policy_profile not in {"evidence_required", "uncertainty_required"}
+        ):
             raise RuntimeError(
                 f"Case #{index} must include valid 'id', 'query', and "
                 "'policy_profile' (evidence_required|uncertainty_required)."
@@ -83,14 +88,19 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
         must_not_contain_raw = case.get("must_not_contain", [])
         must_not_contain: list[str] = []
         if isinstance(must_not_contain_raw, list):
-            must_not_contain = [str(item).strip().lower() for item in must_not_contain_raw if str(item).strip()]
+            must_not_contain = [
+                str(item).strip().lower()
+                for item in must_not_contain_raw
+                if str(item).strip()
+            ]
         normalized.append(
             {
                 "id": case_id,
                 "query": query,
                 "policy_profile": policy_profile,
                 "seed_text": seed_text,
-                "source_name": str(case.get("source_name", f"{case_id}.txt")).strip() or f"{case_id}.txt",
+                "source_name": str(case.get("source_name", f"{case_id}.txt")).strip()
+                or f"{case_id}.txt",
                 "must_not_contain": must_not_contain,
             }
         )
@@ -212,14 +222,20 @@ def _contains_forbidden_phrases(answer: str, forbidden_phrases: list[str]) -> li
             if index < 0:
                 break
             end = index + len(probe)
-            prefix = lowered[max(0, index - 80):index]
-            if re.search(r"(?:no|without)\s+(?:clear\s+|solid\s+)?evidence(?:\s+\w+){0,4}\s*$", prefix):
+            prefix = lowered[max(0, index - 80) : index]
+            if re.search(
+                r"(?:no|without)\s+(?:clear\s+|solid\s+)?evidence(?:\s+\w+){0,4}\s*$",
+                prefix,
+            ):
                 start = end
                 continue
             if re.search(r"not enough evidence(?:\s+\w+){0,4}\s*$", prefix):
                 start = end
                 continue
-            if re.search(r"(?:can't|cannot|do not|don't)\s+(?:know|tell|verify|confirm)(?:\s+\w+){0,4}\s*$", prefix):
+            if re.search(
+                r"(?:can't|cannot|do not|don't)\s+(?:know|tell|verify|confirm)(?:\s+\w+){0,4}\s*$",
+                prefix,
+            ):
                 start = end
                 continue
             hits.append(phrase)
@@ -313,7 +329,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run hallucination-risk eval using an LLM judge over /chat outputs.",
     )
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL.")
+    parser.add_argument(
+        "--base-url", default="http://127.0.0.1:8000", help="Polinko API base URL."
+    )
     parser.add_argument(
         "--cases",
         default="docs/eval/beta_2_0/hallucination_eval_cases.json",
@@ -329,7 +347,9 @@ def build_parser() -> argparse.ArgumentParser:
         default="",
         help="Optional run id suffix. Defaults to current epoch seconds.",
     )
-    parser.add_argument("--timeout", type=int, default=90, help="HTTP timeout in seconds.")
+    parser.add_argument(
+        "--timeout", type=int, default=90, help="HTTP timeout in seconds."
+    )
     parser.add_argument(
         "--judge-model",
         default="gpt-4.1-mini",
@@ -481,7 +501,9 @@ def main() -> int:
             answer = str(chat_payload.get("output", "")).strip()
             memory_used_raw = chat_payload.get("memory_used")
             memory_used = memory_used_raw if isinstance(memory_used_raw, list) else []
-            normalized_memory_used = [item for item in memory_used if isinstance(item, dict)]
+            normalized_memory_used = [
+                item for item in memory_used if isinstance(item, dict)
+            ]
             case_eval_mode: Literal["judge", "deterministic"] = effective_mode
             if effective_mode == "judge":
                 try:
@@ -503,7 +525,9 @@ def main() -> int:
                             memory_used=normalized_memory_used,
                         )
                         judgment["notes"] = f"judge_error={exc}; {judgment['notes']}"
-                        print(f"  WARN judge failed, used deterministic fallback: {exc}")
+                        print(
+                            f"  WARN judge failed, used deterministic fallback: {exc}"
+                        )
                     else:
                         raise
             else:
@@ -549,7 +573,9 @@ def main() -> int:
                 passes += 1
                 print(f"  PASS score={score} risk={risk}")
             else:
-                joined_reasons = "; ".join(fail_reasons) if fail_reasons else "judge_marked_fail"
+                joined_reasons = (
+                    "; ".join(fail_reasons) if fail_reasons else "judge_marked_fail"
+                )
                 failures.append(
                     f"{case['id']}: score={score} risk={risk} notes={notes} reasons={joined_reasons}"
                 )

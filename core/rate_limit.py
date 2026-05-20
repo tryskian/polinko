@@ -13,7 +13,9 @@ class SlidingWindowRateLimiter:
         clock: Callable[[], float] | None = None,
     ) -> None:
         self._window_seconds = max(1, window_seconds)
-        self._cleanup_interval_seconds = max(self._window_seconds, cleanup_interval_seconds)
+        self._cleanup_interval_seconds = max(
+            self._window_seconds, cleanup_interval_seconds
+        )
         self._clock = clock or time.time
         self._last_cleanup_at = self._clock()
         self._lock = threading.Lock()

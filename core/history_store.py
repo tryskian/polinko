@@ -353,7 +353,8 @@ class ChatHistoryStore:
 
     def _ensure_chat_messages_columns(self, conn: sqlite3.Connection) -> None:
         columns = {
-            row["name"] for row in conn.execute("PRAGMA table_info(chat_messages);").fetchall()
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(chat_messages);").fetchall()
         }
         if "message_id" not in columns:
             conn.execute("ALTER TABLE chat_messages ADD COLUMN message_id TEXT;")
@@ -382,7 +383,9 @@ class ChatHistoryStore:
                 str(row["message_id"]) if row["message_id"] is not None else None
             )
             current_parent_id = (
-                str(row["parent_message_id"]) if row["parent_message_id"] is not None else None
+                str(row["parent_message_id"])
+                if row["parent_message_id"] is not None
+                else None
             )
 
             next_message_id = current_message_id or _build_message_id(
@@ -396,7 +399,10 @@ class ChatHistoryStore:
             if role in {"user", "assistant"} and next_parent_id is None:
                 next_parent_id = latest_visible_message_by_session.get(session_id)
 
-            if current_message_id != next_message_id or current_parent_id != next_parent_id:
+            if (
+                current_message_id != next_message_id
+                or current_parent_id != next_parent_id
+            ):
                 conn.execute(
                     """
                     UPDATE chat_messages
@@ -444,9 +450,13 @@ class ChatHistoryStore:
             title=str(row["title"]),
             created_at=int(row["created_at"]),
             updated_at=int(row["updated_at"]),
-            message_count=int(count_row["message_count"]) if count_row is not None else 0,
+            message_count=int(count_row["message_count"])
+            if count_row is not None
+            else 0,
             status=str(row["status"]),
-            deprecated_at=int(row["deprecated_at"]) if row["deprecated_at"] is not None else None,
+            deprecated_at=int(row["deprecated_at"])
+            if row["deprecated_at"] is not None
+            else None,
         )
 
     def list_chats(self, *, include_deprecated: bool = False) -> list[ChatSummary]:
@@ -469,7 +479,9 @@ class ChatHistoryStore:
                   WHERE role IN ('user', 'assistant')
                   GROUP BY session_id
                 ) m ON m.session_id = c.session_id
-                """ + where_clause + """
+                """
+                + where_clause
+                + """
                 ORDER BY c.updated_at DESC, c.created_at DESC;
                 """
             ).fetchall()
@@ -481,7 +493,9 @@ class ChatHistoryStore:
                 updated_at=int(row["updated_at"]),
                 message_count=int(row["message_count"]),
                 status=str(row["status"]),
-                deprecated_at=int(row["deprecated_at"]) if row["deprecated_at"] is not None else None,
+                deprecated_at=int(row["deprecated_at"])
+                if row["deprecated_at"] is not None
+                else None,
             )
             for row in rows
         ]
@@ -518,7 +532,9 @@ class ChatHistoryStore:
             updated_at=int(row["updated_at"]),
             message_count=int(row["message_count"]),
             status=str(row["status"]),
-            deprecated_at=int(row["deprecated_at"]) if row["deprecated_at"] is not None else None,
+            deprecated_at=int(row["deprecated_at"])
+            if row["deprecated_at"] is not None
+            else None,
         )
 
     def rename_chat(self, session_id: str, title: str) -> ChatSummary:
@@ -558,14 +574,20 @@ class ChatHistoryStore:
             title=str(row["title"]),
             created_at=int(row["created_at"]),
             updated_at=int(row["updated_at"]),
-            message_count=int(count_row["message_count"]) if count_row is not None else 0,
+            message_count=int(count_row["message_count"])
+            if count_row is not None
+            else 0,
             status=str(row["status"]),
-            deprecated_at=int(row["deprecated_at"]) if row["deprecated_at"] is not None else None,
+            deprecated_at=int(row["deprecated_at"])
+            if row["deprecated_at"] is not None
+            else None,
         )
 
     def delete_chat(self, session_id: str) -> None:
         with self._connection() as conn:
-            deleted = conn.execute("DELETE FROM chats WHERE session_id = ?;", (session_id,))
+            deleted = conn.execute(
+                "DELETE FROM chats WHERE session_id = ?;", (session_id,)
+            )
             if deleted.rowcount == 0:
                 raise KeyError(session_id)
 
@@ -720,13 +742,19 @@ class ChatHistoryStore:
         normalized_negative_tags = [
             tag.strip() for tag in (negative_tags or []) if tag.strip()
         ]
-        normalized_tags = list(dict.fromkeys(normalized_positive_tags + normalized_negative_tags))
+        normalized_tags = list(
+            dict.fromkeys(normalized_positive_tags + normalized_negative_tags)
+        )
         normalized_note = note.strip() if note is not None and note.strip() else None
         normalized_recommended_action = (
-            recommended_action.strip() if recommended_action is not None and recommended_action.strip() else None
+            recommended_action.strip()
+            if recommended_action is not None and recommended_action.strip()
+            else None
         )
         normalized_action_taken = (
-            action_taken.strip() if action_taken is not None and action_taken.strip() else None
+            action_taken.strip()
+            if action_taken is not None and action_taken.strip()
+            else None
         )
         normalized_status = status.strip().upper() if status.strip() else "LOGGED"
         now = _now_ms()
@@ -872,7 +900,9 @@ class ChatHistoryStore:
             created_at=now,
         )
 
-    def list_eval_checkpoints(self, session_id: str, limit: int = 200) -> list[EvalCheckpoint]:
+    def list_eval_checkpoints(
+        self, session_id: str, limit: int = 200
+    ) -> list[EvalCheckpoint]:
         with self._connection() as conn:
             rows = conn.execute(
                 """
@@ -986,13 +1016,21 @@ class ChatHistoryStore:
             OcrRun(
                 run_id=str(row["run_id"]),
                 session_id=str(row["session_id"]),
-                source_name=str(row["source_name"]) if row["source_name"] is not None else None,
-                mime_type=str(row["mime_type"]) if row["mime_type"] is not None else None,
+                source_name=str(row["source_name"])
+                if row["source_name"] is not None
+                else None,
+                mime_type=str(row["mime_type"])
+                if row["mime_type"] is not None
+                else None,
                 source_message_id=(
-                    str(row["source_message_id"]) if row["source_message_id"] is not None else None
+                    str(row["source_message_id"])
+                    if row["source_message_id"] is not None
+                    else None
                 ),
                 result_message_id=(
-                    str(row["result_message_id"]) if row["result_message_id"] is not None else None
+                    str(row["result_message_id"])
+                    if row["result_message_id"] is not None
+                    else None
                 ),
                 status=str(row["status"]),
                 extracted_text=str(row["extracted_text"]),
@@ -1034,7 +1072,9 @@ class ChatHistoryStore:
         response_payload: dict[str, Any],
     ) -> None:
         now = _now_ms()
-        serialized = json.dumps(response_payload, ensure_ascii=False, separators=(",", ":"))
+        serialized = json.dumps(
+            response_payload, ensure_ascii=False, separators=(",", ":")
+        )
         with self._connection() as conn:
             conn.execute(
                 """
@@ -1083,7 +1123,9 @@ class ChatHistoryStore:
         # Preserve oldest->newest order for deterministic prompt construction.
         return [str(row["content"]) for row in reversed(rows)]
 
-    def maybe_set_title_from_first_user_message(self, session_id: str, user_message: str) -> None:
+    def maybe_set_title_from_first_user_message(
+        self, session_id: str, user_message: str
+    ) -> None:
         candidate = derive_chat_title(user_message)
         now = _now_ms()
         with self._connection() as conn:
@@ -1120,10 +1162,14 @@ class ChatHistoryStore:
             active_role=str(row["active_role"]),
             objective=str(row["objective"]) if row["objective"] is not None else None,
             updated_at=int(row["updated_at"]),
-            updated_by=str(row["updated_by"]) if row["updated_by"] is not None else None,
+            updated_by=str(row["updated_by"])
+            if row["updated_by"] is not None
+            else None,
         )
 
-    def list_handoffs(self, session_id: str, limit: int = 20) -> list[CollaborationHandoff]:
+    def list_handoffs(
+        self, session_id: str, limit: int = 20
+    ) -> list[CollaborationHandoff]:
         with self._connection() as conn:
             rows = conn.execute(
                 """
@@ -1151,14 +1197,22 @@ class ChatHistoryStore:
             CollaborationHandoff(
                 handoff_id=f"handoff-{int(row['id'])}",
                 session_id=str(row["session_id"]),
-                from_agent_id=str(row["from_agent_id"]) if row["from_agent_id"] is not None else None,
-                from_role=str(row["from_role"]) if row["from_role"] is not None else None,
+                from_agent_id=str(row["from_agent_id"])
+                if row["from_agent_id"] is not None
+                else None,
+                from_role=str(row["from_role"])
+                if row["from_role"] is not None
+                else None,
                 to_agent_id=str(row["to_agent_id"]),
                 to_role=str(row["to_role"]),
-                objective=str(row["objective"]) if row["objective"] is not None else None,
+                objective=str(row["objective"])
+                if row["objective"] is not None
+                else None,
                 reason=str(row["reason"]) if row["reason"] is not None else None,
                 created_at=int(row["created_at"]),
-                created_by=str(row["created_by"]) if row["created_by"] is not None else None,
+                created_by=str(row["created_by"])
+                if row["created_by"] is not None
+                else None,
             )
             for row in ordered
         ]
@@ -1181,7 +1235,9 @@ class ChatHistoryStore:
             raise ValueError("to_role cannot be blank.")
         safe_objective = objective.strip() if objective and objective.strip() else None
         safe_reason = reason.strip() if reason and reason.strip() else None
-        safe_created_by = created_by.strip() if created_by and created_by.strip() else None
+        safe_created_by = (
+            created_by.strip() if created_by and created_by.strip() else None
+        )
 
         now = _now_ms()
         with self._connection() as conn:
@@ -1204,7 +1260,9 @@ class ChatHistoryStore:
             from_agent_id = (
                 str(current_row["active_agent_id"]) if current_row is not None else None
             )
-            from_role = str(current_row["active_role"]) if current_row is not None else None
+            from_role = (
+                str(current_row["active_role"]) if current_row is not None else None
+            )
             conn.execute(
                 """
                 INSERT INTO chat_collaboration_state(
@@ -1223,7 +1281,14 @@ class ChatHistoryStore:
                   updated_at = excluded.updated_at,
                   updated_by = excluded.updated_by;
                 """,
-                (session_id, safe_agent_id, safe_role, safe_objective, now, safe_created_by),
+                (
+                    session_id,
+                    safe_agent_id,
+                    safe_role,
+                    safe_objective,
+                    now,
+                    safe_created_by,
+                ),
             )
             inserted = conn.execute(
                 """
@@ -1257,7 +1322,9 @@ class ChatHistoryStore:
                 (now, session_id),
             )
 
-        handoff_row_id = int(inserted.lastrowid) if inserted.lastrowid is not None else 0
+        handoff_row_id = (
+            int(inserted.lastrowid) if inserted.lastrowid is not None else 0
+        )
         state = CollaborationState(
             session_id=session_id,
             active_agent_id=safe_agent_id,
@@ -1296,7 +1363,9 @@ class ChatHistoryStore:
             session_id=str(row["session_id"]),
             memory_scope=str(row["memory_scope"]),
             updated_at=int(row["updated_at"]),
-            updated_by=str(row["updated_by"]) if row["updated_by"] is not None else None,
+            updated_by=str(row["updated_by"])
+            if row["updated_by"] is not None
+            else None,
         )
 
     def set_personalization(
@@ -1310,7 +1379,9 @@ class ChatHistoryStore:
         if safe_scope not in {"session", "global"}:
             raise ValueError("memory_scope must be 'session' or 'global'.")
         now = _now_ms()
-        safe_updated_by = updated_by.strip() if updated_by and updated_by.strip() else None
+        safe_updated_by = (
+            updated_by.strip() if updated_by and updated_by.strip() else None
+        )
         with self._connection() as conn:
             conn.execute(
                 """
@@ -1345,8 +1416,13 @@ class ChatHistoryStore:
     def clear_messages(self, session_id: str) -> None:
         now = _now_ms()
         with self._connection() as conn:
-            conn.execute("DELETE FROM chat_messages WHERE session_id = ?;", (session_id,))
-            conn.execute("UPDATE chats SET updated_at = ? WHERE session_id = ?;", (now, session_id))
+            conn.execute(
+                "DELETE FROM chat_messages WHERE session_id = ?;", (session_id,)
+            )
+            conn.execute(
+                "UPDATE chats SET updated_at = ? WHERE session_id = ?;",
+                (now, session_id),
+            )
 
 
 def _message_feedback_from_row(row: sqlite3.Row) -> MessageFeedback:
@@ -1363,13 +1439,19 @@ def _message_feedback_from_row(row: sqlite3.Row) -> MessageFeedback:
         if isinstance(decoded, dict):
             raw_positive = decoded.get("positive")
             if isinstance(raw_positive, list):
-                parsed_positive_tags = [str(item).strip() for item in raw_positive if str(item).strip()]
+                parsed_positive_tags = [
+                    str(item).strip() for item in raw_positive if str(item).strip()
+                ]
             raw_negative = decoded.get("negative")
             if isinstance(raw_negative, list):
-                parsed_negative_tags = [str(item).strip() for item in raw_negative if str(item).strip()]
+                parsed_negative_tags = [
+                    str(item).strip() for item in raw_negative if str(item).strip()
+                ]
             raw_all = decoded.get("all")
             if isinstance(raw_all, list):
-                parsed_tags = [str(item).strip() for item in raw_all if str(item).strip()]
+                parsed_tags = [
+                    str(item).strip() for item in raw_all if str(item).strip()
+                ]
     parsed_positive_tags = list(dict.fromkeys(parsed_positive_tags))
     parsed_negative_tags = list(dict.fromkeys(parsed_negative_tags))
     if not parsed_tags:
@@ -1383,9 +1465,13 @@ def _message_feedback_from_row(row: sqlite3.Row) -> MessageFeedback:
         tags=parsed_tags,
         note=str(row["note"]) if row["note"] is not None else None,
         recommended_action=(
-            str(row["recommended_action"]) if row["recommended_action"] is not None else None
+            str(row["recommended_action"])
+            if row["recommended_action"] is not None
+            else None
         ),
-        action_taken=str(row["action_taken"]) if row["action_taken"] is not None else None,
+        action_taken=str(row["action_taken"])
+        if row["action_taken"] is not None
+        else None,
         status=str(row["status"]),
         created_at=int(row["created_at"]),
         updated_at=int(row["updated_at"]),
