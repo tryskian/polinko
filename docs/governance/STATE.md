@@ -93,6 +93,9 @@ Last updated: 2026-05-20
     excluded from the type-check gate
   - `make ci-python-type-check`, GitHub CI, and `make end` enforce the same
     scoped mypy surface
+  - Pyright is repo-owned as an advisory/editor check:
+    `make pyright-check` runs the pinned root Node dependency against
+    `pyrightconfig.json`, but mypy remains the required CI and closeout gate
 - Test and runtime resource hygiene is explicit:
   - sqlite connections are closed through explicit lifecycle handling
   - tests reject direct `with sqlite3.connect(...)` usage so Python 3.14

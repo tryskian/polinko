@@ -782,3 +782,16 @@ or branch history instead.
   while active `src`/`tools` code had existing type drift. A scoped gate matches
   the package-boundary refactor and catches real runtime/tooling drift without
   treating archived evidence as live source.
+
+## D-058: Keep Pyright repo-owned and advisory
+
+- Date: `2026-05-20`
+- Category: `build_validation`
+- Tags: `pyright`, `node_tooling`, `make`, `editor`, `type_checking`
+- Decision: Pin Pyright in the root Node tooling manifest and expose it through
+  `make pyright-check` for editor/static-analysis parity, while keeping mypy as
+  the required Python type-check gate in CI and closeout.
+- Why: `pyrightconfig.json` is tracked repo configuration, so the executable
+  should be repo-owned rather than dependent on a global install. Keeping it
+  advisory avoids adding a second required type gate while still making the
+  editor surface reproducible.
