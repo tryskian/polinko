@@ -6,7 +6,7 @@ portfolio_app_dir="${POLINKO_DEVCONTAINER_PORTFOLIO_APP_DIR:-apps/portfolio}"
 
 python3 -m venv --copies "$venv_dir"
 "$venv_dir/bin/python3" -m pip install --upgrade pip
-"$venv_dir/bin/python3" -m pip install -r requirements.lock
+"$venv_dir/bin/python3" -m pip install -r requirements.txt
 
 if [ -f package-lock.json ]; then
 	npm ci --no-audit --no-fund

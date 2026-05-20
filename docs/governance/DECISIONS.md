@@ -751,3 +751,19 @@ or branch history instead.
   human-led method choice with Codex executing implementation, validation, and
   Git flow. Recording that authorship keeps the governance ledger aligned with
   the charter working model.
+
+## D-056: Use Dependabot-visible Python lockfile naming
+
+- Date: `2026-05-20`
+- Category: `dependency_management`
+- Tags: `dependabot`, `pip_tools`, `lockfiles`, `ci`, `python`
+- Human-led: The human lead surfaced the failing Dependabot `requirements.in`
+  update signal from GitHub during the refactor pass.
+- Decision: Keep `requirements.in` as the direct-dependency input and use the
+  generated `requirements.txt` as the pip-tools lockfile consumed by CI,
+  Docker, devcontainer setup, `pip-audit`, and `make deps-lock-check`.
+- Why: GitHub Dependabot's pip/pip-compile support recognizes standard
+  requirements text files. Keeping the generated output as `requirements.lock`
+  made Dependabot PRs update only the input file while Polinko's CI correctly
+  rejected the stale compiled output. The standard naming preserves strict
+  lockfile validation without requiring a weaker security gate.

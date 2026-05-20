@@ -1,6 +1,6 @@
 # Build and dependency management configuration.
 REQUIREMENTS_IN ?= requirements.in
-REQUIREMENTS_LOCK ?= requirements.lock
+REQUIREMENTS_LOCK ?= requirements.txt
 PIP_TOOLS_VERSION ?= 7.5.3
 # PYSEC-2025-183 / CVE-2025-45768 is a disputed PyJWT advisory with no
 # released fix. PyJWT is present transitively through mcp, and Polinko has no

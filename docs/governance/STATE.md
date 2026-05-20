@@ -79,6 +79,8 @@ Last updated: 2026-05-20
   - squash-only merge
 - Development setup and dependency gates are aligned to canonical paths:
   - devcontainer setup creates `.venv`
+  - Python dependencies use `requirements.in` plus generated
+    `requirements.txt`, matching pip-tools and Dependabot conventions
   - portfolio Node setup uses `apps/portfolio/`
   - root and portfolio npm locks both have audit and Dependabot coverage
   - portfolio installs prefer `npm ci` when a lockfile is present

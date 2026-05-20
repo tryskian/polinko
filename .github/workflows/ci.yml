@@ -31,7 +31,7 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.lock
+          pip install -r requirements.txt
       - name: Editable package install
         run: make package-install-check PYTHON=python
       - name: Unit tests
@@ -50,7 +50,7 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.lock
+          pip install -r requirements.txt
       - name: Ruff checks
         run: make ci-python-style PYTHON=python
 
@@ -64,7 +64,7 @@ jobs:
       - name: Install audit and locked deps
         run: |
           python -m pip install --upgrade pip pip-audit
-          pip install -r requirements.lock
+          pip install -r requirements.txt
       - name: Python security and lock check
         run: make ci-python-security PYTHON=python
 
