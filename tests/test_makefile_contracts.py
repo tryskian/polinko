@@ -31,6 +31,9 @@ OCR_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_cases.sh"
 OCR_STABILITY_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_stability.sh"
 OCR_GROWTH_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_cases.sh"
 OCR_GROWTH_BATCH_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_batched.sh"
+OCR_GROWTH_CASE_WORKFLOW_SCRIPT = (
+    REPO_ROOT / "tools" / "run_ocr_growth_case_workflow.sh"
+)
 OCR_GROWTH_STABILITY_RUNNER_SCRIPT = (
     REPO_ROOT / "tools" / "run_eval_ocr_growth_stability.sh"
 )
@@ -186,7 +189,11 @@ class MakefileContractTests(unittest.TestCase):
             "OCR_GROWTH_STABILITY_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_growth_stability.sh",
             config_text,
         )
-        self.assertIn("OCR_GROWTH_RUNNER_ENV =", config_text)
+        self.assertIn(
+            "OCR_GROWTH_CASE_WORKFLOW_SCRIPT ?= ./tools/run_ocr_growth_case_workflow.sh",
+            config_text,
+        )
+        self.assertIn("OCR_GROWTH_CASE_WORKFLOW_ENV =", config_text)
         self.assertIn(
             "OCR_REPORT_BUILDER_SCRIPT ?= ./tools/run_ocr_report_builder.sh",
             config_text,
@@ -289,6 +296,9 @@ class MakefileContractTests(unittest.TestCase):
         lane_workflow_text = OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT.read_text(
             encoding="utf-8"
         )
+        growth_case_workflow_text = OCR_GROWTH_CASE_WORKFLOW_SCRIPT.read_text(
+            encoding="utf-8"
+        )
         focus_workflow_text = OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT.read_text(
             encoding="utf-8"
         )
@@ -304,10 +314,14 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("OCR_GUARDED_CASE_RUNNER_SCRIPT", lane_workflow_text)
         self.assertIn("OCR_EVAL_RUNNER_SCRIPT", lane_workflow_text)
         self.assertIn("OCR_STABILITY_RUNNER_SCRIPT", lane_workflow_text)
+        self.assertIn("eval_case_guard_or_exit", growth_case_workflow_text)
+        self.assertIn("OCR_GROWTH_EVAL_RUNNER_SCRIPT", growth_case_workflow_text)
+        self.assertIn("OCR_GROWTH_BATCH_RUNNER_SCRIPT", growth_case_workflow_text)
         self.assertIn("eval_case_guard_or_exit", focus_workflow_text)
         self.assertIn("eval_case_guard_or_exit", growth_workflow_text)
-        self.assertIn('bash "$(OCR_GUARDED_CASE_RUNNER_SCRIPT)"', text)
+        self.assertNotIn('bash "$(OCR_GUARDED_CASE_RUNNER_SCRIPT)"', text)
         self.assertIn('bash "$(OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT)"', text)
+        self.assertIn('bash "$(OCR_GROWTH_CASE_WORKFLOW_SCRIPT)"', text)
         self.assertIn('bash "$(OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT)"', text)
         self.assertIn('bash "$(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT)"', text)
         for suite in (
@@ -352,11 +366,11 @@ class MakefileContractTests(unittest.TestCase):
             text,
         )
         self.assertIn(
-            'bash "$(OCR_GROWTH_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
+            'bash "$(OCR_GROWTH_CASE_WORKFLOW_SCRIPT)" eval',
             text,
         )
         self.assertIn(
-            'bash "$(OCR_GROWTH_BATCH_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
+            'bash "$(OCR_GROWTH_CASE_WORKFLOW_SCRIPT)" batched',
             text,
         )
         self.assertNotIn(
@@ -397,6 +411,14 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertNotIn(
             'PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
+            text,
+        )
+        self.assertNotIn(
+            'bash "$(OCR_GROWTH_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
+            text,
+        )
+        self.assertNotIn(
+            'bash "$(OCR_GROWTH_BATCH_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)"',
             text,
         )
         self.assertNotIn("$(PYTHON) -m tools.eval_ocr_batched", text)
@@ -451,6 +473,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(OCR_STABILITY_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_GROWTH_EVAL_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_GROWTH_BATCH_RUNNER_SCRIPT.is_file())
+        self.assertTrue(OCR_GROWTH_CASE_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(OCR_GROWTH_STABILITY_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_REPORT_BUILDER_SCRIPT.is_file())
         self.assertTrue(OCR_REPORT_WORKFLOW_SCRIPT.is_file())
@@ -468,6 +491,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(os.access(OCR_STABILITY_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GROWTH_EVAL_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GROWTH_BATCH_RUNNER_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_GROWTH_CASE_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GROWTH_STABILITY_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_REPORT_BUILDER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_REPORT_WORKFLOW_SCRIPT, os.X_OK))
@@ -497,6 +521,13 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("OCR_EVAL_RUNNER_SCRIPT", lane_workflow_text)
         self.assertIn("OCR_STABILITY_RUNNER_SCRIPT", lane_workflow_text)
         self.assertIn('exec bash "$guarded_case_runner_script"', lane_workflow_text)
+        growth_case_workflow_text = OCR_GROWTH_CASE_WORKFLOW_SCRIPT.read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("EVAL_CASE_GUARD_SCRIPT", growth_case_workflow_text)
+        self.assertIn("OCR_GROWTH_EVAL_RUNNER_SCRIPT", growth_case_workflow_text)
+        self.assertIn("OCR_GROWTH_BATCH_RUNNER_SCRIPT", growth_case_workflow_text)
+        self.assertIn("eval_case_guard_or_exit", growth_case_workflow_text)
         report_workflow_text = OCR_REPORT_WORKFLOW_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("OCR_REPORT_BUILDER_SCRIPT", report_workflow_text)
         self.assertIn('exec bash "$report_builder_script"', report_workflow_text)
@@ -577,6 +608,8 @@ class MakefileContractTests(unittest.TestCase):
             "ocr-data",
             "ocr-notebook-workflow",
             "eval-ocr-transcript-cases",
+            "eval-ocr-transcript-cases-growth",
+            "eval-ocr-transcript-cases-growth-batched",
             "eval-ocr-transcript-cases-handwriting",
             "eval-ocr-transcript-cases-typed-benchmark",
             "eval-ocr-transcript-stability",
