@@ -41,6 +41,9 @@ Source of truth:
 Wake-lock rule:
 
 - `make caffeinate` records only this repo's managed PID
+- the managed process is launched in a detached child session so it survives
+  non-interactive host shell command exit
+- `make decaffeinate` stops the repo-owned PID
 - unmanaged `caffeinate` processes are reported but never adopted or stopped
 
 ## End

@@ -137,6 +137,7 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("OPENAI_ACCOUNT_ENV =", config_text)
         self.assertIn("CAFFEINATE_SCRIPT ?= ./tools/manage_caffeinate.sh", config_text)
+        self.assertIn("CAFFEINATE_LAUNCHER_PYTHON ?= $(PYTHON)", config_text)
         self.assertIn("CAFFEINATE_ENV =", config_text)
         self.assertIn(
             "SERVER_DAEMON_SCRIPT ?= ./tools/run_server_daemon.sh", config_text
@@ -550,6 +551,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(SERVER_DAEMON_SCRIPT.is_file())
         self.assertTrue(os.access(CAFFEINATE_SCRIPT, os.X_OK))
         self.assertTrue(os.access(SERVER_DAEMON_SCRIPT, os.X_OK))
+        caffeinate_script_text = CAFFEINATE_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("start_new_session=True", caffeinate_script_text)
+        self.assertNotIn("nohup $caffeinate_cmd", caffeinate_script_text)
         self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" summary', text)
         self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" costs', text)
         self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" usage', text)

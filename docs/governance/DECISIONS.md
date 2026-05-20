@@ -706,3 +706,16 @@ or branch history instead.
 - Why: Python 3.14 surfaces unclosed sqlite connections as `ResourceWarning`.
   Explicit lifecycle handling keeps test output clean without changing the
   manual-eval or runtime database contract.
+
+## D-053: Launch managed caffeinate in a detached session
+
+- Date: `2026-05-20`
+- Category: `workflow_environment`
+- Tags: `caffeinate`, `startup`, `pid_lifecycle`, `host_shell`
+- Decision: `make caffeinate` launches the repo-managed wake-lock process
+  through the configured Python launcher in a detached child session, then
+  records only that process PID. Public targets stay `make caffeinate`,
+  `make caffeinate-status`, `make decaffeinate`, and `make end`.
+- Why: Non-interactive host shells can clean up ordinary background children
+  when the command session exits. A detached session lets status and closeout
+  observe and stop the same repo-owned wake-lock process reliably.
