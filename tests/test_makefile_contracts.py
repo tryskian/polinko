@@ -12,6 +12,7 @@ MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
+EVAL_REPORT_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_report.sh"
 OCR_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_cases.sh"
 OCR_STABILITY_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_stability.sh"
 OCR_GROWTH_EVAL_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_eval_ocr_growth_cases.sh"
@@ -78,6 +79,8 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("EVAL_CASE_GUARD_SCRIPT ?= ./tools/eval_case_guard.sh", config_text)
+        self.assertIn("EVAL_REPORT_RUNNER_SCRIPT ?= ./tools/run_eval_report.sh", config_text)
+        self.assertIn("EVAL_REPORT_RUNNER_ENV =", config_text)
         self.assertIn("OCR_EVAL_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_cases.sh", config_text)
         self.assertIn("OCR_EVAL_RUNNER_ENV =", config_text)
         self.assertIn(
@@ -166,6 +169,21 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("import json,pathlib", text)
         self.assertNotIn("CASE_COUNT=", text)
         self.assertIn("tools.count_eval_cases", guard_text)
+        for suite in (
+            "retrieval",
+            "file-search",
+            "hallucination",
+            "style",
+            "response-behaviour",
+            "ocr-safety",
+            "ocr",
+            "ocr-recovery",
+            "clip-ab",
+        ):
+            self.assertIn(
+                f'bash "$(EVAL_REPORT_RUNNER_SCRIPT)" {suite}',
+                text,
+            )
         self.assertIn('eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_GROWTH)"', text)
         self.assertIn('eval_case_guard_or_exit "$(OCR_FOCUS_CASES_JSON)"', text)
         self.assertIn('bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)"', text)
@@ -210,6 +228,15 @@ class MakefileContractTests(unittest.TestCase):
             '$(PYTHON) -m tools.eval_ocr_stability \\\n\t\t\t\t--base-url "http://127.0.0.1:8000" \\\n\t\t\t\t--cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"',
             text,
         )
+        self.assertNotIn("eval_reports/retrieval-$$RUN_ID.json", text)
+        self.assertNotIn("eval_reports/file-search-$$RUN_ID.json", text)
+        self.assertNotIn("eval_reports/hallucination-$$RUN_ID.json", text)
+        self.assertNotIn("eval_reports/style-$$RUN_ID.json", text)
+        self.assertNotIn("eval_reports/response-behaviour-$$RUN_ID.json", text)
+        self.assertNotIn("eval_reports/ocr-safety-$$RUN_ID.json", text)
+        self.assertNotIn("eval_reports/ocr-$$RUN_ID.json", text)
+        self.assertNotIn("eval_reports/ocr-recovery-$$RUN_ID.json", text)
+        self.assertNotIn("eval_reports/clip-ab-$$RUN_ID.json", text)
         self.assertRegex(
             text,
             r"(?m)^ocrkernel:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tCGPT_EXPORT_ROOT_DEFAULT=\"\$\(CGPT_EXPORT_ROOT_DEFAULT\)\" \\\n\t\tbash \"\$\(OCR_WORKFLOW_SCRIPT\)\" ocrkernel$",
@@ -228,6 +255,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(OCR_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(EVAL_SERVER_DAEMON_SCRIPT.is_file())
         self.assertTrue(EVAL_CASE_GUARD_SCRIPT.is_file())
+        self.assertTrue(EVAL_REPORT_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_EVAL_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_STABILITY_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_GROWTH_EVAL_RUNNER_SCRIPT.is_file())
@@ -236,6 +264,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(os.access(OCR_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_SERVER_DAEMON_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_CASE_GUARD_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(EVAL_REPORT_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_EVAL_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_STABILITY_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GROWTH_EVAL_RUNNER_SCRIPT, os.X_OK))
