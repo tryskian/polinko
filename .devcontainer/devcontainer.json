@@ -13,7 +13,41 @@
     "vscode": {
       "settings": {
         "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python3",
+        "python.createEnvironment.contentButton": "hide",
+        "python.testing.pytestEnabled": false,
+        "python.testing.unittestEnabled": true,
+        "python.testing.unittestArgs": ["-s", "tests", "-p", "test_*.py"],
         "python.analysis.extraPaths": ["${workspaceFolder}"],
+        "python.analysis.exclude": [
+          "**/.history/**",
+          "**/.venv/**",
+          "**/node_modules/**",
+          "**/apps/portfolio/node_modules/**"
+        ],
+        "ruff.importStrategy": "fromEnvironment",
+        "ruff.path": ["${containerWorkspaceFolder}/.venv/bin/ruff"],
+        "ruff.format.preview": true,
+        "mypy-type-checker.importStrategy": "fromEnvironment",
+        "mypy-type-checker.reportingScope": "workspace",
+        "mypy-type-checker.cwd": "${containerWorkspaceFolder}",
+        "mypy-type-checker.path": [
+          "${containerWorkspaceFolder}/.venv/bin/python",
+          "-m",
+          "mypy"
+        ],
+        "mypy-type-checker.interpreter": [
+          "${containerWorkspaceFolder}/.venv/bin/python3"
+        ],
+        "mypy-type-checker.args": ["--config-file", "mypy.ini"],
+        "mypy-type-checker.showNotifications": "onError",
+        "markdownlint.run": "onSave",
+        "markdownlint.severityForError": "Warning",
+        "markdownlint.ignore": [
+          "**/docs/peanut/**",
+          "**/.local/**",
+          "**/output/**",
+          "**/node_modules/**"
+        ],
         "remote.extensionKind": {
           "ms-azuretools.vscode-docker": ["ui"]
         },
