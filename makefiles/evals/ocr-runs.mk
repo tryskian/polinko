@@ -14,26 +14,10 @@ eval-ocr-transcript-cases:
 	@$(OCR_BASE_TRANSCRIPT_WORKFLOW_ENV) bash "$(OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT)" cases
 
 eval-ocr-transcript-cases-growth:
-	@$(OCR_GUARDED_CASE_RUNNER_ENV) \
-		$(OCR_GROWTH_RUNNER_ENV) \
-		bash "$(OCR_GUARDED_CASE_RUNNER_SCRIPT)" \
-		"$(OCR_TRANSCRIPT_CASES_GROWTH)" \
-		"Transcript OCR growth cases not found" \
-		"Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" \
-		"No transcript OCR growth cases available yet; skipping eval." \
-		-- \
-		bash "$(OCR_GROWTH_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)" "$(OCR_EVAL_TIMEOUT)" "$(OCR_GROWTH_EVAL_OFFSET)" "$(OCR_GROWTH_EVAL_MAX_CASES)" "$(OCR_EVAL_OCR_RETRIES)" "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	@$(OCR_GROWTH_CASE_WORKFLOW_ENV) bash "$(OCR_GROWTH_CASE_WORKFLOW_SCRIPT)" eval
 
 eval-ocr-transcript-cases-growth-batched:
-	@$(OCR_GUARDED_CASE_RUNNER_ENV) \
-		$(OCR_GROWTH_RUNNER_ENV) \
-		bash "$(OCR_GUARDED_CASE_RUNNER_SCRIPT)" \
-		"$(OCR_TRANSCRIPT_CASES_GROWTH)" \
-		"Transcript OCR growth cases not found" \
-		"Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" \
-		"No transcript OCR growth cases available yet; skipping eval." \
-		-- \
-		bash "$(OCR_GROWTH_BATCH_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_GROWTH)" "$(OCR_GROWTH_BATCH_SIZE)" "$(OCR_GROWTH_OCR_RETRIES)" "$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" "$(OCR_GROWTH_EVAL_OFFSET)" "$(OCR_GROWTH_EVAL_MAX_CASES)" "$(OCR_GROWTH_BATCH_REPORT_DIR)" "$(OCR_GROWTH_BATCH_SUMMARY_JSON)" "$(OCR_GROWTH_BATCH_SUMMARY_MD)"
+	@$(OCR_GROWTH_CASE_WORKFLOW_ENV) bash "$(OCR_GROWTH_CASE_WORKFLOW_SCRIPT)" batched
 
 eval-ocr-transcript-cases-handwriting:
 	@$(OCR_TRANSCRIPT_LANE_WORKFLOW_ENV) bash "$(OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT)" case handwriting
