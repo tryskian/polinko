@@ -10,6 +10,7 @@ MAKEFILE = REPO_ROOT / "Makefile"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
+SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "run_server_daemon.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
 OCR_GUARDED_CASE_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_guarded_ocr_case_eval.sh"
@@ -129,6 +130,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("PYTHON ?=", config_text)
         self.assertIn("CLI_ENTRYPOINT ?= main.py", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
+        self.assertIn(
+            "SERVER_DAEMON_SCRIPT ?= ./tools/run_server_daemon.sh", config_text
+        )
+        self.assertIn("SERVER_DAEMON_ENV =", config_text)
         self.assertIn("PORTFOLIO_APP_DIR ?= apps/portfolio", config_text)
         self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", config_text)
         self.assertIn("FRONTEND_DIR ?= $(PORTFOLIO_APP_DIR)", config_text)
@@ -493,6 +498,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("tools.eval_parallel_orchestrator", text)
         self.assertNotIn("nohup $(PYTHON) -m tools.eval_sidecar run", text)
         self.assertNotIn("PID=$$!", text)
+        self.assertNotIn("nohup $(PYTHON) -m uvicorn $(ASGI_APP)", text)
         self.assertNotIn("$(PYTHON) -m tools.eval_ocr_growth_metrics", text)
         self.assertNotIn("$(PYTHON) -m tools.build_ocr_growth_fail_cohort", text)
         self.assertNotIn("$(PYTHON) -m tools.build_ocr_focus_cases", text)
@@ -520,6 +526,13 @@ class MakefileContractTests(unittest.TestCase):
             r"(?m)^ocr-notebook-workflow:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tbash \"\$\(OCR_WORKFLOW_SCRIPT\)\" ocr-notebook-workflow$",
         )
         self.assertNotIn('bash "$(EVAL_SERVER_DAEMON_SCRIPT)"', text)
+
+    def test_runtime_helper_scripts_are_named_for_their_roles(self) -> None:
+        text = _makefile_contract_text()
+
+        self.assertTrue(SERVER_DAEMON_SCRIPT.is_file())
+        self.assertTrue(os.access(SERVER_DAEMON_SCRIPT, os.X_OK))
+        self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)"', text)
 
     def test_eval_helper_scripts_are_named_for_their_roles(self) -> None:
         self.assertTrue(OCR_WORKFLOW_SCRIPT.is_file())
