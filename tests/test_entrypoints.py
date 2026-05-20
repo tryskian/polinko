@@ -1,5 +1,7 @@
 import importlib
 from pathlib import Path
+import sys
+import types
 import unittest
 
 
@@ -9,11 +11,42 @@ class EntrypointTests(unittest.TestCase):
 
         self.assertTrue(callable(cli_main.main))
 
-    def test_legacy_app_launcher_points_to_main(self) -> None:
-        cli_main = importlib.import_module("main")
-        legacy_app = importlib.import_module("app")
+    def test_legacy_app_import_does_not_load_cli_runtime(self) -> None:
+        original_app = sys.modules.pop("app", None)
+        original_main = sys.modules.pop("main", None)
+        try:
+            legacy_app = importlib.import_module("app")
 
-        self.assertIs(legacy_app.main, cli_main.main)
+            self.assertNotIn("main", sys.modules)
+            self.assertEqual(legacy_app.__all__, ["main"])
+        finally:
+            sys.modules.pop("app", None)
+            if original_app is not None:
+                sys.modules["app"] = original_app
+            if original_main is not None:
+                sys.modules["main"] = original_main
+
+    def test_legacy_app_launcher_forwards_to_main(self) -> None:
+        legacy_app = importlib.import_module("app")
+        original_main = sys.modules.get("main")
+        called = []
+        fake_main = types.ModuleType("main")
+
+        def run_main() -> None:
+            called.append("main")
+
+        fake_main.main = run_main
+        sys.modules["main"] = fake_main
+
+        try:
+            legacy_app.main()
+        finally:
+            if original_main is not None:
+                sys.modules["main"] = original_main
+            else:
+                sys.modules.pop("main", None)
+
+        self.assertEqual(called, ["main"])
 
     def test_cli_interpreter_fallback_prefers_current_local_venv(self) -> None:
         cli_main = importlib.import_module("main")
