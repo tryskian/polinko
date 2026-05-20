@@ -587,21 +587,7 @@ eval-ocr-transcript-stability:
 		echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"; \
 		exit 1; \
 	fi; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-		PYTHONUNBUFFERED=1 $(PYTHON) -m tools.eval_ocr_stability \
-			--base-url "http://127.0.0.1:8000" \
-			--cases "$(OCR_TRANSCRIPT_CASES)" \
-			--runs "$(OCR_STABILITY_RUNS)" \
-			--timeout "$(OCR_EVAL_TIMEOUT)" \
-			--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
-			--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
-			--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \
-			--rate-limit-cooldown-ms "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" \
-			--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-			--stop-on-rate-limit-abort \
-			--strict \
-			--report-dir "$(OCR_STABILITY_REPORT_DIR)" \
-			--output-json "$(OCR_STABILITY_OUTPUT)"
+	OCR_STABILITY_PYTHONUNBUFFERED=1 $(OCR_STABILITY_RUNNER_ENV) bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES)" "$(OCR_STABILITY_RUNS)" "$(OCR_STABILITY_OCR_RETRIES)" "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" "$(OCR_STABILITY_CASE_DELAY_MS)" "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" "$(OCR_STABILITY_REPORT_DIR)" "$(OCR_STABILITY_OUTPUT)"
 
 eval-ocr-transcript-growth:
 	@set -eu; \
@@ -704,21 +690,7 @@ eval-ocr-focus-stability:
 			exit 0; \
 		fi; \
 	fi; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-		$(PYTHON) -m tools.eval_ocr_stability \
-			--base-url "http://127.0.0.1:8000" \
-			--cases "$(OCR_FOCUS_CASES_JSON)" \
-			--runs "$(OCR_FOCUS_RUNS)" \
-			--timeout "$(OCR_EVAL_TIMEOUT)" \
-			--ocr-retries "$(OCR_FOCUS_OCR_RETRIES)" \
-			--ocr-retry-delay-ms "$(OCR_FOCUS_OCR_RETRY_DELAY_MS)" \
-			--case-delay-ms "$(OCR_FOCUS_CASE_DELAY_MS)" \
-			--rate-limit-cooldown-ms "$(OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS)" \
-			--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-			--stop-on-rate-limit-abort \
-			--strict \
-			--report-dir "$(OCR_FOCUS_REPORT_DIR)" \
-			--output-json "$(OCR_FOCUS_OUTPUT)"
+	$(OCR_STABILITY_RUNNER_ENV) bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_FOCUS_CASES_JSON)" "$(OCR_FOCUS_RUNS)" "$(OCR_FOCUS_OCR_RETRIES)" "$(OCR_FOCUS_OCR_RETRY_DELAY_MS)" "$(OCR_FOCUS_CASE_DELAY_MS)" "$(OCR_FOCUS_RATE_LIMIT_COOLDOWN_MS)" "$(OCR_FOCUS_REPORT_DIR)" "$(OCR_FOCUS_OUTPUT)"
 
 eval-ocr-focus-fail-patterns:
 	@set -eu; \
@@ -770,60 +742,18 @@ eval-ocr-transcript-stability-handwriting-benchmark:
 	PYTHON="$(PYTHON)"; \
 	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
 	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" "Transcript handwriting benchmark OCR cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript handwriting benchmark OCR cases available yet; skipping stability run."; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-			$(PYTHON) -m tools.eval_ocr_stability \
-				--base-url "http://127.0.0.1:8000" \
-				--cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" \
-				--runs "$(OCR_STABILITY_RUNS)" \
-				--timeout "$(OCR_EVAL_TIMEOUT)" \
-				--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
-				--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
-				--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \
-				--rate-limit-cooldown-ms "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" \
-				--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-				--stop-on-rate-limit-abort \
-				--strict \
-				--report-dir "$(OCR_STABILITY_HANDWRITING_BENCHMARK_REPORT_DIR)" \
-				--output-json "$(OCR_STABILITY_HANDWRITING_BENCHMARK_OUTPUT)"
+	$(OCR_STABILITY_RUNNER_ENV) bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)" "$(OCR_STABILITY_RUNS)" "$(OCR_STABILITY_OCR_RETRIES)" "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" "$(OCR_STABILITY_CASE_DELAY_MS)" "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" "$(OCR_STABILITY_HANDWRITING_BENCHMARK_REPORT_DIR)" "$(OCR_STABILITY_HANDWRITING_BENCHMARK_OUTPUT)"
 
 eval-ocr-transcript-stability-typed-benchmark:
 	@set -eu; \
 	PYTHON="$(PYTHON)"; \
 	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
 	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" "Transcript typed benchmark OCR cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript typed benchmark OCR cases available yet; skipping stability run."; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-			$(PYTHON) -m tools.eval_ocr_stability \
-				--base-url "http://127.0.0.1:8000" \
-				--cases "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" \
-				--runs "$(OCR_STABILITY_RUNS)" \
-				--timeout "$(OCR_EVAL_TIMEOUT)" \
-				--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
-				--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
-				--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \
-				--rate-limit-cooldown-ms "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" \
-				--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-				--stop-on-rate-limit-abort \
-				--strict \
-				--report-dir "$(OCR_STABILITY_TYPED_BENCHMARK_REPORT_DIR)" \
-				--output-json "$(OCR_STABILITY_TYPED_BENCHMARK_OUTPUT)"
+	$(OCR_STABILITY_RUNNER_ENV) bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_TYPED_BENCHMARK)" "$(OCR_STABILITY_RUNS)" "$(OCR_STABILITY_OCR_RETRIES)" "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" "$(OCR_STABILITY_CASE_DELAY_MS)" "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" "$(OCR_STABILITY_TYPED_BENCHMARK_REPORT_DIR)" "$(OCR_STABILITY_TYPED_BENCHMARK_OUTPUT)"
 
 eval-ocr-transcript-stability-illustration-benchmark:
 	@set -eu; \
 	PYTHON="$(PYTHON)"; \
 	. "$(EVAL_CASE_GUARD_SCRIPT)"; \
 	eval_case_guard_or_exit "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" "Transcript illustration benchmark OCR cases not found" "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" "No transcript illustration benchmark OCR cases available yet; skipping stability run."; \
-	bash "$(EVAL_SERVER_DAEMON_SCRIPT)"; \
-			$(PYTHON) -m tools.eval_ocr_stability \
-				--base-url "http://127.0.0.1:8000" \
-				--cases "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" \
-				--runs "$(OCR_STABILITY_RUNS)" \
-				--timeout "$(OCR_EVAL_TIMEOUT)" \
-				--ocr-retries "$(OCR_STABILITY_OCR_RETRIES)" \
-				--ocr-retry-delay-ms "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" \
-				--case-delay-ms "$(OCR_STABILITY_CASE_DELAY_MS)" \
-				--rate-limit-cooldown-ms "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" \
-				--max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-				--stop-on-rate-limit-abort \
-				--strict \
-				--report-dir "$(OCR_STABILITY_ILLUSTRATION_BENCHMARK_REPORT_DIR)" \
-				--output-json "$(OCR_STABILITY_ILLUSTRATION_BENCHMARK_OUTPUT)"
+	$(OCR_STABILITY_RUNNER_ENV) bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_ILLUSTRATION_BENCHMARK)" "$(OCR_STABILITY_RUNS)" "$(OCR_STABILITY_OCR_RETRIES)" "$(OCR_STABILITY_OCR_RETRY_DELAY_MS)" "$(OCR_STABILITY_CASE_DELAY_MS)" "$(OCR_STABILITY_RATE_LIMIT_COOLDOWN_MS)" "$(OCR_STABILITY_ILLUSTRATION_BENCHMARK_REPORT_DIR)" "$(OCR_STABILITY_ILLUSTRATION_BENCHMARK_OUTPUT)"
