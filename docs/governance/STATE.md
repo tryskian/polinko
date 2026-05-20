@@ -78,6 +78,11 @@ Last updated: 2026-05-20
   - sqlite connections are closed through explicit lifecycle handling
   - tests reject direct `with sqlite3.connect(...)` usage so Python 3.14
     ResourceWarning noise stays out of `make test`
+- Runtime lifecycle controls are repo-managed:
+  - `make caffeinate` launches the managed wake-lock process in a detached
+    child session through the configured Python launcher
+  - `make caffeinate-status`, `make decaffeinate`, and `make end` operate on
+    the repo-owned PID without adopting unrelated user wake-lock processes
 - Documentation roles are explicit:
   - `CHARTER` holds durable rules
   - `STATE` holds tracked current truth
