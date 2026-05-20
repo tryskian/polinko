@@ -16,6 +16,9 @@ OCR_GUARDED_CASE_RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_guarded_ocr_case_eva
 OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT = (
     REPO_ROOT / "tools" / "run_ocr_base_transcript_workflow.sh"
 )
+OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT = (
+    REPO_ROOT / "tools" / "run_ocr_transcript_lane_workflow.sh"
+)
 OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT = (
     REPO_ROOT / "tools" / "run_ocr_focus_stability_workflow.sh"
 )
@@ -138,6 +141,11 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("OCR_BASE_TRANSCRIPT_WORKFLOW_ENV =", config_text)
+        self.assertIn(
+            "OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT ?= ./tools/run_ocr_transcript_lane_workflow.sh",
+            config_text,
+        )
+        self.assertIn("OCR_TRANSCRIPT_LANE_WORKFLOW_ENV =", config_text)
         self.assertIn(
             "OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT ?= ./tools/run_ocr_focus_stability_workflow.sh",
             config_text,
@@ -278,6 +286,9 @@ class MakefileContractTests(unittest.TestCase):
         text = _makefile_source_text(MAKE_EVALS)
         guard_text = EVAL_CASE_GUARD_SCRIPT.read_text(encoding="utf-8")
         guarded_runner_text = OCR_GUARDED_CASE_RUNNER_SCRIPT.read_text(encoding="utf-8")
+        lane_workflow_text = OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT.read_text(
+            encoding="utf-8"
+        )
         focus_workflow_text = OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT.read_text(
             encoding="utf-8"
         )
@@ -290,9 +301,13 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("CASE_COUNT=", text)
         self.assertIn("tools.count_eval_cases", guard_text)
         self.assertIn("eval_case_guard_or_exit", guarded_runner_text)
+        self.assertIn("OCR_GUARDED_CASE_RUNNER_SCRIPT", lane_workflow_text)
+        self.assertIn("OCR_EVAL_RUNNER_SCRIPT", lane_workflow_text)
+        self.assertIn("OCR_STABILITY_RUNNER_SCRIPT", lane_workflow_text)
         self.assertIn("eval_case_guard_or_exit", focus_workflow_text)
         self.assertIn("eval_case_guard_or_exit", growth_workflow_text)
         self.assertIn('bash "$(OCR_GUARDED_CASE_RUNNER_SCRIPT)"', text)
+        self.assertIn('bash "$(OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT)"', text)
         self.assertIn('bash "$(OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT)"', text)
         self.assertIn('bash "$(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT)"', text)
         for suite in (
@@ -325,7 +340,7 @@ class MakefileContractTests(unittest.TestCase):
             self.assertNotIn(f'eval_case_guard_or_exit "$({moved_cases})"', text)
         self.assertIn('bash "$(OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT)" cases', text)
         self.assertIn(
-            'bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING)"',
+            'bash "$(OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT)" case handwriting',
             text,
         )
         self.assertIn(
@@ -333,7 +348,7 @@ class MakefileContractTests(unittest.TestCase):
             text,
         )
         self.assertIn(
-            'bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"',
+            'bash "$(OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT)" stability handwriting-benchmark',
             text,
         )
         self.assertIn(
@@ -370,6 +385,14 @@ class MakefileContractTests(unittest.TestCase):
             )
         self.assertNotIn(
             '$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_TRANSCRIPT_CASES_HANDWRITING)" --strict',
+            text,
+        )
+        self.assertNotIn(
+            'bash "$(OCR_EVAL_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING)"',
+            text,
+        )
+        self.assertNotIn(
+            'bash "$(OCR_STABILITY_RUNNER_SCRIPT)" "$(OCR_TRANSCRIPT_CASES_HANDWRITING_BENCHMARK)"',
             text,
         )
         self.assertNotIn(
@@ -419,6 +442,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(EVAL_CASE_GUARD_SCRIPT.is_file())
         self.assertTrue(OCR_GUARDED_CASE_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT.is_file())
+        self.assertTrue(OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(EVAL_REPORT_RUNNER_SCRIPT.is_file())
@@ -435,6 +459,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(os.access(EVAL_CASE_GUARD_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GUARDED_CASE_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(EVAL_REPORT_RUNNER_SCRIPT, os.X_OK))
@@ -465,6 +490,13 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("OCR_EVAL_RUNNER_SCRIPT", base_transcript_workflow_text)
         self.assertIn("OCR_STABILITY_RUNNER_SCRIPT", base_transcript_workflow_text)
         self.assertIn('exec bash "$eval_runner_script"', base_transcript_workflow_text)
+        lane_workflow_text = OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT.read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("OCR_GUARDED_CASE_RUNNER_SCRIPT", lane_workflow_text)
+        self.assertIn("OCR_EVAL_RUNNER_SCRIPT", lane_workflow_text)
+        self.assertIn("OCR_STABILITY_RUNNER_SCRIPT", lane_workflow_text)
+        self.assertIn('exec bash "$guarded_case_runner_script"', lane_workflow_text)
         report_workflow_text = OCR_REPORT_WORKFLOW_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("OCR_REPORT_BUILDER_SCRIPT", report_workflow_text)
         self.assertIn('exec bash "$report_builder_script"', report_workflow_text)
@@ -545,7 +577,10 @@ class MakefileContractTests(unittest.TestCase):
             "ocr-data",
             "ocr-notebook-workflow",
             "eval-ocr-transcript-cases",
+            "eval-ocr-transcript-cases-handwriting",
+            "eval-ocr-transcript-cases-typed-benchmark",
             "eval-ocr-transcript-stability",
+            "eval-ocr-transcript-stability-handwriting-benchmark",
             "eval-ocr-transcript-growth",
             "eval-ocr-growth-fail-cohort",
             "eval-ocr-focus-cases",
