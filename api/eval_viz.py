@@ -2510,7 +2510,7 @@ def render_pass_fail_viz_html(
         source_artifact: 'source artifact',
         row_or_case_judgment: 'row/case judgment',
         lane_summary: 'lane summary',
-        pulse_verdict: 'pulse verdict',
+        repeated_lane_signal: 'repeated lane signal',
       };
       return labels[value] || String(value || '').replaceAll('_', ' ');
     }

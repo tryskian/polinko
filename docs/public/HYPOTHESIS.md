@@ -93,7 +93,7 @@ live together so claims can be traced back to source material.
   - the lane now tests transfer under harder visual conditions
 - pre-Beta 2.4 stages the next research-model contract:
   - OCR stays case-level `pass` / `fail`
-  - fail-pressure pulses are not carried forward as the method shape
+  - run-level verdicts are not carried forward as the method shape
   - row and case evidence stay inspectable before any lane-level claim is
     promoted
 

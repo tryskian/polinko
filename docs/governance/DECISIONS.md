@@ -541,3 +541,17 @@ or branch history instead.
 - Why: The repo no longer uses `frontend/` or a custom-named repositioning
   virtualenv as active setup surfaces. Aligning setup with canonical paths keeps
   local, container, and CI dependency behavior deterministic.
+
+## D-041: Keep source-first workbench payloads free of run-level rollups
+
+- Date: `2026-05-20`
+- Category: `evidence_governance`
+- Tags: `pre_beta`, `manual_evals`, `eval_workbench`, `source_first`
+- Decision: The active manual-eval and pass/fail visualization payloads expose
+  the allowed source-first chain only: source artifact, row/case judgment,
+  lane summary, and repeated lane signal as the promotion gate. They do not
+  expose broken run-level rollup fields as rejected active contract members.
+- Why: The discarded rollup shape collided with eval runs and made the
+  workbench contract look like it still had an active alternate method. The
+  live workbench should preserve manual evals and chat evidence without
+  carrying that method residue forward.

@@ -372,7 +372,12 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["evals"], [])
             self.assertEqual(payload["lane_summaries"], [])
             self.assertEqual(
-                payload["source_first"]["contract"]["rejected_rollup"], "pulse_verdict"
+                payload["source_first"]["contract"]["promotion_gate"],
+                "repeated_lane_signal",
+            )
+            self.assertNotIn("rejected_rollup", payload["source_first"]["contract"])
+            self.assertNotIn(
+                "pulse", json.dumps(payload["source_first"]["contract"]).lower()
             )
             self.assertEqual(payload["source_first"]["source_artifacts"]["sessions"], 0)
             self.assertEqual(payload["source_first"]["exclusions"], [])

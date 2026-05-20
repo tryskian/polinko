@@ -21,22 +21,26 @@ class ResearchModelContractTests(unittest.TestCase):
             "`Beta 2.3`",
             "`pre-Beta 2.4`",
             "docs/eval/beta_2_3/",
-            "not being carried forward",
+            "discarded run-level rollup hypothesis",
             "source-first research claims",
             "`POST /chat`",
             "`/chats/*`",
             "`.local/runtime_dbs/active/manual_evals.db`",
             "`.local/runtime_dbs/active/history.db`",
             "`pass` / `fail`",
-            "Pulse-level verdicts are not canonical rollups",
+            "Run-level verdicts are not canonical rollups",
             "docs/eval/beta_2_4/",
         ):
             self.assertIn(expected, contract)
+
+        normalized = " ".join(contract.split())
+        self.assertIn("is not being carried forward as the next method", normalized)
 
         for rejected in (
             "Non-OCR research pulses can use run-level",
             "final pulse verdict",
             "source artifact to row label to pulse verdict",
+            "Pulse-level verdicts are not canonical rollups",
         ):
             self.assertNotIn(rejected, contract)
 
@@ -52,15 +56,31 @@ class ResearchModelContractTests(unittest.TestCase):
 
     def test_current_truth_surfaces_reject_pulse_carry_forward(self) -> None:
         expectations = {
-            "README.md": "pulse path is not being carried forward",
-            "docs/research/README.md": "pulse hypothesis is not being carried forward",
-            "docs/eval/README.md": "pulse hypothesis is not being carried forward",
-            "docs/governance/STATE.md": "pulse hypothesis is not being carried forward",
-            "docs/public/HYPOTHESIS.md": "pulses are not carried forward",
+            "README.md": "run-level rollup path is not being carried forward",
+            "docs/research/README.md": (
+                "run-level rollup hypothesis is not being carried forward"
+            ),
+            "docs/eval/README.md": (
+                "run-level rollup hypothesis is not being carried forward"
+            ),
+            "docs/governance/STATE.md": (
+                "run-level rollup hypothesis is not being carried forward"
+            ),
+            "docs/public/HYPOTHESIS.md": ("run-level verdicts are not carried forward"),
         }
 
         for path, expected in expectations.items():
             self.assertIn(expected, _read(path), path)
+
+    def test_active_contract_surfaces_do_not_expose_pulse_as_live_method(self) -> None:
+        for path in (
+            "README.md",
+            CONTRACT_PATH,
+            "docs/eval/README.md",
+            "docs/governance/STATE.md",
+            "docs/public/HYPOTHESIS.md",
+        ):
+            self.assertNotIn("pulse", _read(path).lower(), path)
 
     def test_research_index_and_manifest_include_the_contract(self) -> None:
         research_index = _read("docs/research/README.md")
@@ -96,6 +116,10 @@ class ResearchModelContractTests(unittest.TestCase):
         self.assertIn("Current disposition: Superseded by `D-028`.", decisions)
         self.assertIn(
             "## D-028: Do not carry fail-pressure pulses into pre-Beta 2.4",
+            decisions,
+        )
+        self.assertIn(
+            "## D-041: Keep source-first workbench payloads free of run-level rollups",
             decisions,
         )
 

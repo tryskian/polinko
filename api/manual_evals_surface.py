@@ -20,7 +20,7 @@ def empty_source_first_payload() -> dict[str, Any]:
                 "lane_summary",
             ],
             "rollup_unit": "lane_summary",
-            "rejected_rollup": "pulse_verdict",
+            "promotion_gate": "repeated_lane_signal",
         },
         "source_artifacts": {
             "history_sources": 0,

@@ -27,7 +27,7 @@ Use it when you need:
     material promoted only after explicit curation
 - `pre-Beta 2.4`
   - staged research-model contract before the next evidence folder is cut
-  - the fail-pressure pulse hypothesis is not being carried forward
+  - the discarded run-level rollup hypothesis is not being carried forward
   - row and case evidence remain source-bound before lane-level summaries
   - manual evals and chat workbench sources stay canonical inputs
 
@@ -79,6 +79,7 @@ Do not flatten one into the other.
   create a third OCR gate state
 - thin new lanes can begin as row-local human `pass` / `fail` evidence before
   larger automation
+- run-level verdicts are not canonical rollups for the active eval workbench
 
 ## What Is Tracked Here
 
