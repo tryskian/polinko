@@ -768,6 +768,7 @@ class MakefileContractTests(unittest.TestCase):
             "eval-ocr-focus-stability",
             "eval-ocr-focus-fail-patterns",
             "ci-python-style",
+            "ci-python-type-check",
         ):
             with self.subTest(target=target):
                 result = subprocess.run(
@@ -791,14 +792,17 @@ class MakefileContractTests(unittest.TestCase):
 
         self.assertRegex(
             text,
-            r"(?m)^ci:\s*ci-docs ci-python-style ci-package ci-test ci-python-security ci-node-security$",
+            r"(?m)^ci:\s*ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security$",
         )
         self.assertRegex(
             text,
             r"(?m)^ci-python-style:\s*ruff-check ruff-format-check$",
         )
+        self.assertRegex(text, r"(?m)^ci-python-type-check:\s*type-check$")
         self.assertIn("python-style:", workflow_text)
         self.assertIn("make ci-python-style PYTHON=python", workflow_text)
+        self.assertIn("python-type-check:", workflow_text)
+        self.assertIn("make ci-python-type-check PYTHON=python", workflow_text)
 
     def test_python_security_gate_keeps_narrow_no_fix_audit_exception(self) -> None:
         text = _makefile_contract_text()

@@ -1,14 +1,16 @@
 # Build, dependency, and CI checks.
-.PHONY: ci ci-docs ci-python-style ci-package ci-test ci-python-security ci-node-security
+.PHONY: ci ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security
 .PHONY: deps-install deps-lock deps-lock-check
 .PHONY: package-install-check
 .PHONY: python-security-check node-security-check security-checks
 
-ci: ci-docs ci-python-style ci-package ci-test ci-python-security ci-node-security
+ci: ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security
 
 ci-docs: path-leak-check lint-docs
 
 ci-python-style: ruff-check ruff-format-check
+
+ci-python-type-check: type-check
 
 ci-package: package-install-check
 

@@ -5,12 +5,9 @@ from pydantic import BaseModel
 StructuredModelT = TypeVar("StructuredModelT", bound=BaseModel)
 
 
-class _SupportsResponsesParse(Protocol):
-    def parse(self, **kwargs: Any) -> Any: ...
-
-
 class SupportsResponsesClientParse(Protocol):
-    responses: _SupportsResponsesParse
+    @property
+    def responses(self) -> Any: ...
 
 
 def parse_structured_output(

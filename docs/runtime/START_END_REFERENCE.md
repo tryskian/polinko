@@ -69,13 +69,15 @@ Sequence:
    - `make doctor-env`
 4. Run Python style checks:
    - `make ci-python-style`
-5. Lint docs:
+5. Run Python type checks:
+   - `make ci-python-type-check`
+6. Lint docs:
    - `make lint-docs`
-6. Run tests:
+7. Run tests:
    - `make test`
-7. Run dependency security checks:
+8. Run dependency security checks:
    - `make security-checks`
-8. Stop background tasks:
+9. Stop background tasks:
    - `make eod-stop`
      - `make server-daemon-stop`
      - `make caffeinate-off-all`
@@ -92,6 +94,8 @@ Explicit companion checks:
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make security-checks`
   - runs local Python and Node dependency audits
+- `make type-check`
+  - runs mypy against active `src/` and `tools/` Python surfaces
 - `make end-git-check`
   - verifies current branch is `main`
   - verifies the working tree is clean

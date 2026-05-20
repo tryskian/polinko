@@ -1,5 +1,5 @@
 # Local validation and check targets.
-.PHONY: test test-one test-targeted pycheck ruff-check ruff-format-check lint-docs backend-gate backend-gate-start
+.PHONY: test test-one test-targeted pycheck type-check ruff-check ruff-format-check lint-docs backend-gate backend-gate-start
 .PHONY: path-leak-check path-leak-audit-local precommit-install precommit-run act-list act-ci
 .PHONY: mermaid-render d3-render public-diagrams-render transcript-fix transcript-check end-docs-check doctor-env
 
@@ -29,6 +29,9 @@ pycheck:
 		exit 2; \
 	fi; \
 	python3 -m py_compile $(FILES)
+
+type-check:
+	$(PYTHON) -m mypy --config-file mypy.ini
 
 ruff-check:
 	$(PYTHON) -m ruff check .

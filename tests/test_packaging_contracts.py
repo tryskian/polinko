@@ -65,7 +65,10 @@ class PackagingContractTests(unittest.TestCase):
         install_check = _read("tools/check_package_install.py")
         pyright_config = _read("pyrightconfig.json")
 
-        self.assertIn("ci: ci-docs ci-python-style ci-package ci-test", build_make)
+        self.assertIn(
+            "ci: ci-docs ci-python-style ci-python-type-check ci-package ci-test",
+            build_make,
+        )
         self.assertIn("ci-package: package-install-check", build_make)
         self.assertIn("pip install --no-build-isolation --no-deps -e .", build_make)
         self.assertIn("$(PYTHON) tools/check_package_install.py", build_make)
