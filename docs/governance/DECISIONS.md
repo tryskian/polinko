@@ -443,3 +443,16 @@ or branch history instead.
   The command/config surface should foreground portfolio ownership while
   keeping older operator commands and overrides working during the beta
   cleanup.
+
+## D-033: Prefer dependency edges for internal Make wrapper chains
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `dry_run`, `dependencies`, `operator_surface`
+- Decision: Express internal Make wrapper chains as prerequisites or
+  target-specific variable assignments when the chain does not require shell
+  control flow. Avoid embedding recursive `$(MAKE)` calls inside
+  backslash-continued operator shell recipes.
+- Why: Recursive Make lines are executed under `make -n`. Dependency edges keep
+  dry-runs observational for common operator targets and reduce accidental
+  build, server, browser, or keep-awake side effects.

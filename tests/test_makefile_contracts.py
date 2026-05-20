@@ -98,9 +98,29 @@ class MakefileContractTests(unittest.TestCase):
         text = _makefile_contract_text()
 
         self.assertRegex(text, r"(?m)^eod end-preflight:\s*end$")
+        self.assertRegex(text, r"(?m)^eod-stop:\s*server-daemon-stop caffeinate-off-all session-status$")
         self.assertRegex(text, r"(?m)^caffeinate-on:\s*caffeinate$")
         self.assertRegex(text, r"(?m)^caffeinate-off:\s*decaffeinate$")
+        self.assertRegex(text, r"(?m)^caffeinate-off-all:\s*caffeinate-off$")
         self.assertRegex(text, r"(?m)^decaffeinate-status:\s*caffeinate-status$")
+
+    def test_operator_wrappers_use_dependency_edges_for_internal_chains(self) -> None:
+        text = _makefile_contract_text()
+
+        self.assertRegex(text, r"(?m)^backend-gate:\s*backend-gate-start doctor-env test quality-gate-deterministic$")
+        self.assertRegex(text, r"(?m)^docs:\s*open-api-docs$")
+        self.assertRegex(text, r"(?m)^open-api-docs:\s*server-daemon$")
+        self.assertRegex(text, r"(?m)^open-cost-console:\s*open-limits open-usage open-billing$")
+        self.assertRegex(text, r"(?m)^viz:\s*server-daemon$")
+        self.assertRegex(text, r"(?m)^portfolio:\s*portfolio-build server-daemon-stop server-daemon$")
+        self.assertRegex(text, r"(?m)^portfolio-playwright:\s*PORTFOLIO_LAUNCH\s*=\s*playwright$")
+        self.assertRegex(text, r"(?m)^portfolio-playwright:\s*portfolio$")
+        self.assertRegex(text, r"(?m)^eval-reports:\s*eval-retrieval-report eval-file-search-report eval-ocr-report eval-style-report eval-response-behaviour-report eval-ocr-safety-report eval-hallucination-report$")
+        self.assertRegex(text, r"(?m)^quality-gate-deterministic:\s*HALLUCINATION_EVAL_MODE\s*=\s*deterministic$")
+        self.assertRegex(text, r"(?m)^quality-gate-deterministic:\s*quality-gate$")
+        self.assertRegex(text, r"(?m)^ocr-cases-from-export:\s*ocr-cases-from-export-build ocr-handwriting-benchmark-cases ocr-typed-benchmark-cases ocr-illustration-benchmark-cases ocr-transcript-delta$")
+        self.assertRegex(text, r"(?m)^ocrminehand:\s*OCR_CASES_FROM_EXPORT_ARGS\s*=\s*--include-lanes handwriting$")
+        self.assertRegex(text, r"(?m)^ocrminehand:\s*ocr-cases-from-export$")
 
     def test_frontend_surface_names_are_aliases_for_portfolio_targets(self) -> None:
         text = _makefile_contract_text()
@@ -148,6 +168,31 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('npm --prefix "apps/portfolio" run build', result.stdout)
         self.assertNotIn("vite v", result.stdout + result.stderr)
         self.assertNotIn("built in", result.stdout + result.stderr)
+
+    def test_operator_wrapper_dry_runs_resolve_without_recursive_variable_errors(self) -> None:
+        for target in (
+            "portfolio",
+            "portfolio-playwright",
+            "open-api-docs",
+            "viz",
+            "caffeinate-off-all",
+            "eod-stop",
+            "backend-gate",
+            "ocrminehand",
+        ):
+            with self.subTest(target=target):
+                result = subprocess.run(
+                    ["make", "-n", target],
+                    cwd=REPO_ROOT,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                combined_output = result.stdout + result.stderr
+
+                self.assertNotIn("Recursive variable", combined_output)
+                self.assertNotIn("vite v", combined_output)
+                self.assertNotIn("built in", combined_output)
 
     def test_eval_entrypoints_stay_phony(self) -> None:
         targets = set(_phony_targets())

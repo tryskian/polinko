@@ -34,11 +34,7 @@ eod end-preflight: end
 end-git-check:
 	bash ./tools/check_end_git_clean.sh
 
-eod-stop:
-	@set -eu; \
-	$(MAKE) --no-print-directory server-daemon-stop || true; \
-	$(MAKE) --no-print-directory caffeinate-off-all || true; \
-	$(MAKE) --no-print-directory session-status || true
+eod-stop: server-daemon-stop caffeinate-off-all session-status
 
 rituals:
 	@cat docs/runtime/START_END_REFERENCE.md
@@ -149,9 +145,8 @@ server-daemon-status:
 	fi; \
 	echo "server-daemon: OFF."
 
-open-api-docs:
+open-api-docs: server-daemon
 	@set -eu; \
-	$(MAKE) --no-print-directory server-daemon; \
 	URL="$(DEV_API_DOCS_URL)"; \
 	if command -v open >/dev/null 2>&1; then \
 		open "$$URL"; \
@@ -162,8 +157,7 @@ open-api-docs:
 	fi; \
 	echo "API docs URL: $$URL"
 
-docs:
-	@$(MAKE) --no-print-directory open-api-docs
+docs: open-api-docs
 
 open-limits:
 	@set -eu; \
@@ -201,15 +195,10 @@ open-billing:
 	fi; \
 	echo "OpenAI billing URL: $$URL"
 
-open-cost-console:
-	@set -eu; \
-	$(MAKE) --no-print-directory open-limits; \
-	$(MAKE) --no-print-directory open-usage; \
-	$(MAKE) --no-print-directory open-billing
+open-cost-console: open-limits open-usage open-billing
 
-viz:
+viz: server-daemon
 	@set -eu; \
-	$(MAKE) --no-print-directory server-daemon; \
 	URL="$(DEV_VIZ_URL)"; \
 	if command -v open >/dev/null 2>&1; then \
 		open "$$URL"; \
@@ -257,13 +246,12 @@ caffeinate-on: caffeinate
 
 caffeinate-off: decaffeinate
 
-caffeinate-off-all:
+caffeinate-off-all: caffeinate-off
 	@set -eu; \
 	if [ "$$(uname -s)" != "Darwin" ]; then \
 		echo "caffeinate is macOS-only; skipping."; \
 		exit 0; \
 	fi; \
-	$(MAKE) --no-print-directory caffeinate-off || true; \
 	PIDS=$$(pgrep -f "^/usr/bin/caffeinate -d -i -m( |$$)" || true); \
 	if [ -n "$$PIDS" ]; then \
 		for PID in $$PIDS; do \
