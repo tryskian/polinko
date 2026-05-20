@@ -19,10 +19,10 @@ from openai import (
 )
 from polinko.api.app_factory import create_runtime_metrics
 from polinko.api import app_factory
-from core.history_store import ChatHistoryStore
-from core.history_store import MessageFeedback
-from core.prompts import ACTIVE_PROMPT_VERSION
-from core.vector_store import VectorStore
+from polinko.core.history_store import ChatHistoryStore
+from polinko.core.history_store import MessageFeedback
+from polinko.core.prompts import ACTIVE_PROMPT_VERSION
+from polinko.core.vector_store import VectorStore
 
 
 os.environ.setdefault("OPENAI_API_KEY", "sk-test-key-123456789012345")

@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from openai import OpenAI
 from pydantic import BaseModel, Field
 
-from core.responses_parse import parse_structured_output
+from polinko.core.responses_parse import parse_structured_output
 from tools.eval_chat_common import chat_message as _chat
 from tools.eval_chat_common import create_chat as _create_chat
 from tools.eval_chat_common import default_headers as _headers

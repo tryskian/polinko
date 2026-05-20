@@ -1,6 +1,6 @@
 import unittest
 
-from core.rate_limit import SlidingWindowRateLimiter
+from polinko.core.rate_limit import SlidingWindowRateLimiter
 
 
 class FakeClock:

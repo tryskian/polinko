@@ -9,7 +9,7 @@ This page is the structural map of the tracked system.
 - Use `docs/runtime/SURFACE_IA.md` for web surface path roles and planned
   directory renames.
 - Use `docs/runtime/PACKAGE_BOUNDARY.md` for the Python package-boundary
-  migration contract and future runtime import move.
+  migration contract and compatibility layer.
 
 ## Top-Level Map
 
@@ -24,15 +24,17 @@ This page is the structural map of the tracked system.
 - `pyproject.toml`
   - Python package metadata and `src` layout configuration
 - `src/polinko/`
-  - editable-install package scaffold and first runtime package boundary
+  - editable-install runtime package boundary
 - `src/polinko/config.py`
   - canonical environment loading and validation implementation
 - `src/polinko/api/`
   - HTTP layer, route spec, middleware, and wiring
 - `api/`
   - compatibility shims for older `api.*` imports
-- `core/`
+- `src/polinko/core/`
   - runtime logic, prompting, session/history, and retrieval helpers
+- `core/`
+  - compatibility shims for older `core.*` imports
 - `tools/`
   - local operators, evals, reports, and renderers
   - includes `tools/check_package_install.py` for editable-install validation
@@ -59,7 +61,8 @@ This page is the structural map of the tracked system.
 1. `server.py` loads config from `polinko.config`.
 2. `server.py` creates the FastAPI app through `polinko.api.app_factory`.
 3. `src/polinko/api/` wires routes, middleware, and runtime dependencies.
-4. request execution delegates into `core/` runtime and persistence modules
+4. request execution delegates into `polinko.core` runtime and persistence
+   modules
 5. runtime history and eval state write to local SQLite stores under
    `.local/runtime_dbs/active/`
 6. `POST /chat` and `/chats/*` are active chat-facing manual eval workbench
@@ -104,7 +107,8 @@ This page is the structural map of the tracked system.
   - `src/polinko/api/`
   - root `api/` stays compatibility-only during the package-boundary migration
 - prompt and runtime behaviour:
-  - `core/`
+  - `src/polinko/core/`
+  - root `core/` stays compatibility-only during the package-boundary migration
 - eval, report, and local operator scripts:
   - `tools/`
 - tracked repo truth and procedure:

@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from typing import Any, cast
 
-from core.runtime import create_session
+from polinko.core.runtime import create_session
 
 
 class RuntimeSessionTests(unittest.TestCase):

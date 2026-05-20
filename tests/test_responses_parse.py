@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 from pydantic import BaseModel
 
-from core.responses_parse import parse_structured_output
+from polinko.core.responses_parse import parse_structured_output
 
 
 class _Payload(BaseModel):
