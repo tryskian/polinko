@@ -693,3 +693,16 @@ or branch history instead.
   `server:app`, and legacy local imports still protect operator and eval
   workflows. An explicit audit keeps compatibility visible without allowing
   active code to drift back to root imports.
+
+## D-052: Close SQLite connections explicitly
+
+- Date: `2026-05-20`
+- Category: `runtime_engineering`
+- Tags: `sqlite`, `tests`, `resource_lifecycle`, `python314`
+- Decision: Do not use `sqlite3.connect(...)` directly as a context manager in
+  repo code or tests. Use an explicit close path, such as
+  `contextlib.closing(...)`, and make commits explicit when setup data must be
+  persisted.
+- Why: Python 3.14 surfaces unclosed sqlite connections as `ResourceWarning`.
+  Explicit lifecycle handling keeps test output clean without changing the
+  manual-eval or runtime database contract.

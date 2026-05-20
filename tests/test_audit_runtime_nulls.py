@@ -1,3 +1,4 @@
+from contextlib import closing
 import sqlite3
 import unittest
 from pathlib import Path
@@ -13,7 +14,7 @@ class AuditRuntimeNullsTests(unittest.TestCase):
             history_db = tmp / "history.db"
             vector_db = tmp / "vector.db"
 
-            with sqlite3.connect(history_db) as conn:
+            with closing(sqlite3.connect(history_db)) as conn:
                 conn.execute(
                     "CREATE TABLE ocr_runs (run_id TEXT, source_message_id TEXT, result_message_id TEXT)"
                 )
@@ -22,7 +23,7 @@ class AuditRuntimeNullsTests(unittest.TestCase):
                 conn.execute("INSERT INTO ocr_runs VALUES ('r3', '', 'm3')")
                 conn.commit()
 
-            with sqlite3.connect(vector_db) as conn:
+            with closing(sqlite3.connect(vector_db)) as conn:
                 conn.execute(
                     "CREATE TABLE message_vectors (message_id TEXT, source_type TEXT)"
                 )

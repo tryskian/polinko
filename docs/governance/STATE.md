@@ -74,6 +74,10 @@ Last updated: 2026-05-20
   - portfolio Node setup uses `apps/portfolio/`
   - root and portfolio npm locks both have audit and Dependabot coverage
   - portfolio installs prefer `npm ci` when a lockfile is present
+- Test and runtime resource hygiene is explicit:
+  - sqlite connections are closed through explicit lifecycle handling
+  - tests reject direct `with sqlite3.connect(...)` usage so Python 3.14
+    ResourceWarning noise stays out of `make test`
 - Documentation roles are explicit:
   - `CHARTER` holds durable rules
   - `STATE` holds tracked current truth

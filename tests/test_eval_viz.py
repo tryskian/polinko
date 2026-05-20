@@ -3,6 +3,7 @@ import sqlite3
 import tempfile
 import unittest
 from collections import Counter
+from contextlib import closing
 from pathlib import Path
 
 from polinko.api.eval_viz import build_pass_fail_viz_payload, render_pass_fail_viz_html
@@ -10,7 +11,7 @@ from tools.build_manual_evals_db import build_manual_evals_db
 
 
 def _init_viz_history_db(path: Path, *, include_feedback: bool = False) -> None:
-    with sqlite3.connect(path) as conn:
+    with closing(sqlite3.connect(path)) as conn:
         conn.executescript(
             """
             CREATE TABLE chats (
@@ -237,7 +238,7 @@ class EvalVizTests(unittest.TestCase):
             tracked_root = root / "tracked"
             _init_viz_history_db(history_db, include_feedback=True)
             _init_tracked_eval_root(tracked_root)
-            with sqlite3.connect(history_db) as conn:
+            with closing(sqlite3.connect(history_db)) as conn:
                 conn.executemany(
                     """
                     INSERT INTO message_feedback (

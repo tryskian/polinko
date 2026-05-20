@@ -2,13 +2,14 @@ import json
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 from pathlib import Path
 
 from polinko.api.portfolio_sankey import build_portfolio_sankey_payload
 
 
 def _init_manual_evals_db(path: Path) -> None:
-    with sqlite3.connect(path) as conn:
+    with closing(sqlite3.connect(path)) as conn:
         conn.executescript(
             """
             CREATE TABLE sessions (

@@ -2,6 +2,7 @@ import os
 import sqlite3
 import tempfile
 import unittest
+from contextlib import closing
 
 from polinko.core.vector_store import VectorStore
 
@@ -25,7 +26,7 @@ class VectorStoreTests(unittest.TestCase):
                 created_at=1_700_000_000_000,
             )
 
-            with sqlite3.connect(db_path) as conn:
+            with closing(sqlite3.connect(db_path)) as conn:
                 row = conn.execute(
                     "SELECT message_id FROM message_vectors WHERE source_ref = ? LIMIT 1;",
                     (source_ref,),
@@ -37,7 +38,7 @@ class VectorStoreTests(unittest.TestCase):
     def test_initialize_backfills_legacy_non_chat_message_ids(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             db_path = os.path.join(tmpdir, "vectors-legacy.db")
-            with sqlite3.connect(db_path) as conn:
+            with closing(sqlite3.connect(db_path)) as conn:
                 conn.execute(
                     """
                     CREATE TABLE message_vectors (
@@ -77,6 +78,7 @@ class VectorStoreTests(unittest.TestCase):
                         1,
                     ),
                 )
+                conn.commit()
                 conn.execute(
                     """
                     INSERT INTO message_vectors(
@@ -98,11 +100,12 @@ class VectorStoreTests(unittest.TestCase):
                         1,
                     ),
                 )
+                conn.commit()
 
             # Reopening through VectorStore runs schema ensure + backfill.
             VectorStore(db_path)
 
-            with sqlite3.connect(db_path) as conn:
+            with closing(sqlite3.connect(db_path)) as conn:
                 ocr_row = conn.execute(
                     "SELECT message_id FROM message_vectors WHERE vector_id = 'vec-legacy-1';"
                 ).fetchone()
