@@ -25,6 +25,12 @@ Last updated: 2026-05-20
     imports use `polinko.*`, while root shims stay compatibility-only
   - root `api/` and `core/` shim packages expose explicit supported legacy
     `from api import ...` and `from core import ...` submodule imports
+  - the root shim readiness audit records `server.py` as not retirement-ready
+    while `server:app` remains active in Docker, Make defaults, server-daemon,
+    and local eval gates
+  - `app.py` is the closest root launcher to retirement because tracked active
+    code has no caller beyond the shim and compatibility tests, but removal
+    still requires a separate deprecation/removal kernel
   - prompt and runtime behaviour stay minimal and deterministic
   - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active
     because they feed manual evals, feedback, checkpoints, exports, and
