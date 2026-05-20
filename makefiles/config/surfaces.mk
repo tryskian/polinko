@@ -1,5 +1,6 @@
 # Notebook, portfolio, mockup, and local browser surface configuration.
 DEV_PORTFOLIO_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/portfolio
+# Legacy compatibility only: prefer PORTFOLIO_APP_DIR for new usage.
 ifneq ($(origin FRONTEND_DIR), undefined)
 PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)
 else

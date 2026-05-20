@@ -27,7 +27,7 @@ def _read_make_source(relative_path: str, seen: set[Path] | None = None) -> str:
 
 
 class SurfaceIaContractTests(unittest.TestCase):
-    def test_current_and_target_surface_paths_are_documented(self) -> None:
+    def test_current_and_retired_surface_paths_are_documented(self) -> None:
         surface_ia = _read("docs/runtime/SURFACE_IA.md")
 
         for path in (
@@ -85,6 +85,8 @@ class SurfaceIaContractTests(unittest.TestCase):
         self.assertIn(
             "portfolio-app-install frontend-install: portfolio-install", surfaces_make
         )
+        self.assertIn("Legacy alias: use make portfolio-install.", surfaces_make)
+        self.assertIn("Legacy alias: use make portfolio-build.", surfaces_make)
         self.assertIn("$(PORTFOLIO_APP_DIR)/package.json", surfaces_make)
         self.assertIn("POLINKO_PORTFOLIO_STATIC_DIR", surfaces_make)
         self.assertIn("$(PORTFOLIO_STATIC_DIR)", surfaces_make)
@@ -102,6 +104,20 @@ class SurfaceIaContractTests(unittest.TestCase):
             '"public/portfolio"',
             app_factory,
         )
+
+    def test_manual_eval_trace_labels_are_not_ui_named(self) -> None:
+        backfill = _read("tools/backfill_eval_trace_artifacts.py")
+
+        self.assertIn(
+            'tool_name="manual_eval_workbench/eval_submission"',
+            backfill,
+        )
+        self.assertIn(
+            '"manual_eval_workbench_submission"',
+            backfill,
+        )
+        self.assertNotIn('"ui/eval_submission"', backfill)
+        self.assertNotIn('"ui_eval_submission"', backfill)
 
 
 if __name__ == "__main__":

@@ -194,7 +194,7 @@ def run_backfill(
         }
         trace_payload = build_eval_trace(
             run_id=run_id,
-            tool_name="ui/eval_submission",
+            tool_name="manual_eval_workbench/eval_submission",
             source_artifacts=source_artifacts,
             gate_outcomes=_build_gate_outcomes(submission),
             summary=_build_summary(submission),
@@ -202,7 +202,7 @@ def run_backfill(
         )
         if timestamp_ms > 0:
             trace_payload["generated_at"] = timestamp_ms // 1000
-        trace_payload["trace_type"] = "ui_eval_submission"
+        trace_payload["trace_type"] = "manual_eval_workbench_submission"
         trace_payload["trace_id"] = _stable_id("trace", submission_key)
 
         append_eval_trace(trace_payload=trace_payload, trace_jsonl_path=trace_jsonl)
@@ -221,7 +221,9 @@ def run_backfill(
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Backfill eval trace artifacts from UI eval submission logs."
+        description=(
+            "Backfill eval trace artifacts from manual eval workbench submission logs."
+        )
     )
     parser.add_argument(
         "--submissions-jsonl",

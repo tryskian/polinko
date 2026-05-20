@@ -36,6 +36,8 @@ Last updated: 2026-05-20
     commands
   - portfolio source lives under `apps/portfolio/`, while tracked static output
     stays under `public/portfolio/`
+  - `frontend` and `ui` are retired web-surface names; remaining Make/config
+    references are compatibility aliases only
   - private portfolio mockups and screenshots stay in `docs/peanut/`
   - private portfolio mockups use `docs/peanut/assets/portfolio-mockups/`
   - promotion from private portfolio work to public docs requires explicit
@@ -53,6 +55,8 @@ Last updated: 2026-05-20
   - the manual eval workbench, including notebooks, local evidence databases,
     `/chat`, `/chats/*`, and runtime history, remains source evidence for that
     contract
+  - generated trace artifacts from manual submissions use manual eval workbench
+    names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane
   - uncertainty-boundary, hallucination-boundary, retrieval, and
     response-behaviour surfaces are operationalized

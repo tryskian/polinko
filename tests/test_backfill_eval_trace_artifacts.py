@@ -55,8 +55,10 @@ class BackfillEvalTraceArtifactsTests(unittest.TestCase):
             lines = traces.read_text(encoding="utf-8").splitlines()
             self.assertEqual(len(lines), 2)
             entry = json.loads(lines[0])
-            self.assertEqual(entry["tool_name"], "ui/eval_submission")
-            self.assertEqual(entry["trace_type"], "ui_eval_submission")
+            self.assertEqual(
+                entry["tool_name"], "manual_eval_workbench/eval_submission"
+            )
+            self.assertEqual(entry["trace_type"], "manual_eval_workbench_submission")
             self.assertIn("submission_key", entry["metadata"])
 
             second = backfill.run_backfill(
