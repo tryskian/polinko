@@ -504,3 +504,15 @@ or branch history instead.
 - Why: Eval targets are active research surfaces. Splitting the large eval
   target file by role keeps the command contract visible while making future
   research-lane changes smaller and easier to validate.
+
+## D-038: Keep OCR report preflights in workflow scripts
+
+- Date: `2026-05-20`
+- Category: `build_system`
+- Tags: `makefile`, `ocr`, `reports`, `workflow`
+- Decision: Keep the OCR report builder as the suite-to-Python command router,
+  and move report-target preflight checks into a focused OCR report workflow
+  script. Public report target and alias names remain stable.
+- Why: Report targets need shell-controlled file and directory checks before
+  builder execution. Keeping that control flow in a script makes the OCR Make
+  fragment smaller while preserving dry-run visibility and failure guidance.
