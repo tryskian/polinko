@@ -47,7 +47,7 @@ try:
         AuthenticationError,
         RateLimitError,
     )
-    from config import load_config
+    from polinko.config import load_config
     from core.history_store import ChatHistoryStore
     from core.runtime import create_agent, create_run_config, create_session
 except ModuleNotFoundError as exc:

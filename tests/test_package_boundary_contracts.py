@@ -15,11 +15,12 @@ class PackageBoundaryContractTests(unittest.TestCase):
         boundary = _read("docs/runtime/PACKAGE_BOUNDARY.md")
 
         for expected in (
-            "Tracked runtime Python currently has four root modules",
+            "Tracked root runtime compatibility modules",
             "`main.py`",
             "`app.py`",
             "`server.py`",
             "`config.py`",
+            "re-exports `AppConfig` and `load_config` from `polinko.config`",
             "The future runtime import package should be `polinko` under `src/polinko/`.",
             "`src/polinko/config.py`",
             "`src/polinko/api/`",
@@ -49,14 +50,24 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "## D-045: Add the editable-install rail before moving runtime imports",
             decisions,
         )
+        self.assertIn(
+            "## D-046: Move config into the Python package first",
+            decisions,
+        )
 
-    def test_packaging_rail_does_not_move_runtime_modules(self) -> None:
+    def test_config_is_moved_but_api_and_core_remain_rooted(self) -> None:
         package_root = REPO_ROOT / "src" / "polinko"
 
         self.assertTrue((package_root / "__init__.py").is_file())
-        self.assertFalse((package_root / "config.py").exists())
+        self.assertTrue((package_root / "config.py").is_file())
         self.assertFalse((package_root / "api").exists())
         self.assertFalse((package_root / "core").exists())
+
+        legacy_config = _read("config.py")
+        self.assertIn(
+            "from polinko.config import AppConfig, load_config", legacy_config
+        )
+        self.assertIn('__all__ = ["AppConfig", "load_config"]', legacy_config)
 
     def test_current_root_runtime_modules_are_explicit(self) -> None:
         tracked_python = subprocess.check_output(

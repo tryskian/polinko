@@ -39,13 +39,13 @@ class PackagingContractTests(unittest.TestCase):
         ruff = pyproject["tool"]["ruff"]
         self.assertEqual(ruff["target-version"], "py313")
 
-    def test_package_scaffold_has_identity_only(self) -> None:
+    def test_package_scaffold_has_config_boundary_only(self) -> None:
         package_root = REPO_ROOT / "src" / "polinko"
         init_text = _read("src/polinko/__init__.py")
 
         self.assertTrue((package_root / "__init__.py").is_file())
+        self.assertTrue((package_root / "config.py").is_file())
         self.assertIn('__version__ = "0.0.0"', init_text)
-        self.assertFalse((package_root / "config.py").exists())
         self.assertFalse((package_root / "api").exists())
         self.assertFalse((package_root / "core").exists())
 
@@ -62,6 +62,9 @@ class PackagingContractTests(unittest.TestCase):
         self.assertIn("make package-install-check PYTHON=python", ci_workflow)
         self.assertIn('metadata.version("polinko")', install_check)
         self.assertIn("polinko.__version__", install_check)
+        self.assertIn(
+            "from polinko.config import AppConfig, load_config", install_check
+        )
         self.assertIn('"src"', pyright_config)
 
 

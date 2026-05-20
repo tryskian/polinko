@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="880" height="260" viewBox="0 0 880 260" role="img" aria-labelledby="title desc">
   <title id="title">Polinko runtime architecture overview</title>
-  <desc id="desc">A high-level flow from server and config into the FastAPI app factory, runtime core, binary eval reports, and public evidence surfaces.</desc>
+  <desc id="desc">A high-level flow from server and packaged config into the FastAPI app factory, runtime core, binary eval reports, and public evidence surfaces.</desc>
   <defs>
     <style>
       .bg { fill: #ffffff; }
@@ -21,7 +21,7 @@
   <text class="sub" x="104" y="84" text-anchor="middle">API entrypoint</text>
 
   <rect class="box" x="24" y="154" width="160" height="74" fill="#eef4fb" stroke="#4e79a7" />
-  <text class="label" x="104" y="184" text-anchor="middle">config.py</text>
+  <text class="label" x="104" y="184" text-anchor="middle">polinko.config</text>
   <text class="sub" x="104" y="206" text-anchor="middle">env + validation</text>
 
   <rect class="box" x="252" y="92" width="170" height="74" fill="#fbf5e8" stroke="#f28e2b" />

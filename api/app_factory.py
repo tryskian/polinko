@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field
 from api.eval_viz import build_pass_fail_viz_payload, render_pass_fail_viz_html
 from api.manual_evals_surface import build_manual_evals_surface_payload
 from api.portfolio_sankey import build_portfolio_sankey_payload
-from config import AppConfig
+from polinko.config import AppConfig
 from core.history_store import (
     ChatHistoryStore,
     ChatSummary,

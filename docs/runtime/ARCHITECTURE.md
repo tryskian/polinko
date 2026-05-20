@@ -20,12 +20,13 @@ This page is the structural map of the tracked system.
 - `server.py`
   - FastAPI API and chat-facing manual eval workbench entrypoint
 - `config.py`
-  - environment loading and validation
+  - compatibility shim for older config imports
 - `pyproject.toml`
   - Python package metadata and `src` layout configuration
 - `src/polinko/`
-  - editable-install package scaffold
-  - currently contains package identity only
+  - editable-install package scaffold and first runtime package boundary
+- `src/polinko/config.py`
+  - canonical environment loading and validation implementation
 - `api/`
   - HTTP layer, route spec, middleware, and wiring
 - `core/`
@@ -53,7 +54,7 @@ This page is the structural map of the tracked system.
 
 ## Runtime Flow
 
-1. `server.py` loads config from `config.py`.
+1. `server.py` loads config from `polinko.config`.
 2. `server.py` creates the FastAPI app through `api.app_factory`.
 3. `api/` wires routes, middleware, and runtime dependencies.
 4. request execution delegates into `core/` runtime and persistence modules
@@ -111,7 +112,7 @@ This page is the structural map of the tracked system.
   - local `docs/peanut/assets/portfolio-mockups/`
 - web surface source/output naming:
   - `docs/runtime/SURFACE_IA.md`
-- Python package-boundary preflight:
+- Python package-boundary migration contract:
   - `docs/runtime/PACKAGE_BOUNDARY.md`
 - historical beta references:
   - `docs/eval/`
@@ -129,7 +130,7 @@ This page is the structural map of the tracked system.
 - `OCR_REFERENCE`
   - OCR eval lane reference
 - `PACKAGE_BOUNDARY`
-  - Python package-boundary preflight
+  - Python package-boundary migration contract
 - local `SESSION_HANDOFF`
   - active slice and next-session carryover
 

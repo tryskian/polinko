@@ -2,10 +2,17 @@ import os
 import unittest
 from unittest.mock import patch
 
-from config import load_config
+from polinko.config import AppConfig, load_config
 
 
 class ConfigTests(unittest.TestCase):
+    def test_legacy_root_config_shim_exports_public_api(self) -> None:
+        from config import AppConfig as LegacyAppConfig
+        from config import load_config as legacy_load_config
+
+        self.assertIs(LegacyAppConfig, AppConfig)
+        self.assertIs(legacy_load_config, load_config)
+
     def test_accepts_quoted_openai_api_key(self) -> None:
         env = {
             "OPENAI_API_KEY": '"sk-test-key-12345678901234567890"',

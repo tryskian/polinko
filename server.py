@@ -2,7 +2,7 @@ from agents import Runner  # noqa: F401
 from typing import cast
 
 from api.app_factory import RuntimeDeps, create_app
-from config import load_config
+from polinko.config import load_config
 
 
 config = load_config(dotenv_path=".env")
