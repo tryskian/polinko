@@ -469,3 +469,14 @@ or branch history instead.
 - Why: `make -n` executes recursive `$(MAKE)` recipe lines. Script delegation
   keeps dry-runs observational while preserving guard order, skip behavior, and
   existing eval target names.
+
+## D-035: Keep Ruff in CI and closeout gates
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `ci`, `ruff`, `validation`
+- Decision: Add `ci-python-style` as the named Python style gate, backed by
+  `ruff-check` and `ruff-format-check`, and run it from both GitHub CI and the
+  local `make end` closeout routine.
+- Why: The formatter baseline is only durable if the standard local and remote
+  gates reject style drift before broad refactor work continues.

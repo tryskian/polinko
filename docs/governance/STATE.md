@@ -95,6 +95,8 @@ Last updated: 2026-05-19
 
 - `make doctor-env`
 - `make api-smoke`
+- `make ruff-check`
+- `make ruff-format-check`
 - `make lint-docs`
 - `make test`
 - `make security-checks`

@@ -64,13 +64,15 @@ Sequence:
    - `make transcript-check`
 3. Verify the environment:
    - `make doctor-env`
-4. Lint docs:
+4. Run Python style checks:
+   - `make ci-python-style`
+5. Lint docs:
    - `make lint-docs`
-5. Run tests:
+6. Run tests:
    - `make test`
-6. Run dependency security checks:
+7. Run dependency security checks:
    - `make security-checks`
-7. Stop background tasks:
+8. Stop background tasks:
    - `make eod-stop`
      - `make server-daemon-stop`
      - `make caffeinate-off-all`
