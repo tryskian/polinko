@@ -456,3 +456,16 @@ or branch history instead.
 - Why: Recursive Make lines are executed under `make -n`. Dependency edges keep
   dry-runs observational for common operator targets and reduce accidental
   build, server, browser, or keep-awake side effects.
+
+## D-034: Delegate shell-controlled eval workflows to tool scripts
+
+- Date: `2026-05-19`
+- Category: `build_system`
+- Tags: `makefile`, `evals`, `dry_run`, `workflow`
+- Decision: Keep public eval Make targets stable, but delegate ordered
+  workflows that need shell guards plus internal target sequencing to versioned
+  scripts under `tools/`. Use focused helper scripts for shared eval setup such
+  as ensuring the server daemon after case validation passes.
+- Why: `make -n` executes recursive `$(MAKE)` recipe lines. Script delegation
+  keeps dry-runs observational while preserving guard order, skip behavior, and
+  existing eval target names.
