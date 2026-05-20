@@ -115,6 +115,7 @@ Use this doc for operator procedure.
 
 1. Finish branch-local validation before merge:
    - `make doctor-env`
+   - `make ci-python-style`
    - `make lint-docs`
    - `make test`
    - `git diff --check`
@@ -168,10 +169,15 @@ Use this doc for operator procedure.
   - local Python and Node dependency audits
 - `make lint-docs`
   - docs lint
+- `make ruff-check`
+  - Python lint
+- `make ruff-format-check`
+  - Python format check
 - `make test`
   - test suite
 - `make ci`
   - local aggregate of the named GitHub CI job targets:
-    `ci-docs`, `ci-test`, `ci-python-security`, and `ci-node-security`
+    `ci-docs`, `ci-python-style`, `ci-test`, `ci-python-security`, and
+    `ci-node-security`
 - `make end-git-check`
   - clean-main closeout check

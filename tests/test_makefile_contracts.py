@@ -142,6 +142,7 @@ class MakefileContractTests(unittest.TestCase):
         targets = set(_phony_targets())
 
         self.assertIn("ci", targets)
+        self.assertIn("ci-python-style", targets)
         self.assertIn("chat", targets)
         self.assertIn("server-daemon", targets)
         self.assertIn("caffeinate", targets)
@@ -430,6 +431,7 @@ class MakefileContractTests(unittest.TestCase):
             "eval-ocr-transcript-cases",
             "eval-ocr-transcript-stability",
             "eval-ocr-focus-stability",
+            "ci-python-style",
         ):
             with self.subTest(target=target):
                 result = subprocess.run(
@@ -444,6 +446,23 @@ class MakefileContractTests(unittest.TestCase):
                 self.assertNotIn("Recursive variable", combined_output)
                 self.assertNotIn("vite v", combined_output)
                 self.assertNotIn("built in", combined_output)
+
+    def test_ci_gate_includes_ruff_style_checks(self) -> None:
+        text = _makefile_contract_text()
+        workflow_text = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertRegex(
+            text,
+            r"(?m)^ci:\s*ci-docs ci-python-style ci-test ci-python-security ci-node-security$",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^ci-python-style:\s*ruff-check ruff-format-check$",
+        )
+        self.assertIn("python-style:", workflow_text)
+        self.assertIn("make ci-python-style PYTHON=python", workflow_text)
 
     def test_ocr_workflow_script_preserves_export_root_guard(self) -> None:
         env = os.environ.copy()
