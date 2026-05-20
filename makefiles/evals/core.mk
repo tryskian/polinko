@@ -58,24 +58,10 @@ eval-ocr-report:
 	@$(EVAL_REPORT_RUNNER_ENV) bash "$(EVAL_REPORT_RUNNER_SCRIPT)" ocr
 
 eval-ocr-handwriting:
-	@set -eu; \
-	if [ ! -f "$(OCR_HANDWRITING_CASES)" ]; then \
-		echo "Handwriting cases file not found: $(OCR_HANDWRITING_CASES)"; \
-		echo "Create it with image_path entries (see docs/runtime/RUNBOOK.md)."; \
-		exit 1; \
-	fi; \
-	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_HANDWRITING_CASES)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+	@$(OCR_HANDWRITING_EVAL_RUNNER_ENV) bash "$(OCR_HANDWRITING_EVAL_RUNNER_SCRIPT)" run
 
 eval-ocr-handwriting-report:
-	@set -eu; \
-	if [ ! -f "$(OCR_HANDWRITING_CASES)" ]; then \
-		echo "Handwriting cases file not found: $(OCR_HANDWRITING_CASES)"; \
-		echo "Create it with image_path entries (see docs/runtime/RUNBOOK.md)."; \
-		exit 1; \
-	fi; \
-	mkdir -p eval_reports; \
-	RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) -m tools.eval_ocr --timeout "$(OCR_EVAL_TIMEOUT)" --cases "$(OCR_HANDWRITING_CASES)" --strict --show-text --ocr-retries "$(OCR_EVAL_OCR_RETRIES)" --ocr-retry-delay-ms "$(OCR_EVAL_OCR_RETRY_DELAY_MS)" --max-consecutive-rate-limit-errors "$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" --run-id $$RUN_ID --report-json "eval_reports/ocr-handwriting-$$RUN_ID.json"
+	@$(OCR_HANDWRITING_EVAL_RUNNER_ENV) bash "$(OCR_HANDWRITING_EVAL_RUNNER_SCRIPT)" report
 
 eval-ocr-recovery:
 	$(PYTHON) -m tools.eval_ocr_recovery
@@ -98,5 +84,4 @@ backfill-eval-traces:
 eval-reports: eval-retrieval-report eval-file-search-report eval-ocr-report eval-style-report eval-response-behaviour-report eval-ocr-safety-report eval-hallucination-report
 
 eval-reports-parallel:
-	@RUN_ID=$$(date +%Y%m%d-%H%M%S); \
-	$(PYTHON) -m tools.eval_parallel_orchestrator --base-url "$${BASE_URL:-http://127.0.0.1:8000}" --run-id $$RUN_ID --hallucination-mode "$(HALLUCINATION_EVAL_MODE)" --hallucination-min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
+	@$(EVAL_REPORTS_PARALLEL_RUNNER_ENV) bash "$(EVAL_REPORTS_PARALLEL_RUNNER_SCRIPT)"
