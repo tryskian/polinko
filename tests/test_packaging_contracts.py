@@ -48,6 +48,7 @@ class PackagingContractTests(unittest.TestCase):
         init_text = _read("src/polinko/__init__.py")
 
         self.assertTrue((package_root / "__init__.py").is_file())
+        self.assertTrue((package_root / "asgi.py").is_file())
         self.assertTrue((package_root / "cli.py").is_file())
         self.assertTrue((package_root / "config.py").is_file())
         self.assertTrue((package_root / "api" / "__init__.py").is_file())
@@ -77,6 +78,7 @@ class PackagingContractTests(unittest.TestCase):
         self.assertIn('find_spec("polinko.api.app_factory")', install_check)
         self.assertIn('find_spec("polinko.core.runtime")', install_check)
         self.assertIn('find_spec("polinko.cli")', install_check)
+        self.assertIn('find_spec("polinko.asgi")', install_check)
         self.assertIn('resources.files("polinko.api")', install_check)
         self.assertIn('metadata.entry_points(group="console_scripts")', install_check)
         self.assertIn('"polinko-chat"', install_check)

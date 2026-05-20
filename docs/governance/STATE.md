@@ -9,6 +9,8 @@ Last updated: 2026-05-20
 - Backend-first runtime remains canonical:
   - FastAPI API + chat-facing manual eval workbench endpoints are active
     execution and manual-eval surfaces
+  - ASGI app construction lives in `src/polinko/asgi.py`
+  - root `server.py` remains the `uvicorn server:app` compatibility shim
   - CLI chat implementation lives in `src/polinko/cli.py`
   - `make chat`, `polinko-chat`, and root `main.py` launch the packaged CLI
   - `app.py` remains only as a lazy compatibility shim during the entrypoint

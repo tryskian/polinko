@@ -18,7 +18,7 @@ This page is the structural map of the tracked system.
 - `app.py`
   - lazy compatibility shim for older CLI calls
 - `server.py`
-  - FastAPI API and chat-facing manual eval workbench entrypoint
+  - compatibility shim for `uvicorn server:app`
 - `config.py`
   - compatibility shim for older config imports
 - `pyproject.toml`
@@ -27,6 +27,8 @@ This page is the structural map of the tracked system.
   - editable-install runtime package boundary
 - `src/polinko/cli.py`
   - canonical CLI chat implementation
+- `src/polinko/asgi.py`
+  - canonical ASGI app construction and runtime-deps access
 - `src/polinko/config.py`
   - canonical environment loading and validation implementation
 - `src/polinko/api/`
@@ -60,21 +62,22 @@ This page is the structural map of the tracked system.
 
 ## Runtime Flow
 
-1. `server.py` loads config from `polinko.config`.
-2. `server.py` creates the FastAPI app through `polinko.api.app_factory`.
-3. `src/polinko/api/` wires routes, middleware, and runtime dependencies.
-4. request execution delegates into `polinko.core` runtime and persistence
+1. `server.py` forwards `server:app` compatibility to `polinko.asgi`.
+2. `polinko.asgi` loads config from `polinko.config`.
+3. `polinko.asgi` creates the FastAPI app through `polinko.api.app_factory`.
+4. `src/polinko/api/` wires routes, middleware, and runtime dependencies.
+5. request execution delegates into `polinko.core` runtime and persistence
    modules
-5. runtime history and eval state write to local SQLite stores under
+6. runtime history and eval state write to local SQLite stores under
    `.local/runtime_dbs/active/`
-6. `POST /chat` and `/chats/*` are active chat-facing manual eval workbench
+7. `POST /chat` and `/chats/*` are active chat-facing manual eval workbench
    surfaces; deterministic fixture mode supports smoke tests, and default
    remains `live`
-7. active gate semantics stay scoped:
+8. active gate semantics stay scoped:
    - OCR case outcomes are `pass` / `fail`
    - broader manual and non-OCR lanes may still use `retain` / `evict` after
      `fail` as upstream case curation
-8. CLI chat implementation runs through `polinko.cli`; `make chat`,
+9. CLI chat implementation runs through `polinko.cli`; `make chat`,
    `polinko-chat`, root `main.py`, and legacy `app.py` launch that packaged
    entrypoint.
 

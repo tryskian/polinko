@@ -27,6 +27,8 @@ def main() -> None:
         raise SystemExit("polinko.core.runtime is not discoverable")
     if find_spec("polinko.cli") is None:
         raise SystemExit("polinko.cli is not discoverable")
+    if find_spec("polinko.asgi") is None:
+        raise SystemExit("polinko.asgi is not discoverable")
     if not resources.files("polinko.api").joinpath("static/favicon.png").is_file():
         raise SystemExit("polinko.api static favicon is not packaged")
     scripts = metadata.entry_points(group="console_scripts")

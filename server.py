@@ -1,17 +1,11 @@
-from agents import Runner  # noqa: F401
-from typing import cast
+"""Compatibility shim for ``uvicorn server:app``.
 
-from polinko.api.app_factory import RuntimeDeps, create_app
-from polinko.config import load_config
+The packaged ASGI app lives in ``polinko.asgi``. This module forwards module
+identity so older tests, scripts, and local server commands keep working.
+"""
 
+from importlib import import_module
+import sys
 
-config = load_config(dotenv_path=".env")
-app = create_app(config)
-
-
-def get_runtime_deps() -> RuntimeDeps:
-    return cast(RuntimeDeps, app.state.runtime_deps)
-
-
-# Backward-compatible symbols used by tests/dev scripts.
-runtime_deps = get_runtime_deps()
+_module = import_module("polinko.asgi")
+sys.modules[__name__] = _module
