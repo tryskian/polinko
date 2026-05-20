@@ -1,3 +1,4 @@
+import os
 import re
 import subprocess
 import unittest
@@ -7,6 +8,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MAKEFILE = REPO_ROOT / "Makefile"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
+MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 
 
 def _makefile_text() -> str:
@@ -122,6 +124,24 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^ocrminehand:\s*OCR_CASES_FROM_EXPORT_ARGS\s*=\s*--include-lanes handwriting$")
         self.assertRegex(text, r"(?m)^ocrminehand:\s*ocr-cases-from-export$")
 
+    def test_eval_workflow_orchestration_delegates_to_scripts(self) -> None:
+        text = MAKE_EVALS.read_text(encoding="utf-8")
+
+        self.assertNotIn("$(MAKE)", text)
+        self.assertRegex(
+            text,
+            r"(?m)^ocrkernel:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tCGPT_EXPORT_ROOT_DEFAULT=\"\$\(CGPT_EXPORT_ROOT_DEFAULT\)\" \\\n\t\tbash ./tools/ocr_workflow\.sh ocrkernel$",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^ocr-data:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tCGPT_EXPORT_ROOT_DEFAULT=\"\$\(CGPT_EXPORT_ROOT_DEFAULT\)\" \\\n\t\tbash ./tools/ocr_workflow\.sh ocr-data$",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^ocr-notebook-workflow:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tbash ./tools/ocr_workflow\.sh ocr-notebook-workflow$",
+        )
+        self.assertIn("bash ./tools/ensure_server_daemon.sh", text)
+
     def test_frontend_surface_names_are_aliases_for_portfolio_targets(self) -> None:
         text = _makefile_contract_text()
 
@@ -179,6 +199,12 @@ class MakefileContractTests(unittest.TestCase):
             "eod-stop",
             "backend-gate",
             "ocrminehand",
+            "ocrkernel",
+            "ocr-data",
+            "ocr-notebook-workflow",
+            "eval-ocr-transcript-cases",
+            "eval-ocr-transcript-stability",
+            "eval-ocr-focus-stability",
         ):
             with self.subTest(target=target):
                 result = subprocess.run(
@@ -193,6 +219,27 @@ class MakefileContractTests(unittest.TestCase):
                 self.assertNotIn("Recursive variable", combined_output)
                 self.assertNotIn("vite v", combined_output)
                 self.assertNotIn("built in", combined_output)
+
+    def test_ocr_workflow_script_preserves_export_root_guard(self) -> None:
+        env = os.environ.copy()
+        env["CGPT_EXPORT_ROOT"] = ""
+        env["CGPT_EXPORT_ROOT_DEFAULT"] = ""
+
+        result = subprocess.run(
+            ["bash", "tools/ocr_workflow.sh", "ocr-data"],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            env=env,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("CGPT_EXPORT_ROOT is required.", result.stdout)
+        self.assertIn(
+            "make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT",
+            result.stdout,
+        )
 
     def test_eval_entrypoints_stay_phony(self) -> None:
         targets = set(_phony_targets())
