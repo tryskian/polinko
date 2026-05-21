@@ -959,3 +959,16 @@ or branch history instead.
 - Why: The active workbench should describe lane summaries without reviving
   run-level rollup language, but local/manual consumers should not break during
   the refactor.
+- Current disposition: Superseded by `D-071`.
+
+## D-071: Retire the source-first rollup compatibility alias
+
+- Date: `2026-05-20`
+- Category: `eval_quality`
+- Tags: `manual_evals`, `source_first`, `payload_contract`, `compatibility`
+- Decision: Remove `rollup_unit` from active source-first manual eval payloads.
+  `summary_unit=lane_summary` is the only active lane-summary field.
+- Why: A tracked and local compatibility audit found no active notebook,
+  `.local`, or `docs/peanut` workbench consumer of `rollup_unit`. Keeping the
+  alias would preserve retired rollup wording after the source-first contract
+  had already moved on.

@@ -64,9 +64,7 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             self.assertEqual(
                 payload["source_first"]["contract"]["summary_unit"], "lane_summary"
             )
-            self.assertEqual(
-                payload["source_first"]["contract"]["rollup_unit"], "lane_summary"
-            )
+            self.assertNotIn("rollup_unit", payload["source_first"]["contract"])
             self.assertNotIn("rejected_rollup", payload["source_first"]["contract"])
             self.assertNotIn(
                 "pulse", json.dumps(payload["source_first"]["contract"]).lower()
@@ -133,9 +131,7 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             self.assertEqual(
                 source_first["lane_summaries"][0]["summary_unit"], "lane_summary"
             )
-            self.assertEqual(
-                source_first["lane_summaries"][0]["rollup_unit"], "lane_summary"
-            )
+            self.assertNotIn("rollup_unit", source_first["lane_summaries"][0])
             exclusions = {row["key"]: row for row in source_first["exclusions"]}
             self.assertEqual(exclusions["ocr_without_manual_feedback"]["count"], 0)
             self.assertEqual(exclusions["session_without_judgment"]["count"], 0)

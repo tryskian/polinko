@@ -196,9 +196,7 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(
                 payload["source_first"]["contract"]["summary_unit"], "lane_summary"
             )
-            self.assertEqual(
-                payload["source_first"]["contract"]["rollup_unit"], "lane_summary"
-            )
+            self.assertNotIn("rollup_unit", payload["source_first"]["contract"])
             self.assertEqual(payload["source_first"]["source_artifacts"]["sessions"], 1)
             self.assertEqual(payload["source_first"]["source_artifacts"]["ocr_runs"], 3)
             self.assertEqual(

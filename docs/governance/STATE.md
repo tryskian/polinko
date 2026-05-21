@@ -85,7 +85,8 @@ Last updated: 2026-05-20
   - active eval visualization labels use source-first monitor wording rather
     than retired run-level rollup labels
   - source-first manual eval payloads expose `summary_unit` for lane-summary
-    wording while preserving existing field compatibility
+    wording; the temporary `rollup_unit` compatibility alias was retired after
+    a tracked and local consumer audit found no active dependency
   - generated trace artifacts from manual submissions use manual eval workbench
     names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane
