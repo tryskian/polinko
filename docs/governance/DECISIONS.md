@@ -889,3 +889,19 @@ or branch history instead.
 - Why: The import-shim migration is complete. Consolidating the contract
   reduces root-level ambiguity while preserving the two launch paths that still
   protect operator, Docker, and local eval workflows.
+
+## D-066: Treat entrypoint compatibility as an explicit audit surface
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `entrypoints`, `compatibility`, `asgi`, `cli`, `operator_surface`
+- Human-led: The human lead chose to continue the refactor one kernel at a
+  time after the package-boundary consolidation, with manual eval and operator
+  workflows preserved.
+- Decision: Keep operator entrypoints mapped explicitly: `make chat`,
+  `python main.py`, and `polinko-chat` reach `polinko.cli`; `make server`,
+  `make localhost`, `make server-daemon`, local eval gates, and Docker continue
+  through `server:app` until an approved replacement ASGI string exists.
+- Why: Launchers are now the remaining root compatibility layer. Treating them
+  as a tested audit surface prevents cleanup from silently changing active
+  operator or eval paths.
