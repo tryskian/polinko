@@ -986,3 +986,16 @@ or branch history instead.
   object as an active manual-eval contract boundary. Adding explicit version
   markers makes future payload migrations visible without changing existing
   source-first evidence behavior.
+
+## D-073: Cover manual eval source-first data in API smoke
+
+- Date: `2026-05-20`
+- Category: `runtime`
+- Tags: `api_smoke`, `manual_evals`, `source_first`, `eval_viz`
+- Decision: `make api-smoke` checks `/manual-evals/surface` and
+  `/viz/pass-fail/data` without launching a browser. The smoke validates the
+  shared source-first `schema_version`, `summary_unit=lane_summary`, and the
+  absence of the retired `rollup_unit` alias.
+- Why: These endpoints are active manual-eval evidence surfaces. Keeping them
+  in the startup/runtime smoke path catches contract drift before manual eval
+  workbench use.
