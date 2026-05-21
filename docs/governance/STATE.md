@@ -105,6 +105,9 @@ Last updated: 2026-05-20
     mutating local databases, while `make manual-evals-db` preserves an
     existing warehouse under `.local_archive/manual-evals-db-refresh-*` before
     rebuilding and prints the post-refresh status
+  - `make manual-evals-db-health` reports read-only source-quality signals for
+    the current warehouse, including source coverage, missing image assets,
+    feedback-to-result links, open feedback, and session evidence mix
   - generated trace artifacts from manual submissions use manual eval workbench
     names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane

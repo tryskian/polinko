@@ -228,6 +228,11 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-076: Make manual eval warehouse refresh backup-first",
             "`make manual-evals-db-status`",
             "`.local_archive/manual-evals-db-refresh-*`",
+            "## D-077: Report manual eval warehouse health read-only",
+            "`make manual-evals-db-health`",
+            "source coverage",
+            "image resolution",
+            "feedback status",
         ):
             self.assertIn(expected, decisions)
 
@@ -241,6 +246,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-db-status` prints terminal-native freshness",
             "preserves an",
             "existing warehouse under `.local_archive/manual-evals-db-refresh-*`",
+            "`make manual-evals-db-health` reports read-only source-quality",
+            "missing image assets",
+            "feedback-to-result links",
         ):
             self.assertIn(expected, state)
 
@@ -248,6 +256,9 @@ class ResearchModelContractTests(unittest.TestCase):
         self.assertIn("evidence-bearing import scope", eval_map)
         self.assertIn("inspect freshness without mutation", eval_map)
         self.assertIn("`.local_archive/manual-evals-db-refresh-*`", eval_map)
+        self.assertIn(
+            "inspect warehouse health with `make manual-evals-db-health`", eval_map
+        )
 
         for expected in (
             "MANUAL_EVALS_DB_SCHEMA_VERSION",
