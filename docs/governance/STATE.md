@@ -177,6 +177,16 @@ Last updated: 2026-05-21
     dimensions, source previews, and fillable decision fields that default to
     `selected_action=undecided`, without running OCR, closing feedback,
     writing live evals, or mutating the warehouse
+  - `make manual-evals-ocr-retry-selection-validate` validates a local OCR
+    retry human-selection JSON against the current source-artifact shortlist,
+    using
+    `schema_version=polinko.manual_eval_ocr_retry_selection_validation.v1`
+  - OCR retry selection validation accepts compact decision lists or filled
+    selection templates, requires `rerun_input`, `curated_case`, or
+    `context_only`, verifies selected artifact IDs against the matching
+    shortlist item, flags missing/stale/duplicate decisions, and remains
+    read-only without running OCR, closing feedback, writing live evals, or
+    mutating the warehouse
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then

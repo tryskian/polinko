@@ -1,3 +1,4 @@
+import json
 import sqlite3
 import unittest
 from contextlib import closing
@@ -12,6 +13,7 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_INPUT_PACKET_SCHEMA_VERSION,
     OCR_RETRY_RERUN_MANIFEST_SCHEMA_VERSION,
     OCR_RETRY_RERUN_PLAN_SCHEMA_VERSION,
+    OCR_RETRY_SELECTION_VALIDATION_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_TEMPLATE_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_REVIEW_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_PROVENANCE_SCHEMA_VERSION,
@@ -21,6 +23,7 @@ from tools.manual_evals_db_health import (
     build_ocr_retry_input_packet_report,
     build_ocr_retry_rerun_manifest_report,
     build_ocr_retry_rerun_plan_report,
+    build_ocr_retry_selection_validation_report,
     build_ocr_retry_selection_template_report,
     build_ocr_retry_selection_review_report,
     build_ocr_retry_source_provenance_report,
@@ -32,6 +35,7 @@ from tools.manual_evals_db_health import (
     format_ocr_retry_input_packet_report,
     format_ocr_retry_rerun_manifest_report,
     format_ocr_retry_rerun_plan_report,
+    format_ocr_retry_selection_validation_report,
     format_ocr_retry_selection_template_report,
     format_ocr_retry_selection_review_report,
     format_ocr_retry_source_provenance_report,
@@ -1581,6 +1585,166 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 "fill_template=selected_action=<rerun_input|curated_case|context_only>",
                 template_summary,
             )
+
+            missing_validation = build_ocr_retry_selection_validation_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            missing_summary = format_ocr_retry_selection_validation_report(
+                missing_validation
+            )
+
+            self.assertEqual(
+                missing_validation["schema_version"],
+                OCR_RETRY_SELECTION_VALIDATION_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                missing_validation["selection_template_schema_version"],
+                OCR_RETRY_SELECTION_TEMPLATE_SCHEMA_VERSION,
+            )
+            self.assertEqual(missing_validation["state"], "attention")
+            self.assertEqual(missing_validation["decision_source"]["state"], "missing")
+            self.assertEqual(
+                missing_validation["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "shortlist_items": 1,
+                    "candidate_artifacts": 2,
+                    "submitted_decisions": 0,
+                    "valid_decisions": 0,
+                    "pending_decisions": 1,
+                    "invalid_decisions": 0,
+                    "missing_decisions": 1,
+                    "stale_decisions": 0,
+                    "duplicate_decisions": 0,
+                    "selected_artifacts": 0,
+                    "invalid_selected_artifacts": 0,
+                    "feedback_closure_blocked_items": 1,
+                    "ocr_source_message_ids_present": 0,
+                    "ocr_result_message_ids_present": 0,
+                    "exact_feedback_result_links": 0,
+                    "requested_artifact_ids": 0,
+                    "unmatched_artifact_ids": 0,
+                    "preview_only": True,
+                    "limit_applied": False,
+                },
+            )
+            self.assertIn(
+                "manual eval OCR retry selection validation: state=attention "
+                "rows=1/1 items=1 candidate_artifacts=2 submitted=0 "
+                "valid=0 pending=1 invalid=0 missing=1",
+                missing_summary,
+            )
+            self.assertIn("issues=missing_decision", missing_summary)
+
+            selection_path = tmp / "ocr_retry_selection.json"
+            selected_artifact_id = sorted(artifact_ids)[0]
+            selection_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": "polinko.manual_eval_ocr_retry_selection_decisions.v1",
+                        "decisions": [
+                            {
+                                "shortlist_id": template_item["shortlist_id"],
+                                "selected_action": "rerun_input",
+                                "selected_artifact_ids": [selected_artifact_id],
+                                "rationale": "Use the selected rerun source.",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            valid_validation = build_ocr_retry_selection_validation_report(
+                db_path=output_db,
+                selection_path=selection_path,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            valid_summary = format_ocr_retry_selection_validation_report(
+                valid_validation
+            )
+
+            self.assertEqual(valid_validation["state"], "ok")
+            self.assertEqual(valid_validation["decision_source"]["state"], "loaded")
+            self.assertEqual(valid_validation["counts"]["submitted_decisions"], 1)
+            self.assertEqual(valid_validation["counts"]["valid_decisions"], 1)
+            self.assertEqual(valid_validation["counts"]["invalid_decisions"], 0)
+            self.assertEqual(valid_validation["counts"]["selected_artifacts"], 1)
+            self.assertIn("state=valid action=rerun_input issues=none", valid_summary)
+            self.assertIn(f"selected_artifacts={selected_artifact_id}", valid_summary)
+
+            selection_path.write_text(
+                json.dumps(
+                    {
+                        "decisions": [
+                            {
+                                "shortlist_id": template_item["shortlist_id"],
+                                "selected_action": "retry",
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            invalid_action_validation = build_ocr_retry_selection_validation_report(
+                db_path=output_db,
+                selection_path=selection_path,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            invalid_action_summary = format_ocr_retry_selection_validation_report(
+                invalid_action_validation
+            )
+
+            self.assertEqual(invalid_action_validation["state"], "error")
+            self.assertEqual(
+                invalid_action_validation["counts"]["invalid_decisions"],
+                1,
+            )
+            self.assertIn("issues=invalid_selected_action", invalid_action_summary)
+
+            selection_path.write_text(
+                json.dumps(
+                    {
+                        "decisions": [
+                            {
+                                "shortlist_id": template_item["shortlist_id"],
+                                "selected_action": "rerun_input",
+                                "selected_artifact_ids": ["stale-artifact"],
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            invalid_validation = build_ocr_retry_selection_validation_report(
+                db_path=output_db,
+                selection_path=selection_path,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            invalid_summary = format_ocr_retry_selection_validation_report(
+                invalid_validation
+            )
+
+            self.assertEqual(invalid_validation["state"], "error")
+            self.assertEqual(invalid_validation["counts"]["invalid_decisions"], 1)
+            self.assertEqual(
+                invalid_validation["counts"]["invalid_selected_artifacts"],
+                1,
+            )
+            self.assertIn(
+                "issues=selected_artifact_not_in_shortlist",
+                invalid_summary,
+            )
+            self.assertIn("invalid_artifacts=stale-artifact", invalid_summary)
 
     def test_health_report_handles_missing_warehouse(self) -> None:
         with TemporaryDirectory() as tmpdir:
