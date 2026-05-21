@@ -1,5 +1,5 @@
 # Manual eval workbench, portfolio, and local browser surface targets.
-.PHONY: notebook-setup notebook nb notes manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh manual-evals-db-status manualdb-status
+.PHONY: notebook-setup notebook nb notes manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh manual-evals-db-status manualdb-status manual-evals-db-health manualdb-health
 .PHONY: portfolio-install portfolio-app-install frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
 .PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 
@@ -24,6 +24,9 @@ manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh:
 
 manual-evals-db-status manualdb-status:
 	$(PYTHON) -m tools.manual_evals_db_status
+
+manual-evals-db-health manualdb-health:
+	$(PYTHON) -m tools.manual_evals_db_health
 
 portfolio-install:
 	@set -eu; \

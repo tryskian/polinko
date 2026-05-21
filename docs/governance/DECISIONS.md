@@ -1039,3 +1039,19 @@ or branch history instead.
 - Why: Manual eval warehouse refreshes are local evidence maintenance. The
   operator should be able to inspect freshness before rebuilding and preserve
   the previous warehouse automatically when the refresh does mutate it.
+
+## D-077: Report manual eval warehouse health read-only
+
+- Date: `2026-05-20`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `health`, `source_quality`, `local_evidence`,
+  `makefile`
+- Decision: `make manual-evals-db-health` reports read-only manual eval
+  warehouse health from the integrated local DB, including source coverage,
+  image resolution, feedback status, feedback-to-result linking, and session
+  evidence mix. The target distinguishes freshness from source-quality
+  attention so a current warehouse can still expose unresolved evidence gaps.
+- Why: The refreshed warehouse can be current while still carrying missing
+  images, open feedback, or unlinked feedback evidence. Operators need a
+  terminal-native health report before deciding whether a later cleanup kernel
+  should reconcile evidence or leave it as historical context.

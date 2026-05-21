@@ -167,6 +167,8 @@ Use this doc for operator procedure.
 - `make manual-evals-db`
   - back up the existing manual eval warehouse, rebuild it from configured
     history sources, and print the post-refresh freshness status
+- `make manual-evals-db-health`
+  - print read-only manual eval warehouse source-quality signals
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

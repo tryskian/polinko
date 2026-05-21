@@ -56,6 +56,7 @@ notes, exports, and runtime history.
   - inspect freshness without mutation with `make manual-evals-db-status`
   - refreshes preserve the previous warehouse under
     `.local_archive/manual-evals-db-refresh-*` before rebuilding
+  - inspect warehouse health with `make manual-evals-db-health`
 - active chat artifacts:
   - `POST /chat`
   - `/chats/*`
