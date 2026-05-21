@@ -283,6 +283,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-rerun-plan`",
             "`schema_version=polinko.manual_eval_ocr_retry_rerun_plan.v1`",
             "payload-only command preview",
+            "## D-093: Shortlist OCR retry source artifacts before reruns",
+            "`make manual-evals-ocr-retry-selection-review`",
+            "`schema_version=polinko.manual_eval_ocr_retry_selection_review.v1`",
+            "`rerun_input`, `curated_case`, or",
         ):
             self.assertIn(expected, decisions)
 
@@ -330,6 +334,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_ocr_retry_rerun_plan.v1`",
             "payload-only command previews",
             "`ARTIFACT_IDS=<artifact_id>`",
+            "`make manual-evals-ocr-retry-selection-review` prints a read-only",
+            "`schema_version=polinko.manual_eval_ocr_retry_selection_review.v1`",
+            "collapse duplicate source image artifacts",
+            "`rerun_input`, `curated_case`, or",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",
@@ -415,6 +423,13 @@ class ResearchModelContractTests(unittest.TestCase):
         )
         self.assertIn("payload-only command previews", eval_map)
         self.assertIn("`ARTIFACT_IDS=<artifact_id>`", eval_map)
+        self.assertIn("`make manual-evals-ocr-retry-selection-review`", eval_map)
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_ocr_retry_selection_review.v1`",
+            eval_map,
+        )
+        self.assertIn("collapse duplicate source image artifacts", eval_map)
+        self.assertIn("`rerun_input`, `curated_case`, or `context_only`", eval_map)
         self.assertIn("without inferring links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)

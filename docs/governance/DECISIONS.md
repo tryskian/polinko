@@ -1303,3 +1303,23 @@ or branch history instead.
   curation, feedback closure, live eval write, or warehouse mutation. The plan
   makes artifact selection explicit through stable artifact IDs and optional
   `ARTIFACT_IDS=<artifact_id>` filtering while staying preview-only.
+
+## D-093: Shortlist OCR retry source artifacts before reruns
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `selection_review`
+- Human-led: The human lead kept the manual eval workbench as the active
+  research surface and chose to review OCR retry evidence before any rerun.
+- Decision: `make manual-evals-ocr-retry-selection-review` prints a read-only
+  OCR retry source-artifact shortlist for human selection. The terminal report
+  and JSON export expose
+  `schema_version=polinko.manual_eval_ocr_retry_selection_review.v1`, grouped
+  source image identities, feedback IDs, OCR run IDs, source image names,
+  thumbnail dimensions, source previews, candidate payload previews, and the
+  allowed human dispositions: `rerun_input`, `curated_case`, or
+  `context_only`.
+- Why: Rerun plans can contain multiple OCR runs for the same resolved source
+  image. Collapsing duplicate source artifacts into a shortlist makes the next
+  human decision explicit while keeping feedback closure blocked until exact
+  OCR source/result message IDs and feedback-to-result links are present.
