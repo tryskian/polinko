@@ -86,6 +86,13 @@ notes, exports, and runtime history.
   - source-verification packets include feedback note/action text, candidate
     source image names, OCR run IDs, OCR previews, and readiness flags
   - exact not-confirmed reasons are included without inferring links
+  - drill into source-history message provenance without mutation with
+    `make manual-evals-ocr-retry-source-provenance`
+  - JSON OCR retry source-provenance export uses
+    `schema_version=polinko.manual_eval_ocr_retry_source_provenance.v1`
+  - source-provenance packets expose source-history feedback message presence
+    and exact OCR source/result message IDs when they are already present,
+    while preserving context-only OCR rows as not exact links
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under
