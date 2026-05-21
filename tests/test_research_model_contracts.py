@@ -225,6 +225,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-075: Compare freshness against manual eval import scope",
             "sessions count only when they have",
             "metadata exclude-prefixes are",
+            "## D-076: Make manual eval warehouse refresh backup-first",
+            "`make manual-evals-db-status`",
+            "`.local_archive/manual-evals-db-refresh-*`",
         ):
             self.assertIn(expected, decisions)
 
@@ -235,11 +238,16 @@ class ResearchModelContractTests(unittest.TestCase):
             "`data_freshness` compares source history counts",
             "against the manual eval",
             "import scope",
+            "`make manual-evals-db-status` prints terminal-native freshness",
+            "preserves an",
+            "existing warehouse under `.local_archive/manual-evals-db-refresh-*`",
         ):
             self.assertIn(expected, state)
 
         self.assertIn("read-only `data_freshness` status", eval_map)
         self.assertIn("evidence-bearing import scope", eval_map)
+        self.assertIn("inspect freshness without mutation", eval_map)
+        self.assertIn("`.local_archive/manual-evals-db-refresh-*`", eval_map)
 
         for expected in (
             "MANUAL_EVALS_DB_SCHEMA_VERSION",

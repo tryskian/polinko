@@ -285,9 +285,27 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("openai-limits", targets)
         self.assertIn("manual-evals-db", targets)
         self.assertIn("manualdb", targets)
+        self.assertIn("manual-evals-db-refresh", targets)
+        self.assertIn("manualdb-refresh", targets)
+        self.assertIn("manual-evals-db-status", targets)
+        self.assertIn("manualdb-status", targets)
         self.assertIn("portfolio", targets)
         self.assertIn("portfolio-mockups", targets)
         self.assertIn("pwcli", targets)
+
+    def test_manual_eval_db_targets_are_terminal_native_and_backup_first(
+        self,
+    ) -> None:
+        text = _makefile_contract_text()
+
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh:$",
+        )
+        self.assertIn("--backup-existing", text)
+        self.assertIn("--status-summary", text)
+        self.assertRegex(text, r"(?m)^manual-evals-db-status manualdb-status:$")
+        self.assertIn("$(PYTHON) -m tools.manual_evals_db_status", text)
 
     def test_lifecycle_aliases_delegate_to_canonical_targets(self) -> None:
         text = _makefile_contract_text()

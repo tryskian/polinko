@@ -1,5 +1,5 @@
 # Manual eval workbench, portfolio, and local browser surface targets.
-.PHONY: notebook-setup notebook nb notes manual-evals-db manualdb
+.PHONY: notebook-setup notebook nb notes manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh manual-evals-db-status manualdb-status
 .PHONY: portfolio-install portfolio-app-install frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
 .PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 
@@ -14,11 +14,16 @@ notebook nb notes:
 		$(PYTHON) -m jupyter lab --notebook-dir="$(NOTEBOOK_DIR_ABS)" "$(NOTEBOOK_DIR_ABS)"; \
 	fi
 
-manual-evals-db manualdb:
+manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh:
 	$(PYTHON) -m tools.build_manual_evals_db \
 		--optional-history-source beta_1_0=.local/legacy_eval/archive_legacy_eval/databases/.polinko_history.db \
 		--history-source current=.local/runtime_dbs/active/history.db \
-		--include-eval-sessions
+		--include-eval-sessions \
+		--backup-existing \
+		--status-summary
+
+manual-evals-db-status manualdb-status:
+	$(PYTHON) -m tools.manual_evals_db_status
 
 portfolio-install:
 	@set -eu; \

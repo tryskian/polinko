@@ -1025,3 +1025,17 @@ or branch history instead.
 - Why: Idle chats can exist in source history without belonging to the manual
   eval warehouse. A freshly rebuilt warehouse should not remain stale because
   raw source tables contain non-imported chat rows.
+
+## D-076: Make manual eval warehouse refresh backup-first
+
+- Date: `2026-05-20`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `freshness`, `backup`, `makefile`, `local_evidence`
+- Decision: `make manual-evals-db` and the explicit
+  `make manual-evals-db-refresh` alias copy an existing manual eval warehouse
+  into `.local_archive/manual-evals-db-refresh-*` before rebuilding and print
+  the read-only freshness status afterward. `make manual-evals-db-status`
+  provides the same freshness status without mutating local databases.
+- Why: Manual eval warehouse refreshes are local evidence maintenance. The
+  operator should be able to inspect freshness before rebuilding and preserve
+  the previous warehouse automatically when the refresh does mutate it.

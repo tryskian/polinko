@@ -7,6 +7,7 @@ import json
 import mimetypes
 import os
 import re
+import shutil
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -1004,6 +1005,30 @@ def build_manual_evals_db(
     }
 
 
+def _backup_existing_output_db(
+    output_db: Path,
+    *,
+    backup_root: Path,
+    timestamp: datetime | None = None,
+) -> Path | None:
+    if not output_db.exists():
+        return None
+
+    backup_timestamp = (timestamp or datetime.now()).strftime("%Y%m%d-%H%M%S")
+    backup_dir = backup_root / f"manual-evals-db-refresh-{backup_timestamp}"
+    counter = 2
+    while backup_dir.exists():
+        backup_dir = backup_root / (
+            f"manual-evals-db-refresh-{backup_timestamp}-{counter}"
+        )
+        counter += 1
+
+    backup_dir.mkdir(parents=True, exist_ok=False)
+    backup_path = backup_dir / f"{output_db.name}.before"
+    shutil.copy2(output_db, backup_path)
+    return backup_path
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Build the canonical eval SQLite DB from one or more history DB sources.",
@@ -1031,6 +1056,21 @@ def _build_parser() -> argparse.ArgumentParser:
         "--output-db",
         default=".local/runtime_dbs/active/manual_evals.db",
         help="Path to output manual eval DB.",
+    )
+    parser.add_argument(
+        "--backup-existing",
+        action="store_true",
+        help="Copy an existing output DB into .local_archive before rebuilding.",
+    )
+    parser.add_argument(
+        "--backup-root",
+        default=".local_archive",
+        help="Directory for --backup-existing snapshots.",
+    )
+    parser.add_argument(
+        "--status-summary",
+        action="store_true",
+        help="Print read-only freshness status after rebuilding.",
     )
     parser.add_argument(
         "--exclude-prefix",
@@ -1095,9 +1135,18 @@ def main() -> int:
         _parse_history_source_spec(value, optional=True)
         for value in args.optional_history_source
     ]
+    output_db = Path(args.output_db).expanduser()
+    if args.backup_existing:
+        backup_path = _backup_existing_output_db(
+            output_db,
+            backup_root=Path(args.backup_root).expanduser(),
+        )
+        if backup_path is not None:
+            print(f"manual_evals.db backup: {backup_path}")
+
     result = build_manual_evals_db(
         history_db=Path(args.history_db).expanduser(),
-        output_db=Path(args.output_db).expanduser(),
+        output_db=output_db,
         exclude_prefixes=prefixes,
         image_roots=image_roots,
         thumbnail_size=max(24, int(args.thumbnail_size)),
@@ -1110,6 +1159,13 @@ def main() -> int:
         f"ocr_runs={result['ocr_runs']} image_assets={result['image_assets']} "
         f"thumbs={result['thumbnails_ready']} missing_images={result['images_missing']}"
     )
+    if args.status_summary:
+        from tools.manual_evals_db_status import (
+            data_freshness_status,
+            format_freshness_status,
+        )
+
+        print(format_freshness_status(data_freshness_status(db_path=output_db)))
     return 0
 
 
