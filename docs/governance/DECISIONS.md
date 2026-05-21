@@ -946,3 +946,16 @@ or branch history instead.
 - Why: `/viz/pass-fail` is still an active manual-eval and OCR inspection
   surface. Its labels should not imply that the discarded run-level rollup
   method is still live.
+
+## D-070: Add source-first summary-unit naming to workbench payloads
+
+- Date: `2026-05-20`
+- Category: `eval_quality`
+- Tags: `manual_evals`, `source_first`, `payload_contract`, `compatibility`
+- Decision: Manual eval workbench source-first payloads expose
+  `summary_unit=lane_summary` as the active field name and keep the existing
+  `rollup_unit` field as a compatibility alias. The live eval monitor displays
+  summary-unit wording.
+- Why: The active workbench should describe lane summaries without reviving
+  run-level rollup language, but local/manual consumers should not break during
+  the refactor.

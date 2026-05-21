@@ -2581,11 +2581,14 @@ def render_pass_fail_viz_html(
         : [];
 
       if (sourceFirstSubtitleEl) {
+        const summaryUnit = (
+          contract.summary_unit || contract.rollup_unit || 'lane_summary'
+        );
         sourceFirstSubtitleEl.textContent = [
           `${Number(artifacts.history_sources || 0)} history sources`,
           `${Number(artifacts.feedback || 0)} feedback rows`,
           `${Number(artifacts.ocr_runs || 0)} OCR runs`,
-          `rollup: ${sourceContractLabel(contract.rollup_unit || 'lane_summary')}`,
+          `summary unit: ${sourceContractLabel(summaryUnit)}`,
         ].join(' · ');
       }
 
