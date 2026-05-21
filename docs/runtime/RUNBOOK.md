@@ -151,17 +151,20 @@ Use this doc for operator procedure.
 ## Local Tooling Policy
 
 1. Use `docs/runtime/LOCAL_TOOLING.md` for local operator tooling that prepares
-   human decisions or high-impact eval inputs.
+   human decisions, inspects local evidence, or prepares high-impact eval
+   inputs.
 2. Keep preparation separate from execution:
    - generate ignored local input
    - validate that input against current source truth
    - preview application without mutation
    - execute only through a separate explicit follow-up gate
-3. Required knobs include an ignored default output path, explicit path
+3. Use read-only inventory/status tools before eval refreshes when local
+   evidence state is unclear.
+4. Required knobs include an ignored default output path, explicit path
    override, no-overwrite default, `FORCE=1`, deterministic `schema_version`,
    validation command, and apply-preview command.
-4. Preparation tools must not launch a browser, run OCR, close feedback, write
-   live eval rows, or mutate the manual eval warehouse.
+5. Preparation and inventory tools must not launch a browser, run OCR, close
+   feedback, write live eval rows, or mutate the manual eval warehouse.
 
 ## Atomic Commands
 
@@ -184,6 +187,13 @@ Use this doc for operator procedure.
     history sources, and print the post-refresh freshness status
 - `make manual-evals-db-health`
   - print read-only manual eval warehouse source-quality signals
+- `make ocr-inventory`
+  - print read-only OCR lane inventory, including tracked cases, local
+    cases/reports, manual-eval DB paths, notebook paths, row-source counts,
+    and freshness state from existing metadata
+- `make ocr-inventory-json`
+  - print the same OCR inventory as JSON
+  - use `FRESHNESS_DAYS=<days>` to adjust the freshness threshold
 - `make manual-evals-feedback-actionables`
   - print read-only row-level open feedback actionables for manual triage
 - `make manual-evals-feedback-cohorts`

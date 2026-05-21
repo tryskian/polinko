@@ -20,6 +20,10 @@ workflow, output surfaces, and tuning knobs.
   - if OCR follow-up reopens, it should be case-design-only and start from:
     - `gx-68844003-002`
     - `gx-6952d743-021`
+- Current tooling pin:
+  - live OCR/eval execution is paused until explicitly resumed
+  - use `make ocr-inventory` and `make ocr-inventory-json` to inspect local
+    evidence state before refreshing or running eval lanes
 
 ## Lane Model
 
@@ -38,6 +42,7 @@ workflow, output surfaces, and tuning knobs.
    - `make ocr-inventory`
    - reports tracked cases plus local case, report, manual-eval DB, and
      notebook paths without running OCR or mutating local data
+   - use this before any eval refresh while OCR execution is pinned
 2. End-to-end kernel:
    - `make ocrkernel`
    - optional export-root override:

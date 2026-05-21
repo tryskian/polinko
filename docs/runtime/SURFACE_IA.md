@@ -85,6 +85,14 @@ It includes:
 Automated eval reports, strict OCR gates, and tracked beta snapshots remain
 separate eval evidence lanes.
 
+Read-only OCR inventory is a tooling companion to the workbench:
+
+- `make ocr-inventory`
+- `make ocr-inventory-json`
+
+It inspects local evidence shape and freshness without moving chat-facing
+routes or executing eval lanes.
+
 Generated trace artifacts from workbench submissions use manual-eval workbench
 names:
 

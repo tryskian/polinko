@@ -19,6 +19,11 @@ must separate preparation from execution:
 The first three stages are safe to add as local tooling. The fourth stage needs
 its own approval and validation kernel.
 
+Read-only inventory and status tools are also local tooling. They may inspect
+tracked and ignored local evidence, summarize freshness, and print JSON for
+operator review, but they must not execute evals, run OCR, launch browsers, or
+mutate local data.
+
 ## Required Knobs
 
 Every tool that materializes local operator input must expose:
@@ -52,7 +57,8 @@ available.
 
 ## Current Polinko Instance
 
-The current OCR retry human-selection flow is the reference instance:
+The current OCR retry human-selection flow is the reference instance for
+operator input tooling:
 
 - `make manual-evals-ocr-retry-selection-draft`
   - writes ignored local input to
@@ -68,6 +74,18 @@ The current OCR retry human-selection flow is the reference instance:
   - reads the same local operator decisions
   - emits would-apply payloads only when validation reports `state=ok`
   - stays read-only
+
+The current OCR lane inventory is the reference instance for read-only local
+evidence inspection:
+
+- `make ocr-inventory`
+  - prints tracked OCR cases, local case inputs, local reports, manual-eval DB
+    paths, and notebook paths without running OCR or mutating data
+  - reports JSON shape, row-source counts, and freshness state from existing
+    `generated_at` metadata
+- `make ocr-inventory-json`
+  - emits the same inventory as JSON for scripts or manual review
+  - accepts `FRESHNESS_DAYS=<days>` through the same Make surface
 
 ## Adoption Rule
 
@@ -96,6 +114,8 @@ This contract preserves the active manual-eval evidence surfaces:
 - local notebook workspace under `.local/notebooks/`
 - local evidence databases under `.local/runtime_dbs/active/`
 - `/viz/pass-fail`
+- read-only OCR inventory through `make ocr-inventory` and
+  `make ocr-inventory-json`
 
 Local tooling can prepare decisions for those surfaces, but it must not mutate
 them without a separate explicit execution gate.
