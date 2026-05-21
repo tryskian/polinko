@@ -34,11 +34,15 @@ workflow, output surfaces, and tuning knobs.
 
 ## Canonical Command Sequence
 
-1. End-to-end kernel:
+1. Read-only lane inventory:
+   - `make ocr-inventory`
+   - reports tracked cases plus local case, report, manual-eval DB, and
+     notebook paths without running OCR or mutating local data
+2. End-to-end kernel:
    - `make ocrkernel`
    - optional export-root override:
      - `make ocrkernel CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
-2. Mine and build cases:
+3. Mine and build cases:
    - `make ocrmine`
    - explicit export-root override:
      - `make ocrmine CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
@@ -48,7 +52,7 @@ workflow, output surfaces, and tuning knobs.
      - `make ocr-generalization-review`
      - optional pinned include:
        - `make ocr-generalization-review OCR_GENERALIZATION_REVIEW_INCLUDE_IDS=<candidate-id>`
-3. Run the widened growth lane:
+4. Run the widened growth lane:
    - `make ocrwiden`
    - synchronous fallback:
      - `make ocrwidensync`
@@ -62,15 +66,15 @@ workflow, output surfaces, and tuning knobs.
      - `make ocrwidenall OCR_GROWTH_BATCH_SIZE=40 OCR_GROWTH_OCR_RETRIES=2 OCR_GROWTH_OCR_RETRY_DELAY_MS=750`
    - stability replay:
      - `make ocrstablegrowth`
-4. Run lockset lanes:
+5. Run lockset lanes:
    - `make ocrhandbench`
    - `make ocrtypebench`
    - `make ocrillubench`
-5. Run lockset stability replays:
+6. Run lockset stability replays:
    - `make ocrstablehand`
    - `make ocrstabletype`
    - `make ocrstableillu`
-6. Compute growth metrics and fail-derived follow-up:
+7. Compute growth metrics and fail-derived follow-up:
    - growth metrics:
      - `make ocrgrowth`
    - stable growth fail cohort:
@@ -162,9 +166,13 @@ workflow, output surfaces, and tuning knobs.
 
 1. Notebook surface:
    - `make notes`
-2. Offline transcript-mining refresh with no live OCR calls:
+   - aliases: `make notebook`, `make nb`
+   - default local workspace: `.local/notebooks/`
+   - optional starter override:
+     - `make notes NOTEBOOK_START_PATH=/abs/path/to/notebook.ipynb`
+2. Read-only OCR lane inventory:
+   - `make ocr-inventory`
+3. Offline transcript-mining refresh with no live OCR calls:
    - `make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
-3. Full online notebook/eval workflow:
+4. Full online notebook/eval workflow:
    - `make ocr-notebook-workflow CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
-4. Starter template:
-   - `output/jupyter-notebook/ocr-eval-live-filters-starter.ipynb`

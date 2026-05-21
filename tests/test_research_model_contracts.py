@@ -157,6 +157,7 @@ class ResearchModelContractTests(unittest.TestCase):
             "The manual eval workbench is the human-judged research workspace",
             "`make notes`",
             "aliases: `make notebook`, `make nb`",
+            "default local path: `.local/notebooks/`",
             "`POST /chat`",
             "`/chats/*`",
             "`.local/runtime_dbs/active/manual_evals.db`",

@@ -93,6 +93,7 @@ This contract preserves the active manual-eval evidence surfaces:
 - `/chat`
 - `/chats/*`
 - notebooks launched by `make notes`, `make notebook`, and `make nb`
+- local notebook workspace under `.local/notebooks/`
 - local evidence databases under `.local/runtime_dbs/active/`
 - `/viz/pass-fail`
 

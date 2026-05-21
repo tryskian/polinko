@@ -46,6 +46,7 @@ notes, exports, and runtime history.
 - notebook workspace:
   - `make notes`
   - aliases: `make notebook`, `make nb`
+  - default local path: `.local/notebooks/`
 - integrated manual-eval warehouse:
   - `.local/runtime_dbs/active/manual_evals.db`
   - rebuild with `make manual-evals-db`

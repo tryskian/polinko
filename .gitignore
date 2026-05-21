@@ -57,6 +57,7 @@ _virtualenv.py
 .local/eval_runs/
 .local/logs/
 .local/legacy_eval/
+.local/notebooks/
 .local_archive/
 
 # Local eval artifacts
