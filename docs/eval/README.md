@@ -53,6 +53,9 @@ notes, exports, and runtime history.
   - API surfaces expose read-only `data_freshness` status before any rebuild
   - freshness source counts use the same evidence-bearing import scope as the
     rebuild command
+  - inspect freshness without mutation with `make manual-evals-db-status`
+  - refreshes preserve the previous warehouse under
+    `.local_archive/manual-evals-db-refresh-*` before rebuilding
 - active chat artifacts:
   - `POST /chat`
   - `/chats/*`

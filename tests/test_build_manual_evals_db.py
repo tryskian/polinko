@@ -2,11 +2,16 @@ import base64
 import sqlite3
 import unittest
 from contextlib import closing
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from polinko.api.manual_eval_contracts import MANUAL_EVALS_DB_SCHEMA_VERSION
-from tools.build_manual_evals_db import HistorySource, build_manual_evals_db
+from tools.build_manual_evals_db import (
+    HistorySource,
+    _backup_existing_output_db,
+    build_manual_evals_db,
+)
 
 
 _PNG_1X1 = base64.b64decode(
@@ -277,6 +282,44 @@ class BuildManualEvalsDbTests(unittest.TestCase):
                 }
                 self.assertIn("idx_feedback_session_message", feedback_indexes)
                 self.assertIn("idx_ocr_runs_session_result_message", ocr_indexes)
+
+    def test_backup_existing_output_db_preserves_current_db_before_refresh(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db = tmp / "manual_evals.db"
+            backup_root = tmp / "archive"
+            output_db.write_text("old db", encoding="utf-8")
+
+            backup_path = _backup_existing_output_db(
+                output_db,
+                backup_root=backup_root,
+                timestamp=datetime(2026, 5, 20, 22, 28, 1),
+            )
+
+            assert backup_path is not None
+            self.assertEqual(
+                backup_path,
+                backup_root
+                / "manual-evals-db-refresh-20260520-222801"
+                / "manual_evals.db.before",
+            )
+            self.assertEqual(backup_path.read_text(encoding="utf-8"), "old db")
+            self.assertEqual(output_db.read_text(encoding="utf-8"), "old db")
+
+    def test_backup_existing_output_db_skips_missing_output(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+
+            backup_path = _backup_existing_output_db(
+                tmp / "manual_evals.db",
+                backup_root=tmp / "archive",
+                timestamp=datetime(2026, 5, 20, 22, 28, 1),
+            )
+
+            self.assertIsNone(backup_path)
+            self.assertFalse((tmp / "archive").exists())
 
 
 if __name__ == "__main__":

@@ -101,6 +101,10 @@ Last updated: 2026-05-20
   - `data_freshness` compares source history counts against the manual eval
     import scope, so idle chats outside feedback/checkpoint/OCR evidence do
     not make a freshly rebuilt warehouse stale
+  - `make manual-evals-db-status` prints terminal-native freshness without
+    mutating local databases, while `make manual-evals-db` preserves an
+    existing warehouse under `.local_archive/manual-evals-db-refresh-*` before
+    rebuilding and prints the post-refresh status
   - generated trace artifacts from manual submissions use manual eval workbench
     names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane

@@ -162,6 +162,11 @@ Use this doc for operator procedure.
   - report closeout wake-lock status
 - `make api-smoke`
   - live backend smoke check
+- `make manual-evals-db-status`
+  - print read-only manual eval warehouse freshness without rebuilding
+- `make manual-evals-db`
+  - back up the existing manual eval warehouse, rebuild it from configured
+    history sources, and print the post-refresh freshness status
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`
