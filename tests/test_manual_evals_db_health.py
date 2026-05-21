@@ -9,12 +9,15 @@ from tools.manual_evals_db_health import (
     ACTIONABLES_SCHEMA_VERSION,
     COHORTS_SCHEMA_VERSION,
     OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
+    OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
     build_manual_evals_health_report,
     build_ocr_retry_candidates_report,
+    build_ocr_retry_source_verification_report,
     build_open_feedback_actionables_report,
     build_open_feedback_cohorts_report,
     format_manual_evals_health_report,
     format_ocr_retry_candidates_report,
+    format_ocr_retry_source_verification_report,
     format_open_feedback_actionables_report,
     format_open_feedback_cohorts_report,
 )
@@ -90,6 +93,15 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             )
             retry_candidates_summary = format_ocr_retry_candidates_report(
                 retry_candidates
+            )
+            source_verification = build_ocr_retry_source_verification_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            source_verification_summary = format_ocr_retry_source_verification_report(
+                source_verification
             )
             after_history = history_db.stat().st_mtime_ns
             after_output = output_db.stat().st_mtime_ns
@@ -345,6 +357,63 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 "unlinked_feedback=0 latest_confirmed=yes",
                 retry_candidates_summary,
             )
+            self.assertEqual(
+                source_verification["schema_version"],
+                OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                source_verification["candidate_schema_version"],
+                OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                source_verification["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "verification_items": 1,
+                    "ready_verification_items": 1,
+                    "needs_review_verification_items": 0,
+                    "source_candidates": 1,
+                    "limit_applied": False,
+                },
+            )
+            verification_item = source_verification["verification_items"][0]
+            self.assertEqual(
+                verification_item["confirmation"],
+                {
+                    "state": "confirmed",
+                    "basis": "explicit_feedback_result_links_before_rerun",
+                    "reasons": [],
+                },
+            )
+            self.assertEqual(
+                verification_item["feedback_rows"][0]["recommended_action"],
+                "Retry OCR with a tighter crop and attach fresh image evidence "
+                "for comparison.",
+            )
+            self.assertEqual(
+                verification_item["source_candidates"][0]["source_image_name"],
+                "guardrail-note.txt",
+            )
+            self.assertIn(
+                "manual eval OCR retry source verification: state=ok rows=1/1 "
+                "items=1 needs_review=0 source_candidates=1",
+                source_verification_summary,
+            )
+            self.assertIn(
+                "confirmation=confirmed ocr_runs=1",
+                source_verification_summary,
+            )
+            self.assertIn("reasons=none", source_verification_summary)
+            self.assertIn(
+                "recommended_action=Retry OCR with a tighter crop and attach fresh "
+                "image evidence for comparison.",
+                source_verification_summary,
+            )
+            self.assertIn(
+                "ocr=ocr-1 source_image=guardrail-note.txt",
+                source_verification_summary,
+            )
 
             with closing(sqlite3.connect(output_db)) as conn:
                 self.assertEqual(
@@ -398,6 +467,15 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             )
             retry_candidates_summary = format_ocr_retry_candidates_report(
                 retry_candidates
+            )
+            source_verification = build_ocr_retry_source_verification_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            source_verification_summary = format_ocr_retry_source_verification_report(
+                source_verification
             )
 
             self.assertEqual(
@@ -454,6 +532,66 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             self.assertIn(
                 "preview=second OCR text for ambiguity review",
                 retry_candidates_summary,
+            )
+            self.assertEqual(
+                source_verification["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "verification_items": 1,
+                    "ready_verification_items": 0,
+                    "needs_review_verification_items": 1,
+                    "source_candidates": 2,
+                    "limit_applied": False,
+                },
+            )
+            verification_item = source_verification["verification_items"][0]
+            self.assertEqual(
+                verification_item["confirmation"]["state"],
+                "not_confirmed",
+            )
+            self.assertEqual(
+                [item["code"] for item in verification_item["confirmation"]["reasons"]],
+                [
+                    "multiple_same_session_ocr_runs",
+                    "missing_feedback_to_result_link",
+                    "latest_ocr_is_context_only",
+                ],
+            )
+            self.assertEqual(
+                verification_item["source_candidates"][0]["run_id"],
+                "ocr-new",
+            )
+            self.assertEqual(
+                verification_item["source_candidates"][0]["source_image_name"],
+                "second.png",
+            )
+            self.assertIn(
+                "manual eval OCR retry source verification: state=ok rows=1/1 "
+                "items=1 needs_review=1 source_candidates=2",
+                source_verification_summary,
+            )
+            self.assertIn(
+                "confirmation=not_confirmed ocr_runs=2",
+                source_verification_summary,
+            )
+            self.assertIn(
+                "multiple_same_session_ocr_runs: same source session has multiple",
+                source_verification_summary,
+            )
+            self.assertIn(
+                "missing_feedback_to_result_link: feedback message_id does not "
+                "match any OCR result_message_id",
+                source_verification_summary,
+            )
+            self.assertIn(
+                "latest_ocr_is_context_only: latest same-session OCR run is context "
+                "only",
+                source_verification_summary,
+            )
+            self.assertIn(
+                "ocr=ocr-new source_image=second.png",
+                source_verification_summary,
             )
 
     def test_health_report_handles_missing_warehouse(self) -> None:

@@ -184,6 +184,13 @@ Use this doc for operator procedure.
     for explicit manual triage slices
   - use readiness flags to distinguish exact feedback-to-result links from
     same-session OCR context before reruns
+- `make manual-evals-ocr-retry-source-verification`
+  - print the read-only OCR retry source-verification packet for the default
+    `ocr_retry_evidence` partial slice
+  - combine with `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>`
+    for explicit manual triage slices
+  - use feedback notes/actions, source image names, OCR previews, readiness
+    flags, and exact not-confirmed reasons before reruns or feedback closure
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`
