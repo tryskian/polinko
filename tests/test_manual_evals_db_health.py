@@ -11,12 +11,14 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
     OCR_RETRY_INPUT_PACKET_SCHEMA_VERSION,
     OCR_RETRY_RERUN_MANIFEST_SCHEMA_VERSION,
+    OCR_RETRY_RERUN_PLAN_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_PROVENANCE_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
     build_manual_evals_health_report,
     build_ocr_retry_candidates_report,
     build_ocr_retry_input_packet_report,
     build_ocr_retry_rerun_manifest_report,
+    build_ocr_retry_rerun_plan_report,
     build_ocr_retry_source_provenance_report,
     build_ocr_retry_source_verification_report,
     build_open_feedback_actionables_report,
@@ -25,6 +27,7 @@ from tools.manual_evals_db_health import (
     format_ocr_retry_candidates_report,
     format_ocr_retry_input_packet_report,
     format_ocr_retry_rerun_manifest_report,
+    format_ocr_retry_rerun_plan_report,
     format_ocr_retry_source_provenance_report,
     format_ocr_retry_source_verification_report,
     format_open_feedback_actionables_report,
@@ -1139,6 +1142,30 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             rerun_manifest_summary = format_ocr_retry_rerun_manifest_report(
                 rerun_manifest
             )
+            rerun_plan = build_ocr_retry_rerun_plan_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            rerun_plan_summary = format_ocr_retry_rerun_plan_report(rerun_plan)
+            artifact_id = rerun_plan["plan_items"][0]["plan_artifacts"][0][
+                "artifact_id"
+            ]
+            filtered_rerun_plan = build_ocr_retry_rerun_plan_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+                artifact_ids=[artifact_id],
+            )
+            unmatched_rerun_plan = build_ocr_retry_rerun_plan_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+                artifact_ids=["missing-artifact"],
+            )
 
             self.assertEqual(
                 rerun_manifest["counts"],
@@ -1211,6 +1238,117 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 "ocr=ocr-1 source_image=file-abc123-image1.png "
                 "image_status=resolved resolved=yes",
                 rerun_manifest_summary,
+            )
+            self.assertEqual(
+                rerun_plan["schema_version"],
+                OCR_RETRY_RERUN_PLAN_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                rerun_plan["manifest_schema_version"],
+                OCR_RETRY_RERUN_MANIFEST_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                rerun_plan["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "manifest_items": 1,
+                    "plan_items": 1,
+                    "source_artifacts": 1,
+                    "resolved_source_artifacts": 1,
+                    "planned_source_artifacts": 1,
+                    "feedback_closure_blocked_items": 1,
+                    "ocr_source_message_ids_present": 0,
+                    "ocr_result_message_ids_present": 0,
+                    "exact_feedback_result_links": 0,
+                    "requested_artifact_ids": 0,
+                    "unmatched_artifact_ids": 0,
+                    "preview_only": True,
+                    "limit_applied": False,
+                },
+            )
+            self.assertEqual(
+                rerun_plan["filters"]["selection_mode"],
+                "all_ready_resolved_source_artifacts",
+            )
+            self.assertEqual(artifact_id, "chat-1::ocr-1::ocr-1")
+            plan_item = rerun_plan["plan_items"][0]
+            plan_artifact = plan_item["plan_artifacts"][0]
+            self.assertEqual(
+                plan_artifact["action"],
+                "rerun_or_curate_source_artifact",
+            )
+            self.assertTrue(plan_artifact["preview_only"])
+            self.assertEqual(plan_artifact["feedback_ids"], [1])
+            self.assertEqual(plan_artifact["source_session_id"], "chat-1")
+            self.assertEqual(plan_artifact["session_id"], "chat-1")
+            self.assertEqual(plan_artifact["ocr_run_id"], "ocr-1")
+            self.assertEqual(
+                plan_artifact["source_image_name"],
+                "file-abc123-image1.png",
+            )
+            self.assertEqual(
+                Path(plan_artifact["payload_inputs"]["resolved_path"]).name,
+                "image1.png",
+            )
+            self.assertEqual(
+                plan_artifact["command_preview"],
+                {
+                    "mode": "payload_only",
+                    "label": "manual_eval_ocr_retry_rerun_preview",
+                    "payload_schema": "source_artifact_selection",
+                },
+            )
+            self.assertEqual(
+                plan_artifact["feedback_source_preview"]["source_preview"],
+                "feedback source row for resolved source artifact",
+            )
+            self.assertEqual(
+                filtered_rerun_plan["counts"]["planned_source_artifacts"],
+                1,
+            )
+            self.assertEqual(
+                filtered_rerun_plan["filters"]["selection_mode"],
+                "requested_artifact_ids",
+            )
+            self.assertEqual(
+                filtered_rerun_plan["filters"]["artifact_ids"],
+                [artifact_id],
+            )
+            self.assertEqual(
+                unmatched_rerun_plan["counts"]["planned_source_artifacts"],
+                0,
+            )
+            self.assertEqual(
+                unmatched_rerun_plan["counts"]["unmatched_artifact_ids"],
+                1,
+            )
+            self.assertEqual(
+                unmatched_rerun_plan["unmatched_artifact_ids"],
+                ["missing-artifact"],
+            )
+            self.assertIn(
+                "manual eval OCR retry rerun plan: state=ok rows=1/1 "
+                "items=1 planned_artifacts=1 resolved=1/1 closure_blocked=1 "
+                "source_message_ids=0 result_message_ids=0 exact_links=0 "
+                "selection=all_ready_resolved_source_artifacts "
+                "requested_artifacts=0 unmatched=0 preview_only=yes",
+                rerun_plan_summary,
+            )
+            self.assertIn(
+                "artifact=chat-1::ocr-1::ocr-1 "
+                "action=rerun_or_curate_source_artifact preview_only=yes "
+                "feedback=1 ocr=ocr-1 source_image=file-abc123-image1.png",
+                rerun_plan_summary,
+            )
+            self.assertIn(
+                "source_preview=feedback=1 message=m-result-1 source_state=found",
+                rerun_plan_summary,
+            )
+            self.assertIn(
+                "payload=artifact_id=chat-1::ocr-1::ocr-1 "
+                "operation=ocr_retry_rerun_or_case_curation",
+                rerun_plan_summary,
             )
 
     def test_health_report_handles_missing_warehouse(self) -> None:

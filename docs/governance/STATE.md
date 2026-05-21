@@ -152,6 +152,14 @@ Last updated: 2026-05-21
     resolution status, thumbnail dimensions, OCR previews, feedback
     source-message previews, and the separate feedback-closure blocker state
     before any rerun, curation, or feedback closure
+  - `make manual-evals-ocr-retry-rerun-plan` prints a read-only OCR retry
+    rerun plan for selected source artifacts, using
+    `schema_version=polinko.manual_eval_ocr_retry_rerun_plan.v1`
+  - OCR retry rerun plans expose stable source artifact IDs, feedback IDs,
+    source sessions, OCR run IDs, source image names, resolved source paths,
+    thumbnail dimensions, source previews, and payload-only command previews;
+    `ARTIFACT_IDS=<artifact_id>` narrows the preview without running OCR,
+    closing feedback, writing live evals, or mutating the warehouse
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then

@@ -214,6 +214,15 @@ Use this doc for operator procedure.
   - use resolved source artifacts, thumbnail dimensions, OCR previews, and
     feedback source-message previews as the go/no-go surface before any rerun,
     curation, feedback closure, or warehouse mutation
+- `make manual-evals-ocr-retry-rerun-plan`
+  - print the read-only OCR retry rerun plan and payload preview for the
+    default `ocr_retry_evidence` partial slice
+  - combine with `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, `LIMIT=<n>`, and
+    `ARTIFACT_IDS=<artifact_id>` for explicit manual source-artifact selection
+  - use stable source artifact IDs, feedback IDs, OCR run IDs, resolved source
+    paths, thumbnail dimensions, and source previews to inspect exact
+    payload-only command previews before any OCR rerun, curation, feedback
+    closure, or warehouse mutation
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`
