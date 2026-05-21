@@ -184,6 +184,33 @@ class ResearchModelContractTests(unittest.TestCase):
             self.assertIn(expected, state)
             self.assertIn(expected, eval_map)
 
+    def test_api_smoke_covers_manual_eval_source_first_surfaces(self) -> None:
+        decisions = _read("docs/governance/DECISIONS.md")
+        state = _read("docs/governance/STATE.md")
+        smoke = _read("tools/api_smoke.py")
+
+        for expected in (
+            "## D-073: Cover manual eval source-first data in API smoke",
+            "`make api-smoke` checks `/manual-evals/surface`",
+            "`/viz/pass-fail/data` without launching a browser",
+            "`summary_unit=lane_summary`",
+        ):
+            self.assertIn(expected, decisions)
+
+        for expected in (
+            "`make api-smoke` includes non-browser checks for `/manual-evals/surface`",
+            "`/viz/pass-fail/data`",
+        ):
+            self.assertIn(expected, state)
+
+        for expected in (
+            'path="/manual-evals/surface?max_runs=5&max_sessions=5"',
+            'path="/viz/pass-fail/data?max_evals=5"',
+            "SOURCE_FIRST_SCHEMA_VERSION",
+            '"rollup_unit" in contract',
+        ):
+            self.assertIn(expected, smoke)
+
 
 if __name__ == "__main__":
     unittest.main()

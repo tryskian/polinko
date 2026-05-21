@@ -91,6 +91,9 @@ Last updated: 2026-05-20
     `schema_version=polinko.manual_eval_source_first.v1`; generated
     `manual_evals.db` metadata exposes
     `schema_version=polinko.manual_evals_db.v1`
+  - `make api-smoke` includes non-browser checks for `/manual-evals/surface`
+    and `/viz/pass-fail/data` so source-first schema and summary-unit drift is
+    caught in the startup/runtime smoke path
   - generated trace artifacts from manual submissions use manual eval workbench
     names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane
