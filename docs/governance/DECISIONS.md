@@ -1443,3 +1443,24 @@ or branch history instead.
   not from implicit assumptions or stale report paths. The inventory pin gives
   operators a safe map of what exists, what is stale, and what lacks freshness
   metadata before any eval refresh or live OCR execution is approved.
+
+## D-100: Gate OCR retry execution readiness before execution
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `execution_readiness`,
+  `read_only`
+- Human-led: The human lead approved continuing the Polinko-first tooling
+  lane while keeping live OCR/eval execution pinned.
+- Decision: `make manual-evals-ocr-retry-execution-readiness` prints a
+  read-only readiness report from local OCR retry human-selection decisions.
+  The terminal report and JSON export expose
+  `schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`,
+  validation state, apply-preview state, executable item counts, selected
+  artifact source-file existence, payload-only command-preview state, and
+  readiness blockers.
+- Why: Apply-preview shows what would be applied, but the next operator needs
+  a final non-mutating gate that answers whether selected retry/curation
+  inputs are executable before any OCR rerun, feedback closure, live eval
+  write, or manual eval warehouse mutation. Execution remains a separate
+  explicit follow-up kernel.

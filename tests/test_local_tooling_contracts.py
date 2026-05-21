@@ -52,6 +52,8 @@ class LocalToolingContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_ocr_retry_selection_decision_draft.v1`",
             "`make manual-evals-ocr-retry-selection-validate`",
             "`make manual-evals-ocr-retry-selection-apply-preview`",
+            "`make manual-evals-ocr-retry-execution-readiness`",
+            "`schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`",
             "Future Polinko tooling should adopt the contract, not the OCR-specific",
         ):
             self.assertIn(expected, contract)

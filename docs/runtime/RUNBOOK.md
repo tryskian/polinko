@@ -299,6 +299,18 @@ Use this doc for operator procedure.
   - use the split by `rerun_input`, `curated_case`, and `context_only` to
     inspect would-apply payloads before any OCR rerun, curation, feedback
     closure, live eval write, or warehouse mutation
+- `make manual-evals-ocr-retry-execution-readiness`
+  - print a read-only execution-readiness report from the same local OCR retry
+    selection JSON without mutating eval data
+  - combine with `SELECTION_PATH=<path>`, `COHORT=<cohort_id>`,
+    `OUTCOME=<outcome>`, `LIMIT=<n>`, and `ARTIFACT_IDS=<artifact_id>` for
+    explicit manual source-artifact review
+  - require selection apply-preview `state=ok`, then check selected
+    `rerun_input` and `curated_case` artifacts for existing source files and
+    payload-only command previews
+  - use this as the final read-only readiness gate before a separate explicit
+    execution kernel; it still does not run OCR, close feedback, write live
+    eval rows, or mutate the manual eval warehouse
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

@@ -208,6 +208,14 @@ Last updated: 2026-05-21
     and keep pending/stale/duplicate/mismatched selections as blockers without
     running OCR, closing feedback, writing live evals, or mutating the
     warehouse
+  - `make manual-evals-ocr-retry-execution-readiness` prints a read-only OCR
+    retry execution-readiness report from a valid local decision JSON, using
+    `schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`
+  - OCR retry execution readiness requires apply-preview `state=ok`, checks
+    selected `rerun_input` and `curated_case` artifacts for existing source
+    files and payload-only command previews, and stays blocked until a separate
+    explicit execution kernel runs OCR, closes feedback, writes live eval rows,
+    or mutates the warehouse
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then
