@@ -303,6 +303,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-ocr-retry-source-provenance", targets)
         self.assertIn("manual-evals-ocr-retry-input-packet", targets)
         self.assertIn("manualdb-ocr-retry-input-packet", targets)
+        self.assertIn("manual-evals-ocr-retry-rerun-manifest", targets)
+        self.assertIn("manualdb-ocr-retry-rerun-manifest", targets)
         self.assertIn("portfolio", targets)
         self.assertIn("portfolio-mockups", targets)
         self.assertIn("pwcli", targets)
@@ -361,6 +363,12 @@ class MakefileContractTests(unittest.TestCase):
             r"manualdb-ocr-retry-input-packet:$",
         )
         self.assertIn("--ocr-retry-input-packet", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-ocr-retry-rerun-manifest "
+            r"manualdb-ocr-retry-rerun-manifest:$",
+        )
+        self.assertIn("--ocr-retry-rerun-manifest", text)
 
     def test_lifecycle_aliases_delegate_to_canonical_targets(self) -> None:
         text = _makefile_contract_text()

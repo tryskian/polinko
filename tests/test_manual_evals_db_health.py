@@ -10,11 +10,13 @@ from tools.manual_evals_db_health import (
     COHORTS_SCHEMA_VERSION,
     OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
     OCR_RETRY_INPUT_PACKET_SCHEMA_VERSION,
+    OCR_RETRY_RERUN_MANIFEST_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_PROVENANCE_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
     build_manual_evals_health_report,
     build_ocr_retry_candidates_report,
     build_ocr_retry_input_packet_report,
+    build_ocr_retry_rerun_manifest_report,
     build_ocr_retry_source_provenance_report,
     build_ocr_retry_source_verification_report,
     build_open_feedback_actionables_report,
@@ -22,12 +24,13 @@ from tools.manual_evals_db_health import (
     format_manual_evals_health_report,
     format_ocr_retry_candidates_report,
     format_ocr_retry_input_packet_report,
+    format_ocr_retry_rerun_manifest_report,
     format_ocr_retry_source_provenance_report,
     format_ocr_retry_source_verification_report,
     format_open_feedback_actionables_report,
     format_open_feedback_cohorts_report,
 )
-from tests.test_build_manual_evals_db import _init_history_db
+from tests.test_build_manual_evals_db import _PNG_1X1, _init_history_db
 
 
 class ManualEvalsDbHealthTests(unittest.TestCase):
@@ -148,6 +151,15 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 limit=10,
             )
             input_packet_summary = format_ocr_retry_input_packet_report(input_packet)
+            rerun_manifest = build_ocr_retry_rerun_manifest_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            rerun_manifest_summary = format_ocr_retry_rerun_manifest_report(
+                rerun_manifest
+            )
             after_history = history_db.stat().st_mtime_ns
             after_output = output_db.stat().st_mtime_ns
 
@@ -589,6 +601,73 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 "ocr=ocr-1 source_image=guardrail-note.txt image_status=missing",
                 input_packet_summary,
             )
+            self.assertEqual(
+                rerun_manifest["schema_version"],
+                OCR_RETRY_RERUN_MANIFEST_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                rerun_manifest["input_packet_schema_version"],
+                OCR_RETRY_INPUT_PACKET_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                rerun_manifest["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "manifest_items": 1,
+                    "selection_ready_items": 0,
+                    "feedback_closure_blocked_items": 0,
+                    "feedback_inputs": 1,
+                    "source_artifacts": 1,
+                    "resolved_source_artifacts": 0,
+                    "unresolved_source_artifacts": 1,
+                    "artifacts_with_thumbnail": 0,
+                    "ocr_source_message_ids_present": 1,
+                    "ocr_result_message_ids_present": 1,
+                    "exact_feedback_result_links": 1,
+                    "limit_applied": False,
+                },
+            )
+            manifest_item = rerun_manifest["manifest_items"][0]
+            self.assertEqual(
+                manifest_item["selection_gate"]["reason_code"],
+                "no_resolved_source_artifacts",
+            )
+            self.assertEqual(
+                manifest_item["feedback_closure_state"]["state"],
+                "ready",
+            )
+            self.assertEqual(
+                manifest_item["source_artifacts"][0]["run_id"],
+                "ocr-1",
+            )
+            self.assertEqual(
+                manifest_item["feedback_source_previews"][0]["source_preview"],
+                "hello world response that received manual feedback",
+            )
+            self.assertIn(
+                "manual eval OCR retry rerun manifest: state=ok rows=1/1 "
+                "items=1 selection_ready=0 closure_blocked=0 feedback_inputs=1 "
+                "source_artifacts=1 resolved=0/1 thumbnails=0 "
+                "source_message_ids=1 result_message_ids=1 exact_links=1",
+                rerun_manifest_summary,
+            )
+            self.assertIn(
+                "selection=blocked reason=no_resolved_source_artifacts",
+                rerun_manifest_summary,
+            )
+            self.assertIn(
+                "closure=ready next=review_exact_link_before_feedback_closure",
+                rerun_manifest_summary,
+            )
+            self.assertIn(
+                "feedback=1 message=m-result-1 source_state=found role=assistant",
+                rerun_manifest_summary,
+            )
+            self.assertIn(
+                "ocr=ocr-1 source_image=guardrail-note.txt image_status=missing",
+                rerun_manifest_summary,
+            )
 
             with closing(sqlite3.connect(output_db)) as conn:
                 self.assertEqual(
@@ -718,6 +797,15 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 limit=10,
             )
             input_packet_summary = format_ocr_retry_input_packet_report(input_packet)
+            rerun_manifest = build_ocr_retry_rerun_manifest_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            rerun_manifest_summary = format_ocr_retry_rerun_manifest_report(
+                rerun_manifest
+            )
 
             self.assertEqual(
                 retry_candidates["counts"],
@@ -935,6 +1023,194 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             self.assertIn(
                 "ocr=ocr-new source_image=second.png image_status=missing",
                 input_packet_summary,
+            )
+            self.assertEqual(
+                rerun_manifest["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "manifest_items": 1,
+                    "selection_ready_items": 0,
+                    "feedback_closure_blocked_items": 1,
+                    "feedback_inputs": 1,
+                    "source_artifacts": 2,
+                    "resolved_source_artifacts": 0,
+                    "unresolved_source_artifacts": 2,
+                    "artifacts_with_thumbnail": 0,
+                    "ocr_source_message_ids_present": 2,
+                    "ocr_result_message_ids_present": 2,
+                    "exact_feedback_result_links": 0,
+                    "limit_applied": False,
+                },
+            )
+            manifest_item = rerun_manifest["manifest_items"][0]
+            self.assertEqual(
+                manifest_item["selection_gate"]["reason_code"],
+                "no_resolved_source_artifacts",
+            )
+            self.assertEqual(
+                manifest_item["feedback_closure_state"]["reason_code"],
+                "missing_exact_feedback_result_link",
+            )
+            self.assertEqual(
+                manifest_item["source_artifacts"][0]["run_id"],
+                "ocr-new",
+            )
+            self.assertEqual(
+                manifest_item["feedback_source_previews"][0]["source_preview"],
+                "manual feedback points to an unlinked assistant row",
+            )
+            self.assertIn(
+                "manual eval OCR retry rerun manifest: state=ok rows=1/1 "
+                "items=1 selection_ready=0 closure_blocked=1 feedback_inputs=1 "
+                "source_artifacts=2 resolved=0/2 thumbnails=0 "
+                "source_message_ids=2 result_message_ids=2 exact_links=0",
+                rerun_manifest_summary,
+            )
+            self.assertIn(
+                "selection=blocked reason=no_resolved_source_artifacts",
+                rerun_manifest_summary,
+            )
+            self.assertIn(
+                "closure=blocked reason=missing_exact_feedback_result_link",
+                rerun_manifest_summary,
+            )
+            self.assertIn(
+                "ocr=ocr-new source_image=second.png image_status=missing",
+                rerun_manifest_summary,
+            )
+
+    def test_ocr_retry_rerun_manifest_selects_resolved_source_artifacts(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            image_dir = tmp / "images"
+            image_dir.mkdir(parents=True, exist_ok=True)
+            (image_dir / "image1.png").write_bytes(_PNG_1X1)
+            _init_history_db(
+                history_db,
+                feedback_outcome="partial",
+                source_name="file-abc123-image1.png",
+            )
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET status = 'open',
+                        recommended_action = 'Retry OCR with a tighter crop and attach fresh image evidence for comparison.'
+                    """
+                )
+                conn.execute(
+                    """
+                    UPDATE ocr_runs
+                    SET source_message_id = NULL,
+                        result_message_id = NULL
+                    """
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES (
+                      'chat-1', 'assistant',
+                      'feedback source row for resolved source artifact',
+                      155, 'm-result-1', NULL
+                    )
+                    """
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[image_dir],
+                include_thumbnails=False,
+            )
+
+            rerun_manifest = build_ocr_retry_rerun_manifest_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            rerun_manifest_summary = format_ocr_retry_rerun_manifest_report(
+                rerun_manifest
+            )
+
+            self.assertEqual(
+                rerun_manifest["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "manifest_items": 1,
+                    "selection_ready_items": 1,
+                    "feedback_closure_blocked_items": 1,
+                    "feedback_inputs": 1,
+                    "source_artifacts": 1,
+                    "resolved_source_artifacts": 1,
+                    "unresolved_source_artifacts": 0,
+                    "artifacts_with_thumbnail": 0,
+                    "ocr_source_message_ids_present": 0,
+                    "ocr_result_message_ids_present": 0,
+                    "exact_feedback_result_links": 0,
+                    "limit_applied": False,
+                },
+            )
+            manifest_item = rerun_manifest["manifest_items"][0]
+            self.assertEqual(
+                manifest_item["selection_gate"]["state"],
+                "ready_for_selection",
+            )
+            self.assertEqual(
+                manifest_item["selection_gate"]["reason_code"],
+                "missing_ocr_source_result_message_ids",
+            )
+            self.assertEqual(
+                manifest_item["feedback_closure_state"]["state"],
+                "blocked",
+            )
+            source_artifact = manifest_item["source_artifacts"][0]
+            self.assertTrue(source_artifact["image"]["resolved"])
+            self.assertEqual(source_artifact["image"]["status"], "resolved")
+            self.assertEqual(
+                source_artifact["image"]["source_filename"],
+                "file-abc123-image1.png",
+            )
+            self.assertEqual(
+                Path(source_artifact["image"]["resolved_path"]).name,
+                "image1.png",
+            )
+            self.assertEqual(
+                source_artifact["image"]["source_size_bytes"],
+                len(_PNG_1X1),
+            )
+            self.assertEqual(
+                manifest_item["feedback_source_previews"][0]["source_preview"],
+                "feedback source row for resolved source artifact",
+            )
+            self.assertIn(
+                "manual eval OCR retry rerun manifest: state=ok rows=1/1 "
+                "items=1 selection_ready=1 closure_blocked=1 feedback_inputs=1 "
+                "source_artifacts=1 resolved=1/1 thumbnails=0 "
+                "source_message_ids=0 result_message_ids=0 exact_links=0",
+                rerun_manifest_summary,
+            )
+            self.assertIn(
+                "selection=ready_for_selection "
+                "reason=missing_ocr_source_result_message_ids",
+                rerun_manifest_summary,
+            )
+            self.assertIn(
+                "closure=blocked reason=missing_ocr_source_result_message_ids",
+                rerun_manifest_summary,
+            )
+            self.assertIn(
+                "ocr=ocr-1 source_image=file-abc123-image1.png "
+                "image_status=resolved resolved=yes",
+                rerun_manifest_summary,
             )
 
     def test_health_report_handles_missing_warehouse(self) -> None:
