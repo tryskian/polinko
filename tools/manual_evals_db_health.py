@@ -232,6 +232,56 @@ def _build_feedback_quality(conn: sqlite3.Connection) -> dict[str, Any]:
         ORDER BY era, outcome, status
         """,
     )
+    open_debt_rows = _fetch_rows(
+        conn,
+        """
+        SELECT
+          era,
+          LOWER(outcome) AS outcome,
+          LOWER(status) AS status,
+          COUNT(*) AS rows,
+          COUNT(DISTINCT session_id) AS sessions,
+          SUM(CASE WHEN note IS NOT NULL AND note != '' THEN 1 ELSE 0 END)
+            AS rows_with_note,
+          SUM(
+            CASE
+              WHEN recommended_action IS NOT NULL AND recommended_action != '' THEN 1
+              ELSE 0
+            END
+          ) AS rows_with_recommended_action,
+          SUM(
+            CASE
+              WHEN action_taken IS NOT NULL AND action_taken != '' THEN 1
+              ELSE 0
+            END
+          ) AS rows_with_action_taken,
+          SUM(
+            CASE
+              WHEN EXISTS (
+                SELECT 1
+                FROM ocr_runs o
+                WHERE o.session_id = feedback.session_id
+                  AND o.result_message_id = feedback.message_id
+              ) THEN 1
+              ELSE 0
+            END
+          ) AS linked_to_ocr_result,
+          SUM(
+            CASE
+              WHEN EXISTS (
+                SELECT 1
+                FROM ocr_runs o
+                WHERE o.session_id = feedback.session_id
+              ) THEN 1
+              ELSE 0
+            END
+          ) AS same_session_ocr
+        FROM feedback
+        WHERE LOWER(status) = 'open'
+        GROUP BY era, LOWER(outcome), LOWER(status)
+        ORDER BY era, outcome, status
+        """,
+    )
     link_row = conn.execute(
         """
         SELECT
@@ -275,6 +325,7 @@ def _build_feedback_quality(conn: sqlite3.Connection) -> dict[str, Any]:
         "open": open_rows,
         "open_fail": open_fail_rows,
         "open_partial": open_partial_rows,
+        "open_debt_by_outcome": open_debt_rows,
     }
 
 
@@ -453,6 +504,23 @@ def format_manual_evals_health_report(report: dict[str, Any]) -> str:
         f"open_partial={_int_value(feedback_quality.get('open_partial'))} "
         f"linked_to_ocr_result={linked_feedback}/{total_feedback} ({_pct(linked_feedback, total_feedback)})"
     )
+    open_debt_rows = feedback_quality.get("open_debt_by_outcome")
+    if isinstance(open_debt_rows, list) and open_debt_rows:
+        lines.append("open feedback debt:")
+        for row in open_debt_rows:
+            if not isinstance(row, dict):
+                continue
+            lines.append(
+                "- "
+                f"{row.get('era', 'unknown')} {row.get('outcome', 'unknown')}: "
+                f"rows={_int_value(row.get('rows'))} "
+                f"sessions={_int_value(row.get('sessions'))} "
+                f"notes={_int_value(row.get('rows_with_note'))} "
+                f"recommended_actions={_int_value(row.get('rows_with_recommended_action'))} "
+                f"action_taken={_int_value(row.get('rows_with_action_taken'))} "
+                f"linked_to_ocr_result={_int_value(row.get('linked_to_ocr_result'))} "
+                f"same_session_ocr={_int_value(row.get('same_session_ocr'))}"
+            )
 
     lines.append(
         "session mix: "

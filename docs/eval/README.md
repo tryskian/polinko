@@ -58,6 +58,8 @@ notes, exports, and runtime history.
     `.local_archive/manual-evals-db-refresh-*` before rebuilding
   - inspect warehouse health with `make manual-evals-db-health`
   - health output breaks remaining missing-image debt down by source family
+  - health output breaks open feedback debt down by era/outcome and known OCR
+    evidence relationships without inferring links
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

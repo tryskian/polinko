@@ -245,6 +245,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-081: Classify manual eval missing-image debt by source family",
             "source family",
             "text-fixture debt",
+            "## D-082: Classify manual eval open feedback debt read-only",
+            "same-session OCR presence",
+            "not infer feedback-to-OCR links",
         ):
             self.assertIn(expected, decisions)
 
@@ -262,6 +265,7 @@ class ResearchModelContractTests(unittest.TestCase):
             "missing image assets",
             "missing image debt by source family",
             "feedback-to-result links",
+            "feedback debt by outcome",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",
@@ -279,6 +283,8 @@ class ResearchModelContractTests(unittest.TestCase):
             "inspect warehouse health with `make manual-evals-db-health`", eval_map
         )
         self.assertIn("source family", eval_map)
+        self.assertIn("open feedback debt", eval_map)
+        self.assertIn("without inferring links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)
         self.assertIn("Dropbox screenshot sync root", eval_map)
