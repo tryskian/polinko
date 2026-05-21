@@ -1,5 +1,7 @@
 import base64
+from contextlib import closing
 import json
+import sqlite3
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -138,7 +140,59 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             )
             self.assertEqual(evidence_row["judgment"]["unit"], "row")
             self.assertEqual(evidence_row["judgment"]["outcome"], "fail")
+            self.assertEqual(
+                evidence_row["linked_case"]["match_type"], "feedback_result_message"
+            )
             self.assertEqual(evidence_row["linked_case"]["source_run_id"], "ocr-1")
+            self.assertEqual(
+                evidence_row["linked_case"]["result_message_id"], "m-result-1"
+            )
+
+    def test_source_first_links_feedback_to_matching_ocr_result_not_latest_session_run(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            history_db = root / "history.db"
+            output_db = root / "manual_evals.db"
+
+            _init_history_db(history_db, feedback_outcome="FAIL")
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute(
+                    """
+                    INSERT INTO ocr_runs (
+                      run_id, session_id, source_name, mime_type,
+                      source_message_id, result_message_id, status, extracted_text, created_at
+                    ) VALUES (
+                      'ocr-2', 'chat-1', 'file-abc123-image2.png', 'image/png',
+                      'm-source-2', 'm-result-2', 'ok', 'newer unrelated ocr text', 250
+                    )
+                    """
+                )
+                conn.commit()
+
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                include_thumbnails=False,
+            )
+
+            payload = build_manual_evals_surface_payload(
+                db_path=output_db,
+                max_runs=20,
+                max_sessions=10,
+            )
+
+            evidence_row = payload["source_first"]["evidence_rows"][0]
+            linked_case = evidence_row["linked_case"]
+
+            self.assertEqual(
+                evidence_row["source_artifact"]["message_id"], "m-result-1"
+            )
+            self.assertEqual(linked_case["match_type"], "feedback_result_message")
+            self.assertEqual(linked_case["source_run_id"], "ocr-1")
+            self.assertEqual(linked_case["result_message_id"], "m-result-1")
+            self.assertNotEqual(linked_case["source_run_id"], "ocr-2")
 
 
 if __name__ == "__main__":
