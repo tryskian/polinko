@@ -486,6 +486,9 @@ def _attach_source_first(
     enriched["source_first"] = (
         source_first if isinstance(source_first, dict) else empty_source_first_payload()
     )
+    data_freshness = surface_payload.get("data_freshness")
+    if isinstance(data_freshness, dict):
+        enriched["data_freshness"] = data_freshness
     return enriched
 
 

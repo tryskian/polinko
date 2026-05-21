@@ -55,14 +55,34 @@ def _validate_source_first_payload(payload: dict[str, Any], *, path: str) -> Non
         raise RuntimeError(f"GET {path} returned retired rollup_unit alias.")
 
 
+def _validate_data_freshness_payload(payload: dict[str, Any], *, path: str) -> None:
+    data_freshness = payload.get("data_freshness")
+    if not isinstance(data_freshness, dict):
+        raise RuntimeError(f"GET {path} returned missing data_freshness object.")
+
+    state = str(data_freshness.get("state", "")).strip()
+    if state not in {"current", "stale", "unknown", "missing"}:
+        raise RuntimeError(f"GET {path} returned unexpected freshness state: {state!r}")
+
+    manual_evals_db = data_freshness.get("manual_evals_db")
+    if not isinstance(manual_evals_db, dict):
+        raise RuntimeError(f"GET {path} returned missing manual_evals_db freshness.")
+    if "schema_current" not in manual_evals_db:
+        raise RuntimeError(
+            f"GET {path} returned missing manual_evals_db.schema_current."
+        )
+
+
 def _validate_manual_evals_surface_payload(payload: dict[str, Any]) -> None:
     if not isinstance(payload.get("available"), bool):
         raise RuntimeError("GET /manual-evals/surface returned missing availability.")
     _validate_source_first_payload(payload, path="/manual-evals/surface")
+    _validate_data_freshness_payload(payload, path="/manual-evals/surface")
 
 
 def _validate_pass_fail_data_payload(payload: dict[str, Any]) -> None:
     _validate_source_first_payload(payload, path="/viz/pass-fail/data")
+    _validate_data_freshness_payload(payload, path="/viz/pass-fail/data")
 
 
 def main() -> int:
