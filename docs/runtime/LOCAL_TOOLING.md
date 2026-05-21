@@ -55,6 +55,9 @@ Execution tools may be added later only as explicit follow-up gates. They must
 state their mutation target, reuse the validator, and keep a preview path
 available.
 
+The designed OCR retry execution gate is documented in
+`docs/runtime/OCR_RETRY_EXECUTION_GATE.md`. It is not runnable yet.
+
 ## Current Polinko Instance
 
 The current OCR retry human-selection flow is the reference instance for

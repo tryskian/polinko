@@ -24,6 +24,9 @@ workflow, output surfaces, and tuning knobs.
   - live OCR/eval execution is paused until explicitly resumed
   - use `make ocr-inventory` and `make ocr-inventory-json` to inspect local
     evidence state before refreshing or running eval lanes
+  - the OCR retry execution gate is designed in
+    `docs/runtime/OCR_RETRY_EXECUTION_GATE.md`, but no runnable retry execution
+    target exists yet
 
 ## Lane Model
 

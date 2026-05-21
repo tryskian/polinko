@@ -1464,3 +1464,22 @@ or branch history instead.
   inputs are executable before any OCR rerun, feedback closure, live eval
   write, or manual eval warehouse mutation. Execution remains a separate
   explicit follow-up kernel.
+
+## D-101: Design OCR retry execution before implementation
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `execution_gate`, `design_only`, `rollback`
+- Human-led: The human lead confirmed the next kernel should still not run
+  evals, and should define what the execution gate would require first.
+- Decision: `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` defines the future OCR
+  retry execution gate as `designed-only`. The proposed command shape requires
+  `SELECTION_PATH=<path>` plus `CONFIRM=ocr-retry-execute`, recomputes
+  validation/apply-preview/readiness inside the same process, treats
+  `context_only` as non-executing, and writes only a local ignored run bundle
+  under `.local/manual_eval_runs/ocr_retry/` in the first implementation.
+- Why: The readiness gate makes execution possible to reason about, but adding
+  an executor before the mutation target, confirmation token, failure handling,
+  and rollback story are reviewed would blur the refactor boundary. This keeps
+  live OCR/eval execution pinned while making the next implementation kernel
+  precise.

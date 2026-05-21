@@ -216,6 +216,10 @@ Last updated: 2026-05-21
     files and payload-only command previews, and stays blocked until a separate
     explicit execution kernel runs OCR, closes feedback, writes live eval rows,
     or mutates the warehouse
+  - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` defines the designed-only OCR
+    retry execution gate shape, including required confirmation, in-process
+    readiness recomputation, local ignored run-bundle output, rollback, and
+    failure handling; no runnable retry execution target exists yet
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then
