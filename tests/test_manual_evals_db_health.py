@@ -6,8 +6,11 @@ from tempfile import TemporaryDirectory
 
 from tools.build_manual_evals_db import build_manual_evals_db
 from tools.manual_evals_db_health import (
+    ACTIONABLES_SCHEMA_VERSION,
     build_manual_evals_health_report,
+    build_open_feedback_actionables_report,
     format_manual_evals_health_report,
+    format_open_feedback_actionables_report,
 )
 from tests.test_build_manual_evals_db import _init_history_db
 
@@ -43,6 +46,14 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             before_output = output_db.stat().st_mtime_ns
             report = build_manual_evals_health_report(db_path=output_db)
             summary = format_manual_evals_health_report(report)
+            actionables = build_open_feedback_actionables_report(
+                db_path=output_db,
+                outcome="fail",
+                limit=10,
+            )
+            actionables_summary = format_open_feedback_actionables_report(
+                actionables,
+            )
             after_history = history_db.stat().st_mtime_ns
             after_output = output_db.stat().st_mtime_ns
 
@@ -93,6 +104,60 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 summary,
             )
             self.assertIn("linked_to_ocr_result=1/1", summary)
+            self.assertEqual(
+                actionables["schema_version"],
+                ACTIONABLES_SCHEMA_VERSION,
+            )
+            self.assertEqual(actionables["state"], "ok")
+            self.assertEqual(
+                actionables["counts"],
+                {
+                    "total_rows": 1,
+                    "returned_rows": 1,
+                    "limit_applied": False,
+                },
+            )
+            self.assertEqual(actionables["filters"]["outcome"], "fail")
+            self.assertEqual(len(actionables["rows"]), 1)
+            actionable = actionables["rows"][0]
+            self.assertEqual(actionable["feedback_id"], 1)
+            self.assertEqual(actionable["outcome"], "fail")
+            self.assertEqual(actionable["status"], "open")
+            self.assertEqual(actionable["session_id"], "chat-1")
+            self.assertEqual(actionable["message_id"], "m-result-1")
+            self.assertEqual(actionable["note"], "manual note")
+            self.assertEqual(
+                actionable["recommended_action"],
+                "Review this case before closure.",
+            )
+            self.assertTrue(actionable["has_recommended_action"])
+            self.assertFalse(actionable["has_action_taken"])
+            self.assertEqual(
+                actionable["ocr_context"],
+                {
+                    "linked_to_ocr_result": True,
+                    "same_session_ocr_runs": 1,
+                    "latest_same_session_ocr": {
+                        "run_id": "ocr-1",
+                        "source_name": "guardrail-note.txt",
+                        "status": "ok",
+                    },
+                },
+            )
+            self.assertIn(
+                "manual eval open feedback actionables: state=ok rows=1/1 "
+                "outcome=fail limit=10",
+                actionables_summary,
+            )
+            self.assertIn("feedback=1 era=current outcome=fail", actionables_summary)
+            self.assertIn(
+                "recommended_action=Review this case before closure.",
+                actionables_summary,
+            )
+            self.assertIn(
+                "ocr_context: linked_to_ocr_result=yes same_session_ocr_runs=1",
+                actionables_summary,
+            )
 
             with closing(sqlite3.connect(output_db)) as conn:
                 self.assertEqual(

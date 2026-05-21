@@ -1129,3 +1129,19 @@ or branch history instead.
   see what work is queued and what evidence relationship is known. Same-session
   OCR presence is useful triage context, but it is not the same as an explicit
   result-message link.
+
+## D-083: List manual eval open feedback actionables read-only
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `feedback`, `triage`, `local_evidence`, `makefile`
+- Decision: `make manual-evals-feedback-actionables` prints a read-only row
+  list of open manual-eval feedback for triage. The terminal report and JSON
+  export expose `schema_version=polinko.manual_eval_feedback_actionables.v1`,
+  feedback row identity, source session/message identity, note and
+  recommended-action fields, and OCR context split between explicit
+  result-message links and same-session OCR presence.
+- Why: The health summary shows open feedback debt exists, but curation needs
+  row-level evidence before any warehouse mutation or closure. A read-only
+  actionables list lets the operator inspect queued work without guessing
+  feedback-to-OCR relationships or changing the local evidence database.

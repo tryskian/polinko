@@ -60,6 +60,10 @@ notes, exports, and runtime history.
   - health output breaks remaining missing-image debt down by source family
   - health output breaks open feedback debt down by era/outcome and known OCR
     evidence relationships without inferring links
+  - list open feedback row actionables with
+    `make manual-evals-feedback-actionables`
+  - JSON actionables export uses
+    `schema_version=polinko.manual_eval_feedback_actionables.v1`
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

@@ -169,6 +169,8 @@ Use this doc for operator procedure.
     history sources, and print the post-refresh freshness status
 - `make manual-evals-db-health`
   - print read-only manual eval warehouse source-quality signals
+- `make manual-evals-feedback-actionables`
+  - print read-only row-level open feedback actionables for manual triage
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`
