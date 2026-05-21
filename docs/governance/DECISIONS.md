@@ -931,3 +931,18 @@ or branch history instead.
 - Why: The visualization is an operator decision surface. Borrowing feedback
   from another OCR run in the same session can make the chart imply a human
   judgment applied to an artifact that was never judged.
+
+## D-069: Use monitor wording for active eval visualization
+
+- Date: `2026-05-20`
+- Category: `eval_quality`
+- Tags: `eval_viz`, `manual_evals`, `source_first`, `terminology`
+- Human-led: The human lead retired the pulse direction because it did not
+  work properly and collided with eval runs.
+- Decision: Active runtime and operator visualization labels use
+  source-first monitor wording for `/viz/pass-fail`. Historical pulse wording
+  stays only where it documents the rejected hypothesis or frozen beta
+  evidence.
+- Why: `/viz/pass-fail` is still an active manual-eval and OCR inspection
+  surface. Its labels should not imply that the discarded run-level rollup
+  method is still live.

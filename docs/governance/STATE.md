@@ -82,6 +82,8 @@ Last updated: 2026-05-20
   - `/viz/pass-fail` also uses feedback-to-result message matching for manual
     eval rows, so run-specific chart rows do not borrow unrelated session
     feedback
+  - active eval visualization labels use source-first monitor wording rather
+    than retired run-level rollup labels
   - generated trace artifacts from manual submissions use manual eval workbench
     names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane

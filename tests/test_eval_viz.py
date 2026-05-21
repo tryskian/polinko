@@ -433,9 +433,11 @@ class EvalVizTests(unittest.TestCase):
 
     def test_html_contains_live_viz_markup(self) -> None:
         html = render_pass_fail_viz_html(refresh_ms=2500, chart_max_points=20)
-        self.assertIn("Polinko Eval Pulse", html)
+        self.assertIn("Polinko Eval Monitor", html)
+        self.assertNotIn("Eval Pulse", html)
+        self.assertNotIn("heartbeat", html.lower())
         self.assertIn('href="/favicon.png"', html)
-        self.assertIn("See the balance move.", html)
+        self.assertIn("Watch the eval balance.", html)
         self.assertIn('id="passRate"', html)
         self.assertIn('id="healthState"', html)
         self.assertIn('id="latestMix"', html)
