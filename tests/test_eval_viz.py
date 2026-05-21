@@ -194,6 +194,9 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(payload["evals"][0]["outcome"], "ERROR")
             self.assertEqual(len(payload["lane_summaries"]), 2)
             self.assertEqual(
+                payload["source_first"]["contract"]["summary_unit"], "lane_summary"
+            )
+            self.assertEqual(
                 payload["source_first"]["contract"]["rollup_unit"], "lane_summary"
             )
             self.assertEqual(payload["source_first"]["source_artifacts"]["sessions"], 1)
@@ -456,6 +459,8 @@ class EvalVizTests(unittest.TestCase):
         self.assertIn("lane-card-link", html)
         self.assertIn("bucketed binary gate report history", html)
         self.assertIn("bucketed manual eval outcome history", html)
+        self.assertIn("summary unit:", html)
+        self.assertNotIn("rollup:", html)
         self.assertIn("bucketed active-lane mix history", html)
         self.assertIn("function clipId(runId)", html)
         self.assertIn(

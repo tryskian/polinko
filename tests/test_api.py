@@ -178,6 +178,9 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("runs", payload)
         self.assertIn("source_first", payload)
         self.assertEqual(
+            payload["source_first"]["contract"]["summary_unit"], "lane_summary"
+        )
+        self.assertEqual(
             payload["source_first"]["contract"]["rollup_unit"], "lane_summary"
         )
         self.assertEqual(

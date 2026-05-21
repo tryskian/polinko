@@ -61,6 +61,12 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
                 payload["source_first"]["contract"]["promotion_gate"],
                 "repeated_lane_signal",
             )
+            self.assertEqual(
+                payload["source_first"]["contract"]["summary_unit"], "lane_summary"
+            )
+            self.assertEqual(
+                payload["source_first"]["contract"]["rollup_unit"], "lane_summary"
+            )
             self.assertNotIn("rejected_rollup", payload["source_first"]["contract"])
             self.assertNotIn(
                 "pulse", json.dumps(payload["source_first"]["contract"]).lower()
@@ -123,6 +129,9 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             self.assertEqual(source_first["judgments"]["manual_feedback"]["closed"], 1)
             self.assertEqual(
                 source_first["lane_summaries"][0]["lane"], "manual_feedback"
+            )
+            self.assertEqual(
+                source_first["lane_summaries"][0]["summary_unit"], "lane_summary"
             )
             self.assertEqual(
                 source_first["lane_summaries"][0]["rollup_unit"], "lane_summary"
