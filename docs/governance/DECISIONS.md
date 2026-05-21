@@ -1114,3 +1114,18 @@ or branch history instead.
   unresolved assets are historical text fixture source names, so the health
   surface should make that boundary explicit before future refactor kernels
   decide whether to curate seed files or leave the names as historical debt.
+
+## D-082: Classify manual eval open feedback debt read-only
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `health`, `feedback`, `local_evidence`
+- Decision: `make manual-evals-db-health` breaks open feedback debt down by
+  era and outcome, including affected session counts, note coverage,
+  recommended-action coverage, action-taken coverage, explicit OCR-result
+  links, and same-session OCR presence. The report stays read-only. It does
+  not infer feedback-to-OCR links by broad heuristics.
+- Why: Open manual eval feedback is actionable only when the next operator can
+  see what work is queued and what evidence relationship is known. Same-session
+  OCR presence is useful triage context, but it is not the same as an explicit
+  result-message link.

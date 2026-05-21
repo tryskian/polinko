@@ -23,6 +23,15 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 feedback_outcome="fail",
                 source_name="guardrail-note.txt",
             )
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET status = 'open',
+                        recommended_action = 'Review this case before closure.'
+                    """
+                )
+                conn.commit()
             build_manual_evals_db(
                 history_db=history_db,
                 output_db=output_db,
@@ -57,9 +66,32 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             )
             self.assertEqual(report["feedback_quality"]["linked_to_ocr_result"], 1)
             self.assertEqual(report["feedback_quality"]["unlinked_to_ocr_result"], 0)
+            self.assertEqual(
+                report["feedback_quality"]["open_debt_by_outcome"],
+                [
+                    {
+                        "era": "current",
+                        "outcome": "fail",
+                        "status": "open",
+                        "rows": 1,
+                        "sessions": 1,
+                        "rows_with_note": 1,
+                        "rows_with_recommended_action": 1,
+                        "rows_with_action_taken": 0,
+                        "linked_to_ocr_result": 1,
+                        "same_session_ocr": 1,
+                    }
+                ],
+            )
             self.assertIn("manual_evals.db health: state=attention", summary)
             self.assertIn("missing image debt:", summary)
             self.assertIn("- text_fixture: assets=1 ocr_runs=1", summary)
+            self.assertIn("open feedback debt:", summary)
+            self.assertIn(
+                "- current fail: rows=1 sessions=1 notes=1 recommended_actions=1 "
+                "action_taken=0 linked_to_ocr_result=1 same_session_ocr=1",
+                summary,
+            )
             self.assertIn("linked_to_ocr_result=1/1", summary)
 
             with closing(sqlite3.connect(output_db)) as conn:
