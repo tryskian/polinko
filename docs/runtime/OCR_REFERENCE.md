@@ -177,6 +177,9 @@ workflow, output surfaces, and tuning knobs.
      - or `make ocr-inventory ARGS=--json`
    - terminal output includes JSON shape, source schema version when present,
      primary row count, and top-level list counts for local evidence files
+   - freshness output flags local case/report files as `current`, `stale`,
+     `unknown`, or `missing` from existing `generated_at` metadata
+   - override the default freshness threshold with `FRESHNESS_DAYS=<days>`
 3. Offline transcript-mining refresh with no live OCR calls:
    - `make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 4. Full online notebook/eval workflow:

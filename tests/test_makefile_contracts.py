@@ -256,6 +256,10 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("OCR_LANE_INVENTORY_ARGS ?= $(ARGS)", config_text)
+        self.assertIn(
+            "OCR_LANE_INVENTORY_FRESHNESS_DAYS ?= $(FRESHNESS_DAYS)",
+            config_text,
+        )
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -716,7 +720,7 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertRegex(
             text,
-            r"(?m)^ocr-inventory:\n\t@\$\(PYTHON\) \"\$\(OCR_LANE_INVENTORY_SCRIPT\)\" \$\(strip \$\(OCR_LANE_INVENTORY_ARGS\)\)$",
+            r"(?m)^ocr-inventory:\n\t@\$\(PYTHON\) \"\$\(OCR_LANE_INVENTORY_SCRIPT\)\" \$\(strip \$\(OCR_LANE_INVENTORY_ARGS\)\) \$\(if \$\(strip \$\(OCR_LANE_INVENTORY_FRESHNESS_DAYS\)\),--freshness-days \"\$\(OCR_LANE_INVENTORY_FRESHNESS_DAYS\)\"\)$",
         )
         self.assertRegex(
             text,
