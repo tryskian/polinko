@@ -1,5 +1,5 @@
 # Manual eval workbench, portfolio, and local browser surface targets.
-.PHONY: notebook-setup notebook nb notes manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh manual-evals-db-status manualdb-status manual-evals-db-health manualdb-health manual-evals-feedback-actionables manualdb-feedback-actionables manual-evals-feedback-cohorts manualdb-feedback-cohorts
+.PHONY: notebook-setup notebook nb notes manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh manual-evals-db-status manualdb-status manual-evals-db-health manualdb-health manual-evals-feedback-actionables manualdb-feedback-actionables manual-evals-feedback-cohorts manualdb-feedback-cohorts manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates
 .PHONY: portfolio-install portfolio-app-install frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
 .PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 
@@ -33,6 +33,9 @@ manual-evals-feedback-actionables manualdb-feedback-actionables:
 
 manual-evals-feedback-cohorts manualdb-feedback-cohorts:
 	$(PYTHON) -m tools.manual_evals_db_health --open-feedback-cohorts $(strip $(MANUAL_EVALS_FEEDBACK_FILTER_ARGS))
+
+manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates:
+	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-candidates $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
 
 portfolio-install:
 	@set -eu; \

@@ -72,6 +72,10 @@ notes, exports, and runtime history.
     `make manual-evals-feedback-actionables COHORT=ocr_retry_evidence`
   - combine `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>` for
     terminal-native manual triage filters
+  - inspect the first OCR retry candidate packet without mutation with
+    `make manual-evals-ocr-retry-candidates`
+  - JSON OCR retry candidate export uses
+    `schema_version=polinko.manual_eval_ocr_retry_candidates.v1`
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

@@ -119,6 +119,10 @@ Last updated: 2026-05-21
     `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>` Make variables;
     cohort filtering remains read-only and uses explicit `recommended_action`
     labels
+  - `make manual-evals-ocr-retry-candidates` prints a read-only OCR retry
+    candidate packet for selected open feedback, grouped by source session and
+    latest same-session OCR run, using
+    `schema_version=polinko.manual_eval_ocr_retry_candidates.v1`
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then

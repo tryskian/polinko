@@ -1179,3 +1179,21 @@ or branch history instead.
   curation, or closure decision. The first intended drilldown is
   `ocr_retry_evidence`, because it is the largest open cohort and has the most
   same-session OCR context.
+
+## D-086: Packet OCR retry candidates read-only before reruns
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `local_evidence`
+- Decision: `make manual-evals-ocr-retry-candidates` prints a read-only OCR
+  retry candidate packet for open manual-eval feedback. The terminal report
+  and JSON export expose
+  `schema_version=polinko.manual_eval_ocr_retry_candidates.v1`, selected
+  feedback rows, source session grouping, latest same-session OCR evidence,
+  source names, OCR text preview metadata, and image asset resolution and
+  thumbnail availability fields already present in `manual_evals.db`.
+- Why: OCR retry work should start from a bounded evidence packet, not from
+  broad same-session inference or immediate reruns. Candidate packets let the
+  operator choose the first retry batch while keeping the warehouse read-only
+  and preserving the distinction between explicit feedback-to-result links and
+  same-session OCR context.

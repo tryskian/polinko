@@ -8,10 +8,13 @@ from tools.build_manual_evals_db import build_manual_evals_db
 from tools.manual_evals_db_health import (
     ACTIONABLES_SCHEMA_VERSION,
     COHORTS_SCHEMA_VERSION,
+    OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
     build_manual_evals_health_report,
+    build_ocr_retry_candidates_report,
     build_open_feedback_actionables_report,
     build_open_feedback_cohorts_report,
     format_manual_evals_health_report,
+    format_ocr_retry_candidates_report,
     format_open_feedback_actionables_report,
     format_open_feedback_cohorts_report,
 )
@@ -79,6 +82,15 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 cohort="ocr_retry_evidence",
             )
             cohorts_summary = format_open_feedback_cohorts_report(cohorts)
+            retry_candidates = build_ocr_retry_candidates_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            retry_candidates_summary = format_ocr_retry_candidates_report(
+                retry_candidates
+            )
             after_history = history_db.stat().st_mtime_ns
             after_output = output_db.stat().st_mtime_ns
 
@@ -257,6 +269,62 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 cohorts_summary,
             )
             self.assertIn("sample_feedback=1", cohorts_summary)
+            self.assertEqual(
+                retry_candidates["schema_version"],
+                OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
+            )
+            self.assertEqual(retry_candidates["state"], "ok")
+            self.assertEqual(
+                retry_candidates["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "candidate_groups": 1,
+                    "limit_applied": False,
+                },
+            )
+            self.assertEqual(retry_candidates["filters"]["outcome"], "fail")
+            self.assertEqual(
+                retry_candidates["filters"]["cohort"], "ocr_retry_evidence"
+            )
+            self.assertEqual(
+                retry_candidates["filters"]["packet_basis"],
+                "recommended_action_and_same_session_ocr",
+            )
+            self.assertEqual(len(retry_candidates["candidate_groups"]), 1)
+            candidate_group = retry_candidates["candidate_groups"][0]
+            self.assertEqual(candidate_group["session_id"], "chat-1")
+            self.assertEqual(candidate_group["feedback_ids"], [1])
+            self.assertEqual(candidate_group["same_session_ocr_runs"], 1)
+            self.assertEqual(
+                candidate_group["latest_same_session_ocr"]["run_id"],
+                "ocr-1",
+            )
+            self.assertEqual(
+                candidate_group["latest_same_session_ocr"]["source_name"],
+                "guardrail-note.txt",
+            )
+            self.assertEqual(
+                candidate_group["latest_same_session_ocr"]["image_asset"]["status"],
+                "missing",
+            )
+            self.assertEqual(
+                candidate_group["feedback_rows"][0]["feedback_id"],
+                1,
+            )
+            self.assertIn(
+                "manual eval OCR retry candidates: state=ok rows=1/1 groups=1 "
+                "outcome=fail cohort=ocr_retry_evidence",
+                retry_candidates_summary,
+            )
+            self.assertIn(
+                "session=chat-1 source_session=chat-1 feedback=1 ocr_runs=1",
+                retry_candidates_summary,
+            )
+            self.assertIn(
+                "latest_run=ocr-1 latest_source=guardrail-note.txt",
+                retry_candidates_summary,
+            )
 
             with closing(sqlite3.connect(output_db)) as conn:
                 self.assertEqual(

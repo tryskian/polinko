@@ -14,6 +14,7 @@ from tools.manual_evals_db_status import data_freshness_status
 DEFAULT_DB_PATH = Path(".local/runtime_dbs/active/manual_evals.db")
 ACTIONABLES_SCHEMA_VERSION = "polinko.manual_eval_feedback_actionables.v1"
 COHORTS_SCHEMA_VERSION = "polinko.manual_eval_feedback_cohorts.v1"
+OCR_RETRY_CANDIDATES_SCHEMA_VERSION = "polinko.manual_eval_ocr_retry_candidates.v1"
 
 COHORT_DESCRIPTIONS = {
     "ocr_retry_evidence": "Retry OCR/crop and attach fresh image evidence.",
@@ -101,6 +102,15 @@ def _normalize_cohort_filter(cohort: str | None) -> str | None:
         valid = ", ".join(COHORT_IDS)
         raise ValueError(f"unknown feedback cohort '{cohort_id}' (expected: {valid})")
     return cohort_id
+
+
+def _normalize_outcome_filter(outcome: str | None) -> str | None:
+    if outcome is None:
+        return None
+    outcome_filter = outcome.strip().lower()
+    if not outcome_filter or outcome_filter == "all":
+        return None
+    return outcome_filter
 
 
 def _fetch_count(conn: sqlite3.Connection, sql: str) -> int:
@@ -615,9 +625,7 @@ def build_open_feedback_actionables_report(
     cohort: str | None = None,
     limit: int = 100,
 ) -> dict[str, Any]:
-    outcome_filter = outcome.strip().lower() if outcome else None
-    if outcome_filter == "":
-        outcome_filter = None
+    outcome_filter = _normalize_outcome_filter(outcome)
     cohort_filter = _normalize_cohort_filter(cohort)
     if not db_path.is_file():
         return {
@@ -764,9 +772,7 @@ def build_open_feedback_cohorts_report(
     outcome: str | None = None,
     cohort: str | None = None,
 ) -> dict[str, Any]:
-    outcome_filter = outcome.strip().lower() if outcome else None
-    if outcome_filter == "":
-        outcome_filter = None
+    outcome_filter = _normalize_outcome_filter(outcome)
     cohort_filter = _normalize_cohort_filter(cohort)
     if not db_path.is_file():
         return {
@@ -812,6 +818,226 @@ def build_open_feedback_cohorts_report(
             "cohorts": len(cohorts),
         },
         "cohorts": cohorts,
+    }
+
+
+def _truncate_text(value: object, *, max_chars: int = 180) -> str:
+    text = _normalize_text(value)
+    if len(text) <= max_chars:
+        return text
+    return text[: max(0, max_chars - 1)].rstrip() + "..."
+
+
+def _build_ocr_retry_evidence_rows(
+    conn: sqlite3.Connection,
+    *,
+    session_ids: Sequence[str],
+) -> dict[str, list[dict[str, Any]]]:
+    clean_session_ids = [item for item in dict.fromkeys(session_ids) if item]
+    if not clean_session_ids:
+        return {}
+    placeholders = ",".join("?" for _ in clean_session_ids)
+    rows = _fetch_rows(
+        conn,
+        f"""
+        SELECT
+          o.run_id,
+          o.session_id,
+          o.source_name,
+          o.mime_type,
+          o.source_message_id,
+          o.result_message_id,
+          o.status,
+          o.extracted_text,
+          o.created_at,
+          ia.source_filename AS image_source_filename,
+          ia.resolved_path AS image_resolved_path,
+          ia.mime_type AS image_mime_type,
+          ia.status AS image_status,
+          ia.error AS image_error,
+          ia.source_size_bytes AS image_source_size_bytes,
+          ia.thumbnail_width AS image_thumbnail_width,
+          ia.thumbnail_height AS image_thumbnail_height,
+          CASE WHEN ia.thumbnail_data_url IS NOT NULL AND ia.thumbnail_data_url != ''
+            THEN 1 ELSE 0
+          END AS image_has_thumbnail
+        FROM ocr_runs o
+        LEFT JOIN image_assets ia ON ia.id = o.image_asset_id
+        WHERE o.session_id IN ({placeholders})
+        ORDER BY o.session_id, o.created_at DESC, o.id DESC
+        """,
+        clean_session_ids,
+    )
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        session_id = str(row.get("session_id") or "")
+        extracted_text = _normalize_text(row.get("extracted_text"))
+        evidence_row: dict[str, Any] = {
+            "run_id": str(row.get("run_id") or ""),
+            "session_id": session_id,
+            "source_name": str(row.get("source_name") or ""),
+            "mime_type": str(row.get("mime_type") or ""),
+            "source_message_id": str(row.get("source_message_id") or ""),
+            "result_message_id": str(row.get("result_message_id") or ""),
+            "status": str(row.get("status") or ""),
+            "created_at": _int_value(row.get("created_at")),
+            "extracted_text_chars": len(extracted_text),
+            "extracted_text_preview": _truncate_text(extracted_text),
+            "image_asset": {
+                "source_filename": str(row.get("image_source_filename") or ""),
+                "resolved_path": str(row.get("image_resolved_path") or ""),
+                "mime_type": str(row.get("image_mime_type") or ""),
+                "status": str(row.get("image_status") or "unlinked"),
+                "error": str(row.get("image_error") or ""),
+                "source_size_bytes": _int_value(row.get("image_source_size_bytes")),
+                "thumbnail": {
+                    "available": bool(_int_value(row.get("image_has_thumbnail"))),
+                    "width": _int_value(row.get("image_thumbnail_width")),
+                    "height": _int_value(row.get("image_thumbnail_height")),
+                },
+            },
+        }
+        grouped.setdefault(session_id, []).append(evidence_row)
+    return grouped
+
+
+def _packet_feedback_row(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "feedback_id": _int_value(row.get("feedback_id")),
+        "message_id": str(row.get("message_id") or ""),
+        "outcome": str(row.get("outcome") or ""),
+        "status": str(row.get("status") or ""),
+        "tags": row.get("tags") if isinstance(row.get("tags"), list) else [],
+        "note": str(row.get("note") or ""),
+        "recommended_action": str(row.get("recommended_action") or ""),
+        "action_taken": str(row.get("action_taken") or ""),
+        "updated_at": _int_value(row.get("updated_at")),
+        "ocr_context": row.get("ocr_context")
+        if isinstance(row.get("ocr_context"), dict)
+        else {},
+    }
+
+
+def _latest_run_for_row(
+    row: dict[str, Any],
+    evidence_rows: Sequence[dict[str, Any]],
+) -> dict[str, Any] | None:
+    ocr_context = row.get("ocr_context")
+    if not isinstance(ocr_context, dict):
+        ocr_context = {}
+    latest = ocr_context.get("latest_same_session_ocr")
+    if not isinstance(latest, dict):
+        latest = {}
+    latest_run_id = str(latest.get("run_id") or "")
+    for evidence_row in evidence_rows:
+        if evidence_row.get("run_id") == latest_run_id:
+            return evidence_row
+    return evidence_rows[0] if evidence_rows else None
+
+
+def _build_ocr_retry_candidate_groups(
+    actionables: Sequence[dict[str, Any]],
+    evidence_by_session: dict[str, list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    groups: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in actionables:
+        session_id = str(row.get("session_id") or "")
+        evidence_rows = evidence_by_session.get(session_id, [])
+        latest_run = _latest_run_for_row(row, evidence_rows)
+        latest_run_id = str(latest_run.get("run_id") if latest_run else "")
+        group_key = (session_id, latest_run_id)
+        group = groups.setdefault(
+            group_key,
+            {
+                "group_id": f"{session_id}::{latest_run_id or 'no-ocr-run'}",
+                "source_label": str(row.get("source_label") or ""),
+                "source_history_db": str(row.get("source_history_db") or ""),
+                "source_session_id": str(row.get("source_session_id") or ""),
+                "session_id": session_id,
+                "title": str(row.get("title") or ""),
+                "latest_same_session_ocr": latest_run or {},
+                "same_session_ocr_runs": len(evidence_rows),
+                "feedback_ids": [],
+                "feedback_rows": [],
+                "ocr_runs": evidence_rows,
+            },
+        )
+        feedback_id = _int_value(row.get("feedback_id"))
+        group["feedback_ids"].append(feedback_id)
+        group["feedback_rows"].append(_packet_feedback_row(row))
+
+    def sort_key(item: dict[str, Any]) -> tuple[int, str]:
+        feedback_rows = item.get("feedback_rows")
+        feedback_count = len(feedback_rows) if isinstance(feedback_rows, list) else 0
+        return (-feedback_count, str(item.get("session_id") or ""))
+
+    return sorted(groups.values(), key=sort_key)
+
+
+def build_ocr_retry_candidates_report(
+    *,
+    db_path: Path,
+    outcome: str | None = "partial",
+    cohort: str | None = "ocr_retry_evidence",
+    limit: int = 100,
+) -> dict[str, Any]:
+    outcome_filter = _normalize_outcome_filter(outcome)
+    cohort_filter = _normalize_cohort_filter(cohort)
+    if cohort_filter is None:
+        cohort_filter = "ocr_retry_evidence"
+    row_limit = max(1, limit)
+    if not db_path.is_file():
+        return {
+            "schema_version": OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
+            "state": "error",
+            "manual_evals_db": {"path": str(db_path), "exists": False},
+            "filters": {
+                "status": "open",
+                "outcome": outcome_filter or "",
+                "cohort": cohort_filter,
+                "limit": row_limit,
+                "packet_basis": "recommended_action_and_same_session_ocr",
+            },
+            "candidate_groups": [],
+            "warnings": ["manual_evals.db is not available"],
+        }
+
+    with closing(_connect_readonly(db_path)) as conn:
+        integrity = str(conn.execute("PRAGMA integrity_check").fetchone()[0])
+        all_rows = _build_filtered_open_feedback_actionable_rows(
+            conn,
+            outcome=outcome_filter,
+            cohort=cohort_filter,
+        )
+        rows = all_rows[:row_limit]
+        evidence_by_session = _build_ocr_retry_evidence_rows(
+            conn,
+            session_ids=[str(row.get("session_id") or "") for row in rows],
+        )
+        candidate_groups = _build_ocr_retry_candidate_groups(rows, evidence_by_session)
+
+    return {
+        "schema_version": OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
+        "state": "ok" if integrity == "ok" else "error",
+        "manual_evals_db": {
+            "path": str(db_path),
+            "exists": True,
+            "integrity": integrity,
+        },
+        "filters": {
+            "status": "open",
+            "outcome": outcome_filter or "",
+            "cohort": cohort_filter,
+            "limit": row_limit,
+            "packet_basis": "recommended_action_and_same_session_ocr",
+        },
+        "counts": {
+            "total_feedback_rows": len(all_rows),
+            "returned_feedback_rows": len(rows),
+            "candidate_groups": len(candidate_groups),
+            "limit_applied": len(rows) < len(all_rows),
+        },
+        "candidate_groups": candidate_groups,
     }
 
 
@@ -1136,6 +1362,105 @@ def format_open_feedback_cohorts_report(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _format_feedback_ids(value: object) -> str:
+    if not isinstance(value, list) or not value:
+        return "none"
+    return ",".join(str(_int_value(item)) for item in value)
+
+
+def _format_latest_ocr_line(latest_ocr: dict[str, Any]) -> str:
+    image_asset = latest_ocr.get("image_asset")
+    if not isinstance(image_asset, dict):
+        image_asset = {}
+    thumbnail = image_asset.get("thumbnail")
+    if not isinstance(thumbnail, dict):
+        thumbnail = {}
+    thumbnail_text = "none"
+    if thumbnail.get("available"):
+        thumbnail_text = (
+            f"{_int_value(thumbnail.get('width'))}x"
+            f"{_int_value(thumbnail.get('height'))}"
+        )
+    return (
+        f"latest_run={latest_ocr.get('run_id') or 'none'} "
+        f"latest_source={latest_ocr.get('source_name') or 'none'} "
+        f"latest_status={latest_ocr.get('status') or 'none'} "
+        f"image_status={image_asset.get('status') or 'unknown'} "
+        f"resolved={'yes' if image_asset.get('resolved_path') else 'no'} "
+        f"thumbnail={thumbnail_text} "
+        f"chars={_int_value(latest_ocr.get('extracted_text_chars'))}"
+    )
+
+
+def format_ocr_retry_candidates_report(report: dict[str, Any]) -> str:
+    manual_db = report.get("manual_evals_db")
+    if not isinstance(manual_db, dict):
+        manual_db = {}
+    counts = report.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+    filters = report.get("filters")
+    if not isinstance(filters, dict):
+        filters = {}
+
+    lines = [
+        "manual eval OCR retry candidates: "
+        f"state={report.get('state', 'unknown')} "
+        "rows="
+        f"{_int_value(counts.get('returned_feedback_rows'))}/"
+        f"{_int_value(counts.get('total_feedback_rows'))} "
+        f"groups={_int_value(counts.get('candidate_groups'))} "
+        f"outcome={filters.get('outcome') or 'all'} "
+        f"cohort={filters.get('cohort') or 'all'} "
+        f"limit={_int_value(filters.get('limit'))} "
+        f"basis={filters.get('packet_basis') or 'unknown'} "
+        f"path={manual_db.get('path', 'unknown')}",
+    ]
+
+    candidate_groups = report.get("candidate_groups")
+    if not isinstance(candidate_groups, list) or not candidate_groups:
+        lines.append("candidate_groups: none")
+        warnings = report.get("warnings")
+        if isinstance(warnings, list) and warnings:
+            lines.append("warnings:")
+            lines.extend(f"- {str(item)}" for item in warnings)
+        return "\n".join(lines)
+
+    for group in candidate_groups:
+        if not isinstance(group, dict):
+            continue
+        latest_ocr = group.get("latest_same_session_ocr")
+        if not isinstance(latest_ocr, dict):
+            latest_ocr = {}
+        lines.extend(
+            [
+                "- "
+                f"session={group.get('session_id') or 'unknown'} "
+                f"source_session={group.get('source_session_id') or 'unknown'} "
+                f"feedback={_format_feedback_ids(group.get('feedback_ids'))} "
+                f"ocr_runs={_int_value(group.get('same_session_ocr_runs'))}",
+                f"  title={_display_text(group.get('title'))}",
+                f"  {_format_latest_ocr_line(latest_ocr)}",
+            ]
+        )
+        feedback_rows = group.get("feedback_rows")
+        if not isinstance(feedback_rows, list):
+            feedback_rows = []
+        for row in feedback_rows:
+            if not isinstance(row, dict):
+                continue
+            lines.append(
+                "  - "
+                f"feedback={_int_value(row.get('feedback_id'))} "
+                f"message={row.get('message_id') or 'unknown'} "
+                f"outcome={row.get('outcome') or 'unknown'} "
+                f"note={_display_text(row.get('note'))}"
+            )
+    if counts.get("limit_applied"):
+        lines.append("limit_applied: true")
+    return "\n".join(lines)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Print read-only manual eval warehouse health signals.",
@@ -1161,6 +1486,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Print read-only cohorts for open manual-eval feedback actionables.",
     )
     parser.add_argument(
+        "--ocr-retry-candidates",
+        action="store_true",
+        help="Print read-only OCR retry candidate packets for selected feedback.",
+    )
+    parser.add_argument(
         "--outcome",
         default="",
         help="Filter open feedback actionables by outcome, such as fail or partial.",
@@ -1183,6 +1513,19 @@ def _build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = _build_parser().parse_args()
     db_path = Path(args.db).expanduser()
+    if args.ocr_retry_candidates:
+        report = build_ocr_retry_candidates_report(
+            db_path=db_path,
+            outcome=args.outcome or "partial",
+            cohort=args.cohort or "ocr_retry_evidence",
+            limit=max(1, args.limit),
+        )
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            print(format_ocr_retry_candidates_report(report))
+        return 0
+
     if args.open_feedback_cohorts:
         report = build_open_feedback_cohorts_report(
             db_path=db_path,
