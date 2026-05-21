@@ -18,7 +18,11 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             tmp = Path(tmpdir)
             history_db = tmp / "history.db"
             output_db = tmp / "manual_evals.db"
-            _init_history_db(history_db, feedback_outcome="fail")
+            _init_history_db(
+                history_db,
+                feedback_outcome="fail",
+                source_name="guardrail-note.txt",
+            )
             build_manual_evals_db(
                 history_db=history_db,
                 output_db=output_db,
@@ -41,9 +45,21 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             self.assertEqual(report["counts"]["feedback"], 1)
             self.assertEqual(report["image_quality"]["missing_assets"], 1)
             self.assertEqual(report["image_quality"]["missing_ocr_runs"], 1)
+            self.assertEqual(
+                report["image_quality"]["missing_debt_by_family"],
+                [
+                    {
+                        "source_family": "text_fixture",
+                        "missing_assets": 1,
+                        "missing_ocr_runs": 1,
+                    }
+                ],
+            )
             self.assertEqual(report["feedback_quality"]["linked_to_ocr_result"], 1)
             self.assertEqual(report["feedback_quality"]["unlinked_to_ocr_result"], 0)
             self.assertIn("manual_evals.db health: state=attention", summary)
+            self.assertIn("missing image debt:", summary)
+            self.assertIn("- text_fixture: assets=1 ocr_runs=1", summary)
             self.assertIn("linked_to_ocr_result=1/1", summary)
 
             with closing(sqlite3.connect(output_db)) as conn:

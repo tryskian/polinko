@@ -107,7 +107,8 @@ Last updated: 2026-05-20
     rebuilding and prints the post-refresh status
   - `make manual-evals-db-health` reports read-only source-quality signals for
     the current warehouse, including source coverage, missing image assets,
-    feedback-to-result links, open feedback, and session evidence mix
+    missing image debt by source family, feedback-to-result links, open
+    feedback, and session evidence mix
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then

@@ -242,6 +242,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-080: Resolve manual eval screenshots from Dropbox sync roots",
             "macOS Dropbox",
             "historical source-name debt",
+            "## D-081: Classify manual eval missing-image debt by source family",
+            "source family",
+            "text-fixture debt",
         ):
             self.assertIn(expected, decisions)
 
@@ -257,6 +260,7 @@ class ResearchModelContractTests(unittest.TestCase):
             "existing warehouse under `.local_archive/manual-evals-db-refresh-*`",
             "`make manual-evals-db-health` reports read-only source-quality",
             "missing image assets",
+            "missing image debt by source family",
             "feedback-to-result links",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
@@ -274,6 +278,7 @@ class ResearchModelContractTests(unittest.TestCase):
         self.assertIn(
             "inspect warehouse health with `make manual-evals-db-health`", eval_map
         )
+        self.assertIn("source family", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)
         self.assertIn("Dropbox screenshot sync root", eval_map)
