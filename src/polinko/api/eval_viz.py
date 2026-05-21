@@ -1231,7 +1231,7 @@ def render_pass_fail_viz_html(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/png" href="/favicon.png" />
-  <title>Polinko Eval Pulse</title>
+  <title>Polinko Eval Monitor</title>
   <style>
     :root {
       --paper: #f7f1e8;
@@ -1995,12 +1995,13 @@ def render_pass_fail_viz_html(
   <main class="shell">
     <section class="hero">
       <div class="hero-copy">
-        <div class="eyebrow">Polinko Eval Pulse</div>
-        <h1>See the balance move.</h1>
+        <div class="eyebrow">Polinko Eval Monitor</div>
+        <h1>Watch the eval balance.</h1>
         <p>
-          A live window for the active eval lane, with tracked snapshots from
-          the wider evidence map. Deep detail stays in the database; this page
-          is the heartbeat and the lane overview.
+          A live source-first window for the active eval lane, with tracked
+          snapshots from the wider evidence map. Deep detail stays in the
+          database; this page keeps the current window and lane overview
+          visible.
         </p>
       </div>
 
