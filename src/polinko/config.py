@@ -23,6 +23,7 @@ class AppConfig:
     image_context_prompt: str
     vector_enabled: bool
     vector_db_path: str
+    vector_embedding_provider: Literal["openai", "local"]
     vector_embedding_model: str
     vector_top_k: int
     vector_top_k_global: int
@@ -172,6 +173,19 @@ def _validate_chat_harness_mode(value: str | None) -> Literal["live", "fixture"]
     )
 
 
+def _validate_vector_embedding_provider(
+    value: str | None,
+) -> Literal["openai", "local"]:
+    normalized = (value or "openai").strip().lower()
+    if normalized == "openai":
+        return "openai"
+    if normalized == "local":
+        return "local"
+    raise RuntimeError(
+        "POLINKO_VECTOR_EMBEDDING_PROVIDER must be one of: openai, local."
+    )
+
+
 def load_config(dotenv_path: str = ".env") -> AppConfig:
     load_dotenv(dotenv_path=dotenv_path)
 
@@ -229,6 +243,9 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
     vector_db_path = (
         _read_env("POLINKO_VECTOR_DB_PATH", ".local/runtime_dbs/active/vector.db")
         or ".local/runtime_dbs/active/vector.db"
+    )
+    vector_embedding_provider = _validate_vector_embedding_provider(
+        _read_env("POLINKO_VECTOR_EMBEDDING_PROVIDER")
     )
     vector_embedding_model = (
         _read_env("POLINKO_VECTOR_EMBEDDING_MODEL", "text-embedding-3-small")
@@ -338,6 +355,7 @@ def load_config(dotenv_path: str = ".env") -> AppConfig:
         image_context_prompt=image_context_prompt,
         vector_enabled=vector_enabled,
         vector_db_path=vector_db_path,
+        vector_embedding_provider=vector_embedding_provider,
         vector_embedding_model=vector_embedding_model,
         vector_top_k=vector_top_k,
         vector_top_k_global=vector_top_k_global,

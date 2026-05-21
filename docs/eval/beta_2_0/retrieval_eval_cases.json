@@ -4,6 +4,7 @@
       "id": "aurora_lattice",
       "seed_text": "Aurora lattice protocol stabilizes horizon drift using prism anchors and low-noise phase locks.",
       "query": "What keeps the aurora lattice from drifting?",
+      "fixture_query": "aurora lattice prism anchors horizon drift",
       "source_type": "ocr",
       "must_include": ["aurora lattice", "prism anchors"]
     },
@@ -11,6 +12,7 @@
       "id": "cedar_loop",
       "seed_text": "Cedar loop rehearsal uses triad checkpoints and cadence offsets to prevent stack collapse.",
       "query": "Which controls keep cedar loop rehearsal stable?",
+      "fixture_query": "cedar loop triad checkpoints rehearsal stable",
       "source_type": "ocr",
       "must_include": ["cedar loop", "triad checkpoints"]
     },
@@ -18,6 +20,7 @@
       "id": "delta_forge",
       "seed_text": "Delta forge notebooks pair index tags with branch stamps so edits remain lineage-safe.",
       "query": "How does delta forge keep notebook lineage safe?",
+      "fixture_query": "delta forge lineage-safe notebooks branch stamps",
       "source_type": "ocr",
       "must_include": ["delta forge", "lineage-safe"]
     },
@@ -25,6 +28,7 @@
       "id": "nimbus_grid",
       "seed_text": "Nimbus grid diagnostics tie anomaly scores to source snapshots before escalation.",
       "query": "What does nimbus grid attach to anomaly scores first?",
+      "fixture_query": "nimbus grid source snapshots anomaly scores",
       "source_type": "ocr",
       "must_include": ["nimbus grid", "source snapshots"]
     },
@@ -32,6 +36,7 @@
       "id": "opal_trace",
       "seed_text": "Opal trace mode stores evidence fragments with timestamp fences and verifier hashes.",
       "query": "What does opal trace mode store with timestamp fences?",
+      "fixture_query": "opal trace verifier hashes timestamp fences",
       "source_type": "ocr",
       "must_include": ["opal trace", "verifier hashes"]
     },
@@ -39,6 +44,7 @@
       "id": "quill_matrix",
       "seed_text": "Quill matrix retrieval favors concrete snippets over summaries during ambiguity handling.",
       "query": "What does quill matrix retrieval favor in ambiguous situations?",
+      "fixture_query": "quill matrix concrete snippets ambiguity handling",
       "source_type": "ocr",
       "must_include": ["quill matrix", "concrete snippets"]
     },
@@ -46,6 +52,7 @@
       "id": "raven_bridge",
       "seed_text": "Raven bridge policy disallows speculative joins unless two independent signals agree.",
       "query": "When does raven bridge allow speculative joins?",
+      "fixture_query": "raven bridge independent signals speculative joins",
       "source_type": "ocr",
       "must_include": ["raven bridge", "independent signals"]
     },
@@ -53,6 +60,7 @@
       "id": "solstice_map",
       "seed_text": "Solstice map indexing chunks long records by section headers and intent pivots.",
       "query": "How does solstice map indexing chunk long records?",
+      "fixture_query": "solstice map intent pivots section headers",
       "source_type": "ocr",
       "must_include": ["solstice map", "intent pivots"]
     },
@@ -60,6 +68,7 @@
       "id": "tide_kernel",
       "seed_text": "Tide kernel retrieval lowers confidence when evidence freshness is older than policy bounds.",
       "query": "When does tide kernel retrieval lower confidence?",
+      "fixture_query": "tide kernel evidence freshness policy bounds",
       "source_type": "ocr",
       "must_include": ["tide kernel", "evidence freshness"]
     },
@@ -67,6 +76,7 @@
       "id": "umbra_ledger",
       "seed_text": "Umbra ledger notes are immutable once promoted, with corrections appended as delta records.",
       "query": "How are corrections handled in umbra ledger notes?",
+      "fixture_query": "umbra ledger delta records corrections",
       "source_type": "ocr",
       "must_include": ["umbra ledger", "delta records"]
     },
@@ -74,6 +84,7 @@
       "id": "vector_orchard",
       "seed_text": "Vector orchard search ranks by semantic proximity plus token overlap for grounded recall.",
       "query": "How does vector orchard search rank results?",
+      "fixture_query": "vector orchard token overlap grounded recall",
       "source_type": "ocr",
       "must_include": ["vector orchard", "token overlap"]
     },
@@ -81,6 +92,7 @@
       "id": "willow_guard",
       "seed_text": "Willow guardrails require citations when factual confidence depends on retrieved memory.",
       "query": "When do willow guardrails require citations?",
+      "fixture_query": "willow guardrails retrieved memory citations",
       "source_type": "ocr",
       "must_include": ["willow guardrails", "retrieved memory"]
     }

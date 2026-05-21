@@ -473,6 +473,30 @@ class MakefileContractTests(unittest.TestCase):
             text,
             r"(?m)^quality-gate-deterministic:\s*HALLUCINATION_EVAL_MODE\s*=\s*deterministic$",
         )
+        self.assertRegex(
+            text,
+            r"(?m)^quality-gate-deterministic:\s*HALLUCINATION_CHAT_HARNESS_MODE\s*=\s*fixture$",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^quality-gate-deterministic:\s*STYLE_EVAL_MODE\s*=\s*deterministic$",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^quality-gate-deterministic:\s*STYLE_CHAT_HARNESS_MODE\s*=\s*fixture$",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^quality-gate-deterministic:\s*RESPONSE_BEHAVIOUR_CHAT_HARNESS_MODE\s*=\s*fixture$",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^quality-gate-deterministic:\s*RETRIEVAL_CHAT_HARNESS_MODE\s*=\s*fixture$",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^quality-gate-deterministic:\s*GATE_VECTOR_EMBEDDING_PROVIDER\s*=\s*local$",
+        )
         self.assertRegex(text, r"(?m)^quality-gate-deterministic:\s*quality-gate$")
         self.assertRegex(
             text,

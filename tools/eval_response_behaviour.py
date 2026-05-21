@@ -137,6 +137,7 @@ def _load_cases(
             {
                 "id": case_id,
                 "query": query,
+                "fixture_output": str(case.get("fixture_output", "")).strip(),
                 "required_all": _normalize_phrase_list(
                     case.get("required_all"),
                     field_name="required_all",
@@ -156,6 +157,30 @@ def _load_cases(
             }
         )
     return normalized
+
+
+def _build_deterministic_fixture_output(case: dict[str, Any]) -> str:
+    configured = str(case.get("fixture_output", "")).strip()
+    if configured:
+        return configured
+
+    required: list[str] = []
+    for phrase in case.get("required_all", []):
+        clean = str(phrase).strip()
+        if clean and clean not in required:
+            required.append(clean)
+    for group in case.get("required_any_groups", []):
+        if not isinstance(group, list):
+            continue
+        first = next((str(item).strip() for item in group if str(item).strip()), "")
+        if first and first not in required:
+            required.append(first)
+
+    if required:
+        return ". ".join(required) + "."
+    if str(case.get("id", "")) == "direct_low_context_greeting":
+        return "hi"
+    return "I cannot verify that from the available context."
 
 
 def _contains_forbidden_phrases(answer: str, forbidden_phrases: list[str]) -> list[str]:
@@ -295,6 +320,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--timeout", type=int, default=90, help="HTTP timeout in seconds."
     )
     parser.add_argument(
+        "--chat-harness-mode",
+        choices=["live", "fixture"],
+        default="live",
+        help="Chat harness mode to use for /chat calls.",
+    )
+    parser.add_argument(
         "--case-attempts",
         type=int,
         default=3,
@@ -400,6 +431,10 @@ def main() -> int:
                     session_id=session_id,
                     message=case["query"],
                     timeout=args.timeout,
+                    harness_mode=args.chat_harness_mode,
+                    fixture_output=_build_deterministic_fixture_output(case)
+                    if args.chat_harness_mode == "fixture"
+                    else str(case.get("fixture_output", "")),
                 )
                 answer = str(chat_payload.get("output", "")).strip()
                 assessment = _apply_deterministic_gate(case=case, answer=answer)

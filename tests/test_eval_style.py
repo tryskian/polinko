@@ -1,6 +1,7 @@
 import unittest
 
 from tools.eval_style import _build_confidence_counts
+from tools.eval_style import _build_deterministic_fixture_output
 from tools.eval_style import _case_confidence_bucket
 from tools.eval_style import _contains_forbidden_phrases
 from tools.eval_style import _load_cases
@@ -110,6 +111,18 @@ class StyleEvalTests(unittest.TestCase):
             ],
         )
         self.assertEqual(missing_groups, [])
+
+    def test_build_deterministic_fixture_output_uses_required_phrases(self) -> None:
+        fixture = _build_deterministic_fixture_output(
+            {
+                "id": "tone_matching_without_mimicry",
+                "fixture_output": "",
+                "required_all": ["mimicry"],
+                "required_any_groups": [["tone-matching", "tone matching"]],
+            }
+        )
+        self.assertIn("mimicry", fixture)
+        self.assertIn("tone-matching", fixture)
 
     def test_load_cases_accepts_required_phrase_fields(self) -> None:
         payload = {
