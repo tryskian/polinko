@@ -22,18 +22,20 @@ Last updated: 2026-05-20
     the runtime package
   - legacy root `config.py` has been retired after the legacy-import preflight
     found no active tracked or focused local ignored-lane root import usage
-  - root `api/` and root `core/` remain as compatibility shims for legacy
-    imports
+  - legacy root `api/` has been retired after the legacy-import preflight
+    found no active tracked or focused local ignored-lane root import usage
+  - root `core/` remains as a compatibility shim package for legacy imports
   - the root compatibility audit confirms active `src/` and `tools/` Python
-    imports use `polinko.*`, while root shims stay compatibility-only
-  - root `api/` and `core/` shim packages expose explicit supported legacy
-    `from api import ...` and `from core import ...` submodule imports
+    imports use `polinko.*`, while the remaining root shim stays
+    compatibility-only
+  - the root `core/` shim package exposes explicit supported legacy
+    `from core import ...` submodule imports
   - the root shim readiness audit records `server.py` as not retirement-ready
     while `server:app` remains active in Docker, Make defaults, server-daemon,
     and local eval gates
-  - `app.py` and `config.py` are retired; remaining root launcher/shim
-    retirement work stays surface-specific and must preserve manual eval and
-    operator workflows
+  - `app.py`, `config.py`, and root `api/` are retired; remaining root
+    launcher/shim retirement work stays surface-specific and must preserve
+    manual eval and operator workflows
   - prompt and runtime behaviour stay minimal and deterministic
   - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active
     because they feed manual evals, feedback, checkpoints, exports, and

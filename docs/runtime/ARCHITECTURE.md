@@ -29,8 +29,6 @@ This page is the structural map of the tracked system.
   - canonical environment loading and validation implementation
 - `src/polinko/api/`
   - HTTP layer, route spec, middleware, and wiring
-- `api/`
-  - compatibility shims for older `api.*` imports
 - `src/polinko/core/`
   - runtime logic, prompting, session/history, and retrieval helpers
 - `core/`
@@ -111,7 +109,6 @@ This page is the structural map of the tracked system.
 - active `src/` and `tools/` Python imports use `polinko.*`
 - API endpoints, middleware, and specs:
   - `src/polinko/api/`
-  - root `api/` stays compatibility-only during the package-boundary migration
 - prompt and runtime behaviour:
   - `src/polinko/core/`
   - root `core/` stays compatibility-only during the package-boundary migration

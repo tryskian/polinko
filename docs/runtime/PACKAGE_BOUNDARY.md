@@ -5,7 +5,8 @@
 This page records the package-boundary migration contract for the beta refactor.
 The packaging rail exists now; `config`, API, and core runtime implementation
 are under `src/polinko/`. The legacy root `app.py` launcher is retired. The
-legacy root `config.py` import shim is retired.
+legacy root `config.py` import shim is retired. The legacy root `api/` import
+shims are retired.
 
 ## Current Tracked Shape
 
@@ -17,11 +18,6 @@ Tracked root runtime compatibility modules:
 - `server.py`
   - compatibility shim for `uvicorn server:app`
   - forwards module identity to `polinko.asgi`
-- `api/`
-  - compatibility shims for legacy `api.*` imports
-  - forwards module identity to `polinko.api.*`
-  - exposes an explicit `__all__` list for supported legacy
-    `from api import ...` imports
 - `core/`
   - compatibility shims for legacy `core.*` imports
   - forwards module identity to `polinko.core.*`
@@ -63,8 +59,8 @@ Tracked packaging rail:
 Current audit result:
 
 - active runtime and tool imports should use `polinko.*`
-- root compatibility imports are allowed only in the tracked shim layer and
-  focused legacy-contract tests
+- remaining root compatibility imports are allowed only in the tracked shim
+  layer and focused legacy-contract tests
 - compatibility launcher and shim retirement must happen through
   surface-specific kernels with evidence
 - active `server:app` references still exist in Docker, Make runtime defaults,
@@ -73,12 +69,13 @@ Current audit result:
   polinko.cli`, `polinko-chat`, or root `main.py` for CLI chat launches
 - the legacy root `config.py` import shim is retired; use `polinko.config`
   imports
+- the legacy root `api/` import shims are retired; use `polinko.api.*`
+  imports
 
 | Compatibility surface | Required by active references | Retire only after |
 | --- | --- | --- |
 | `main.py` | stable direct `python main.py` launcher and project-venv restart hints | direct root CLI launches are no longer supported |
 | `server.py` | stable `server:app` ASGI string used by Make defaults, server-daemon, local eval gates, Docker, and older scripts | operator, Docker, and eval defaults have an approved replacement ASGI string |
-| `api/` | legacy `api.*` imports and supported `from api import ...` submodule imports | older local scripts have moved to `polinko.api.*` |
 | `core/` | legacy `core.*` imports and supported `from core import ...` submodule imports | older local scripts have moved to `polinko.core.*` |
 
 ### Readiness Snapshot: 2026-05-20
@@ -92,7 +89,7 @@ reference audit.
 | `app.py` | no active tracked code caller before removal; focused local ignored-lane search found no legacy launcher usage | retired in a separate deprecation/removal kernel |
 | `server.py` | `server:app` remains the default ASGI string in Make, Docker, server-daemon, and local eval gates | not retirement-ready |
 | `config.py` | active `src/` and `tools/` imports use `polinko.config`; focused local ignored-lane search found no legacy root import usage | retired in a separate deprecation/removal kernel |
-| `api/` | active `src/` and `tools/` imports use `polinko.api.*`; legacy root imports remain confined to focused compatibility tests | keep until local legacy import support is intentionally dropped |
+| `api/` | active `src/` and `tools/` imports use `polinko.api.*`; focused local ignored-lane search found no legacy root import usage | retired in a separate deprecation/removal kernel |
 | `core/` | active `src/` and `tools/` imports use `polinko.core.*`; legacy root imports remain confined to focused compatibility tests | keep until local legacy import support is intentionally dropped |
 
 Retired root launchers:
@@ -109,6 +106,10 @@ Retired root import shims:
   - removed after the legacy-import preflight found no active tracked caller
     and no focused local ignored-lane import usage
   - replacement imports use `polinko.config`
+- `api/`
+  - removed after the legacy-import preflight found no active tracked caller
+    and no focused local ignored-lane import usage
+  - replacement imports use `polinko.api.*`
 
 ## Target Package Shape
 
@@ -119,7 +120,7 @@ Target placement:
 - `src/polinko/config.py`
   - canonical config implementation
 - `src/polinko/api/`
-  - migrated from root `api/`
+  - canonical API implementation
 - `src/polinko/core/`
   - migrated from root `core/`
 - root `main.py`
@@ -152,8 +153,7 @@ Target placement:
 - Do not move runtime modules into `src/polinko/` before the editable-install
   rail is green.
 - Do not reintroduce root `config.py`; use `polinko.config`.
-- Keep root `api/` as compatibility shims until older local tests and scripts
-  have moved off `api.*` imports.
+- Do not reintroduce root `api/`; use `polinko.api.*`.
 - Keep root `core/` as compatibility shims until older local tests and scripts
   have moved off `core.*` imports.
 - Do not change public operator commands:

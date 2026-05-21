@@ -7,12 +7,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LEGACY_ROOT_IMPORTS = ("api", "config", "core")
-LEGACY_API_SHIMS = (
-    "app_factory",
-    "eval_viz",
-    "manual_evals_surface",
-    "portfolio_sankey",
-)
 LEGACY_CORE_SHIMS = (
     "history_store",
     "prompts",
@@ -44,10 +38,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "canonical ASGI app construction",
             "`polinko-chat`",
             "legacy root `config.py` import shim is retired",
-            "`api/`",
-            "compatibility shims for legacy `api.*` imports",
-            "explicit `__all__` list for supported legacy",
-            "`from api import ...` imports",
+            "legacy root `api/` import shims are retired",
             "`core/`",
             "compatibility shims for legacy `core.*` imports",
             "`from core import ...` imports",
@@ -68,7 +59,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
         for expected in (
             "## Compatibility Audit",
             "active runtime and tool imports should use `polinko.*`",
-            "root compatibility imports are allowed only in the tracked shim layer",
+            "remaining root compatibility imports are allowed only in the tracked shim",
             "compatibility launcher and shim retirement must happen through",
             "active `server:app` references still exist in Docker",
             "legacy `app.py` launcher is retired",
@@ -81,7 +72,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "`config.py`",
             "focused local ignored-lane search found no legacy root import usage",
             "`api/`",
-            "older local scripts have moved to `polinko.api.*`",
+            "replacement imports use `polinko.api.*`",
             "`core/`",
             "older local scripts have moved to `polinko.core.*`",
         ):
@@ -96,8 +87,9 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertIn("docs/runtime/PACKAGE_BOUNDARY.md", architecture)
         self.assertIn("`PACKAGE_BOUNDARY`", architecture)
         self.assertIn("package-boundary migration contract is documented", state)
-        self.assertIn("root `api/` and `core/` shim packages", state)
-        self.assertIn("`from api import ...` and `from core import ...`", state)
+        self.assertIn("legacy root `api/` has been retired", state)
+        self.assertIn("root `core/` shim package", state)
+        self.assertIn("`from core import ...`", state)
         self.assertIn("`PACKAGE_BOUNDARY` holds the Python", state)
         self.assertIn("docs/runtime/PACKAGE_BOUNDARY.md", docs_index)
         self.assertIn(
@@ -144,6 +136,10 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "## D-062: Retire the legacy root config.py import shim",
             decisions,
         )
+        self.assertIn(
+            "## D-063: Retire the legacy root api package shims",
+            decisions,
+        )
 
     def test_runtime_modules_are_moved_with_root_compatibility_shims(self) -> None:
         package_root = REPO_ROOT / "src" / "polinko"
@@ -159,13 +155,6 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertTrue((package_root / "core" / "runtime.py").is_file())
         self.assertTrue((package_root / "core" / "history_store.py").is_file())
 
-        legacy_api = _read("api/app_factory.py")
-        self.assertIn('import_module("polinko.api.app_factory")', legacy_api)
-        self.assertIs(
-            import_module("api.app_factory"),
-            import_module("polinko.api.app_factory"),
-        )
-
         legacy_core = _read("core/runtime.py")
         self.assertIn('import_module("polinko.core.runtime")', legacy_core)
         self.assertIs(
@@ -178,16 +167,8 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertIn("sys.modules[__name__] = _module", legacy_server)
 
     def test_all_root_package_shims_forward_module_identity(self) -> None:
-        legacy_api_package = import_module("api")
         legacy_core_package = import_module("core")
-        self.assertEqual(legacy_api_package.__all__, list(LEGACY_API_SHIMS))
         self.assertEqual(legacy_core_package.__all__, list(LEGACY_CORE_SHIMS))
-
-        for module_name in LEGACY_API_SHIMS:
-            self.assertIs(
-                import_module(f"api.{module_name}"),
-                import_module(f"polinko.api.{module_name}"),
-            )
 
         for module_name in LEGACY_CORE_SHIMS:
             self.assertIs(
@@ -196,14 +177,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
             )
 
     def test_root_package_shims_support_legacy_fromlist_imports(self) -> None:
-        legacy_api_package = __import__("api", fromlist=list(LEGACY_API_SHIMS))
         legacy_core_package = __import__("core", fromlist=list(LEGACY_CORE_SHIMS))
-
-        for module_name in LEGACY_API_SHIMS:
-            self.assertIs(
-                getattr(legacy_api_package, module_name),
-                import_module(f"polinko.api.{module_name}"),
-            )
 
         for module_name in LEGACY_CORE_SHIMS:
             self.assertIs(
@@ -365,6 +339,63 @@ class PackageBoundaryContractTests(unittest.TestCase):
                 continue
             source = _read(relative_path)
             if "from config import" in source or "import config" in source:
+                mentions.append(relative_path)
+
+        self.assertEqual(mentions, [])
+
+    def test_legacy_api_package_shims_are_retired_after_preflight(self) -> None:
+        self.assertFalse((REPO_ROOT / "api").exists())
+
+        tracked_files = subprocess.check_output(
+            ["git", "ls-files"],
+            cwd=REPO_ROOT,
+            text=True,
+        ).splitlines()
+        active_extensions = {".py", ".sh", ".mk"}
+        active_paths = [
+            path
+            for path in tracked_files
+            if Path(path).suffix in active_extensions
+            or path in {"Makefile", "Dockerfile", "pyproject.toml"}
+        ]
+        allowed_paths = {
+            "api/__init__.py",
+            "api/app_factory.py",
+            "api/eval_viz.py",
+            "api/manual_evals_surface.py",
+            "api/portfolio_sankey.py",
+            "docs/governance/DECISIONS.md",
+            "docs/governance/STATE.md",
+            "docs/runtime/ARCHITECTURE.md",
+            "docs/runtime/PACKAGE_BOUNDARY.md",
+            "tests/test_package_boundary_contracts.py",
+        }
+        mentions = []
+
+        for relative_path in active_paths:
+            if relative_path in allowed_paths:
+                continue
+            if not (REPO_ROOT / relative_path).exists():
+                continue
+            source = _read(relative_path)
+            if Path(relative_path).suffix == ".py":
+                tree = ast.parse(source, filename=relative_path)
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.Import):
+                        for alias in node.names:
+                            if alias.name.split(".", maxsplit=1)[0] == "api":
+                                mentions.append(f"{relative_path}:{node.lineno}")
+                    elif isinstance(node, ast.ImportFrom) and node.module is not None:
+                        if node.module.split(".", maxsplit=1)[0] == "api":
+                            mentions.append(f"{relative_path}:{node.lineno}")
+
+            legacy_dynamic_import_markers = (
+                'import_module("api.',
+                "import_module('api.",
+                '__import__("api"',
+                "__import__('api'",
+            )
+            if any(marker in source for marker in legacy_dynamic_import_markers):
                 mentions.append(relative_path)
 
         self.assertEqual(mentions, [])
