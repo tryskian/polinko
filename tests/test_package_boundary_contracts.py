@@ -35,7 +35,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "Tracked root runtime compatibility modules",
             "`main.py`",
             "compatibility launcher for `python main.py`",
-            "legacy root `app.py` launcher has been retired",
+            "legacy root `app.py` launcher is retired",
             "`server.py`",
             "compatibility shim for `uvicorn server:app`",
             "`src/polinko/cli.py`",
@@ -43,8 +43,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "`src/polinko/asgi.py`",
             "canonical ASGI app construction",
             "`polinko-chat`",
-            "`config.py`",
-            "re-exports `AppConfig` and `load_config` from `polinko.config`",
+            "legacy root `config.py` import shim is retired",
             "`api/`",
             "compatibility shims for legacy `api.*` imports",
             "explicit `__all__` list for supported legacy",
@@ -73,13 +72,14 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "compatibility launcher and shim retirement must happen through",
             "active `server:app` references still exist in Docker",
             "legacy `app.py` launcher is retired",
+            "legacy root `config.py` import shim is retired",
             "### Readiness Snapshot: 2026-05-20",
             "retired in a separate deprecation/removal kernel",
             "not retirement-ready",
             "`server.py`",
             "Make defaults, server-daemon, local eval gates, Docker",
             "`config.py`",
-            "older local scripts have moved to `polinko.config`",
+            "focused local ignored-lane search found no legacy root import usage",
             "`api/`",
             "older local scripts have moved to `polinko.api.*`",
             "`core/`",
@@ -140,6 +140,10 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "## D-061: Retire the legacy root app.py launcher",
             decisions,
         )
+        self.assertIn(
+            "## D-062: Retire the legacy root config.py import shim",
+            decisions,
+        )
 
     def test_runtime_modules_are_moved_with_root_compatibility_shims(self) -> None:
         package_root = REPO_ROOT / "src" / "polinko"
@@ -154,12 +158,6 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertTrue((package_root / "core" / "__init__.py").is_file())
         self.assertTrue((package_root / "core" / "runtime.py").is_file())
         self.assertTrue((package_root / "core" / "history_store.py").is_file())
-
-        legacy_config = _read("config.py")
-        self.assertIn(
-            "from polinko.config import AppConfig, load_config", legacy_config
-        )
-        self.assertIn('__all__ = ["AppConfig", "load_config"]', legacy_config)
 
         legacy_api = _read("api/app_factory.py")
         self.assertIn('import_module("polinko.api.app_factory")', legacy_api)
@@ -180,11 +178,6 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertIn("sys.modules[__name__] = _module", legacy_server)
 
     def test_all_root_package_shims_forward_module_identity(self) -> None:
-        legacy_config = import_module("config")
-        packaged_config = import_module("polinko.config")
-        self.assertIs(legacy_config.AppConfig, packaged_config.AppConfig)
-        self.assertIs(legacy_config.load_config, packaged_config.load_config)
-
         legacy_api_package = import_module("api")
         legacy_core_package = import_module("core")
         self.assertEqual(legacy_api_package.__all__, list(LEGACY_API_SHIMS))
@@ -229,7 +222,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
         ]
         root_modules = sorted(path for path in existing_python if "/" not in path)
 
-        self.assertEqual(root_modules, ["config.py", "main.py", "server.py"])
+        self.assertEqual(root_modules, ["main.py", "server.py"])
 
     def test_active_source_and_tool_imports_use_packaged_runtime(self) -> None:
         tracked_python = subprocess.check_output(
@@ -265,7 +258,6 @@ class PackageBoundaryContractTests(unittest.TestCase):
             text=True,
         ).splitlines()
         allowed_paths = {
-            "tests/test_config.py",
             "tests/test_package_boundary_contracts.py",
         }
         violations = []
@@ -333,8 +325,46 @@ class PackageBoundaryContractTests(unittest.TestCase):
         for relative_path in active_paths:
             if relative_path in allowed_paths:
                 continue
+            if not (REPO_ROOT / relative_path).exists():
+                continue
             source = _read(relative_path)
             if "python app.py" in source or 'import_module("app")' in source:
+                mentions.append(relative_path)
+
+        self.assertEqual(mentions, [])
+
+    def test_legacy_config_import_shim_is_retired_after_preflight(self) -> None:
+        self.assertFalse((REPO_ROOT / "config.py").exists())
+
+        tracked_files = subprocess.check_output(
+            ["git", "ls-files"],
+            cwd=REPO_ROOT,
+            text=True,
+        ).splitlines()
+        active_extensions = {".py", ".sh", ".mk"}
+        active_paths = [
+            path
+            for path in tracked_files
+            if Path(path).suffix in active_extensions
+            or path in {"Makefile", "Dockerfile", "pyproject.toml"}
+        ]
+        allowed_paths = {
+            "config.py",
+            "docs/governance/DECISIONS.md",
+            "docs/governance/STATE.md",
+            "docs/runtime/ARCHITECTURE.md",
+            "docs/runtime/PACKAGE_BOUNDARY.md",
+            "tests/test_package_boundary_contracts.py",
+        }
+        mentions = []
+
+        for relative_path in active_paths:
+            if relative_path in allowed_paths:
+                continue
+            if not (REPO_ROOT / relative_path).exists():
+                continue
+            source = _read(relative_path)
+            if "from config import" in source or "import config" in source:
                 mentions.append(relative_path)
 
         self.assertEqual(mentions, [])

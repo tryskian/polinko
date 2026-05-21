@@ -100,8 +100,8 @@ launch the system browser.
   eval workbench endpoints; root `server.py` preserves `uvicorn server:app`.
 - `pyproject.toml` and `src/polinko/` provide the editable-install rail for the
   runtime package.
-- `src/polinko/config.py` contains the canonical config implementation; root
-  `config.py` is a compatibility shim.
+- `src/polinko/config.py` contains the canonical config implementation; the
+  legacy root `config.py` shim is retired.
 - `src/polinko/api/` contains the canonical API implementation; root `api/`
   contains compatibility shims.
 - `src/polinko/core/` contains canonical runtime logic; root `core/` contains
