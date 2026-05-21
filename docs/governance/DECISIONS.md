@@ -1012,3 +1012,16 @@ or branch history instead.
 - Why: Manual eval work can continue with stale local evidence, but the
   workbench must make stale, schema-old, or missing source data visible without
   silently rebuilding local databases or launching browser surfaces.
+
+## D-075: Compare freshness against manual eval import scope
+
+- Date: `2026-05-20`
+- Category: `eval_quality`
+- Tags: `manual_evals`, `freshness`, `import_scope`, `local_evidence`
+- Decision: `data_freshness` source counts compare against the same import
+  scope used by `make manual-evals-db`: sessions count only when they have
+  feedback, checkpoint, or OCR evidence, and metadata exclude-prefixes are
+  honored.
+- Why: Idle chats can exist in source history without belonging to the manual
+  eval warehouse. A freshly rebuilt warehouse should not remain stale because
+  raw source tables contain non-imported chat rows.

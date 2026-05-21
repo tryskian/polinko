@@ -167,6 +167,41 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             self.assertEqual(source["count_deltas"]["sessions"], 1)
             self.assertEqual(source["count_deltas"]["ocr_runs"], 1)
 
+    def test_data_freshness_ignores_chats_outside_manual_eval_import_scope(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            history_db = root / "history.db"
+            output_db = root / "manual_evals.db"
+
+            _init_history_db(history_db)
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                include_thumbnails=False,
+            )
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute(
+                    """
+                    INSERT INTO chats (session_id, title, created_at, updated_at, status, deprecated_at)
+                    VALUES ('chat-idle', 'Idle chat', 9999999999990, 9999999999999, 'active', NULL)
+                    """
+                )
+                conn.commit()
+
+            payload = build_manual_evals_surface_payload(db_path=output_db)
+            freshness = payload["data_freshness"]
+            source = freshness["source_history_dbs"][0]
+
+            self.assertEqual(freshness["state"], "current")
+            self.assertEqual(freshness["warnings"], [])
+            self.assertEqual(source["count_scope"], "manual_eval_import")
+            self.assertEqual(source["recorded_counts"]["sessions"], 1)
+            self.assertEqual(source["current_counts"]["sessions"], 1)
+            self.assertEqual(source["count_deltas"]["sessions"], 0)
+            self.assertFalse(source["is_newer_than_generated"])
+
     def test_data_freshness_reports_old_manual_eval_schema_metadata(self) -> None:
         with TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
