@@ -7,12 +7,15 @@ from pathlib import Path
 import re
 from typing import Any
 
+from polinko.api.manual_eval_contracts import SOURCE_FIRST_SCHEMA_VERSION
+
 _MANUAL_EVALS_DB_PATH = Path(".local/runtime_dbs/active/manual_evals.db")
 _FILE_UPLOAD_PREFIX_RE = re.compile(r"^file[-_][^-_]+[-_](.+)$", re.IGNORECASE)
 
 
 def empty_source_first_payload() -> dict[str, Any]:
     return {
+        "schema_version": SOURCE_FIRST_SCHEMA_VERSION,
         "contract": {
             "chain": [
                 "source_artifact",

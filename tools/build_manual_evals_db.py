@@ -13,6 +13,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Sequence
 
+from polinko.api.manual_eval_contracts import MANUAL_EVALS_DB_SCHEMA_VERSION
+
 PILImageModule: Any | None = None
 PILUnidentifiedImageError: type[Exception] = Exception
 try:
@@ -954,6 +956,7 @@ def build_manual_evals_db(
         for source in loaded_sources
     }
     metadata = {
+        "schema_version": MANUAL_EVALS_DB_SCHEMA_VERSION,
         "generated_at_utc": datetime.now(tz=timezone.utc).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         ),

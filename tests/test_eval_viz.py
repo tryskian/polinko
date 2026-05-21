@@ -7,6 +7,7 @@ from contextlib import closing
 from pathlib import Path
 
 from polinko.api.eval_viz import build_pass_fail_viz_payload, render_pass_fail_viz_html
+from polinko.api.manual_eval_contracts import SOURCE_FIRST_SCHEMA_VERSION
 from tools.build_manual_evals_db import build_manual_evals_db
 
 
@@ -195,6 +196,9 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(len(payload["lane_summaries"]), 2)
             self.assertEqual(
                 payload["source_first"]["contract"]["summary_unit"], "lane_summary"
+            )
+            self.assertEqual(
+                payload["source_first"]["schema_version"], SOURCE_FIRST_SCHEMA_VERSION
             )
             self.assertNotIn("rollup_unit", payload["source_first"]["contract"])
             self.assertEqual(payload["source_first"]["source_artifacts"]["sessions"], 1)
@@ -391,6 +395,9 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(
                 payload["source_first"]["contract"]["promotion_gate"],
                 "repeated_lane_signal",
+            )
+            self.assertEqual(
+                payload["source_first"]["schema_version"], SOURCE_FIRST_SCHEMA_VERSION
             )
             self.assertNotIn("rejected_rollup", payload["source_first"]["contract"])
             self.assertNotIn(

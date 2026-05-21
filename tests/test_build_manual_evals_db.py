@@ -5,6 +5,7 @@ from contextlib import closing
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from polinko.api.manual_eval_contracts import MANUAL_EVALS_DB_SCHEMA_VERSION
 from tools.build_manual_evals_db import HistorySource, build_manual_evals_db
 
 
@@ -218,6 +219,15 @@ class BuildManualEvalsDbTests(unittest.TestCase):
 
             with closing(sqlite3.connect(output_db)) as conn:
                 conn.row_factory = sqlite3.Row
+                metadata = {
+                    str(row["key"]): str(row["value"])
+                    for row in conn.execute(
+                        "SELECT key, value FROM metadata"
+                    ).fetchall()
+                }
+                self.assertEqual(
+                    metadata["schema_version"], MANUAL_EVALS_DB_SCHEMA_VERSION
+                )
                 sessions = conn.execute(
                     "SELECT session_id, era, source_session_id FROM sessions ORDER BY era"
                 ).fetchall()

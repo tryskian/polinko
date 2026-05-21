@@ -19,6 +19,7 @@ from openai import (
 )
 from polinko.api.app_factory import create_runtime_metrics
 from polinko.api import app_factory
+from polinko.api.manual_eval_contracts import SOURCE_FIRST_SCHEMA_VERSION
 from polinko.core.history_store import ChatHistoryStore
 from polinko.core.history_store import MessageFeedback
 from polinko.core.prompts import ACTIVE_PROMPT_VERSION
@@ -179,6 +180,9 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertIn("source_first", payload)
         self.assertEqual(
             payload["source_first"]["contract"]["summary_unit"], "lane_summary"
+        )
+        self.assertEqual(
+            payload["source_first"]["schema_version"], SOURCE_FIRST_SCHEMA_VERSION
         )
         self.assertNotIn("rollup_unit", payload["source_first"]["contract"])
         self.assertEqual(
