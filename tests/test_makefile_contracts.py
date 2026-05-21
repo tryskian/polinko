@@ -255,6 +255,7 @@ class MakefileContractTests(unittest.TestCase):
             "OCR_LANE_INVENTORY_SCRIPT ?= ./tools/report_ocr_lane_inventory.py",
             config_text,
         )
+        self.assertIn("OCR_LANE_INVENTORY_ARGS ?= $(ARGS)", config_text)
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -715,7 +716,11 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertRegex(
             text,
-            r"(?m)^ocr-inventory:\n\t\$\(PYTHON\) \"\$\(OCR_LANE_INVENTORY_SCRIPT\)\"$",
+            r"(?m)^ocr-inventory:\n\t@\$\(PYTHON\) \"\$\(OCR_LANE_INVENTORY_SCRIPT\)\" \$\(strip \$\(OCR_LANE_INVENTORY_ARGS\)\)$",
+        )
+        self.assertRegex(
+            text,
+            r"(?m)^ocr-inventory-json: OCR_LANE_INVENTORY_ARGS = --json\nocr-inventory-json: ocr-inventory$",
         )
         self.assertNotIn('bash "$(EVAL_SERVER_DAEMON_SCRIPT)"', text)
 
@@ -973,6 +978,7 @@ class MakefileContractTests(unittest.TestCase):
             "ocr-transcript-delta",
             "ocrkernel",
             "ocr-inventory",
+            "ocr-inventory-json",
             "ocr-data",
             "ocr-notebook-workflow",
             "eval-ocr-transcript-cases",
@@ -1063,6 +1069,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("ocrmine", targets)
         self.assertIn("ocrkernel", targets)
         self.assertIn("ocr-inventory", targets)
+        self.assertIn("ocr-inventory-json", targets)
         self.assertIn("eval-sidecar-start", targets)
         self.assertIn("eval-ocr-transcript-cases-growth-batched", targets)
 

@@ -231,6 +231,8 @@ Last updated: 2026-05-21
     generalization candidates
   - `make ocr-inventory` prints a read-only map of tracked OCR cases plus
     local case, report, manual-eval DB, and notebook paths
+  - `make ocr-inventory-json` exposes the same OCR evidence map in JSON,
+    including source JSON shape and list-count metadata when available
   - OCR verdicts stay `pass` / `fail` under that broader intake
 - Branch protection on `main` remains active:
   - PR required

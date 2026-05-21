@@ -7,6 +7,14 @@ from pathlib import Path
 from typing import Any
 
 SCHEMA_VERSION = "polinko.ocr_lane_inventory.v1"
+ROW_COUNT_KEYS = (
+    "cases",
+    "candidates",
+    "selected_candidates",
+    "failing_cases",
+    "runs",
+    "items",
+)
 
 TRACKED_CASE_PATHS: tuple[tuple[str, str], ...] = (
     ("base_ocr_cases", "docs/eval/beta_2_0/ocr_eval_cases.json"),
@@ -161,23 +169,45 @@ def _display_path(path: Path, *, root: Path) -> str:
         return path.as_posix()
 
 
-def _json_count(path: Path) -> int | None:
+def _json_shape(payload: Any) -> str:
+    if isinstance(payload, dict):
+        return "object"
+    if isinstance(payload, list):
+        return "list"
+    return type(payload).__name__
+
+
+def _json_metadata(path: Path) -> dict[str, Any]:
     if not path.is_file():
-        return None
+        return {}
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeDecodeError, json.JSONDecodeError):
-        return None
-    if isinstance(payload, dict):
-        cases = payload.get("cases")
-        if isinstance(cases, list):
-            return len(cases)
-        candidates = payload.get("candidates")
-        if isinstance(candidates, list):
-            return len(candidates)
+        return {}
+    metadata: dict[str, Any] = {"json_shape": _json_shape(payload)}
     if isinstance(payload, list):
-        return len(payload)
-    return None
+        metadata["rows"] = len(payload)
+        return metadata
+    if isinstance(payload, dict):
+        schema_version = payload.get("schema_version")
+        if isinstance(schema_version, str):
+            metadata["source_schema_version"] = schema_version
+        generated_at = payload.get("generated_at")
+        if isinstance(generated_at, str | int | float):
+            metadata["generated_at"] = generated_at
+        list_counts = {
+            key: len(value)
+            for key, value in sorted(payload.items())
+            if isinstance(value, list)
+        }
+        if list_counts:
+            metadata["list_counts"] = list_counts
+            for key in ROW_COUNT_KEYS:
+                if key in list_counts:
+                    metadata["rows"] = list_counts[key]
+                    metadata["row_source"] = key
+                    break
+    return metadata
 
 
 def _file_status(name: str, path: Path, *, root: Path) -> dict[str, Any]:
@@ -191,9 +221,7 @@ def _file_status(name: str, path: Path, *, root: Path) -> dict[str, Any]:
     if path.is_file():
         status["kind"] = "file"
         status["bytes"] = path.stat().st_size
-        count = _json_count(path)
-        if count is not None:
-            status["rows"] = count
+        status.update(_json_metadata(path))
     elif path.is_dir():
         status["kind"] = "dir"
         status["entries"] = len(list(path.iterdir()))
@@ -238,8 +266,19 @@ def build_inventory(*, root: Path) -> dict[str, Any]:
 
 def _format_row(item: dict[str, Any]) -> str:
     details: list[str] = [str(item["path"]), str(item["kind"])]
+    if "json_shape" in item:
+        details.append(f"json={item['json_shape']}")
+    if "source_schema_version" in item:
+        details.append(f"schema={item['source_schema_version']}")
     if "rows" in item:
         details.append(f"rows={item['rows']}")
+    if "row_source" in item:
+        details.append(f"row_source={item['row_source']}")
+    if "list_counts" in item:
+        list_counts = item["list_counts"]
+        details.append(
+            "lists=" + ",".join(f"{key}:{value}" for key, value in list_counts.items())
+        )
     if "entries" in item:
         details.append(f"entries={item['entries']}")
     if "bytes" in item and "rows" not in item:
