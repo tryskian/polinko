@@ -1,6 +1,7 @@
 import base64
 import sqlite3
 import unittest
+import zipfile
 from contextlib import closing
 from datetime import datetime
 from pathlib import Path
@@ -198,6 +199,87 @@ class BuildManualEvalsDbTests(unittest.TestCase):
                     self.assertGreater(int(asset["thumbnail_width"]), 0)
                     self.assertGreater(int(asset["thumbnail_height"]), 0)
                     self.assertGreater(result["thumbnails_ready"], 0)
+
+    def test_build_resolves_image_asset_inside_zip_archive(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            image_dir = tmp / "images"
+            image_dir.mkdir(parents=True, exist_ok=True)
+            zip_path = image_dir / "export.zip"
+            with zipfile.ZipFile(zip_path, "w") as archive:
+                archive.writestr("assets/image1.png", _PNG_1X1)
+            _init_history_db(history_db)
+
+            result = build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[image_dir],
+                include_thumbnails=True,
+                thumbnail_size=96,
+            )
+
+            self.assertEqual(result["image_assets"], 1)
+            self.assertEqual(result["images_missing"], 0)
+
+            with closing(sqlite3.connect(output_db)) as conn:
+                conn.row_factory = sqlite3.Row
+                asset = conn.execute(
+                    """
+                    SELECT
+                      resolved_path,
+                      status,
+                      thumbnail_png,
+                      thumbnail_data_url,
+                      source_size_bytes
+                    FROM image_assets
+                    LIMIT 1
+                    """
+                ).fetchone()
+                assert asset is not None
+                self.assertEqual(
+                    str(asset["resolved_path"]), f"{zip_path}::assets/image1.png"
+                )
+                self.assertEqual(int(asset["source_size_bytes"]), len(_PNG_1X1))
+                status = str(asset["status"])
+                self.assertIn(
+                    status, {"thumbnail_ready", "resolved_no_pillow", "thumbnail_error"}
+                )
+                if status == "thumbnail_ready":
+                    self.assertGreater(len(bytes(asset["thumbnail_png"])), 0)
+                    self.assertTrue(
+                        str(asset["thumbnail_data_url"]).startswith(
+                            "data:image/png;base64,"
+                        )
+                    )
+
+    def test_build_prefers_extracted_file_over_zip_archive(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            image_dir = tmp / "images"
+            image_dir.mkdir(parents=True, exist_ok=True)
+            extracted_path = image_dir / "image1.png"
+            extracted_path.write_bytes(_PNG_1X1)
+            with zipfile.ZipFile(image_dir / "export.zip", "w") as archive:
+                archive.writestr("assets/image1.png", _PNG_1X1)
+            _init_history_db(history_db)
+
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[image_dir],
+                include_thumbnails=False,
+            )
+
+            with closing(sqlite3.connect(output_db)) as conn:
+                resolved_path = conn.execute(
+                    "SELECT resolved_path FROM image_assets LIMIT 1"
+                ).fetchone()[0]
+
+            self.assertEqual(Path(str(resolved_path)), extracted_path)
 
     def test_build_combines_multiple_history_sources_with_provenance(self) -> None:
         with TemporaryDirectory() as tmpdir:
