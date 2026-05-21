@@ -122,7 +122,10 @@ Last updated: 2026-05-21
   - `make manual-evals-ocr-retry-candidates` prints a read-only OCR retry
     candidate packet for selected open feedback, grouped by source session and
     latest same-session OCR run, using
-    `schema_version=polinko.manual_eval_ocr_retry_candidates.v1`
+    `schema_version=polinko.manual_eval_ocr_retry_candidates.v2`
+  - OCR retry candidate packets expose read-only readiness flags for ambiguous
+    same-session OCR context and missing explicit feedback-to-result links
+    before any reruns
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then

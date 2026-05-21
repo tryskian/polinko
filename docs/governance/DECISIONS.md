@@ -1197,3 +1197,20 @@ or branch history instead.
   operator choose the first retry batch while keeping the warehouse read-only
   and preserving the distinction between explicit feedback-to-result links and
   same-session OCR context.
+
+## D-087: Flag OCR retry packet readiness before reruns
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `readiness`
+- Decision: OCR retry candidate packets use
+  `schema_version=polinko.manual_eval_ocr_retry_candidates.v2` and expose a
+  read-only readiness block per candidate group. Readiness flags show multiple
+  same-session OCR runs, missing explicit feedback-to-result links, latest OCR
+  context-only status, and missing same-session OCR context before any rerun or
+  warehouse mutation. Terminal output stays bounded while JSON keeps the full
+  same-session OCR context.
+- Why: The operator needs to see when same-session OCR evidence is context
+  rather than a confirmed case link. Readiness flags keep the first retry
+  packet useful without widening linkage heuristics or launching live eval
+  writes.

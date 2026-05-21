@@ -182,6 +182,8 @@ Use this doc for operator procedure.
     `ocr_retry_evidence` partial slice
   - combine with `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>`
     for explicit manual triage slices
+  - use readiness flags to distinguish exact feedback-to-result links from
+    same-session OCR context before reruns
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

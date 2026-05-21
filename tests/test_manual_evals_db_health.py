@@ -280,6 +280,8 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                     "total_feedback_rows": 1,
                     "returned_feedback_rows": 1,
                     "candidate_groups": 1,
+                    "ready_candidate_groups": 1,
+                    "needs_review_candidate_groups": 0,
                     "limit_applied": False,
                 },
             )
@@ -312,9 +314,22 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 candidate_group["feedback_rows"][0]["feedback_id"],
                 1,
             )
+            self.assertEqual(
+                candidate_group["readiness"],
+                {
+                    "state": "ready",
+                    "flags": [],
+                    "basis": ("explicit_result_message_match_and_same_session_context"),
+                    "explicit_feedback_to_result_links": 1,
+                    "unlinked_feedback_rows": 0,
+                    "same_session_ocr_runs": 1,
+                    "linked_ocr_run_ids": ["ocr-1"],
+                    "latest_ocr_is_confirmed_feedback_result": True,
+                },
+            )
             self.assertIn(
                 "manual eval OCR retry candidates: state=ok rows=1/1 groups=1 "
-                "outcome=fail cohort=ocr_retry_evidence",
+                "needs_review=0 outcome=fail cohort=ocr_retry_evidence",
                 retry_candidates_summary,
             )
             self.assertIn(
@@ -325,11 +340,121 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 "latest_run=ocr-1 latest_source=guardrail-note.txt",
                 retry_candidates_summary,
             )
+            self.assertIn(
+                "readiness=ready flags=none explicit_links=1 "
+                "unlinked_feedback=0 latest_confirmed=yes",
+                retry_candidates_summary,
+            )
 
             with closing(sqlite3.connect(output_db)) as conn:
                 self.assertEqual(
                     conn.execute("PRAGMA integrity_check").fetchone()[0], "ok"
                 )
+
+    def test_ocr_retry_candidates_flag_ambiguous_same_session_context(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            _init_history_db(
+                history_db,
+                feedback_outcome="partial",
+                source_name="first.png",
+                run_id="ocr-old",
+            )
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET message_id = 'm-feedback-unlinked',
+                        status = 'open',
+                        recommended_action = 'Retry OCR with a tighter crop and attach fresh image evidence for comparison.'
+                    """
+                )
+                conn.execute(
+                    """
+                    INSERT INTO ocr_runs (
+                      run_id, session_id, source_name, mime_type, source_message_id,
+                      result_message_id, status, extracted_text, created_at
+                    ) VALUES (
+                      'ocr-new', 'chat-1', 'second.png', 'image/png', 'm-source-2',
+                      'm-result-2', 'ok', 'second OCR text for ambiguity review', 190
+                    )
+                    """
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[],
+                include_thumbnails=False,
+            )
+
+            retry_candidates = build_ocr_retry_candidates_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            retry_candidates_summary = format_ocr_retry_candidates_report(
+                retry_candidates
+            )
+
+            self.assertEqual(
+                retry_candidates["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "candidate_groups": 1,
+                    "ready_candidate_groups": 0,
+                    "needs_review_candidate_groups": 1,
+                    "limit_applied": False,
+                },
+            )
+            candidate_group = retry_candidates["candidate_groups"][0]
+            self.assertEqual(
+                candidate_group["readiness"],
+                {
+                    "state": "needs_review",
+                    "flags": [
+                        "multiple_same_session_ocr_runs",
+                        "missing_feedback_to_result_link",
+                        "latest_ocr_is_context_only",
+                    ],
+                    "basis": ("explicit_result_message_match_and_same_session_context"),
+                    "explicit_feedback_to_result_links": 0,
+                    "unlinked_feedback_rows": 1,
+                    "same_session_ocr_runs": 2,
+                    "linked_ocr_run_ids": [],
+                    "latest_ocr_is_confirmed_feedback_result": False,
+                },
+            )
+            self.assertEqual(
+                candidate_group["latest_same_session_ocr"]["run_id"],
+                "ocr-new",
+            )
+            self.assertEqual(len(candidate_group["ocr_runs"]), 2)
+            self.assertIn(
+                "manual eval OCR retry candidates: state=ok rows=1/1 groups=1 "
+                "needs_review=1 outcome=partial cohort=ocr_retry_evidence",
+                retry_candidates_summary,
+            )
+            self.assertIn(
+                "readiness=needs_review "
+                "flags=multiple_same_session_ocr_runs,missing_feedback_to_result_link,"
+                "latest_ocr_is_context_only explicit_links=0 "
+                "unlinked_feedback=1 latest_confirmed=no",
+                retry_candidates_summary,
+            )
+            self.assertIn("same_session_ocr_context:", retry_candidates_summary)
+            self.assertIn(
+                "ocr=ocr-new source=second.png status=ok",
+                retry_candidates_summary,
+            )
+            self.assertIn(
+                "preview=second OCR text for ambiguity review",
+                retry_candidates_summary,
+            )
 
     def test_health_report_handles_missing_warehouse(self) -> None:
         with TemporaryDirectory() as tmpdir:
