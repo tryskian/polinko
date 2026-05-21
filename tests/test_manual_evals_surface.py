@@ -6,6 +6,10 @@ import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from polinko.api.manual_eval_contracts import (
+    MANUAL_EVALS_DB_SCHEMA_VERSION,
+    SOURCE_FIRST_SCHEMA_VERSION,
+)
 from polinko.api.manual_evals_surface import build_manual_evals_surface_payload
 from tools.build_manual_evals_db import build_manual_evals_db
 from tests.test_build_manual_evals_db import _init_history_db
@@ -23,6 +27,9 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
         self.assertFalse(payload["available"])
         self.assertEqual(payload["summary"]["ocr_runs"], 0)
         self.assertEqual(payload["runs"], [])
+        self.assertEqual(
+            payload["source_first"]["schema_version"], SOURCE_FIRST_SCHEMA_VERSION
+        )
         self.assertEqual(payload["source_first"]["exclusions"], [])
 
     def test_returns_runs_sessions_and_image_preview_fields(self) -> None:
@@ -56,6 +63,12 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             self.assertEqual(
                 payload["source_first"]["contract"]["chain"],
                 ["source_artifact", "row_or_case_judgment", "lane_summary"],
+            )
+            self.assertEqual(
+                payload["source_first"]["schema_version"], SOURCE_FIRST_SCHEMA_VERSION
+            )
+            self.assertEqual(
+                payload["metadata"]["schema_version"], MANUAL_EVALS_DB_SCHEMA_VERSION
             )
             self.assertEqual(
                 payload["source_first"]["contract"]["promotion_gate"],

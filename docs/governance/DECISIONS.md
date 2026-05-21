@@ -972,3 +972,17 @@ or branch history instead.
   `.local`, or `docs/peanut` workbench consumer of `rollup_unit`. Keeping the
   alias would preserve retired rollup wording after the source-first contract
   had already moved on.
+
+## D-072: Version source-first manual eval payload boundaries
+
+- Date: `2026-05-20`
+- Category: `eval_quality`
+- Tags: `manual_evals`, `source_first`, `payload_contract`, `schema_version`
+- Decision: Source-first manual eval payloads expose
+  `schema_version=polinko.manual_eval_source_first.v1`, and generated
+  `manual_evals.db` metadata exposes
+  `schema_version=polinko.manual_evals_db.v1`.
+- Why: `/manual-evals/surface` and `/viz/pass-fail/data` share the source-first
+  object as an active manual-eval contract boundary. Adding explicit version
+  markers makes future payload migrations visible without changing existing
+  source-first evidence behavior.

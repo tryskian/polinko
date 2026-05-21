@@ -165,6 +165,25 @@ class ResearchModelContractTests(unittest.TestCase):
         ):
             self.assertIn(expected, eval_map)
 
+    def test_source_first_schema_versions_are_documented(self) -> None:
+        decisions = _read("docs/governance/DECISIONS.md")
+        state = _read("docs/governance/STATE.md")
+        eval_map = _read("docs/eval/README.md")
+
+        for expected in (
+            "## D-072: Version source-first manual eval payload boundaries",
+            "`schema_version=polinko.manual_eval_source_first.v1`",
+            "`schema_version=polinko.manual_evals_db.v1`",
+        ):
+            self.assertIn(expected, decisions)
+
+        for expected in (
+            "`schema_version=polinko.manual_eval_source_first.v1`",
+            "`schema_version=polinko.manual_evals_db.v1`",
+        ):
+            self.assertIn(expected, state)
+            self.assertIn(expected, eval_map)
+
 
 if __name__ == "__main__":
     unittest.main()

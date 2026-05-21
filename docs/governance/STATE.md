@@ -87,6 +87,10 @@ Last updated: 2026-05-20
   - source-first manual eval payloads expose `summary_unit` for lane-summary
     wording; the temporary `rollup_unit` compatibility alias was retired after
     a tracked and local consumer audit found no active dependency
+  - source-first manual eval payloads expose
+    `schema_version=polinko.manual_eval_source_first.v1`; generated
+    `manual_evals.db` metadata exposes
+    `schema_version=polinko.manual_evals_db.v1`
   - generated trace artifacts from manual submissions use manual eval workbench
     names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane

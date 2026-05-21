@@ -49,6 +49,7 @@ notes, exports, and runtime history.
 - integrated manual-eval warehouse:
   - `.local/runtime_dbs/active/manual_evals.db`
   - rebuild with `make manual-evals-db`
+  - DB metadata exposes `schema_version=polinko.manual_evals_db.v1`
 - active chat artifacts:
   - `POST /chat`
   - `/chats/*`
@@ -70,6 +71,9 @@ Manual evals and strict OCR gate reports answer different questions:
 - `/viz/pass-fail` uses the same source-first match when it turns manual
   feedback into evaluated rows; raw OCR status stays raw when feedback belongs
   to a different result message
+- `/manual-evals/surface` and `/viz/pass-fail/data` expose the shared
+  source-first payload as
+  `schema_version=polinko.manual_eval_source_first.v1`
 - OCR gate reports preserve binary fail pressure
 - `/viz/pass-fail` keeps the live chart on the active window and uses tracked
   eval files to keep the wider lane map visible below it
