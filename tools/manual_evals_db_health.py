@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
+from collections.abc import Sequence
 from contextlib import closing
 from pathlib import Path
 from typing import Any
@@ -11,6 +12,7 @@ from tools.manual_evals_db_status import data_freshness_status
 
 
 DEFAULT_DB_PATH = Path(".local/runtime_dbs/active/manual_evals.db")
+ACTIONABLES_SCHEMA_VERSION = "polinko.manual_eval_feedback_actionables.v1"
 
 
 def _connect_readonly(db_path: Path) -> sqlite3.Connection:
@@ -41,6 +43,24 @@ def _row_dict(row: sqlite3.Row) -> dict[str, Any]:
     return {key: row[key] for key in row.keys()}
 
 
+def _normalize_text(value: object) -> str:
+    if value is None:
+        return ""
+    return " ".join(str(value).split())
+
+
+def _parse_tags(value: object) -> list[str]:
+    if value is None:
+        return []
+    try:
+        parsed = json.loads(str(value))
+    except json.JSONDecodeError:
+        return []
+    if not isinstance(parsed, list):
+        return []
+    return [str(item) for item in parsed if str(item).strip()]
+
+
 def _fetch_count(conn: sqlite3.Connection, sql: str) -> int:
     row = conn.execute(sql).fetchone()
     if row is None:
@@ -48,8 +68,12 @@ def _fetch_count(conn: sqlite3.Connection, sql: str) -> int:
     return _int_value(row[0])
 
 
-def _fetch_rows(conn: sqlite3.Connection, sql: str) -> list[dict[str, Any]]:
-    return [_row_dict(row) for row in conn.execute(sql).fetchall()]
+def _fetch_rows(
+    conn: sqlite3.Connection,
+    sql: str,
+    params: Sequence[object] = (),
+) -> list[dict[str, Any]]:
+    return [_row_dict(row) for row in conn.execute(sql, params).fetchall()]
 
 
 def _image_asset_family_sql(alias: str) -> str:
@@ -357,6 +381,209 @@ def _build_session_mix(conn: sqlite3.Connection) -> dict[str, int]:
     }
 
 
+def _open_feedback_where_clause(outcome: str | None) -> tuple[str, list[str]]:
+    conditions = ["LOWER(f.status) = 'open'"]
+    params: list[str] = []
+    if outcome:
+        conditions.append("LOWER(f.outcome) = ?")
+        params.append(outcome.strip().lower())
+    return " AND ".join(conditions), params
+
+
+def _open_feedback_actionables_total(
+    conn: sqlite3.Connection,
+    *,
+    outcome: str | None,
+) -> int:
+    where_clause, params = _open_feedback_where_clause(outcome)
+    row = conn.execute(
+        f"""
+        SELECT COUNT(*)
+        FROM feedback f
+        WHERE {where_clause}
+        """,
+        params,
+    ).fetchone()
+    return _int_value(row[0] if row is not None else 0)
+
+
+def _build_open_feedback_actionable_rows(
+    conn: sqlite3.Connection,
+    *,
+    outcome: str | None,
+    limit: int,
+) -> list[dict[str, Any]]:
+    where_clause, params = _open_feedback_where_clause(outcome)
+    rows = _fetch_rows(
+        conn,
+        f"""
+        SELECT
+          f.id,
+          f.era,
+          f.source_label,
+          f.source_history_db,
+          f.source_session_id,
+          f.session_id,
+          f.message_id,
+          f.outcome,
+          f.tags_json,
+          f.note,
+          f.recommended_action,
+          f.action_taken,
+          f.status,
+          f.created_at,
+          f.updated_at,
+          s.title,
+          EXISTS (
+            SELECT 1
+            FROM ocr_runs linked
+            WHERE linked.session_id = f.session_id
+              AND linked.result_message_id = f.message_id
+          ) AS linked_to_ocr_result,
+          (
+            SELECT COUNT(*)
+            FROM ocr_runs same_session
+            WHERE same_session.session_id = f.session_id
+          ) AS same_session_ocr_runs,
+          (
+            SELECT latest.run_id
+            FROM ocr_runs latest
+            WHERE latest.session_id = f.session_id
+            ORDER BY latest.created_at DESC, latest.id DESC
+            LIMIT 1
+          ) AS latest_same_session_ocr_run_id,
+          (
+            SELECT latest.source_name
+            FROM ocr_runs latest
+            WHERE latest.session_id = f.session_id
+            ORDER BY latest.created_at DESC, latest.id DESC
+            LIMIT 1
+          ) AS latest_same_session_ocr_source_name,
+          (
+            SELECT latest.status
+            FROM ocr_runs latest
+            WHERE latest.session_id = f.session_id
+            ORDER BY latest.created_at DESC, latest.id DESC
+            LIMIT 1
+          ) AS latest_same_session_ocr_status
+        FROM feedback f
+        JOIN sessions s ON s.session_id = f.session_id
+        WHERE {where_clause}
+        ORDER BY
+          f.era,
+          CASE LOWER(f.outcome)
+            WHEN 'fail' THEN 0
+            WHEN 'partial' THEN 1
+            ELSE 2
+          END,
+          f.updated_at DESC,
+          f.id DESC
+        LIMIT ?
+        """,
+        [*params, str(max(1, limit))],
+    )
+    actionable_rows: list[dict[str, Any]] = []
+    for row in rows:
+        note = _normalize_text(row.get("note"))
+        recommended_action = _normalize_text(row.get("recommended_action"))
+        action_taken = _normalize_text(row.get("action_taken"))
+        same_session_ocr_runs = _int_value(row.get("same_session_ocr_runs"))
+        actionable_rows.append(
+            {
+                "feedback_id": _int_value(row.get("id")),
+                "era": str(row.get("era") or ""),
+                "source_label": str(row.get("source_label") or ""),
+                "source_history_db": str(row.get("source_history_db") or ""),
+                "source_session_id": str(row.get("source_session_id") or ""),
+                "session_id": str(row.get("session_id") or ""),
+                "message_id": str(row.get("message_id") or ""),
+                "title": _normalize_text(row.get("title")),
+                "outcome": str(row.get("outcome") or "").lower(),
+                "status": str(row.get("status") or "").lower(),
+                "tags": _parse_tags(row.get("tags_json")),
+                "note": note,
+                "recommended_action": recommended_action,
+                "action_taken": action_taken,
+                "has_note": bool(note),
+                "has_recommended_action": bool(recommended_action),
+                "has_action_taken": bool(action_taken),
+                "created_at": _int_value(row.get("created_at")),
+                "updated_at": _int_value(row.get("updated_at")),
+                "ocr_context": {
+                    "linked_to_ocr_result": bool(
+                        _int_value(row.get("linked_to_ocr_result"))
+                    ),
+                    "same_session_ocr_runs": same_session_ocr_runs,
+                    "latest_same_session_ocr": {
+                        "run_id": str(row.get("latest_same_session_ocr_run_id") or ""),
+                        "source_name": str(
+                            row.get("latest_same_session_ocr_source_name") or ""
+                        ),
+                        "status": str(row.get("latest_same_session_ocr_status") or ""),
+                    },
+                },
+            }
+        )
+    return actionable_rows
+
+
+def build_open_feedback_actionables_report(
+    *,
+    db_path: Path,
+    outcome: str | None = None,
+    limit: int = 100,
+) -> dict[str, Any]:
+    outcome_filter = outcome.strip().lower() if outcome else None
+    if outcome_filter == "":
+        outcome_filter = None
+    if not db_path.is_file():
+        return {
+            "schema_version": ACTIONABLES_SCHEMA_VERSION,
+            "state": "error",
+            "manual_evals_db": {"path": str(db_path), "exists": False},
+            "filters": {
+                "status": "open",
+                "outcome": outcome_filter or "",
+                "limit": max(1, limit),
+            },
+            "rows": [],
+            "warnings": ["manual_evals.db is not available"],
+        }
+
+    with closing(_connect_readonly(db_path)) as conn:
+        integrity = str(conn.execute("PRAGMA integrity_check").fetchone()[0])
+        total_rows = _open_feedback_actionables_total(
+            conn,
+            outcome=outcome_filter,
+        )
+        rows = _build_open_feedback_actionable_rows(
+            conn,
+            outcome=outcome_filter,
+            limit=limit,
+        )
+
+    return {
+        "schema_version": ACTIONABLES_SCHEMA_VERSION,
+        "state": "ok" if integrity == "ok" else "error",
+        "manual_evals_db": {
+            "path": str(db_path),
+            "exists": True,
+            "integrity": integrity,
+        },
+        "filters": {
+            "status": "open",
+            "outcome": outcome_filter or "",
+            "limit": max(1, limit),
+        },
+        "counts": {
+            "total_rows": total_rows,
+            "returned_rows": len(rows),
+            "limit_applied": len(rows) < total_rows,
+        },
+        "rows": rows,
+    }
+
+
 def _health_state(
     *,
     freshness: dict[str, Any],
@@ -532,6 +759,82 @@ def format_manual_evals_health_report(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _display_text(value: object) -> str:
+    text = _normalize_text(value)
+    return text if text else "none"
+
+
+def format_open_feedback_actionables_report(report: dict[str, Any]) -> str:
+    manual_db = report.get("manual_evals_db")
+    if not isinstance(manual_db, dict):
+        manual_db = {}
+    counts = report.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+    filters = report.get("filters")
+    if not isinstance(filters, dict):
+        filters = {}
+
+    total_rows = _int_value(counts.get("total_rows"))
+    returned_rows = _int_value(counts.get("returned_rows"))
+    lines = [
+        "manual eval open feedback actionables: "
+        f"state={report.get('state', 'unknown')} "
+        f"rows={returned_rows}/{total_rows} "
+        f"outcome={filters.get('outcome') or 'all'} "
+        f"limit={_int_value(filters.get('limit'))} "
+        f"path={manual_db.get('path', 'unknown')}",
+    ]
+
+    rows = report.get("rows")
+    if not isinstance(rows, list) or not rows:
+        lines.append("rows: none")
+        warnings = report.get("warnings")
+        if isinstance(warnings, list) and warnings:
+            lines.append("warnings:")
+            lines.extend(f"- {str(item)}" for item in warnings)
+        return "\n".join(lines)
+
+    for item in rows:
+        if not isinstance(item, dict):
+            continue
+        ocr_context = item.get("ocr_context")
+        if not isinstance(ocr_context, dict):
+            ocr_context = {}
+        latest_ocr = ocr_context.get("latest_same_session_ocr")
+        if not isinstance(latest_ocr, dict):
+            latest_ocr = {}
+        tags = item.get("tags")
+        tag_text = ", ".join(str(tag) for tag in tags) if isinstance(tags, list) else ""
+        lines.extend(
+            [
+                "- "
+                f"feedback={_int_value(item.get('feedback_id'))} "
+                f"era={item.get('era', '') or 'unknown'} "
+                f"outcome={item.get('outcome', '') or 'unknown'} "
+                f"status={item.get('status', '') or 'unknown'} "
+                f"session={item.get('session_id', '') or 'unknown'} "
+                f"message={item.get('message_id', '') or 'unknown'}",
+                f"  title={_display_text(item.get('title'))}",
+                f"  tags={tag_text or 'none'}",
+                f"  note={_display_text(item.get('note'))}",
+                f"  recommended_action={_display_text(item.get('recommended_action'))}",
+                f"  action_taken={_display_text(item.get('action_taken'))}",
+                "  ocr_context: "
+                "linked_to_ocr_result="
+                f"{'yes' if ocr_context.get('linked_to_ocr_result') else 'no'} "
+                "same_session_ocr_runs="
+                f"{_int_value(ocr_context.get('same_session_ocr_runs'))} "
+                f"latest_run={latest_ocr.get('run_id') or 'none'} "
+                f"latest_source={latest_ocr.get('source_name') or 'none'} "
+                f"latest_status={latest_ocr.get('status') or 'none'}",
+            ]
+        )
+    if counts.get("limit_applied"):
+        lines.append("limit_applied: true")
+    return "\n".join(lines)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Print read-only manual eval warehouse health signals.",
@@ -546,12 +849,41 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print the health report as JSON.",
     )
+    parser.add_argument(
+        "--open-feedback-actionables",
+        action="store_true",
+        help="Print open feedback rows that need manual-eval triage.",
+    )
+    parser.add_argument(
+        "--outcome",
+        default="",
+        help="Filter open feedback actionables by outcome, such as fail or partial.",
+    )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=100,
+        help="Maximum open feedback actionable rows to print.",
+    )
     return parser
 
 
 def main() -> int:
     args = _build_parser().parse_args()
-    report = build_manual_evals_health_report(db_path=Path(args.db).expanduser())
+    db_path = Path(args.db).expanduser()
+    if args.open_feedback_actionables:
+        report = build_open_feedback_actionables_report(
+            db_path=db_path,
+            outcome=args.outcome,
+            limit=max(1, args.limit),
+        )
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            print(format_open_feedback_actionables_report(report))
+        return 0
+
+    report = build_manual_evals_health_report(db_path=db_path)
     if args.json:
         print(json.dumps(report, indent=2, sort_keys=True))
     else:

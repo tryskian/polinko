@@ -109,6 +109,9 @@ Last updated: 2026-05-21
     the current warehouse, including source coverage, missing image assets,
     missing image debt by source family, feedback-to-result links, open
     feedback debt by outcome, and session evidence mix
+  - `make manual-evals-feedback-actionables` prints a read-only row-level list
+    and JSON export for open manual-eval feedback using
+    `schema_version=polinko.manual_eval_feedback_actionables.v1`
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then
