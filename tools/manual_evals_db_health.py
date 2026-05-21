@@ -13,6 +13,17 @@ from tools.manual_evals_db_status import data_freshness_status
 
 DEFAULT_DB_PATH = Path(".local/runtime_dbs/active/manual_evals.db")
 ACTIONABLES_SCHEMA_VERSION = "polinko.manual_eval_feedback_actionables.v1"
+COHORTS_SCHEMA_VERSION = "polinko.manual_eval_feedback_cohorts.v1"
+
+COHORT_DESCRIPTIONS = {
+    "ocr_retry_evidence": "Retry OCR/crop and attach fresh image evidence.",
+    "grounding_source_verification": (
+        "Re-run with grounding constraints and verify against source evidence."
+    ),
+    "style_regression": "Adjust style notes and add style regression coverage.",
+    "other_explicit_action": "Explicit recommended action outside known cohorts.",
+    "missing_recommended_action": "Open feedback row has no recommended action.",
+}
 
 
 def _connect_readonly(db_path: Path) -> sqlite3.Connection:
@@ -59,6 +70,23 @@ def _parse_tags(value: object) -> list[str]:
     if not isinstance(parsed, list):
         return []
     return [str(item) for item in parsed if str(item).strip()]
+
+
+def _feedback_action_cohort(recommended_action: object) -> str:
+    action = _normalize_text(recommended_action).lower()
+    if not action:
+        return "missing_recommended_action"
+    if (
+        "retry ocr" in action
+        or "tighter crop" in action
+        or "fresh image evidence" in action
+    ):
+        return "ocr_retry_evidence"
+    if "grounding constraints" in action or "source evidence" in action:
+        return "grounding_source_verification"
+    if "style notes" in action or "style eval regression" in action:
+        return "style_regression"
+    return "other_explicit_action"
 
 
 def _fetch_count(conn: sqlite3.Connection, sql: str) -> int:
@@ -584,6 +612,156 @@ def build_open_feedback_actionables_report(
     }
 
 
+def _new_cohort_summary(cohort_id: str) -> dict[str, Any]:
+    return {
+        "cohort_id": cohort_id,
+        "description": COHORT_DESCRIPTIONS[cohort_id],
+        "rows": 0,
+        "sessions": 0,
+        "outcomes": {},
+        "rows_with_note": 0,
+        "rows_with_recommended_action": 0,
+        "rows_with_action_taken": 0,
+        "linked_to_ocr_result": 0,
+        "same_session_ocr": 0,
+        "sample_feedback_ids": [],
+        "_session_ids": set(),
+    }
+
+
+def _finalize_cohort_summary(summary: dict[str, Any]) -> dict[str, Any]:
+    session_ids = summary.pop("_session_ids", set())
+    if isinstance(session_ids, set):
+        summary["sessions"] = len(session_ids)
+    outcomes = summary.get("outcomes")
+    if isinstance(outcomes, dict):
+        summary["outcomes"] = {
+            key: outcomes[key]
+            for key in sorted(
+                outcomes,
+                key=lambda item: (
+                    {"fail": 0, "partial": 1}.get(str(item), 2),
+                    str(item),
+                ),
+            )
+        }
+    return summary
+
+
+def _build_open_feedback_cohort_rows(
+    conn: sqlite3.Connection,
+    *,
+    outcome: str | None,
+) -> list[dict[str, Any]]:
+    total_rows = _open_feedback_actionables_total(conn, outcome=outcome)
+    if total_rows <= 0:
+        return []
+    actionables = _build_open_feedback_actionable_rows(
+        conn,
+        outcome=outcome,
+        limit=total_rows,
+    )
+    summaries: dict[str, dict[str, Any]] = {}
+    for row in actionables:
+        cohort_id = _feedback_action_cohort(row.get("recommended_action"))
+        summary = summaries.setdefault(cohort_id, _new_cohort_summary(cohort_id))
+        summary["rows"] = _int_value(summary.get("rows")) + 1
+        session_ids = summary.get("_session_ids")
+        if isinstance(session_ids, set):
+            session_ids.add(str(row.get("session_id") or ""))
+        outcome_key = str(row.get("outcome") or "unknown")
+        outcomes = summary.get("outcomes")
+        if isinstance(outcomes, dict):
+            outcomes[outcome_key] = _int_value(outcomes.get(outcome_key)) + 1
+        if row.get("has_note"):
+            summary["rows_with_note"] = _int_value(summary.get("rows_with_note")) + 1
+        if row.get("has_recommended_action"):
+            summary["rows_with_recommended_action"] = (
+                _int_value(summary.get("rows_with_recommended_action")) + 1
+            )
+        if row.get("has_action_taken"):
+            summary["rows_with_action_taken"] = (
+                _int_value(summary.get("rows_with_action_taken")) + 1
+            )
+        ocr_context = row.get("ocr_context")
+        if not isinstance(ocr_context, dict):
+            ocr_context = {}
+        if ocr_context.get("linked_to_ocr_result"):
+            summary["linked_to_ocr_result"] = (
+                _int_value(summary.get("linked_to_ocr_result")) + 1
+            )
+        if _int_value(ocr_context.get("same_session_ocr_runs")) > 0:
+            summary["same_session_ocr"] = (
+                _int_value(summary.get("same_session_ocr")) + 1
+            )
+        sample_ids = summary.get("sample_feedback_ids")
+        if isinstance(sample_ids, list) and len(sample_ids) < 5:
+            sample_ids.append(_int_value(row.get("feedback_id")))
+
+    finalized = [_finalize_cohort_summary(summary) for summary in summaries.values()]
+    return sorted(
+        finalized,
+        key=lambda item: (
+            -_int_value(item.get("rows")),
+            str(item.get("cohort_id") or ""),
+        ),
+    )
+
+
+def build_open_feedback_cohorts_report(
+    *,
+    db_path: Path,
+    outcome: str | None = None,
+) -> dict[str, Any]:
+    outcome_filter = outcome.strip().lower() if outcome else None
+    if outcome_filter == "":
+        outcome_filter = None
+    if not db_path.is_file():
+        return {
+            "schema_version": COHORTS_SCHEMA_VERSION,
+            "state": "error",
+            "manual_evals_db": {"path": str(db_path), "exists": False},
+            "filters": {
+                "status": "open",
+                "outcome": outcome_filter or "",
+                "cohort_basis": "recommended_action",
+            },
+            "cohorts": [],
+            "warnings": ["manual_evals.db is not available"],
+        }
+
+    with closing(_connect_readonly(db_path)) as conn:
+        integrity = str(conn.execute("PRAGMA integrity_check").fetchone()[0])
+        total_rows = _open_feedback_actionables_total(
+            conn,
+            outcome=outcome_filter,
+        )
+        cohorts = _build_open_feedback_cohort_rows(
+            conn,
+            outcome=outcome_filter,
+        )
+
+    return {
+        "schema_version": COHORTS_SCHEMA_VERSION,
+        "state": "ok" if integrity == "ok" else "error",
+        "manual_evals_db": {
+            "path": str(db_path),
+            "exists": True,
+            "integrity": integrity,
+        },
+        "filters": {
+            "status": "open",
+            "outcome": outcome_filter or "",
+            "cohort_basis": "recommended_action",
+        },
+        "counts": {
+            "total_rows": total_rows,
+            "cohorts": len(cohorts),
+        },
+        "cohorts": cohorts,
+    }
+
+
 def _health_state(
     *,
     freshness: dict[str, Any],
@@ -835,6 +1013,70 @@ def format_open_feedback_actionables_report(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def _format_outcomes(value: object) -> str:
+    if not isinstance(value, dict) or not value:
+        return "none"
+    return ",".join(f"{key}={_int_value(count)}" for key, count in value.items())
+
+
+def format_open_feedback_cohorts_report(report: dict[str, Any]) -> str:
+    manual_db = report.get("manual_evals_db")
+    if not isinstance(manual_db, dict):
+        manual_db = {}
+    counts = report.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+    filters = report.get("filters")
+    if not isinstance(filters, dict):
+        filters = {}
+
+    lines = [
+        "manual eval open feedback cohorts: "
+        f"state={report.get('state', 'unknown')} "
+        f"rows={_int_value(counts.get('total_rows'))} "
+        f"cohorts={_int_value(counts.get('cohorts'))} "
+        f"outcome={filters.get('outcome') or 'all'} "
+        f"basis={filters.get('cohort_basis') or 'unknown'} "
+        f"path={manual_db.get('path', 'unknown')}",
+    ]
+
+    cohorts = report.get("cohorts")
+    if not isinstance(cohorts, list) or not cohorts:
+        lines.append("cohorts: none")
+        warnings = report.get("warnings")
+        if isinstance(warnings, list) and warnings:
+            lines.append("warnings:")
+            lines.extend(f"- {str(item)}" for item in warnings)
+        return "\n".join(lines)
+
+    for item in cohorts:
+        if not isinstance(item, dict):
+            continue
+        sample_ids = item.get("sample_feedback_ids")
+        if isinstance(sample_ids, list):
+            sample_text = ",".join(str(_int_value(item)) for item in sample_ids)
+        else:
+            sample_text = "none"
+        lines.extend(
+            [
+                "- "
+                f"{item.get('cohort_id', 'unknown')}: "
+                f"rows={_int_value(item.get('rows'))} "
+                f"sessions={_int_value(item.get('sessions'))} "
+                f"outcomes={_format_outcomes(item.get('outcomes'))} "
+                f"notes={_int_value(item.get('rows_with_note'))} "
+                "recommended_actions="
+                f"{_int_value(item.get('rows_with_recommended_action'))} "
+                f"action_taken={_int_value(item.get('rows_with_action_taken'))} "
+                f"linked_to_ocr_result={_int_value(item.get('linked_to_ocr_result'))} "
+                f"same_session_ocr={_int_value(item.get('same_session_ocr'))} "
+                f"sample_feedback={sample_text or 'none'}",
+                f"  action={_display_text(item.get('description'))}",
+            ]
+        )
+    return "\n".join(lines)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Print read-only manual eval warehouse health signals.",
@@ -855,6 +1097,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Print open feedback rows that need manual-eval triage.",
     )
     parser.add_argument(
+        "--open-feedback-cohorts",
+        action="store_true",
+        help="Print read-only cohorts for open manual-eval feedback actionables.",
+    )
+    parser.add_argument(
         "--outcome",
         default="",
         help="Filter open feedback actionables by outcome, such as fail or partial.",
@@ -871,6 +1118,17 @@ def _build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = _build_parser().parse_args()
     db_path = Path(args.db).expanduser()
+    if args.open_feedback_cohorts:
+        report = build_open_feedback_cohorts_report(
+            db_path=db_path,
+            outcome=args.outcome,
+        )
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            print(format_open_feedback_cohorts_report(report))
+        return 0
+
     if args.open_feedback_actionables:
         report = build_open_feedback_actionables_report(
             db_path=db_path,

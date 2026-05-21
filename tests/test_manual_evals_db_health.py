@@ -7,10 +7,13 @@ from tempfile import TemporaryDirectory
 from tools.build_manual_evals_db import build_manual_evals_db
 from tools.manual_evals_db_health import (
     ACTIONABLES_SCHEMA_VERSION,
+    COHORTS_SCHEMA_VERSION,
     build_manual_evals_health_report,
     build_open_feedback_actionables_report,
+    build_open_feedback_cohorts_report,
     format_manual_evals_health_report,
     format_open_feedback_actionables_report,
+    format_open_feedback_cohorts_report,
 )
 from tests.test_build_manual_evals_db import _init_history_db
 
@@ -31,7 +34,7 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                     """
                     UPDATE message_feedback
                     SET status = 'open',
-                        recommended_action = 'Review this case before closure.'
+                        recommended_action = 'Retry OCR with a tighter crop and attach fresh image evidence for comparison.'
                     """
                 )
                 conn.commit()
@@ -54,6 +57,11 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             actionables_summary = format_open_feedback_actionables_report(
                 actionables,
             )
+            cohorts = build_open_feedback_cohorts_report(
+                db_path=output_db,
+                outcome="fail",
+            )
+            cohorts_summary = format_open_feedback_cohorts_report(cohorts)
             after_history = history_db.stat().st_mtime_ns
             after_output = output_db.stat().st_mtime_ns
 
@@ -128,7 +136,8 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             self.assertEqual(actionable["note"], "manual note")
             self.assertEqual(
                 actionable["recommended_action"],
-                "Review this case before closure.",
+                "Retry OCR with a tighter crop and attach fresh image evidence "
+                "for comparison.",
             )
             self.assertTrue(actionable["has_recommended_action"])
             self.assertFalse(actionable["has_action_taken"])
@@ -151,13 +160,54 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             )
             self.assertIn("feedback=1 era=current outcome=fail", actionables_summary)
             self.assertIn(
-                "recommended_action=Review this case before closure.",
+                "recommended_action=Retry OCR with a tighter crop and attach fresh "
+                "image evidence for comparison.",
                 actionables_summary,
             )
             self.assertIn(
                 "ocr_context: linked_to_ocr_result=yes same_session_ocr_runs=1",
                 actionables_summary,
             )
+            self.assertEqual(cohorts["schema_version"], COHORTS_SCHEMA_VERSION)
+            self.assertEqual(cohorts["state"], "ok")
+            self.assertEqual(
+                cohorts["counts"],
+                {
+                    "total_rows": 1,
+                    "cohorts": 1,
+                },
+            )
+            self.assertEqual(cohorts["filters"]["cohort_basis"], "recommended_action")
+            self.assertEqual(
+                cohorts["cohorts"],
+                [
+                    {
+                        "cohort_id": "ocr_retry_evidence",
+                        "description": (
+                            "Retry OCR/crop and attach fresh image evidence."
+                        ),
+                        "rows": 1,
+                        "sessions": 1,
+                        "outcomes": {"fail": 1},
+                        "rows_with_note": 1,
+                        "rows_with_recommended_action": 1,
+                        "rows_with_action_taken": 0,
+                        "linked_to_ocr_result": 1,
+                        "same_session_ocr": 1,
+                        "sample_feedback_ids": [1],
+                    }
+                ],
+            )
+            self.assertIn(
+                "manual eval open feedback cohorts: state=ok rows=1 cohorts=1 "
+                "outcome=fail basis=recommended_action",
+                cohorts_summary,
+            )
+            self.assertIn(
+                "- ocr_retry_evidence: rows=1 sessions=1 outcomes=fail=1",
+                cohorts_summary,
+            )
+            self.assertIn("sample_feedback=1", cohorts_summary)
 
             with closing(sqlite3.connect(output_db)) as conn:
                 self.assertEqual(
