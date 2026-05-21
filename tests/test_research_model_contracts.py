@@ -257,6 +257,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-085: Filter manual eval feedback drilldowns by cohort read-only",
             "`COHORT=<cohort_id>`",
             "`ocr_retry_evidence`",
+            "## D-086: Packet OCR retry candidates read-only before reruns",
+            "`make manual-evals-ocr-retry-candidates`",
+            "`schema_version=polinko.manual_eval_ocr_retry_candidates.v1`",
         ):
             self.assertIn(expected, decisions)
 
@@ -282,6 +285,8 @@ class ResearchModelContractTests(unittest.TestCase):
             "`COHORT=<cohort_id>`",
             "`OUTCOME=<outcome>`",
             "`LIMIT=<n>`",
+            "`make manual-evals-ocr-retry-candidates` prints a read-only OCR",
+            "`schema_version=polinko.manual_eval_ocr_retry_candidates.v1`",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",
@@ -315,6 +320,11 @@ class ResearchModelContractTests(unittest.TestCase):
             eval_map,
         )
         self.assertIn("`COHORT=<cohort_id>`", eval_map)
+        self.assertIn("`make manual-evals-ocr-retry-candidates`", eval_map)
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_ocr_retry_candidates.v1`",
+            eval_map,
+        )
         self.assertIn("without inferring links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)

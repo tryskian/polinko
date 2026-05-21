@@ -177,6 +177,11 @@ Use this doc for operator procedure.
   - print read-only row-level actionables for one selected cohort
   - combine with `OUTCOME=<outcome>` and `LIMIT=<n>` for smaller manual
     triage slices
+- `make manual-evals-ocr-retry-candidates`
+  - print the read-only OCR retry candidate packet for the default
+    `ocr_retry_evidence` partial slice
+  - combine with `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>`
+    for explicit manual triage slices
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`
