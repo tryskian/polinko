@@ -1,4 +1,5 @@
 import base64
+import os
 import sqlite3
 import unittest
 import zipfile
@@ -9,6 +10,7 @@ from tempfile import TemporaryDirectory
 
 from polinko.api.manual_eval_contracts import MANUAL_EVALS_DB_SCHEMA_VERSION
 from tools.build_manual_evals_db import (
+    DEFAULT_IMAGE_ROOTS,
     HistorySource,
     _backup_existing_output_db,
     build_manual_evals_db,
@@ -280,6 +282,45 @@ class BuildManualEvalsDbTests(unittest.TestCase):
                 ).fetchone()[0]
 
             self.assertEqual(Path(str(resolved_path)), extracted_path)
+
+    def test_default_image_roots_include_tracked_eval_snapshots(self) -> None:
+        self.assertIn(Path("docs/eval"), DEFAULT_IMAGE_ROOTS)
+
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            image_path = (
+                tmp / "docs" / "eval" / "beta_1_0" / "curated_eval_snapshot_1.png"
+            )
+            image_path.parent.mkdir(parents=True, exist_ok=True)
+            image_path.write_bytes(_PNG_1X1)
+            _init_history_db(
+                history_db,
+                source_name="curated_eval_snapshot_1.png",
+            )
+
+            previous_cwd = Path.cwd()
+            try:
+                os.chdir(tmp)
+                result = build_manual_evals_db(
+                    history_db=history_db,
+                    output_db=output_db,
+                    include_thumbnails=False,
+                )
+            finally:
+                os.chdir(previous_cwd)
+
+            self.assertEqual(result["images_missing"], 0)
+            with closing(sqlite3.connect(output_db)) as conn:
+                resolved_path = conn.execute(
+                    "SELECT resolved_path FROM image_assets LIMIT 1"
+                ).fetchone()[0]
+
+            self.assertEqual(
+                Path(str(resolved_path)),
+                Path("docs/eval/beta_1_0/curated_eval_snapshot_1.png"),
+            )
 
     def test_build_combines_multiple_history_sources_with_provenance(self) -> None:
         with TemporaryDirectory() as tmpdir:

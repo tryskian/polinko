@@ -44,6 +44,7 @@ DEFAULT_EXCLUDE_PREFIXES: tuple[str, ...] = (
 DEFAULT_IMAGE_ROOTS: tuple[Path, ...] = (
     Path("docs/peanut/assets/screenshots"),
     Path("docs/peanut/assets/screenshots/ocr_evals_legacy"),
+    Path("docs/eval"),
     Path.home() / "Downloads",
     Path.home() / "Pictures",
     Path.home() / "Screenshots",

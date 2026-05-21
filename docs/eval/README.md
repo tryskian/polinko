@@ -57,8 +57,9 @@ notes, exports, and runtime history.
   - refreshes preserve the previous warehouse under
     `.local_archive/manual-evals-db-refresh-*` before rebuilding
   - inspect warehouse health with `make manual-evals-db-health`
-  - image resolution checks extracted files first, then matching files inside
-    `.zip` archives under configured image roots
+  - image resolution checks extracted files first across private screenshot
+    roots, tracked `docs/eval/` snapshots, and local export roots, then
+    matching files inside `.zip` archives under configured image roots
 - active chat artifacts:
   - `POST /chat`
   - `/chats/*`

@@ -236,6 +236,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-078: Resolve manual eval images from local export archives",
             "`zip_path::member`",
             "archived bytes",
+            "## D-079: Resolve manual eval images from tracked eval snapshots",
+            "`docs/eval/`",
+            "Curated eval evidence",
         ):
             self.assertIn(expected, decisions)
 
@@ -252,7 +255,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-db-health` reports read-only source-quality",
             "missing image assets",
             "feedback-to-result links",
-            "matching files inside `.zip` archives",
+            "tracked `docs/eval/`",
+            "matching files inside `.zip`",
+            "archives under configured image roots",
             "without extracting files",
         ):
             self.assertIn(expected, state)
@@ -265,6 +270,7 @@ class ResearchModelContractTests(unittest.TestCase):
             "inspect warehouse health with `make manual-evals-db-health`", eval_map
         )
         self.assertIn("matching files inside", eval_map)
+        self.assertIn("tracked `docs/eval/` snapshots", eval_map)
         self.assertIn("`.zip` archives", eval_map)
 
         for expected in (

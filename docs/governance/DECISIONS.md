@@ -1070,3 +1070,18 @@ or branch history instead.
   unresolved OCR evidence exists locally inside ChatGPT export archives rather
   than extracted directories. The builder should use that local evidence
   directly while keeping the live warehouse refresh backup-first and explicit.
+
+## D-079: Resolve manual eval images from tracked eval snapshots
+
+- Date: `2026-05-20`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `image_resolution`, `docs_eval`, `local_evidence`
+- Decision: The manual eval warehouse builder includes `docs/eval/` in the
+  default OCR source-image roots, after private peanut screenshot roots and
+  before loose home-directory export roots. Tracked eval snapshot images are
+  therefore resolved as curated evidence before the builder falls back to
+  uncurated local export folders and archives.
+- Why: The missing-image audit found screenshot assets already present under
+  the tracked Beta 1.0 eval snapshot. Curated eval evidence should not remain
+  invisible to the integrated warehouse or be counted as absent historical
+  evidence.
