@@ -138,6 +138,13 @@ Last updated: 2026-05-21
   - OCR retry source-provenance packets expose source-history feedback message
     presence plus exact OCR source/result message IDs when they are already
     present in the warehouse; context-only OCR rows remain not exact links
+  - `make manual-evals-ocr-retry-input-packet` prints a read-only OCR retry
+    input packet for selected OCR retry candidates, using
+    `schema_version=polinko.manual_eval_ocr_retry_input_packet.v1`
+  - OCR retry input packets expose feedback IDs, source sessions, source image
+    names, resolved image status, OCR run IDs, feedback source-message
+    previews, and exact-link blocker state before any rerun or feedback
+    closure
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then

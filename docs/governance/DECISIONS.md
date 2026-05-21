@@ -1249,3 +1249,21 @@ or branch history instead.
   but closure still needs proof of what message provenance is exact. The
   provenance packet reads only referenced source-history rows, keeps terminal
   output bounded, and preserves context-only OCR rows as not exact links.
+
+## D-090: Packet OCR retry rerun inputs read-only
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `input_packet`
+- Decision: `make manual-evals-ocr-retry-input-packet` prints a read-only OCR
+  retry input packet for selected OCR retry candidates. The terminal report
+  and JSON export expose
+  `schema_version=polinko.manual_eval_ocr_retry_input_packet.v1`, feedback
+  IDs, source sessions, source image names, resolved image status, OCR run
+  IDs, feedback source-message previews, and exact-link blocker state before
+  any rerun or feedback closure.
+- Why: Source-verification and source-provenance packets show the evidence
+  chain, but rerun/case-curation work needs a compact input surface. The input
+  packet composes those reports without adding new linkage heuristics, keeps
+  the warehouse read-only, and makes missing OCR source/result message
+  provenance explicit.

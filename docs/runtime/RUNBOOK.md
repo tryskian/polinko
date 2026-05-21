@@ -198,6 +198,14 @@ Use this doc for operator procedure.
     for explicit manual triage slices
   - use source-history feedback message presence and exact OCR source/result
     message IDs already present in the warehouse before reruns or closure
+- `make manual-evals-ocr-retry-input-packet`
+  - print the read-only OCR retry input packet for the default
+    `ocr_retry_evidence` partial slice
+  - combine with `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>`
+    for explicit manual triage slices
+  - use verified source candidates plus source-history provenance to prepare
+    rerun/case-curation inputs without closing feedback or mutating the
+    warehouse
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

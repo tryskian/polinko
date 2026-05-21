@@ -9,16 +9,19 @@ from tools.manual_evals_db_health import (
     ACTIONABLES_SCHEMA_VERSION,
     COHORTS_SCHEMA_VERSION,
     OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
+    OCR_RETRY_INPUT_PACKET_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_PROVENANCE_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
     build_manual_evals_health_report,
     build_ocr_retry_candidates_report,
+    build_ocr_retry_input_packet_report,
     build_ocr_retry_source_provenance_report,
     build_ocr_retry_source_verification_report,
     build_open_feedback_actionables_report,
     build_open_feedback_cohorts_report,
     format_manual_evals_health_report,
     format_ocr_retry_candidates_report,
+    format_ocr_retry_input_packet_report,
     format_ocr_retry_source_provenance_report,
     format_ocr_retry_source_verification_report,
     format_open_feedback_actionables_report,
@@ -138,6 +141,13 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             source_provenance_summary = format_ocr_retry_source_provenance_report(
                 source_provenance
             )
+            input_packet = build_ocr_retry_input_packet_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            input_packet_summary = format_ocr_retry_input_packet_report(input_packet)
             after_history = history_db.stat().st_mtime_ns
             after_output = output_db.stat().st_mtime_ns
 
@@ -512,6 +522,73 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 source_provenance_summary,
             )
             self.assertIn("exact_feedback_link=yes", source_provenance_summary)
+            self.assertEqual(
+                input_packet["schema_version"],
+                OCR_RETRY_INPUT_PACKET_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                input_packet["verification_schema_version"],
+                OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                input_packet["provenance_schema_version"],
+                OCR_RETRY_SOURCE_PROVENANCE_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                input_packet["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "input_items": 1,
+                    "blocked_input_items": 0,
+                    "feedback_inputs": 1,
+                    "feedback_sources_found": 1,
+                    "rerun_inputs": 1,
+                    "resolved_rerun_inputs": 0,
+                    "unresolved_rerun_inputs": 1,
+                    "ocr_source_message_ids_present": 1,
+                    "ocr_result_message_ids_present": 1,
+                    "exact_feedback_result_links": 1,
+                    "limit_applied": False,
+                },
+            )
+            input_item = input_packet["input_items"][0]
+            self.assertEqual(
+                input_item["blocker_state"],
+                {
+                    "state": "ready",
+                    "reason_code": "",
+                    "reason": "",
+                    "next_action": "review_exact_link_before_feedback_closure",
+                },
+            )
+            self.assertEqual(
+                input_item["feedback_inputs"][0]["source_message"]["content_preview"],
+                "hello world response that received manual feedback",
+            )
+            self.assertEqual(input_item["rerun_inputs"][0]["run_id"], "ocr-1")
+            self.assertTrue(input_item["rerun_inputs"][0]["exact_feedback_result_link"])
+            self.assertEqual(
+                input_item["rerun_inputs"][0]["image_asset"]["status"], "missing"
+            )
+            self.assertIn(
+                "manual eval OCR retry input packet: state=ok rows=1/1 items=1 "
+                "blocked=0 feedback_inputs=1/1 rerun_inputs=1 resolved=0/1 "
+                "source_message_ids=1 result_message_ids=1 exact_links=1",
+                input_packet_summary,
+            )
+            self.assertIn(
+                "blocker=ready next=review_exact_link_before_feedback_closure",
+                input_packet_summary,
+            )
+            self.assertIn(
+                "feedback=1 message=m-result-1 source_state=found role=assistant",
+                input_packet_summary,
+            )
+            self.assertIn(
+                "ocr=ocr-1 source_image=guardrail-note.txt image_status=missing",
+                input_packet_summary,
+            )
 
             with closing(sqlite3.connect(output_db)) as conn:
                 self.assertEqual(
@@ -634,6 +711,13 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             source_provenance_summary = format_ocr_retry_source_provenance_report(
                 source_provenance
             )
+            input_packet = build_ocr_retry_input_packet_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            input_packet_summary = format_ocr_retry_input_packet_report(input_packet)
 
             self.assertEqual(
                 retry_candidates["counts"],
@@ -803,6 +887,55 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 source_provenance_summary,
             )
             self.assertIn("exact_feedback_link=no", source_provenance_summary)
+            self.assertEqual(
+                input_packet["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "input_items": 1,
+                    "blocked_input_items": 1,
+                    "feedback_inputs": 1,
+                    "feedback_sources_found": 1,
+                    "rerun_inputs": 2,
+                    "resolved_rerun_inputs": 0,
+                    "unresolved_rerun_inputs": 2,
+                    "ocr_source_message_ids_present": 2,
+                    "ocr_result_message_ids_present": 2,
+                    "exact_feedback_result_links": 0,
+                    "limit_applied": False,
+                },
+            )
+            input_item = input_packet["input_items"][0]
+            self.assertEqual(
+                input_item["blocker_state"]["reason_code"],
+                "missing_exact_feedback_result_link",
+            )
+            self.assertEqual(
+                input_item["feedback_inputs"][0]["source_message"]["content_preview"],
+                "manual feedback points to an unlinked assistant row",
+            )
+            self.assertEqual(input_item["rerun_inputs"][0]["run_id"], "ocr-new")
+            self.assertEqual(
+                input_item["rerun_inputs"][0]["result_message"]["content_preview"],
+                "second OCR text for ambiguity review",
+            )
+            self.assertFalse(
+                input_item["rerun_inputs"][0]["exact_feedback_result_link"]
+            )
+            self.assertIn(
+                "manual eval OCR retry input packet: state=ok rows=1/1 items=1 "
+                "blocked=1 feedback_inputs=1/1 rerun_inputs=2 resolved=0/2 "
+                "source_message_ids=2 result_message_ids=2 exact_links=0",
+                input_packet_summary,
+            )
+            self.assertIn(
+                "blocker=blocked reason=missing_exact_feedback_result_link",
+                input_packet_summary,
+            )
+            self.assertIn(
+                "ocr=ocr-new source_image=second.png image_status=missing",
+                input_packet_summary,
+            )
 
     def test_health_report_handles_missing_warehouse(self) -> None:
         with TemporaryDirectory() as tmpdir:
