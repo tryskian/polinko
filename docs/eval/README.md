@@ -117,6 +117,14 @@ notes, exports, and runtime history.
     thumbnail dimensions, source previews, and payload-only command previews;
     `ARTIFACT_IDS=<artifact_id>` narrows the preview without running OCR or
     mutating the warehouse
+  - build a human-selection OCR retry shortlist without mutation with
+    `make manual-evals-ocr-retry-selection-review`
+  - JSON OCR retry selection-review export uses
+    `schema_version=polinko.manual_eval_ocr_retry_selection_review.v1`
+  - selection reviews collapse duplicate source image artifacts from rerun
+    plans and expose feedback IDs, OCR run IDs, source image names, thumbnail
+    dimensions, source previews, candidate payload previews, and explicit
+    dispositions: `rerun_input`, `curated_case`, or `context_only`
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

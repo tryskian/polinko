@@ -12,6 +12,7 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_INPUT_PACKET_SCHEMA_VERSION,
     OCR_RETRY_RERUN_MANIFEST_SCHEMA_VERSION,
     OCR_RETRY_RERUN_PLAN_SCHEMA_VERSION,
+    OCR_RETRY_SELECTION_REVIEW_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_PROVENANCE_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
     build_manual_evals_health_report,
@@ -19,6 +20,7 @@ from tools.manual_evals_db_health import (
     build_ocr_retry_input_packet_report,
     build_ocr_retry_rerun_manifest_report,
     build_ocr_retry_rerun_plan_report,
+    build_ocr_retry_selection_review_report,
     build_ocr_retry_source_provenance_report,
     build_ocr_retry_source_verification_report,
     build_open_feedback_actionables_report,
@@ -28,6 +30,7 @@ from tools.manual_evals_db_health import (
     format_ocr_retry_input_packet_report,
     format_ocr_retry_rerun_manifest_report,
     format_ocr_retry_rerun_plan_report,
+    format_ocr_retry_selection_review_report,
     format_ocr_retry_source_provenance_report,
     format_ocr_retry_source_verification_report,
     format_open_feedback_actionables_report,
@@ -1350,6 +1353,147 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 "operation=ocr_retry_rerun_or_case_curation",
                 rerun_plan_summary,
             )
+
+    def test_ocr_retry_selection_review_collapses_duplicate_source_artifacts(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            image_dir = tmp / "images"
+            image_dir.mkdir(parents=True, exist_ok=True)
+            (image_dir / "image1.png").write_bytes(_PNG_1X1)
+            _init_history_db(history_db, feedback_outcome="partial")
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET status = 'open',
+                        recommended_action = 'Retry OCR with a tighter crop and attach fresh image evidence.',
+                        action_taken = NULL
+                    """
+                )
+                conn.execute(
+                    """
+                    UPDATE ocr_runs
+                    SET source_message_id = NULL,
+                        result_message_id = NULL
+                    """
+                )
+                conn.execute(
+                    """
+                    INSERT INTO ocr_runs (
+                      run_id, session_id, source_name, mime_type,
+                      source_message_id, result_message_id, status,
+                      extracted_text, created_at
+                    ) VALUES (
+                      'ocr-new', 'chat-1', 'file-abc123-image1.png', 'image/png',
+                      NULL, NULL, 'ok', 'newer OCR text', 190
+                    )
+                    """
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES (
+                      'chat-1', 'assistant',
+                      'feedback source row for duplicate source artifact',
+                      155, 'm-result-1', NULL
+                    )
+                    """
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[image_dir],
+                include_thumbnails=False,
+            )
+
+            selection_review = build_ocr_retry_selection_review_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            summary = format_ocr_retry_selection_review_report(selection_review)
+
+            self.assertEqual(
+                selection_review["schema_version"],
+                OCR_RETRY_SELECTION_REVIEW_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                selection_review["rerun_plan_schema_version"],
+                OCR_RETRY_RERUN_PLAN_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                selection_review["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "plan_items": 1,
+                    "planned_source_artifacts": 2,
+                    "shortlist_items": 1,
+                    "collapsed_duplicate_source_artifacts": 1,
+                    "candidate_ocr_runs": 2,
+                    "decision_pending_items": 1,
+                    "feedback_closure_blocked_items": 1,
+                    "ocr_source_message_ids_present": 0,
+                    "ocr_result_message_ids_present": 0,
+                    "exact_feedback_result_links": 0,
+                    "requested_artifact_ids": 0,
+                    "unmatched_artifact_ids": 0,
+                    "preview_only": True,
+                    "limit_applied": False,
+                },
+            )
+            item = selection_review["selection_review_items"][0]
+            self.assertEqual(item["feedback_ids"], [1])
+            self.assertEqual(
+                item["selection_decision"]["state"], "needs_human_selection"
+            )
+            self.assertEqual(
+                item["selection_decision"]["allowed_actions"],
+                ["rerun_input", "curated_case", "context_only"],
+            )
+            self.assertEqual(
+                item["selection_decision"]["reason_code"],
+                "duplicate_source_artifacts_collapsed",
+            )
+            self.assertEqual(item["feedback_closure_state"]["state"], "blocked")
+            self.assertEqual(item["source_image_name"], "file-abc123-image1.png")
+            self.assertEqual(Path(item["resolved_path"]).name, "image1.png")
+            self.assertEqual(item["counts"]["candidate_ocr_runs"], 2)
+            self.assertEqual(item["counts"]["duplicate_source_artifacts"], 1)
+            candidate_ids = {
+                candidate["ocr_run_id"] for candidate in item["candidate_ocr_runs"]
+            }
+            self.assertEqual(candidate_ids, {"ocr-1", "ocr-new"})
+            artifact_ids = {
+                candidate["artifact_id"] for candidate in item["candidate_ocr_runs"]
+            }
+            self.assertEqual(
+                artifact_ids,
+                {"chat-1::ocr-new::ocr-1", "chat-1::ocr-new::ocr-new"},
+            )
+
+            self.assertIn(
+                "manual eval OCR retry selection review: state=ok rows=1/1 "
+                "items=1 planned_artifacts=2 collapsed_duplicates=1 "
+                "candidate_runs=2 decision_pending=1 closure_blocked=1",
+                summary,
+            )
+            self.assertIn(
+                "decision=needs_human_selection "
+                "actions=rerun_input,curated_case,context_only",
+                summary,
+            )
+            self.assertIn("candidate_runs=2 duplicate_artifacts=1", summary)
+            self.assertIn("ocr=ocr-1", summary)
+            self.assertIn("ocr=ocr-new", summary)
 
     def test_health_report_handles_missing_warehouse(self) -> None:
         with TemporaryDirectory() as tmpdir:
