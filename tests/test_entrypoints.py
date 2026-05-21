@@ -6,6 +6,13 @@ import types
 import unittest
 
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _read(relative_path: str) -> str:
+    return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+
+
 class EntrypointTests(unittest.TestCase):
     def test_cli_entrypoint_imports_without_running_loop(self) -> None:
         cli_main = importlib.import_module("main")
@@ -80,6 +87,56 @@ class EntrypointTests(unittest.TestCase):
         self.assertNotIn(
             "polinko-repositioning-system", str(cli_main._project_python_candidates())
         )
+
+    def test_operator_entrypoint_compatibility_contract_is_wired(self) -> None:
+        boundary = _read("docs/runtime/PACKAGE_BOUNDARY.md")
+        decisions = _read("docs/governance/DECISIONS.md")
+        runtime_config = _read("makefiles/config/runtime.mk")
+        runtime_make = _read("makefiles/runtime.mk")
+        pyproject = _read("pyproject.toml")
+        dockerfile = _read("Dockerfile")
+        server_daemon = _read("tools/run_server_daemon.sh")
+        local_eval_gate = _read("tools/run_local_eval_gate.sh")
+
+        for expected in (
+            "## Entrypoint Compatibility Contract",
+            "`make chat`",
+            "`python main.py`",
+            "`polinko-chat`",
+            "`make server` / `make localhost`",
+            "`make server-daemon`",
+            "local eval gates",
+            "Docker CMD",
+        ):
+            self.assertIn(expected, boundary)
+
+        self.assertIn(
+            "## D-066: Treat entrypoint compatibility as an explicit audit surface",
+            decisions,
+        )
+        self.assertIn("CLI_ENTRYPOINT ?= -m polinko.cli", runtime_config)
+        self.assertIn("ASGI_APP ?= server:app", runtime_config)
+        self.assertIn("chat:\n\t$(PYTHON) $(CLI_ENTRYPOINT)", runtime_make)
+        self.assertIn(
+            "localhost server:\n\t$(PYTHON) -m uvicorn $(ASGI_APP)",
+            runtime_make,
+        )
+        self.assertIn('polinko-chat = "polinko.cli:main"', pyproject)
+        self.assertIn('"server:app"', dockerfile)
+        self.assertIn("asgi_app=${ASGI_APP:-server:app}", server_daemon)
+        self.assertIn("asgi_app=${ASGI_APP:-server:app}", local_eval_gate)
+
+    def test_root_launchers_stay_thin_compatibility_surfaces(self) -> None:
+        root_modules = sorted(path.name for path in REPO_ROOT.glob("*.py"))
+        main_text = _read("main.py")
+        server_text = _read("server.py")
+
+        self.assertEqual(root_modules, ["main.py", "server.py"])
+        self.assertIn("from polinko.cli import main as run_main", main_text)
+        self.assertNotIn("from agents import", main_text)
+        self.assertNotIn("from openai import", main_text)
+        self.assertIn('import_module("polinko.asgi")', server_text)
+        self.assertIn("sys.modules[__name__] = _module", server_text)
 
 
 if __name__ == "__main__":

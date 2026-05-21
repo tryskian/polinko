@@ -29,6 +29,10 @@ Last updated: 2026-05-20
   - the package-boundary audit confirms active `src/` and `tools/` Python
     imports use `polinko.*`, while remaining root compatibility surfaces are
     launchers only
+  - the entrypoint compatibility contract maps `make chat`, `python main.py`,
+    `polinko-chat`, `make server`, `make localhost`, `make server-daemon`,
+    local eval gates, and Docker to their packaged CLI or ASGI implementation
+    paths
   - the root launcher readiness audit records `server.py` as not
     retirement-ready
     while `server:app` remains active in Docker, Make defaults, server-daemon,

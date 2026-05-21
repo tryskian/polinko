@@ -73,6 +73,27 @@ Current audit result:
 | `main.py` | stable direct `python main.py` launcher and project-venv restart hints | direct root CLI launches are no longer supported |
 | `server.py` | stable `server:app` ASGI string used by Make defaults, server-daemon, local eval gates, Docker, and older scripts | operator, Docker, and eval defaults have an approved replacement ASGI string |
 
+## Entrypoint Compatibility Contract
+
+The remaining root files are compatibility launchers. They do not own runtime
+implementation.
+
+| Operator path | Stable target | Canonical implementation |
+| --- | --- | --- |
+| `make chat` | `$(PYTHON) -m polinko.cli` through `CLI_ENTRYPOINT` | `polinko.cli.main` |
+| `python main.py` | root compatibility launcher with project-venv restart hints | lazy import of `polinko.cli.main` |
+| `polinko-chat` | installed console script | `polinko.cli:main` |
+| `make server` / `make localhost` | `uvicorn server:app` through `ASGI_APP` | root `server.py` forwarding to `polinko.asgi` |
+| `make server-daemon` | repo-managed daemon using `ASGI_APP` | `tools/run_server_daemon.sh` defaulting to `server:app` |
+| local eval gates | fresh local server using `ASGI_APP` | `tools/run_local_eval_gate.sh` defaulting to `server:app` |
+| Docker CMD | `uvicorn server:app` | root `server.py` forwarding to `polinko.asgi` |
+
+Changing the CLI target requires updating the Make runtime config, root
+`main.py`, `pyproject.toml`, the package-install check, and focused entrypoint
+tests in the same kernel. Changing the ASGI target requires updating Docker,
+Make runtime config, server-daemon startup, local eval gates, API smoke
+expectations, and this package-boundary contract in the same kernel.
+
 ### Readiness Snapshot: 2026-05-20
 
 This snapshot records the current retirement posture after the root-surface
