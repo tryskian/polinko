@@ -58,8 +58,11 @@ notes, exports, and runtime history.
     `.local_archive/manual-evals-db-refresh-*` before rebuilding
   - inspect warehouse health with `make manual-evals-db-health`
   - image resolution checks extracted files first across private screenshot
-    roots, tracked `docs/eval/` snapshots, and local export roots, then
-    matching files inside `.zip` archives under configured image roots
+    roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
+    and local export roots, then matching files inside `.zip` archives under
+    configured image roots
+  - remaining unresolved text fixtures are historical source-name debt unless
+    their seed files are explicitly curated as source files
 - active chat artifacts:
   - `POST /chat`
   - `/chats/*`

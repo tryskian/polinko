@@ -45,6 +45,7 @@ DEFAULT_IMAGE_ROOTS: tuple[Path, ...] = (
     Path("docs/peanut/assets/screenshots"),
     Path("docs/peanut/assets/screenshots/ocr_evals_legacy"),
     Path("docs/eval"),
+    Path.home() / "Library/CloudStorage/Dropbox/Screenshots",
     Path.home() / "Downloads",
     Path.home() / "Pictures",
     Path.home() / "Screenshots",
