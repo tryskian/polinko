@@ -140,6 +140,14 @@ notes, exports, and runtime history.
     templates, requires `rerun_input`, `curated_case`, or `context_only`,
     verifies selected artifact IDs against the matching shortlist item, and
     flags missing/stale/duplicate decisions before any OCR execution surface
+  - preview local OCR retry decision application without mutation with
+    `make manual-evals-ocr-retry-selection-apply-preview`
+  - JSON OCR retry selection-apply preview export uses
+    `schema_version=polinko.manual_eval_ocr_retry_selection_apply_preview.v1`
+  - apply previews require validation `state=ok` before emitting would-apply
+    payloads, split decisions by `rerun_input`, `curated_case`, and
+    `context_only`, and keep validation blockers visible before any OCR
+    execution surface
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

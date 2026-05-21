@@ -250,6 +250,18 @@ Use this doc for operator procedure.
     selected artifact IDs to catch missing, stale, duplicate, or mismatched
     selections before any OCR rerun, curation, feedback closure, live eval
     write, or warehouse mutation
+- `make manual-evals-ocr-retry-selection-apply-preview`
+  - print a read-only would-apply plan from a valid local OCR retry selection
+    JSON without mutating eval data
+  - combine with `SELECTION_PATH=<path>`, `COHORT=<cohort_id>`,
+    `OUTCOME=<outcome>`, `LIMIT=<n>`, and `ARTIFACT_IDS=<artifact_id>` for
+    explicit manual source-artifact review
+  - require selection validation `state=ok` before payload previews are
+    emitted; otherwise inspect the validation blockers and keep the preview
+    blocked
+  - use the split by `rerun_input`, `curated_case`, and `context_only` to
+    inspect would-apply payloads before any OCR rerun, curation, feedback
+    closure, live eval write, or warehouse mutation
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

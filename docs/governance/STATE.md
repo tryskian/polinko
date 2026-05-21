@@ -187,6 +187,15 @@ Last updated: 2026-05-21
     shortlist item, flags missing/stale/duplicate decisions, and remains
     read-only without running OCR, closing feedback, writing live evals, or
     mutating the warehouse
+  - `make manual-evals-ocr-retry-selection-apply-preview` prints a read-only
+    would-apply preview from a valid local OCR retry decision JSON, using
+    `schema_version=polinko.manual_eval_ocr_retry_selection_apply_preview.v1`
+  - OCR retry selection apply previews require validation `state=ok` before
+    emitting would-apply payloads, split valid decisions by `rerun_input`,
+    `curated_case`, and `context_only`, preserve selected artifact provenance,
+    and keep pending/stale/duplicate/mismatched selections as blockers without
+    running OCR, closing feedback, writing live evals, or mutating the
+    warehouse
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then

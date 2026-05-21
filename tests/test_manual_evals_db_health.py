@@ -13,6 +13,7 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_INPUT_PACKET_SCHEMA_VERSION,
     OCR_RETRY_RERUN_MANIFEST_SCHEMA_VERSION,
     OCR_RETRY_RERUN_PLAN_SCHEMA_VERSION,
+    OCR_RETRY_SELECTION_APPLY_PREVIEW_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_VALIDATION_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_TEMPLATE_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_REVIEW_SCHEMA_VERSION,
@@ -23,6 +24,7 @@ from tools.manual_evals_db_health import (
     build_ocr_retry_input_packet_report,
     build_ocr_retry_rerun_manifest_report,
     build_ocr_retry_rerun_plan_report,
+    build_ocr_retry_selection_apply_preview_report,
     build_ocr_retry_selection_validation_report,
     build_ocr_retry_selection_template_report,
     build_ocr_retry_selection_review_report,
@@ -35,6 +37,7 @@ from tools.manual_evals_db_health import (
     format_ocr_retry_input_packet_report,
     format_ocr_retry_rerun_manifest_report,
     format_ocr_retry_rerun_plan_report,
+    format_ocr_retry_selection_apply_preview_report,
     format_ocr_retry_selection_validation_report,
     format_ocr_retry_selection_template_report,
     format_ocr_retry_selection_review_report,
@@ -1640,6 +1643,43 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             )
             self.assertIn("issues=missing_decision", missing_summary)
 
+            missing_apply_preview = build_ocr_retry_selection_apply_preview_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            missing_apply_summary = format_ocr_retry_selection_apply_preview_report(
+                missing_apply_preview
+            )
+
+            self.assertEqual(
+                missing_apply_preview["schema_version"],
+                OCR_RETRY_SELECTION_APPLY_PREVIEW_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                missing_apply_preview["selection_validation_schema_version"],
+                OCR_RETRY_SELECTION_VALIDATION_SCHEMA_VERSION,
+            )
+            self.assertEqual(missing_apply_preview["state"], "blocked")
+            self.assertEqual(missing_apply_preview["validation_state"], "attention")
+            self.assertEqual(missing_apply_preview["counts"]["preview_items"], 0)
+            self.assertEqual(
+                missing_apply_preview["counts"]["blocked_by_validation"],
+                1,
+            )
+            self.assertEqual(
+                missing_apply_preview["application_preview"]["items"],
+                [],
+            )
+            self.assertIn(
+                "manual eval OCR retry selection apply preview: state=blocked "
+                "validation=attention rows=1/1 items=1",
+                missing_apply_summary,
+            )
+            self.assertIn("validation_blockers:", missing_apply_summary)
+            self.assertIn("application_preview_items: none", missing_apply_summary)
+
             selection_path = tmp / "ocr_retry_selection.json"
             selected_artifact_id = sorted(artifact_ids)[0]
             selection_path.write_text(
@@ -1678,6 +1718,84 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             self.assertIn("state=valid action=rerun_input issues=none", valid_summary)
             self.assertIn(f"selected_artifacts={selected_artifact_id}", valid_summary)
 
+            valid_apply_preview = build_ocr_retry_selection_apply_preview_report(
+                db_path=output_db,
+                selection_path=selection_path,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            valid_apply_summary = format_ocr_retry_selection_apply_preview_report(
+                valid_apply_preview
+            )
+
+            self.assertEqual(valid_apply_preview["state"], "ok")
+            self.assertEqual(valid_apply_preview["validation_state"], "ok")
+            self.assertEqual(valid_apply_preview["counts"]["preview_items"], 1)
+            self.assertEqual(valid_apply_preview["counts"]["rerun_input_items"], 1)
+            self.assertEqual(valid_apply_preview["counts"]["curated_case_items"], 0)
+            self.assertEqual(valid_apply_preview["counts"]["context_only_items"], 0)
+            self.assertEqual(valid_apply_preview["counts"]["selected_artifacts"], 1)
+            self.assertEqual(valid_apply_preview["counts"]["blocked_by_validation"], 0)
+            apply_item = valid_apply_preview["application_preview"]["items"][0]
+            self.assertEqual(apply_item["mutation"], "none")
+            self.assertEqual(apply_item["execution"], "none")
+            self.assertEqual(apply_item["selected_action"], "rerun_input")
+            self.assertEqual(
+                apply_item["selected_artifact_ids"], [selected_artifact_id]
+            )
+            self.assertEqual(
+                apply_item["selected_artifacts"][0]["artifact_id"],
+                selected_artifact_id,
+            )
+            self.assertEqual(
+                valid_apply_preview["application_preview"]["actions"]["rerun_input"][0][
+                    "shortlist_id"
+                ],
+                template_item["shortlist_id"],
+            )
+            self.assertIn(
+                "manual eval OCR retry selection apply preview: state=ok "
+                "validation=ok rows=1/1 items=1",
+                valid_apply_summary,
+            )
+            self.assertIn("action=rerun_input", valid_apply_summary)
+            self.assertIn(f"artifact={selected_artifact_id}", valid_apply_summary)
+
+            selection_path.write_text(
+                json.dumps(
+                    {
+                        "decisions": [
+                            {
+                                "shortlist_id": template_item["shortlist_id"],
+                                "selected_action": "context_only",
+                                "rationale": "Keep this source as context.",
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            context_apply_preview = build_ocr_retry_selection_apply_preview_report(
+                db_path=output_db,
+                selection_path=selection_path,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+
+            self.assertEqual(context_apply_preview["state"], "ok")
+            self.assertEqual(context_apply_preview["counts"]["preview_items"], 1)
+            self.assertEqual(context_apply_preview["counts"]["rerun_input_items"], 0)
+            self.assertEqual(context_apply_preview["counts"]["context_only_items"], 1)
+            self.assertEqual(context_apply_preview["counts"]["selected_artifacts"], 0)
+            self.assertEqual(
+                context_apply_preview["application_preview"]["actions"]["context_only"][
+                    0
+                ]["selected_artifacts"],
+                [],
+            )
+
             selection_path.write_text(
                 json.dumps(
                     {
@@ -1708,6 +1826,22 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 1,
             )
             self.assertIn("issues=invalid_selected_action", invalid_action_summary)
+
+            invalid_action_apply = build_ocr_retry_selection_apply_preview_report(
+                db_path=output_db,
+                selection_path=selection_path,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+
+            self.assertEqual(invalid_action_apply["state"], "blocked")
+            self.assertEqual(invalid_action_apply["validation_state"], "error")
+            self.assertEqual(invalid_action_apply["counts"]["preview_items"], 0)
+            self.assertEqual(
+                invalid_action_apply["application_preview"]["items"],
+                [],
+            )
 
             selection_path.write_text(
                 json.dumps(
