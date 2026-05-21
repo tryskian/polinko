@@ -75,7 +75,10 @@ notes, exports, and runtime history.
   - inspect the first OCR retry candidate packet without mutation with
     `make manual-evals-ocr-retry-candidates`
   - JSON OCR retry candidate export uses
-    `schema_version=polinko.manual_eval_ocr_retry_candidates.v1`
+    `schema_version=polinko.manual_eval_ocr_retry_candidates.v2`
+  - OCR retry candidate packets expose read-only readiness flags for
+    ambiguous same-session OCR context and missing explicit feedback-to-result
+    links before any reruns
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

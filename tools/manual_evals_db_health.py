@@ -14,7 +14,8 @@ from tools.manual_evals_db_status import data_freshness_status
 DEFAULT_DB_PATH = Path(".local/runtime_dbs/active/manual_evals.db")
 ACTIONABLES_SCHEMA_VERSION = "polinko.manual_eval_feedback_actionables.v1"
 COHORTS_SCHEMA_VERSION = "polinko.manual_eval_feedback_cohorts.v1"
-OCR_RETRY_CANDIDATES_SCHEMA_VERSION = "polinko.manual_eval_ocr_retry_candidates.v1"
+OCR_RETRY_CANDIDATES_SCHEMA_VERSION = "polinko.manual_eval_ocr_retry_candidates.v2"
+OCR_RETRY_TERMINAL_CONTEXT_LIMIT = 3
 
 COHORT_DESCRIPTIONS = {
     "ocr_retry_evidence": "Retry OCR/crop and attach fresh image evidence.",
@@ -935,6 +936,72 @@ def _latest_run_for_row(
     return evidence_rows[0] if evidence_rows else None
 
 
+def _feedback_has_ocr_result_link(row: dict[str, Any]) -> bool:
+    ocr_context = row.get("ocr_context")
+    if not isinstance(ocr_context, dict):
+        return False
+    return bool(ocr_context.get("linked_to_ocr_result"))
+
+
+def _linked_ocr_run_ids(
+    feedback_rows: Sequence[dict[str, Any]],
+    evidence_rows: Sequence[dict[str, Any]],
+) -> list[str]:
+    feedback_message_ids = {
+        str(row.get("message_id") or "")
+        for row in feedback_rows
+        if row.get("message_id")
+    }
+    if not feedback_message_ids:
+        return []
+    linked_run_ids: list[str] = []
+    for evidence_row in evidence_rows:
+        result_message_id = str(evidence_row.get("result_message_id") or "")
+        run_id = str(evidence_row.get("run_id") or "")
+        if result_message_id in feedback_message_ids and run_id:
+            linked_run_ids.append(run_id)
+    return linked_run_ids
+
+
+def _build_ocr_retry_readiness(
+    *,
+    feedback_rows: Sequence[dict[str, Any]],
+    evidence_rows: Sequence[dict[str, Any]],
+    latest_run: dict[str, Any],
+) -> dict[str, Any]:
+    linked_feedback_rows = sum(
+        1 for row in feedback_rows if _feedback_has_ocr_result_link(row)
+    )
+    unlinked_feedback_rows = max(0, len(feedback_rows) - linked_feedback_rows)
+    linked_run_ids = _linked_ocr_run_ids(feedback_rows, evidence_rows)
+    latest_run_id = str(latest_run.get("run_id") or "")
+    latest_run_is_linked = bool(latest_run_id and latest_run_id in linked_run_ids)
+    same_session_ocr_runs = len(evidence_rows)
+
+    flags: list[str] = []
+    if same_session_ocr_runs <= 0:
+        flags.append("no_same_session_ocr_context")
+    elif same_session_ocr_runs > 1:
+        flags.append("multiple_same_session_ocr_runs")
+    if unlinked_feedback_rows > 0:
+        flags.append("missing_feedback_to_result_link")
+    if latest_run_id and not latest_run_is_linked:
+        flags.append("latest_ocr_is_context_only")
+    if not latest_run_id:
+        flags.append("no_latest_same_session_ocr")
+
+    return {
+        "state": "needs_review" if flags else "ready",
+        "flags": flags,
+        "basis": "explicit_result_message_match_and_same_session_context",
+        "explicit_feedback_to_result_links": linked_feedback_rows,
+        "unlinked_feedback_rows": unlinked_feedback_rows,
+        "same_session_ocr_runs": same_session_ocr_runs,
+        "linked_ocr_run_ids": linked_run_ids,
+        "latest_ocr_is_confirmed_feedback_result": latest_run_is_linked,
+    }
+
+
 def _build_ocr_retry_candidate_groups(
     actionables: Sequence[dict[str, Any]],
     evidence_by_session: dict[str, list[dict[str, Any]]],
@@ -965,6 +1032,22 @@ def _build_ocr_retry_candidate_groups(
         feedback_id = _int_value(row.get("feedback_id"))
         group["feedback_ids"].append(feedback_id)
         group["feedback_rows"].append(_packet_feedback_row(row))
+
+    for group in groups.values():
+        feedback_rows = group.get("feedback_rows")
+        if not isinstance(feedback_rows, list):
+            feedback_rows = []
+        group_ocr_runs = group.get("ocr_runs")
+        if not isinstance(group_ocr_runs, list):
+            group_ocr_runs = []
+        latest_run = group.get("latest_same_session_ocr")
+        if not isinstance(latest_run, dict):
+            latest_run = {}
+        group["readiness"] = _build_ocr_retry_readiness(
+            feedback_rows=feedback_rows,
+            evidence_rows=group_ocr_runs,
+            latest_run=latest_run,
+        )
 
     def sort_key(item: dict[str, Any]) -> tuple[int, str]:
         feedback_rows = item.get("feedback_rows")
@@ -1015,6 +1098,12 @@ def build_ocr_retry_candidates_report(
             session_ids=[str(row.get("session_id") or "") for row in rows],
         )
         candidate_groups = _build_ocr_retry_candidate_groups(rows, evidence_by_session)
+        needs_review_groups = sum(
+            1
+            for group in candidate_groups
+            if isinstance(group.get("readiness"), dict)
+            and group["readiness"].get("state") == "needs_review"
+        )
 
     return {
         "schema_version": OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
@@ -1035,6 +1124,8 @@ def build_ocr_retry_candidates_report(
             "total_feedback_rows": len(all_rows),
             "returned_feedback_rows": len(rows),
             "candidate_groups": len(candidate_groups),
+            "ready_candidate_groups": len(candidate_groups) - needs_review_groups,
+            "needs_review_candidate_groups": needs_review_groups,
             "limit_applied": len(rows) < len(all_rows),
         },
         "candidate_groups": candidate_groups,
@@ -1392,6 +1483,38 @@ def _format_latest_ocr_line(latest_ocr: dict[str, Any]) -> str:
     )
 
 
+def _format_readiness_flags(readiness: dict[str, Any]) -> str:
+    flags = readiness.get("flags")
+    if not isinstance(flags, list) or not flags:
+        return "none"
+    return ",".join(str(item) for item in flags)
+
+
+def _format_ocr_context_line(ocr_run: dict[str, Any]) -> str:
+    image_asset = ocr_run.get("image_asset")
+    if not isinstance(image_asset, dict):
+        image_asset = {}
+    thumbnail = image_asset.get("thumbnail")
+    if not isinstance(thumbnail, dict):
+        thumbnail = {}
+    thumbnail_text = "none"
+    if thumbnail.get("available"):
+        thumbnail_text = (
+            f"{_int_value(thumbnail.get('width'))}x"
+            f"{_int_value(thumbnail.get('height'))}"
+        )
+    preview = _truncate_text(ocr_run.get("extracted_text_preview"), max_chars=80)
+    return (
+        f"ocr={ocr_run.get('run_id') or 'none'} "
+        f"source={ocr_run.get('source_name') or 'none'} "
+        f"status={ocr_run.get('status') or 'none'} "
+        f"image_status={image_asset.get('status') or 'unknown'} "
+        f"resolved={'yes' if image_asset.get('resolved_path') else 'no'} "
+        f"thumbnail={thumbnail_text} "
+        f"preview={preview or 'none'}"
+    )
+
+
 def format_ocr_retry_candidates_report(report: dict[str, Any]) -> str:
     manual_db = report.get("manual_evals_db")
     if not isinstance(manual_db, dict):
@@ -1410,6 +1533,7 @@ def format_ocr_retry_candidates_report(report: dict[str, Any]) -> str:
         f"{_int_value(counts.get('returned_feedback_rows'))}/"
         f"{_int_value(counts.get('total_feedback_rows'))} "
         f"groups={_int_value(counts.get('candidate_groups'))} "
+        f"needs_review={_int_value(counts.get('needs_review_candidate_groups'))} "
         f"outcome={filters.get('outcome') or 'all'} "
         f"cohort={filters.get('cohort') or 'all'} "
         f"limit={_int_value(filters.get('limit'))} "
@@ -1432,6 +1556,12 @@ def format_ocr_retry_candidates_report(report: dict[str, Any]) -> str:
         latest_ocr = group.get("latest_same_session_ocr")
         if not isinstance(latest_ocr, dict):
             latest_ocr = {}
+        readiness = group.get("readiness")
+        if not isinstance(readiness, dict):
+            readiness = {}
+        ocr_runs = group.get("ocr_runs")
+        if not isinstance(ocr_runs, list):
+            ocr_runs = []
         lines.extend(
             [
                 "- "
@@ -1441,8 +1571,30 @@ def format_ocr_retry_candidates_report(report: dict[str, Any]) -> str:
                 f"ocr_runs={_int_value(group.get('same_session_ocr_runs'))}",
                 f"  title={_display_text(group.get('title'))}",
                 f"  {_format_latest_ocr_line(latest_ocr)}",
+                "  readiness="
+                f"{readiness.get('state') or 'unknown'} "
+                f"flags={_format_readiness_flags(readiness)} "
+                "explicit_links="
+                f"{_int_value(readiness.get('explicit_feedback_to_result_links'))} "
+                "unlinked_feedback="
+                f"{_int_value(readiness.get('unlinked_feedback_rows'))} "
+                "latest_confirmed="
+                f"{'yes' if readiness.get('latest_ocr_is_confirmed_feedback_result') else 'no'}",
             ]
         )
+        if readiness.get("state") == "needs_review" and ocr_runs:
+            context_rows = [
+                item
+                for item in ocr_runs[:OCR_RETRY_TERMINAL_CONTEXT_LIMIT]
+                if isinstance(item, dict)
+            ]
+            if context_rows:
+                lines.append("  same_session_ocr_context:")
+                for ocr_run in context_rows:
+                    lines.append(f"  - {_format_ocr_context_line(ocr_run)}")
+                hidden_rows = len(ocr_runs) - len(context_rows)
+                if hidden_rows > 0:
+                    lines.append(f"  same_session_ocr_context_more={hidden_rows}")
         feedback_rows = group.get("feedback_rows")
         if not isinstance(feedback_rows, list):
             feedback_rows = []
