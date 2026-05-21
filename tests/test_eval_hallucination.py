@@ -1,10 +1,15 @@
+import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from tools.eval_hallucination import _MIN_ACCEPTABLE_SCORE
 from tools.eval_hallucination import _apply_deterministic_gate
+from tools.eval_hallucination import _build_deterministic_fixture_output
 from tools.eval_hallucination import _contains_forbidden_phrases
 from tools.eval_hallucination import _deterministic_assessment
+from tools.eval_hallucination import _load_cases
 from tools.eval_hallucination import _resolve_judge_client
 from tools.eval_hallucination import build_parser
 
@@ -42,6 +47,8 @@ class HallucinationEvalGateTests(unittest.TestCase):
                 "https://judge.example/v1",
                 "--evaluation-mode",
                 "judge",
+                "--chat-harness-mode",
+                "fixture",
                 "--min-acceptable-score",
                 "70",
             ]
@@ -49,7 +56,56 @@ class HallucinationEvalGateTests(unittest.TestCase):
         self.assertEqual(args.judge_api_key_env, "JUDGE_API_KEY")
         self.assertEqual(args.judge_base_url, "https://judge.example/v1")
         self.assertEqual(args.evaluation_mode, "judge")
+        self.assertEqual(args.chat_harness_mode, "fixture")
         self.assertEqual(args.min_acceptable_score, 70)
+
+    def test_load_cases_accepts_fixture_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "cases.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "cases": [
+                            {
+                                "id": "invoice_case",
+                                "policy_profile": "evidence_required",
+                                "seed_text": "Invoice total 1840.",
+                                "query": "What was the total?",
+                                "fixture_query": "invoice total 1840",
+                                "fixture_output": "The total is 1840.",
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            cases = _load_cases(path)
+
+        self.assertEqual(cases[0]["fixture_query"], "invoice total 1840")
+        self.assertEqual(cases[0]["fixture_output"], "The total is 1840.")
+
+    def test_build_deterministic_fixture_output_uses_seed_for_evidence_cases(
+        self,
+    ) -> None:
+        output = _build_deterministic_fixture_output(
+            {
+                "policy_profile": "evidence_required",
+                "seed_text": "Invoice total 1840.",
+                "fixture_output": "",
+            }
+        )
+
+        self.assertEqual(output, "Invoice total 1840.")
+
+    def test_build_deterministic_fixture_output_uses_safe_uncertainty_default(
+        self,
+    ) -> None:
+        output = _build_deterministic_fixture_output(
+            {"policy_profile": "uncertainty_required", "fixture_output": ""}
+        )
+
+        self.assertEqual(output, "I cannot verify that from the available evidence.")
 
     def test_contains_forbidden_phrases_matches_case_insensitive(self) -> None:
         answer = "This includes a Let Me Guess phrase."

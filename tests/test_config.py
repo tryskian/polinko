@@ -52,6 +52,7 @@ class ConfigTests(unittest.TestCase):
             cfg = load_config(dotenv_path="__missing__.env")
         self.assertFalse(cfg.vector_enabled)
         self.assertEqual(cfg.vector_db_path, ".local/runtime_dbs/active/vector.db")
+        self.assertEqual(cfg.vector_embedding_provider, "openai")
         self.assertEqual(cfg.vector_embedding_model, "text-embedding-3-small")
         self.assertEqual(cfg.vector_top_k, 2)
         self.assertEqual(cfg.vector_top_k_global, 2)
@@ -143,6 +144,7 @@ class ConfigTests(unittest.TestCase):
             "POLINKO_VECTOR_MIN_SIMILARITY_GLOBAL": "0.55",
             "POLINKO_VECTOR_MIN_SIMILARITY_SESSION": "0.35",
             "POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK": "true",
+            "POLINKO_VECTOR_EMBEDDING_PROVIDER": "local",
         }
         with patch.dict(os.environ, env, clear=True):
             cfg = load_config(dotenv_path="__missing__.env")
@@ -153,6 +155,16 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(cfg.vector_min_similarity_global, 0.55)
         self.assertEqual(cfg.vector_min_similarity_session, 0.35)
         self.assertTrue(cfg.vector_local_embedding_fallback)
+        self.assertEqual(cfg.vector_embedding_provider, "local")
+
+    def test_rejects_invalid_vector_embedding_provider(self) -> None:
+        env = {
+            "OPENAI_API_KEY": "sk-test-key-12345678901234567890",
+            "POLINKO_VECTOR_EMBEDDING_PROVIDER": "remote-ish",
+        }
+        with patch.dict(os.environ, env, clear=True):
+            with self.assertRaises(RuntimeError):
+                load_config(dotenv_path="__missing__.env")
 
     def test_responses_orchestration_requires_vector_store_id(self) -> None:
         env = {

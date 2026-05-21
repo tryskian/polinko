@@ -74,6 +74,8 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
             raise RuntimeError(f"Case #{index} must be an object.")
         case_id = str(case.get("id", f"case-{index}")).strip()
         query = str(case.get("query", "")).strip()
+        fixture_query = str(case.get("fixture_query", "")).strip() or query
+        fixture_output = str(case.get("fixture_output", "")).strip()
         policy_profile = str(case.get("policy_profile", "")).strip().lower()
         if (
             not case_id
@@ -97,6 +99,8 @@ def _load_cases(path: Path) -> list[dict[str, Any]]:
             {
                 "id": case_id,
                 "query": query,
+                "fixture_query": fixture_query,
+                "fixture_output": fixture_output,
                 "policy_profile": policy_profile,
                 "seed_text": seed_text,
                 "source_name": str(case.get("source_name", f"{case_id}.txt")).strip()
@@ -325,6 +329,17 @@ def _deterministic_assessment(
     }
 
 
+def _build_deterministic_fixture_output(case: dict[str, Any]) -> str:
+    configured = str(case.get("fixture_output", "")).strip()
+    if configured:
+        return configured
+    if str(case.get("policy_profile", "")).lower() == "evidence_required":
+        seed_text = str(case.get("seed_text", "")).strip()
+        if seed_text:
+            return seed_text
+    return "I cannot verify that from the available evidence."
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run hallucination-risk eval using an LLM judge over /chat outputs.",
@@ -375,6 +390,12 @@ def build_parser() -> argparse.ArgumentParser:
             "'deterministic' uses local rule checks only, "
             "'auto' uses judge when available and falls back to deterministic."
         ),
+    )
+    parser.add_argument(
+        "--chat-harness-mode",
+        choices=["live", "fixture"],
+        default="live",
+        help="Chat harness mode to use for /chat calls.",
     )
     parser.add_argument(
         "--strict",
@@ -473,6 +494,11 @@ def main() -> int:
         session_id = f"{args.session_prefix}-{run_id}-{case['id']}"
         print(f"\n[{index}/{len(cases)}] {case['id']}")
         try:
+            request_query = (
+                case["fixture_query"]
+                if args.chat_harness_mode == "fixture"
+                else case["query"]
+            )
             _create_chat(args.base_url, headers, session_id, args.timeout)
             # Keep eval deterministic by isolating each case from cross-chat retrieval noise.
             _set_memory_scope(
@@ -495,8 +521,12 @@ def main() -> int:
                 base_url=args.base_url,
                 headers=headers,
                 session_id=session_id,
-                message=case["query"],
+                message=request_query,
                 timeout=args.timeout,
+                harness_mode=args.chat_harness_mode,
+                fixture_output=_build_deterministic_fixture_output(case)
+                if args.chat_harness_mode == "fixture"
+                else case["fixture_output"],
             )
             answer = str(chat_payload.get("output", "")).strip()
             memory_used_raw = chat_payload.get("memory_used")
@@ -558,6 +588,8 @@ def main() -> int:
                 {
                     "id": case["id"],
                     "session_id": session_id,
+                    "query": case["query"],
+                    "request_query": request_query,
                     "pass": passed,
                     "judge_pass": judge_pass,
                     "score": score,

@@ -1,6 +1,7 @@
 import unittest
 
 from tools.eval_response_behaviour import _apply_deterministic_gate
+from tools.eval_response_behaviour import _build_deterministic_fixture_output
 from tools.eval_response_behaviour import _contains_forbidden_phrases
 from tools.eval_response_behaviour import _missing_required_all
 from tools.eval_response_behaviour import _missing_required_any_groups
@@ -92,6 +93,17 @@ class ResponseBehaviourEvalTests(unittest.TestCase):
         )
         self.assertTrue(result["pass"])
         self.assertEqual(result["fail_reasons"], [])
+
+    def test_build_deterministic_fixture_output_uses_required_anchor(self) -> None:
+        fixture = _build_deterministic_fixture_output(
+            {
+                "id": "explicit_uncertainty_when_context_missing",
+                "fixture_output": "",
+                "required_all": [],
+                "required_any_groups": [["cannot verify", "can't verify"]],
+            }
+        )
+        self.assertIn("cannot verify", fixture)
 
     def test_deterministic_gate_fails_missing_required_group(self) -> None:
         case = {

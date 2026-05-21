@@ -78,13 +78,23 @@ def chat_message(
     session_id: str,
     message: str,
     timeout: int,
+    harness_mode: str | None = None,
+    fixture_output: str | None = None,
 ) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "session_id": session_id,
+        "message": message,
+    }
+    if harness_mode:
+        payload["harness_mode"] = harness_mode
+    if fixture_output:
+        payload["fixture_output"] = fixture_output
     return request_json(
         method="POST",
         base_url=base_url,
         path="/chat",
         headers=headers,
-        payload={"session_id": session_id, "message": message},
+        payload=payload,
         timeout=timeout,
     )
 

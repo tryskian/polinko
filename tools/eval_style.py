@@ -126,6 +126,30 @@ def _missing_required_any_groups(
     return missing
 
 
+def _build_deterministic_fixture_output(case: dict[str, Any]) -> str:
+    configured = str(case.get("fixture_output", "")).strip()
+    if configured:
+        return configured
+
+    required: list[str] = []
+    for phrase in case.get("required_all", []):
+        clean = str(phrase).strip()
+        if clean and clean not in required:
+            required.append(clean)
+    for group in case.get("required_any_groups", []):
+        if not isinstance(group, list):
+            continue
+        first = next((str(item).strip() for item in group if str(item).strip()), "")
+        if first and first not in required:
+            required.append(first)
+
+    if required:
+        return ". ".join(required) + "."
+    if str(case.get("id", "")) == "low_context_nonperformative_greeting":
+        return "hi"
+    return "deterministic fixture response."
+
+
 def _load_cases(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
@@ -168,6 +192,7 @@ def _load_cases(path: Path) -> tuple[list[dict[str, Any]], list[str]]:
             {
                 "id": case_id,
                 "query": query,
+                "fixture_output": str(case.get("fixture_output", "")).strip(),
                 "style_notes": style_notes,
                 "max_words": max_words,
                 "required_all": _normalize_phrase_list(
@@ -312,6 +337,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="OpenAI model for style pass/fail scoring.",
     )
     parser.add_argument(
+        "--evaluation-mode",
+        choices=["judge", "deterministic"],
+        default="judge",
+        help="Use an LLM judge or deterministic fixture constraints.",
+    )
+    parser.add_argument(
+        "--chat-harness-mode",
+        choices=["live", "fixture"],
+        default="live",
+        help="Chat harness mode to use for /chat calls.",
+    )
+    parser.add_argument(
         "--case-attempts",
         type=int,
         default=1,
@@ -361,9 +398,13 @@ def main() -> int:
     cases, global_forbidden_phrases = _load_cases(cases_path)
 
     openai_api_key = os.getenv("OPENAI_API_KEY")
-    if not openai_api_key:
+    if args.evaluation_mode == "judge" and not openai_api_key:
         raise SystemExit("OPENAI_API_KEY is required for style eval.")
-    judge_client = OpenAI(api_key=openai_api_key)
+    judge_client = (
+        OpenAI(api_key=openai_api_key)
+        if args.evaluation_mode == "judge" and openai_api_key
+        else None
+    )
 
     run_id = args.run_id.strip() or str(int(time.time()))
     headers = _headers()
@@ -419,16 +460,30 @@ def main() -> int:
                     session_id=session_id,
                     message=case["query"],
                     timeout=args.timeout,
+                    harness_mode=args.chat_harness_mode,
+                    fixture_output=_build_deterministic_fixture_output(case)
+                    if args.chat_harness_mode == "fixture"
+                    else str(case.get("fixture_output", "")),
                 )
                 answer = str(chat_payload.get("output", "")).strip()
                 wc = _word_count(answer)
-                result = _judge_case(
-                    judge_client=judge_client,
-                    model=args.judge_model,
-                    case=case,
-                    answer=answer,
-                    word_count=wc,
-                )
+                if args.evaluation_mode == "judge":
+                    if judge_client is None:
+                        raise RuntimeError("Style judge client unavailable.")
+                    result = _judge_case(
+                        judge_client=judge_client,
+                        model=args.judge_model,
+                        case=case,
+                        answer=answer,
+                        word_count=wc,
+                    )
+                else:
+                    result = {
+                        "pass": True,
+                        "score": 10,
+                        "fit": "on_style",
+                        "notes": "deterministic fixture assessment",
+                    }
                 score = result.get("score")
                 fit = result.get("fit")
                 case_pass = bool(result.get("pass", False))

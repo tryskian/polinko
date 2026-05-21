@@ -136,6 +136,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Delay between transient HTTP retries, in milliseconds.",
     )
     parser.add_argument(
+        "--chat-harness-mode",
+        choices=["live", "fixture"],
+        default="live",
+        help="Chat harness mode to use for /chat calls.",
+    )
+    parser.add_argument(
         "--keep-chats",
         action="store_true",
         help="Keep generated eval chats instead of deleting them.",
@@ -203,6 +209,11 @@ def main() -> int:
         source_name = f"{case_id}.txt"
         must_include = case["must_include"]
         source_type = case["source_type"]
+        retrieval_query = (
+            case["fixture_query"]
+            if args.chat_harness_mode == "fixture"
+            else case["query"]
+        )
 
         print(f"\n[{index}/{len(cases)}] {case_id}")
         case_status = "PASS"
@@ -257,10 +268,11 @@ def main() -> int:
                 base_url=args.base_url,
                 headers=headers,
                 session_id=target_session,
-                message=case["query"],
+                message=retrieval_query,
                 timeout=args.timeout,
                 retries=args.request_retries,
                 retry_delay_ms=args.request_retry_delay_ms,
+                harness_mode=args.chat_harness_mode,
             )
             global_memory = global_chat.get("memory_used")
             if not isinstance(global_memory, list):
@@ -300,10 +312,11 @@ def main() -> int:
                 base_url=args.base_url,
                 headers=headers,
                 session_id=target_session,
-                message=case["query"],
+                message=retrieval_query,
                 timeout=args.timeout,
                 retries=args.request_retries,
                 retry_delay_ms=args.request_retry_delay_ms,
+                harness_mode=args.chat_harness_mode,
             )
             session_memory = session_chat.get("memory_used")
             if not isinstance(session_memory, list):
@@ -345,6 +358,7 @@ def main() -> int:
                     "source_type": source_type,
                     "must_include": must_include,
                     "query": case["query"],
+                    "request_query": retrieval_query,
                     "status": case_status,
                     "detail": detail,
                     "error": case_error,

@@ -54,6 +54,7 @@ start_local_server() {
 			"${GATE_VECTOR_DB:-/tmp/polinko-quality-gate-vector.db}"
 		POLINKO_SESSION_DB_PATH="${GATE_SESSION_DB:-/tmp/polinko-quality-gate-sessions.db}" \
 			POLINKO_VECTOR_DB_PATH="${GATE_VECTOR_DB:-/tmp/polinko-quality-gate-vector.db}" \
+			POLINKO_VECTOR_EMBEDDING_PROVIDER="${GATE_VECTOR_EMBEDDING_PROVIDER:-openai}" \
 			POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
 			"$python_bin" -m uvicorn "$asgi_app" --host 127.0.0.1 --port "$port" >"$log_path" 2>&1 &
 		;;
@@ -97,7 +98,8 @@ run_eval_smoke() {
 	"$python_bin" -m tools.eval_retrieval \
 		--base-url "$base_url" \
 		--request-retries "${RETRIEVAL_REQUEST_RETRIES:-2}" \
-		--request-retry-delay-ms "${RETRIEVAL_REQUEST_RETRY_DELAY_MS:-750}"
+		--request-retry-delay-ms "${RETRIEVAL_REQUEST_RETRY_DELAY_MS:-750}" \
+		--chat-harness-mode "${RETRIEVAL_CHAT_HARNESS_MODE:-live}"
 	"$python_bin" -m tools.eval_file_search --base-url "$base_url"
 	echo "Eval smoke passed."
 }
@@ -114,6 +116,7 @@ run_hallucination_gate() {
 		--judge-model "${HALLUCINATION_JUDGE_MODEL:-gpt-4.1-mini}" \
 		--judge-api-key-env "${HALLUCINATION_JUDGE_API_KEY_ENV:-OPENAI_API_KEY}" \
 		--judge-base-url "${HALLUCINATION_JUDGE_BASE_URL:-}" \
+		--chat-harness-mode "${HALLUCINATION_CHAT_HARNESS_MODE:-live}" \
 		--min-acceptable-score "${HALLUCINATION_MIN_ACCEPTABLE_SCORE:-5}"
 	echo "Hallucination gate passed."
 }
@@ -127,7 +130,8 @@ run_quality_gate() {
 	"$python_bin" -m tools.eval_retrieval \
 		--base-url "$base_url" \
 		--request-retries "${RETRIEVAL_REQUEST_RETRIES:-2}" \
-		--request-retry-delay-ms "${RETRIEVAL_REQUEST_RETRY_DELAY_MS:-750}"
+		--request-retry-delay-ms "${RETRIEVAL_REQUEST_RETRY_DELAY_MS:-750}" \
+		--chat-harness-mode "${RETRIEVAL_CHAT_HARNESS_MODE:-live}"
 	"$python_bin" -m tools.eval_file_search --base-url "$base_url"
 	"$python_bin" -m tools.eval_ocr \
 		--timeout "${OCR_EVAL_TIMEOUT:-90}" \
@@ -140,8 +144,13 @@ run_quality_gate() {
 		--base-url "$base_url" \
 		--strict \
 		--case-attempts "${STYLE_CASE_ATTEMPTS:-1}" \
-		--min-pass-attempts "${STYLE_MIN_PASS_ATTEMPTS:-1}"
-	"$python_bin" -m tools.eval_response_behaviour --base-url "$base_url" --strict
+		--min-pass-attempts "${STYLE_MIN_PASS_ATTEMPTS:-1}" \
+		--evaluation-mode "${STYLE_EVAL_MODE:-judge}" \
+		--chat-harness-mode "${STYLE_CHAT_HARNESS_MODE:-live}"
+	"$python_bin" -m tools.eval_response_behaviour \
+		--base-url "$base_url" \
+		--strict \
+		--chat-harness-mode "${RESPONSE_BEHAVIOUR_CHAT_HARNESS_MODE:-live}"
 	"$python_bin" -m tools.eval_hallucination \
 		--base-url "$base_url" \
 		--strict \
@@ -149,6 +158,7 @@ run_quality_gate() {
 		--judge-model "${HALLUCINATION_JUDGE_MODEL:-gpt-4.1-mini}" \
 		--judge-api-key-env "${HALLUCINATION_JUDGE_API_KEY_ENV:-OPENAI_API_KEY}" \
 		--judge-base-url "${HALLUCINATION_JUDGE_BASE_URL:-}" \
+		--chat-harness-mode "${HALLUCINATION_CHAT_HARNESS_MODE:-live}" \
 		--min-acceptable-score "${HALLUCINATION_MIN_ACCEPTABLE_SCORE:-5}"
 	echo "Quality gate passed."
 }

@@ -792,6 +792,7 @@ class RuntimeDeps:
     vector_max_chars: int
     vector_exclude_current_session: bool
     vector_local_embedding_fallback: bool
+    vector_embedding_provider: Literal["openai", "local"]
     vector_embedding_model: str
     vector_store: VectorStore | None
     embedding_client: OpenAI | None
@@ -2685,7 +2686,11 @@ def _is_low_confidence_ocr_text(value: str) -> bool:
 
 
 def _embed_texts(texts: list[str], deps: RuntimeDeps) -> list[list[float]]:
+    if deps.vector_embedding_provider == "local":
+        return [_local_fallback_embedding(text) for text in texts]
     if deps.embedding_client is None:
+        if deps.vector_local_embedding_fallback:
+            return [_local_fallback_embedding(text) for text in texts]
         raise RuntimeError("Embedding client is not configured.")
     try:
         response = deps.embedding_client.embeddings.create(
@@ -3522,11 +3527,14 @@ def create_app(config: AppConfig) -> FastAPI:
         vector_max_chars=config.vector_max_chars,
         vector_exclude_current_session=config.vector_exclude_current_session,
         vector_local_embedding_fallback=config.vector_local_embedding_fallback,
+        vector_embedding_provider=config.vector_embedding_provider,
         vector_embedding_model=config.vector_embedding_model,
         vector_store=VectorStore(config.vector_db_path)
         if config.vector_enabled
         else None,
-        embedding_client=shared_openai_client if config.vector_enabled else None,
+        embedding_client=shared_openai_client
+        if config.vector_enabled and config.vector_embedding_provider == "openai"
+        else None,
         responses_orchestration_enabled=config.responses_orchestration_enabled,
         responses_orchestration_model=config.responses_orchestration_model,
         responses_vector_store_id=config.responses_vector_store_id,
@@ -4787,6 +4795,12 @@ def create_app(config: AppConfig) -> FastAPI:
             try:
                 if harness_mode == "fixture":
                     pipeline = "fixture"
+                    retrieved_memory = _retrieve_memory(
+                        deps=deps,
+                        session_id=session_id,
+                        query_text=req.message,
+                        memory_scope=memory_scope,
+                    )
                     output_text = _build_fixture_chat_output(
                         message=req.message,
                         fixture_output=req.fixture_output,

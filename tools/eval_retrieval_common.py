@@ -62,6 +62,7 @@ def load_cases(path: Path) -> list[dict[str, Any]]:
         case_id = str(case.get("id", f"case-{index}")).strip()
         seed_text = str(case.get("seed_text", "")).strip()
         query = str(case.get("query", "")).strip()
+        fixture_query = str(case.get("fixture_query", "")).strip() or query
         source_type = str(case.get("source_type", "ocr")).strip().lower() or "ocr"
         required_terms = normalize_terms(case.get("must_include"))
         if not case_id or not seed_text or not query:
@@ -73,6 +74,7 @@ def load_cases(path: Path) -> list[dict[str, Any]]:
                 "id": case_id,
                 "seed_text": seed_text,
                 "query": query,
+                "fixture_query": fixture_query,
                 "source_type": source_type,
                 "must_include": required_terms,
             }
@@ -186,13 +188,23 @@ def chat_message(
     timeout: int,
     retries: int,
     retry_delay_ms: int,
+    harness_mode: str | None = None,
+    fixture_output: str | None = None,
 ) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "session_id": session_id,
+        "message": message,
+    }
+    if harness_mode:
+        payload["harness_mode"] = harness_mode
+    if fixture_output:
+        payload["fixture_output"] = fixture_output
     return request_json(
         method="POST",
         base_url=base_url,
         path="/chat",
         headers=headers,
-        payload={"session_id": session_id, "message": message},
+        payload=payload,
         timeout=timeout,
         retries=retries,
         retry_delay_ms=retry_delay_ms,

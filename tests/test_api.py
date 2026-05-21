@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import json
+import logging
 import os
 import re
 import tempfile
@@ -43,6 +44,12 @@ class PolinkoApiTests(unittest.TestCase):
         return patch.object(server.Runner, "run", new=fake_run)
 
     def setUp(self) -> None:
+        self._saved_logger_levels = {}
+        for logger_name in ("httpx", "polinko.api"):
+            logger = logging.getLogger(logger_name)
+            self._saved_logger_levels[logger_name] = logger.level
+            logger.setLevel(logging.CRITICAL + 1)
+
         self.tmpdir = tempfile.TemporaryDirectory()
         deps = server.get_runtime_deps()
         deps.rate_limit_per_minute = 30
@@ -91,8 +98,12 @@ class PolinkoApiTests(unittest.TestCase):
         self.client = TestClient(server.app)
 
     def tearDown(self) -> None:
-        self.client.close()
-        self.tmpdir.cleanup()
+        try:
+            self.client.close()
+            self.tmpdir.cleanup()
+        finally:
+            for logger_name, level in self._saved_logger_levels.items():
+                logging.getLogger(logger_name).setLevel(level)
 
     def test_health(self) -> None:
         resp = self.client.get("/health")

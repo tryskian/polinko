@@ -1,10 +1,14 @@
+import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import requests
 
 from tools.eval_retrieval import _request_json
 from tools.eval_retrieval import build_parser
+from tools.eval_retrieval_common import load_cases
 
 
 class _FakeResponse:
@@ -28,6 +32,54 @@ class EvalRetrievalTests(unittest.TestCase):
         args = build_parser().parse_args([])
         self.assertEqual(args.request_retries, 2)
         self.assertEqual(args.request_retry_delay_ms, 750)
+
+    def test_load_cases_accepts_fixture_query(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "cases.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "cases": [
+                            {
+                                "id": "anchor_case",
+                                "seed_text": "Anchor case stores a prism marker.",
+                                "query": "What is stored?",
+                                "fixture_query": "anchor case prism marker",
+                                "must_include": ["anchor case"],
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            cases = load_cases(path)
+
+        self.assertEqual(cases[0]["query"], "What is stored?")
+        self.assertEqual(cases[0]["fixture_query"], "anchor case prism marker")
+
+    def test_load_cases_defaults_fixture_query_to_query(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "cases.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "cases": [
+                            {
+                                "id": "default_case",
+                                "seed_text": "Default case stores a prism marker.",
+                                "query": "What is stored?",
+                                "must_include": ["default case"],
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            cases = load_cases(path)
+
+        self.assertEqual(cases[0]["fixture_query"], "What is stored?")
 
     def test_request_json_retries_on_retryable_http_status(self) -> None:
         responses = [

@@ -313,6 +313,7 @@ class OcrEvalRuleTests(unittest.TestCase):
         with (
             mock.patch("tools.eval_ocr._ocr", side_effect=side_effects) as mock_ocr,
             mock.patch("tools.eval_ocr.time.sleep") as mock_sleep,
+            mock.patch("builtins.print") as mock_print,
         ):
             payload = _ocr_with_retries(
                 base_url="http://127.0.0.1:8000",
@@ -331,6 +332,11 @@ class OcrEvalRuleTests(unittest.TestCase):
         self.assertEqual(payload, {"run": {"extracted_text": "ok"}})
         self.assertEqual(mock_ocr.call_count, 2)
         mock_sleep.assert_called_once()
+        mock_print.assert_called_once()
+        self.assertIn(
+            "WARN transient OCR error for s-retry",
+            mock_print.call_args.args[0],
+        )
 
     def test_ocr_with_retries_does_not_retry_non_transient(self) -> None:
         with mock.patch(
@@ -370,6 +376,7 @@ class OcrEvalRuleTests(unittest.TestCase):
         with (
             mock.patch("tools.eval_ocr._ocr", side_effect=side_effects) as mock_ocr,
             mock.patch("tools.eval_ocr.time.sleep") as mock_sleep,
+            mock.patch("builtins.print") as mock_print,
         ):
             payload = _ocr_with_retries(
                 base_url="http://127.0.0.1:8000",
@@ -388,6 +395,11 @@ class OcrEvalRuleTests(unittest.TestCase):
         self.assertEqual(payload, {"run": {"extracted_text": "ok"}})
         self.assertEqual(mock_ocr.call_count, 2)
         mock_sleep.assert_called_once_with(7.0)
+        mock_print.assert_called_once()
+        self.assertIn(
+            "WARN transient OCR error for s-retry-after",
+            mock_print.call_args.args[0],
+        )
 
 
 if __name__ == "__main__":
