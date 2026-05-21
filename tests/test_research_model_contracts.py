@@ -233,6 +233,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "source coverage",
             "image resolution",
             "feedback status",
+            "## D-078: Resolve manual eval images from local export archives",
+            "`zip_path::member`",
+            "archived bytes",
         ):
             self.assertIn(expected, decisions)
 
@@ -249,6 +252,8 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-db-health` reports read-only source-quality",
             "missing image assets",
             "feedback-to-result links",
+            "matching files inside `.zip` archives",
+            "without extracting files",
         ):
             self.assertIn(expected, state)
 
@@ -259,6 +264,8 @@ class ResearchModelContractTests(unittest.TestCase):
         self.assertIn(
             "inspect warehouse health with `make manual-evals-db-health`", eval_map
         )
+        self.assertIn("matching files inside", eval_map)
+        self.assertIn("`.zip` archives", eval_map)
 
         for expected in (
             "MANUAL_EVALS_DB_SCHEMA_VERSION",

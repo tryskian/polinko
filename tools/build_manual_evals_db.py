@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import sqlite3
+import zipfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -77,6 +78,16 @@ class LoadedHistorySource:
     ocr_runs: list[sqlite3.Row]
 
 
+@dataclass(frozen=True)
+class ImageAssetReference:
+    resolved_path: str
+    file_path: Path | None = None
+    zip_path: Path | None = None
+    zip_member: str | None = None
+    source_size_bytes: int | None = None
+    source_mtime_unix: int | None = None
+
+
 def _source_key(value: str, *, fallback: str) -> str:
     cleaned = _SOURCE_KEY_RE.sub("_", value.strip()).strip("_")
     return cleaned or fallback
@@ -133,32 +144,63 @@ def _build_filename_index(
     *,
     image_roots: Sequence[Path],
     target_filenames: Sequence[str],
-) -> dict[str, Path]:
+) -> dict[str, ImageAssetReference]:
     wanted = {name.casefold() for name in target_filenames if name.strip()}
     if not wanted:
         return {}
 
-    index: dict[str, Path] = {}
+    index: dict[str, ImageAssetReference] = {}
+    zip_paths: list[Path] = []
     for root in image_roots:
         if not root.is_dir():
             continue
         try:
             for dirpath, _, filenames in os.walk(root):
                 for filename in filenames:
+                    file_path = Path(dirpath) / filename
+                    if filename.casefold().endswith(".zip"):
+                        zip_paths.append(file_path)
                     key = filename.casefold()
                     if key not in wanted or key in index:
                         continue
-                    index[key] = Path(dirpath) / filename
+                    index[key] = ImageAssetReference(
+                        resolved_path=str(file_path),
+                        file_path=file_path,
+                    )
                     if len(index) == len(wanted):
                         return index
         except OSError:
             continue
+
+    for zip_path in zip_paths:
+        if len(index) == len(wanted):
+            return index
+        try:
+            with zipfile.ZipFile(zip_path) as archive:
+                for info in archive.infolist():
+                    if info.is_dir():
+                        continue
+                    filename = Path(info.filename).name
+                    key = filename.casefold()
+                    if key not in wanted or key in index:
+                        continue
+                    index[key] = ImageAssetReference(
+                        resolved_path=f"{zip_path}::{info.filename}",
+                        zip_path=zip_path,
+                        zip_member=info.filename,
+                        source_size_bytes=int(info.file_size),
+                        source_mtime_unix=_zip_mtime_unix(info),
+                    )
+                    if len(index) == len(wanted):
+                        return index
+        except (OSError, zipfile.BadZipFile):
+            continue
     return index
 
 
-def _resolve_source_path(
-    source_name: str, filename_index: dict[str, Path]
-) -> Path | None:
+def _resolve_source_asset(
+    source_name: str, filename_index: dict[str, ImageAssetReference]
+) -> ImageAssetReference | None:
     for candidate in _source_filename_candidates(source_name):
         match = filename_index.get(candidate.casefold())
         if match is not None:
@@ -186,6 +228,43 @@ def _build_thumbnail(path: Path, *, size: int) -> tuple[bytes, int, int]:
         buffer = io.BytesIO()
         working_image.save(buffer, format="PNG", optimize=True)
         return buffer.getvalue(), width, height
+
+
+def _build_thumbnail_from_bytes(data: bytes, *, size: int) -> tuple[bytes, int, int]:
+    if PILImageModule is None:  # pragma: no cover - tested via caller branch
+        raise RuntimeError("Pillow is not installed.")
+
+    with PILImageModule.open(io.BytesIO(data)) as image:
+        working_image = (
+            image.convert("RGBA") if image.mode not in ("RGB", "RGBA") else image.copy()
+        )
+        resampling_enum = getattr(PILImageModule, "Resampling", None)
+        resample = (
+            resampling_enum.LANCZOS
+            if resampling_enum is not None
+            else getattr(PILImageModule, "LANCZOS", 1)
+        )
+        working_image.thumbnail((size, size), resample=resample)
+        width, height = working_image.size
+        buffer = io.BytesIO()
+        working_image.save(buffer, format="PNG", optimize=True)
+        return buffer.getvalue(), width, height
+
+
+def _zip_mtime_unix(info: zipfile.ZipInfo) -> int | None:
+    try:
+        return int(datetime(*info.date_time, tzinfo=timezone.utc).timestamp())
+    except (TypeError, ValueError, OSError):
+        return None
+
+
+def _read_resolved_asset_bytes(reference: ImageAssetReference) -> bytes:
+    if reference.file_path is not None:
+        return reference.file_path.read_bytes()
+    if reference.zip_path is None or reference.zip_member is None:
+        raise FileNotFoundError(reference.resolved_path)
+    with zipfile.ZipFile(reference.zip_path) as archive:
+        return archive.read(reference.zip_member)
 
 
 def _read_sessions(
@@ -493,8 +572,10 @@ def _prepare_image_assets(
 
     for index, source_name in enumerate(source_names, start=1):
         source_filename = Path(source_name).name.strip() or None
-        resolved_path = _resolve_source_path(source_name, filename_index)
-        resolved_path_text = str(resolved_path) if resolved_path is not None else None
+        resolved_asset = _resolve_source_asset(source_name, filename_index)
+        resolved_path_text = (
+            resolved_asset.resolved_path if resolved_asset is not None else None
+        )
         mime_type = (
             mimetypes.guess_type(
                 resolved_path_text or source_filename or "", strict=False
@@ -511,16 +592,19 @@ def _prepare_image_assets(
         status = "missing"
         error_text: str | None = None
 
-        if resolved_path is None:
+        if resolved_asset is None:
             stats["image_missing"] += 1
         else:
             stats["image_resolved"] += 1
-            try:
-                file_stat = resolved_path.stat()
-                source_size_bytes = int(file_stat.st_size)
-                source_mtime_unix = int(file_stat.st_mtime)
-            except OSError as exc:
-                error_text = f"stat_failed: {exc}"
+            source_size_bytes = resolved_asset.source_size_bytes
+            source_mtime_unix = resolved_asset.source_mtime_unix
+            if resolved_asset.file_path is not None:
+                try:
+                    file_stat = resolved_asset.file_path.stat()
+                    source_size_bytes = int(file_stat.st_size)
+                    source_mtime_unix = int(file_stat.st_mtime)
+                except OSError as exc:
+                    error_text = f"stat_failed: {exc}"
 
             if not enable_thumbnails:
                 status = "resolved"
@@ -530,16 +614,30 @@ def _prepare_image_assets(
                 stats["thumbnails_skipped"] += 1
             else:
                 try:
-                    thumbnail_png, thumb_width, thumb_height = _build_thumbnail(
-                        resolved_path,
-                        size=thumbnail_size,
-                    )
+                    if resolved_asset.file_path is not None:
+                        thumbnail_png, thumb_width, thumb_height = _build_thumbnail(
+                            resolved_asset.file_path,
+                            size=thumbnail_size,
+                        )
+                    else:
+                        thumbnail_png, thumb_width, thumb_height = (
+                            _build_thumbnail_from_bytes(
+                                _read_resolved_asset_bytes(resolved_asset),
+                                size=thumbnail_size,
+                            )
+                        )
                     thumbnail_data_url = "data:image/png;base64," + base64.b64encode(
                         thumbnail_png
                     ).decode("ascii")
                     status = "thumbnail_ready"
                     stats["thumbnails_ready"] += 1
-                except (OSError, PILUnidentifiedImageError, RuntimeError) as exc:
+                except (
+                    OSError,
+                    KeyError,
+                    zipfile.BadZipFile,
+                    PILUnidentifiedImageError,
+                    RuntimeError,
+                ) as exc:
                     status = "thumbnail_error"
                     error_text = str(exc)
                     stats["thumbnails_error"] += 1

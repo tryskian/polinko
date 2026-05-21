@@ -1055,3 +1055,18 @@ or branch history instead.
   images, open feedback, or unlinked feedback evidence. Operators need a
   terminal-native health report before deciding whether a later cleanup kernel
   should reconcile evidence or leave it as historical context.
+
+## D-078: Resolve manual eval images from local export archives
+
+- Date: `2026-05-20`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `image_resolution`, `local_evidence`, `archives`
+- Decision: The manual eval warehouse builder resolves OCR source images from
+  matching files inside `.zip` archives under the configured image roots after
+  checking extracted files first. Archive-backed rows store a
+  `zip_path::member` reference and build thumbnails from the archived bytes
+  without extracting files into the repo.
+- Why: The missing-image audit showed that a material portion of the current
+  unresolved OCR evidence exists locally inside ChatGPT export archives rather
+  than extracted directories. The builder should use that local evidence
+  directly while keeping the live warehouse refresh backup-first and explicit.
