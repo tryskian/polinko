@@ -17,8 +17,6 @@ This page is the structural map of the tracked system.
   - compatibility launcher for direct CLI chat calls
 - `server.py`
   - compatibility shim for `uvicorn server:app`
-- `config.py`
-  - compatibility shim for older config imports
 - `pyproject.toml`
   - Python package metadata and `src` layout configuration
 - `src/polinko/`

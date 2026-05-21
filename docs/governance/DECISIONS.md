@@ -839,3 +839,15 @@ or branch history instead.
 - Why: Keeping a compatibility launcher with no observed caller preserves
   ambiguity at the repo root. Removing it tightens the package-boundary surface
   while leaving the active CLI and `server:app` operator paths unchanged.
+
+## D-062: Retire the legacy root config.py import shim
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `config`, `compatibility`, `imports`, `package_boundary`
+- Decision: Remove root `config.py` after the legacy-import preflight found no
+  active tracked code caller and no focused local ignored-lane root import
+  usage. Runtime and tooling imports use `polinko.config`.
+- Why: Config is already canonical under the packaged runtime. Removing the
+  unused root shim reduces import ambiguity while preserving the active API,
+  CLI, manual eval workbench, and `server:app` surfaces.
