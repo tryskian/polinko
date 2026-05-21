@@ -31,8 +31,6 @@ This page is the structural map of the tracked system.
   - HTTP layer, route spec, middleware, and wiring
 - `src/polinko/core/`
   - runtime logic, prompting, session/history, and retrieval helpers
-- `core/`
-  - compatibility shims for older `core.*` imports
 - `tools/`
   - local operators, evals, reports, and renderers
   - includes `tools/check_package_install.py` for editable-install validation
@@ -111,7 +109,6 @@ This page is the structural map of the tracked system.
   - `src/polinko/api/`
 - prompt and runtime behaviour:
   - `src/polinko/core/`
-  - root `core/` stays compatibility-only during the package-boundary migration
 - eval, report, and local operator scripts:
   - `tools/`
 - tracked repo truth and procedure:
