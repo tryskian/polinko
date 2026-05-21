@@ -16,7 +16,7 @@ Last updated: 2026-05-20
   - legacy root `app.py` has been retired after the deprecation/removal
     preflight found no active tracked or focused local ignored-lane launcher
     usage
-  - Python package-boundary migration contract is documented; `config`, API,
+  - Python package-boundary contract is documented; `config`, API,
     and core runtime implementation now live under `src/polinko/`
   - `pyproject.toml` and `src/polinko/` provide the editable-install rail for
     the runtime package
@@ -26,10 +26,11 @@ Last updated: 2026-05-20
     found no active tracked or focused local ignored-lane root import usage
   - legacy root `core/` has been retired after the legacy-import preflight
     found no active tracked or focused local ignored-lane root import usage
-  - the root compatibility audit confirms active `src/` and `tools/` Python
-    imports use `polinko.*`, while remaining root entrypoint shims stay
-    compatibility-only
-  - the root shim readiness audit records `server.py` as not retirement-ready
+  - the package-boundary audit confirms active `src/` and `tools/` Python
+    imports use `polinko.*`, while remaining root compatibility surfaces are
+    launchers only
+  - the root launcher readiness audit records `server.py` as not
+    retirement-ready
     while `server:app` remains active in Docker, Make defaults, server-daemon,
     and local eval gates
   - `app.py`, `config.py`, root `api/`, and root `core/` are retired;
@@ -128,7 +129,7 @@ Last updated: 2026-05-20
   - `STATE` holds tracked current truth
   - `RUNBOOK` holds operator procedure
   - `ARCHITECTURE` holds stable system shape
-  - `PACKAGE_BOUNDARY` holds the Python package-boundary migration contract
+  - `PACKAGE_BOUNDARY` holds the Python package-boundary contract
   - `make package-install-check` verifies the editable-install rail
   - local `SESSION_HANDOFF` holds the active slice
   - `make end` now mirrors the legacy `make eod` closeout routine directly

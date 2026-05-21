@@ -9,7 +9,7 @@ This page is the structural map of the tracked system.
 - Use `docs/runtime/SURFACE_IA.md` for web surface path roles, manual eval
   workbench naming, and legacy compatibility aliases.
 - Use `docs/runtime/PACKAGE_BOUNDARY.md` for the Python package-boundary
-  migration contract and compatibility layer.
+  contract and remaining root launcher compatibility.
 
 ## Top-Level Map
 

@@ -5,11 +5,63 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-LEGACY_ROOT_IMPORTS = ("api", "config", "core")
+ACTIVE_FILE_EXTENSIONS = {".py", ".sh", ".mk"}
+ACTIVE_ROOT_FILES = {"Makefile", "Dockerfile", "pyproject.toml"}
+RETIRED_ROOT_IMPORTS = ("api", "config", "core")
+RETIRED_ROOT_SURFACES = ("app.py", "config.py", "api", "core")
 
 
 def _read(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
+
+
+def _tracked_files(*patterns: str) -> list[str]:
+    command = ["git", "ls-files", *patterns]
+    return subprocess.check_output(command, cwd=REPO_ROOT, text=True).splitlines()
+
+
+def _active_tracked_paths() -> list[str]:
+    return [
+        path
+        for path in _tracked_files()
+        if Path(path).suffix in ACTIVE_FILE_EXTENSIONS or path in ACTIVE_ROOT_FILES
+    ]
+
+
+def _retired_root_import_mentions(
+    root_name: str,
+    *,
+    allowed_paths: set[str],
+) -> list[str]:
+    mentions = []
+    dynamic_import_markers = (
+        f'import_module("{root_name}.',
+        f"import_module('{root_name}.",
+        f'__import__("{root_name}"',
+        f"__import__('{root_name}'",
+    )
+
+    for relative_path in _active_tracked_paths():
+        if relative_path in allowed_paths:
+            continue
+        if not (REPO_ROOT / relative_path).exists():
+            continue
+        source = _read(relative_path)
+        if Path(relative_path).suffix == ".py":
+            tree = ast.parse(source, filename=relative_path)
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    for alias in node.names:
+                        if alias.name.split(".", maxsplit=1)[0] == root_name:
+                            mentions.append(f"{relative_path}:{node.lineno}")
+                elif isinstance(node, ast.ImportFrom) and node.module is not None:
+                    if node.module.split(".", maxsplit=1)[0] == root_name:
+                        mentions.append(f"{relative_path}:{node.lineno}")
+
+        if any(marker in source for marker in dynamic_import_markers):
+            mentions.append(relative_path)
+
+    return mentions
 
 
 class PackageBoundaryContractTests(unittest.TestCase):
@@ -17,7 +69,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
         boundary = _read("docs/runtime/PACKAGE_BOUNDARY.md")
 
         for expected in (
-            "Tracked root runtime compatibility modules",
+            "Tracked root compatibility launchers",
             "`main.py`",
             "compatibility launcher for `python main.py`",
             "legacy root `app.py` launcher is retired",
@@ -31,13 +83,13 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "legacy root `config.py` import shim is retired",
             "legacy root `api/` import shims are retired",
             "legacy root `core/` import shims are retired",
-            "The future runtime import package should be `polinko` under `src/polinko/`.",
+            "The runtime import package is `polinko` under `src/polinko/`.",
             "`src/polinko/config.py`",
             "`src/polinko/api/`",
             "`src/polinko/core/`",
             "root `tools/`",
-            "current console script: `polinko-chat`",
-            "Do not move runtime modules into `src/polinko/`",
+            "Keep `polinko-chat` as the installed console-script entrypoint.",
+            "Keep runtime modules under `src/polinko/`",
             "Do not change ASGI import compatibility for `server:app`.",
         ):
             self.assertIn(expected, boundary)
@@ -46,10 +98,10 @@ class PackageBoundaryContractTests(unittest.TestCase):
         boundary = _read("docs/runtime/PACKAGE_BOUNDARY.md")
 
         for expected in (
-            "## Compatibility Audit",
+            "## Current Boundary",
             "active runtime and tool imports should use `polinko.*`",
-            "remaining root compatibility imports are allowed only in the tracked shim",
-            "compatibility launcher and shim retirement must happen through",
+            "remaining root compatibility surfaces are launchers, not import shims",
+            "compatibility launcher retirement must happen through",
             "active `server:app` references still exist in Docker",
             "legacy `app.py` launcher is retired",
             "legacy root `config.py` import shim is retired",
@@ -75,7 +127,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
 
         self.assertIn("docs/runtime/PACKAGE_BOUNDARY.md", architecture)
         self.assertIn("`PACKAGE_BOUNDARY`", architecture)
-        self.assertIn("package-boundary migration contract is documented", state)
+        self.assertIn("package-boundary contract is documented", state)
         self.assertIn("legacy root `api/` has been retired", state)
         self.assertIn("legacy root `core/` has been retired", state)
         self.assertIn("`PACKAGE_BOUNDARY` holds the Python", state)
@@ -132,6 +184,10 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "## D-064: Retire the legacy root core package shims",
             decisions,
         )
+        self.assertIn(
+            "## D-065: Consolidate the Python package boundary around root launchers",
+            decisions,
+        )
 
     def test_runtime_modules_are_moved_with_entrypoint_compatibility_shims(
         self,
@@ -154,11 +210,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertIn("sys.modules[__name__] = _module", legacy_server)
 
     def test_current_root_runtime_modules_are_explicit(self) -> None:
-        tracked_python = subprocess.check_output(
-            ["git", "ls-files", "*.py"],
-            cwd=REPO_ROOT,
-            text=True,
-        ).splitlines()
+        tracked_python = _tracked_files("*.py")
         existing_python = [
             path for path in tracked_python if (REPO_ROOT / path).exists()
         ]
@@ -167,11 +219,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertEqual(root_modules, ["main.py", "server.py"])
 
     def test_active_source_and_tool_imports_use_packaged_runtime(self) -> None:
-        tracked_python = subprocess.check_output(
-            ["git", "ls-files", "*.py"],
-            cwd=REPO_ROOT,
-            text=True,
-        ).splitlines()
+        tracked_python = _tracked_files("*.py")
         active_paths = [
             path for path in tracked_python if path.startswith(("src/", "tools/"))
         ]
@@ -184,42 +232,11 @@ class PackageBoundaryContractTests(unittest.TestCase):
                 if isinstance(node, ast.Import):
                     for alias in node.names:
                         root_name = alias.name.split(".", maxsplit=1)[0]
-                        if root_name in LEGACY_ROOT_IMPORTS:
+                        if root_name in RETIRED_ROOT_IMPORTS:
                             violations.append(f"{relative_path}:{node.lineno}")
                 elif isinstance(node, ast.ImportFrom) and node.module is not None:
                     root_name = node.module.split(".", maxsplit=1)[0]
-                    if root_name in LEGACY_ROOT_IMPORTS:
-                        violations.append(f"{relative_path}:{node.lineno}")
-
-        self.assertEqual(violations, [])
-
-    def test_legacy_root_imports_stay_confined_to_compatibility_tests(self) -> None:
-        tracked_python = subprocess.check_output(
-            ["git", "ls-files", "*.py"],
-            cwd=REPO_ROOT,
-            text=True,
-        ).splitlines()
-        allowed_paths = {
-            "tests/test_package_boundary_contracts.py",
-        }
-        violations = []
-
-        for relative_path in tracked_python:
-            if not (REPO_ROOT / relative_path).exists():
-                continue
-            if relative_path in allowed_paths:
-                continue
-            source = _read(relative_path)
-            tree = ast.parse(source, filename=relative_path)
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Import):
-                    for alias in node.names:
-                        root_name = alias.name.split(".", maxsplit=1)[0]
-                        if root_name in LEGACY_ROOT_IMPORTS:
-                            violations.append(f"{relative_path}:{node.lineno}")
-                elif isinstance(node, ast.ImportFrom) and node.module is not None:
-                    root_name = node.module.split(".", maxsplit=1)[0]
-                    if root_name in LEGACY_ROOT_IMPORTS:
+                    if root_name in RETIRED_ROOT_IMPORTS:
                         violations.append(f"{relative_path}:{node.lineno}")
 
         self.assertEqual(violations, [])
@@ -238,23 +255,32 @@ class PackageBoundaryContractTests(unittest.TestCase):
             with self.subTest(relative_path=relative_path):
                 self.assertIn(expected, _read(relative_path))
 
-    def test_legacy_app_launcher_is_retired_after_preflight(self) -> None:
-        self.assertFalse((REPO_ROOT / "app.py").exists())
+    def test_retired_root_surfaces_stay_absent(self) -> None:
+        for relative_path in RETIRED_ROOT_SURFACES:
+            with self.subTest(relative_path=relative_path):
+                self.assertFalse((REPO_ROOT / relative_path).exists())
 
-        tracked_files = subprocess.check_output(
-            ["git", "ls-files"],
-            cwd=REPO_ROOT,
-            text=True,
-        ).splitlines()
-        active_extensions = {".py", ".sh", ".mk"}
-        active_paths = [
-            path
-            for path in tracked_files
-            if Path(path).suffix in active_extensions
-            or path in {"Makefile", "Dockerfile", "pyproject.toml"}
-        ]
+    def test_active_tracked_files_do_not_regain_retired_root_imports(self) -> None:
         allowed_paths = {
-            "app.py",
+            "docs/governance/DECISIONS.md",
+            "docs/governance/STATE.md",
+            "docs/runtime/ARCHITECTURE.md",
+            "docs/runtime/PACKAGE_BOUNDARY.md",
+            "tests/test_package_boundary_contracts.py",
+        }
+        mentions = []
+
+        for root_name in RETIRED_ROOT_IMPORTS:
+            mentions.extend(
+                _retired_root_import_mentions(root_name, allowed_paths=allowed_paths)
+            )
+
+        self.assertEqual(mentions, [])
+
+    def test_active_tracked_files_do_not_regain_retired_app_launcher_calls(
+        self,
+    ) -> None:
+        allowed_paths = {
             "docs/governance/DECISIONS.md",
             "docs/governance/STATE.md",
             "docs/runtime/ARCHITECTURE.md",
@@ -264,165 +290,13 @@ class PackageBoundaryContractTests(unittest.TestCase):
         }
         mentions = []
 
-        for relative_path in active_paths:
+        for relative_path in _active_tracked_paths():
             if relative_path in allowed_paths:
                 continue
             if not (REPO_ROOT / relative_path).exists():
                 continue
             source = _read(relative_path)
             if "python app.py" in source or 'import_module("app")' in source:
-                mentions.append(relative_path)
-
-        self.assertEqual(mentions, [])
-
-    def test_legacy_config_import_shim_is_retired_after_preflight(self) -> None:
-        self.assertFalse((REPO_ROOT / "config.py").exists())
-
-        tracked_files = subprocess.check_output(
-            ["git", "ls-files"],
-            cwd=REPO_ROOT,
-            text=True,
-        ).splitlines()
-        active_extensions = {".py", ".sh", ".mk"}
-        active_paths = [
-            path
-            for path in tracked_files
-            if Path(path).suffix in active_extensions
-            or path in {"Makefile", "Dockerfile", "pyproject.toml"}
-        ]
-        allowed_paths = {
-            "config.py",
-            "docs/governance/DECISIONS.md",
-            "docs/governance/STATE.md",
-            "docs/runtime/ARCHITECTURE.md",
-            "docs/runtime/PACKAGE_BOUNDARY.md",
-            "tests/test_package_boundary_contracts.py",
-        }
-        mentions = []
-
-        for relative_path in active_paths:
-            if relative_path in allowed_paths:
-                continue
-            if not (REPO_ROOT / relative_path).exists():
-                continue
-            source = _read(relative_path)
-            if "from config import" in source or "import config" in source:
-                mentions.append(relative_path)
-
-        self.assertEqual(mentions, [])
-
-    def test_legacy_api_package_shims_are_retired_after_preflight(self) -> None:
-        self.assertFalse((REPO_ROOT / "api").exists())
-
-        tracked_files = subprocess.check_output(
-            ["git", "ls-files"],
-            cwd=REPO_ROOT,
-            text=True,
-        ).splitlines()
-        active_extensions = {".py", ".sh", ".mk"}
-        active_paths = [
-            path
-            for path in tracked_files
-            if Path(path).suffix in active_extensions
-            or path in {"Makefile", "Dockerfile", "pyproject.toml"}
-        ]
-        allowed_paths = {
-            "api/__init__.py",
-            "api/app_factory.py",
-            "api/eval_viz.py",
-            "api/manual_evals_surface.py",
-            "api/portfolio_sankey.py",
-            "docs/governance/DECISIONS.md",
-            "docs/governance/STATE.md",
-            "docs/runtime/ARCHITECTURE.md",
-            "docs/runtime/PACKAGE_BOUNDARY.md",
-            "tests/test_package_boundary_contracts.py",
-        }
-        mentions = []
-
-        for relative_path in active_paths:
-            if relative_path in allowed_paths:
-                continue
-            if not (REPO_ROOT / relative_path).exists():
-                continue
-            source = _read(relative_path)
-            if Path(relative_path).suffix == ".py":
-                tree = ast.parse(source, filename=relative_path)
-                for node in ast.walk(tree):
-                    if isinstance(node, ast.Import):
-                        for alias in node.names:
-                            if alias.name.split(".", maxsplit=1)[0] == "api":
-                                mentions.append(f"{relative_path}:{node.lineno}")
-                    elif isinstance(node, ast.ImportFrom) and node.module is not None:
-                        if node.module.split(".", maxsplit=1)[0] == "api":
-                            mentions.append(f"{relative_path}:{node.lineno}")
-
-            legacy_dynamic_import_markers = (
-                'import_module("api.',
-                "import_module('api.",
-                '__import__("api"',
-                "__import__('api'",
-            )
-            if any(marker in source for marker in legacy_dynamic_import_markers):
-                mentions.append(relative_path)
-
-        self.assertEqual(mentions, [])
-
-    def test_legacy_core_package_shims_are_retired_after_preflight(self) -> None:
-        self.assertFalse((REPO_ROOT / "core").exists())
-
-        tracked_files = subprocess.check_output(
-            ["git", "ls-files"],
-            cwd=REPO_ROOT,
-            text=True,
-        ).splitlines()
-        active_extensions = {".py", ".sh", ".mk"}
-        active_paths = [
-            path
-            for path in tracked_files
-            if Path(path).suffix in active_extensions
-            or path in {"Makefile", "Dockerfile", "pyproject.toml"}
-        ]
-        allowed_paths = {
-            "core/__init__.py",
-            "core/history_store.py",
-            "core/prompts.py",
-            "core/rate_limit.py",
-            "core/responses_parse.py",
-            "core/runtime.py",
-            "core/vector_store.py",
-            "docs/governance/DECISIONS.md",
-            "docs/governance/STATE.md",
-            "docs/runtime/ARCHITECTURE.md",
-            "docs/runtime/PACKAGE_BOUNDARY.md",
-            "tests/test_package_boundary_contracts.py",
-        }
-        mentions = []
-
-        for relative_path in active_paths:
-            if relative_path in allowed_paths:
-                continue
-            if not (REPO_ROOT / relative_path).exists():
-                continue
-            source = _read(relative_path)
-            if Path(relative_path).suffix == ".py":
-                tree = ast.parse(source, filename=relative_path)
-                for node in ast.walk(tree):
-                    if isinstance(node, ast.Import):
-                        for alias in node.names:
-                            if alias.name.split(".", maxsplit=1)[0] == "core":
-                                mentions.append(f"{relative_path}:{node.lineno}")
-                    elif isinstance(node, ast.ImportFrom) and node.module is not None:
-                        if node.module.split(".", maxsplit=1)[0] == "core":
-                            mentions.append(f"{relative_path}:{node.lineno}")
-
-            legacy_dynamic_import_markers = (
-                'import_module("core.',
-                "import_module('core.",
-                '__import__("core"',
-                "__import__('core'",
-            )
-            if any(marker in source for marker in legacy_dynamic_import_markers):
                 mentions.append(relative_path)
 
         self.assertEqual(mentions, [])
