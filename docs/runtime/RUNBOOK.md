@@ -173,6 +173,10 @@ Use this doc for operator procedure.
   - print read-only row-level open feedback actionables for manual triage
 - `make manual-evals-feedback-cohorts`
   - print read-only open feedback action cohorts for manual triage
+- `make manual-evals-feedback-actionables COHORT=ocr_retry_evidence`
+  - print read-only row-level actionables for one selected cohort
+  - combine with `OUTCOME=<outcome>` and `LIMIT=<n>` for smaller manual
+    triage slices
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

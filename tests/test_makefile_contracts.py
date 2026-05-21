@@ -319,11 +319,17 @@ class MakefileContractTests(unittest.TestCase):
             r"(?m)^manual-evals-feedback-actionables manualdb-feedback-actionables:$",
         )
         self.assertIn("--open-feedback-actionables", text)
+        self.assertIn("MANUAL_EVALS_FEEDBACK_COHORT ?= $(COHORT)", text)
+        self.assertIn("MANUAL_EVALS_FEEDBACK_OUTCOME ?= $(OUTCOME)", text)
+        self.assertIn("MANUAL_EVALS_FEEDBACK_LIMIT ?= $(LIMIT)", text)
+        self.assertIn("$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS)", text)
         self.assertRegex(
             text,
             r"(?m)^manual-evals-feedback-cohorts manualdb-feedback-cohorts:$",
         )
         self.assertIn("--open-feedback-cohorts", text)
+        self.assertIn("--cohort", text)
+        self.assertIn("$(MANUAL_EVALS_FEEDBACK_FILTER_ARGS)", text)
 
     def test_lifecycle_aliases_delegate_to_canonical_targets(self) -> None:
         text = _makefile_contract_text()

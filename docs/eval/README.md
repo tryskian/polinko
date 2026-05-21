@@ -68,6 +68,10 @@ notes, exports, and runtime history.
     `make manual-evals-feedback-cohorts`
   - JSON cohort export uses
     `schema_version=polinko.manual_eval_feedback_cohorts.v1`
+  - drill into a selected cohort without mutation with
+    `make manual-evals-feedback-actionables COHORT=ocr_retry_evidence`
+  - combine `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>` for
+    terminal-native manual triage filters
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

@@ -254,6 +254,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-084: Cohort manual eval open feedback actionables read-only",
             "`make manual-evals-feedback-cohorts`",
             "`schema_version=polinko.manual_eval_feedback_cohorts.v1`",
+            "## D-085: Filter manual eval feedback drilldowns by cohort read-only",
+            "`COHORT=<cohort_id>`",
+            "`ocr_retry_evidence`",
         ):
             self.assertIn(expected, decisions)
 
@@ -276,6 +279,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_feedback_actionables.v1`",
             "`make manual-evals-feedback-cohorts` prints read-only",
             "`schema_version=polinko.manual_eval_feedback_cohorts.v1`",
+            "`COHORT=<cohort_id>`",
+            "`OUTCOME=<outcome>`",
+            "`LIMIT=<n>`",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",
@@ -304,6 +310,11 @@ class ResearchModelContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_feedback_cohorts.v1`",
             eval_map,
         )
+        self.assertIn(
+            "`make manual-evals-feedback-actionables COHORT=ocr_retry_evidence`",
+            eval_map,
+        )
+        self.assertIn("`COHORT=<cohort_id>`", eval_map)
         self.assertIn("without inferring links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)

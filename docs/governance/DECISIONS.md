@@ -1161,3 +1161,21 @@ or branch history instead.
   batch-selection view before curation. Cohorts are derived from explicit
   `recommended_action` text and known OCR context fields, not broad inferred
   feedback-to-OCR linkage.
+
+## D-085: Filter manual eval feedback drilldowns by cohort read-only
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `feedback`, `triage`, `local_evidence`, `makefile`
+- Decision: Open feedback actionables and cohort reports accept an optional
+  cohort filter. From Make, `COHORT=<cohort_id>` narrows
+  `make manual-evals-feedback-actionables` and
+  `make manual-evals-feedback-cohorts`; `OUTCOME=<outcome>` and
+  `LIMIT=<n>` remain terminal-native drilldown controls for row-level
+  actionables. The filter is read-only and uses the same explicit
+  `recommended_action` cohort classifier as the summary report.
+- Why: Cohorts identify a safe batch-selection surface, but the operator still
+  needs row-level evidence for a selected cohort before any OCR retry,
+  curation, or closure decision. The first intended drilldown is
+  `ocr_retry_evidence`, because it is the largest open cohort and has the most
+  same-session OCR context.

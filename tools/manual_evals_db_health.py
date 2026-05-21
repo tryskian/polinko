@@ -24,6 +24,8 @@ COHORT_DESCRIPTIONS = {
     "other_explicit_action": "Explicit recommended action outside known cohorts.",
     "missing_recommended_action": "Open feedback row has no recommended action.",
 }
+COHORT_IDS = tuple(COHORT_DESCRIPTIONS)
+COHORT_FILTER_CHOICES = ("all", *COHORT_IDS)
 
 
 def _connect_readonly(db_path: Path) -> sqlite3.Connection:
@@ -87,6 +89,18 @@ def _feedback_action_cohort(recommended_action: object) -> str:
     if "style notes" in action or "style eval regression" in action:
         return "style_regression"
     return "other_explicit_action"
+
+
+def _normalize_cohort_filter(cohort: str | None) -> str | None:
+    if cohort is None:
+        return None
+    cohort_id = cohort.strip().lower()
+    if not cohort_id or cohort_id == "all":
+        return None
+    if cohort_id not in COHORT_DESCRIPTIONS:
+        valid = ", ".join(COHORT_IDS)
+        raise ValueError(f"unknown feedback cohort '{cohort_id}' (expected: {valid})")
+    return cohort_id
 
 
 def _fetch_count(conn: sqlite3.Connection, sql: str) -> int:
@@ -515,6 +529,7 @@ def _build_open_feedback_actionable_rows(
         note = _normalize_text(row.get("note"))
         recommended_action = _normalize_text(row.get("recommended_action"))
         action_taken = _normalize_text(row.get("action_taken"))
+        cohort_id = _feedback_action_cohort(recommended_action)
         same_session_ocr_runs = _int_value(row.get("same_session_ocr_runs"))
         actionable_rows.append(
             {
@@ -537,6 +552,10 @@ def _build_open_feedback_actionable_rows(
                 "has_action_taken": bool(action_taken),
                 "created_at": _int_value(row.get("created_at")),
                 "updated_at": _int_value(row.get("updated_at")),
+                "action_cohort": {
+                    "id": cohort_id,
+                    "description": COHORT_DESCRIPTIONS[cohort_id],
+                },
                 "ocr_context": {
                     "linked_to_ocr_result": bool(
                         _int_value(row.get("linked_to_ocr_result"))
@@ -555,15 +574,51 @@ def _build_open_feedback_actionable_rows(
     return actionable_rows
 
 
+def _filter_actionable_rows_by_cohort(
+    rows: Sequence[dict[str, Any]],
+    *,
+    cohort: str | None,
+) -> list[dict[str, Any]]:
+    if cohort is None:
+        return list(rows)
+    filtered_rows: list[dict[str, Any]] = []
+    for row in rows:
+        action_cohort = row.get("action_cohort")
+        if not isinstance(action_cohort, dict):
+            action_cohort = {}
+        if action_cohort.get("id") == cohort:
+            filtered_rows.append(row)
+    return filtered_rows
+
+
+def _build_filtered_open_feedback_actionable_rows(
+    conn: sqlite3.Connection,
+    *,
+    outcome: str | None,
+    cohort: str | None,
+) -> list[dict[str, Any]]:
+    total_rows = _open_feedback_actionables_total(conn, outcome=outcome)
+    if total_rows <= 0:
+        return []
+    rows = _build_open_feedback_actionable_rows(
+        conn,
+        outcome=outcome,
+        limit=total_rows,
+    )
+    return _filter_actionable_rows_by_cohort(rows, cohort=cohort)
+
+
 def build_open_feedback_actionables_report(
     *,
     db_path: Path,
     outcome: str | None = None,
+    cohort: str | None = None,
     limit: int = 100,
 ) -> dict[str, Any]:
     outcome_filter = outcome.strip().lower() if outcome else None
     if outcome_filter == "":
         outcome_filter = None
+    cohort_filter = _normalize_cohort_filter(cohort)
     if not db_path.is_file():
         return {
             "schema_version": ACTIONABLES_SCHEMA_VERSION,
@@ -572,6 +627,7 @@ def build_open_feedback_actionables_report(
             "filters": {
                 "status": "open",
                 "outcome": outcome_filter or "",
+                "cohort": cohort_filter or "",
                 "limit": max(1, limit),
             },
             "rows": [],
@@ -580,15 +636,13 @@ def build_open_feedback_actionables_report(
 
     with closing(_connect_readonly(db_path)) as conn:
         integrity = str(conn.execute("PRAGMA integrity_check").fetchone()[0])
-        total_rows = _open_feedback_actionables_total(
+        all_rows = _build_filtered_open_feedback_actionable_rows(
             conn,
             outcome=outcome_filter,
+            cohort=cohort_filter,
         )
-        rows = _build_open_feedback_actionable_rows(
-            conn,
-            outcome=outcome_filter,
-            limit=limit,
-        )
+        total_rows = len(all_rows)
+        rows = all_rows[: max(1, limit)]
 
     return {
         "schema_version": ACTIONABLES_SCHEMA_VERSION,
@@ -601,6 +655,7 @@ def build_open_feedback_actionables_report(
         "filters": {
             "status": "open",
             "outcome": outcome_filter or "",
+            "cohort": cohort_filter or "",
             "limit": max(1, limit),
         },
         "counts": {
@@ -648,22 +703,17 @@ def _finalize_cohort_summary(summary: dict[str, Any]) -> dict[str, Any]:
     return summary
 
 
-def _build_open_feedback_cohort_rows(
-    conn: sqlite3.Connection,
-    *,
-    outcome: str | None,
+def _summarize_open_feedback_cohort_rows(
+    actionables: Sequence[dict[str, Any]],
 ) -> list[dict[str, Any]]:
-    total_rows = _open_feedback_actionables_total(conn, outcome=outcome)
-    if total_rows <= 0:
-        return []
-    actionables = _build_open_feedback_actionable_rows(
-        conn,
-        outcome=outcome,
-        limit=total_rows,
-    )
     summaries: dict[str, dict[str, Any]] = {}
     for row in actionables:
-        cohort_id = _feedback_action_cohort(row.get("recommended_action"))
+        action_cohort = row.get("action_cohort")
+        if not isinstance(action_cohort, dict):
+            action_cohort = {}
+        cohort_id = str(action_cohort.get("id") or "")
+        if cohort_id not in COHORT_DESCRIPTIONS:
+            cohort_id = _feedback_action_cohort(row.get("recommended_action"))
         summary = summaries.setdefault(cohort_id, _new_cohort_summary(cohort_id))
         summary["rows"] = _int_value(summary.get("rows")) + 1
         session_ids = summary.get("_session_ids")
@@ -712,10 +762,12 @@ def build_open_feedback_cohorts_report(
     *,
     db_path: Path,
     outcome: str | None = None,
+    cohort: str | None = None,
 ) -> dict[str, Any]:
     outcome_filter = outcome.strip().lower() if outcome else None
     if outcome_filter == "":
         outcome_filter = None
+    cohort_filter = _normalize_cohort_filter(cohort)
     if not db_path.is_file():
         return {
             "schema_version": COHORTS_SCHEMA_VERSION,
@@ -724,6 +776,7 @@ def build_open_feedback_cohorts_report(
             "filters": {
                 "status": "open",
                 "outcome": outcome_filter or "",
+                "cohort": cohort_filter or "",
                 "cohort_basis": "recommended_action",
             },
             "cohorts": [],
@@ -732,14 +785,13 @@ def build_open_feedback_cohorts_report(
 
     with closing(_connect_readonly(db_path)) as conn:
         integrity = str(conn.execute("PRAGMA integrity_check").fetchone()[0])
-        total_rows = _open_feedback_actionables_total(
+        actionables = _build_filtered_open_feedback_actionable_rows(
             conn,
             outcome=outcome_filter,
+            cohort=cohort_filter,
         )
-        cohorts = _build_open_feedback_cohort_rows(
-            conn,
-            outcome=outcome_filter,
-        )
+        total_rows = len(actionables)
+        cohorts = _summarize_open_feedback_cohort_rows(actionables)
 
     return {
         "schema_version": COHORTS_SCHEMA_VERSION,
@@ -752,6 +804,7 @@ def build_open_feedback_cohorts_report(
         "filters": {
             "status": "open",
             "outcome": outcome_filter or "",
+            "cohort": cohort_filter or "",
             "cohort_basis": "recommended_action",
         },
         "counts": {
@@ -960,6 +1013,7 @@ def format_open_feedback_actionables_report(report: dict[str, Any]) -> str:
         f"state={report.get('state', 'unknown')} "
         f"rows={returned_rows}/{total_rows} "
         f"outcome={filters.get('outcome') or 'all'} "
+        f"cohort={filters.get('cohort') or 'all'} "
         f"limit={_int_value(filters.get('limit'))} "
         f"path={manual_db.get('path', 'unknown')}",
     ]
@@ -984,6 +1038,9 @@ def format_open_feedback_actionables_report(report: dict[str, Any]) -> str:
             latest_ocr = {}
         tags = item.get("tags")
         tag_text = ", ".join(str(tag) for tag in tags) if isinstance(tags, list) else ""
+        action_cohort = item.get("action_cohort")
+        if not isinstance(action_cohort, dict):
+            action_cohort = {}
         lines.extend(
             [
                 "- "
@@ -991,6 +1048,7 @@ def format_open_feedback_actionables_report(report: dict[str, Any]) -> str:
                 f"era={item.get('era', '') or 'unknown'} "
                 f"outcome={item.get('outcome', '') or 'unknown'} "
                 f"status={item.get('status', '') or 'unknown'} "
+                f"cohort={action_cohort.get('id') or 'unknown'} "
                 f"session={item.get('session_id', '') or 'unknown'} "
                 f"message={item.get('message_id', '') or 'unknown'}",
                 f"  title={_display_text(item.get('title'))}",
@@ -1036,6 +1094,7 @@ def format_open_feedback_cohorts_report(report: dict[str, Any]) -> str:
         f"rows={_int_value(counts.get('total_rows'))} "
         f"cohorts={_int_value(counts.get('cohorts'))} "
         f"outcome={filters.get('outcome') or 'all'} "
+        f"cohort={filters.get('cohort') or 'all'} "
         f"basis={filters.get('cohort_basis') or 'unknown'} "
         f"path={manual_db.get('path', 'unknown')}",
     ]
@@ -1107,6 +1166,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Filter open feedback actionables by outcome, such as fail or partial.",
     )
     parser.add_argument(
+        "--cohort",
+        choices=COHORT_FILTER_CHOICES,
+        default=None,
+        help="Filter open feedback actionables by cohort id.",
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         default=100,
@@ -1122,6 +1187,7 @@ def main() -> int:
         report = build_open_feedback_cohorts_report(
             db_path=db_path,
             outcome=args.outcome,
+            cohort=args.cohort,
         )
         if args.json:
             print(json.dumps(report, indent=2, sort_keys=True))
@@ -1133,6 +1199,7 @@ def main() -> int:
         report = build_open_feedback_actionables_report(
             db_path=db_path,
             outcome=args.outcome,
+            cohort=args.cohort,
             limit=max(1, args.limit),
         )
         if args.json:
