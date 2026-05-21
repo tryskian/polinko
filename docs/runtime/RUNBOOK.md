@@ -240,6 +240,18 @@ Use this doc for operator procedure.
   - use shortlist IDs, candidate artifact IDs, source previews, and fillable
     `selected_action=undecided` fields to prepare local human decisions before
     any OCR rerun, curation, feedback closure, or warehouse mutation
+- `make manual-evals-ocr-retry-selection-draft`
+  - write a local ignored OCR retry human-selection draft for the default
+    `ocr_retry_evidence` partial shortlist
+  - combine with `DRAFT_PATH=<path>`, `FORCE=1`, `COHORT=<cohort_id>`,
+    `OUTCOME=<outcome>`, `LIMIT=<n>`, and `ARTIFACT_IDS=<artifact_id>` for
+    explicit local decision files
+  - default output is
+    `.local/manual_eval_decisions/ocr_retry_selection_draft.json`; existing
+    files are not overwritten unless `FORCE=1`
+  - fill the draft locally, then validate it with
+    `make manual-evals-ocr-retry-selection-validate SELECTION_PATH=<path>`
+    before any apply preview or execution surface
 - `make manual-evals-ocr-retry-selection-validate`
   - validate local OCR retry human decisions against the current default
     `ocr_retry_evidence` partial shortlist without mutating eval data

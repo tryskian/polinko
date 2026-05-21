@@ -291,6 +291,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-selection-template`",
             "`schema_version=polinko.manual_eval_ocr_retry_selection_template.v1`",
             "`selected_action=undecided`",
+            "## D-097: Materialize OCR retry decision drafts locally",
+            "`make manual-evals-ocr-retry-selection-draft`",
+            "`schema_version=polinko.manual_eval_ocr_retry_selection_decision_draft.v1`",
+            "template fingerprints",
             "## D-095: Validate OCR retry source-artifact decisions before execution",
             "`make manual-evals-ocr-retry-selection-validate`",
             "`schema_version=polinko.manual_eval_ocr_retry_selection_validation.v1`",
@@ -354,6 +358,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_ocr_retry_selection_template.v1`",
             "candidate artifact IDs",
             "`selected_action=undecided`",
+            "`make manual-evals-ocr-retry-selection-draft` writes a local",
+            "`schema_version=polinko.manual_eval_ocr_retry_selection_decision_draft.v1`",
+            ".local/manual_eval_decisions/ocr_retry_selection_draft.json",
+            "template fingerprints",
             "`make manual-evals-ocr-retry-selection-validate` validates a local",
             "`schema_version=polinko.manual_eval_ocr_retry_selection_validation.v1`",
             "flags missing/stale/duplicate decisions",
@@ -459,6 +467,12 @@ class ResearchModelContractTests(unittest.TestCase):
         )
         self.assertIn("candidate artifact IDs", eval_map)
         self.assertIn("`selected_action=undecided`", eval_map)
+        self.assertIn("`make manual-evals-ocr-retry-selection-draft`", eval_map)
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_ocr_retry_selection_decision_draft.v1`",
+            eval_map,
+        )
+        self.assertIn("template fingerprints", eval_map)
         self.assertIn(
             "`make manual-evals-ocr-retry-selection-validate`",
             eval_map,

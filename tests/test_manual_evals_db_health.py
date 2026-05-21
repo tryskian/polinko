@@ -14,6 +14,7 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_RERUN_MANIFEST_SCHEMA_VERSION,
     OCR_RETRY_RERUN_PLAN_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_APPLY_PREVIEW_SCHEMA_VERSION,
+    OCR_RETRY_SELECTION_DECISION_DRAFT_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_VALIDATION_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_TEMPLATE_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_REVIEW_SCHEMA_VERSION,
@@ -25,6 +26,7 @@ from tools.manual_evals_db_health import (
     build_ocr_retry_rerun_manifest_report,
     build_ocr_retry_rerun_plan_report,
     build_ocr_retry_selection_apply_preview_report,
+    build_ocr_retry_selection_decision_draft_payload,
     build_ocr_retry_selection_validation_report,
     build_ocr_retry_selection_template_report,
     build_ocr_retry_selection_review_report,
@@ -38,6 +40,7 @@ from tools.manual_evals_db_health import (
     format_ocr_retry_rerun_manifest_report,
     format_ocr_retry_rerun_plan_report,
     format_ocr_retry_selection_apply_preview_report,
+    format_ocr_retry_selection_decision_draft_report,
     format_ocr_retry_selection_validation_report,
     format_ocr_retry_selection_template_report,
     format_ocr_retry_selection_review_report,
@@ -45,6 +48,7 @@ from tools.manual_evals_db_health import (
     format_ocr_retry_source_verification_report,
     format_open_feedback_actionables_report,
     format_open_feedback_cohorts_report,
+    write_ocr_retry_selection_decision_draft,
 )
 from tests.test_build_manual_evals_db import _PNG_1X1, _init_history_db
 
@@ -1588,6 +1592,115 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 "fill_template=selected_action=<rerun_input|curated_case|context_only>",
                 template_summary,
             )
+
+            decision_draft = build_ocr_retry_selection_decision_draft_payload(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            self.assertEqual(
+                decision_draft["schema_version"],
+                OCR_RETRY_SELECTION_DECISION_DRAFT_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                decision_draft["selection_template_schema_version"],
+                OCR_RETRY_SELECTION_TEMPLATE_SCHEMA_VERSION,
+            )
+            self.assertEqual(decision_draft["draft_contract"]["mutation"], "none")
+            self.assertTrue(decision_draft["draft_contract"]["local_only"])
+            self.assertTrue(decision_draft["draft_contract"]["requires_validation"])
+            self.assertEqual(decision_draft["counts"]["draft_items"], 1)
+            self.assertEqual(decision_draft["counts"]["candidate_artifacts"], 2)
+            self.assertEqual(len(decision_draft["template_fingerprint"]), 64)
+            draft_template = decision_draft["selection_template"]
+            self.assertEqual(
+                draft_template["template_fingerprint"],
+                decision_draft["template_fingerprint"],
+            )
+            draft_item = draft_template["items"][0]
+            self.assertEqual(len(draft_item["template_item_fingerprint"]), 64)
+            self.assertEqual(
+                draft_item["decision_input"]["selected_action"],
+                "undecided",
+            )
+            draft_path = tmp / "manual_eval_decisions" / "ocr_retry_selection.json"
+            write_report = write_ocr_retry_selection_decision_draft(
+                db_path=output_db,
+                output_path=draft_path,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            draft_write_summary = format_ocr_retry_selection_decision_draft_report(
+                write_report
+            )
+            self.assertEqual(write_report["state"], "written")
+            self.assertEqual(
+                write_report["schema_version"],
+                OCR_RETRY_SELECTION_DECISION_DRAFT_SCHEMA_VERSION,
+            )
+            self.assertFalse(write_report["output"]["overwritten"])
+            self.assertEqual(write_report["output"]["path"], str(draft_path))
+            self.assertTrue(draft_path.exists())
+            self.assertIn(
+                "manual eval OCR retry selection decision draft: state=written "
+                "rows=1/1 items=1 shortlist=1 candidate_artifacts=2",
+                draft_write_summary,
+            )
+            self.assertIn(f"output={draft_path}", draft_write_summary)
+            self.assertIn(
+                "next_validate=make manual-evals-ocr-retry-selection-validate",
+                draft_write_summary,
+            )
+            loaded_draft = json.loads(draft_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                loaded_draft["schema_version"],
+                OCR_RETRY_SELECTION_DECISION_DRAFT_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                loaded_draft["selection_template"]["items"][0]["shortlist_id"],
+                template_item["shortlist_id"],
+            )
+            draft_validation = build_ocr_retry_selection_validation_report(
+                db_path=output_db,
+                selection_path=draft_path,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            self.assertEqual(draft_validation["state"], "attention")
+            self.assertEqual(draft_validation["decision_source"]["state"], "loaded")
+            self.assertEqual(
+                draft_validation["decision_source"]["schema_version"],
+                OCR_RETRY_SELECTION_DECISION_DRAFT_SCHEMA_VERSION,
+            )
+            self.assertEqual(draft_validation["counts"]["submitted_decisions"], 1)
+            self.assertEqual(draft_validation["counts"]["pending_decisions"], 1)
+            self.assertEqual(draft_validation["counts"]["missing_decisions"], 0)
+            self.assertEqual(
+                draft_validation["selection_validation_items"][0]["issues"],
+                ["pending_selected_action"],
+            )
+            blocked_write = write_ocr_retry_selection_decision_draft(
+                db_path=output_db,
+                output_path=draft_path,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            self.assertEqual(blocked_write["state"], "blocked")
+            self.assertIn("already exists", blocked_write["warnings"][0])
+            forced_write = write_ocr_retry_selection_decision_draft(
+                db_path=output_db,
+                output_path=draft_path,
+                force=True,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            self.assertEqual(forced_write["state"], "written")
+            self.assertTrue(forced_write["output"]["overwritten"])
 
             missing_validation = build_ocr_retry_selection_validation_report(
                 db_path=output_db,

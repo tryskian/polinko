@@ -1383,3 +1383,27 @@ or branch history instead.
   rerun, curation, feedback closure, live eval write, or warehouse mutation.
   The preview only emits payloads when validation is `ok`; otherwise it shows
   blockers and stays non-executing.
+
+## D-097: Materialize OCR retry decision drafts locally
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `selection_draft`,
+  `local_tooling`
+- Human-led: The human lead asked to focus the refactor on tooling that the
+  toy repos can adopt while keeping OCR retry decisions in the manual eval
+  workbench.
+- Decision: `make manual-evals-ocr-retry-selection-draft` writes a local
+  ignored OCR retry human-selection draft from the current source-artifact
+  shortlist. Draft files expose
+  `schema_version=polinko.manual_eval_ocr_retry_selection_decision_draft.v1`,
+  the current selection-template schema version, shortlist IDs, candidate
+  artifact IDs, source provenance, template fingerprints, and undecided
+  fillable decision inputs. The default output path is
+  `.local/manual_eval_decisions/ocr_retry_selection_draft.json`, and existing
+  draft files are not overwritten unless the operator passes `FORCE=1`.
+- Why: The template can already be printed, but manual operators need a
+  stable local file to fill without copy/paste. Making the generator local,
+  deterministic, fingerprinted, and overwrite-safe gives Polinko a reusable
+  tooling pattern for the other toy repos: materialize local input, validate
+  it, preview application, then execute only after the gates pass.

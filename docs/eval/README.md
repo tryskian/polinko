@@ -132,6 +132,16 @@ notes, exports, and runtime history.
   - selection templates expose shortlist IDs, candidate artifact IDs, source
     previews, and fillable decision fields that default to
     `selected_action=undecided`
+  - materialize a local fillable human-selection draft with
+    `make manual-evals-ocr-retry-selection-draft`
+  - JSON OCR retry selection-draft files use
+    `schema_version=polinko.manual_eval_ocr_retry_selection_decision_draft.v1`
+  - selection drafts are written to a local ignored lane by default, preserve
+    shortlist IDs, candidate artifact IDs, source provenance, and template
+    fingerprints, and remain blocked from execution until the validator and
+    apply-preview gates pass
+  - template fingerprints stay in the draft payload for local stale-input
+    review
   - validate local OCR retry human-selection JSON without mutation with
     `make manual-evals-ocr-retry-selection-validate`
   - JSON OCR retry selection-validation export uses
