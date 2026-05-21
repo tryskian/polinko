@@ -31,6 +31,8 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             payload["source_first"]["schema_version"], SOURCE_FIRST_SCHEMA_VERSION
         )
         self.assertEqual(payload["source_first"]["exclusions"], [])
+        self.assertEqual(payload["data_freshness"]["state"], "missing")
+        self.assertFalse(payload["data_freshness"]["manual_evals_db"]["exists"])
 
     def test_returns_runs_sessions_and_image_preview_fields(self) -> None:
         with TemporaryDirectory() as tmpdir:
@@ -69,6 +71,13 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
             )
             self.assertEqual(
                 payload["metadata"]["schema_version"], MANUAL_EVALS_DB_SCHEMA_VERSION
+            )
+            self.assertEqual(payload["data_freshness"]["state"], "current")
+            self.assertTrue(
+                payload["data_freshness"]["manual_evals_db"]["schema_current"]
+            )
+            self.assertEqual(
+                payload["source_first"]["data_freshness"]["state"], "current"
             )
             self.assertEqual(
                 payload["source_first"]["contract"]["promotion_gate"],
@@ -114,6 +123,76 @@ class ManualEvalsSurfaceTests(unittest.TestCase):
                         "data:image/png;base64,"
                     )
                 )
+
+    def test_data_freshness_reports_stale_source_counts_without_rebuild(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            history_db = root / "history.db"
+            output_db = root / "manual_evals.db"
+
+            _init_history_db(history_db)
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                include_thumbnails=False,
+            )
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute(
+                    """
+                    INSERT INTO chats (session_id, title, created_at, updated_at, status, deprecated_at)
+                    VALUES ('chat-2', 'Fresh manual source', 300, 400, 'active', NULL)
+                    """
+                )
+                conn.execute(
+                    """
+                    INSERT INTO ocr_runs (
+                      run_id, session_id, source_name, mime_type,
+                      source_message_id, result_message_id, status, extracted_text, created_at
+                    ) VALUES (
+                      'ocr-2', 'chat-2', 'image2.png', 'image/png',
+                      'm-source-2', 'm-result-2', 'ok', 'new source text', 350
+                    )
+                    """
+                )
+                conn.commit()
+
+            payload = build_manual_evals_surface_payload(db_path=output_db)
+            freshness = payload["data_freshness"]
+            source = freshness["source_history_dbs"][0]
+
+            self.assertEqual(freshness["state"], "stale")
+            self.assertTrue(freshness["warnings"])
+            self.assertEqual(source["recorded_counts"]["sessions"], 1)
+            self.assertEqual(source["current_counts"]["sessions"], 2)
+            self.assertEqual(source["count_deltas"]["sessions"], 1)
+            self.assertEqual(source["count_deltas"]["ocr_runs"], 1)
+
+    def test_data_freshness_reports_old_manual_eval_schema_metadata(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            history_db = root / "history.db"
+            output_db = root / "manual_evals.db"
+
+            _init_history_db(history_db)
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                include_thumbnails=False,
+            )
+            with closing(sqlite3.connect(output_db)) as conn:
+                conn.execute("DELETE FROM metadata WHERE key = 'schema_version'")
+                conn.commit()
+
+            payload = build_manual_evals_surface_payload(db_path=output_db)
+
+            self.assertEqual(payload["data_freshness"]["state"], "stale")
+            self.assertFalse(
+                payload["data_freshness"]["manual_evals_db"]["schema_current"]
+            )
+            self.assertIn(
+                "manual_evals.db schema_version is missing or not current",
+                payload["data_freshness"]["warnings"],
+            )
 
     def test_source_first_payload_links_feedback_to_source_artifact(self) -> None:
         with TemporaryDirectory() as tmpdir:

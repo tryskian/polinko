@@ -7,10 +7,19 @@ from pathlib import Path
 import re
 from typing import Any
 
-from polinko.api.manual_eval_contracts import SOURCE_FIRST_SCHEMA_VERSION
+from polinko.api.manual_eval_contracts import (
+    MANUAL_EVALS_DB_SCHEMA_VERSION,
+    SOURCE_FIRST_SCHEMA_VERSION,
+)
 
 _MANUAL_EVALS_DB_PATH = Path(".local/runtime_dbs/active/manual_evals.db")
 _FILE_UPLOAD_PREFIX_RE = re.compile(r"^file[-_][^-_]+[-_](.+)$", re.IGNORECASE)
+_SOURCE_HISTORY_TABLES = {
+    "sessions": ("chats", "updated_at"),
+    "feedback": ("message_feedback", "updated_at"),
+    "checkpoints": ("eval_checkpoints", "created_at"),
+    "ocr_runs": ("ocr_runs", "created_at"),
+}
 
 
 def empty_source_first_payload() -> dict[str, Any]:
@@ -110,6 +119,38 @@ def _safe_int(value: Any) -> int:
         return 0
 
 
+def _iso_timestamp_ms(value: str) -> int | None:
+    if not value:
+        return None
+    normalized = value.strip().replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return int(parsed.timestamp() * 1000)
+
+
+def _unixish_to_timestamp_ms(value: Any) -> int | None:
+    timestamp = _safe_int(value)
+    if timestamp <= 0:
+        return None
+    if timestamp >= 1_000_000_000_000:
+        return timestamp
+    if timestamp >= 1_000_000_000:
+        return timestamp * 1000
+    return timestamp
+
+
+def _timestamp_ms_to_utc(value: int | None) -> str:
+    if value is None or value <= 0:
+        return ""
+    return datetime.fromtimestamp(value / 1000, tz=timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
+
+
 def _table_columns(conn: sqlite3.Connection, table_name: str) -> set[str]:
     try:
         rows = conn.execute(f"PRAGMA table_info({table_name})").fetchall()
@@ -156,6 +197,216 @@ def _source_count_from_metadata(metadata: dict[str, str]) -> int:
     if isinstance(parsed, list):
         return len(parsed)
     return 0
+
+
+def _metadata_source_history_records(
+    metadata: dict[str, str],
+) -> list[dict[str, Any]]:
+    raw_sources = metadata.get("source_history_dbs_json", "")
+    records: list[dict[str, Any]] = []
+    if raw_sources:
+        try:
+            parsed = json.loads(raw_sources)
+        except (TypeError, ValueError):
+            parsed = []
+        if isinstance(parsed, list):
+            records = [row for row in parsed if isinstance(row, dict)]
+
+    if records:
+        return records
+
+    raw_counts = metadata.get("source_counts_json", "")
+    if raw_counts:
+        try:
+            parsed_counts = json.loads(raw_counts)
+        except (TypeError, ValueError):
+            parsed_counts = {}
+        if isinstance(parsed_counts, dict):
+            return [
+                row
+                for row in parsed_counts.values()
+                if isinstance(row, dict) and str(row.get("history_db") or "").strip()
+            ]
+
+    source_history_db = metadata.get("source_history_db", "").strip()
+    if source_history_db:
+        return [
+            {
+                "era": "current",
+                "label": "current",
+                "history_db": source_history_db,
+                "sessions": metadata.get("sessions_count", "0"),
+                "feedback": metadata.get("feedback_count", "0"),
+                "checkpoints": metadata.get("checkpoints_count", "0"),
+                "ocr_runs": metadata.get("ocr_runs_count", "0"),
+            }
+        ]
+    return []
+
+
+def _source_history_snapshot(
+    source_record: dict[str, Any],
+    *,
+    generated_at_ms: int | None,
+) -> dict[str, Any]:
+    raw_path = str(source_record.get("history_db") or "").strip()
+    path = Path(raw_path) if raw_path else Path()
+    recorded_counts = {
+        key: _safe_int(source_record.get(key)) for key in _SOURCE_HISTORY_TABLES
+    }
+    snapshot: dict[str, Any] = {
+        "era": str(source_record.get("era") or ""),
+        "label": str(source_record.get("label") or ""),
+        "path": raw_path,
+        "exists": bool(raw_path and path.is_file()),
+        "recorded_counts": recorded_counts,
+        "current_counts": {},
+        "count_deltas": {},
+        "latest_activity_ms": None,
+        "latest_activity_utc": "",
+        "is_newer_than_generated": False,
+    }
+    if not snapshot["exists"]:
+        return snapshot
+
+    try:
+        conn = sqlite3.connect(f"file:{path}?mode=ro", uri=True)
+    except sqlite3.Error:
+        return snapshot
+    conn.row_factory = sqlite3.Row
+
+    current_counts: dict[str, int] = {}
+    latest_values: list[int] = []
+    for key, (table_name, timestamp_column) in _SOURCE_HISTORY_TABLES.items():
+        try:
+            row = conn.execute(
+                f"""
+                SELECT
+                  COUNT(*) AS c,
+                  MAX({timestamp_column}) AS latest
+                FROM {table_name}
+                """
+            ).fetchone()
+        except sqlite3.Error:
+            current_counts[key] = 0
+            continue
+        current_counts[key] = _safe_int(row["c"]) if row is not None else 0
+        latest_ms = _unixish_to_timestamp_ms(row["latest"]) if row is not None else None
+        if latest_ms is not None:
+            latest_values.append(latest_ms)
+    conn.close()
+
+    latest_activity_ms = max(latest_values) if latest_values else None
+    snapshot["current_counts"] = current_counts
+    snapshot["count_deltas"] = {
+        key: current_counts.get(key, 0) - recorded_counts.get(key, 0)
+        for key in _SOURCE_HISTORY_TABLES
+    }
+    snapshot["latest_activity_ms"] = latest_activity_ms
+    snapshot["latest_activity_utc"] = _timestamp_ms_to_utc(latest_activity_ms)
+    snapshot["is_newer_than_generated"] = (
+        latest_activity_ms is not None
+        and generated_at_ms is not None
+        and latest_activity_ms > generated_at_ms
+    )
+    return snapshot
+
+
+def _data_freshness_payload(
+    *,
+    db_path: Path,
+    metadata: dict[str, str],
+    summary: dict[str, int],
+) -> dict[str, Any]:
+    generated_at = metadata.get("generated_at_utc", "").strip()
+    generated_at_ms = _iso_timestamp_ms(generated_at)
+    db_schema_version = metadata.get("schema_version", "").strip()
+    schema_current = db_schema_version == MANUAL_EVALS_DB_SCHEMA_VERSION
+    source_records = _metadata_source_history_records(metadata)
+    source_snapshots = [
+        _source_history_snapshot(record, generated_at_ms=generated_at_ms)
+        for record in source_records
+    ]
+
+    warnings: list[str] = []
+    if not generated_at_ms:
+        warnings.append("manual_evals.db generated_at_utc is missing or invalid")
+    if not schema_current:
+        warnings.append("manual_evals.db schema_version is missing or not current")
+    if not source_snapshots:
+        warnings.append("manual_evals.db has no source history DB metadata")
+
+    for snapshot in source_snapshots:
+        if not snapshot["exists"]:
+            warnings.append(
+                f"source history DB is missing: {snapshot['path'] or '(unknown)'}"
+            )
+            continue
+        if any(int(delta) != 0 for delta in snapshot["count_deltas"].values()):
+            warnings.append(
+                f"source history DB counts changed since manual_evals.db build: {snapshot['path']}"
+            )
+        if snapshot["is_newer_than_generated"]:
+            warnings.append(
+                f"source history DB has activity after manual_evals.db build: {snapshot['path']}"
+            )
+
+    if not db_path.is_file():
+        state = "missing"
+    elif any("source history DB is missing" in warning for warning in warnings):
+        state = "unknown"
+    elif warnings:
+        state = "stale"
+    else:
+        state = "current"
+
+    return {
+        "state": state,
+        "warnings": warnings,
+        "manual_evals_db": {
+            "path": str(db_path),
+            "exists": db_path.is_file(),
+            "schema_version": db_schema_version,
+            "expected_schema_version": MANUAL_EVALS_DB_SCHEMA_VERSION,
+            "schema_current": schema_current,
+            "generated_at_utc": generated_at,
+            "generated_at_ms": generated_at_ms,
+            "summary_counts": dict(summary),
+        },
+        "source_history_dbs": source_snapshots,
+    }
+
+
+def _unavailable_data_freshness_payload(
+    *,
+    db_path: Path,
+    error: str | None = None,
+) -> dict[str, Any]:
+    warnings = ["manual_evals.db is not available"]
+    if error:
+        warnings.append(error)
+    return {
+        "state": "missing",
+        "warnings": warnings,
+        "manual_evals_db": {
+            "path": str(db_path),
+            "exists": False,
+            "schema_version": "",
+            "expected_schema_version": MANUAL_EVALS_DB_SCHEMA_VERSION,
+            "schema_current": False,
+            "generated_at_utc": "",
+            "generated_at_ms": None,
+            "summary_counts": {
+                "sessions": 0,
+                "feedback": 0,
+                "checkpoints": 0,
+                "ocr_runs": 0,
+                "image_assets": 0,
+                "thumbnails_ready": 0,
+            },
+        },
+        "source_history_dbs": [],
+    }
 
 
 def _source_artifact_counts(
@@ -725,6 +976,9 @@ def build_manual_evals_surface_payload(
 ) -> dict[str, Any]:
     target_db = db_path if db_path is not None else _MANUAL_EVALS_DB_PATH
     if not target_db.is_file():
+        data_freshness = _unavailable_data_freshness_payload(db_path=target_db)
+        source_first = empty_source_first_payload()
+        source_first["data_freshness"] = data_freshness
         return {
             "available": False,
             "db_path": str(target_db),
@@ -739,13 +993,20 @@ def build_manual_evals_surface_payload(
             },
             "sessions": [],
             "runs": [],
-            "source_first": empty_source_first_payload(),
+            "source_first": source_first,
+            "data_freshness": data_freshness,
             "metadata": {},
         }
 
     try:
         conn = sqlite3.connect(f"file:{target_db}?mode=ro", uri=True)
     except sqlite3.Error as exc:
+        data_freshness = _unavailable_data_freshness_payload(
+            db_path=target_db,
+            error=f"db_open_error: {exc}",
+        )
+        source_first = empty_source_first_payload()
+        source_first["data_freshness"] = data_freshness
         return {
             "available": False,
             "db_path": str(target_db),
@@ -761,7 +1022,8 @@ def build_manual_evals_surface_payload(
             },
             "sessions": [],
             "runs": [],
-            "source_first": empty_source_first_payload(),
+            "source_first": source_first,
+            "data_freshness": data_freshness,
             "metadata": {},
         }
 
@@ -792,6 +1054,12 @@ def build_manual_evals_surface_payload(
         summary=summary,
         max_rows=max_runs,
     )
+    data_freshness = _data_freshness_payload(
+        db_path=target_db,
+        metadata=metadata,
+        summary=summary,
+    )
+    source_first["data_freshness"] = data_freshness
 
     conn.close()
 
@@ -807,5 +1075,6 @@ def build_manual_evals_surface_payload(
         "sessions": sessions,
         "runs": runs,
         "source_first": source_first,
+        "data_freshness": data_freshness,
         "metadata": metadata,
     }

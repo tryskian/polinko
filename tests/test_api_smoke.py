@@ -14,6 +14,15 @@ def _source_first_payload() -> dict[str, object]:
     }
 
 
+def _data_freshness_payload() -> dict[str, object]:
+    return {
+        "state": "current",
+        "manual_evals_db": {
+            "schema_current": True,
+        },
+    }
+
+
 class ApiSmokeTests(unittest.TestCase):
     def test_manual_evals_surface_validation_accepts_versioned_source_first(
         self,
@@ -22,6 +31,7 @@ class ApiSmokeTests(unittest.TestCase):
             {
                 "available": False,
                 "source_first": _source_first_payload(),
+                "data_freshness": _data_freshness_payload(),
             }
         )
 
@@ -29,6 +39,7 @@ class ApiSmokeTests(unittest.TestCase):
         api_smoke._validate_pass_fail_data_payload(
             {
                 "source_first": _source_first_payload(),
+                "data_freshness": _data_freshness_payload(),
             }
         )
 
@@ -39,7 +50,28 @@ class ApiSmokeTests(unittest.TestCase):
         contract["rollup_unit"] = "lane_summary"
 
         with self.assertRaisesRegex(RuntimeError, "rollup_unit"):
-            api_smoke._validate_pass_fail_data_payload({"source_first": payload})
+            api_smoke._validate_pass_fail_data_payload(
+                {
+                    "source_first": payload,
+                    "data_freshness": _data_freshness_payload(),
+                }
+            )
+
+    def test_data_freshness_validation_accepts_stale_local_manual_eval_db(
+        self,
+    ) -> None:
+        api_smoke._validate_manual_evals_surface_payload(
+            {
+                "available": True,
+                "source_first": _source_first_payload(),
+                "data_freshness": {
+                    "state": "stale",
+                    "manual_evals_db": {
+                        "schema_current": False,
+                    },
+                },
+            }
+        )
 
 
 if __name__ == "__main__":

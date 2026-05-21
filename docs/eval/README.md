@@ -50,6 +50,7 @@ notes, exports, and runtime history.
   - `.local/runtime_dbs/active/manual_evals.db`
   - rebuild with `make manual-evals-db`
   - DB metadata exposes `schema_version=polinko.manual_evals_db.v1`
+  - API surfaces expose read-only `data_freshness` status before any rebuild
 - active chat artifacts:
   - `POST /chat`
   - `/chats/*`

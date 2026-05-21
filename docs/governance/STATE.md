@@ -94,6 +94,10 @@ Last updated: 2026-05-20
   - `make api-smoke` includes non-browser checks for `/manual-evals/surface`
     and `/viz/pass-fail/data` so source-first schema and summary-unit drift is
     caught in the startup/runtime smoke path
+  - `/manual-evals/surface` and `/viz/pass-fail/data` expose read-only
+    `data_freshness` status for the local manual eval warehouse so stale,
+    schema-old, unknown, or missing source data is visible without rebuilding
+    local databases
   - generated trace artifacts from manual submissions use manual eval workbench
     names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane

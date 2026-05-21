@@ -999,3 +999,16 @@ or branch history instead.
 - Why: These endpoints are active manual-eval evidence surfaces. Keeping them
   in the startup/runtime smoke path catches contract drift before manual eval
   workbench use.
+
+## D-074: Surface manual eval warehouse freshness read-only
+
+- Date: `2026-05-20`
+- Category: `eval_quality`
+- Tags: `manual_evals`, `freshness`, `source_first`, `eval_viz`
+- Decision: `/manual-evals/surface` and `/viz/pass-fail/data` expose a
+  read-only `data_freshness` block that labels the manual eval warehouse as
+  `current`, `stale`, `unknown`, or `missing` from existing metadata and source
+  history DB counts/timestamps.
+- Why: Manual eval work can continue with stale local evidence, but the
+  workbench must make stale, schema-old, or missing source data visible without
+  silently rebuilding local databases or launching browser surfaces.

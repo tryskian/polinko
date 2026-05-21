@@ -200,6 +200,10 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(
                 payload["source_first"]["schema_version"], SOURCE_FIRST_SCHEMA_VERSION
             )
+            self.assertEqual(payload["data_freshness"]["state"], "current")
+            self.assertEqual(
+                payload["source_first"]["data_freshness"]["state"], "current"
+            )
             self.assertNotIn("rollup_unit", payload["source_first"]["contract"])
             self.assertEqual(payload["source_first"]["source_artifacts"]["sessions"], 1)
             self.assertEqual(payload["source_first"]["source_artifacts"]["ocr_runs"], 3)

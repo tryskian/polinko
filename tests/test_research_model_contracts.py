@@ -211,6 +211,43 @@ class ResearchModelContractTests(unittest.TestCase):
         ):
             self.assertIn(expected, smoke)
 
+    def test_manual_eval_freshness_status_is_documented_and_guarded(self) -> None:
+        decisions = _read("docs/governance/DECISIONS.md")
+        state = _read("docs/governance/STATE.md")
+        eval_map = _read("docs/eval/README.md")
+        surface = _read("src/polinko/api/manual_evals_surface.py")
+        smoke = _read("tools/api_smoke.py")
+
+        for expected in (
+            "## D-074: Surface manual eval warehouse freshness read-only",
+            "`data_freshness` block",
+            "`current`, `stale`, `unknown`, or `missing`",
+        ):
+            self.assertIn(expected, decisions)
+
+        for expected in (
+            "`data_freshness` status",
+            "is visible without rebuilding",
+            "local databases",
+        ):
+            self.assertIn(expected, state)
+
+        self.assertIn("read-only `data_freshness` status", eval_map)
+
+        for expected in (
+            "MANUAL_EVALS_DB_SCHEMA_VERSION",
+            '"state": state',
+            '"source_history_dbs": source_snapshots',
+        ):
+            self.assertIn(expected, surface)
+
+        for expected in (
+            "_validate_data_freshness_payload",
+            '{"current", "stale", "unknown", "missing"}',
+            '"schema_current" not in manual_evals_db',
+        ):
+            self.assertIn(expected, smoke)
+
 
 if __name__ == "__main__":
     unittest.main()
