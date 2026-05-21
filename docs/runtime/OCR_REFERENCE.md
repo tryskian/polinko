@@ -172,6 +172,11 @@ workflow, output surfaces, and tuning knobs.
      - `make notes NOTEBOOK_START_PATH=/abs/path/to/notebook.ipynb`
 2. Read-only OCR lane inventory:
    - `make ocr-inventory`
+   - JSON output:
+     - `make ocr-inventory-json`
+     - or `make ocr-inventory ARGS=--json`
+   - terminal output includes JSON shape, source schema version when present,
+     primary row count, and top-level list counts for local evidence files
 3. Offline transcript-mining refresh with no live OCR calls:
    - `make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 4. Full online notebook/eval workflow:

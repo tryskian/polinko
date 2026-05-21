@@ -39,6 +39,19 @@ class OcrLaneInventoryTests(unittest.TestCase):
                 json.dumps([{"id": "local-1"}]),
                 encoding="utf-8",
             )
+            (local_cases_dir / "ocr_generalization_review.json").write_text(
+                json.dumps(
+                    {
+                        "schema_version": "polinko.test_review.v1",
+                        "generated_at": "2026-05-21T20:00:00Z",
+                        "selected_candidates": [
+                            {"id": "candidate-1"},
+                            {"id": "candidate-2"},
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
             (local_cases_dir / "ocr_typed_from_transcripts.json").write_bytes(
                 b"\x8dnot-json"
             )
@@ -64,6 +77,20 @@ class OcrLaneInventoryTests(unittest.TestCase):
         self.assertEqual(local_cases["transcript_all"]["rows"], 1)
         self.assertEqual(local_cases["typed"]["kind"], "file")
         self.assertNotIn("rows", local_cases["typed"])
+        self.assertEqual(local_cases["generalization_review"]["json_shape"], "object")
+        self.assertEqual(
+            local_cases["generalization_review"]["source_schema_version"],
+            "polinko.test_review.v1",
+        )
+        self.assertEqual(local_cases["generalization_review"]["rows"], 2)
+        self.assertEqual(
+            local_cases["generalization_review"]["row_source"],
+            "selected_candidates",
+        )
+        self.assertEqual(
+            local_cases["generalization_review"]["list_counts"],
+            {"selected_candidates": 2},
+        )
 
         notebooks = _by_name(inventory["notebooks"])
         self.assertEqual(notebooks["notebook_dir"]["path"], ".local/notebooks")
@@ -77,6 +104,7 @@ class OcrLaneInventoryTests(unittest.TestCase):
         self.assertIn("tracked cases", output)
         self.assertIn("manual eval sources", output)
         self.assertIn(".local/notebooks", output)
+        self.assertIn("row_source=selected_candidates", output)
 
     def test_local_notebook_lane_is_ignored(self) -> None:
         gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
