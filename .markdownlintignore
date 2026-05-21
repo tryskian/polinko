@@ -1,4 +1,4 @@
-docs/peanut/transcripts/**
+docs/peanut/**
 .local/**
 output/**
 node_modules/**

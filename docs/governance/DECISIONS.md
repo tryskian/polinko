@@ -1390,9 +1390,8 @@ or branch history instead.
 - Category: `operator_workflow`
 - Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `selection_draft`,
   `local_tooling`
-- Human-led: The human lead asked to focus the refactor on tooling that the
-  toy repos can adopt while keeping OCR retry decisions in the manual eval
-  workbench.
+- Human-led: The human lead asked to keep OCR retry decisions in the manual
+  eval workbench while tightening Polinko's local tooling pattern.
 - Decision: `make manual-evals-ocr-retry-selection-draft` writes a local
   ignored OCR retry human-selection draft from the current source-artifact
   shortlist. Draft files expose
@@ -1405,5 +1404,24 @@ or branch history instead.
 - Why: The template can already be printed, but manual operators need a
   stable local file to fill without copy/paste. Making the generator local,
   deterministic, fingerprinted, and overwrite-safe gives Polinko a reusable
-  tooling pattern for the other toy repos: materialize local input, validate
-  it, preview application, then execute only after the gates pass.
+  local tooling pattern: materialize local input, validate it, preview
+  application, then execute only after the gates pass.
+
+## D-098: Name the reusable local tooling contract
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `local_tooling`, `manual_evals`, `operator_input`, `polinko_tooling`
+- Human-led: The human lead narrowed the refactor back to Polinko-first
+  tooling while preserving source-first manual eval workflows.
+- Decision: `docs/runtime/LOCAL_TOOLING.md` records the repo-local pattern for
+  high-impact operator tooling: generate ignored local input, validate it
+  against current source truth, preview application without mutation, and
+  execute only through a separate explicit follow-up gate. Required knobs are
+  an ignored local default path, explicit path override, no-overwrite default,
+  `FORCE=1`, deterministic `schema_version`, source fingerprints, validation,
+  and apply-preview commands.
+- Why: The OCR retry decision-draft flow is useful beyond OCR, but extracting
+  a shared package now would freeze the wrong abstraction. Naming the contract
+  lets Polinko reuse the safe operator pattern while keeping implementation
+  repo-local until repeated behavior proves the shared boundary.

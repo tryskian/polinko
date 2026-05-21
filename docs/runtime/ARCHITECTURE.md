@@ -10,6 +10,9 @@ This page is the structural map of the tracked system.
   workbench naming, and legacy compatibility aliases.
 - Use `docs/runtime/PACKAGE_BOUNDARY.md` for the Python package-boundary
   contract and remaining root launcher compatibility.
+- Use `docs/runtime/LOCAL_TOOLING.md` for local operator tooling patterns that
+  generate ignored inputs, validate them, and preview application before any
+  execution gate.
 
 ## Top-Level Map
 
@@ -124,6 +127,8 @@ This page is the structural map of the tracked system.
   - `manual_eval_workbench_submission`
 - Python package-boundary migration contract:
   - `docs/runtime/PACKAGE_BOUNDARY.md`
+- local operator tooling contract:
+  - `docs/runtime/LOCAL_TOOLING.md`
 - historical beta references:
   - `docs/eval/`
 
@@ -141,6 +146,8 @@ This page is the structural map of the tracked system.
   - OCR eval lane reference
 - `PACKAGE_BOUNDARY`
   - Python package-boundary migration contract
+- `LOCAL_TOOLING`
+  - local operator input, validation, preview, and execution-gate contract
 - local `SESSION_HANDOFF`
   - active slice and next-session carryover
 

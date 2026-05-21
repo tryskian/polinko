@@ -148,6 +148,21 @@ Use this doc for operator procedure.
 4. Keep local-only files in the local lane and keep tracked repo truth in the
    tracked docs surface.
 
+## Local Tooling Policy
+
+1. Use `docs/runtime/LOCAL_TOOLING.md` for local operator tooling that prepares
+   human decisions or high-impact eval inputs.
+2. Keep preparation separate from execution:
+   - generate ignored local input
+   - validate that input against current source truth
+   - preview application without mutation
+   - execute only through a separate explicit follow-up gate
+3. Required knobs include an ignored default output path, explicit path
+   override, no-overwrite default, `FORCE=1`, deterministic `schema_version`,
+   validation command, and apply-preview command.
+4. Preparation tools must not launch a browser, run OCR, close feedback, write
+   live eval rows, or mutate the manual eval warehouse.
+
 ## Atomic Commands
 
 - `make doctor-env`

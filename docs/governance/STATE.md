@@ -266,6 +266,17 @@ Last updated: 2026-05-21
     `make viz` print the target URL by default instead of launching a browser
   - explicit browser launch remains available through `make docs-open`,
     `make open-api-docs-browser`, `make viz-open`, and `make open-viz`
+- Local operator tooling follows a reusable non-mutating contract:
+  - `docs/runtime/LOCAL_TOOLING.md` records the repo-local pattern for tools
+    that materialize ignored local input, validate it, preview application, and
+    execute only through a separate explicit follow-up gate
+  - required knobs include an ignored local default path, explicit path
+    override, no-overwrite default, `FORCE=1`, deterministic
+    `schema_version`, source fingerprints, validation command, and
+    apply-preview command
+  - the OCR retry decision draft flow is the current reference instance, but
+    the reusable contract is local input, validation, and apply-preview before
+    any execution gate
 - Documentation roles are explicit:
   - `CHARTER` holds durable rules
   - `STATE` holds tracked current truth
@@ -298,6 +309,8 @@ Last updated: 2026-05-21
   - `docs/runtime/RUNBOOK.md`
 - Structure:
   - `docs/runtime/ARCHITECTURE.md`
+- Local tooling contract:
+  - `docs/runtime/LOCAL_TOOLING.md`
 - Durable history:
   - `docs/governance/DECISIONS.md`
 - Active local carryover:
