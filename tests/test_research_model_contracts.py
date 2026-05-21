@@ -222,6 +222,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-074: Surface manual eval warehouse freshness read-only",
             "`data_freshness` block",
             "`current`, `stale`, `unknown`, or `missing`",
+            "## D-075: Compare freshness against manual eval import scope",
+            "sessions count only when they have",
+            "metadata exclude-prefixes are",
         ):
             self.assertIn(expected, decisions)
 
@@ -229,13 +232,20 @@ class ResearchModelContractTests(unittest.TestCase):
             "`data_freshness` status",
             "is visible without rebuilding",
             "local databases",
+            "`data_freshness` compares source history counts",
+            "against the manual eval",
+            "import scope",
         ):
             self.assertIn(expected, state)
 
         self.assertIn("read-only `data_freshness` status", eval_map)
+        self.assertIn("evidence-bearing import scope", eval_map)
 
         for expected in (
             "MANUAL_EVALS_DB_SCHEMA_VERSION",
+            "_exclude_prefixes_from_metadata",
+            "_source_history_count_row",
+            "count_scope",
             '"state": state',
             '"source_history_dbs": source_snapshots',
         ):

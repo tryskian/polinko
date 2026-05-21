@@ -98,6 +98,9 @@ Last updated: 2026-05-20
     `data_freshness` status for the local manual eval warehouse so stale,
     schema-old, unknown, or missing source data is visible without rebuilding
     local databases
+  - `data_freshness` compares source history counts against the manual eval
+    import scope, so idle chats outside feedback/checkpoint/OCR evidence do
+    not make a freshly rebuilt warehouse stale
   - generated trace artifacts from manual submissions use manual eval workbench
     names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane

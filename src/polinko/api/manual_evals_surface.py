@@ -244,10 +244,85 @@ def _metadata_source_history_records(
     return []
 
 
+def _exclude_clause(prefixes: list[str], *, alias: str) -> tuple[str, list[str]]:
+    normalized = [prefix for prefix in prefixes if prefix]
+    if not normalized:
+        return "1=1", []
+    parts = [f"{alias}.session_id NOT LIKE ?" for _ in normalized]
+    return " AND ".join(parts), [f"{prefix}%" for prefix in normalized]
+
+
+def _exclude_prefixes_from_metadata(metadata: dict[str, str]) -> list[str]:
+    raw_prefixes = metadata.get("exclude_prefixes_json", "")
+    if not raw_prefixes:
+        return []
+    try:
+        parsed = json.loads(raw_prefixes)
+    except (TypeError, ValueError):
+        return []
+    if not isinstance(parsed, list):
+        return []
+    return [str(prefix).strip() for prefix in parsed if str(prefix).strip()]
+
+
+def _source_history_count_row(
+    conn: sqlite3.Connection,
+    key: str,
+    *,
+    exclude_prefixes: list[str],
+) -> sqlite3.Row | None:
+    if key == "sessions":
+        where_sql, params = _exclude_clause(exclude_prefixes, alias="c")
+        return conn.execute(
+            f"""
+            SELECT
+              COUNT(*) AS c,
+              MAX(c.updated_at) AS latest
+            FROM chats c
+            LEFT JOIN (
+              SELECT session_id, COUNT(*) AS feedback_count
+              FROM message_feedback
+              GROUP BY session_id
+            ) fb ON fb.session_id = c.session_id
+            LEFT JOIN (
+              SELECT session_id, COUNT(*) AS checkpoint_count
+              FROM eval_checkpoints
+              GROUP BY session_id
+            ) cp ON cp.session_id = c.session_id
+            LEFT JOIN (
+              SELECT session_id, COUNT(*) AS ocr_runs_count
+              FROM ocr_runs
+              GROUP BY session_id
+            ) ocr ON ocr.session_id = c.session_id
+            WHERE {where_sql}
+              AND (
+                COALESCE(fb.feedback_count, 0) > 0
+                OR COALESCE(cp.checkpoint_count, 0) > 0
+                OR COALESCE(ocr.ocr_runs_count, 0) > 0
+              )
+            """,
+            params,
+        ).fetchone()
+
+    table_name, timestamp_column = _SOURCE_HISTORY_TABLES[key]
+    where_sql, params = _exclude_clause(exclude_prefixes, alias="source")
+    return conn.execute(
+        f"""
+        SELECT
+          COUNT(*) AS c,
+          MAX(source.{timestamp_column}) AS latest
+        FROM {table_name} source
+        WHERE {where_sql}
+        """,
+        params,
+    ).fetchone()
+
+
 def _source_history_snapshot(
     source_record: dict[str, Any],
     *,
     generated_at_ms: int | None,
+    exclude_prefixes: list[str],
 ) -> dict[str, Any]:
     raw_path = str(source_record.get("history_db") or "").strip()
     path = Path(raw_path) if raw_path else Path()
@@ -265,6 +340,7 @@ def _source_history_snapshot(
         "latest_activity_ms": None,
         "latest_activity_utc": "",
         "is_newer_than_generated": False,
+        "count_scope": "manual_eval_import",
     }
     if not snapshot["exists"]:
         return snapshot
@@ -277,16 +353,13 @@ def _source_history_snapshot(
 
     current_counts: dict[str, int] = {}
     latest_values: list[int] = []
-    for key, (table_name, timestamp_column) in _SOURCE_HISTORY_TABLES.items():
+    for key in _SOURCE_HISTORY_TABLES:
         try:
-            row = conn.execute(
-                f"""
-                SELECT
-                  COUNT(*) AS c,
-                  MAX({timestamp_column}) AS latest
-                FROM {table_name}
-                """
-            ).fetchone()
+            row = _source_history_count_row(
+                conn,
+                key,
+                exclude_prefixes=exclude_prefixes,
+            )
         except sqlite3.Error:
             current_counts[key] = 0
             continue
@@ -323,8 +396,13 @@ def _data_freshness_payload(
     db_schema_version = metadata.get("schema_version", "").strip()
     schema_current = db_schema_version == MANUAL_EVALS_DB_SCHEMA_VERSION
     source_records = _metadata_source_history_records(metadata)
+    exclude_prefixes = _exclude_prefixes_from_metadata(metadata)
     source_snapshots = [
-        _source_history_snapshot(record, generated_at_ms=generated_at_ms)
+        _source_history_snapshot(
+            record,
+            generated_at_ms=generated_at_ms,
+            exclude_prefixes=exclude_prefixes,
+        )
         for record in source_records
     ]
 
