@@ -145,6 +145,13 @@ Last updated: 2026-05-21
     names, resolved image status, OCR run IDs, feedback source-message
     previews, and exact-link blocker state before any rerun or feedback
     closure
+  - `make manual-evals-ocr-retry-rerun-manifest` prints a read-only OCR retry
+    source-artifact selection manifest for selected OCR retry inputs, using
+    `schema_version=polinko.manual_eval_ocr_retry_rerun_manifest.v1`
+  - OCR retry rerun manifests expose source image names, OCR run IDs,
+    resolution status, thumbnail dimensions, OCR previews, feedback
+    source-message previews, and the separate feedback-closure blocker state
+    before any rerun, curation, or feedback closure
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then

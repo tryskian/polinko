@@ -206,6 +206,14 @@ Use this doc for operator procedure.
   - use verified source candidates plus source-history provenance to prepare
     rerun/case-curation inputs without closing feedback or mutating the
     warehouse
+- `make manual-evals-ocr-retry-rerun-manifest`
+  - print the read-only OCR retry source-artifact selection manifest for the
+    default `ocr_retry_evidence` partial slice
+  - combine with `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>`
+    for explicit manual triage slices
+  - use resolved source artifacts, thumbnail dimensions, OCR previews, and
+    feedback source-message previews as the go/no-go surface before any rerun,
+    curation, feedback closure, or warehouse mutation
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

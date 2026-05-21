@@ -100,6 +100,14 @@ notes, exports, and runtime history.
   - input packets expose feedback IDs, source sessions, source image names,
     resolved image status, OCR run IDs, feedback source-message previews, and
     exact-link blocker state before any rerun or feedback closure
+  - build a concrete OCR retry source-artifact selection manifest without
+    mutation with `make manual-evals-ocr-retry-rerun-manifest`
+  - JSON OCR retry rerun-manifest export uses
+    `schema_version=polinko.manual_eval_ocr_retry_rerun_manifest.v1`
+  - rerun manifests expose source image names, OCR run IDs, resolution status,
+    thumbnail dimensions, OCR previews, feedback source-message previews, and
+    the separate feedback-closure blocker state before any rerun, curation, or
+    feedback closure
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

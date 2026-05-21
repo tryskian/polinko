@@ -275,6 +275,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-input-packet`",
             "`schema_version=polinko.manual_eval_ocr_retry_input_packet.v1`",
             "exact-link blocker state",
+            "## D-091: Manifest OCR retry source artifacts before reruns",
+            "`make manual-evals-ocr-retry-rerun-manifest`",
+            "`schema_version=polinko.manual_eval_ocr_retry_rerun_manifest.v1`",
+            "separate feedback-closure blocker state",
         ):
             self.assertIn(expected, decisions)
 
@@ -314,6 +318,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_ocr_retry_input_packet.v1`",
             "resolved image status",
             "exact-link blocker state",
+            "`make manual-evals-ocr-retry-rerun-manifest` prints a read-only",
+            "`schema_version=polinko.manual_eval_ocr_retry_rerun_manifest.v1`",
+            "thumbnail dimensions",
+            "separate feedback-closure blocker state",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",
@@ -382,6 +390,16 @@ class ResearchModelContractTests(unittest.TestCase):
         )
         self.assertIn("resolved image status", eval_map)
         self.assertIn("exact-link blocker state", eval_map)
+        self.assertIn(
+            "`make manual-evals-ocr-retry-rerun-manifest`",
+            eval_map,
+        )
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_ocr_retry_rerun_manifest.v1`",
+            eval_map,
+        )
+        self.assertIn("thumbnail dimensions", eval_map)
+        self.assertIn("separate feedback-closure blocker state", eval_map)
         self.assertIn("without inferring links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)

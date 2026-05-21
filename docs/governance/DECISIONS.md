@@ -1267,3 +1267,21 @@ or branch history instead.
   packet composes those reports without adding new linkage heuristics, keeps
   the warehouse read-only, and makes missing OCR source/result message
   provenance explicit.
+
+## D-091: Manifest OCR retry source artifacts before reruns
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `rerun_manifest`
+- Decision: `make manual-evals-ocr-retry-rerun-manifest` prints a read-only
+  OCR retry source-artifact selection manifest for selected OCR retry inputs.
+  The terminal report and JSON export expose
+  `schema_version=polinko.manual_eval_ocr_retry_rerun_manifest.v1`, feedback
+  IDs, source sessions, OCR run IDs, source image names, image resolution
+  status, thumbnail dimensions, OCR previews, feedback source-message
+  previews, and the separate feedback-closure blocker state.
+- Why: The input packet proves which source artifacts are available, but a
+  human go/no-go decision needs a stable artifact-selection surface before any
+  rerun, curation, or feedback closure. The manifest keeps source-artifact
+  selection distinct from feedback closure while OCR source/result message IDs
+  and exact feedback-result links remain absent.
