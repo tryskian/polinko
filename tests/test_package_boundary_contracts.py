@@ -1,5 +1,4 @@
 import ast
-from importlib import import_module
 import subprocess
 import unittest
 from pathlib import Path
@@ -7,14 +6,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LEGACY_ROOT_IMPORTS = ("api", "config", "core")
-LEGACY_CORE_SHIMS = (
-    "history_store",
-    "prompts",
-    "rate_limit",
-    "responses_parse",
-    "runtime",
-    "vector_store",
-)
 
 
 def _read(relative_path: str) -> str:
@@ -39,9 +30,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "`polinko-chat`",
             "legacy root `config.py` import shim is retired",
             "legacy root `api/` import shims are retired",
-            "`core/`",
-            "compatibility shims for legacy `core.*` imports",
-            "`from core import ...` imports",
+            "legacy root `core/` import shims are retired",
             "The future runtime import package should be `polinko` under `src/polinko/`.",
             "`src/polinko/config.py`",
             "`src/polinko/api/`",
@@ -74,7 +63,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "`api/`",
             "replacement imports use `polinko.api.*`",
             "`core/`",
-            "older local scripts have moved to `polinko.core.*`",
+            "replacement imports use `polinko.core.*`",
         ):
             self.assertIn(expected, boundary)
 
@@ -88,8 +77,7 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertIn("`PACKAGE_BOUNDARY`", architecture)
         self.assertIn("package-boundary migration contract is documented", state)
         self.assertIn("legacy root `api/` has been retired", state)
-        self.assertIn("root `core/` shim package", state)
-        self.assertIn("`from core import ...`", state)
+        self.assertIn("legacy root `core/` has been retired", state)
         self.assertIn("`PACKAGE_BOUNDARY` holds the Python", state)
         self.assertIn("docs/runtime/PACKAGE_BOUNDARY.md", docs_index)
         self.assertIn(
@@ -140,8 +128,14 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "## D-063: Retire the legacy root api package shims",
             decisions,
         )
+        self.assertIn(
+            "## D-064: Retire the legacy root core package shims",
+            decisions,
+        )
 
-    def test_runtime_modules_are_moved_with_root_compatibility_shims(self) -> None:
+    def test_runtime_modules_are_moved_with_entrypoint_compatibility_shims(
+        self,
+    ) -> None:
         package_root = REPO_ROOT / "src" / "polinko"
 
         self.assertTrue((package_root / "__init__.py").is_file())
@@ -155,35 +149,9 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertTrue((package_root / "core" / "runtime.py").is_file())
         self.assertTrue((package_root / "core" / "history_store.py").is_file())
 
-        legacy_core = _read("core/runtime.py")
-        self.assertIn('import_module("polinko.core.runtime")', legacy_core)
-        self.assertIs(
-            import_module("core.runtime"),
-            import_module("polinko.core.runtime"),
-        )
-
         legacy_server = _read("server.py")
         self.assertIn('import_module("polinko.asgi")', legacy_server)
         self.assertIn("sys.modules[__name__] = _module", legacy_server)
-
-    def test_all_root_package_shims_forward_module_identity(self) -> None:
-        legacy_core_package = import_module("core")
-        self.assertEqual(legacy_core_package.__all__, list(LEGACY_CORE_SHIMS))
-
-        for module_name in LEGACY_CORE_SHIMS:
-            self.assertIs(
-                import_module(f"core.{module_name}"),
-                import_module(f"polinko.core.{module_name}"),
-            )
-
-    def test_root_package_shims_support_legacy_fromlist_imports(self) -> None:
-        legacy_core_package = __import__("core", fromlist=list(LEGACY_CORE_SHIMS))
-
-        for module_name in LEGACY_CORE_SHIMS:
-            self.assertIs(
-                getattr(legacy_core_package, module_name),
-                import_module(f"polinko.core.{module_name}"),
-            )
 
     def test_current_root_runtime_modules_are_explicit(self) -> None:
         tracked_python = subprocess.check_output(
@@ -394,6 +362,65 @@ class PackageBoundaryContractTests(unittest.TestCase):
                 "import_module('api.",
                 '__import__("api"',
                 "__import__('api'",
+            )
+            if any(marker in source for marker in legacy_dynamic_import_markers):
+                mentions.append(relative_path)
+
+        self.assertEqual(mentions, [])
+
+    def test_legacy_core_package_shims_are_retired_after_preflight(self) -> None:
+        self.assertFalse((REPO_ROOT / "core").exists())
+
+        tracked_files = subprocess.check_output(
+            ["git", "ls-files"],
+            cwd=REPO_ROOT,
+            text=True,
+        ).splitlines()
+        active_extensions = {".py", ".sh", ".mk"}
+        active_paths = [
+            path
+            for path in tracked_files
+            if Path(path).suffix in active_extensions
+            or path in {"Makefile", "Dockerfile", "pyproject.toml"}
+        ]
+        allowed_paths = {
+            "core/__init__.py",
+            "core/history_store.py",
+            "core/prompts.py",
+            "core/rate_limit.py",
+            "core/responses_parse.py",
+            "core/runtime.py",
+            "core/vector_store.py",
+            "docs/governance/DECISIONS.md",
+            "docs/governance/STATE.md",
+            "docs/runtime/ARCHITECTURE.md",
+            "docs/runtime/PACKAGE_BOUNDARY.md",
+            "tests/test_package_boundary_contracts.py",
+        }
+        mentions = []
+
+        for relative_path in active_paths:
+            if relative_path in allowed_paths:
+                continue
+            if not (REPO_ROOT / relative_path).exists():
+                continue
+            source = _read(relative_path)
+            if Path(relative_path).suffix == ".py":
+                tree = ast.parse(source, filename=relative_path)
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.Import):
+                        for alias in node.names:
+                            if alias.name.split(".", maxsplit=1)[0] == "core":
+                                mentions.append(f"{relative_path}:{node.lineno}")
+                    elif isinstance(node, ast.ImportFrom) and node.module is not None:
+                        if node.module.split(".", maxsplit=1)[0] == "core":
+                            mentions.append(f"{relative_path}:{node.lineno}")
+
+            legacy_dynamic_import_markers = (
+                'import_module("core.',
+                "import_module('core.",
+                '__import__("core"',
+                "__import__('core'",
             )
             if any(marker in source for marker in legacy_dynamic_import_markers):
                 mentions.append(relative_path)

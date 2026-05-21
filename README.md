@@ -104,8 +104,8 @@ launch the system browser.
   legacy root `config.py` shim is retired.
 - `src/polinko/api/` contains the canonical API implementation; legacy root
   `api/` shims are retired.
-- `src/polinko/core/` contains canonical runtime logic; root `core/` contains
-  compatibility shims.
+- `src/polinko/core/` contains canonical runtime logic; legacy root `core/`
+  shims are retired.
 - `tools/` contains eval and maintenance scripts.
 - `tests/` contains the test suite.
 - `docs/public/` contains the curated public reading path.
