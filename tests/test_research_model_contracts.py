@@ -267,6 +267,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-source-verification`",
             "`schema_version=polinko.manual_eval_ocr_retry_source_verification.v1`",
             "exact not-confirmed reasons",
+            "## D-089: Drill into OCR retry source-history provenance read-only",
+            "`make manual-evals-ocr-retry-source-provenance`",
+            "`schema_version=polinko.manual_eval_ocr_retry_source_provenance.v1`",
+            "source-history feedback messages",
         ):
             self.assertIn(expected, decisions)
 
@@ -298,6 +302,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-source-verification` prints a read-only",
             "`schema_version=polinko.manual_eval_ocr_retry_source_verification.v1`",
             "exact not-confirmed reasons",
+            "`make manual-evals-ocr-retry-source-provenance` prints a read-only",
+            "`schema_version=polinko.manual_eval_ocr_retry_source_provenance.v1`",
+            "source-history feedback message",
+            "exact OCR source/result message IDs",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",
@@ -346,6 +354,16 @@ class ResearchModelContractTests(unittest.TestCase):
             eval_map,
         )
         self.assertIn("exact not-confirmed reasons", eval_map)
+        self.assertIn(
+            "`make manual-evals-ocr-retry-source-provenance`",
+            eval_map,
+        )
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_ocr_retry_source_provenance.v1`",
+            eval_map,
+        )
+        self.assertIn("source-history feedback message presence", eval_map)
+        self.assertIn("exact OCR source/result message IDs", eval_map)
         self.assertIn("without inferring links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)

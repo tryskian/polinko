@@ -9,14 +9,17 @@ from tools.manual_evals_db_health import (
     ACTIONABLES_SCHEMA_VERSION,
     COHORTS_SCHEMA_VERSION,
     OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
+    OCR_RETRY_SOURCE_PROVENANCE_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
     build_manual_evals_health_report,
     build_ocr_retry_candidates_report,
+    build_ocr_retry_source_provenance_report,
     build_ocr_retry_source_verification_report,
     build_open_feedback_actionables_report,
     build_open_feedback_cohorts_report,
     format_manual_evals_health_report,
     format_ocr_retry_candidates_report,
+    format_ocr_retry_source_provenance_report,
     format_ocr_retry_source_verification_report,
     format_open_feedback_actionables_report,
     format_open_feedback_cohorts_report,
@@ -41,6 +44,29 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                     UPDATE message_feedback
                     SET status = 'open',
                         recommended_action = 'Retry OCR with a tighter crop and attach fresh image evidence for comparison.'
+                    """
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES (
+                      'chat-1', 'user', 'source upload prompt', 120,
+                      'm-source-1', NULL
+                    )
+                    """
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES (
+                      'chat-1', 'assistant',
+                      'hello world response that received manual feedback',
+                      155, 'm-result-1', 'm-source-1'
+                    )
                     """
                 )
                 conn.commit()
@@ -102,6 +128,15 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             )
             source_verification_summary = format_ocr_retry_source_verification_report(
                 source_verification
+            )
+            source_provenance = build_ocr_retry_source_provenance_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            source_provenance_summary = format_ocr_retry_source_provenance_report(
+                source_provenance
             )
             after_history = history_db.stat().st_mtime_ns
             after_output = output_db.stat().st_mtime_ns
@@ -414,6 +449,69 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 "ocr=ocr-1 source_image=guardrail-note.txt",
                 source_verification_summary,
             )
+            self.assertEqual(
+                source_provenance["schema_version"],
+                OCR_RETRY_SOURCE_PROVENANCE_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                source_provenance["verification_schema_version"],
+                OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                source_provenance["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "provenance_items": 1,
+                    "source_history_available": 1,
+                    "feedback_messages": 1,
+                    "feedback_messages_found": 1,
+                    "ocr_runs": 1,
+                    "ocr_source_message_ids_present": 1,
+                    "ocr_result_message_ids_present": 1,
+                    "exact_feedback_result_links": 1,
+                    "limit_applied": False,
+                },
+            )
+            provenance_item = source_provenance["provenance_items"][0]
+            self.assertEqual(provenance_item["source_history"]["state"], "ok")
+            self.assertEqual(
+                provenance_item["feedback_messages"][0]["source_message"]["state"],
+                "found",
+            )
+            self.assertEqual(
+                provenance_item["ocr_message_provenance"][0][
+                    "exact_feedback_result_link"
+                ],
+                True,
+            )
+            self.assertEqual(
+                provenance_item["ocr_message_provenance"][0]["source_message"][
+                    "content_preview"
+                ],
+                "source upload prompt",
+            )
+            self.assertEqual(
+                provenance_item["ocr_message_provenance"][0]["result_message"][
+                    "content_preview"
+                ],
+                "hello world response that received manual feedback",
+            )
+            self.assertIn(
+                "manual eval OCR retry source provenance: state=ok rows=1/1 "
+                "items=1 source_history=1/1 feedback_sources=1/1 ocr_runs=1 "
+                "source_message_ids=1 result_message_ids=1 exact_links=1",
+                source_provenance_summary,
+            )
+            self.assertIn(
+                "feedback=1 message=m-result-1 source_state=found role=assistant",
+                source_provenance_summary,
+            )
+            self.assertIn(
+                "ocr=ocr-1 source_image=guardrail-note.txt source_message=m-source-1",
+                source_provenance_summary,
+            )
+            self.assertIn("exact_feedback_link=yes", source_provenance_summary)
 
             with closing(sqlite3.connect(output_db)) as conn:
                 self.assertEqual(
@@ -451,6 +549,56 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                     )
                     """
                 )
+                conn.executemany(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    [
+                        (
+                            "chat-1",
+                            "assistant",
+                            "manual feedback points to an unlinked assistant row",
+                            170,
+                            "m-feedback-unlinked",
+                            None,
+                        ),
+                        (
+                            "chat-1",
+                            "user",
+                            "first source image upload",
+                            120,
+                            "m-source-1",
+                            None,
+                        ),
+                        (
+                            "chat-1",
+                            "assistant",
+                            "first OCR text",
+                            151,
+                            "m-result-1",
+                            "m-source-1",
+                        ),
+                        (
+                            "chat-1",
+                            "user",
+                            "second source image upload",
+                            180,
+                            "m-source-2",
+                            None,
+                        ),
+                        (
+                            "chat-1",
+                            "assistant",
+                            "second OCR text for ambiguity review",
+                            191,
+                            "m-result-2",
+                            "m-source-2",
+                        ),
+                    ],
+                )
                 conn.commit()
             build_manual_evals_db(
                 history_db=history_db,
@@ -476,6 +624,15 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             )
             source_verification_summary = format_ocr_retry_source_verification_report(
                 source_verification
+            )
+            source_provenance = build_ocr_retry_source_provenance_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            source_provenance_summary = format_ocr_retry_source_provenance_report(
+                source_provenance
             )
 
             self.assertEqual(
@@ -593,6 +750,59 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 "ocr=ocr-new source_image=second.png",
                 source_verification_summary,
             )
+            self.assertEqual(
+                source_provenance["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "provenance_items": 1,
+                    "source_history_available": 1,
+                    "feedback_messages": 1,
+                    "feedback_messages_found": 1,
+                    "ocr_runs": 2,
+                    "ocr_source_message_ids_present": 2,
+                    "ocr_result_message_ids_present": 2,
+                    "exact_feedback_result_links": 0,
+                    "limit_applied": False,
+                },
+            )
+            provenance_item = source_provenance["provenance_items"][0]
+            self.assertEqual(
+                provenance_item["feedback_messages"][0]["source_message"][
+                    "content_preview"
+                ],
+                "manual feedback points to an unlinked assistant row",
+            )
+            self.assertEqual(
+                provenance_item["ocr_message_provenance"][0]["run_id"],
+                "ocr-new",
+            )
+            self.assertEqual(
+                provenance_item["ocr_message_provenance"][0]["result_message"][
+                    "content_preview"
+                ],
+                "second OCR text for ambiguity review",
+            )
+            self.assertFalse(
+                provenance_item["ocr_message_provenance"][0][
+                    "exact_feedback_result_link"
+                ]
+            )
+            self.assertIn(
+                "manual eval OCR retry source provenance: state=ok rows=1/1 "
+                "items=1 source_history=1/1 feedback_sources=1/1 ocr_runs=2 "
+                "source_message_ids=2 result_message_ids=2 exact_links=0",
+                source_provenance_summary,
+            )
+            self.assertIn(
+                "feedback=1 message=m-feedback-unlinked source_state=found",
+                source_provenance_summary,
+            )
+            self.assertIn(
+                "ocr=ocr-new source_image=second.png source_message=m-source-2",
+                source_provenance_summary,
+            )
+            self.assertIn("exact_feedback_link=no", source_provenance_summary)
 
     def test_health_report_handles_missing_warehouse(self) -> None:
         with TemporaryDirectory() as tmpdir:

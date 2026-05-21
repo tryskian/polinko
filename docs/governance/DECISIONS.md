@@ -1232,3 +1232,20 @@ or branch history instead.
   Source-verification packets keep the workflow terminal-native and
   warehouse-read-only while preserving the distinction between exact
   feedback-to-result links and same-session OCR context.
+
+## D-089: Drill into OCR retry source-history provenance read-only
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `source_provenance`
+- Decision: `make manual-evals-ocr-retry-source-provenance` prints a
+  read-only source-history provenance packet for selected OCR retry
+  candidates. The terminal report and JSON export expose
+  `schema_version=polinko.manual_eval_ocr_retry_source_provenance.v1`,
+  source-history feedback messages, OCR source/result message IDs when those
+  IDs are already present in the warehouse, bounded source/result previews,
+  and exact feedback-result link counts.
+- Why: Source-verification packets show which OCR runs are candidate context,
+  but closure still needs proof of what message provenance is exact. The
+  provenance packet reads only referenced source-history rows, keeps terminal
+  output bounded, and preserves context-only OCR rows as not exact links.
