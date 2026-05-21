@@ -271,6 +271,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-source-provenance`",
             "`schema_version=polinko.manual_eval_ocr_retry_source_provenance.v1`",
             "source-history feedback messages",
+            "## D-090: Packet OCR retry rerun inputs read-only",
+            "`make manual-evals-ocr-retry-input-packet`",
+            "`schema_version=polinko.manual_eval_ocr_retry_input_packet.v1`",
+            "exact-link blocker state",
         ):
             self.assertIn(expected, decisions)
 
@@ -306,6 +310,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_ocr_retry_source_provenance.v1`",
             "source-history feedback message",
             "exact OCR source/result message IDs",
+            "`make manual-evals-ocr-retry-input-packet` prints a read-only",
+            "`schema_version=polinko.manual_eval_ocr_retry_input_packet.v1`",
+            "resolved image status",
+            "exact-link blocker state",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",
@@ -364,6 +372,16 @@ class ResearchModelContractTests(unittest.TestCase):
         )
         self.assertIn("source-history feedback message presence", eval_map)
         self.assertIn("exact OCR source/result message IDs", eval_map)
+        self.assertIn(
+            "`make manual-evals-ocr-retry-input-packet`",
+            eval_map,
+        )
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_ocr_retry_input_packet.v1`",
+            eval_map,
+        )
+        self.assertIn("resolved image status", eval_map)
+        self.assertIn("exact-link blocker state", eval_map)
         self.assertIn("without inferring links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)

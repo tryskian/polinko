@@ -93,6 +93,13 @@ notes, exports, and runtime history.
   - source-provenance packets expose source-history feedback message presence
     and exact OCR source/result message IDs when they are already present,
     while preserving context-only OCR rows as not exact links
+  - build a concrete OCR retry input packet without mutation with
+    `make manual-evals-ocr-retry-input-packet`
+  - JSON OCR retry input-packet export uses
+    `schema_version=polinko.manual_eval_ocr_retry_input_packet.v1`
+  - input packets expose feedback IDs, source sessions, source image names,
+    resolved image status, OCR run IDs, feedback source-message previews, and
+    exact-link blocker state before any rerun or feedback closure
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under
