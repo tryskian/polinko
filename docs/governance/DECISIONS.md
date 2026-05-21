@@ -905,3 +905,16 @@ or branch history instead.
 - Why: Launchers are now the remaining root compatibility layer. Treating them
   as a tested audit surface prevents cleanup from silently changing active
   operator or eval paths.
+
+## D-067: Keep manual eval evidence rows linked by source message
+
+- Date: `2026-05-20`
+- Category: `eval_quality`
+- Tags: `manual_evals`, `source_first`, `evidence_rows`, `workbench`
+- Decision: Manual eval workbench evidence rows link feedback to an OCR case
+  only when the feedback message matches that OCR run's result message.
+  Session context alone is not enough to promote the latest OCR run into the
+  judged case link.
+- Why: A source-first workbench has to preserve the actual artifact-to-judgment
+  chain. In sessions with multiple OCR runs, linking feedback to the latest
+  session OCR run can misstate what the human judgment applied to.

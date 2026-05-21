@@ -383,16 +383,17 @@ def _load_source_first_evidence_rows(
     try:
         rows = conn.execute(
             """
-            WITH latest_ocr AS (
+            WITH linked_ocr AS (
               SELECT *
               FROM (
                 SELECT
                   r.*,
                   ROW_NUMBER() OVER (
-                    PARTITION BY r.session_id
+                    PARTITION BY r.session_id, r.result_message_id
                     ORDER BY r.created_at DESC, r.id DESC
                   ) AS rn
                 FROM ocr_runs r
+                WHERE r.result_message_id IS NOT NULL
               )
               WHERE rn = 1
             )
@@ -413,14 +414,18 @@ def _load_source_first_evidence_rows(
               f.created_at,
               f.updated_at,
               s.title,
-              latest_ocr.run_id,
-              latest_ocr.source_run_id,
-              latest_ocr.source_name,
-              latest_ocr.status AS ocr_status,
-              latest_ocr.extracted_text
+              linked_ocr.run_id,
+              linked_ocr.source_run_id,
+              linked_ocr.source_message_id,
+              linked_ocr.result_message_id,
+              linked_ocr.source_name,
+              linked_ocr.status AS ocr_status,
+              linked_ocr.extracted_text
             FROM feedback f
             JOIN sessions s ON s.session_id = f.session_id
-            LEFT JOIN latest_ocr ON latest_ocr.session_id = f.session_id
+            LEFT JOIN linked_ocr
+              ON linked_ocr.session_id = f.session_id
+             AND linked_ocr.result_message_id = f.message_id
             ORDER BY f.updated_at DESC, f.id DESC
             LIMIT ?
             """,
@@ -459,8 +464,13 @@ def _load_source_first_evidence_rows(
             },
             "linked_case": {
                 "type": "ocr_run",
+                "match_type": (
+                    "feedback_result_message" if str(row["run_id"] or "") else ""
+                ),
                 "run_id": str(row["run_id"] or ""),
                 "source_run_id": str(row["source_run_id"] or ""),
+                "source_message_id": str(row["source_message_id"] or ""),
+                "result_message_id": str(row["result_message_id"] or ""),
                 "source_name": str(row["source_name"] or ""),
                 "status": str(row["ocr_status"] or ""),
                 "observed_text_preview": _normalize_text(

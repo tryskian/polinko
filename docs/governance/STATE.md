@@ -76,6 +76,9 @@ Last updated: 2026-05-20
   - the manual eval workbench, including notebooks, local evidence databases,
     `/chat`, `/chats/*`, and runtime history, remains source evidence for that
     contract
+  - manual eval workbench evidence rows link feedback to matching OCR
+    source/result messages when a case link exists, rather than treating the
+    latest OCR run in a session as the judged case
   - generated trace artifacts from manual submissions use manual eval workbench
     names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane
