@@ -20,7 +20,6 @@ def empty_source_first_payload() -> dict[str, Any]:
                 "lane_summary",
             ],
             "summary_unit": "lane_summary",
-            "rollup_unit": "lane_summary",
             "promotion_gate": "repeated_lane_signal",
         },
         "source_artifacts": {
@@ -262,7 +261,6 @@ def _source_first_lane_summaries(
         {
             "lane": "manual_feedback",
             "summary_unit": "lane_summary",
-            "rollup_unit": "lane_summary",
             "rows": manual_feedback["total"],
             "pass": manual_feedback["pass"],
             "fail": manual_feedback["fail"],
@@ -272,7 +270,6 @@ def _source_first_lane_summaries(
         {
             "lane": "ocr_cases",
             "summary_unit": "lane_summary",
-            "rollup_unit": "lane_summary",
             "rows": int(summary["ocr_runs"]),
             "source_labels": _load_source_labels(conn, "ocr_runs"),
         },
