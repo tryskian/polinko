@@ -539,7 +539,7 @@ def _feedback_expected(row: sqlite3.Row) -> str:
     fail_count = int(row["feedback_fail_count"] or 0)
     other_count = int(row["feedback_other_count"] or 0)
     note = _normalize_text(row["feedback_notes"] or "", max_chars=220)
-    summary = f"session feedback: {pass_count} pass / {fail_count} fail"
+    summary = f"linked feedback: {pass_count} pass / {fail_count} fail"
     if other_count:
         summary += f" / {other_count} other"
     if note:
@@ -629,6 +629,8 @@ def _build_payload_from_manual_evals_db(
                 r.session_id,
                 r.source_session_id,
                 r.source_name,
+                r.source_message_id,
+                r.result_message_id,
                 r.status,
                 r.extracted_text,
                 r.created_at,
@@ -644,14 +646,16 @@ def _build_payload_from_manual_evals_db(
               LEFT JOIN (
                 SELECT
                   session_id,
+                  message_id,
                   COUNT(*) AS feedback_count,
                   SUM(CASE WHEN lower(outcome) = 'pass' THEN 1 ELSE 0 END) AS pass_count,
                   SUM(CASE WHEN lower(outcome) = 'fail' THEN 1 ELSE 0 END) AS fail_count,
                   SUM(CASE WHEN lower(outcome) NOT IN ('pass', 'fail') THEN 1 ELSE 0 END) AS other_count,
                   GROUP_CONCAT(NULLIF(note, ''), ' | ') AS notes
                 FROM feedback
-                GROUP BY session_id
+                GROUP BY session_id, message_id
               ) fb ON fb.session_id = r.session_id
+                  AND fb.message_id = r.result_message_id
               ORDER BY r.created_at DESC, r.id DESC
               LIMIT ?
             )
@@ -675,19 +679,14 @@ def _build_payload_from_manual_evals_db(
     feedback_params: list[Any] = []
     if run_id:
         feedback_where += """
-              AND EXISTS (
-                SELECT 1
-                FROM ocr_runs filtered
-                WHERE filtered.session_id = f.session_id
-                  AND (filtered.run_id = ? OR filtered.source_run_id = ?)
-              )
+              AND (linked_ocr.run_id = ? OR linked_ocr.source_run_id = ?)
         """
         feedback_params.extend([run_id, run_id])
 
     try:
         feedback_rows = conn.execute(
             f"""
-            WITH latest_ocr AS (
+            WITH linked_ocr AS (
               SELECT *
               FROM (
                 SELECT
@@ -695,11 +694,12 @@ def _build_payload_from_manual_evals_db(
                   ia.source_filename,
                   ia.resolved_path,
                   ROW_NUMBER() OVER (
-                    PARTITION BY r.session_id
+                    PARTITION BY r.session_id, r.result_message_id
                     ORDER BY r.created_at DESC, r.id DESC
                   ) AS rn
                 FROM ocr_runs r
                 LEFT JOIN image_assets ia ON ia.id = r.image_asset_id
+                WHERE r.result_message_id IS NOT NULL
               )
               WHERE rn = 1
             )
@@ -720,15 +720,19 @@ def _build_payload_from_manual_evals_db(
                 f.status AS feedback_status,
                 f.created_at,
                 s.title,
-                latest_ocr.run_id,
-                latest_ocr.source_run_id,
-                latest_ocr.source_name,
-                latest_ocr.extracted_text,
-                latest_ocr.source_filename,
-                latest_ocr.resolved_path
+                linked_ocr.run_id,
+                linked_ocr.source_run_id,
+                linked_ocr.source_message_id,
+                linked_ocr.result_message_id,
+                linked_ocr.source_name,
+                linked_ocr.extracted_text,
+                linked_ocr.source_filename,
+                linked_ocr.resolved_path
               FROM feedback f
               JOIN sessions s ON s.session_id = f.session_id
-              LEFT JOIN latest_ocr ON latest_ocr.session_id = f.session_id
+              LEFT JOIN linked_ocr
+                ON linked_ocr.session_id = f.session_id
+               AND linked_ocr.result_message_id = f.message_id
               {feedback_where}
               ORDER BY f.created_at DESC, f.id DESC
               LIMIT ?
@@ -788,6 +792,11 @@ def _build_payload_from_manual_evals_db(
                 "era": str(row["era"] or ""),
                 "run_id": run_id_value,
                 "source_run_id": str(row["source_run_id"] or run_id_value),
+                "source_message_id": str(row["source_message_id"] or ""),
+                "result_message_id": str(row["result_message_id"] or ""),
+                "feedback_match_type": (
+                    "feedback_result_message" if str(row["run_id"] or "") else ""
+                ),
                 "source_session_id": str(
                     row["source_session_id"] or row["session_id"] or ""
                 ),
@@ -827,6 +836,8 @@ def _build_payload_from_manual_evals_db(
               r.session_id,
               r.source_session_id,
               r.source_name,
+              r.source_message_id,
+              r.result_message_id,
               r.status,
               r.extracted_text,
               r.created_at,
@@ -842,14 +853,16 @@ def _build_payload_from_manual_evals_db(
             LEFT JOIN (
               SELECT
                 session_id,
+                message_id,
                 COUNT(*) AS feedback_count,
                 SUM(CASE WHEN lower(outcome) = 'pass' THEN 1 ELSE 0 END) AS pass_count,
                 SUM(CASE WHEN lower(outcome) = 'fail' THEN 1 ELSE 0 END) AS fail_count,
                 SUM(CASE WHEN lower(outcome) NOT IN ('pass', 'fail') THEN 1 ELSE 0 END) AS other_count,
                 GROUP_CONCAT(NULLIF(note, ''), ' | ') AS notes
               FROM feedback
-              GROUP BY session_id
+              GROUP BY session_id, message_id
             ) fb ON fb.session_id = r.session_id
+                AND fb.message_id = r.result_message_id
             {eval_where}
             ORDER BY r.created_at DESC, r.id DESC
             LIMIT ?
@@ -887,6 +900,13 @@ def _build_payload_from_manual_evals_db(
                 "era": str(row["era"] or ""),
                 "run_id": str(row["run_id"] or ""),
                 "source_run_id": str(row["source_run_id"] or ""),
+                "source_message_id": str(row["source_message_id"] or ""),
+                "result_message_id": str(row["result_message_id"] or ""),
+                "feedback_match_type": (
+                    "feedback_result_message"
+                    if int(row["feedback_count"] or 0) > 0
+                    else ""
+                ),
                 "source_session_id": str(row["source_session_id"] or ""),
             }
         )

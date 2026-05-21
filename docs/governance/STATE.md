@@ -79,6 +79,9 @@ Last updated: 2026-05-20
   - manual eval workbench evidence rows link feedback to matching OCR
     source/result messages when a case link exists, rather than treating the
     latest OCR run in a session as the judged case
+  - `/viz/pass-fail` also uses feedback-to-result message matching for manual
+    eval rows, so run-specific chart rows do not borrow unrelated session
+    feedback
   - generated trace artifacts from manual submissions use manual eval workbench
     names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane

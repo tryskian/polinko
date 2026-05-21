@@ -16,12 +16,13 @@ def _write_executable(path: Path, text: str) -> None:
 
 
 class RunLocalEvalGateTests(unittest.TestCase):
-    def _base_env(self, tmp_path: Path) -> tuple[dict[str, str], Path]:
+    def _base_env(self, tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
         bin_dir = tmp_path / "bin"
         bin_dir.mkdir()
 
         python_args = tmp_path / "python-args.tsv"
         curl_args = tmp_path / "curl-args.txt"
+        server_started = tmp_path / "server-started"
         python_script = bin_dir / "python.sh"
         curl_script = bin_dir / "curl"
         sleep_script = bin_dir / "sleep"
@@ -41,6 +42,7 @@ for arg in "$@"; do
 done
 printf "\\n" >> "$PYTHON_ARGS"
 if [ "${1:-}" = "-m" ] && [ "${2:-}" = "uvicorn" ]; then
+\t: > "$SERVER_STARTED"
 \texec /bin/sleep 30
 fi
 """,
@@ -50,6 +52,13 @@ fi
             """#!/usr/bin/env sh
 set -eu
 printf "%s\\n" "$*" >> "$CURL_ARGS"
+if [ "${CURL_EXIT:-0}" = "0" ]; then
+\twait_count=0
+\twhile [ ! -f "$SERVER_STARTED" ] && [ "$wait_count" -lt 100 ]; do
+\t\twait_count=$((wait_count + 1))
+\t\t/bin/sleep 0.01
+\tdone
+fi
 exit "${CURL_EXIT:-0}"
 """,
         )
@@ -76,6 +85,7 @@ exit "${CURL_EXIT:-0}"
                 "PYTHON": str(python_script),
                 "PYTHON_ARGS": str(python_args),
                 "CURL_ARGS": str(curl_args),
+                "SERVER_STARTED": str(server_started),
                 "ASGI_APP": "custom_server:app",
                 "SMOKE_PORT": "9991",
                 "SMOKE_BASE_URL": "http://127.0.0.1:9991",
@@ -101,7 +111,7 @@ exit "${CURL_EXIT:-0}"
                 "HALLUCINATION_MIN_ACCEPTABLE_SCORE": "8",
             }
         )
-        return env, python_args
+        return env, python_args, server_started
 
     def _run_suite(
         self, suite: str, env: dict[str, str]
@@ -123,7 +133,7 @@ exit "${CURL_EXIT:-0}"
 
     def test_local_eval_gate_suites_run_expected_commands(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            env, python_args = self._base_env(Path(tmp))
+            env, python_args, server_started = self._base_env(Path(tmp))
             expected_calls = {
                 "api-smoke": [
                     [
@@ -283,6 +293,7 @@ exit "${CURL_EXIT:-0}"
             for suite, expected in expected_calls.items():
                 with self.subTest(suite=suite):
                     python_args.write_text("", encoding="utf-8")
+                    server_started.unlink(missing_ok=True)
 
                     result = self._run_suite(suite, env)
 
@@ -291,8 +302,9 @@ exit "${CURL_EXIT:-0}"
 
     def test_readiness_failure_stops_before_eval_commands(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            env, python_args = self._base_env(Path(tmp))
+            env, python_args, server_started = self._base_env(Path(tmp))
             env["CURL_EXIT"] = "1"
+            server_started.unlink(missing_ok=True)
 
             result = self._run_suite("api-smoke", env)
 

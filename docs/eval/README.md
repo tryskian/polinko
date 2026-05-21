@@ -67,6 +67,9 @@ Manual evals and strict OCR gate reports answer different questions:
 - manual feedback evidence rows link to the matching source/result message
   when a case link exists; session context alone is not promoted into an OCR
   case link
+- `/viz/pass-fail` uses the same source-first match when it turns manual
+  feedback into evaluated rows; raw OCR status stays raw when feedback belongs
+  to a different result message
 - OCR gate reports preserve binary fail pressure
 - `/viz/pass-fail` keeps the live chart on the active window and uses tracked
   eval files to keep the wider lane map visible below it

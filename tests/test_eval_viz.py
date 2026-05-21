@@ -79,13 +79,15 @@ def _init_viz_history_db(path: Path, *, include_feedback: bool = False) -> None:
             INSERT INTO ocr_runs (
               run_id, session_id, source_name, mime_type, source_message_id,
               result_message_id, status, extracted_text, created_at
-            ) VALUES (?, 'chat-1', ?, ?, NULL, NULL, ?, ?, ?)
+            ) VALUES (?, 'chat-1', ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 (
                     "ocr-1",
                     "Screenshot-1.png",
                     "image/png",
+                    "m-source-1",
+                    "m-result-1",
                     "ok",
                     "hello world",
                     1774901000000,
@@ -94,6 +96,8 @@ def _init_viz_history_db(path: Path, *, include_feedback: bool = False) -> None:
                     "ocr-2",
                     "IMG_0001.jpeg",
                     "image/jpeg",
+                    "m-source-2",
+                    "m-result-2",
                     "ok",
                     "notes on paper",
                     1774902000000,
@@ -102,6 +106,8 @@ def _init_viz_history_db(path: Path, *, include_feedback: bool = False) -> None:
                     "ocr-3",
                     "diagram-card.png",
                     "image/png",
+                    "m-source-3",
+                    "m-result-3",
                     "error",
                     "NODE\nEDGE\nGRAPH",
                     1774903000000,
@@ -228,7 +234,8 @@ class EvalVizTests(unittest.TestCase):
             self.assertEqual(len(payload["evals"]), 1)
             self.assertEqual(payload["evals"][0]["source_run_id"], "ocr-2")
             self.assertEqual(payload["evals"][0]["outcome"], "PASS")
-            self.assertIn("session feedback", payload["evals"][0]["expected"])
+            self.assertEqual(payload["evals"][0]["expected"], "(raw OCR status)")
+            self.assertEqual(payload["evals"][0]["feedback_match_type"], "")
 
     def test_payload_prefers_fail_focused_feedback_chart_by_default(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
@@ -299,6 +306,14 @@ class EvalVizTests(unittest.TestCase):
             )
             self.assertEqual(payload["evals"][0]["outcome"], "FAIL")
             self.assertIn("missed handwriting context", payload["evals"][0]["expected"])
+            self.assertEqual(payload["evals"][0]["source_run_id"], "ocr-2")
+            self.assertEqual(payload["evals"][0]["result_message_id"], "m-result-2")
+            self.assertEqual(
+                payload["evals"][0]["feedback_match_type"],
+                "feedback_result_message",
+            )
+            self.assertIn("notes on paper", payload["evals"][0]["observed"])
+            self.assertNotIn("NODE EDGE GRAPH", payload["evals"][0]["observed"])
 
     def test_payload_uses_latest_report_and_builds_rows(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:

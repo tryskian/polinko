@@ -918,3 +918,16 @@ or branch history instead.
 - Why: A source-first workbench has to preserve the actual artifact-to-judgment
   chain. In sessions with multiple OCR runs, linking feedback to the latest
   session OCR run can misstate what the human judgment applied to.
+
+## D-068: Keep eval viz feedback rows on result-message provenance
+
+- Date: `2026-05-20`
+- Category: `eval_quality`
+- Tags: `manual_evals`, `eval_viz`, `source_first`, `provenance`
+- Decision: `/viz/pass-fail` manual feedback rows and run-specific OCR rows use
+  feedback only when `feedback.message_id` matches the OCR run's
+  `result_message_id`. The manual eval DB also indexes the feedback-message and
+  OCR-result-message columns used for that join.
+- Why: The visualization is an operator decision surface. Borrowing feedback
+  from another OCR run in the same session can make the chart imply a human
+  judgment applied to an artifact that was never judged.
