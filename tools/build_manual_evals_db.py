@@ -427,10 +427,14 @@ def _init_output_db(conn: sqlite3.Connection) -> None:
 
         CREATE INDEX idx_feedback_session_updated
           ON feedback(session_id, updated_at DESC, id DESC);
+        CREATE INDEX idx_feedback_session_message
+          ON feedback(session_id, message_id);
         CREATE INDEX idx_checkpoints_session_created
           ON checkpoints(session_id, created_at DESC, id DESC);
         CREATE INDEX idx_ocr_runs_session_created
           ON ocr_runs(session_id, created_at DESC, id DESC);
+        CREATE INDEX idx_ocr_runs_session_result_message
+          ON ocr_runs(session_id, result_message_id);
         CREATE INDEX idx_image_assets_status
           ON image_assets(status);
         """

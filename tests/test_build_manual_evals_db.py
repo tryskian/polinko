@@ -232,13 +232,41 @@ class BuildManualEvalsDbTests(unittest.TestCase):
                 self.assertEqual(str(sessions[1]["session_id"]), "current:chat-1")
 
                 runs = conn.execute(
-                    "SELECT run_id, source_run_id, era FROM ocr_runs ORDER BY era"
+                    """
+                    SELECT
+                      run_id,
+                      source_run_id,
+                      source_message_id,
+                      result_message_id,
+                      era
+                    FROM ocr_runs
+                    ORDER BY era
+                    """
                 ).fetchall()
                 self.assertEqual(
                     [str(row["source_run_id"]) for row in runs], ["ocr-1", "ocr-1"]
                 )
+                self.assertEqual(
+                    [str(row["source_message_id"]) for row in runs],
+                    ["m-source-1", "m-source-1"],
+                )
+                self.assertEqual(
+                    [str(row["result_message_id"]) for row in runs],
+                    ["m-result-1", "m-result-1"],
+                )
                 self.assertEqual(str(runs[0]["run_id"]), "beta_1_0:ocr-1")
                 self.assertEqual(str(runs[1]["run_id"]), "current:ocr-1")
+
+                feedback_indexes = {
+                    str(row["name"])
+                    for row in conn.execute("PRAGMA index_list('feedback')").fetchall()
+                }
+                ocr_indexes = {
+                    str(row["name"])
+                    for row in conn.execute("PRAGMA index_list('ocr_runs')").fetchall()
+                }
+                self.assertIn("idx_feedback_session_message", feedback_indexes)
+                self.assertIn("idx_ocr_runs_session_result_message", ocr_indexes)
 
 
 if __name__ == "__main__":
