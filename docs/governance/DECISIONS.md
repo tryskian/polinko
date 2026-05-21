@@ -876,3 +876,16 @@ or branch history instead.
 - Why: Core runtime logic is already canonical under the packaged runtime.
   Removing the unused root shims reduces import ambiguity while preserving the
   active API, CLI, manual eval workbench, and `server:app` surfaces.
+
+## D-065: Consolidate the Python package boundary around root launchers
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `python`, `package_boundary`, `root_launchers`, `imports`
+- Decision: Treat `src/polinko/` as the runtime import boundary. Root
+  `app.py`, `config.py`, `api/`, and `core/` stay retired and guarded against
+  reintroduction; root `main.py` and `server.py` remain the only root
+  compatibility surfaces.
+- Why: The import-shim migration is complete. Consolidating the contract
+  reduces root-level ambiguity while preserving the two launch paths that still
+  protect operator, Docker, and local eval workflows.

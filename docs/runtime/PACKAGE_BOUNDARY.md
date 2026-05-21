@@ -2,7 +2,7 @@
 
 # Python Package Boundary
 
-This page records the package-boundary migration contract for the beta refactor.
+This page records the package-boundary contract for the beta refactor.
 The packaging rail exists now; `config`, API, and core runtime implementation
 are under `src/polinko/`. The legacy root `app.py` launcher is retired. The
 legacy root `config.py` import shim is retired. The legacy root `api/` import
@@ -10,7 +10,7 @@ shims are retired. The legacy root `core/` import shims are retired.
 
 ## Current Tracked Shape
 
-Tracked root runtime compatibility modules:
+Tracked root compatibility launchers:
 
 - `main.py`
   - compatibility launcher for `python main.py`
@@ -49,15 +49,14 @@ Tracked packaging rail:
   - verifies editable-install metadata, package import identity, and packaged
     API static assets
 
-## Compatibility Audit
+## Current Boundary
 
 Current audit result:
 
 - active runtime and tool imports should use `polinko.*`
-- remaining root compatibility imports are allowed only in the tracked shim
-  layer and focused legacy-contract tests
-- compatibility launcher and shim retirement must happen through
-  surface-specific kernels with evidence
+- remaining root compatibility surfaces are launchers, not import shims
+- compatibility launcher retirement must happen through surface-specific
+  kernels with evidence
 - active `server:app` references still exist in Docker, Make runtime defaults,
   server-daemon startup, and local eval gate startup
 - the legacy `app.py` launcher is retired; use `make chat`, `python -m
@@ -76,7 +75,7 @@ Current audit result:
 
 ### Readiness Snapshot: 2026-05-20
 
-This snapshot records the current retirement posture after the root-shim
+This snapshot records the current retirement posture after the root-surface
 reference audit.
 
 | Surface | Current evidence | Retirement posture |
@@ -88,16 +87,13 @@ reference audit.
 | `api/` | active `src/` and `tools/` imports use `polinko.api.*`; focused local ignored-lane search found no legacy root import usage | retired in a separate deprecation/removal kernel |
 | `core/` | active `src/` and `tools/` imports use `polinko.core.*`; focused local ignored-lane search found no legacy root import usage | retired in a separate deprecation/removal kernel |
 
-Retired root launchers:
+Retired root surfaces:
 
 - `app.py`
   - removed after the deprecation/removal preflight found no active tracked
     caller and no focused local ignored-lane launcher usage
   - replacement launchers are `make chat`, `python -m polinko.cli`,
     `polinko-chat`, and root `main.py`
-
-Retired root import shims:
-
 - `config.py`
   - removed after the legacy-import preflight found no active tracked caller
     and no focused local ignored-lane import usage
@@ -111,11 +107,11 @@ Retired root import shims:
     and no focused local ignored-lane import usage
   - replacement imports use `polinko.core.*`
 
-## Target Package Shape
+## Package Shape
 
-The future runtime import package should be `polinko` under `src/polinko/`.
+The runtime import package is `polinko` under `src/polinko/`.
 
-Target placement:
+Current placement:
 
 - `src/polinko/config.py`
   - canonical config implementation
@@ -137,21 +133,18 @@ Target placement:
   - remains repo-local operator tooling unless a later tooling split is
     explicitly approved
 
-## Migration Order
+## Remaining Order
 
 1. Keep packaging metadata and editable-install coverage green.
 2. Keep active runtime imports on `polinko.*`.
-3. Keep `main.py` and `server.py` as compatibility launchers during the import
-   rewrite.
+3. Keep `main.py` and `server.py` as compatibility launchers.
    - root `server.py` currently forwards to `polinko.asgi`
 4. Move or split `tools/` only after runtime imports and tests are stable.
-5. Add a console-script entrypoint for the CLI before removing any root launcher.
-   - current console script: `polinko-chat`
+5. Keep `polinko-chat` as the installed console-script entrypoint.
 
 ## Guardrails
 
-- Do not move runtime modules into `src/polinko/` before the editable-install
-  rail is green.
+- Keep runtime modules under `src/polinko/`.
 - Do not reintroduce root `config.py`; use `polinko.config`.
 - Do not reintroduce root `api/`; use `polinko.api.*`.
 - Do not reintroduce root `core/`; use `polinko.core.*`.
