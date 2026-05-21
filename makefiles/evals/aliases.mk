@@ -3,7 +3,7 @@
 .PHONY: ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall ocrhand ocrtype ocrillu
 .PHONY: ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus ocrfocuscases ocrfocusreport ocrkernel
 .PHONY: ocrhandbench ocrtypebench ocrillubench ocrstablehand ocrstabletype ocrstableillu ocrdelta
-.PHONY: nulls runtime-null-audit ocr-data ocr-notebook-workflow
+.PHONY: nulls runtime-null-audit ocr-inventory ocr-data ocr-notebook-workflow
 
 # Short aliases for frequent long-chain commands.
 ocrindex: cgpt-export-index
@@ -81,6 +81,9 @@ nulls: runtime-null-audit
 
 runtime-null-audit:
 	$(PYTHON) -m tools.audit_runtime_nulls
+
+ocr-inventory:
+	$(PYTHON) "$(OCR_LANE_INVENTORY_SCRIPT)"
 
 ocr-data:
 	@CGPT_EXPORT_ROOT="$(CGPT_EXPORT_ROOT)" \

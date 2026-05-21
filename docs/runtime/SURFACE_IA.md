@@ -72,6 +72,8 @@ It includes:
   - `make notes`
   - `make notebook`
   - `make nb`
+- local notebook workspace:
+  - `.local/notebooks/`
 - local evidence databases:
   - `.local/runtime_dbs/active/manual_evals.db`
   - `.local/runtime_dbs/active/history.db`

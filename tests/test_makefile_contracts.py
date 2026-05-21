@@ -47,6 +47,7 @@ OCR_GROWTH_STABILITY_RUNNER_SCRIPT = (
 )
 OCR_REPORT_BUILDER_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_builder.sh"
 OCR_REPORT_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_workflow.sh"
+OCR_LANE_INVENTORY_SCRIPT = REPO_ROOT / "tools" / "report_ocr_lane_inventory.py"
 OCR_INTAKE_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_intake_workflow.sh"
 
 
@@ -250,6 +251,10 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("OCR_REPORT_WORKFLOW_ENV =", config_text)
+        self.assertIn(
+            "OCR_LANE_INVENTORY_SCRIPT ?= ./tools/report_ocr_lane_inventory.py",
+            config_text,
+        )
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
@@ -708,6 +713,10 @@ class MakefileContractTests(unittest.TestCase):
             text,
             r"(?m)^ocr-notebook-workflow:\n\t@CGPT_EXPORT_ROOT=\"\$\(CGPT_EXPORT_ROOT\)\" \\\n\t\tbash \"\$\(OCR_WORKFLOW_SCRIPT\)\" ocr-notebook-workflow$",
         )
+        self.assertRegex(
+            text,
+            r"(?m)^ocr-inventory:\n\t\$\(PYTHON\) \"\$\(OCR_LANE_INVENTORY_SCRIPT\)\"$",
+        )
         self.assertNotIn('bash "$(EVAL_SERVER_DAEMON_SCRIPT)"', text)
 
     def test_runtime_helper_scripts_are_named_for_their_roles(self) -> None:
@@ -756,6 +765,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(OCR_GROWTH_STABILITY_RUNNER_SCRIPT.is_file())
         self.assertTrue(OCR_REPORT_BUILDER_SCRIPT.is_file())
         self.assertTrue(OCR_REPORT_WORKFLOW_SCRIPT.is_file())
+        self.assertTrue(OCR_LANE_INVENTORY_SCRIPT.is_file())
         self.assertTrue(OCR_INTAKE_WORKFLOW_SCRIPT.is_file())
         self.assertTrue(os.access(OCR_WORKFLOW_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_INTAKE_WORKFLOW_SCRIPT, os.X_OK))
@@ -962,6 +972,7 @@ class MakefileContractTests(unittest.TestCase):
             "ocr-generalization-review",
             "ocr-transcript-delta",
             "ocrkernel",
+            "ocr-inventory",
             "ocr-data",
             "ocr-notebook-workflow",
             "eval-ocr-transcript-cases",
@@ -1051,6 +1062,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("quality-gate-deterministic", targets)
         self.assertIn("ocrmine", targets)
         self.assertIn("ocrkernel", targets)
+        self.assertIn("ocr-inventory", targets)
         self.assertIn("eval-sidecar-start", targets)
         self.assertIn("eval-ocr-transcript-cases-growth-batched", targets)
 

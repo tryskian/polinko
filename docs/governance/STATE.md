@@ -44,6 +44,8 @@ Last updated: 2026-05-21
   - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active
     because they feed manual evals, feedback, checkpoints, exports, and
     runtime history
+  - notebook workspace defaults to `.local/notebooks/`, keeping manual eval
+    notebooks in the local evidence lane by default
 - The repository is the research object:
   - tracked docs, code, tests, and reports are canonical truth
   - public-facing writing is the derived publication layer from repo truth
@@ -227,6 +229,8 @@ Last updated: 2026-05-21
     generalization pressure as the next kernel
   - OCR intake now uses transcript-mined episodes plus OCR-ready
     generalization candidates
+  - `make ocr-inventory` prints a read-only map of tracked OCR cases plus
+    local case, report, manual-eval DB, and notebook paths
   - OCR verdicts stay `pass` / `fail` under that broader intake
 - Branch protection on `main` remains active:
   - PR required

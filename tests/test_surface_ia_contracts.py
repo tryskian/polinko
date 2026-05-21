@@ -48,6 +48,7 @@ class SurfaceIaContractTests(unittest.TestCase):
             "`make notes`",
             "`make notebook`",
             "`make nb`",
+            "`.local/notebooks/`",
             "`.local/runtime_dbs/active/manual_evals.db`",
             "`.local/runtime_dbs/active/history.db`",
             "`POST /chat`",
