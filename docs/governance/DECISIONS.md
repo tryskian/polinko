@@ -1323,3 +1323,22 @@ or branch history instead.
   image. Collapsing duplicate source artifacts into a shortlist makes the next
   human decision explicit while keeping feedback closure blocked until exact
   OCR source/result message IDs and feedback-to-result links are present.
+
+## D-094: Template OCR retry source-artifact decisions before reruns
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `selection_template`
+- Human-led: The human lead keeps the OCR retry decision as a manual eval
+  workbench judgment before any automated rerun.
+- Decision: `make manual-evals-ocr-retry-selection-template` prints a
+  read-only human-selection template for the OCR retry shortlist. The terminal
+  report and JSON export expose
+  `schema_version=polinko.manual_eval_ocr_retry_selection_template.v1`,
+  shortlist IDs, feedback IDs, candidate artifact IDs, OCR run IDs, source
+  image names, source previews, thumbnail dimensions, and fillable decision
+  fields with `selected_action=undecided`.
+- Why: Selection review identifies what needs a human choice, but the next
+  step needs a stable decision input shape before any OCR rerun, curation,
+  feedback closure, live eval write, or warehouse mutation. The template keeps
+  allowed dispositions explicit while leaving all selections undecided.

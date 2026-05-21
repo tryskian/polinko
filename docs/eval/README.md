@@ -125,6 +125,13 @@ notes, exports, and runtime history.
     plans and expose feedback IDs, OCR run IDs, source image names, thumbnail
     dimensions, source previews, candidate payload previews, and explicit
     dispositions: `rerun_input`, `curated_case`, or `context_only`
+  - build a human-selection template without mutation with
+    `make manual-evals-ocr-retry-selection-template`
+  - JSON OCR retry selection-template export uses
+    `schema_version=polinko.manual_eval_ocr_retry_selection_template.v1`
+  - selection templates expose shortlist IDs, candidate artifact IDs, source
+    previews, and fillable decision fields that default to
+    `selected_action=undecided`
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

@@ -12,6 +12,7 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_INPUT_PACKET_SCHEMA_VERSION,
     OCR_RETRY_RERUN_MANIFEST_SCHEMA_VERSION,
     OCR_RETRY_RERUN_PLAN_SCHEMA_VERSION,
+    OCR_RETRY_SELECTION_TEMPLATE_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_REVIEW_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_PROVENANCE_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
@@ -20,6 +21,7 @@ from tools.manual_evals_db_health import (
     build_ocr_retry_input_packet_report,
     build_ocr_retry_rerun_manifest_report,
     build_ocr_retry_rerun_plan_report,
+    build_ocr_retry_selection_template_report,
     build_ocr_retry_selection_review_report,
     build_ocr_retry_source_provenance_report,
     build_ocr_retry_source_verification_report,
@@ -30,6 +32,7 @@ from tools.manual_evals_db_health import (
     format_ocr_retry_input_packet_report,
     format_ocr_retry_rerun_manifest_report,
     format_ocr_retry_rerun_plan_report,
+    format_ocr_retry_selection_template_report,
     format_ocr_retry_selection_review_report,
     format_ocr_retry_source_provenance_report,
     format_ocr_retry_source_verification_report,
@@ -1494,6 +1497,90 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             self.assertIn("candidate_runs=2 duplicate_artifacts=1", summary)
             self.assertIn("ocr=ocr-1", summary)
             self.assertIn("ocr=ocr-new", summary)
+
+            selection_template = build_ocr_retry_selection_template_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            template_summary = format_ocr_retry_selection_template_report(
+                selection_template
+            )
+
+            self.assertEqual(
+                selection_template["schema_version"],
+                OCR_RETRY_SELECTION_TEMPLATE_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                selection_template["selection_review_schema_version"],
+                OCR_RETRY_SELECTION_REVIEW_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                selection_template["counts"],
+                {
+                    "total_feedback_rows": 1,
+                    "returned_feedback_rows": 1,
+                    "shortlist_items": 1,
+                    "template_items": 1,
+                    "candidate_artifacts": 2,
+                    "collapsed_duplicate_source_artifacts": 1,
+                    "default_undecided_items": 1,
+                    "feedback_closure_blocked_items": 1,
+                    "ocr_source_message_ids_present": 0,
+                    "ocr_result_message_ids_present": 0,
+                    "exact_feedback_result_links": 0,
+                    "requested_artifact_ids": 0,
+                    "unmatched_artifact_ids": 0,
+                    "preview_only": True,
+                    "limit_applied": False,
+                },
+            )
+            template = selection_template["selection_template"]
+            self.assertEqual(template["mutation"], "none")
+            self.assertEqual(
+                template["allowed_actions"],
+                ["rerun_input", "curated_case", "context_only"],
+            )
+            template_item = template["items"][0]
+            self.assertEqual(template_item["feedback_ids"], [1])
+            self.assertEqual(
+                template_item["decision_input"],
+                {
+                    "selected_action": "undecided",
+                    "allowed_actions": [
+                        "rerun_input",
+                        "curated_case",
+                        "context_only",
+                    ],
+                    "selected_artifact_ids": [],
+                    "rationale": "",
+                    "notes": "",
+                    "requires_human_selection": True,
+                },
+            )
+            self.assertEqual(
+                {
+                    candidate["artifact_id"]
+                    for candidate in template_item["candidate_artifacts"]
+                },
+                artifact_ids,
+            )
+            self.assertIn(
+                "manual eval OCR retry selection template: state=ok rows=1/1 "
+                "items=1 shortlist=1 candidate_artifacts=2 "
+                "collapsed_duplicates=1 undecided=1 closure_blocked=1",
+                template_summary,
+            )
+            self.assertIn(
+                "selected_action=undecided "
+                "allowed=rerun_input,curated_case,context_only",
+                template_summary,
+            )
+            self.assertIn(
+                "fill_template=selected_action=<rerun_input|curated_case|context_only>",
+                template_summary,
+            )
 
     def test_health_report_handles_missing_warehouse(self) -> None:
         with TemporaryDirectory() as tmpdir:

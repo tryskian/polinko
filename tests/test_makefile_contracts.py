@@ -309,6 +309,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-ocr-retry-rerun-plan", targets)
         self.assertIn("manual-evals-ocr-retry-selection-review", targets)
         self.assertIn("manualdb-ocr-retry-selection-review", targets)
+        self.assertIn("manual-evals-ocr-retry-selection-template", targets)
+        self.assertIn("manualdb-ocr-retry-selection-template", targets)
         self.assertIn("portfolio", targets)
         self.assertIn("portfolio-mockups", targets)
         self.assertIn("pwcli", targets)
@@ -385,6 +387,12 @@ class MakefileContractTests(unittest.TestCase):
             r"manualdb-ocr-retry-selection-review:$",
         )
         self.assertIn("--ocr-retry-selection-review", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-ocr-retry-selection-template "
+            r"manualdb-ocr-retry-selection-template:$",
+        )
+        self.assertIn("--ocr-retry-selection-template", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_ARTIFACT_IDS ?= $(ARTIFACT_IDS)", text)
         self.assertIn("$(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS)", text)
 
