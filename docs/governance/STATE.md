@@ -115,6 +115,10 @@ Last updated: 2026-05-21
   - `make manual-evals-feedback-cohorts` prints read-only action cohorts for
     open manual-eval feedback using
     `schema_version=polinko.manual_eval_feedback_cohorts.v1`
+  - open feedback actionables and cohorts can be narrowed with
+    `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>` Make variables;
+    cohort filtering remains read-only and uses explicit `recommended_action`
+    labels
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then

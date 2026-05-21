@@ -29,10 +29,10 @@ manual-evals-db-health manualdb-health:
 	$(PYTHON) -m tools.manual_evals_db_health
 
 manual-evals-feedback-actionables manualdb-feedback-actionables:
-	$(PYTHON) -m tools.manual_evals_db_health --open-feedback-actionables
+	$(PYTHON) -m tools.manual_evals_db_health --open-feedback-actionables $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
 
 manual-evals-feedback-cohorts manualdb-feedback-cohorts:
-	$(PYTHON) -m tools.manual_evals_db_health --open-feedback-cohorts
+	$(PYTHON) -m tools.manual_evals_db_health --open-feedback-cohorts $(strip $(MANUAL_EVALS_FEEDBACK_FILTER_ARGS))
 
 portfolio-install:
 	@set -eu; \

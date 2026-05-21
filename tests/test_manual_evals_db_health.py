@@ -57,9 +57,26 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             actionables_summary = format_open_feedback_actionables_report(
                 actionables,
             )
+            cohort_actionables = build_open_feedback_actionables_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            empty_cohort_actionables = build_open_feedback_actionables_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="style_regression",
+                limit=10,
+            )
             cohorts = build_open_feedback_cohorts_report(
                 db_path=output_db,
                 outcome="fail",
+            )
+            filtered_cohorts = build_open_feedback_cohorts_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="ocr_retry_evidence",
             )
             cohorts_summary = format_open_feedback_cohorts_report(cohorts)
             after_history = history_db.stat().st_mtime_ns
@@ -126,6 +143,7 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 },
             )
             self.assertEqual(actionables["filters"]["outcome"], "fail")
+            self.assertEqual(actionables["filters"]["cohort"], "")
             self.assertEqual(len(actionables["rows"]), 1)
             actionable = actionables["rows"][0]
             self.assertEqual(actionable["feedback_id"], 1)
@@ -142,6 +160,13 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             self.assertTrue(actionable["has_recommended_action"])
             self.assertFalse(actionable["has_action_taken"])
             self.assertEqual(
+                actionable["action_cohort"],
+                {
+                    "id": "ocr_retry_evidence",
+                    "description": "Retry OCR/crop and attach fresh image evidence.",
+                },
+            )
+            self.assertEqual(
                 actionable["ocr_context"],
                 {
                     "linked_to_ocr_result": True,
@@ -155,10 +180,14 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             )
             self.assertIn(
                 "manual eval open feedback actionables: state=ok rows=1/1 "
-                "outcome=fail limit=10",
+                "outcome=fail cohort=all limit=10",
                 actionables_summary,
             )
-            self.assertIn("feedback=1 era=current outcome=fail", actionables_summary)
+            self.assertIn(
+                "feedback=1 era=current outcome=fail status=open "
+                "cohort=ocr_retry_evidence",
+                actionables_summary,
+            )
             self.assertIn(
                 "recommended_action=Retry OCR with a tighter crop and attach fresh "
                 "image evidence for comparison.",
@@ -168,6 +197,20 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 "ocr_context: linked_to_ocr_result=yes same_session_ocr_runs=1",
                 actionables_summary,
             )
+            self.assertEqual(
+                cohort_actionables["counts"],
+                {
+                    "total_rows": 1,
+                    "returned_rows": 1,
+                    "limit_applied": False,
+                },
+            )
+            self.assertEqual(
+                cohort_actionables["filters"]["cohort"],
+                "ocr_retry_evidence",
+            )
+            self.assertEqual(empty_cohort_actionables["counts"]["total_rows"], 0)
+            self.assertEqual(empty_cohort_actionables["rows"], [])
             self.assertEqual(cohorts["schema_version"], COHORTS_SCHEMA_VERSION)
             self.assertEqual(cohorts["state"], "ok")
             self.assertEqual(
@@ -178,6 +221,7 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 },
             )
             self.assertEqual(cohorts["filters"]["cohort_basis"], "recommended_action")
+            self.assertEqual(cohorts["filters"]["cohort"], "")
             self.assertEqual(
                 cohorts["cohorts"],
                 [
@@ -198,9 +242,14 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                     }
                 ],
             )
+            self.assertEqual(filtered_cohorts["counts"]["total_rows"], 1)
+            self.assertEqual(
+                filtered_cohorts["filters"]["cohort"], "ocr_retry_evidence"
+            )
+            self.assertEqual(filtered_cohorts["cohorts"], cohorts["cohorts"])
             self.assertIn(
                 "manual eval open feedback cohorts: state=ok rows=1 cohorts=1 "
-                "outcome=fail basis=recommended_action",
+                "outcome=fail cohort=all basis=recommended_action",
                 cohorts_summary,
             )
             self.assertIn(
