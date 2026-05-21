@@ -74,6 +74,14 @@ operator input tooling:
   - reads the same local operator decisions
   - emits would-apply payloads only when validation reports `state=ok`
   - stays read-only
+- `make manual-evals-ocr-retry-execution-readiness`
+  - reads the same local operator decisions
+  - checks whether selected `rerun_input` and `curated_case` artifacts have
+    existing source files and payload-only command previews
+  - emits
+    `schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`
+  - stays read-only and does not run OCR, close feedback, write eval rows, or
+    mutate the manual eval warehouse
 
 The current OCR lane inventory is the reference instance for read-only local
 evidence inspection:

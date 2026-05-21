@@ -15,6 +15,7 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_RERUN_PLAN_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_APPLY_PREVIEW_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_DECISION_DRAFT_SCHEMA_VERSION,
+    OCR_RETRY_EXECUTION_READINESS_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_VALIDATION_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_TEMPLATE_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_REVIEW_SCHEMA_VERSION,
@@ -27,6 +28,7 @@ from tools.manual_evals_db_health import (
     build_ocr_retry_rerun_plan_report,
     build_ocr_retry_selection_apply_preview_report,
     build_ocr_retry_selection_decision_draft_payload,
+    build_ocr_retry_execution_readiness_report,
     build_ocr_retry_selection_validation_report,
     build_ocr_retry_selection_template_report,
     build_ocr_retry_selection_review_report,
@@ -41,6 +43,7 @@ from tools.manual_evals_db_health import (
     format_ocr_retry_rerun_plan_report,
     format_ocr_retry_selection_apply_preview_report,
     format_ocr_retry_selection_decision_draft_report,
+    format_ocr_retry_execution_readiness_report,
     format_ocr_retry_selection_validation_report,
     format_ocr_retry_selection_template_report,
     format_ocr_retry_selection_review_report,
@@ -1875,6 +1878,71 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             self.assertIn("action=rerun_input", valid_apply_summary)
             self.assertIn(f"artifact={selected_artifact_id}", valid_apply_summary)
 
+            execution_readiness = build_ocr_retry_execution_readiness_report(
+                db_path=output_db,
+                selection_path=selection_path,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            execution_readiness_summary = format_ocr_retry_execution_readiness_report(
+                execution_readiness
+            )
+
+            self.assertEqual(
+                execution_readiness["schema_version"],
+                OCR_RETRY_EXECUTION_READINESS_SCHEMA_VERSION,
+            )
+            self.assertEqual(
+                execution_readiness["selection_apply_preview_schema_version"],
+                OCR_RETRY_SELECTION_APPLY_PREVIEW_SCHEMA_VERSION,
+            )
+            self.assertEqual(execution_readiness["state"], "ready")
+            self.assertEqual(execution_readiness["validation_state"], "ok")
+            self.assertEqual(execution_readiness["apply_preview_state"], "ok")
+            self.assertTrue(
+                execution_readiness["readiness_contract"][
+                    "requires_explicit_follow_up_gate"
+                ]
+            )
+            self.assertEqual(
+                execution_readiness["readiness_contract"]["mutation"], "none"
+            )
+            self.assertEqual(
+                execution_readiness["readiness_contract"]["execution"], "none"
+            )
+            self.assertEqual(execution_readiness["counts"]["readiness_items"], 1)
+            self.assertEqual(execution_readiness["counts"]["ready_items"], 1)
+            self.assertEqual(execution_readiness["counts"]["blocked_items"], 0)
+            self.assertEqual(execution_readiness["counts"]["executable_items"], 1)
+            self.assertEqual(execution_readiness["counts"]["source_files_ready"], 1)
+            self.assertEqual(execution_readiness["counts"]["source_files_missing"], 0)
+            readiness_item = execution_readiness["execution_readiness_items"][0]
+            self.assertEqual(readiness_item["state"], "ready")
+            self.assertTrue(readiness_item["executable"])
+            self.assertEqual(readiness_item["selected_action"], "rerun_input")
+            self.assertEqual(
+                readiness_item["execution_gate"],
+                "explicit_follow_up_required",
+            )
+            self.assertEqual(readiness_item["mutation"], "none")
+            self.assertEqual(readiness_item["execution"], "none")
+            readiness_artifact = readiness_item["selected_artifacts"][0]
+            self.assertEqual(readiness_artifact["state"], "ready")
+            self.assertTrue(readiness_artifact["source_file_exists"])
+            self.assertEqual(readiness_artifact["artifact_id"], selected_artifact_id)
+            self.assertIn(
+                "manual eval OCR retry execution readiness: state=ready "
+                "validation=ok apply_preview=ok rows=1/1 items=1",
+                execution_readiness_summary,
+            )
+            self.assertIn("executable=1 blocked=0", execution_readiness_summary)
+            self.assertIn("readiness=ready executable=yes", execution_readiness_summary)
+            self.assertIn(
+                f"artifact={selected_artifact_id} state=ready",
+                execution_readiness_summary,
+            )
+
             selection_path.write_text(
                 json.dumps(
                     {
@@ -1953,6 +2021,25 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             self.assertEqual(invalid_action_apply["counts"]["preview_items"], 0)
             self.assertEqual(
                 invalid_action_apply["application_preview"]["items"],
+                [],
+            )
+
+            invalid_action_readiness = build_ocr_retry_execution_readiness_report(
+                db_path=output_db,
+                selection_path=selection_path,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+
+            self.assertEqual(invalid_action_readiness["state"], "blocked")
+            self.assertEqual(invalid_action_readiness["validation_state"], "error")
+            self.assertEqual(
+                invalid_action_readiness["counts"]["blocked_by_validation"],
+                1,
+            )
+            self.assertEqual(
+                invalid_action_readiness["execution_readiness_items"],
                 [],
             )
 

@@ -159,6 +159,13 @@ notes, exports, and runtime history.
     payloads, split decisions by `rerun_input`, `curated_case`, and
     `context_only`, and keep validation blockers visible before any OCR
     execution surface
+  - check OCR retry execution readiness without mutation with
+    `make manual-evals-ocr-retry-execution-readiness`
+  - JSON OCR retry execution-readiness export uses
+    `schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`
+  - execution-readiness reports require apply-preview `state=ok`, verify
+    selected artifact source-file existence and payload-only command previews,
+    and keep execution in a separate explicit follow-up gate
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

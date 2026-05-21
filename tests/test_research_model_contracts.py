@@ -304,6 +304,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-selection-apply-preview`",
             "`schema_version=polinko.manual_eval_ocr_retry_selection_apply_preview.v1`",
             "validation is `ok`",
+            "## D-100: Gate OCR retry execution readiness before execution",
+            "`make manual-evals-ocr-retry-execution-readiness`",
+            "`schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`",
+            "Execution remains a separate",
         ):
             self.assertIn(expected, decisions)
 
@@ -369,6 +373,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-selection-apply-preview` prints a read-only",
             "`schema_version=polinko.manual_eval_ocr_retry_selection_apply_preview.v1`",
             "split valid decisions by `rerun_input`",
+            "`make manual-evals-ocr-retry-execution-readiness` prints a read-only",
+            "`schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`",
+            "requires apply-preview `state=ok`",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",
@@ -492,6 +499,15 @@ class ResearchModelContractTests(unittest.TestCase):
             eval_map,
         )
         self.assertIn("split decisions by `rerun_input`", eval_map)
+        self.assertIn(
+            "`make manual-evals-ocr-retry-execution-readiness`",
+            eval_map,
+        )
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`",
+            eval_map,
+        )
+        self.assertIn("separate explicit follow-up gate", eval_map)
         self.assertIn("without inferring links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)
