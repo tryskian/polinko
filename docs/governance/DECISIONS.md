@@ -1425,3 +1425,21 @@ or branch history instead.
   a shared package now would freeze the wrong abstraction. Naming the contract
   lets Polinko reuse the safe operator pattern while keeping implementation
   repo-local until repeated behavior proves the shared boundary.
+
+## D-099: Pin OCR evidence tooling to read-only inventory before eval refresh
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `ocr`, `inventory`, `freshness`, `local_evidence`, `read_only`
+- Human-led: The human lead paused live eval execution and asked to align
+  Polinko governance/runtime docs before resuming toy work.
+- Decision: `make ocr-inventory` and `make ocr-inventory-json` are the
+  current OCR tooling pin. They inspect tracked OCR cases, local case inputs,
+  local reports, manual-eval DB paths, and notebook paths without running OCR,
+  launching browsers, writing eval rows, or mutating local databases. The
+  inventory reports JSON shape, row-source counts, and read-only freshness
+  states from existing `generated_at` metadata.
+- Why: OCR generalization work should resume from known local evidence state,
+  not from implicit assumptions or stale report paths. The inventory pin gives
+  operators a safe map of what exists, what is stale, and what lacks freshness
+  metadata before any eval refresh or live OCR execution is approved.

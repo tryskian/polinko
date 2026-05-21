@@ -37,6 +37,7 @@ This page is the structural map of the tracked system.
 - `tools/`
   - local operators, evals, reports, and renderers
   - includes `tools/check_package_install.py` for editable-install validation
+  - includes read-only inventory/status tools for local evidence inspection
 - `tests/`
   - API and runtime regression tests
 - `Makefile`
@@ -101,6 +102,12 @@ This page is the structural map of the tracked system.
   - `.local/eval_reports/`
 - local eval cases and artefacts:
   - `.local/eval_cases/`
+- local notebook workspace:
+  - `.local/notebooks/`
+- read-only OCR inventory:
+  - `make ocr-inventory`
+  - `make ocr-inventory-json`
+  - reports local evidence shape and freshness without eval execution
 - evidence diagram payload:
   - built from the Sankey payload generator
   - bridges Beta 1.0 manual feedback with current OCR report counts
@@ -147,7 +154,8 @@ This page is the structural map of the tracked system.
 - `PACKAGE_BOUNDARY`
   - Python package-boundary migration contract
 - `LOCAL_TOOLING`
-  - local operator input, validation, preview, and execution-gate contract
+  - local inventory/status, operator input, validation, preview, and
+    execution-gate contract
 - local `SESSION_HANDOFF`
   - active slice and next-session carryover
 

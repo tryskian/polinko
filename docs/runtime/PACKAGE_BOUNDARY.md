@@ -153,6 +153,8 @@ Current placement:
 - root `tools/`
   - remains repo-local operator tooling unless a later tooling split is
     explicitly approved
+  - includes read-only local evidence inventory commands such as
+    `tools/report_ocr_lane_inventory.py`
 
 ## Remaining Order
 
@@ -180,6 +182,8 @@ Current placement:
   `polinko-chat`, or root `main.py`.
 - Do not package `tools/` into the runtime app before runtime imports and
   compatibility launchers are stable.
+- Keep local evidence inventory and operator tooling repo-local unless a
+  later tooling split is explicitly approved.
 
 ## Validation
 

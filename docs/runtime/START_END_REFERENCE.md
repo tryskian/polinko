@@ -101,6 +101,15 @@ Explicit companion checks:
   - verifies the working tree is clean
   - verifies local `main` is synced with `origin/main`
 
+Read-only tooling pin:
+
+- `make ocr-inventory`
+  - print OCR local evidence shape and freshness without running evals
+- `make ocr-inventory-json`
+  - print the same OCR inventory as JSON
+- `FRESHNESS_DAYS=<days>`
+  - override the OCR inventory freshness threshold
+
 Source of truth:
 
 - [tools/end_of_day_routine.sh](../../tools/end_of_day_routine.sh)

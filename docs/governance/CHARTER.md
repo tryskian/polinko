@@ -32,6 +32,7 @@ evidence-preserving method work.
 - Prefer deterministic, testable changes.
 - Fail fast on config, auth, and runtime issues.
 - Inspect evidence before interpretation.
+- Use read-only inventory/status tooling before high-impact eval refreshes.
 - Preserve evidence chains:
   - archive before delete
   - keep summaries anchored to raw evidence

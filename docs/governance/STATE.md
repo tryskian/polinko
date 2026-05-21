@@ -227,6 +227,8 @@ Last updated: 2026-05-21
   - OCR remains one mature method lane inside the broader project
   - OCR is stabilized on the current image set, with broader
     generalization pressure as the next kernel
+  - live OCR/eval execution is pinned until an explicit resume decision; the
+    current OCR work surface is read-only tooling and docs alignment
   - OCR intake now uses transcript-mined episodes plus OCR-ready
     generalization candidates
   - `make ocr-inventory` prints a read-only map of tracked OCR cases plus
