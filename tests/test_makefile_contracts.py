@@ -293,6 +293,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-health", targets)
         self.assertIn("manual-evals-feedback-actionables", targets)
         self.assertIn("manualdb-feedback-actionables", targets)
+        self.assertIn("manual-evals-feedback-cohorts", targets)
+        self.assertIn("manualdb-feedback-cohorts", targets)
         self.assertIn("portfolio", targets)
         self.assertIn("portfolio-mockups", targets)
         self.assertIn("pwcli", targets)
@@ -317,6 +319,11 @@ class MakefileContractTests(unittest.TestCase):
             r"(?m)^manual-evals-feedback-actionables manualdb-feedback-actionables:$",
         )
         self.assertIn("--open-feedback-actionables", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-feedback-cohorts manualdb-feedback-cohorts:$",
+        )
+        self.assertIn("--open-feedback-cohorts", text)
 
     def test_lifecycle_aliases_delegate_to_canonical_targets(self) -> None:
         text = _makefile_contract_text()

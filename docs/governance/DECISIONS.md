@@ -1145,3 +1145,19 @@ or branch history instead.
   row-level evidence before any warehouse mutation or closure. A read-only
   actionables list lets the operator inspect queued work without guessing
   feedback-to-OCR relationships or changing the local evidence database.
+
+## D-084: Cohort manual eval open feedback actionables read-only
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `feedback`, `triage`, `local_evidence`, `makefile`
+- Decision: `make manual-evals-feedback-cohorts` prints read-only cohorts for
+  open manual-eval feedback actionables. The terminal report and JSON export
+  expose `schema_version=polinko.manual_eval_feedback_cohorts.v1`, cohort
+  identity, row/session/outcome counts, note and action coverage, explicit
+  OCR-result link counts, same-session OCR context counts, and sample feedback
+  row ids.
+- Why: Row-level actionables are inspectable, but the operator needs a compact
+  batch-selection view before curation. Cohorts are derived from explicit
+  `recommended_action` text and known OCR context fields, not broad inferred
+  feedback-to-OCR linkage.

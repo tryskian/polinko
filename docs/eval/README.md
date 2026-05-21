@@ -64,6 +64,10 @@ notes, exports, and runtime history.
     `make manual-evals-feedback-actionables`
   - JSON actionables export uses
     `schema_version=polinko.manual_eval_feedback_actionables.v1`
+  - summarize open feedback row actionables by cohort with
+    `make manual-evals-feedback-cohorts`
+  - JSON cohort export uses
+    `schema_version=polinko.manual_eval_feedback_cohorts.v1`
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

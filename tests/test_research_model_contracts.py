@@ -251,6 +251,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-083: List manual eval open feedback actionables read-only",
             "`make manual-evals-feedback-actionables`",
             "`schema_version=polinko.manual_eval_feedback_actionables.v1`",
+            "## D-084: Cohort manual eval open feedback actionables read-only",
+            "`make manual-evals-feedback-cohorts`",
+            "`schema_version=polinko.manual_eval_feedback_cohorts.v1`",
         ):
             self.assertIn(expected, decisions)
 
@@ -271,6 +274,8 @@ class ResearchModelContractTests(unittest.TestCase):
             "feedback debt by outcome",
             "`make manual-evals-feedback-actionables` prints a read-only",
             "`schema_version=polinko.manual_eval_feedback_actionables.v1`",
+            "`make manual-evals-feedback-cohorts` prints read-only",
+            "`schema_version=polinko.manual_eval_feedback_cohorts.v1`",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",
@@ -292,6 +297,11 @@ class ResearchModelContractTests(unittest.TestCase):
         self.assertIn("`make manual-evals-feedback-actionables`", eval_map)
         self.assertIn(
             "`schema_version=polinko.manual_eval_feedback_actionables.v1`",
+            eval_map,
+        )
+        self.assertIn("`make manual-evals-feedback-cohorts`", eval_map)
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_feedback_cohorts.v1`",
             eval_map,
         )
         self.assertIn("without inferring links", eval_map)

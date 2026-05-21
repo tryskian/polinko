@@ -171,6 +171,8 @@ Use this doc for operator procedure.
   - print read-only manual eval warehouse source-quality signals
 - `make manual-evals-feedback-actionables`
   - print read-only row-level open feedback actionables for manual triage
+- `make manual-evals-feedback-cohorts`
+  - print read-only open feedback action cohorts for manual triage
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`
