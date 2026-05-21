@@ -287,6 +287,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-selection-review`",
             "`schema_version=polinko.manual_eval_ocr_retry_selection_review.v1`",
             "`rerun_input`, `curated_case`, or",
+            "## D-094: Template OCR retry source-artifact decisions before reruns",
+            "`make manual-evals-ocr-retry-selection-template`",
+            "`schema_version=polinko.manual_eval_ocr_retry_selection_template.v1`",
+            "`selected_action=undecided`",
         ):
             self.assertIn(expected, decisions)
 
@@ -338,6 +342,10 @@ class ResearchModelContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_ocr_retry_selection_review.v1`",
             "collapse duplicate source image artifacts",
             "`rerun_input`, `curated_case`, or",
+            "`make manual-evals-ocr-retry-selection-template` prints a read-only",
+            "`schema_version=polinko.manual_eval_ocr_retry_selection_template.v1`",
+            "candidate artifact IDs",
+            "`selected_action=undecided`",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",
@@ -430,6 +438,13 @@ class ResearchModelContractTests(unittest.TestCase):
         )
         self.assertIn("collapse duplicate source image artifacts", eval_map)
         self.assertIn("`rerun_input`, `curated_case`, or `context_only`", eval_map)
+        self.assertIn("`make manual-evals-ocr-retry-selection-template`", eval_map)
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_ocr_retry_selection_template.v1`",
+            eval_map,
+        )
+        self.assertIn("candidate artifact IDs", eval_map)
+        self.assertIn("`selected_action=undecided`", eval_map)
         self.assertIn("without inferring links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)

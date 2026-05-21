@@ -232,6 +232,14 @@ Use this doc for operator procedure.
     dimensions, source previews, and candidate payload previews to choose
     `rerun_input`, `curated_case`, or `context_only` before any OCR rerun,
     curation, feedback closure, or warehouse mutation
+- `make manual-evals-ocr-retry-selection-template`
+  - print the read-only OCR retry human-selection template for the default
+    `ocr_retry_evidence` partial slice
+  - combine with `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, `LIMIT=<n>`, and
+    `ARTIFACT_IDS=<artifact_id>` for explicit manual source-artifact review
+  - use shortlist IDs, candidate artifact IDs, source previews, and fillable
+    `selected_action=undecided` fields to prepare local human decisions before
+    any OCR rerun, curation, feedback closure, or warehouse mutation
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`
