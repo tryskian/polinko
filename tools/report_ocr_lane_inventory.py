@@ -3,10 +3,12 @@ from __future__ import annotations
 import argparse
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 SCHEMA_VERSION = "polinko.ocr_lane_inventory.v1"
+DEFAULT_FRESHNESS_DAYS = 14.0
 ROW_COUNT_KEYS = (
     "cases",
     "candidates",
@@ -15,6 +17,7 @@ ROW_COUNT_KEYS = (
     "runs",
     "items",
 )
+FRESHNESS_SECTION_KEYS = ("local_cases", "local_reports")
 
 TRACKED_CASE_PATHS: tuple[tuple[str, str], ...] = (
     ("base_ocr_cases", "docs/eval/beta_2_0/ocr_eval_cases.json"),
@@ -210,6 +213,95 @@ def _json_metadata(path: Path) -> dict[str, Any]:
     return metadata
 
 
+def _parse_generated_at(value: Any) -> datetime | None:
+    if isinstance(value, int | float):
+        try:
+            return datetime.fromtimestamp(float(value), tz=timezone.utc)
+        except (OverflowError, OSError, ValueError):
+            return None
+    if not isinstance(value, str):
+        return None
+    raw_value = value.strip()
+    if not raw_value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw_value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _age_days(generated_at: datetime, *, now: datetime) -> float:
+    return round(max((now - generated_at).total_seconds(), 0.0) / 86_400, 2)
+
+
+def _annotate_freshness(
+    inventory: dict[str, Any],
+    *,
+    now: datetime,
+    freshness_days: float,
+) -> None:
+    summary: dict[str, Any] = {
+        "threshold_days": freshness_days,
+        "current": 0,
+        "stale": 0,
+        "unknown": 0,
+        "missing": 0,
+        "current_items": [],
+        "stale_items": [],
+        "unknown_items": [],
+        "missing_items": [],
+    }
+    for section_key in FRESHNESS_SECTION_KEYS:
+        for item in inventory[section_key]:
+            item_ref = {
+                "section": section_key,
+                "name": item["name"],
+                "path": item["path"],
+            }
+            if not item.get("exists"):
+                item["freshness_state"] = "missing"
+                item["freshness_reason"] = "path_missing"
+                summary["missing"] += 1
+                summary["missing_items"].append(item_ref)
+                continue
+
+            generated_at = _parse_generated_at(item.get("generated_at"))
+            if generated_at is None:
+                item["freshness_state"] = "unknown"
+                item["freshness_reason"] = "generated_at_missing_or_invalid"
+                summary["unknown"] += 1
+                summary["unknown_items"].append(item_ref)
+                continue
+
+            generated_at_utc = generated_at.strftime("%Y-%m-%dT%H:%M:%SZ")
+            age_days = _age_days(generated_at, now=now)
+            item["generated_at_utc"] = generated_at_utc
+            item["age_days"] = age_days
+            item_ref.update(
+                {
+                    "generated_at_utc": generated_at_utc,
+                    "age_days": age_days,
+                }
+            )
+            if age_days > freshness_days:
+                item["freshness_state"] = "stale"
+                item["freshness_reason"] = "generated_at_older_than_threshold"
+                summary["stale"] += 1
+                summary["stale_items"].append(item_ref)
+            else:
+                item["freshness_state"] = "current"
+                item["freshness_reason"] = "generated_at_within_threshold"
+                summary["current"] += 1
+                summary["current_items"].append(item_ref)
+
+    for key in ("current_items", "stale_items", "unknown_items", "missing_items"):
+        summary[key].sort(key=lambda item: (str(item["section"]), str(item["name"])))
+    inventory["freshness"] = summary
+
+
 def _file_status(name: str, path: Path, *, root: Path) -> dict[str, Any]:
     exists = path.exists()
     status: dict[str, Any] = {
@@ -228,14 +320,23 @@ def _file_status(name: str, path: Path, *, root: Path) -> dict[str, Any]:
     return status
 
 
-def build_inventory(*, root: Path) -> dict[str, Any]:
+def build_inventory(
+    *,
+    root: Path,
+    now: datetime | None = None,
+    freshness_days: float = DEFAULT_FRESHNESS_DAYS,
+) -> dict[str, Any]:
+    if now is None:
+        now = datetime.now(timezone.utc)
+    else:
+        now = now.astimezone(timezone.utc)
     notebook_dir = _resolve_path("NOTEBOOK_DIR", ".local/notebooks", root=root)
     notebook_start = _resolve_path(
         "NOTEBOOK_START_PATH",
         ".local/notebooks/ocr-eval-live-filters-starter.ipynb",
         root=root,
     )
-    return {
+    inventory = {
         "schema_version": SCHEMA_VERSION,
         "tracked_cases": [
             _file_status(name, root / path, root=root)
@@ -262,6 +363,12 @@ def build_inventory(*, root: Path) -> dict[str, Any]:
             _file_status("notebook_start", notebook_start, root=root),
         ],
     }
+    _annotate_freshness(
+        inventory,
+        now=now,
+        freshness_days=freshness_days,
+    )
+    return inventory
 
 
 def _format_row(item: dict[str, Any]) -> str:
@@ -270,6 +377,10 @@ def _format_row(item: dict[str, Any]) -> str:
         details.append(f"json={item['json_shape']}")
     if "source_schema_version" in item:
         details.append(f"schema={item['source_schema_version']}")
+    if "freshness_state" in item:
+        details.append(f"freshness={item['freshness_state']}")
+    if "age_days" in item:
+        details.append(f"age_days={item['age_days']}")
     if "rows" in item:
         details.append(f"rows={item['rows']}")
     if "row_source" in item:
@@ -296,6 +407,25 @@ def format_inventory(inventory: dict[str, Any]) -> str:
         ("notebooks", "notebooks"),
     )
     lines = [f"OCR lane inventory: {inventory['schema_version']}"]
+    freshness = inventory.get("freshness")
+    if isinstance(freshness, dict):
+        lines.append("")
+        lines.append("freshness")
+        lines.append(
+            "  - "
+            f"threshold_days={freshness['threshold_days']} "
+            f"current={freshness['current']} "
+            f"stale={freshness['stale']} "
+            f"unknown={freshness['unknown']} "
+            f"missing={freshness['missing']}"
+        )
+        for item in freshness["stale_items"]:
+            lines.append(
+                "  - stale: "
+                f"{item['section']}/{item['name']} "
+                f"generated_at={item['generated_at_utc']} "
+                f"age_days={item['age_days']}"
+            )
     for title, key in sections:
         lines.append("")
         lines.append(title)
@@ -315,12 +445,21 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Emit inventory as JSON instead of terminal text.",
     )
+    parser.add_argument(
+        "--freshness-days",
+        type=float,
+        default=DEFAULT_FRESHNESS_DAYS,
+        help=(
+            "Mark local case/report files stale when generated_at is older "
+            "than this many days."
+        ),
+    )
     return parser
 
 
 def main() -> int:
     args = build_parser().parse_args()
-    inventory = build_inventory(root=Path.cwd())
+    inventory = build_inventory(root=Path.cwd(), freshness_days=args.freshness_days)
     if args.json:
         print(json.dumps(inventory, ensure_ascii=False, indent=2))
     else:

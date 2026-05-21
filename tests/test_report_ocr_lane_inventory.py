@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 import unittest
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -27,9 +28,11 @@ class OcrLaneInventoryTests(unittest.TestCase):
             root = Path(tmpdir)
             tracked_dir = root / "docs" / "eval" / "beta_2_0"
             local_cases_dir = root / ".local" / "eval_cases"
+            local_reports_dir = root / ".local" / "eval_reports"
             notebook_dir = root / ".local" / "notebooks"
             tracked_dir.mkdir(parents=True)
             local_cases_dir.mkdir(parents=True)
+            local_reports_dir.mkdir(parents=True)
             notebook_dir.mkdir(parents=True)
             (tracked_dir / "ocr_eval_cases.json").write_text(
                 json.dumps({"cases": [{"id": "base-1"}, {"id": "base-2"}]}),
@@ -55,9 +58,22 @@ class OcrLaneInventoryTests(unittest.TestCase):
             (local_cases_dir / "ocr_typed_from_transcripts.json").write_bytes(
                 b"\x8dnot-json"
             )
+            (local_reports_dir / "ocr_growth_metrics.json").write_text(
+                json.dumps(
+                    {
+                        "generated_at": "2026-05-01T20:00:00Z",
+                        "cases": [{"id": "old-1"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
 
             with patch.dict(os.environ, {}, clear=True):
-                inventory = build_inventory(root=root)
+                inventory = build_inventory(
+                    root=root,
+                    now=datetime(2026, 5, 22, 20, 0, tzinfo=timezone.utc),
+                    freshness_days=7,
+                )
 
         self.assertEqual(inventory["schema_version"], SCHEMA_VERSION)
 
@@ -91,6 +107,29 @@ class OcrLaneInventoryTests(unittest.TestCase):
             local_cases["generalization_review"]["list_counts"],
             {"selected_candidates": 2},
         )
+        self.assertEqual(
+            local_cases["generalization_review"]["freshness_state"],
+            "current",
+        )
+        self.assertEqual(local_cases["generalization_review"]["age_days"], 1.0)
+
+        local_reports = _by_name(inventory["local_reports"])
+        self.assertEqual(local_reports["growth_metrics"]["freshness_state"], "stale")
+        self.assertEqual(local_reports["growth_metrics"]["age_days"], 21.0)
+        self.assertEqual(
+            local_reports["growth_metrics"]["freshness_reason"],
+            "generated_at_older_than_threshold",
+        )
+
+        freshness = inventory["freshness"]
+        stale_names = {item["name"] for item in freshness["stale_items"]}
+        current_names = {item["name"] for item in freshness["current_items"]}
+        unknown_names = {item["name"] for item in freshness["unknown_items"]}
+
+        self.assertEqual(freshness["threshold_days"], 7)
+        self.assertIn("growth_metrics", stale_names)
+        self.assertIn("generalization_review", current_names)
+        self.assertIn("transcript_all", unknown_names)
 
         notebooks = _by_name(inventory["notebooks"])
         self.assertEqual(notebooks["notebook_dir"]["path"], ".local/notebooks")
@@ -103,8 +142,12 @@ class OcrLaneInventoryTests(unittest.TestCase):
         self.assertIn("OCR lane inventory: polinko.ocr_lane_inventory.v1", output)
         self.assertIn("tracked cases", output)
         self.assertIn("manual eval sources", output)
+        self.assertIn("freshness", output)
+        self.assertIn("stale=1", output)
+        self.assertIn("stale: local_reports/growth_metrics", output)
         self.assertIn(".local/notebooks", output)
         self.assertIn("row_source=selected_candidates", output)
+        self.assertIn("freshness=current", output)
 
     def test_local_notebook_lane_is_ignored(self) -> None:
         gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")

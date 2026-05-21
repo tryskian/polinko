@@ -233,6 +233,8 @@ Last updated: 2026-05-21
     local case, report, manual-eval DB, and notebook paths
   - `make ocr-inventory-json` exposes the same OCR evidence map in JSON,
     including source JSON shape and list-count metadata when available
+  - OCR inventory freshness flags local case/report files as `current`,
+    `stale`, `unknown`, or `missing` from existing `generated_at` metadata
   - OCR verdicts stay `pass` / `fail` under that broader intake
 - Branch protection on `main` remains active:
   - PR required
