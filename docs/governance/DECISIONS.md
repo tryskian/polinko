@@ -851,3 +851,16 @@ or branch history instead.
 - Why: Config is already canonical under the packaged runtime. Removing the
   unused root shim reduces import ambiguity while preserving the active API,
   CLI, manual eval workbench, and `server:app` surfaces.
+
+## D-063: Retire the legacy root api package shims
+
+- Date: `2026-05-20`
+- Category: `architecture`
+- Tags: `api`, `compatibility`, `imports`, `package_boundary`
+- Decision: Remove root `api/` after the legacy-import preflight found no
+  active tracked code caller and no focused local ignored-lane root import
+  usage. Runtime and tooling imports use `polinko.api.*`.
+- Why: API implementation is already canonical under the packaged runtime.
+  Removing the unused root shims reduces import ambiguity while preserving the
+  active ASGI, manual eval workbench, public portfolio data, CLI, and
+  `server:app` surfaces.

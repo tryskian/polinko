@@ -102,8 +102,8 @@ launch the system browser.
   runtime package.
 - `src/polinko/config.py` contains the canonical config implementation; the
   legacy root `config.py` shim is retired.
-- `src/polinko/api/` contains the canonical API implementation; root `api/`
-  contains compatibility shims.
+- `src/polinko/api/` contains the canonical API implementation; legacy root
+  `api/` shims are retired.
 - `src/polinko/core/` contains canonical runtime logic; root `core/` contains
   compatibility shims.
 - `tools/` contains eval and maintenance scripts.
