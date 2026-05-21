@@ -1,5 +1,5 @@
 # Manual eval workbench, portfolio, and local browser surface targets.
-.PHONY: notebook-setup notebook nb notes manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh manual-evals-db-status manualdb-status manual-evals-db-health manualdb-health manual-evals-feedback-actionables manualdb-feedback-actionables manual-evals-feedback-cohorts manualdb-feedback-cohorts manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates manual-evals-ocr-retry-source-verification manualdb-ocr-retry-source-verification manual-evals-ocr-retry-source-provenance manualdb-ocr-retry-source-provenance manual-evals-ocr-retry-input-packet manualdb-ocr-retry-input-packet manual-evals-ocr-retry-rerun-manifest manualdb-ocr-retry-rerun-manifest manual-evals-ocr-retry-rerun-plan manualdb-ocr-retry-rerun-plan manual-evals-ocr-retry-selection-review manualdb-ocr-retry-selection-review manual-evals-ocr-retry-selection-template manualdb-ocr-retry-selection-template manual-evals-ocr-retry-selection-validate manualdb-ocr-retry-selection-validate
+.PHONY: notebook-setup notebook nb notes manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh manual-evals-db-status manualdb-status manual-evals-db-health manualdb-health manual-evals-feedback-actionables manualdb-feedback-actionables manual-evals-feedback-cohorts manualdb-feedback-cohorts manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates manual-evals-ocr-retry-source-verification manualdb-ocr-retry-source-verification manual-evals-ocr-retry-source-provenance manualdb-ocr-retry-source-provenance manual-evals-ocr-retry-input-packet manualdb-ocr-retry-input-packet manual-evals-ocr-retry-rerun-manifest manualdb-ocr-retry-rerun-manifest manual-evals-ocr-retry-rerun-plan manualdb-ocr-retry-rerun-plan manual-evals-ocr-retry-selection-review manualdb-ocr-retry-selection-review manual-evals-ocr-retry-selection-template manualdb-ocr-retry-selection-template manual-evals-ocr-retry-selection-validate manualdb-ocr-retry-selection-validate manual-evals-ocr-retry-selection-apply-preview manualdb-ocr-retry-selection-apply-preview
 .PHONY: portfolio-install portfolio-app-install frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
 .PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 
@@ -60,6 +60,9 @@ manual-evals-ocr-retry-selection-template manualdb-ocr-retry-selection-template:
 
 manual-evals-ocr-retry-selection-validate manualdb-ocr-retry-selection-validate:
 	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-selection-validate $(strip $(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS)) $(strip $(MANUAL_EVALS_OCR_RETRY_SELECTION_VALIDATE_ARGS))
+
+manual-evals-ocr-retry-selection-apply-preview manualdb-ocr-retry-selection-apply-preview:
+	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-selection-apply-preview $(strip $(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS)) $(strip $(MANUAL_EVALS_OCR_RETRY_SELECTION_VALIDATE_ARGS))
 
 portfolio-install:
 	@set -eu; \

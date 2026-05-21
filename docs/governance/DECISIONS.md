@@ -1362,3 +1362,24 @@ or branch history instead.
   before any OCR rerun, curation, feedback closure, live eval write, or
   warehouse mutation while keeping closure blocked until exact OCR
   source/result message IDs and feedback-to-result links exist.
+
+## D-096: Preview OCR retry selection application before execution
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `selection_apply_preview`
+- Human-led: The human lead kept OCR retry application as an inspectable
+  manual eval workbench step before any execution.
+- Decision: `make manual-evals-ocr-retry-selection-apply-preview` prints a
+  read-only would-apply preview for local OCR retry human-selection decisions.
+  The terminal report and JSON export expose
+  `schema_version=polinko.manual_eval_ocr_retry_selection_apply_preview.v1`,
+  validator state, validation blockers, action splits for `rerun_input`,
+  `curated_case`, and `context_only`, selected artifact IDs, OCR run IDs,
+  source sessions, source image names, resolved paths, payload-only previews,
+  and the existing feedback-closure blocker state.
+- Why: Validation proves the local decision file is well-formed, but the next
+  operator step needs to inspect the exact would-apply payloads before any OCR
+  rerun, curation, feedback closure, live eval write, or warehouse mutation.
+  The preview only emits payloads when validation is `ok`; otherwise it shows
+  blockers and stays non-executing.
