@@ -1100,3 +1100,17 @@ or branch history instead.
   remaining unresolved image assets after this root are text fixtures, which
   are historical source-name debt until their seed files are explicitly
   curated as source files.
+
+## D-081: Classify manual eval missing-image debt by source family
+
+- Date: `2026-05-20`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `health`, `source_quality`, `local_evidence`
+- Decision: `make manual-evals-db-health` breaks unresolved image debt down by
+  source family in addition to printing total missing asset and OCR-run counts.
+  The report must make the remaining text-fixture debt visible without mutating
+  the warehouse or rerunning broad filesystem audits.
+- Why: Screenshot recovery is closed for the current warehouse. The remaining
+  unresolved assets are historical text fixture source names, so the health
+  surface should make that boundary explicit before future refactor kernels
+  decide whether to curate seed files or leave the names as historical debt.

@@ -52,6 +52,32 @@ def _fetch_rows(conn: sqlite3.Connection, sql: str) -> list[dict[str, Any]]:
     return [_row_dict(row) for row in conn.execute(sql).fetchall()]
 
 
+def _image_asset_family_sql(alias: str) -> str:
+    filename = f"LOWER(COALESCE({alias}.source_filename, {alias}.source_name, ''))"
+    mime_type = f"LOWER(COALESCE({alias}.mime_type, ''))"
+    return f"""
+        CASE
+          WHEN {alias}.id IS NULL THEN 'unlinked'
+          WHEN {mime_type} LIKE 'text/%'
+            OR {filename} GLOB '*.txt'
+            OR {filename} GLOB '*.md'
+          THEN 'text_fixture'
+          WHEN {mime_type} LIKE 'image/%'
+            OR {filename} GLOB '*.png'
+            OR {filename} GLOB '*.jpg'
+            OR {filename} GLOB '*.jpeg'
+            OR {filename} GLOB '*.gif'
+            OR {filename} GLOB '*.webp'
+            OR {filename} GLOB '*.heic'
+            OR {filename} GLOB '*.bmp'
+            OR {filename} GLOB '*.tif'
+            OR {filename} GLOB '*.tiff'
+          THEN 'image_file'
+          ELSE 'other'
+        END
+    """
+
+
 def _build_counts(conn: sqlite3.Connection) -> dict[str, int]:
     return {
         "sessions": _fetch_count(conn, "SELECT COUNT(*) FROM sessions"),
@@ -104,6 +130,31 @@ def _build_image_quality(conn: sqlite3.Connection) -> dict[str, Any]:
         ORDER BY o.era, image_status
         """,
     )
+    missing_asset_family_rows = _fetch_rows(
+        conn,
+        f"""
+        SELECT
+          {_image_asset_family_sql("ia")} AS source_family,
+          COUNT(*) AS missing_assets
+        FROM image_assets ia
+        WHERE ia.status = 'missing'
+        GROUP BY source_family
+        ORDER BY missing_assets DESC, source_family
+        """,
+    )
+    missing_run_family_rows = _fetch_rows(
+        conn,
+        f"""
+        SELECT
+          {_image_asset_family_sql("ia")} AS source_family,
+          COUNT(*) AS missing_ocr_runs
+        FROM ocr_runs o
+        LEFT JOIN image_assets ia ON ia.id = o.image_asset_id
+        WHERE COALESCE(ia.status, 'unlinked') IN ('missing', 'unlinked')
+        GROUP BY source_family
+        ORDER BY missing_ocr_runs DESC, source_family
+        """,
+    )
     total_assets = sum(_int_value(row.get("count")) for row in asset_rows)
     missing_assets = sum(
         _int_value(row.get("count"))
@@ -116,9 +167,37 @@ def _build_image_quality(conn: sqlite3.Connection) -> dict[str, Any]:
         for row in ocr_rows
         if row.get("image_status") in {"missing", "unlinked"}
     )
+    debt_by_family: dict[str, dict[str, Any]] = {}
+    for row in missing_asset_family_rows:
+        family = str(row.get("source_family") or "other")
+        debt_by_family[family] = {
+            "source_family": family,
+            "missing_assets": _int_value(row.get("missing_assets")),
+            "missing_ocr_runs": 0,
+        }
+    for row in missing_run_family_rows:
+        family = str(row.get("source_family") or "other")
+        debt_row = debt_by_family.setdefault(
+            family,
+            {
+                "source_family": family,
+                "missing_assets": 0,
+                "missing_ocr_runs": 0,
+            },
+        )
+        debt_row["missing_ocr_runs"] = _int_value(row.get("missing_ocr_runs"))
+    missing_debt_by_family = sorted(
+        debt_by_family.values(),
+        key=lambda row: (
+            -_int_value(row.get("missing_assets")),
+            -_int_value(row.get("missing_ocr_runs")),
+            str(row.get("source_family") or ""),
+        ),
+    )
     return {
         "assets_by_status": asset_rows,
         "ocr_runs_by_image_status": ocr_rows,
+        "missing_debt_by_family": missing_debt_by_family,
         "missing_assets": missing_assets,
         "total_assets": total_assets,
         "missing_ocr_runs": missing_runs,
@@ -351,6 +430,18 @@ def format_manual_evals_health_report(report: dict[str, Any]) -> str:
         f"missing_assets={missing_assets}/{total_assets} ({_pct(missing_assets, total_assets)}) "
         f"ocr_runs_without_resolved_image={missing_runs}/{total_runs} ({_pct(missing_runs, total_runs)})"
     )
+    missing_debt_rows = image_quality.get("missing_debt_by_family")
+    if isinstance(missing_debt_rows, list) and missing_debt_rows:
+        lines.append("missing image debt:")
+        for row in missing_debt_rows:
+            if not isinstance(row, dict):
+                continue
+            lines.append(
+                "- "
+                f"{row.get('source_family', 'other')}: "
+                f"assets={_int_value(row.get('missing_assets'))} "
+                f"ocr_runs={_int_value(row.get('missing_ocr_runs'))}"
+            )
 
     total_feedback = _int_value(feedback_quality.get("total"))
     linked_feedback = _int_value(feedback_quality.get("linked_to_ocr_result"))
