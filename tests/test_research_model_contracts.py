@@ -239,6 +239,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-079: Resolve manual eval images from tracked eval snapshots",
             "`docs/eval/`",
             "Curated eval evidence",
+            "## D-080: Resolve manual eval screenshots from Dropbox sync roots",
+            "macOS Dropbox",
+            "historical source-name debt",
         ):
             self.assertIn(expected, decisions)
 
@@ -256,6 +259,8 @@ class ResearchModelContractTests(unittest.TestCase):
             "missing image assets",
             "feedback-to-result links",
             "tracked `docs/eval/`",
+            "Dropbox screenshot sync root",
+            "historical source-name debt",
             "matching files inside `.zip`",
             "archives under configured image roots",
             "without extracting files",
@@ -271,6 +276,8 @@ class ResearchModelContractTests(unittest.TestCase):
         )
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)
+        self.assertIn("Dropbox screenshot sync root", eval_map)
+        self.assertIn("historical source-name debt", eval_map)
         self.assertIn("`.zip` archives", eval_map)
 
         for expected in (

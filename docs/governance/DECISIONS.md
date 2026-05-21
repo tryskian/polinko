@@ -1085,3 +1085,18 @@ or branch history instead.
   the tracked Beta 1.0 eval snapshot. Curated eval evidence should not remain
   invisible to the integrated warehouse or be counted as absent historical
   evidence.
+
+## D-080: Resolve manual eval screenshots from Dropbox sync roots
+
+- Date: `2026-05-20`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `image_resolution`, `screenshots`, `local_evidence`
+- Decision: The manual eval warehouse builder includes the macOS Dropbox
+  screenshot sync folder in the default OCR source-image roots. The root is
+  checked as a narrow screenshot folder before loose home-directory export
+  roots.
+- Why: The bounded missing-image audit found exact local matches for every
+  remaining unresolved screenshot asset in that synced screenshot folder. The
+  remaining unresolved image assets after this root are text fixtures, which
+  are historical source-name debt until their seed files are explicitly
+  curated as source files.

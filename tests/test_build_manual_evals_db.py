@@ -285,6 +285,10 @@ class BuildManualEvalsDbTests(unittest.TestCase):
 
     def test_default_image_roots_include_tracked_eval_snapshots(self) -> None:
         self.assertIn(Path("docs/eval"), DEFAULT_IMAGE_ROOTS)
+        self.assertIn(
+            Path.home() / "Library/CloudStorage/Dropbox/Screenshots",
+            DEFAULT_IMAGE_ROOTS,
+        )
 
         with TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)

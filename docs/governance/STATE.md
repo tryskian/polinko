@@ -110,9 +110,12 @@ Last updated: 2026-05-20
     feedback-to-result links, open feedback, and session evidence mix
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
-    snapshots, and local export roots, then matching files inside `.zip`
-    archives under configured image roots; archive-backed thumbnails are built
-    without extracting files into the repo
+    snapshots, the Dropbox screenshot sync root, and local export roots, then
+    matching files inside `.zip` archives under configured image roots;
+    archive-backed thumbnails are built without extracting files into the repo
+  - the remaining unresolved image assets after the Dropbox screenshot root are
+    text fixtures and stay historical source-name debt until curated source
+    files are promoted
   - generated trace artifacts from manual submissions use manual eval workbench
     names, not `ui` names
   - co-reasoning is the first promoted non-OCR lane
