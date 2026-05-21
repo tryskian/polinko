@@ -1214,3 +1214,21 @@ or branch history instead.
   rather than a confirmed case link. Readiness flags keep the first retry
   packet useful without widening linkage heuristics or launching live eval
   writes.
+
+## D-088: Verify OCR retry source candidates before closure
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `source_verification`
+- Decision: `make manual-evals-ocr-retry-source-verification` prints a
+  read-only source-verification packet for selected OCR retry candidates. The
+  terminal report and JSON export expose
+  `schema_version=polinko.manual_eval_ocr_retry_source_verification.v1`,
+  feedback note/action text, candidate source image names, OCR run IDs, OCR
+  previews, readiness flags, and exact not-confirmed reasons before any rerun
+  or feedback closure.
+- Why: Readiness flags identify ambiguity, but manual eval curation still
+  needs source-level evidence in one packet before taking action.
+  Source-verification packets keep the workflow terminal-native and
+  warehouse-read-only while preserving the distinction between exact
+  feedback-to-result links and same-session OCR context.

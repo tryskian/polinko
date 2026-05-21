@@ -79,6 +79,13 @@ notes, exports, and runtime history.
   - OCR retry candidate packets expose read-only readiness flags for
     ambiguous same-session OCR context and missing explicit feedback-to-result
     links before any reruns
+  - verify selected OCR retry source candidates without mutation with
+    `make manual-evals-ocr-retry-source-verification`
+  - JSON OCR retry source-verification export uses
+    `schema_version=polinko.manual_eval_ocr_retry_source_verification.v1`
+  - source-verification packets include feedback note/action text, candidate
+    source image names, OCR run IDs, OCR previews, and readiness flags
+  - exact not-confirmed reasons are included without inferring links
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under
