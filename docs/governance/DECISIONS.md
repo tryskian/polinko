@@ -1285,3 +1285,21 @@ or branch history instead.
   rerun, curation, or feedback closure. The manifest keeps source-artifact
   selection distinct from feedback closure while OCR source/result message IDs
   and exact feedback-result links remain absent.
+
+## D-092: Preview OCR retry rerun plans before execution
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `rerun_plan`
+- Decision: `make manual-evals-ocr-retry-rerun-plan` prints a read-only OCR
+  retry rerun plan for selected source artifacts. The terminal report and JSON
+  export expose
+  `schema_version=polinko.manual_eval_ocr_retry_rerun_plan.v1`, source
+  artifact IDs, feedback IDs, source sessions, OCR run IDs, source image
+  names, resolved source paths, thumbnail dimensions, source previews, and a
+  payload-only command preview.
+- Why: The manifest shows which resolved source artifacts are selectable, but
+  execution still needs a concrete would-run payload before any OCR rerun,
+  curation, feedback closure, live eval write, or warehouse mutation. The plan
+  makes artifact selection explicit through stable artifact IDs and optional
+  `ARTIFACT_IDS=<artifact_id>` filtering while staying preview-only.

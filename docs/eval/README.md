@@ -108,6 +108,15 @@ notes, exports, and runtime history.
     thumbnail dimensions, OCR previews, feedback source-message previews, and
     the separate feedback-closure blocker state before any rerun, curation, or
     feedback closure
+  - build a payload-only OCR retry rerun plan without mutation with
+    `make manual-evals-ocr-retry-rerun-plan`
+  - JSON OCR retry rerun-plan export uses
+    `schema_version=polinko.manual_eval_ocr_retry_rerun_plan.v1`
+  - rerun plans expose stable source artifact IDs, feedback IDs, source
+    sessions, OCR run IDs, source image names, resolved source paths,
+    thumbnail dimensions, source previews, and payload-only command previews;
+    `ARTIFACT_IDS=<artifact_id>` narrows the preview without running OCR or
+    mutating the warehouse
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under
