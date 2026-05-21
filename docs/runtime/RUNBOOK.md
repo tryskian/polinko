@@ -240,6 +240,16 @@ Use this doc for operator procedure.
   - use shortlist IDs, candidate artifact IDs, source previews, and fillable
     `selected_action=undecided` fields to prepare local human decisions before
     any OCR rerun, curation, feedback closure, or warehouse mutation
+- `make manual-evals-ocr-retry-selection-validate`
+  - validate local OCR retry human decisions against the current default
+    `ocr_retry_evidence` partial shortlist without mutating eval data
+  - combine with `SELECTION_PATH=<path>`, `COHORT=<cohort_id>`,
+    `OUTCOME=<outcome>`, `LIMIT=<n>`, and `ARTIFACT_IDS=<artifact_id>` for
+    explicit manual source-artifact review
+  - use `rerun_input`, `curated_case`, or `context_only` decisions plus
+    selected artifact IDs to catch missing, stale, duplicate, or mismatched
+    selections before any OCR rerun, curation, feedback closure, live eval
+    write, or warehouse mutation
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

@@ -1342,3 +1342,23 @@ or branch history instead.
   step needs a stable decision input shape before any OCR rerun, curation,
   feedback closure, live eval write, or warehouse mutation. The template keeps
   allowed dispositions explicit while leaving all selections undecided.
+
+## D-095: Validate OCR retry source-artifact decisions before execution
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback`, `triage`, `selection_validation`
+- Human-led: The human lead kept OCR retry choices as manual eval workbench
+  decisions and asked for validation before any execution surface.
+- Decision: `make manual-evals-ocr-retry-selection-validate` validates a
+  local OCR retry human-selection JSON against the current source-artifact
+  shortlist. The terminal report and JSON export expose
+  `schema_version=polinko.manual_eval_ocr_retry_selection_validation.v1`,
+  decision-source status, shortlist IDs, selected actions, selected artifact
+  IDs, invalid artifact IDs, stale/missing/duplicate decision counts, and the
+  existing feedback-closure blocker state.
+- Why: A filled template is still local operator input, not execution proof.
+  The validator catches missing, stale, duplicate, or mismatched selections
+  before any OCR rerun, curation, feedback closure, live eval write, or
+  warehouse mutation while keeping closure blocked until exact OCR
+  source/result message IDs and feedback-to-result links exist.

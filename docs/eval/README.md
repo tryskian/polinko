@@ -132,6 +132,14 @@ notes, exports, and runtime history.
   - selection templates expose shortlist IDs, candidate artifact IDs, source
     previews, and fillable decision fields that default to
     `selected_action=undecided`
+  - validate local OCR retry human-selection JSON without mutation with
+    `make manual-evals-ocr-retry-selection-validate`
+  - JSON OCR retry selection-validation export uses
+    `schema_version=polinko.manual_eval_ocr_retry_selection_validation.v1`
+  - selection validation accepts compact decision lists or filled selection
+    templates, requires `rerun_input`, `curated_case`, or `context_only`,
+    verifies selected artifact IDs against the matching shortlist item, and
+    flags missing/stale/duplicate decisions before any OCR execution surface
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under
