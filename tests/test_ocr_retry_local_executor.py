@@ -28,6 +28,7 @@ from tools.manual_evals_db_health import (
     format_ocr_retry_feedback_closure_apply_verification_report,
     format_ocr_retry_feedback_closure_preview_report,
     format_ocr_retry_feedback_closure_restore_report,
+    format_ocr_retry_selection_template_report,
     write_ocr_retry_execution_bundle,
     write_ocr_retry_feedback_closure_apply,
     write_ocr_retry_feedback_closure_restore,
@@ -148,6 +149,30 @@ def _feedback_rows(db_path: Path) -> list[dict[str, object]]:
 
 
 class OcrRetryLocalExecutorTests(unittest.TestCase):
+    def test_selection_template_terminal_output_hides_absolute_source_paths(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, _selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+
+            report = build_ocr_retry_selection_template_report(
+                db_path=output_db,
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            summary = format_ocr_retry_selection_template_report(report)
+
+            self.assertIn(
+                "manual eval OCR retry selection template: state=ok",
+                summary,
+            )
+            self.assertIn("source_path=image1.png", summary)
+            self.assertNotIn(str(tmp / "images" / "image1.png"), summary)
+
     def test_missing_confirmation_blocks_before_provider_call(self) -> None:
         with TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)
