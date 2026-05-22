@@ -1525,3 +1525,24 @@ or branch history instead.
   repeatable inspection gate before any future feedback-closure, live-eval, or
   warehouse-mutation kernel. Separating bundle inspection from mutation keeps
   the manual eval workbench reversible and reviewable.
+
+## D-104: Preview OCR retry feedback closure before applying it
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback_closure`, `preview_only`
+- Human-led: The human lead approved continuing through the next OCR retry
+  tooling kernel while keeping eval runs and warehouse mutation out of scope.
+- Decision: `make manual-evals-ocr-retry-feedback-closure-preview` and
+  `make manualdb-ocr-retry-feedback-closure-preview` now read one inspected
+  local OCR retry execution bundle via `RUN_DIR=<path>` and emit
+  `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`.
+  The report groups successful OCR retry responses by feedback ID, previews
+  which feedback rows would be closeable, marks mixed provider status as
+  `attention`, and blocks when bundle inspection reports structural or
+  mutation-boundary errors.
+- Why: Feedback closure is a mutation boundary, so it needs a preview surface
+  before an apply surface. This keeps closure decisions tied to concrete local
+  OCR evidence while preserving the rule that feedback status, action-taken
+  text, live eval rows, and `manual_evals.db` remain unchanged until an
+  explicit future apply gate exists.

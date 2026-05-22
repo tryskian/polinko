@@ -328,6 +328,12 @@ Use this doc for operator procedure.
   - reports `ok`, `attention`, or `error` after checking files, run IDs,
     request/response counts, provider failure status, stop reasons, and the
     local-bundle mutation boundary
+- OCR retry feedback-closure preview:
+  - `make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`
+  - reads one inspected local execution bundle without closing feedback or
+    mutating eval data
+  - groups OCR retry responses by feedback ID, proposes closeable feedback
+    items only as preview data, and marks mixed provider status as `attention`
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

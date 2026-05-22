@@ -10,11 +10,14 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
     OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION,
     OCR_RETRY_EXECUTION_SCHEMA_VERSION,
+    OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION,
     OcrRetryExecutionProviderError,
     build_ocr_retry_execution_bundle_report,
+    build_ocr_retry_feedback_closure_preview_report,
     build_ocr_retry_selection_template_report,
     format_ocr_retry_execution_bundle_report,
     format_ocr_retry_execution_report,
+    format_ocr_retry_feedback_closure_preview_report,
     write_ocr_retry_execution_bundle,
 )
 from tests.test_build_manual_evals_db import _PNG_1X1, _init_history_db
@@ -355,6 +358,146 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
                 "warehouse_mutation_not_none",
                 [blocker["code"] for blocker in report["inspection_blockers"]],
             )
+
+    def test_feedback_closure_preview_proposes_ready_feedback_without_mutation(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                ocr_provider="scaffold",
+                ocr_model="mock-ocr",
+                run_id="run-closure-ready",
+                ocr_runner=lambda request: {
+                    "status": "ok",
+                    "provider": "mock",
+                    "model": "mock-ocr",
+                    "extracted_text": "fresh OCR text",
+                },
+            )
+
+            report = build_ocr_retry_feedback_closure_preview_report(
+                run_dir=tmp / "runs" / "run-closure-ready"
+            )
+            summary = format_ocr_retry_feedback_closure_preview_report(report)
+
+            self.assertEqual(
+                report["schema_version"],
+                OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION,
+            )
+            self.assertEqual(report["state"], "ok")
+            self.assertEqual(report["counts"]["feedback_items"], 1)
+            self.assertEqual(report["counts"]["ready_feedback"], 1)
+            self.assertEqual(
+                report["mutation_boundary"]["feedback_closure"],
+                "none",
+            )
+            closure_item = report["closure_items"][0]
+            self.assertEqual(closure_item["state"], "ready")
+            self.assertEqual(closure_item["proposed_feedback_status"], "closed")
+            self.assertEqual(closure_item["mutation"], "none")
+            self.assertIn(
+                "manual eval OCR retry feedback closure preview: state=ok "
+                "run=run-closure-ready",
+                summary,
+            )
+            self.assertIn("dir=run-closure-ready", summary)
+            self.assertNotIn(tmpdir, summary)
+            self.assertEqual(_feedback_statuses(output_db), ["open"])
+
+    def test_feedback_closure_preview_marks_mixed_response_status_as_attention(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, artifact_ids = _build_ready_selection_fixture(
+                tmp,
+                duplicate_artifacts=True,
+            )
+
+            def partial_runner(request: dict[str, object]) -> dict[str, object]:
+                if request["artifact_id"] == artifact_ids[0]:
+                    return {"status": "ok", "extracted_text": "first OCR text"}
+                raise OcrRetryExecutionProviderError(
+                    "rate limit reached",
+                    status="rate_limited",
+                    retry_after="7",
+                )
+
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                run_id="run-closure-attention",
+                ocr_runner=partial_runner,
+            )
+
+            report = build_ocr_retry_feedback_closure_preview_report(
+                run_dir=tmp / "runs" / "run-closure-attention"
+            )
+
+            self.assertEqual(report["state"], "attention")
+            self.assertEqual(report["counts"]["feedback_items"], 1)
+            self.assertEqual(report["counts"]["attention_feedback"], 1)
+            self.assertEqual(report["closure_items"][0]["state"], "attention")
+            self.assertEqual(
+                report["closure_items"][0]["reason"],
+                "mixed_ocr_retry_response_status",
+            )
+            self.assertEqual(
+                report["closure_items"][0]["proposed_feedback_status"],
+                "open",
+            )
+            self.assertIn("provider failures", report["warnings"][0])
+            self.assertEqual(_feedback_statuses(output_db), ["open"])
+
+    def test_feedback_closure_preview_blocks_when_bundle_inspection_fails(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                run_id="run-closure-blocked",
+                ocr_runner=lambda request: {
+                    "status": "ok",
+                    "extracted_text": "fresh OCR text",
+                },
+            )
+            run_dir = tmp / "runs" / "run-closure-blocked"
+            request_rows = [
+                json.loads(line)
+                for line in (run_dir / "requests.jsonl").read_text("utf-8").splitlines()
+            ]
+            request_rows[0]["warehouse_mutation"] = "write"
+            (run_dir / "requests.jsonl").write_text(
+                "\n".join(json.dumps(row) for row in request_rows) + "\n",
+                encoding="utf-8",
+            )
+
+            report = build_ocr_retry_feedback_closure_preview_report(run_dir=run_dir)
+
+            self.assertEqual(report["state"], "blocked")
+            self.assertEqual(report["closure_items"], [])
+            self.assertIn(
+                "warehouse_mutation_not_none",
+                [blocker["code"] for blocker in report["preview_blockers"]],
+            )
+            self.assertEqual(_feedback_statuses(output_db), ["open"])
 
     def test_context_only_selection_blocks_without_provider_call(self) -> None:
         with TemporaryDirectory() as tmpdir:

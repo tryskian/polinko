@@ -31,6 +31,9 @@ workflow, output surfaces, and tuning knobs.
   - use `make manual-evals-ocr-retry-execution-report RUN_DIR=<path>` to
     inspect one ignored local OCR retry execution bundle before any future
     closure or warehouse mutation gate
+  - use `make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`
+    to preview feedback closure from an inspected bundle without changing
+    feedback status, eval rows, or `manual_evals.db`
   - feedback closure, live eval rows, and manual eval warehouse mutation remain
     out of scope for the OCR retry execution gate
 

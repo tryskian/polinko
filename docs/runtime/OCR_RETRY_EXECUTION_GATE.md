@@ -117,6 +117,26 @@ Report states:
   skipped requests.
 - `error`: bundle structure, alignment, or mutation boundary is invalid.
 
+## Feedback-Closure Preview
+
+Closure remains non-mutating. The current follow-up target previews only:
+
+- `make manual-evals-ocr-retry-feedback-closure-preview`
+- alias: `make manualdb-ocr-retry-feedback-closure-preview`
+- required input: `RUN_DIR=<path>`
+- JSON schema:
+  `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`
+
+The feedback-closure preview target is read-only. It first runs the execution
+bundle inspection gate, then groups successful OCR retry responses by feedback
+ID. It proposes which feedback rows would be closeable, marks mixed provider
+status as `attention`, and blocks when the bundle inspection has structural or
+mutation-boundary errors.
+
+The preview does not write feedback status, action-taken text, live eval rows,
+or `manual_evals.db`. It also keeps terminal output path-safe by printing run
+ID, directory name, feedback counts, and closure item states only.
+
 ## Rollback Story
 
 Rollback is local-file cleanup:
