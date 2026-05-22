@@ -61,6 +61,9 @@ OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION = (
 OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION = (
     "polinko.manual_eval_ocr_retry_feedback_closure_apply.v1"
 )
+OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_SCHEMA_VERSION = (
+    "polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1"
+)
 OCR_RETRY_EXECUTION_CONFIRM_TOKEN = "ocr-retry-execute"
 OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN = "ocr-retry-feedback-closure-apply"
 DEFAULT_OCR_RETRY_SELECTION_DRAFT_PATH = Path(
@@ -6276,6 +6279,314 @@ def write_ocr_retry_feedback_closure_apply(
     return report
 
 
+def _feedback_closure_apply_report_blocker(
+    code: str,
+    detail: str,
+) -> dict[str, str]:
+    return {"code": code, "detail": detail}
+
+
+def _feedback_ids_from_apply_summary(
+    summary: dict[str, Any],
+) -> tuple[list[int], list[str]]:
+    raw_ids = summary.get("updated_feedback_ids")
+    if not isinstance(raw_ids, list) or not raw_ids:
+        raw_ids = [
+            item.get("feedback_id")
+            for item in summary.get("apply_items", [])
+            if isinstance(item, dict)
+        ]
+    feedback_ids: list[int] = []
+    invalid_feedback_ids: list[str] = []
+    seen: set[int] = set()
+    for raw_id in raw_ids:
+        raw_text = str(raw_id or "").strip()
+        try:
+            feedback_id = int(raw_text)
+        except ValueError:
+            invalid_feedback_ids.append(raw_text or "<empty>")
+            continue
+        if feedback_id < 1:
+            invalid_feedback_ids.append(raw_text)
+            continue
+        if feedback_id in seen:
+            continue
+        seen.add(feedback_id)
+        feedback_ids.append(feedback_id)
+    return feedback_ids, invalid_feedback_ids
+
+
+def _apply_summary_file_path(run_dir: Path | None) -> Path | None:
+    if run_dir is None:
+        return None
+    return run_dir.expanduser() / "feedback_closure_apply_summary.json"
+
+
+def _status_count(rows_by_id: dict[int, dict[str, Any]], status: str) -> int:
+    return sum(
+        1
+        for row in rows_by_id.values()
+        if str(row.get("status") or "").strip() == status
+    )
+
+
+def _path_from_payload(value: object) -> Path | None:
+    raw_path = str(value or "").strip()
+    if not raw_path:
+        return None
+    return Path(raw_path).expanduser()
+
+
+def build_ocr_retry_feedback_closure_apply_report(
+    *,
+    db_path: Path,
+    run_dir: Path | None,
+) -> dict[str, Any]:
+    blockers: list[dict[str, str]] = []
+    resolved_db_path = db_path.expanduser()
+    resolved_run_dir = run_dir.expanduser() if run_dir else None
+    summary_path = _apply_summary_file_path(resolved_run_dir)
+    summary: dict[str, Any] | None = None
+
+    if summary_path is None:
+        blockers.append(
+            _feedback_closure_apply_report_blocker(
+                "missing_run_dir",
+                "RUN_DIR is required before inspecting feedback-closure apply.",
+            )
+        )
+    elif not summary_path.is_file():
+        blockers.append(
+            _feedback_closure_apply_report_blocker(
+                "missing_apply_summary",
+                "feedback_closure_apply_summary.json is required in the run bundle.",
+            )
+        )
+    else:
+        summary, parse_errors = _read_json_object(summary_path)
+        for error in parse_errors:
+            blockers.append(
+                _feedback_closure_apply_report_blocker(
+                    "apply_summary_parse_error",
+                    error,
+                )
+            )
+    if summary is None:
+        summary = {}
+
+    run_id = str(summary.get("run_id") or "")
+    if summary.get("schema_version") and (
+        summary.get("schema_version") != OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION
+    ):
+        blockers.append(
+            _feedback_closure_apply_report_blocker(
+                "apply_summary_schema_mismatch",
+                "feedback closure apply summary schema version is not supported.",
+            )
+        )
+    if resolved_run_dir is not None and run_id and resolved_run_dir.name != run_id:
+        blockers.append(
+            _feedback_closure_apply_report_blocker(
+                "run_id_mismatch",
+                "feedback closure apply summary run_id does not match RUN_DIR.",
+            )
+        )
+
+    feedback_ids, invalid_feedback_ids = _feedback_ids_from_apply_summary(summary)
+    if invalid_feedback_ids:
+        blockers.append(
+            _feedback_closure_apply_report_blocker(
+                "invalid_feedback_id",
+                "feedback closure apply summary contains non-integer feedback IDs: "
+                + ",".join(invalid_feedback_ids),
+            )
+        )
+    if not feedback_ids:
+        blockers.append(
+            _feedback_closure_apply_report_blocker(
+                "missing_feedback_ids",
+                "feedback closure apply summary does not name updated feedback IDs.",
+            )
+        )
+
+    mutation_boundary = summary.get("mutation_boundary")
+    if not isinstance(mutation_boundary, dict):
+        mutation_boundary = {}
+    expected_boundary = _ocr_retry_feedback_closure_apply_mutation_boundary()
+    for key, expected_value in expected_boundary.items():
+        if mutation_boundary.get(key) != expected_value:
+            blockers.append(
+                _feedback_closure_apply_report_blocker(
+                    "mutation_boundary_mismatch",
+                    f"mutation boundary {key} is not {expected_value}.",
+                )
+            )
+
+    backup = summary.get("backup")
+    if not isinstance(backup, dict):
+        backup = {}
+    backup_db_path = _path_from_payload(backup.get("db_path"))
+    backup_manifest_path = _path_from_payload(backup.get("manifest_path"))
+    backup_integrity = "not_checked"
+    backup_rows_by_id: dict[int, dict[str, Any]] = {}
+    if backup_db_path is None:
+        blockers.append(
+            _feedback_closure_apply_report_blocker(
+                "missing_backup_db_path",
+                "feedback closure apply summary does not name a backup DB path.",
+            )
+        )
+    elif not backup_db_path.is_file():
+        blockers.append(
+            _feedback_closure_apply_report_blocker(
+                "backup_db_not_found",
+                "feedback closure apply backup DB was not found.",
+            )
+        )
+    else:
+        try:
+            backup_integrity = _sqlite_integrity_check(backup_db_path)
+        except sqlite3.Error as exc:
+            backup_integrity = "error"
+            blockers.append(
+                _feedback_closure_apply_report_blocker(
+                    "backup_integrity_check_failed",
+                    f"feedback closure apply backup integrity check failed: {exc}",
+                )
+            )
+        if backup_integrity != "ok":
+            blockers.append(
+                _feedback_closure_apply_report_blocker(
+                    "backup_integrity_not_ok",
+                    f"feedback closure apply backup integrity check returned {backup_integrity}.",
+                )
+            )
+        elif feedback_ids:
+            backup_rows_by_id = _feedback_rows_by_id(
+                db_path=backup_db_path,
+                feedback_ids=feedback_ids,
+            )
+    if backup_manifest_path is None:
+        blockers.append(
+            _feedback_closure_apply_report_blocker(
+                "missing_backup_manifest_path",
+                "feedback closure apply summary does not name a backup manifest path.",
+            )
+        )
+    elif not backup_manifest_path.is_file():
+        blockers.append(
+            _feedback_closure_apply_report_blocker(
+                "backup_manifest_not_found",
+                "feedback closure apply backup manifest was not found.",
+            )
+        )
+
+    active_integrity = "not_checked"
+    active_rows_by_id: dict[int, dict[str, Any]] = {}
+    if not resolved_db_path.is_file():
+        blockers.append(
+            _feedback_closure_apply_report_blocker(
+                "manual_evals_db_not_found",
+                "manual eval warehouse was not found.",
+            )
+        )
+    else:
+        try:
+            active_integrity = _sqlite_integrity_check(resolved_db_path)
+        except sqlite3.Error as exc:
+            active_integrity = "error"
+            blockers.append(
+                _feedback_closure_apply_report_blocker(
+                    "manual_evals_db_integrity_check_failed",
+                    f"manual eval warehouse integrity check failed: {exc}",
+                )
+            )
+        if active_integrity != "ok":
+            blockers.append(
+                _feedback_closure_apply_report_blocker(
+                    "manual_evals_db_integrity_not_ok",
+                    f"manual eval warehouse integrity check returned {active_integrity}.",
+                )
+            )
+        elif feedback_ids:
+            active_rows_by_id = _feedback_rows_by_id(
+                db_path=resolved_db_path,
+                feedback_ids=feedback_ids,
+            )
+
+    feedback_rows: list[dict[str, Any]] = []
+    for feedback_id in feedback_ids:
+        active_row = active_rows_by_id.get(feedback_id, {})
+        backup_row = backup_rows_by_id.get(feedback_id, {})
+        active_status = str(active_row.get("status") or "missing")
+        backup_status = str(backup_row.get("status") or "missing")
+        action_taken = _normalize_text(active_row.get("action_taken"))
+        if active_status != "closed":
+            blockers.append(
+                _feedback_closure_apply_report_blocker(
+                    "active_feedback_not_closed",
+                    f"active feedback {feedback_id} status is {active_status}.",
+                )
+            )
+        if not action_taken:
+            blockers.append(
+                _feedback_closure_apply_report_blocker(
+                    "active_feedback_missing_action_taken",
+                    f"active feedback {feedback_id} has no action_taken text.",
+                )
+            )
+        if backup_status != "open":
+            blockers.append(
+                _feedback_closure_apply_report_blocker(
+                    "backup_feedback_not_open",
+                    f"backup feedback {feedback_id} status is {backup_status}.",
+                )
+            )
+        feedback_rows.append(
+            {
+                "feedback_id": feedback_id,
+                "active_status": active_status,
+                "backup_status": backup_status,
+                "active_action_taken_present": bool(action_taken),
+                "active_updated_at": _int_value(active_row.get("updated_at")),
+                "backup_updated_at": _int_value(backup_row.get("updated_at")),
+            }
+        )
+
+    state = "error" if blockers else "ok"
+    return {
+        "schema_version": OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_SCHEMA_VERSION,
+        "state": state,
+        "run_dir": str(resolved_run_dir or ""),
+        "run_id": run_id,
+        "summary_path": str(summary_path or ""),
+        "manual_evals_db": {
+            "path": str(resolved_db_path),
+            "integrity_check": active_integrity,
+        },
+        "backup": {
+            **backup,
+            "integrity_check": backup_integrity,
+        },
+        "counts": {
+            "target_feedback_rows": len(feedback_ids),
+            "active_closed_feedback": _status_count(active_rows_by_id, "closed"),
+            "backup_open_feedback": _status_count(backup_rows_by_id, "open"),
+            "active_missing_feedback": max(
+                0, len(feedback_ids) - len(active_rows_by_id)
+            ),
+            "backup_missing_feedback": max(
+                0, len(feedback_ids) - len(backup_rows_by_id)
+            ),
+            "report_blockers": len(blockers),
+        },
+        "mutation_boundary": mutation_boundary,
+        "feedback_rows": feedback_rows,
+        "report_blockers": blockers,
+        "warnings": [blocker["detail"] for blocker in blockers],
+    }
+
+
 def _health_state(
     *,
     freshness: dict[str, Any],
@@ -8467,6 +8778,70 @@ def format_ocr_retry_feedback_closure_apply_report(report: dict[str, Any]) -> st
     return "\n".join(lines)
 
 
+def format_ocr_retry_feedback_closure_apply_verification_report(
+    report: dict[str, Any],
+) -> str:
+    counts = report.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+    backup = report.get("backup")
+    if not isinstance(backup, dict):
+        backup = {}
+    manual_db = report.get("manual_evals_db")
+    if not isinstance(manual_db, dict):
+        manual_db = {}
+    run_dir_name = Path(str(report.get("run_dir") or "none")).name or "none"
+    backup_dir_name = Path(str(backup.get("dir") or "none")).name or "none"
+
+    lines = [
+        "manual eval OCR retry feedback closure apply report: "
+        f"state={report.get('state', 'unknown')} "
+        f"run={report.get('run_id') or 'unknown'} "
+        f"feedback={_int_value(counts.get('target_feedback_rows'))} "
+        f"active_closed={_int_value(counts.get('active_closed_feedback'))} "
+        f"backup_open={_int_value(counts.get('backup_open_feedback'))} "
+        f"active_missing={_int_value(counts.get('active_missing_feedback'))} "
+        f"backup_missing={_int_value(counts.get('backup_missing_feedback'))} "
+        f"blockers={_int_value(counts.get('report_blockers'))} "
+        f"active_integrity={manual_db.get('integrity_check') or 'unknown'} "
+        f"backup_integrity={backup.get('integrity_check') or 'unknown'} "
+        f"dir={run_dir_name} "
+        f"backup_dir={backup_dir_name}",
+    ]
+    feedback_rows = report.get("feedback_rows")
+    if isinstance(feedback_rows, list) and feedback_rows:
+        lines.append("feedback_rows:")
+        for row in feedback_rows:
+            if not isinstance(row, dict):
+                continue
+            lines.append(
+                "- "
+                f"feedback={row.get('feedback_id') or 'unknown'} "
+                f"active={row.get('active_status') or 'unknown'} "
+                f"backup={row.get('backup_status') or 'unknown'} "
+                "action_taken="
+                f"{'yes' if row.get('active_action_taken_present') else 'no'}"
+            )
+    blockers = report.get("report_blockers")
+    if isinstance(blockers, list) and blockers:
+        lines.append("report_blockers:")
+        for blocker in blockers:
+            if not isinstance(blocker, dict):
+                continue
+            lines.append(
+                "- "
+                f"code={blocker.get('code') or 'unknown'} "
+                f"detail={blocker.get('detail') or ''}"
+            )
+    if backup.get("restore_command"):
+        lines.append("restore_hint=stop local server and restore from backup manifest")
+    warnings = report.get("warnings")
+    if isinstance(warnings, list) and warnings:
+        lines.append("warnings:")
+        lines.extend(f"- {str(item)}" for item in warnings)
+    return "\n".join(lines)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Print read-only manual eval warehouse health signals.",
@@ -8570,6 +8945,11 @@ def _build_parser() -> argparse.ArgumentParser:
         "--ocr-retry-feedback-closure-apply",
         action="store_true",
         help="Apply guarded OCR retry feedback closure after backup.",
+    )
+    parser.add_argument(
+        "--ocr-retry-feedback-closure-apply-report",
+        action="store_true",
+        help="Inspect an OCR retry feedback-closure apply summary without mutation.",
     )
     parser.add_argument(
         "--selection-path",
@@ -8740,6 +9120,17 @@ def main() -> int:
         else:
             print(format_ocr_retry_feedback_closure_apply_report(report))
         return 0 if report.get("state") == "applied" else 2
+
+    if args.ocr_retry_feedback_closure_apply_report:
+        report = build_ocr_retry_feedback_closure_apply_report(
+            db_path=db_path,
+            run_dir=Path(args.run_dir) if str(args.run_dir).strip() else None,
+        )
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            print(format_ocr_retry_feedback_closure_apply_verification_report(report))
+        return 0 if report.get("state") == "ok" else 2
 
     if args.ocr_retry_execute:
         report = write_ocr_retry_execution_bundle(

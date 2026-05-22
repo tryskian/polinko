@@ -39,6 +39,9 @@ workflow, output surfaces, and tuning knobs.
     and feedback-closure preview are both `ok`
   - feedback-closure apply creates a backup under `.local_archive/` before
     updating feedback `status`, `action_taken`, and `updated_at`
+  - use `make manual-evals-ocr-retry-feedback-closure-apply-report
+    RUN_DIR=<path>` to verify backup integrity, backup-open rows, and
+    active-closed rows after apply without mutation
   - live eval rows, OCR reruns, warehouse refresh, OCR row mutation, and
     inferred source links remain out of scope for the OCR retry execution gate
 

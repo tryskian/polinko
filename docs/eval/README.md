@@ -187,6 +187,12 @@ notes, exports, and runtime history.
     `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`
   - feedback-closure apply is backup-first and limits mutation to feedback
     `status`, `action_taken`, and `updated_at`
+  - verify OCR retry feedback closure after apply without mutation with
+    `make manual-evals-ocr-retry-feedback-closure-apply-report RUN_DIR=<path>`
+  - JSON OCR retry feedback-closure apply-report exports use
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`
+  - apply-report verifies backup DB integrity, backup feedback rows still open,
+    active feedback rows closed, and action-taken text present
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

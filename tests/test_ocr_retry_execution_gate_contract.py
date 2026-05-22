@@ -46,6 +46,8 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-feedback-closure-apply`",
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`",
             "`CONFIRM=ocr-retry-feedback-closure-apply`",
+            "`make manual-evals-ocr-retry-feedback-closure-apply-report`",
+            "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`",
             ".local_archive/manual-evals-feedback-closure-apply-<timestamp>/",
             "It must not write live eval rows, run OCR, refresh `manual_evals.db`",
             "selection validation reports `state=ok`",
@@ -118,9 +120,14 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
         self.assertIn("--ocr-retry-execution-report", health_tool)
         self.assertIn("--ocr-retry-feedback-closure-preview", health_tool)
         self.assertIn("--ocr-retry-feedback-closure-apply", health_tool)
+        self.assertIn("--ocr-retry-feedback-closure-apply-report", health_tool)
         self.assertIn("OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION", health_tool)
         self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION", health_tool)
         self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION", health_tool)
+        self.assertIn(
+            "OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_SCHEMA_VERSION",
+            health_tool,
+        )
         self.assertIn("--confirm", health_tool)
         self.assertIn("OCR_RETRY_EXECUTION_CONFIRM_TOKEN", health_tool)
         self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN", health_tool)
@@ -130,6 +137,10 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
         self.assertIn("build_ocr_retry_execution_readiness_report", health_tool)
         self.assertIn(
             "manual-evals-ocr-retry-feedback-closure-apply",
+            makefile_text,
+        )
+        self.assertIn(
+            "manual-evals-ocr-retry-feedback-closure-apply-report",
             makefile_text,
         )
 

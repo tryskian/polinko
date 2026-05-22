@@ -246,6 +246,12 @@ Last updated: 2026-05-21
     `.local_archive/manual-evals-feedback-closure-apply-<timestamp>/`, emits
     `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`,
     and limits mutation to feedback `status`, `action_taken`, and `updated_at`
+  - `make manual-evals-ocr-retry-feedback-closure-apply-report` verifies the
+    local apply summary with `RUN_DIR=<path>`, using
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`
+  - OCR retry feedback-closure apply reports are read-only and verify backup
+    DB integrity, backup feedback rows still open, active feedback rows closed,
+    and action-taken text present
   - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` defines the local-bundle OCR
     retry executor boundary, including rollback and failure handling
   - manual eval warehouse rebuilds resolve OCR source images from extracted
