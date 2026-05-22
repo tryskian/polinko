@@ -21,12 +21,15 @@ workflow, output surfaces, and tuning knobs.
     - `gx-68844003-002`
     - `gx-6952d743-021`
 - Current tooling pin:
-  - live OCR/eval execution is paused until explicitly resumed
+  - live eval execution is paused until explicitly resumed
   - use `make ocr-inventory` and `make ocr-inventory-json` to inspect local
     evidence state before refreshing or running eval lanes
-  - the OCR retry execution gate is designed in
-    `docs/runtime/OCR_RETRY_EXECUTION_GATE.md`, but no runnable retry execution
-    target exists yet
+  - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` documents that the local-bundle
+    retry execution target exists for selected manual-eval OCR retry artifacts;
+    it requires `SELECTION_PATH=<path>` plus `CONFIRM=ocr-retry-execute` and
+    writes only ignored local run bundles
+  - feedback closure, live eval rows, and manual eval warehouse mutation remain
+    out of scope for the OCR retry execution gate
 
 ## Lane Model
 
@@ -45,7 +48,7 @@ workflow, output surfaces, and tuning knobs.
    - `make ocr-inventory`
    - reports tracked cases plus local case, report, manual-eval DB, and
      notebook paths without running OCR or mutating local data
-   - use this before any eval refresh while OCR execution is pinned
+   - use this before any eval refresh while eval execution is pinned
 2. End-to-end kernel:
    - `make ocrkernel`
    - optional export-root override:

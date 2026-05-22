@@ -308,6 +308,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-execution-readiness`",
             "`schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`",
             "Execution remains a separate",
+            "## D-102: Implement OCR retry execution as a local bundle first",
+            "`make manual-evals-ocr-retry-execute`",
+            "`CONFIRM=ocr-retry-execute`",
         ):
             self.assertIn(expected, decisions)
 
@@ -376,6 +379,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-execution-readiness` prints a read-only",
             "`schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`",
             "requires apply-preview `state=ok`",
+            "`make manual-evals-ocr-retry-execute` is the local-bundle OCR retry",
+            "`CONFIRM=ocr-retry-execute`",
+            ".local/manual_eval_runs/ocr_retry/",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",

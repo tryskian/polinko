@@ -51,12 +51,13 @@ Preparation tools must not:
 - mutate the manual eval warehouse
 - infer source links that are not present in current source truth
 
-Execution tools may be added later only as explicit follow-up gates. They must
-state their mutation target, reuse the validator, and keep a preview path
-available.
+Execution tools may be added only as explicit follow-up gates. They must state
+their mutation target, reuse the validator, and keep a preview path available.
 
-The designed OCR retry execution gate is documented in
-`docs/runtime/OCR_RETRY_EXECUTION_GATE.md`. It is not runnable yet.
+The OCR retry execution gate is documented in
+`docs/runtime/OCR_RETRY_EXECUTION_GATE.md`. It writes local ignored run bundles
+only and keeps feedback closure, live eval writes, and warehouse mutation out
+of scope.
 
 ## Current Polinko Instance
 
@@ -84,6 +85,12 @@ operator input tooling:
   - emits
     `schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`
   - stays read-only and does not run OCR, close feedback, write eval rows, or
+    mutate the manual eval warehouse
+- `make manual-evals-ocr-retry-execute`
+  - requires `SELECTION_PATH=<path>` and `CONFIRM=ocr-retry-execute`
+  - recomputes validation, apply-preview, and execution readiness in-process
+  - writes local ignored run bundles under `.local/manual_eval_runs/ocr_retry/`
+  - does not close feedback, write eval rows, refresh `manual_evals.db`, or
     mutate the manual eval warehouse
 
 The current OCR lane inventory is the reference instance for read-only local

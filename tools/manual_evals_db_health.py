@@ -1,14 +1,19 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
+import mimetypes
+import os
 import shlex
 import sqlite3
-from collections.abc import Sequence
+import uuid
+from collections.abc import Callable, Sequence
 from contextlib import closing
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from tools.manual_evals_db_status import data_freshness_status
 
@@ -46,8 +51,16 @@ OCR_RETRY_SELECTION_APPLY_PREVIEW_SCHEMA_VERSION = (
 OCR_RETRY_EXECUTION_READINESS_SCHEMA_VERSION = (
     "polinko.manual_eval_ocr_retry_execution_readiness.v1"
 )
+OCR_RETRY_EXECUTION_SCHEMA_VERSION = "polinko.manual_eval_ocr_retry_execution.v1"
+OCR_RETRY_EXECUTION_CONFIRM_TOKEN = "ocr-retry-execute"
 DEFAULT_OCR_RETRY_SELECTION_DRAFT_PATH = Path(
     ".local/manual_eval_decisions/ocr_retry_selection_draft.json"
+)
+DEFAULT_OCR_RETRY_EXECUTION_DIR = Path(".local/manual_eval_runs/ocr_retry")
+DEFAULT_OCR_RETRY_MODEL = "gpt-4.1-mini"
+DEFAULT_OCR_RETRY_PROMPT = (
+    "Extract all readable text from this image. Preserve line breaks and symbols "
+    "exactly. Do not invent letters or words; if uncertain, output [?]."
 )
 OCR_RETRY_TERMINAL_CONTEXT_LIMIT = 3
 
@@ -4279,6 +4292,668 @@ def build_ocr_retry_execution_readiness_report(
     return report
 
 
+class OcrRetryExecutionProviderError(RuntimeError):
+    def __init__(
+        self,
+        message: str,
+        *,
+        status: str = "provider_error",
+        retry_after: str = "",
+    ) -> None:
+        super().__init__(message)
+        self.status = status
+        self.retry_after = retry_after
+
+
+OcrRetryRunner = Callable[[dict[str, Any]], dict[str, Any]]
+
+
+def _utc_run_timestamp() -> str:
+    return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+
+
+def _short_text_preview(value: object, *, limit: int = 240) -> str:
+    normalized = _normalize_text(value)
+    if len(normalized) <= limit:
+        return normalized
+    return normalized[: limit - 3].rstrip() + "..."
+
+
+def _selection_file_fingerprint(selection_path: Path | None) -> str:
+    if selection_path is None or not selection_path.is_file():
+        return ""
+    return hashlib.sha256(selection_path.read_bytes()).hexdigest()
+
+
+def _ocr_retry_execution_mutation_boundary() -> dict[str, str]:
+    return {
+        "manual_evals_db": "read_only",
+        "feedback_closure": "none",
+        "live_eval_rows": "none",
+        "manual_eval_warehouse": "none",
+    }
+
+
+def _ocr_retry_execution_blocker(code: str, detail: str) -> dict[str, str]:
+    return {"code": code, "detail": detail}
+
+
+def _blocked_ocr_retry_execution_report(
+    *,
+    readiness_report: dict[str, Any] | None,
+    selection_path: Path | None,
+    confirm_token: str,
+    execution_blockers: Sequence[dict[str, str]],
+    ocr_provider: str,
+    ocr_model: str,
+    execution_dir: Path | None,
+) -> dict[str, Any]:
+    readiness_counts: dict[str, Any] = {}
+    if isinstance(readiness_report, dict):
+        counts = readiness_report.get("counts")
+        if isinstance(counts, dict):
+            readiness_counts = counts
+    return {
+        "schema_version": OCR_RETRY_EXECUTION_SCHEMA_VERSION,
+        "state": "blocked",
+        "execution_mode": "local_bundle",
+        "selection_path": str(selection_path or ""),
+        "selection_fingerprint": _selection_file_fingerprint(selection_path),
+        "readiness_schema_version": readiness_report.get("schema_version", "")
+        if isinstance(readiness_report, dict)
+        else "",
+        "readiness_state": readiness_report.get("state", "not_checked")
+        if isinstance(readiness_report, dict)
+        else "not_checked",
+        "confirmation": {
+            "required": OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+            "provided": bool(confirm_token),
+            "state": "ok"
+            if confirm_token == OCR_RETRY_EXECUTION_CONFIRM_TOKEN
+            else "blocked",
+        },
+        "ocr_provider": ocr_provider,
+        "ocr_model": ocr_model,
+        "counts": {
+            "readiness_items": _int_value(readiness_counts.get("readiness_items")),
+            "executable_items": _int_value(readiness_counts.get("executable_items")),
+            "requests": 0,
+            "responses": 0,
+            "succeeded": 0,
+            "failed": 0,
+            "context_only_skipped": _int_value(
+                readiness_counts.get("context_only_items")
+            ),
+        },
+        "mutation_boundary": _ocr_retry_execution_mutation_boundary(),
+        "output": {
+            "written": False,
+            "root": str(execution_dir or ""),
+            "run_dir": "",
+        },
+        "execution_blockers": list(execution_blockers),
+        "warnings": [blocker["detail"] for blocker in execution_blockers],
+    }
+
+
+def _response_retry_after_from_openai_error(exc: Exception) -> str:
+    response = getattr(exc, "response", None)
+    headers = getattr(response, "headers", None)
+    if headers is None:
+        return ""
+    retry_after = headers.get("retry-after") or headers.get("Retry-After")
+    return str(retry_after or "").strip()
+
+
+def _ocr_retry_request_source(request: dict[str, Any]) -> dict[str, Any]:
+    source = request.get("source")
+    if isinstance(source, dict):
+        return source
+    return {}
+
+
+def _run_scaffold_ocr_retry_request(request: dict[str, Any]) -> dict[str, Any]:
+    source = _ocr_retry_request_source(request)
+    resolved_path = Path(str(source.get("resolved_path") or "")).expanduser()
+    raw_bytes = resolved_path.read_bytes()
+    extracted_text = raw_bytes.decode("utf-8", errors="ignore").strip()
+    status = "ok" if extracted_text else "stub"
+    if not extracted_text:
+        extracted_text = (
+            "[OCR scaffold] Binary payload received. Configure "
+            "POLINKO_OCR_PROVIDER=openai for text extraction."
+        )
+    return {
+        "status": status,
+        "provider": "scaffold",
+        "model": "scaffold",
+        "extracted_text": extracted_text,
+        "extracted_text_preview": _short_text_preview(extracted_text),
+        "chars": len(extracted_text),
+    }
+
+
+def _run_openai_ocr_retry_request(
+    request: dict[str, Any],
+    *,
+    ocr_model: str,
+    ocr_prompt: str,
+) -> dict[str, Any]:
+    try:
+        from openai import (
+            APIConnectionError,
+            APIStatusError,
+            AuthenticationError,
+            OpenAI,
+            RateLimitError,
+        )
+    except ImportError as exc:  # pragma: no cover - package is present in repo env
+        raise OcrRetryExecutionProviderError(
+            "openai package is not installed",
+            status="provider_not_configured",
+        ) from exc
+
+    api_key = str(os.getenv("OPENAI_API_KEY") or "").strip()
+    if not api_key:
+        raise OcrRetryExecutionProviderError(
+            "OPENAI_API_KEY is not set",
+            status="provider_not_configured",
+        )
+
+    source = _ocr_retry_request_source(request)
+    resolved_path = Path(str(source.get("resolved_path") or "")).expanduser()
+    mime_type = str(
+        source.get("mime_type")
+        or mimetypes.guess_type(str(resolved_path))[0]
+        or "application/octet-stream"
+    )
+    if not mime_type.startswith("image/"):
+        raise OcrRetryExecutionProviderError(
+            f"OpenAI OCR expects image input, got {mime_type}",
+            status="invalid_request",
+        )
+    data_url = (
+        f"data:{mime_type};base64,"
+        f"{base64.b64encode(resolved_path.read_bytes()).decode('ascii')}"
+    )
+    client = OpenAI(api_key=api_key)
+    ocr_input = cast(
+        Any,
+        [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": ocr_prompt},
+                    {"type": "input_image", "image_url": data_url},
+                ],
+            }
+        ],
+    )
+    try:
+        response = client.responses.create(
+            model=ocr_model,
+            input=ocr_input,
+            temperature=0,
+        )
+    except AuthenticationError as exc:
+        raise OcrRetryExecutionProviderError(
+            "OpenAI authentication failed",
+            status="authentication_error",
+        ) from exc
+    except RateLimitError as exc:
+        raise OcrRetryExecutionProviderError(
+            "OpenAI OCR rate limit reached",
+            status="rate_limited",
+            retry_after=_response_retry_after_from_openai_error(exc),
+        ) from exc
+    except APIConnectionError as exc:
+        raise OcrRetryExecutionProviderError(
+            "Connection error reaching OpenAI OCR provider",
+            status="provider_unavailable",
+        ) from exc
+    except APIStatusError as exc:
+        status = "provider_unavailable" if exc.status_code >= 500 else "provider_error"
+        if exc.status_code == 429:
+            status = "rate_limited"
+        if exc.status_code in {400, 413, 415, 422}:
+            status = "invalid_request"
+        if exc.status_code in {401, 403}:
+            status = "authentication_error"
+        raise OcrRetryExecutionProviderError(
+            f"OpenAI OCR error ({exc.status_code})",
+            status=status,
+            retry_after=_response_retry_after_from_openai_error(exc),
+        ) from exc
+
+    output_text = getattr(response, "output_text", None)
+    extracted_text = (
+        str(output_text).strip()
+        if isinstance(output_text, str) and output_text.strip()
+        else "[OCR] No text detected."
+    )
+    return {
+        "status": "ok",
+        "provider": "openai",
+        "model": ocr_model,
+        "extracted_text": extracted_text,
+        "extracted_text_preview": _short_text_preview(extracted_text),
+        "chars": len(extracted_text),
+    }
+
+
+def _run_default_ocr_retry_request(
+    request: dict[str, Any],
+    *,
+    ocr_provider: str,
+    ocr_model: str,
+    ocr_prompt: str,
+) -> dict[str, Any]:
+    provider = (ocr_provider or "scaffold").strip().lower()
+    if provider == "openai":
+        return _run_openai_ocr_retry_request(
+            request,
+            ocr_model=ocr_model,
+            ocr_prompt=ocr_prompt,
+        )
+    if provider == "scaffold":
+        return _run_scaffold_ocr_retry_request(request)
+    raise OcrRetryExecutionProviderError(
+        f"unsupported OCR retry provider: {provider}",
+        status="provider_not_configured",
+    )
+
+
+def _ocr_retry_execution_requests(
+    *,
+    run_id: str,
+    readiness_report: dict[str, Any],
+    ocr_provider: str,
+    ocr_model: str,
+) -> list[dict[str, Any]]:
+    readiness_items = readiness_report.get("execution_readiness_items")
+    if not isinstance(readiness_items, list):
+        return []
+    requests: list[dict[str, Any]] = []
+    for item in readiness_items:
+        if not isinstance(item, dict) or not item.get("executable"):
+            continue
+        artifacts = item.get("selected_artifacts")
+        if not isinstance(artifacts, list):
+            continue
+        for artifact in artifacts:
+            if not isinstance(artifact, dict) or artifact.get("state") != "ready":
+                continue
+            payload_inputs = artifact.get("payload_inputs")
+            if not isinstance(payload_inputs, dict):
+                payload_inputs = {}
+            resolved_path = str(artifact.get("resolved_path") or "").strip()
+            mime_type = str(
+                payload_inputs.get("mime_type")
+                or mimetypes.guess_type(resolved_path)[0]
+                or "application/octet-stream"
+            )
+            request_index = len(requests) + 1
+            requests.append(
+                {
+                    "schema_version": OCR_RETRY_EXECUTION_SCHEMA_VERSION,
+                    "run_id": run_id,
+                    "request_id": f"{run_id}::{request_index:04d}",
+                    "sequence": request_index,
+                    "operation": "ocr_retry_rerun_or_case_curation",
+                    "selected_action": str(item.get("selected_action") or ""),
+                    "shortlist_id": str(item.get("shortlist_id") or ""),
+                    "artifact_id": str(artifact.get("artifact_id") or ""),
+                    "feedback_ids": item.get("feedback_ids")
+                    if isinstance(item.get("feedback_ids"), list)
+                    else [],
+                    "source_session_id": str(artifact.get("source_session_id") or ""),
+                    "session_id": str(artifact.get("session_id") or ""),
+                    "ocr_run_id": str(artifact.get("ocr_run_id") or ""),
+                    "source": {
+                        "resolved_path": resolved_path,
+                        "source_image_name": str(
+                            artifact.get("source_image_name") or ""
+                        ),
+                        "mime_type": mime_type,
+                        "source_file_exists": bool(artifact.get("source_file_exists")),
+                    },
+                    "provider": {
+                        "name": ocr_provider,
+                        "model": ocr_model,
+                    },
+                    "payload_inputs": payload_inputs,
+                    "command_preview": artifact.get("command_preview")
+                    if isinstance(artifact.get("command_preview"), dict)
+                    else {},
+                    "warehouse_mutation": "none",
+                }
+            )
+    return requests
+
+
+def _normalize_ocr_retry_response(
+    *,
+    request: dict[str, Any],
+    raw_response: dict[str, Any],
+) -> dict[str, Any]:
+    status = str(raw_response.get("status") or "ok")
+    extracted_text = str(raw_response.get("extracted_text") or "")
+    return {
+        "schema_version": OCR_RETRY_EXECUTION_SCHEMA_VERSION,
+        "run_id": request.get("run_id", ""),
+        "request_id": request.get("request_id", ""),
+        "artifact_id": request.get("artifact_id", ""),
+        "shortlist_id": request.get("shortlist_id", ""),
+        "status": status,
+        "provider": str(raw_response.get("provider") or ""),
+        "model": str(raw_response.get("model") or ""),
+        "extracted_text_preview": str(
+            raw_response.get("extracted_text_preview")
+            or _short_text_preview(extracted_text)
+        ),
+        "extracted_text_chars": _int_value(
+            raw_response.get("chars")
+            if "chars" in raw_response
+            else len(extracted_text)
+        ),
+        "retry_after": str(raw_response.get("retry_after") or ""),
+        "error": str(raw_response.get("error") or ""),
+        "warehouse_mutation": "none",
+    }
+
+
+def _error_ocr_retry_response(
+    *,
+    request: dict[str, Any],
+    exc: Exception,
+) -> dict[str, Any]:
+    status = "provider_error"
+    retry_after = ""
+    if isinstance(exc, OcrRetryExecutionProviderError):
+        status = exc.status
+        retry_after = exc.retry_after
+    return {
+        "schema_version": OCR_RETRY_EXECUTION_SCHEMA_VERSION,
+        "run_id": request.get("run_id", ""),
+        "request_id": request.get("request_id", ""),
+        "artifact_id": request.get("artifact_id", ""),
+        "shortlist_id": request.get("shortlist_id", ""),
+        "status": status,
+        "provider": "",
+        "model": "",
+        "extracted_text_preview": "",
+        "extracted_text_chars": 0,
+        "retry_after": retry_after,
+        "error": str(exc),
+        "warehouse_mutation": "none",
+    }
+
+
+def _write_json(path: Path, payload: dict[str, Any]) -> None:
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+
+
+def _write_jsonl(path: Path, rows: Sequence[dict[str, Any]]) -> None:
+    path.write_text(
+        "".join(json.dumps(row, sort_keys=True) + "\n" for row in rows),
+        encoding="utf-8",
+    )
+
+
+def write_ocr_retry_execution_bundle(
+    *,
+    db_path: Path,
+    selection_path: Path | None,
+    confirm_token: str,
+    outcome: str | None = "partial",
+    cohort: str | None = "ocr_retry_evidence",
+    limit: int = 100,
+    artifact_ids: Sequence[str] | None = None,
+    execution_dir: Path | None = None,
+    ocr_provider: str = "scaffold",
+    ocr_model: str = DEFAULT_OCR_RETRY_MODEL,
+    ocr_prompt: str = DEFAULT_OCR_RETRY_PROMPT,
+    run_id: str | None = None,
+    ocr_runner: OcrRetryRunner | None = None,
+) -> dict[str, Any]:
+    resolved_selection_path = selection_path.expanduser() if selection_path else None
+    resolved_execution_root = (
+        execution_dir.expanduser() if execution_dir else DEFAULT_OCR_RETRY_EXECUTION_DIR
+    )
+    normalized_provider = (ocr_provider or "scaffold").strip().lower()
+    normalized_model = (ocr_model or DEFAULT_OCR_RETRY_MODEL).strip()
+    normalized_prompt = (ocr_prompt or DEFAULT_OCR_RETRY_PROMPT).strip()
+
+    readiness_report = (
+        build_ocr_retry_execution_readiness_report(
+            db_path=db_path,
+            selection_path=resolved_selection_path,
+            outcome=outcome,
+            cohort=cohort,
+            limit=limit,
+            artifact_ids=artifact_ids,
+        )
+        if resolved_selection_path is not None
+        else None
+    )
+
+    blockers: list[dict[str, str]] = []
+    if resolved_selection_path is None:
+        blockers.append(
+            _ocr_retry_execution_blocker(
+                "missing_selection_path",
+                "SELECTION_PATH is required before OCR retry execution.",
+            )
+        )
+    elif not resolved_selection_path.is_file():
+        blockers.append(
+            _ocr_retry_execution_blocker(
+                "selection_path_not_found",
+                f"OCR retry selection decision file was not found: {resolved_selection_path}",
+            )
+        )
+    if confirm_token != OCR_RETRY_EXECUTION_CONFIRM_TOKEN:
+        blockers.append(
+            _ocr_retry_execution_blocker(
+                "missing_confirmation",
+                "CONFIRM=ocr-retry-execute is required before OCR retry execution.",
+            )
+        )
+    readiness_state = (
+        str(readiness_report.get("state") or "unknown")
+        if isinstance(readiness_report, dict)
+        else "not_checked"
+    )
+    readiness_counts = (
+        readiness_report.get("counts") if isinstance(readiness_report, dict) else {}
+    )
+    if not isinstance(readiness_counts, dict):
+        readiness_counts = {}
+    if isinstance(readiness_report, dict) and readiness_state != "ready":
+        blockers.append(
+            _ocr_retry_execution_blocker(
+                "readiness_not_ready",
+                f"OCR retry execution readiness is {readiness_state}.",
+            )
+        )
+    if (
+        isinstance(readiness_report, dict)
+        and readiness_state == "ready"
+        and _int_value(readiness_counts.get("executable_items")) < 1
+    ):
+        blockers.append(
+            _ocr_retry_execution_blocker(
+                "no_executable_items",
+                "No executable OCR retry items were selected.",
+            )
+        )
+    if resolved_execution_root.exists() and not resolved_execution_root.is_dir():
+        blockers.append(
+            _ocr_retry_execution_blocker(
+                "execution_dir_not_directory",
+                f"OCR retry execution output path is not a directory: {resolved_execution_root}",
+            )
+        )
+    if blockers:
+        return _blocked_ocr_retry_execution_report(
+            readiness_report=readiness_report,
+            selection_path=resolved_selection_path,
+            confirm_token=confirm_token,
+            execution_blockers=blockers,
+            ocr_provider=normalized_provider,
+            ocr_model=normalized_model,
+            execution_dir=resolved_execution_root,
+        )
+
+    assert readiness_report is not None
+    actual_run_id = run_id or (
+        f"ocr-retry-{_utc_run_timestamp()}-"
+        f"{_selection_file_fingerprint(resolved_selection_path)[:10]}-"
+        f"{uuid.uuid4().hex[:8]}"
+    )
+    run_dir = resolved_execution_root / actual_run_id
+    if run_dir.exists():
+        return _blocked_ocr_retry_execution_report(
+            readiness_report=readiness_report,
+            selection_path=resolved_selection_path,
+            confirm_token=confirm_token,
+            execution_blockers=[
+                _ocr_retry_execution_blocker(
+                    "execution_run_dir_exists",
+                    f"OCR retry execution run directory already exists: {run_dir}",
+                )
+            ],
+            ocr_provider=normalized_provider,
+            ocr_model=normalized_model,
+            execution_dir=resolved_execution_root,
+        )
+
+    requests = _ocr_retry_execution_requests(
+        run_id=actual_run_id,
+        readiness_report=readiness_report,
+        ocr_provider=normalized_provider,
+        ocr_model=normalized_model,
+    )
+    if not requests:
+        return _blocked_ocr_retry_execution_report(
+            readiness_report=readiness_report,
+            selection_path=resolved_selection_path,
+            confirm_token=confirm_token,
+            execution_blockers=[
+                _ocr_retry_execution_blocker(
+                    "no_execution_requests",
+                    "No OCR retry execution requests could be built.",
+                )
+            ],
+            ocr_provider=normalized_provider,
+            ocr_model=normalized_model,
+            execution_dir=resolved_execution_root,
+        )
+
+    run_dir.mkdir(parents=True)
+    files = {
+        "manifest": str(run_dir / "manifest.json"),
+        "requests": str(run_dir / "requests.jsonl"),
+        "responses": str(run_dir / "responses.jsonl"),
+        "summary": str(run_dir / "summary.json"),
+    }
+    manifest = {
+        "schema_version": OCR_RETRY_EXECUTION_SCHEMA_VERSION,
+        "run_id": actual_run_id,
+        "created_at": datetime.now(UTC).isoformat(),
+        "execution_mode": "local_bundle",
+        "selection_path": str(resolved_selection_path),
+        "selection_fingerprint": _selection_file_fingerprint(resolved_selection_path),
+        "readiness_schema_version": readiness_report.get("schema_version", ""),
+        "readiness_state": readiness_report.get("state", "unknown"),
+        "readiness_counts": readiness_counts,
+        "filters": readiness_report.get("filters")
+        if isinstance(readiness_report.get("filters"), dict)
+        else {},
+        "decision_source": readiness_report.get("decision_source")
+        if isinstance(readiness_report.get("decision_source"), dict)
+        else {},
+        "ocr_provider": normalized_provider,
+        "ocr_model": normalized_model,
+        "request_count": len(requests),
+        "mutation_boundary": _ocr_retry_execution_mutation_boundary(),
+        "files": files,
+    }
+    _write_json(run_dir / "manifest.json", manifest)
+    _write_jsonl(run_dir / "requests.jsonl", requests)
+
+    runner = ocr_runner or (
+        lambda request: _run_default_ocr_retry_request(
+            request,
+            ocr_provider=normalized_provider,
+            ocr_model=normalized_model,
+            ocr_prompt=normalized_prompt,
+        )
+    )
+    responses: list[dict[str, Any]] = []
+    stop_reason = ""
+    for request in requests:
+        try:
+            responses.append(
+                _normalize_ocr_retry_response(
+                    request=request,
+                    raw_response=runner(request),
+                )
+            )
+        except Exception as exc:  # noqa: BLE001 - provider errors must be recorded
+            response = _error_ocr_retry_response(request=request, exc=exc)
+            responses.append(response)
+            if response["status"] in {"rate_limited", "provider_unavailable"}:
+                stop_reason = str(response["status"])
+                break
+
+    _write_jsonl(run_dir / "responses.jsonl", responses)
+    succeeded = sum(1 for response in responses if response.get("status") == "ok")
+    failed = len(responses) - succeeded
+    skipped = len(requests) - len(responses)
+    state = "completed"
+    if failed and succeeded:
+        state = "partial_failure"
+    elif failed:
+        state = "failed"
+    summary = {
+        "schema_version": OCR_RETRY_EXECUTION_SCHEMA_VERSION,
+        "run_id": actual_run_id,
+        "state": state,
+        "execution_mode": "local_bundle",
+        "selection_path": str(resolved_selection_path),
+        "selection_fingerprint": manifest["selection_fingerprint"],
+        "readiness_schema_version": manifest["readiness_schema_version"],
+        "readiness_state": readiness_report.get("state", "unknown"),
+        "ocr_provider": normalized_provider,
+        "ocr_model": normalized_model,
+        "counts": {
+            "readiness_items": _int_value(readiness_counts.get("readiness_items")),
+            "executable_items": _int_value(readiness_counts.get("executable_items")),
+            "requests": len(requests),
+            "responses": len(responses),
+            "succeeded": succeeded,
+            "failed": failed,
+            "skipped_after_stop": skipped,
+            "context_only_skipped": _int_value(
+                readiness_counts.get("context_only_items")
+            ),
+        },
+        "stop_reason": stop_reason,
+        "mutation_boundary": _ocr_retry_execution_mutation_boundary(),
+        "output": {
+            "written": True,
+            "root": str(resolved_execution_root),
+            "run_dir": str(run_dir),
+            "files": files,
+        },
+    }
+    _write_json(run_dir / "summary.json", summary)
+    return summary
+
+
 def _health_state(
     *,
     freshness: dict[str, Any],
@@ -6253,6 +6928,54 @@ def format_ocr_retry_execution_readiness_report(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def format_ocr_retry_execution_report(report: dict[str, Any]) -> str:
+    counts = report.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+    output = report.get("output")
+    if not isinstance(output, dict):
+        output = {}
+    mutation = report.get("mutation_boundary")
+    if not isinstance(mutation, dict):
+        mutation = {}
+
+    lines = [
+        "manual eval OCR retry execution: "
+        f"state={report.get('state', 'unknown')} "
+        f"readiness={report.get('readiness_state', 'unknown')} "
+        f"provider={report.get('ocr_provider') or 'unknown'} "
+        f"model={report.get('ocr_model') or 'unknown'} "
+        f"readiness_items={_int_value(counts.get('readiness_items'))} "
+        f"executable={_int_value(counts.get('executable_items'))} "
+        f"requests={_int_value(counts.get('requests'))} "
+        f"responses={_int_value(counts.get('responses'))} "
+        f"succeeded={_int_value(counts.get('succeeded'))} "
+        f"failed={_int_value(counts.get('failed'))} "
+        f"context_only_skipped={_int_value(counts.get('context_only_skipped'))} "
+        f"warehouse_mutation={mutation.get('manual_eval_warehouse') or 'none'} "
+        f"output={output.get('run_dir') or 'none'}",
+    ]
+    stop_reason = str(report.get("stop_reason") or "")
+    if stop_reason:
+        lines.append(f"stop_reason: {stop_reason}")
+    blockers = report.get("execution_blockers")
+    if isinstance(blockers, list) and blockers:
+        lines.append("execution_blockers:")
+        for blocker in blockers:
+            if not isinstance(blocker, dict):
+                continue
+            lines.append(
+                "- "
+                f"code={blocker.get('code') or 'unknown'} "
+                f"detail={blocker.get('detail') or ''}"
+            )
+    warnings = report.get("warnings")
+    if isinstance(warnings, list) and warnings:
+        lines.append("warnings:")
+        lines.extend(f"- {str(item)}" for item in warnings)
+    return "\n".join(lines)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Print read-only manual eval warehouse health signals.",
@@ -6338,9 +7061,40 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Print read-only OCR retry execution readiness for selected decisions.",
     )
     parser.add_argument(
+        "--ocr-retry-execute",
+        action="store_true",
+        help="Run guarded OCR retry execution into a local ignored bundle.",
+    )
+    parser.add_argument(
         "--selection-path",
         default="",
         help="Path to a local OCR retry human-selection decision JSON file.",
+    )
+    parser.add_argument(
+        "--confirm",
+        default="",
+        help="Required confirmation token for OCR retry execution.",
+    )
+    parser.add_argument(
+        "--execution-dir",
+        default="",
+        help="Root directory for local OCR retry execution run bundles.",
+    )
+    parser.add_argument(
+        "--ocr-provider",
+        choices=("scaffold", "openai"),
+        default=os.getenv("POLINKO_OCR_PROVIDER", "scaffold"),
+        help="OCR provider for guarded retry execution.",
+    )
+    parser.add_argument(
+        "--ocr-model",
+        default=os.getenv("POLINKO_OCR_MODEL", DEFAULT_OCR_RETRY_MODEL),
+        help="OCR model for guarded retry execution.",
+    )
+    parser.add_argument(
+        "--ocr-prompt",
+        default=os.getenv("POLINKO_OCR_PROMPT", DEFAULT_OCR_RETRY_PROMPT),
+        help="OCR prompt for guarded retry execution.",
     )
     parser.add_argument(
         "--output-path",
@@ -6435,6 +7189,34 @@ def main() -> int:
         else:
             print(format_ocr_retry_execution_readiness_report(report))
         return 0
+
+    if args.ocr_retry_execute:
+        report = write_ocr_retry_execution_bundle(
+            db_path=db_path,
+            selection_path=Path(args.selection_path)
+            if str(args.selection_path).strip()
+            else None,
+            confirm_token=str(args.confirm or ""),
+            outcome=args.outcome or "partial",
+            cohort=args.cohort or "ocr_retry_evidence",
+            limit=max(1, args.limit),
+            artifact_ids=args.artifact_id,
+            execution_dir=Path(args.execution_dir)
+            if str(args.execution_dir).strip()
+            else None,
+            ocr_provider=str(args.ocr_provider or "scaffold"),
+            ocr_model=str(args.ocr_model or DEFAULT_OCR_RETRY_MODEL),
+            ocr_prompt=str(args.ocr_prompt or DEFAULT_OCR_RETRY_PROMPT),
+        )
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            print(format_ocr_retry_execution_report(report))
+        if report.get("state") == "completed":
+            return 0
+        if report.get("state") in {"partial_failure", "failed"}:
+            return 1
+        return 2
 
     if args.ocr_retry_selection_validate:
         report = build_ocr_retry_selection_validation_report(

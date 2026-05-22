@@ -1483,3 +1483,23 @@ or branch history instead.
   and rollback story are reviewed would blur the refactor boundary. This keeps
   live OCR/eval execution pinned while making the next implementation kernel
   precise.
+
+## D-102: Implement OCR retry execution as a local bundle first
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `execution_gate`, `local_bundle`, `rollback`
+- Human-led: The human lead approved the next kernel after the execution-gate
+  design while keeping eval runs out of scope.
+- Decision: `make manual-evals-ocr-retry-execute` and
+  `make manualdb-ocr-retry-execute` now execute selected OCR retry artifacts
+  only into ignored local bundles under `.local/manual_eval_runs/ocr_retry/`.
+  The command requires `SELECTION_PATH=<path>` and
+  `CONFIRM=ocr-retry-execute`, recomputes validation, apply-preview, and
+  execution readiness in-process, skips `context_only` selections, records
+  request/response evidence, and keeps feedback closure, live eval writes,
+  `manual_evals.db` refresh, and warehouse mutation out of scope.
+- Why: The next safest step after readiness is a reversible local artifact
+  bundle, not direct warehouse mutation. This gives the operator concrete OCR
+  retry evidence to inspect while preserving the exact feedback and eval
+  boundaries already established by the manual eval workbench.

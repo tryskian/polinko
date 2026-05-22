@@ -153,6 +153,8 @@ class OcrLaneInventoryTests(unittest.TestCase):
         gitignore = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
 
         self.assertIn(".local/notebooks/", gitignore)
+        self.assertIn(".local/manual_eval_decisions/", gitignore)
+        self.assertIn(".local/manual_eval_runs/", gitignore)
 
 
 if __name__ == "__main__":

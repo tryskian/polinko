@@ -213,13 +213,15 @@ Last updated: 2026-05-21
     `schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`
   - OCR retry execution readiness requires apply-preview `state=ok`, checks
     selected `rerun_input` and `curated_case` artifacts for existing source
-    files and payload-only command previews, and stays blocked until a separate
-    explicit execution kernel runs OCR, closes feedback, writes live eval rows,
-    or mutates the warehouse
-  - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` defines the designed-only OCR
-    retry execution gate shape, including required confirmation, in-process
-    readiness recomputation, local ignored run-bundle output, rollback, and
-    failure handling; no runnable retry execution target exists yet
+    files and payload-only command previews
+  - `make manual-evals-ocr-retry-execute` is the local-bundle OCR retry
+    executor; it requires `SELECTION_PATH=<path>` plus
+    `CONFIRM=ocr-retry-execute`, recomputes validation/apply-preview/readiness
+    in-process, writes ignored run bundles under
+    `.local/manual_eval_runs/ocr_retry/`, and does not close feedback, write
+    live eval rows, refresh `manual_evals.db`, or mutate the warehouse
+  - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` defines the local-bundle OCR
+    retry executor boundary, including rollback and failure handling
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then
@@ -239,8 +241,9 @@ Last updated: 2026-05-21
   - OCR remains one mature method lane inside the broader project
   - OCR is stabilized on the current image set, with broader
     generalization pressure as the next kernel
-  - live OCR/eval execution is pinned until an explicit resume decision; the
-    current OCR work surface is read-only tooling and docs alignment
+  - live eval execution is pinned until an explicit resume decision; the
+    current OCR work surface is read-only inventory plus guarded local-bundle
+    retry execution
   - OCR intake now uses transcript-mined episodes plus OCR-ready
     generalization candidates
   - `make ocr-inventory` prints a read-only map of tracked OCR cases plus

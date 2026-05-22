@@ -13,8 +13,8 @@ This page is the structural map of the tracked system.
 - Use `docs/runtime/LOCAL_TOOLING.md` for local operator tooling patterns that
   generate ignored inputs, validate them, and preview application before any
   execution gate.
-- Use `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` for the designed-only OCR
-  retry execution gate contract before a runnable implementation exists.
+- Use `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` for the local-bundle OCR retry
+  execution gate contract.
 
 ## Top-Level Map
 
@@ -159,7 +159,7 @@ This page is the structural map of the tracked system.
   - local inventory/status, operator input, validation, preview, and
     execution-gate contract
 - `OCR_RETRY_EXECUTION_GATE`
-  - designed-only OCR retry execution gate shape, mutation boundary, and
+  - local-bundle OCR retry execution gate shape, mutation boundary, and
     rollback contract
 - local `SESSION_HANDOFF`
   - active slice and next-session carryover

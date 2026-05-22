@@ -55,6 +55,8 @@ _virtualenv.py
 .local/dashboard/
 .local/eval_cases/
 .local/eval_runs/
+.local/manual_eval_decisions/
+.local/manual_eval_runs/
 .local/logs/
 .local/legacy_eval/
 .local/notebooks/
