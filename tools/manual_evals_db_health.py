@@ -8266,6 +8266,16 @@ def _format_plan_thumbnail(value: object) -> str:
     return f"{_int_value(value.get('width'))}x{_int_value(value.get('height'))}"
 
 
+def _format_terminal_source_path(value: object) -> str:
+    raw_path = str(value or "").strip()
+    if not raw_path:
+        return "none"
+    path = Path(raw_path).expanduser()
+    if path.is_absolute():
+        return path.name or "none"
+    return raw_path
+
+
 def _format_plan_artifact_line(item: dict[str, Any]) -> str:
     preview = _truncate_text(item.get("ocr_text_preview"), max_chars=80)
     return (
@@ -8276,7 +8286,7 @@ def _format_plan_artifact_line(item: dict[str, Any]) -> str:
         f"ocr={item.get('ocr_run_id') or 'none'} "
         f"source_image={item.get('source_image_name') or 'none'} "
         f"thumbnail={_format_plan_thumbnail(item.get('thumbnail'))} "
-        f"source_path={item.get('resolved_path') or 'none'} "
+        f"source_path={_format_terminal_source_path(item.get('resolved_path'))} "
         f"ocr_preview={preview or 'none'}"
     )
 
@@ -8394,7 +8404,8 @@ def format_ocr_retry_rerun_plan_report(report: dict[str, Any]) -> str:
                     "    payload="
                     f"artifact_id={payload.get('artifact_id') or 'none'} "
                     f"operation={payload.get('operation') or 'unknown'} "
-                    f"source_path={payload.get('resolved_path') or 'none'}"
+                    "source_path="
+                    f"{_format_terminal_source_path(payload.get('resolved_path'))}"
                 )
     if counts.get("limit_applied"):
         lines.append("limit_applied: true")
@@ -8431,7 +8442,7 @@ def _format_selection_candidate_line(item: dict[str, Any]) -> str:
         f"ocr={item.get('ocr_run_id') or 'none'} "
         f"source_image={item.get('source_image_name') or 'none'} "
         f"thumbnail={_format_plan_thumbnail(item.get('thumbnail'))} "
-        f"source_path={item.get('resolved_path') or 'none'} "
+        f"source_path={_format_terminal_source_path(item.get('resolved_path'))} "
         f"ocr_preview={preview or 'none'}"
     )
 
@@ -8524,7 +8535,8 @@ def format_ocr_retry_selection_review_report(report: dict[str, Any]) -> str:
                 "  readiness="
                 f"{readiness.get('state') or 'unknown'} "
                 f"flags={_format_readiness_flags(readiness)}",
-                f"  source_path={item.get('resolved_path') or 'none'}",
+                "  source_path="
+                f"{_format_terminal_source_path(item.get('resolved_path'))}",
                 "  source_preview="
                 f"{_format_plan_source_preview(item.get('source_preview'))}",
             ]
@@ -8571,7 +8583,7 @@ def _format_template_candidate_line(item: dict[str, Any]) -> str:
         f"preview_only={'yes' if item.get('preview_only') else 'no'} "
         f"source_image={item.get('source_image_name') or 'none'} "
         f"thumbnail={_format_plan_thumbnail(item.get('thumbnail'))} "
-        f"source_path={item.get('resolved_path') or 'none'} "
+        f"source_path={_format_terminal_source_path(item.get('resolved_path'))} "
         f"ocr_preview={preview or 'none'}"
     )
 
@@ -8666,7 +8678,8 @@ def format_ocr_retry_selection_template_report(report: dict[str, Any]) -> str:
                 "  readiness="
                 f"{readiness.get('state') or 'unknown'} "
                 f"flags={_format_readiness_flags(readiness)}",
-                f"  source_path={item.get('resolved_path') or 'none'}",
+                "  source_path="
+                f"{_format_terminal_source_path(item.get('resolved_path'))}",
                 "  source_preview="
                 f"{_format_plan_source_preview(item.get('source_preview'))}",
                 "  fill_template="
@@ -8853,7 +8866,7 @@ def format_ocr_retry_selection_validation_report(report: dict[str, Any]) -> str:
             "candidate_artifacts="
             f"{_format_validation_artifact_ids(item.get('candidate_artifact_ids'))} "
             f"source_image={item.get('source_image_name') or 'none'} "
-            f"source_path={item.get('resolved_path') or 'none'} "
+            f"source_path={_format_terminal_source_path(item.get('resolved_path'))} "
             f"preview_only={'yes' if item.get('preview_only') else 'no'}"
         )
     if counts.get("limit_applied"):
@@ -8878,7 +8891,7 @@ def _format_apply_selected_artifact_line(item: dict[str, Any]) -> str:
         f"preview_only={'yes' if item.get('preview_only') else 'no'} "
         f"source_image={item.get('source_image_name') or 'none'} "
         f"thumbnail={_format_plan_thumbnail(item.get('thumbnail'))} "
-        f"source_path={item.get('resolved_path') or 'none'} "
+        f"source_path={_format_terminal_source_path(item.get('resolved_path'))} "
         f"command={command.get('mode') or 'payload_only'} "
         f"ocr_preview={preview or 'none'}"
     )
@@ -8979,7 +8992,7 @@ def format_ocr_retry_selection_apply_preview_report(report: dict[str, Any]) -> s
                 "selected_artifacts="
                 f"{_format_validation_artifact_ids(item.get('selected_artifact_ids'))} "
                 f"source_image={item.get('source_image_name') or 'none'} "
-                f"source_path={item.get('resolved_path') or 'none'} "
+                f"source_path={_format_terminal_source_path(item.get('resolved_path'))} "
                 f"mutation={item.get('mutation') or 'none'} "
                 f"execution={item.get('execution') or 'none'} "
                 f"preview_only={'yes' if item.get('preview_only') else 'no'}"
@@ -9015,7 +9028,7 @@ def _format_execution_readiness_artifact(item: dict[str, Any]) -> str:
         f"source_exists={'yes' if item.get('source_file_exists') else 'no'} "
         f"ocr={item.get('ocr_run_id') or 'none'} "
         f"source_image={item.get('source_image_name') or 'none'} "
-        f"source_path={item.get('resolved_path') or 'none'} "
+        f"source_path={_format_terminal_source_path(item.get('resolved_path'))} "
         f"operation={payload.get('operation') or 'none'} "
         f"command={command.get('mode') or 'payload_only'}"
     )
@@ -9109,7 +9122,7 @@ def format_ocr_retry_execution_readiness_report(report: dict[str, Any]) -> str:
                 "selected_artifacts="
                 f"{_format_validation_artifact_ids(item.get('selected_artifact_ids'))} "
                 f"source_image={item.get('source_image_name') or 'none'} "
-                f"source_path={item.get('resolved_path') or 'none'} "
+                f"source_path={_format_terminal_source_path(item.get('resolved_path'))} "
                 f"gate={item.get('execution_gate') or 'none'} "
                 f"mutation={item.get('mutation') or 'none'} "
                 f"execution={item.get('execution') or 'none'} "
