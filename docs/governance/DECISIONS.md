@@ -1613,3 +1613,27 @@ or branch history instead.
   surface, so it needs a read-only post-apply verifier before manual restore
   decisions. Keeping verification separate from apply preserves backup
   confidence without adding another writer.
+
+## D-108: Restore OCR retry feedback closure from verified apply backups
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback_closure`, `restore`, `backup_first`
+- Human-led: The human lead chose to add the restore path before any further
+  feedback-closure application, treating rollback tooling as the safest next
+  kernel.
+- Decision: `make manual-evals-ocr-retry-feedback-closure-restore-preview` and
+  `make manualdb-ocr-retry-feedback-closure-restore-preview` now inspect one
+  apply backup with `BACKUP_DIR=<path>` without mutation. The guarded restore
+  targets, `make manual-evals-ocr-retry-feedback-closure-restore` and
+  `make manualdb-ocr-retry-feedback-closure-restore`, require
+  `BACKUP_DIR=<path>` and `CONFIRM=ocr-retry-feedback-closure-restore`, emit
+  `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_restore.v1`,
+  write a pre-restore backup under
+  `.local_archive/manual-evals-feedback-closure-restore-<timestamp>/`, and
+  restore the whole manual eval warehouse from the verified apply backup.
+- Why: The apply gate already writes backup-first, but a backup is incomplete
+  operationally until the restore path is explicit, tested, and documented.
+  The restore gate keeps rollback guarded and reversible while preserving the
+  exclusions for OCR reruns, eval runs, warehouse refresh, inferred source
+  links, and pulse work.

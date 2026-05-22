@@ -42,6 +42,12 @@ workflow, output surfaces, and tuning knobs.
   - use `make manual-evals-ocr-retry-feedback-closure-apply-report
     RUN_DIR=<path>` to verify backup integrity, backup-open rows, and
     active-closed rows after apply without mutation
+  - use `make manual-evals-ocr-retry-feedback-closure-restore-preview
+    BACKUP_DIR=<path>` to inspect restore readiness without mutation
+  - use `make manual-evals-ocr-retry-feedback-closure-restore
+    BACKUP_DIR=<path> CONFIRM=ocr-retry-feedback-closure-restore` only after
+    restore preview is `ok`; it writes a pre-restore backup before restoring
+    the whole manual eval warehouse from the verified apply backup
   - live eval rows, OCR reruns, warehouse refresh, OCR row mutation, and
     inferred source links remain out of scope for the OCR retry execution gate
 

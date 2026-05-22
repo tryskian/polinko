@@ -48,8 +48,14 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
             "`CONFIRM=ocr-retry-feedback-closure-apply`",
             "`make manual-evals-ocr-retry-feedback-closure-apply-report`",
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`",
+            "`make manual-evals-ocr-retry-feedback-closure-restore-preview`",
+            "`make manual-evals-ocr-retry-feedback-closure-restore`",
+            "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_restore.v1`",
+            "`CONFIRM=ocr-retry-feedback-closure-restore`",
             ".local_archive/manual-evals-feedback-closure-apply-<timestamp>/",
+            ".local_archive/manual-evals-feedback-closure-restore-<timestamp>/",
             "It must not write live eval rows, run OCR, refresh `manual_evals.db`",
+            "whole-database rollback",
             "selection validation reports `state=ok`",
             "selection apply-preview reports `state=ok`",
             "execution readiness reports `state=ready`",
@@ -89,6 +95,7 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
                 "make manual-evals-ocr-retry-execution-report",
                 "make manual-evals-ocr-retry-feedback-closure-preview",
                 "make manual-evals-ocr-retry-feedback-closure-apply",
+                "make manual-evals-ocr-retry-feedback-closure-restore",
                 "backup-first",
             ),
             "docs/governance/STATE.md": (
@@ -121,6 +128,8 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
         self.assertIn("--ocr-retry-feedback-closure-preview", health_tool)
         self.assertIn("--ocr-retry-feedback-closure-apply", health_tool)
         self.assertIn("--ocr-retry-feedback-closure-apply-report", health_tool)
+        self.assertIn("--ocr-retry-feedback-closure-restore-preview", health_tool)
+        self.assertIn("--ocr-retry-feedback-closure-restore", health_tool)
         self.assertIn("OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION", health_tool)
         self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION", health_tool)
         self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION", health_tool)
@@ -128,11 +137,14 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
             "OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_SCHEMA_VERSION",
             health_tool,
         )
+        self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_SCHEMA_VERSION", health_tool)
         self.assertIn("--confirm", health_tool)
         self.assertIn("OCR_RETRY_EXECUTION_CONFIRM_TOKEN", health_tool)
         self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN", health_tool)
+        self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_CONFIRM_TOKEN", health_tool)
         self.assertIn("CONFIRM=ocr-retry-execute", health_tool)
         self.assertIn("CONFIRM=ocr-retry-feedback-closure-apply", health_tool)
+        self.assertIn("CONFIRM=ocr-retry-feedback-closure-restore", health_tool)
         self.assertIn("manual_eval_warehouse", health_tool)
         self.assertIn("build_ocr_retry_execution_readiness_report", health_tool)
         self.assertIn(
@@ -141,6 +153,14 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
         )
         self.assertIn(
             "manual-evals-ocr-retry-feedback-closure-apply-report",
+            makefile_text,
+        )
+        self.assertIn(
+            "manual-evals-ocr-retry-feedback-closure-restore-preview",
+            makefile_text,
+        )
+        self.assertIn(
+            "manual-evals-ocr-retry-feedback-closure-restore",
             makefile_text,
         )
 
