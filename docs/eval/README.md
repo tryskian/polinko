@@ -73,6 +73,18 @@ notes, exports, and runtime history.
     `make manual-evals-feedback-actionables COHORT=ocr_retry_evidence`
   - combine `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>` for
     terminal-native manual triage filters
+  - preview overlay-hypothesis OCR feedback rows that have no same-session OCR
+    context and whose source response asked for new image evidence with
+    `make manual-evals-no-context-reclassify-preview`
+  - apply that reclassification with
+    `make manual-evals-no-context-reclassify-apply
+    CONFIRM=manual-evals-no-context-reclassify`
+  - overlay reclassification preserves the row as overlay-assisted OCR
+    hypothesis evidence, keeps feedback open, writes a backup under
+    `.local_archive/manual-evals-feedback-no-context-*`, and limits mutation
+    to feedback `recommended_action`, `action_taken`, and `updated_at`
+  - JSON overlay reclassification export uses
+    `schema_version=polinko.manual_eval_no_context_feedback_reclassify.v1`
   - inspect the first OCR retry candidate packet without mutation with
     `make manual-evals-ocr-retry-candidates`
   - JSON OCR retry candidate export uses

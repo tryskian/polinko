@@ -121,6 +121,15 @@ Last updated: 2026-05-21
     `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>` Make variables;
     cohort filtering remains read-only and uses explicit `recommended_action`
     labels
+  - `make manual-evals-no-context-reclassify-preview` previews
+    overlay-hypothesis OCR feedback rows that have no same-session OCR context
+    and whose source response asked for new image evidence, using
+    `schema_version=polinko.manual_eval_no_context_feedback_reclassify.v1`
+  - `make manual-evals-no-context-reclassify-apply` requires
+    `CONFIRM=manual-evals-no-context-reclassify`, keeps matching feedback rows
+    open as overlay-assisted OCR hypothesis evidence, writes a backup under
+    `.local_archive/manual-evals-feedback-no-context-*`, and limits mutation
+    to feedback `recommended_action`, `action_taken`, and `updated_at`
   - `make manual-evals-ocr-retry-candidates` prints a read-only OCR retry
     candidate packet for selected open feedback, grouped by source session and
     latest same-session OCR run, using

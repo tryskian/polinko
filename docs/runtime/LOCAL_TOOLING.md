@@ -135,6 +135,19 @@ operator input tooling:
   - writes a pre-restore backup under
     `.local_archive/manual-evals-feedback-closure-restore-<timestamp>/`
   - restores the whole manual eval warehouse from the verified apply backup
+- `make manual-evals-no-context-reclassify-preview`
+  - previews overlay-hypothesis OCR feedback rows that have no same-session
+    OCR context and whose source response asked for new image evidence
+  - emits
+    `schema_version=polinko.manual_eval_no_context_feedback_reclassify.v1`
+  - stays read-only
+- `make manual-evals-no-context-reclassify-apply`
+  - requires `CONFIRM=manual-evals-no-context-reclassify`
+  - writes a backup-first warehouse copy under
+    `.local_archive/manual-evals-feedback-no-context-*`
+  - keeps feedback rows open as overlay-assisted OCR hypothesis evidence while
+    mutating only feedback
+    `recommended_action`, `action_taken`, and `updated_at`
 
 The current OCR lane inventory is the reference instance for read-only local
 evidence inspection:

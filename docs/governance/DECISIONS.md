@@ -1637,3 +1637,28 @@ or branch history instead.
   The restore gate keeps rollback guarded and reversible while preserving the
   exclusions for OCR reruns, eval runs, warehouse refresh, inferred source
   links, and pulse work.
+
+## D-109: Preserve overlay-hypothesis OCR feedback without closing it
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `feedback_reclassification`, `ocr`, `backup_first`
+- Human-led: The human lead approved continuing the manual-eval cleanup while
+  keeping eval runs and pulse work out of scope.
+- Decision: `make manual-evals-no-context-reclassify-preview` and
+  `make manualdb-no-context-reclassify-preview` now preview overlay-hypothesis
+  OCR feedback rows that have no same-session OCR context and whose source
+  response asked for new image evidence. The apply targets
+  `make manual-evals-no-context-reclassify-apply` and
+  `make manualdb-no-context-reclassify-apply` require
+  `CONFIRM=manual-evals-no-context-reclassify`, back up the active manual eval
+  warehouse under `.local_archive/manual-evals-feedback-no-context-*`, keep
+  matching feedback rows open, and emit
+  `schema_version=polinko.manual_eval_no_context_feedback_reclassify.v1`.
+- Why: Some human-led overlay experiments were routed into executable OCR retry
+  debt even though the useful evidence is the overlay-assisted OCR hypothesis
+  itself. Reclassification preserves the feedback as open overlay evidence
+  while removing it from the OCR execution queue, and limits mutation to
+  feedback `recommended_action`, `action_taken`, and `updated_at`; it still
+  excludes feedback closure, OCR reruns, eval runs, warehouse refresh, source
+  DB mutation, inferred source links, and pulse work.

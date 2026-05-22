@@ -72,8 +72,18 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                     """
                     UPDATE message_feedback
                     SET status = 'open',
+                        tags_json = ?,
                         recommended_action = 'Retry OCR with a tighter crop and attach fresh image evidence for comparison.'
-                    """
+                    """,
+                    (
+                        json.dumps(
+                            {
+                                "positive": [],
+                                "negative": ["ocr_miss", "grounding_gap"],
+                                "all": ["ocr_miss", "grounding_gap"],
+                            }
+                        ),
+                    ),
                 )
                 conn.execute(
                     """
@@ -255,6 +265,7 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             self.assertEqual(actionable["status"], "open")
             self.assertEqual(actionable["session_id"], "chat-1")
             self.assertEqual(actionable["message_id"], "m-result-1")
+            self.assertEqual(actionable["tags"], ["ocr_miss", "grounding_gap"])
             self.assertEqual(actionable["note"], "manual note")
             self.assertEqual(
                 actionable["recommended_action"],
@@ -297,6 +308,7 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 "image evidence for comparison.",
                 actionables_summary,
             )
+            self.assertIn("tags=ocr_miss, grounding_gap", actionables_summary)
             self.assertIn(
                 "ocr_context: linked_to_ocr_result=yes same_session_ocr_runs=1",
                 actionables_summary,
