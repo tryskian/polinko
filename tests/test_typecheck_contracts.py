@@ -33,6 +33,20 @@ class TypecheckContractTests(unittest.TestCase):
         self.assertIn("ci-python-type-check", closeout)
         self.assertIn("make type-check", state)
 
+    def test_closeout_enforces_clean_synced_main_first(self) -> None:
+        closeout = _read("tools/end_of_day_routine.sh")
+        git_check = _read("tools/check_end_git_clean.sh")
+        start_reference = _read("docs/runtime/START_END_REFERENCE.md")
+
+        self.assertIn("1/10 end-git-check", closeout)
+        self.assertIn("make --no-print-directory end-git-check", closeout)
+        self.assertLess(
+            closeout.index("end-git-check"), closeout.index("transcript-fix")
+        )
+        self.assertIn("expected branch $BRANCH", git_check)
+        self.assertIn("rerunning make end", git_check)
+        self.assertIn("current branch must be `main`", start_reference)
+
     def test_pyright_is_repo_owned_advisory_editor_check(self) -> None:
         package = json.loads(_read("package.json"))
         checks_makefile = _read("makefiles/checks.mk")

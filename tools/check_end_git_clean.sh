@@ -7,7 +7,7 @@ REMOTE="${END_GIT_REMOTE:-origin}"
 fail() {
 	echo "end-git-check: FAIL" >&2
 	echo "  $1" >&2
-	echo "  finish by merging the feature branch, switching to $BRANCH, pulling --ff-only, and rerunning make end-git-check" >&2
+	echo "  finish by merging the feature branch, switching to $BRANCH, pulling --ff-only, and rerunning make end" >&2
 	exit 1
 }
 

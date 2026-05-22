@@ -1687,3 +1687,19 @@ or branch history instead.
   removes stale/coarse cohort labels from future OCR retry work, and preserves
   reversibility without mutating feedback closure state, OCR rows, eval rows,
   source history, inferred source links, warehouse refreshes, or pulse work.
+
+## D-111: Make `make end` enforce clean synced main
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `closeout`, `git`, `main`, `safety_gate`
+- Human-led: The human lead caught that `make end` could pass on a feature
+  branch, which contradicted the repo closeout contract.
+- Decision: `make end` now runs `make end-git-check` as its first step.
+  Closeout fails unless the current branch is `main`, the working tree is
+  clean, and local `main` is synced with `origin/main`. `make end-git-check`
+  remains available as a standalone git-only check.
+- Why: Branch-local validation and final closeout are different states. A
+  feature branch can pass local quality checks, but the end-of-day closeout
+  should only pass after the protected-main merge flow has completed and the
+  local workspace is back on clean synced `main`.

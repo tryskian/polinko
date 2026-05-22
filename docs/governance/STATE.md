@@ -371,7 +371,9 @@ Last updated: 2026-05-21
   - `PACKAGE_BOUNDARY` holds the Python package-boundary contract
   - `make package-install-check` verifies the editable-install rail
   - local `SESSION_HANDOFF` holds the active slice
-  - `make end` now mirrors the legacy `make eod` closeout routine directly
+  - `make end` now runs the clean-main git check first, then the technical
+    closeout routine; feature branches use branch-local validation targets
+    until the protected-main merge flow is complete
 
 ## Active Priorities
 
@@ -414,6 +416,6 @@ Last updated: 2026-05-21
 - `make test`
 - `make security-checks`
 - `make ci` when checking the local equivalent of GitHub CI job targets
-- `make end`
+- `make end` after merge and sync on clean `main`
 - `make end-docs-check` when validating current-truth freshness explicitly
-- `make end-git-check` after merge and sync
+- `make end-git-check` as the standalone clean-main check
