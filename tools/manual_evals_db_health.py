@@ -6843,7 +6843,7 @@ def build_ocr_retry_feedback_closure_restore_preview_report(
                         f"backup feedback {feedback_id} is missing.",
                     )
                 )
-            elif backup_status != "open":
+            elif not _feedback_status_is_open(backup_status):
                 blockers.append(
                     _feedback_closure_restore_blocker(
                         "backup_feedback_not_open",
@@ -6858,7 +6858,7 @@ def build_ocr_retry_feedback_closure_restore_preview_report(
                         f"active feedback {feedback_id} is missing.",
                     )
                 )
-            elif active_status != "closed":
+            elif not _feedback_status_is_closed(active_status):
                 blockers.append(
                     _feedback_closure_restore_blocker(
                         "active_feedback_not_closed",
@@ -7126,7 +7126,7 @@ def write_ocr_retry_feedback_closure_restore(
                 restored_status = str(
                     restored_rows_by_id.get(feedback_id, {}).get("status") or "missing"
                 )
-                if restored_status != "open":
+                if not _feedback_status_is_open(restored_status):
                     blockers.append(
                         _feedback_closure_restore_blocker(
                             "restored_feedback_not_open",

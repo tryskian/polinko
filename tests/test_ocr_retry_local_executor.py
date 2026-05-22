@@ -775,7 +775,7 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
             )
             self.assertNotIn(tmpdir, verification_summary)
 
-    def test_feedback_closure_apply_accepts_uppercase_open_status(
+    def test_feedback_closure_apply_and_restore_accept_uppercase_statuses(
         self,
     ) -> None:
         with TemporaryDirectory() as tmpdir:
@@ -811,6 +811,15 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
                 db_path=output_db,
                 run_dir=tmp / "runs" / "run-closure-uppercase",
             )
+            backup_dir = (
+                tmp
+                / "archive"
+                / ("manual-evals-feedback-closure-apply-20260521T010203Z")
+            )
+            restore_preview = build_ocr_retry_feedback_closure_restore_preview_report(
+                db_path=output_db,
+                backup_dir=backup_dir,
+            )
 
             self.assertEqual(report["state"], "applied")
             self.assertEqual(report["apply_items"][0]["status_before"], "OPEN")
@@ -827,6 +836,22 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
                 verification["feedback_rows"][0]["backup_status"],
                 "OPEN",
             )
+            self.assertEqual(restore_preview["state"], "ok")
+            self.assertEqual(restore_preview["counts"]["active_closed_feedback"], 1)
+            self.assertEqual(restore_preview["counts"]["backup_open_feedback"], 1)
+
+            restore = write_ocr_retry_feedback_closure_restore(
+                db_path=output_db,
+                backup_dir=backup_dir,
+                confirm_token=OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_CONFIRM_TOKEN,
+                restore_root=tmp / "restore",
+                restored_at="20260521T020304Z",
+            )
+            self.assertEqual(restore["state"], "restored")
+            self.assertEqual(restore["restore_items"][0]["status_before"], "CLOSED")
+            self.assertEqual(restore["restore_items"][0]["status_after"], "OPEN")
+            self.assertEqual(restore["counts"]["restored_feedback_rows"], 1)
+            self.assertEqual(_feedback_statuses(output_db), ["OPEN"])
 
     def test_feedback_closure_restore_preview_and_restore_from_apply_backup(
         self,
