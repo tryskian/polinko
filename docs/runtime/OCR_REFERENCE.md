@@ -34,6 +34,8 @@ workflow, output surfaces, and tuning knobs.
   - use `make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`
     to preview feedback closure from an inspected bundle without changing
     feedback status, eval rows, or `manual_evals.db`
+  - feedback-closure apply is designed-only; no apply target exists until the
+    backup-first mutation and restore contract is implemented
   - feedback closure, live eval rows, and manual eval warehouse mutation remain
     out of scope for the OCR retry execution gate
 

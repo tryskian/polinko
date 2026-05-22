@@ -107,6 +107,10 @@ operator input tooling:
     feedback rows would be closeable
   - stays read-only and does not close feedback, write action-taken text,
     refresh `manual_evals.db`, write eval rows, or mutate the warehouse
+- feedback-closure apply is not implemented yet
+  - no `manual-evals-ocr-retry-feedback-closure-apply` target exists
+  - the designed future gate requires a backup-first warehouse copy before any
+    feedback row update
 
 The current OCR lane inventory is the reference instance for read-only local
 evidence inspection:

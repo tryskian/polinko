@@ -334,6 +334,14 @@ Use this doc for operator procedure.
     mutating eval data
   - groups OCR retry responses by feedback ID, proposes closeable feedback
     items only as preview data, and marks mixed provider status as `attention`
+- OCR retry feedback-closure apply:
+  - designed-only; no
+    `manual-evals-ocr-retry-feedback-closure-apply` target exists yet
+  - proposed future command requires `RUN_DIR=<path>` plus
+    `CONFIRM=ocr-retry-feedback-closure-apply`
+  - must back up `.local/runtime_dbs/active/manual_evals.db` under
+    `.local_archive/manual-evals-feedback-closure-apply-<timestamp>/` before
+    any feedback row update
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

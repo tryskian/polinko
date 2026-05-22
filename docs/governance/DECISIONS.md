@@ -1546,3 +1546,27 @@ or branch history instead.
   OCR evidence while preserving the rule that feedback status, action-taken
   text, live eval rows, and `manual_evals.db` remain unchanged until an
   explicit future apply gate exists.
+
+## D-105: Design OCR retry feedback closure as backup-first apply
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback_closure`, `backup_first`,
+  `design_only`
+- Human-led: The human lead approved continuing the OCR retry tooling sequence,
+  with implementation discipline kept ahead of any database mutation.
+- Decision: `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` now defines the future
+  feedback-closure apply gate as design-only. The proposed command shape is
+  `make manual-evals-ocr-retry-feedback-closure-apply RUN_DIR=<path>
+  CONFIRM=ocr-retry-feedback-closure-apply`, with a
+  `manualdb-ocr-retry-feedback-closure-apply` alias. The gate may be
+  implemented only after the inspected execution bundle and feedback-closure
+  preview both report `state=ok`, every closure item is `ready`, target
+  feedback rows are still open, and the current manual eval warehouse has been
+  copied under
+  `.local_archive/manual-evals-feedback-closure-apply-<timestamp>/`.
+- Why: Closing feedback changes the manual eval warehouse, so the apply path
+  needs a backup, restore story, confirmation token, and exact mutation scope
+  before code exists. The designed scope permits only feedback `status`,
+  `action_taken`, and `updated_at` updates, and still excludes live eval rows,
+  OCR reruns, warehouse refresh, OCR row mutation, and inferred source links.
