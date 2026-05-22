@@ -322,6 +322,8 @@ class ResearchModelContractTests(unittest.TestCase):
             ".local_archive/manual-evals-feedback-closure-apply-<timestamp>/",
             "## D-106: Implement OCR retry feedback closure as backup-first apply",
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`",
+            "## D-107: Verify OCR retry feedback closure after apply",
+            "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`",
         ):
             self.assertIn(expected, decisions)
 
@@ -402,6 +404,8 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-feedback-closure-apply` applies OCR retry",
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`",
             "`CONFIRM=ocr-retry-feedback-closure-apply`",
+            "`make manual-evals-ocr-retry-feedback-closure-apply-report`",
+            "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`",
             ".local_archive/manual-evals-feedback-closure-apply-<timestamp>/",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
@@ -559,6 +563,14 @@ class ResearchModelContractTests(unittest.TestCase):
         )
         self.assertIn(
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`",
+            eval_map,
+        )
+        self.assertIn(
+            "`make manual-evals-ocr-retry-feedback-closure-apply-report RUN_DIR=<path>`",
+            eval_map,
+        )
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`",
             eval_map,
         )
         self.assertIn("backup-first", eval_map)

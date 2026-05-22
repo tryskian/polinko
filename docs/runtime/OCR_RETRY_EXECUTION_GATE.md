@@ -186,6 +186,23 @@ Rollback for the apply gate is database restore:
 3. Re-run `make manual-evals-db-health` and
    `make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`.
 
+## Feedback-Closure Apply Report
+
+The apply-report target is read-only:
+
+- target:
+  - `make manual-evals-ocr-retry-feedback-closure-apply-report`
+  - alias: `make manualdb-ocr-retry-feedback-closure-apply-report`
+- required input: `RUN_DIR=<path>`
+- JSON schema:
+  `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`
+
+It reads `feedback_closure_apply_summary.json` from the run bundle, verifies
+the backup DB integrity check is `ok`, verifies backup feedback rows remain
+open, verifies active feedback rows are closed, and verifies action-taken text
+is present. It must not restore from backup, reopen feedback, close feedback,
+write live eval rows, run OCR, or mutate the manual eval warehouse.
+
 ## Rollback Story
 
 Rollback is local-file cleanup:

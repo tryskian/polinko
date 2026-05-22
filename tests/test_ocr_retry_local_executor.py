@@ -11,15 +11,18 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION,
     OCR_RETRY_EXECUTION_SCHEMA_VERSION,
     OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN,
+    OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_SCHEMA_VERSION,
     OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION,
     OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION,
     OcrRetryExecutionProviderError,
     build_ocr_retry_execution_bundle_report,
+    build_ocr_retry_feedback_closure_apply_report,
     build_ocr_retry_feedback_closure_preview_report,
     build_ocr_retry_selection_template_report,
     format_ocr_retry_execution_bundle_report,
     format_ocr_retry_execution_report,
     format_ocr_retry_feedback_closure_apply_report,
+    format_ocr_retry_feedback_closure_apply_verification_report,
     format_ocr_retry_feedback_closure_preview_report,
     write_ocr_retry_execution_bundle,
     write_ocr_retry_feedback_closure_apply,
@@ -659,6 +662,110 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
                 summary,
             )
             self.assertNotIn(tmpdir, summary)
+
+            verification = build_ocr_retry_feedback_closure_apply_report(
+                db_path=output_db,
+                run_dir=tmp / "runs" / "run-closure-apply",
+            )
+            verification_summary = (
+                format_ocr_retry_feedback_closure_apply_verification_report(
+                    verification
+                )
+            )
+            self.assertEqual(
+                verification["schema_version"],
+                OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_SCHEMA_VERSION,
+            )
+            self.assertEqual(verification["state"], "ok")
+            self.assertEqual(verification["counts"]["target_feedback_rows"], 1)
+            self.assertEqual(verification["counts"]["active_closed_feedback"], 1)
+            self.assertEqual(verification["counts"]["backup_open_feedback"], 1)
+            self.assertEqual(verification["counts"]["report_blockers"], 0)
+            self.assertEqual(verification["manual_evals_db"]["integrity_check"], "ok")
+            self.assertEqual(verification["backup"]["integrity_check"], "ok")
+            self.assertEqual(
+                verification["feedback_rows"][0]["active_status"],
+                "closed",
+            )
+            self.assertEqual(
+                verification["feedback_rows"][0]["backup_status"],
+                "open",
+            )
+            self.assertIn(
+                "manual eval OCR retry feedback closure apply report: state=ok "
+                "run=run-closure-apply",
+                verification_summary,
+            )
+            self.assertIn(
+                "backup_dir=manual-evals-feedback-closure-apply-20260521T010203Z",
+                verification_summary,
+            )
+            self.assertNotIn(tmpdir, verification_summary)
+
+    def test_feedback_closure_apply_report_blocks_when_summary_missing(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, _selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            run_dir = tmp / "runs" / "missing-summary"
+            run_dir.mkdir(parents=True)
+
+            report = build_ocr_retry_feedback_closure_apply_report(
+                db_path=output_db,
+                run_dir=run_dir,
+            )
+
+            self.assertEqual(report["state"], "error")
+            self.assertIn(
+                "missing_apply_summary",
+                [blocker["code"] for blocker in report["report_blockers"]],
+            )
+            self.assertEqual(_feedback_statuses(output_db), ["open"])
+
+    def test_feedback_closure_apply_report_flags_active_status_drift(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                run_id="run-closure-report-drift",
+                ocr_runner=lambda request: {
+                    "status": "ok",
+                    "extracted_text": "fresh OCR text",
+                },
+            )
+            write_ocr_retry_feedback_closure_apply(
+                db_path=output_db,
+                run_dir=tmp / "runs" / "run-closure-report-drift",
+                confirm_token=OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN,
+                backup_root=tmp / "archive",
+                applied_at="20260521T010203Z",
+            )
+            with closing(sqlite3.connect(output_db)) as conn:
+                conn.execute("UPDATE feedback SET status = 'open' WHERE id = 1")
+                conn.commit()
+
+            report = build_ocr_retry_feedback_closure_apply_report(
+                db_path=output_db,
+                run_dir=tmp / "runs" / "run-closure-report-drift",
+            )
+
+            self.assertEqual(report["state"], "error")
+            self.assertIn(
+                "active_feedback_not_closed",
+                [blocker["code"] for blocker in report["report_blockers"]],
+            )
+            self.assertEqual(report["counts"]["backup_open_feedback"], 1)
 
     def test_feedback_closure_apply_blocks_when_feedback_is_no_longer_open(
         self,

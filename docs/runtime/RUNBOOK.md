@@ -348,6 +348,13 @@ Use this doc for operator procedure.
   - applies only feedback `status`, `action_taken`, and `updated_at` updates
     after the execution-bundle report and feedback-closure preview are both
     `ok`
+- OCR retry feedback-closure apply report:
+  - `make manual-evals-ocr-retry-feedback-closure-apply-report RUN_DIR=<path>`
+  - reads the local apply summary without mutation
+  - emits
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`
+  - verifies active feedback rows are closed and backup feedback rows remain
+    open before any manual restore decision
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

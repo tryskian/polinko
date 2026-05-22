@@ -1593,3 +1593,23 @@ or branch history instead.
   `action_taken`, and `updated_at`; it still excludes live eval rows, OCR
   reruns, warehouse refresh, OCR row mutation, inferred source links, and pulse
   work.
+
+## D-107: Verify OCR retry feedback closure after apply
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback_closure`, `verification`,
+  `read_only`
+- Human-led: The human lead approved continuing the OCR retry tooling sequence
+  while keeping additional mutation, eval runs, and pulse work out of scope.
+- Decision: `make manual-evals-ocr-retry-feedback-closure-apply-report` and
+  `make manualdb-ocr-retry-feedback-closure-apply-report` now inspect the
+  local apply summary from `RUN_DIR=<path>` without mutation. The report emits
+  `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`,
+  verifies backup DB integrity, verifies backup feedback rows remain open,
+  verifies active feedback rows are closed, and verifies active action-taken
+  text is present.
+- Why: The apply gate is intentionally allowed to mutate a narrow feedback
+  surface, so it needs a read-only post-apply verifier before manual restore
+  decisions. Keeping verification separate from apply preserves backup
+  confidence without adding another writer.
