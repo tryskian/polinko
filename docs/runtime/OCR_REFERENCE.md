@@ -29,15 +29,18 @@ workflow, output surfaces, and tuning knobs.
     it requires `SELECTION_PATH=<path>` plus `CONFIRM=ocr-retry-execute` and
     writes only ignored local run bundles
   - use `make manual-evals-ocr-retry-execution-report RUN_DIR=<path>` to
-    inspect one ignored local OCR retry execution bundle before any future
-    closure or warehouse mutation gate
+    inspect one ignored local OCR retry execution bundle before closure or any
+    warehouse mutation gate
   - use `make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`
     to preview feedback closure from an inspected bundle without changing
     feedback status, eval rows, or `manual_evals.db`
-  - feedback-closure apply is designed-only; no apply target exists until the
-    backup-first mutation and restore contract is implemented
-  - feedback closure, live eval rows, and manual eval warehouse mutation remain
-    out of scope for the OCR retry execution gate
+  - use `make manual-evals-ocr-retry-feedback-closure-apply RUN_DIR=<path>
+    CONFIRM=ocr-retry-feedback-closure-apply` only after the execution bundle
+    and feedback-closure preview are both `ok`
+  - feedback-closure apply creates a backup under `.local_archive/` before
+    updating feedback `status`, `action_taken`, and `updated_at`
+  - live eval rows, OCR reruns, warehouse refresh, OCR row mutation, and
+    inferred source links remain out of scope for the OCR retry execution gate
 
 ## Lane Model
 

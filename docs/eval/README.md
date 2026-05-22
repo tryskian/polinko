@@ -172,18 +172,21 @@ notes, exports, and runtime history.
     `schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`
   - execution-bundle reports verify files, run IDs, request/response counts,
     provider failure status, stop reasons, and the no-warehouse-mutation
-    boundary before any future feedback closure or warehouse mutation
+    boundary before feedback closure or any warehouse mutation
   - preview OCR retry feedback closure without mutation with
     `make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`
   - JSON OCR retry feedback-closure previews use
     `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`
   - feedback-closure previews group successful OCR retry responses by feedback
     ID and keep feedback status, action-taken text, eval rows, and
-    `manual_evals.db` unchanged until a separate apply gate exists
-  - OCR retry feedback-closure apply is designed-only; no
-    `manual-evals-ocr-retry-feedback-closure-apply` target exists yet
-  - the designed apply gate is backup-first and limits future mutation to
-    feedback `status`, `action_taken`, and `updated_at`
+    `manual_evals.db` unchanged
+  - apply OCR retry feedback closure with
+    `make manual-evals-ocr-retry-feedback-closure-apply RUN_DIR=<path>
+    CONFIRM=ocr-retry-feedback-closure-apply`
+  - JSON OCR retry feedback-closure apply reports use
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`
+  - feedback-closure apply is backup-first and limits mutation to feedback
+    `status`, `action_taken`, and `updated_at`
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

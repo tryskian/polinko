@@ -19,7 +19,7 @@ requests, but it does not close feedback, write live eval rows, refresh
 - No manual eval warehouse mutation happens from this gate.
 
 Feedback closure, live eval writes, and warehouse mutation remain separate
-future gates.
+follow-up gates.
 
 ## Command Shape
 
@@ -137,19 +137,21 @@ The preview does not write feedback status, action-taken text, live eval rows,
 or `manual_evals.db`. It also keeps terminal output path-safe by printing run
 ID, directory name, feedback counts, and closure item states only.
 
-## Designed Feedback-Closure Apply Gate
+## Feedback-Closure Apply Gate
 
-The apply gate is designed only. There is no
-`manual-evals-ocr-retry-feedback-closure-apply` Make target yet.
+The feedback-closure apply target is implemented as a backup-first local
+warehouse writer.
 
-When implemented, the apply gate must stay backup-first and explicit:
+It is exposed through:
 
-- proposed target:
+- target:
   - `make manual-evals-ocr-retry-feedback-closure-apply`
   - alias: `make manualdb-ocr-retry-feedback-closure-apply`
 - required inputs:
   - `RUN_DIR=<path>`
   - `CONFIRM=ocr-retry-feedback-closure-apply`
+- JSON schema:
+  `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`
 - required preconditions:
   1. execution bundle report returns `state=ok`
   2. feedback-closure preview returns `state=ok`
@@ -168,10 +170,12 @@ The apply gate may update only the feedback rows named by the preview:
 - `action_taken`
 - `updated_at`
 
-It must not write live eval rows, run OCR, refresh `manual_evals.db`, mutate
-OCR run rows, or infer new source links. It must write a local apply summary
-beside the run bundle and include the backup path, updated feedback IDs, rows
-skipped because they were no longer open, and restore command guidance.
+It blocks without a backup or mutation when confirmation is missing, the bundle
+or preview is not `ok`, the target feedback rows are missing, or any target
+feedback row is no longer open. It must not write live eval rows, run OCR,
+refresh `manual_evals.db`, mutate OCR run rows, or infer new source links. It
+writes a local apply summary beside the run bundle and includes the backup
+path, updated feedback IDs, skipped feedback IDs, and restore command guidance.
 
 Rollback for the apply gate is database restore:
 
@@ -191,9 +195,8 @@ Rollback is local-file cleanup:
 3. Re-run `make manual-evals-ocr-retry-execution-readiness` to confirm the
    source selection still resolves.
 
-If a later kernel adds database mutation, that kernel must add backup-first
-behavior under `.local_archive/` before mutation and document restore steps in
-this file.
+Any additional database mutation gate must add backup-first behavior under
+`.local_archive/` before mutation and document restore steps in this file.
 
 ## Failure Handling
 

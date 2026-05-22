@@ -10,6 +10,8 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
     OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION,
     OCR_RETRY_EXECUTION_SCHEMA_VERSION,
+    OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN,
+    OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION,
     OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION,
     OcrRetryExecutionProviderError,
     build_ocr_retry_execution_bundle_report,
@@ -17,8 +19,10 @@ from tools.manual_evals_db_health import (
     build_ocr_retry_selection_template_report,
     format_ocr_retry_execution_bundle_report,
     format_ocr_retry_execution_report,
+    format_ocr_retry_feedback_closure_apply_report,
     format_ocr_retry_feedback_closure_preview_report,
     write_ocr_retry_execution_bundle,
+    write_ocr_retry_feedback_closure_apply,
 )
 from tests.test_build_manual_evals_db import _PNG_1X1, _init_history_db
 
@@ -123,6 +127,15 @@ def _feedback_statuses(db_path: Path) -> list[str]:
             for row in conn.execute(
                 "SELECT status FROM feedback ORDER BY id"
             ).fetchall()
+        ]
+
+
+def _feedback_rows(db_path: Path) -> list[dict[str, object]]:
+    with closing(sqlite3.connect(db_path)) as conn:
+        conn.row_factory = sqlite3.Row
+        return [
+            dict(row)
+            for row in conn.execute("SELECT * FROM feedback ORDER BY id").fetchall()
         ]
 
 
@@ -497,6 +510,241 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
                 "warehouse_mutation_not_none",
                 [blocker["code"] for blocker in report["preview_blockers"]],
             )
+            self.assertEqual(_feedback_statuses(output_db), ["open"])
+
+    def test_feedback_closure_apply_requires_confirmation_before_backup(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                run_id="run-closure-missing-confirm",
+                ocr_runner=lambda request: {
+                    "status": "ok",
+                    "extracted_text": "fresh OCR text",
+                },
+            )
+
+            report = write_ocr_retry_feedback_closure_apply(
+                db_path=output_db,
+                run_dir=tmp / "runs" / "run-closure-missing-confirm",
+                confirm_token="",
+                backup_root=tmp / "archive",
+                applied_at="20260521T010203Z",
+            )
+
+            self.assertEqual(
+                report["schema_version"],
+                OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION,
+            )
+            self.assertEqual(report["state"], "blocked")
+            self.assertIn(
+                "missing_confirmation",
+                [blocker["code"] for blocker in report["apply_blockers"]],
+            )
+            self.assertFalse((tmp / "archive").exists())
+            self.assertEqual(_feedback_statuses(output_db), ["open"])
+
+    def test_feedback_closure_apply_closes_ready_feedback_after_backup(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            before_rows = _feedback_rows(output_db)
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                run_id="run-closure-apply",
+                ocr_runner=lambda request: {
+                    "status": "ok",
+                    "provider": "mock",
+                    "model": "mock-ocr",
+                    "extracted_text": "fresh OCR text",
+                },
+            )
+
+            report = write_ocr_retry_feedback_closure_apply(
+                db_path=output_db,
+                run_dir=tmp / "runs" / "run-closure-apply",
+                confirm_token=OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN,
+                backup_root=tmp / "archive",
+                applied_at="20260521T010203Z",
+            )
+            summary = format_ocr_retry_feedback_closure_apply_report(report)
+
+            self.assertEqual(report["state"], "applied")
+            self.assertEqual(report["bundle_state"], "ok")
+            self.assertEqual(report["preview_state"], "ok")
+            self.assertEqual(report["counts"]["updated_feedback_rows"], 1)
+            self.assertEqual(
+                report["mutation_boundary"]["manual_eval_warehouse"],
+                "feedback_rows_only",
+            )
+            self.assertEqual(report["updated_feedback_ids"], [1])
+            backup_dir = (
+                tmp
+                / "archive"
+                / ("manual-evals-feedback-closure-apply-20260521T010203Z")
+            )
+            self.assertTrue((backup_dir / "manual_evals.db").is_file())
+            self.assertTrue((backup_dir / "manifest.json").is_file())
+            self.assertTrue(
+                (
+                    tmp
+                    / "runs"
+                    / "run-closure-apply"
+                    / "feedback_closure_apply_summary.json"
+                ).is_file()
+            )
+            with closing(sqlite3.connect(backup_dir / "manual_evals.db")) as conn:
+                self.assertEqual(
+                    conn.execute("PRAGMA integrity_check").fetchone()[0],
+                    "ok",
+                )
+                self.assertEqual(
+                    [
+                        str(row[0])
+                        for row in conn.execute(
+                            "SELECT status FROM feedback ORDER BY id"
+                        ).fetchall()
+                    ],
+                    ["open"],
+                )
+            after_rows = _feedback_rows(output_db)
+            self.assertEqual(after_rows[0]["status"], "closed")
+            self.assertIn("run-closure-apply", str(after_rows[0]["action_taken"]))
+            self.assertGreater(
+                int(after_rows[0]["updated_at"]),
+                int(before_rows[0]["updated_at"]),
+            )
+            for unchanged_column in (
+                "source_id",
+                "era",
+                "source_key",
+                "source_label",
+                "source_history_db",
+                "source_session_id",
+                "session_id",
+                "message_id",
+                "outcome",
+                "tags_json",
+                "note",
+                "recommended_action",
+                "created_at",
+            ):
+                self.assertEqual(
+                    after_rows[0][unchanged_column],
+                    before_rows[0][unchanged_column],
+                    unchanged_column,
+                )
+            self.assertIn(
+                "manual eval OCR retry feedback closure apply: state=applied "
+                "run=run-closure-apply",
+                summary,
+            )
+            self.assertIn(
+                "backup_dir=manual-evals-feedback-closure-apply-20260521T010203Z",
+                summary,
+            )
+            self.assertNotIn(tmpdir, summary)
+
+    def test_feedback_closure_apply_blocks_when_feedback_is_no_longer_open(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                run_id="run-closure-stale",
+                ocr_runner=lambda request: {
+                    "status": "ok",
+                    "extracted_text": "fresh OCR text",
+                },
+            )
+            with closing(sqlite3.connect(output_db)) as conn:
+                conn.execute("UPDATE feedback SET status = 'closed' WHERE id = 1")
+                conn.commit()
+
+            report = write_ocr_retry_feedback_closure_apply(
+                db_path=output_db,
+                run_dir=tmp / "runs" / "run-closure-stale",
+                confirm_token=OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN,
+                backup_root=tmp / "archive",
+                applied_at="20260521T010203Z",
+            )
+
+            self.assertEqual(report["state"], "blocked")
+            self.assertIn(
+                "feedback_rows_not_open",
+                [blocker["code"] for blocker in report["apply_blockers"]],
+            )
+            self.assertFalse((tmp / "archive").exists())
+            self.assertEqual(_feedback_statuses(output_db), ["closed"])
+
+    def test_feedback_closure_apply_blocks_when_preview_needs_attention(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, artifact_ids = _build_ready_selection_fixture(
+                tmp,
+                duplicate_artifacts=True,
+            )
+
+            def partial_runner(request: dict[str, object]) -> dict[str, object]:
+                if request["artifact_id"] == artifact_ids[0]:
+                    return {"status": "ok", "extracted_text": "first OCR text"}
+                raise OcrRetryExecutionProviderError(
+                    "rate limit reached",
+                    status="rate_limited",
+                    retry_after="7",
+                )
+
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                run_id="run-closure-apply-attention",
+                ocr_runner=partial_runner,
+            )
+
+            report = write_ocr_retry_feedback_closure_apply(
+                db_path=output_db,
+                run_dir=tmp / "runs" / "run-closure-apply-attention",
+                confirm_token=OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN,
+                backup_root=tmp / "archive",
+                applied_at="20260521T010203Z",
+            )
+
+            self.assertEqual(report["state"], "blocked")
+            self.assertIn(
+                "bundle_report_not_ok",
+                [blocker["code"] for blocker in report["apply_blockers"]],
+            )
+            self.assertIn(
+                "preview_not_ok",
+                [blocker["code"] for blocker in report["apply_blockers"]],
+            )
+            self.assertFalse((tmp / "archive").exists())
             self.assertEqual(_feedback_statuses(output_db), ["open"])
 
     def test_context_only_selection_blocks_without_provider_call(self) -> None:

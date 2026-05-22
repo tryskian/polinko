@@ -226,7 +226,7 @@ Last updated: 2026-05-21
   - OCR retry execution bundle reports are read-only, hide source file paths in
     terminal output, and check bundle files, run ID alignment,
     request/response counts, provider failure status, stop reasons, and the
-    no-warehouse-mutation boundary before any future closure or warehouse gate
+    no-warehouse-mutation boundary before closure or any warehouse gate
   - `make manual-evals-ocr-retry-feedback-closure-preview` previews feedback
     closure from one inspected OCR retry execution bundle with
     `RUN_DIR=<path>`, using
@@ -235,14 +235,17 @@ Last updated: 2026-05-21
     ID, mark mixed provider status as `attention`, and remain read-only: they
     do not close feedback, write action-taken text, refresh `manual_evals.db`,
     write eval rows, or mutate the warehouse
-  - OCR retry feedback-closure apply is designed-only: no
-    `manual-evals-ocr-retry-feedback-closure-apply` target exists yet
-  - the designed apply gate requires `RUN_DIR=<path>` plus
-    `CONFIRM=ocr-retry-feedback-closure-apply`, backup-first copy of the
-    current manual eval warehouse under
-    `.local_archive/manual-evals-feedback-closure-apply-<timestamp>/`, and an
-    exact mutation scope limited to feedback `status`, `action_taken`, and
-    `updated_at`
+  - `make manual-evals-ocr-retry-feedback-closure-apply` applies OCR retry
+    feedback closure from one inspected local execution bundle only when
+    `RUN_DIR=<path>` and `CONFIRM=ocr-retry-feedback-closure-apply` are
+    provided, the execution-bundle report and feedback-closure preview are
+    both `ok`, every preview item is `ready`, and every target feedback row is
+    still open
+  - OCR retry feedback-closure apply writes a backup-first copy of the current
+    manual eval warehouse under
+    `.local_archive/manual-evals-feedback-closure-apply-<timestamp>/`, emits
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`,
+    and limits mutation to feedback `status`, `action_taken`, and `updated_at`
   - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` defines the local-bundle OCR
     retry executor boundary, including rollback and failure handling
   - manual eval warehouse rebuilds resolve OCR source images from extracted
