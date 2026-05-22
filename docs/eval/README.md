@@ -166,6 +166,13 @@ notes, exports, and runtime history.
   - execution-readiness reports require apply-preview `state=ok`, verify
     selected artifact source-file existence and payload-only command previews,
     and keep execution in a separate explicit follow-up gate
+  - inspect local OCR retry execution bundles without mutation with
+    `make manual-evals-ocr-retry-execution-report RUN_DIR=<path>`
+  - JSON OCR retry execution-bundle reports use
+    `schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`
+  - execution-bundle reports verify files, run IDs, request/response counts,
+    provider failure status, stop reasons, and the no-warehouse-mutation
+    boundary before any future feedback closure or warehouse mutation
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

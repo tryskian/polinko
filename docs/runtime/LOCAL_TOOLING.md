@@ -92,6 +92,13 @@ operator input tooling:
   - writes local ignored run bundles under `.local/manual_eval_runs/ocr_retry/`
   - does not close feedback, write eval rows, refresh `manual_evals.db`, or
     mutate the manual eval warehouse
+- `make manual-evals-ocr-retry-execution-report`
+  - reads one local ignored run bundle through `RUN_DIR=<path>`
+  - emits
+    `schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`
+  - checks bundle files, run ID alignment, request/response counts, provider
+    failure status, stop reasons, and the no-warehouse-mutation boundary
+  - stays read-only and hides source file paths from terminal output
 
 The current OCR lane inventory is the reference instance for read-only local
 evidence inspection:

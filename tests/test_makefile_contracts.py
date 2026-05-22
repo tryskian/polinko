@@ -329,6 +329,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-ocr-retry-execution-readiness", targets)
         self.assertIn("manual-evals-ocr-retry-execute", targets)
         self.assertIn("manualdb-ocr-retry-execute", targets)
+        self.assertIn("manual-evals-ocr-retry-execution-report", targets)
+        self.assertIn("manualdb-ocr-retry-execution-report", targets)
         self.assertIn("portfolio", targets)
         self.assertIn("portfolio-mockups", targets)
         self.assertIn("pwcli", targets)
@@ -441,9 +443,17 @@ class MakefileContractTests(unittest.TestCase):
             r"manualdb-ocr-retry-execute:$",
         )
         self.assertIn("--ocr-retry-execute", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-ocr-retry-execution-report "
+            r"manualdb-ocr-retry-execution-report:$",
+        )
+        self.assertIn("--ocr-retry-execution-report", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_CONFIRM ?= $(CONFIRM)", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_EXECUTION_DIR ?= $(EXECUTION_DIR)", text)
+        self.assertIn("MANUAL_EVALS_OCR_RETRY_RUN_DIR ?= $(RUN_DIR)", text)
         self.assertIn("$(MANUAL_EVALS_OCR_RETRY_EXECUTE_ARGS)", text)
+        self.assertIn("$(MANUAL_EVALS_OCR_RETRY_EXECUTION_REPORT_ARGS)", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_ARTIFACT_IDS ?= $(ARTIFACT_IDS)", text)
         self.assertIn(
             "MANUAL_EVALS_OCR_RETRY_SELECTION_PATH ?= $(SELECTION_PATH)", text
