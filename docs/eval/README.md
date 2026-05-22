@@ -180,6 +180,10 @@ notes, exports, and runtime history.
   - feedback-closure previews group successful OCR retry responses by feedback
     ID and keep feedback status, action-taken text, eval rows, and
     `manual_evals.db` unchanged until a separate apply gate exists
+  - OCR retry feedback-closure apply is designed-only; no
+    `manual-evals-ocr-retry-feedback-closure-apply` target exists yet
+  - the designed apply gate is backup-first and limits future mutation to
+    feedback `status`, `action_taken`, and `updated_at`
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

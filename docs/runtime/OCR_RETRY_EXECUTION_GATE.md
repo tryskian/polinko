@@ -137,6 +137,51 @@ The preview does not write feedback status, action-taken text, live eval rows,
 or `manual_evals.db`. It also keeps terminal output path-safe by printing run
 ID, directory name, feedback counts, and closure item states only.
 
+## Designed Feedback-Closure Apply Gate
+
+The apply gate is designed only. There is no
+`manual-evals-ocr-retry-feedback-closure-apply` Make target yet.
+
+When implemented, the apply gate must stay backup-first and explicit:
+
+- proposed target:
+  - `make manual-evals-ocr-retry-feedback-closure-apply`
+  - alias: `make manualdb-ocr-retry-feedback-closure-apply`
+- required inputs:
+  - `RUN_DIR=<path>`
+  - `CONFIRM=ocr-retry-feedback-closure-apply`
+- required preconditions:
+  1. execution bundle report returns `state=ok`
+  2. feedback-closure preview returns `state=ok`
+  3. every preview item has `state=ready`
+  4. every target feedback row is still open in the current manual eval
+     warehouse
+  5. the current manual eval warehouse is backed up before any write
+
+The backup must copy the current warehouse to a timestamped path under:
+
+- `.local_archive/manual-evals-feedback-closure-apply-<timestamp>/`
+
+The apply gate may update only the feedback rows named by the preview:
+
+- `status`
+- `action_taken`
+- `updated_at`
+
+It must not write live eval rows, run OCR, refresh `manual_evals.db`, mutate
+OCR run rows, or infer new source links. It must write a local apply summary
+beside the run bundle and include the backup path, updated feedback IDs, rows
+skipped because they were no longer open, and restore command guidance.
+
+Rollback for the apply gate is database restore:
+
+1. Stop any local server using the manual eval warehouse.
+2. Copy the backup DB from
+   `.local_archive/manual-evals-feedback-closure-apply-<timestamp>/` back over
+   `.local/runtime_dbs/active/manual_evals.db`.
+3. Re-run `make manual-evals-db-health` and
+   `make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`.
+
 ## Rollback Story
 
 Rollback is local-file cleanup:

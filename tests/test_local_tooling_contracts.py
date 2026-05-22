@@ -62,6 +62,8 @@ class LocalToolingContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`",
             "`make manual-evals-ocr-retry-feedback-closure-preview`",
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`",
+            "no `manual-evals-ocr-retry-feedback-closure-apply` target exists",
+            "backup-first warehouse copy",
             "Future Polinko tooling should adopt the contract, not the OCR-specific",
         ):
             self.assertIn(expected, contract)

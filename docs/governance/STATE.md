@@ -235,6 +235,14 @@ Last updated: 2026-05-21
     ID, mark mixed provider status as `attention`, and remain read-only: they
     do not close feedback, write action-taken text, refresh `manual_evals.db`,
     write eval rows, or mutate the warehouse
+  - OCR retry feedback-closure apply is designed-only: no
+    `manual-evals-ocr-retry-feedback-closure-apply` target exists yet
+  - the designed apply gate requires `RUN_DIR=<path>` plus
+    `CONFIRM=ocr-retry-feedback-closure-apply`, backup-first copy of the
+    current manual eval warehouse under
+    `.local_archive/manual-evals-feedback-closure-apply-<timestamp>/`, and an
+    exact mutation scope limited to feedback `status`, `action_taken`, and
+    `updated_at`
   - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` defines the local-bundle OCR
     retry executor boundary, including rollback and failure handling
   - manual eval warehouse rebuilds resolve OCR source images from extracted
