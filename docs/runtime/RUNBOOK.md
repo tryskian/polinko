@@ -311,13 +311,16 @@ Use this doc for operator procedure.
   - use this as the final read-only readiness gate before a separate explicit
     execution kernel; it still does not run OCR, close feedback, write live
     eval rows, or mutate the manual eval warehouse
-- OCR retry execution gate design:
+- OCR retry execution:
   - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md`
-  - status is `designed-only`
-  - no runnable OCR retry execution target exists yet
-  - future execution must require `SELECTION_PATH=<path>` plus an exact
-    confirmation token, recompute readiness in-process, and write only a local
-    ignored execution bundle in its first implementation
+  - `make manual-evals-ocr-retry-execute`
+  - requires `SELECTION_PATH=<path>` plus
+    `CONFIRM=ocr-retry-execute`
+  - recomputes validation, apply-preview, and execution readiness in-process
+  - writes only a local ignored execution bundle under
+    `.local/manual_eval_runs/ocr_retry/`
+  - does not close feedback, write live eval rows, refresh `manual_evals.db`,
+    or mutate the manual eval warehouse
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

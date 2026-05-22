@@ -23,17 +23,18 @@ def _makefile_contract_text() -> str:
 
 
 class OcrRetryExecutionGateContractTests(unittest.TestCase):
-    def test_execution_gate_design_is_documented_but_not_runnable(self) -> None:
+    def test_execution_gate_documents_local_bundle_executor_boundary(self) -> None:
         design = _read("docs/runtime/OCR_RETRY_EXECUTION_GATE.md")
         normalized_design = " ".join(design.split())
 
         for expected in (
-            "Status: `designed-only`",
-            "No OCR retry execution Make target exists yet.",
+            "Status: `implemented-local-bundle`",
+            "The OCR retry execution Make target exists only as a guarded local-bundle writer.",
             "`make manual-evals-ocr-retry-execute`",
             "`SELECTION_PATH=<path>`",
             "`CONFIRM=ocr-retry-execute`",
             "The command must recompute readiness inside the same process.",
+            "`manual-evals-ocr-retry-execute` writes only ignored local run bundles.",
             "selection validation reports `state=ok`",
             "selection apply-preview reports `state=ok`",
             "execution readiness reports `state=ready`",
@@ -42,7 +43,7 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
             "manual_evals.db",
             "Rollback Story",
             "Failure Handling",
-            "Until those tests and the command exist, OCR retry execution remains designed but not runnable.",
+            "Feedback closure, live eval writes, and warehouse mutation remain separate future gates.",
         ):
             self.assertIn(expected, normalized_design)
 
@@ -57,27 +58,27 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
         expectations = {
             "docs/runtime/ARCHITECTURE.md": (
                 "docs/runtime/OCR_RETRY_EXECUTION_GATE.md",
-                "designed-only OCR retry execution gate shape",
+                "local-bundle OCR retry execution gate shape",
             ),
             "docs/runtime/LOCAL_TOOLING.md": (
                 "docs/runtime/OCR_RETRY_EXECUTION_GATE.md",
-                "It is not runnable yet.",
+                "local ignored run bundles",
             ),
             "docs/runtime/OCR_REFERENCE.md": (
                 "docs/runtime/OCR_RETRY_EXECUTION_GATE.md",
-                "no runnable retry execution target exists yet",
+                "local-bundle retry execution target exists",
             ),
             "docs/runtime/RUNBOOK.md": (
-                "OCR retry execution gate design",
-                "no runnable OCR retry execution target exists yet",
+                "OCR retry execution",
+                "make manual-evals-ocr-retry-execute",
             ),
             "docs/governance/STATE.md": (
                 "docs/runtime/OCR_RETRY_EXECUTION_GATE.md",
-                "no runnable retry execution target exists yet",
+                "local-bundle OCR retry executor",
             ),
             "docs/governance/DECISIONS.md": (
-                "## D-101: Design OCR retry execution before implementation",
-                "The human lead confirmed the next kernel should still not run evals",
+                "## D-102: Implement OCR retry execution as a local bundle first",
+                "The human lead approved the next kernel after the execution-gate design",
             ),
         }
 
@@ -86,18 +87,22 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
             for expected in expected_items:
                 self.assertIn(expected, text, path)
 
-    def test_no_ocr_retry_execution_target_or_parser_flag_exists_yet(self) -> None:
+    def test_ocr_retry_execution_target_and_parser_flag_are_guarded(self) -> None:
         makefile_text = _makefile_contract_text()
         health_tool = _read("tools/manual_evals_db_health.py")
 
-        self.assertIsNone(
+        self.assertIsNotNone(
             re.search(
                 r"(?m)^manual-evals-ocr-retry-execute\s+manualdb-ocr-retry-execute:",
                 makefile_text,
             )
         )
-        self.assertNotIn("--ocr-retry-execute", health_tool)
-        self.assertNotIn("ocr_retry_execute", health_tool)
+        self.assertIn("--ocr-retry-execute", health_tool)
+        self.assertIn("--confirm", health_tool)
+        self.assertIn("OCR_RETRY_EXECUTION_CONFIRM_TOKEN", health_tool)
+        self.assertIn("CONFIRM=ocr-retry-execute", health_tool)
+        self.assertIn("manual_eval_warehouse", health_tool)
+        self.assertIn("build_ocr_retry_execution_readiness_report", health_tool)
 
 
 if __name__ == "__main__":

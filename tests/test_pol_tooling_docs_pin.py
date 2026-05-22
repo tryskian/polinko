@@ -28,8 +28,8 @@ class PolToolingDocsPinTests(unittest.TestCase):
             self.assertIn(expected, normalized_decisions)
 
         for expected in (
-            "live OCR/eval execution is pinned until an explicit resume decision",
-            "current OCR work surface is read-only tooling and docs alignment",
+            "live eval execution is pinned until an explicit resume decision",
+            "current OCR work surface is read-only inventory plus guarded local-bundle",
             "OCR inventory freshness flags local case/report files",
         ):
             self.assertIn(expected, state)
@@ -52,9 +52,9 @@ class PolToolingDocsPinTests(unittest.TestCase):
                 "`FRESHNESS_DAYS=<days>`",
             ),
             "docs/runtime/OCR_REFERENCE.md": (
-                "live OCR/eval execution is paused until explicitly resumed",
+                "live eval execution is paused until explicitly resumed",
                 "use `make ocr-inventory` and `make ocr-inventory-json`",
-                "before any eval refresh while OCR execution is pinned",
+                "before any eval refresh while eval execution is pinned",
             ),
             "docs/runtime/ARCHITECTURE.md": (
                 "read-only inventory/status tools for local evidence inspection",
