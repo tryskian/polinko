@@ -333,6 +333,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-ocr-retry-execution-report", targets)
         self.assertIn("manual-evals-ocr-retry-feedback-closure-preview", targets)
         self.assertIn("manualdb-ocr-retry-feedback-closure-preview", targets)
+        self.assertIn("manual-evals-no-context-reclassify-preview", targets)
+        self.assertIn("manualdb-no-context-reclassify-preview", targets)
+        self.assertIn("manual-evals-no-context-reclassify-apply", targets)
+        self.assertIn("manualdb-no-context-reclassify-apply", targets)
         self.assertIn("portfolio", targets)
         self.assertIn("portfolio-mockups", targets)
         self.assertIn("pwcli", targets)
@@ -469,6 +473,18 @@ class MakefileContractTests(unittest.TestCase):
             r"manualdb-ocr-retry-feedback-closure-restore:$",
         )
         self.assertIn("--ocr-retry-feedback-closure-restore", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-no-context-reclassify-preview "
+            r"manualdb-no-context-reclassify-preview:$",
+        )
+        self.assertIn("--no-context-feedback-reclassify-preview", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-no-context-reclassify-apply "
+            r"manualdb-no-context-reclassify-apply:$",
+        )
+        self.assertIn("--no-context-feedback-reclassify-apply", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_CONFIRM ?= $(CONFIRM)", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_EXECUTION_DIR ?= $(EXECUTION_DIR)", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_RUN_DIR ?= $(RUN_DIR)", text)
@@ -478,6 +494,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(MANUAL_EVALS_OCR_RETRY_EXECUTION_REPORT_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_ARGS)", text)
+        self.assertIn("$(MANUAL_EVALS_NO_CONTEXT_RECLASSIFY_ARGS)", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_ARTIFACT_IDS ?= $(ARTIFACT_IDS)", text)
         self.assertIn(
             "MANUAL_EVALS_OCR_RETRY_SELECTION_PATH ?= $(SELECTION_PATH)", text

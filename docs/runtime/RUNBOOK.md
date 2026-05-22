@@ -202,6 +202,18 @@ Use this doc for operator procedure.
   - print read-only row-level actionables for one selected cohort
   - combine with `OUTCOME=<outcome>` and `LIMIT=<n>` for smaller manual
     triage slices
+- `make manual-evals-no-context-reclassify-preview`
+  - preview overlay-hypothesis OCR feedback rows that have no same-session OCR
+    context and whose source response asked for new image evidence
+  - emits
+    `schema_version=polinko.manual_eval_no_context_feedback_reclassify.v1`
+- `make manual-evals-no-context-reclassify-apply
+  CONFIRM=manual-evals-no-context-reclassify`
+  - keeps matching feedback rows open while moving them out of executable OCR
+    retry work into overlay-assisted OCR hypothesis evidence
+  - writes a backup under `.local_archive/manual-evals-feedback-no-context-*`
+    before mutating feedback `recommended_action`, `action_taken`, and
+    `updated_at`
 - `make manual-evals-ocr-retry-candidates`
   - print the read-only OCR retry candidate packet for the default
     `ocr_retry_evidence` partial slice

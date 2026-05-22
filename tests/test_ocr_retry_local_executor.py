@@ -17,12 +17,17 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION,
     OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_CONFIRM_TOKEN,
     OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_SCHEMA_VERSION,
+    NO_CONTEXT_RECLASSIFIED_RECOMMENDED_ACTION,
+    NO_CONTEXT_RECLASSIFY_CONFIRM_TOKEN,
+    NO_CONTEXT_RECLASSIFY_SCHEMA_VERSION,
     OcrRetryExecutionProviderError,
+    build_no_context_feedback_reclassify_report,
     build_ocr_retry_execution_bundle_report,
     build_ocr_retry_feedback_closure_apply_report,
     build_ocr_retry_feedback_closure_preview_report,
     build_ocr_retry_feedback_closure_restore_preview_report,
     build_ocr_retry_selection_template_report,
+    format_no_context_feedback_reclassify_report,
     format_ocr_retry_execution_bundle_report,
     format_ocr_retry_execution_report,
     format_ocr_retry_feedback_closure_apply_report,
@@ -33,6 +38,7 @@ from tools.manual_evals_db_health import (
     write_ocr_retry_execution_bundle,
     write_ocr_retry_feedback_closure_apply,
     write_ocr_retry_feedback_closure_restore,
+    write_no_context_feedback_reclassify,
 )
 from tests.test_build_manual_evals_db import _PNG_1X1, _init_history_db
 
@@ -150,6 +156,139 @@ def _feedback_rows(db_path: Path) -> list[dict[str, object]]:
 
 
 class OcrRetryLocalExecutorTests(unittest.TestCase):
+    def test_no_context_feedback_reclassify_preserves_open_feedback(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            _init_history_db(history_db, feedback_outcome="fail")
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute("DELETE FROM ocr_runs")
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET status = 'open',
+                        tags_json = ?,
+                        note = NULL,
+                        recommended_action = ?
+                    """,
+                    (
+                        json.dumps(
+                            {
+                                "positive": [],
+                                "negative": ["ocr_miss", "grounding_gap"],
+                                "all": ["ocr_miss", "grounding_gap"],
+                            }
+                        ),
+                        "Retry OCR with a tighter crop and attach fresh image evidence for comparison.",
+                    ),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES (
+                      'chat-1', 'assistant',
+                      'No new image evidence in this turn. Attach a new image '
+                      || '(or tighter crop) and I will transcribe only what is visible.',
+                      155, 'm-result-1', NULL
+                    )
+                    """
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[],
+                include_thumbnails=False,
+            )
+
+            preview = build_no_context_feedback_reclassify_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            preview_summary = format_no_context_feedback_reclassify_report(preview)
+
+            self.assertEqual(
+                preview["schema_version"],
+                NO_CONTEXT_RECLASSIFY_SCHEMA_VERSION,
+            )
+            self.assertEqual(preview["state"], "ok")
+            self.assertEqual(preview["counts"]["ready_feedback"], 1)
+            self.assertEqual(preview["counts"]["blocked_feedback"], 0)
+            self.assertEqual(preview["items"][0]["state"], "ready")
+            self.assertIn(
+                "manual eval no-context feedback reclassify: state=ok mode=preview",
+                preview_summary,
+            )
+            self.assertNotIn(tmpdir, preview_summary)
+
+            before_rows = _feedback_rows(output_db)
+            report = write_no_context_feedback_reclassify(
+                db_path=output_db,
+                confirm_token=NO_CONTEXT_RECLASSIFY_CONFIRM_TOKEN,
+                backup_root=tmp / "archive",
+                applied_at="20260521T090807Z",
+                outcome="fail",
+                cohort="ocr_retry_evidence",
+                limit=10,
+            )
+            summary = format_no_context_feedback_reclassify_report(report)
+
+            self.assertEqual(report["state"], "applied")
+            self.assertEqual(report["counts"]["updated_feedback_rows"], 1)
+            self.assertEqual(report["updated_feedback_ids"], [1])
+            backup_dir = (
+                tmp / "archive" / "manual-evals-feedback-no-context-20260521T090807Z"
+            )
+            self.assertTrue((backup_dir / "manual_evals.db").is_file())
+            self.assertTrue((backup_dir / "manifest.json").is_file())
+            after_rows = _feedback_rows(output_db)
+            self.assertEqual(after_rows[0]["status"], "open")
+            self.assertEqual(
+                after_rows[0]["recommended_action"],
+                NO_CONTEXT_RECLASSIFIED_RECOMMENDED_ACTION,
+            )
+            self.assertIn(
+                "Reclassified by overlay-hypothesis feedback gate",
+                str(after_rows[0]["action_taken"]),
+            )
+            self.assertGreater(
+                int(after_rows[0]["updated_at"]),
+                int(before_rows[0]["updated_at"]),
+            )
+            for unchanged_column in (
+                "source_id",
+                "era",
+                "source_key",
+                "source_label",
+                "source_history_db",
+                "source_session_id",
+                "session_id",
+                "message_id",
+                "outcome",
+                "tags_json",
+                "note",
+                "created_at",
+            ):
+                self.assertEqual(
+                    after_rows[0][unchanged_column],
+                    before_rows[0][unchanged_column],
+                    unchanged_column,
+                )
+            self.assertIn(
+                "manual eval no-context feedback reclassify: state=applied mode=apply",
+                summary,
+            )
+            self.assertIn(
+                "backup_dir=manual-evals-feedback-no-context-20260521T090807Z",
+                summary,
+            )
+            self.assertNotIn(tmpdir, summary)
+
     def test_selection_template_terminal_output_hides_absolute_source_paths(
         self,
     ) -> None:
