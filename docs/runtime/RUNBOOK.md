@@ -355,6 +355,17 @@ Use this doc for operator procedure.
     `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`
   - verifies active feedback rows are closed and backup feedback rows remain
     open before any manual restore decision
+- OCR retry feedback-closure restore:
+  - `make manual-evals-ocr-retry-feedback-closure-restore-preview
+    BACKUP_DIR=<path>`
+  - previews restore readiness without mutation
+  - `make manual-evals-ocr-retry-feedback-closure-restore BACKUP_DIR=<path>
+    CONFIRM=ocr-retry-feedback-closure-restore`
+  - emits
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_restore.v1`
+  - writes a pre-restore backup under
+    `.local_archive/manual-evals-feedback-closure-restore-<timestamp>/`, then
+    restores the whole manual eval warehouse from the verified apply backup
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

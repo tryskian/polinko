@@ -14,18 +14,23 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_SCHEMA_VERSION,
     OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION,
     OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION,
+    OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_CONFIRM_TOKEN,
+    OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_SCHEMA_VERSION,
     OcrRetryExecutionProviderError,
     build_ocr_retry_execution_bundle_report,
     build_ocr_retry_feedback_closure_apply_report,
     build_ocr_retry_feedback_closure_preview_report,
+    build_ocr_retry_feedback_closure_restore_preview_report,
     build_ocr_retry_selection_template_report,
     format_ocr_retry_execution_bundle_report,
     format_ocr_retry_execution_report,
     format_ocr_retry_feedback_closure_apply_report,
     format_ocr_retry_feedback_closure_apply_verification_report,
     format_ocr_retry_feedback_closure_preview_report,
+    format_ocr_retry_feedback_closure_restore_report,
     write_ocr_retry_execution_bundle,
     write_ocr_retry_feedback_closure_apply,
+    write_ocr_retry_feedback_closure_restore,
 )
 from tests.test_build_manual_evals_db import _PNG_1X1, _init_history_db
 
@@ -701,6 +706,160 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
                 verification_summary,
             )
             self.assertNotIn(tmpdir, verification_summary)
+
+    def test_feedback_closure_restore_preview_and_restore_from_apply_backup(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            before_rows = _feedback_rows(output_db)
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                run_id="run-closure-restore",
+                ocr_runner=lambda request: {
+                    "status": "ok",
+                    "provider": "mock",
+                    "model": "mock-ocr",
+                    "extracted_text": "fresh OCR text",
+                },
+            )
+            write_ocr_retry_feedback_closure_apply(
+                db_path=output_db,
+                run_dir=tmp / "runs" / "run-closure-restore",
+                confirm_token=OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN,
+                backup_root=tmp / "archive",
+                applied_at="20260521T010203Z",
+            )
+            backup_dir = (
+                tmp / "archive" / "manual-evals-feedback-closure-apply-20260521T010203Z"
+            )
+
+            preview = build_ocr_retry_feedback_closure_restore_preview_report(
+                db_path=output_db,
+                backup_dir=backup_dir,
+            )
+            preview_summary = format_ocr_retry_feedback_closure_restore_report(preview)
+
+            self.assertEqual(
+                preview["schema_version"],
+                OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_SCHEMA_VERSION,
+            )
+            self.assertEqual(preview["state"], "ok")
+            self.assertEqual(preview["mode"], "preview")
+            self.assertEqual(preview["counts"]["target_feedback_rows"], 1)
+            self.assertEqual(preview["counts"]["active_closed_feedback"], 1)
+            self.assertEqual(preview["counts"]["backup_open_feedback"], 1)
+            self.assertEqual(preview["counts"]["restore_blockers"], 0)
+            self.assertIn(
+                "manual eval OCR retry feedback closure restore: state=ok "
+                "mode=preview run=run-closure-restore",
+                preview_summary,
+            )
+            self.assertIn(
+                "backup_dir=manual-evals-feedback-closure-apply-20260521T010203Z",
+                preview_summary,
+            )
+            self.assertNotIn(tmpdir, preview_summary)
+
+            restore = write_ocr_retry_feedback_closure_restore(
+                db_path=output_db,
+                backup_dir=backup_dir,
+                confirm_token=OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_CONFIRM_TOKEN,
+                restore_root=tmp / "restore-archive",
+                restored_at="20260521T040506Z",
+            )
+            restore_summary = format_ocr_retry_feedback_closure_restore_report(restore)
+
+            self.assertEqual(restore["state"], "restored")
+            self.assertEqual(restore["counts"]["restored_feedback_rows"], 1)
+            self.assertEqual(restore["counts"]["backups_written"], 1)
+            self.assertEqual(restore["counts"]["restore_blockers"], 0)
+            self.assertEqual(_feedback_rows(output_db), before_rows)
+            restore_dir = (
+                tmp
+                / "restore-archive"
+                / "manual-evals-feedback-closure-restore-20260521T040506Z"
+            )
+            self.assertTrue((restore_dir / "manual_evals.pre_restore.db").is_file())
+            self.assertTrue((restore_dir / "restore_summary.json").is_file())
+            with closing(
+                sqlite3.connect(restore_dir / "manual_evals.pre_restore.db")
+            ) as conn:
+                self.assertEqual(
+                    conn.execute("PRAGMA integrity_check").fetchone()[0],
+                    "ok",
+                )
+                self.assertEqual(
+                    [
+                        str(row[0])
+                        for row in conn.execute(
+                            "SELECT status FROM feedback ORDER BY id"
+                        ).fetchall()
+                    ],
+                    ["closed"],
+                )
+            self.assertIn(
+                "manual eval OCR retry feedback closure restore: state=restored "
+                "mode=restore run=run-closure-restore",
+                restore_summary,
+            )
+            self.assertIn(
+                "restore_dir=manual-evals-feedback-closure-restore-20260521T040506Z",
+                restore_summary,
+            )
+            self.assertNotIn(tmpdir, restore_summary)
+
+    def test_feedback_closure_restore_blocks_without_confirmation(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                run_id="run-closure-restore-blocked",
+                ocr_runner=lambda request: {
+                    "status": "ok",
+                    "extracted_text": "fresh OCR text",
+                },
+            )
+            write_ocr_retry_feedback_closure_apply(
+                db_path=output_db,
+                run_dir=tmp / "runs" / "run-closure-restore-blocked",
+                confirm_token=OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN,
+                backup_root=tmp / "archive",
+                applied_at="20260521T010203Z",
+            )
+            backup_dir = (
+                tmp / "archive" / "manual-evals-feedback-closure-apply-20260521T010203Z"
+            )
+
+            report = write_ocr_retry_feedback_closure_restore(
+                db_path=output_db,
+                backup_dir=backup_dir,
+                confirm_token="",
+                restore_root=tmp / "restore-archive",
+                restored_at="20260521T040506Z",
+            )
+
+            self.assertEqual(report["state"], "blocked")
+            self.assertIn(
+                "missing_confirmation",
+                [blocker["code"] for blocker in report["restore_blockers"]],
+            )
+            self.assertFalse((tmp / "restore-archive").exists())
+            self.assertEqual(_feedback_statuses(output_db), ["closed"])
 
     def test_feedback_closure_apply_report_blocks_when_summary_missing(
         self,

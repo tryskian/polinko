@@ -457,12 +457,27 @@ class MakefileContractTests(unittest.TestCase):
             r"manualdb-ocr-retry-feedback-closure-preview:$",
         )
         self.assertIn("--ocr-retry-feedback-closure-preview", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-ocr-retry-feedback-closure-restore-preview "
+            r"manualdb-ocr-retry-feedback-closure-restore-preview:$",
+        )
+        self.assertIn("--ocr-retry-feedback-closure-restore-preview", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-ocr-retry-feedback-closure-restore "
+            r"manualdb-ocr-retry-feedback-closure-restore:$",
+        )
+        self.assertIn("--ocr-retry-feedback-closure-restore", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_CONFIRM ?= $(CONFIRM)", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_EXECUTION_DIR ?= $(EXECUTION_DIR)", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_RUN_DIR ?= $(RUN_DIR)", text)
+        self.assertIn("MANUAL_EVALS_OCR_RETRY_BACKUP_DIR ?= $(BACKUP_DIR)", text)
+        self.assertIn("MANUAL_EVALS_OCR_RETRY_RESTORE_ROOT ?= $(RESTORE_ROOT)", text)
         self.assertIn("$(MANUAL_EVALS_OCR_RETRY_EXECUTE_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_OCR_RETRY_EXECUTION_REPORT_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_ARGS)", text)
+        self.assertIn("$(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_ARGS)", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_ARTIFACT_IDS ?= $(ARTIFACT_IDS)", text)
         self.assertIn(
             "MANUAL_EVALS_OCR_RETRY_SELECTION_PATH ?= $(SELECTION_PATH)", text

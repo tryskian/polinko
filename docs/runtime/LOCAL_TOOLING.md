@@ -123,6 +123,18 @@ operator input tooling:
     feedback rows closed, and action-taken text present
   - stays read-only and does not restore, reopen, close, or mutate warehouse
     rows
+- `make manual-evals-ocr-retry-feedback-closure-restore-preview`
+  - reads one apply backup through `BACKUP_DIR=<path>`
+  - emits
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_restore.v1`
+  - verifies backup integrity, backup-open rows, and active closed apply
+    markers without mutation
+- `make manual-evals-ocr-retry-feedback-closure-restore`
+  - reads one apply backup through `BACKUP_DIR=<path>`
+  - requires `CONFIRM=ocr-retry-feedback-closure-restore`
+  - writes a pre-restore backup under
+    `.local_archive/manual-evals-feedback-closure-restore-<timestamp>/`
+  - restores the whole manual eval warehouse from the verified apply backup
 
 The current OCR lane inventory is the reference instance for read-only local
 evidence inspection:

@@ -252,6 +252,14 @@ Last updated: 2026-05-21
   - OCR retry feedback-closure apply reports are read-only and verify backup
     DB integrity, backup feedback rows still open, active feedback rows closed,
     and action-taken text present
+  - `make manual-evals-ocr-retry-feedback-closure-restore-preview` inspects one
+    apply backup with `BACKUP_DIR=<path>`, using
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_restore.v1`
+  - `make manual-evals-ocr-retry-feedback-closure-restore` requires
+    `BACKUP_DIR=<path>` and `CONFIRM=ocr-retry-feedback-closure-restore`,
+    writes a pre-restore backup under
+    `.local_archive/manual-evals-feedback-closure-restore-<timestamp>/`, then
+    restores the whole manual eval warehouse from the verified apply backup
   - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` defines the local-bundle OCR
     retry executor boundary, including rollback and failure handling
   - manual eval warehouse rebuilds resolve OCR source images from extracted

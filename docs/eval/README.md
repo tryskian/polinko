@@ -193,6 +193,17 @@ notes, exports, and runtime history.
     `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`
   - apply-report verifies backup DB integrity, backup feedback rows still open,
     active feedback rows closed, and action-taken text present
+  - preview OCR retry feedback-closure restore without mutation with
+    `make manual-evals-ocr-retry-feedback-closure-restore-preview
+    BACKUP_DIR=<path>`
+  - restore OCR retry feedback closure only with
+    `make manual-evals-ocr-retry-feedback-closure-restore BACKUP_DIR=<path>
+    CONFIRM=ocr-retry-feedback-closure-restore`
+  - JSON OCR retry feedback-closure restore exports use
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_restore.v1`
+  - restore writes a pre-restore backup under
+    `.local_archive/manual-evals-feedback-closure-restore-<timestamp>/` before
+    restoring the whole manual eval warehouse from the verified apply backup
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

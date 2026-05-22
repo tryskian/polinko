@@ -175,15 +175,18 @@ or preview is not `ok`, the target feedback rows are missing, or any target
 feedback row is no longer open. It must not write live eval rows, run OCR,
 refresh `manual_evals.db`, mutate OCR run rows, or infer new source links. It
 writes a local apply summary beside the run bundle and includes the backup
-path, updated feedback IDs, skipped feedback IDs, and restore command guidance.
+path, updated feedback IDs, skipped feedback IDs, and restore guidance.
 
-Rollback for the apply gate is database restore:
+Rollback for the apply gate is the explicit restore gate:
 
 1. Stop any local server using the manual eval warehouse.
-2. Copy the backup DB from
-   `.local_archive/manual-evals-feedback-closure-apply-<timestamp>/` back over
-   `.local/runtime_dbs/active/manual_evals.db`.
-3. Re-run `make manual-evals-db-health` and
+2. Preview the restore with
+   `make manual-evals-ocr-retry-feedback-closure-restore-preview
+   BACKUP_DIR=<path>`.
+3. Restore only with
+   `make manual-evals-ocr-retry-feedback-closure-restore BACKUP_DIR=<path>
+   CONFIRM=ocr-retry-feedback-closure-restore`.
+4. Re-run `make manual-evals-db-health` and
    `make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`.
 
 ## Feedback-Closure Apply Report
@@ -203,14 +206,49 @@ open, verifies active feedback rows are closed, and verifies action-taken text
 is present. It must not restore from backup, reopen feedback, close feedback,
 write live eval rows, run OCR, or mutate the manual eval warehouse.
 
+## Feedback-Closure Restore Gate
+
+The restore target is the guarded rollback path for a feedback-closure apply.
+
+It is exposed through:
+
+- preview target:
+  - `make manual-evals-ocr-retry-feedback-closure-restore-preview`
+  - alias: `make manualdb-ocr-retry-feedback-closure-restore-preview`
+- restore target:
+  - `make manual-evals-ocr-retry-feedback-closure-restore`
+  - alias: `make manualdb-ocr-retry-feedback-closure-restore`
+- required restore inputs:
+  - `BACKUP_DIR=<path>`
+  - `CONFIRM=ocr-retry-feedback-closure-restore`
+- JSON schema:
+  `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_restore.v1`
+
+The preview target is read-only. It requires an apply backup directory with
+`manifest.json` and `manual_evals.db`, verifies backup DB integrity, verifies
+the backup feedback rows remain open, and verifies the active feedback rows
+still look like feedback-closure apply outputs.
+
+The restore target first backs up the active warehouse under:
+
+- `.local_archive/manual-evals-feedback-closure-restore-<timestamp>/`
+
+Then it restores the whole manual eval warehouse from the verified apply
+backup. This is intentionally a whole-database rollback, not a row patch, so it
+must not run while a local server is using `manual_evals.db`. It must not run
+OCR, refresh the warehouse from history, write live eval rows, infer source
+links, or touch pulse surfaces.
+
 ## Rollback Story
 
-Rollback is local-file cleanup:
+Rollback starts with local-file cleanup:
 
 1. Remove the generated run bundle under `.local/manual_eval_runs/ocr_retry/`.
 2. Keep the original `SELECTION_PATH` unchanged.
 3. Re-run `make manual-evals-ocr-retry-execution-readiness` to confirm the
    source selection still resolves.
+4. For feedback-closure apply rollback, use the feedback-closure restore gate
+   rather than copying SQLite files by hand.
 
 Any additional database mutation gate must add backup-first behavior under
 `.local_archive/` before mutation and document restore steps in this file.
