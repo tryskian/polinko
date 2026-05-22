@@ -320,6 +320,8 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-105: Design OCR retry feedback closure as backup-first apply",
             "CONFIRM=ocr-retry-feedback-closure-apply",
             ".local_archive/manual-evals-feedback-closure-apply-<timestamp>/",
+            "## D-106: Implement OCR retry feedback closure as backup-first apply",
+            "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`",
         ):
             self.assertIn(expected, decisions)
 
@@ -397,8 +399,8 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-feedback-closure-preview` previews feedback",
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`",
             "do not close feedback, write action-taken text",
-            "OCR retry feedback-closure apply is designed-only",
-            "`manual-evals-ocr-retry-feedback-closure-apply` target exists yet",
+            "`make manual-evals-ocr-retry-feedback-closure-apply` applies OCR retry",
+            "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`",
             "`CONFIRM=ocr-retry-feedback-closure-apply`",
             ".local_archive/manual-evals-feedback-closure-apply-<timestamp>/",
             "tracked `docs/eval/`",
@@ -552,11 +554,16 @@ class ResearchModelContractTests(unittest.TestCase):
         )
         self.assertIn("feedback status, action-taken text", eval_map)
         self.assertIn(
-            "`manual-evals-ocr-retry-feedback-closure-apply` target exists yet",
+            "`make manual-evals-ocr-retry-feedback-closure-apply RUN_DIR=<path>",
+            eval_map,
+        )
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`",
             eval_map,
         )
         self.assertIn("backup-first", eval_map)
-        self.assertIn("feedback `status`, `action_taken`, and `updated_at`", eval_map)
+        self.assertIn("feedback-closure apply is backup-first", eval_map)
+        self.assertIn("`status`, `action_taken`, and `updated_at`", eval_map)
         self.assertIn("without inferring links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)

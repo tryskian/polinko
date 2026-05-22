@@ -107,10 +107,14 @@ operator input tooling:
     feedback rows would be closeable
   - stays read-only and does not close feedback, write action-taken text,
     refresh `manual_evals.db`, write eval rows, or mutate the warehouse
-- feedback-closure apply is not implemented yet
-  - no `manual-evals-ocr-retry-feedback-closure-apply` target exists
-  - the designed future gate requires a backup-first warehouse copy before any
-    feedback row update
+- `make manual-evals-ocr-retry-feedback-closure-apply`
+  - reads the same local ignored run bundle through `RUN_DIR=<path>`
+  - requires `CONFIRM=ocr-retry-feedback-closure-apply`
+  - emits
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`
+  - requires execution-bundle and feedback-closure preview state `ok`
+  - writes a backup-first warehouse copy before any feedback row update
+  - mutates only feedback `status`, `action_taken`, and `updated_at`
 
 The current OCR lane inventory is the reference instance for read-only local
 evidence inspection:

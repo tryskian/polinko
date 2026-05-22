@@ -335,13 +335,19 @@ Use this doc for operator procedure.
   - groups OCR retry responses by feedback ID, proposes closeable feedback
     items only as preview data, and marks mixed provider status as `attention`
 - OCR retry feedback-closure apply:
-  - designed-only; no
-    `manual-evals-ocr-retry-feedback-closure-apply` target exists yet
-  - proposed future command requires `RUN_DIR=<path>` plus
+  - `make manual-evals-ocr-retry-feedback-closure-apply RUN_DIR=<path>
+    CONFIRM=ocr-retry-feedback-closure-apply`
+  - requires `RUN_DIR=<path>` plus
     `CONFIRM=ocr-retry-feedback-closure-apply`
-  - must back up `.local/runtime_dbs/active/manual_evals.db` under
+  - emits
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`
+  - runs as a backup-first gate by copying
+    `.local/runtime_dbs/active/manual_evals.db` under
     `.local_archive/manual-evals-feedback-closure-apply-<timestamp>/` before
     any feedback row update
+  - applies only feedback `status`, `action_taken`, and `updated_at` updates
+    after the execution-bundle report and feedback-closure preview are both
+    `ok`
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

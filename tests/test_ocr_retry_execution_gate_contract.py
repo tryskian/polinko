@@ -42,8 +42,9 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-feedback-closure-preview`",
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`",
             "The feedback-closure preview target is read-only.",
-            "The apply gate is designed only.",
-            "There is no `manual-evals-ocr-retry-feedback-closure-apply` Make target yet.",
+            "The feedback-closure apply target is implemented as a backup-first local warehouse writer.",
+            "`make manual-evals-ocr-retry-feedback-closure-apply`",
+            "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`",
             "`CONFIRM=ocr-retry-feedback-closure-apply`",
             ".local_archive/manual-evals-feedback-closure-apply-<timestamp>/",
             "It must not write live eval rows, run OCR, refresh `manual_evals.db`",
@@ -55,7 +56,7 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
             "manual_evals.db",
             "Rollback Story",
             "Failure Handling",
-            "Feedback closure, live eval writes, and warehouse mutation remain separate future gates.",
+            "Feedback closure, live eval writes, and warehouse mutation remain separate follow-up gates.",
         ):
             self.assertIn(expected, normalized_design)
 
@@ -85,7 +86,8 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
                 "make manual-evals-ocr-retry-execute",
                 "make manual-evals-ocr-retry-execution-report",
                 "make manual-evals-ocr-retry-feedback-closure-preview",
-                "designed-only",
+                "make manual-evals-ocr-retry-feedback-closure-apply",
+                "backup-first",
             ),
             "docs/governance/STATE.md": (
                 "docs/runtime/OCR_RETRY_EXECUTION_GATE.md",
@@ -115,15 +117,21 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
         self.assertIn("--ocr-retry-execute", health_tool)
         self.assertIn("--ocr-retry-execution-report", health_tool)
         self.assertIn("--ocr-retry-feedback-closure-preview", health_tool)
+        self.assertIn("--ocr-retry-feedback-closure-apply", health_tool)
         self.assertIn("OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION", health_tool)
         self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION", health_tool)
+        self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION", health_tool)
         self.assertIn("--confirm", health_tool)
         self.assertIn("OCR_RETRY_EXECUTION_CONFIRM_TOKEN", health_tool)
+        self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN", health_tool)
         self.assertIn("CONFIRM=ocr-retry-execute", health_tool)
+        self.assertIn("CONFIRM=ocr-retry-feedback-closure-apply", health_tool)
         self.assertIn("manual_eval_warehouse", health_tool)
         self.assertIn("build_ocr_retry_execution_readiness_report", health_tool)
-        self.assertNotIn("--ocr-retry-feedback-closure-apply", health_tool)
-        self.assertNotIn("manual-evals-ocr-retry-feedback-closure-apply", makefile_text)
+        self.assertIn(
+            "manual-evals-ocr-retry-feedback-closure-apply",
+            makefile_text,
+        )
 
 
 if __name__ == "__main__":

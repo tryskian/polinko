@@ -1570,3 +1570,26 @@ or branch history instead.
   before code exists. The designed scope permits only feedback `status`,
   `action_taken`, and `updated_at` updates, and still excludes live eval rows,
   OCR reruns, warehouse refresh, OCR row mutation, and inferred source links.
+
+## D-106: Implement OCR retry feedback closure as backup-first apply
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `feedback_closure`, `backup_first`,
+  `local_mutation`
+- Human-led: The human lead approved proceeding from the designed apply gate
+  into implementation while keeping eval runs and pulse work out of scope.
+- Decision: `make manual-evals-ocr-retry-feedback-closure-apply` and
+  `make manualdb-ocr-retry-feedback-closure-apply` now apply feedback closure
+  from one inspected OCR retry execution bundle. The command requires
+  `RUN_DIR=<path>` and `CONFIRM=ocr-retry-feedback-closure-apply`, requires the
+  execution-bundle report and feedback-closure preview to both be `ok`, backs
+  up the current manual eval warehouse under
+  `.local_archive/manual-evals-feedback-closure-apply-<timestamp>/`, and emits
+  `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`.
+- Why: The preview gate proved the closeable feedback set, but closure still
+  changes the manual eval warehouse. The implemented apply gate keeps that
+  mutation explicit, backup-first, and limited to feedback `status`,
+  `action_taken`, and `updated_at`; it still excludes live eval rows, OCR
+  reruns, warehouse refresh, OCR row mutation, inferred source links, and pulse
+  work.
