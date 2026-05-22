@@ -321,6 +321,13 @@ Use this doc for operator procedure.
     `.local/manual_eval_runs/ocr_retry/`
   - does not close feedback, write live eval rows, refresh `manual_evals.db`,
     or mutate the manual eval warehouse
+- OCR retry execution bundle inspection:
+  - `make manual-evals-ocr-retry-execution-report RUN_DIR=<path>`
+  - reads one local ignored execution bundle without running OCR or mutating
+    eval data
+  - reports `ok`, `attention`, or `error` after checking files, run IDs,
+    request/response counts, provider failure status, stop reasons, and the
+    local-bundle mutation boundary
 - `make docs`
   - start or reuse the local server and print the API docs URL
 - `make docs-open`

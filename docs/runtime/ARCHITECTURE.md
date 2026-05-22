@@ -160,7 +160,7 @@ This page is the structural map of the tracked system.
     execution-gate contract
 - `OCR_RETRY_EXECUTION_GATE`
   - local-bundle OCR retry execution gate shape, mutation boundary, and
-    rollback contract
+    rollback/inspection contract
 - local `SESSION_HANDOFF`
   - active slice and next-session carryover
 

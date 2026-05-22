@@ -8,9 +8,12 @@ from tempfile import TemporaryDirectory
 from tools.build_manual_evals_db import build_manual_evals_db
 from tools.manual_evals_db_health import (
     OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+    OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION,
     OCR_RETRY_EXECUTION_SCHEMA_VERSION,
     OcrRetryExecutionProviderError,
+    build_ocr_retry_execution_bundle_report,
     build_ocr_retry_selection_template_report,
+    format_ocr_retry_execution_bundle_report,
     format_ocr_retry_execution_report,
     write_ocr_retry_execution_bundle,
 )
@@ -223,6 +226,135 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
                 "none",
             )
             self.assertEqual(_feedback_statuses(output_db), ["open"])
+
+    def test_execution_bundle_report_inspects_local_bundle_without_path_leak(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                ocr_provider="scaffold",
+                ocr_model="mock-ocr",
+                run_id="run-report-ok",
+                ocr_runner=lambda request: {
+                    "status": "ok",
+                    "provider": "mock",
+                    "model": "mock-ocr",
+                    "extracted_text": "fresh OCR text",
+                },
+            )
+
+            run_dir = tmp / "runs" / "run-report-ok"
+            report = build_ocr_retry_execution_bundle_report(run_dir=run_dir)
+            summary = format_ocr_retry_execution_bundle_report(report)
+
+            self.assertEqual(
+                report["schema_version"], OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION
+            )
+            self.assertEqual(report["state"], "ok")
+            self.assertEqual(report["run_id"], "run-report-ok")
+            self.assertEqual(report["counts"]["requests"], 1)
+            self.assertEqual(report["counts"]["responses"], 1)
+            self.assertEqual(report["counts"]["succeeded"], 1)
+            self.assertEqual(report["counts"]["failed"], 0)
+            self.assertEqual(
+                report["mutation_boundary"]["manual_eval_warehouse"],
+                "none",
+            )
+            self.assertIn(
+                "manual eval OCR retry execution bundle: state=ok run=run-report-ok",
+                summary,
+            )
+            self.assertIn("dir=run-report-ok", summary)
+            self.assertNotIn(tmpdir, summary)
+            self.assertEqual(_feedback_statuses(output_db), ["open"])
+
+    def test_execution_bundle_report_flags_provider_failure_as_attention(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, artifact_ids = _build_ready_selection_fixture(
+                tmp,
+                duplicate_artifacts=True,
+            )
+
+            def partial_runner(request: dict[str, object]) -> dict[str, object]:
+                if request["artifact_id"] == artifact_ids[0]:
+                    return {"status": "ok", "extracted_text": "first OCR text"}
+                raise OcrRetryExecutionProviderError(
+                    "rate limit reached",
+                    status="rate_limited",
+                    retry_after="7",
+                )
+
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                ocr_provider="scaffold",
+                ocr_model="mock-ocr",
+                run_id="run-report-attention",
+                ocr_runner=partial_runner,
+            )
+
+            report = build_ocr_retry_execution_bundle_report(
+                run_dir=tmp / "runs" / "run-report-attention"
+            )
+
+            self.assertEqual(report["state"], "attention")
+            self.assertEqual(report["counts"]["requests"], 2)
+            self.assertEqual(report["counts"]["responses"], 2)
+            self.assertEqual(report["counts"]["failed"], 1)
+            self.assertEqual(report["inspection_blockers"], [])
+            self.assertIn("provider failures", report["warnings"][0])
+
+    def test_execution_bundle_report_blocks_on_mutation_boundary_drift(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                run_id="run-report-mutated",
+                ocr_runner=lambda request: {
+                    "status": "ok",
+                    "extracted_text": "fresh OCR text",
+                },
+            )
+            run_dir = tmp / "runs" / "run-report-mutated"
+            request_rows = [
+                json.loads(line)
+                for line in (run_dir / "requests.jsonl").read_text("utf-8").splitlines()
+            ]
+            request_rows[0]["warehouse_mutation"] = "write"
+            (run_dir / "requests.jsonl").write_text(
+                "\n".join(json.dumps(row) for row in request_rows) + "\n",
+                encoding="utf-8",
+            )
+
+            report = build_ocr_retry_execution_bundle_report(run_dir=run_dir)
+
+            self.assertEqual(report["state"], "error")
+            self.assertIn(
+                "warehouse_mutation_not_none",
+                [blocker["code"] for blocker in report["inspection_blockers"]],
+            )
 
     def test_context_only_selection_blocks_without_provider_call(self) -> None:
         with TemporaryDirectory() as tmpdir:

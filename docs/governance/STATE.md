@@ -220,6 +220,13 @@ Last updated: 2026-05-21
     in-process, writes ignored run bundles under
     `.local/manual_eval_runs/ocr_retry/`, and does not close feedback, write
     live eval rows, refresh `manual_evals.db`, or mutate the warehouse
+  - `make manual-evals-ocr-retry-execution-report` inspects one local OCR retry
+    execution bundle with `RUN_DIR=<path>`, using
+    `schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`
+  - OCR retry execution bundle reports are read-only, hide source file paths in
+    terminal output, and check bundle files, run ID alignment,
+    request/response counts, provider failure status, stop reasons, and the
+    no-warehouse-mutation boundary before any future closure or warehouse gate
   - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` defines the local-bundle OCR
     retry executor boundary, including rollback and failure handling
   - manual eval warehouse rebuilds resolve OCR source images from extracted

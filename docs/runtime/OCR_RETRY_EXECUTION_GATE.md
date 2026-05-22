@@ -94,6 +94,29 @@ The bundle records:
 The implementation must not close feedback, write live eval rows, or refresh
 `manual_evals.db`. Those are separate follow-up gates.
 
+## Inspection Target
+
+Generated execution bundles are inspected before any follow-up mutation gate:
+
+- `make manual-evals-ocr-retry-execution-report`
+- alias: `make manualdb-ocr-retry-execution-report`
+- required input: `RUN_DIR=<path>`
+- JSON schema:
+  `schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`
+
+The report target is read-only. It reads the bundle files, verifies that they
+stay under the run directory, checks schema versions, run ID alignment,
+request/response counts, response status counts, stop reasons, and the
+local-bundle mutation boundary. Terminal output hides source file paths and
+prints only the run ID, directory name, counts, and blocker/warning summary.
+
+Report states:
+
+- `ok`: bundle is structurally valid and all responses succeeded.
+- `attention`: bundle is structurally valid but contains provider failures or
+  skipped requests.
+- `error`: bundle structure, alignment, or mutation boundary is invalid.
+
 ## Rollback Story
 
 Rollback is local-file cleanup:

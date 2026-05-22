@@ -311,6 +311,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "## D-102: Implement OCR retry execution as a local bundle first",
             "`make manual-evals-ocr-retry-execute`",
             "`CONFIRM=ocr-retry-execute`",
+            "## D-103: Inspect OCR retry execution bundles before mutation gates",
+            "`make manual-evals-ocr-retry-execution-report`",
+            "`schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`",
         ):
             self.assertIn(expected, decisions)
 
@@ -382,6 +385,9 @@ class ResearchModelContractTests(unittest.TestCase):
             "`make manual-evals-ocr-retry-execute` is the local-bundle OCR retry",
             "`CONFIRM=ocr-retry-execute`",
             ".local/manual_eval_runs/ocr_retry/",
+            "`make manual-evals-ocr-retry-execution-report` inspects one local",
+            "`schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`",
+            "no-warehouse-mutation boundary",
             "tracked `docs/eval/`",
             "Dropbox screenshot sync root",
             "historical source-name debt",
@@ -514,6 +520,15 @@ class ResearchModelContractTests(unittest.TestCase):
             eval_map,
         )
         self.assertIn("separate explicit follow-up gate", eval_map)
+        self.assertIn(
+            "`make manual-evals-ocr-retry-execution-report RUN_DIR=<path>`",
+            eval_map,
+        )
+        self.assertIn(
+            "`schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`",
+            eval_map,
+        )
+        self.assertIn("no-warehouse-mutation", eval_map)
         self.assertIn("without inferring links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)

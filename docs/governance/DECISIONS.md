@@ -1503,3 +1503,25 @@ or branch history instead.
   bundle, not direct warehouse mutation. This gives the operator concrete OCR
   retry evidence to inspect while preserving the exact feedback and eval
   boundaries already established by the manual eval workbench.
+
+## D-103: Inspect OCR retry execution bundles before mutation gates
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr`, `execution_gate`, `local_bundle`, `inspection`
+- Human-led: The human lead approved continuing the OCR retry tooling refactor
+  while keeping eval runs, feedback closure, and warehouse mutation out of
+  scope.
+- Decision: `make manual-evals-ocr-retry-execution-report` and
+  `make manualdb-ocr-retry-execution-report` now inspect one local OCR retry
+  execution bundle via `RUN_DIR=<path>` without running OCR or mutating eval
+  data. The report emits
+  `schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`, checks
+  bundle files, schema versions, run ID alignment, request/response counts,
+  provider failure status, stop reasons, and the local-bundle mutation
+  boundary. Terminal output hides source file paths and reports only run ID,
+  directory name, counts, warnings, and blockers.
+- Why: The local executor creates concrete evidence, but that evidence needs a
+  repeatable inspection gate before any future feedback-closure, live-eval, or
+  warehouse-mutation kernel. Separating bundle inspection from mutation keeps
+  the manual eval workbench reversible and reviewable.

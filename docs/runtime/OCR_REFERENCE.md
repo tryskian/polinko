@@ -28,6 +28,9 @@ workflow, output surfaces, and tuning knobs.
     retry execution target exists for selected manual-eval OCR retry artifacts;
     it requires `SELECTION_PATH=<path>` plus `CONFIRM=ocr-retry-execute` and
     writes only ignored local run bundles
+  - use `make manual-evals-ocr-retry-execution-report RUN_DIR=<path>` to
+    inspect one ignored local OCR retry execution bundle before any future
+    closure or warehouse mutation gate
   - feedback closure, live eval rows, and manual eval warehouse mutation remain
     out of scope for the OCR retry execution gate
 
