@@ -5023,7 +5023,11 @@ def _bundle_file_path(value: object, *, run_dir: Path, fallback_name: str) -> Pa
     if not raw_path:
         return run_dir / fallback_name
     path = Path(raw_path).expanduser()
-    return path if path.is_absolute() else run_dir / path
+    if path.is_absolute():
+        return path
+    if _bundle_path_under_run_dir(path, run_dir):
+        return path
+    return run_dir / path
 
 
 def _bundle_mutation_boundary_ok(boundary: object) -> bool:

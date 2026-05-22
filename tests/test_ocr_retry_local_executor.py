@@ -1,4 +1,5 @@
 import json
+import os
 import sqlite3
 import unittest
 from contextlib import closing
@@ -323,6 +324,48 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
                 summary,
             )
             self.assertIn("dir=run-report-ok", summary)
+            self.assertNotIn(tmpdir, summary)
+            self.assertEqual(_feedback_statuses(output_db), ["open"])
+
+    def test_execution_bundle_report_accepts_repo_relative_bundle_files(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            old_cwd = Path.cwd()
+            try:
+                os.chdir(tmp)
+                write_ocr_retry_execution_bundle(
+                    db_path=output_db,
+                    selection_path=selection_path,
+                    confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                    execution_dir=Path(".local/manual_eval_runs/ocr_retry"),
+                    ocr_provider="scaffold",
+                    ocr_model="mock-ocr",
+                    run_id="run-report-relative",
+                    ocr_runner=lambda request: {
+                        "status": "ok",
+                        "provider": "mock",
+                        "model": "mock-ocr",
+                        "extracted_text": "fresh OCR text",
+                    },
+                )
+
+                run_dir = Path(".local/manual_eval_runs/ocr_retry/run-report-relative")
+                report = build_ocr_retry_execution_bundle_report(run_dir=run_dir)
+                summary = format_ocr_retry_execution_bundle_report(report)
+            finally:
+                os.chdir(old_cwd)
+
+            self.assertEqual(report["state"], "ok")
+            self.assertEqual(report["run_id"], "run-report-relative")
+            self.assertEqual(report["counts"]["requests"], 1)
+            self.assertEqual(report["counts"]["responses"], 1)
+            self.assertEqual(report["inspection_blockers"], [])
+            self.assertIn("dir=run-report-relative", summary)
             self.assertNotIn(tmpdir, summary)
             self.assertEqual(_feedback_statuses(output_db), ["open"])
 
