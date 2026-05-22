@@ -214,6 +214,16 @@ Use this doc for operator procedure.
   - writes a backup under `.local_archive/manual-evals-feedback-no-context-*`
     before mutating feedback `recommended_action`, `action_taken`, and
     `updated_at`
+- `make manual-evals-feedback-reclassify-preview PLAN_PATH=<path>`
+  - preview a local human-reviewed feedback reclassification plan
+  - emits `schema_version=polinko.manual_eval_feedback_reclassify.v1`
+- `make manual-evals-feedback-reclassify-apply PLAN_PATH=<path>
+  CONFIRM=manual-evals-feedback-reclassify`
+  - keeps feedback rows open while moving them between explicit manual-eval
+    action cohorts
+  - writes a backup under
+    `.local_archive/manual-evals-feedback-reclassify-*` before mutating
+    feedback `recommended_action`, `action_taken`, and `updated_at`
 - `make manual-evals-ocr-retry-candidates`
   - print the read-only OCR retry candidate packet for the default
     `ocr_retry_evidence` partial slice

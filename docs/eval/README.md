@@ -85,6 +85,17 @@ notes, exports, and runtime history.
     to feedback `recommended_action`, `action_taken`, and `updated_at`
   - JSON overlay reclassification export uses
     `schema_version=polinko.manual_eval_no_context_feedback_reclassify.v1`
+  - preview a local human-reviewed feedback reclassification plan with
+    `make manual-evals-feedback-reclassify-preview PLAN_PATH=<path>`
+  - apply that plan with
+    `make manual-evals-feedback-reclassify-apply PLAN_PATH=<path>
+    CONFIRM=manual-evals-feedback-reclassify`
+  - plan-based feedback reclassification keeps rows open, writes a backup
+    under `.local_archive/manual-evals-feedback-reclassify-*`, and limits
+    mutation to feedback `recommended_action`, `action_taken`, and
+    `updated_at`
+  - JSON feedback reclassification export uses
+    `schema_version=polinko.manual_eval_feedback_reclassify.v1`
   - inspect the first OCR retry candidate packet without mutation with
     `make manual-evals-ocr-retry-candidates`
   - JSON OCR retry candidate export uses

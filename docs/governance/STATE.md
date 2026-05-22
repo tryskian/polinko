@@ -130,6 +130,14 @@ Last updated: 2026-05-21
     open as overlay-assisted OCR hypothesis evidence, writes a backup under
     `.local_archive/manual-evals-feedback-no-context-*`, and limits mutation
     to feedback `recommended_action`, `action_taken`, and `updated_at`
+  - `make manual-evals-feedback-reclassify-preview` reads a local
+    human-reviewed plan through `PLAN_PATH=<path>` without mutation, using
+    `schema_version=polinko.manual_eval_feedback_reclassify.v1`
+  - `make manual-evals-feedback-reclassify-apply` requires
+    `PLAN_PATH=<path>` and `CONFIRM=manual-evals-feedback-reclassify`, keeps
+    matching feedback rows open, writes a backup under
+    `.local_archive/manual-evals-feedback-reclassify-*`, and limits mutation
+    to feedback `recommended_action`, `action_taken`, and `updated_at`
   - `make manual-evals-ocr-retry-candidates` prints a read-only OCR retry
     candidate packet for selected open feedback, grouped by source session and
     latest same-session OCR run, using
