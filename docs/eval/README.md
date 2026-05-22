@@ -173,6 +173,13 @@ notes, exports, and runtime history.
   - execution-bundle reports verify files, run IDs, request/response counts,
     provider failure status, stop reasons, and the no-warehouse-mutation
     boundary before any future feedback closure or warehouse mutation
+  - preview OCR retry feedback closure without mutation with
+    `make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`
+  - JSON OCR retry feedback-closure previews use
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`
+  - feedback-closure previews group successful OCR retry responses by feedback
+    ID and keep feedback status, action-taken text, eval rows, and
+    `manual_evals.db` unchanged until a separate apply gate exists
   - image resolution checks extracted files first across private screenshot
     roots, tracked `docs/eval/` snapshots, the Dropbox screenshot sync root,
     and local export roots, then matching files inside `.zip` archives under

@@ -99,6 +99,14 @@ operator input tooling:
   - checks bundle files, run ID alignment, request/response counts, provider
     failure status, stop reasons, and the no-warehouse-mutation boundary
   - stays read-only and hides source file paths from terminal output
+- `make manual-evals-ocr-retry-feedback-closure-preview`
+  - reads the same local ignored run bundle through `RUN_DIR=<path>`
+  - emits
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`
+  - groups successful OCR retry responses by feedback ID and previews which
+    feedback rows would be closeable
+  - stays read-only and does not close feedback, write action-taken text,
+    refresh `manual_evals.db`, write eval rows, or mutate the warehouse
 
 The current OCR lane inventory is the reference instance for read-only local
 evidence inspection:

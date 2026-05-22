@@ -227,6 +227,14 @@ Last updated: 2026-05-21
     terminal output, and check bundle files, run ID alignment,
     request/response counts, provider failure status, stop reasons, and the
     no-warehouse-mutation boundary before any future closure or warehouse gate
+  - `make manual-evals-ocr-retry-feedback-closure-preview` previews feedback
+    closure from one inspected OCR retry execution bundle with
+    `RUN_DIR=<path>`, using
+    `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`
+  - OCR retry feedback-closure previews group successful responses by feedback
+    ID, mark mixed provider status as `attention`, and remain read-only: they
+    do not close feedback, write action-taken text, refresh `manual_evals.db`,
+    write eval rows, or mutate the warehouse
   - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` defines the local-bundle OCR
     retry executor boundary, including rollback and failure handling
   - manual eval warehouse rebuilds resolve OCR source images from extracted

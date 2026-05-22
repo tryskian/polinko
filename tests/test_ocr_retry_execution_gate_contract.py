@@ -39,6 +39,9 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
             "`RUN_DIR=<path>`",
             "`schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`",
             "The report target is read-only.",
+            "`make manual-evals-ocr-retry-feedback-closure-preview`",
+            "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`",
+            "The feedback-closure preview target is read-only.",
             "selection validation reports `state=ok`",
             "selection apply-preview reports `state=ok`",
             "execution readiness reports `state=ready`",
@@ -76,6 +79,7 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
                 "OCR retry execution",
                 "make manual-evals-ocr-retry-execute",
                 "make manual-evals-ocr-retry-execution-report",
+                "make manual-evals-ocr-retry-feedback-closure-preview",
             ),
             "docs/governance/STATE.md": (
                 "docs/runtime/OCR_RETRY_EXECUTION_GATE.md",
@@ -104,7 +108,9 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
         )
         self.assertIn("--ocr-retry-execute", health_tool)
         self.assertIn("--ocr-retry-execution-report", health_tool)
+        self.assertIn("--ocr-retry-feedback-closure-preview", health_tool)
         self.assertIn("OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION", health_tool)
+        self.assertIn("OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION", health_tool)
         self.assertIn("--confirm", health_tool)
         self.assertIn("OCR_RETRY_EXECUTION_CONFIRM_TOKEN", health_tool)
         self.assertIn("CONFIRM=ocr-retry-execute", health_tool)
