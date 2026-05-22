@@ -1662,3 +1662,44 @@ or branch history instead.
   feedback `recommended_action`, `action_taken`, and `updated_at`; it still
   excludes feedback closure, OCR reruns, eval runs, warehouse refresh, source
   DB mutation, inferred source links, and pulse work.
+
+## D-110: Split mixed grounding feedback through a local plan gate
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `feedback_reclassification`, `backup_first`,
+  `local_mutation`
+- Human-led: The human lead clarified that old manual-eval feedback rows can
+  contain different hypothesis/evidence lanes and approved preserving them in
+  the correct manual-eval cohorts without running evals or pulse work.
+- Decision: `make manual-evals-feedback-reclassify-preview` and
+  `make manualdb-feedback-reclassify-preview` now read a local
+  human-reviewed JSON plan via `PLAN_PATH=<path>` and emit
+  `schema_version=polinko.manual_eval_feedback_reclassify.v1`. The apply
+  targets, `make manual-evals-feedback-reclassify-apply` and
+  `make manualdb-feedback-reclassify-apply`, require the same `PLAN_PATH` plus
+  `CONFIRM=manual-evals-feedback-reclassify`, back up the active manual eval
+  warehouse under `.local_archive/manual-evals-feedback-reclassify-*`, keep
+  matching feedback rows open, and reclassify only their explicit
+  `recommended_action`, `action_taken`, and `updated_at` fields.
+- Why: The manual eval warehouse is mixed evidence, not one uniform execution
+  queue. Plan-based reclassification keeps human-reviewed intent explicit,
+  removes stale/coarse cohort labels from future OCR retry work, and preserves
+  reversibility without mutating feedback closure state, OCR rows, eval rows,
+  source history, inferred source links, warehouse refreshes, or pulse work.
+
+## D-111: Make `make end` enforce clean synced main
+
+- Date: `2026-05-21`
+- Category: `operator_workflow`
+- Tags: `closeout`, `git`, `main`, `safety_gate`
+- Human-led: The human lead caught that `make end` could pass on a feature
+  branch, which contradicted the repo closeout contract.
+- Decision: `make end` now runs `make end-git-check` as its first step.
+  Closeout fails unless the current branch is `main`, the working tree is
+  clean, and local `main` is synced with `origin/main`. `make end-git-check`
+  remains available as a standalone git-only check.
+- Why: Branch-local validation and final closeout are different states. A
+  feature branch can pass local quality checks, but the end-of-day closeout
+  should only pass after the protected-main merge flow has completed and the
+  local workspace is back on clean synced `main`.

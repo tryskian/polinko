@@ -124,9 +124,9 @@ Use this doc for operator procedure.
 2. Package the branch when the kernel is ready.
 3. Merge through the protected-main PR flow.
 4. After merge, switch back to `main` and pull fast-forward only.
-5. Run the literal closeout routine:
+5. Run the literal closeout routine from clean synced `main`:
    - `make end`
-6. If you need doc freshness or clean-main verification as standalone checks, run:
+6. If you need companion checks as standalone checks, run:
    - `make end-docs-check`
    - `make end-git-check`
 7. Update tracked current truth and local handoff before stopping.
@@ -214,6 +214,16 @@ Use this doc for operator procedure.
   - writes a backup under `.local_archive/manual-evals-feedback-no-context-*`
     before mutating feedback `recommended_action`, `action_taken`, and
     `updated_at`
+- `make manual-evals-feedback-reclassify-preview PLAN_PATH=<path>`
+  - preview a local human-reviewed feedback reclassification plan
+  - emits `schema_version=polinko.manual_eval_feedback_reclassify.v1`
+- `make manual-evals-feedback-reclassify-apply PLAN_PATH=<path>
+  CONFIRM=manual-evals-feedback-reclassify`
+  - keeps feedback rows open while moving them between explicit manual-eval
+    action cohorts
+  - writes a backup under
+    `.local_archive/manual-evals-feedback-reclassify-*` before mutating
+    feedback `recommended_action`, `action_taken`, and `updated_at`
 - `make manual-evals-ocr-retry-candidates`
   - print the read-only OCR retry candidate packet for the default
     `ocr_retry_evidence` partial slice
@@ -389,9 +399,9 @@ Use this doc for operator procedure.
   - start or reuse the local server and launch the PASS/FAIL viz URL in the
     system browser
 - `make end`
-  - literal legacy closeout routine plus security gate: transcript fix/check,
-    doctor, Python style/type checks, docs lint, tests, security checks, and
-    stop background tasks
+  - literal closeout routine from clean synced `main`: clean-main Git check,
+    transcript fix/check, doctor, Python style/type checks, docs lint, tests,
+    security checks, and stop background tasks
 - `make end-docs-check`
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make security-checks`
@@ -423,4 +433,4 @@ Use this doc for operator procedure.
 - `make openai-limits OPENAI_PROJECT_ID=<project_id>`
   - print OpenAI project rate limits
 - `make end-git-check`
-  - clean-main closeout check
+  - standalone clean-main closeout check; `make end` runs it first

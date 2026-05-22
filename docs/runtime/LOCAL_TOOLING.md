@@ -148,6 +148,18 @@ operator input tooling:
   - keeps feedback rows open as overlay-assisted OCR hypothesis evidence while
     mutating only feedback
     `recommended_action`, `action_taken`, and `updated_at`
+- `make manual-evals-feedback-reclassify-preview`
+  - reads a local human-reviewed reclassification plan through
+    `PLAN_PATH=<path>`
+  - emits `schema_version=polinko.manual_eval_feedback_reclassify.v1`
+  - stays read-only
+- `make manual-evals-feedback-reclassify-apply`
+  - reads the same local plan through `PLAN_PATH=<path>`
+  - requires `CONFIRM=manual-evals-feedback-reclassify`
+  - writes a backup-first warehouse copy under
+    `.local_archive/manual-evals-feedback-reclassify-*`
+  - keeps feedback rows open while mutating only feedback
+    `recommended_action`, `action_taken`, and `updated_at`
 
 The current OCR lane inventory is the reference instance for read-only local
 evidence inspection:

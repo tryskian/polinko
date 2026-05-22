@@ -8,6 +8,8 @@ from tempfile import TemporaryDirectory
 
 from tools.build_manual_evals_db import build_manual_evals_db
 from tools.manual_evals_db_health import (
+    FEEDBACK_RECLASSIFY_CONFIRM_TOKEN,
+    FEEDBACK_RECLASSIFY_SCHEMA_VERSION,
     OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
     OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION,
     OCR_RETRY_EXECUTION_SCHEMA_VERSION,
@@ -21,12 +23,14 @@ from tools.manual_evals_db_health import (
     NO_CONTEXT_RECLASSIFY_CONFIRM_TOKEN,
     NO_CONTEXT_RECLASSIFY_SCHEMA_VERSION,
     OcrRetryExecutionProviderError,
+    build_feedback_reclassify_report,
     build_no_context_feedback_reclassify_report,
     build_ocr_retry_execution_bundle_report,
     build_ocr_retry_feedback_closure_apply_report,
     build_ocr_retry_feedback_closure_preview_report,
     build_ocr_retry_feedback_closure_restore_preview_report,
     build_ocr_retry_selection_template_report,
+    format_feedback_reclassify_report,
     format_no_context_feedback_reclassify_report,
     format_ocr_retry_execution_bundle_report,
     format_ocr_retry_execution_report,
@@ -35,6 +39,7 @@ from tools.manual_evals_db_health import (
     format_ocr_retry_feedback_closure_preview_report,
     format_ocr_retry_feedback_closure_restore_report,
     format_ocr_retry_selection_template_report,
+    write_feedback_reclassify,
     write_ocr_retry_execution_bundle,
     write_ocr_retry_feedback_closure_apply,
     write_ocr_retry_feedback_closure_restore,
@@ -285,6 +290,171 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
             )
             self.assertIn(
                 "backup_dir=manual-evals-feedback-no-context-20260521T090807Z",
+                summary,
+            )
+            self.assertNotIn(tmpdir, summary)
+
+    def test_feedback_reclassify_plan_preserves_open_feedback(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            _init_history_db(history_db, feedback_outcome="fail")
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET status = 'open',
+                        tags_json = ?,
+                        note = ?,
+                        recommended_action = ?
+                    """,
+                    (
+                        json.dumps(
+                            {
+                                "positive": [],
+                                "negative": ["grounding_gap"],
+                                "all": ["grounding_gap"],
+                            }
+                        ),
+                        'Expected "wubble" but observed "wobble".',
+                        "Re-run with grounding constraints and verify against source evidence.",
+                    ),
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[],
+                include_thumbnails=False,
+            )
+            plan_path = tmp / "feedback_reclassify.json"
+            plan_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": (
+                            "polinko.manual_eval_feedback_reclassify_plan.v1"
+                        ),
+                        "decisions": [
+                            {
+                                "feedback_id": 1,
+                                "recommended_action": (
+                                    "Preserve as expected-output regression: "
+                                    'expected "wubble" but observed "wobble"; '
+                                    "rerun the exact prompt and compare against "
+                                    "expected wording."
+                                ),
+                                "rationale": (
+                                    "Manual note identifies a concrete expected-output "
+                                    "mismatch, not source grounding debt."
+                                ),
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            preview = build_feedback_reclassify_report(
+                db_path=output_db,
+                plan_path=plan_path,
+            )
+            preview_summary = format_feedback_reclassify_report(preview)
+
+            self.assertEqual(
+                preview["schema_version"],
+                FEEDBACK_RECLASSIFY_SCHEMA_VERSION,
+            )
+            self.assertEqual(preview["state"], "ok")
+            self.assertEqual(preview["counts"]["ready_feedback"], 1)
+            self.assertEqual(
+                preview["items"][0]["current_cohort"], "grounding_source_verification"
+            )
+            self.assertEqual(
+                preview["items"][0]["new_cohort"],
+                "expected_output_regression",
+            )
+            self.assertIn(
+                "manual eval feedback reclassify: state=ok mode=preview",
+                preview_summary,
+            )
+            self.assertNotIn(tmpdir, preview_summary)
+
+            missing_confirmation = write_feedback_reclassify(
+                db_path=output_db,
+                plan_path=plan_path,
+                confirm_token="",
+                backup_root=tmp / "archive",
+                applied_at="20260521T111213Z",
+            )
+            self.assertEqual(missing_confirmation["state"], "blocked")
+            self.assertEqual(
+                missing_confirmation["apply_blockers"][0]["code"],
+                "missing_confirmation",
+            )
+            self.assertEqual(missing_confirmation["counts"]["backups_written"], 0)
+
+            before_rows = _feedback_rows(output_db)
+            report = write_feedback_reclassify(
+                db_path=output_db,
+                plan_path=plan_path,
+                confirm_token=FEEDBACK_RECLASSIFY_CONFIRM_TOKEN,
+                backup_root=tmp / "archive",
+                applied_at="20260521T111213Z",
+            )
+            summary = format_feedback_reclassify_report(report)
+
+            self.assertEqual(report["state"], "applied")
+            self.assertEqual(report["counts"]["updated_feedback_rows"], 1)
+            self.assertEqual(report["updated_feedback_ids"], [1])
+            backup_dir = (
+                tmp / "archive" / "manual-evals-feedback-reclassify-20260521T111213Z"
+            )
+            self.assertTrue((backup_dir / "manual_evals.db").is_file())
+            self.assertTrue((backup_dir / "manifest.json").is_file())
+            after_rows = _feedback_rows(output_db)
+            self.assertEqual(after_rows[0]["status"], "open")
+            self.assertEqual(
+                after_rows[0]["recommended_action"],
+                preview["items"][0]["new_recommended_action"],
+            )
+            self.assertIn(
+                "Reclassified by manual feedback reclassification gate",
+                str(after_rows[0]["action_taken"]),
+            )
+            self.assertIn(
+                "expected_output_regression",
+                str(after_rows[0]["action_taken"]),
+            )
+            self.assertGreater(
+                int(after_rows[0]["updated_at"]),
+                int(before_rows[0]["updated_at"]),
+            )
+            for unchanged_column in (
+                "source_id",
+                "era",
+                "source_key",
+                "source_label",
+                "source_history_db",
+                "source_session_id",
+                "session_id",
+                "message_id",
+                "outcome",
+                "tags_json",
+                "note",
+                "created_at",
+            ):
+                self.assertEqual(
+                    after_rows[0][unchanged_column],
+                    before_rows[0][unchanged_column],
+                    unchanged_column,
+                )
+            self.assertIn(
+                "manual eval feedback reclassify: state=applied mode=apply",
+                summary,
+            )
+            self.assertIn(
+                "backup_dir=manual-evals-feedback-reclassify-20260521T111213Z",
                 summary,
             )
             self.assertNotIn(tmpdir, summary)

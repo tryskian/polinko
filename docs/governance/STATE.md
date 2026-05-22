@@ -130,6 +130,14 @@ Last updated: 2026-05-21
     open as overlay-assisted OCR hypothesis evidence, writes a backup under
     `.local_archive/manual-evals-feedback-no-context-*`, and limits mutation
     to feedback `recommended_action`, `action_taken`, and `updated_at`
+  - `make manual-evals-feedback-reclassify-preview` reads a local
+    human-reviewed plan through `PLAN_PATH=<path>` without mutation, using
+    `schema_version=polinko.manual_eval_feedback_reclassify.v1`
+  - `make manual-evals-feedback-reclassify-apply` requires
+    `PLAN_PATH=<path>` and `CONFIRM=manual-evals-feedback-reclassify`, keeps
+    matching feedback rows open, writes a backup under
+    `.local_archive/manual-evals-feedback-reclassify-*`, and limits mutation
+    to feedback `recommended_action`, `action_taken`, and `updated_at`
   - `make manual-evals-ocr-retry-candidates` prints a read-only OCR retry
     candidate packet for selected open feedback, grouped by source session and
     latest same-session OCR run, using
@@ -363,7 +371,9 @@ Last updated: 2026-05-21
   - `PACKAGE_BOUNDARY` holds the Python package-boundary contract
   - `make package-install-check` verifies the editable-install rail
   - local `SESSION_HANDOFF` holds the active slice
-  - `make end` now mirrors the legacy `make eod` closeout routine directly
+  - `make end` now runs the clean-main git check first, then the technical
+    closeout routine; feature branches use branch-local validation targets
+    until the protected-main merge flow is complete
 
 ## Active Priorities
 
@@ -406,6 +416,6 @@ Last updated: 2026-05-21
 - `make test`
 - `make security-checks`
 - `make ci` when checking the local equivalent of GitHub CI job targets
-- `make end`
+- `make end` after merge and sync on clean `main`
 - `make end-docs-check` when validating current-truth freshness explicitly
-- `make end-git-check` after merge and sync
+- `make end-git-check` as the standalone clean-main check

@@ -61,27 +61,32 @@ Aliases:
 
 Sequence:
 
-1. Run transcript repair:
+1. Verify the Git closeout state:
+   - `make end-git-check`
+   - current branch must be `main`
+   - working tree must be clean
+   - local `main` must be synced with `origin/main`
+2. Run transcript repair:
    - `make transcript-fix`
-2. Validate curated transcripts:
+3. Validate curated transcripts:
    - `make transcript-check`
-3. Verify the environment:
+4. Verify the environment:
    - `make doctor-env`
-4. Run Python style checks:
+5. Run Python style checks:
    - `make ci-python-style`
-5. Run Python type checks:
+6. Run Python type checks:
    - `make ci-python-type-check`
-6. Lint docs:
+7. Lint docs:
    - `make lint-docs`
-7. Run tests:
+8. Run tests:
    - `make test`
-8. Run dependency security checks:
+9. Run dependency security checks:
    - `make security-checks`
-9. Stop background tasks:
-   - `make eod-stop`
-     - `make server-daemon-stop`
-     - `make caffeinate-off-all`
-     - `make session-status`
+10. Stop background tasks:
+    - `make eod-stop`
+      - `make server-daemon-stop`
+      - `make caffeinate-off-all`
+      - `make session-status`
 
 Preflight:
 
@@ -97,6 +102,7 @@ Explicit companion checks:
 - `make type-check`
   - runs mypy against active `src/` and `tools/` Python surfaces
 - `make end-git-check`
+  - also available as a standalone git-only closeout check
   - verifies current branch is `main`
   - verifies the working tree is clean
   - verifies local `main` is synced with `origin/main`
