@@ -5784,6 +5784,23 @@ def _ocr_retry_feedback_closure_apply_blocker(
     return {"code": code, "detail": detail}
 
 
+def _feedback_status_normalized(status: object) -> str:
+    return str(status or "").strip().casefold()
+
+
+def _feedback_status_is_open(status: object) -> bool:
+    return _feedback_status_normalized(status) == "open"
+
+
+def _feedback_status_is_closed(status: object) -> bool:
+    return _feedback_status_normalized(status) == "closed"
+
+
+def _closed_feedback_status_for_open_status(status: object) -> str:
+    raw_status = str(status or "").strip()
+    return "CLOSED" if raw_status.isupper() else "closed"
+
+
 def _feedback_closure_apply_counts(
     preview_report: dict[str, Any] | None,
     *,
@@ -6120,7 +6137,9 @@ def write_ocr_retry_feedback_closure_apply(
             non_open_feedback = [
                 f"{feedback_id}={rows_by_id[feedback_id].get('status') or 'unknown'}"
                 for feedback_id in feedback_ids
-                if str(rows_by_id.get(feedback_id, {}).get("status") or "") != "open"
+                if not _feedback_status_is_open(
+                    rows_by_id.get(feedback_id, {}).get("status")
+                )
             ]
             if non_open_feedback:
                 blockers.append(
@@ -6204,7 +6223,7 @@ def write_ocr_retry_feedback_closure_apply(
         no_longer_open = [
             f"{feedback_id}={current_statuses.get(feedback_id) or 'missing'}"
             for feedback_id in feedback_ids
-            if current_statuses.get(feedback_id) != "open"
+            if not _feedback_status_is_open(current_statuses.get(feedback_id))
         ]
         if no_longer_open:
             conn.rollback()
@@ -6227,6 +6246,8 @@ def write_ocr_retry_feedback_closure_apply(
             preview_item = item_by_feedback_id[feedback_id]
             evidence = preview_item.get("evidence")
             evidence_count = len(evidence) if isinstance(evidence, list) else 0
+            status_before = current_statuses.get(feedback_id) or "open"
+            status_after = _closed_feedback_status_for_open_status(status_before)
             action_taken = _feedback_closure_action_taken(
                 run_id=run_id,
                 feedback_id=feedback_id,
@@ -6239,15 +6260,15 @@ def write_ocr_retry_feedback_closure_apply(
                 SET status = ?,
                     action_taken = ?,
                     updated_at = ?
-                WHERE id = ? AND status = ?
+                WHERE id = ? AND lower(status) = ?
                 """,
-                ("closed", action_taken, updated_at, feedback_id, "open"),
+                (status_after, action_taken, updated_at, feedback_id, "open"),
             )
             apply_items.append(
                 {
                     "feedback_id": feedback_id,
-                    "status_before": "open",
-                    "status_after": "closed",
+                    "status_before": status_before,
+                    "status_after": status_after,
                     "action_taken": action_taken,
                     "updated_at": updated_at,
                     "evidence_count": evidence_count,
@@ -6351,7 +6372,7 @@ def _status_count(rows_by_id: dict[int, dict[str, Any]], status: str) -> int:
     return sum(
         1
         for row in rows_by_id.values()
-        if str(row.get("status") or "").strip() == status
+        if _feedback_status_normalized(row.get("status")) == status.casefold()
     )
 
 
@@ -6546,7 +6567,7 @@ def build_ocr_retry_feedback_closure_apply_report(
         active_status = str(active_row.get("status") or "missing")
         backup_status = str(backup_row.get("status") or "missing")
         action_taken = _normalize_text(active_row.get("action_taken"))
-        if active_status != "closed":
+        if not _feedback_status_is_closed(active_status):
             blockers.append(
                 _feedback_closure_apply_report_blocker(
                     "active_feedback_not_closed",
@@ -6560,7 +6581,7 @@ def build_ocr_retry_feedback_closure_apply_report(
                     f"active feedback {feedback_id} has no action_taken text.",
                 )
             )
-        if backup_status != "open":
+        if not _feedback_status_is_open(backup_status):
             blockers.append(
                 _feedback_closure_apply_report_blocker(
                     "backup_feedback_not_open",
