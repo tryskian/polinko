@@ -775,6 +775,59 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
             )
             self.assertNotIn(tmpdir, verification_summary)
 
+    def test_feedback_closure_apply_accepts_uppercase_open_status(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            output_db, selection_path, _artifact_ids = _build_ready_selection_fixture(
+                tmp
+            )
+            with closing(sqlite3.connect(output_db)) as conn:
+                conn.execute("UPDATE feedback SET status = 'OPEN' WHERE id = 1")
+                conn.commit()
+            write_ocr_retry_execution_bundle(
+                db_path=output_db,
+                selection_path=selection_path,
+                confirm_token=OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
+                execution_dir=tmp / "runs",
+                run_id="run-closure-uppercase",
+                ocr_runner=lambda request: {
+                    "status": "ok",
+                    "provider": "mock",
+                    "model": "mock-ocr",
+                    "extracted_text": "fresh OCR text",
+                },
+            )
+
+            report = write_ocr_retry_feedback_closure_apply(
+                db_path=output_db,
+                run_dir=tmp / "runs" / "run-closure-uppercase",
+                confirm_token=OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN,
+                backup_root=tmp / "archive",
+                applied_at="20260521T010203Z",
+            )
+            verification = build_ocr_retry_feedback_closure_apply_report(
+                db_path=output_db,
+                run_dir=tmp / "runs" / "run-closure-uppercase",
+            )
+
+            self.assertEqual(report["state"], "applied")
+            self.assertEqual(report["apply_items"][0]["status_before"], "OPEN")
+            self.assertEqual(report["apply_items"][0]["status_after"], "CLOSED")
+            self.assertEqual(_feedback_statuses(output_db), ["CLOSED"])
+            self.assertEqual(verification["state"], "ok")
+            self.assertEqual(verification["counts"]["active_closed_feedback"], 1)
+            self.assertEqual(verification["counts"]["backup_open_feedback"], 1)
+            self.assertEqual(
+                verification["feedback_rows"][0]["active_status"],
+                "CLOSED",
+            )
+            self.assertEqual(
+                verification["feedback_rows"][0]["backup_status"],
+                "OPEN",
+            )
+
     def test_feedback_closure_restore_preview_and_restore_from_apply_backup(
         self,
     ) -> None:
