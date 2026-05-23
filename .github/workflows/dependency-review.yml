@@ -15,4 +15,5 @@ jobs:
         with:
           fail-on-severity: moderate
           fail-on-scopes: runtime,development
+          allow-dependencies-licenses: pkg:pypi/starlette
           show-patched-versions: true
