@@ -1745,3 +1745,20 @@ or branch history instead.
   only the future gate and mutation boundary; it excludes feedback closure,
   OCR reruns, eval writes, warehouse mutation, source-history mutation,
   inferred links, and pulse work.
+
+## D-114: Pin Starlette in the dependency input for security visibility
+
+- Date: `2026-05-22`
+- Category: `dependency_management`
+- Tags: `starlette`, `pip_audit`, `pip_tools`, `requirements`, `security`
+- Human-led: The human lead connected the same Starlette security issue seen
+  in sibling repos to Polinko's dependency input and asked for the durable
+  dependency-layer fix.
+- Decision: Pin `starlette==1.0.1` directly in `requirements.in` and
+  regenerate `requirements.txt` with pip-tools. Keep `pyproject.toml` free of
+  runtime dependencies under the current repo policy.
+- Why: `starlette` is transitive through FastAPI and MCP, but the security gate
+  audits the generated lock and Dependabot watches the pip input. Pinning the
+  fixed release in `requirements.in` keeps future lock regeneration,
+  Dependabot updates, and `pip-audit` aligned without weakening the security
+  check or adding runtime dependency metadata to `pyproject.toml`.
