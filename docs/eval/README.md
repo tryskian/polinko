@@ -73,6 +73,10 @@ notes, exports, and runtime history.
     `make manual-evals-feedback-actionables COHORT=ocr_retry_evidence`
   - combine `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>` for
     terminal-native manual triage filters
+  - inspect source-history context for selected open feedback rows with
+    `make manual-evals-feedback-source-context`
+  - JSON source-context export uses
+    `schema_version=polinko.manual_eval_feedback_source_context.v1`
   - preview overlay-hypothesis OCR feedback rows that have no same-session OCR
     context and whose source response asked for new image evidence with
     `make manual-evals-no-context-reclassify-preview`

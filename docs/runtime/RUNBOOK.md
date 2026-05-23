@@ -202,6 +202,12 @@ Use this doc for operator procedure.
   - print read-only row-level actionables for one selected cohort
   - combine with `OUTCOME=<outcome>` and `LIMIT=<n>` for smaller manual
     triage slices
+- `make manual-evals-feedback-source-context`
+  - print read-only source-history context for selected open feedback rows
+  - defaults to the `grounding_source_verification` fail slice
+  - combine with `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>`
+    for explicit manual triage slices
+  - emits `schema_version=polinko.manual_eval_feedback_source_context.v1`
 - `make manual-evals-no-context-reclassify-preview`
   - preview overlay-hypothesis OCR feedback rows that have no same-session OCR
     context and whose source response asked for new image evidence

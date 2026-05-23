@@ -1703,3 +1703,24 @@ or branch history instead.
   feature branch can pass local quality checks, but the end-of-day closeout
   should only pass after the protected-main merge flow has completed and the
   local workspace is back on clean synced `main`.
+
+## D-112: Add read-only source context for non-OCR feedback hygiene
+
+- Date: `2026-05-22`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `feedback`, `source_context`, `read_only`
+- Human-led: The human lead resumed manual-eval evidence hygiene from the
+  separated cohorts after PR #586 and kept eval runs and pulse work out of
+  scope.
+- Decision: `make manual-evals-feedback-source-context` and
+  `make manualdb-feedback-source-context` now print read-only source-history
+  context for selected open feedback rows. The target defaults to the
+  `grounding_source_verification` fail slice, supports the same
+  `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>` filters as open
+  feedback actionables, and emits
+  `schema_version=polinko.manual_eval_feedback_source_context.v1`.
+- Why: After OCR and overlay feedback were separated, the remaining grounding
+  row needs source-message inspection before any closure or rerun decision.
+  A read-only source-context packet keeps the next manual triage step anchored
+  to source history while excluding feedback closure, OCR reruns, eval writes,
+  warehouse mutation, source-history mutation, inferred links, and pulse work.
