@@ -305,6 +305,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-feedback-actionables", targets)
         self.assertIn("manual-evals-feedback-cohorts", targets)
         self.assertIn("manualdb-feedback-cohorts", targets)
+        self.assertIn("manual-evals-feedback-source-context", targets)
+        self.assertIn("manualdb-feedback-source-context", targets)
         self.assertIn("manual-evals-ocr-retry-candidates", targets)
         self.assertIn("manualdb-ocr-retry-candidates", targets)
         self.assertIn("manual-evals-ocr-retry-source-verification", targets)
@@ -376,6 +378,12 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("--open-feedback-cohorts", text)
         self.assertIn("--cohort", text)
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_FILTER_ARGS)", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-feedback-source-context "
+            r"manualdb-feedback-source-context:$",
+        )
+        self.assertIn("--feedback-source-context", text)
         self.assertRegex(
             text,
             r"(?m)^manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates:$",

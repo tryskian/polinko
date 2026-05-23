@@ -10,6 +10,7 @@ from tools.build_manual_evals_db import build_manual_evals_db
 from tools.manual_evals_db_health import (
     FEEDBACK_RECLASSIFY_CONFIRM_TOKEN,
     FEEDBACK_RECLASSIFY_SCHEMA_VERSION,
+    FEEDBACK_SOURCE_CONTEXT_SCHEMA_VERSION,
     OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
     OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION,
     OCR_RETRY_EXECUTION_SCHEMA_VERSION,
@@ -24,6 +25,7 @@ from tools.manual_evals_db_health import (
     NO_CONTEXT_RECLASSIFY_SCHEMA_VERSION,
     OcrRetryExecutionProviderError,
     build_feedback_reclassify_report,
+    build_feedback_source_context_report,
     build_no_context_feedback_reclassify_report,
     build_ocr_retry_execution_bundle_report,
     build_ocr_retry_feedback_closure_apply_report,
@@ -31,6 +33,7 @@ from tools.manual_evals_db_health import (
     build_ocr_retry_feedback_closure_restore_preview_report,
     build_ocr_retry_selection_template_report,
     format_feedback_reclassify_report,
+    format_feedback_source_context_report,
     format_no_context_feedback_reclassify_report,
     format_ocr_retry_execution_bundle_report,
     format_ocr_retry_execution_report,
@@ -161,6 +164,85 @@ def _feedback_rows(db_path: Path) -> list[dict[str, object]]:
 
 
 class OcrRetryLocalExecutorTests(unittest.TestCase):
+    def test_feedback_source_context_reads_source_history_without_mutation(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            _init_history_db(history_db, feedback_outcome="fail")
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET status = 'open',
+                        tags_json = ?,
+                        recommended_action = ?
+                    """,
+                    (
+                        json.dumps(
+                            {
+                                "positive": [],
+                                "negative": ["grounding_gap"],
+                                "all": ["grounding_gap"],
+                            }
+                        ),
+                        "Re-run with explicit grounding constraints and verify response against source evidence.",
+                    ),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES
+                      ('chat-1', 'user', 'Please answer only from source evidence.', 150, 'm-user-1', NULL),
+                      ('chat-1', 'assistant', 'Grounding-sensitive answer that needs verification.', 155, 'm-result-1', 'm-user-1'),
+                      ('chat-1', 'user', 'Follow-up after the judged response.', 165, 'm-after-1', 'm-result-1')
+                    """
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[],
+                include_thumbnails=False,
+            )
+
+            before_rows = _feedback_rows(output_db)
+            report = build_feedback_source_context_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="grounding_source_verification",
+                limit=10,
+            )
+            summary = format_feedback_source_context_report(report)
+            after_rows = _feedback_rows(output_db)
+
+            self.assertEqual(
+                report["schema_version"],
+                FEEDBACK_SOURCE_CONTEXT_SCHEMA_VERSION,
+            )
+            self.assertEqual(report["state"], "ok")
+            self.assertEqual(report["counts"]["returned_rows"], 1)
+            self.assertEqual(report["counts"]["source_messages_found"], 1)
+            self.assertEqual(report["counts"]["context_messages"], 3)
+            item = report["items"][0]
+            self.assertEqual(item["feedback_id"], 1)
+            self.assertEqual(item["source_context"]["state"], "found")
+            self.assertEqual(
+                [message["position"] for message in item["source_context"]["messages"]],
+                ["before", "target", "after"],
+            )
+            self.assertIn(
+                "manual eval feedback source context: state=ok",
+                summary,
+            )
+            self.assertIn("warehouse_mutation=read_only", summary)
+            self.assertIn("Grounding-sensitive answer", summary)
+            self.assertEqual(after_rows, before_rows)
+
     def test_no_context_feedback_reclassify_preserves_open_feedback(self) -> None:
         with TemporaryDirectory() as tmpdir:
             tmp = Path(tmpdir)

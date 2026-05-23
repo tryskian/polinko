@@ -121,6 +121,11 @@ Last updated: 2026-05-21
     `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>` Make variables;
     cohort filtering remains read-only and uses explicit `recommended_action`
     labels
+  - `make manual-evals-feedback-source-context` prints read-only
+    source-history context for selected open feedback rows using
+    `schema_version=polinko.manual_eval_feedback_source_context.v1`; it
+    defaults to the `grounding_source_verification` fail slice and does not
+    mutate feedback, OCR rows, eval rows, or source history
   - `make manual-evals-no-context-reclassify-preview` previews
     overlay-hypothesis OCR feedback rows that have no same-session OCR context
     and whose source response asked for new image evidence, using
