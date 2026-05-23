@@ -173,6 +173,7 @@ sse-starlette==3.3.4
     # via mcp
 starlette==1.0.1
     # via
+    #   -r requirements.in
     #   fastapi
     #   mcp
     #   sse-starlette

@@ -1,5 +1,6 @@
 fastapi==0.136.1
 uvicorn==0.47.0
+starlette==1.0.1
 openai==2.38.0
 openai-agents==0.17.3
 python-dotenv==1.2.2

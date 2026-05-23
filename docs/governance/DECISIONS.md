@@ -1724,3 +1724,41 @@ or branch history instead.
   A read-only source-context packet keeps the next manual triage step anchored
   to source history while excluding feedback closure, OCR reruns, eval writes,
   warehouse mutation, source-history mutation, inferred links, and pulse work.
+
+## D-113: Preview human-reviewed non-OCR feedback decisions
+
+- Date: `2026-05-22`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `feedback`, `source_context`, `decision_preview`,
+  `read_only`
+- Human-led: The human lead approved continuing the manual-eval evidence
+  hygiene sequence from the remaining grounding row while keeping eval runs
+  and pulse work out of scope.
+- Decision: `make manual-evals-feedback-decision-preview` and
+  `make manualdb-feedback-decision-preview` now read a local human-reviewed
+  decision JSON through `DECISION_PATH=<path>`, validate each selected feedback
+  row against the current source-context slice, and emit
+  `schema_version=polinko.manual_eval_feedback_decision_preview.v1`.
+- Why: The remaining grounding row should be reviewed from source context
+  before any closure or reclassification mutation. A decision preview keeps
+  the human decision explicit, source-anchored, and read-only while printing
+  only the future gate and mutation boundary; it excludes feedback closure,
+  OCR reruns, eval writes, warehouse mutation, source-history mutation,
+  inferred links, and pulse work.
+
+## D-114: Pin Starlette in the dependency input for security visibility
+
+- Date: `2026-05-22`
+- Category: `dependency_management`
+- Tags: `starlette`, `pip_audit`, `pip_tools`, `requirements`, `security`
+- Human-led: The human lead connected the same Starlette security issue seen
+  in sibling repos to Polinko's dependency input and asked for the durable
+  dependency-layer fix.
+- Decision: Pin `starlette==1.0.1` directly in `requirements.in` and
+  regenerate `requirements.txt` with pip-tools. Keep `pyproject.toml` free of
+  runtime dependencies under the current repo policy.
+- Why: `starlette` is transitive through FastAPI and MCP, but the security gate
+  audits the generated lock and Dependabot watches the pip input. Pinning the
+  fixed release in `requirements.in` keeps future lock regeneration,
+  Dependabot updates, and `pip-audit` aligned without weakening the security
+  check or adding runtime dependency metadata to `pyproject.toml`.

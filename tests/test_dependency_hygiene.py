@@ -75,12 +75,16 @@ class DependencyHygieneTests(unittest.TestCase):
     ) -> None:
         build_config = _read("makefiles/config/build.mk")
         workflow = _read(".github/workflows/ci.yml")
+        requirements_input = _read("requirements.in")
         lockfile = _read("requirements.txt")
 
         self.assertIn("REQUIREMENTS_IN ?= requirements.in", build_config)
         self.assertIn("REQUIREMENTS_LOCK ?= requirements.txt", build_config)
         self.assertIn("pip install -r requirements.txt", workflow)
         self.assertIn("--output-file=requirements.txt", lockfile)
+        self.assertIn("starlette==1.0.1", requirements_input)
+        self.assertIn("starlette==1.0.1", lockfile)
+        self.assertIn("#   -r requirements.in", lockfile)
         self.assertFalse((REPO_ROOT / "requirements.lock").exists())
 
     def test_runtime_venv_candidates_exclude_retired_custom_name(self) -> None:
