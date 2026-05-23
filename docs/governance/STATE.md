@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-21
+Last updated: 2026-05-23
 
 ## Current Truth
 
@@ -137,6 +137,11 @@ Last updated: 2026-05-21
     human-reviewed decision through `DECISION_PATH=<path>` without mutation,
     validates it against the current source-context slice, and emits
     `schema_version=polinko.manual_eval_feedback_decision_preview.v1`
+  - local feedback decision packets can record `keep_open` as the active
+    evidence posture for overlay-assisted OCR hypothesis rows that have no
+    exact OCR retry execution target; those rows remain hypothesis pressure
+    until a real OCR comparison lane exists with attached overlay/source image
+    context
   - `make manual-evals-no-context-reclassify-preview` previews
     overlay-hypothesis OCR feedback rows that have no same-session OCR context
     and whose source response asked for new image evidence, using

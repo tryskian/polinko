@@ -1782,3 +1782,22 @@ or branch history instead.
   human-reviewed input before previewing any future gate. A draft generator
   reduces manual JSON friction while preserving the same source-anchored,
   no-overwrite, no-mutation contract as other local operator input tooling.
+
+## D-116: Treat overlay feedback decisions as evidence pressure
+
+- Date: `2026-05-23`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `feedback_decisions`, `ocr_overlay`, `read_only`
+- Human-led: The human lead clarified that the overlay experiment is part of
+  the research model and should stay recorded as manual-eval evidence, not
+  folded into pulse work or ungrounded OCR retry execution.
+- Decision: `docs/runtime/LOCAL_TOOLING.md` now names manual feedback decision
+  packets as local operator inputs and records `keep_open` as the active
+  evidence posture for overlay-assisted OCR hypothesis rows that have no exact
+  OCR retry execution target. `docs/runtime/RUNBOOK.md` and
+  `docs/governance/STATE.md` mirror the rule.
+- Why: Overlay rows can be useful hypothesis pressure without being executable
+  OCR retry work. Keeping them open until there is a real OCR comparison lane
+  with attached overlay/source image context preserves the evidence chain while
+  excluding OCR reruns, feedback closure, live eval writes, warehouse mutation,
+  inferred source links, and pulse work.

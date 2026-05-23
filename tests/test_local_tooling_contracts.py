@@ -73,6 +73,7 @@ class LocalToolingContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_feedback_decision_draft.v1`",
             "`make manual-evals-feedback-decision-preview`",
             "`schema_version=polinko.manual_eval_feedback_decision_preview.v1`",
+            "Manual Feedback Decision Packets",
             "`make manual-evals-ocr-retry-feedback-closure-restore-preview`",
             "`make manual-evals-ocr-retry-feedback-closure-restore`",
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_restore.v1`",
@@ -86,6 +87,40 @@ class LocalToolingContractTests(unittest.TestCase):
             "Extract shared code only after repeated Polinko behavior proves",
             normalized_contract,
         )
+        self.assertIn(
+            "`keep_open` is the default evidence posture",
+            normalized_contract,
+        )
+        self.assertIn(
+            "until there is a real OCR comparison lane",
+            normalized_contract,
+        )
+
+    def test_overlay_feedback_decision_pressure_is_documented(self) -> None:
+        expectations = {
+            "docs/runtime/LOCAL_TOOLING.md": (
+                "overlay-assisted OCR hypothesis rows",
+                "real OCR comparison lane",
+            ),
+            "docs/runtime/RUNBOOK.md": (
+                "overlay-assisted OCR hypothesis rows",
+                "exact OCR retry execution target",
+            ),
+            "docs/governance/STATE.md": (
+                "overlay-assisted OCR hypothesis rows",
+                "hypothesis pressure",
+            ),
+            "docs/governance/DECISIONS.md": (
+                "## D-116: Treat overlay feedback decisions as evidence pressure",
+                "Human-led: The human lead clarified",
+            ),
+        }
+
+        for path, required_snippets in expectations.items():
+            text = _read(path)
+            normalized_text = " ".join(text.split())
+            for snippet in required_snippets:
+                self.assertIn(snippet, normalized_text, path)
 
     def test_runtime_and_governance_surfaces_link_contract(self) -> None:
         expectations = {

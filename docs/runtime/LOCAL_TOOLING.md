@@ -54,6 +54,27 @@ Preparation tools must not:
 Execution tools may be added only as explicit follow-up gates. They must state
 their mutation target, reuse the validator, and keep a preview path available.
 
+## Manual Feedback Decision Packets
+
+Manual feedback decision packets are local operator inputs, not warehouse
+updates. The workflow is:
+
+1. Inspect the open feedback slice with source-context tooling.
+2. Write an ignored local decision draft.
+3. Fill the draft with one of the allowed actions:
+   - `keep_open`
+   - `reclassify`
+   - `close_feedback`
+4. Preview the filled decision against the current source-context fingerprints.
+5. Add a separate explicit gate only when a future mutation is approved.
+
+For overlay-assisted OCR hypothesis rows, `keep_open` is the default evidence
+posture when the row has no exact OCR retry execution target. Those rows remain
+active hypothesis pressure until there is a real OCR comparison lane with
+attached overlay/source image context. A decision preview can record that local
+human-reviewed posture without running OCR, closing feedback, writing eval rows,
+or mutating the manual eval warehouse.
+
 The OCR retry execution gate is documented in
 `docs/runtime/OCR_RETRY_EXECUTION_GATE.md`. It writes local ignored run bundles
 only and keeps feedback closure, live eval writes, and warehouse mutation out
