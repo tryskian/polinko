@@ -219,6 +219,9 @@ Use this doc for operator procedure.
   - validates the row against current source-context evidence
   - emits `schema_version=polinko.manual_eval_feedback_decision_preview.v1`
   - stays read-only and prints the future gate/mutation boundary only
+  - use `keep_open` for overlay-assisted OCR hypothesis rows that have no exact
+    OCR retry execution target; they remain active evidence pressure until a
+    real OCR comparison lane exists with attached overlay/source image context
 - `make manual-evals-no-context-reclassify-preview`
   - preview overlay-hypothesis OCR feedback rows that have no same-session OCR
     context and whose source response asked for new image evidence
