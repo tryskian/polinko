@@ -8,6 +8,7 @@ from tempfile import TemporaryDirectory
 
 from tools.build_manual_evals_db import build_manual_evals_db
 from tools.manual_evals_db_health import (
+    FEEDBACK_DECISION_PREVIEW_SCHEMA_VERSION,
     FEEDBACK_RECLASSIFY_CONFIRM_TOKEN,
     FEEDBACK_RECLASSIFY_SCHEMA_VERSION,
     FEEDBACK_SOURCE_CONTEXT_SCHEMA_VERSION,
@@ -24,6 +25,7 @@ from tools.manual_evals_db_health import (
     NO_CONTEXT_RECLASSIFY_CONFIRM_TOKEN,
     NO_CONTEXT_RECLASSIFY_SCHEMA_VERSION,
     OcrRetryExecutionProviderError,
+    build_feedback_decision_preview_report,
     build_feedback_reclassify_report,
     build_feedback_source_context_report,
     build_no_context_feedback_reclassify_report,
@@ -32,6 +34,7 @@ from tools.manual_evals_db_health import (
     build_ocr_retry_feedback_closure_preview_report,
     build_ocr_retry_feedback_closure_restore_preview_report,
     build_ocr_retry_selection_template_report,
+    format_feedback_decision_preview_report,
     format_feedback_reclassify_report,
     format_feedback_source_context_report,
     format_no_context_feedback_reclassify_report,
@@ -241,6 +244,124 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
             )
             self.assertIn("warehouse_mutation=read_only", summary)
             self.assertIn("Grounding-sensitive answer", summary)
+            self.assertEqual(after_rows, before_rows)
+
+    def test_feedback_decision_preview_uses_source_context_without_mutation(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            _init_history_db(history_db, feedback_outcome="fail")
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET status = 'open',
+                        tags_json = ?,
+                        recommended_action = ?
+                    """,
+                    (
+                        json.dumps(
+                            {
+                                "positive": [],
+                                "negative": ["grounding_gap"],
+                                "all": ["grounding_gap"],
+                            }
+                        ),
+                        "Re-run with explicit grounding constraints and verify response against source evidence.",
+                    ),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES
+                      ('chat-1', 'user', 'Please answer only from source evidence.', 150, 'm-user-1', NULL),
+                      ('chat-1', 'assistant', 'Grounding-sensitive answer that needs verification.', 155, 'm-result-1', 'm-user-1'),
+                      ('chat-1', 'user', 'Follow-up after the judged response.', 165, 'm-after-1', 'm-result-1')
+                    """
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[],
+                include_thumbnails=False,
+            )
+
+            source_report = build_feedback_source_context_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="grounding_source_verification",
+                limit=10,
+            )
+            source_item = source_report["items"][0]
+            fingerprint = source_item["source_context"]["fingerprint"]
+            decision_path = tmp / "feedback_decision.json"
+            decision_path.write_text(
+                json.dumps(
+                    {
+                        "schema_version": ("polinko.manual_eval_feedback_decision.v1"),
+                        "decisions": [
+                            {
+                                "feedback_id": 1,
+                                "selected_action": "reclassify",
+                                "recommended_action": (
+                                    "Preserve as expected-output regression: "
+                                    "manual note shows wording mismatch."
+                                ),
+                                "source_context_fingerprint": fingerprint,
+                                "rationale": (
+                                    "Human review found the source context is "
+                                    "available, so this row can move out of "
+                                    "grounding source verification."
+                                ),
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            before_rows = _feedback_rows(output_db)
+            report = build_feedback_decision_preview_report(
+                db_path=output_db,
+                decision_path=decision_path,
+                outcome="fail",
+                cohort="grounding_source_verification",
+                limit=10,
+            )
+            summary = format_feedback_decision_preview_report(report)
+            after_rows = _feedback_rows(output_db)
+
+            self.assertEqual(
+                report["schema_version"],
+                FEEDBACK_DECISION_PREVIEW_SCHEMA_VERSION,
+            )
+            self.assertEqual(report["state"], "ok")
+            self.assertEqual(report["counts"]["ready_feedback"], 1)
+            item = report["items"][0]
+            self.assertEqual(item["feedback_id"], 1)
+            self.assertEqual(item["selected_action"], "reclassify")
+            self.assertEqual(item["source_context_state"], "found")
+            self.assertEqual(item["source_context_fingerprint"], fingerprint)
+            self.assertEqual(
+                item["would_apply"]["future_gate"],
+                "manual-evals-feedback-reclassify-apply",
+            )
+            self.assertEqual(
+                item["would_apply"]["cohort_after"],
+                "expected_output_regression",
+            )
+            self.assertIn(
+                "manual eval feedback decision preview: state=ok mode=preview",
+                summary,
+            )
+            self.assertIn("warehouse_mutation=read_only", summary)
+            self.assertNotIn(tmpdir, summary)
             self.assertEqual(after_rows, before_rows)
 
     def test_no_context_feedback_reclassify_preserves_open_feedback(self) -> None:

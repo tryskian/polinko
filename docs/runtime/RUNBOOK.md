@@ -208,6 +208,11 @@ Use this doc for operator procedure.
   - combine with `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>`
     for explicit manual triage slices
   - emits `schema_version=polinko.manual_eval_feedback_source_context.v1`
+- `make manual-evals-feedback-decision-preview DECISION_PATH=<path>`
+  - preview a local human-reviewed decision for the selected feedback slice
+  - validates the row against current source-context evidence
+  - emits `schema_version=polinko.manual_eval_feedback_decision_preview.v1`
+  - stays read-only and prints the future gate/mutation boundary only
 - `make manual-evals-no-context-reclassify-preview`
   - preview overlay-hypothesis OCR feedback rows that have no same-session OCR
     context and whose source response asked for new image evidence

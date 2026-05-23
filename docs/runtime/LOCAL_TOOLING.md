@@ -153,6 +153,12 @@ operator input tooling:
     `PLAN_PATH=<path>`
   - emits `schema_version=polinko.manual_eval_feedback_reclassify.v1`
   - stays read-only
+- `make manual-evals-feedback-decision-preview`
+  - reads a local human-reviewed feedback decision through
+    `DECISION_PATH=<path>`
+  - validates the decision against the current source-context slice
+  - emits `schema_version=polinko.manual_eval_feedback_decision_preview.v1`
+  - stays read-only and prints only the future gate/mutation boundary
 - `make manual-evals-feedback-reclassify-apply`
   - reads the same local plan through `PLAN_PATH=<path>`
   - requires `CONFIRM=manual-evals-feedback-reclassify`

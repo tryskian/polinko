@@ -1724,3 +1724,24 @@ or branch history instead.
   A read-only source-context packet keeps the next manual triage step anchored
   to source history while excluding feedback closure, OCR reruns, eval writes,
   warehouse mutation, source-history mutation, inferred links, and pulse work.
+
+## D-113: Preview human-reviewed non-OCR feedback decisions
+
+- Date: `2026-05-22`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `feedback`, `source_context`, `decision_preview`,
+  `read_only`
+- Human-led: The human lead approved continuing the manual-eval evidence
+  hygiene sequence from the remaining grounding row while keeping eval runs
+  and pulse work out of scope.
+- Decision: `make manual-evals-feedback-decision-preview` and
+  `make manualdb-feedback-decision-preview` now read a local human-reviewed
+  decision JSON through `DECISION_PATH=<path>`, validate each selected feedback
+  row against the current source-context slice, and emit
+  `schema_version=polinko.manual_eval_feedback_decision_preview.v1`.
+- Why: The remaining grounding row should be reviewed from source context
+  before any closure or reclassification mutation. A decision preview keeps
+  the human decision explicit, source-anchored, and read-only while printing
+  only the future gate and mutation boundary; it excludes feedback closure,
+  OCR reruns, eval writes, warehouse mutation, source-history mutation,
+  inferred links, and pulse work.

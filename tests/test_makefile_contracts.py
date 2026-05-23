@@ -307,6 +307,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-feedback-cohorts", targets)
         self.assertIn("manual-evals-feedback-source-context", targets)
         self.assertIn("manualdb-feedback-source-context", targets)
+        self.assertIn("manual-evals-feedback-decision-preview", targets)
+        self.assertIn("manualdb-feedback-decision-preview", targets)
         self.assertIn("manual-evals-ocr-retry-candidates", targets)
         self.assertIn("manualdb-ocr-retry-candidates", targets)
         self.assertIn("manual-evals-ocr-retry-source-verification", targets)
@@ -384,6 +386,12 @@ class MakefileContractTests(unittest.TestCase):
             r"manualdb-feedback-source-context:$",
         )
         self.assertIn("--feedback-source-context", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-feedback-decision-preview "
+            r"manualdb-feedback-decision-preview:$",
+        )
+        self.assertIn("--feedback-decision-preview", text)
         self.assertRegex(
             text,
             r"(?m)^manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates:$",
@@ -522,6 +530,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "MANUAL_EVALS_FEEDBACK_RECLASSIFY_PLAN_PATH ?= $(PLAN_PATH)", text
         )
+        self.assertIn("MANUAL_EVALS_FEEDBACK_DECISION_PATH ?= $(DECISION_PATH)", text)
+        self.assertIn("$(MANUAL_EVALS_FEEDBACK_DECISION_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_RECLASSIFY_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_RECLASSIFY_APPLY_ARGS)", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_ARTIFACT_IDS ?= $(ARTIFACT_IDS)", text)

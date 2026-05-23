@@ -77,6 +77,12 @@ notes, exports, and runtime history.
     `make manual-evals-feedback-source-context`
   - JSON source-context export uses
     `schema_version=polinko.manual_eval_feedback_source_context.v1`
+  - preview a local human-reviewed feedback decision without mutation with
+    `make manual-evals-feedback-decision-preview DECISION_PATH=<path>`
+  - JSON decision-preview export uses
+    `schema_version=polinko.manual_eval_feedback_decision_preview.v1`
+  - decision previews validate the selected feedback row against the current
+    source-context slice and print the future gate/mutation boundary only
   - preview overlay-hypothesis OCR feedback rows that have no same-session OCR
     context and whose source response asked for new image evidence with
     `make manual-evals-no-context-reclassify-preview`
