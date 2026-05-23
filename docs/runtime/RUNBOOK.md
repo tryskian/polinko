@@ -208,6 +208,12 @@ Use this doc for operator procedure.
   - combine with `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>`
     for explicit manual triage slices
   - emits `schema_version=polinko.manual_eval_feedback_source_context.v1`
+- `make manual-evals-feedback-decision-draft`
+  - write a local ignored decision draft for the selected feedback slice
+  - accepts `DRAFT_PATH=<path>` and `FORCE=1`
+  - emits `schema_version=polinko.manual_eval_feedback_decision_draft.v1`
+  - stays local-only without OCR, feedback closure, eval writes, warehouse
+    mutation, or source-history mutation
 - `make manual-evals-feedback-decision-preview DECISION_PATH=<path>`
   - preview a local human-reviewed decision for the selected feedback slice
   - validates the row against current source-context evidence

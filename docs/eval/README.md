@@ -77,6 +77,11 @@ notes, exports, and runtime history.
     `make manual-evals-feedback-source-context`
   - JSON source-context export uses
     `schema_version=polinko.manual_eval_feedback_source_context.v1`
+  - write a local ignored feedback-decision draft without mutation with
+    `make manual-evals-feedback-decision-draft`
+  - JSON decision-draft files default to
+    `.local/manual_eval_decisions/feedback_decision.json` and use
+    `schema_version=polinko.manual_eval_feedback_decision_draft.v1`
   - preview a local human-reviewed feedback decision without mutation with
     `make manual-evals-feedback-decision-preview DECISION_PATH=<path>`
   - JSON decision-preview export uses

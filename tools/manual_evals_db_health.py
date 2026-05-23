@@ -27,6 +27,9 @@ FEEDBACK_SOURCE_CONTEXT_SCHEMA_VERSION = (
 FEEDBACK_DECISION_PREVIEW_SCHEMA_VERSION = (
     "polinko.manual_eval_feedback_decision_preview.v1"
 )
+FEEDBACK_DECISION_DRAFT_SCHEMA_VERSION = (
+    "polinko.manual_eval_feedback_decision_draft.v1"
+)
 FEEDBACK_RECLASSIFY_SCHEMA_VERSION = "polinko.manual_eval_feedback_reclassify.v1"
 OCR_RETRY_CANDIDATES_SCHEMA_VERSION = "polinko.manual_eval_ocr_retry_candidates.v2"
 OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION = (
@@ -1142,6 +1145,204 @@ def build_feedback_source_context_report(
         "blockers": item_blockers,
         "warnings": [blocker["detail"] for blocker in item_blockers],
     }
+
+
+def _feedback_decision_draft_source_preview(
+    source_context: dict[str, Any],
+) -> dict[str, Any]:
+    messages = source_context.get("messages")
+    if not isinstance(messages, list):
+        messages = []
+    for raw_message in messages:
+        if isinstance(raw_message, dict) and raw_message.get("position") == "target":
+            return {
+                "message_id": str(raw_message.get("message_id") or ""),
+                "role": str(raw_message.get("role") or ""),
+                "content_preview": str(raw_message.get("content_preview") or ""),
+            }
+    return {"message_id": "", "role": "", "content_preview": ""}
+
+
+def _feedback_decision_draft_item(source_item: dict[str, Any]) -> dict[str, Any]:
+    source_context = source_item.get("source_context")
+    if not isinstance(source_context, dict):
+        source_context = {}
+    action_cohort = source_item.get("action_cohort")
+    if not isinstance(action_cohort, dict):
+        action_cohort = {}
+    messages = source_context.get("messages")
+    if not isinstance(messages, list):
+        messages = []
+    return {
+        "feedback_id": _int_value(source_item.get("feedback_id")),
+        "selected_action": "undecided",
+        "recommended_action": "",
+        "closure_note": "",
+        "source_context_fingerprint": str(source_context.get("fingerprint") or ""),
+        "rationale": "",
+        "current": {
+            "status": str(source_item.get("status") or ""),
+            "outcome": str(source_item.get("outcome") or ""),
+            "cohort": str(action_cohort.get("id") or ""),
+            "recommended_action": str(source_item.get("recommended_action") or ""),
+            "message_id": str(source_item.get("message_id") or ""),
+            "title": str(source_item.get("title") or ""),
+        },
+        "source_context": {
+            "state": str(source_context.get("state") or "unknown"),
+            "fingerprint": str(source_context.get("fingerprint") or ""),
+            "message_count": len(messages),
+            "target_message": _feedback_decision_draft_source_preview(source_context),
+        },
+        "fill_template": (
+            "selected_action=<keep_open|reclassify|close_feedback> "
+            "recommended_action=<required for reclassify> "
+            "closure_note=<required for close_feedback> rationale=<text>"
+        ),
+    }
+
+
+def build_feedback_decision_draft_payload(
+    *,
+    db_path: Path,
+    outcome: str | None = "fail",
+    cohort: str | None = "grounding_source_verification",
+    limit: int = 1,
+) -> dict[str, Any]:
+    source_context_report = build_feedback_source_context_report(
+        db_path=db_path,
+        outcome=outcome,
+        cohort=cohort,
+        limit=limit,
+    )
+    source_items = source_context_report.get("items")
+    if not isinstance(source_items, list):
+        source_items = []
+    draft_items = [
+        _feedback_decision_draft_item(item)
+        for item in source_items
+        if isinstance(item, dict)
+    ]
+    source_counts = source_context_report.get("counts")
+    if not isinstance(source_counts, dict):
+        source_counts = {}
+    source_filters = source_context_report.get("filters")
+    if not isinstance(source_filters, dict):
+        source_filters = {}
+    return {
+        "schema_version": FEEDBACK_DECISION_DRAFT_SCHEMA_VERSION,
+        "source_context_schema_version": source_context_report.get(
+            "schema_version", ""
+        ),
+        "state": source_context_report.get("state", "unknown"),
+        "manual_evals_db": source_context_report.get("manual_evals_db", {}),
+        "filters": {
+            "status": source_filters.get("status") or "open",
+            "outcome": source_filters.get("outcome") or "",
+            "cohort": source_filters.get("cohort") or "",
+            "limit": _int_value(source_filters.get("limit")),
+            "packet_basis": "source_context_local_decision_draft",
+        },
+        "counts": {
+            "total_rows": _int_value(source_counts.get("total_rows")),
+            "returned_rows": _int_value(source_counts.get("returned_rows")),
+            "draft_decisions": len(draft_items),
+            "source_messages_found": _int_value(
+                source_counts.get("source_messages_found")
+            ),
+            "context_messages": _int_value(source_counts.get("context_messages")),
+            "blockers": _int_value(source_counts.get("blockers")),
+            "limit_applied": bool(source_counts.get("limit_applied")),
+            "preview_only": True,
+        },
+        "allowed_actions": [
+            {
+                "id": action_id,
+                "description": FEEDBACK_DECISION_ACTION_DESCRIPTIONS[action_id],
+            }
+            for action_id in FEEDBACK_DECISION_ACTIONS
+        ],
+        "draft_contract": {
+            "mutation": "none",
+            "execution": "none",
+            "local_only": True,
+            "requires_preview": True,
+            "next_preview_schema_version": FEEDBACK_DECISION_PREVIEW_SCHEMA_VERSION,
+            "allowed_actions": list(FEEDBACK_DECISION_ACTIONS),
+        },
+        "decisions": draft_items,
+        "blockers": source_context_report.get("blockers", []),
+        "warnings": source_context_report.get("warnings", []),
+    }
+
+
+def write_feedback_decision_draft(
+    *,
+    db_path: Path,
+    output_path: Path | None = None,
+    force: bool = False,
+    outcome: str | None = "fail",
+    cohort: str | None = "grounding_source_verification",
+    limit: int = 1,
+) -> dict[str, Any]:
+    payload = build_feedback_decision_draft_payload(
+        db_path=db_path,
+        outcome=outcome,
+        cohort=cohort,
+        limit=limit,
+    )
+    resolved_path = (output_path or DEFAULT_FEEDBACK_DECISION_PATH).expanduser()
+    quoted_output_path = shlex.quote(str(resolved_path))
+    counts = payload.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+    report: dict[str, Any] = {
+        "schema_version": FEEDBACK_DECISION_DRAFT_SCHEMA_VERSION,
+        "source_context_schema_version": payload.get(
+            "source_context_schema_version", ""
+        ),
+        "state": "pending",
+        "manual_evals_db": payload.get("manual_evals_db", {}),
+        "filters": payload.get("filters", {}),
+        "counts": counts,
+        "output": {
+            "path": str(resolved_path),
+            "force": force,
+            "overwritten": False,
+            "local_only": True,
+        },
+        "next_commands": {
+            "preview": (
+                "make manual-evals-feedback-decision-preview "
+                f"DECISION_PATH={quoted_output_path}"
+            ),
+        },
+    }
+    if resolved_path.exists() and resolved_path.is_dir():
+        report["state"] = "blocked"
+        report.setdefault("warnings", []).append(
+            f"Manual eval feedback decision draft output path is a directory: {resolved_path}"
+        )
+        return report
+    if resolved_path.exists() and not force:
+        report["state"] = "blocked"
+        report.setdefault("warnings", []).append(
+            "Manual eval feedback decision draft already exists; pass --force "
+            f"to overwrite: {resolved_path}"
+        )
+        return report
+
+    existed = resolved_path.exists()
+    resolved_path.parent.mkdir(parents=True, exist_ok=True)
+    resolved_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    report["state"] = "written"
+    output = report["output"]
+    if isinstance(output, dict):
+        output["overwritten"] = existed
+    return report
 
 
 def _feedback_decision_preview_mutation_boundary() -> dict[str, str]:
@@ -9642,6 +9843,53 @@ def format_feedback_decision_preview_report(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def format_feedback_decision_draft_report(report: dict[str, Any]) -> str:
+    manual_db = report.get("manual_evals_db")
+    if not isinstance(manual_db, dict):
+        manual_db = {}
+    counts = report.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+    filters = report.get("filters")
+    if not isinstance(filters, dict):
+        filters = {}
+    output = report.get("output")
+    if not isinstance(output, dict):
+        output = {}
+    next_commands = report.get("next_commands")
+    if not isinstance(next_commands, dict):
+        next_commands = {}
+
+    lines = [
+        "manual eval feedback decision draft: "
+        f"state={report.get('state') or 'unknown'} "
+        f"rows={_int_value(counts.get('returned_rows'))}/"
+        f"{_int_value(counts.get('total_rows'))} "
+        f"decisions={_int_value(counts.get('draft_decisions'))} "
+        f"source_messages_found={_int_value(counts.get('source_messages_found'))} "
+        f"context_messages={_int_value(counts.get('context_messages'))} "
+        f"blockers={_int_value(counts.get('blockers'))} "
+        f"preview_only={'yes' if counts.get('preview_only') else 'no'} "
+        f"force={'yes' if output.get('force') else 'no'} "
+        f"overwritten={'yes' if output.get('overwritten') else 'no'} "
+        f"local_only={'yes' if output.get('local_only') else 'no'} "
+        f"outcome={filters.get('outcome') or 'all'} "
+        f"cohort={filters.get('cohort') or 'all'} "
+        f"limit={_int_value(filters.get('limit'))} "
+        f"basis={filters.get('packet_basis') or 'unknown'} "
+        f"path={manual_db.get('path', 'unknown')} "
+        f"output={output.get('path') or 'none'}",
+    ]
+    preview_command = str(next_commands.get("preview") or "")
+    if preview_command:
+        lines.append(f"next_preview={preview_command}")
+    warnings = report.get("warnings")
+    if isinstance(warnings, list) and warnings:
+        lines.append("warnings:")
+        lines.extend(f"- {str(item)}" for item in warnings)
+    return "\n".join(lines)
+
+
 def _format_outcomes(value: object) -> str:
     if not isinstance(value, dict) or not value:
         return "none"
@@ -11905,6 +12153,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Preview a local human-reviewed feedback decision without mutation.",
     )
     parser.add_argument(
+        "--feedback-decision-draft",
+        action="store_true",
+        help="Write a local manual feedback decision draft without mutation.",
+    )
+    parser.add_argument(
         "--ocr-retry-candidates",
         action="store_true",
         help="Print read-only OCR retry candidate packets for selected feedback.",
@@ -12466,6 +12719,23 @@ def main() -> int:
         else:
             print(format_feedback_source_context_report(report))
         return 2 if report.get("state") == "error" else 0
+
+    if args.feedback_decision_draft:
+        report = write_feedback_decision_draft(
+            db_path=db_path,
+            output_path=Path(args.output_path)
+            if str(args.output_path).strip()
+            else None,
+            force=bool(args.force),
+            outcome=args.outcome or "fail",
+            cohort=args.cohort or "grounding_source_verification",
+            limit=max(1, args.limit),
+        )
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            print(format_feedback_decision_draft_report(report))
+        return 0 if report.get("state") == "written" else 2
 
     if args.feedback_decision_preview:
         report = build_feedback_decision_preview_report(

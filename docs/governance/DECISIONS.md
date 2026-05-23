@@ -1762,3 +1762,23 @@ or branch history instead.
   fixed release in `requirements.in` keeps future lock regeneration,
   Dependabot updates, and `pip-audit` aligned without weakening the security
   check or adding runtime dependency metadata to `pyproject.toml`.
+
+## D-115: Draft non-OCR feedback decisions locally before preview
+
+- Date: `2026-05-22`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `feedback`, `local_input`, `decision_draft`,
+  `read_only`
+- Human-led: The human lead continued manual-eval evidence hygiene from the
+  remaining grounding row while keeping eval runs and pulse work out of scope.
+- Decision: `make manual-evals-feedback-decision-draft` and
+  `make manualdb-feedback-decision-draft` now write a local ignored feedback
+  decision draft for the selected source-context slice. The draft defaults to
+  `.local/manual_eval_decisions/feedback_decision.json`, accepts
+  `DRAFT_PATH=<path>` and `FORCE=1`, preserves source-context fingerprints,
+  defaults decisions to `selected_action=undecided`, and emits
+  `schema_version=polinko.manual_eval_feedback_decision_draft.v1`.
+- Why: The remaining non-OCR feedback decision should be prepared as local
+  human-reviewed input before previewing any future gate. A draft generator
+  reduces manual JSON friction while preserving the same source-anchored,
+  no-overwrite, no-mutation contract as other local operator input tooling.

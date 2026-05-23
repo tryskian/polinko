@@ -153,6 +153,12 @@ operator input tooling:
     `PLAN_PATH=<path>`
   - emits `schema_version=polinko.manual_eval_feedback_reclassify.v1`
   - stays read-only
+- `make manual-evals-feedback-decision-draft`
+  - writes a local ignored feedback decision draft to
+    `.local/manual_eval_decisions/feedback_decision.json`
+  - accepts `DRAFT_PATH=<path>` and `FORCE=1`
+  - preserves source-context fingerprints for preview-time stale-input checks
+  - emits `schema_version=polinko.manual_eval_feedback_decision_draft.v1`
 - `make manual-evals-feedback-decision-preview`
   - reads a local human-reviewed feedback decision through
     `DECISION_PATH=<path>`
