@@ -8,6 +8,7 @@ from tempfile import TemporaryDirectory
 
 from tools.build_manual_evals_db import build_manual_evals_db
 from tools.manual_evals_db_health import (
+    FEEDBACK_DECISION_DRAFT_SCHEMA_VERSION,
     FEEDBACK_DECISION_PREVIEW_SCHEMA_VERSION,
     FEEDBACK_RECLASSIFY_CONFIRM_TOKEN,
     FEEDBACK_RECLASSIFY_SCHEMA_VERSION,
@@ -25,6 +26,7 @@ from tools.manual_evals_db_health import (
     NO_CONTEXT_RECLASSIFY_CONFIRM_TOKEN,
     NO_CONTEXT_RECLASSIFY_SCHEMA_VERSION,
     OcrRetryExecutionProviderError,
+    build_feedback_decision_draft_payload,
     build_feedback_decision_preview_report,
     build_feedback_reclassify_report,
     build_feedback_source_context_report,
@@ -34,6 +36,7 @@ from tools.manual_evals_db_health import (
     build_ocr_retry_feedback_closure_preview_report,
     build_ocr_retry_feedback_closure_restore_preview_report,
     build_ocr_retry_selection_template_report,
+    format_feedback_decision_draft_report,
     format_feedback_decision_preview_report,
     format_feedback_reclassify_report,
     format_feedback_source_context_report,
@@ -45,6 +48,7 @@ from tools.manual_evals_db_health import (
     format_ocr_retry_feedback_closure_preview_report,
     format_ocr_retry_feedback_closure_restore_report,
     format_ocr_retry_selection_template_report,
+    write_feedback_decision_draft,
     write_feedback_reclassify,
     write_ocr_retry_execution_bundle,
     write_ocr_retry_feedback_closure_apply,
@@ -244,6 +248,139 @@ class OcrRetryLocalExecutorTests(unittest.TestCase):
             )
             self.assertIn("warehouse_mutation=read_only", summary)
             self.assertIn("Grounding-sensitive answer", summary)
+            self.assertEqual(after_rows, before_rows)
+
+    def test_feedback_decision_draft_writes_local_input_without_mutation(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            _init_history_db(history_db, feedback_outcome="fail")
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET status = 'open',
+                        tags_json = ?,
+                        recommended_action = ?
+                    """,
+                    (
+                        json.dumps(
+                            {
+                                "positive": [],
+                                "negative": ["grounding_gap"],
+                                "all": ["grounding_gap"],
+                            }
+                        ),
+                        "Re-run with explicit grounding constraints and verify response against source evidence.",
+                    ),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES
+                      ('chat-1', 'user', 'Please answer only from source evidence.', 150, 'm-user-1', NULL),
+                      ('chat-1', 'assistant', 'Grounding-sensitive answer that needs verification.', 155, 'm-result-1', 'm-user-1'),
+                      ('chat-1', 'user', 'Follow-up after the judged response.', 165, 'm-after-1', 'm-result-1')
+                    """
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[],
+                include_thumbnails=False,
+            )
+
+            before_rows = _feedback_rows(output_db)
+            draft_payload = build_feedback_decision_draft_payload(
+                db_path=output_db,
+                outcome="fail",
+                cohort="grounding_source_verification",
+                limit=10,
+            )
+            draft_path = tmp / "manual_eval_decisions" / "feedback_decision.json"
+            write_report = write_feedback_decision_draft(
+                db_path=output_db,
+                output_path=draft_path,
+                outcome="fail",
+                cohort="grounding_source_verification",
+                limit=10,
+            )
+            write_summary = format_feedback_decision_draft_report(write_report)
+            after_rows = _feedback_rows(output_db)
+
+            self.assertEqual(
+                draft_payload["schema_version"],
+                FEEDBACK_DECISION_DRAFT_SCHEMA_VERSION,
+            )
+            self.assertEqual(draft_payload["counts"]["draft_decisions"], 1)
+            self.assertEqual(
+                draft_payload["draft_contract"]["next_preview_schema_version"],
+                FEEDBACK_DECISION_PREVIEW_SCHEMA_VERSION,
+            )
+            draft_item = draft_payload["decisions"][0]
+            self.assertEqual(draft_item["feedback_id"], 1)
+            self.assertEqual(draft_item["selected_action"], "undecided")
+            self.assertEqual(draft_item["source_context"]["state"], "found")
+            self.assertEqual(len(draft_item["source_context_fingerprint"]), 64)
+            self.assertIn(
+                "Grounding-sensitive answer",
+                draft_item["source_context"]["target_message"]["content_preview"],
+            )
+            self.assertEqual(write_report["state"], "written")
+            self.assertFalse(write_report["output"]["overwritten"])
+            self.assertEqual(write_report["output"]["path"], str(draft_path))
+            self.assertTrue(draft_path.exists())
+            self.assertIn(
+                "manual eval feedback decision draft: state=written "
+                "rows=1/1 decisions=1",
+                write_summary,
+            )
+            self.assertIn(
+                "next_preview=make manual-evals-feedback-decision-preview",
+                write_summary,
+            )
+            loaded_draft = json.loads(draft_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                loaded_draft["schema_version"],
+                FEEDBACK_DECISION_DRAFT_SCHEMA_VERSION,
+            )
+            preview_report = build_feedback_decision_preview_report(
+                db_path=output_db,
+                decision_path=draft_path,
+                outcome="fail",
+                cohort="grounding_source_verification",
+                limit=10,
+            )
+            self.assertEqual(preview_report["state"], "blocked")
+            self.assertEqual(
+                preview_report["items"][0]["blockers"][0]["code"],
+                "invalid_selected_action",
+            )
+            blocked_write = write_feedback_decision_draft(
+                db_path=output_db,
+                output_path=draft_path,
+                outcome="fail",
+                cohort="grounding_source_verification",
+                limit=10,
+            )
+            self.assertEqual(blocked_write["state"], "blocked")
+            self.assertIn("already exists", blocked_write["warnings"][0])
+            forced_write = write_feedback_decision_draft(
+                db_path=output_db,
+                output_path=draft_path,
+                force=True,
+                outcome="fail",
+                cohort="grounding_source_verification",
+                limit=10,
+            )
+            self.assertEqual(forced_write["state"], "written")
+            self.assertTrue(forced_write["output"]["overwritten"])
             self.assertEqual(after_rows, before_rows)
 
     def test_feedback_decision_preview_uses_source_context_without_mutation(

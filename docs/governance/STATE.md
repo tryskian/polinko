@@ -126,6 +126,13 @@ Last updated: 2026-05-21
     `schema_version=polinko.manual_eval_feedback_source_context.v1`; it
     defaults to the `grounding_source_verification` fail slice and does not
     mutate feedback, OCR rows, eval rows, or source history
+  - `make manual-evals-feedback-decision-draft` writes a local ignored
+    feedback-decision draft for the current source-context slice using
+    `schema_version=polinko.manual_eval_feedback_decision_draft.v1`; it
+    defaults to `.local/manual_eval_decisions/feedback_decision.json`, refuses
+    overwrite unless `FORCE=1`, preserves source-context fingerprints, and
+    does not mutate feedback, OCR rows, eval rows, the warehouse, or source
+    history
   - `make manual-evals-feedback-decision-preview` reads a local
     human-reviewed decision through `DECISION_PATH=<path>` without mutation,
     validates it against the current source-context slice, and emits
