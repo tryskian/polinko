@@ -88,6 +88,12 @@ notes, exports, and runtime history.
     `schema_version=polinko.manual_eval_feedback_decision_preview.v1`
   - decision previews validate the selected feedback row against the current
     source-context slice and print the future gate/mutation boundary only
+  - inspect overlay/OCR comparison readiness without mutation with
+    `make manual-evals-overlay-comparison-readiness`
+  - JSON overlay/OCR readiness export uses
+    `schema_version=polinko.manual_eval_overlay_ocr_comparison_readiness.v1`
+  - overlay readiness packets expose source context, source-image candidates,
+    exact blockers, and payload-only previews before any OCR comparison run
   - preview overlay-hypothesis OCR feedback rows that have no same-session OCR
     context and whose source response asked for new image evidence with
     `make manual-evals-no-context-reclassify-preview`

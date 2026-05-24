@@ -311,6 +311,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-feedback-decision-draft", targets)
         self.assertIn("manual-evals-feedback-decision-preview", targets)
         self.assertIn("manualdb-feedback-decision-preview", targets)
+        self.assertIn("manual-evals-overlay-comparison-readiness", targets)
+        self.assertIn("manualdb-overlay-comparison-readiness", targets)
         self.assertIn("manual-evals-ocr-retry-candidates", targets)
         self.assertIn("manualdb-ocr-retry-candidates", targets)
         self.assertIn("manual-evals-ocr-retry-source-verification", targets)
@@ -400,6 +402,12 @@ class MakefileContractTests(unittest.TestCase):
             r"manualdb-feedback-decision-preview:$",
         )
         self.assertIn("--feedback-decision-preview", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-overlay-comparison-readiness "
+            r"manualdb-overlay-comparison-readiness:$",
+        )
+        self.assertIn("--overlay-ocr-comparison-readiness", text)
         self.assertRegex(
             text,
             r"(?m)^manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates:$",

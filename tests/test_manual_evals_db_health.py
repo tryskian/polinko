@@ -11,6 +11,7 @@ from tools.manual_evals_db_health import (
     COHORTS_SCHEMA_VERSION,
     OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
     OCR_RETRY_INPUT_PACKET_SCHEMA_VERSION,
+    OVERLAY_OCR_COMPARISON_READINESS_SCHEMA_VERSION,
     OCR_RETRY_RERUN_MANIFEST_SCHEMA_VERSION,
     OCR_RETRY_RERUN_PLAN_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_APPLY_PREVIEW_SCHEMA_VERSION,
@@ -24,6 +25,7 @@ from tools.manual_evals_db_health import (
     build_manual_evals_health_report,
     build_ocr_retry_candidates_report,
     build_ocr_retry_input_packet_report,
+    build_overlay_ocr_comparison_readiness_report,
     build_ocr_retry_rerun_manifest_report,
     build_ocr_retry_rerun_plan_report,
     build_ocr_retry_selection_apply_preview_report,
@@ -39,6 +41,7 @@ from tools.manual_evals_db_health import (
     format_manual_evals_health_report,
     format_ocr_retry_candidates_report,
     format_ocr_retry_input_packet_report,
+    format_overlay_ocr_comparison_readiness_report,
     format_ocr_retry_rerun_manifest_report,
     format_ocr_retry_rerun_plan_report,
     format_ocr_retry_selection_apply_preview_report,
@@ -708,6 +711,142 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
                 self.assertEqual(
                     conn.execute("PRAGMA integrity_check").fetchone()[0], "ok"
                 )
+
+    def test_overlay_comparison_readiness_blocks_without_source_image_context(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            _init_history_db(
+                history_db,
+                feedback_outcome="fail",
+                source_name="overlay-source.png",
+            )
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute("DELETE FROM ocr_runs")
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET status = 'open',
+                        tags_json = ?,
+                        recommended_action = ?
+                    """,
+                    (
+                        json.dumps(
+                            {
+                                "positive": [],
+                                "negative": ["ocr_miss", "grounding_gap"],
+                                "all": ["ocr_miss", "grounding_gap"],
+                            }
+                        ),
+                        (
+                            "Preserve as overlay-assisted OCR hypothesis evidence; "
+                            "attach the overlay/source image context before rerunning "
+                            "OCR for comparison."
+                        ),
+                    ),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES (
+                      'chat-1', 'user', 'What does the overlay show?', 120,
+                      'm-source-1', NULL
+                    )
+                    """
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES (
+                      'chat-1', 'assistant',
+                      'No new image evidence in this turn. Attach a new image.',
+                      155, 'm-result-1', 'm-source-1'
+                    )
+                    """
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[],
+                include_thumbnails=False,
+            )
+
+            before_history = history_db.stat().st_mtime_ns
+            before_output = output_db.stat().st_mtime_ns
+
+            readiness = build_overlay_ocr_comparison_readiness_report(
+                db_path=output_db,
+                outcome="fail",
+                cohort="ocr_overlay_hypothesis",
+                limit=5,
+            )
+            summary = format_overlay_ocr_comparison_readiness_report(readiness)
+
+            self.assertEqual(
+                readiness["schema_version"],
+                OVERLAY_OCR_COMPARISON_READINESS_SCHEMA_VERSION,
+            )
+            self.assertEqual(readiness["state"], "blocked")
+            self.assertEqual(
+                readiness["filters"]["packet_basis"],
+                "source_context_and_overlay_source_image_readiness",
+            )
+            self.assertEqual(
+                readiness["counts"],
+                {
+                    "total_rows": 1,
+                    "returned_rows": 1,
+                    "limit_applied": False,
+                    "source_messages_found": 1,
+                    "source_images": 0,
+                    "ready_items": 0,
+                    "blocked_items": 1,
+                    "payload_previews": 1,
+                    "blockers": 1,
+                },
+            )
+            self.assertEqual(
+                readiness["mutation_boundary"]["manual_evals_db"],
+                "read_only",
+            )
+            self.assertEqual(
+                readiness["mutation_boundary"]["ocr_execution"],
+                "none",
+            )
+            item = readiness["items"][0]
+            self.assertEqual(item["state"], "blocked")
+            self.assertEqual(item["source_context"]["state"], "found")
+            self.assertEqual(item["source_images"], [])
+            self.assertEqual(
+                item["blockers"][0]["code"],
+                "missing_overlay_source_image_context",
+            )
+            self.assertEqual(item["payload_preview"]["execution"], "none")
+            self.assertEqual(item["payload_preview"]["mutation"], "none")
+            self.assertIn(
+                "manual eval overlay/OCR comparison readiness: "
+                "state=blocked rows=1/1 ready=0 blocked=1 source_images=0",
+                summary,
+            )
+            self.assertIn(
+                "payload_preview=manual_eval_overlay_ocr_comparison_preview "
+                "execution=none mutation=none",
+                summary,
+            )
+            self.assertIn(
+                "code=missing_overlay_source_image_context",
+                summary,
+            )
+            self.assertEqual(history_db.stat().st_mtime_ns, before_history)
+            self.assertEqual(output_db.stat().st_mtime_ns, before_output)
 
     def test_ocr_retry_candidates_flag_ambiguous_same_session_context(self) -> None:
         with TemporaryDirectory() as tmpdir:

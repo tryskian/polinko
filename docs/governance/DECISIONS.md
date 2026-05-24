@@ -1801,3 +1801,24 @@ or branch history instead.
   with attached overlay/source image context preserves the evidence chain while
   excluding OCR reruns, feedback closure, live eval writes, warehouse mutation,
   inferred source links, and pulse work.
+
+## D-117: Add read-only overlay/OCR comparison readiness
+
+- Date: `2026-05-24`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr_overlay`, `comparison_readiness`, `read_only`
+- Human-led: The human lead carried forward the overlay experiment as research
+  evidence while keeping eval runs, pulse work, and ungrounded OCR reruns out
+  of scope.
+- Decision: `make manual-evals-overlay-comparison-readiness` and
+  `make manualdb-overlay-comparison-readiness` now print a read-only
+  overlay/OCR comparison readiness packet for selected overlay-assisted OCR
+  hypothesis rows. The packet emits
+  `schema_version=polinko.manual_eval_overlay_ocr_comparison_readiness.v1` and
+  exposes source context, source-image candidates, exact blockers, and
+  payload-only previews for a future overlay/OCR comparison lane.
+- Why: Overlay hypothesis rows need a readiness surface before any comparison
+  execution exists. The packet keeps missing overlay/source image context
+  visible as a blocker while preserving the evidence chain and excluding OCR
+  runs, feedback closure, live eval writes, source-history mutation, manual
+  eval warehouse mutation, browser launch, and pulse work.
