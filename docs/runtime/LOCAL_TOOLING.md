@@ -159,8 +159,15 @@ operator input tooling:
 - `make manual-evals-overlay-comparison-readiness`
   - reads selected overlay-assisted OCR hypothesis rows through
     `COHORT=ocr_overlay_hypothesis`, `OUTCOME=<outcome>`, and `LIMIT=<n>`
+  - can read a local ignored overlay/source image context index through
+    `OVERLAY_SOURCE_INDEX_PATH=<path>`; the default index path is
+    `.local/manual_eval_decisions/overlay_source_context_index.json`
   - emits
     `schema_version=polinko.manual_eval_overlay_ocr_comparison_readiness.v1`
+  - local index files use
+    `schema_version=polinko.manual_eval_overlay_source_context_index.v1`
+    and must match the current source-context fingerprint before they can make
+    a row ready
   - exposes source context, source-image candidates, exact blockers, and
     payload-only previews for a future overlay/OCR comparison lane
   - stays read-only and does not run OCR, close feedback, write eval rows,

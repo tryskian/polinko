@@ -130,22 +130,27 @@ class LocalToolingContractTests(unittest.TestCase):
             "docs/eval/README.md": (
                 "make manual-evals-overlay-comparison-readiness",
                 "polinko.manual_eval_overlay_ocr_comparison_readiness.v1",
+                "polinko.manual_eval_overlay_source_context_index.v1",
             ),
             "docs/runtime/LOCAL_TOOLING.md": (
                 "`make manual-evals-overlay-comparison-readiness`",
+                "OVERLAY_SOURCE_INDEX_PATH=<path>",
                 "payload-only previews for a future overlay/OCR comparison lane",
             ),
             "docs/runtime/RUNBOOK.md": (
                 "`make manual-evals-overlay-comparison-readiness`",
+                "OVERLAY_SOURCE_INDEX_PATH=<path>",
                 "before any OCR run, feedback closure, eval write, or warehouse mutation",
             ),
             "docs/governance/STATE.md": (
                 "`make manual-evals-overlay-comparison-readiness`",
+                "polinko.manual_eval_overlay_source_context_index.v1",
                 "source-image candidates, exact blockers, and payload-only previews",
             ),
             "docs/governance/DECISIONS.md": (
                 "## D-117: Add read-only overlay/OCR comparison readiness",
                 "Human-led: The human lead carried forward the overlay experiment",
+                "## D-118: Index overlay source context through local human input",
             ),
         }
 

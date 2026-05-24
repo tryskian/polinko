@@ -1822,3 +1822,26 @@ or branch history instead.
   visible as a blocker while preserving the evidence chain and excluding OCR
   runs, feedback closure, live eval writes, source-history mutation, manual
   eval warehouse mutation, browser launch, and pulse work.
+
+## D-118: Index overlay source context through local human input
+
+- Date: `2026-05-24`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr_overlay`, `source_context`, `local_input`,
+  `read_only`
+- Human-led: The human lead kept the overlay experiment in Polinko research
+  while asking for the safest way to attach source-image context before any OCR
+  comparison work.
+- Decision: `make manual-evals-overlay-comparison-readiness` can now read a
+  local ignored overlay/source image context index through
+  `OVERLAY_SOURCE_INDEX_PATH=<path>`, defaulting to
+  `.local/manual_eval_decisions/overlay_source_context_index.json`. Index files
+  use `schema_version=polinko.manual_eval_overlay_source_context_index.v1` and
+  must match the current feedback ID, source session, message ID, and
+  source-context fingerprint before indexed images can make a readiness item
+  ready.
+- Why: Overlay/source image attachment should be explicit human-reviewed local
+  input, not inferred filename matching or a manual-eval warehouse mutation.
+  Fingerprint matching preserves source-context freshness while keeping OCR
+  runs, feedback closure, eval writes, source-history mutation, warehouse
+  mutation, browser launch, and pulse work out of scope.

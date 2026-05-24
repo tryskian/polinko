@@ -376,7 +376,12 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("MANUAL_EVALS_FEEDBACK_COHORT ?= $(COHORT)", text)
         self.assertIn("MANUAL_EVALS_FEEDBACK_OUTCOME ?= $(OUTCOME)", text)
         self.assertIn("MANUAL_EVALS_FEEDBACK_LIMIT ?= $(LIMIT)", text)
+        self.assertIn(
+            "MANUAL_EVALS_OVERLAY_SOURCE_INDEX_PATH ?= $(OVERLAY_SOURCE_INDEX_PATH)",
+            text,
+        )
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS)", text)
+        self.assertIn("$(MANUAL_EVALS_OVERLAY_COMPARISON_ARGS)", text)
         self.assertRegex(
             text,
             r"(?m)^manual-evals-feedback-cohorts manualdb-feedback-cohorts:$",
@@ -408,6 +413,7 @@ class MakefileContractTests(unittest.TestCase):
             r"manualdb-overlay-comparison-readiness:$",
         )
         self.assertIn("--overlay-ocr-comparison-readiness", text)
+        self.assertIn("--overlay-source-index", text)
         self.assertRegex(
             text,
             r"(?m)^manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates:$",

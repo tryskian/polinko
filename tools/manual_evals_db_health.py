@@ -33,6 +33,9 @@ FEEDBACK_DECISION_DRAFT_SCHEMA_VERSION = (
 OVERLAY_OCR_COMPARISON_READINESS_SCHEMA_VERSION = (
     "polinko.manual_eval_overlay_ocr_comparison_readiness.v1"
 )
+OVERLAY_SOURCE_CONTEXT_INDEX_SCHEMA_VERSION = (
+    "polinko.manual_eval_overlay_source_context_index.v1"
+)
 FEEDBACK_RECLASSIFY_SCHEMA_VERSION = "polinko.manual_eval_feedback_reclassify.v1"
 OCR_RETRY_CANDIDATES_SCHEMA_VERSION = "polinko.manual_eval_ocr_retry_candidates.v2"
 OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION = (
@@ -101,6 +104,9 @@ DEFAULT_FEEDBACK_RECLASSIFY_PLAN_PATH = Path(
 )
 DEFAULT_FEEDBACK_DECISION_PATH = Path(
     ".local/manual_eval_decisions/feedback_decision.json"
+)
+DEFAULT_OVERLAY_SOURCE_CONTEXT_INDEX_PATH = Path(
+    ".local/manual_eval_decisions/overlay_source_context_index.json"
 )
 DEFAULT_OCR_RETRY_MODEL = "gpt-4.1-mini"
 DEFAULT_OCR_RETRY_PROMPT = (
@@ -1168,6 +1174,145 @@ def _overlay_comparison_blocker(code: str, detail: str) -> dict[str, str]:
     return {"code": code, "detail": detail}
 
 
+def _overlay_source_index_blocker(code: str, detail: str) -> dict[str, str]:
+    return {"code": code, "detail": detail}
+
+
+def _load_overlay_source_context_index(
+    index_path: Path | None,
+) -> tuple[dict[str, Any], dict[int, list[dict[str, Any]]]]:
+    resolved_path = (
+        index_path or DEFAULT_OVERLAY_SOURCE_CONTEXT_INDEX_PATH
+    ).expanduser()
+    explicit_path = index_path is not None
+    source: dict[str, Any] = {
+        "path": str(resolved_path),
+        "exists": resolved_path.is_file(),
+        "explicit_path": explicit_path,
+        "state": "missing",
+        "schema_version": "",
+        "entries": 0,
+        "indexed_source_images": 0,
+        "blockers": [],
+    }
+    if not resolved_path.is_file():
+        if explicit_path:
+            source["state"] = "blocked"
+            source["blockers"] = [
+                _overlay_source_index_blocker(
+                    "overlay_source_index_not_found",
+                    "explicit overlay/source image index file was not found.",
+                )
+            ]
+        return source, {}
+
+    try:
+        payload = json.loads(resolved_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        source["state"] = "blocked"
+        source["blockers"] = [
+            _overlay_source_index_blocker(
+                "overlay_source_index_unreadable",
+                f"overlay/source image index could not be read: {exc}",
+            )
+        ]
+        return source, {}
+
+    if not isinstance(payload, dict):
+        source["state"] = "blocked"
+        source["blockers"] = [
+            _overlay_source_index_blocker(
+                "overlay_source_index_not_object",
+                "overlay/source image index root must be a JSON object.",
+            )
+        ]
+        return source, {}
+
+    source["schema_version"] = str(payload.get("schema_version") or "")
+    if source["schema_version"] != OVERLAY_SOURCE_CONTEXT_INDEX_SCHEMA_VERSION:
+        source["state"] = "blocked"
+        source["blockers"] = [
+            _overlay_source_index_blocker(
+                "overlay_source_index_schema_mismatch",
+                "overlay/source image index schema version is not supported.",
+            )
+        ]
+        return source, {}
+
+    raw_entries = payload.get("entries")
+    if not isinstance(raw_entries, list):
+        source["state"] = "blocked"
+        source["blockers"] = [
+            _overlay_source_index_blocker(
+                "overlay_source_index_entries_not_list",
+                "overlay/source image index entries must be a list.",
+            )
+        ]
+        return source, {}
+
+    entries_by_feedback: dict[int, list[dict[str, Any]]] = {}
+    blockers: list[dict[str, str]] = []
+    indexed_source_images = 0
+    for position, raw_entry in enumerate(raw_entries, start=1):
+        if not isinstance(raw_entry, dict):
+            blockers.append(
+                _overlay_source_index_blocker(
+                    "overlay_source_index_entry_not_object",
+                    f"overlay/source image index entry {position} is not an object.",
+                )
+            )
+            continue
+        feedback_id = _int_value(raw_entry.get("feedback_id"))
+        if feedback_id <= 0:
+            blockers.append(
+                _overlay_source_index_blocker(
+                    "overlay_source_index_entry_missing_feedback_id",
+                    f"overlay/source image index entry {position} has no feedback_id.",
+                )
+            )
+            continue
+        raw_images = raw_entry.get("source_images")
+        if not isinstance(raw_images, list):
+            raw_images = []
+        indexed_source_images += len(
+            [item for item in raw_images if isinstance(item, dict)]
+        )
+        normalized_entry = {
+            "feedback_id": feedback_id,
+            "source_session_id": str(raw_entry.get("source_session_id") or ""),
+            "session_id": str(raw_entry.get("session_id") or ""),
+            "message_id": str(raw_entry.get("message_id") or ""),
+            "source_context_fingerprint": str(
+                raw_entry.get("source_context_fingerprint") or ""
+            ),
+            "source_images": raw_images,
+            "notes": str(raw_entry.get("notes") or ""),
+        }
+        entries_by_feedback.setdefault(feedback_id, []).append(normalized_entry)
+
+    source["entries"] = sum(len(entries) for entries in entries_by_feedback.values())
+    source["indexed_source_images"] = indexed_source_images
+    source["blockers"] = blockers
+    source["state"] = "blocked" if blockers else "loaded"
+    return source, entries_by_feedback
+
+
+def _source_index_public(source_index: dict[str, Any]) -> dict[str, Any]:
+    blockers = source_index.get("blockers")
+    if not isinstance(blockers, list):
+        blockers = []
+    return {
+        "path": str(source_index.get("path") or ""),
+        "exists": bool(source_index.get("exists")),
+        "explicit_path": bool(source_index.get("explicit_path")),
+        "state": str(source_index.get("state") or "missing"),
+        "schema_version": str(source_index.get("schema_version") or ""),
+        "entries": _int_value(source_index.get("entries")),
+        "indexed_source_images": _int_value(source_index.get("indexed_source_images")),
+        "blockers": blockers,
+    }
+
+
 def _overlay_source_image_candidate(evidence_row: dict[str, Any]) -> dict[str, Any]:
     image_asset = evidence_row.get("image_asset")
     if not isinstance(image_asset, dict):
@@ -1186,6 +1331,7 @@ def _overlay_source_image_candidate(evidence_row: dict[str, Any]) -> dict[str, A
         "extracted_text_preview": str(evidence_row.get("extracted_text_preview") or ""),
         "image_asset": {
             "source_filename": str(image_asset.get("source_filename") or ""),
+            "resolved_path": str(image_asset.get("resolved_path") or ""),
             "mime_type": str(image_asset.get("mime_type") or ""),
             "status": str(image_asset.get("status") or "unlinked"),
             "error": str(image_asset.get("error") or ""),
@@ -1196,7 +1342,183 @@ def _overlay_source_image_candidate(evidence_row: dict[str, Any]) -> dict[str, A
                 "height": _int_value(thumbnail.get("height")),
             },
         },
+        "context_source": "ocr_run",
     }
+
+
+def _overlay_index_source_image_candidate(
+    raw_image: dict[str, Any],
+    *,
+    source_index_path: str,
+) -> tuple[dict[str, Any], list[dict[str, str]]]:
+    raw_path = str(raw_image.get("resolved_path") or raw_image.get("path") or "")
+    resolved_path = Path(raw_path).expanduser() if raw_path.strip() else None
+    source_name = str(
+        raw_image.get("source_image_name")
+        or raw_image.get("source_name")
+        or (resolved_path.name if resolved_path is not None else "")
+    )
+    source_filename = (
+        Path(source_name).name
+        if source_name
+        else (resolved_path.name if resolved_path is not None else "")
+    )
+    blockers: list[dict[str, str]] = []
+    source_file_exists = resolved_path.is_file() if resolved_path is not None else False
+    source_size_bytes = 0
+    if resolved_path is None:
+        blockers.append(
+            _overlay_comparison_blocker(
+                "overlay_source_index_image_path_missing",
+                "indexed overlay/source image does not name a local source path.",
+            )
+        )
+    elif not source_file_exists:
+        blockers.append(
+            _overlay_comparison_blocker(
+                "overlay_source_index_image_not_found",
+                "indexed overlay/source image path does not exist.",
+            )
+        )
+    else:
+        try:
+            source_size_bytes = int(resolved_path.stat().st_size)
+        except OSError:
+            source_size_bytes = 0
+    mime_type = (
+        str(raw_image.get("mime_type") or "")
+        or mimetypes.guess_type(str(resolved_path or source_filename), strict=False)[0]
+    )
+    return (
+        {
+            "run_id": "",
+            "source_name": source_name,
+            "source_message_id": "",
+            "result_message_id": "",
+            "status": "indexed",
+            "created_at": 0,
+            "extracted_text_chars": 0,
+            "extracted_text_preview": "",
+            "image_asset": {
+                "source_filename": source_filename,
+                "resolved_path": str(resolved_path or ""),
+                "mime_type": str(mime_type or ""),
+                "status": "resolved" if source_file_exists else "missing",
+                "error": "" if source_file_exists else "indexed_path_unavailable",
+                "source_size_bytes": source_size_bytes,
+                "thumbnail": {
+                    "available": False,
+                    "width": 0,
+                    "height": 0,
+                },
+            },
+            "context_source": "overlay_source_index",
+            "source_index": {
+                "path": source_index_path,
+                "role": str(raw_image.get("role") or "overlay_source"),
+                "notes": str(raw_image.get("notes") or ""),
+            },
+        },
+        blockers,
+    )
+
+
+def _overlay_index_entry_blockers(
+    *,
+    entry: dict[str, Any],
+    source_item: dict[str, Any],
+    source_context: dict[str, Any],
+) -> list[dict[str, str]]:
+    blockers: list[dict[str, str]] = []
+    if str(entry.get("source_session_id") or "") and str(
+        entry.get("source_session_id") or ""
+    ) != str(source_item.get("source_session_id") or ""):
+        blockers.append(
+            _overlay_comparison_blocker(
+                "overlay_source_index_source_session_mismatch",
+                "overlay/source image index entry targets a different source session.",
+            )
+        )
+    if str(entry.get("session_id") or "") and str(entry.get("session_id") or "") != str(
+        source_item.get("session_id") or ""
+    ):
+        blockers.append(
+            _overlay_comparison_blocker(
+                "overlay_source_index_session_mismatch",
+                "overlay/source image index entry targets a different session.",
+            )
+        )
+    if str(entry.get("message_id") or "") and str(entry.get("message_id") or "") != str(
+        source_item.get("message_id") or ""
+    ):
+        blockers.append(
+            _overlay_comparison_blocker(
+                "overlay_source_index_message_mismatch",
+                "overlay/source image index entry targets a different feedback message.",
+            )
+        )
+    if not str(entry.get("source_context_fingerprint") or ""):
+        blockers.append(
+            _overlay_comparison_blocker(
+                "overlay_source_index_missing_fingerprint",
+                "overlay/source image index entry must include the current source-context fingerprint.",
+            )
+        )
+    elif str(entry.get("source_context_fingerprint") or "") != str(
+        source_context.get("fingerprint") or ""
+    ):
+        blockers.append(
+            _overlay_comparison_blocker(
+                "overlay_source_index_fingerprint_mismatch",
+                "overlay/source image index entry is stale for the current source context.",
+            )
+        )
+    return blockers
+
+
+def _overlay_index_source_images(
+    *,
+    source_item: dict[str, Any],
+    source_context: dict[str, Any],
+    source_index_entries: Sequence[dict[str, Any]],
+    source_index_path: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, str]]]:
+    source_images: list[dict[str, Any]] = []
+    blockers: list[dict[str, str]] = []
+    for entry in source_index_entries:
+        entry_blockers = _overlay_index_entry_blockers(
+            entry=entry,
+            source_item=source_item,
+            source_context=source_context,
+        )
+        if entry_blockers:
+            blockers.extend(entry_blockers)
+            continue
+        raw_images = entry.get("source_images")
+        if not isinstance(raw_images, list) or not raw_images:
+            blockers.append(
+                _overlay_comparison_blocker(
+                    "overlay_source_index_entry_has_no_images",
+                    "overlay/source image index entry has no source images.",
+                )
+            )
+            continue
+        for raw_image in raw_images:
+            if not isinstance(raw_image, dict):
+                blockers.append(
+                    _overlay_comparison_blocker(
+                        "overlay_source_index_image_not_object",
+                        "overlay/source image index source_images item is not an object.",
+                    )
+                )
+                continue
+            source_image, image_blockers = _overlay_index_source_image_candidate(
+                raw_image,
+                source_index_path=source_index_path,
+            )
+            source_images.append(source_image)
+            blockers.extend(image_blockers)
+    return source_images, blockers
 
 
 def _overlay_comparison_payload_preview(
@@ -1234,6 +1556,9 @@ def _overlay_comparison_payload_preview(
 def _overlay_comparison_item(
     source_item: dict[str, Any],
     evidence_rows: Sequence[dict[str, Any]],
+    *,
+    source_index_entries: Sequence[dict[str, Any]],
+    source_index_path: str,
 ) -> dict[str, Any]:
     source_context = source_item.get("source_context")
     if not isinstance(source_context, dict):
@@ -1241,7 +1566,14 @@ def _overlay_comparison_item(
     action_cohort = source_item.get("action_cohort")
     if not isinstance(action_cohort, dict):
         action_cohort = {}
-    source_images = [_overlay_source_image_candidate(row) for row in evidence_rows]
+    ocr_source_images = [_overlay_source_image_candidate(row) for row in evidence_rows]
+    indexed_source_images, index_blockers = _overlay_index_source_images(
+        source_item=source_item,
+        source_context=source_context,
+        source_index_entries=source_index_entries,
+        source_index_path=source_index_path,
+    )
+    source_images = [*ocr_source_images, *indexed_source_images]
     blockers: list[dict[str, str]] = []
     if source_context.get("state") != "found":
         blockers.append(
@@ -1250,6 +1582,7 @@ def _overlay_comparison_item(
                 "feedback row does not have source-history context for comparison.",
             )
         )
+    blockers.extend(index_blockers)
     if not source_images:
         blockers.append(
             _overlay_comparison_blocker(
@@ -1296,6 +1629,8 @@ def _overlay_comparison_item(
             "basis": "source_context_and_attached_overlay_source_image_context",
             "source_context_state": str(source_context.get("state") or "unknown"),
             "source_image_count": len(source_images),
+            "ocr_source_image_count": len(ocr_source_images),
+            "indexed_source_image_count": len(indexed_source_images),
             "blockers": blockers,
         },
         "payload_preview": payload_preview,
@@ -1310,10 +1645,15 @@ def build_overlay_ocr_comparison_readiness_report(
     outcome: str | None = "fail",
     cohort: str | None = "ocr_overlay_hypothesis",
     limit: int = 100,
+    overlay_source_index_path: Path | None = None,
 ) -> dict[str, Any]:
     outcome_filter = _normalize_outcome_filter(outcome) or "fail"
     cohort_filter = _normalize_cohort_filter(cohort) or "ocr_overlay_hypothesis"
     row_limit = max(1, limit)
+    source_index, source_index_entries = _load_overlay_source_context_index(
+        overlay_source_index_path
+    )
+    public_source_index = _source_index_public(source_index)
     source_context_report = build_feedback_source_context_report(
         db_path=db_path,
         outcome=outcome_filter,
@@ -1338,6 +1678,10 @@ def build_overlay_ocr_comparison_readiness_report(
         _overlay_comparison_item(
             item,
             evidence_by_session.get(str(item.get("session_id") or ""), []),
+            source_index_entries=source_index_entries.get(
+                _int_value(item.get("feedback_id")), []
+            ),
+            source_index_path=str(public_source_index.get("path") or ""),
         )
         for item in source_items
         if isinstance(item, dict)
@@ -1355,14 +1699,17 @@ def build_overlay_ocr_comparison_readiness_report(
     report_blockers = [
         blocker for blocker in source_report_blockers if isinstance(blocker, dict)
     ]
-    all_blockers = [*report_blockers, *item_blockers]
+    source_index_blockers = public_source_index.get("blockers")
+    if not isinstance(source_index_blockers, list):
+        source_index_blockers = []
+    all_blockers = [*report_blockers, *source_index_blockers, *item_blockers]
     source_context_counts = source_context_report.get("counts")
     if not isinstance(source_context_counts, dict):
         source_context_counts = {}
     state = "ready"
     if source_context_report.get("state") == "error":
         state = "error"
-    elif item_blockers:
+    elif source_index_blockers or item_blockers:
         state = "blocked"
     return {
         "schema_version": OVERLAY_OCR_COMPARISON_READINESS_SCHEMA_VERSION,
@@ -1371,6 +1718,7 @@ def build_overlay_ocr_comparison_readiness_report(
         ),
         "state": state,
         "manual_evals_db": source_context_report.get("manual_evals_db", {}),
+        "source_index": public_source_index,
         "filters": {
             "status": "open",
             "outcome": outcome_filter,
@@ -1390,6 +1738,23 @@ def build_overlay_ocr_comparison_readiness_report(
                 for item in items
                 if isinstance(item.get("source_images"), list)
             ),
+            "ocr_source_images": sum(
+                _int_value(
+                    item.get("readiness", {}).get("ocr_source_image_count")
+                    if isinstance(item.get("readiness"), dict)
+                    else 0
+                )
+                for item in items
+            ),
+            "indexed_source_images": sum(
+                _int_value(
+                    item.get("readiness", {}).get("indexed_source_image_count")
+                    if isinstance(item.get("readiness"), dict)
+                    else 0
+                )
+                for item in items
+            ),
+            "source_index_entries": _int_value(public_source_index.get("entries")),
             "ready_items": sum(1 for item in items if item.get("state") == "ready"),
             "blocked_items": sum(1 for item in items if item.get("state") != "ready"),
             "payload_previews": len(items),
@@ -10035,6 +10400,9 @@ def format_overlay_ocr_comparison_readiness_report(report: dict[str, Any]) -> st
     mutation = report.get("mutation_boundary")
     if not isinstance(mutation, dict):
         mutation = {}
+    source_index = report.get("source_index")
+    if not isinstance(source_index, dict):
+        source_index = {}
     lines = [
         "manual eval overlay/OCR comparison readiness: "
         f"state={report.get('state', 'unknown')} "
@@ -10046,6 +10414,8 @@ def format_overlay_ocr_comparison_readiness_report(report: dict[str, Any]) -> st
         f"payload_previews={_int_value(counts.get('payload_previews'))} "
         f"outcome={filters.get('outcome') or 'all'} "
         f"cohort={filters.get('cohort') or 'all'} "
+        f"source_index={source_index.get('state') or 'missing'} "
+        f"index_entries={_int_value(source_index.get('entries'))} "
         f"warehouse_mutation={mutation.get('manual_evals_db') or 'unknown'} "
         f"execution={mutation.get('ocr_execution') or 'unknown'} "
         f"path={manual_db.get('path', 'unknown')}",
@@ -10108,6 +10478,7 @@ def format_overlay_ocr_comparison_readiness_report(report: dict[str, Any]) -> st
                 lines.append(
                     "  - "
                     f"run={source_image.get('run_id') or 'none'} "
+                    f"origin={source_image.get('context_source') or 'unknown'} "
                     f"source={_display_text(source_image.get('source_name'))} "
                     f"image_status={image_asset.get('status') or 'unknown'} "
                     f"thumbnail="
@@ -12543,6 +12914,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Print read-only overlay/OCR comparison readiness packets.",
     )
     parser.add_argument(
+        "--overlay-source-index",
+        default="",
+        help="Path to a local overlay/source image context index JSON file.",
+    )
+    parser.add_argument(
         "--ocr-retry-candidates",
         action="store_true",
         help="Print read-only OCR retry candidate packets for selected feedback.",
@@ -13111,6 +13487,9 @@ def main() -> int:
             outcome=args.outcome or "fail",
             cohort=args.cohort or "ocr_overlay_hypothesis",
             limit=max(1, args.limit),
+            overlay_source_index_path=Path(args.overlay_source_index)
+            if str(args.overlay_source_index).strip()
+            else None,
         )
         if args.json:
             print(json.dumps(report, indent=2, sort_keys=True))

@@ -92,6 +92,9 @@ notes, exports, and runtime history.
     `make manual-evals-overlay-comparison-readiness`
   - JSON overlay/OCR readiness export uses
     `schema_version=polinko.manual_eval_overlay_ocr_comparison_readiness.v1`
+  - optional local overlay/source image indexes use
+    `schema_version=polinko.manual_eval_overlay_source_context_index.v1` and
+    require current source-context fingerprints
   - overlay readiness packets expose source context, source-image candidates,
     exact blockers, and payload-only previews before any OCR comparison run
   - preview overlay-hypothesis OCR feedback rows that have no same-session OCR

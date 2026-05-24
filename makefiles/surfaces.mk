@@ -44,7 +44,7 @@ manual-evals-feedback-decision-preview manualdb-feedback-decision-preview:
 	$(PYTHON) -m tools.manual_evals_db_health --feedback-decision-preview $(strip $(MANUAL_EVALS_FEEDBACK_DECISION_ARGS))
 
 manual-evals-overlay-comparison-readiness manualdb-overlay-comparison-readiness:
-	$(PYTHON) -m tools.manual_evals_db_health --overlay-ocr-comparison-readiness $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
+	$(PYTHON) -m tools.manual_evals_db_health --overlay-ocr-comparison-readiness $(strip $(MANUAL_EVALS_OVERLAY_COMPARISON_ARGS))
 
 manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates:
 	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-candidates $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))

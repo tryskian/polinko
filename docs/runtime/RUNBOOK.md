@@ -227,6 +227,11 @@ Use this doc for operator procedure.
     overlay-assisted OCR hypothesis rows
   - combine with `COHORT=ocr_overlay_hypothesis`, `OUTCOME=<outcome>`, and
     `LIMIT=<n>` for explicit manual triage slices
+  - pass `OVERLAY_SOURCE_INDEX_PATH=<path>` to attach a local ignored
+    overlay/source image context index; the default index path is
+    `.local/manual_eval_decisions/overlay_source_context_index.json`
+  - require matching source-context fingerprints before indexed images make a
+    row ready
   - expose source context, source-image candidates, exact blockers, and
     payload-only previews before any OCR run, feedback closure, eval write, or
     warehouse mutation
