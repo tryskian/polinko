@@ -10,6 +10,19 @@ style-gate instability pass on `nonperformative_working_style_contract`.
 The goal was not to get a pretty one-off live pass. The goal was to see whether
 the old dominant style pressure still controlled the broader `Beta 2.2` gate.
 
+## Diagram
+
+```mermaid
+flowchart TD
+  A["Previous broad soak: 11/21 pass"] --> B["Style-gate instability pass"]
+  B --> C["One-hour deterministic quality soak"]
+  C --> D["21 cycles"]
+  D --> E["19 pass cycles"]
+  D --> F["2 fail cycles"]
+  F --> G["Remaining pressure: uncertainty-boundary precision"]
+  E --> H["Style lane no longer dominates broad gate"]
+```
+
 ## Run
 
 - target: `quality-gate-deterministic`

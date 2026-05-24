@@ -9,7 +9,7 @@
   - starting state came from the `2026-05-01` full OCR kernel
   - follow-up narrowed exploratory phrase probes and evaluator phrase matching
   - result was judged through fresh focus replay and focus stability only
-- Local report artifacts:
+- Local report artefacts:
   - `.local/eval_reports/ocr_focus_stability.json`
   - `.local/eval_reports/ocr_focus_fail_patterns.md`
   - `.local/eval_cases/ocr_growth_focus_cases.json`
@@ -68,7 +68,7 @@ binary gate changes. It should start from case design only:
 The important change is not a new failing cohort. It is a boundary change.
 
 - runtime OCR hardening did its job
-- the remaining pressure is no longer in OCR execution behavior
+- the remaining pressure is no longer in OCR execution behaviour
 - the remaining pressure is in case semantics and guarded cue design
 
 That means the correct next move after this note is to keep OCR runtime parked

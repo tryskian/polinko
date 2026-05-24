@@ -2,7 +2,7 @@
 
 # Polinko in Brief
 
-Polinko is a human-led, repo-native research lab for inspecting AI behavior
+Polinko is a human-led, repo-native research lab for inspecting AI behaviour
 through fail-first evaluation, grounding, co-reasoning, operator burden, and
 human-AI collaboration.
 
@@ -13,7 +13,7 @@ repository is the research surface.
 
 Polinko is a fail-first research instrument. It uses binary eval gates, OCR
 reliability loops, transcript-backed insight capture, and evidence-preserving
-docs to study grounded behavior and drift.
+docs to study grounded behaviour and drift.
 
 ## Governing Theory
 
@@ -21,7 +21,7 @@ The strongest signal is in failure and in what is not yet well-defined.
 Binary `pass` / `fail` gates preserve that signal instead of smoothing it away.
 
 Reliability improves when the system re-grounds in source evidence or the
-artifact itself instead of trusting:
+artefact itself instead of trusting:
 
 - stale memory
 - carried priors
@@ -35,7 +35,7 @@ In short: confidence must not outrun evidence.
 - Failure is the main signal, not a side effect.
 - The transcript lane is primary-source research material, not just notes.
 - Human authorship stays explicit:
-  - Krystian owns theory, judgment, and publication decisions.
+  - Krystian owns theory, judgement, and publication decisions.
   - Codex supports implementation, validation, and repo maintenance.
 - The website is a doorway; the repo carries the evidence.
 
@@ -80,8 +80,8 @@ In short: confidence must not outrun evidence.
 - current mature method lane is still green:
   - transcript-backed OCR growth set: `25/25` stable
   - fail-history cohort: `0` active cases
-  - current image set is stabilized
-  - transcript-mined generalization pressure is next
+  - current image set is stabilised
+  - transcript-mined generalisation pressure is next
 - tracked snapshots:
   - [Beta 2.3 snapshot](../research/beta_2_3_2026-05-16.md)
   - [Beta 2.2 snapshot](../research/beta_2_2_2026-05-08.md)
@@ -93,4 +93,4 @@ In short: confidence must not outrun evidence.
 ## One-Sentence Read
 
 Polinko is a fail-first research instrument for studying when model confidence
-outruns evidence, and how artifact-grounded evaluation changes that.
+outruns evidence, and how artefact-grounded evaluation changes that.

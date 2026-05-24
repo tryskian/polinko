@@ -22,28 +22,41 @@ The active question is whether Polinko can move from lane snapshots to
 source-first research claims while preserving row evidence and the manual eval
 workbench as source material.
 
+## Diagram
+
+```mermaid
+flowchart TD
+  A["Source artefacts"] --> B["Row-level or case-level judgement"]
+  B --> C["Lane summary"]
+  C --> D["Promotion claim"]
+  B --> E["Thin-lane qualitative notes"]
+  E --> C
+  A --> F["Broken traceability"]
+  F --> G["Local diagnostic material"]
+```
+
 ## Contract
 
-- OCR remains case-level `pass` / `fail` under broader generalization pressure.
+- OCR remains case-level `pass` / `fail` under broader generalisation pressure.
 - OCR post-fail handling can still use `retain` / `evict` case governance.
 - Non-OCR lanes stay source-first:
-  - manual eval judgment
+  - manual eval judgement
   - manual eval workbench evidence from notebooks, local evidence databases,
-    and chat artifacts
-  - row-local or case-local `pass` / `fail` where binary judgment is earned
+    and chat artefacts
+  - row-local or case-local `pass` / `fail` where binary judgement is earned
   - qualitative notes where the lane is still thin
 - Run-level verdicts are not canonical rollups for pre-Beta 2.4.
-- Any promotion claim must stay traceable to source artifacts, row/case
-  judgment, and repeated lane signal.
+- Any promotion claim must stay traceable to source artefacts, row/case
+  judgement, and repeated lane signal.
 
 ## Evidence Stack
 
 The research model has four layers:
 
-1. Source artifacts from active workbench and eval surfaces.
-2. Row-level or case-level judgments that preserve source evidence.
+1. Source artefacts from active workbench and eval surfaces.
+2. Row-level or case-level judgements that preserve source evidence.
 3. Lane-level summaries with visible counts, examples, and exclusions.
-4. Promotion claim only after repeated lane signal stabilizes.
+4. Promotion claim only after repeated lane signal stabilises.
 
 Canonical source surfaces include:
 
@@ -65,7 +78,7 @@ The first pre-Beta 2.4 kernel should be small, predetermined, and auditable.
 
 It should record:
 
-- source artifacts used
+- source artefacts used
 - row or case count
 - manual-eval or chat-workbench evidence
 - explicit exclusions with narrow reasons
@@ -77,6 +90,6 @@ exists.
 ## Decision Rule
 
 A pre-Beta 2.4 kernel can inform the next beta only when the evidence stack
-stays traceable from source artifact to row/case judgment to lane summary. If
+stays traceable from source artefact to row/case judgement to lane summary. If
 that chain breaks, the result remains local diagnostic material rather than
 promoted beta evidence.

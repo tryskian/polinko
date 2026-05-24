@@ -8,14 +8,14 @@ This is the shortest route through Polinko’s public research surface.
 
 - `Beta 2.3` is the frozen method snapshot for next-beta work:
   - OCR case outcomes stay `pass` / `fail`
-  - OCR now moves into transcript-mined generalization pressure
+  - OCR now moves into transcript-mined generalisation pressure
   - OCR-ready candidates widen intake before eval
 - OCR is the mature green lane:
-  - stabilized on the current image set
-  - generalization pressure is next
+  - stabilised on the current image set
+  - generalisation pressure is next
 - co-reasoning is the first promoted non-OCR lane:
   - promoted through tracked style and soak evidence
-- retrieval and response-behaviour surfaces are operationalized
+- retrieval and response-behaviour surfaces are operationalised
 - uncertainty-boundary and hallucination-boundary surfaces are currently green
 - operator burden is the active thin lane:
   - distinct evidence is present, but the lane is still narrow
@@ -42,9 +42,9 @@ This is the shortest route through Polinko’s public research surface.
 - [Hallucination-boundary promotion](../research/hallucination-boundary-promotion-2026-05-12.md)
   - wider green coverage
 - [Retrieval grounding snapshot](../research/retrieval-grounding-2026-03-28.md)
-  - operationalized retrieval and file-search proof
+  - operationalised retrieval and file-search proof
 - [Response-behaviour stability snapshot](../research/response-behaviour-stability-2026-04-25.md)
-  - operationalized directness and bounded-claim proof
+  - operationalised directness and bounded-claim proof
 - [Operator burden signal shape](../research/operator-burden-signal-shape-2026-05-12.md)
   - active thin-lane evidence shape
 - [Research Surface](../research/README.md)

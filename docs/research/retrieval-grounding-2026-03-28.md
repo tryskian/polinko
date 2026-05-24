@@ -11,7 +11,7 @@ and file-search claims source-bound and inspectable inside Beta 2.0.
 
 ## Tracked Delta
 
-Tracked artifacts for this lane:
+Tracked artefacts for this lane:
 
 - [retrieval-20260328-184111.json](../eval/beta_2_0/retrieval-20260328-184111.json)
 - [file-search-20260328-184143.json](../eval/beta_2_0/file-search-20260328-184143.json)
@@ -34,7 +34,7 @@ Tracked artifacts for this lane:
 
 ## Current Read
 
-Retrieval grounding is operationalized across two connected surfaces:
+Retrieval grounding is operationalised across two connected surfaces:
 
 - retrieval eval proves global recall plus session isolation
 - file-search eval proves scoped and global lookup across OCR, PDF, and image
@@ -53,5 +53,5 @@ The tracked lane currently covers:
 Polinko can now claim inspectable retrieval grounding with explicit leak and
 miss counters instead of treating retrieval as a hidden capability claim.
 
-This lane is operationalized and stable. It does not currently need a new
+This lane is operationalised and stable. It does not currently need a new
 promotion step because the visible pressure is elsewhere.

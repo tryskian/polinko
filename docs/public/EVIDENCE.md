@@ -48,8 +48,8 @@ Core surfaces:
 - tracked evidence Sankey payload
 
 `/viz/pass-fail` keeps the chart on the active live window and uses tracked
-eval artifacts to surface the broader lane map underneath it, with direct links
-into the tracked artifact and promoted note when available.
+eval artefacts to surface the broader lane map underneath it, with direct links
+into the tracked artefact and promoted note when available.
 
 Representative tracked note:
 

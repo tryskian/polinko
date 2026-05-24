@@ -11,9 +11,23 @@
 This folder freezes the Beta 2.3 research and evidence read before the next
 beta cleanup and refactor work starts.
 
-Beta 2.3 is the method boundary where OCR moves from stabilized current-image
-replay into broader generalization pressure. This snapshot preserves the
+Beta 2.3 is the method boundary where OCR moves from stabilised current-image
+replay into broader generalisation pressure. This snapshot preserves the
 current read, evidence pointers, and high-level candidate-review counts.
+
+## Diagram
+
+```mermaid
+flowchart TD
+  A["Source boundary: 2026-05-16"] --> B["Frozen Beta 2.3 eval snapshot"]
+  B --> C["Research note"]
+  B --> D["Snapshot manifest"]
+  B --> E["Promoted supporting notes"]
+  C --> F["Current method read"]
+  D --> F
+  E --> F
+  F --> G["Next-beta hand-off"]
+```
 
 ## Snapshot Read
 
@@ -23,7 +37,7 @@ current read, evidence pointers, and high-level candidate-review counts.
   - active fail-history cohort: `0`
 - intake at freeze:
   - transcript-mined OCR episodes remain a source surface
-  - OCR-ready generalization candidates widen intake
+  - OCR-ready generalisation candidates widen intake
   - local review selected `24` cases from `2248` source candidates
   - selected lane mix: `9` illustration, `8` handwriting, `7` typed
 - case governance at freeze:
@@ -47,10 +61,10 @@ current read, evidence pointers, and high-level candidate-review counts.
 
 ## Source Handling
 
-- Promote curated summaries, manifests, and selected public artifacts into
+- Promote curated summaries, manifests, and selected public artefacts into
   `docs/eval/`.
 - Keep export-derived raw case material in local `.local/eval_cases/` until a
-  later curation pass selects safe tracked artifacts.
+  later curation pass selects safe tracked artefacts.
 - Keep live report churn in `.local/eval_reports/`; promote stable counts and
   selected reports through explicit snapshot commits.
 

@@ -9,7 +9,7 @@ lanes.
 
 It exists to answer a simple question:
 
-> Is there enough real transcript evidence to operationalize broader Polinko
+> Is there enough real transcript evidence to operationalise broader Polinko
 > hypotheses beyond OCR?
 
 ## Method
@@ -67,5 +67,5 @@ target there.
 - confirmed: Polinko has a real multi-lane export-backed evidence surface
 - confirmed: OCR is not the only mature or mineable lane
 - promoted from this backlog: co-reasoning reliability
-- deferred: operator-burden operationalization until better mining cues or
+- deferred: operator-burden operationalisation until better mining cues or
   manual seed cases are added

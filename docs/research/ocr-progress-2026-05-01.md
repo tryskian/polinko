@@ -5,7 +5,7 @@
 - Run date: `2026-05-01`
 - Kernel: `make ocrkernel CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 - Lane: `ocr_growth`
-- Local report artifacts:
+- Local report artefacts:
   - `.local/eval_cases/ocr_transcript_cases_delta.md`
   - `.local/eval_reports/ocr_growth_batched_summary.md`
   - `.local/eval_reports/ocr_growth_stability.json`
