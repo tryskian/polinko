@@ -146,6 +146,12 @@ Last updated: 2026-05-24
     overlay/OCR comparison readiness packet for selected overlay-assisted OCR
     hypothesis rows, using
     `schema_version=polinko.manual_eval_overlay_ocr_comparison_readiness.v1`
+  - the readiness packet can read a local ignored overlay/source image context
+    index at `.local/manual_eval_decisions/overlay_source_context_index.json`
+    or `OVERLAY_SOURCE_INDEX_PATH=<path>`; index entries use
+    `schema_version=polinko.manual_eval_overlay_source_context_index.v1` and
+    must match the current source-context fingerprint before they make a row
+    ready
   - overlay/OCR comparison readiness packets expose source context,
     source-image candidates, exact blockers, and payload-only previews before
     any OCR run, feedback closure, eval write, source-history mutation, or
