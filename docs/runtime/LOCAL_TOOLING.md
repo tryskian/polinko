@@ -156,6 +156,15 @@ operator input tooling:
   - writes a pre-restore backup under
     `.local_archive/manual-evals-feedback-closure-restore-<timestamp>/`
   - restores the whole manual eval warehouse from the verified apply backup
+- `make manual-evals-overlay-comparison-readiness`
+  - reads selected overlay-assisted OCR hypothesis rows through
+    `COHORT=ocr_overlay_hypothesis`, `OUTCOME=<outcome>`, and `LIMIT=<n>`
+  - emits
+    `schema_version=polinko.manual_eval_overlay_ocr_comparison_readiness.v1`
+  - exposes source context, source-image candidates, exact blockers, and
+    payload-only previews for a future overlay/OCR comparison lane
+  - stays read-only and does not run OCR, close feedback, write eval rows,
+    mutate source history, or mutate the manual eval warehouse
 - `make manual-evals-no-context-reclassify-preview`
   - previews overlay-hypothesis OCR feedback rows that have no same-session
     OCR context and whose source response asked for new image evidence

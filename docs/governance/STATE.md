@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-22
+Last updated: 2026-05-24
 
 ## Current Truth
 
@@ -142,6 +142,14 @@ Last updated: 2026-05-22
     exact OCR retry execution target; those rows remain hypothesis pressure
     until a real OCR comparison lane exists with attached overlay/source image
     context
+  - `make manual-evals-overlay-comparison-readiness` prints a read-only
+    overlay/OCR comparison readiness packet for selected overlay-assisted OCR
+    hypothesis rows, using
+    `schema_version=polinko.manual_eval_overlay_ocr_comparison_readiness.v1`
+  - overlay/OCR comparison readiness packets expose source context,
+    source-image candidates, exact blockers, and payload-only previews before
+    any OCR run, feedback closure, eval write, source-history mutation, or
+    warehouse mutation
   - `make manual-evals-no-context-reclassify-preview` previews
     overlay-hypothesis OCR feedback rows that have no same-session OCR context
     and whose source response asked for new image evidence, using

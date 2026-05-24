@@ -16,26 +16,26 @@ enough to read in public.
   - eval snapshot now lives under `docs/eval/beta_2_3/`
   - release outcomes stay `pass` / `fail`
   - post-fail disposition stays `retain` / `evict`
-  - OCR now moves into broader generalization pressure
+  - OCR now moves into broader generalisation pressure
   - intake now combines transcript-mined episodes with OCR-ready candidates
 - `pre-Beta 2.4` is staged as the next research-model contract:
   - the discarded run-level rollup hypothesis is not being carried forward
   - row and case evidence stay visible before lane-level summaries
   - manual eval workbench sources remain evidence, including notebooks,
-    databases, chat artifacts, feedback, and checkpoints
+    databases, chat artefacts, feedback, and checkpoints
   - no new evidence folder is cut until real evidence exists
 - OCR is the mature green lane:
   - growth stability: `25/25` stable, `0` flaky
   - fail-history cohort: `0` active cases
-  - current image set is stabilized
-  - generalization pressure is next
+  - current image set is stabilised
+  - generalisation pressure is next
 - co-reasoning is the first promoted non-OCR lane:
   - tracked style pass: `14/14`
   - one-hour deterministic soak: `19/21` pass cycles
 - the broad gate is holding across:
   - uncertainty-boundary stability: `21/21` pass cycles, `0` fail cycles
   - hallucination-boundary coverage: `9/9` pass across `9` tracked cases
-- operationalized support lanes are holding:
+- operationalised support lanes are holding:
   - retrieval grounding: `12/12` retrieval pass, `5/5` file-search pass
   - response-behaviour stability: `7/7` pass with one recovered first-pass
     wobble
@@ -51,7 +51,7 @@ enough to read in public.
 
 - promoted:
   - co-reasoning reliability
-- operationalized:
+- operationalised:
   - uncertainty-boundary and hallucination-boundary coverage
   - retrieval grounding
   - response-behaviour stability
@@ -75,7 +75,7 @@ enough to read in public.
 - promoted non-OCR lane:
   - [Co-reasoning promotion snapshot](./co-reasoning-promotion-2026-05-08.md)
   - [Hallucination-boundary promotion](./hallucination-boundary-promotion-2026-05-12.md)
-- operationalized support lanes:
+- operationalised support lanes:
   - [Retrieval grounding snapshot](./retrieval-grounding-2026-03-28.md)
   - [Response-behaviour stability snapshot](./response-behaviour-stability-2026-04-25.md)
   - [Eval evidence map](../eval/README.md)

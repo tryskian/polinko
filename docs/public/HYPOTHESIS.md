@@ -22,38 +22,38 @@ Polinko is a local-first evaluation lab for small, inspectable hypothesis lanes:
 - retrieval grounding
 - response-behaviour stability
 
-The implementation, tests, docs, eval reports, and visual research artifacts
+The implementation, tests, docs, eval reports, and visual research artefacts
 live together so claims can be traced back to source material.
 
 ## Current Hypothesis Matrix
 
 - `OCR reliability`
-  - status: operationalized
+  - status: operationalised
   - measured by: OCR, OCR recovery, OCR safety, growth/focus stability, OCR
     progress notes
 - `OCR confidence helps suppress low-signal inference`
-  - status: operationalized through uncertainty-boundary and
+  - status: operationalised through uncertainty-boundary and
     hallucination-boundary coverage
   - measured by: OCR safety, hallucination evals, and export-backed OCR
     confidence boundary mining
-- `Co-reasoning reliability can be operationalized as binary eval signal`
+- `Co-reasoning reliability can be operationalised as binary eval signal`
   - status: promoted, first tracked non-OCR lane
   - measured by: tracked style stress cases, live style eval passes, and the
     export-backed behaviour backlog
 - `Source-first evidence can carry non-OCR method claims`
   - status: staged for pre-Beta 2.4
   - measured by: manual eval workbench evidence, notebooks, local evidence
-    databases, tracked row/case judgments, exclusions, and lane summaries
+    databases, tracked row/case judgements, exclusions, and lane summaries
 - `Commentary-heavy response contracts increase operator burden`
   - status: thin lane
   - measured by: experiment `R-D`, manual transcript diagnostics, the tracked
   operator-burden row surface, and export-backed control-contract mining
 - `Retrieval grounding should stay inspectable and source-bound`
-  - status: operationalized
+  - status: operationalised
   - measured by: retrieval and file-search eval suites, the tracked retrieval
     grounding snapshot, plus export-backed retrieval backlog
 - `Response-behaviour stability should stay direct and source-bound`
-  - status: operationalized
+  - status: operationalised
   - measured by: response-behaviour eval suite and the tracked
     response-behaviour stability snapshot
 - `Failure should stay the main signal across lanes`
@@ -85,8 +85,8 @@ live together so claims can be traced back to source material.
     - recurring seam shape
     - real method consequence
   - no additional non-OCR lane currently meets that threshold
-- Beta 2.3 carries the OCR lane into fresh generalization pressure:
-  - stabilized same-image OCR is the starting base
+- Beta 2.3 carries the OCR lane into fresh generalisation pressure:
+  - stabilised same-image OCR is the starting base
   - transcript mining now refreshes the OCR data surface
   - OCR-ready candidates widen intake beyond transcript-shaped asks
   - OCR failures now use explicit `retain` / `evict` case governance

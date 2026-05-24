@@ -8,9 +8,9 @@
 ![Maintenance](https://img.shields.io/badge/maintenance-in%20progress-F28E2B)
 
 > **Maintenance in progress.** Documentation and research surfaces are being
-> standardized before this repo is shared as a stable reference.
+> standardised before this repo is shared as a stable reference.
 
-Polinko is a human-led research system for inspecting AI behavior through
+Polinko is a human-led research system for inspecting AI behaviour through
 fail-first evaluation, evidence-preserving method work, and repo-native
 publishing.
 
@@ -22,7 +22,7 @@ Most AI projects foreground polished outputs and hide the failure structure.
 Polinko keeps failure visible enough to inspect, classify, and improve. That
 matters anywhere confidence can outrun source evidence.
 
-The method is intentionally small and strict: preserve the artifact, decide
+The method is intentionally small and strict: preserve the artefact, decide
 `pass` or `fail`, retain useful failures, evict noise, and let the tracked
 evidence change the next run.
 
@@ -33,15 +33,15 @@ as the next research-model contract before new evidence is cut.
 
 The active read is:
 
-- OCR is the mature green lane, stabilized on the current image set and moving
-  into broader generalization pressure.
+- OCR is the mature green lane, stabilised on the current image set and moving
+  into broader generalisation pressure.
 - The discarded run-level rollup path is not being carried forward; the next
-  research-model question is how source artifacts, row/case judgment, manual
+  research-model question is how source artefacts, row/case judgement, manual
   evals, lane summaries, and repeated lane signal can carry claims.
 - Co-reasoning is the first promoted non-OCR lane, supported by tracked style
   and soak evidence.
 - Retrieval, response behaviour, uncertainty boundary, and hallucination
-  boundary are operationalized support surfaces.
+  boundary are operationalised support surfaces.
 - Operator burden is the active thin lane because it is still producing
   distinct evidence pressure.
 - The research surface is open: current lane status is explicit, but the method
@@ -71,7 +71,7 @@ Use the operator path when you need to run, inspect, or change the system:
 ## What Lives Here
 
 - FastAPI API and CLI runtime
-- Manual eval workbench: notebooks, local evidence databases, chat artifacts,
+- Manual eval workbench: notebooks, local evidence databases, chat artefacts,
   feedback, checkpoints, and exports
 - Fail-first eval surfaces
 - OCR and non-OCR method lanes
@@ -114,6 +114,6 @@ launch the system browser.
 - `docs/governance/` contains charter, state, and decisions.
 - `docs/runtime/` contains runbook and architecture.
 
-## License
+## Licence
 
-Apache-2.0. See [LICENSE](LICENSE).
+Apache-2.0. See [licence](LICENSE).

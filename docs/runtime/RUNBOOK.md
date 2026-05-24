@@ -222,6 +222,16 @@ Use this doc for operator procedure.
   - use `keep_open` for overlay-assisted OCR hypothesis rows that have no exact
     OCR retry execution target; they remain active evidence pressure until a
     real OCR comparison lane exists with attached overlay/source image context
+- `make manual-evals-overlay-comparison-readiness`
+  - print read-only overlay/OCR comparison readiness for selected
+    overlay-assisted OCR hypothesis rows
+  - combine with `COHORT=ocr_overlay_hypothesis`, `OUTCOME=<outcome>`, and
+    `LIMIT=<n>` for explicit manual triage slices
+  - expose source context, source-image candidates, exact blockers, and
+    payload-only previews before any OCR run, feedback closure, eval write, or
+    warehouse mutation
+  - emits
+    `schema_version=polinko.manual_eval_overlay_ocr_comparison_readiness.v1`
 - `make manual-evals-no-context-reclassify-preview`
   - preview overlay-hypothesis OCR feedback rows that have no same-session OCR
     context and whose source response asked for new image evidence

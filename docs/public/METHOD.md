@@ -6,7 +6,7 @@ Polinko is human-led. This note defines who owns the claims, how AI is used,
 and where the responsibility boundary sits.
 
 Krystian Fernando owns the research framework, hypotheses, evidence selection,
-judgment, and final claims. AI systems are used as instruments inside that
+judgement, and final claims. AI systems are used as instruments inside that
 process, not as independent authors or source authority.
 
 ## AI Role
@@ -32,7 +32,7 @@ or own publication decisions.
 ## Responsibility Boundary
 
 - Concept formation remains human-owned.
-- Judgment and selection remain human-owned.
+- Judgement and selection remain human-owned.
 - Final claims remain human-owned.
 - AI assistance is cited as part of the method, not treated as source
   authority.

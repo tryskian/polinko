@@ -16,7 +16,7 @@ This is a hypothesis-only method note for non-OCR evals.
 
 It does not change OCR.
 
-It proposes a different unit of judgment for bounded non-OCR runs:
+It proposes a different unit of judgement for bounded non-OCR runs:
 
 - the run is the binary unit
 - the items are evidence inside the run
@@ -37,7 +37,7 @@ shape matters more than single-row replay.
   - anchor
   - counted seam
   - excluded noise[^excluded-noise-taxonomy]
-- grow pulse size only after the passing shape starts to stabilize
+- grow pulse size only after the passing shape starts to stabilise
 
 ## Why
 
@@ -46,7 +46,7 @@ shape matters more than single-row replay.
 - row evidence still stays inspectable
 - one lucky row cannot make the whole run look healthier than it is
 
-## Proposed Judgment Shape
+## Proposed Judgement Shape
 
 - judge item evidence first:
   - anchor
@@ -76,10 +76,10 @@ shape matters more than single-row replay.
 
 ## What This Would Change
 
-- binary judgment would move from the row to the pulse
+- binary judgement would move from the row to the pulse
 - counted seam density would matter more than isolated wins
 - exclusion review would become part of pulse hygiene
-- larger non-OCR batches would have to earn themselves through stabilized
+- larger non-OCR batches would have to earn themselves through stabilised
   smaller pulses
 
 [^excluded-noise-taxonomy]: If this hypothesis graduates into procedure,

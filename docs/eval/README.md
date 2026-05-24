@@ -8,7 +8,7 @@ Use it when you need:
 
 - beta-era context
 - case files and report snapshots
-- the shortest path from eval artifacts to public proof
+- the shortest path from eval artefacts to public proof
 
 ![Polinko evidence sankey](../public/diagrams/polinko-evidence-sankey.svg)
 
@@ -22,7 +22,7 @@ Use it when you need:
   - flatter case/report structure and repeatable eval commands
 - `beta_2_3`
   - frozen method-boundary snapshot for next-beta cleanup
-  - OCR generalization pressure starts from the stabilized current-image base
+  - OCR generalisation pressure starts from the stabilised current-image base
   - tracked summary points to curated notes and evidence, with raw export
     material promoted only after explicit curation
 - `pre-Beta 2.4`
@@ -33,14 +33,14 @@ Use it when you need:
 
 Beta 1.0, Beta 2.0, Beta 2.3, and pre-Beta 2.4 should be read by role.
 Beta 1.0 explains the transition into binary evals. Beta 2.0 shows the
-operationalized lane. Beta 2.3 freezes the current method read before the
+operationalised lane. Beta 2.3 freezes the current method read before the
 next beta work starts. Pre-Beta 2.4 names the next source-first
 research-model contract.
 
 ## Current Canonical Surfaces
 
 The manual eval workbench is the human-judged research workspace. It includes
-notebooks, local evidence databases, chat artifacts, feedback, checkpoints,
+notebooks, local evidence databases, chat artefacts, feedback, checkpoints,
 notes, exports, and runtime history.
 
 - notebook workspace:
@@ -65,7 +65,7 @@ notes, exports, and runtime history.
     `make manual-evals-feedback-actionables`
   - JSON actionables export uses
     `schema_version=polinko.manual_eval_feedback_actionables.v1`
-  - summarize open feedback row actionables by cohort with
+  - summarise open feedback row actionables by cohort with
     `make manual-evals-feedback-cohorts`
   - JSON cohort export uses
     `schema_version=polinko.manual_eval_feedback_cohorts.v1`
@@ -88,6 +88,12 @@ notes, exports, and runtime history.
     `schema_version=polinko.manual_eval_feedback_decision_preview.v1`
   - decision previews validate the selected feedback row against the current
     source-context slice and print the future gate/mutation boundary only
+  - inspect overlay/OCR comparison readiness without mutation with
+    `make manual-evals-overlay-comparison-readiness`
+  - JSON overlay/OCR readiness export uses
+    `schema_version=polinko.manual_eval_overlay_ocr_comparison_readiness.v1`
+  - overlay readiness packets expose source context, source-image candidates,
+    exact blockers, and payload-only previews before any OCR comparison run
   - preview overlay-hypothesis OCR feedback rows that have no same-session OCR
     context and whose source response asked for new image evidence with
     `make manual-evals-no-context-reclassify-preview`
@@ -139,7 +145,7 @@ notes, exports, and runtime history.
   - input packets expose feedback IDs, source sessions, source image names,
     resolved image status, OCR run IDs, feedback source-message previews, and
     exact-link blocker state before any rerun or feedback closure
-  - build a concrete OCR retry source-artifact selection manifest without
+  - build a concrete OCR retry source-artefact selection manifest without
     mutation with `make manual-evals-ocr-retry-rerun-manifest`
   - JSON OCR retry rerun-manifest export uses
     `schema_version=polinko.manual_eval_ocr_retry_rerun_manifest.v1`
@@ -151,7 +157,7 @@ notes, exports, and runtime history.
     `make manual-evals-ocr-retry-rerun-plan`
   - JSON OCR retry rerun-plan export uses
     `schema_version=polinko.manual_eval_ocr_retry_rerun_plan.v1`
-  - rerun plans expose stable source artifact IDs, feedback IDs, source
+  - rerun plans expose stable source artefact IDs, feedback IDs, source
     sessions, OCR run IDs, source image names, resolved source paths,
     thumbnail dimensions, source previews, and payload-only command previews;
     `ARTIFACT_IDS=<artifact_id>` narrows the preview without running OCR or
@@ -160,7 +166,7 @@ notes, exports, and runtime history.
     `make manual-evals-ocr-retry-selection-review`
   - JSON OCR retry selection-review export uses
     `schema_version=polinko.manual_eval_ocr_retry_selection_review.v1`
-  - selection reviews collapse duplicate source image artifacts from rerun
+  - selection reviews collapse duplicate source image artefacts from rerun
     plans and expose feedback IDs, OCR run IDs, source image names, thumbnail
     dimensions, source previews, candidate payload previews, and explicit
     dispositions: `rerun_input`, `curated_case`, or `context_only`
@@ -168,15 +174,15 @@ notes, exports, and runtime history.
     `make manual-evals-ocr-retry-selection-template`
   - JSON OCR retry selection-template export uses
     `schema_version=polinko.manual_eval_ocr_retry_selection_template.v1`
-  - selection templates expose shortlist IDs, candidate artifact IDs, source
+  - selection templates expose shortlist IDs, candidate artefact IDs, source
     previews, and fillable decision fields that default to
     `selected_action=undecided`
-  - materialize a local fillable human-selection draft with
+  - materialise a local fillable human-selection draft with
     `make manual-evals-ocr-retry-selection-draft`
   - JSON OCR retry selection-draft files use
     `schema_version=polinko.manual_eval_ocr_retry_selection_decision_draft.v1`
   - selection drafts are written to a local ignored lane by default, preserve
-    shortlist IDs, candidate artifact IDs, source provenance, and template
+    shortlist IDs, candidate artefact IDs, source provenance, and template
     fingerprints, and remain blocked from execution until the validator and
     apply-preview gates pass
   - template fingerprints stay in the draft payload for local stale-input
@@ -187,7 +193,7 @@ notes, exports, and runtime history.
     `schema_version=polinko.manual_eval_ocr_retry_selection_validation.v1`
   - selection validation accepts compact decision lists or filled selection
     templates, requires `rerun_input`, `curated_case`, or `context_only`,
-    verifies selected artifact IDs against the matching shortlist item, and
+    verifies selected artefact IDs against the matching shortlist item, and
     flags missing/stale/duplicate decisions before any OCR execution surface
   - preview local OCR retry decision application without mutation with
     `make manual-evals-ocr-retry-selection-apply-preview`
@@ -202,7 +208,7 @@ notes, exports, and runtime history.
   - JSON OCR retry execution-readiness export uses
     `schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`
   - execution-readiness reports require apply-preview `state=ok`, verify
-    selected artifact source-file existence and payload-only command previews,
+    selected artefact source-file existence and payload-only command previews,
     and keep execution in a separate explicit follow-up gate
   - inspect local OCR retry execution bundles without mutation with
     `make manual-evals-ocr-retry-execution-report RUN_DIR=<path>`
@@ -248,10 +254,10 @@ notes, exports, and runtime history.
     configured image roots
   - remaining unresolved text fixtures are historical source-name debt unless
     their seed files are explicitly curated as source files
-- active chat artifacts:
+- active chat artefacts:
   - `POST /chat`
   - `/chats/*`
-  - includes feedback, checkpoints, notes, exports, and personalization rows
+  - includes feedback, checkpoints, notes, exports, and personalisation rows
 - raw current runtime source:
   - `.local/runtime_dbs/active/history.db`
 - live strict-gate observability plus tracked lane snapshots:
@@ -261,7 +267,7 @@ notes, exports, and runtime history.
 
 Manual evals and strict OCR gate reports answer different questions:
 
-- manual evals capture human judgment and qualitative notes from the manual
+- manual evals capture human judgement and qualitative notes from the manual
   eval workbench
 - manual feedback evidence rows link to the matching source/result message
   when a case link exists; session context alone is not promoted into an OCR
@@ -276,7 +282,7 @@ Manual evals and strict OCR gate reports answer different questions:
 - `/viz/pass-fail` keeps the live chart on the active window and uses tracked
   eval files to keep the wider lane map visible below it
 - tracked lane cards now expose direct links to:
-  - the underlying tracked artifact
+  - the underlying tracked artefact
   - the promoted research note when that lane has one
 
 Do not flatten one into the other.
@@ -312,13 +318,13 @@ Do not flatten one into the other.
 - active-era case files and report snapshots under `docs/eval/beta_2_0/`
 - includes OCR, OCR recovery, OCR safety, hallucination, retrieval, file
   search, style, response behaviour, CLIP A/B, and operator burden
-- append-only eval trace artifacts stay local under `eval_reports/`; they are
+- append-only eval trace artefacts stay local under `eval_reports/`; they are
   not auto-promoted into the tracked beta surface
 - current non-OCR promoted lane lives in the tracked style surface for
   co-reasoning reliability
 - current thin-lane operator burden surface lives in:
   - `docs/eval/beta_2_0/operator_burden_rows.json`
-  - summarize with:
+  - summarise with:
     - `make operator-burden-report`
     - the summary now surfaces:
       - pass anchors
@@ -336,7 +342,7 @@ Do not flatten one into the other.
   - `2026-05-16`
 - snapshot role:
   - preserve the current Beta 2.3 read before broad cleanup/refactor work
-  - record high-level OCR generalization intake counts
+  - record high-level OCR generalisation intake counts
   - point to the tracked research notes and prior operational evidence files
   - hand off into the staged pre-Beta 2.4 research-model contract
 - entry points:
@@ -353,10 +359,10 @@ Do not flatten one into the other.
 - private exports, scratch screenshots, and raw local audit material
 
 Do not commit the full Beta 1.0 snapshot wholesale. Promote only curated
-evidence or explicitly approved artifacts.
+evidence or explicitly approved artefacts.
 
 ## Interpretation Rule
 
-- compare Beta 1.0 and Beta 2.0 by role, not by artifact neatness
+- compare Beta 1.0 and Beta 2.0 by role, not by artefact neatness
 - treat transcripts, screenshots, and raw reports as source evidence
 - let decisions and public notes interpret the evidence, not replace it

@@ -12,7 +12,7 @@ surface.
 
 ## Tracked Delta
 
-Tracked artifacts for this lane:
+Tracked artefacts for this lane:
 
 - [response-behaviour-20260425-175025.json](../eval/beta_2_0/response-behaviour-20260425-175025.json)
 - `docs/eval/beta_2_0/response_behaviour_eval_cases.json`
@@ -27,7 +27,7 @@ Tracked artifacts for this lane:
 
 ## Current Read
 
-Response-behaviour stability is operationalized as a directness and
+Response-behaviour stability is operationalised as a directness and
 bounded-claim lane.
 
 The tracked lane currently covers:

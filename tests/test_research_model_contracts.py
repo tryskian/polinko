@@ -1,17 +1,111 @@
 import json
+import re
 import unittest
 from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = "docs/research/pre-beta-2-4-research-model-contract-2026-05-19.md"
+BETA_NOTE_PATHS = (
+    "docs/research/beta_2_2_2026-05-08.md",
+    "docs/research/beta-2-2-stability-soak-2026-05-09.md",
+    "docs/research/beta_2_3_2026-05-16.md",
+    "docs/research/pre-beta-2-4-research-model-contract-2026-05-19.md",
+    "docs/eval/beta_2_3/README.md",
+)
+PUBLIC_MARKDOWN_PATHS = (
+    "README.md",
+    "docs/eval/README.md",
+    "docs/eval/beta_2_3/README.md",
+    *tuple(
+        str(path.relative_to(REPO_ROOT))
+        for path in sorted((REPO_ROOT / "docs/public").glob("*.md"))
+    ),
+    *tuple(
+        str(path.relative_to(REPO_ROOT))
+        for path in sorted((REPO_ROOT / "docs/research").glob("*.md"))
+    ),
+)
+US_SPELLING_TERMS = (
+    "behavior",
+    "artifact",
+    "artifacts",
+    "stabilized",
+    "stabilize",
+    "stabilizes",
+    "standardized",
+    "generalization",
+    "generalize",
+    "operationalized",
+    "operationalize",
+    "operationalization",
+    "summarize",
+    "personalization",
+    "license",
+    "judgment",
+    "judgments",
+    "analyze",
+    "normalized",
+    "normalize",
+    "organized",
+    "organize",
+    "center",
+    "gray",
+    "catalog",
+    "modeling",
+    "color",
+    "materialize",
+)
 
 
 def _read(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
 
 
+def _markdown_prose_lines(text: str) -> list[tuple[int, str]]:
+    prose_lines: list[tuple[int, str]] = []
+    in_fence = False
+
+    for line_number, line in enumerate(text.splitlines(), start=1):
+        if line.strip().startswith("```"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+
+        prose = "".join(
+            segment for index, segment in enumerate(line.split("`")) if index % 2 == 0
+        )
+        prose = re.sub(r"!\[([^\]]*)\]\([^)]+\)", r"\1", prose)
+        prose = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", prose)
+        prose_lines.append((line_number, prose))
+
+    return prose_lines
+
+
 class ResearchModelContractTests(unittest.TestCase):
+    def test_beta_notes_include_local_mermaid_diagrams(self) -> None:
+        for path in BETA_NOTE_PATHS:
+            text = _read(path)
+
+            self.assertIn("## Diagram", text, path)
+            self.assertIn("```mermaid", text, path)
+
+    def test_public_markdown_uses_uk_english_outside_syntax(self) -> None:
+        patterns = {
+            term: re.compile(rf"\b{re.escape(term)}\b", flags=re.IGNORECASE)
+            for term in US_SPELLING_TERMS
+        }
+        failures: list[str] = []
+
+        for path in PUBLIC_MARKDOWN_PATHS:
+            for line_number, prose in _markdown_prose_lines(_read(path)):
+                for term, pattern in patterns.items():
+                    if pattern.search(prose):
+                        failures.append(f"{path}:{line_number}: {term}")
+
+        self.assertEqual([], failures)
+
     def test_pre_beta_2_4_contract_is_staged_and_source_bound(self) -> None:
         contract = _read(CONTRACT_PATH)
 
@@ -30,6 +124,7 @@ class ResearchModelContractTests(unittest.TestCase):
             "`.local/runtime_dbs/active/manual_evals.db`",
             "`.local/runtime_dbs/active/history.db`",
             "`pass` / `fail`",
+            "source artefacts used",
             "Run-level verdicts are not canonical rollups",
             "docs/eval/beta_2_4/",
         ):
@@ -41,7 +136,7 @@ class ResearchModelContractTests(unittest.TestCase):
         for rejected in (
             "Non-OCR research pulses can use run-level",
             "final pulse verdict",
-            "source artifact to row label to pulse verdict",
+            "source artefact to row label to pulse verdict",
             "Pulse-level verdicts are not canonical rollups",
         ):
             self.assertNotIn(rejected, contract)
@@ -504,14 +599,14 @@ class ResearchModelContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_ocr_retry_selection_review.v1`",
             eval_map,
         )
-        self.assertIn("collapse duplicate source image artifacts", eval_map)
+        self.assertIn("collapse duplicate source image artefacts", eval_map)
         self.assertIn("`rerun_input`, `curated_case`, or `context_only`", eval_map)
         self.assertIn("`make manual-evals-ocr-retry-selection-template`", eval_map)
         self.assertIn(
             "`schema_version=polinko.manual_eval_ocr_retry_selection_template.v1`",
             eval_map,
         )
-        self.assertIn("candidate artifact IDs", eval_map)
+        self.assertIn("candidate artefact IDs", eval_map)
         self.assertIn("`selected_action=undecided`", eval_map)
         self.assertIn("`make manual-evals-ocr-retry-selection-draft`", eval_map)
         self.assertIn(

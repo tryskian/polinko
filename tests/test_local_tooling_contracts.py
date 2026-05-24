@@ -74,6 +74,9 @@ class LocalToolingContractTests(unittest.TestCase):
             "`make manual-evals-feedback-decision-preview`",
             "`schema_version=polinko.manual_eval_feedback_decision_preview.v1`",
             "Manual Feedback Decision Packets",
+            "`make manual-evals-overlay-comparison-readiness`",
+            "`schema_version=polinko.manual_eval_overlay_ocr_comparison_readiness.v1`",
+            "payload-only previews for a future overlay/OCR comparison lane",
             "`make manual-evals-ocr-retry-feedback-closure-restore-preview`",
             "`make manual-evals-ocr-retry-feedback-closure-restore`",
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_restore.v1`",
@@ -113,6 +116,36 @@ class LocalToolingContractTests(unittest.TestCase):
             "docs/governance/DECISIONS.md": (
                 "## D-116: Treat overlay feedback decisions as evidence pressure",
                 "Human-led: The human lead clarified",
+            ),
+        }
+
+        for path, required_snippets in expectations.items():
+            text = _read(path)
+            normalized_text = " ".join(text.split())
+            for snippet in required_snippets:
+                self.assertIn(snippet, normalized_text, path)
+
+    def test_overlay_comparison_readiness_is_documented(self) -> None:
+        expectations = {
+            "docs/eval/README.md": (
+                "make manual-evals-overlay-comparison-readiness",
+                "polinko.manual_eval_overlay_ocr_comparison_readiness.v1",
+            ),
+            "docs/runtime/LOCAL_TOOLING.md": (
+                "`make manual-evals-overlay-comparison-readiness`",
+                "payload-only previews for a future overlay/OCR comparison lane",
+            ),
+            "docs/runtime/RUNBOOK.md": (
+                "`make manual-evals-overlay-comparison-readiness`",
+                "before any OCR run, feedback closure, eval write, or warehouse mutation",
+            ),
+            "docs/governance/STATE.md": (
+                "`make manual-evals-overlay-comparison-readiness`",
+                "source-image candidates, exact blockers, and payload-only previews",
+            ),
+            "docs/governance/DECISIONS.md": (
+                "## D-117: Add read-only overlay/OCR comparison readiness",
+                "Human-led: The human lead carried forward the overlay experiment",
             ),
         }
 

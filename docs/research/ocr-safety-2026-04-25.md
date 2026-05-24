@@ -6,7 +6,7 @@
 - Run id: `20260425-205754`
 - Suite: `ocr_safety`
 - Case file: `docs/eval/beta_2_0/ocr_safety_eval_cases.json`
-- Local report artifact: `eval_reports/ocr-safety-20260425-205754.json`
+- Local report artefact: `eval_reports/ocr-safety-20260425-205754.json`
 
 ## Summary
 
