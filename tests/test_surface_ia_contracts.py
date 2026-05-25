@@ -66,6 +66,27 @@ class SurfaceIaContractTests(unittest.TestCase):
         self.assertTrue((REPO_ROOT / "public" / "portfolio" / "index.html").is_file())
         self.assertTrue((REPO_ROOT / "public" / "portfolio" / "assets").is_dir())
 
+    def test_portfolio_board_uses_clipped_stage_viewport(self) -> None:
+        styles = _read("apps/portfolio/src/styles.css")
+        main_js = _read("apps/portfolio/src/main.js")
+
+        for expected in (
+            "--stage-width",
+            "--stage-height",
+            "overflow: hidden;",
+            "overscroll-behavior: none;",
+            "width: var(--stage-width);",
+            "height: var(--stage-height);",
+            "--scene-x: calc(var(--stage-width) * 2);",
+            "--scene-y: calc(var(--stage-height) * 4);",
+        ):
+            self.assertIn(expected, styles)
+        self.assertNotIn("calc(100vw + 2px)", styles)
+        self.assertNotIn("calc(100vh + 2px)", styles)
+        self.assertIn("function syncStageViewport()", main_js)
+        self.assertIn('"--stage-width", `${window.innerWidth}px`', main_js)
+        self.assertIn('"--stage-height", `${window.innerHeight}px`', main_js)
+
     def test_current_portfolio_source_output_and_server_paths_align(self) -> None:
         makefile = _read("Makefile")
         make_config = _read_make_source("makefiles/config.mk")
