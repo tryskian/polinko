@@ -95,6 +95,14 @@ notes, exports, and runtime history.
   - optional local overlay/source image indexes use
     `schema_version=polinko.manual_eval_overlay_source_context_index.v1` and
     require current source-context fingerprints
+  - draft a local overlay/source image index without mutation with
+    `make manual-evals-overlay-source-index-draft`
+  - JSON overlay/source index draft reports use
+    `schema_version=polinko.manual_eval_overlay_source_context_index_draft.v1`
+  - validate the local overlay/source image index without mutation with
+    `make manual-evals-overlay-source-index-validate`
+  - JSON overlay/source index validation reports use
+    `schema_version=polinko.manual_eval_overlay_source_context_index_validation.v1`
   - overlay readiness packets expose source context, source-image candidates,
     exact blockers, and payload-only previews before any OCR comparison run
   - preview overlay-hypothesis OCR feedback rows that have no same-session OCR

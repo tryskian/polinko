@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-24
+Last updated: 2026-05-25
 
 ## Current Truth
 
@@ -156,6 +156,16 @@ Last updated: 2026-05-24
     source-image candidates, exact blockers, and payload-only previews before
     any OCR run, feedback closure, eval write, source-history mutation, or
     warehouse mutation
+  - `make manual-evals-overlay-source-index-draft` writes a local ignored
+    fillable overlay/source image context index from the current readiness
+    slice using
+    `schema_version=polinko.manual_eval_overlay_source_context_index_draft.v1`
+  - `make manual-evals-overlay-source-index-validate` validates the local
+    index against the current readiness packet using
+    `schema_version=polinko.manual_eval_overlay_source_context_index_validation.v1`
+  - overlay source-index drafts preserve feedback IDs, source sessions,
+    message IDs, and source-context fingerprints, and require human-reviewed
+    local source image paths before readiness can become ready
   - `make manual-evals-no-context-reclassify-preview` previews
     overlay-hypothesis OCR feedback rows that have no same-session OCR context
     and whose source response asked for new image evidence, using

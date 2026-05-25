@@ -172,6 +172,30 @@ operator input tooling:
     payload-only previews for a future overlay/OCR comparison lane
   - stays read-only and does not run OCR, close feedback, write eval rows,
     mutate source history, or mutate the manual eval warehouse
+- `make manual-evals-overlay-source-index-draft`
+  - writes a local ignored fillable overlay/source image context index to
+    `.local/manual_eval_decisions/overlay_source_context_index.json`
+  - accepts `DRAFT_PATH=<path>` and `FORCE=1`
+  - emits
+    `schema_version=polinko.manual_eval_overlay_source_context_index_draft.v1`
+  - draft files use
+    `schema_version=polinko.manual_eval_overlay_source_context_index.v1`
+  - uses the current readiness slice as input and preserves feedback IDs,
+    source sessions, message IDs, and source-context fingerprints
+  - requires human-reviewed local source image paths before validation can
+    make a row ready
+  - stays local-only without OCR, feedback closure, eval writes, source-history
+    mutation, warehouse mutation, browser launch, or pulse work
+- `make manual-evals-overlay-source-index-validate`
+  - validates the local ignored overlay/source image context index against the
+    current readiness packet
+  - accepts `OVERLAY_SOURCE_INDEX_PATH=<path>`
+  - emits
+    `schema_version=polinko.manual_eval_overlay_source_context_index_validation.v1`
+  - reuses the readiness fingerprint gate, local image-path checks, and
+    blocker reporting before any future comparison lane exists
+  - stays read-only and does not run OCR, close feedback, write eval rows,
+    mutate source history, or mutate the manual eval warehouse
 - `make manual-evals-no-context-reclassify-preview`
   - previews overlay-hypothesis OCR feedback rows that have no same-session
     OCR context and whose source response asked for new image evidence
