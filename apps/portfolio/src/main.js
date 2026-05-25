@@ -27,6 +27,11 @@ const EMPTY_GRAPHS = {
   current: { nodes: [], links: [] },
 };
 
+function syncStageViewport() {
+  document.documentElement.style.setProperty("--stage-width", `${window.innerWidth}px`);
+  document.documentElement.style.setProperty("--stage-height", `${window.innerHeight}px`);
+}
+
 function setupSankeyDataWiring() {
   const evidenceSurface = document.getElementById(EVIDENCE_SURFACE_ID);
   if (!(evidenceSurface instanceof HTMLElement)) {
@@ -91,6 +96,7 @@ function setupPinnedStageStepper() {
   if ("scrollRestoration" in window.history) {
     window.history.scrollRestoration = "manual";
   }
+  syncStageViewport();
   window.scrollTo(0, 0);
 
   const clampSceneIndex = gsap.utils.clamp(0, scenes.length - 1);
@@ -228,7 +234,10 @@ function setupPinnedStageStepper() {
     }
   };
 
-  const onResize = () => goToScene(currentIndex, true);
+  const onResize = () => {
+    syncStageViewport();
+    goToScene(currentIndex, true);
+  };
 
   gsap.set(board, { force3D: true });
   goToScene(currentIndex, true);
@@ -290,6 +299,7 @@ function setupWebGLStage() {
 }
 
 const teardownSankey = setupSankeyDataWiring();
+syncStageViewport();
 const teardownStageStepper = setupPinnedStageStepper();
 const teardownWebGL = setupWebGLStage();
 
