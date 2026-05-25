@@ -82,8 +82,8 @@ class DependencyHygieneTests(unittest.TestCase):
         self.assertIn("REQUIREMENTS_LOCK ?= requirements.txt", build_config)
         self.assertIn("pip install -r requirements.txt", workflow)
         self.assertIn("--output-file=requirements.txt", lockfile)
-        self.assertIn("starlette==1.0.1", requirements_input)
-        self.assertIn("starlette==1.0.1", lockfile)
+        self.assertIn("starlette==1.1.0", requirements_input)
+        self.assertIn("starlette==1.1.0", lockfile)
         self.assertIn("#   -r requirements.in", lockfile)
         self.assertFalse((REPO_ROOT / "requirements.lock").exists())
 
