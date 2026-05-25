@@ -13,13 +13,13 @@ from tools.manual_eval_ocr_retry_selection_review import (
 from tools.manual_eval_ocr_retry_selection_template import (
     build_ocr_retry_selection_template_report,
 )
+from tools.manual_eval_ocr_retry_selection_validation import (
+    OCR_RETRY_SELECTION_VALIDATION_SCHEMA_VERSION,
+)
 
 
 OCR_RETRY_SELECTION_DECISION_DRAFT_SCHEMA_VERSION = (
     "polinko.manual_eval_ocr_retry_selection_decision_draft.v1"
-)
-OCR_RETRY_SELECTION_VALIDATION_SCHEMA_VERSION = (
-    "polinko.manual_eval_ocr_retry_selection_validation.v1"
 )
 OCR_RETRY_SELECTION_APPLY_PREVIEW_SCHEMA_VERSION = (
     "polinko.manual_eval_ocr_retry_selection_apply_preview.v1"
