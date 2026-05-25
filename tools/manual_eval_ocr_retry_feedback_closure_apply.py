@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import shlex
 import sqlite3
 from collections.abc import Sequence
@@ -11,6 +10,14 @@ from typing import Any
 
 from tools.manual_eval_ocr_retry_feedback_closure_preview import (
     build_ocr_retry_feedback_closure_preview_report,
+)
+from tools.manual_eval_ocr_retry_feedback_db import (
+    feedback_rows_by_id as _feedback_rows_by_id,
+    feedback_status_is_open as _feedback_status_is_open,
+    int_value as _int_value,
+    sqlite_integrity_check as _sqlite_integrity_check,
+    utc_run_timestamp as _utc_run_timestamp,
+    write_json as _write_json,
 )
 
 
@@ -30,76 +37,6 @@ def ocr_retry_feedback_closure_apply_mutation_boundary() -> dict[str, str]:
         "ocr_run_rows": "none",
         "source_links": "none",
     }
-
-
-def _int_value(value: object) -> int:
-    if value is None:
-        return 0
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return 0
-        return int(value)
-    try:
-        return int(str(value))
-    except (TypeError, ValueError):
-        return 0
-
-
-def _row_dict(row: sqlite3.Row) -> dict[str, Any]:
-    return {key: row[key] for key in row.keys()}
-
-
-def _connect_readonly(db_path: Path) -> sqlite3.Connection:
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def _utc_run_timestamp() -> str:
-    return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-
-
-def _write_json(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
-
-
-def _sqlite_integrity_check(db_path: Path) -> str:
-    with closing(_connect_readonly(db_path)) as conn:
-        row = conn.execute("PRAGMA integrity_check").fetchone()
-    if row is None:
-        return "missing"
-    return str(row[0] or "")
-
-
-def _feedback_rows_by_id(
-    *,
-    db_path: Path,
-    feedback_ids: Sequence[int],
-) -> dict[int, dict[str, Any]]:
-    if not feedback_ids:
-        return {}
-    placeholders = ",".join("?" for _ in feedback_ids)
-    with closing(_connect_readonly(db_path)) as conn:
-        rows = conn.execute(
-            f"SELECT * FROM feedback WHERE id IN ({placeholders})",
-            [int(feedback_id) for feedback_id in feedback_ids],
-        ).fetchall()
-    return {_int_value(row["id"]): _row_dict(row) for row in rows}
-
-
-def _feedback_status_normalized(status: object) -> str:
-    return str(status or "").strip().casefold()
-
-
-def _feedback_status_is_open(status: object) -> bool:
-    return _feedback_status_normalized(status) == "open"
 
 
 def _closed_feedback_status_for_open_status(status: object) -> str:

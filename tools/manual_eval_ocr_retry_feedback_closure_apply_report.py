@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import sqlite3
-from collections.abc import Sequence
-from contextlib import closing
 from pathlib import Path
 from typing import Any
 
@@ -13,81 +11,20 @@ from tools.manual_eval_ocr_retry_feedback_closure_apply import (
     OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION,
     ocr_retry_feedback_closure_apply_mutation_boundary,
 )
+from tools.manual_eval_ocr_retry_feedback_db import (
+    feedback_rows_by_id as _feedback_rows_by_id,
+    feedback_status_is_closed as _feedback_status_is_closed,
+    feedback_status_is_open as _feedback_status_is_open,
+    int_value as _int_value,
+    normalize_text as _normalize_text,
+    sqlite_integrity_check as _sqlite_integrity_check,
+    status_count as _status_count,
+)
 
 
 OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_SCHEMA_VERSION = (
     "polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1"
 )
-
-
-def _connect_readonly(db_path: Path) -> sqlite3.Connection:
-    conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-
-def _int_value(value: object) -> int:
-    if value is None:
-        return 0
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return 0
-        return int(value)
-    try:
-        return int(str(value))
-    except (TypeError, ValueError):
-        return 0
-
-
-def _row_dict(row: sqlite3.Row) -> dict[str, Any]:
-    return {key: row[key] for key in row.keys()}
-
-
-def _normalize_text(value: object) -> str:
-    if value is None:
-        return ""
-    return " ".join(str(value).split())
-
-
-def _sqlite_integrity_check(db_path: Path) -> str:
-    with closing(_connect_readonly(db_path)) as conn:
-        row = conn.execute("PRAGMA integrity_check").fetchone()
-    if row is None:
-        return "missing"
-    return str(row[0] or "")
-
-
-def _feedback_rows_by_id(
-    *,
-    db_path: Path,
-    feedback_ids: Sequence[int],
-) -> dict[int, dict[str, Any]]:
-    if not feedback_ids:
-        return {}
-    placeholders = ",".join("?" for _ in feedback_ids)
-    with closing(_connect_readonly(db_path)) as conn:
-        rows = conn.execute(
-            f"SELECT * FROM feedback WHERE id IN ({placeholders})",
-            [int(feedback_id) for feedback_id in feedback_ids],
-        ).fetchall()
-    return {_int_value(row["id"]): _row_dict(row) for row in rows}
-
-
-def _feedback_status_normalized(status: object) -> str:
-    return str(status or "").strip().casefold()
-
-
-def _feedback_status_is_open(status: object) -> bool:
-    return _feedback_status_normalized(status) == "open"
-
-
-def _feedback_status_is_closed(status: object) -> bool:
-    return _feedback_status_normalized(status) == "closed"
 
 
 def _feedback_closure_apply_report_blocker(
@@ -131,14 +68,6 @@ def _apply_summary_file_path(run_dir: Path | None) -> Path | None:
     if run_dir is None:
         return None
     return run_dir.expanduser() / "feedback_closure_apply_summary.json"
-
-
-def _status_count(rows_by_id: dict[int, dict[str, Any]], status: str) -> int:
-    return sum(
-        1
-        for row in rows_by_id.values()
-        if _feedback_status_normalized(row.get("status")) == status.casefold()
-    )
 
 
 def _path_from_payload(value: object) -> Path | None:

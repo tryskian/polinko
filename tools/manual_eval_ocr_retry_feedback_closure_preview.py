@@ -9,29 +9,12 @@ from tools.manual_eval_ocr_retry_execution_bundle_report import (
     ocr_retry_execution_mutation_boundary,
     read_jsonl_objects,
 )
+from tools.manual_eval_ocr_retry_feedback_db import int_value as _int_value
 
 
 OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION = (
     "polinko.manual_eval_ocr_retry_feedback_closure_preview.v1"
 )
-
-
-def _int_value(value: object) -> int:
-    if value is None:
-        return 0
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return 0
-        return int(value)
-    try:
-        return int(str(value))
-    except (TypeError, ValueError):
-        return 0
 
 
 def _feedback_ids_from_request(request: dict[str, Any]) -> list[str]:
