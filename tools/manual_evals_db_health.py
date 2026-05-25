@@ -36,6 +36,12 @@ OVERLAY_OCR_COMPARISON_READINESS_SCHEMA_VERSION = (
 OVERLAY_SOURCE_CONTEXT_INDEX_SCHEMA_VERSION = (
     "polinko.manual_eval_overlay_source_context_index.v1"
 )
+OVERLAY_SOURCE_CONTEXT_INDEX_DRAFT_SCHEMA_VERSION = (
+    "polinko.manual_eval_overlay_source_context_index_draft.v1"
+)
+OVERLAY_SOURCE_CONTEXT_INDEX_VALIDATION_SCHEMA_VERSION = (
+    "polinko.manual_eval_overlay_source_context_index_validation.v1"
+)
 FEEDBACK_RECLASSIFY_SCHEMA_VERSION = "polinko.manual_eval_feedback_reclassify.v1"
 OCR_RETRY_CANDIDATES_SCHEMA_VERSION = "polinko.manual_eval_ocr_retry_candidates.v2"
 OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION = (
@@ -1771,6 +1777,240 @@ def build_overlay_ocr_comparison_readiness_report(
         "items": items,
         "blockers": all_blockers,
         "warnings": [str(blocker.get("detail") or "") for blocker in all_blockers],
+    }
+
+
+def _utc_timestamp() -> str:
+    return datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def _overlay_source_index_draft_entry(item: dict[str, Any]) -> dict[str, Any]:
+    source_context = item.get("source_context")
+    if not isinstance(source_context, dict):
+        source_context = {}
+    return {
+        "feedback_id": _int_value(item.get("feedback_id")),
+        "source_session_id": str(item.get("source_session_id") or ""),
+        "session_id": str(item.get("session_id") or ""),
+        "message_id": str(item.get("message_id") or ""),
+        "source_context_fingerprint": str(source_context.get("fingerprint") or ""),
+        "notes": "",
+        "source_images": [
+            {
+                "role": "overlay_source",
+                "source_image_name": "",
+                "resolved_path": "",
+                "notes": "human-reviewed local source image path required",
+            }
+        ],
+        "fill_template": (
+            "source_images[0].resolved_path=<local image path>; "
+            "source_images[0].source_image_name=<optional display name>; "
+            "notes=<human review notes>"
+        ),
+    }
+
+
+def build_overlay_source_context_index_draft_payload(
+    *,
+    db_path: Path,
+    outcome: str | None = "fail",
+    cohort: str | None = "ocr_overlay_hypothesis",
+    limit: int = 100,
+) -> dict[str, Any]:
+    readiness = build_overlay_ocr_comparison_readiness_report(
+        db_path=db_path,
+        outcome=outcome,
+        cohort=cohort,
+        limit=limit,
+    )
+    items = readiness.get("items")
+    if not isinstance(items, list):
+        items = []
+    filters = readiness.get("filters")
+    if not isinstance(filters, dict):
+        filters = {}
+    return {
+        "schema_version": OVERLAY_SOURCE_CONTEXT_INDEX_SCHEMA_VERSION,
+        "generated_at": _utc_timestamp(),
+        "source_readiness_schema_version": readiness.get("schema_version", ""),
+        "filters": {
+            "status": filters.get("status") or "open",
+            "outcome": filters.get("outcome") or "",
+            "cohort": filters.get("cohort") or "",
+            "limit": _int_value(filters.get("limit")),
+            "packet_basis": "overlay_source_context_index_authoring",
+        },
+        "authoring_contract": {
+            "local_only": True,
+            "human_review_required": True,
+            "requires_local_source_image_paths": True,
+            "source_context_fingerprint_required": True,
+            "execution": "none",
+            "mutation": "none",
+            "validation_command": (
+                "make manual-evals-overlay-source-index-validate "
+                "COHORT=ocr_overlay_hypothesis OUTCOME=fail"
+            ),
+        },
+        "entries": [
+            _overlay_source_index_draft_entry(item)
+            for item in items
+            if isinstance(item, dict)
+        ],
+    }
+
+
+def write_overlay_source_context_index_draft(
+    *,
+    db_path: Path,
+    output_path: Path | None = None,
+    force: bool = False,
+    outcome: str | None = "fail",
+    cohort: str | None = "ocr_overlay_hypothesis",
+    limit: int = 100,
+) -> dict[str, Any]:
+    resolved_path = (
+        output_path or DEFAULT_OVERLAY_SOURCE_CONTEXT_INDEX_PATH
+    ).expanduser()
+    payload = build_overlay_source_context_index_draft_payload(
+        db_path=db_path,
+        outcome=outcome,
+        cohort=cohort,
+        limit=limit,
+    )
+    entries = payload.get("entries")
+    if not isinstance(entries, list):
+        entries = []
+    existed_before = resolved_path.exists()
+    if existed_before and not force:
+        return {
+            "schema_version": OVERLAY_SOURCE_CONTEXT_INDEX_DRAFT_SCHEMA_VERSION,
+            "state": "blocked",
+            "manual_evals_db": {
+                "path": str(db_path),
+                "exists": db_path.is_file(),
+            },
+            "output": {
+                "path": str(resolved_path),
+                "exists": True,
+                "written": False,
+                "force": False,
+                "overwritten": False,
+                "local_only": True,
+            },
+            "counts": {
+                "draft_entries": len(entries),
+                "source_image_placeholders": sum(
+                    len(entry.get("source_images", []))
+                    for entry in entries
+                    if isinstance(entry, dict)
+                    and isinstance(entry.get("source_images"), list)
+                ),
+            },
+            "payload": payload,
+            "blockers": [
+                _overlay_source_index_blocker(
+                    "overlay_source_index_draft_exists",
+                    "overlay/source image context index already exists; pass FORCE=1 to overwrite.",
+                )
+            ],
+            "warnings": [
+                "overlay/source image context index already exists; pass FORCE=1 to overwrite."
+            ],
+        }
+    resolved_path.parent.mkdir(parents=True, exist_ok=True)
+    resolved_path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return {
+        "schema_version": OVERLAY_SOURCE_CONTEXT_INDEX_DRAFT_SCHEMA_VERSION,
+        "state": "written",
+        "manual_evals_db": {
+            "path": str(db_path),
+            "exists": db_path.is_file(),
+        },
+        "output": {
+            "path": str(resolved_path),
+            "exists": True,
+            "written": True,
+            "force": bool(force),
+            "overwritten": bool(existed_before),
+            "local_only": True,
+        },
+        "counts": {
+            "draft_entries": len(entries),
+            "source_image_placeholders": sum(
+                len(entry.get("source_images", []))
+                for entry in entries
+                if isinstance(entry, dict)
+                and isinstance(entry.get("source_images"), list)
+            ),
+        },
+        "payload": payload,
+        "blockers": [],
+        "warnings": [],
+    }
+
+
+def build_overlay_source_context_index_validation_report(
+    *,
+    db_path: Path,
+    overlay_source_index_path: Path | None = None,
+    outcome: str | None = "fail",
+    cohort: str | None = "ocr_overlay_hypothesis",
+    limit: int = 100,
+) -> dict[str, Any]:
+    resolved_path = (
+        overlay_source_index_path or DEFAULT_OVERLAY_SOURCE_CONTEXT_INDEX_PATH
+    ).expanduser()
+    readiness = build_overlay_ocr_comparison_readiness_report(
+        db_path=db_path,
+        outcome=outcome,
+        cohort=cohort,
+        limit=limit,
+        overlay_source_index_path=resolved_path,
+    )
+    source_index = readiness.get("source_index")
+    if not isinstance(source_index, dict):
+        source_index = {}
+    counts = readiness.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+    readiness_state = str(readiness.get("state") or "unknown")
+    state = "ready" if readiness_state == "ready" else "blocked"
+    if readiness_state == "error":
+        state = "error"
+    return {
+        "schema_version": OVERLAY_SOURCE_CONTEXT_INDEX_VALIDATION_SCHEMA_VERSION,
+        "readiness_schema_version": readiness.get("schema_version", ""),
+        "state": state,
+        "source_index": source_index,
+        "manual_evals_db": readiness.get("manual_evals_db", {}),
+        "filters": readiness.get("filters", {}),
+        "counts": {
+            "returned_rows": _int_value(counts.get("returned_rows")),
+            "ready_items": _int_value(counts.get("ready_items")),
+            "blocked_items": _int_value(counts.get("blocked_items")),
+            "source_images": _int_value(counts.get("source_images")),
+            "indexed_source_images": _int_value(counts.get("indexed_source_images")),
+            "source_index_entries": _int_value(counts.get("source_index_entries")),
+            "blockers": _int_value(counts.get("blockers")),
+        },
+        "validation_contract": {
+            "local_only": True,
+            "human_review_required": True,
+            "requires_local_source_image_paths": True,
+            "source_context_fingerprint_required": True,
+            "execution": "none",
+            "mutation": "none",
+        },
+        "mutation_boundary": readiness.get("mutation_boundary", {}),
+        "items": readiness.get("items", []),
+        "blockers": readiness.get("blockers", []),
+        "warnings": readiness.get("warnings", []),
+        "path": str(resolved_path),
     }
 
 
@@ -10511,6 +10751,121 @@ def format_overlay_ocr_comparison_readiness_report(report: dict[str, Any]) -> st
     return "\n".join(lines)
 
 
+def format_overlay_source_context_index_draft_report(report: dict[str, Any]) -> str:
+    output = report.get("output")
+    if not isinstance(output, dict):
+        output = {}
+    counts = report.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+    payload = report.get("payload")
+    if not isinstance(payload, dict):
+        payload = {}
+    filters = payload.get("filters")
+    if not isinstance(filters, dict):
+        filters = {}
+    lines = [
+        "manual eval overlay source index draft: "
+        f"state={report.get('state') or 'unknown'} "
+        f"entries={_int_value(counts.get('draft_entries'))} "
+        f"placeholders={_int_value(counts.get('source_image_placeholders'))} "
+        f"outcome={filters.get('outcome') or 'all'} "
+        f"cohort={filters.get('cohort') or 'all'} "
+        f"force={'yes' if output.get('force') else 'no'} "
+        f"overwritten={'yes' if output.get('overwritten') else 'no'} "
+        f"local_only={'yes' if output.get('local_only') else 'no'} "
+        f"output={output.get('path') or 'none'}",
+        "next_validate=make manual-evals-overlay-source-index-validate "
+        "COHORT=ocr_overlay_hypothesis OUTCOME=fail",
+    ]
+    blockers = report.get("blockers")
+    if isinstance(blockers, list) and blockers:
+        lines.append("blockers:")
+        for blocker in blockers:
+            if not isinstance(blocker, dict):
+                continue
+            lines.append(
+                "- "
+                f"code={blocker.get('code') or 'unknown'} "
+                f"detail={blocker.get('detail') or ''}"
+            )
+    return "\n".join(lines)
+
+
+def format_overlay_source_context_index_validation_report(
+    report: dict[str, Any],
+) -> str:
+    counts = report.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+    source_index = report.get("source_index")
+    if not isinstance(source_index, dict):
+        source_index = {}
+    mutation = report.get("mutation_boundary")
+    if not isinstance(mutation, dict):
+        mutation = {}
+    lines = [
+        "manual eval overlay source index validation: "
+        f"state={report.get('state') or 'unknown'} "
+        f"rows={_int_value(counts.get('returned_rows'))} "
+        f"ready={_int_value(counts.get('ready_items'))} "
+        f"blocked={_int_value(counts.get('blocked_items'))} "
+        f"source_images={_int_value(counts.get('source_images'))} "
+        f"indexed_source_images={_int_value(counts.get('indexed_source_images'))} "
+        f"source_index={source_index.get('state') or 'missing'} "
+        f"index_entries={_int_value(source_index.get('entries'))} "
+        f"blockers={_int_value(counts.get('blockers'))} "
+        f"warehouse_mutation={mutation.get('manual_evals_db') or 'unknown'} "
+        f"execution={mutation.get('ocr_execution') or 'unknown'} "
+        f"path={report.get('path') or 'none'}",
+    ]
+    items = report.get("items")
+    if not isinstance(items, list) or not items:
+        lines.append("items: none")
+    else:
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            source_context = item.get("source_context")
+            if not isinstance(source_context, dict):
+                source_context = {}
+            readiness = item.get("readiness")
+            if not isinstance(readiness, dict):
+                readiness = {}
+            lines.append(
+                "- "
+                f"feedback={_int_value(item.get('feedback_id'))} "
+                f"state={item.get('state') or 'unknown'} "
+                f"fingerprint={source_context.get('fingerprint') or 'none'} "
+                f"source_images={_int_value(readiness.get('source_image_count'))} "
+                "indexed_source_images="
+                f"{_int_value(readiness.get('indexed_source_image_count'))}"
+            )
+            blockers = item.get("blockers")
+            if isinstance(blockers, list) and blockers:
+                lines.append("  blockers:")
+                for blocker in blockers:
+                    if not isinstance(blocker, dict):
+                        continue
+                    lines.append(
+                        "  - "
+                        f"code={blocker.get('code') or 'unknown'} "
+                        f"detail={blocker.get('detail') or ''}"
+                    )
+    blockers = report.get("blockers")
+    if isinstance(blockers, list) and blockers:
+        lines.append("blockers:")
+        for blocker in blockers:
+            if not isinstance(blocker, dict):
+                continue
+            lines.append(
+                "- "
+                f"code={blocker.get('code') or 'unknown'} "
+                f"detail={blocker.get('detail') or ''}"
+            )
+    return "\n".join(lines)
+
+
 def format_feedback_decision_preview_report(report: dict[str, Any]) -> str:
     decision = report.get("decision")
     if not isinstance(decision, dict):
@@ -12914,6 +13269,16 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Print read-only overlay/OCR comparison readiness packets.",
     )
     parser.add_argument(
+        "--overlay-source-index-draft",
+        action="store_true",
+        help="Write a local fillable overlay/source image context index draft.",
+    )
+    parser.add_argument(
+        "--overlay-source-index-validate",
+        action="store_true",
+        help="Validate a local overlay/source image context index against readiness.",
+    )
+    parser.add_argument(
         "--overlay-source-index",
         default="",
         help="Path to a local overlay/source image context index JSON file.",
@@ -13496,6 +13861,39 @@ def main() -> int:
         else:
             print(format_overlay_ocr_comparison_readiness_report(report))
         return 2 if report.get("state") == "error" else 0
+
+    if args.overlay_source_index_draft:
+        report = write_overlay_source_context_index_draft(
+            db_path=db_path,
+            output_path=Path(args.output_path)
+            if str(args.output_path).strip()
+            else None,
+            force=bool(args.force),
+            outcome=args.outcome or "fail",
+            cohort=args.cohort or "ocr_overlay_hypothesis",
+            limit=max(1, args.limit),
+        )
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            print(format_overlay_source_context_index_draft_report(report))
+        return 0 if report.get("state") == "written" else 2
+
+    if args.overlay_source_index_validate:
+        report = build_overlay_source_context_index_validation_report(
+            db_path=db_path,
+            overlay_source_index_path=Path(args.overlay_source_index)
+            if str(args.overlay_source_index).strip()
+            else None,
+            outcome=args.outcome or "fail",
+            cohort=args.cohort or "ocr_overlay_hypothesis",
+            limit=max(1, args.limit),
+        )
+        if args.json:
+            print(json.dumps(report, indent=2, sort_keys=True))
+        else:
+            print(format_overlay_source_context_index_validation_report(report))
+        return 0 if report.get("state") == "ready" else 2
 
     if args.feedback_decision_draft:
         report = write_feedback_decision_draft(

@@ -25,6 +25,7 @@ from tools.manual_evals_db_health import (
     OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
     build_manual_evals_health_report,
     build_ocr_retry_candidates_report,
+    build_overlay_source_context_index_validation_report,
     build_ocr_retry_input_packet_report,
     build_overlay_ocr_comparison_readiness_report,
     build_ocr_retry_rerun_manifest_report,
@@ -41,6 +42,8 @@ from tools.manual_evals_db_health import (
     build_open_feedback_cohorts_report,
     format_manual_evals_health_report,
     format_ocr_retry_candidates_report,
+    format_overlay_source_context_index_draft_report,
+    format_overlay_source_context_index_validation_report,
     format_ocr_retry_input_packet_report,
     format_overlay_ocr_comparison_readiness_report,
     format_ocr_retry_rerun_manifest_report,
@@ -56,6 +59,7 @@ from tools.manual_evals_db_health import (
     format_open_feedback_actionables_report,
     format_open_feedback_cohorts_report,
     write_ocr_retry_selection_decision_draft,
+    write_overlay_source_context_index_draft,
 )
 from tests.test_build_manual_evals_db import _PNG_1X1, _init_history_db
 
@@ -1106,6 +1110,197 @@ class ManualEvalsDbHealthTests(unittest.TestCase):
             self.assertIn("missing_overlay_source_image_context", blocker_codes)
             self.assertIn("source_index=loaded index_entries=1", summary)
             self.assertIn("code=overlay_source_index_fingerprint_mismatch", summary)
+
+    def test_overlay_source_context_index_draft_writes_fillable_local_index(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            index_path = tmp / "overlay_source_context_index.json"
+            _init_history_db(history_db, feedback_outcome="fail")
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute("DELETE FROM ocr_runs")
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET status = 'open',
+                        recommended_action = ?
+                    """,
+                    (
+                        "Preserve as overlay-assisted OCR hypothesis evidence; "
+                        "attach the overlay/source image context before rerunning "
+                        "OCR for comparison.",
+                    ),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES (
+                      'chat-1', 'assistant',
+                      'No new image evidence in this turn. Attach a new image.',
+                      155, 'm-result-1', NULL
+                    )
+                    """
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[],
+                include_thumbnails=False,
+            )
+            before_history = history_db.stat().st_mtime_ns
+            before_output = output_db.stat().st_mtime_ns
+
+            report = write_overlay_source_context_index_draft(
+                db_path=output_db,
+                output_path=index_path,
+                outcome="fail",
+                cohort="ocr_overlay_hypothesis",
+                limit=5,
+            )
+            summary = format_overlay_source_context_index_draft_report(report)
+            payload = json.loads(index_path.read_text(encoding="utf-8"))
+
+            self.assertEqual(report["state"], "written")
+            self.assertEqual(
+                payload["schema_version"],
+                OVERLAY_SOURCE_CONTEXT_INDEX_SCHEMA_VERSION,
+            )
+            self.assertTrue(payload["authoring_contract"]["human_review_required"])
+            self.assertTrue(
+                payload["authoring_contract"]["requires_local_source_image_paths"]
+            )
+            self.assertEqual(len(payload["entries"]), 1)
+            entry = payload["entries"][0]
+            self.assertEqual(entry["feedback_id"], 1)
+            self.assertTrue(entry["source_context_fingerprint"])
+            self.assertEqual(
+                entry["source_images"][0]["notes"],
+                "human-reviewed local source image path required",
+            )
+            self.assertEqual(entry["source_images"][0]["resolved_path"], "")
+            self.assertIn("state=written entries=1 placeholders=1", summary)
+            self.assertIn("local_only=yes", summary)
+            self.assertEqual(history_db.stat().st_mtime_ns, before_history)
+            self.assertEqual(output_db.stat().st_mtime_ns, before_output)
+
+            blocked = write_overlay_source_context_index_draft(
+                db_path=output_db,
+                output_path=index_path,
+                outcome="fail",
+                cohort="ocr_overlay_hypothesis",
+                limit=5,
+            )
+
+            self.assertEqual(blocked["state"], "blocked")
+            self.assertEqual(
+                blocked["blockers"][0]["code"],
+                "overlay_source_index_draft_exists",
+            )
+
+    def test_overlay_source_context_index_validation_requires_image_paths(
+        self,
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            history_db = tmp / "history.db"
+            output_db = tmp / "manual_evals.db"
+            index_path = tmp / "overlay_source_context_index.json"
+            overlay_image = tmp / "overlay-source.png"
+            overlay_image.write_bytes(_PNG_1X1)
+            _init_history_db(history_db, feedback_outcome="fail")
+            with closing(sqlite3.connect(history_db)) as conn:
+                conn.execute("DELETE FROM ocr_runs")
+                conn.execute(
+                    """
+                    UPDATE message_feedback
+                    SET status = 'open',
+                        recommended_action = ?
+                    """,
+                    (
+                        "Preserve as overlay-assisted OCR hypothesis evidence; "
+                        "attach the overlay/source image context before rerunning "
+                        "OCR for comparison.",
+                    ),
+                )
+                conn.execute(
+                    """
+                    INSERT INTO chat_messages (
+                      session_id, role, content, created_at, message_id,
+                      parent_message_id
+                    ) VALUES (
+                      'chat-1', 'assistant',
+                      'No new image evidence in this turn. Attach a new image.',
+                      155, 'm-result-1', NULL
+                    )
+                    """
+                )
+                conn.commit()
+            build_manual_evals_db(
+                history_db=history_db,
+                output_db=output_db,
+                image_roots=[],
+                include_thumbnails=False,
+            )
+            write_overlay_source_context_index_draft(
+                db_path=output_db,
+                output_path=index_path,
+                outcome="fail",
+                cohort="ocr_overlay_hypothesis",
+                limit=5,
+            )
+
+            blocked = build_overlay_source_context_index_validation_report(
+                db_path=output_db,
+                overlay_source_index_path=index_path,
+                outcome="fail",
+                cohort="ocr_overlay_hypothesis",
+                limit=5,
+            )
+            blocked_summary = format_overlay_source_context_index_validation_report(
+                blocked
+            )
+
+            self.assertEqual(blocked["state"], "blocked")
+            self.assertEqual(blocked["counts"]["ready_items"], 0)
+            self.assertIn(
+                "overlay_source_index_image_path_missing",
+                blocked_summary,
+            )
+
+            payload = json.loads(index_path.read_text(encoding="utf-8"))
+            payload["entries"][0]["source_images"][0]["source_image_name"] = (
+                "overlay-source.png"
+            )
+            payload["entries"][0]["source_images"][0]["resolved_path"] = str(
+                overlay_image
+            )
+            payload["entries"][0]["source_images"][0]["notes"] = (
+                "human-reviewed overlay source"
+            )
+            index_path.write_text(
+                json.dumps(payload, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+
+            ready = build_overlay_source_context_index_validation_report(
+                db_path=output_db,
+                overlay_source_index_path=index_path,
+                outcome="fail",
+                cohort="ocr_overlay_hypothesis",
+                limit=5,
+            )
+            ready_summary = format_overlay_source_context_index_validation_report(ready)
+
+            self.assertEqual(ready["state"], "ready")
+            self.assertEqual(ready["counts"]["ready_items"], 1)
+            self.assertEqual(ready["counts"]["indexed_source_images"], 1)
+            self.assertIn("state=ready rows=1 ready=1 blocked=0", ready_summary)
 
     def test_ocr_retry_candidates_flag_ambiguous_same_session_context(self) -> None:
         with TemporaryDirectory() as tmpdir:

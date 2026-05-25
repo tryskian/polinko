@@ -237,6 +237,27 @@ Use this doc for operator procedure.
     warehouse mutation
   - emits
     `schema_version=polinko.manual_eval_overlay_ocr_comparison_readiness.v1`
+- `make manual-evals-overlay-source-index-draft`
+  - write a local ignored overlay/source image context index draft for the
+    selected readiness slice
+  - accepts `DRAFT_PATH=<path>` and `FORCE=1`
+  - writes `.local/manual_eval_decisions/overlay_source_context_index.json` by
+    default
+  - emits
+    `schema_version=polinko.manual_eval_overlay_source_context_index_draft.v1`
+  - draft entries preserve the current feedback ID, source session, message
+    ID, and source-context fingerprint
+  - fill in human-reviewed local source image paths before validation
+- `make manual-evals-overlay-source-index-validate`
+  - validate the local ignored overlay/source image context index against the
+    current readiness packet
+  - accepts `OVERLAY_SOURCE_INDEX_PATH=<path>`
+  - emits
+    `schema_version=polinko.manual_eval_overlay_source_context_index_validation.v1`
+  - reuse readiness blockers for stale fingerprints and missing local source
+    image paths
+  - stays read-only before any OCR run, feedback closure, eval write, or
+    warehouse mutation
 - `make manual-evals-no-context-reclassify-preview`
   - preview overlay-hypothesis OCR feedback rows that have no same-session OCR
     context and whose source response asked for new image evidence

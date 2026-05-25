@@ -380,8 +380,18 @@ class MakefileContractTests(unittest.TestCase):
             "MANUAL_EVALS_OVERLAY_SOURCE_INDEX_PATH ?= $(OVERLAY_SOURCE_INDEX_PATH)",
             text,
         )
+        self.assertIn(
+            "MANUAL_EVALS_OVERLAY_SOURCE_INDEX_DRAFT_PATH ?= $(DRAFT_PATH)",
+            text,
+        )
+        self.assertIn(
+            "MANUAL_EVALS_OVERLAY_SOURCE_INDEX_DRAFT_FORCE ?= $(FORCE)",
+            text,
+        )
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_OVERLAY_COMPARISON_ARGS)", text)
+        self.assertIn("$(MANUAL_EVALS_OVERLAY_SOURCE_INDEX_DRAFT_ARGS)", text)
+        self.assertIn("$(MANUAL_EVALS_OVERLAY_SOURCE_INDEX_VALIDATE_ARGS)", text)
         self.assertRegex(
             text,
             r"(?m)^manual-evals-feedback-cohorts manualdb-feedback-cohorts:$",
@@ -414,6 +424,18 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("--overlay-ocr-comparison-readiness", text)
         self.assertIn("--overlay-source-index", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-overlay-source-index-draft "
+            r"manualdb-overlay-source-index-draft:$",
+        )
+        self.assertIn("--overlay-source-index-draft", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-overlay-source-index-validate "
+            r"manualdb-overlay-source-index-validate:$",
+        )
+        self.assertIn("--overlay-source-index-validate", text)
         self.assertRegex(
             text,
             r"(?m)^manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates:$",

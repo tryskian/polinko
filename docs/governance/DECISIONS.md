@@ -1845,3 +1845,26 @@ or branch history instead.
   Fingerprint matching preserves source-context freshness while keeping OCR
   runs, feedback closure, eval writes, source-history mutation, warehouse
   mutation, browser launch, and pulse work out of scope.
+
+## D-119: Draft and validate overlay source indexes locally
+
+- Date: `2026-05-25`
+- Category: `operator_workflow`
+- Tags: `manual_evals`, `ocr_overlay`, `source_context`, `local_input`,
+  `validation`
+- Human-led: The human lead chose to keep the overlay experiment active as
+  research evidence while requiring a careful chat about the kernel before
+  implementation.
+- Decision: `make manual-evals-overlay-source-index-draft` now writes a local
+  ignored fillable overlay/source image context index from the current
+  readiness slice, and `make manual-evals-overlay-source-index-validate`
+  validates that index against the current readiness packet. Draft reports use
+  `schema_version=polinko.manual_eval_overlay_source_context_index_draft.v1`;
+  validation reports use
+  `schema_version=polinko.manual_eval_overlay_source_context_index_validation.v1`.
+- Why: Human-reviewed local source image paths need a safe authoring surface
+  before any overlay/OCR comparison lane exists. Drafting and validating the
+  index locally preserves feedback IDs, source sessions, message IDs, and
+  source-context fingerprints while keeping OCR runs, feedback closure, eval
+  writes, source-history mutation, warehouse mutation, browser launch, and
+  pulse work out of scope.
