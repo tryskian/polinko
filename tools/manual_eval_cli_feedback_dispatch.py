@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from tools.manual_eval_cli_dispatch_support import (
+    FinishReport,
+    optional_path,
+    positive_limit,
+)
 from tools.manual_eval_feedback_decisions import (
     build_feedback_decision_preview_report,
     format_feedback_decision_draft_report,
@@ -41,12 +45,6 @@ from tools.manual_eval_source_context import (
     format_feedback_source_context_report,
 )
 
-FinishReport = Callable[..., int]
-
-
-def _optional_path(value: Any) -> Path | None:
-    return Path(value) if str(value).strip() else None
-
 
 def handle_feedback_reclassify_commands(
     *,
@@ -59,7 +57,7 @@ def handle_feedback_reclassify_commands(
             db_path=db_path,
             outcome=args.outcome or "fail",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(
             report,
@@ -72,10 +70,10 @@ def handle_feedback_reclassify_commands(
         report = write_no_context_feedback_reclassify(
             db_path=db_path,
             confirm_token=str(args.confirm or ""),
-            backup_root=_optional_path(args.backup_root),
+            backup_root=optional_path(args.backup_root),
             outcome=args.outcome or "fail",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(
             report,
@@ -87,7 +85,7 @@ def handle_feedback_reclassify_commands(
     if args.feedback_reclassify_preview:
         report = build_feedback_reclassify_report(
             db_path=db_path,
-            plan_path=_optional_path(args.plan_path),
+            plan_path=optional_path(args.plan_path),
         )
         return finish(
             report,
@@ -99,9 +97,9 @@ def handle_feedback_reclassify_commands(
     if args.feedback_reclassify_apply:
         report = write_feedback_reclassify(
             db_path=db_path,
-            plan_path=_optional_path(args.plan_path),
+            plan_path=optional_path(args.plan_path),
             confirm_token=str(args.confirm or ""),
-            backup_root=_optional_path(args.backup_root),
+            backup_root=optional_path(args.backup_root),
         )
         return finish(
             report,
@@ -124,7 +122,7 @@ def handle_feedback_context_commands(
             db_path=db_path,
             outcome=args.outcome or "fail",
             cohort=args.cohort or "grounding_source_verification",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(
             report,
@@ -137,8 +135,8 @@ def handle_feedback_context_commands(
             db_path=db_path,
             outcome=args.outcome or "fail",
             cohort=args.cohort or "ocr_overlay_hypothesis",
-            limit=max(1, args.limit),
-            overlay_source_index_path=_optional_path(args.overlay_source_index),
+            limit=positive_limit(args.limit),
+            overlay_source_index_path=optional_path(args.overlay_source_index),
         )
         return finish(
             report,
@@ -149,11 +147,11 @@ def handle_feedback_context_commands(
     if args.overlay_source_index_draft:
         report = write_overlay_source_context_index_draft(
             db_path=db_path,
-            output_path=_optional_path(args.output_path),
+            output_path=optional_path(args.output_path),
             force=bool(args.force),
             outcome=args.outcome or "fail",
             cohort=args.cohort or "ocr_overlay_hypothesis",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(
             report,
@@ -165,10 +163,10 @@ def handle_feedback_context_commands(
     if args.overlay_source_index_validate:
         report = build_overlay_source_context_index_validation_report(
             db_path=db_path,
-            overlay_source_index_path=_optional_path(args.overlay_source_index),
+            overlay_source_index_path=optional_path(args.overlay_source_index),
             outcome=args.outcome or "fail",
             cohort=args.cohort or "ocr_overlay_hypothesis",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(
             report,
@@ -180,11 +178,11 @@ def handle_feedback_context_commands(
     if args.feedback_decision_draft:
         report = write_feedback_decision_draft(
             db_path=db_path,
-            output_path=_optional_path(args.output_path),
+            output_path=optional_path(args.output_path),
             force=bool(args.force),
             outcome=args.outcome or "fail",
             cohort=args.cohort or "grounding_source_verification",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(
             report,
@@ -196,10 +194,10 @@ def handle_feedback_context_commands(
     if args.feedback_decision_preview:
         report = build_feedback_decision_preview_report(
             db_path=db_path,
-            decision_path=_optional_path(args.decision_path),
+            decision_path=optional_path(args.decision_path),
             outcome=args.outcome or "fail",
             cohort=args.cohort or "grounding_source_verification",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(
             report,
@@ -221,7 +219,7 @@ def handle_feedback_context_commands(
             db_path=db_path,
             outcome=args.outcome,
             cohort=args.cohort,
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(report, format_open_feedback_actionables_report)
 
