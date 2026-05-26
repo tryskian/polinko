@@ -6,59 +6,91 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from tools.build_manual_evals_db import build_manual_evals_db
-from tools.manual_evals_db_health import (
+from tools.manual_eval_cli_contracts import (
     ACTIONABLES_SCHEMA_VERSION,
     COHORTS_SCHEMA_VERSION,
     OCR_RETRY_CANDIDATES_SCHEMA_VERSION,
+    OCR_RETRY_EXECUTION_READINESS_SCHEMA_VERSION,
     OCR_RETRY_INPUT_PACKET_SCHEMA_VERSION,
-    OVERLAY_OCR_COMPARISON_READINESS_SCHEMA_VERSION,
-    OVERLAY_SOURCE_CONTEXT_INDEX_SCHEMA_VERSION,
     OCR_RETRY_RERUN_MANIFEST_SCHEMA_VERSION,
     OCR_RETRY_RERUN_PLAN_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_APPLY_PREVIEW_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_DECISION_DRAFT_SCHEMA_VERSION,
-    OCR_RETRY_EXECUTION_READINESS_SCHEMA_VERSION,
-    OCR_RETRY_SELECTION_VALIDATION_SCHEMA_VERSION,
-    OCR_RETRY_SELECTION_TEMPLATE_SCHEMA_VERSION,
     OCR_RETRY_SELECTION_REVIEW_SCHEMA_VERSION,
+    OCR_RETRY_SELECTION_TEMPLATE_SCHEMA_VERSION,
+    OCR_RETRY_SELECTION_VALIDATION_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_PROVENANCE_SCHEMA_VERSION,
     OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION,
-    build_manual_evals_health_report,
-    build_ocr_retry_candidates_report,
-    build_overlay_source_context_index_validation_report,
-    build_ocr_retry_input_packet_report,
-    build_overlay_ocr_comparison_readiness_report,
-    build_ocr_retry_rerun_manifest_report,
-    build_ocr_retry_rerun_plan_report,
-    build_ocr_retry_selection_apply_preview_report,
+    OVERLAY_OCR_COMPARISON_READINESS_SCHEMA_VERSION,
+    OVERLAY_SOURCE_CONTEXT_INDEX_SCHEMA_VERSION,
     build_ocr_retry_selection_decision_draft_payload,
+)
+from tools.manual_eval_health_report import (
+    build_manual_evals_health_report,
+    format_manual_evals_health_report,
+)
+from tools.manual_eval_ocr_retry_candidates import (
+    build_ocr_retry_candidates_report,
+    format_ocr_retry_candidates_report,
+)
+from tools.manual_eval_ocr_retry_execution_readiness import (
     build_ocr_retry_execution_readiness_report,
-    build_ocr_retry_selection_validation_report,
-    build_ocr_retry_selection_template_report,
+    format_ocr_retry_execution_readiness_report,
+)
+from tools.manual_eval_ocr_retry_input_packet import (
+    build_ocr_retry_input_packet_report,
+    format_ocr_retry_input_packet_report,
+)
+from tools.manual_eval_ocr_retry_rerun_manifest import (
+    build_ocr_retry_rerun_manifest_report,
+    format_ocr_retry_rerun_manifest_report,
+)
+from tools.manual_eval_ocr_retry_rerun_plan import (
+    build_ocr_retry_rerun_plan_report,
+    format_ocr_retry_rerun_plan_report,
+)
+from tools.manual_eval_ocr_retry_selection_apply_preview import (
+    build_ocr_retry_selection_apply_preview_report,
+    format_ocr_retry_selection_apply_preview_report,
+)
+from tools.manual_eval_ocr_retry_selection_decision_draft import (
+    format_ocr_retry_selection_decision_draft_report,
+    write_ocr_retry_selection_decision_draft,
+)
+from tools.manual_eval_ocr_retry_selection_review import (
     build_ocr_retry_selection_review_report,
+    format_ocr_retry_selection_review_report,
+)
+from tools.manual_eval_ocr_retry_selection_template import (
+    build_ocr_retry_selection_template_report,
+    format_ocr_retry_selection_template_report,
+)
+from tools.manual_eval_ocr_retry_selection_validation import (
+    build_ocr_retry_selection_validation_report,
+    format_ocr_retry_selection_validation_report,
+)
+from tools.manual_eval_ocr_retry_source_provenance import (
     build_ocr_retry_source_provenance_report,
+    format_ocr_retry_source_provenance_report,
+)
+from tools.manual_eval_ocr_retry_source_verification import (
     build_ocr_retry_source_verification_report,
+    format_ocr_retry_source_verification_report,
+)
+from tools.manual_eval_open_feedback import (
     build_open_feedback_actionables_report,
     build_open_feedback_cohorts_report,
-    format_manual_evals_health_report,
-    format_ocr_retry_candidates_report,
-    format_overlay_source_context_index_draft_report,
-    format_overlay_source_context_index_validation_report,
-    format_ocr_retry_input_packet_report,
-    format_overlay_ocr_comparison_readiness_report,
-    format_ocr_retry_rerun_manifest_report,
-    format_ocr_retry_rerun_plan_report,
-    format_ocr_retry_selection_apply_preview_report,
-    format_ocr_retry_selection_decision_draft_report,
-    format_ocr_retry_execution_readiness_report,
-    format_ocr_retry_selection_validation_report,
-    format_ocr_retry_selection_template_report,
-    format_ocr_retry_selection_review_report,
-    format_ocr_retry_source_provenance_report,
-    format_ocr_retry_source_verification_report,
     format_open_feedback_actionables_report,
     format_open_feedback_cohorts_report,
-    write_ocr_retry_selection_decision_draft,
+)
+from tools.manual_eval_overlay_readiness import (
+    build_overlay_ocr_comparison_readiness_report,
+    format_overlay_ocr_comparison_readiness_report,
+)
+from tools.manual_eval_overlay_source_index import (
+    build_overlay_source_context_index_validation_report,
+    format_overlay_source_context_index_draft_report,
+    format_overlay_source_context_index_validation_report,
     write_overlay_source_context_index_draft,
 )
 from tests.test_build_manual_evals_db import _PNG_1X1, _init_history_db
