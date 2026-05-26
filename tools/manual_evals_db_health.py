@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from tools.manual_eval_cli_feedback_dispatch import (
+    handle_feedback_context_commands,
+    handle_feedback_reclassify_commands,
+)
 from tools.manual_eval_cli_ocr_retry_dispatch import (
     handle_ocr_retry_post_feedback_commands,
     handle_ocr_retry_pre_feedback_commands,
@@ -47,19 +51,19 @@ from tools.manual_eval_cli_output import finish_manual_eval_report as _finish_re
 from tools.manual_eval_cli_parser import build_manual_evals_db_health_parser
 from tools.manual_eval_feedback_decisions import (
     build_feedback_decision_draft_payload as build_feedback_decision_draft_payload,
-    build_feedback_decision_preview_report,
-    format_feedback_decision_draft_report,
-    format_feedback_decision_preview_report,
-    write_feedback_decision_draft,
+    build_feedback_decision_preview_report as build_feedback_decision_preview_report,
+    format_feedback_decision_draft_report as format_feedback_decision_draft_report,
+    format_feedback_decision_preview_report as format_feedback_decision_preview_report,
+    write_feedback_decision_draft as write_feedback_decision_draft,
 )
 from tools.manual_eval_feedback_reclassify import (
     DEFAULT_FEEDBACK_RECLASSIFY_BACKUP_ROOT as DEFAULT_FEEDBACK_RECLASSIFY_BACKUP_ROOT,
     DEFAULT_FEEDBACK_RECLASSIFY_PLAN_PATH as DEFAULT_FEEDBACK_RECLASSIFY_PLAN_PATH,
     FEEDBACK_RECLASSIFY_CONFIRM_TOKEN as FEEDBACK_RECLASSIFY_CONFIRM_TOKEN,
     FEEDBACK_RECLASSIFY_SCHEMA_VERSION as FEEDBACK_RECLASSIFY_SCHEMA_VERSION,
-    build_feedback_reclassify_report,
-    format_feedback_reclassify_report,
-    write_feedback_reclassify,
+    build_feedback_reclassify_report as build_feedback_reclassify_report,
+    format_feedback_reclassify_report as format_feedback_reclassify_report,
+    write_feedback_reclassify as write_feedback_reclassify,
 )
 from tools.manual_eval_health_report import (
     build_manual_evals_health_report,
@@ -70,9 +74,9 @@ from tools.manual_eval_no_context_feedback_reclassify import (
     NO_CONTEXT_RECLASSIFIED_RECOMMENDED_ACTION as NO_CONTEXT_RECLASSIFIED_RECOMMENDED_ACTION,
     NO_CONTEXT_RECLASSIFY_CONFIRM_TOKEN as NO_CONTEXT_RECLASSIFY_CONFIRM_TOKEN,
     NO_CONTEXT_RECLASSIFY_SCHEMA_VERSION as NO_CONTEXT_RECLASSIFY_SCHEMA_VERSION,
-    build_no_context_feedback_reclassify_report,
-    format_no_context_feedback_reclassify_report,
-    write_no_context_feedback_reclassify,
+    build_no_context_feedback_reclassify_report as build_no_context_feedback_reclassify_report,
+    format_no_context_feedback_reclassify_report as format_no_context_feedback_reclassify_report,
+    write_no_context_feedback_reclassify as write_no_context_feedback_reclassify,
 )
 from tools.manual_eval_ocr_retry_candidates import (
     build_ocr_retry_candidates_report as build_ocr_retry_candidates_report,
@@ -167,25 +171,25 @@ from tools.manual_eval_ocr_retry_source_provenance import (
     format_ocr_retry_source_provenance_report as format_ocr_retry_source_provenance_report,
 )
 from tools.manual_eval_open_feedback import (
-    build_open_feedback_actionables_report,
-    build_open_feedback_cohorts_report,
-    format_open_feedback_actionables_report,
-    format_open_feedback_cohorts_report,
+    build_open_feedback_actionables_report as build_open_feedback_actionables_report,
+    build_open_feedback_cohorts_report as build_open_feedback_cohorts_report,
+    format_open_feedback_actionables_report as format_open_feedback_actionables_report,
+    format_open_feedback_cohorts_report as format_open_feedback_cohorts_report,
 )
 from tools.manual_eval_overlay_source_index import (
     build_overlay_source_context_index_draft_payload as build_overlay_source_context_index_draft_payload,
-    build_overlay_source_context_index_validation_report,
-    format_overlay_source_context_index_draft_report,
-    format_overlay_source_context_index_validation_report,
-    write_overlay_source_context_index_draft,
+    build_overlay_source_context_index_validation_report as build_overlay_source_context_index_validation_report,
+    format_overlay_source_context_index_draft_report as format_overlay_source_context_index_draft_report,
+    format_overlay_source_context_index_validation_report as format_overlay_source_context_index_validation_report,
+    write_overlay_source_context_index_draft as write_overlay_source_context_index_draft,
 )
 from tools.manual_eval_overlay_readiness import (
-    build_overlay_ocr_comparison_readiness_report,
-    format_overlay_ocr_comparison_readiness_report,
+    build_overlay_ocr_comparison_readiness_report as build_overlay_ocr_comparison_readiness_report,
+    format_overlay_ocr_comparison_readiness_report as format_overlay_ocr_comparison_readiness_report,
 )
 from tools.manual_eval_source_context import (
-    build_feedback_source_context_report,
-    format_feedback_source_context_report,
+    build_feedback_source_context_report as build_feedback_source_context_report,
+    format_feedback_source_context_report as format_feedback_source_context_report,
 )
 
 # Guarded feedback-closure commands keep manual_eval_warehouse scope explicit.
@@ -238,65 +242,13 @@ def main() -> int:
     if ocr_retry_status is not None:
         return ocr_retry_status
 
-    if args.no_context_feedback_reclassify_preview:
-        report = build_no_context_feedback_reclassify_report(
-            db_path=db_path,
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-        )
-        return finish(
-            report,
-            format_no_context_feedback_reclassify_report,
-            status_by_state={"ok": 0},
-            default_status=2,
-        )
-
-    if args.no_context_feedback_reclassify_apply:
-        report = write_no_context_feedback_reclassify(
-            db_path=db_path,
-            confirm_token=str(args.confirm or ""),
-            backup_root=Path(args.backup_root)
-            if str(args.backup_root).strip()
-            else None,
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-        )
-        return finish(
-            report,
-            format_no_context_feedback_reclassify_report,
-            status_by_state={"applied": 0},
-            default_status=2,
-        )
-
-    if args.feedback_reclassify_preview:
-        report = build_feedback_reclassify_report(
-            db_path=db_path,
-            plan_path=Path(args.plan_path) if str(args.plan_path).strip() else None,
-        )
-        return finish(
-            report,
-            format_feedback_reclassify_report,
-            status_by_state={"ok": 0},
-            default_status=2,
-        )
-
-    if args.feedback_reclassify_apply:
-        report = write_feedback_reclassify(
-            db_path=db_path,
-            plan_path=Path(args.plan_path) if str(args.plan_path).strip() else None,
-            confirm_token=str(args.confirm or ""),
-            backup_root=Path(args.backup_root)
-            if str(args.backup_root).strip()
-            else None,
-        )
-        return finish(
-            report,
-            format_feedback_reclassify_report,
-            status_by_state={"applied": 0},
-            default_status=2,
-        )
+    feedback_reclassify_status = handle_feedback_reclassify_commands(
+        args=args,
+        db_path=db_path,
+        finish=finish,
+    )
+    if feedback_reclassify_status is not None:
+        return feedback_reclassify_status
 
     ocr_retry_status = handle_ocr_retry_post_feedback_commands(
         args=args,
@@ -306,121 +258,13 @@ def main() -> int:
     if ocr_retry_status is not None:
         return ocr_retry_status
 
-    if args.feedback_source_context:
-        report = build_feedback_source_context_report(
-            db_path=db_path,
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "grounding_source_verification",
-            limit=max(1, args.limit),
-        )
-        return finish(
-            report,
-            format_feedback_source_context_report,
-            status_by_state={"error": 2},
-        )
-
-    if args.overlay_ocr_comparison_readiness:
-        report = build_overlay_ocr_comparison_readiness_report(
-            db_path=db_path,
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "ocr_overlay_hypothesis",
-            limit=max(1, args.limit),
-            overlay_source_index_path=Path(args.overlay_source_index)
-            if str(args.overlay_source_index).strip()
-            else None,
-        )
-        return finish(
-            report,
-            format_overlay_ocr_comparison_readiness_report,
-            status_by_state={"error": 2},
-        )
-
-    if args.overlay_source_index_draft:
-        report = write_overlay_source_context_index_draft(
-            db_path=db_path,
-            output_path=Path(args.output_path)
-            if str(args.output_path).strip()
-            else None,
-            force=bool(args.force),
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "ocr_overlay_hypothesis",
-            limit=max(1, args.limit),
-        )
-        return finish(
-            report,
-            format_overlay_source_context_index_draft_report,
-            status_by_state={"written": 0},
-            default_status=2,
-        )
-
-    if args.overlay_source_index_validate:
-        report = build_overlay_source_context_index_validation_report(
-            db_path=db_path,
-            overlay_source_index_path=Path(args.overlay_source_index)
-            if str(args.overlay_source_index).strip()
-            else None,
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "ocr_overlay_hypothesis",
-            limit=max(1, args.limit),
-        )
-        return finish(
-            report,
-            format_overlay_source_context_index_validation_report,
-            status_by_state={"ready": 0},
-            default_status=2,
-        )
-
-    if args.feedback_decision_draft:
-        report = write_feedback_decision_draft(
-            db_path=db_path,
-            output_path=Path(args.output_path)
-            if str(args.output_path).strip()
-            else None,
-            force=bool(args.force),
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "grounding_source_verification",
-            limit=max(1, args.limit),
-        )
-        return finish(
-            report,
-            format_feedback_decision_draft_report,
-            status_by_state={"written": 0},
-            default_status=2,
-        )
-
-    if args.feedback_decision_preview:
-        report = build_feedback_decision_preview_report(
-            db_path=db_path,
-            decision_path=Path(args.decision_path)
-            if str(args.decision_path).strip()
-            else None,
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "grounding_source_verification",
-            limit=max(1, args.limit),
-        )
-        return finish(
-            report,
-            format_feedback_decision_preview_report,
-            status_by_state={"ok": 0},
-            default_status=2,
-        )
-
-    if args.open_feedback_cohorts:
-        report = build_open_feedback_cohorts_report(
-            db_path=db_path,
-            outcome=args.outcome,
-            cohort=args.cohort,
-        )
-        return finish(report, format_open_feedback_cohorts_report)
-
-    if args.open_feedback_actionables:
-        report = build_open_feedback_actionables_report(
-            db_path=db_path,
-            outcome=args.outcome,
-            cohort=args.cohort,
-            limit=max(1, args.limit),
-        )
-        return finish(report, format_open_feedback_actionables_report)
+    feedback_context_status = handle_feedback_context_commands(
+        args=args,
+        db_path=db_path,
+        finish=finish,
+    )
+    if feedback_context_status is not None:
+        return feedback_context_status
 
     report = build_manual_evals_health_report(db_path=db_path)
     return finish(report, format_manual_evals_health_report)
