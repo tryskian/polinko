@@ -29,6 +29,24 @@ FeedbackActionCohort = Callable[[object], str]
 FeedbackStatusIsOpen = Callable[[object], bool]
 
 
+def _default_source_context_builder() -> SourceContextBuilder:
+    from tools.manual_eval_source_context import build_feedback_source_context_report
+
+    return build_feedback_source_context_report
+
+
+def _default_feedback_action_cohort() -> FeedbackActionCohort:
+    from tools.manual_eval_open_feedback import feedback_action_cohort
+
+    return feedback_action_cohort
+
+
+def _default_feedback_status_is_open() -> FeedbackStatusIsOpen:
+    from tools.manual_eval_ocr_retry_feedback_db import feedback_status_is_open
+
+    return feedback_status_is_open
+
+
 def _int_value(value: object) -> int:
     if value is None:
         return 0
@@ -116,12 +134,15 @@ def _draft_item(source_item: dict[str, Any]) -> dict[str, Any]:
 def build_feedback_decision_draft_payload(
     *,
     db_path: Path,
-    outcome: str | None,
-    cohort: str | None,
-    limit: int,
-    source_context_builder: SourceContextBuilder,
+    outcome: str | None = "fail",
+    cohort: str | None = "grounding_source_verification",
+    limit: int = 1,
+    source_context_builder: SourceContextBuilder | None = None,
 ) -> dict[str, Any]:
-    source_context_report = source_context_builder(
+    actual_source_context_builder = (
+        source_context_builder or _default_source_context_builder()
+    )
+    source_context_report = actual_source_context_builder(
         db_path=db_path,
         outcome=outcome,
         cohort=cohort,
@@ -187,12 +208,12 @@ def build_feedback_decision_draft_payload(
 def write_feedback_decision_draft(
     *,
     db_path: Path,
-    output_path: Path | None,
-    force: bool,
-    outcome: str | None,
-    cohort: str | None,
-    limit: int,
-    source_context_builder: SourceContextBuilder,
+    output_path: Path | None = None,
+    force: bool = False,
+    outcome: str | None = "fail",
+    cohort: str | None = "grounding_source_verification",
+    limit: int = 1,
+    source_context_builder: SourceContextBuilder | None = None,
 ) -> dict[str, Any]:
     payload = build_feedback_decision_draft_payload(
         db_path=db_path,
@@ -576,13 +597,13 @@ def _preview_item(
 def build_feedback_decision_preview_report(
     *,
     db_path: Path,
-    decision_path: Path | None,
-    outcome: str | None,
-    cohort: str | None,
-    limit: int,
-    source_context_builder: SourceContextBuilder,
-    feedback_status_is_open: FeedbackStatusIsOpen,
-    feedback_action_cohort: FeedbackActionCohort,
+    decision_path: Path | None = None,
+    outcome: str | None = "fail",
+    cohort: str | None = "grounding_source_verification",
+    limit: int = 1,
+    source_context_builder: SourceContextBuilder | None = None,
+    feedback_status_is_open: FeedbackStatusIsOpen | None = None,
+    feedback_action_cohort: FeedbackActionCohort | None = None,
 ) -> dict[str, Any]:
     resolved_decision_path = (
         decision_path.expanduser()
@@ -594,7 +615,16 @@ def build_feedback_decision_preview_report(
     blockers.extend(load_blockers)
     decisions, decision_blockers = _decision_inputs(decision_payload)
     blockers.extend(decision_blockers)
-    source_context_report = source_context_builder(
+    actual_source_context_builder = (
+        source_context_builder or _default_source_context_builder()
+    )
+    actual_feedback_status_is_open = (
+        feedback_status_is_open or _default_feedback_status_is_open()
+    )
+    actual_feedback_action_cohort = (
+        feedback_action_cohort or _default_feedback_action_cohort()
+    )
+    source_context_report = actual_source_context_builder(
         db_path=db_path,
         outcome=outcome,
         cohort=cohort,
@@ -621,8 +651,8 @@ def build_feedback_decision_preview_report(
             source_item=source_items_by_feedback_id.get(
                 _int_value(decision.get("feedback_id"))
             ),
-            feedback_status_is_open=feedback_status_is_open,
-            feedback_action_cohort=feedback_action_cohort,
+            feedback_status_is_open=actual_feedback_status_is_open,
+            feedback_action_cohort=actual_feedback_action_cohort,
         )
         for decision in decisions
     ]

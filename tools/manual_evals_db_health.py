@@ -4,7 +4,6 @@ import argparse
 import json
 import os
 from pathlib import Path
-from typing import Any
 
 from tools import manual_eval_feedback_decisions as feedback_decisions
 from tools import manual_eval_open_feedback as open_feedback
@@ -39,11 +38,11 @@ from tools import manual_eval_overlay_readiness as overlay_readiness_reports
 from tools import manual_eval_overlay_source_index as overlay_source_index
 from tools import manual_eval_source_context as source_context_reports
 from tools.manual_eval_feedback_decisions import (
-    build_feedback_decision_draft_payload as _build_feedback_decision_draft_payload,
-    build_feedback_decision_preview_report as _build_feedback_decision_preview_report,
+    build_feedback_decision_draft_payload as build_feedback_decision_draft_payload,
+    build_feedback_decision_preview_report,
     format_feedback_decision_draft_report,
     format_feedback_decision_preview_report,
-    write_feedback_decision_draft as _write_feedback_decision_draft,
+    write_feedback_decision_draft,
 )
 from tools.manual_eval_feedback_reclassify import (
     DEFAULT_FEEDBACK_RECLASSIFY_BACKUP_ROOT as DEFAULT_FEEDBACK_RECLASSIFY_BACKUP_ROOT,
@@ -159,22 +158,18 @@ from tools.manual_eval_ocr_retry_source_provenance import (
     build_ocr_retry_source_provenance_report,
     format_ocr_retry_source_provenance_report,
 )
-from tools.manual_eval_ocr_retry_feedback_db import (
-    feedback_status_is_open as _feedback_status_is_open,
-)
 from tools.manual_eval_open_feedback import (
     build_open_feedback_actionables_report,
     build_open_feedback_cohorts_report,
-    feedback_action_cohort as _feedback_action_cohort,
     format_open_feedback_actionables_report,
     format_open_feedback_cohorts_report,
 )
 from tools.manual_eval_overlay_source_index import (
-    build_overlay_source_context_index_draft_payload as _build_overlay_source_context_index_draft_payload,
-    build_overlay_source_context_index_validation_report as _build_overlay_source_context_index_validation_report,
+    build_overlay_source_context_index_draft_payload as build_overlay_source_context_index_draft_payload,
+    build_overlay_source_context_index_validation_report,
     format_overlay_source_context_index_draft_report,
     format_overlay_source_context_index_validation_report,
-    write_overlay_source_context_index_draft as _write_overlay_source_context_index_draft,
+    write_overlay_source_context_index_draft,
 )
 from tools.manual_eval_overlay_readiness import (
     build_overlay_ocr_comparison_readiness_report,
@@ -271,116 +266,6 @@ build_ocr_retry_selection_decision_draft_payload = (
     ocr_retry_selection_decision_draft.build_ocr_retry_selection_decision_draft_payload
 )
 OCR_RETRY_TERMINAL_CONTEXT_LIMIT = 3
-
-
-def build_overlay_source_context_index_draft_payload(
-    *,
-    db_path: Path,
-    outcome: str | None = "fail",
-    cohort: str | None = "ocr_overlay_hypothesis",
-    limit: int = 100,
-) -> dict[str, Any]:
-    return _build_overlay_source_context_index_draft_payload(
-        db_path=db_path,
-        outcome=outcome,
-        cohort=cohort,
-        limit=limit,
-        readiness_builder=build_overlay_ocr_comparison_readiness_report,
-    )
-
-
-def write_overlay_source_context_index_draft(
-    *,
-    db_path: Path,
-    output_path: Path | None = None,
-    force: bool = False,
-    outcome: str | None = "fail",
-    cohort: str | None = "ocr_overlay_hypothesis",
-    limit: int = 100,
-) -> dict[str, Any]:
-    return _write_overlay_source_context_index_draft(
-        db_path=db_path,
-        output_path=output_path,
-        force=force,
-        outcome=outcome,
-        cohort=cohort,
-        limit=limit,
-        readiness_builder=build_overlay_ocr_comparison_readiness_report,
-    )
-
-
-def build_overlay_source_context_index_validation_report(
-    *,
-    db_path: Path,
-    overlay_source_index_path: Path | None = None,
-    outcome: str | None = "fail",
-    cohort: str | None = "ocr_overlay_hypothesis",
-    limit: int = 100,
-) -> dict[str, Any]:
-    return _build_overlay_source_context_index_validation_report(
-        db_path=db_path,
-        overlay_source_index_path=overlay_source_index_path,
-        outcome=outcome,
-        cohort=cohort,
-        limit=limit,
-        readiness_builder=build_overlay_ocr_comparison_readiness_report,
-    )
-
-
-def build_feedback_decision_draft_payload(
-    *,
-    db_path: Path,
-    outcome: str | None = "fail",
-    cohort: str | None = "grounding_source_verification",
-    limit: int = 1,
-) -> dict[str, Any]:
-    return _build_feedback_decision_draft_payload(
-        db_path=db_path,
-        outcome=outcome,
-        cohort=cohort,
-        limit=limit,
-        source_context_builder=build_feedback_source_context_report,
-    )
-
-
-def write_feedback_decision_draft(
-    *,
-    db_path: Path,
-    output_path: Path | None = None,
-    force: bool = False,
-    outcome: str | None = "fail",
-    cohort: str | None = "grounding_source_verification",
-    limit: int = 1,
-) -> dict[str, Any]:
-    return _write_feedback_decision_draft(
-        db_path=db_path,
-        output_path=output_path,
-        force=force,
-        outcome=outcome,
-        cohort=cohort,
-        limit=limit,
-        source_context_builder=build_feedback_source_context_report,
-    )
-
-
-def build_feedback_decision_preview_report(
-    *,
-    db_path: Path,
-    decision_path: Path | None = None,
-    outcome: str | None = "fail",
-    cohort: str | None = "grounding_source_verification",
-    limit: int = 1,
-) -> dict[str, Any]:
-    return _build_feedback_decision_preview_report(
-        db_path=db_path,
-        decision_path=decision_path,
-        outcome=outcome,
-        cohort=cohort,
-        limit=limit,
-        source_context_builder=build_feedback_source_context_report,
-        feedback_status_is_open=_feedback_status_is_open,
-        feedback_action_cohort=_feedback_action_cohort,
-    )
 
 
 def _build_parser() -> argparse.ArgumentParser:
