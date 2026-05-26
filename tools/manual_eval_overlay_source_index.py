@@ -25,6 +25,14 @@ DEFAULT_OVERLAY_SOURCE_CONTEXT_INDEX_PATH = Path(
 ReadinessBuilder = Callable[..., dict[str, Any]]
 
 
+def _default_readiness_builder() -> ReadinessBuilder:
+    from tools.manual_eval_overlay_readiness import (
+        build_overlay_ocr_comparison_readiness_report,
+    )
+
+    return build_overlay_ocr_comparison_readiness_report
+
+
 def _int_value(value: object) -> int:
     if value is None:
         return 0
@@ -395,12 +403,13 @@ def _draft_entry(item: dict[str, Any]) -> dict[str, Any]:
 def build_overlay_source_context_index_draft_payload(
     *,
     db_path: Path,
-    outcome: str | None,
-    cohort: str | None,
-    limit: int,
-    readiness_builder: ReadinessBuilder,
+    outcome: str | None = "fail",
+    cohort: str | None = "ocr_overlay_hypothesis",
+    limit: int = 100,
+    readiness_builder: ReadinessBuilder | None = None,
 ) -> dict[str, Any]:
-    readiness = readiness_builder(
+    actual_readiness_builder = readiness_builder or _default_readiness_builder()
+    readiness = actual_readiness_builder(
         db_path=db_path,
         outcome=outcome,
         cohort=cohort,
@@ -442,12 +451,12 @@ def build_overlay_source_context_index_draft_payload(
 def write_overlay_source_context_index_draft(
     *,
     db_path: Path,
-    output_path: Path | None,
-    force: bool,
-    outcome: str | None,
-    cohort: str | None,
-    limit: int,
-    readiness_builder: ReadinessBuilder,
+    output_path: Path | None = None,
+    force: bool = False,
+    outcome: str | None = "fail",
+    cohort: str | None = "ocr_overlay_hypothesis",
+    limit: int = 100,
+    readiness_builder: ReadinessBuilder | None = None,
 ) -> dict[str, Any]:
     resolved_path = (
         output_path or DEFAULT_OVERLAY_SOURCE_CONTEXT_INDEX_PATH
@@ -537,16 +546,17 @@ def write_overlay_source_context_index_draft(
 def build_overlay_source_context_index_validation_report(
     *,
     db_path: Path,
-    overlay_source_index_path: Path | None,
-    outcome: str | None,
-    cohort: str | None,
-    limit: int,
-    readiness_builder: ReadinessBuilder,
+    overlay_source_index_path: Path | None = None,
+    outcome: str | None = "fail",
+    cohort: str | None = "ocr_overlay_hypothesis",
+    limit: int = 100,
+    readiness_builder: ReadinessBuilder | None = None,
 ) -> dict[str, Any]:
     resolved_path = (
         overlay_source_index_path or DEFAULT_OVERLAY_SOURCE_CONTEXT_INDEX_PATH
     ).expanduser()
-    readiness = readiness_builder(
+    actual_readiness_builder = readiness_builder or _default_readiness_builder()
+    readiness = actual_readiness_builder(
         db_path=db_path,
         outcome=outcome,
         cohort=cohort,
