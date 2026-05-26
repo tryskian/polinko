@@ -44,6 +44,76 @@ def feedback_reclassify_mutation_boundary() -> dict[str, str]:
     }
 
 
+def format_feedback_reclassify_report(report: dict[str, Any]) -> str:
+    counts = report.get("counts")
+    if not isinstance(counts, dict):
+        counts = {}
+    mutation = report.get("mutation_boundary")
+    if not isinstance(mutation, dict):
+        mutation = {}
+    backup = report.get("backup")
+    if not isinstance(backup, dict):
+        backup = {}
+    lines = [
+        "manual eval feedback reclassify: "
+        f"state={report.get('state') or 'unknown'} "
+        f"mode={report.get('mode') or 'unknown'} "
+        f"planned={int_value(counts.get('planned_feedback'))} "
+        f"ready={int_value(counts.get('ready_feedback'))} "
+        f"blocked={int_value(counts.get('blocked_feedback'))} "
+        f"updated={int_value(counts.get('updated_feedback_rows'))} "
+        f"mutation={mutation.get('manual_evals_db') or 'none'} "
+        f"backup_dir={Path(str(backup.get('dir') or '')).name}",
+    ]
+    items = report.get("items")
+    if not isinstance(items, list):
+        items = report.get("apply_items")
+    if isinstance(items, list) and items:
+        lines.append("feedback_rows:")
+        for item in items:
+            if not isinstance(item, dict):
+                continue
+            lines.append(
+                "- "
+                f"feedback={item.get('feedback_id') or 'unknown'} "
+                f"state={item.get('state') or report.get('state') or 'unknown'} "
+                f"from={item.get('current_cohort') or 'unknown'} "
+                f"to={item.get('new_cohort') or 'unknown'} "
+                f"outcome={item.get('outcome') or ''} "
+                f"message={item.get('message_id') or ''} "
+                f"mutation={item.get('mutation') or 'preview'}"
+            )
+            blockers = item.get("blockers")
+            if isinstance(blockers, list) and blockers:
+                for blocker in blockers:
+                    if not isinstance(blocker, dict):
+                        continue
+                    lines.append(
+                        "  blocker="
+                        f"{blocker.get('code') or 'unknown'} "
+                        f"detail={blocker.get('detail') or ''}"
+                    )
+    blockers = report.get("blockers")
+    if not isinstance(blockers, list):
+        blockers = report.get("apply_blockers")
+    if isinstance(blockers, list) and blockers:
+        label = "apply_blockers" if report.get("mode") == "apply" else "blockers"
+        lines.append(f"{label}:")
+        for blocker in blockers:
+            if not isinstance(blocker, dict):
+                continue
+            lines.append(
+                "- "
+                f"code={blocker.get('code') or 'unknown'} "
+                f"detail={blocker.get('detail') or ''}"
+            )
+    warnings = report.get("warnings")
+    if isinstance(warnings, list) and warnings:
+        lines.append("warnings:")
+        lines.extend(f"- {str(item)}" for item in warnings)
+    return "\n".join(lines)
+
+
 def _feedback_reclassify_blocker(code: str, detail: str) -> dict[str, str]:
     return {"code": code, "detail": detail}
 

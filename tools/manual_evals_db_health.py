@@ -51,6 +51,7 @@ from tools.manual_eval_feedback_reclassify import (
     FEEDBACK_RECLASSIFY_CONFIRM_TOKEN as FEEDBACK_RECLASSIFY_CONFIRM_TOKEN,
     FEEDBACK_RECLASSIFY_SCHEMA_VERSION as FEEDBACK_RECLASSIFY_SCHEMA_VERSION,
     build_feedback_reclassify_report,
+    format_feedback_reclassify_report,
     write_feedback_reclassify,
 )
 from tools.manual_eval_health_report import (
@@ -63,6 +64,7 @@ from tools.manual_eval_no_context_feedback_reclassify import (
     NO_CONTEXT_RECLASSIFY_CONFIRM_TOKEN as NO_CONTEXT_RECLASSIFY_CONFIRM_TOKEN,
     NO_CONTEXT_RECLASSIFY_SCHEMA_VERSION as NO_CONTEXT_RECLASSIFY_SCHEMA_VERSION,
     build_no_context_feedback_reclassify_report,
+    format_no_context_feedback_reclassify_report,
     write_no_context_feedback_reclassify,
 )
 from tools.manual_eval_ocr_retry_candidates import (
@@ -159,7 +161,6 @@ from tools.manual_eval_ocr_retry_source_provenance import (
 )
 from tools.manual_eval_ocr_retry_feedback_db import (
     feedback_status_is_open as _feedback_status_is_open,
-    int_value as _int_value,
 )
 from tools.manual_eval_open_feedback import (
     build_open_feedback_actionables_report,
@@ -380,141 +381,6 @@ def build_feedback_decision_preview_report(
         feedback_status_is_open=_feedback_status_is_open,
         feedback_action_cohort=_feedback_action_cohort,
     )
-
-
-def format_no_context_feedback_reclassify_report(report: dict[str, Any]) -> str:
-    counts = report.get("counts")
-    if not isinstance(counts, dict):
-        counts = {}
-    mutation = report.get("mutation_boundary")
-    if not isinstance(mutation, dict):
-        mutation = {}
-    backup = report.get("backup")
-    if not isinstance(backup, dict):
-        backup = {}
-    lines = [
-        "manual eval no-context feedback reclassify: "
-        f"state={report.get('state') or 'unknown'} "
-        f"mode={report.get('mode') or 'unknown'} "
-        f"feedback={_int_value(counts.get('candidate_feedback'))} "
-        f"ready={_int_value(counts.get('ready_feedback'))} "
-        f"blocked={_int_value(counts.get('blocked_feedback'))} "
-        f"updated={_int_value(counts.get('updated_feedback_rows'))} "
-        f"mutation={mutation.get('manual_evals_db') or 'none'} "
-        f"backup_dir={Path(str(backup.get('dir') or '')).name}",
-    ]
-    items = report.get("items")
-    if not isinstance(items, list):
-        items = report.get("apply_items")
-    if isinstance(items, list) and items:
-        lines.append("feedback_rows:")
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            lines.append(
-                "- "
-                f"feedback={item.get('feedback_id') or 'unknown'} "
-                f"state={item.get('state') or report.get('state') or 'unknown'} "
-                f"outcome={item.get('outcome') or ''} "
-                f"message={item.get('message_id') or ''} "
-                f"mutation={item.get('mutation') or 'preview'}"
-            )
-            blockers = item.get("blockers")
-            if isinstance(blockers, list) and blockers:
-                for blocker in blockers:
-                    if not isinstance(blocker, dict):
-                        continue
-                    lines.append(
-                        "  blocker="
-                        f"{blocker.get('code') or 'unknown'} "
-                        f"detail={blocker.get('detail') or ''}"
-                    )
-    blockers = report.get("apply_blockers")
-    if isinstance(blockers, list) and blockers:
-        lines.append("apply_blockers:")
-        for blocker in blockers:
-            if not isinstance(blocker, dict):
-                continue
-            lines.append(
-                "- "
-                f"code={blocker.get('code') or 'unknown'} "
-                f"detail={blocker.get('detail') or ''}"
-            )
-    warnings = report.get("warnings")
-    if isinstance(warnings, list) and warnings:
-        lines.append("warnings:")
-        lines.extend(f"- {str(item)}" for item in warnings)
-    return "\n".join(lines)
-
-
-def format_feedback_reclassify_report(report: dict[str, Any]) -> str:
-    counts = report.get("counts")
-    if not isinstance(counts, dict):
-        counts = {}
-    mutation = report.get("mutation_boundary")
-    if not isinstance(mutation, dict):
-        mutation = {}
-    backup = report.get("backup")
-    if not isinstance(backup, dict):
-        backup = {}
-    lines = [
-        "manual eval feedback reclassify: "
-        f"state={report.get('state') or 'unknown'} "
-        f"mode={report.get('mode') or 'unknown'} "
-        f"planned={_int_value(counts.get('planned_feedback'))} "
-        f"ready={_int_value(counts.get('ready_feedback'))} "
-        f"blocked={_int_value(counts.get('blocked_feedback'))} "
-        f"updated={_int_value(counts.get('updated_feedback_rows'))} "
-        f"mutation={mutation.get('manual_evals_db') or 'none'} "
-        f"backup_dir={Path(str(backup.get('dir') or '')).name}",
-    ]
-    items = report.get("items")
-    if not isinstance(items, list):
-        items = report.get("apply_items")
-    if isinstance(items, list) and items:
-        lines.append("feedback_rows:")
-        for item in items:
-            if not isinstance(item, dict):
-                continue
-            lines.append(
-                "- "
-                f"feedback={item.get('feedback_id') or 'unknown'} "
-                f"state={item.get('state') or report.get('state') or 'unknown'} "
-                f"from={item.get('current_cohort') or 'unknown'} "
-                f"to={item.get('new_cohort') or 'unknown'} "
-                f"outcome={item.get('outcome') or ''} "
-                f"message={item.get('message_id') or ''} "
-                f"mutation={item.get('mutation') or 'preview'}"
-            )
-            blockers = item.get("blockers")
-            if isinstance(blockers, list) and blockers:
-                for blocker in blockers:
-                    if not isinstance(blocker, dict):
-                        continue
-                    lines.append(
-                        "  blocker="
-                        f"{blocker.get('code') or 'unknown'} "
-                        f"detail={blocker.get('detail') or ''}"
-                    )
-    blockers = report.get("blockers")
-    if not isinstance(blockers, list):
-        blockers = report.get("apply_blockers")
-    if isinstance(blockers, list) and blockers:
-        label = "apply_blockers" if report.get("mode") == "apply" else "blockers"
-        lines.append(f"{label}:")
-        for blocker in blockers:
-            if not isinstance(blocker, dict):
-                continue
-            lines.append(
-                "- "
-                f"code={blocker.get('code') or 'unknown'} "
-                f"detail={blocker.get('detail') or ''}"
-            )
-    warnings = report.get("warnings")
-    if isinstance(warnings, list) and warnings:
-        lines.append("warnings:")
-        lines.extend(f"- {str(item)}" for item in warnings)
-    return "\n".join(lines)
 
 
 def _build_parser() -> argparse.ArgumentParser:
