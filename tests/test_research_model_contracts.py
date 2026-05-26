@@ -83,6 +83,17 @@ def _markdown_prose_lines(text: str) -> list[tuple[int, str]]:
     return prose_lines
 
 
+def _is_allowed_public_spelling(relative_path: str, term: str, prose: str) -> bool:
+    if relative_path != "README.md" or term.lower() != "license":
+        return False
+
+    normalized = prose.strip().lower()
+    return normalized in {
+        "## license",
+        "apache-2.0. see license.",
+    }
+
+
 class ResearchModelContractTests(unittest.TestCase):
     def test_beta_notes_include_local_mermaid_diagrams(self) -> None:
         for path in BETA_NOTE_PATHS:
@@ -101,7 +112,9 @@ class ResearchModelContractTests(unittest.TestCase):
         for path in PUBLIC_MARKDOWN_PATHS:
             for line_number, prose in _markdown_prose_lines(_read(path)):
                 for term, pattern in patterns.items():
-                    if pattern.search(prose):
+                    if pattern.search(prose) and not _is_allowed_public_spelling(
+                        path, term, prose
+                    ):
                         failures.append(f"{path}:{line_number}: {term}")
 
         self.assertEqual([], failures)
