@@ -1,8 +1,6 @@
-<!-- @format -->
-
 # Polinko
 
-[![CI](https://github.com/tryskian/polinko/actions/workflows/ci.yml/badge.svg)](https://github.com/tryskian/polinko/actions/workflows/ci.yml)
+![CI](https://github.com/tryskian/polinko/actions/workflows/ci.yml/badge.svg)
 ![Eval Contract](https://img.shields.io/badge/eval-pass%2Ffail-4E79A7)
 ![Research Surface](https://img.shields.io/badge/research-repo_native-76B7B2)
 ![Maintenance](https://img.shields.io/badge/maintenance-in%20progress-F28E2B)
@@ -16,70 +14,47 @@ publishing.
 
 The website is a doorway. The repository is the research surface.
 
-## Why This Exists
+## Research Question
 
-Most AI projects foreground polished outputs and hide the failure structure.
-Polinko keeps failure visible enough to inspect, classify, and improve. That
-matters anywhere confidence can outrun source evidence.
+How can human-led eval work make AI failure legible enough to improve the
+method without hiding risk behind polished outputs?
 
-The method is intentionally small and strict: preserve the artefact, decide
-`pass` or `fail`, retain useful failures, evict noise, and let the tracked
-evidence change the next run.
+## Working Theory
+
+AI responses are shaped by more than the prompt. Policy, guardrails, retrieval,
+memory, context limits, tooling, and prior response residue can all bend the
+path from intent to output.
+
+Polinko treats visible mismatch as evidence. The method preserves failures,
+classifies them, and uses them to update the next research boundary instead of
+smoothing them away.
+
+OCR is one pressure lane because the expected answer is externally checkable.
+It is part of the theory, not the whole model.
 
 ## Current Read
 
-`Beta 2.3` is the frozen method snapshot. `pre-Beta 2.4` is now staged
-as the next research-model contract before new evidence is cut.
-
-The active read is:
-
-- OCR is the mature green lane, stabilised on the current image set and moving
-  into broader generalisation pressure.
-- The discarded run-level rollup path is not being carried forward; the next
-  research-model question is how source artefacts, row/case judgement, manual
-  evals, lane summaries, and repeated lane signal can carry claims.
-- Co-reasoning is the first promoted non-OCR lane, supported by tracked style
-  and soak evidence.
+- `Beta 2.3` is the frozen method snapshot.
+- `pre-Beta 2.4` is staged as the next research-model contract.
+- OCR is the mature green lane and is moving into generalisation pressure.
+- Co-reasoning is the first promoted non-OCR lane.
 - Retrieval, response behaviour, uncertainty boundary, and hallucination
   boundary are operationalised support surfaces.
-- Operator burden is the active thin lane because it is still producing
-  distinct evidence pressure.
-- The research surface is open: current lane status is explicit, but the method
-  claim is still under pressure.
+- Operator burden is the active thin lane.
+- The discarded run-level rollup path is not being carried forward.
 
-For the maintained research map, start with
-[docs/research/README.md](docs/research/README.md).
+## Read Next
 
-## Start Here
+| Surface                                      | Use                                      |
+| -------------------------------------------- | ---------------------------------------- |
+| [Field notes](docs/public/README.md)         | shortest reading path                    |
+| [Research surface](docs/research/README.md)  | current notes, beta evidence, hypotheses |
+| [Eval evidence](docs/eval/README.md)         | tracked eval snapshots                   |
+| [Runbook](docs/runtime/RUNBOOK.md)           | operator procedure                       |
+| [Architecture](docs/runtime/ARCHITECTURE.md) | system shape                             |
+| [Decisions](docs/governance/DECISIONS.md)    | durable rationale                        |
 
-Use the public path when you want the shortest reviewer-facing read:
-
-- [Polinko in Brief](docs/public/IN_BRIEF.md)
-- [Method & Authorship](docs/public/METHOD.md)
-- [Hypothesis](docs/public/HYPOTHESIS.md)
-- [Evidence](docs/public/EVIDENCE.md)
-- [Diagrams](docs/public/DIAGRAMS.md)
-
-Use the operator path when you need to run, inspect, or change the system:
-
-- [Docs Map](docs/README.md)
-- [Runbook](docs/runtime/RUNBOOK.md)
-- [Architecture](docs/runtime/ARCHITECTURE.md)
-- [Current State](docs/governance/STATE.md)
-- [Decisions](docs/governance/DECISIONS.md)
-
-## What Lives Here
-
-- FastAPI API and CLI runtime
-- Manual eval workbench: notebooks, local evidence databases, chat artefacts,
-  feedback, checkpoints, and exports
-- Fail-first eval surfaces
-- OCR and non-OCR method lanes
-- Export-backed behaviour backlog mining
-- Tracked research docs, diagrams, and eval context
-- Repo-local engineering and validation workflow
-
-## Quick Start
+## Run Locally
 
 ```bash
 make deps-install
@@ -89,31 +64,10 @@ make doctor-env
 make docs
 ```
 
-This prints the local API docs URL. Use `make docs-open` only when you want to
-launch the system browser.
+Use `make docs-open` only when you want to launch the system browser.
 
-## Repo Map
+---
 
-- `src/polinko/cli.py` contains the packaged CLI chat implementation; `make
-  chat`, `polinko-chat`, and root `main.py` launch it.
-- `src/polinko/asgi.py` constructs the FastAPI ASGI app and chat-facing manual
-  eval workbench endpoints; root `server.py` preserves `uvicorn server:app`.
-- `pyproject.toml` and `src/polinko/` provide the editable-install rail for the
-  runtime package.
-- `src/polinko/config.py` contains the canonical config implementation; the
-  legacy root `config.py` shim is retired.
-- `src/polinko/api/` contains the canonical API implementation; legacy root
-  `api/` shims are retired.
-- `src/polinko/core/` contains canonical runtime logic; legacy root `core/`
-  shims are retired.
-- `tools/` contains eval and maintenance scripts.
-- `tests/` contains the test suite.
-- `docs/public/` contains the curated public reading path.
-- `docs/research/` contains the compact research surface.
-- `docs/eval/` contains eval evidence and phase context.
-- `docs/governance/` contains charter, state, and decisions.
-- `docs/runtime/` contains runbook and architecture.
+## License
 
-## Licence
-
-Apache-2.0. See [licence](LICENSE).
+Apache-2.0. See [license](LICENSE).
