@@ -40,6 +40,9 @@ This page is the structural map of the tracked system.
   - local operators, evals, reports, and renderers
   - includes `tools/check_package_install.py` for editable-install validation
   - includes read-only inventory/status tools for local evidence inspection
+  - includes the manual-eval health CLI entrypoint plus focused
+    `manual_eval_cli_*` modules for contracts, parser construction, output,
+    dispatch, and shared dispatch support
 - `tests/`
   - API and runtime regression tests
 - `Makefile`

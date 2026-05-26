@@ -324,6 +324,11 @@ Last updated: 2026-05-25
     restores the whole manual eval warehouse from the verified apply backup
   - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` defines the local-bundle OCR
     retry executor boundary, including rollback and failure handling
+  - the manual-eval health CLI is decomposed by responsibility:
+    `tools/manual_evals_db_health.py` is the thin parser/router entrypoint,
+    while CLI contracts, parser construction, output handling, feedback
+    dispatch, OCR retry dispatch, and shared dispatch helpers live in focused
+    `tools/manual_eval_cli_*` modules
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then

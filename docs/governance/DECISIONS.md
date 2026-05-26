@@ -1868,3 +1868,19 @@ or branch history instead.
   source-context fingerprints while keeping OCR runs, feedback closure, eval
   writes, source-history mutation, warehouse mutation, browser launch, and
   pulse work out of scope.
+
+## D-120: Keep the manual eval health CLI as a thin entrypoint
+
+- Date: `2026-05-25`
+- Category: `architecture`
+- Tags: `manual_evals`, `cli`, `dispatch`, `import_surface`, `refactor`
+- Decision: Keep `tools/manual_evals_db_health.py` as the manual-eval health
+  CLI entrypoint only. CLI contracts, parser construction, output handling,
+  feedback dispatch, OCR retry dispatch, shared dispatch helpers, and helper
+  tests live with their owning modules rather than being re-exported through
+  the entrypoint.
+- Why: The manual-eval command surface now carries many read-only and guarded
+  local operator flows. Keeping the entrypoint thin preserves routing
+  auditability, reduces import-surface ambiguity, and lets future manual-eval
+  refactors stay small while preserving the no-eval, no-pulse, no-unapproved
+  mutation boundaries.
