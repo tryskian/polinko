@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from tools.manual_eval_cli_dispatch_support import (
+    FinishReport,
+    optional_path,
+    positive_limit,
+)
 from tools.manual_eval_ocr_retry_candidates import (
     build_ocr_retry_candidates_report,
     format_ocr_retry_candidates_report,
@@ -84,12 +88,6 @@ from tools.manual_eval_ocr_retry_source_verification import (
     format_ocr_retry_source_verification_report,
 )
 
-FinishReport = Callable[..., int]
-
-
-def _optional_path(value: Any) -> Path | None:
-    return Path(value) if str(value).strip() else None
-
 
 def handle_ocr_retry_pre_feedback_commands(
     *,
@@ -100,11 +98,11 @@ def handle_ocr_retry_pre_feedback_commands(
     if args.ocr_retry_selection_draft:
         report = write_ocr_retry_selection_decision_draft(
             db_path=db_path,
-            output_path=_optional_path(args.output_path),
+            output_path=optional_path(args.output_path),
             force=bool(args.force),
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
             artifact_ids=args.artifact_id,
         )
         return finish(
@@ -117,10 +115,10 @@ def handle_ocr_retry_pre_feedback_commands(
     if args.ocr_retry_selection_apply_preview:
         report = build_ocr_retry_selection_apply_preview_report(
             db_path=db_path,
-            selection_path=_optional_path(args.selection_path),
+            selection_path=optional_path(args.selection_path),
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
             artifact_ids=args.artifact_id,
         )
         return finish(report, format_ocr_retry_selection_apply_preview_report)
@@ -128,17 +126,17 @@ def handle_ocr_retry_pre_feedback_commands(
     if args.ocr_retry_execution_readiness:
         report = build_ocr_retry_execution_readiness_report(
             db_path=db_path,
-            selection_path=_optional_path(args.selection_path),
+            selection_path=optional_path(args.selection_path),
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
             artifact_ids=args.artifact_id,
         )
         return finish(report, format_ocr_retry_execution_readiness_report)
 
     if args.ocr_retry_execution_report:
         report = build_ocr_retry_execution_bundle_report(
-            run_dir=_optional_path(args.run_dir),
+            run_dir=optional_path(args.run_dir),
         )
         return finish(
             report,
@@ -148,7 +146,7 @@ def handle_ocr_retry_pre_feedback_commands(
 
     if args.ocr_retry_feedback_closure_preview:
         report = build_ocr_retry_feedback_closure_preview_report(
-            run_dir=_optional_path(args.run_dir),
+            run_dir=optional_path(args.run_dir),
         )
         return finish(
             report,
@@ -159,9 +157,9 @@ def handle_ocr_retry_pre_feedback_commands(
     if args.ocr_retry_feedback_closure_apply:
         report = write_ocr_retry_feedback_closure_apply(
             db_path=db_path,
-            run_dir=_optional_path(args.run_dir),
+            run_dir=optional_path(args.run_dir),
             confirm_token=str(args.confirm or ""),
-            backup_root=_optional_path(args.backup_root),
+            backup_root=optional_path(args.backup_root),
         )
         return finish(
             report,
@@ -173,7 +171,7 @@ def handle_ocr_retry_pre_feedback_commands(
     if args.ocr_retry_feedback_closure_apply_report:
         report = build_ocr_retry_feedback_closure_apply_report(
             db_path=db_path,
-            run_dir=_optional_path(args.run_dir),
+            run_dir=optional_path(args.run_dir),
         )
         return finish(
             report,
@@ -185,7 +183,7 @@ def handle_ocr_retry_pre_feedback_commands(
     if args.ocr_retry_feedback_closure_restore_preview:
         report = build_ocr_retry_feedback_closure_restore_preview_report(
             db_path=db_path,
-            backup_dir=_optional_path(args.backup_dir),
+            backup_dir=optional_path(args.backup_dir),
         )
         return finish(
             report,
@@ -197,9 +195,9 @@ def handle_ocr_retry_pre_feedback_commands(
     if args.ocr_retry_feedback_closure_restore:
         report = write_ocr_retry_feedback_closure_restore(
             db_path=db_path,
-            backup_dir=_optional_path(args.backup_dir),
+            backup_dir=optional_path(args.backup_dir),
             confirm_token=str(args.confirm or ""),
-            restore_root=_optional_path(args.restore_root),
+            restore_root=optional_path(args.restore_root),
         )
         return finish(
             report,
@@ -220,13 +218,13 @@ def handle_ocr_retry_post_feedback_commands(
     if args.ocr_retry_execute:
         report = write_ocr_retry_execution_bundle(
             db_path=db_path,
-            selection_path=_optional_path(args.selection_path),
+            selection_path=optional_path(args.selection_path),
             confirm_token=str(args.confirm or ""),
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
             artifact_ids=args.artifact_id,
-            execution_dir=_optional_path(args.execution_dir),
+            execution_dir=optional_path(args.execution_dir),
             ocr_provider=str(args.ocr_provider or "scaffold"),
             ocr_model=str(args.ocr_model or DEFAULT_OCR_RETRY_MODEL),
             ocr_prompt=str(args.ocr_prompt or DEFAULT_OCR_RETRY_PROMPT),
@@ -241,10 +239,10 @@ def handle_ocr_retry_post_feedback_commands(
     if args.ocr_retry_selection_validate:
         report = build_ocr_retry_selection_validation_report(
             db_path=db_path,
-            selection_path=_optional_path(args.selection_path),
+            selection_path=optional_path(args.selection_path),
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
             artifact_ids=args.artifact_id,
         )
         return finish(report, format_ocr_retry_selection_validation_report)
@@ -254,7 +252,7 @@ def handle_ocr_retry_post_feedback_commands(
             db_path=db_path,
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
             artifact_ids=args.artifact_id,
         )
         return finish(report, format_ocr_retry_selection_template_report)
@@ -264,7 +262,7 @@ def handle_ocr_retry_post_feedback_commands(
             db_path=db_path,
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
             artifact_ids=args.artifact_id,
         )
         return finish(report, format_ocr_retry_selection_review_report)
@@ -274,7 +272,7 @@ def handle_ocr_retry_post_feedback_commands(
             db_path=db_path,
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
             artifact_ids=args.artifact_id,
         )
         return finish(report, format_ocr_retry_rerun_plan_report)
@@ -284,7 +282,7 @@ def handle_ocr_retry_post_feedback_commands(
             db_path=db_path,
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(report, format_ocr_retry_rerun_manifest_report)
 
@@ -293,7 +291,7 @@ def handle_ocr_retry_post_feedback_commands(
             db_path=db_path,
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(report, format_ocr_retry_input_packet_report)
 
@@ -302,7 +300,7 @@ def handle_ocr_retry_post_feedback_commands(
             db_path=db_path,
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(report, format_ocr_retry_source_provenance_report)
 
@@ -311,7 +309,7 @@ def handle_ocr_retry_post_feedback_commands(
             db_path=db_path,
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(report, format_ocr_retry_source_verification_report)
 
@@ -320,7 +318,7 @@ def handle_ocr_retry_post_feedback_commands(
             db_path=db_path,
             outcome=args.outcome or "partial",
             cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
+            limit=positive_limit(args.limit),
         )
         return finish(report, format_ocr_retry_candidates_report)
 
