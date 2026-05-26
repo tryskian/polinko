@@ -2,6 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from tools.manual_eval_cli_ocr_retry_dispatch import (
+    handle_ocr_retry_post_feedback_commands,
+    handle_ocr_retry_pre_feedback_commands,
+)
 from tools.manual_eval_cli_contracts import (
     ACTIONABLES_SCHEMA_VERSION as ACTIONABLES_SCHEMA_VERSION,
     COHORTS_SCHEMA_VERSION as COHORTS_SCHEMA_VERSION,
@@ -71,96 +75,96 @@ from tools.manual_eval_no_context_feedback_reclassify import (
     write_no_context_feedback_reclassify,
 )
 from tools.manual_eval_ocr_retry_candidates import (
-    build_ocr_retry_candidates_report,
-    format_ocr_retry_candidates_report,
+    build_ocr_retry_candidates_report as build_ocr_retry_candidates_report,
+    format_ocr_retry_candidates_report as format_ocr_retry_candidates_report,
 )
 from tools.manual_eval_ocr_retry_source_verification import (
-    build_ocr_retry_source_verification_report,
-    format_ocr_retry_source_verification_report,
+    build_ocr_retry_source_verification_report as build_ocr_retry_source_verification_report,
+    format_ocr_retry_source_verification_report as format_ocr_retry_source_verification_report,
 )
 from tools.manual_eval_ocr_retry_input_packet import (
-    build_ocr_retry_input_packet_report,
-    format_ocr_retry_input_packet_report,
+    build_ocr_retry_input_packet_report as build_ocr_retry_input_packet_report,
+    format_ocr_retry_input_packet_report as format_ocr_retry_input_packet_report,
 )
 from tools.manual_eval_ocr_retry_rerun_manifest import (
-    build_ocr_retry_rerun_manifest_report,
-    format_ocr_retry_rerun_manifest_report,
+    build_ocr_retry_rerun_manifest_report as build_ocr_retry_rerun_manifest_report,
+    format_ocr_retry_rerun_manifest_report as format_ocr_retry_rerun_manifest_report,
 )
 from tools.manual_eval_ocr_retry_rerun_plan import (
-    build_ocr_retry_rerun_plan_report,
-    format_ocr_retry_rerun_plan_report,
+    build_ocr_retry_rerun_plan_report as build_ocr_retry_rerun_plan_report,
+    format_ocr_retry_rerun_plan_report as format_ocr_retry_rerun_plan_report,
 )
 from tools.manual_eval_ocr_retry_selection_review import (
-    build_ocr_retry_selection_review_report,
-    format_ocr_retry_selection_review_report,
+    build_ocr_retry_selection_review_report as build_ocr_retry_selection_review_report,
+    format_ocr_retry_selection_review_report as format_ocr_retry_selection_review_report,
 )
 from tools.manual_eval_ocr_retry_selection_decision_draft import (
-    format_ocr_retry_selection_decision_draft_report,
-    write_ocr_retry_selection_decision_draft,
+    format_ocr_retry_selection_decision_draft_report as format_ocr_retry_selection_decision_draft_report,
+    write_ocr_retry_selection_decision_draft as write_ocr_retry_selection_decision_draft,
 )
 from tools.manual_eval_ocr_retry_selection_apply_preview import (
-    build_ocr_retry_selection_apply_preview_report,
-    format_ocr_retry_selection_apply_preview_report,
+    build_ocr_retry_selection_apply_preview_report as build_ocr_retry_selection_apply_preview_report,
+    format_ocr_retry_selection_apply_preview_report as format_ocr_retry_selection_apply_preview_report,
 )
 from tools.manual_eval_ocr_retry_execution_readiness import (
-    build_ocr_retry_execution_readiness_report,
-    format_ocr_retry_execution_readiness_report,
+    build_ocr_retry_execution_readiness_report as build_ocr_retry_execution_readiness_report,
+    format_ocr_retry_execution_readiness_report as format_ocr_retry_execution_readiness_report,
 )
 from tools.manual_eval_ocr_retry_execution_report import (
-    format_ocr_retry_execution_bundle_report,
-    format_ocr_retry_execution_report,
+    format_ocr_retry_execution_bundle_report as format_ocr_retry_execution_bundle_report,
+    format_ocr_retry_execution_report as format_ocr_retry_execution_report,
 )
 from tools.manual_eval_ocr_retry_execution_bundle_report import (
-    build_ocr_retry_execution_bundle_report,
+    build_ocr_retry_execution_bundle_report as build_ocr_retry_execution_bundle_report,
 )
 from tools.manual_eval_ocr_retry_execution_requests import (
     OcrRetryExecutionProviderError as OcrRetryExecutionProviderError,
 )
 from tools.manual_eval_ocr_retry_execution_writer import (
     DEFAULT_OCR_RETRY_EXECUTION_DIR as DEFAULT_OCR_RETRY_EXECUTION_DIR,
-    DEFAULT_OCR_RETRY_MODEL,
-    DEFAULT_OCR_RETRY_PROMPT,
+    DEFAULT_OCR_RETRY_MODEL as DEFAULT_OCR_RETRY_MODEL,
+    DEFAULT_OCR_RETRY_PROMPT as DEFAULT_OCR_RETRY_PROMPT,
     OCR_RETRY_EXECUTION_CONFIRM_TOKEN as OCR_RETRY_EXECUTION_CONFIRM_TOKEN,
-    write_ocr_retry_execution_bundle,
+    write_ocr_retry_execution_bundle as write_ocr_retry_execution_bundle,
 )
 from tools.manual_eval_ocr_retry_feedback_closure_preview import (
     OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION as OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_SCHEMA_VERSION,
-    build_ocr_retry_feedback_closure_preview_report,
+    build_ocr_retry_feedback_closure_preview_report as build_ocr_retry_feedback_closure_preview_report,
 )
 from tools.manual_eval_ocr_retry_feedback_closure_apply import (
     DEFAULT_FEEDBACK_CLOSURE_APPLY_BACKUP_ROOT as DEFAULT_FEEDBACK_CLOSURE_APPLY_BACKUP_ROOT,
     OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN as OCR_RETRY_FEEDBACK_CLOSURE_APPLY_CONFIRM_TOKEN,
     OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION as OCR_RETRY_FEEDBACK_CLOSURE_APPLY_SCHEMA_VERSION,
-    write_ocr_retry_feedback_closure_apply,
+    write_ocr_retry_feedback_closure_apply as write_ocr_retry_feedback_closure_apply,
 )
 from tools.manual_eval_ocr_retry_feedback_closure_apply_report import (
     OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_SCHEMA_VERSION as OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_SCHEMA_VERSION,
-    build_ocr_retry_feedback_closure_apply_report,
+    build_ocr_retry_feedback_closure_apply_report as build_ocr_retry_feedback_closure_apply_report,
 )
 from tools.manual_eval_ocr_retry_feedback_closure_restore import (
     DEFAULT_FEEDBACK_CLOSURE_RESTORE_BACKUP_ROOT as DEFAULT_FEEDBACK_CLOSURE_RESTORE_BACKUP_ROOT,
     OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_CONFIRM_TOKEN as OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_CONFIRM_TOKEN,
     OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_SCHEMA_VERSION as OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_SCHEMA_VERSION,
-    build_ocr_retry_feedback_closure_restore_preview_report,
-    write_ocr_retry_feedback_closure_restore,
+    build_ocr_retry_feedback_closure_restore_preview_report as build_ocr_retry_feedback_closure_restore_preview_report,
+    write_ocr_retry_feedback_closure_restore as write_ocr_retry_feedback_closure_restore,
 )
 from tools.manual_eval_ocr_retry_feedback_closure_formatters import (
-    format_ocr_retry_feedback_closure_apply_report,
-    format_ocr_retry_feedback_closure_apply_verification_report,
-    format_ocr_retry_feedback_closure_preview_report,
-    format_ocr_retry_feedback_closure_restore_report,
+    format_ocr_retry_feedback_closure_apply_report as format_ocr_retry_feedback_closure_apply_report,
+    format_ocr_retry_feedback_closure_apply_verification_report as format_ocr_retry_feedback_closure_apply_verification_report,
+    format_ocr_retry_feedback_closure_preview_report as format_ocr_retry_feedback_closure_preview_report,
+    format_ocr_retry_feedback_closure_restore_report as format_ocr_retry_feedback_closure_restore_report,
 )
 from tools.manual_eval_ocr_retry_selection_template import (
-    build_ocr_retry_selection_template_report,
-    format_ocr_retry_selection_template_report,
+    build_ocr_retry_selection_template_report as build_ocr_retry_selection_template_report,
+    format_ocr_retry_selection_template_report as format_ocr_retry_selection_template_report,
 )
 from tools.manual_eval_ocr_retry_selection_validation import (
-    build_ocr_retry_selection_validation_report,
-    format_ocr_retry_selection_validation_report,
+    build_ocr_retry_selection_validation_report as build_ocr_retry_selection_validation_report,
+    format_ocr_retry_selection_validation_report as format_ocr_retry_selection_validation_report,
 )
 from tools.manual_eval_ocr_retry_source_provenance import (
-    build_ocr_retry_source_provenance_report,
-    format_ocr_retry_source_provenance_report,
+    build_ocr_retry_source_provenance_report as build_ocr_retry_source_provenance_report,
+    format_ocr_retry_source_provenance_report as format_ocr_retry_source_provenance_report,
 )
 from tools.manual_eval_open_feedback import (
     build_open_feedback_actionables_report,
@@ -226,126 +230,13 @@ def main() -> int:
             **status_kwargs,
         )
 
-    if args.ocr_retry_selection_draft:
-        report = write_ocr_retry_selection_decision_draft(
-            db_path=db_path,
-            output_path=Path(args.output_path)
-            if str(args.output_path).strip()
-            else None,
-            force=bool(args.force),
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-            artifact_ids=args.artifact_id,
-        )
-        return finish(
-            report,
-            format_ocr_retry_selection_decision_draft_report,
-            status_by_state={"written": 0},
-            default_status=2,
-        )
-
-    if args.ocr_retry_selection_apply_preview:
-        report = build_ocr_retry_selection_apply_preview_report(
-            db_path=db_path,
-            selection_path=Path(args.selection_path)
-            if str(args.selection_path).strip()
-            else None,
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-            artifact_ids=args.artifact_id,
-        )
-        return finish(report, format_ocr_retry_selection_apply_preview_report)
-
-    if args.ocr_retry_execution_readiness:
-        report = build_ocr_retry_execution_readiness_report(
-            db_path=db_path,
-            selection_path=Path(args.selection_path)
-            if str(args.selection_path).strip()
-            else None,
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-            artifact_ids=args.artifact_id,
-        )
-        return finish(report, format_ocr_retry_execution_readiness_report)
-
-    if args.ocr_retry_execution_report:
-        report = build_ocr_retry_execution_bundle_report(
-            run_dir=Path(args.run_dir) if str(args.run_dir).strip() else None,
-        )
-        return finish(
-            report,
-            format_ocr_retry_execution_bundle_report,
-            status_by_state={"error": 2},
-        )
-
-    if args.ocr_retry_feedback_closure_preview:
-        report = build_ocr_retry_feedback_closure_preview_report(
-            run_dir=Path(args.run_dir) if str(args.run_dir).strip() else None,
-        )
-        return finish(
-            report,
-            format_ocr_retry_feedback_closure_preview_report,
-            status_by_state={"blocked": 2},
-        )
-
-    if args.ocr_retry_feedback_closure_apply:
-        report = write_ocr_retry_feedback_closure_apply(
-            db_path=db_path,
-            run_dir=Path(args.run_dir) if str(args.run_dir).strip() else None,
-            confirm_token=str(args.confirm or ""),
-            backup_root=Path(args.backup_root)
-            if str(args.backup_root).strip()
-            else None,
-        )
-        return finish(
-            report,
-            format_ocr_retry_feedback_closure_apply_report,
-            status_by_state={"applied": 0},
-            default_status=2,
-        )
-
-    if args.ocr_retry_feedback_closure_apply_report:
-        report = build_ocr_retry_feedback_closure_apply_report(
-            db_path=db_path,
-            run_dir=Path(args.run_dir) if str(args.run_dir).strip() else None,
-        )
-        return finish(
-            report,
-            format_ocr_retry_feedback_closure_apply_verification_report,
-            status_by_state={"ok": 0},
-            default_status=2,
-        )
-
-    if args.ocr_retry_feedback_closure_restore_preview:
-        report = build_ocr_retry_feedback_closure_restore_preview_report(
-            db_path=db_path,
-            backup_dir=Path(args.backup_dir) if str(args.backup_dir).strip() else None,
-        )
-        return finish(
-            report,
-            format_ocr_retry_feedback_closure_restore_report,
-            status_by_state={"ok": 0},
-            default_status=2,
-        )
-
-    if args.ocr_retry_feedback_closure_restore:
-        report = write_ocr_retry_feedback_closure_restore(
-            db_path=db_path,
-            backup_dir=Path(args.backup_dir) if str(args.backup_dir).strip() else None,
-            confirm_token=str(args.confirm or ""),
-            restore_root=Path(args.restore_root)
-            if str(args.restore_root).strip()
-            else None,
-        )
-        return finish(
-            report,
-            format_ocr_retry_feedback_closure_restore_report,
-            status_by_state={"restored": 0},
-            default_status=2,
-        )
+    ocr_retry_status = handle_ocr_retry_pre_feedback_commands(
+        args=args,
+        db_path=db_path,
+        finish=finish,
+    )
+    if ocr_retry_status is not None:
+        return ocr_retry_status
 
     if args.no_context_feedback_reclassify_preview:
         report = build_no_context_feedback_reclassify_report(
@@ -407,118 +298,13 @@ def main() -> int:
             default_status=2,
         )
 
-    if args.ocr_retry_execute:
-        report = write_ocr_retry_execution_bundle(
-            db_path=db_path,
-            selection_path=Path(args.selection_path)
-            if str(args.selection_path).strip()
-            else None,
-            confirm_token=str(args.confirm or ""),
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-            artifact_ids=args.artifact_id,
-            execution_dir=Path(args.execution_dir)
-            if str(args.execution_dir).strip()
-            else None,
-            ocr_provider=str(args.ocr_provider or "scaffold"),
-            ocr_model=str(args.ocr_model or DEFAULT_OCR_RETRY_MODEL),
-            ocr_prompt=str(args.ocr_prompt or DEFAULT_OCR_RETRY_PROMPT),
-        )
-        return finish(
-            report,
-            format_ocr_retry_execution_report,
-            status_by_state={"completed": 0, "failed": 1, "partial_failure": 1},
-            default_status=2,
-        )
-
-    if args.ocr_retry_selection_validate:
-        report = build_ocr_retry_selection_validation_report(
-            db_path=db_path,
-            selection_path=Path(args.selection_path)
-            if str(args.selection_path).strip()
-            else None,
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-            artifact_ids=args.artifact_id,
-        )
-        return finish(report, format_ocr_retry_selection_validation_report)
-
-    if args.ocr_retry_selection_template:
-        report = build_ocr_retry_selection_template_report(
-            db_path=db_path,
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-            artifact_ids=args.artifact_id,
-        )
-        return finish(report, format_ocr_retry_selection_template_report)
-
-    if args.ocr_retry_selection_review:
-        report = build_ocr_retry_selection_review_report(
-            db_path=db_path,
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-            artifact_ids=args.artifact_id,
-        )
-        return finish(report, format_ocr_retry_selection_review_report)
-
-    if args.ocr_retry_rerun_plan:
-        report = build_ocr_retry_rerun_plan_report(
-            db_path=db_path,
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-            artifact_ids=args.artifact_id,
-        )
-        return finish(report, format_ocr_retry_rerun_plan_report)
-
-    if args.ocr_retry_rerun_manifest:
-        report = build_ocr_retry_rerun_manifest_report(
-            db_path=db_path,
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-        )
-        return finish(report, format_ocr_retry_rerun_manifest_report)
-
-    if args.ocr_retry_input_packet:
-        report = build_ocr_retry_input_packet_report(
-            db_path=db_path,
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-        )
-        return finish(report, format_ocr_retry_input_packet_report)
-
-    if args.ocr_retry_source_provenance:
-        report = build_ocr_retry_source_provenance_report(
-            db_path=db_path,
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-        )
-        return finish(report, format_ocr_retry_source_provenance_report)
-
-    if args.ocr_retry_source_verification:
-        report = build_ocr_retry_source_verification_report(
-            db_path=db_path,
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-        )
-        return finish(report, format_ocr_retry_source_verification_report)
-
-    if args.ocr_retry_candidates:
-        report = build_ocr_retry_candidates_report(
-            db_path=db_path,
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
-            limit=max(1, args.limit),
-        )
-        return finish(report, format_ocr_retry_candidates_report)
+    ocr_retry_status = handle_ocr_retry_post_feedback_commands(
+        args=args,
+        db_path=db_path,
+        finish=finish,
+    )
+    if ocr_retry_status is not None:
+        return ocr_retry_status
 
     if args.feedback_source_context:
         report = build_feedback_source_context_report(
