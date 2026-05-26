@@ -1,8 +1,6 @@
-<!-- @format -->
+# Polinko Reading Path
 
-# Polinko Public Reading Path
-
-This is the shortest route through Polinko’s public research surface.
+This is the shortest route through Polinko’s research surface.
 
 ## Current Snapshot
 
