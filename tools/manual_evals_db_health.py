@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 from tools.manual_eval_cli_contracts import (
@@ -40,6 +39,7 @@ from tools.manual_eval_cli_contracts import (
     OVERLAY_SOURCE_CONTEXT_INDEX_VALIDATION_SCHEMA_VERSION as OVERLAY_SOURCE_CONTEXT_INDEX_VALIDATION_SCHEMA_VERSION,
     build_ocr_retry_selection_decision_draft_payload as build_ocr_retry_selection_decision_draft_payload,
 )
+from tools.manual_eval_cli_output import finish_manual_eval_report as _finish_report
 from tools.manual_eval_cli_parser import build_manual_evals_db_health_parser
 from tools.manual_eval_feedback_decisions import (
     build_feedback_decision_draft_payload as build_feedback_decision_draft_payload,
@@ -217,6 +217,15 @@ def _build_parser():
 def main() -> int:
     args = _build_parser().parse_args()
     db_path = Path(args.db).expanduser()
+
+    def finish(report, formatter, **status_kwargs):
+        return _finish_report(
+            report,
+            formatter,
+            json_output=bool(args.json),
+            **status_kwargs,
+        )
+
     if args.ocr_retry_selection_draft:
         report = write_ocr_retry_selection_decision_draft(
             db_path=db_path,
@@ -229,11 +238,12 @@ def main() -> int:
             limit=max(1, args.limit),
             artifact_ids=args.artifact_id,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_selection_decision_draft_report(report))
-        return 0 if report.get("state") == "written" else 2
+        return finish(
+            report,
+            format_ocr_retry_selection_decision_draft_report,
+            status_by_state={"written": 0},
+            default_status=2,
+        )
 
     if args.ocr_retry_selection_apply_preview:
         report = build_ocr_retry_selection_apply_preview_report(
@@ -246,11 +256,7 @@ def main() -> int:
             limit=max(1, args.limit),
             artifact_ids=args.artifact_id,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_selection_apply_preview_report(report))
-        return 0
+        return finish(report, format_ocr_retry_selection_apply_preview_report)
 
     if args.ocr_retry_execution_readiness:
         report = build_ocr_retry_execution_readiness_report(
@@ -263,31 +269,27 @@ def main() -> int:
             limit=max(1, args.limit),
             artifact_ids=args.artifact_id,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_execution_readiness_report(report))
-        return 0
+        return finish(report, format_ocr_retry_execution_readiness_report)
 
     if args.ocr_retry_execution_report:
         report = build_ocr_retry_execution_bundle_report(
             run_dir=Path(args.run_dir) if str(args.run_dir).strip() else None,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_execution_bundle_report(report))
-        return 2 if report.get("state") == "error" else 0
+        return finish(
+            report,
+            format_ocr_retry_execution_bundle_report,
+            status_by_state={"error": 2},
+        )
 
     if args.ocr_retry_feedback_closure_preview:
         report = build_ocr_retry_feedback_closure_preview_report(
             run_dir=Path(args.run_dir) if str(args.run_dir).strip() else None,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_feedback_closure_preview_report(report))
-        return 2 if report.get("state") == "blocked" else 0
+        return finish(
+            report,
+            format_ocr_retry_feedback_closure_preview_report,
+            status_by_state={"blocked": 2},
+        )
 
     if args.ocr_retry_feedback_closure_apply:
         report = write_ocr_retry_feedback_closure_apply(
@@ -298,33 +300,36 @@ def main() -> int:
             if str(args.backup_root).strip()
             else None,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_feedback_closure_apply_report(report))
-        return 0 if report.get("state") == "applied" else 2
+        return finish(
+            report,
+            format_ocr_retry_feedback_closure_apply_report,
+            status_by_state={"applied": 0},
+            default_status=2,
+        )
 
     if args.ocr_retry_feedback_closure_apply_report:
         report = build_ocr_retry_feedback_closure_apply_report(
             db_path=db_path,
             run_dir=Path(args.run_dir) if str(args.run_dir).strip() else None,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_feedback_closure_apply_verification_report(report))
-        return 0 if report.get("state") == "ok" else 2
+        return finish(
+            report,
+            format_ocr_retry_feedback_closure_apply_verification_report,
+            status_by_state={"ok": 0},
+            default_status=2,
+        )
 
     if args.ocr_retry_feedback_closure_restore_preview:
         report = build_ocr_retry_feedback_closure_restore_preview_report(
             db_path=db_path,
             backup_dir=Path(args.backup_dir) if str(args.backup_dir).strip() else None,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_feedback_closure_restore_report(report))
-        return 0 if report.get("state") == "ok" else 2
+        return finish(
+            report,
+            format_ocr_retry_feedback_closure_restore_report,
+            status_by_state={"ok": 0},
+            default_status=2,
+        )
 
     if args.ocr_retry_feedback_closure_restore:
         report = write_ocr_retry_feedback_closure_restore(
@@ -335,11 +340,12 @@ def main() -> int:
             if str(args.restore_root).strip()
             else None,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_feedback_closure_restore_report(report))
-        return 0 if report.get("state") == "restored" else 2
+        return finish(
+            report,
+            format_ocr_retry_feedback_closure_restore_report,
+            status_by_state={"restored": 0},
+            default_status=2,
+        )
 
     if args.no_context_feedback_reclassify_preview:
         report = build_no_context_feedback_reclassify_report(
@@ -348,11 +354,12 @@ def main() -> int:
             cohort=args.cohort or "ocr_retry_evidence",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_no_context_feedback_reclassify_report(report))
-        return 0 if report.get("state") == "ok" else 2
+        return finish(
+            report,
+            format_no_context_feedback_reclassify_report,
+            status_by_state={"ok": 0},
+            default_status=2,
+        )
 
     if args.no_context_feedback_reclassify_apply:
         report = write_no_context_feedback_reclassify(
@@ -365,22 +372,24 @@ def main() -> int:
             cohort=args.cohort or "ocr_retry_evidence",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_no_context_feedback_reclassify_report(report))
-        return 0 if report.get("state") == "applied" else 2
+        return finish(
+            report,
+            format_no_context_feedback_reclassify_report,
+            status_by_state={"applied": 0},
+            default_status=2,
+        )
 
     if args.feedback_reclassify_preview:
         report = build_feedback_reclassify_report(
             db_path=db_path,
             plan_path=Path(args.plan_path) if str(args.plan_path).strip() else None,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_feedback_reclassify_report(report))
-        return 0 if report.get("state") == "ok" else 2
+        return finish(
+            report,
+            format_feedback_reclassify_report,
+            status_by_state={"ok": 0},
+            default_status=2,
+        )
 
     if args.feedback_reclassify_apply:
         report = write_feedback_reclassify(
@@ -391,11 +400,12 @@ def main() -> int:
             if str(args.backup_root).strip()
             else None,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_feedback_reclassify_report(report))
-        return 0 if report.get("state") == "applied" else 2
+        return finish(
+            report,
+            format_feedback_reclassify_report,
+            status_by_state={"applied": 0},
+            default_status=2,
+        )
 
     if args.ocr_retry_execute:
         report = write_ocr_retry_execution_bundle(
@@ -415,15 +425,12 @@ def main() -> int:
             ocr_model=str(args.ocr_model or DEFAULT_OCR_RETRY_MODEL),
             ocr_prompt=str(args.ocr_prompt or DEFAULT_OCR_RETRY_PROMPT),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_execution_report(report))
-        if report.get("state") == "completed":
-            return 0
-        if report.get("state") in {"partial_failure", "failed"}:
-            return 1
-        return 2
+        return finish(
+            report,
+            format_ocr_retry_execution_report,
+            status_by_state={"completed": 0, "failed": 1, "partial_failure": 1},
+            default_status=2,
+        )
 
     if args.ocr_retry_selection_validate:
         report = build_ocr_retry_selection_validation_report(
@@ -436,11 +443,7 @@ def main() -> int:
             limit=max(1, args.limit),
             artifact_ids=args.artifact_id,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_selection_validation_report(report))
-        return 0
+        return finish(report, format_ocr_retry_selection_validation_report)
 
     if args.ocr_retry_selection_template:
         report = build_ocr_retry_selection_template_report(
@@ -450,11 +453,7 @@ def main() -> int:
             limit=max(1, args.limit),
             artifact_ids=args.artifact_id,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_selection_template_report(report))
-        return 0
+        return finish(report, format_ocr_retry_selection_template_report)
 
     if args.ocr_retry_selection_review:
         report = build_ocr_retry_selection_review_report(
@@ -464,11 +463,7 @@ def main() -> int:
             limit=max(1, args.limit),
             artifact_ids=args.artifact_id,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_selection_review_report(report))
-        return 0
+        return finish(report, format_ocr_retry_selection_review_report)
 
     if args.ocr_retry_rerun_plan:
         report = build_ocr_retry_rerun_plan_report(
@@ -478,11 +473,7 @@ def main() -> int:
             limit=max(1, args.limit),
             artifact_ids=args.artifact_id,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_rerun_plan_report(report))
-        return 0
+        return finish(report, format_ocr_retry_rerun_plan_report)
 
     if args.ocr_retry_rerun_manifest:
         report = build_ocr_retry_rerun_manifest_report(
@@ -491,11 +482,7 @@ def main() -> int:
             cohort=args.cohort or "ocr_retry_evidence",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_rerun_manifest_report(report))
-        return 0
+        return finish(report, format_ocr_retry_rerun_manifest_report)
 
     if args.ocr_retry_input_packet:
         report = build_ocr_retry_input_packet_report(
@@ -504,11 +491,7 @@ def main() -> int:
             cohort=args.cohort or "ocr_retry_evidence",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_input_packet_report(report))
-        return 0
+        return finish(report, format_ocr_retry_input_packet_report)
 
     if args.ocr_retry_source_provenance:
         report = build_ocr_retry_source_provenance_report(
@@ -517,11 +500,7 @@ def main() -> int:
             cohort=args.cohort or "ocr_retry_evidence",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_source_provenance_report(report))
-        return 0
+        return finish(report, format_ocr_retry_source_provenance_report)
 
     if args.ocr_retry_source_verification:
         report = build_ocr_retry_source_verification_report(
@@ -530,11 +509,7 @@ def main() -> int:
             cohort=args.cohort or "ocr_retry_evidence",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_source_verification_report(report))
-        return 0
+        return finish(report, format_ocr_retry_source_verification_report)
 
     if args.ocr_retry_candidates:
         report = build_ocr_retry_candidates_report(
@@ -543,11 +518,7 @@ def main() -> int:
             cohort=args.cohort or "ocr_retry_evidence",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_ocr_retry_candidates_report(report))
-        return 0
+        return finish(report, format_ocr_retry_candidates_report)
 
     if args.feedback_source_context:
         report = build_feedback_source_context_report(
@@ -556,11 +527,11 @@ def main() -> int:
             cohort=args.cohort or "grounding_source_verification",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_feedback_source_context_report(report))
-        return 2 if report.get("state") == "error" else 0
+        return finish(
+            report,
+            format_feedback_source_context_report,
+            status_by_state={"error": 2},
+        )
 
     if args.overlay_ocr_comparison_readiness:
         report = build_overlay_ocr_comparison_readiness_report(
@@ -572,11 +543,11 @@ def main() -> int:
             if str(args.overlay_source_index).strip()
             else None,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_overlay_ocr_comparison_readiness_report(report))
-        return 2 if report.get("state") == "error" else 0
+        return finish(
+            report,
+            format_overlay_ocr_comparison_readiness_report,
+            status_by_state={"error": 2},
+        )
 
     if args.overlay_source_index_draft:
         report = write_overlay_source_context_index_draft(
@@ -589,11 +560,12 @@ def main() -> int:
             cohort=args.cohort or "ocr_overlay_hypothesis",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_overlay_source_context_index_draft_report(report))
-        return 0 if report.get("state") == "written" else 2
+        return finish(
+            report,
+            format_overlay_source_context_index_draft_report,
+            status_by_state={"written": 0},
+            default_status=2,
+        )
 
     if args.overlay_source_index_validate:
         report = build_overlay_source_context_index_validation_report(
@@ -605,11 +577,12 @@ def main() -> int:
             cohort=args.cohort or "ocr_overlay_hypothesis",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_overlay_source_context_index_validation_report(report))
-        return 0 if report.get("state") == "ready" else 2
+        return finish(
+            report,
+            format_overlay_source_context_index_validation_report,
+            status_by_state={"ready": 0},
+            default_status=2,
+        )
 
     if args.feedback_decision_draft:
         report = write_feedback_decision_draft(
@@ -622,11 +595,12 @@ def main() -> int:
             cohort=args.cohort or "grounding_source_verification",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_feedback_decision_draft_report(report))
-        return 0 if report.get("state") == "written" else 2
+        return finish(
+            report,
+            format_feedback_decision_draft_report,
+            status_by_state={"written": 0},
+            default_status=2,
+        )
 
     if args.feedback_decision_preview:
         report = build_feedback_decision_preview_report(
@@ -638,11 +612,12 @@ def main() -> int:
             cohort=args.cohort or "grounding_source_verification",
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_feedback_decision_preview_report(report))
-        return 0 if report.get("state") == "ok" else 2
+        return finish(
+            report,
+            format_feedback_decision_preview_report,
+            status_by_state={"ok": 0},
+            default_status=2,
+        )
 
     if args.open_feedback_cohorts:
         report = build_open_feedback_cohorts_report(
@@ -650,11 +625,7 @@ def main() -> int:
             outcome=args.outcome,
             cohort=args.cohort,
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_open_feedback_cohorts_report(report))
-        return 0
+        return finish(report, format_open_feedback_cohorts_report)
 
     if args.open_feedback_actionables:
         report = build_open_feedback_actionables_report(
@@ -663,18 +634,10 @@ def main() -> int:
             cohort=args.cohort,
             limit=max(1, args.limit),
         )
-        if args.json:
-            print(json.dumps(report, indent=2, sort_keys=True))
-        else:
-            print(format_open_feedback_actionables_report(report))
-        return 0
+        return finish(report, format_open_feedback_actionables_report)
 
     report = build_manual_evals_health_report(db_path=db_path)
-    if args.json:
-        print(json.dumps(report, indent=2, sort_keys=True))
-    else:
-        print(format_manual_evals_health_report(report))
-    return 0
+    return finish(report, format_manual_evals_health_report)
 
 
 if __name__ == "__main__":
