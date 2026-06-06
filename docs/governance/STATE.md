@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-05-25
+Last updated: 2026-06-06
 
 ## Current Truth
 
@@ -370,6 +370,8 @@ Last updated: 2026-05-25
     `.venv`
   - Python dependencies use `requirements.in` plus generated
     `requirements.txt`, matching pip-tools and Dependabot conventions
+  - Python security pins were refreshed through PR #650:
+    `PyJWT==2.13.0` and `pip==26.1.2`
   - Dependabot Python/`pyproject.toml` version update jobs are currently
     blocked by GitHub's "cannot open any more pull requests" limit and should
     be triaged by reducing or merging the open dependency PR queue before
