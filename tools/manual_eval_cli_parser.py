@@ -13,10 +13,7 @@ from tools.manual_eval_ocr_retry_execution_writer import (
 )
 
 
-def build_manual_evals_db_health_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Print read-only manual eval warehouse health signals.",
-    )
+def _add_common_report_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--db",
         default=str(DEFAULT_DB_PATH),
@@ -27,6 +24,9 @@ def build_manual_evals_db_health_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Print the health report as JSON.",
     )
+
+
+def _add_feedback_context_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--open-feedback-actionables",
         action="store_true",
@@ -72,6 +72,9 @@ def build_manual_evals_db_health_parser() -> argparse.ArgumentParser:
         default="",
         help="Path to a local overlay/source image context index JSON file.",
     )
+
+
+def _add_ocr_retry_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--ocr-retry-candidates",
         action="store_true",
@@ -167,6 +170,9 @@ def build_manual_evals_db_health_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Restore manual_evals.db from a verified feedback-closure apply backup.",
     )
+
+
+def _add_feedback_reclassify_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--no-context-feedback-reclassify-preview",
         action="store_true",
@@ -187,6 +193,9 @@ def build_manual_evals_db_health_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Apply guarded feedback reclassification from a local JSON decision plan.",
     )
+
+
+def _add_local_artifact_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--plan-path",
         default="",
@@ -237,6 +246,9 @@ def build_manual_evals_db_health_parser() -> argparse.ArgumentParser:
         default="",
         help="Root directory for local feedback-closure restore backups.",
     )
+
+
+def _add_ocr_execution_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--ocr-provider",
         choices=("scaffold", "openai"),
@@ -253,6 +265,9 @@ def build_manual_evals_db_health_parser() -> argparse.ArgumentParser:
         default=os.getenv("POLINKO_OCR_PROMPT", DEFAULT_OCR_RETRY_PROMPT),
         help="OCR prompt for guarded retry execution.",
     )
+
+
+def _add_output_filter_args(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--output-path",
         default="",
@@ -289,4 +304,17 @@ def build_manual_evals_db_health_parser() -> argparse.ArgumentParser:
         default=100,
         help="Maximum open feedback actionable rows to print.",
     )
+
+
+def build_manual_evals_db_health_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Print read-only manual eval warehouse health signals.",
+    )
+    _add_common_report_args(parser)
+    _add_feedback_context_args(parser)
+    _add_ocr_retry_args(parser)
+    _add_feedback_reclassify_args(parser)
+    _add_local_artifact_args(parser)
+    _add_ocr_execution_args(parser)
+    _add_output_filter_args(parser)
     return parser
