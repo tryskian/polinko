@@ -89,7 +89,7 @@ mypy-extensions==1.1.0
     # via mypy
 nodeenv==1.10.0
     # via pre-commit
-openai==2.38.0
+openai==2.41.0
     # via
     #   -r requirements.in
     #   openai-agents
