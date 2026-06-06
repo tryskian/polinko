@@ -328,7 +328,8 @@ Last updated: 2026-06-06
     `tools/manual_evals_db_health.py` is the thin parser/router entrypoint,
     while CLI contracts, parser construction, output handling, feedback
     dispatch, OCR retry dispatch, and shared dispatch helpers live in focused
-    `tools/manual_eval_cli_*` modules
+    `tools/manual_eval_cli_*` modules; parser construction now uses
+    argument-family helpers with a focused option-order contract test
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then
