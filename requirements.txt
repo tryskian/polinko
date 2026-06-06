@@ -93,7 +93,7 @@ openai==2.38.0
     # via
     #   -r requirements.in
     #   openai-agents
-openai-agents==0.17.3
+openai-agents==0.17.4
     # via -r requirements.in
 packaging==26.0
     # via
