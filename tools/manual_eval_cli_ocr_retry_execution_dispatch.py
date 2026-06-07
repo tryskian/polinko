@@ -1,0 +1,86 @@
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+from tools.manual_eval_cli_dispatch_support import (
+    FinishReport,
+    optional_path,
+    positive_limit,
+)
+from tools.manual_eval_ocr_retry_execution_bundle_report import (
+    build_ocr_retry_execution_bundle_report,
+)
+from tools.manual_eval_ocr_retry_execution_readiness import (
+    build_ocr_retry_execution_readiness_report,
+    format_ocr_retry_execution_readiness_report,
+)
+from tools.manual_eval_ocr_retry_execution_report import (
+    format_ocr_retry_execution_bundle_report,
+    format_ocr_retry_execution_report,
+)
+from tools.manual_eval_ocr_retry_execution_writer import (
+    DEFAULT_OCR_RETRY_MODEL,
+    DEFAULT_OCR_RETRY_PROMPT,
+    write_ocr_retry_execution_bundle,
+)
+
+
+def handle_ocr_retry_execution_pre_feedback_commands(
+    *,
+    args: Any,
+    db_path: Path,
+    finish: FinishReport,
+) -> int | None:
+    if args.ocr_retry_execution_readiness:
+        report = build_ocr_retry_execution_readiness_report(
+            db_path=db_path,
+            selection_path=optional_path(args.selection_path),
+            outcome=args.outcome or "partial",
+            cohort=args.cohort or "ocr_retry_evidence",
+            limit=positive_limit(args.limit),
+            artifact_ids=args.artifact_id,
+        )
+        return finish(report, format_ocr_retry_execution_readiness_report)
+
+    if args.ocr_retry_execution_report:
+        report = build_ocr_retry_execution_bundle_report(
+            run_dir=optional_path(args.run_dir),
+        )
+        return finish(
+            report,
+            format_ocr_retry_execution_bundle_report,
+            status_by_state={"error": 2},
+        )
+
+    return None
+
+
+def handle_ocr_retry_execution_post_feedback_commands(
+    *,
+    args: Any,
+    db_path: Path,
+    finish: FinishReport,
+) -> int | None:
+    if args.ocr_retry_execute:
+        report = write_ocr_retry_execution_bundle(
+            db_path=db_path,
+            selection_path=optional_path(args.selection_path),
+            confirm_token=str(args.confirm or ""),
+            outcome=args.outcome or "partial",
+            cohort=args.cohort or "ocr_retry_evidence",
+            limit=positive_limit(args.limit),
+            artifact_ids=args.artifact_id,
+            execution_dir=optional_path(args.execution_dir),
+            ocr_provider=str(args.ocr_provider or "scaffold"),
+            ocr_model=str(args.ocr_model or DEFAULT_OCR_RETRY_MODEL),
+            ocr_prompt=str(args.ocr_prompt or DEFAULT_OCR_RETRY_PROMPT),
+        )
+        return finish(
+            report,
+            format_ocr_retry_execution_report,
+            status_by_state={"completed": 0, "failed": 1, "partial_failure": 1},
+            default_status=2,
+        )
+
+    return None
