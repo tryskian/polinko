@@ -328,8 +328,10 @@ Last updated: 2026-06-06
     `tools/manual_evals_db_health.py` is the thin parser/router entrypoint,
     while CLI contracts, parser construction, output handling, feedback
     dispatch, OCR retry dispatch, and shared dispatch helpers live in focused
-    `tools/manual_eval_cli_*` modules; parser construction now uses
-    argument-family helpers with a focused option-order contract test, and
+    `tools/manual_eval_cli_*` modules; parser construction now keeps
+    `tools/manual_eval_cli_parser.py` as the stable facade while shared,
+    feedback, and OCR retry argument-family helpers live in focused parser
+    modules with option-order and coordinator-order contract tests, and
     manual-eval CLI contract aliases now keep
     `tools/manual_eval_cli_contracts.py` as the stable public facade while
     grouped feedback, overlay, OCR retry, and shared contract modules own the
