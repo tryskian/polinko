@@ -329,7 +329,11 @@ Last updated: 2026-06-06
     while CLI contracts, parser construction, output handling, feedback
     dispatch, OCR retry dispatch, and shared dispatch helpers live in focused
     `tools/manual_eval_cli_*` modules; parser construction now uses
-    argument-family helpers with a focused option-order contract test
+    argument-family helpers with a focused option-order contract test, and
+    manual-eval CLI contract aliases now keep
+    `tools/manual_eval_cli_contracts.py` as the stable public facade while
+    grouped feedback, overlay, OCR retry, and shared contract modules own the
+    underlying schema/default aliases with a focused export-order test
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then
