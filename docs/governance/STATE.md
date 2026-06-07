@@ -333,7 +333,11 @@ Last updated: 2026-06-06
     manual-eval CLI contract aliases now keep
     `tools/manual_eval_cli_contracts.py` as the stable public facade while
     grouped feedback, overlay, OCR retry, and shared contract modules own the
-    underlying schema/default aliases with a focused export-order test
+    underlying schema/default aliases with a focused export-order test; OCR
+    retry dispatch now keeps `tools/manual_eval_cli_ocr_retry_dispatch.py` as
+    the stable coordinator while selection/source planning, execution, and
+    feedback-closure command bodies live in lifecycle-owned dispatch modules
+    with a focused group-order contract test
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then
