@@ -1,11 +1,12 @@
 import unittest
+from collections.abc import Callable
 
-from tools.manual_eval_cli_parser import build_manual_evals_db_health_parser
+from tools import manual_eval_cli_parser
 
 
 class ManualEvalCliParserTests(unittest.TestCase):
     def test_parser_option_order_preserves_manual_eval_surface_contract(self) -> None:
-        parser = build_manual_evals_db_health_parser()
+        parser = manual_eval_cli_parser.build_manual_evals_db_health_parser()
 
         option_order = [
             action.option_strings[0]
@@ -68,6 +69,49 @@ class ManualEvalCliParserTests(unittest.TestCase):
                 "--outcome",
                 "--cohort",
                 "--limit",
+            ],
+        )
+
+    def test_parser_build_uses_argument_family_builders_in_order(self) -> None:
+        calls: list[str] = []
+
+        def record(name: str) -> Callable[[object], None]:
+            def _record(_parser: object) -> None:
+                calls.append(name)
+
+            return _record
+
+        originals = {
+            name: getattr(manual_eval_cli_parser, name)
+            for name in (
+                "add_common_report_args",
+                "add_feedback_context_args",
+                "add_ocr_retry_args",
+                "add_feedback_reclassify_args",
+                "add_local_artifact_args",
+                "add_ocr_execution_args",
+                "add_output_filter_args",
+            )
+        }
+        try:
+            for name in originals:
+                setattr(manual_eval_cli_parser, name, record(name))
+
+            manual_eval_cli_parser.build_manual_evals_db_health_parser()
+        finally:
+            for name, original in originals.items():
+                setattr(manual_eval_cli_parser, name, original)
+
+        self.assertEqual(
+            calls,
+            [
+                "add_common_report_args",
+                "add_feedback_context_args",
+                "add_ocr_retry_args",
+                "add_feedback_reclassify_args",
+                "add_local_artifact_args",
+                "add_ocr_execution_args",
+                "add_output_filter_args",
             ],
         )
 
