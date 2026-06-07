@@ -337,7 +337,11 @@ Last updated: 2026-06-06
     retry dispatch now keeps `tools/manual_eval_cli_ocr_retry_dispatch.py` as
     the stable coordinator while selection/source planning, execution, and
     feedback-closure command bodies live in lifecycle-owned dispatch modules
-    with a focused group-order contract test
+    with a focused group-order contract test; feedback dispatch now keeps
+    `tools/manual_eval_cli_feedback_dispatch.py` as the stable coordinator
+    while reclassify, source-context, overlay, decision, and open-feedback
+    command bodies live in focused dispatch modules with a focused
+    group-order contract test
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then
