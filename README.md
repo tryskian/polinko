@@ -1,12 +1,18 @@
 # Polinko
 
 ![CI](https://github.com/tryskian/polinko/actions/workflows/ci.yml/badge.svg)
+[![Polinko Model](https://img.shields.io/badge/polinko_model-staged_next_beta-4C956C)](docs/research/pre-beta-2-4-research-model-contract-2026-05-19.md)
 ![Eval Contract](https://img.shields.io/badge/eval-pass%2Ffail-4E79A7)
 ![Research Surface](https://img.shields.io/badge/research-repo_native-76B7B2)
-![Maintenance](https://img.shields.io/badge/maintenance-in%20progress-F28E2B)
+![Model Refactor](https://img.shields.io/badge/model_refactor-active-F28E2B)
 
-> **Maintenance in progress.** Documentation and research surfaces are being
-> standardised before this repo is shared as a stable reference.
+> [!NOTE]
+> **Current status:** The Polinko research model is being staged for the next
+> beta.
+>
+> This is an active refactor window for the model contract, evidence snapshots,
+> docs, and supporting tools. Current builds are kept stable while the repo
+> surfaces are simplified, tested, and aligned for the next release.
 
 Polinko is a human-led research system for inspecting AI behaviour through
 fail-first evaluation, evidence-preserving method work, and repo-native
