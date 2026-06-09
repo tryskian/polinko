@@ -55,7 +55,12 @@ Last updated: 2026-06-09
   - Codex owns implementation, validation, Git/PR flow, and hygiene execution
   - cleanup proceeds one kernel at a time from clean synced `main`
 - Public-facing surfaces remain derived from repo truth:
-  - the root README now points to public research docs, not local portfolio
+  - the root README now names the Polinko research model as staged for the
+    next beta, replacing generic maintenance framing with a model-refactor
+    status note
+  - the public status badge set distinguishes the Polinko research model,
+    active model refactor, eval contract, research surface, and CI status
+  - the root README points to public research docs, not local portfolio
     commands
   - portfolio source lives under `apps/portfolio/`, while tracked static output
     stays under `public/portfolio/`
@@ -73,6 +78,9 @@ Last updated: 2026-06-09
   - fail-first evaluation is the active posture
   - Beta 2.3 evidence is frozen under `docs/eval/beta_2_3/`
   - `pre-Beta 2.4` is staged as the next research-model contract
+  - the next model-contract review must preserve the original positive
+    instruction shape by describing the behaviours the model should produce as
+    the primary contract
   - the discarded run-level rollup hypothesis is not being carried forward
   - non-OCR lanes stay source-first rather than run-verdict-first
   - the manual eval workbench, including notebooks, local evidence databases,
