@@ -1884,3 +1884,23 @@ or branch history instead.
   auditability, reduces import-surface ambiguity, and lets future manual-eval
   refactors stay small while preserving the no-eval, no-pulse, no-unapproved
   mutation boundaries.
+
+## D-121: Frame README status at the research-model level
+
+- Date: `2026-06-09`
+- Category: `documentation`
+- Tags: `readme`, `research_model`, `repo_family`, `positive_contract`,
+  `pre_beta`
+- Human-led: The human lead corrected the refactor framing from repo-level
+  cleanup to the Polinko research model being staged for the next beta, and
+  required the public README language to keep the original positive
+  instruction shape visible.
+- Decision: The root README now uses a GitHub note callout and aligned badges
+  to state that the Polinko research model is being staged for the next beta.
+  The status copy names an active refactor window for the model contract,
+  evidence snapshots, docs, and supporting tools, while saying current builds
+  are kept stable during simplification, testing, and release alignment.
+- Why: The public status surface must distinguish Polinko the research model
+  from Polinko the repository. Model-level status wording keeps the staged beta
+  boundary visible, and positive target language keeps the refactor aligned
+  with the original Polinko instruction shape.
