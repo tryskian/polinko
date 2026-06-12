@@ -6,6 +6,19 @@ from typing import Any, NamedTuple
 
 FinishReport = Callable[..., int]
 CommandHandler = Callable[..., int | None]
+DEFAULT_ERROR_STATUS = 2
+STATUS_APPLIED_OK = {"applied": 0}
+STATUS_BLOCKED_ERROR = {"blocked": DEFAULT_ERROR_STATUS}
+STATUS_ERROR = {"error": DEFAULT_ERROR_STATUS}
+STATUS_OK = {"ok": 0}
+STATUS_READY_OK = {"ready": 0}
+STATUS_RESTORED_OK = {"restored": 0}
+STATUS_WRITTEN_OK = {"written": 0}
+STATUS_OCR_EXECUTION = {
+    "completed": 0,
+    "failed": 1,
+    "partial_failure": 1,
+}
 
 
 class DefaultFilters(NamedTuple):

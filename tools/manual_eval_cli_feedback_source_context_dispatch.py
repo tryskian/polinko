@@ -5,6 +5,7 @@ from typing import Any
 
 from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
+    STATUS_ERROR,
     default_filters,
     positive_limit,
 )
@@ -35,7 +36,7 @@ def handle_feedback_source_context_commands(
         return finish(
             report,
             format_feedback_source_context_report,
-            status_by_state={"error": 2},
+            status_by_state=STATUS_ERROR,
         )
 
     return None

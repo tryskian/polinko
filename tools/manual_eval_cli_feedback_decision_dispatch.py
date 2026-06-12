@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from tools.manual_eval_cli_dispatch_support import (
+    DEFAULT_ERROR_STATUS,
     FinishReport,
+    STATUS_OK,
+    STATUS_WRITTEN_OK,
     default_filters,
     optional_path,
     positive_limit,
@@ -40,8 +43,8 @@ def handle_feedback_decision_commands(
         return finish(
             report,
             format_feedback_decision_draft_report,
-            status_by_state={"written": 0},
-            default_status=2,
+            status_by_state=STATUS_WRITTEN_OK,
+            default_status=DEFAULT_ERROR_STATUS,
         )
 
     if args.feedback_decision_preview:
@@ -60,8 +63,8 @@ def handle_feedback_decision_commands(
         return finish(
             report,
             format_feedback_decision_preview_report,
-            status_by_state={"ok": 0},
-            default_status=2,
+            status_by_state=STATUS_OK,
+            default_status=DEFAULT_ERROR_STATUS,
         )
 
     return None

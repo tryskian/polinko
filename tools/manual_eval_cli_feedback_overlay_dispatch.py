@@ -4,7 +4,11 @@ from pathlib import Path
 from typing import Any
 
 from tools.manual_eval_cli_dispatch_support import (
+    DEFAULT_ERROR_STATUS,
     FinishReport,
+    STATUS_ERROR,
+    STATUS_READY_OK,
+    STATUS_WRITTEN_OK,
     default_filters,
     optional_path,
     positive_limit,
@@ -39,7 +43,7 @@ def handle_feedback_overlay_commands(
         return finish(
             report,
             format_overlay_ocr_comparison_readiness_report,
-            status_by_state={"error": 2},
+            status_by_state=STATUS_ERROR,
         )
 
     if args.overlay_source_index_draft:
@@ -55,8 +59,8 @@ def handle_feedback_overlay_commands(
         return finish(
             report,
             format_overlay_source_context_index_draft_report,
-            status_by_state={"written": 0},
-            default_status=2,
+            status_by_state=STATUS_WRITTEN_OK,
+            default_status=DEFAULT_ERROR_STATUS,
         )
 
     if args.overlay_source_index_validate:
@@ -71,8 +75,8 @@ def handle_feedback_overlay_commands(
         return finish(
             report,
             format_overlay_source_context_index_validation_report,
-            status_by_state={"ready": 0},
-            default_status=2,
+            status_by_state=STATUS_READY_OK,
+            default_status=DEFAULT_ERROR_STATUS,
         )
 
     return None

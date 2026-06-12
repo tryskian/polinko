@@ -4,7 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from tools.manual_eval_cli_dispatch_support import (
+    DEFAULT_ERROR_STATUS,
     FinishReport,
+    STATUS_ERROR,
+    STATUS_OCR_EXECUTION,
     default_filters,
     optional_path,
     positive_limit,
@@ -52,7 +55,7 @@ def handle_ocr_retry_execution_pre_feedback_commands(
         return finish(
             report,
             format_ocr_retry_execution_bundle_report,
-            status_by_state={"error": 2},
+            status_by_state=STATUS_ERROR,
         )
 
     return None
@@ -82,8 +85,8 @@ def handle_ocr_retry_execution_post_feedback_commands(
         return finish(
             report,
             format_ocr_retry_execution_report,
-            status_by_state={"completed": 0, "failed": 1, "partial_failure": 1},
-            default_status=2,
+            status_by_state=STATUS_OCR_EXECUTION,
+            default_status=DEFAULT_ERROR_STATUS,
         )
 
     return None
