@@ -2,10 +2,15 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 FinishReport = Callable[..., int]
 CommandHandler = Callable[..., int | None]
+
+
+class DefaultFilters(NamedTuple):
+    outcome: str
+    cohort: str
 
 
 def dispatch_first_match(
@@ -20,6 +25,13 @@ def dispatch_first_match(
         if status is not None:
             return status
     return None
+
+
+def default_filters(args: Any, *, outcome: str, cohort: str) -> DefaultFilters:
+    return DefaultFilters(
+        outcome=args.outcome or outcome,
+        cohort=args.cohort or cohort,
+    )
 
 
 def optional_path(value: Any) -> Path | None:

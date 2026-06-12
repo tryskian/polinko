@@ -5,6 +5,7 @@ from typing import Any
 
 from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
+    default_filters,
     optional_path,
     positive_limit,
 )
@@ -27,10 +28,11 @@ def handle_feedback_overlay_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.overlay_ocr_comparison_readiness:
+        filters = default_filters(args, outcome="fail", cohort="ocr_overlay_hypothesis")
         report = build_overlay_ocr_comparison_readiness_report(
             db_path=db_path,
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "ocr_overlay_hypothesis",
+            outcome=filters.outcome,
+            cohort=filters.cohort,
             limit=positive_limit(args.limit),
             overlay_source_index_path=optional_path(args.overlay_source_index),
         )
@@ -41,12 +43,13 @@ def handle_feedback_overlay_commands(
         )
 
     if args.overlay_source_index_draft:
+        filters = default_filters(args, outcome="fail", cohort="ocr_overlay_hypothesis")
         report = write_overlay_source_context_index_draft(
             db_path=db_path,
             output_path=optional_path(args.output_path),
             force=bool(args.force),
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "ocr_overlay_hypothesis",
+            outcome=filters.outcome,
+            cohort=filters.cohort,
             limit=positive_limit(args.limit),
         )
         return finish(
@@ -57,11 +60,12 @@ def handle_feedback_overlay_commands(
         )
 
     if args.overlay_source_index_validate:
+        filters = default_filters(args, outcome="fail", cohort="ocr_overlay_hypothesis")
         report = build_overlay_source_context_index_validation_report(
             db_path=db_path,
             overlay_source_index_path=optional_path(args.overlay_source_index),
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "ocr_overlay_hypothesis",
+            outcome=filters.outcome,
+            cohort=filters.cohort,
             limit=positive_limit(args.limit),
         )
         return finish(

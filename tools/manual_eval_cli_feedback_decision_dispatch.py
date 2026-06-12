@@ -5,6 +5,7 @@ from typing import Any
 
 from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
+    default_filters,
     optional_path,
     positive_limit,
 )
@@ -23,12 +24,17 @@ def handle_feedback_decision_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.feedback_decision_draft:
+        filters = default_filters(
+            args,
+            outcome="fail",
+            cohort="grounding_source_verification",
+        )
         report = write_feedback_decision_draft(
             db_path=db_path,
             output_path=optional_path(args.output_path),
             force=bool(args.force),
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "grounding_source_verification",
+            outcome=filters.outcome,
+            cohort=filters.cohort,
             limit=positive_limit(args.limit),
         )
         return finish(
@@ -39,11 +45,16 @@ def handle_feedback_decision_commands(
         )
 
     if args.feedback_decision_preview:
+        filters = default_filters(
+            args,
+            outcome="fail",
+            cohort="grounding_source_verification",
+        )
         report = build_feedback_decision_preview_report(
             db_path=db_path,
             decision_path=optional_path(args.decision_path),
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "grounding_source_verification",
+            outcome=filters.outcome,
+            cohort=filters.cohort,
             limit=positive_limit(args.limit),
         )
         return finish(

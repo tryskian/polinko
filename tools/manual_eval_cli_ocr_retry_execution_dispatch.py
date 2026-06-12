@@ -5,6 +5,7 @@ from typing import Any
 
 from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
+    default_filters,
     optional_path,
     positive_limit,
 )
@@ -33,11 +34,12 @@ def handle_ocr_retry_execution_pre_feedback_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.ocr_retry_execution_readiness:
+        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
         report = build_ocr_retry_execution_readiness_report(
             db_path=db_path,
             selection_path=optional_path(args.selection_path),
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
+            outcome=filters.outcome,
+            cohort=filters.cohort,
             limit=positive_limit(args.limit),
             artifact_ids=args.artifact_id,
         )
@@ -63,12 +65,13 @@ def handle_ocr_retry_execution_post_feedback_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.ocr_retry_execute:
+        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
         report = write_ocr_retry_execution_bundle(
             db_path=db_path,
             selection_path=optional_path(args.selection_path),
             confirm_token=str(args.confirm or ""),
-            outcome=args.outcome or "partial",
-            cohort=args.cohort or "ocr_retry_evidence",
+            outcome=filters.outcome,
+            cohort=filters.cohort,
             limit=positive_limit(args.limit),
             artifact_ids=args.artifact_id,
             execution_dir=optional_path(args.execution_dir),
