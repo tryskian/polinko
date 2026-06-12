@@ -5,6 +5,7 @@ from typing import Any
 
 from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
+    default_filters,
     optional_path,
     positive_limit,
 )
@@ -27,10 +28,11 @@ def handle_feedback_reclassify_command_group(
     finish: FinishReport,
 ) -> int | None:
     if args.no_context_feedback_reclassify_preview:
+        filters = default_filters(args, outcome="fail", cohort="ocr_retry_evidence")
         report = build_no_context_feedback_reclassify_report(
             db_path=db_path,
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "ocr_retry_evidence",
+            outcome=filters.outcome,
+            cohort=filters.cohort,
             limit=positive_limit(args.limit),
         )
         return finish(
@@ -41,12 +43,13 @@ def handle_feedback_reclassify_command_group(
         )
 
     if args.no_context_feedback_reclassify_apply:
+        filters = default_filters(args, outcome="fail", cohort="ocr_retry_evidence")
         report = write_no_context_feedback_reclassify(
             db_path=db_path,
             confirm_token=str(args.confirm or ""),
             backup_root=optional_path(args.backup_root),
-            outcome=args.outcome or "fail",
-            cohort=args.cohort or "ocr_retry_evidence",
+            outcome=filters.outcome,
+            cohort=filters.cohort,
             limit=positive_limit(args.limit),
         )
         return finish(

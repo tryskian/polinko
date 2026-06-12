@@ -1,8 +1,9 @@
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
-from tools.manual_eval_cli_dispatch_support import dispatch_first_match
+from tools.manual_eval_cli_dispatch_support import default_filters, dispatch_first_match
 
 
 class ManualEvalCliDispatchSupportTests(unittest.TestCase):
@@ -48,6 +49,26 @@ class ManualEvalCliDispatchSupportTests(unittest.TestCase):
 
         self.assertIsNone(status)
         self.assertEqual(calls, ["first", "second"])
+
+    def test_default_filters_uses_command_family_defaults_for_blank_args(self) -> None:
+        filters = default_filters(
+            SimpleNamespace(outcome="", cohort=None),
+            outcome="partial",
+            cohort="ocr_retry_evidence",
+        )
+
+        self.assertEqual(filters.outcome, "partial")
+        self.assertEqual(filters.cohort, "ocr_retry_evidence")
+
+    def test_default_filters_preserves_explicit_args(self) -> None:
+        filters = default_filters(
+            SimpleNamespace(outcome="fail", cohort="ocr_overlay_hypothesis"),
+            outcome="partial",
+            cohort="ocr_retry_evidence",
+        )
+
+        self.assertEqual(filters.outcome, "fail")
+        self.assertEqual(filters.cohort, "ocr_overlay_hypothesis")
 
 
 if __name__ == "__main__":
