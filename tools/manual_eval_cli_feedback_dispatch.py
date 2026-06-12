@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from tools.manual_eval_cli_dispatch_support import FinishReport
+from tools.manual_eval_cli_dispatch_support import FinishReport, dispatch_first_match
 from tools.manual_eval_cli_feedback_decision_dispatch import (
     handle_feedback_decision_commands,
 )
@@ -38,13 +38,14 @@ def handle_feedback_context_commands(
     db_path: Path,
     finish: FinishReport,
 ) -> int | None:
-    for handler in (
-        handle_feedback_source_context_commands,
-        handle_feedback_overlay_commands,
-        handle_feedback_decision_commands,
-        handle_open_feedback_commands,
-    ):
-        status = handler(args=args, db_path=db_path, finish=finish)
-        if status is not None:
-            return status
-    return None
+    return dispatch_first_match(
+        handlers=(
+            handle_feedback_source_context_commands,
+            handle_feedback_overlay_commands,
+            handle_feedback_decision_commands,
+            handle_open_feedback_commands,
+        ),
+        args=args,
+        db_path=db_path,
+        finish=finish,
+    )
