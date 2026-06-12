@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from tools.manual_eval_cli_dispatch_support import dispatch_first_match
 from tools.manual_eval_cli_feedback_dispatch import (
     handle_feedback_context_commands,
     handle_feedback_reclassify_commands,
@@ -59,37 +60,19 @@ def main() -> int:
             **status_kwargs,
         )
 
-    ocr_retry_status = handle_ocr_retry_pre_feedback_commands(
+    command_status = dispatch_first_match(
+        handlers=(
+            handle_ocr_retry_pre_feedback_commands,
+            handle_feedback_reclassify_commands,
+            handle_ocr_retry_post_feedback_commands,
+            handle_feedback_context_commands,
+        ),
         args=args,
         db_path=db_path,
         finish=finish,
     )
-    if ocr_retry_status is not None:
-        return ocr_retry_status
-
-    feedback_reclassify_status = handle_feedback_reclassify_commands(
-        args=args,
-        db_path=db_path,
-        finish=finish,
-    )
-    if feedback_reclassify_status is not None:
-        return feedback_reclassify_status
-
-    ocr_retry_status = handle_ocr_retry_post_feedback_commands(
-        args=args,
-        db_path=db_path,
-        finish=finish,
-    )
-    if ocr_retry_status is not None:
-        return ocr_retry_status
-
-    feedback_context_status = handle_feedback_context_commands(
-        args=args,
-        db_path=db_path,
-        finish=finish,
-    )
-    if feedback_context_status is not None:
-        return feedback_context_status
+    if command_status is not None:
+        return command_status
 
     report = build_manual_evals_health_report(db_path=db_path)
     return finish(report, format_manual_evals_health_report)
