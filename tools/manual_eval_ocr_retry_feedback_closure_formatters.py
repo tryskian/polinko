@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
-from tools.manual_eval_ocr_retry_feedback_db import int_value
+from tools.manual_eval_ocr_retry_report_formatters import int_value, terminal_path_name
 
 
 def format_ocr_retry_feedback_closure_preview_report(report: dict[str, Any]) -> str:
@@ -13,7 +12,7 @@ def format_ocr_retry_feedback_closure_preview_report(report: dict[str, Any]) -> 
     mutation = report.get("mutation_boundary")
     if not isinstance(mutation, dict):
         mutation = {}
-    run_dir_name = Path(str(report.get("run_dir") or "none")).name or "none"
+    run_dir_name = terminal_path_name(report.get("run_dir"))
 
     lines = [
         "manual eval OCR retry feedback closure preview: "
@@ -77,8 +76,8 @@ def format_ocr_retry_feedback_closure_apply_report(report: dict[str, Any]) -> st
     backup = report.get("backup")
     if not isinstance(backup, dict):
         backup = {}
-    run_dir_name = Path(str(report.get("run_dir") or "none")).name or "none"
-    backup_dir_name = Path(str(backup.get("dir") or "none")).name or "none"
+    run_dir_name = terminal_path_name(report.get("run_dir"))
+    backup_dir_name = terminal_path_name(backup.get("dir"))
 
     lines = [
         "manual eval OCR retry feedback closure apply: "
@@ -141,8 +140,8 @@ def format_ocr_retry_feedback_closure_apply_verification_report(
     manual_db = report.get("manual_evals_db")
     if not isinstance(manual_db, dict):
         manual_db = {}
-    run_dir_name = Path(str(report.get("run_dir") or "none")).name or "none"
-    backup_dir_name = Path(str(backup.get("dir") or "none")).name or "none"
+    run_dir_name = terminal_path_name(report.get("run_dir"))
+    backup_dir_name = terminal_path_name(backup.get("dir"))
 
     lines = [
         "manual eval OCR retry feedback closure apply report: "
@@ -209,8 +208,8 @@ def format_ocr_retry_feedback_closure_restore_report(report: dict[str, Any]) -> 
     mutation = report.get("mutation_boundary")
     if not isinstance(mutation, dict):
         mutation = {}
-    backup_dir_name = Path(str(source_backup.get("dir") or "none")).name or "none"
-    restore_dir_name = Path(str(pre_restore_backup.get("dir") or "none")).name or "none"
+    backup_dir_name = terminal_path_name(source_backup.get("dir"))
+    restore_dir_name = terminal_path_name(pre_restore_backup.get("dir"))
 
     lines = [
         "manual eval OCR retry feedback closure restore: "
