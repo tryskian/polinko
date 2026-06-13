@@ -1,25 +1,11 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
-
-def _int_value(value: object) -> int:
-    if value is None:
-        return 0
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return 0
-        return int(value)
-    try:
-        return int(str(value))
-    except (TypeError, ValueError):
-        return 0
+from tools.manual_eval_ocr_retry_report_formatters import (
+    int_value as _int_value,
+    terminal_path_name,
+)
 
 
 def format_ocr_retry_execution_report(report: dict[str, Any]) -> str:
@@ -79,7 +65,7 @@ def format_ocr_retry_execution_bundle_report(report: dict[str, Any]) -> str:
         mutation = {}
     files_available = _int_value(counts.get("files_available"))
     files_expected = _int_value(counts.get("files_expected"))
-    run_dir_name = Path(str(report.get("run_dir") or "none")).name or "none"
+    run_dir_name = terminal_path_name(report.get("run_dir"))
 
     lines = [
         "manual eval OCR retry execution bundle: "

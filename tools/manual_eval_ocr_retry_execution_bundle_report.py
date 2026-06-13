@@ -5,29 +5,13 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, cast
 
+from tools.manual_eval_ocr_retry_report_formatters import int_value as _int_value
+
 
 OCR_RETRY_EXECUTION_SCHEMA_VERSION = "polinko.manual_eval_ocr_retry_execution.v1"
 OCR_RETRY_EXECUTION_REPORT_SCHEMA_VERSION = (
     "polinko.manual_eval_ocr_retry_execution_report.v1"
 )
-
-
-def _int_value(value: object) -> int:
-    if value is None:
-        return 0
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return 0
-        return int(value)
-    try:
-        return int(str(value))
-    except (TypeError, ValueError):
-        return 0
 
 
 def ocr_retry_execution_mutation_boundary() -> dict[str, str]:
