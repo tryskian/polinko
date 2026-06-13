@@ -4,6 +4,14 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from tools.manual_eval_ocr_retry_selection_formatters import (
+    format_feedback_ids as _format_feedback_ids,
+    format_input_blocker_state as _format_input_blocker_state,
+    format_plan_thumbnail as _format_plan_thumbnail,
+    format_terminal_source_path as _format_terminal_source_path,
+    int_value as _int_value,
+    truncate_text as _truncate_text,
+)
 from tools.manual_eval_ocr_retry_selection_review import (
     OCR_RETRY_SELECTION_ALLOWED_ACTIONS,
 )
@@ -22,75 +30,6 @@ from tools.manual_eval_ocr_retry_selection_validation import (
 OCR_RETRY_SELECTION_APPLY_PREVIEW_SCHEMA_VERSION = (
     "polinko.manual_eval_ocr_retry_selection_apply_preview.v1"
 )
-
-
-def _int_value(value: object) -> int:
-    if value is None:
-        return 0
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return 0
-        return int(value)
-    try:
-        return int(str(value))
-    except (TypeError, ValueError):
-        return 0
-
-
-def _normalize_text(value: object) -> str:
-    if value is None:
-        return ""
-    return " ".join(str(value).split())
-
-
-def _truncate_text(value: object, *, max_chars: int = 180) -> str:
-    text = _normalize_text(value)
-    if len(text) <= max_chars:
-        return text
-    return text[: max(0, max_chars - 1)].rstrip() + "..."
-
-
-def _format_feedback_ids(value: object) -> str:
-    if not isinstance(value, list) or not value:
-        return "none"
-    return ",".join(str(_int_value(item)) for item in value)
-
-
-def _format_input_blocker_state(value: object) -> str:
-    if not isinstance(value, dict):
-        return "unknown"
-    state = str(value.get("state") or "unknown")
-    reason_code = str(value.get("reason_code") or "")
-    next_action = str(value.get("next_action") or "")
-    if not reason_code and not next_action:
-        return state
-    parts = [state]
-    if reason_code:
-        parts.append(f"reason={reason_code}")
-    if next_action:
-        parts.append(f"next={next_action}")
-    return " ".join(parts)
-
-
-def _format_plan_thumbnail(value: object) -> str:
-    if not isinstance(value, dict) or not value.get("available"):
-        return "none"
-    return f"{_int_value(value.get('width'))}x{_int_value(value.get('height'))}"
-
-
-def _format_terminal_source_path(value: object) -> str:
-    raw_path = str(value or "").strip()
-    if not raw_path:
-        return "none"
-    path = Path(raw_path).expanduser()
-    if path.is_absolute():
-        return path.name or "none"
-    return raw_path
 
 
 def _empty_selection_apply_actions() -> dict[str, list[dict[str, Any]]]:
