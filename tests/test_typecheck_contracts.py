@@ -54,7 +54,7 @@ class TypecheckContractTests(unittest.TestCase):
         ci_workflow = _read(".github/workflows/ci.yml")
         state = _read("docs/governance/STATE.md")
 
-        self.assertEqual(package["devDependencies"]["pyright"], "1.1.409")
+        self.assertEqual(package["devDependencies"]["pyright"], "1.1.410")
         self.assertEqual(
             package["scripts"]["typecheck:pyright"],
             "pyright --project pyrightconfig.json",
