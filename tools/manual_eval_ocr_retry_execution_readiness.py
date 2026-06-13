@@ -10,6 +10,12 @@ from tools.manual_eval_ocr_retry_selection_apply_preview import (
 from tools.manual_eval_ocr_retry_selection_review import (
     OCR_RETRY_SELECTION_ALLOWED_ACTIONS,
 )
+from tools.manual_eval_ocr_retry_selection_formatters import (
+    format_feedback_ids as _format_feedback_ids,
+    format_input_blocker_state as _format_input_blocker_state,
+    format_terminal_source_path as _format_terminal_source_path,
+    int_value as _int_value,
+)
 from tools.manual_eval_ocr_retry_selection_validation import (
     format_validation_artifact_ids,
     format_validation_issues,
@@ -19,56 +25,6 @@ from tools.manual_eval_ocr_retry_selection_validation import (
 OCR_RETRY_EXECUTION_READINESS_SCHEMA_VERSION = (
     "polinko.manual_eval_ocr_retry_execution_readiness.v1"
 )
-
-
-def _int_value(value: object) -> int:
-    if value is None:
-        return 0
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return 0
-        return int(value)
-    try:
-        return int(str(value))
-    except (TypeError, ValueError):
-        return 0
-
-
-def _format_feedback_ids(value: object) -> str:
-    if not isinstance(value, list) or not value:
-        return "none"
-    return ",".join(str(_int_value(item)) for item in value)
-
-
-def _format_input_blocker_state(value: object) -> str:
-    if not isinstance(value, dict):
-        return "unknown"
-    state = str(value.get("state") or "unknown")
-    reason_code = str(value.get("reason_code") or "")
-    next_action = str(value.get("next_action") or "")
-    if not reason_code and not next_action:
-        return state
-    parts = [state]
-    if reason_code:
-        parts.append(f"reason={reason_code}")
-    if next_action:
-        parts.append(f"next={next_action}")
-    return " ".join(parts)
-
-
-def _format_terminal_source_path(value: object) -> str:
-    raw_path = str(value or "").strip()
-    if not raw_path:
-        return "none"
-    path = Path(raw_path).expanduser()
-    if path.is_absolute():
-        return path.name or "none"
-    return raw_path
 
 
 def _execution_readiness_artifact(

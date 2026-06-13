@@ -7,6 +7,13 @@ from pathlib import Path
 from typing import Any
 
 from tools.manual_eval_ocr_retry_candidates import OCR_RETRY_TERMINAL_CONTEXT_LIMIT
+from tools.manual_eval_ocr_retry_selection_formatters import (
+    display_text as _display_text,
+    format_feedback_ids as _format_feedback_ids,
+    int_value as _int_value,
+    normalize_text as _normalize_text,
+    truncate_text as _truncate_text,
+)
 from tools.manual_eval_ocr_retry_source_verification import (
     build_ocr_retry_source_verification_report,
 )
@@ -23,24 +30,6 @@ def _connect_readonly(db_path: Path) -> sqlite3.Connection:
     return conn
 
 
-def _int_value(value: object) -> int:
-    if value is None:
-        return 0
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return 0
-        return int(value)
-    try:
-        return int(str(value))
-    except (TypeError, ValueError):
-        return 0
-
-
 def _row_dict(row: sqlite3.Row) -> dict[str, Any]:
     return {key: row[key] for key in row.keys()}
 
@@ -51,30 +40,6 @@ def _fetch_rows(
     params: Sequence[object] | None = None,
 ) -> list[dict[str, Any]]:
     return [_row_dict(row) for row in conn.execute(sql, params or []).fetchall()]
-
-
-def _normalize_text(value: object) -> str:
-    if value is None:
-        return ""
-    return " ".join(str(value).split())
-
-
-def _display_text(value: object) -> str:
-    text = _normalize_text(value)
-    return text if text else "none"
-
-
-def _truncate_text(value: object, *, max_chars: int = 180) -> str:
-    text = _normalize_text(value)
-    if len(text) <= max_chars:
-        return text
-    return text[: max(0, max_chars - 1)].rstrip() + "..."
-
-
-def _format_feedback_ids(value: object) -> str:
-    if not isinstance(value, list) or not value:
-        return "none"
-    return ",".join(str(_int_value(item)) for item in value)
 
 
 def _read_source_history_messages(

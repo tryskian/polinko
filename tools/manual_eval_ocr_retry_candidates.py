@@ -12,6 +12,13 @@ from tools.manual_eval_open_feedback import (
     normalize_cohort_filter,
     normalize_outcome_filter,
 )
+from tools.manual_eval_ocr_retry_selection_formatters import (
+    display_text as _display_text,
+    format_feedback_ids as _format_feedback_ids,
+    format_readiness_flags as _format_readiness_flags,
+    int_value as _int_value,
+    truncate_text as _truncate_text,
+)
 
 
 OCR_RETRY_CANDIDATES_SCHEMA_VERSION = "polinko.manual_eval_ocr_retry_candidates.v2"
@@ -22,42 +29,6 @@ def _connect_readonly(db_path: Path) -> sqlite3.Connection:
     conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     conn.row_factory = sqlite3.Row
     return conn
-
-
-def _int_value(value: object) -> int:
-    if value is None:
-        return 0
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return 0
-        return int(value)
-    try:
-        return int(str(value))
-    except (TypeError, ValueError):
-        return 0
-
-
-def _normalize_text(value: object) -> str:
-    if value is None:
-        return ""
-    return " ".join(str(value).split())
-
-
-def _display_text(value: object) -> str:
-    text = _normalize_text(value)
-    return text if text else "none"
-
-
-def _truncate_text(value: object, *, max_chars: int = 180) -> str:
-    text = _normalize_text(value)
-    if len(text) <= max_chars:
-        return text
-    return text[: max(0, max_chars - 1)].rstrip() + "..."
 
 
 def _packet_feedback_row(row: dict[str, Any]) -> dict[str, Any]:
@@ -290,12 +261,6 @@ def build_ocr_retry_candidates_report(
     }
 
 
-def _format_feedback_ids(value: object) -> str:
-    if not isinstance(value, list) or not value:
-        return "none"
-    return ",".join(str(_int_value(item)) for item in value)
-
-
 def _format_latest_ocr_line(latest_ocr: dict[str, Any]) -> str:
     image_asset = latest_ocr.get("image_asset")
     if not isinstance(image_asset, dict):
@@ -318,13 +283,6 @@ def _format_latest_ocr_line(latest_ocr: dict[str, Any]) -> str:
         f"thumbnail={thumbnail_text} "
         f"chars={_int_value(latest_ocr.get('extracted_text_chars'))}"
     )
-
-
-def _format_readiness_flags(readiness: dict[str, Any]) -> str:
-    flags = readiness.get("flags")
-    if not isinstance(flags, list) or not flags:
-        return "none"
-    return ",".join(str(item) for item in flags)
 
 
 def _format_ocr_context_line(ocr_run: dict[str, Any]) -> str:
