@@ -8,6 +8,13 @@ from tools.manual_eval_ocr_retry_candidates import (
     OCR_RETRY_TERMINAL_CONTEXT_LIMIT,
     build_ocr_retry_candidates_report,
 )
+from tools.manual_eval_ocr_retry_selection_formatters import (
+    display_text as _display_text,
+    format_feedback_ids as _format_feedback_ids,
+    format_readiness_flags as _format_readiness_flags,
+    int_value as _int_value,
+    truncate_text as _truncate_text,
+)
 
 
 OCR_RETRY_SOURCE_VERIFICATION_SCHEMA_VERSION = (
@@ -32,55 +39,6 @@ OCR_RETRY_SOURCE_VERIFICATION_REASONS = {
         "no latest same-session OCR run is available for this source session"
     ),
 }
-
-
-def _int_value(value: object) -> int:
-    if value is None:
-        return 0
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return 0
-        return int(value)
-    try:
-        return int(str(value))
-    except (TypeError, ValueError):
-        return 0
-
-
-def _normalize_text(value: object) -> str:
-    if value is None:
-        return ""
-    return " ".join(str(value).split())
-
-
-def _display_text(value: object) -> str:
-    text = _normalize_text(value)
-    return text if text else "none"
-
-
-def _truncate_text(value: object, *, max_chars: int = 180) -> str:
-    text = _normalize_text(value)
-    if len(text) <= max_chars:
-        return text
-    return text[: max(0, max_chars - 1)].rstrip() + "..."
-
-
-def _format_feedback_ids(value: object) -> str:
-    if not isinstance(value, list) or not value:
-        return "none"
-    return ",".join(str(_int_value(item)) for item in value)
-
-
-def _format_readiness_flags(readiness: dict[str, Any]) -> str:
-    flags = readiness.get("flags")
-    if not isinstance(flags, list) or not flags:
-        return "none"
-    return ",".join(str(item) for item in flags)
 
 
 def _unconfirmed_reasons(
