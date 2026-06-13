@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+from tools.manual_eval_ocr_retry_selection_formatters import int_value as _int_value
 from tools.manual_eval_ocr_retry_selection_review import (
     OCR_RETRY_SELECTION_ALLOWED_ACTIONS,
 )
@@ -27,24 +28,6 @@ OCR_RETRY_SELECTION_DECISION_DRAFT_SCHEMA_VERSION = (
 DEFAULT_OCR_RETRY_SELECTION_DRAFT_PATH = Path(
     ".local/manual_eval_decisions/ocr_retry_selection_draft.json"
 )
-
-
-def _int_value(value: object) -> int:
-    if value is None:
-        return 0
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return 0
-        return int(value)
-    try:
-        return int(str(value))
-    except (TypeError, ValueError):
-        return 0
 
 
 def _json_fingerprint(payload: object) -> str:
