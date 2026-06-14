@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-09
+Last updated: 2026-06-14
 
 ## Current Truth
 
@@ -347,7 +347,11 @@ Last updated: 2026-06-09
     retry dispatch now keeps `tools/manual_eval_cli_ocr_retry_dispatch.py` as
     the stable coordinator while selection/source planning, execution, and
     feedback-closure command bodies live in lifecycle-owned dispatch modules
-    with a focused group-order contract test; feedback dispatch now keeps
+    with a focused group-order contract test; OCR retry dispatch default
+    filters now live in `tools/manual_eval_cli_dispatch_support.py` and are
+    reused by execution and selection dispatch so the default `partial` /
+    `ocr_retry_evidence` command contract has one source; feedback dispatch
+    now keeps
     `tools/manual_eval_cli_feedback_dispatch.py` as the stable coordinator
     while reclassify, source-context, overlay, decision, and open-feedback
     command bodies live in focused dispatch modules with a focused
