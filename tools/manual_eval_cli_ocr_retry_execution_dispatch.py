@@ -8,7 +8,7 @@ from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
     STATUS_ERROR,
     STATUS_OCR_EXECUTION,
-    default_filters,
+    ocr_retry_filters,
     optional_path,
     positive_limit,
 )
@@ -37,7 +37,7 @@ def handle_ocr_retry_execution_pre_feedback_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.ocr_retry_execution_readiness:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = build_ocr_retry_execution_readiness_report(
             db_path=db_path,
             selection_path=optional_path(args.selection_path),
@@ -68,7 +68,7 @@ def handle_ocr_retry_execution_post_feedback_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.ocr_retry_execute:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = write_ocr_retry_execution_bundle(
             db_path=db_path,
             selection_path=optional_path(args.selection_path),

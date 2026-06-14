@@ -3,7 +3,11 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from tools.manual_eval_cli_dispatch_support import default_filters, dispatch_first_match
+from tools.manual_eval_cli_dispatch_support import (
+    default_filters,
+    dispatch_first_match,
+    ocr_retry_filters,
+)
 
 
 class ManualEvalCliDispatchSupportTests(unittest.TestCase):
@@ -69,6 +73,20 @@ class ManualEvalCliDispatchSupportTests(unittest.TestCase):
 
         self.assertEqual(filters.outcome, "fail")
         self.assertEqual(filters.cohort, "ocr_overlay_hypothesis")
+
+    def test_ocr_retry_filters_use_retry_command_defaults(self) -> None:
+        filters = ocr_retry_filters(SimpleNamespace(outcome="", cohort=None))
+
+        self.assertEqual(filters.outcome, "partial")
+        self.assertEqual(filters.cohort, "ocr_retry_evidence")
+
+    def test_ocr_retry_filters_preserve_explicit_overrides(self) -> None:
+        filters = ocr_retry_filters(
+            SimpleNamespace(outcome="fail", cohort="grounding_source_verification"),
+        )
+
+        self.assertEqual(filters.outcome, "fail")
+        self.assertEqual(filters.cohort, "grounding_source_verification")
 
 
 if __name__ == "__main__":
