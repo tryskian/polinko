@@ -7,7 +7,7 @@ from tools.manual_eval_cli_dispatch_support import (
     DEFAULT_ERROR_STATUS,
     FinishReport,
     STATUS_WRITTEN_OK,
-    default_filters,
+    ocr_retry_filters,
     optional_path,
     positive_limit,
 )
@@ -64,7 +64,7 @@ def handle_ocr_retry_selection_pre_feedback_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.ocr_retry_selection_draft:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = write_ocr_retry_selection_decision_draft(
             db_path=db_path,
             output_path=optional_path(args.output_path),
@@ -82,7 +82,7 @@ def handle_ocr_retry_selection_pre_feedback_commands(
         )
 
     if args.ocr_retry_selection_apply_preview:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = build_ocr_retry_selection_apply_preview_report(
             db_path=db_path,
             selection_path=optional_path(args.selection_path),
@@ -103,7 +103,7 @@ def handle_ocr_retry_selection_post_feedback_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.ocr_retry_selection_validate:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = build_ocr_retry_selection_validation_report(
             db_path=db_path,
             selection_path=optional_path(args.selection_path),
@@ -115,7 +115,7 @@ def handle_ocr_retry_selection_post_feedback_commands(
         return finish(report, format_ocr_retry_selection_validation_report)
 
     if args.ocr_retry_selection_template:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = build_ocr_retry_selection_template_report(
             db_path=db_path,
             outcome=filters.outcome,
@@ -126,7 +126,7 @@ def handle_ocr_retry_selection_post_feedback_commands(
         return finish(report, format_ocr_retry_selection_template_report)
 
     if args.ocr_retry_selection_review:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = build_ocr_retry_selection_review_report(
             db_path=db_path,
             outcome=filters.outcome,
@@ -137,7 +137,7 @@ def handle_ocr_retry_selection_post_feedback_commands(
         return finish(report, format_ocr_retry_selection_review_report)
 
     if args.ocr_retry_rerun_plan:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = build_ocr_retry_rerun_plan_report(
             db_path=db_path,
             outcome=filters.outcome,
@@ -148,7 +148,7 @@ def handle_ocr_retry_selection_post_feedback_commands(
         return finish(report, format_ocr_retry_rerun_plan_report)
 
     if args.ocr_retry_rerun_manifest:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = build_ocr_retry_rerun_manifest_report(
             db_path=db_path,
             outcome=filters.outcome,
@@ -158,7 +158,7 @@ def handle_ocr_retry_selection_post_feedback_commands(
         return finish(report, format_ocr_retry_rerun_manifest_report)
 
     if args.ocr_retry_input_packet:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = build_ocr_retry_input_packet_report(
             db_path=db_path,
             outcome=filters.outcome,
@@ -168,7 +168,7 @@ def handle_ocr_retry_selection_post_feedback_commands(
         return finish(report, format_ocr_retry_input_packet_report)
 
     if args.ocr_retry_source_provenance:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = build_ocr_retry_source_provenance_report(
             db_path=db_path,
             outcome=filters.outcome,
@@ -178,7 +178,7 @@ def handle_ocr_retry_selection_post_feedback_commands(
         return finish(report, format_ocr_retry_source_provenance_report)
 
     if args.ocr_retry_source_verification:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = build_ocr_retry_source_verification_report(
             db_path=db_path,
             outcome=filters.outcome,
@@ -188,7 +188,7 @@ def handle_ocr_retry_selection_post_feedback_commands(
         return finish(report, format_ocr_retry_source_verification_report)
 
     if args.ocr_retry_candidates:
-        filters = default_filters(args, outcome="partial", cohort="ocr_retry_evidence")
+        filters = ocr_retry_filters(args)
         report = build_ocr_retry_candidates_report(
             db_path=db_path,
             outcome=filters.outcome,

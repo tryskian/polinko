@@ -7,6 +7,8 @@ from typing import Any, NamedTuple
 FinishReport = Callable[..., int]
 CommandHandler = Callable[..., int | None]
 DEFAULT_ERROR_STATUS = 2
+OCR_RETRY_DEFAULT_COHORT = "ocr_retry_evidence"
+OCR_RETRY_DEFAULT_OUTCOME = "partial"
 STATUS_APPLIED_OK = {"applied": 0}
 STATUS_BLOCKED_ERROR = {"blocked": DEFAULT_ERROR_STATUS}
 STATUS_ERROR = {"error": DEFAULT_ERROR_STATUS}
@@ -44,6 +46,14 @@ def default_filters(args: Any, *, outcome: str, cohort: str) -> DefaultFilters:
     return DefaultFilters(
         outcome=args.outcome or outcome,
         cohort=args.cohort or cohort,
+    )
+
+
+def ocr_retry_filters(args: Any) -> DefaultFilters:
+    return default_filters(
+        args,
+        outcome=OCR_RETRY_DEFAULT_OUTCOME,
+        cohort=OCR_RETRY_DEFAULT_COHORT,
     )
 
 
