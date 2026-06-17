@@ -7,7 +7,7 @@ from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
     STATUS_OK,
     STATUS_WRITTEN_OK,
-    filtered_command_args,
+    filtered_report_kwargs,
     finish_report_with_error_default,
     local_artifact_paths,
 )
@@ -28,18 +28,15 @@ def handle_feedback_decision_commands(
     paths = local_artifact_paths(args)
 
     if args.feedback_decision_draft:
-        command_args = filtered_command_args(
-            args,
-            outcome="fail",
-            cohort="grounding_source_verification",
-        )
         report = write_feedback_decision_draft(
             db_path=db_path,
             output_path=paths.output_path,
             force=bool(args.force),
-            outcome=command_args.outcome,
-            cohort=command_args.cohort,
-            limit=command_args.limit,
+            **filtered_report_kwargs(
+                args,
+                outcome="fail",
+                cohort="grounding_source_verification",
+            ),
         )
         return finish_report_with_error_default(
             finish=finish,
@@ -49,17 +46,14 @@ def handle_feedback_decision_commands(
         )
 
     if args.feedback_decision_preview:
-        command_args = filtered_command_args(
-            args,
-            outcome="fail",
-            cohort="grounding_source_verification",
-        )
         report = build_feedback_decision_preview_report(
             db_path=db_path,
             decision_path=paths.decision_path,
-            outcome=command_args.outcome,
-            cohort=command_args.cohort,
-            limit=command_args.limit,
+            **filtered_report_kwargs(
+                args,
+                outcome="fail",
+                cohort="grounding_source_verification",
+            ),
         )
         return finish_report_with_error_default(
             finish=finish,

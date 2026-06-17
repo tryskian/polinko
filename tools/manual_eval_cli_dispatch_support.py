@@ -110,6 +110,15 @@ def filtered_command_args(
     )
 
 
+def filtered_report_kwargs(args: Any, *, outcome: str, cohort: str) -> dict[str, Any]:
+    command_args = filtered_command_args(args, outcome=outcome, cohort=cohort)
+    return {
+        "outcome": command_args.outcome,
+        "cohort": command_args.cohort,
+        "limit": command_args.limit,
+    }
+
+
 def ocr_retry_command_args(args: Any) -> OcrRetryCommandArgs:
     filters = ocr_retry_filters(args)
     return OcrRetryCommandArgs(

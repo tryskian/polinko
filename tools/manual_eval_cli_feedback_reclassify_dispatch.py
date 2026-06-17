@@ -7,7 +7,7 @@ from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
     STATUS_APPLIED_OK,
     STATUS_OK,
-    filtered_command_args,
+    filtered_report_kwargs,
     finish_report_with_error_default,
     local_artifact_paths,
 )
@@ -32,16 +32,13 @@ def handle_feedback_reclassify_command_group(
     paths = local_artifact_paths(args)
 
     if args.no_context_feedback_reclassify_preview:
-        command_args = filtered_command_args(
-            args,
-            outcome="fail",
-            cohort="ocr_retry_evidence",
-        )
         report = build_no_context_feedback_reclassify_report(
             db_path=db_path,
-            outcome=command_args.outcome,
-            cohort=command_args.cohort,
-            limit=command_args.limit,
+            **filtered_report_kwargs(
+                args,
+                outcome="fail",
+                cohort="ocr_retry_evidence",
+            ),
         )
         return finish_report_with_error_default(
             finish=finish,
@@ -51,18 +48,15 @@ def handle_feedback_reclassify_command_group(
         )
 
     if args.no_context_feedback_reclassify_apply:
-        command_args = filtered_command_args(
-            args,
-            outcome="fail",
-            cohort="ocr_retry_evidence",
-        )
         report = write_no_context_feedback_reclassify(
             db_path=db_path,
             confirm_token=str(args.confirm or ""),
             backup_root=paths.backup_root,
-            outcome=command_args.outcome,
-            cohort=command_args.cohort,
-            limit=command_args.limit,
+            **filtered_report_kwargs(
+                args,
+                outcome="fail",
+                cohort="ocr_retry_evidence",
+            ),
         )
         return finish_report_with_error_default(
             finish=finish,
