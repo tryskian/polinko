@@ -120,6 +120,20 @@ def ocr_retry_command_args(args: Any) -> OcrRetryCommandArgs:
     )
 
 
+def ocr_retry_report_kwargs(
+    args: Any, *, include_artifact_ids: bool = False
+) -> dict[str, Any]:
+    command_args = ocr_retry_command_args(args)
+    kwargs: dict[str, Any] = {
+        "outcome": command_args.outcome,
+        "cohort": command_args.cohort,
+        "limit": command_args.limit,
+    }
+    if include_artifact_ids:
+        kwargs["artifact_ids"] = command_args.artifact_ids
+    return kwargs
+
+
 def local_artifact_paths(args: Any) -> LocalArtifactPaths:
     return LocalArtifactPaths(
         backup_dir=optional_path(getattr(args, "backup_dir", None)),

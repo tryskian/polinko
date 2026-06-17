@@ -360,7 +360,9 @@ Last updated: 2026-06-17
     feedback and OCR retry dispatch paths now reuse the shared support helper
     for local artifact path normalization; guarded error-default finish calls
     now reuse the shared support helper while preserving explicit status
-    mappings; the thin health/router entrypoint
+    mappings; OCR retry dispatch report-builder argument expansion now reuses
+    the shared support helper for retry defaults, positive limits, and
+    optional artifact IDs; the thin health/router entrypoint
     now has focused contract coverage for route order, short-circuit
     behavior, health fallback, and explicit guarded-mutation marker coverage
   - manual eval warehouse rebuilds resolve OCR source images from extracted
