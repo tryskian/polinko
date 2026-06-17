@@ -7,6 +7,7 @@ from tools.manual_eval_cli_dispatch_support import (
     default_filters,
     dispatch_first_match,
     filtered_command_args,
+    finish_report_with_error_default,
     local_artifact_paths,
     ocr_retry_command_args,
     ocr_retry_filters,
@@ -56,6 +57,28 @@ class ManualEvalCliDispatchSupportTests(unittest.TestCase):
 
         self.assertIsNone(status)
         self.assertEqual(calls, ["first", "second"])
+
+    def test_finish_report_with_error_default_uses_shared_default_status(self) -> None:
+        calls: list[dict[str, Any]] = []
+        report = {"state": "blocked"}
+
+        def finish(*args: Any, **kwargs: Any) -> int:
+            calls.append({"args": args, "kwargs": kwargs})
+            return 2
+
+        status = finish_report_with_error_default(
+            finish=finish,
+            report=report,
+            formatter=str,
+            status_by_state={"ok": 0},
+        )
+
+        self.assertEqual(status, 2)
+        self.assertEqual(calls[0]["args"], (report, str))
+        self.assertEqual(
+            calls[0]["kwargs"],
+            {"status_by_state": {"ok": 0}, "default_status": 2},
+        )
 
     def test_default_filters_uses_command_family_defaults_for_blank_args(self) -> None:
         filters = default_filters(

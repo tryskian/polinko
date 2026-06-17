@@ -4,12 +4,12 @@ from pathlib import Path
 from typing import Any
 
 from tools.manual_eval_cli_dispatch_support import (
-    DEFAULT_ERROR_STATUS,
     FinishReport,
     STATUS_ERROR,
     STATUS_READY_OK,
     STATUS_WRITTEN_OK,
     filtered_command_args,
+    finish_report_with_error_default,
     local_artifact_paths,
 )
 from tools.manual_eval_overlay_readiness import (
@@ -65,11 +65,11 @@ def handle_feedback_overlay_commands(
             cohort=command_args.cohort,
             limit=command_args.limit,
         )
-        return finish(
-            report,
-            format_overlay_source_context_index_draft_report,
+        return finish_report_with_error_default(
+            finish=finish,
+            report=report,
+            formatter=format_overlay_source_context_index_draft_report,
             status_by_state=STATUS_WRITTEN_OK,
-            default_status=DEFAULT_ERROR_STATUS,
         )
 
     if args.overlay_source_index_validate:
@@ -85,11 +85,11 @@ def handle_feedback_overlay_commands(
             cohort=command_args.cohort,
             limit=command_args.limit,
         )
-        return finish(
-            report,
-            format_overlay_source_context_index_validation_report,
+        return finish_report_with_error_default(
+            finish=finish,
+            report=report,
+            formatter=format_overlay_source_context_index_validation_report,
             status_by_state=STATUS_READY_OK,
-            default_status=DEFAULT_ERROR_STATUS,
         )
 
     return None

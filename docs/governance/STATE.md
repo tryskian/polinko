@@ -358,7 +358,9 @@ Last updated: 2026-06-17
     group-order contract test; feedback dispatch command-family filtering now
     reuses the shared support helper for default filters and positive limits;
     feedback and OCR retry dispatch paths now reuse the shared support helper
-    for local artifact path normalization; the thin health/router entrypoint
+    for local artifact path normalization; guarded error-default finish calls
+    now reuse the shared support helper while preserving explicit status
+    mappings; the thin health/router entrypoint
     now has focused contract coverage for route order, short-circuit
     behavior, health fallback, and explicit guarded-mutation marker coverage
   - manual eval warehouse rebuilds resolve OCR source images from extracted

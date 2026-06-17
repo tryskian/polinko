@@ -4,12 +4,12 @@ from pathlib import Path
 from typing import Any
 
 from tools.manual_eval_cli_dispatch_support import (
-    DEFAULT_ERROR_STATUS,
     FinishReport,
     STATUS_APPLIED_OK,
     STATUS_BLOCKED_ERROR,
     STATUS_OK,
     STATUS_RESTORED_OK,
+    finish_report_with_error_default,
     local_artifact_paths,
 )
 from tools.manual_eval_ocr_retry_feedback_closure_apply import (
@@ -58,11 +58,11 @@ def handle_ocr_retry_feedback_closure_commands(
             confirm_token=str(args.confirm or ""),
             backup_root=paths.backup_root,
         )
-        return finish(
-            report,
-            format_ocr_retry_feedback_closure_apply_report,
+        return finish_report_with_error_default(
+            finish=finish,
+            report=report,
+            formatter=format_ocr_retry_feedback_closure_apply_report,
             status_by_state=STATUS_APPLIED_OK,
-            default_status=DEFAULT_ERROR_STATUS,
         )
 
     if args.ocr_retry_feedback_closure_apply_report:
@@ -70,11 +70,11 @@ def handle_ocr_retry_feedback_closure_commands(
             db_path=db_path,
             run_dir=paths.run_dir,
         )
-        return finish(
-            report,
-            format_ocr_retry_feedback_closure_apply_verification_report,
+        return finish_report_with_error_default(
+            finish=finish,
+            report=report,
+            formatter=format_ocr_retry_feedback_closure_apply_verification_report,
             status_by_state=STATUS_OK,
-            default_status=DEFAULT_ERROR_STATUS,
         )
 
     if args.ocr_retry_feedback_closure_restore_preview:
@@ -82,11 +82,11 @@ def handle_ocr_retry_feedback_closure_commands(
             db_path=db_path,
             backup_dir=paths.backup_dir,
         )
-        return finish(
-            report,
-            format_ocr_retry_feedback_closure_restore_report,
+        return finish_report_with_error_default(
+            finish=finish,
+            report=report,
+            formatter=format_ocr_retry_feedback_closure_restore_report,
             status_by_state=STATUS_OK,
-            default_status=DEFAULT_ERROR_STATUS,
         )
 
     if args.ocr_retry_feedback_closure_restore:
@@ -96,11 +96,11 @@ def handle_ocr_retry_feedback_closure_commands(
             confirm_token=str(args.confirm or ""),
             restore_root=paths.restore_root,
         )
-        return finish(
-            report,
-            format_ocr_retry_feedback_closure_restore_report,
+        return finish_report_with_error_default(
+            finish=finish,
+            report=report,
+            formatter=format_ocr_retry_feedback_closure_restore_report,
             status_by_state=STATUS_RESTORED_OK,
-            default_status=DEFAULT_ERROR_STATUS,
         )
 
     return None
