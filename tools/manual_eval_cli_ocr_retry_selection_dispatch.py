@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
+    ReportFormatter,
     STATUS_WRITTEN_OK,
     finish_report_with_error_default,
     local_artifact_paths,
@@ -56,6 +58,71 @@ from tools.manual_eval_ocr_retry_source_verification import (
 )
 
 
+ReportBuilder = Callable[..., dict[str, Any]]
+
+
+class OcrRetrySelectionReportCommand(NamedTuple):
+    flag: str
+    builder: ReportBuilder
+    formatter: ReportFormatter
+    include_artifact_ids: bool = False
+    include_selection_path: bool = False
+
+
+OCR_RETRY_SELECTION_REPORT_COMMANDS = (
+    OcrRetrySelectionReportCommand(
+        flag="ocr_retry_selection_validate",
+        builder=build_ocr_retry_selection_validation_report,
+        formatter=format_ocr_retry_selection_validation_report,
+        include_artifact_ids=True,
+        include_selection_path=True,
+    ),
+    OcrRetrySelectionReportCommand(
+        flag="ocr_retry_selection_template",
+        builder=build_ocr_retry_selection_template_report,
+        formatter=format_ocr_retry_selection_template_report,
+        include_artifact_ids=True,
+    ),
+    OcrRetrySelectionReportCommand(
+        flag="ocr_retry_selection_review",
+        builder=build_ocr_retry_selection_review_report,
+        formatter=format_ocr_retry_selection_review_report,
+        include_artifact_ids=True,
+    ),
+    OcrRetrySelectionReportCommand(
+        flag="ocr_retry_rerun_plan",
+        builder=build_ocr_retry_rerun_plan_report,
+        formatter=format_ocr_retry_rerun_plan_report,
+        include_artifact_ids=True,
+    ),
+    OcrRetrySelectionReportCommand(
+        flag="ocr_retry_rerun_manifest",
+        builder=build_ocr_retry_rerun_manifest_report,
+        formatter=format_ocr_retry_rerun_manifest_report,
+    ),
+    OcrRetrySelectionReportCommand(
+        flag="ocr_retry_input_packet",
+        builder=build_ocr_retry_input_packet_report,
+        formatter=format_ocr_retry_input_packet_report,
+    ),
+    OcrRetrySelectionReportCommand(
+        flag="ocr_retry_source_provenance",
+        builder=build_ocr_retry_source_provenance_report,
+        formatter=format_ocr_retry_source_provenance_report,
+    ),
+    OcrRetrySelectionReportCommand(
+        flag="ocr_retry_source_verification",
+        builder=build_ocr_retry_source_verification_report,
+        formatter=format_ocr_retry_source_verification_report,
+    ),
+    OcrRetrySelectionReportCommand(
+        flag="ocr_retry_candidates",
+        builder=build_ocr_retry_candidates_report,
+        formatter=format_ocr_retry_candidates_report,
+    ),
+)
+
+
 def handle_ocr_retry_selection_pre_feedback_commands(
     *,
     args: Any,
@@ -95,70 +162,18 @@ def handle_ocr_retry_selection_post_feedback_commands(
     db_path: Path,
     finish: FinishReport,
 ) -> int | None:
-    paths = local_artifact_paths(args)
+    for command in OCR_RETRY_SELECTION_REPORT_COMMANDS:
+        if getattr(args, command.flag):
+            report_kwargs = ocr_retry_report_kwargs(
+                args,
+                include_artifact_ids=command.include_artifact_ids,
+            )
+            if command.include_selection_path:
+                report_kwargs["selection_path"] = local_artifact_paths(
+                    args
+                ).selection_path
 
-    if args.ocr_retry_selection_validate:
-        report = build_ocr_retry_selection_validation_report(
-            db_path=db_path,
-            selection_path=paths.selection_path,
-            **ocr_retry_report_kwargs(args, include_artifact_ids=True),
-        )
-        return finish(report, format_ocr_retry_selection_validation_report)
-
-    if args.ocr_retry_selection_template:
-        report = build_ocr_retry_selection_template_report(
-            db_path=db_path,
-            **ocr_retry_report_kwargs(args, include_artifact_ids=True),
-        )
-        return finish(report, format_ocr_retry_selection_template_report)
-
-    if args.ocr_retry_selection_review:
-        report = build_ocr_retry_selection_review_report(
-            db_path=db_path,
-            **ocr_retry_report_kwargs(args, include_artifact_ids=True),
-        )
-        return finish(report, format_ocr_retry_selection_review_report)
-
-    if args.ocr_retry_rerun_plan:
-        report = build_ocr_retry_rerun_plan_report(
-            db_path=db_path,
-            **ocr_retry_report_kwargs(args, include_artifact_ids=True),
-        )
-        return finish(report, format_ocr_retry_rerun_plan_report)
-
-    if args.ocr_retry_rerun_manifest:
-        report = build_ocr_retry_rerun_manifest_report(
-            db_path=db_path,
-            **ocr_retry_report_kwargs(args),
-        )
-        return finish(report, format_ocr_retry_rerun_manifest_report)
-
-    if args.ocr_retry_input_packet:
-        report = build_ocr_retry_input_packet_report(
-            db_path=db_path,
-            **ocr_retry_report_kwargs(args),
-        )
-        return finish(report, format_ocr_retry_input_packet_report)
-
-    if args.ocr_retry_source_provenance:
-        report = build_ocr_retry_source_provenance_report(
-            db_path=db_path,
-            **ocr_retry_report_kwargs(args),
-        )
-        return finish(report, format_ocr_retry_source_provenance_report)
-
-    if args.ocr_retry_source_verification:
-        report = build_ocr_retry_source_verification_report(
-            db_path=db_path,
-            **ocr_retry_report_kwargs(args),
-        )
-        return finish(report, format_ocr_retry_source_verification_report)
-
-    if args.ocr_retry_candidates:
-        report = build_ocr_retry_candidates_report(
-            db_path=db_path,
-            **ocr_retry_report_kwargs(args),
-        )
-        return finish(report, format_ocr_retry_candidates_report)
+            report = command.builder(db_path=db_path, **report_kwargs)
+            return finish(report, command.formatter)
 
     return None

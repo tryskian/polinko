@@ -364,7 +364,9 @@ Last updated: 2026-06-17
     the shared support helper for retry defaults, positive limits, and
     optional artifact IDs; filtered feedback dispatch report-builder argument
     expansion now reuses the shared support helper for default filters and
-    positive limits; the thin health/router entrypoint
+    positive limits; OCR retry selection post-feedback read-only report
+    dispatch now uses a local command table for route order, report builders,
+    formatters, and path/artifact argument shape; the thin health/router entrypoint
     now has focused contract coverage for route order, short-circuit
     behavior, health fallback, and explicit guarded-mutation marker coverage
   - manual eval warehouse rebuilds resolve OCR source images from extracted
