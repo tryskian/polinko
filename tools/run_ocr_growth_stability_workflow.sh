@@ -20,6 +20,7 @@ growth_stability_output=${OCR_GROWTH_STABILITY_OUTPUT:-.local/eval_reports/ocr_g
 
 export PYTHON="$python_bin"
 
+# shellcheck source=./tools/eval_case_guard.sh
 . "$guard_script"
 eval_case_guard_or_exit \
 	"$cases_path" \

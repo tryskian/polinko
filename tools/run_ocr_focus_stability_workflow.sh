@@ -19,6 +19,7 @@ growth_fail_cohort_json=${OCR_GROWTH_FAIL_COHORT_JSON:-.local/eval_cases/ocr_gro
 
 export PYTHON="$python_bin"
 
+# shellcheck source=./tools/eval_case_guard.sh
 . "$guard_script"
 eval_case_guard_or_exit \
 	"$focus_cases_json" \
