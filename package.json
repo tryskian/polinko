@@ -14,5 +14,11 @@
     "jsdom": "29.1.1",
     "markdownlint-cli2": "0.22.1",
     "pyright": "1.1.410"
+  },
+  "overrides": {
+    "dompurify": "3.4.11",
+    "js-yaml": "4.2.0",
+    "markdown-it": "14.2.0",
+    "ws": "8.21.0"
   }
 }
