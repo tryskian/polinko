@@ -147,7 +147,7 @@ python-dotenv==1.2.2
     # via
     #   -r requirements.in
     #   pydantic-settings
-python-multipart==0.0.28
+python-multipart==0.0.31
     # via mcp
 pyyaml==6.0.3
     # via
