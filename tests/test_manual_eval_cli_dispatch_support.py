@@ -11,6 +11,7 @@ from tools.manual_eval_cli_dispatch_support import (
     local_artifact_paths,
     ocr_retry_command_args,
     ocr_retry_filters,
+    ocr_retry_report_kwargs,
 )
 
 
@@ -207,6 +208,43 @@ class ManualEvalCliDispatchSupportTests(unittest.TestCase):
         self.assertEqual(command_args.cohort, "grounding_source_verification")
         self.assertEqual(command_args.limit, 12)
         self.assertEqual(command_args.artifact_ids, ["artifact-a", "artifact-b"])
+
+    def test_ocr_retry_report_kwargs_use_retry_defaults_without_artifacts(
+        self,
+    ) -> None:
+        kwargs = ocr_retry_report_kwargs(
+            SimpleNamespace(outcome="", cohort=None, limit=0, artifact_id=[]),
+        )
+
+        self.assertEqual(
+            kwargs,
+            {
+                "outcome": "partial",
+                "cohort": "ocr_retry_evidence",
+                "limit": 1,
+            },
+        )
+
+    def test_ocr_retry_report_kwargs_can_include_artifacts(self) -> None:
+        kwargs = ocr_retry_report_kwargs(
+            SimpleNamespace(
+                outcome="fail",
+                cohort="grounding_source_verification",
+                limit=12,
+                artifact_id=["artifact-a", "artifact-b"],
+            ),
+            include_artifact_ids=True,
+        )
+
+        self.assertEqual(
+            kwargs,
+            {
+                "outcome": "fail",
+                "cohort": "grounding_source_verification",
+                "limit": 12,
+                "artifact_ids": ["artifact-a", "artifact-b"],
+            },
+        )
 
 
 if __name__ == "__main__":

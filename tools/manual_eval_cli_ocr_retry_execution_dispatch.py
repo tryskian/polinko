@@ -9,7 +9,7 @@ from tools.manual_eval_cli_dispatch_support import (
     STATUS_OCR_EXECUTION,
     finish_report_with_error_default,
     local_artifact_paths,
-    ocr_retry_command_args,
+    ocr_retry_report_kwargs,
 )
 from tools.manual_eval_ocr_retry_execution_bundle_report import (
     build_ocr_retry_execution_bundle_report,
@@ -38,14 +38,10 @@ def handle_ocr_retry_execution_pre_feedback_commands(
     paths = local_artifact_paths(args)
 
     if args.ocr_retry_execution_readiness:
-        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_execution_readiness_report(
             db_path=db_path,
             selection_path=paths.selection_path,
-            outcome=command_args.outcome,
-            cohort=command_args.cohort,
-            limit=command_args.limit,
-            artifact_ids=command_args.artifact_ids,
+            **ocr_retry_report_kwargs(args, include_artifact_ids=True),
         )
         return finish(report, format_ocr_retry_execution_readiness_report)
 
@@ -71,15 +67,11 @@ def handle_ocr_retry_execution_post_feedback_commands(
     paths = local_artifact_paths(args)
 
     if args.ocr_retry_execute:
-        command_args = ocr_retry_command_args(args)
         report = write_ocr_retry_execution_bundle(
             db_path=db_path,
             selection_path=paths.selection_path,
             confirm_token=str(args.confirm or ""),
-            outcome=command_args.outcome,
-            cohort=command_args.cohort,
-            limit=command_args.limit,
-            artifact_ids=command_args.artifact_ids,
+            **ocr_retry_report_kwargs(args, include_artifact_ids=True),
             execution_dir=paths.execution_dir,
             ocr_provider=str(args.ocr_provider or "scaffold"),
             ocr_model=str(args.ocr_model or DEFAULT_OCR_RETRY_MODEL),
