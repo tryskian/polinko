@@ -9,7 +9,7 @@ from tools.manual_eval_cli_dispatch_support import (
     STATUS_APPLIED_OK,
     STATUS_OK,
     filtered_command_args,
-    optional_path,
+    local_artifact_paths,
 )
 from tools.manual_eval_feedback_reclassify import (
     build_feedback_reclassify_report,
@@ -29,6 +29,8 @@ def handle_feedback_reclassify_command_group(
     db_path: Path,
     finish: FinishReport,
 ) -> int | None:
+    paths = local_artifact_paths(args)
+
     if args.no_context_feedback_reclassify_preview:
         command_args = filtered_command_args(
             args,
@@ -57,7 +59,7 @@ def handle_feedback_reclassify_command_group(
         report = write_no_context_feedback_reclassify(
             db_path=db_path,
             confirm_token=str(args.confirm or ""),
-            backup_root=optional_path(args.backup_root),
+            backup_root=paths.backup_root,
             outcome=command_args.outcome,
             cohort=command_args.cohort,
             limit=command_args.limit,
@@ -72,7 +74,7 @@ def handle_feedback_reclassify_command_group(
     if args.feedback_reclassify_preview:
         report = build_feedback_reclassify_report(
             db_path=db_path,
-            plan_path=optional_path(args.plan_path),
+            plan_path=paths.plan_path,
         )
         return finish(
             report,
@@ -84,9 +86,9 @@ def handle_feedback_reclassify_command_group(
     if args.feedback_reclassify_apply:
         report = write_feedback_reclassify(
             db_path=db_path,
-            plan_path=optional_path(args.plan_path),
+            plan_path=paths.plan_path,
             confirm_token=str(args.confirm or ""),
-            backup_root=optional_path(args.backup_root),
+            backup_root=paths.backup_root,
         )
         return finish(
             report,

@@ -7,6 +7,7 @@ from tools.manual_eval_cli_dispatch_support import (
     default_filters,
     dispatch_first_match,
     filtered_command_args,
+    local_artifact_paths,
     ocr_retry_command_args,
     ocr_retry_filters,
 )
@@ -115,6 +116,49 @@ class ManualEvalCliDispatchSupportTests(unittest.TestCase):
         self.assertEqual(command_args.outcome, "partial")
         self.assertEqual(command_args.cohort, "ocr_retry_evidence")
         self.assertEqual(command_args.limit, 25)
+
+    def test_local_artifact_paths_normalize_blank_and_missing_values(self) -> None:
+        paths = local_artifact_paths(
+            SimpleNamespace(
+                backup_dir="",
+                output_path="  ",
+                run_dir=None,
+                selection_path="selection.json",
+            ),
+        )
+
+        self.assertIsNone(paths.backup_dir)
+        self.assertIsNone(paths.backup_root)
+        self.assertIsNone(paths.output_path)
+        self.assertIsNone(paths.run_dir)
+        self.assertEqual(paths.selection_path, Path("selection.json"))
+
+    def test_local_artifact_paths_preserve_explicit_paths(self) -> None:
+        paths = local_artifact_paths(
+            SimpleNamespace(
+                backup_dir="backups/apply",
+                backup_root="backups",
+                decision_path="decisions/feedback.json",
+                execution_dir="runs",
+                output_path="drafts/selection.json",
+                overlay_source_index="overlay/index.json",
+                plan_path="plans/reclassify.json",
+                restore_root="restores",
+                run_dir="runs/run-1",
+                selection_path="selections/review.json",
+            ),
+        )
+
+        self.assertEqual(paths.backup_dir, Path("backups/apply"))
+        self.assertEqual(paths.backup_root, Path("backups"))
+        self.assertEqual(paths.decision_path, Path("decisions/feedback.json"))
+        self.assertEqual(paths.execution_dir, Path("runs"))
+        self.assertEqual(paths.output_path, Path("drafts/selection.json"))
+        self.assertEqual(paths.overlay_source_index_path, Path("overlay/index.json"))
+        self.assertEqual(paths.plan_path, Path("plans/reclassify.json"))
+        self.assertEqual(paths.restore_root, Path("restores"))
+        self.assertEqual(paths.run_dir, Path("runs/run-1"))
+        self.assertEqual(paths.selection_path, Path("selections/review.json"))
 
     def test_ocr_retry_command_args_use_retry_defaults(self) -> None:
         command_args = ocr_retry_command_args(

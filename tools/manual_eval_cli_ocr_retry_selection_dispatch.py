@@ -7,8 +7,8 @@ from tools.manual_eval_cli_dispatch_support import (
     DEFAULT_ERROR_STATUS,
     FinishReport,
     STATUS_WRITTEN_OK,
+    local_artifact_paths,
     ocr_retry_command_args,
-    optional_path,
 )
 from tools.manual_eval_ocr_retry_candidates import (
     build_ocr_retry_candidates_report,
@@ -62,11 +62,13 @@ def handle_ocr_retry_selection_pre_feedback_commands(
     db_path: Path,
     finish: FinishReport,
 ) -> int | None:
+    paths = local_artifact_paths(args)
+
     if args.ocr_retry_selection_draft:
         command_args = ocr_retry_command_args(args)
         report = write_ocr_retry_selection_decision_draft(
             db_path=db_path,
-            output_path=optional_path(args.output_path),
+            output_path=paths.output_path,
             force=bool(args.force),
             outcome=command_args.outcome,
             cohort=command_args.cohort,
@@ -84,7 +86,7 @@ def handle_ocr_retry_selection_pre_feedback_commands(
         command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_selection_apply_preview_report(
             db_path=db_path,
-            selection_path=optional_path(args.selection_path),
+            selection_path=paths.selection_path,
             outcome=command_args.outcome,
             cohort=command_args.cohort,
             limit=command_args.limit,
@@ -101,11 +103,13 @@ def handle_ocr_retry_selection_post_feedback_commands(
     db_path: Path,
     finish: FinishReport,
 ) -> int | None:
+    paths = local_artifact_paths(args)
+
     if args.ocr_retry_selection_validate:
         command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_selection_validation_report(
             db_path=db_path,
-            selection_path=optional_path(args.selection_path),
+            selection_path=paths.selection_path,
             outcome=command_args.outcome,
             cohort=command_args.cohort,
             limit=command_args.limit,

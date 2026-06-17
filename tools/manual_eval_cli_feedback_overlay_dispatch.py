@@ -10,7 +10,7 @@ from tools.manual_eval_cli_dispatch_support import (
     STATUS_READY_OK,
     STATUS_WRITTEN_OK,
     filtered_command_args,
-    optional_path,
+    local_artifact_paths,
 )
 from tools.manual_eval_overlay_readiness import (
     build_overlay_ocr_comparison_readiness_report,
@@ -30,6 +30,8 @@ def handle_feedback_overlay_commands(
     db_path: Path,
     finish: FinishReport,
 ) -> int | None:
+    paths = local_artifact_paths(args)
+
     if args.overlay_ocr_comparison_readiness:
         command_args = filtered_command_args(
             args,
@@ -41,7 +43,7 @@ def handle_feedback_overlay_commands(
             outcome=command_args.outcome,
             cohort=command_args.cohort,
             limit=command_args.limit,
-            overlay_source_index_path=optional_path(args.overlay_source_index),
+            overlay_source_index_path=paths.overlay_source_index_path,
         )
         return finish(
             report,
@@ -57,7 +59,7 @@ def handle_feedback_overlay_commands(
         )
         report = write_overlay_source_context_index_draft(
             db_path=db_path,
-            output_path=optional_path(args.output_path),
+            output_path=paths.output_path,
             force=bool(args.force),
             outcome=command_args.outcome,
             cohort=command_args.cohort,
@@ -78,7 +80,7 @@ def handle_feedback_overlay_commands(
         )
         report = build_overlay_source_context_index_validation_report(
             db_path=db_path,
-            overlay_source_index_path=optional_path(args.overlay_source_index),
+            overlay_source_index_path=paths.overlay_source_index_path,
             outcome=command_args.outcome,
             cohort=command_args.cohort,
             limit=command_args.limit,
