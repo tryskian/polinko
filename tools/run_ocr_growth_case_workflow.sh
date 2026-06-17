@@ -20,8 +20,7 @@ eval|batched)
 	;;
 esac
 
-python_bin=${PYTHON:-python3}
-guard_script=${EVAL_CASE_GUARD_SCRIPT:-./tools/eval_case_guard.sh}
+common_script=${OCR_WORKFLOW_COMMON_SCRIPT:-./tools/ocr_workflow_common.sh}
 growth_eval_runner_script=${OCR_GROWTH_EVAL_RUNNER_SCRIPT:-./tools/run_eval_ocr_growth_cases.sh}
 growth_batch_runner_script=${OCR_GROWTH_BATCH_RUNNER_SCRIPT:-./tools/run_eval_ocr_growth_batched.sh}
 
@@ -39,10 +38,9 @@ growth_batch_report_dir=${OCR_GROWTH_BATCH_REPORT_DIR:-.local/eval_reports/ocr_g
 growth_batch_summary_json=${OCR_GROWTH_BATCH_SUMMARY_JSON:-.local/eval_reports/ocr_growth_batched_summary.json}
 growth_batch_summary_md=${OCR_GROWTH_BATCH_SUMMARY_MD:-.local/eval_reports/ocr_growth_batched_summary.md}
 
-export PYTHON="$python_bin"
-
-# shellcheck source=./tools/eval_case_guard.sh
-. "$guard_script"
+# shellcheck source=./tools/ocr_workflow_common.sh
+. "$common_script"
+ocr_workflow_use_eval_case_guard
 eval_case_guard_or_exit \
 	"$cases_path" \
 	"Transcript OCR growth cases not found" \

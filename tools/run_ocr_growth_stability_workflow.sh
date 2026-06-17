@@ -1,8 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-python_bin=${PYTHON:-python3}
-guard_script=${EVAL_CASE_GUARD_SCRIPT:-./tools/eval_case_guard.sh}
+common_script=${OCR_WORKFLOW_COMMON_SCRIPT:-./tools/ocr_workflow_common.sh}
 growth_stability_runner_script=${OCR_GROWTH_STABILITY_RUNNER_SCRIPT:-./tools/run_eval_ocr_growth_stability.sh}
 
 cases_path=${OCR_TRANSCRIPT_CASES_GROWTH:-.local/eval_cases/ocr_transcript_cases_growth.json}
@@ -18,10 +17,9 @@ max_consecutive_rate_limit_errors=${OCR_MAX_CONSEC_RATE_LIMIT_ERRORS:-3}
 growth_stability_report_dir=${OCR_GROWTH_STABILITY_REPORT_DIR:-.local/eval_reports/ocr_growth_stability_runs}
 growth_stability_output=${OCR_GROWTH_STABILITY_OUTPUT:-.local/eval_reports/ocr_growth_stability.json}
 
-export PYTHON="$python_bin"
-
-# shellcheck source=./tools/eval_case_guard.sh
-. "$guard_script"
+# shellcheck source=./tools/ocr_workflow_common.sh
+. "$common_script"
+ocr_workflow_use_eval_case_guard
 eval_case_guard_or_exit \
 	"$cases_path" \
 	"Transcript OCR growth cases not found" \

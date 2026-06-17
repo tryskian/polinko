@@ -8,6 +8,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
+COMMON_SCRIPT = REPO_ROOT / "tools" / "ocr_workflow_common.sh"
 GUARDED_SCRIPT = REPO_ROOT / "tools" / "run_guarded_ocr_case_eval.sh"
 
 
@@ -84,6 +85,17 @@ class EvalCaseGuardTests(unittest.TestCase):
     def test_direct_execution_is_rejected(self) -> None:
         result = subprocess.run(
             ["/bin/sh", str(SCRIPT)],
+            capture_output=True,
+            cwd=REPO_ROOT,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Source this helper", result.stderr)
+
+    def test_common_helper_direct_execution_is_rejected(self) -> None:
+        result = subprocess.run(
+            ["/bin/sh", str(COMMON_SCRIPT)],
             capture_output=True,
             cwd=REPO_ROOT,
             text=True,
