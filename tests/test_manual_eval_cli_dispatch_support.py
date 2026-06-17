@@ -6,6 +6,7 @@ from typing import Any
 from tools.manual_eval_cli_dispatch_support import (
     default_filters,
     dispatch_first_match,
+    ocr_retry_command_args,
     ocr_retry_filters,
 )
 
@@ -87,6 +88,31 @@ class ManualEvalCliDispatchSupportTests(unittest.TestCase):
 
         self.assertEqual(filters.outcome, "fail")
         self.assertEqual(filters.cohort, "grounding_source_verification")
+
+    def test_ocr_retry_command_args_use_retry_defaults(self) -> None:
+        command_args = ocr_retry_command_args(
+            SimpleNamespace(outcome="", cohort=None, limit=0, artifact_id=[]),
+        )
+
+        self.assertEqual(command_args.outcome, "partial")
+        self.assertEqual(command_args.cohort, "ocr_retry_evidence")
+        self.assertEqual(command_args.limit, 1)
+        self.assertEqual(command_args.artifact_ids, [])
+
+    def test_ocr_retry_command_args_preserve_explicit_args(self) -> None:
+        command_args = ocr_retry_command_args(
+            SimpleNamespace(
+                outcome="fail",
+                cohort="grounding_source_verification",
+                limit=12,
+                artifact_id=["artifact-a", "artifact-b"],
+            ),
+        )
+
+        self.assertEqual(command_args.outcome, "fail")
+        self.assertEqual(command_args.cohort, "grounding_source_verification")
+        self.assertEqual(command_args.limit, 12)
+        self.assertEqual(command_args.artifact_ids, ["artifact-a", "artifact-b"])
 
 
 if __name__ == "__main__":

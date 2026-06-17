@@ -7,9 +7,8 @@ from tools.manual_eval_cli_dispatch_support import (
     DEFAULT_ERROR_STATUS,
     FinishReport,
     STATUS_WRITTEN_OK,
-    ocr_retry_filters,
+    ocr_retry_command_args,
     optional_path,
-    positive_limit,
 )
 from tools.manual_eval_ocr_retry_candidates import (
     build_ocr_retry_candidates_report,
@@ -64,15 +63,15 @@ def handle_ocr_retry_selection_pre_feedback_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.ocr_retry_selection_draft:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = write_ocr_retry_selection_decision_draft(
             db_path=db_path,
             output_path=optional_path(args.output_path),
             force=bool(args.force),
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
-            artifact_ids=args.artifact_id,
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
+            artifact_ids=command_args.artifact_ids,
         )
         return finish(
             report,
@@ -82,14 +81,14 @@ def handle_ocr_retry_selection_pre_feedback_commands(
         )
 
     if args.ocr_retry_selection_apply_preview:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_selection_apply_preview_report(
             db_path=db_path,
             selection_path=optional_path(args.selection_path),
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
-            artifact_ids=args.artifact_id,
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
+            artifact_ids=command_args.artifact_ids,
         )
         return finish(report, format_ocr_retry_selection_apply_preview_report)
 
@@ -103,97 +102,97 @@ def handle_ocr_retry_selection_post_feedback_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.ocr_retry_selection_validate:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_selection_validation_report(
             db_path=db_path,
             selection_path=optional_path(args.selection_path),
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
-            artifact_ids=args.artifact_id,
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
+            artifact_ids=command_args.artifact_ids,
         )
         return finish(report, format_ocr_retry_selection_validation_report)
 
     if args.ocr_retry_selection_template:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_selection_template_report(
             db_path=db_path,
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
-            artifact_ids=args.artifact_id,
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
+            artifact_ids=command_args.artifact_ids,
         )
         return finish(report, format_ocr_retry_selection_template_report)
 
     if args.ocr_retry_selection_review:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_selection_review_report(
             db_path=db_path,
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
-            artifact_ids=args.artifact_id,
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
+            artifact_ids=command_args.artifact_ids,
         )
         return finish(report, format_ocr_retry_selection_review_report)
 
     if args.ocr_retry_rerun_plan:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_rerun_plan_report(
             db_path=db_path,
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
-            artifact_ids=args.artifact_id,
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
+            artifact_ids=command_args.artifact_ids,
         )
         return finish(report, format_ocr_retry_rerun_plan_report)
 
     if args.ocr_retry_rerun_manifest:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_rerun_manifest_report(
             db_path=db_path,
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
         )
         return finish(report, format_ocr_retry_rerun_manifest_report)
 
     if args.ocr_retry_input_packet:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_input_packet_report(
             db_path=db_path,
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
         )
         return finish(report, format_ocr_retry_input_packet_report)
 
     if args.ocr_retry_source_provenance:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_source_provenance_report(
             db_path=db_path,
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
         )
         return finish(report, format_ocr_retry_source_provenance_report)
 
     if args.ocr_retry_source_verification:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_source_verification_report(
             db_path=db_path,
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
         )
         return finish(report, format_ocr_retry_source_verification_report)
 
     if args.ocr_retry_candidates:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_candidates_report(
             db_path=db_path,
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
         )
         return finish(report, format_ocr_retry_candidates_report)
 

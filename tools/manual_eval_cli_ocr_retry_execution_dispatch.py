@@ -8,9 +8,8 @@ from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
     STATUS_ERROR,
     STATUS_OCR_EXECUTION,
-    ocr_retry_filters,
+    ocr_retry_command_args,
     optional_path,
-    positive_limit,
 )
 from tools.manual_eval_ocr_retry_execution_bundle_report import (
     build_ocr_retry_execution_bundle_report,
@@ -37,14 +36,14 @@ def handle_ocr_retry_execution_pre_feedback_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.ocr_retry_execution_readiness:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = build_ocr_retry_execution_readiness_report(
             db_path=db_path,
             selection_path=optional_path(args.selection_path),
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
-            artifact_ids=args.artifact_id,
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
+            artifact_ids=command_args.artifact_ids,
         )
         return finish(report, format_ocr_retry_execution_readiness_report)
 
@@ -68,15 +67,15 @@ def handle_ocr_retry_execution_post_feedback_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.ocr_retry_execute:
-        filters = ocr_retry_filters(args)
+        command_args = ocr_retry_command_args(args)
         report = write_ocr_retry_execution_bundle(
             db_path=db_path,
             selection_path=optional_path(args.selection_path),
             confirm_token=str(args.confirm or ""),
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
-            artifact_ids=args.artifact_id,
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
+            artifact_ids=command_args.artifact_ids,
             execution_dir=optional_path(args.execution_dir),
             ocr_provider=str(args.ocr_provider or "scaffold"),
             ocr_model=str(args.ocr_model or DEFAULT_OCR_RETRY_MODEL),

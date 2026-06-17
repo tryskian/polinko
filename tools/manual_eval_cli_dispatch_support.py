@@ -28,6 +28,13 @@ class DefaultFilters(NamedTuple):
     cohort: str
 
 
+class OcrRetryCommandArgs(NamedTuple):
+    outcome: str
+    cohort: str
+    limit: int
+    artifact_ids: list[str]
+
+
 def dispatch_first_match(
     *,
     handlers: Iterable[CommandHandler],
@@ -54,6 +61,16 @@ def ocr_retry_filters(args: Any) -> DefaultFilters:
         args,
         outcome=OCR_RETRY_DEFAULT_OUTCOME,
         cohort=OCR_RETRY_DEFAULT_COHORT,
+    )
+
+
+def ocr_retry_command_args(args: Any) -> OcrRetryCommandArgs:
+    filters = ocr_retry_filters(args)
+    return OcrRetryCommandArgs(
+        outcome=filters.outcome,
+        cohort=filters.cohort,
+        limit=positive_limit(args.limit),
+        artifact_ids=args.artifact_id,
     )
 
 
