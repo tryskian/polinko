@@ -32,6 +32,7 @@ guard_script=${EVAL_CASE_GUARD_SCRIPT:-./tools/eval_case_guard.sh}
 
 export PYTHON="$python_bin"
 
+# shellcheck source=./tools/eval_case_guard.sh
 . "$guard_script"
 eval_case_guard_or_exit "$cases_path" "$missing_message" "$missing_hint" "$empty_message"
 
