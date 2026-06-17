@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "description": "Repo-root tooling for docs/dev checks",
   "scripts": {
-    "lint:docs": "markdownlint-cli2 README.md apps/**/*.md docs/**/*.md docs/eval/beta_*/README.md",
+    "lint:docs": "markdownlint-cli2 README.md apps/**/*.md docs/**/*.md docs/public/diagrams/*.md docs/eval/beta_*/README.md",
     "typecheck:pyright": "pyright --project pyrightconfig.json"
   },
   "devDependencies": {
