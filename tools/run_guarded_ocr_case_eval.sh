@@ -27,13 +27,11 @@ if [ "$#" -eq 0 ]; then
 	exit 2
 fi
 
-python_bin=${PYTHON:-python3}
-guard_script=${EVAL_CASE_GUARD_SCRIPT:-./tools/eval_case_guard.sh}
+common_script=${OCR_WORKFLOW_COMMON_SCRIPT:-./tools/ocr_workflow_common.sh}
 
-export PYTHON="$python_bin"
-
-# shellcheck source=./tools/eval_case_guard.sh
-. "$guard_script"
+# shellcheck source=./tools/ocr_workflow_common.sh
+. "$common_script"
+ocr_workflow_use_eval_case_guard
 eval_case_guard_or_exit "$cases_path" "$missing_message" "$missing_hint" "$empty_message"
 
 exec "$@"

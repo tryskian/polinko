@@ -1,8 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-python_bin=${PYTHON:-python3}
-guard_script=${EVAL_CASE_GUARD_SCRIPT:-./tools/eval_case_guard.sh}
+common_script=${OCR_WORKFLOW_COMMON_SCRIPT:-./tools/ocr_workflow_common.sh}
 stability_runner_script=${OCR_STABILITY_RUNNER_SCRIPT:-./tools/run_eval_ocr_stability.sh}
 
 focus_cases_json=${OCR_FOCUS_CASES_JSON:-.local/eval_cases/ocr_growth_focus_cases.json}
@@ -17,10 +16,9 @@ focus_skip_recent_rate_limit=${OCR_FOCUS_SKIP_RECENT_RATE_LIMIT:-true}
 focus_rate_limit_backoff_seconds=${OCR_FOCUS_RATE_LIMIT_BACKOFF_SECONDS:-900}
 growth_fail_cohort_json=${OCR_GROWTH_FAIL_COHORT_JSON:-.local/eval_cases/ocr_growth_fail_cohort.json}
 
-export PYTHON="$python_bin"
-
-# shellcheck source=./tools/eval_case_guard.sh
-. "$guard_script"
+# shellcheck source=./tools/ocr_workflow_common.sh
+. "$common_script"
+ocr_workflow_use_eval_case_guard
 eval_case_guard_or_exit \
 	"$focus_cases_json" \
 	"OCR focus cases not found" \
@@ -28,7 +26,7 @@ eval_case_guard_or_exit \
 	"No OCR focus cases available; skipping focus stability run."
 
 if [ "$focus_skip_recent_rate_limit" = "true" ] && [ -f "$focus_output" ]; then
-	skip=$("$python_bin" -m tools.should_skip_ocr_run \
+	skip=$("$PYTHON" -m tools.should_skip_ocr_run \
 		--report "$focus_output" \
 		--backoff-seconds "$focus_rate_limit_backoff_seconds")
 	if [ "$skip" = "1" ]; then
@@ -38,7 +36,7 @@ if [ "$focus_skip_recent_rate_limit" = "true" ] && [ -f "$focus_output" ]; then
 fi
 
 if [ "$focus_skip_recent_rate_limit" = "true" ] && [ -f "$growth_fail_cohort_json" ]; then
-	skip=$("$python_bin" -m tools.should_skip_ocr_run \
+	skip=$("$PYTHON" -m tools.should_skip_ocr_run \
 		--report "$growth_fail_cohort_json" \
 		--backoff-seconds "$focus_rate_limit_backoff_seconds")
 	if [ "$skip" = "1" ]; then
