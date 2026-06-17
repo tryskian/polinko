@@ -4,10 +4,10 @@ from pathlib import Path
 from typing import Any
 
 from tools.manual_eval_cli_dispatch_support import (
-    DEFAULT_ERROR_STATUS,
     FinishReport,
     STATUS_ERROR,
     STATUS_OCR_EXECUTION,
+    finish_report_with_error_default,
     local_artifact_paths,
     ocr_retry_command_args,
 )
@@ -85,11 +85,11 @@ def handle_ocr_retry_execution_post_feedback_commands(
             ocr_model=str(args.ocr_model or DEFAULT_OCR_RETRY_MODEL),
             ocr_prompt=str(args.ocr_prompt or DEFAULT_OCR_RETRY_PROMPT),
         )
-        return finish(
-            report,
-            format_ocr_retry_execution_report,
+        return finish_report_with_error_default(
+            finish=finish,
+            report=report,
+            formatter=format_ocr_retry_execution_report,
             status_by_state=STATUS_OCR_EXECUTION,
-            default_status=DEFAULT_ERROR_STATUS,
         )
 
     return None

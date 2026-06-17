@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
 from typing import Any, NamedTuple
 
 FinishReport = Callable[..., int]
+ReportFormatter = Callable[[dict[str, Any]], str]
 CommandHandler = Callable[..., int | None]
 DEFAULT_ERROR_STATUS = 2
 OCR_RETRY_DEFAULT_COHORT = "ocr_retry_evidence"
@@ -66,6 +67,21 @@ def dispatch_first_match(
         if status is not None:
             return status
     return None
+
+
+def finish_report_with_error_default(
+    *,
+    finish: FinishReport,
+    report: dict[str, Any],
+    formatter: ReportFormatter,
+    status_by_state: Mapping[str, int],
+) -> int:
+    return finish(
+        report,
+        formatter,
+        status_by_state=status_by_state,
+        default_status=DEFAULT_ERROR_STATUS,
+    )
 
 
 def default_filters(args: Any, *, outcome: str, cohort: str) -> DefaultFilters:
