@@ -7,6 +7,7 @@ from tools.manual_eval_cli_dispatch_support import (
     default_filters,
     dispatch_first_match,
     filtered_command_args,
+    filtered_report_kwargs,
     finish_report_with_error_default,
     local_artifact_paths,
     ocr_retry_command_args,
@@ -140,6 +141,44 @@ class ManualEvalCliDispatchSupportTests(unittest.TestCase):
         self.assertEqual(command_args.outcome, "partial")
         self.assertEqual(command_args.cohort, "ocr_retry_evidence")
         self.assertEqual(command_args.limit, 25)
+
+    def test_filtered_report_kwargs_use_family_defaults_and_positive_limit(
+        self,
+    ) -> None:
+        kwargs = filtered_report_kwargs(
+            SimpleNamespace(outcome="", cohort=None, limit=0),
+            outcome="fail",
+            cohort="grounding_source_verification",
+        )
+
+        self.assertEqual(
+            kwargs,
+            {
+                "outcome": "fail",
+                "cohort": "grounding_source_verification",
+                "limit": 1,
+            },
+        )
+
+    def test_filtered_report_kwargs_preserve_explicit_filters_and_limit(self) -> None:
+        kwargs = filtered_report_kwargs(
+            SimpleNamespace(
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=25,
+            ),
+            outcome="fail",
+            cohort="grounding_source_verification",
+        )
+
+        self.assertEqual(
+            kwargs,
+            {
+                "outcome": "partial",
+                "cohort": "ocr_retry_evidence",
+                "limit": 25,
+            },
+        )
 
     def test_local_artifact_paths_normalize_blank_and_missing_values(self) -> None:
         paths = local_artifact_paths(
