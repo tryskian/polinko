@@ -28,6 +28,12 @@ class DefaultFilters(NamedTuple):
     cohort: str
 
 
+class FilteredCommandArgs(NamedTuple):
+    outcome: str
+    cohort: str
+    limit: int
+
+
 class OcrRetryCommandArgs(NamedTuple):
     outcome: str
     cohort: str
@@ -61,6 +67,17 @@ def ocr_retry_filters(args: Any) -> DefaultFilters:
         args,
         outcome=OCR_RETRY_DEFAULT_OUTCOME,
         cohort=OCR_RETRY_DEFAULT_COHORT,
+    )
+
+
+def filtered_command_args(
+    args: Any, *, outcome: str, cohort: str
+) -> FilteredCommandArgs:
+    filters = default_filters(args, outcome=outcome, cohort=cohort)
+    return FilteredCommandArgs(
+        outcome=filters.outcome,
+        cohort=filters.cohort,
+        limit=positive_limit(args.limit),
     )
 
 

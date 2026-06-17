@@ -8,9 +8,8 @@ from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
     STATUS_OK,
     STATUS_WRITTEN_OK,
-    default_filters,
+    filtered_command_args,
     optional_path,
-    positive_limit,
 )
 from tools.manual_eval_feedback_decisions import (
     build_feedback_decision_preview_report,
@@ -27,7 +26,7 @@ def handle_feedback_decision_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.feedback_decision_draft:
-        filters = default_filters(
+        command_args = filtered_command_args(
             args,
             outcome="fail",
             cohort="grounding_source_verification",
@@ -36,9 +35,9 @@ def handle_feedback_decision_commands(
             db_path=db_path,
             output_path=optional_path(args.output_path),
             force=bool(args.force),
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
         )
         return finish(
             report,
@@ -48,7 +47,7 @@ def handle_feedback_decision_commands(
         )
 
     if args.feedback_decision_preview:
-        filters = default_filters(
+        command_args = filtered_command_args(
             args,
             outcome="fail",
             cohort="grounding_source_verification",
@@ -56,9 +55,9 @@ def handle_feedback_decision_commands(
         report = build_feedback_decision_preview_report(
             db_path=db_path,
             decision_path=optional_path(args.decision_path),
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
         )
         return finish(
             report,

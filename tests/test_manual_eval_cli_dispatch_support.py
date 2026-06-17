@@ -6,6 +6,7 @@ from typing import Any
 from tools.manual_eval_cli_dispatch_support import (
     default_filters,
     dispatch_first_match,
+    filtered_command_args,
     ocr_retry_command_args,
     ocr_retry_filters,
 )
@@ -88,6 +89,32 @@ class ManualEvalCliDispatchSupportTests(unittest.TestCase):
 
         self.assertEqual(filters.outcome, "fail")
         self.assertEqual(filters.cohort, "grounding_source_verification")
+
+    def test_filtered_command_args_use_family_defaults_and_positive_limit(self) -> None:
+        command_args = filtered_command_args(
+            SimpleNamespace(outcome="", cohort=None, limit=0),
+            outcome="fail",
+            cohort="grounding_source_verification",
+        )
+
+        self.assertEqual(command_args.outcome, "fail")
+        self.assertEqual(command_args.cohort, "grounding_source_verification")
+        self.assertEqual(command_args.limit, 1)
+
+    def test_filtered_command_args_preserve_explicit_filters_and_limit(self) -> None:
+        command_args = filtered_command_args(
+            SimpleNamespace(
+                outcome="partial",
+                cohort="ocr_retry_evidence",
+                limit=25,
+            ),
+            outcome="fail",
+            cohort="grounding_source_verification",
+        )
+
+        self.assertEqual(command_args.outcome, "partial")
+        self.assertEqual(command_args.cohort, "ocr_retry_evidence")
+        self.assertEqual(command_args.limit, 25)
 
     def test_ocr_retry_command_args_use_retry_defaults(self) -> None:
         command_args = ocr_retry_command_args(

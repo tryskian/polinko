@@ -9,9 +9,8 @@ from tools.manual_eval_cli_dispatch_support import (
     STATUS_ERROR,
     STATUS_READY_OK,
     STATUS_WRITTEN_OK,
-    default_filters,
+    filtered_command_args,
     optional_path,
-    positive_limit,
 )
 from tools.manual_eval_overlay_readiness import (
     build_overlay_ocr_comparison_readiness_report,
@@ -32,12 +31,16 @@ def handle_feedback_overlay_commands(
     finish: FinishReport,
 ) -> int | None:
     if args.overlay_ocr_comparison_readiness:
-        filters = default_filters(args, outcome="fail", cohort="ocr_overlay_hypothesis")
+        command_args = filtered_command_args(
+            args,
+            outcome="fail",
+            cohort="ocr_overlay_hypothesis",
+        )
         report = build_overlay_ocr_comparison_readiness_report(
             db_path=db_path,
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
             overlay_source_index_path=optional_path(args.overlay_source_index),
         )
         return finish(
@@ -47,14 +50,18 @@ def handle_feedback_overlay_commands(
         )
 
     if args.overlay_source_index_draft:
-        filters = default_filters(args, outcome="fail", cohort="ocr_overlay_hypothesis")
+        command_args = filtered_command_args(
+            args,
+            outcome="fail",
+            cohort="ocr_overlay_hypothesis",
+        )
         report = write_overlay_source_context_index_draft(
             db_path=db_path,
             output_path=optional_path(args.output_path),
             force=bool(args.force),
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
         )
         return finish(
             report,
@@ -64,13 +71,17 @@ def handle_feedback_overlay_commands(
         )
 
     if args.overlay_source_index_validate:
-        filters = default_filters(args, outcome="fail", cohort="ocr_overlay_hypothesis")
+        command_args = filtered_command_args(
+            args,
+            outcome="fail",
+            cohort="ocr_overlay_hypothesis",
+        )
         report = build_overlay_source_context_index_validation_report(
             db_path=db_path,
             overlay_source_index_path=optional_path(args.overlay_source_index),
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
         )
         return finish(
             report,

@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-14
+Last updated: 2026-06-17
 
 ## Current Truth
 
@@ -355,9 +355,11 @@ Last updated: 2026-06-14
     `tools/manual_eval_cli_feedback_dispatch.py` as the stable coordinator
     while reclassify, source-context, overlay, decision, and open-feedback
     command bodies live in focused dispatch modules with a focused
-    group-order contract test; the thin health/router entrypoint now has
-    focused contract coverage for route order, short-circuit behavior, health
-    fallback, and explicit guarded-mutation marker coverage
+    group-order contract test; feedback dispatch command-family filtering now
+    reuses the shared support helper for default filters and positive limits;
+    the thin health/router entrypoint now has focused contract coverage for
+    route order, short-circuit behavior, health fallback, and explicit
+    guarded-mutation marker coverage
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then
