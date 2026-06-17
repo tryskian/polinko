@@ -1,8 +1,8 @@
 <!-- @format -->
 
-# Diagram Artifacts
+# Diagram Artefacts
 
-This directory holds rendered SVG artifacts and the focused Mermaid source docs
+This directory holds rendered SVG artefacts and the focused Mermaid source docs
 that generate them.
 
 ## Source Docs

@@ -134,8 +134,7 @@ def render_mermaid_diagrams(
     duplicate_slugs = sorted({slug for slug in slugs if slugs.count(slug) > 1})
     if duplicate_slugs:
         raise RuntimeError(
-            "Duplicate Mermaid diagram slugs found: "
-            + ", ".join(duplicate_slugs)
+            "Duplicate Mermaid diagram slugs found: " + ", ".join(duplicate_slugs)
         )
 
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -157,10 +156,7 @@ def render_mermaid_diagrams(
             should_render = (
                 force
                 or not output_path.exists()
-                or (
-                    diagram.slug in manifest
-                    and manifest[diagram.slug] != source_hash
-                )
+                or (diagram.slug in manifest and manifest[diagram.slug] != source_hash)
             )
 
             if not should_render:
@@ -213,7 +209,9 @@ def main() -> None:
     relative_sources = ", ".join(
         str(source.relative_to(REPO_ROOT)) for source in DEFAULT_SOURCES
     )
-    print(f"Checked {len(result.output_paths)} Mermaid diagrams from {relative_sources}:")
+    print(
+        f"Checked {len(result.output_paths)} Mermaid diagrams from {relative_sources}:"
+    )
     if result.updated_paths:
         print(f"Updated {len(result.updated_paths)} SVG artifact(s):")
     else:

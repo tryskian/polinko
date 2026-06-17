@@ -13,9 +13,9 @@ and lane-specific context.
 - [Refactor Method Diagrams](diagrams/refactor-method.md)
 - [Refactor Journey Diagrams](diagrams/refactor-journey.md)
 
-## Rendered Artifacts
+## Rendered Artefacts
 
-- [Diagram Artifact README](diagrams/README.md)
+- [Diagram Artefact README](diagrams/README.md)
 - Rendered SVGs live in `docs/public/diagrams/`
 - Mermaid SVGs are generated with `tools/render_mermaid_diagrams.py`
 
