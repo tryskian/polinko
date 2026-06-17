@@ -8,9 +8,8 @@ from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
     STATUS_APPLIED_OK,
     STATUS_OK,
-    default_filters,
+    filtered_command_args,
     optional_path,
-    positive_limit,
 )
 from tools.manual_eval_feedback_reclassify import (
     build_feedback_reclassify_report,
@@ -31,12 +30,16 @@ def handle_feedback_reclassify_command_group(
     finish: FinishReport,
 ) -> int | None:
     if args.no_context_feedback_reclassify_preview:
-        filters = default_filters(args, outcome="fail", cohort="ocr_retry_evidence")
+        command_args = filtered_command_args(
+            args,
+            outcome="fail",
+            cohort="ocr_retry_evidence",
+        )
         report = build_no_context_feedback_reclassify_report(
             db_path=db_path,
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
         )
         return finish(
             report,
@@ -46,14 +49,18 @@ def handle_feedback_reclassify_command_group(
         )
 
     if args.no_context_feedback_reclassify_apply:
-        filters = default_filters(args, outcome="fail", cohort="ocr_retry_evidence")
+        command_args = filtered_command_args(
+            args,
+            outcome="fail",
+            cohort="ocr_retry_evidence",
+        )
         report = write_no_context_feedback_reclassify(
             db_path=db_path,
             confirm_token=str(args.confirm or ""),
             backup_root=optional_path(args.backup_root),
-            outcome=filters.outcome,
-            cohort=filters.cohort,
-            limit=positive_limit(args.limit),
+            outcome=command_args.outcome,
+            cohort=command_args.cohort,
+            limit=command_args.limit,
         )
         return finish(
             report,
