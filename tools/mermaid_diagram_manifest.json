@@ -1,0 +1,18 @@
+{
+  "beta-evidence-map": "cde8e553cb2c3bbfa1d99d555fecf33e6a9c8cafad064f25dedc5c67ec0a7d2d",
+  "clean-main-closeout": "764300b8f9d5415a19111d358e9c99505e7a65bbbe26a06b62a8d3d1f26af67b",
+  "current-ocr-signal-shape": "e20c9b8d7cbf13741b2c8d739f284392f3f2f93e34e9114492ae91d68d9d4911",
+  "ocr-progress-funnel": "5f9616d94966d98531361b1b873a64f0e4da77a151ffb32d39f4e21ecf0a74af",
+  "one-kernel-rule": "f7701d1a877a50558bda39e781caf84cad712590d10d2a8f34681fd6f2234f35",
+  "operator-burden-signal-shape": "abddf86edeec1be31e9c6610bb36bc7b785064ba01064856838aa190e83e494a",
+  "polinko-binary-eval-loop": "cea67daacdd1d525f726aad1cb67e023be24bbd0102bbfff189a4ee9f3d88b94",
+  "polinko-eval-contract": "6eee452a58faf80c863e999b6d64659d3597441b59b09585ca40e3e90f4ac7a6",
+  "polinko-post-fail-gate-stack": "72d7b2e7aec2b39641b51b79a23d8208cc78942490de9747e9d1a584b52b5854",
+  "refactor-journey-docs-and-closeout": "933d51f2b77f684d16ca1289396cea8de61be8ff681673914719d426a7c72619",
+  "refactor-journey-evidence-first": "e5d0a05487133f45b2e60b6dbdf8a8c90286002da76d81f45873ddcb3d47963f",
+  "refactor-journey-manual-eval-workbench": "8156747b665c54197a0f99fc0c7a39aedd6d80d54bca99478cc55a4ebcb97a96",
+  "refactor-journey-runtime-package-boundary": "34ab1aa7a1a729ac836bf03d56988c7b5477fa911250fff9ada5833c6dea054a",
+  "refactor-operating-loop": "3ec677cb7dc1dcbc88523bc5077f443d0dc8a700af54807b6f7dcec3a88e45c3",
+  "refactor-safety-gate": "e1d60fae1503dcbe0f3f71ce73587853be169055dea4a4729c2f063aa4c57dcd",
+  "refactor-source-hierarchy": "513b61fedd7d632708254ca48c57afb9fbc3fd8f780aeff24c3a3baf14427647"
+}
