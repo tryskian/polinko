@@ -34,6 +34,19 @@ class FilteredCommandArgs(NamedTuple):
     limit: int
 
 
+class LocalArtifactPaths(NamedTuple):
+    backup_dir: Path | None
+    backup_root: Path | None
+    decision_path: Path | None
+    execution_dir: Path | None
+    output_path: Path | None
+    overlay_source_index_path: Path | None
+    plan_path: Path | None
+    restore_root: Path | None
+    run_dir: Path | None
+    selection_path: Path | None
+
+
 class OcrRetryCommandArgs(NamedTuple):
     outcome: str
     cohort: str
@@ -88,6 +101,23 @@ def ocr_retry_command_args(args: Any) -> OcrRetryCommandArgs:
         cohort=filters.cohort,
         limit=positive_limit(args.limit),
         artifact_ids=args.artifact_id,
+    )
+
+
+def local_artifact_paths(args: Any) -> LocalArtifactPaths:
+    return LocalArtifactPaths(
+        backup_dir=optional_path(getattr(args, "backup_dir", None)),
+        backup_root=optional_path(getattr(args, "backup_root", None)),
+        decision_path=optional_path(getattr(args, "decision_path", None)),
+        execution_dir=optional_path(getattr(args, "execution_dir", None)),
+        output_path=optional_path(getattr(args, "output_path", None)),
+        overlay_source_index_path=optional_path(
+            getattr(args, "overlay_source_index", None)
+        ),
+        plan_path=optional_path(getattr(args, "plan_path", None)),
+        restore_root=optional_path(getattr(args, "restore_root", None)),
+        run_dir=optional_path(getattr(args, "run_dir", None)),
+        selection_path=optional_path(getattr(args, "selection_path", None)),
     )
 
 

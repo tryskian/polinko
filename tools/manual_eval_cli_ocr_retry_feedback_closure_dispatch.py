@@ -10,7 +10,7 @@ from tools.manual_eval_cli_dispatch_support import (
     STATUS_BLOCKED_ERROR,
     STATUS_OK,
     STATUS_RESTORED_OK,
-    optional_path,
+    local_artifact_paths,
 )
 from tools.manual_eval_ocr_retry_feedback_closure_apply import (
     write_ocr_retry_feedback_closure_apply,
@@ -39,9 +39,11 @@ def handle_ocr_retry_feedback_closure_commands(
     db_path: Path,
     finish: FinishReport,
 ) -> int | None:
+    paths = local_artifact_paths(args)
+
     if args.ocr_retry_feedback_closure_preview:
         report = build_ocr_retry_feedback_closure_preview_report(
-            run_dir=optional_path(args.run_dir),
+            run_dir=paths.run_dir,
         )
         return finish(
             report,
@@ -52,9 +54,9 @@ def handle_ocr_retry_feedback_closure_commands(
     if args.ocr_retry_feedback_closure_apply:
         report = write_ocr_retry_feedback_closure_apply(
             db_path=db_path,
-            run_dir=optional_path(args.run_dir),
+            run_dir=paths.run_dir,
             confirm_token=str(args.confirm or ""),
-            backup_root=optional_path(args.backup_root),
+            backup_root=paths.backup_root,
         )
         return finish(
             report,
@@ -66,7 +68,7 @@ def handle_ocr_retry_feedback_closure_commands(
     if args.ocr_retry_feedback_closure_apply_report:
         report = build_ocr_retry_feedback_closure_apply_report(
             db_path=db_path,
-            run_dir=optional_path(args.run_dir),
+            run_dir=paths.run_dir,
         )
         return finish(
             report,
@@ -78,7 +80,7 @@ def handle_ocr_retry_feedback_closure_commands(
     if args.ocr_retry_feedback_closure_restore_preview:
         report = build_ocr_retry_feedback_closure_restore_preview_report(
             db_path=db_path,
-            backup_dir=optional_path(args.backup_dir),
+            backup_dir=paths.backup_dir,
         )
         return finish(
             report,
@@ -90,9 +92,9 @@ def handle_ocr_retry_feedback_closure_commands(
     if args.ocr_retry_feedback_closure_restore:
         report = write_ocr_retry_feedback_closure_restore(
             db_path=db_path,
-            backup_dir=optional_path(args.backup_dir),
+            backup_dir=paths.backup_dir,
             confirm_token=str(args.confirm or ""),
-            restore_root=optional_path(args.restore_root),
+            restore_root=paths.restore_root,
         )
         return finish(
             report,

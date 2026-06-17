@@ -9,7 +9,7 @@ from tools.manual_eval_cli_dispatch_support import (
     STATUS_OK,
     STATUS_WRITTEN_OK,
     filtered_command_args,
-    optional_path,
+    local_artifact_paths,
 )
 from tools.manual_eval_feedback_decisions import (
     build_feedback_decision_preview_report,
@@ -25,6 +25,8 @@ def handle_feedback_decision_commands(
     db_path: Path,
     finish: FinishReport,
 ) -> int | None:
+    paths = local_artifact_paths(args)
+
     if args.feedback_decision_draft:
         command_args = filtered_command_args(
             args,
@@ -33,7 +35,7 @@ def handle_feedback_decision_commands(
         )
         report = write_feedback_decision_draft(
             db_path=db_path,
-            output_path=optional_path(args.output_path),
+            output_path=paths.output_path,
             force=bool(args.force),
             outcome=command_args.outcome,
             cohort=command_args.cohort,
@@ -54,7 +56,7 @@ def handle_feedback_decision_commands(
         )
         report = build_feedback_decision_preview_report(
             db_path=db_path,
-            decision_path=optional_path(args.decision_path),
+            decision_path=paths.decision_path,
             outcome=command_args.outcome,
             cohort=command_args.cohort,
             limit=command_args.limit,
