@@ -62,6 +62,14 @@ class SurfaceIaContractTests(unittest.TestCase):
         self.assertFalse((REPO_ROOT / "frontend").exists())
         self.assertFalse((REPO_ROOT / "ui").exists())
 
+    def test_private_portfolio_mockup_placeholder_stays_trackable(self) -> None:
+        gitignore = _read(".gitignore")
+
+        self.assertIn("!docs/peanut/assets/", gitignore)
+        self.assertIn("!docs/peanut/assets/portfolio-mockups/", gitignore)
+        self.assertIn("!docs/peanut/assets/portfolio-mockups/.gitkeep", gitignore)
+        self.assertNotIn("!docs/peanut/assets/tumbles/portfolio/", gitignore)
+
     def test_tracked_portfolio_static_output_lives_under_public_portfolio(self) -> None:
         self.assertTrue((REPO_ROOT / "public" / "portfolio" / "index.html").is_file())
         self.assertTrue((REPO_ROOT / "public" / "portfolio" / "assets").is_dir())

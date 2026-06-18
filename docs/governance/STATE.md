@@ -68,6 +68,8 @@ Last updated: 2026-06-17
     references are compatibility aliases only
   - private portfolio mockups and screenshots stay in `docs/peanut/`
   - private portfolio mockups use `docs/peanut/assets/portfolio-mockups/`
+  - ignore policy preserves only the current private portfolio mockup
+    placeholder under `docs/peanut/assets/portfolio-mockups/`
   - promotion from private portfolio work to public docs requires explicit
     approval
 - The eval contract is explicit and binary:

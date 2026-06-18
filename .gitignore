@@ -72,9 +72,8 @@ polinko.code-workspace
 docs/peanut/**
 !docs/peanut/.gitkeep
 !docs/peanut/assets/
-!docs/peanut/assets/tumbles/
-!docs/peanut/assets/tumbles/portfolio/
-!docs/peanut/assets/tumbles/portfolio/.gitkeep
+!docs/peanut/assets/portfolio-mockups/
+!docs/peanut/assets/portfolio-mockups/.gitkeep
 docs/eval/**
 !docs/eval/.gitkeep
 !docs/eval/README.md
