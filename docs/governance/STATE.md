@@ -339,7 +339,9 @@ Last updated: 2026-06-17
     `tools/manual_eval_cli_*` modules; parser construction now keeps
     `tools/manual_eval_cli_parser.py` as the stable facade while shared,
     feedback, and OCR retry argument-family helpers live in focused parser
-    modules with option-order and coordinator-order contract tests, and
+    modules; parser boolean flag registration now reuses the shared parser
+    helper while preserving public option order, with option-order and
+    coordinator-order contract tests, and
     manual-eval CLI contract aliases now keep
     `tools/manual_eval_cli_contracts.py` as the stable public facade while
     grouped feedback, overlay, OCR retry, and shared contract modules own the
