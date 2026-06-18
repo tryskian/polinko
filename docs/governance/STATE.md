@@ -373,7 +373,10 @@ Last updated: 2026-06-18
     formatters, and path/artifact argument shape; feedback reclassify
     dispatch now uses a local command table for route order, builders,
     formatters, no-context defaults, plan/confirm/backup path handling, and
-    preview/apply status mappings; the thin health/router entrypoint now has
+    preview/apply status mappings; feedback overlay dispatch now uses a local
+    command table for route order, report builders, formatters, overlay
+    defaults, source-index path handling, output/force handling, and direct
+    versus guarded finish semantics; the thin health/router entrypoint now has
     focused contract coverage for route order, short-circuit behavior, health
     fallback, and explicit guarded-mutation marker coverage
   - manual eval warehouse rebuilds resolve OCR source images from extracted

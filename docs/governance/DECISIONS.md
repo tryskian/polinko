@@ -1934,3 +1934,20 @@ or branch history instead.
   table keeps route order, report builders, formatters, no-context defaults,
   plan/confirm/backup path handling, and preview/apply status mappings explicit
   without moving mutation boundaries or widening the dispatch surface.
+
+## D-124: Table-drive feedback overlay dispatch
+
+- Date: `2026-06-18`
+- Category: `architecture`
+- Tags: `manual_evals`, `cli`, `dispatch`, `feedback`, `overlay`,
+  `refactor`
+- Decision: `tools/manual_eval_cli_feedback_overlay_dispatch.py` now uses a
+  local command table for overlay readiness, source-index draft, and
+  source-index validation routing. The public coordinator remains
+  `tools/manual_eval_cli_feedback_dispatch.py`.
+- Why: The overlay command group had repeated local routing for commands that
+  share overlay feedback defaults but differ in path arguments and finish
+  semantics. A local table keeps route order, report builders, formatters,
+  overlay defaults, source-index path handling, output/force handling, and
+  direct versus guarded finish behavior explicit without moving mutation
+  boundaries or widening the dispatch surface.
