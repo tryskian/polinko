@@ -1991,3 +1991,20 @@ or branch history instead.
   `GHSA-vmh5-mc38-953g` and `GHSA-pr7r-676h-xcf6`. Updating the lockfile keeps
   the Node audit gate meaningful while preserving the root tooling dependency
   workflow.
+
+## D-128: Table-drive OCR retry feedback-closure dispatch
+
+- Date: `2026-06-18`
+- Category: `architecture`
+- Tags: `manual_evals`, `cli`, `dispatch`, `ocr_retry`, `feedback_closure`,
+  `refactor`
+- Decision: `tools/manual_eval_cli_ocr_retry_feedback_closure_dispatch.py` now
+  uses a local command table for OCR retry feedback-closure preview, apply,
+  apply-report, restore-preview, and restore routing. The public OCR retry
+  coordinator remains `tools/manual_eval_cli_ocr_retry_dispatch.py`.
+- Why: The feedback-closure command group had repeated local routing for five
+  commands that share path normalization and finish handling while differing
+  in run-directory, backup-directory, confirmation-token, backup-root,
+  restore-root, formatter, and status semantics. A local table keeps those
+  differences explicit without moving feedback-closure mutation boundaries or
+  widening the dispatch surface.
