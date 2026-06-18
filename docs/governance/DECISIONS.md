@@ -1951,3 +1951,43 @@ or branch history instead.
   overlay defaults, source-index path handling, output/force handling, and
   direct versus guarded finish behavior explicit without moving mutation
   boundaries or widening the dispatch surface.
+
+## D-125: Table-drive feedback decision dispatch
+
+- Date: `2026-06-18`
+- Category: `architecture`
+- Tags: `manual_evals`, `cli`, `dispatch`, `feedback`, `decision`,
+  `refactor`
+- Decision: `tools/manual_eval_cli_feedback_decision_dispatch.py` now uses a
+  local command table for feedback decision draft and preview routing. The
+  public coordinator remains `tools/manual_eval_cli_feedback_dispatch.py`.
+- Why: The feedback decision command group had repeated local routing for two
+  commands that share feedback decision defaults and guarded finish semantics
+  while differing in local output, force, decision-path, formatter, and status
+  mapping. A local table keeps those differences explicit without moving
+  mutation boundaries or widening the dispatch surface.
+
+## D-126: Refresh pypdf security pin
+
+- Date: `2026-06-18`
+- Category: `dependency_management`
+- Tags: `requirements`, `pip_audit`, `pypdf`, `security`
+- Decision: Refresh the direct `pypdf` pin from `6.13.0` to `6.13.3` in
+  `requirements.in` and regenerate `requirements.txt` with pip-tools.
+- Why: The local Python security gate flagged `pypdf==6.13.0` for
+  `GHSA-jm82-fx9c-mx94`, with `6.13.3` listed as the fixed version. Updating
+  the direct pin keeps the security gate meaningful while preserving the
+  standard `requirements.in` plus generated `requirements.txt` dependency
+  workflow.
+
+## D-127: Refresh root Node security lock
+
+- Date: `2026-06-18`
+- Category: `dependency_management`
+- Tags: `npm_audit`, `package_lock`, `undici`, `security`
+- Decision: Refresh the root transitive `undici` lock entry from `7.25.0` to
+  `7.28.0` in `package-lock.json`.
+- Why: The GitHub node-security gate flagged `undici==7.25.0` for
+  `GHSA-vmh5-mc38-953g` and `GHSA-pr7r-676h-xcf6`. Updating the lockfile keeps
+  the Node audit gate meaningful while preserving the root tooling dependency
+  workflow.

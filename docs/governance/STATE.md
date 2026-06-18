@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-17
+Last updated: 2026-06-18
 
 ## Current Truth
 
@@ -376,7 +376,10 @@ Last updated: 2026-06-17
     preview/apply status mappings; feedback overlay dispatch now uses a local
     command table for route order, report builders, formatters, overlay
     defaults, source-index path handling, output/force handling, and direct
-    versus guarded finish semantics; the thin health/router entrypoint now has
+    versus guarded finish semantics; feedback decision dispatch now uses a
+    local command table for route order, report builders, formatters, feedback
+    decision defaults, output/force handling, decision-path handling, and
+    guarded finish semantics; the thin health/router entrypoint now has
     focused contract coverage for route order, short-circuit behavior, health
     fallback, and explicit guarded-mutation marker coverage
   - manual eval warehouse rebuilds resolve OCR source images from extracted
@@ -420,8 +423,11 @@ Last updated: 2026-06-17
     `.venv`
   - Python dependencies use `requirements.in` plus generated
     `requirements.txt`, matching pip-tools and Dependabot conventions
-  - Python security pins were refreshed through PR #650:
-    `PyJWT==2.13.0` and `pip==26.1.2`
+  - Python security pins are tracked through `requirements.in` plus generated
+    `requirements.txt`; current refreshed pins include `PyJWT==2.13.0`,
+    `pip==26.1.2`, and `pypdf==6.13.3`
+  - root Node security locks are tracked through `package-lock.json`; current
+    refreshed transitive pins include `undici==7.28.0`
   - Dependabot Python/`pyproject.toml` version update jobs are currently
     blocked by GitHub's "cannot open any more pull requests" limit and should
     be triaged by reducing or merging the open dependency PR queue before
