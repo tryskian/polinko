@@ -1,9 +1,11 @@
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import patch
 
 from tools import manual_eval_cli_feedback_dispatch as dispatch
+from tools import manual_eval_cli_feedback_reclassify_dispatch as reclassify_dispatch
 
 
 class ManualEvalCliFeedbackDispatchTests(unittest.TestCase):
@@ -92,6 +94,173 @@ class ManualEvalCliFeedbackDispatchTests(unittest.TestCase):
 
         self.assertEqual(status, 13)
         reclassify_group.assert_called_once()
+
+    def test_feedback_reclassify_group_preserves_report_command_order(self) -> None:
+        calls: list[tuple[str, dict[str, Any]]] = []
+
+        def formatter(_report: dict[str, Any]) -> str:
+            return "report"
+
+        def builder(name: str):
+            def _build(**kwargs: Any) -> dict[str, Any]:
+                calls.append((name, kwargs))
+                return {"state": "ok", "name": name}
+
+            return _build
+
+        commands = (
+            reclassify_dispatch.FeedbackReclassifyCommand(
+                flag="first_command",
+                builder=builder("first"),
+                formatter=formatter,
+                status_by_state={"ok": 0},
+            ),
+            reclassify_dispatch.FeedbackReclassifyCommand(
+                flag="second_command",
+                builder=builder("second"),
+                formatter=formatter,
+                status_by_state={"ok": 0},
+            ),
+        )
+        args = SimpleNamespace(first_command=False, second_command=True)
+
+        with patch.object(
+            reclassify_dispatch,
+            "FEEDBACK_RECLASSIFY_COMMANDS",
+            commands,
+        ):
+            status = reclassify_dispatch.handle_feedback_reclassify_command_group(
+                args=args,
+                db_path=Path("manual_evals.db"),
+                finish=lambda _report, _formatter, **_kwargs: 17,
+            )
+
+        self.assertEqual(status, 17)
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][0], "second")
+        self.assertEqual(calls[0][1], {"db_path": Path("manual_evals.db")})
+
+    def test_no_context_reclassify_command_keeps_default_filters(self) -> None:
+        calls: list[dict[str, Any]] = []
+        finish_calls: list[dict[str, Any]] = []
+
+        def formatter(_report: dict[str, Any]) -> str:
+            return "report"
+
+        def builder(**kwargs: Any) -> dict[str, Any]:
+            calls.append(kwargs)
+            return {"state": "ok"}
+
+        def finish(*args: Any, **kwargs: Any) -> int:
+            finish_calls.append({"args": args, "kwargs": kwargs})
+            return 19
+
+        commands = (
+            reclassify_dispatch.FeedbackReclassifyCommand(
+                flag="no_context_feedback_reclassify_preview",
+                builder=builder,
+                formatter=formatter,
+                status_by_state={"ok": 0},
+                use_no_context_filters=True,
+            ),
+        )
+        args = SimpleNamespace(
+            no_context_feedback_reclassify_preview=True,
+            outcome="",
+            cohort=None,
+            limit=0,
+        )
+
+        with patch.object(
+            reclassify_dispatch,
+            "FEEDBACK_RECLASSIFY_COMMANDS",
+            commands,
+        ):
+            status = reclassify_dispatch.handle_feedback_reclassify_command_group(
+                args=args,
+                db_path=Path("manual_evals.db"),
+                finish=finish,
+            )
+
+        self.assertEqual(status, 19)
+        self.assertEqual(
+            calls,
+            [
+                {
+                    "db_path": Path("manual_evals.db"),
+                    "outcome": "fail",
+                    "cohort": "ocr_retry_evidence",
+                    "limit": 1,
+                }
+            ],
+        )
+        self.assertEqual(finish_calls[0]["args"], ({"state": "ok"}, formatter))
+        self.assertEqual(
+            finish_calls[0]["kwargs"],
+            {"status_by_state": {"ok": 0}, "default_status": 2},
+        )
+
+    def test_feedback_reclassify_apply_keeps_plan_confirm_and_backup(self) -> None:
+        calls: list[dict[str, Any]] = []
+        finish_calls: list[dict[str, Any]] = []
+
+        def formatter(_report: dict[str, Any]) -> str:
+            return "report"
+
+        def builder(**kwargs: Any) -> dict[str, Any]:
+            calls.append(kwargs)
+            return {"state": "applied"}
+
+        def finish(*args: Any, **kwargs: Any) -> int:
+            finish_calls.append({"args": args, "kwargs": kwargs})
+            return 23
+
+        commands = (
+            reclassify_dispatch.FeedbackReclassifyCommand(
+                flag="feedback_reclassify_apply",
+                builder=builder,
+                formatter=formatter,
+                status_by_state={"applied": 0},
+                include_plan_path=True,
+                include_confirm_token=True,
+                include_backup_root=True,
+            ),
+        )
+        args = SimpleNamespace(
+            feedback_reclassify_apply=True,
+            confirm="manual-evals-feedback-reclassify",
+            plan_path="plans/reclassify.json",
+            backup_root="backups",
+        )
+
+        with patch.object(
+            reclassify_dispatch,
+            "FEEDBACK_RECLASSIFY_COMMANDS",
+            commands,
+        ):
+            status = reclassify_dispatch.handle_feedback_reclassify_command_group(
+                args=args,
+                db_path=Path("manual_evals.db"),
+                finish=finish,
+            )
+
+        self.assertEqual(status, 23)
+        self.assertEqual(
+            calls,
+            [
+                {
+                    "db_path": Path("manual_evals.db"),
+                    "plan_path": Path("plans/reclassify.json"),
+                    "confirm_token": "manual-evals-feedback-reclassify",
+                    "backup_root": Path("backups"),
+                }
+            ],
+        )
+        self.assertEqual(finish_calls[0]["args"], ({"state": "applied"}, formatter))
+        self.assertEqual(
+            finish_calls[0]["kwargs"],
+            {"status_by_state": {"applied": 0}, "default_status": 2},
+        )
 
 
 if __name__ == "__main__":
