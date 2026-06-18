@@ -1904,3 +1904,19 @@ or branch history instead.
   from Polinko the repository. Model-level status wording keeps the staged beta
   boundary visible, and positive target language keeps the refactor aligned
   with the original Polinko instruction shape.
+
+## D-122: Keep the private portfolio mockup ignore policy current
+
+- Date: `2026-06-17`
+- Category: `documentation`
+- Tags: `ia`, `portfolio`, `private_lane`, `gitignore`, `refactor`
+- Human-led: The human lead kept the cleanup scope repo-wide while preserving
+  the current one-kernel rhythm.
+- Decision: `.gitignore` now preserves only the current private portfolio
+  mockup placeholder under `docs/peanut/assets/portfolio-mockups/.gitkeep`.
+  The retired `docs/peanut/assets/tumbles/portfolio/` private mockup path is
+  ignored again.
+- Why: The current tracked docs name `docs/peanut/assets/portfolio-mockups/` as
+  the private portfolio mockup lane. Keeping ignore policy aligned with that IA
+  prevents retired private paths from becoming trackable again while preserving
+  the placeholder needed for the current private lane.

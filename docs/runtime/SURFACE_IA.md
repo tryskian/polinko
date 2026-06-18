@@ -24,6 +24,7 @@ refactor. It is intentionally about path roles, not visual direction.
   - Not a source directory.
 - `docs/peanut/assets/portfolio-mockups/`
   - Private local portfolio mockup lane.
+  - `.gitkeep` is the only tracked placeholder in this private lane.
   - Stays private unless explicitly promoted.
 
 ## Current Path Contract
@@ -60,6 +61,8 @@ refactor. It is intentionally about path roles, not visual direction.
     `docs/peanut/assets/tumbles/portfolio/`.
   - Rationale: the path should say what the assets are and keep the private
     lane obvious.
+  - Ignore policy preserves the current `.gitkeep` placeholder and leaves the
+    retired `docs/peanut/assets/tumbles/portfolio/` path ignored.
 
 ## Manual Eval Workbench
 
