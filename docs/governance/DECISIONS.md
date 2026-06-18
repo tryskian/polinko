@@ -2008,3 +2008,16 @@ or branch history instead.
   restore-root, formatter, and status semantics. A local table keeps those
   differences explicit without moving feedback-closure mutation boundaries or
   widening the dispatch surface.
+
+## D-129: Reduce duplicate GitHub Actions runs
+
+- Date: `2026-06-18`
+- Category: `workflow_environment`
+- Tags: `github_actions`, `ci`, `dependency_review`, `noise_reduction`
+- Decision: GitHub CI now runs on pull requests and on pushes to `main`
+  instead of every feature-branch push, and both CI and dependency-review
+  workflows cancel superseded runs for the same pull request or ref.
+- Why: Recent failed-check review showed that one failing feature-branch commit
+  produced duplicate red runs through both `push` and `pull_request` CI. Keeping
+  pull-request checks plus post-merge `main` checks preserves the merge gate
+  while reducing repeated failure noise during active branch work.

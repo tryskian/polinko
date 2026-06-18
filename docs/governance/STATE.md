@@ -432,6 +432,10 @@ Last updated: 2026-06-18
     `pip==26.1.2`, and `pypdf==6.13.3`
   - root Node security locks are tracked through `package-lock.json`; current
     refreshed transitive pins include `undici==7.28.0`
+  - GitHub CI runs on pull requests and on pushes to `main`; feature-branch
+    pushes rely on the pull-request gate to avoid duplicate red runs, and CI
+    plus dependency-review workflows cancel superseded runs when a newer commit
+    arrives
   - Dependabot Python/`pyproject.toml` version update jobs are currently
     blocked by GitHub's "cannot open any more pull requests" limit and should
     be triaged by reducing or merging the open dependency PR queue before
