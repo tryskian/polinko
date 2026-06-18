@@ -441,6 +441,11 @@ Last updated: 2026-06-18
     PR queue limits
   - local dependency refreshes are explicit through `make refresh-deps` before
     rerunning `make security-checks`
+  - shell helper hygiene is explicit through `make scripts-check`, which
+    verifies tracked `tools/*.sh` shebangs, strict modes, and sourced helper
+    contracts
+  - `make ci-docs` and `make end` both run `make scripts-check` so malformed
+    shell helpers fail before longer style, type, test, and security gates
   - portfolio Node setup uses `apps/portfolio/`
   - root and portfolio npm locks both have audit and Dependabot coverage
   - portfolio installs prefer `npm ci` when a lockfile is present

@@ -464,6 +464,9 @@ Use this doc for operator procedure.
     metadata/import identity
 - `make lint-docs`
   - docs lint
+- `make scripts-check`
+  - validates tracked shell helper shebangs, strict modes, and sourced helper
+    contracts
 - `make ruff-check`
   - Python lint
 - `make ruff-format-check`
@@ -474,8 +477,8 @@ Use this doc for operator procedure.
   - test suite
 - `make ci`
   - local aggregate of the named GitHub CI job targets:
-    `ci-docs`, `ci-python-style`, `ci-python-type-check`, `ci-test`,
-    `ci-python-security`, and `ci-node-security`
+    `ci-docs`, `ci-python-style`, `ci-python-type-check`, `ci-package`,
+    `ci-test`, `ci-python-security`, and `ci-node-security`
 
 Dependency maintenance:
 
