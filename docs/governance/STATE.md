@@ -379,9 +379,13 @@ Last updated: 2026-06-18
     versus guarded finish semantics; feedback decision dispatch now uses a
     local command table for route order, report builders, formatters, feedback
     decision defaults, output/force handling, decision-path handling, and
-    guarded finish semantics; the thin health/router entrypoint now has
-    focused contract coverage for route order, short-circuit behavior, health
-    fallback, and explicit guarded-mutation marker coverage
+    guarded finish semantics; OCR retry feedback-closure dispatch now uses a
+    local command table for route order, report builders, formatters, run-dir
+    handling, backup-dir handling, confirmation tokens, backup/restore roots,
+    direct preview finish semantics, and guarded apply/report/restore finish
+    semantics; the thin health/router entrypoint now has focused contract
+    coverage for route order, short-circuit behavior, health fallback, and
+    explicit guarded-mutation marker coverage
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then
