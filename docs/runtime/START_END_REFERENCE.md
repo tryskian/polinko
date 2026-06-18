@@ -68,26 +68,28 @@ Sequence:
    - `make transcript-check`
 4. Verify the environment:
    - `make doctor-env`
-5. Run Python style checks:
+5. Validate shell helper contracts:
+   - `make scripts-check`
+6. Run Python style checks:
    - `make ci-python-style`
-6. Run Python type checks:
+7. Run Python type checks:
    - `make ci-python-type-check`
-7. Lint docs:
+8. Lint docs:
    - `make lint-docs`
-8. Smoke-test editable package import:
+9. Smoke-test editable package import:
    - `make package-install-check`
-9. Run tests:
-   - `make test`
-10. Check diff whitespace:
+10. Run tests:
+    - `make test`
+11. Check diff whitespace:
     - `git diff --check`
-11. Run dependency security checks:
+12. Run dependency security checks:
     - `make security-checks`
-12. Stop background tasks:
+13. Stop background tasks:
     - `make eod-stop`
-      - `make server-daemon-stop`
-      - `make caffeinate-off-all`
-      - `make session-status`
-13. Verify the Git closeout state:
+        - `make server-daemon-stop`
+        - `make caffeinate-off-all`
+        - `make session-status`
+14. Verify the Git closeout state:
     - `make end-git-check`
     - current branch must be `main`
     - working tree must be clean
@@ -103,6 +105,9 @@ Explicit companion checks:
 
 - `make end-docs-check`
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
+- `make scripts-check`
+  - validates tracked shell helper shebangs, strict modes, and sourced helper
+    contracts
 - `make security-checks`
   - runs local Python and Node dependency audits
 - `make refresh-deps`

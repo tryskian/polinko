@@ -1,6 +1,7 @@
 import os
 import re
 import subprocess
+import sys
 import unittest
 from pathlib import Path
 
@@ -50,6 +51,7 @@ OCR_REPORT_BUILDER_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_builder.sh"
 OCR_REPORT_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_workflow.sh"
 OCR_LANE_INVENTORY_SCRIPT = REPO_ROOT / "tools" / "report_ocr_lane_inventory.py"
 OCR_INTAKE_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_intake_workflow.sh"
+SHELL_SCRIPT_CONTRACT_SCRIPT = REPO_ROOT / "tools" / "check_shell_scripts.py"
 
 
 def _makefile_text() -> str:
@@ -611,6 +613,46 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^caffeinate-off-all:\s*caffeinate-off$")
         self.assertRegex(text, r"(?m)^decaffeinate-status:\s*caffeinate-status$")
 
+    def test_shell_script_contract_check_is_named_and_closeout_visible(self) -> None:
+        text = _makefile_contract_text()
+        closeout_text = (REPO_ROOT / "tools" / "end_of_day_routine.sh").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("scripts-check", _phony_targets())
+        self.assertRegex(text, r"(?m)^scripts-check:$")
+        self.assertIn("$(PYTHON) -m tools.check_shell_scripts", text)
+        self.assertRegex(
+            text,
+            r"(?m)^ci-docs:\s*path-leak-check scripts-check lint-docs$",
+        )
+        self.assertIn(
+            'run_step "scripts-check" make --no-print-directory scripts-check',
+            closeout_text,
+        )
+        self.assertGreater(
+            closeout_text.index('run_step "scripts-check"'),
+            closeout_text.index('run_step "doctor-env"'),
+        )
+        self.assertLess(
+            closeout_text.index('run_step "scripts-check"'),
+            closeout_text.index('run_step "ci-python-style"'),
+        )
+
+    def test_shell_script_contract_checker_accepts_tracked_scripts(self) -> None:
+        self.assertTrue(SHELL_SCRIPT_CONTRACT_SCRIPT.exists())
+
+        result = subprocess.run(
+            [sys.executable, "-m", "tools.check_shell_scripts"],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertIn("shell-script-contracts: PASS", result.stdout)
+        self.assertIn("scripts checked", result.stdout)
+
     def test_operator_wrappers_use_dependency_edges_for_internal_chains(self) -> None:
         text = _makefile_contract_text()
 
@@ -1144,6 +1186,7 @@ class MakefileContractTests(unittest.TestCase):
             "open-billing",
             "open-limits",
             "caffeinate",
+            "scripts-check",
             "caffeinate-status",
             "caffeinate-off-all",
             "eod-stop",

@@ -2021,3 +2021,15 @@ or branch history instead.
   produced duplicate red runs through both `push` and `pull_request` CI. Keeping
   pull-request checks plus post-merge `main` checks preserves the merge gate
   while reducing repeated failure noise during active branch work.
+
+## D-130: Make shell helper contracts a named gate
+
+- Date: `2026-06-18`
+- Category: `workflow_environment`
+- Tags: `shell_scripts`, `make`, `ci`, `closeout`, `hygiene`
+- Decision: `make scripts-check` is the canonical shell helper hygiene gate.
+  It validates tracked `tools/*.sh` shebangs, strict modes, and sourced helper
+  contracts, and it runs through both `make ci-docs` and `make end`.
+- Why: Script helper drift had been handled as convention. A named gate keeps
+  local operators, CI wrappers, and closeout helpers aligned before longer
+  validation steps run.
