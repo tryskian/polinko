@@ -1923,7 +1923,7 @@ or branch history instead.
 
 ## D-123: Table-drive feedback reclassify dispatch
 
-- Date: `2026-06-18`
+- Date: `2026-06-17`
 - Category: `architecture`
 - Tags: `manual_evals`, `cli`, `dispatch`, `feedback`, `refactor`
 - Decision: `tools/manual_eval_cli_feedback_reclassify_dispatch.py` now uses a
@@ -1937,7 +1937,7 @@ or branch history instead.
 
 ## D-124: Table-drive feedback overlay dispatch
 
-- Date: `2026-06-18`
+- Date: `2026-06-17`
 - Category: `architecture`
 - Tags: `manual_evals`, `cli`, `dispatch`, `feedback`, `overlay`,
   `refactor`
