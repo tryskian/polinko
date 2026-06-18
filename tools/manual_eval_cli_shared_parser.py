@@ -1,8 +1,25 @@
 from __future__ import annotations
 
 import argparse
+from typing import NamedTuple
 
 from tools.manual_eval_cli_contracts import COHORT_FILTER_CHOICES, DEFAULT_DB_PATH
+
+
+class BooleanFlagArg(NamedTuple):
+    flag: str
+    help: str
+
+
+def add_boolean_flag_args(
+    parser: argparse.ArgumentParser, flags: tuple[BooleanFlagArg, ...]
+) -> None:
+    for flag in flags:
+        parser.add_argument(
+            flag.flag,
+            action="store_true",
+            help=flag.help,
+        )
 
 
 def add_common_report_args(parser: argparse.ArgumentParser) -> None:

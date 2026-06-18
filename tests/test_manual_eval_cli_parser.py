@@ -1,10 +1,33 @@
 import unittest
+import argparse
 from collections.abc import Callable
 
 from tools import manual_eval_cli_parser
+from tools.manual_eval_cli_shared_parser import BooleanFlagArg, add_boolean_flag_args
 
 
 class ManualEvalCliParserTests(unittest.TestCase):
+    def test_boolean_flag_helper_adds_store_true_options_in_order(self) -> None:
+        parser = argparse.ArgumentParser()
+        add_boolean_flag_args(
+            parser,
+            (
+                BooleanFlagArg("--first-flag", "First flag."),
+                BooleanFlagArg("--second-flag", "Second flag."),
+            ),
+        )
+
+        args = parser.parse_args(["--second-flag"])
+        option_order = [
+            action.option_strings[0]
+            for action in parser._actions  # noqa: SLF001 - argparse exposes no public ordered action list.
+            if action.option_strings and action.option_strings[0] != "-h"
+        ]
+
+        self.assertEqual(option_order, ["--first-flag", "--second-flag"])
+        self.assertFalse(args.first_flag)
+        self.assertTrue(args.second_flag)
+
     def test_parser_option_order_preserves_manual_eval_surface_contract(self) -> None:
         parser = manual_eval_cli_parser.build_manual_evals_db_health_parser()
 
