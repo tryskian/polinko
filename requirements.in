@@ -9,7 +9,7 @@ pypdf==6.13.3
 Pillow==12.2.0
 mypy==2.1.0
 pre-commit==4.6.0
-ruff==0.15.16
+ruff==0.15.17
 pytest==9.0.3
 types-PyYAML==6.0.12.20260518
 yamllint==1.38.0
