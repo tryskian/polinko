@@ -31,7 +31,10 @@ start:
 end:
 	bash ./tools/end_of_day_routine.sh
 
-eod end-preflight: end
+eod: end
+
+end-preflight:
+	END_SKIP_GIT_CHECK=1 END_SKIP_STOP=1 bash ./tools/end_of_day_routine.sh
 
 end-git-check:
 	bash ./tools/check_end_git_clean.sh

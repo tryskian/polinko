@@ -436,10 +436,11 @@ Last updated: 2026-06-18
     pushes rely on the pull-request gate to avoid duplicate red runs, and CI
     plus dependency-review workflows cancel superseded runs when a newer commit
     arrives
-  - Dependabot Python/`pyproject.toml` version update jobs are currently
-    blocked by GitHub's "cannot open any more pull requests" limit and should
-    be triaged by reducing or merging the open dependency PR queue before
-    treating the pyproject lane as healthy
+  - Dependabot routine and security updates are grouped by ecosystem so Python,
+    root npm, portfolio npm, and GitHub Actions updates stay below GitHub's open
+    PR queue limits
+  - local dependency refreshes are explicit through `make refresh-deps` before
+    rerunning `make security-checks`
   - portfolio Node setup uses `apps/portfolio/`
   - root and portfolio npm locks both have audit and Dependabot coverage
   - portfolio installs prefer `npm ci` when a lockfile is present

@@ -1,6 +1,6 @@
 # Build, dependency, and CI checks.
 .PHONY: ci ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security
-.PHONY: deps-install deps-lock deps-lock-check
+.PHONY: deps-install deps-refresh refresh-deps deps-lock deps-lock-check
 .PHONY: package-install-check
 .PHONY: python-security-check node-security-check security-checks
 
@@ -22,6 +22,14 @@ ci-node-security: node-security-check
 
 deps-install:
 	$(PYTHON) -m pip install -r "$(REQUIREMENTS_LOCK)"
+
+deps-refresh refresh-deps:
+	$(PYTHON) -m pip install --upgrade pip
+	$(PYTHON) -m pip install --upgrade --upgrade-strategy eager -r "$(REQUIREMENTS_LOCK)"
+	npm install --no-audit --no-fund
+	@if [ -f "$(PORTFOLIO_APP_DIR)/package.json" ]; then \
+		npm --prefix "$(PORTFOLIO_APP_DIR)" install --no-audit --no-fund; \
+	fi
 
 deps-lock:
 	@set -eu; \

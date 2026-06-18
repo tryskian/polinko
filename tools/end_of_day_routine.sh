@@ -4,35 +4,47 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
+TOTAL_STEPS=13
+if [ "${END_SKIP_STOP:-}" = "1" ]; then
+  TOTAL_STEPS=$((TOTAL_STEPS - 1))
+fi
+if [ "${END_SKIP_GIT_CHECK:-}" = "1" ]; then
+  TOTAL_STEPS=$((TOTAL_STEPS - 1))
+fi
+
+STEP=1
+
+run_step() {
+  local label="$1"
+  shift
+  echo "[end] ${STEP}/${TOTAL_STEPS} ${label}"
+  "$@"
+  STEP=$((STEP + 1))
+}
+
 echo "[end] starting end-of-day routine in: $ROOT_DIR"
-echo "[end] 1/10 end-git-check"
-make --no-print-directory end-git-check
+run_step "end-docs-check" make --no-print-directory end-docs-check
+run_step "transcript-fix" make --no-print-directory transcript-fix
+run_step "transcript-check" make --no-print-directory transcript-check
+run_step "doctor-env" make --no-print-directory doctor-env
+run_step "ci-python-style" make --no-print-directory ci-python-style
+run_step "ci-python-type-check" make --no-print-directory ci-python-type-check
+run_step "lint-docs" make --no-print-directory lint-docs
+run_step "package-install-check" make --no-print-directory package-install-check
+run_step "test" make --no-print-directory test
+run_step "git diff --check" git diff --check
+run_step "security-checks" make --no-print-directory security-checks
 
-echo "[end] 2/10 transcript-fix"
-make --no-print-directory transcript-fix
+if [ "${END_SKIP_STOP:-}" = "1" ]; then
+  echo "[end] stop background tasks skipped (preflight only; day is not closed)"
+else
+  run_step "stop background tasks" make --no-print-directory eod-stop
+fi
 
-echo "[end] 3/10 transcript-check"
-make --no-print-directory transcript-check
-
-echo "[end] 4/10 doctor-env"
-make --no-print-directory doctor-env
-
-echo "[end] 5/10 ci-python-style"
-make --no-print-directory ci-python-style
-
-echo "[end] 6/10 ci-python-type-check"
-make --no-print-directory ci-python-type-check
-
-echo "[end] 7/10 lint-docs"
-make --no-print-directory lint-docs
-
-echo "[end] 8/10 test"
-make --no-print-directory test
-
-echo "[end] 9/10 security-checks"
-make --no-print-directory security-checks
-
-echo "[end] 10/10 stop background tasks"
-make --no-print-directory eod-stop
+if [ "${END_SKIP_GIT_CHECK:-}" = "1" ]; then
+  echo "[end] git closeout skipped (preflight only; day is not closed)"
+else
+  run_step "end-git-check" make --no-print-directory end-git-check
+fi
 
 echo "[end] done"

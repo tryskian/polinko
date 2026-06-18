@@ -599,7 +599,9 @@ class MakefileContractTests(unittest.TestCase):
     def test_lifecycle_aliases_delegate_to_canonical_targets(self) -> None:
         text = _makefile_contract_text()
 
-        self.assertRegex(text, r"(?m)^eod end-preflight:\s*end$")
+        self.assertRegex(text, r"(?m)^eod:\s*end$")
+        self.assertIn("end-preflight:", text)
+        self.assertIn("END_SKIP_GIT_CHECK=1 END_SKIP_STOP=1", text)
         self.assertRegex(
             text,
             r"(?m)^eod-stop:\s*server-daemon-stop caffeinate-off-all session-status$",

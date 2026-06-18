@@ -114,13 +114,7 @@ Use this doc for operator procedure.
 ## End-of-Day Ritual
 
 1. Finish branch-local validation before merge:
-   - `make doctor-env`
-   - `make ci-python-style`
-   - `make type-check`
-   - `make lint-docs`
-   - `make package-install-check`
-   - `make test`
-   - `git diff --check`
+   - `make end-preflight`
 2. Package the branch when the kernel is ready.
 3. Merge through the protected-main PR flow.
 4. After merge, switch back to `main` and pull fast-forward only.
@@ -462,6 +456,9 @@ Use this doc for operator procedure.
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make security-checks`
   - local Python, root Node, and portfolio Node dependency audits
+- `make refresh-deps`
+  - refreshes the local Python environment, root npm lock, and portfolio npm
+    lock after Dependabot or dependency metadata changes
 - `make package-install-check`
   - install the root package editable without dependencies and verify package
     metadata/import identity
@@ -479,6 +476,16 @@ Use this doc for operator procedure.
   - local aggregate of the named GitHub CI job targets:
     `ci-docs`, `ci-python-style`, `ci-python-type-check`, `ci-test`,
     `ci-python-security`, and `ci-node-security`
+
+Dependency maintenance:
+
+1. Merge grouped Dependabot PRs before single-package duplicates.
+2. Close duplicate single-package PRs once the grouped PR contains the same
+   bump.
+3. Run `make refresh-deps` after syncing `main`.
+4. Run `make security-checks`.
+5. Finish with `make end` on clean synced `main`.
+
 - `make openai-account-summary`
   - print OpenAI organization costs and usage from the Admin API
   - requires `OPENAI_ADMIN_KEY` or `OPENAI_ADMIN_KEY_ENV=<env_name>`

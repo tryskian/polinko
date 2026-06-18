@@ -57,15 +57,11 @@ make end
 Aliases:
 
 - `make eod`
-- `make end-preflight`
 
 Sequence:
 
-1. Verify the Git closeout state:
-   - `make end-git-check`
-   - current branch must be `main`
-   - working tree must be clean
-   - local `main` must be synced with `origin/main`
+1. Verify current-truth docs freshness:
+   - `make end-docs-check`
 2. Run transcript repair:
    - `make transcript-fix`
 3. Validate curated transcripts:
@@ -78,20 +74,30 @@ Sequence:
    - `make ci-python-type-check`
 7. Lint docs:
    - `make lint-docs`
-8. Run tests:
+8. Smoke-test editable package import:
+   - `make package-install-check`
+9. Run tests:
    - `make test`
-9. Run dependency security checks:
-   - `make security-checks`
-10. Stop background tasks:
+10. Check diff whitespace:
+    - `git diff --check`
+11. Run dependency security checks:
+    - `make security-checks`
+12. Stop background tasks:
     - `make eod-stop`
       - `make server-daemon-stop`
       - `make caffeinate-off-all`
       - `make session-status`
+13. Verify the Git closeout state:
+    - `make end-git-check`
+    - current branch must be `main`
+    - working tree must be clean
+    - local `main` must be synced with `origin/main`
 
 Preflight:
 
 - `make end-preflight`
-- runs the same literal closeout routine as `make end`
+- runs branch-local validation without stopping background tasks
+- skips final clean-main Git closeout because it is not the real day close
 
 Explicit companion checks:
 
@@ -99,6 +105,9 @@ Explicit companion checks:
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make security-checks`
   - runs local Python and Node dependency audits
+- `make refresh-deps`
+  - refreshes local Python, root npm, and portfolio npm dependency surfaces
+    after Dependabot or dependency metadata changes
 - `make type-check`
   - runs mypy against active `src/` and `tools/` Python surfaces
 - `make end-git-check`
