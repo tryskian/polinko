@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-17
+Last updated: 2026-06-18
 
 ## Current Truth
 
@@ -370,9 +370,12 @@ Last updated: 2026-06-17
     expansion now reuses the shared support helper for default filters and
     positive limits; OCR retry selection post-feedback read-only report
     dispatch now uses a local command table for route order, report builders,
-    formatters, and path/artifact argument shape; the thin health/router entrypoint
-    now has focused contract coverage for route order, short-circuit
-    behavior, health fallback, and explicit guarded-mutation marker coverage
+    formatters, and path/artifact argument shape; feedback reclassify
+    dispatch now uses a local command table for route order, builders,
+    formatters, no-context defaults, plan/confirm/backup path handling, and
+    preview/apply status mappings; the thin health/router entrypoint now has
+    focused contract coverage for route order, short-circuit behavior, health
+    fallback, and explicit guarded-mutation marker coverage
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then

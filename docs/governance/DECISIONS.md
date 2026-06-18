@@ -1920,3 +1920,17 @@ or branch history instead.
   the private portfolio mockup lane. Keeping ignore policy aligned with that IA
   prevents retired private paths from becoming trackable again while preserving
   the placeholder needed for the current private lane.
+
+## D-123: Table-drive feedback reclassify dispatch
+
+- Date: `2026-06-18`
+- Category: `architecture`
+- Tags: `manual_evals`, `cli`, `dispatch`, `feedback`, `refactor`
+- Decision: `tools/manual_eval_cli_feedback_reclassify_dispatch.py` now uses a
+  local command table for feedback reclassify preview/apply routing. The
+  public coordinator remains `tools/manual_eval_cli_feedback_dispatch.py`.
+- Why: The feedback reclassify command group had repeated local routing for
+  no-context preview/apply and plan-based preview/apply commands. A local
+  table keeps route order, report builders, formatters, no-context defaults,
+  plan/confirm/backup path handling, and preview/apply status mappings explicit
+  without moving mutation boundaries or widening the dispatch surface.
