@@ -1991,3 +1991,33 @@ or branch history instead.
   `GHSA-vmh5-mc38-953g` and `GHSA-pr7r-676h-xcf6`. Updating the lockfile keeps
   the Node audit gate meaningful while preserving the root tooling dependency
   workflow.
+
+## D-128: Table-drive OCR retry feedback-closure dispatch
+
+- Date: `2026-06-18`
+- Category: `architecture`
+- Tags: `manual_evals`, `cli`, `dispatch`, `ocr_retry`, `feedback_closure`,
+  `refactor`
+- Decision: `tools/manual_eval_cli_ocr_retry_feedback_closure_dispatch.py` now
+  uses a local command table for OCR retry feedback-closure preview, apply,
+  apply-report, restore-preview, and restore routing. The public OCR retry
+  coordinator remains `tools/manual_eval_cli_ocr_retry_dispatch.py`.
+- Why: The feedback-closure command group had repeated local routing for five
+  commands that share path normalization and finish handling while differing
+  in run-directory, backup-directory, confirmation-token, backup-root,
+  restore-root, formatter, and status semantics. A local table keeps those
+  differences explicit without moving feedback-closure mutation boundaries or
+  widening the dispatch surface.
+
+## D-129: Reduce duplicate GitHub Actions runs
+
+- Date: `2026-06-18`
+- Category: `workflow_environment`
+- Tags: `github_actions`, `ci`, `dependency_review`, `noise_reduction`
+- Decision: GitHub CI now runs on pull requests and on pushes to `main`
+  instead of every feature-branch push, and both CI and dependency-review
+  workflows cancel superseded runs for the same pull request or ref.
+- Why: Recent failed-check review showed that one failing feature-branch commit
+  produced duplicate red runs through both `push` and `pull_request` CI. Keeping
+  pull-request checks plus post-merge `main` checks preserves the merge gate
+  while reducing repeated failure noise during active branch work.

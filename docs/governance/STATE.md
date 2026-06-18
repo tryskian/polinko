@@ -379,9 +379,13 @@ Last updated: 2026-06-18
     versus guarded finish semantics; feedback decision dispatch now uses a
     local command table for route order, report builders, formatters, feedback
     decision defaults, output/force handling, decision-path handling, and
-    guarded finish semantics; the thin health/router entrypoint now has
-    focused contract coverage for route order, short-circuit behavior, health
-    fallback, and explicit guarded-mutation marker coverage
+    guarded finish semantics; OCR retry feedback-closure dispatch now uses a
+    local command table for route order, report builders, formatters, run-dir
+    handling, backup-dir handling, confirmation tokens, backup/restore roots,
+    direct preview finish semantics, and guarded apply/report/restore finish
+    semantics; the thin health/router entrypoint now has focused contract
+    coverage for route order, short-circuit behavior, health fallback, and
+    explicit guarded-mutation marker coverage
   - manual eval warehouse rebuilds resolve OCR source images from extracted
     files first across private screenshot roots, tracked `docs/eval/`
     snapshots, the Dropbox screenshot sync root, and local export roots, then
@@ -428,6 +432,10 @@ Last updated: 2026-06-18
     `pip==26.1.2`, and `pypdf==6.13.3`
   - root Node security locks are tracked through `package-lock.json`; current
     refreshed transitive pins include `undici==7.28.0`
+  - GitHub CI runs on pull requests and on pushes to `main`; feature-branch
+    pushes rely on the pull-request gate to avoid duplicate red runs, and CI
+    plus dependency-review workflows cancel superseded runs when a newer commit
+    arrives
   - Dependabot Python/`pyproject.toml` version update jobs are currently
     blocked by GitHub's "cannot open any more pull requests" limit and should
     be triaged by reducing or merging the open dependency PR queue before

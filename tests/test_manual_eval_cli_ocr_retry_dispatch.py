@@ -5,6 +5,9 @@ from typing import Any
 from unittest.mock import patch
 
 from tools import manual_eval_cli_ocr_retry_dispatch as dispatch
+from tools import (
+    manual_eval_cli_ocr_retry_feedback_closure_dispatch as closure_dispatch,
+)
 from tools import manual_eval_cli_ocr_retry_selection_dispatch as selection_dispatch
 
 
@@ -222,6 +225,318 @@ class ManualEvalCliOcrRetryDispatchTests(unittest.TestCase):
                     "selection_path": Path("selection.json"),
                 }
             ],
+        )
+
+    def test_feedback_closure_dispatch_preserves_command_order(self) -> None:
+        self.assertEqual(
+            [
+                command.flag
+                for command in closure_dispatch.OCR_RETRY_FEEDBACK_CLOSURE_COMMANDS
+            ],
+            [
+                "ocr_retry_feedback_closure_preview",
+                "ocr_retry_feedback_closure_apply",
+                "ocr_retry_feedback_closure_apply_report",
+                "ocr_retry_feedback_closure_restore_preview",
+                "ocr_retry_feedback_closure_restore",
+            ],
+        )
+
+    def test_feedback_closure_preview_keeps_direct_finish(self) -> None:
+        calls: list[dict[str, Any]] = []
+        finish_calls: list[dict[str, Any]] = []
+
+        def formatter(_report: dict[str, Any]) -> str:
+            return "report"
+
+        def build_preview(**kwargs: Any) -> dict[str, Any]:
+            calls.append(kwargs)
+            return {"state": "blocked"}
+
+        command = closure_dispatch.OcrRetryFeedbackClosureCommand(
+            flag="ocr_retry_feedback_closure_preview",
+            builder=build_preview,
+            formatter=formatter,
+            status_by_state={"blocked": 2},
+            guarded_finish=False,
+            include_run_dir=True,
+        )
+        args = SimpleNamespace(
+            ocr_retry_feedback_closure_preview=True,
+            run_dir="runs/one",
+            confirm=None,
+        )
+
+        with (
+            patch.object(
+                closure_dispatch,
+                "OCR_RETRY_FEEDBACK_CLOSURE_COMMANDS",
+                (command,),
+            ),
+            patch.object(
+                closure_dispatch, "finish_report_with_error_default"
+            ) as guarded,
+        ):
+            status = closure_dispatch.handle_ocr_retry_feedback_closure_commands(
+                args=args,
+                db_path=Path("manual_evals.db"),
+                finish=lambda _report, _formatter, **kwargs: (
+                    finish_calls.append(kwargs) or 31
+                ),
+            )
+
+        self.assertEqual(status, 31)
+        self.assertEqual(calls, [{"run_dir": Path("runs/one")}])
+        self.assertEqual(finish_calls, [{"status_by_state": {"blocked": 2}}])
+        guarded.assert_not_called()
+
+    def test_feedback_closure_apply_keeps_confirmation_and_backup_root(
+        self,
+    ) -> None:
+        calls: list[dict[str, Any]] = []
+
+        def formatter(_report: dict[str, Any]) -> str:
+            return "report"
+
+        def write_apply(**kwargs: Any) -> dict[str, Any]:
+            calls.append(kwargs)
+            return {"state": "applied"}
+
+        command = closure_dispatch.OcrRetryFeedbackClosureCommand(
+            flag="ocr_retry_feedback_closure_apply",
+            builder=write_apply,
+            formatter=formatter,
+            status_by_state={"applied": 0},
+            include_db_path=True,
+            include_run_dir=True,
+            include_confirm_token=True,
+            include_backup_root=True,
+        )
+        args = SimpleNamespace(
+            ocr_retry_feedback_closure_apply=True,
+            run_dir="runs/one",
+            confirm="ocr-retry-feedback-closure-apply",
+            backup_root="archive",
+        )
+
+        with (
+            patch.object(
+                closure_dispatch,
+                "OCR_RETRY_FEEDBACK_CLOSURE_COMMANDS",
+                (command,),
+            ),
+            patch.object(
+                closure_dispatch,
+                "finish_report_with_error_default",
+                return_value=37,
+            ) as guarded,
+        ):
+            status = closure_dispatch.handle_ocr_retry_feedback_closure_commands(
+                args=args,
+                db_path=Path("manual_evals.db"),
+                finish=lambda *_args, **_kwargs: 0,
+            )
+
+        self.assertEqual(status, 37)
+        self.assertEqual(
+            calls,
+            [
+                {
+                    "db_path": Path("manual_evals.db"),
+                    "run_dir": Path("runs/one"),
+                    "confirm_token": "ocr-retry-feedback-closure-apply",
+                    "backup_root": Path("archive"),
+                }
+            ],
+        )
+        guarded.assert_called_once_with(
+            finish=unittest.mock.ANY,
+            report={"state": "applied"},
+            formatter=formatter,
+            status_by_state={"applied": 0},
+        )
+
+    def test_feedback_closure_apply_report_keeps_run_dir_and_ok_status(
+        self,
+    ) -> None:
+        calls: list[dict[str, Any]] = []
+
+        def formatter(_report: dict[str, Any]) -> str:
+            return "report"
+
+        def build_apply_report(**kwargs: Any) -> dict[str, Any]:
+            calls.append(kwargs)
+            return {"state": "ok"}
+
+        command = closure_dispatch.OcrRetryFeedbackClosureCommand(
+            flag="ocr_retry_feedback_closure_apply_report",
+            builder=build_apply_report,
+            formatter=formatter,
+            status_by_state={"ok": 0},
+            include_db_path=True,
+            include_run_dir=True,
+        )
+        args = SimpleNamespace(
+            ocr_retry_feedback_closure_apply_report=True,
+            run_dir="runs/one",
+            confirm=None,
+        )
+
+        with (
+            patch.object(
+                closure_dispatch,
+                "OCR_RETRY_FEEDBACK_CLOSURE_COMMANDS",
+                (command,),
+            ),
+            patch.object(
+                closure_dispatch,
+                "finish_report_with_error_default",
+                return_value=41,
+            ) as guarded,
+        ):
+            status = closure_dispatch.handle_ocr_retry_feedback_closure_commands(
+                args=args,
+                db_path=Path("manual_evals.db"),
+                finish=lambda *_args, **_kwargs: 0,
+            )
+
+        self.assertEqual(status, 41)
+        self.assertEqual(
+            calls,
+            [{"db_path": Path("manual_evals.db"), "run_dir": Path("runs/one")}],
+        )
+        guarded.assert_called_once_with(
+            finish=unittest.mock.ANY,
+            report={"state": "ok"},
+            formatter=formatter,
+            status_by_state={"ok": 0},
+        )
+
+    def test_feedback_closure_restore_preview_keeps_backup_dir_and_ok_status(
+        self,
+    ) -> None:
+        calls: list[dict[str, Any]] = []
+
+        def formatter(_report: dict[str, Any]) -> str:
+            return "report"
+
+        def build_restore_preview(**kwargs: Any) -> dict[str, Any]:
+            calls.append(kwargs)
+            return {"state": "ok"}
+
+        command = closure_dispatch.OcrRetryFeedbackClosureCommand(
+            flag="ocr_retry_feedback_closure_restore_preview",
+            builder=build_restore_preview,
+            formatter=formatter,
+            status_by_state={"ok": 0},
+            include_db_path=True,
+            include_backup_dir=True,
+        )
+        args = SimpleNamespace(
+            ocr_retry_feedback_closure_restore_preview=True,
+            backup_dir="archive/apply",
+            confirm=None,
+        )
+
+        with (
+            patch.object(
+                closure_dispatch,
+                "OCR_RETRY_FEEDBACK_CLOSURE_COMMANDS",
+                (command,),
+            ),
+            patch.object(
+                closure_dispatch,
+                "finish_report_with_error_default",
+                return_value=43,
+            ) as guarded,
+        ):
+            status = closure_dispatch.handle_ocr_retry_feedback_closure_commands(
+                args=args,
+                db_path=Path("manual_evals.db"),
+                finish=lambda *_args, **_kwargs: 0,
+            )
+
+        self.assertEqual(status, 43)
+        self.assertEqual(
+            calls,
+            [
+                {
+                    "db_path": Path("manual_evals.db"),
+                    "backup_dir": Path("archive/apply"),
+                }
+            ],
+        )
+        guarded.assert_called_once_with(
+            finish=unittest.mock.ANY,
+            report={"state": "ok"},
+            formatter=formatter,
+            status_by_state={"ok": 0},
+        )
+
+    def test_feedback_closure_restore_keeps_confirmation_and_restore_root(
+        self,
+    ) -> None:
+        calls: list[dict[str, Any]] = []
+
+        def formatter(_report: dict[str, Any]) -> str:
+            return "report"
+
+        def write_restore(**kwargs: Any) -> dict[str, Any]:
+            calls.append(kwargs)
+            return {"state": "restored"}
+
+        command = closure_dispatch.OcrRetryFeedbackClosureCommand(
+            flag="ocr_retry_feedback_closure_restore",
+            builder=write_restore,
+            formatter=formatter,
+            status_by_state={"restored": 0},
+            include_db_path=True,
+            include_backup_dir=True,
+            include_confirm_token=True,
+            include_restore_root=True,
+        )
+        args = SimpleNamespace(
+            ocr_retry_feedback_closure_restore=True,
+            backup_dir="archive/apply",
+            confirm="ocr-retry-feedback-closure-restore",
+            restore_root="restore-archive",
+        )
+
+        with (
+            patch.object(
+                closure_dispatch,
+                "OCR_RETRY_FEEDBACK_CLOSURE_COMMANDS",
+                (command,),
+            ),
+            patch.object(
+                closure_dispatch,
+                "finish_report_with_error_default",
+                return_value=47,
+            ) as guarded,
+        ):
+            status = closure_dispatch.handle_ocr_retry_feedback_closure_commands(
+                args=args,
+                db_path=Path("manual_evals.db"),
+                finish=lambda *_args, **_kwargs: 0,
+            )
+
+        self.assertEqual(status, 47)
+        self.assertEqual(
+            calls,
+            [
+                {
+                    "db_path": Path("manual_evals.db"),
+                    "backup_dir": Path("archive/apply"),
+                    "confirm_token": "ocr-retry-feedback-closure-restore",
+                    "restore_root": Path("restore-archive"),
+                }
+            ],
+        )
+        guarded.assert_called_once_with(
+            finish=unittest.mock.ANY,
+            report={"state": "restored"},
+            formatter=formatter,
+            status_by_state={"restored": 0},
         )
 
 
