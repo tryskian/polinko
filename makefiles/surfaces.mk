@@ -1,7 +1,7 @@
 # Manual eval workbench, portfolio, and local browser surface targets.
 .PHONY: notebook-setup notebook nb notes manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh manual-evals-db-status manualdb-status manual-evals-db-health manualdb-health manual-evals-feedback-actionables manualdb-feedback-actionables manual-evals-feedback-cohorts manualdb-feedback-cohorts manual-evals-feedback-source-context manualdb-feedback-source-context manual-evals-feedback-decision-draft manualdb-feedback-decision-draft manual-evals-feedback-decision-preview manualdb-feedback-decision-preview manual-evals-overlay-comparison-readiness manualdb-overlay-comparison-readiness manual-evals-overlay-source-index-draft manualdb-overlay-source-index-draft manual-evals-overlay-source-index-validate manualdb-overlay-source-index-validate manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates manual-evals-ocr-retry-source-verification manualdb-ocr-retry-source-verification manual-evals-ocr-retry-source-provenance manualdb-ocr-retry-source-provenance manual-evals-ocr-retry-input-packet manualdb-ocr-retry-input-packet manual-evals-ocr-retry-rerun-manifest manualdb-ocr-retry-rerun-manifest manual-evals-ocr-retry-rerun-plan manualdb-ocr-retry-rerun-plan manual-evals-ocr-retry-selection-review manualdb-ocr-retry-selection-review manual-evals-ocr-retry-selection-template manualdb-ocr-retry-selection-template manual-evals-ocr-retry-selection-draft manualdb-ocr-retry-selection-draft manual-evals-ocr-retry-selection-validate manualdb-ocr-retry-selection-validate manual-evals-ocr-retry-selection-apply-preview manualdb-ocr-retry-selection-apply-preview manual-evals-ocr-retry-execution-readiness manualdb-ocr-retry-execution-readiness manual-evals-ocr-retry-execute manualdb-ocr-retry-execute manual-evals-ocr-retry-execution-report manualdb-ocr-retry-execution-report manual-evals-ocr-retry-feedback-closure-preview manualdb-ocr-retry-feedback-closure-preview manual-evals-ocr-retry-feedback-closure-apply manualdb-ocr-retry-feedback-closure-apply manual-evals-ocr-retry-feedback-closure-apply-report manualdb-ocr-retry-feedback-closure-apply-report manual-evals-ocr-retry-feedback-closure-restore-preview manualdb-ocr-retry-feedback-closure-restore-preview manual-evals-ocr-retry-feedback-closure-restore manualdb-ocr-retry-feedback-closure-restore manual-evals-no-context-reclassify-preview manualdb-no-context-reclassify-preview manual-evals-no-context-reclassify-apply manualdb-no-context-reclassify-apply manual-evals-feedback-reclassify-preview manualdb-feedback-reclassify-preview manual-evals-feedback-reclassify-apply manualdb-feedback-reclassify-apply
 .PHONY: portfolio-install portfolio-app-install frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
-.PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
+.PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-status portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 
 notebook-setup:
 	$(PYTHON) -m pip install -r requirements.notebook.txt
@@ -188,29 +188,13 @@ portfolio-playwright: portfolio
 
 portfolio-mockups:
 	@set -eu; \
-	if [ ! -f "$(PORTFOLIO_MOCKUP_DIR)/landing-mockups.html" ]; then \
-		echo "Portfolio mockup not found: $(PORTFOLIO_MOCKUP_DIR)/landing-mockups.html"; \
-		exit 1; \
-	fi; \
-	if ! curl -fsS "$(PORTFOLIO_MOCKUP_URL)" >/dev/null 2>&1; then \
-		if [ -f "$(PORTFOLIO_MOCKUP_PID_FILE)" ]; then \
-			PID=$$(cat "$(PORTFOLIO_MOCKUP_PID_FILE)" 2>/dev/null || true); \
-			if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
-				kill "$$PID" 2>/dev/null || true; \
-			fi; \
-			rm -f "$(PORTFOLIO_MOCKUP_PID_FILE)"; \
-		fi; \
-		nohup $(PYTHON) -m http.server "$(PORTFOLIO_MOCKUP_PORT)" --bind 127.0.0.1 --directory "$(PORTFOLIO_MOCKUP_DIR)" >"$(PORTFOLIO_MOCKUP_LOG)" 2>&1 & \
-		PID=$$!; \
-		echo "$$PID" >"$(PORTFOLIO_MOCKUP_PID_FILE)"; \
-		sleep 0.5; \
-		if ! kill -0 "$$PID" 2>/dev/null; then \
-			rm -f "$(PORTFOLIO_MOCKUP_PID_FILE)"; \
-			echo "Failed to start portfolio mockup server. Check $(PORTFOLIO_MOCKUP_LOG)."; \
-			exit 1; \
-		fi; \
-		echo "portfolio mockup server started (PID $$PID, log: $(PORTFOLIO_MOCKUP_LOG))."; \
-	fi; \
+	PORTFOLIO_MOCKUP_DIR="$(PORTFOLIO_MOCKUP_DIR)" \
+	PORTFOLIO_MOCKUP_PORT="$(PORTFOLIO_MOCKUP_PORT)" \
+	PORTFOLIO_MOCKUP_URL="$(PORTFOLIO_MOCKUP_URL)" \
+	PORTFOLIO_MOCKUP_PID_FILE="$(PORTFOLIO_MOCKUP_PID_FILE)" \
+	PORTFOLIO_MOCKUP_LOG="$(PORTFOLIO_MOCKUP_LOG)" \
+	PYTHON="$(PYTHON)" \
+		bash "$(PORTFOLIO_MOCKUP_SCRIPT)" start; \
 	URL="$(PORTFOLIO_MOCKUP_URL)?rebuild=$$(date +%s)"; \
 	if PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" PLAYWRIGHT_SESSION="$(PLAYWRIGHT_SESSION)" "$(PWCLI_TOOL)" tab-new "$$URL" >/dev/null 2>&1; then \
 		echo "Opened Playwright mockup tab: $$URL"; \
@@ -219,20 +203,23 @@ portfolio-mockups:
 	fi; \
 	echo "Portfolio mockup URL: $$URL"
 
+portfolio-mockups-status:
+	@PORTFOLIO_MOCKUP_DIR="$(PORTFOLIO_MOCKUP_DIR)" \
+		PORTFOLIO_MOCKUP_PORT="$(PORTFOLIO_MOCKUP_PORT)" \
+		PORTFOLIO_MOCKUP_URL="$(PORTFOLIO_MOCKUP_URL)" \
+		PORTFOLIO_MOCKUP_PID_FILE="$(PORTFOLIO_MOCKUP_PID_FILE)" \
+		PORTFOLIO_MOCKUP_LOG="$(PORTFOLIO_MOCKUP_LOG)" \
+		PYTHON="$(PYTHON)" \
+		bash "$(PORTFOLIO_MOCKUP_SCRIPT)" status
+
 portfolio-mockups-stop:
-	@set -eu; \
-	if [ ! -f "$(PORTFOLIO_MOCKUP_PID_FILE)" ]; then \
-		echo "No portfolio mockup PID file found."; \
-		exit 0; \
-	fi; \
-	PID=$$(cat "$(PORTFOLIO_MOCKUP_PID_FILE)" 2>/dev/null || true); \
-	if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
-		kill "$$PID"; \
-		echo "portfolio mockup server stopped (PID $$PID)."; \
-	else \
-		echo "Stale portfolio mockup PID file; cleaning up."; \
-	fi; \
-	rm -f "$(PORTFOLIO_MOCKUP_PID_FILE)"
+	@PORTFOLIO_MOCKUP_DIR="$(PORTFOLIO_MOCKUP_DIR)" \
+		PORTFOLIO_MOCKUP_PORT="$(PORTFOLIO_MOCKUP_PORT)" \
+		PORTFOLIO_MOCKUP_URL="$(PORTFOLIO_MOCKUP_URL)" \
+		PORTFOLIO_MOCKUP_PID_FILE="$(PORTFOLIO_MOCKUP_PID_FILE)" \
+		PORTFOLIO_MOCKUP_LOG="$(PORTFOLIO_MOCKUP_LOG)" \
+		PYTHON="$(PYTHON)" \
+		bash "$(PORTFOLIO_MOCKUP_SCRIPT)" stop
 
 pwcli playwright-cli:
 	@PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" \

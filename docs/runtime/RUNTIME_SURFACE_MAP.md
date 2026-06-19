@@ -83,8 +83,9 @@ flowchart TD
 - Closeout is the complete stop-state contract: branch-local validation is
   preflight, but the final gate is `make end` from clean synced `main`.
 - Core background runners use one ownership pattern for PID files,
-  stale-process handling, logs, and cleanup commands; portfolio mockups remains
-  queued for the same check when that preview lane is next touched.
+  stale-process handling, logs, cleanup commands, and detached launch
+  behaviour across `caffeinate`, `server-daemon`, `eval-sidecar`, and
+  `portfolio-mockups`.
 - Manual eval and OCR tooling remain active workbench surfaces, but eval runs
   stay separate from startup and read-only inventory commands.
 - CI and dependency automation should mirror local gates closely enough that

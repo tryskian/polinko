@@ -14,6 +14,7 @@ OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
 OPENAI_ACCOUNT_SCRIPT = REPO_ROOT / "tools" / "openai_account_summary.py"
 SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "run_server_daemon.sh"
+PORTFOLIO_MOCKUP_SCRIPT = REPO_ROOT / "tools" / "run_portfolio_mockups.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
 OCR_WORKFLOW_COMMON_SCRIPT = REPO_ROOT / "tools" / "ocr_workflow_common.sh"
@@ -356,6 +357,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-feedback-reclassify-apply", targets)
         self.assertIn("portfolio", targets)
         self.assertIn("portfolio-mockups", targets)
+        self.assertIn("portfolio-mockups-status", targets)
         self.assertIn("pwcli", targets)
 
     def test_manual_eval_db_targets_are_terminal_native_and_backup_first(
@@ -945,8 +947,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(CAFFEINATE_SCRIPT.is_file())
         self.assertTrue(OPENAI_ACCOUNT_SCRIPT.is_file())
         self.assertTrue(SERVER_DAEMON_SCRIPT.is_file())
+        self.assertTrue(PORTFOLIO_MOCKUP_SCRIPT.is_file())
         self.assertTrue(os.access(CAFFEINATE_SCRIPT, os.X_OK))
         self.assertTrue(os.access(SERVER_DAEMON_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(PORTFOLIO_MOCKUP_SCRIPT, os.X_OK))
         caffeinate_script_text = CAFFEINATE_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("start_new_session=True", caffeinate_script_text)
         self.assertNotIn("nohup $caffeinate_cmd", caffeinate_script_text)
@@ -961,10 +965,21 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" start', text)
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" stop', text)
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" status', text)
+        self.assertIn(
+            "PORTFOLIO_MOCKUP_SCRIPT ?= ./tools/run_portfolio_mockups.sh", text
+        )
+        self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" start', text)
+        self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" status', text)
+        self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" stop', text)
         self.assertNotIn('rm -f "$(SERVER_PID_FILE)"', text)
         server_daemon_script_text = SERVER_DAEMON_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("start_new_session=True", server_daemon_script_text)
         self.assertNotIn("nohup", server_daemon_script_text)
+        portfolio_mockup_script_text = PORTFOLIO_MOCKUP_SCRIPT.read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("start_new_session=True", portfolio_mockup_script_text)
+        self.assertNotIn("nohup", portfolio_mockup_script_text)
         self.assertNotIn("nohup $(CAFFEINATE_CMD)", text)
         self.assertNotIn('pgrep -f "^/usr/bin/caffeinate -d -i -m', text)
         self.assertNotIn("/usr/bin/pmset -g assertions", text)

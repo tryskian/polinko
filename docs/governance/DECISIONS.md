@@ -2094,3 +2094,19 @@ or branch history instead.
   `GHSA-4xgf-cpjx-pc3j`, with `2.14.2` listed as the fixed version. Updating
   the generated lock keeps the audit gate meaningful while preserving
   `requirements.in` as the direct dependency input.
+
+## D-135: Standardise portfolio mockup runner lifecycle
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `runtime`, `make`, `portfolio`, `shell_scripts`, `hygiene`
+- Human-led: The human lead asked to clear hidden runtime and script surfaces
+  one surface at a time.
+- Decision: `portfolio-mockups` now delegates server lifecycle work to
+  `tools/run_portfolio_mockups.sh`, with explicit `start`, `status`, and
+  `stop` actions, detached `start_new_session` launch, repo-owned PID/log
+  paths, stale PID handling, and a Make status target.
+- Why: The portfolio mockup preview was the remaining background runner with
+  PID/log/start/stop behaviour embedded directly in the Make recipe. Moving
+  lifecycle ownership into a helper script aligns it with the other local
+  runners and gives tests one focused contract to guard.
