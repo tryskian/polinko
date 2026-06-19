@@ -12,6 +12,9 @@ Use this doc for operator procedure.
   - stable system shape
 - `docs/runtime/SURFACE_IA.md`
   - web surface path roles and planned directory renames
+- `docs/runtime/RUNTIME_SURFACE_MAP.md`
+  - current operator surface map for startup, closeout, background runners,
+    CI, and eval tooling
 - `docs/governance/STATE.md`
   - tracked current truth
 - local `docs/peanut/governance/SESSION_HANDOFF.md`
@@ -39,29 +42,25 @@ Use this doc for operator procedure.
 
 ## Morning Startup Ritual
 
-1. Read in this order:
+1. Run:
+   - `make start`
+2. Read in this order from the printed rehydrate prompt:
    - `docs/governance/CHARTER.md`
    - `docs/governance/STATE.md`
    - local `docs/peanut/governance/SESSION_HANDOFF.md`
    - `docs/runtime/RUNBOOK.md`
    - `docs/runtime/ARCHITECTURE.md`
-2. Confirm execution location:
-   - canonical repo root or dedicated worktree
-3. Confirm active branch:
+3. Confirm execution location:
+   - printed repo root, canonical repo root, or dedicated worktree
+4. Confirm active branch:
    - `git branch --show-current`
-4. If on `main`, create or switch to a feature branch before edits.
-5. If parallel tracks are active, keep each track in its own worktree.
-6. Give the startup breakdown before implementation:
-   - current state
-   - risks
-   - next kernel
-   - repo/worktree context
-   - active branch
-7. After steps 1-6, run:
-   - `make doctor-env`
-   - `make caffeinate`
-   - `make caffeinate-status`
-   - `make api-smoke`
+5. If on `main`, create or switch to a feature branch before edits.
+6. If parallel tracks are active, keep each track in its own worktree.
+7. Reply in the morning ritual before implementation:
+   - context: printed repo root, host vs devcontainer mode, active branch, clean `main` or feature branch, and runtime health
+   - today's kernels: likely work lanes from current docs/state
+   - startup note: one small issue or risk only if something needs attention
+8. Pause for alignment with the human lead before implementation.
 
 ## Environment Doctor
 
@@ -173,7 +172,7 @@ Use this doc for operator procedure.
 - `make decaffeinate-status`
   - report closeout wake-lock status
 - `make api-smoke`
-  - live backend smoke check
+  - live backend smoke check with isolated default localhost port and DB paths
 - `make manual-evals-db-status`
   - print read-only manual eval warehouse freshness without rebuilding
 - `make manual-evals-db`

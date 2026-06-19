@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-18
+Last updated: 2026-06-19
 
 ## Current Truth
 
@@ -106,6 +106,9 @@ Last updated: 2026-06-18
   - `make api-smoke` includes non-browser checks for `/manual-evals/surface`
     and `/viz/pass-fail/data` so source-first schema and summary-unit drift is
     caught in the startup/runtime smoke path
+  - startup/runtime smoke defaults to isolated localhost port and `/tmp`
+    database paths per run, while explicit `SMOKE_PORT`, `SMOKE_BASE_URL`, and
+    smoke DB path overrides remain available for fixed-endpoint debugging
   - `/manual-evals/surface` and `/viz/pass-fail/data` expose read-only
     `data_freshness` status for the local manual eval warehouse so stale,
     schema-old, unknown, or missing source data is visible without rebuilding
@@ -470,6 +473,8 @@ Last updated: 2026-06-18
     child session through the configured Python launcher
   - `make caffeinate-status`, `make decaffeinate`, and `make end` operate on
     the repo-owned PID without adopting unrelated user wake-lock processes
+  - `make start` can run from VS Code folder-open bootstrap without sharing the
+    default API smoke port or smoke database paths with another active startup
   - local URL helpers such as `make docs`, `make open-api-docs`, and
     `make viz` print the target URL by default instead of launching a browser
   - explicit browser launch remains available through `make docs-open`,

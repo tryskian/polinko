@@ -24,15 +24,19 @@ make --no-print-directory api-smoke
 
 echo "[start] REHYDRATE PROMPT"
 cat <<'EOF'
+Morning startup is complete.
+
 Read docs/governance/CHARTER.md, docs/governance/STATE.md, docs/governance/DECISIONS.md, docs/runtime/RUNBOOK.md, docs/runtime/ARCHITECTURE.md, and local docs/peanut/governance/SESSION_HANDOFF.md if present.
 
-In 5 bullets: current state, risks, and next kernel.
+Reply in the morning ritual:
 
-Before starting implementation, confirm environment/workspace context: canonical repo path is /abs/path/to/polinko, confirm host vs devcontainer mode, confirm active git branch, and say whether the thread is on clean main or a feature branch.
+- Context: repo root printed above, host vs devcontainer mode, active branch, clean main or feature branch, and runtime health.
+- Today's kernels: likely work lanes from current docs/state.
+- Startup note: one small issue or risk only if something needs attention.
 
 Apply no-guessing controls: prefer repo-scoped edits and do not modify user shell profile file or global VS Code settings unless explicitly approved in-chat.
 
 Run in one active kernel at a time.
 
-Then execute the Next Slice from SESSION_HANDOFF with minimal behavior drift and full validation.
+Then pause for alignment with the human lead before implementation.
 EOF
