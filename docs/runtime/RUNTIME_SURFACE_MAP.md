@@ -48,7 +48,7 @@ flowchart TD
 
   subgraph Evals["Manual eval and OCR tooling"]
     ManualWorkbench["manual eval workbench"]
-    DbHealth["manual_evals_db_health modules"]
+    DbHealth["manual_evals_db_health command"]
     OcrInventory["read-only OCR inventory"]
     FeedbackDrafts["local decision drafts and previews"]
     EvalAliases["Make eval aliases and wrappers"]
@@ -87,6 +87,9 @@ flowchart TD
   behaviour across `caffeinate`, `server-daemon`, `eval-sidecar`, and
   `portfolio-mockups`.
 - Manual eval and OCR tooling remain active workbench surfaces, but eval runs
-  stay separate from startup and read-only inventory commands.
+  stay separate from startup and read-only inventory commands. Health,
+  feedback, overlay, OCR retry, and reclassification Make targets route through
+  one manual eval health command entrypoint while preserving public target
+  names and preview/apply boundaries.
 - CI and dependency automation should mirror local gates closely enough that
   failed remote runs point to real fixes, not setup drift.

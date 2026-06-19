@@ -375,9 +375,34 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(PYTHON) -m tools.manual_evals_db_status", text)
         self.assertRegex(text, r"(?m)^manual-evals-db-health manualdb-health:$")
         self.assertIn("$(PYTHON) -m tools.manual_evals_db_health", text)
+        self.assertEqual(
+            1,
+            text.count("$(PYTHON) -m tools.manual_evals_db_health"),
+        )
+        self.assertIn(
+            "MANUAL_EVALS_DB_HEALTH_COMMAND ?= "
+            "$(PYTHON) -m tools.manual_evals_db_health",
+            text,
+        )
+        self.assertIn(
+            "manual_evals_db_health = "
+            "$(MANUAL_EVALS_DB_HEALTH_COMMAND) $(1) $(strip $(2))",
+            text,
+        )
         self.assertRegex(
             text,
             r"(?m)^manual-evals-feedback-actionables manualdb-feedback-actionables:$",
+        )
+        self.assertIn(
+            "$(call manual_evals_db_health,--open-feedback-actionables,"
+            "$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))",
+            text,
+        )
+        self.assertIn(
+            "$(call manual_evals_db_health,--ocr-retry-selection-draft,"
+            "$(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS) "
+            "$(MANUAL_EVALS_OCR_RETRY_SELECTION_DRAFT_ARGS))",
+            text,
         )
         self.assertIn("--open-feedback-actionables", text)
         self.assertIn("MANUAL_EVALS_FEEDBACK_COHORT ?= $(COHORT)", text)

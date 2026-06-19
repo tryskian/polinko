@@ -3,6 +3,8 @@
 .PHONY: portfolio-install portfolio-app-install frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
 .PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-status portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 
+manual_evals_db_health = $(MANUAL_EVALS_DB_HEALTH_COMMAND) $(1) $(strip $(2))
+
 notebook-setup:
 	$(PYTHON) -m pip install -r requirements.notebook.txt
 
@@ -26,100 +28,100 @@ manual-evals-db-status manualdb-status:
 	$(PYTHON) -m tools.manual_evals_db_status
 
 manual-evals-db-health manualdb-health:
-	$(PYTHON) -m tools.manual_evals_db_health
+	$(MANUAL_EVALS_DB_HEALTH_COMMAND)
 
 manual-evals-feedback-actionables manualdb-feedback-actionables:
-	$(PYTHON) -m tools.manual_evals_db_health --open-feedback-actionables $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
+	$(call manual_evals_db_health,--open-feedback-actionables,$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
 
 manual-evals-feedback-cohorts manualdb-feedback-cohorts:
-	$(PYTHON) -m tools.manual_evals_db_health --open-feedback-cohorts $(strip $(MANUAL_EVALS_FEEDBACK_FILTER_ARGS))
+	$(call manual_evals_db_health,--open-feedback-cohorts,$(MANUAL_EVALS_FEEDBACK_FILTER_ARGS))
 
 manual-evals-feedback-source-context manualdb-feedback-source-context:
-	$(PYTHON) -m tools.manual_evals_db_health --feedback-source-context $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
+	$(call manual_evals_db_health,--feedback-source-context,$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
 
 manual-evals-feedback-decision-draft manualdb-feedback-decision-draft:
-	$(PYTHON) -m tools.manual_evals_db_health --feedback-decision-draft $(strip $(MANUAL_EVALS_FEEDBACK_DECISION_DRAFT_ARGS))
+	$(call manual_evals_db_health,--feedback-decision-draft,$(MANUAL_EVALS_FEEDBACK_DECISION_DRAFT_ARGS))
 
 manual-evals-feedback-decision-preview manualdb-feedback-decision-preview:
-	$(PYTHON) -m tools.manual_evals_db_health --feedback-decision-preview $(strip $(MANUAL_EVALS_FEEDBACK_DECISION_ARGS))
+	$(call manual_evals_db_health,--feedback-decision-preview,$(MANUAL_EVALS_FEEDBACK_DECISION_ARGS))
 
 manual-evals-overlay-comparison-readiness manualdb-overlay-comparison-readiness:
-	$(PYTHON) -m tools.manual_evals_db_health --overlay-ocr-comparison-readiness $(strip $(MANUAL_EVALS_OVERLAY_COMPARISON_ARGS))
+	$(call manual_evals_db_health,--overlay-ocr-comparison-readiness,$(MANUAL_EVALS_OVERLAY_COMPARISON_ARGS))
 
 manual-evals-overlay-source-index-draft manualdb-overlay-source-index-draft:
-	$(PYTHON) -m tools.manual_evals_db_health --overlay-source-index-draft $(strip $(MANUAL_EVALS_OVERLAY_SOURCE_INDEX_DRAFT_ARGS))
+	$(call manual_evals_db_health,--overlay-source-index-draft,$(MANUAL_EVALS_OVERLAY_SOURCE_INDEX_DRAFT_ARGS))
 
 manual-evals-overlay-source-index-validate manualdb-overlay-source-index-validate:
-	$(PYTHON) -m tools.manual_evals_db_health --overlay-source-index-validate $(strip $(MANUAL_EVALS_OVERLAY_SOURCE_INDEX_VALIDATE_ARGS))
+	$(call manual_evals_db_health,--overlay-source-index-validate,$(MANUAL_EVALS_OVERLAY_SOURCE_INDEX_VALIDATE_ARGS))
 
 manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-candidates $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-candidates,$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
 
 manual-evals-ocr-retry-source-verification manualdb-ocr-retry-source-verification:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-source-verification $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-source-verification,$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
 
 manual-evals-ocr-retry-source-provenance manualdb-ocr-retry-source-provenance:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-source-provenance $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-source-provenance,$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
 
 manual-evals-ocr-retry-input-packet manualdb-ocr-retry-input-packet:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-input-packet $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-input-packet,$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
 
 manual-evals-ocr-retry-rerun-manifest manualdb-ocr-retry-rerun-manifest:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-rerun-manifest $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-rerun-manifest,$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
 
 manual-evals-ocr-retry-rerun-plan manualdb-ocr-retry-rerun-plan:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-rerun-plan $(strip $(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-rerun-plan,$(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS))
 
 manual-evals-ocr-retry-selection-review manualdb-ocr-retry-selection-review:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-selection-review $(strip $(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-selection-review,$(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS))
 
 manual-evals-ocr-retry-selection-template manualdb-ocr-retry-selection-template:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-selection-template $(strip $(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-selection-template,$(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS))
 
 manual-evals-ocr-retry-selection-draft manualdb-ocr-retry-selection-draft:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-selection-draft $(strip $(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS)) $(strip $(MANUAL_EVALS_OCR_RETRY_SELECTION_DRAFT_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-selection-draft,$(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS) $(MANUAL_EVALS_OCR_RETRY_SELECTION_DRAFT_ARGS))
 
 manual-evals-ocr-retry-selection-validate manualdb-ocr-retry-selection-validate:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-selection-validate $(strip $(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS)) $(strip $(MANUAL_EVALS_OCR_RETRY_SELECTION_VALIDATE_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-selection-validate,$(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS) $(MANUAL_EVALS_OCR_RETRY_SELECTION_VALIDATE_ARGS))
 
 manual-evals-ocr-retry-selection-apply-preview manualdb-ocr-retry-selection-apply-preview:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-selection-apply-preview $(strip $(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS)) $(strip $(MANUAL_EVALS_OCR_RETRY_SELECTION_VALIDATE_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-selection-apply-preview,$(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS) $(MANUAL_EVALS_OCR_RETRY_SELECTION_VALIDATE_ARGS))
 
 manual-evals-ocr-retry-execution-readiness manualdb-ocr-retry-execution-readiness:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-execution-readiness $(strip $(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS)) $(strip $(MANUAL_EVALS_OCR_RETRY_SELECTION_VALIDATE_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-execution-readiness,$(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS) $(MANUAL_EVALS_OCR_RETRY_SELECTION_VALIDATE_ARGS))
 
 manual-evals-ocr-retry-execute manualdb-ocr-retry-execute:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-execute $(strip $(MANUAL_EVALS_OCR_RETRY_EXECUTE_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-execute,$(MANUAL_EVALS_OCR_RETRY_EXECUTE_ARGS))
 
 manual-evals-ocr-retry-execution-report manualdb-ocr-retry-execution-report:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-execution-report $(strip $(MANUAL_EVALS_OCR_RETRY_EXECUTION_REPORT_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-execution-report,$(MANUAL_EVALS_OCR_RETRY_EXECUTION_REPORT_ARGS))
 
 manual-evals-ocr-retry-feedback-closure-preview manualdb-ocr-retry-feedback-closure-preview:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-feedback-closure-preview $(strip $(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-feedback-closure-preview,$(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_PREVIEW_ARGS))
 
 manual-evals-ocr-retry-feedback-closure-apply manualdb-ocr-retry-feedback-closure-apply:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-feedback-closure-apply $(strip $(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_APPLY_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-feedback-closure-apply,$(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_APPLY_ARGS))
 
 manual-evals-ocr-retry-feedback-closure-apply-report manualdb-ocr-retry-feedback-closure-apply-report:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-feedback-closure-apply-report $(strip $(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-feedback-closure-apply-report,$(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_APPLY_REPORT_ARGS))
 
 manual-evals-ocr-retry-feedback-closure-restore-preview manualdb-ocr-retry-feedback-closure-restore-preview:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-feedback-closure-restore-preview $(strip $(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-feedback-closure-restore-preview,$(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_ARGS))
 
 manual-evals-ocr-retry-feedback-closure-restore manualdb-ocr-retry-feedback-closure-restore:
-	$(PYTHON) -m tools.manual_evals_db_health --ocr-retry-feedback-closure-restore $(strip $(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_APPLY_ARGS))
+	$(call manual_evals_db_health,--ocr-retry-feedback-closure-restore,$(MANUAL_EVALS_OCR_RETRY_FEEDBACK_CLOSURE_RESTORE_APPLY_ARGS))
 
 manual-evals-no-context-reclassify-preview manualdb-no-context-reclassify-preview:
-	$(PYTHON) -m tools.manual_evals_db_health --no-context-feedback-reclassify-preview $(strip $(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
+	$(call manual_evals_db_health,--no-context-feedback-reclassify-preview,$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))
 
 manual-evals-no-context-reclassify-apply manualdb-no-context-reclassify-apply:
-	$(PYTHON) -m tools.manual_evals_db_health --no-context-feedback-reclassify-apply $(strip $(MANUAL_EVALS_NO_CONTEXT_RECLASSIFY_ARGS))
+	$(call manual_evals_db_health,--no-context-feedback-reclassify-apply,$(MANUAL_EVALS_NO_CONTEXT_RECLASSIFY_ARGS))
 
 manual-evals-feedback-reclassify-preview manualdb-feedback-reclassify-preview:
-	$(PYTHON) -m tools.manual_evals_db_health --feedback-reclassify-preview $(strip $(MANUAL_EVALS_FEEDBACK_RECLASSIFY_ARGS))
+	$(call manual_evals_db_health,--feedback-reclassify-preview,$(MANUAL_EVALS_FEEDBACK_RECLASSIFY_ARGS))
 
 manual-evals-feedback-reclassify-apply manualdb-feedback-reclassify-apply:
-	$(PYTHON) -m tools.manual_evals_db_health --feedback-reclassify-apply $(strip $(MANUAL_EVALS_FEEDBACK_RECLASSIFY_APPLY_ARGS))
+	$(call manual_evals_db_health,--feedback-reclassify-apply,$(MANUAL_EVALS_FEEDBACK_RECLASSIFY_APPLY_ARGS))
 
 portfolio-install:
 	@set -eu; \

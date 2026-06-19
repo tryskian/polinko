@@ -2110,3 +2110,21 @@ or branch history instead.
   PID/log/start/stop behaviour embedded directly in the Make recipe. Moving
   lifecycle ownership into a helper script aligns it with the other local
   runners and gives tests one focused contract to guard.
+
+## D-136: Centralise manual eval health Make dispatch
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `manual_evals`, `make`, `workbench`, `hygiene`
+- Human-led: The human lead asked to keep cleanup focused on one script surface
+  at a time and to clear small Make/runtime blubbles rather than leaving them
+  as warnings.
+- Decision: Manual eval health, feedback, overlay, OCR retry, and
+  reclassification Make targets keep their existing public names, but now route
+  through `MANUAL_EVALS_DB_HEALTH_COMMAND` and a shared Make helper in
+  `makefiles/surfaces.mk`.
+- Why: These targets all dispatch to `tools.manual_evals_db_health` with
+  different flags and argument variables. Centralising the command entrypoint
+  reduces repeated Make recipe text, makes future workbench entrypoint changes
+  one-place edits, and preserves the read-only/preview/apply operator
+  boundaries.
