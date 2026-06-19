@@ -109,6 +109,9 @@ Last updated: 2026-06-19
   - startup/runtime smoke defaults to isolated localhost port and `/tmp`
     database paths per run, while explicit `SMOKE_PORT`, `SMOKE_BASE_URL`, and
     smoke DB path overrides remain available for fixed-endpoint debugging
+  - core background runner lifecycle is script-owned for `caffeinate`,
+    `server-daemon`, and `eval-sidecar`; Make targets delegate start, status,
+    and stop actions to helper scripts with repo-owned PID/log handling
   - `/manual-evals/surface` and `/viz/pass-fail/data` expose read-only
     `data_freshness` status for the local manual eval warehouse so stale,
     schema-old, unknown, or missing source data is visible without rebuilding

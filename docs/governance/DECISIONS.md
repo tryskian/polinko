@@ -2048,3 +2048,18 @@ or branch history instead.
   server's `/health`, and shared default smoke DB paths let overlapping runs
   delete each other's local state. Per-run default resources keep startup smoke
   independent while preserving deliberate fixed-endpoint control.
+
+## D-132: Standardise core background runner lifecycle
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `runtime`, `make`, `shell_scripts`, `server_daemon`, `eval_sidecar`,
+  `hygiene`
+- Decision: Core background runners now route lifecycle operations through
+  their helper scripts. `server-daemon` and `eval-sidecar` use explicit
+  `start`, `status`, and `stop` actions, detached `start_new_session` process
+  launch, repo-owned PID files, log paths, and stale or idle state handling.
+- Why: Runner PID/log handling had drifted between Make recipes and helper
+  scripts. Keeping lifecycle ownership in scripts matches the existing
+  `caffeinate` pattern, makes Make targets thinner, and gives tests one place
+  to guard local runner behaviour.

@@ -147,6 +147,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "SERVER_DAEMON_SCRIPT ?= ./tools/run_server_daemon.sh", config_text
         )
+        self.assertIn("SERVER_LAUNCHER_PYTHON ?= $(PYTHON)", config_text)
         self.assertIn("SERVER_DAEMON_ENV =", config_text)
         self.assertIn("PORTFOLIO_APP_DIR ?= apps/portfolio", config_text)
         self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", config_text)
@@ -207,6 +208,7 @@ class MakefileContractTests(unittest.TestCase):
             "EVAL_SIDECAR_START_SCRIPT ?= ./tools/run_eval_sidecar_start.sh",
             config_text,
         )
+        self.assertIn("EVAL_SIDECAR_LAUNCHER_PYTHON ?= $(PYTHON)", config_text)
         self.assertIn("EVAL_SIDECAR_START_ENV =", config_text)
         self.assertIn(
             "LOCAL_EVAL_GATE_RUNNER_SCRIPT ?= ./tools/run_local_eval_gate.sh",
@@ -956,7 +958,13 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('bash "$(CAFFEINATE_SCRIPT)" stop', text)
         self.assertIn('bash "$(CAFFEINATE_SCRIPT)" stop-all', text)
         self.assertIn('bash "$(CAFFEINATE_SCRIPT)" status', text)
-        self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)"', text)
+        self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" start', text)
+        self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" stop', text)
+        self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" status', text)
+        self.assertNotIn('rm -f "$(SERVER_PID_FILE)"', text)
+        server_daemon_script_text = SERVER_DAEMON_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("start_new_session=True", server_daemon_script_text)
+        self.assertNotIn("nohup", server_daemon_script_text)
         self.assertNotIn("nohup $(CAFFEINATE_CMD)", text)
         self.assertNotIn('pgrep -f "^/usr/bin/caffeinate -d -i -m', text)
         self.assertNotIn("/usr/bin/pmset -g assertions", text)
@@ -1009,6 +1017,13 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(os.access(OCR_GROWTH_STABILITY_RUNNER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_REPORT_BUILDER_SCRIPT, os.X_OK))
         self.assertTrue(os.access(OCR_REPORT_WORKFLOW_SCRIPT, os.X_OK))
+        text = _makefile_contract_text()
+        self.assertIn('bash "$(EVAL_SIDECAR_START_SCRIPT)" start', text)
+        self.assertIn('bash "$(EVAL_SIDECAR_START_SCRIPT)" status', text)
+        self.assertIn('bash "$(EVAL_SIDECAR_START_SCRIPT)" stop', text)
+        sidecar_script_text = EVAL_SIDECAR_START_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("start_new_session=True", sidecar_script_text)
+        self.assertNotIn("nohup", sidecar_script_text)
         for script in (
             OCR_EVAL_RUNNER_SCRIPT,
             OCR_STABILITY_RUNNER_SCRIPT,

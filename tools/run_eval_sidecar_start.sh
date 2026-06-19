@@ -1,12 +1,21 @@
-#!/usr/bin/env sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
 
-if [ "$#" -ne 0 ]; then
-	echo "Usage: run_eval_sidecar_start.sh" >&2
+usage() {
+	echo "Usage: run_eval_sidecar_start.sh {start|status|stop}" >&2
+}
+
+if [ "$#" -eq 0 ]; then
+	action=start
+elif [ "$#" -eq 1 ]; then
+	action=$1
+else
+	usage
 	exit 2
 fi
 
 python_bin=${PYTHON:-python3}
+launcher_python=${EVAL_SIDECAR_LAUNCHER_PYTHON:-python3}
 target=${EVAL_SIDECAR_TARGET:-quality-gate-deterministic}
 min_seconds=${EVAL_SIDECAR_MIN_SECONDS:-3600}
 runs_dir=${EVAL_SIDECAR_RUNS_DIR:-.local/eval_runs}
@@ -14,28 +23,118 @@ pid_file=${EVAL_SIDECAR_PID_FILE:-/tmp/polinko-eval-sidecar.pid}
 current_file=${EVAL_SIDECAR_CURRENT_FILE:-$runs_dir/eval_sidecar_current.txt}
 log_path=${EVAL_SIDECAR_LOG:-/tmp/polinko-eval-sidecar.log}
 
-if [ -f "$pid_file" ]; then
+launch_detached_sidecar() {
+	"$launcher_python" - "$pid_file" "$log_path" "$python_bin" "$target" "$min_seconds" "$runs_dir" "$current_file" <<'PY'
+import subprocess
+import sys
+
+pid_file, log_path, python_bin, target, min_seconds, runs_dir, current_file = sys.argv[1:8]
+args = [
+    python_bin,
+    "-m",
+    "tools.eval_sidecar",
+    "run",
+    "--target",
+    target,
+    "--min-seconds",
+    min_seconds,
+    "--runs-dir",
+    runs_dir,
+    "--pid-file",
+    pid_file,
+    "--current-file",
+    current_file,
+]
+
+with open(log_path, "ab", buffering=0) as log:
+    process = subprocess.Popen(
+        args,
+        stdin=subprocess.DEVNULL,
+        stdout=log,
+        stderr=subprocess.STDOUT,
+        start_new_session=True,
+        close_fds=True,
+    )
+
+with open(pid_file, "w", encoding="utf-8") as handle:
+    handle.write(str(process.pid))
+PY
+}
+
+start_sidecar() {
+	if [ -f "$pid_file" ]; then
+		pid=$(cat "$pid_file" 2>/dev/null || true)
+		if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+			echo "eval-sidecar already running (PID $pid)."
+			exit 0
+		fi
+		rm -f "$pid_file"
+	fi
+
+	mkdir -p "$(dirname "$pid_file")" "$(dirname "$log_path")" "$(dirname "$current_file")"
+	if ! launch_detached_sidecar; then
+		rm -f "$pid_file"
+		echo "Failed to start eval-sidecar. Check $log_path."
+		exit 1
+	fi
 	pid=$(cat "$pid_file" 2>/dev/null || true)
-	if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-		echo "eval-sidecar already running (PID $pid)."
+	sleep 0.2
+	if kill -0 "$pid" 2>/dev/null; then
+		echo "eval-sidecar started (PID $pid, log: $log_path)."
+	else
+		rm -f "$pid_file"
+		echo "Failed to start eval-sidecar. Check $log_path."
+		exit 1
+	fi
+}
+
+status_sidecar() {
+	if [ ! -f "$current_file" ]; then
+		if [ -f "$pid_file" ]; then
+			pid=$(cat "$pid_file" 2>/dev/null || true)
+			if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+				echo "eval-sidecar: RUNNING (PID $pid)."
+				echo "eval-sidecar current file missing: $current_file"
+				exit 1
+			fi
+			echo "eval-sidecar: STALE PID file."
+			exit 1
+		fi
+		echo "eval-sidecar: OFF."
 		exit 0
 	fi
-	rm -f "$pid_file"
-fi
+	"$python_bin" -m tools.eval_sidecar status --current-file "$current_file" --pid-file "$pid_file"
+}
 
-mkdir -p "$(dirname "$log_path")"
-nohup "$python_bin" -m tools.eval_sidecar run \
-	--target "$target" \
-	--min-seconds "$min_seconds" \
-	--runs-dir "$runs_dir" \
-	--pid-file "$pid_file" \
-	--current-file "$current_file" \
-	>"$log_path" 2>&1 &
-pid=$!
-sleep 0.2
-if kill -0 "$pid" 2>/dev/null; then
-	echo "eval-sidecar started (PID $pid, log: $log_path)."
-else
-	echo "Failed to start eval-sidecar. Check $log_path."
-	exit 1
-fi
+stop_sidecar() {
+	if [ ! -f "$current_file" ]; then
+		if [ -f "$pid_file" ]; then
+			pid=$(cat "$pid_file" 2>/dev/null || true)
+			if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+				echo "eval-sidecar current file missing: $current_file"
+				echo "Refusing to stop a live sidecar without run context (PID $pid)."
+				exit 1
+			fi
+			rm -f "$pid_file"
+		fi
+		echo "No eval-sidecar run found."
+		exit 0
+	fi
+	"$python_bin" -m tools.eval_sidecar stop --current-file "$current_file" --pid-file "$pid_file"
+}
+
+case "$action" in
+	start)
+		start_sidecar
+		;;
+	status)
+		status_sidecar
+		;;
+	stop)
+		stop_sidecar
+		;;
+	*)
+		usage
+		exit 2
+		;;
+esac
