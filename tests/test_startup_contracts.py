@@ -16,7 +16,9 @@ class StartupContractTests(unittest.TestCase):
         self.assertIn("Morning startup is complete.", script)
         self.assertIn("Reply in the morning ritual:", script)
         self.assertIn("Context: repo root printed above", script)
-        self.assertIn("Today's kernels: likely work lanes", script)
+        self.assertIn("Kernel candidates: likely lanes", script)
+        self.assertIn("one recommended first kernel", script)
+        self.assertIn("stop before broadening", script)
         self.assertIn("pause for alignment with the human lead", script)
         self.assertNotIn("/abs/path/to/polinko", script)
         self.assertNotIn("In 5 bullets", script)
@@ -27,8 +29,10 @@ class StartupContractTests(unittest.TestCase):
         runbook = _read("docs/runtime/RUNBOOK.md")
 
         self.assertIn("reply in the morning ritual", start_reference)
+        self.assertIn("kernel candidates", start_reference)
         self.assertIn("pause for alignment with the human lead", start_reference)
         self.assertIn("Reply in the morning ritual before implementation", runbook)
+        self.assertIn("kernel candidates", runbook)
         self.assertIn("Pause for alignment with the human lead", runbook)
         self.assertNotIn("execute the `Next Slice`", start_reference)
 
