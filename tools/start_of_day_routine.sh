@@ -31,12 +31,12 @@ Read docs/governance/CHARTER.md, docs/governance/STATE.md, docs/governance/DECIS
 Reply in the morning ritual:
 
 - Context: repo root printed above, host vs devcontainer mode, active branch, clean main or feature branch, and runtime health.
-- Today's kernels: likely work lanes from current docs/state.
+- Kernel candidates: likely lanes from current docs/state, with one recommended first kernel.
 - Startup note: one small issue or risk only if something needs attention.
 
 Apply no-guessing controls: prefer repo-scoped edits and do not modify user shell profile file or global VS Code settings unless explicitly approved in-chat.
 
-Run in one active kernel at a time.
+After alignment, run one active kernel at a time and stop before broadening.
 
 Then pause for alignment with the human lead before implementation.
 EOF

@@ -58,9 +58,11 @@ Use this doc for operator procedure.
 6. If parallel tracks are active, keep each track in its own worktree.
 7. Reply in the morning ritual before implementation:
    - context: printed repo root, host vs devcontainer mode, active branch, clean `main` or feature branch, and runtime health
-   - today's kernels: likely work lanes from current docs/state
+   - kernel candidates: likely lanes from current docs/state, with one
+     recommended first kernel
    - startup note: one small issue or risk only if something needs attention
-8. Pause for alignment with the human lead before implementation.
+8. After alignment, run one active kernel at a time and stop before broadening.
+9. Pause for alignment with the human lead before implementation.
 
 ## Environment Doctor
 

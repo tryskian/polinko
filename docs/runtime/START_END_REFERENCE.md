@@ -31,10 +31,12 @@ Sequence:
      - read `CHARTER`, `STATE`, `DECISIONS`, `RUNBOOK`, `ARCHITECTURE`, and local `SESSION_HANDOFF` if present
      - reply in the morning ritual
      - include context: printed repo root, host vs devcontainer mode, active branch, clean `main` or feature branch, and runtime health
-     - include today's kernels: likely work lanes from current docs/state
+     - include kernel candidates: likely lanes from current docs/state, with
+       one recommended first kernel
      - include one startup note only if something needs attention
      - apply the no-guessing controls
-     - run one active kernel at a time
+     - after alignment, run one active kernel at a time and stop before
+       broadening
      - pause for alignment with the human lead before implementation
 
 Source of truth:
