@@ -2033,3 +2033,18 @@ or branch history instead.
 - Why: Script helper drift had been handled as convention. A named gate keeps
   local operators, CI wrappers, and closeout helpers aligned before longer
   validation steps run.
+
+## D-131: Isolate startup API smoke resources
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `startup`, `api_smoke`, `vscode`, `ports`, `runtime`, `sqlite`
+- Decision: Default smoke runs allocate an isolated localhost port and run-scoped
+  `/tmp` database paths when smoke endpoint and DB path overrides are unset.
+  Explicit smoke endpoint and DB path overrides remain available for fixed-port
+  debugging.
+- Why: VS Code folder-open bootstrap can overlap with a manual or automatic
+  startup. A fixed default smoke port lets the second run observe the first
+  server's `/health`, and shared default smoke DB paths let overlapping runs
+  delete each other's local state. Per-run default resources keep startup smoke
+  independent while preserving deliberate fixed-endpoint control.

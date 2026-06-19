@@ -15,6 +15,9 @@ This page is the structural map of the tracked system.
   execution gate.
 - Use `docs/runtime/OCR_RETRY_EXECUTION_GATE.md` for the local-bundle OCR retry
   execution gate contract.
+- Use `docs/runtime/RUNTIME_SURFACE_MAP.md` for the current runtime/operator
+  surface map across startup, closeout, background runners, CI, and eval
+  tooling.
 
 ## Top-Level Map
 
@@ -164,6 +167,8 @@ This page is the structural map of the tracked system.
 - `OCR_RETRY_EXECUTION_GATE`
   - local-bundle OCR retry execution gate shape, mutation boundary, and
     rollback/inspection/closure-preview/apply-design contract
+- `RUNTIME_SURFACE_MAP`
+  - current startup, closeout, runner, CI, and eval/tooling map
 - local `SESSION_HANDOFF`
   - active slice and next-session carryover
 

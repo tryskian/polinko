@@ -16,6 +16,19 @@ def _write_executable(path: Path, text: str) -> None:
 
 
 class RunLocalEvalGateTests(unittest.TestCase):
+    def test_default_smoke_resources_are_run_scoped(self) -> None:
+        config = (REPO_ROOT / "makefiles" / "config" / "evals.mk").read_text(
+            encoding="utf-8"
+        )
+        runner = RUNNER_SCRIPT.read_text(encoding="utf-8")
+
+        self.assertIn("SMOKE_PORT ?=\n", config)
+        self.assertIn("SMOKE_BASE_URL ?=\n", config)
+        self.assertIn("SMOKE_HISTORY_DB ?=\n", config)
+        self.assertIn("/tmp/polinko-eval-smoke-$$-history.db", runner)
+        self.assertIn("/tmp/polinko-eval-smoke-$$-memory.db", runner)
+        self.assertIn("/tmp/polinko-eval-smoke-$$-vector.db", runner)
+
     def _base_env(self, tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
         bin_dir = tmp_path / "bin"
         bin_dir.mkdir()
@@ -31,6 +44,10 @@ class RunLocalEvalGateTests(unittest.TestCase):
             python_script,
             """#!/usr/bin/env sh
 set -eu
+if [ "${1:-}" = "-" ]; then
+\tprintf "%s\\n" "${DYNAMIC_PORT:-9993}"
+\texit 0
+fi
 first=1
 for arg in "$@"; do
 \tif [ "$first" -eq 1 ]; then
@@ -43,6 +60,9 @@ done
 printf "\\n" >> "$PYTHON_ARGS"
 if [ "${1:-}" = "-m" ] && [ "${2:-}" = "uvicorn" ]; then
 \t: > "$SERVER_STARTED"
+\tif [ "${UVICORN_EXIT_IMMEDIATELY:-0}" = "1" ]; then
+\t\texit 1
+\tfi
 \texec /bin/sleep 30
 fi
 """,
@@ -331,6 +351,62 @@ exit "${CURL_EXIT:-0}"
             self.assertEqual(result.returncode, 1)
             self.assertIn(
                 "Server failed to start. See /tmp/polinko-api-smoke.log", result.stdout
+            )
+            self.assertEqual(
+                self._read_calls(python_args),
+                [
+                    [
+                        "-m",
+                        "uvicorn",
+                        "custom_server:app",
+                        "--host",
+                        "127.0.0.1",
+                        "--port",
+                        "9991",
+                    ]
+                ],
+            )
+
+    def test_api_smoke_default_uses_dynamic_port(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env.pop("SMOKE_PORT")
+            env.pop("SMOKE_BASE_URL")
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            calls = self._read_calls(python_args)
+            self.assertEqual(
+                calls[0][0:5],
+                ["-m", "uvicorn", "custom_server:app", "--host", "127.0.0.1"],
+            )
+            dynamic_port = calls[0][6]
+            self.assertNotEqual(dynamic_port, "9991")
+            self.assertEqual(calls[0][-2:], ["--port", dynamic_port])
+            self.assertEqual(
+                calls[1],
+                [
+                    "-m",
+                    "tools.api_smoke",
+                    "--base-url",
+                    f"http://127.0.0.1:{dynamic_port}",
+                ],
+            )
+
+    def test_dead_server_stops_before_eval_commands(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env["UVICORN_EXIT_IMMEDIATELY"] = "1"
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "Server failed to stay running. See /tmp/polinko-api-smoke.log",
+                result.stdout,
             )
             self.assertEqual(
                 self._read_calls(python_args),

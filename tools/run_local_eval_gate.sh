@@ -30,6 +30,29 @@ cleanup_server() {
 
 trap cleanup_server EXIT INT TERM
 
+choose_loopback_port() {
+	"$python_bin" - <<'PY'
+import socket
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+    sock.bind(("127.0.0.1", 0))
+    print(sock.getsockname()[1])
+PY
+}
+
+server_is_running() {
+	if ! kill -0 "$server_pid" 2>/dev/null; then
+		return 1
+	fi
+	state=$(ps -p "$server_pid" -o stat= 2>/dev/null || true)
+	case "$state" in
+	*Z*)
+		return 1
+		;;
+	esac
+	return 0
+}
+
 start_local_server() {
 	scope=$1
 	base_url=$2
@@ -38,13 +61,16 @@ start_local_server() {
 
 	case "$scope" in
 	smoke)
+		smoke_history_db=${SMOKE_HISTORY_DB:-/tmp/polinko-eval-smoke-$$-history.db}
+		smoke_memory_db=${SMOKE_MEMORY_DB:-/tmp/polinko-eval-smoke-$$-memory.db}
+		smoke_vector_db=${SMOKE_VECTOR_DB:-/tmp/polinko-eval-smoke-$$-vector.db}
 		rm -f \
-			"${SMOKE_HISTORY_DB:-/tmp/polinko-eval-smoke-history.db}" \
-			"${SMOKE_MEMORY_DB:-/tmp/polinko-eval-smoke-memory.db}" \
-			"${SMOKE_VECTOR_DB:-/tmp/polinko-eval-smoke-vector.db}"
-		POLINKO_HISTORY_DB_PATH="${SMOKE_HISTORY_DB:-/tmp/polinko-eval-smoke-history.db}" \
-			POLINKO_MEMORY_DB_PATH="${SMOKE_MEMORY_DB:-/tmp/polinko-eval-smoke-memory.db}" \
-			POLINKO_VECTOR_DB_PATH="${SMOKE_VECTOR_DB:-/tmp/polinko-eval-smoke-vector.db}" \
+			"$smoke_history_db" \
+			"$smoke_memory_db" \
+			"$smoke_vector_db"
+		POLINKO_HISTORY_DB_PATH="$smoke_history_db" \
+			POLINKO_MEMORY_DB_PATH="$smoke_memory_db" \
+			POLINKO_VECTOR_DB_PATH="$smoke_vector_db" \
 			POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
 			"$python_bin" -m uvicorn "$asgi_app" --host 127.0.0.1 --port "$port" >"$log_path" 2>&1 &
 		;;
@@ -67,12 +93,20 @@ start_local_server() {
 	server_pid=$!
 	ready=0
 	for _ in $(seq 1 100); do
+		if ! server_is_running; then
+			echo "Server failed to stay running. See $log_path"
+			exit 1
+		fi
 		if curl -fsS "$base_url/health" >/dev/null 2>&1; then
 			ready=1
 			break
 		fi
 		sleep 0.2
 	done
+	if ! server_is_running; then
+		echo "Server failed to stay running. See $log_path"
+		exit 1
+	fi
 	if [ "$ready" -ne 1 ]; then
 		echo "Server failed to start. See $log_path"
 		exit 1
@@ -80,19 +114,21 @@ start_local_server() {
 }
 
 run_api_smoke() {
-	base_url=${SMOKE_BASE_URL:-http://127.0.0.1:8067}
+	port=${SMOKE_PORT:-$(choose_loopback_port)}
+	base_url=${SMOKE_BASE_URL:-http://127.0.0.1:$port}
 
 	echo "Running API smoke (fresh local server + small endpoint calls)..."
-	start_local_server smoke "$base_url" "${SMOKE_PORT:-8067}" /tmp/polinko-api-smoke.log
+	start_local_server smoke "$base_url" "$port" /tmp/polinko-api-smoke.log
 	"$python_bin" -m tools.api_smoke --base-url "$base_url"
 	echo "API smoke passed."
 }
 
 run_eval_smoke() {
-	base_url=${SMOKE_BASE_URL:-http://127.0.0.1:8067}
+	port=${SMOKE_PORT:-$(choose_loopback_port)}
+	base_url=${SMOKE_BASE_URL:-http://127.0.0.1:$port}
 
 	echo "Running eval smoke (fresh local server + api smoke + response behaviour + retrieval + file search)..."
-	start_local_server smoke "$base_url" "${SMOKE_PORT:-8067}" /tmp/polinko-eval-smoke.log
+	start_local_server smoke "$base_url" "$port" /tmp/polinko-eval-smoke.log
 	"$python_bin" -m tools.api_smoke --base-url "$base_url"
 	"$python_bin" -m tools.eval_response_behaviour --base-url "$base_url" --strict
 	"$python_bin" -m tools.eval_retrieval \

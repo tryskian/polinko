@@ -27,12 +27,15 @@ Sequence:
 3. Stop before repo action:
    - print the canonical rehydrate prompt
    - the prompt tells the agent to:
+     - say morning startup is complete
      - read `CHARTER`, `STATE`, `DECISIONS`, `RUNBOOK`, `ARCHITECTURE`, and local `SESSION_HANDOFF` if present
-     - return 5 bullets covering current state, risks, and next kernel
-     - confirm repo path, host vs devcontainer mode, active branch, and whether the thread is on clean `main` or a feature branch
+     - reply in the morning ritual
+     - include context: printed repo root, host vs devcontainer mode, active branch, clean `main` or feature branch, and runtime health
+     - include today's kernels: likely work lanes from current docs/state
+     - include one startup note only if something needs attention
      - apply the no-guessing controls
      - run one active kernel at a time
-     - execute the `Next Slice` from `SESSION_HANDOFF` with full validation
+     - pause for alignment with the human lead before implementation
 
 Source of truth:
 
@@ -110,6 +113,9 @@ Explicit companion checks:
     contracts
 - `make security-checks`
   - runs local Python and Node dependency audits
+- `make api-smoke`
+  - uses isolated default localhost port and DB paths unless `SMOKE_PORT`,
+    `SMOKE_BASE_URL`, and smoke DB paths are set explicitly
 - `make refresh-deps`
   - refreshes local Python, root npm, and portfolio npm dependency surfaces
     after Dependabot or dependency metadata changes
