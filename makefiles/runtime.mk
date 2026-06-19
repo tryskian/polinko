@@ -48,35 +48,13 @@ localhost server:
 	$(PYTHON) -m uvicorn $(ASGI_APP) --host "$(DEV_HOST)" --port "$(DEV_BACKEND_PORT)" --reload
 
 server-daemon:
-	@$(SERVER_DAEMON_ENV) bash "$(SERVER_DAEMON_SCRIPT)"
+	@$(SERVER_DAEMON_ENV) bash "$(SERVER_DAEMON_SCRIPT)" start
 
 server-daemon-stop:
-	@set -eu; \
-	if [ ! -f "$(SERVER_PID_FILE)" ]; then \
-		echo "No server-daemon PID file found."; \
-		exit 0; \
-	fi; \
-	PID=$$(cat "$(SERVER_PID_FILE)" 2>/dev/null || true); \
-	if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
-		kill "$$PID"; \
-		echo "server-daemon stopped (PID $$PID)."; \
-	else \
-		echo "Stale server-daemon PID file; cleaning up."; \
-	fi; \
-	rm -f "$(SERVER_PID_FILE)"
+	@$(SERVER_DAEMON_ENV) bash "$(SERVER_DAEMON_SCRIPT)" stop
 
 server-daemon-status:
-	@set -eu; \
-	if [ -f "$(SERVER_PID_FILE)" ]; then \
-		PID=$$(cat "$(SERVER_PID_FILE)" 2>/dev/null || true); \
-		if [ -n "$$PID" ] && kill -0 "$$PID" 2>/dev/null; then \
-			echo "server-daemon: RUNNING (PID $$PID)."; \
-			exit 0; \
-		fi; \
-		echo "server-daemon: STALE PID file."; \
-		exit 1; \
-	fi; \
-	echo "server-daemon: OFF."
+	@$(SERVER_DAEMON_ENV) bash "$(SERVER_DAEMON_SCRIPT)" status
 
 open-api-docs: server-daemon
 	@set -eu; \

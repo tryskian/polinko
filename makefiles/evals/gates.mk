@@ -9,13 +9,13 @@ eval-smoke:
 	@$(LOCAL_EVAL_GATE_RUNNER_ENV) bash "$(LOCAL_EVAL_GATE_RUNNER_SCRIPT)" eval-smoke
 
 eval-sidecar-start:
-	@$(EVAL_SIDECAR_START_ENV) bash "$(EVAL_SIDECAR_START_SCRIPT)"
+	@$(EVAL_SIDECAR_START_ENV) bash "$(EVAL_SIDECAR_START_SCRIPT)" start
 
 eval-sidecar-status:
-	$(PYTHON) -m tools.eval_sidecar status --current-file "$(EVAL_SIDECAR_CURRENT_FILE)" --pid-file "$(EVAL_SIDECAR_PID_FILE)"
+	@$(EVAL_SIDECAR_START_ENV) bash "$(EVAL_SIDECAR_START_SCRIPT)" status
 
 eval-sidecar-stop:
-	$(PYTHON) -m tools.eval_sidecar stop --current-file "$(EVAL_SIDECAR_CURRENT_FILE)" --pid-file "$(EVAL_SIDECAR_PID_FILE)"
+	@$(EVAL_SIDECAR_START_ENV) bash "$(EVAL_SIDECAR_START_SCRIPT)" stop
 
 operator-burden-report:
 	$(PYTHON) -m tools.report_operator_burden_rows

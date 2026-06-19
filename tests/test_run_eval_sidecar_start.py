@@ -135,6 +135,74 @@ class RunEvalSidecarStartTests(unittest.TestCase):
             )
             self.assertTrue((tmp_path / "logs").is_dir())
 
+    def test_status_reports_off_without_current_run(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "sidecar.pid"
+            current_file = tmp_path / "current.txt"
+            args_file = tmp_path / "python-args.txt"
+            python_script = tmp_path / "python.sh"
+            _write_executable(
+                python_script,
+                '#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$PYTHON_ARGS"\n',
+            )
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "PYTHON": str(python_script),
+                    "PYTHON_ARGS": str(args_file),
+                    "EVAL_SIDECAR_PID_FILE": str(pid_file),
+                    "EVAL_SIDECAR_CURRENT_FILE": str(current_file),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("eval-sidecar: OFF.", result.stdout)
+            self.assertFalse(args_file.exists())
+
+    def test_stop_is_noop_without_current_run(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "sidecar.pid"
+            current_file = tmp_path / "current.txt"
+            args_file = tmp_path / "python-args.txt"
+            python_script = tmp_path / "python.sh"
+            _write_executable(
+                python_script,
+                '#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$PYTHON_ARGS"\n',
+            )
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "PYTHON": str(python_script),
+                    "PYTHON_ARGS": str(args_file),
+                    "EVAL_SIDECAR_PID_FILE": str(pid_file),
+                    "EVAL_SIDECAR_CURRENT_FILE": str(current_file),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "stop"],
+                cwd=REPO_ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("No eval-sidecar run found.", result.stdout)
+            self.assertFalse(args_file.exists())
+
     def test_rejects_arguments(self) -> None:
         result = subprocess.run(
             ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "extra"],
