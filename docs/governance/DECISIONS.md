@@ -2063,3 +2063,34 @@ or branch history instead.
   scripts. Keeping lifecycle ownership in scripts matches the existing
   `caffeinate` pattern, makes Make targets thinner, and gives tests one place
   to guard local runner behaviour.
+
+## D-133: Add Starlette test-client compatibility dependency
+
+- Date: `2026-06-19`
+- Category: `dependency_management`
+- Tags: `starlette`, `testclient`, `httpx2`, `requirements`, `closeout`
+- Human-led: The human lead asked to clear small closeout blubbles after
+  `make end` surfaced a Starlette test-client deprecation warning.
+- Decision: Add `httpx2==2.4.0` to `requirements.in` and regenerate
+  `requirements.txt` through pip-tools. Keep `httpx` in the lock for packages
+  that still depend on it, and let Starlette's test client use `httpx2`
+  directly.
+- Why: `starlette.testclient` now prefers `httpx2` and falls back to `httpx`
+  with a deprecation warning when `httpx2` is absent. Pinning the compatibility
+  package in the direct dependency input removes closeout warning noise while
+  preserving the standard `requirements.in` plus generated `requirements.txt`
+  workflow.
+
+## D-134: Refresh pydantic-settings security lock
+
+- Date: `2026-06-19`
+- Category: `dependency_management`
+- Tags: `pip_audit`, `pydantic_settings`, `requirements`, `security`
+- Human-led: The human lead asked for small closeout blubbles to be fixed, and
+  the dependency audit surfaced a Python security advisory during validation.
+- Decision: Refresh the transitive `pydantic-settings` lock entry from
+  `2.13.1` to `2.14.2` in `requirements.txt`.
+- Why: The Python security gate flagged `pydantic-settings==2.13.1` for
+  `GHSA-4xgf-cpjx-pc3j`, with `2.14.2` listed as the fixed version. Updating
+  the generated lock keeps the audit gate meaningful while preserving
+  `requirements.in` as the direct dependency input.
