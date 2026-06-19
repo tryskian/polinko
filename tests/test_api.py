@@ -45,7 +45,7 @@ class PolinkoApiTests(unittest.TestCase):
 
     def setUp(self) -> None:
         self._saved_logger_levels = {}
-        for logger_name in ("httpx", "polinko.api"):
+        for logger_name in ("httpx", "httpx2", "polinko.api"):
             logger = logging.getLogger(logger_name)
             self._saved_logger_levels[logger_name] = logger.level
             logger.setLevel(logging.CRITICAL + 1)
