@@ -354,6 +354,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-ocr-retry-execution-report", targets)
         self.assertIn("manual-evals-ocr-retry-feedback-closure-preview", targets)
         self.assertIn("manualdb-ocr-retry-feedback-closure-preview", targets)
+        self.assertIn("manual-evals-ocr-retry-feedback-closure-apply", targets)
+        self.assertIn("manualdb-ocr-retry-feedback-closure-apply", targets)
+        self.assertIn("manual-evals-ocr-retry-feedback-closure-apply-report", targets)
+        self.assertIn("manualdb-ocr-retry-feedback-closure-apply-report", targets)
         self.assertIn("manual-evals-no-context-reclassify-preview", targets)
         self.assertIn("manualdb-no-context-reclassify-preview", targets)
         self.assertIn("manual-evals-no-context-reclassify-apply", targets)
@@ -564,6 +568,18 @@ class MakefileContractTests(unittest.TestCase):
             r"manualdb-ocr-retry-feedback-closure-preview:$",
         )
         self.assertIn("--ocr-retry-feedback-closure-preview", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-ocr-retry-feedback-closure-apply "
+            r"manualdb-ocr-retry-feedback-closure-apply:$",
+        )
+        self.assertIn("--ocr-retry-feedback-closure-apply", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-ocr-retry-feedback-closure-apply-report "
+            r"manualdb-ocr-retry-feedback-closure-apply-report:$",
+        )
+        self.assertIn("--ocr-retry-feedback-closure-apply-report", text)
         self.assertRegex(
             text,
             r"(?m)^manual-evals-ocr-retry-feedback-closure-restore-preview "
