@@ -500,4 +500,5 @@ Dependency maintenance:
 - `make openai-limits OPENAI_PROJECT_ID=<project_id>`
   - print OpenAI project rate limits
 - `make end-git-check`
-  - standalone clean-main closeout check; `make end` runs it first
+  - standalone clean-main closeout check; `make end` runs it as the final
+    closure gate

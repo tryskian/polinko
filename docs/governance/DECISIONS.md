@@ -1695,7 +1695,7 @@ or branch history instead.
 - Tags: `closeout`, `git`, `main`, `safety_gate`
 - Human-led: The human lead caught that `make end` could pass on a feature
   branch, which contradicted the repo closeout contract.
-- Decision: `make end` now runs `make end-git-check` as its first step.
+- Decision: `make end` runs `make end-git-check` as its final closeout gate.
   Closeout fails unless the current branch is `main`, the working tree is
   clean, and local `main` is synced with `origin/main`. `make end-git-check`
   remains available as a standalone git-only check.

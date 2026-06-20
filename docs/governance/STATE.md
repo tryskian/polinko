@@ -518,9 +518,9 @@ Last updated: 2026-06-19
   - `PACKAGE_BOUNDARY` holds the Python package-boundary contract
   - `make package-install-check` verifies the editable-install rail
   - local `SESSION_HANDOFF` holds the active slice
-  - `make end` now runs the clean-main git check first, then the technical
-    closeout routine; feature branches use branch-local validation targets
-    until the protected-main merge flow is complete
+  - `make end` runs the technical closeout routine, then the clean-main git
+    check as the final closure gate; feature branches use branch-local
+    validation targets until the protected-main merge flow is complete
 
 ## Active Priorities
 
