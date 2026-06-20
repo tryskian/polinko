@@ -438,7 +438,8 @@ Last updated: 2026-06-19
   - strict status checks enabled
   - squash-only merge
 - Development setup and dependency gates are aligned to canonical paths:
-  - devcontainer setup creates `.venv`
+  - devcontainer setup resolves the git top-level before creating `.venv`
+    and installing root or portfolio dependencies
   - devcontainer VS Code settings use repo-owned Ruff and mypy tooling from
     `.venv`
   - Python dependencies use `requirements.in` plus generated

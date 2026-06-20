@@ -2192,3 +2192,18 @@ or branch history instead.
 - Why: Tracked governance and runtime docs are canonical repo truth and must
   remain visible during normal refactor work. The local privacy helper should
   protect explicitly local files without hiding tracked project state.
+
+## D-141: Lock devcontainer setup to repo root
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `devcontainer`, `dependencies`, `local_config`, `hygiene`
+- Human-led: The human lead asked to keep hidden and low-frequency runtime
+  setup scripts maintained so launch-time blubbles do not become repeated
+  operator friction.
+- Decision: `tools/setup_devcontainer.sh` now resolves the git top-level and
+  changes to it before creating `.venv` or installing root and portfolio
+  dependencies.
+- Why: Devcontainer post-create commands and manual local runs should produce
+  the same dependency layout even when the shell starts from a nested
+  directory.

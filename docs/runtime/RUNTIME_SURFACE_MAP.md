@@ -89,6 +89,7 @@ flowchart TD
   preflight, but the final gate is `make end` from clean synced `main`.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files.
+  Devcontainer setup resolves the repo root before installing dependencies.
   `make privacy-local-on` installs only machine-local exclude patterns; tracked
   docs remain visible.
 - Core background runners use one ownership pattern for PID files,

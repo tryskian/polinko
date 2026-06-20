@@ -57,6 +57,10 @@ class DependencyHygieneTests(unittest.TestCase):
     ) -> None:
         script = _read("tools/setup_devcontainer.sh")
 
+        self.assertIn(
+            'ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"', script
+        )
+        self.assertIn('cd "${ROOT}"', script)
         self.assertIn('venv_dir="${POLINKO_DEVCONTAINER_VENV_DIR:-.venv}"', script)
         self.assertIn("requirements.txt", script)
         self.assertIn("npm ci --no-audit --no-fund", script)
