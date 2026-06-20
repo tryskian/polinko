@@ -629,6 +629,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "MANUAL_EVALS_FEEDBACK_RECLASSIFY_PLAN_PATH ?= $(PLAN_PATH)", text
         )
+        self.assertIn("MANUAL_EVALS_RECLASSIFY_CONFIRM ?= $(CONFIRM)", text)
+        self.assertIn("MANUAL_EVALS_RECLASSIFY_BACKUP_ROOT ?= $(BACKUP_ROOT)", text)
         self.assertIn("MANUAL_EVALS_FEEDBACK_DECISION_PATH ?= $(DECISION_PATH)", text)
         self.assertIn(
             "MANUAL_EVALS_FEEDBACK_DECISION_DRAFT_PATH ?= $(DRAFT_PATH)", text
@@ -638,6 +640,16 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_DECISION_DRAFT_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_RECLASSIFY_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_RECLASSIFY_APPLY_ARGS)", text)
+        self.assertIn(
+            "$(if $(strip $(MANUAL_EVALS_RECLASSIFY_CONFIRM)),"
+            '--confirm "$(MANUAL_EVALS_RECLASSIFY_CONFIRM)")',
+            text,
+        )
+        self.assertIn(
+            "$(if $(strip $(MANUAL_EVALS_RECLASSIFY_BACKUP_ROOT)),"
+            '--backup-root "$(MANUAL_EVALS_RECLASSIFY_BACKUP_ROOT)")',
+            text,
+        )
         self.assertIn("MANUAL_EVALS_OCR_RETRY_ARTIFACT_IDS ?= $(ARTIFACT_IDS)", text)
         self.assertIn(
             "MANUAL_EVALS_OCR_RETRY_SELECTION_PATH ?= $(SELECTION_PATH)", text
