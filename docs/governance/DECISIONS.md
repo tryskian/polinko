@@ -2162,3 +2162,17 @@ or branch history instead.
   existed. Routing the base wrapper through the same guard keeps missing and
   empty case-file handling consistent while preserving the existing valid-case
   runner paths.
+
+## D-139: Make local act runner configurable
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `make`, `local_ci`, `act`, `hygiene`
+- Human-led: The human lead asked to keep hidden and low-frequency tooling
+  surfaces maintained rather than treating them as incidental.
+- Decision: Add `ACT ?= act` to external operator tooling config and route
+  `make act-list` / `make act-ci` through `$(ACT)`.
+- Why: The local CI helper recipes previously hard-coded `act`. Making the
+  executable configurable follows the existing Make pattern for external
+  operator tools, preserves default behavior, and gives local environments one
+  explicit override point.

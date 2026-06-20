@@ -135,6 +135,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("include makefiles/config/ops.mk", config_entry_text)
         self.assertIn("include makefiles/config/build.mk", config_entry_text)
         self.assertIn("PYTHON ?=", config_text)
+        self.assertIn("ACT ?= act", config_text)
         self.assertIn("CLI_ENTRYPOINT ?= -m polinko.cli", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
         self.assertIn("LOCAL_BROWSER_LAUNCH ?= none", config_text)
