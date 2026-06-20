@@ -444,6 +444,8 @@ Last updated: 2026-06-19
     `.venv`
   - Python dependencies use `requirements.in` plus generated
     `requirements.txt`, matching pip-tools and Dependabot conventions
+  - `make deps-lock` and `make deps-lock-check` use the same explicit
+    pip-tools backtracking resolver
   - Python security pins are tracked through `requirements.in` plus generated
     `requirements.txt`; current refreshed pins include `PyJWT==2.13.0`,
     `pip==26.1.2`, and `pypdf==6.13.3`

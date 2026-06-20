@@ -2221,3 +2221,16 @@ or branch history instead.
 - Why: Docs and viz helpers already separate URL-printing defaults from
   browser-opening variants. Portfolio preview should follow the same operator
   pattern.
+
+## D-143: Align dependency lock check resolver
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `dependencies`, `pip_tools`, `make`, `hygiene`
+- Human-led: The human lead asked to keep dependency and CI helper scripts in
+  order so recurring checks do not drift into repeated failure cleanup.
+- Decision: `make deps-lock-check` now passes `--resolver=backtracking`,
+  matching `make deps-lock`.
+- Why: The write path and validation path should use the same pip-tools
+  resolver settings so lock freshness checks reflect the lock generation
+  command.

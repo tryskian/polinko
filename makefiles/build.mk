@@ -45,6 +45,7 @@ deps-lock:
 
 deps-lock-check:
 	$(PYTHON) -m piptools compile \
+		--resolver=backtracking \
 		--allow-unsafe \
 		--output-file="$(REQUIREMENTS_LOCK)" \
 		--strip-extras \

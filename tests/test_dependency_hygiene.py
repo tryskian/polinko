@@ -114,6 +114,11 @@ class DependencyHygieneTests(unittest.TestCase):
         self.assertIn('directory: "/"', dependabot)
         self.assertIn('directory: "/apps/portfolio"', dependabot)
 
+    def test_dependency_lock_and_check_use_same_resolver(self) -> None:
+        build_make = _read("makefiles/build.mk")
+
+        self.assertEqual(build_make.count("--resolver=backtracking"), 2)
+
     def test_precommit_uses_repo_owned_lightweight_style_and_doc_checks(self) -> None:
         precommit = _read(".pre-commit-config.yaml")
 
