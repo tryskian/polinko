@@ -21,6 +21,10 @@ list_tracked_docs() {
   git ls-files 'docs/**/*.md' 'docs/*.md' 'docs/*.json' | sort -u
 }
 
+list_skip_worktree_docs() {
+  git ls-files -v docs | rg '^S' || true
+}
+
 write_exclude_block() {
   mkdir -p "$(dirname "${EXCLUDE_FILE}")"
   touch "${EXCLUDE_FILE}"
@@ -56,33 +60,43 @@ remove_exclude_block() {
 
 apply_guard() {
   write_exclude_block
-  list_tracked_docs | xargs -r git update-index --skip-worktree
   echo "Local privacy guard applied."
   status_guard
 }
 
 status_guard() {
   echo "Skip-worktree docs:"
-  if ! git ls-files -v docs | rg '^S' >/dev/null 2>&1; then
+  if ! list_skip_worktree_docs | rg '^S' >/dev/null 2>&1; then
     echo "(none)"
   else
-    git ls-files -v docs | rg '^S'
+    list_skip_worktree_docs
   fi
   echo ""
   echo "Local excludes:"
   if [[ -f "${EXCLUDE_FILE}" ]]; then
-    awk -v b="${MARKER_BEGIN}" -v e="${MARKER_END}" '
+    local block
+    block="$(
+      awk -v b="${MARKER_BEGIN}" -v e="${MARKER_END}" '
       $0 == b { show=1; next }
       $0 == e { show=0; next }
       show == 1 { print }
-    ' "${EXCLUDE_FILE}" || true
+      ' "${EXCLUDE_FILE}" || true
+    )"
+    if [[ -n "${block}" ]]; then
+      printf '%s\n' "${block}"
+    else
+      echo "(none)"
+    fi
   else
     echo "(none)"
   fi
 }
 
 clear_guard() {
-  list_tracked_docs | xargs -r git update-index --no-skip-worktree
+  if list_skip_worktree_docs | rg '^S' >/dev/null 2>&1; then
+    echo "Clearing legacy docs skip-worktree state."
+    list_tracked_docs | xargs -r git update-index --no-skip-worktree
+  fi
   remove_exclude_block
   echo "Local privacy guard cleared."
   status_guard
@@ -91,9 +105,9 @@ clear_guard() {
 usage() {
   cat <<'EOF'
 Usage: tools/local_privacy_guard.sh [apply|status|clear]
-  apply  - mark docs as local-only and install local excludes
-  status - show current local-only guard state
-  clear  - remove local-only guard state
+  apply  - install local excludes for machine-local docs
+  status - show current local privacy guard state
+  clear  - remove local excludes and clear legacy docs skip-worktree state
 EOF
 }
 

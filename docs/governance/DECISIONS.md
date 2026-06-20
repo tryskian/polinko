@@ -2176,3 +2176,19 @@ or branch history instead.
   executable configurable follows the existing Make pattern for external
   operator tools, preserves default behavior, and gives local environments one
   explicit override point.
+
+## D-140: Narrow local privacy helper scope
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `privacy`, `local_config`, `docs`, `hygiene`
+- Human-led: The human lead asked to keep hidden and safety-relevant helper
+  scripts maintained so small local-state problems do not turn into future
+  cleanup debt.
+- Decision: `make privacy-local-on` now installs the machine-local exclude
+  block without marking tracked docs as `skip-worktree`. `make
+  privacy-local-off` remains able to clear legacy docs `skip-worktree` state
+  if an older run left tracked docs hidden.
+- Why: Tracked governance and runtime docs are canonical repo truth and must
+  remain visible during normal refactor work. The local privacy helper should
+  protect explicitly local files without hiding tracked project state.

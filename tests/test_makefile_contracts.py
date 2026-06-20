@@ -53,6 +53,7 @@ OCR_REPORT_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_workflow.sh"
 OCR_LANE_INVENTORY_SCRIPT = REPO_ROOT / "tools" / "report_ocr_lane_inventory.py"
 OCR_INTAKE_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_intake_workflow.sh"
 SHELL_SCRIPT_CONTRACT_SCRIPT = REPO_ROOT / "tools" / "check_shell_scripts.py"
+LOCAL_PRIVACY_GUARD_SCRIPT = REPO_ROOT / "tools" / "local_privacy_guard.sh"
 
 
 def _makefile_text() -> str:
@@ -647,6 +648,18 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^caffeinate-off:\s*decaffeinate$")
         self.assertRegex(text, r"(?m)^caffeinate-off-all:\s*caffeinate-off$")
         self.assertRegex(text, r"(?m)^decaffeinate-status:\s*caffeinate-status$")
+
+    def test_local_privacy_guard_does_not_hide_tracked_docs_on_apply(self) -> None:
+        text = LOCAL_PRIVACY_GUARD_SCRIPT.read_text(encoding="utf-8")
+        apply_body_match = re.search(
+            r"apply_guard\(\) \{\n(?P<body>.*?)\n\}", text, re.S
+        )
+
+        self.assertIsNotNone(apply_body_match)
+        apply_body = apply_body_match.group("body")
+        self.assertIn("write_exclude_block", apply_body)
+        self.assertNotIn("--skip-worktree", apply_body)
+        self.assertIn("install local excludes for machine-local docs", text)
 
     def test_shell_script_contract_check_is_named_and_closeout_visible(self) -> None:
         text = _makefile_contract_text()
