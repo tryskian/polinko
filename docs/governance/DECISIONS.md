@@ -2207,3 +2207,17 @@ or branch history instead.
 - Why: Devcontainer post-create commands and manual local runs should produce
   the same dependency layout even when the shell starts from a nested
   directory.
+
+## D-142: Make portfolio browser launch explicit
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `portfolio`, `make`, `local_preview`, `hygiene`
+- Human-led: The human lead asked to keep operator shortcuts predictable and
+  avoid hidden browser-launch behaviour during maintenance.
+- Decision: `make portfolio` keeps the default non-launching URL path, and
+  `make portfolio-open` is the explicit system-browser launcher. The existing
+  `make portfolio-playwright` target remains the explicit Playwright launcher.
+- Why: Docs and viz helpers already separate URL-printing defaults from
+  browser-opening variants. Portfolio preview should follow the same operator
+  pattern.

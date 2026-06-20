@@ -756,6 +756,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(
             text, r"(?m)^portfolio:\s*portfolio-build server-daemon-stop server-daemon$"
         )
+        self.assertRegex(text, r"(?m)^portfolio-open:\s*PORTFOLIO_LAUNCH\s*=\s*system$")
+        self.assertRegex(text, r"(?m)^portfolio-open:\s*portfolio$")
         self.assertRegex(
             text, r"(?m)^portfolio-playwright:\s*PORTFOLIO_LAUNCH\s*=\s*playwright$"
         )
@@ -1281,6 +1283,7 @@ class MakefileContractTests(unittest.TestCase):
     ) -> None:
         for target in (
             "portfolio",
+            "portfolio-open",
             "portfolio-playwright",
             "open-api-docs",
             "open-api-docs-browser",

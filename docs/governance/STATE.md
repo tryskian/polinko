@@ -492,7 +492,8 @@ Last updated: 2026-06-19
   - local URL helpers such as `make docs`, `make open-api-docs`, and
     `make viz` print the target URL by default instead of launching a browser
   - explicit browser launch remains available through `make docs-open`,
-    `make open-api-docs-browser`, `make viz-open`, and `make open-viz`
+    `make open-api-docs-browser`, `make viz-open`, `make open-viz`, and
+    `make portfolio-open`
   - base OCR transcript case and stability workflows now use the same shared
     case guard as growth, focus, and transcript-lane OCR wrappers, so missing
     and empty case-file handling stays consistent before eval runners launch

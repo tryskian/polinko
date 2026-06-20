@@ -34,7 +34,7 @@
 .PHONY: manual-evals-feedback-reclassify-preview manualdb-feedback-reclassify-preview
 .PHONY: manual-evals-feedback-reclassify-apply manualdb-feedback-reclassify-apply
 .PHONY: portfolio-install portfolio-app-install frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
-.PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-status portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
+.PHONY: portfolio-open portfolio-playwright portfolio-mockups portfolio-mockups-status portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 
 manual_evals_db_health = $(MANUAL_EVALS_DB_HEALTH_COMMAND) $(1) $(strip $(2))
 
@@ -209,7 +209,7 @@ portfolio: portfolio-build server-daemon-stop server-daemon
 				echo "Open this URL in your browser: $$OPEN_URL"; \
 			fi ;; \
 		none) \
-			echo "Open this URL in your browser: $$OPEN_URL" ;; \
+			echo "Portfolio URL: $$OPEN_URL" ;; \
 		*) \
 			echo "Invalid PORTFOLIO_LAUNCH='$(PORTFOLIO_LAUNCH)' (expected playwright, system, or none)."; \
 			exit 2 ;; \
@@ -217,6 +217,9 @@ portfolio: portfolio-build server-daemon-stop server-daemon
 		echo "Portfolio shell URL: $$OPEN_URL"
 
 portfolio-rebuild rebuild: portfolio
+
+portfolio-open: PORTFOLIO_LAUNCH = system
+portfolio-open: portfolio
 
 portfolio-playwright: PORTFOLIO_LAUNCH = playwright
 portfolio-playwright: portfolio
