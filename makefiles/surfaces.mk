@@ -1,5 +1,38 @@
 # Manual eval workbench, portfolio, and local browser surface targets.
-.PHONY: notebook-setup notebook nb notes manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh manual-evals-db-status manualdb-status manual-evals-db-health manualdb-health manual-evals-feedback-actionables manualdb-feedback-actionables manual-evals-feedback-cohorts manualdb-feedback-cohorts manual-evals-feedback-source-context manualdb-feedback-source-context manual-evals-feedback-decision-draft manualdb-feedback-decision-draft manual-evals-feedback-decision-preview manualdb-feedback-decision-preview manual-evals-overlay-comparison-readiness manualdb-overlay-comparison-readiness manual-evals-overlay-source-index-draft manualdb-overlay-source-index-draft manual-evals-overlay-source-index-validate manualdb-overlay-source-index-validate manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates manual-evals-ocr-retry-source-verification manualdb-ocr-retry-source-verification manual-evals-ocr-retry-source-provenance manualdb-ocr-retry-source-provenance manual-evals-ocr-retry-input-packet manualdb-ocr-retry-input-packet manual-evals-ocr-retry-rerun-manifest manualdb-ocr-retry-rerun-manifest manual-evals-ocr-retry-rerun-plan manualdb-ocr-retry-rerun-plan manual-evals-ocr-retry-selection-review manualdb-ocr-retry-selection-review manual-evals-ocr-retry-selection-template manualdb-ocr-retry-selection-template manual-evals-ocr-retry-selection-draft manualdb-ocr-retry-selection-draft manual-evals-ocr-retry-selection-validate manualdb-ocr-retry-selection-validate manual-evals-ocr-retry-selection-apply-preview manualdb-ocr-retry-selection-apply-preview manual-evals-ocr-retry-execution-readiness manualdb-ocr-retry-execution-readiness manual-evals-ocr-retry-execute manualdb-ocr-retry-execute manual-evals-ocr-retry-execution-report manualdb-ocr-retry-execution-report manual-evals-ocr-retry-feedback-closure-preview manualdb-ocr-retry-feedback-closure-preview manual-evals-ocr-retry-feedback-closure-apply manualdb-ocr-retry-feedback-closure-apply manual-evals-ocr-retry-feedback-closure-apply-report manualdb-ocr-retry-feedback-closure-apply-report manual-evals-ocr-retry-feedback-closure-restore-preview manualdb-ocr-retry-feedback-closure-restore-preview manual-evals-ocr-retry-feedback-closure-restore manualdb-ocr-retry-feedback-closure-restore manual-evals-no-context-reclassify-preview manualdb-no-context-reclassify-preview manual-evals-no-context-reclassify-apply manualdb-no-context-reclassify-apply manual-evals-feedback-reclassify-preview manualdb-feedback-reclassify-preview manual-evals-feedback-reclassify-apply manualdb-feedback-reclassify-apply
+.PHONY: notebook-setup notebook nb notes
+.PHONY: manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh
+.PHONY: manual-evals-db-status manualdb-status manual-evals-db-health manualdb-health
+.PHONY: manual-evals-feedback-actionables manualdb-feedback-actionables
+.PHONY: manual-evals-feedback-cohorts manualdb-feedback-cohorts
+.PHONY: manual-evals-feedback-source-context manualdb-feedback-source-context
+.PHONY: manual-evals-feedback-decision-draft manualdb-feedback-decision-draft
+.PHONY: manual-evals-feedback-decision-preview manualdb-feedback-decision-preview
+.PHONY: manual-evals-overlay-comparison-readiness manualdb-overlay-comparison-readiness
+.PHONY: manual-evals-overlay-source-index-draft manualdb-overlay-source-index-draft
+.PHONY: manual-evals-overlay-source-index-validate manualdb-overlay-source-index-validate
+.PHONY: manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates
+.PHONY: manual-evals-ocr-retry-source-verification manualdb-ocr-retry-source-verification
+.PHONY: manual-evals-ocr-retry-source-provenance manualdb-ocr-retry-source-provenance
+.PHONY: manual-evals-ocr-retry-input-packet manualdb-ocr-retry-input-packet
+.PHONY: manual-evals-ocr-retry-rerun-manifest manualdb-ocr-retry-rerun-manifest
+.PHONY: manual-evals-ocr-retry-rerun-plan manualdb-ocr-retry-rerun-plan
+.PHONY: manual-evals-ocr-retry-selection-review manualdb-ocr-retry-selection-review
+.PHONY: manual-evals-ocr-retry-selection-template manualdb-ocr-retry-selection-template
+.PHONY: manual-evals-ocr-retry-selection-draft manualdb-ocr-retry-selection-draft
+.PHONY: manual-evals-ocr-retry-selection-validate manualdb-ocr-retry-selection-validate
+.PHONY: manual-evals-ocr-retry-selection-apply-preview manualdb-ocr-retry-selection-apply-preview
+.PHONY: manual-evals-ocr-retry-execution-readiness manualdb-ocr-retry-execution-readiness
+.PHONY: manual-evals-ocr-retry-execute manualdb-ocr-retry-execute
+.PHONY: manual-evals-ocr-retry-execution-report manualdb-ocr-retry-execution-report
+.PHONY: manual-evals-ocr-retry-feedback-closure-preview manualdb-ocr-retry-feedback-closure-preview
+.PHONY: manual-evals-ocr-retry-feedback-closure-apply manualdb-ocr-retry-feedback-closure-apply
+.PHONY: manual-evals-ocr-retry-feedback-closure-apply-report manualdb-ocr-retry-feedback-closure-apply-report
+.PHONY: manual-evals-ocr-retry-feedback-closure-restore-preview manualdb-ocr-retry-feedback-closure-restore-preview
+.PHONY: manual-evals-ocr-retry-feedback-closure-restore manualdb-ocr-retry-feedback-closure-restore
+.PHONY: manual-evals-no-context-reclassify-preview manualdb-no-context-reclassify-preview
+.PHONY: manual-evals-no-context-reclassify-apply manualdb-no-context-reclassify-apply
+.PHONY: manual-evals-feedback-reclassify-preview manualdb-feedback-reclassify-preview
+.PHONY: manual-evals-feedback-reclassify-apply manualdb-feedback-reclassify-apply
 .PHONY: portfolio-install portfolio-app-install frontend-install portfolio-build frontend-build portfolio portfolio-rebuild rebuild
 .PHONY: portfolio-playwright portfolio-mockups portfolio-mockups-status portfolio-mockups-stop pwcli playwright-cli playwright-snapshot-dir
 
