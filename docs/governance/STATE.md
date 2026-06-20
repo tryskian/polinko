@@ -489,6 +489,9 @@ Last updated: 2026-06-19
     `make viz` print the target URL by default instead of launching a browser
   - explicit browser launch remains available through `make docs-open`,
     `make open-api-docs-browser`, `make viz-open`, and `make open-viz`
+  - base OCR transcript case and stability workflows now use the same shared
+    case guard as growth, focus, and transcript-lane OCR wrappers, so missing
+    and empty case-file handling stays consistent before eval runners launch
 - Local operator tooling follows a reusable non-mutating contract:
   - `docs/runtime/LOCAL_TOOLING.md` records the repo-local pattern for tools
     that materialize ignored local input, validate it, preview application, and

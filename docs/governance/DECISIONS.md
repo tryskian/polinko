@@ -2145,3 +2145,20 @@ or branch history instead.
   private peanut notes that intentionally preserve absolute source paths as
   provenance. Retargeting the Make target keeps the hidden-surface audit
   actionable without treating local evidence provenance as a failure.
+
+## D-138: Guard base OCR transcript workflows consistently
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `ocr`, `evals`, `shell_scripts`, `hygiene`
+- Human-led: The human lead asked to continue script cleanup one surface at a
+  time and to resolve small warnings or blubbles rather than leaving them as
+  ambient maintenance debt.
+- Decision: `tools/run_ocr_base_transcript_workflow.sh` now uses
+  `tools/ocr_workflow_common.sh` and `tools/eval_case_guard.sh` before
+  dispatching base OCR transcript case or stability runners.
+- Why: Growth, focus, and transcript-lane OCR wrappers already used the shared
+  case guard, but the base transcript wrapper only checked that the case file
+  existed. Routing the base wrapper through the same guard keeps missing and
+  empty case-file handling consistent while preserving the existing valid-case
+  runner paths.

@@ -53,11 +53,15 @@ flowchart TD
     OcrInventory["read-only OCR inventory"]
     FeedbackDrafts["local decision drafts and previews"]
     EvalAliases["Make eval aliases and wrappers"]
+    OcrWrappers["OCR workflow wrappers"]
+    SharedCaseGuard["shared OCR case guard"]
     ManualWorkbench --> DbHealth
     ManualWorkbench --> OcrInventory
     ManualWorkbench --> FeedbackDrafts
     DbHealth --> EvalAliases
     OcrInventory --> EvalAliases
+    EvalAliases --> OcrWrappers
+    OcrWrappers --> SharedCaseGuard
   end
 
   subgraph CI["CI and dependency automation"]
@@ -93,6 +97,7 @@ flowchart TD
   stay separate from startup and read-only inventory commands. Health,
   feedback, overlay, OCR retry, and reclassification Make targets route through
   one manual eval health command entrypoint while preserving public target
-  names and preview/apply boundaries.
+  names and preview/apply boundaries. Base, growth, focus, and transcript-lane
+  OCR wrappers share the same case guard before launching eval runners.
 - CI and dependency automation should mirror local gates closely enough that
   failed remote runs point to real fixes, not setup drift.

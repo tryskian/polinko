@@ -182,6 +182,11 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("OCR_BASE_TRANSCRIPT_WORKFLOW_ENV =", config_text)
         self.assertIn(
+            'OCR_WORKFLOW_COMMON_SCRIPT="$(OCR_WORKFLOW_COMMON_SCRIPT)"',
+            config_text,
+        )
+        self.assertIn('EVAL_CASE_GUARD_SCRIPT="$(EVAL_CASE_GUARD_SCRIPT)"', config_text)
+        self.assertIn(
             "OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT ?= ./tools/run_ocr_transcript_lane_workflow.sh",
             config_text,
         )
@@ -1086,6 +1091,9 @@ class MakefileContractTests(unittest.TestCase):
         base_transcript_workflow_text = OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT.read_text(
             encoding="utf-8"
         )
+        self.assertIn("OCR_WORKFLOW_COMMON_SCRIPT", base_transcript_workflow_text)
+        self.assertIn("ocr_workflow_use_eval_case_guard", base_transcript_workflow_text)
+        self.assertIn("eval_case_guard_or_exit", base_transcript_workflow_text)
         self.assertIn("OCR_EVAL_RUNNER_SCRIPT", base_transcript_workflow_text)
         self.assertIn("OCR_STABILITY_RUNNER_SCRIPT", base_transcript_workflow_text)
         self.assertIn('exec bash "$eval_runner_script"', base_transcript_workflow_text)
