@@ -10,6 +10,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 TRACKED_SCOPE = "tracked"
 LOCAL_SCOPE = "local"
+LOCAL_CONFIG_SCOPE = "local-config"
 
 LOCAL_ROOTS = (
     Path(".history"),
@@ -20,6 +21,13 @@ LOCAL_ROOTS = (
     Path("tools"),
     Path("tests"),
     Path("Makefile"),
+)
+
+LOCAL_CONFIG_ROOTS = (
+    Path(".vscode"),
+    Path(".devcontainer"),
+    Path(".pre-commit-config.yaml"),
+    Path("tools/setup_devcontainer.sh"),
 )
 
 ALLOWLIST_PATHS = {
@@ -80,9 +88,9 @@ def _tracked_files() -> list[Path]:
     return [ROOT / entry for entry in entries if _is_text_candidate(Path(entry))]
 
 
-def _local_files() -> list[Path]:
+def _files_under_roots(roots: Iterable[Path]) -> list[Path]:
     files: list[Path] = []
-    for rel_root in LOCAL_ROOTS:
+    for rel_root in roots:
         root = ROOT / rel_root
         if not root.exists():
             continue
@@ -94,6 +102,14 @@ def _local_files() -> list[Path]:
             if path.is_file() and _is_text_candidate(path.relative_to(ROOT)):
                 files.append(path)
     return sorted(set(files))
+
+
+def _local_files() -> list[Path]:
+    return _files_under_roots(LOCAL_ROOTS)
+
+
+def _local_config_files() -> list[Path]:
+    return _files_under_roots(LOCAL_CONFIG_ROOTS)
 
 
 def _scan_file(path: Path) -> list[tuple[int, str, str]]:
@@ -131,9 +147,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--scope",
-        choices=(TRACKED_SCOPE, LOCAL_SCOPE),
+        choices=(TRACKED_SCOPE, LOCAL_SCOPE, LOCAL_CONFIG_SCOPE),
         default=TRACKED_SCOPE,
-        help="tracked: git-tracked files only; local: repo-owned text lanes including ignored local artifacts.",
+        help=(
+            "tracked: git-tracked files only; local: repo-owned text lanes "
+            "including ignored local artifacts; local-config: local runtime "
+            "configuration files only."
+        ),
     )
     return parser
 
@@ -144,19 +164,20 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.scope == TRACKED_SCOPE:
         paths = _tracked_files()
-    else:
+    elif args.scope == LOCAL_SCOPE:
         paths = _local_files()
+    else:
+        paths = _local_config_files()
 
     failures = _scan_paths(paths)
     if failures:
-        label = "tracked" if args.scope == TRACKED_SCOPE else "local"
+        label = args.scope
         print(f"[fail] {label} path leak check found {len(failures)} issue(s):")
         for failure in failures:
             print(f"  - {failure}")
         return 1
 
-    label = "tracked" if args.scope == TRACKED_SCOPE else "local"
-    print(f"[ok] {label} path leak check passed")
+    print(f"[ok] {args.scope} path leak check passed")
     return 0
 
 

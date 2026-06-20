@@ -655,6 +655,8 @@ class MakefileContractTests(unittest.TestCase):
             text,
             r"(?m)^ci-docs:\s*path-leak-check scripts-check lint-docs$",
         )
+        self.assertRegex(text, r"(?m)^path-leak-audit-local:$")
+        self.assertIn("$(PYTHON) -m tools.path_leak_check --scope local-config", text)
         self.assertIn(
             'run_step "scripts-check" make --no-print-directory scripts-check',
             closeout_text,

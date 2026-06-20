@@ -29,6 +29,7 @@ flowchart TD
     MainSync --> MakeEnd["make end"]
     MakeEnd --> DocsGate["make end-docs-check"]
     MakeEnd --> ScriptGate["make scripts-check"]
+    MakeEnd --> PathLeakGate["make path-leak-check"]
     MakeEnd --> TestGate["style, type, docs, package, tests"]
     MakeEnd --> SecurityGate["make security-checks"]
     MakeEnd --> GitGate["make end-git-check"]
@@ -82,6 +83,8 @@ flowchart TD
   for alignment.
 - Closeout is the complete stop-state contract: branch-local validation is
   preflight, but the final gate is `make end` from clean synced `main`.
+  `make path-leak-audit-local` is the focused companion for ignored local
+  runtime config surfaces such as VS Code, devcontainer, and pre-commit files.
 - Core background runners use one ownership pattern for PID files,
   stale-process handling, logs, cleanup commands, and detached launch
   behaviour across `caffeinate`, `server-daemon`, `eval-sidecar`, and

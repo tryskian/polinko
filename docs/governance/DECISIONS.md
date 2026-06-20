@@ -2128,3 +2128,20 @@ or branch history instead.
   reduces repeated Make recipe text, makes future workbench entrypoint changes
   one-place edits, and preserves the read-only/preview/apply operator
   boundaries.
+
+## D-137: Retarget local path-leak audit to runtime config
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `path_leak`, `local_config`, `vscode`, `devcontainer`, `hygiene`
+- Human-led: The human lead asked to treat hidden scripts and local runtime
+  surfaces as first-class maintenance surfaces.
+- Decision: `make path-leak-audit-local` now runs
+  `tools.path_leak_check --scope local-config`, scanning local runtime config
+  surfaces such as `.vscode`, `.devcontainer`, pre-commit config, and the
+  devcontainer setup script. The broader `--scope local` remains available for
+  explicit full local scans.
+- Why: Full local scans include ignored manual-eval evidence bundles and
+  private peanut notes that intentionally preserve absolute source paths as
+  provenance. Retargeting the Make target keeps the hidden-surface audit
+  actionable without treating local evidence provenance as a failure.

@@ -116,6 +116,9 @@ Last updated: 2026-06-19
   - manual eval health, feedback, overlay, OCR retry, and reclassification Make
     targets keep their public names while routing through a single
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper
+  - `make path-leak-audit-local` is an actionable local runtime-config audit:
+    it checks hidden/editor/container config surfaces without failing on
+    ignored manual-eval evidence bundles that intentionally retain source paths
   - `/manual-evals/surface` and `/viz/pass-fail/data` expose read-only
     `data_freshness` status for the local manual eval warehouse so stale,
     schema-old, unknown, or missing source data is visible without rebuilding

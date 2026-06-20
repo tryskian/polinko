@@ -54,6 +54,13 @@ class PathLeakCheckTests(unittest.TestCase):
             ["docs/ok.md"],
         )
 
+    def test_local_config_files_limit_audit_to_runtime_config_surfaces(self) -> None:
+        with mock.patch("tools.path_leak_check.ROOT", Path("/repo")):
+            with mock.patch("tools.path_leak_check._files_under_roots") as scan_roots:
+                path_leak_check._local_config_files()
+
+        scan_roots.assert_called_once_with(path_leak_check.LOCAL_CONFIG_ROOTS)
+
     def test_main_fails_when_tracked_leak_found(self) -> None:
         fake_file = path_leak_check.ROOT / "docs" / "sample.md"
         with mock.patch(
@@ -67,6 +74,16 @@ class PathLeakCheckTests(unittest.TestCase):
                     status = path_leak_check.main(["--scope", "tracked"])
 
         self.assertEqual(status, 1)
+
+    def test_main_uses_local_config_scope_for_local_runtime_config(self) -> None:
+        with mock.patch(
+            "tools.path_leak_check._local_config_files", return_value=[]
+        ) as local_config_files:
+            with contextlib.redirect_stdout(io.StringIO()):
+                status = path_leak_check.main(["--scope", "local-config"])
+
+        self.assertEqual(status, 0)
+        local_config_files.assert_called_once_with()
 
 
 if __name__ == "__main__":
