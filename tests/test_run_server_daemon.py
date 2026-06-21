@@ -139,6 +139,59 @@ class RunServerDaemonTests(unittest.TestCase):
             )
             self.assertTrue((tmp_path / "logs").is_dir())
 
+    def test_status_reports_off_without_pid_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={**os.environ, "SERVER_PID_FILE": str(tmp_path / "server.pid")},
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("server-daemon: OFF.", result.stdout)
+
+    def test_status_reports_stale_pid_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "server.pid"
+            pid_file.write_text("999999", encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={**os.environ, "SERVER_PID_FILE": str(pid_file)},
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("server-daemon: STALE PID file.", result.stdout)
+
+    def test_stop_kills_managed_pid_and_removes_pid_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "server.pid"
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(process.kill)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "stop"],
+                cwd=REPO_ROOT,
+                env={**os.environ, "SERVER_PID_FILE": str(pid_file)},
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("server-daemon stopped", result.stdout)
+            self.assertFalse(pid_file.exists())
+            process.wait(timeout=2)
+
     def test_rejects_arguments(self) -> None:
         result = subprocess.run(
             ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "extra"],
