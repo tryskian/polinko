@@ -140,6 +140,24 @@ class RunPortfolioMockupsTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn("portfolio mockup server: STALE PID file.", result.stdout)
 
+    def test_status_reports_off_without_pid_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PORTFOLIO_MOCKUP_PID_FILE": str(tmp_path / "mockups.pid"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("portfolio mockup server: OFF.", result.stdout)
+
     def test_stop_kills_managed_pid_and_removes_pid_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

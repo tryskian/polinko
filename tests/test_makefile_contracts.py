@@ -674,8 +674,13 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("END_SKIP_GIT_CHECK=1 END_SKIP_STOP=1", text)
         self.assertRegex(
             text,
-            r"(?m)^eod-stop:\s*server-daemon-stop caffeinate-off-all session-status$",
+            r"(?m)^eod-stop:\s*eval-sidecar-stop portfolio-mockups-stop "
+            r"server-daemon-stop caffeinate-off-all session-status$",
         )
+        self.assertIn('echo "== Eval sidecar =="', text)
+        self.assertIn("eval-sidecar-status", text)
+        self.assertIn('echo "== Portfolio mockups =="', text)
+        self.assertIn("portfolio-mockups-status", text)
         self.assertRegex(text, r"(?m)^caffeinate-on:\s*caffeinate$")
         self.assertRegex(text, r"(?m)^caffeinate-off:\s*decaffeinate$")
         self.assertRegex(text, r"(?m)^caffeinate-off-all:\s*caffeinate-off$")
