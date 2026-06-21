@@ -170,7 +170,8 @@ Use this doc for operator procedure.
    - `git diff --check`
 2. Use `make end-preflight` when the kernel is broad enough to need the full
    branch-local quality suite.
-3. Reserve `make end` for real session closeout or post-merge clean-main
+3. End each kernel summary with the recommended next kernel.
+4. Reserve `make end` for real session closeout or post-merge clean-main
    verification.
 
 ## Atomic Commands

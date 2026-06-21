@@ -43,9 +43,11 @@ class StartupContractTests(unittest.TestCase):
         self.assertIn("Active kernel validation", start_reference)
         self.assertIn("During active refactor kernels", start_reference)
         self.assertIn("make end-preflight", start_reference)
+        self.assertIn("recommended next kernel", start_reference)
         self.assertIn("Do not run `make end` after every kernel", start_reference)
         self.assertIn("Active Kernel Validation", runbook)
         self.assertIn("Use focused checks during active refactor kernels", runbook)
+        self.assertIn("recommended next kernel", runbook)
         self.assertIn("Reserve `make end` for real session closeout", runbook)
 
     def test_wake_lock_reference_matches_stop_all_contract(self) -> None:
