@@ -9,10 +9,10 @@ that matches the question you are trying to answer.
 
 - Morning startup:
   say `hi! new day!` and follow
-  [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md#morning-startup-check-codexbeab)
+  [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md#morning-startup-ritual)
 - Wrap / end of day:
   say `human time` or `wind down` and follow
-  [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md#end-of-day-routine-codexbeab)
+  [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md#end-of-day-ritual)
 - Manual eval workbench:
   notebooks, local evidence databases, `make chat`, `POST /chat`, and
   `/chats/*` are active manual-eval surfaces; do not prune them as dead

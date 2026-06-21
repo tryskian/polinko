@@ -31,10 +31,22 @@ class StartupContractTests(unittest.TestCase):
         self.assertIn("reply in the morning ritual", start_reference)
         self.assertIn("kernel candidates", start_reference)
         self.assertIn("pause for alignment with the human lead", start_reference)
+        self.assertIn("docs/governance/DECISIONS.md", runbook)
         self.assertIn("Reply in the morning ritual before implementation", runbook)
         self.assertIn("kernel candidates", runbook)
         self.assertIn("Pause for alignment with the human lead", runbook)
         self.assertNotIn("execute the `Next Slice`", start_reference)
+
+    def test_docs_index_links_to_current_ritual_headings(self) -> None:
+        docs_index = _read("docs/README.md")
+
+        self.assertIn(
+            "./runtime/RUNBOOK.md#morning-startup-ritual",
+            docs_index,
+        )
+        self.assertIn("./runtime/RUNBOOK.md#end-of-day-ritual", docs_index)
+        self.assertNotIn("morning-startup-check-codexbeab", docs_index)
+        self.assertNotIn("end-of-day-routine-codexbeab", docs_index)
 
     def test_runtime_docs_define_active_kernel_validation(self) -> None:
         start_reference = _read("docs/runtime/START_END_REFERENCE.md")
