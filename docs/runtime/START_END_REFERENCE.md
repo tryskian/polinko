@@ -69,6 +69,14 @@ Runner lifecycle rule:
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
 
+Active kernel validation:
+
+- During active refactor kernels, use focused checks for the touched surface
+- Use `make end-preflight` when the kernel is broad enough to need the full
+  branch-local quality suite
+- Do not run `make end` after every kernel; reserve it for real session
+  closeout or post-merge clean-main verification
+
 ## End
 
 Command:

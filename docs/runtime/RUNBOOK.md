@@ -161,6 +161,18 @@ Use this doc for operator procedure.
 5. Preparation and inventory tools must not launch a browser, run OCR, close
    feedback, write live eval rows, or mutate the manual eval warehouse.
 
+## Active Kernel Validation
+
+1. Use focused checks during active refactor kernels:
+   - touched unit tests
+   - `make scripts-check` for script changes
+   - `make lint-docs` for docs changes
+   - `git diff --check`
+2. Use `make end-preflight` when the kernel is broad enough to need the full
+   branch-local quality suite.
+3. Reserve `make end` for real session closeout or post-merge clean-main
+   verification.
+
 ## Atomic Commands
 
 - `make doctor-env`

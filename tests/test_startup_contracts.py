@@ -36,6 +36,18 @@ class StartupContractTests(unittest.TestCase):
         self.assertIn("Pause for alignment with the human lead", runbook)
         self.assertNotIn("execute the `Next Slice`", start_reference)
 
+    def test_runtime_docs_define_active_kernel_validation(self) -> None:
+        start_reference = _read("docs/runtime/START_END_REFERENCE.md")
+        runbook = _read("docs/runtime/RUNBOOK.md")
+
+        self.assertIn("Active kernel validation", start_reference)
+        self.assertIn("During active refactor kernels", start_reference)
+        self.assertIn("make end-preflight", start_reference)
+        self.assertIn("Do not run `make end` after every kernel", start_reference)
+        self.assertIn("Active Kernel Validation", runbook)
+        self.assertIn("Use focused checks during active refactor kernels", runbook)
+        self.assertIn("Reserve `make end` for real session closeout", runbook)
+
     def test_wake_lock_reference_matches_stop_all_contract(self) -> None:
         start_reference = _read("docs/runtime/START_END_REFERENCE.md")
         runtime_makefile = _read("makefiles/runtime.mk")
