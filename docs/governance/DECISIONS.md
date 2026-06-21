@@ -2247,3 +2247,18 @@ or branch history instead.
   strict-mode, and sourced-helper contract checks.
 - Why: Syntax and quoting errors should fail in the lightweight script hygiene
   gate before longer style, type, test, security, or closeout runs.
+
+## D-145: Keep public diagram rendering source-first
+
+- Date: `2026-06-21`
+- Category: `workflow_environment`
+- Tags: `docs`, `diagrams`, `d3`, `make`, `hygiene`
+- Human-led: The human lead asked to continue script cleanup one surface at a
+  time and avoid generated-output churn while keeping warnings and tooling
+  blubbles resolved.
+- Decision: `make d3-render` now renders the Evidence Sankey through a
+  temporary SVG and replaces the tracked SVG only when content changes. This
+  aligns the D3 renderer with the existing Mermaid manifest/hash skip behaviour.
+- Why: Public diagrams should remain source-first and intentional. Routine
+  renderer runs should confirm artefacts are current without creating noisy
+  rewrites.

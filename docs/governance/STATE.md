@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-19
+Last updated: 2026-06-21
 
 ## Current Truth
 
@@ -465,6 +465,9 @@ Last updated: 2026-06-19
     and sourced helper contracts
   - `make ci-docs` and `make end` both run `make scripts-check` so malformed
     shell helpers fail before longer style, type, test, and security gates
+  - public diagram renderers use source-first, write-if-changed behaviour:
+    Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
+    through a temporary SVG before replacing the tracked artefact
   - portfolio Node setup uses `apps/portfolio/`
   - root and portfolio npm locks both have audit and Dependabot coverage
   - portfolio installs prefer `npm ci` when a lockfile is present

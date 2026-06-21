@@ -18,6 +18,8 @@ and lane-specific context.
 - [Diagram Artefact README](diagrams/README.md)
 - Rendered SVGs live in `docs/public/diagrams/`
 - Mermaid SVGs are generated with `tools/render_mermaid_diagrams.py`
+- The Evidence Sankey SVG is generated with
+  `tools/render_public_d3_diagrams.py`
 
 ## Current Dated Progress Notes
 
