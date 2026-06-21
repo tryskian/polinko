@@ -78,6 +78,9 @@ Last updated: 2026-06-21
   - OCR-ready candidate cleanup happens upstream of OCR judgment
 - Polinko is entering the next method beta from a frozen Beta 2.3 snapshot:
   - fail-first evaluation is the active posture
+  - active maintenance kernels prioritise runtime/script hygiene and
+    docs/tooling alignment; OCR-specific work is treated as a parked research
+    lane to resume intentionally when that lane reopens
   - Beta 2.3 evidence is frozen under `docs/eval/beta_2_3/`
   - `pre-Beta 2.4` is staged as the next research-model contract
   - the next model-contract review must preserve the original positive
