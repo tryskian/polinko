@@ -39,7 +39,7 @@ end-preflight:
 end-git-check:
 	bash ./tools/check_end_git_clean.sh
 
-eod-stop: server-daemon-stop caffeinate-off-all session-status
+eod-stop: eval-sidecar-stop portfolio-mockups-stop server-daemon-stop caffeinate-off-all session-status
 
 rituals:
 	@cat docs/runtime/START_END_REFERENCE.md
@@ -143,6 +143,12 @@ viz-open open-viz: server-daemon
 session-status:
 	@echo "== Server =="
 	@$(MAKE) --no-print-directory server-daemon-status || true
+	@echo ""
+	@echo "== Eval sidecar =="
+	@$(MAKE) --no-print-directory eval-sidecar-status || true
+	@echo ""
+	@echo "== Portfolio mockups =="
+	@$(MAKE) --no-print-directory portfolio-mockups-status || true
 	@echo ""
 	@echo "== Keep-awake =="
 	@$(MAKE) --no-print-directory caffeinate-status || true

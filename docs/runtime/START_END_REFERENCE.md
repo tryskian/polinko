@@ -107,6 +107,8 @@ Sequence:
     - `make security-checks`
 14. Stop background tasks:
     - `make eod-stop`
+        - `make eval-sidecar-stop`
+        - `make portfolio-mockups-stop`
         - `make server-daemon-stop`
         - `make caffeinate-off-all`
         - `make session-status`

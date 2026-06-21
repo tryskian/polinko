@@ -496,6 +496,9 @@ Last updated: 2026-06-21
     child session through the configured Python launcher
   - `make caffeinate-status`, `make decaffeinate`, and `make end` operate on
     the repo-owned PID without adopting unrelated user wake-lock processes
+  - `make eod-stop` closes the core background runner family:
+    `eval-sidecar`, `portfolio-mockups`, `server-daemon`, and repo-managed
+    `caffeinate`, then prints status for each family member
   - `make start` can run from VS Code folder-open bootstrap without sharing the
     default API smoke port or smoke database paths with another active startup
   - local URL helpers such as `make docs`, `make open-api-docs`, and

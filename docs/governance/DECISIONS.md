@@ -2275,3 +2275,17 @@ or branch history instead.
 - Why: The runtime map already treated tracked path-leak checking as part of
   closeout. Wiring the gate into the actual closeout routine keeps tracked
   docs/code free of local machine paths before clean-main closure.
+
+## D-147: Close the full background runner family at end-of-day
+
+- Date: `2026-06-21`
+- Category: `workflow_environment`
+- Tags: `runtime`, `make`, `background_runners`, `closeout`, `hygiene`
+- Human-led: The human lead asked to keep script and hidden runtime surfaces
+  maintained one kernel at a time, with warnings resolved rather than parked.
+- Decision: `make eod-stop` now stops `eval-sidecar`,
+  `portfolio-mockups`, `server-daemon`, and repo-managed `caffeinate`, then
+  prints status for the same runner family.
+- Why: The runtime map defines these as the core background runner family.
+  Closeout should operate on the same family it reports, so stray local
+  runner state cannot survive a clean end-of-day gate unnoticed.
