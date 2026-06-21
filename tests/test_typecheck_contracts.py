@@ -52,6 +52,12 @@ class TypecheckContractTests(unittest.TestCase):
         self.assertIn("current branch must be `main`", start_reference)
         self.assertIn("skips final clean-main Git closeout", start_reference)
 
+    def test_runbook_make_end_summary_matches_closeout_order(self) -> None:
+        runbook = _read("docs/runtime/RUNBOOK.md")
+
+        self.assertIn("background-stop, and final clean-main", runbook)
+        self.assertNotIn("clean-main Git check, transcript", runbook)
+
     def test_pyright_is_repo_owned_advisory_editor_check(self) -> None:
         package = json.loads(_read("package.json"))
         checks_makefile = _read("makefiles/checks.mk")

@@ -463,9 +463,10 @@ Use this doc for operator procedure.
   - start or reuse the local server and launch the PASS/FAIL viz URL in the
     system browser
 - `make end`
-  - literal closeout routine from clean synced `main`: clean-main Git check,
-    transcript fix/check, doctor, Python style/type checks, docs lint, tests,
-    security checks, and stop background tasks
+  - literal closeout routine from clean synced `main`: docs freshness,
+    transcript fix/check, doctor, script/path checks, Python style/type checks,
+    docs lint, tests, security checks, background-stop, and final clean-main
+    Git check
 - `make end-docs-check`
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make security-checks`
