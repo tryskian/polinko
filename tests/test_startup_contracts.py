@@ -36,6 +36,17 @@ class StartupContractTests(unittest.TestCase):
         self.assertIn("Pause for alignment with the human lead", runbook)
         self.assertNotIn("execute the `Next Slice`", start_reference)
 
+    def test_wake_lock_reference_matches_stop_all_contract(self) -> None:
+        start_reference = _read("docs/runtime/START_END_REFERENCE.md")
+        runtime_makefile = _read("makefiles/runtime.mk")
+        caffeinate_script = _read("tools/manage_caffeinate.sh")
+
+        self.assertIn("caffeinate-off-all", runtime_makefile)
+        self.assertIn("stop-all", caffeinate_script)
+        self.assertIn("configured wake-lock", start_reference)
+        self.assertIn("without adopting their PIDs", start_reference)
+        self.assertNotIn("never adopted or stopped", start_reference)
+
 
 if __name__ == "__main__":
     unittest.main()

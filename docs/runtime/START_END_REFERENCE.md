@@ -49,7 +49,11 @@ Wake-lock rule:
 - the managed process is launched in a detached child session so it survives
   non-interactive host shell command exit
 - `make decaffeinate` stops the repo-owned PID
-- unmanaged `caffeinate` processes are reported but never adopted or stopped
+- `make caffeinate-status` reports matching unmanaged `caffeinate` processes
+  without adopting their PIDs
+- `make caffeinate-off-all` is closeout cleanup: it stops the repo-owned PID,
+  then clears any remaining process that matches the configured wake-lock
+  command pattern
 
 Runner lifecycle rule:
 

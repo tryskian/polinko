@@ -2289,3 +2289,20 @@ or branch history instead.
 - Why: The runtime map defines these as the core background runner family.
   Closeout should operate on the same family it reports, so stray local
   runner state cannot survive a clean end-of-day gate unnoticed.
+
+## D-148: Document wake-lock closeout cleanup explicitly
+
+- Date: `2026-06-21`
+- Category: `workflow_environment`
+- Tags: `caffeinate`, `closeout`, `pid_lifecycle`, `hygiene`
+- Human-led: The human lead asked to keep runtime helper behaviour clear
+  enough that small launch/closeout blubbles do not become recurring friction.
+- Decision: The start/end reference now distinguishes `caffeinate-status`
+  reporting from `caffeinate-off-all` cleanup. Status reports matching
+  unmanaged processes without adopting their PIDs; closeout cleanup stops the
+  repo-owned PID and any remaining process matching the configured wake-lock
+  command pattern.
+- Why: The script and tests already treated `stop-all` as a command-pattern
+  cleanup path. The compact operator reference needed to describe that active
+  behaviour rather than imply that explicit closeout cleanup never stops
+  matching unmanaged wake-lock processes.
