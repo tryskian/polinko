@@ -47,22 +47,22 @@ Use this doc for operator procedure.
 2. Read in this order from the printed rehydrate prompt:
    - `docs/governance/CHARTER.md`
    - `docs/governance/STATE.md`
-   - local `docs/peanut/governance/SESSION_HANDOFF.md`
+   - `docs/governance/DECISIONS.md`
    - `docs/runtime/RUNBOOK.md`
    - `docs/runtime/ARCHITECTURE.md`
+   - local `docs/peanut/governance/SESSION_HANDOFF.md` if present
 3. Confirm execution location:
-   - printed repo root, canonical repo root, or dedicated worktree
+   - printed repo root and host vs devcontainer mode
 4. Confirm active branch:
    - `git branch --show-current`
 5. If on `main`, create or switch to a feature branch before edits.
-6. If parallel tracks are active, keep each track in its own worktree.
-7. Reply in the morning ritual before implementation:
+6. Reply in the morning ritual before implementation:
    - context: printed repo root, host vs devcontainer mode, active branch, clean `main` or feature branch, and runtime health
    - kernel candidates: likely lanes from current docs/state, with one
      recommended first kernel
    - startup note: one small issue or risk only if something needs attention
-8. After alignment, run one active kernel at a time and stop before broadening.
-9. Pause for alignment with the human lead before implementation.
+7. After alignment, run one active kernel at a time and stop before broadening.
+8. Pause for alignment with the human lead before implementation.
 
 ## Environment Doctor
 
