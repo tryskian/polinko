@@ -2234,3 +2234,16 @@ or branch history instead.
 - Why: The write path and validation path should use the same pip-tools
   resolver settings so lock freshness checks reflect the lock generation
   command.
+
+## D-144: Add shell parser checks to script hygiene
+
+- Date: `2026-06-21`
+- Category: `workflow_environment`
+- Tags: `shell_scripts`, `make`, `hygiene`, `closeout`
+- Human-led: The human lead asked to resolve small script blubbles rather than
+  leaving warnings or shell typos as ambient maintenance debt.
+- Decision: `make scripts-check` now validates tracked `tools/*.sh` files with
+  the matching shell parser (`bash -n` or `sh -n`) in addition to shebang,
+  strict-mode, and sourced-helper contract checks.
+- Why: Syntax and quoting errors should fail in the lightweight script hygiene
+  gate before longer style, type, test, security, or closeout runs.

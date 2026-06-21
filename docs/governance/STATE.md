@@ -461,8 +461,8 @@ Last updated: 2026-06-19
   - local dependency refreshes are explicit through `make refresh-deps` before
     rerunning `make security-checks`
   - shell helper hygiene is explicit through `make scripts-check`, which
-    verifies tracked `tools/*.sh` shebangs, strict modes, and sourced helper
-    contracts
+    verifies tracked `tools/*.sh` shebangs, strict modes, shell parser syntax,
+    and sourced helper contracts
   - `make ci-docs` and `make end` both run `make scripts-check` so malformed
     shell helpers fail before longer style, type, test, and security gates
   - portfolio Node setup uses `apps/portfolio/`
