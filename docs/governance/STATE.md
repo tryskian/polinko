@@ -466,8 +466,9 @@ Last updated: 2026-06-21
   - shell helper hygiene is explicit through `make scripts-check`, which
     verifies tracked `tools/*.sh` shebangs, strict modes, shell parser syntax,
     and sourced helper contracts
-  - `make ci-docs` and `make end` both run `make scripts-check` so malformed
-    shell helpers fail before longer style, type, test, and security gates
+  - `make ci-docs` runs `make path-leak-check`, `make scripts-check`, and
+    `make lint-docs`; `make end` also runs `make path-leak-check` and
+    `make scripts-check` before longer style, type, test, and security gates
   - public diagram renderers use source-first, write-if-changed behaviour:
     Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
     through a temporary SVG before replacing the tracked artefact

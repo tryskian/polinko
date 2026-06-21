@@ -89,26 +89,28 @@ Sequence:
    - `make doctor-env`
 5. Validate shell helper contracts:
    - `make scripts-check`
-6. Run Python style checks:
+6. Check tracked docs/code for local path leaks:
+   - `make path-leak-check`
+7. Run Python style checks:
    - `make ci-python-style`
-7. Run Python type checks:
+8. Run Python type checks:
    - `make ci-python-type-check`
-8. Lint docs:
+9. Lint docs:
    - `make lint-docs`
-9. Smoke-test editable package import:
-   - `make package-install-check`
-10. Run tests:
+10. Smoke-test editable package import:
+    - `make package-install-check`
+11. Run tests:
     - `make test`
-11. Check diff whitespace:
+12. Check diff whitespace:
     - `git diff --check`
-12. Run dependency security checks:
+13. Run dependency security checks:
     - `make security-checks`
-13. Stop background tasks:
+14. Stop background tasks:
     - `make eod-stop`
         - `make server-daemon-stop`
         - `make caffeinate-off-all`
         - `make session-status`
-14. Verify the Git closeout state:
+15. Verify the Git closeout state:
     - `make end-git-check`
     - current branch must be `main`
     - working tree must be clean
@@ -127,6 +129,8 @@ Explicit companion checks:
 - `make scripts-check`
   - validates tracked shell helper shebangs, strict modes, and sourced helper
     contracts
+- `make path-leak-check`
+  - checks tracked text surfaces for local machine path leaks
 - `make security-checks`
   - runs local Python and Node dependency audits
 - `make api-smoke`

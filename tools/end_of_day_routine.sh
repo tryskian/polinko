@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-TOTAL_STEPS=14
+TOTAL_STEPS=15
 if [ "${END_SKIP_STOP:-}" = "1" ]; then
   TOTAL_STEPS=$((TOTAL_STEPS - 1))
 fi
@@ -28,6 +28,7 @@ run_step "transcript-fix" make --no-print-directory transcript-fix
 run_step "transcript-check" make --no-print-directory transcript-check
 run_step "doctor-env" make --no-print-directory doctor-env
 run_step "scripts-check" make --no-print-directory scripts-check
+run_step "path-leak-check" make --no-print-directory path-leak-check
 run_step "ci-python-style" make --no-print-directory ci-python-style
 run_step "ci-python-type-check" make --no-print-directory ci-python-type-check
 run_step "lint-docs" make --no-print-directory lint-docs

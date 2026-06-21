@@ -712,12 +712,20 @@ class MakefileContractTests(unittest.TestCase):
             'run_step "scripts-check" make --no-print-directory scripts-check',
             closeout_text,
         )
+        self.assertIn(
+            'run_step "path-leak-check" make --no-print-directory path-leak-check',
+            closeout_text,
+        )
         self.assertGreater(
             closeout_text.index('run_step "scripts-check"'),
             closeout_text.index('run_step "doctor-env"'),
         )
         self.assertLess(
             closeout_text.index('run_step "scripts-check"'),
+            closeout_text.index('run_step "path-leak-check"'),
+        )
+        self.assertLess(
+            closeout_text.index('run_step "path-leak-check"'),
             closeout_text.index('run_step "ci-python-style"'),
         )
 

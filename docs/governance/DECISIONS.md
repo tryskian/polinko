@@ -2262,3 +2262,16 @@ or branch history instead.
 - Why: Public diagrams should remain source-first and intentional. Routine
   renderer runs should confirm artefacts are current without creating noisy
   rewrites.
+
+## D-146: Run tracked path-leak checks during closeout
+
+- Date: `2026-06-21`
+- Category: `workflow_environment`
+- Tags: `path_leak`, `make`, `closeout`, `hygiene`
+- Human-led: The human lead asked for small warnings and hidden script
+  blubbles to be resolved instead of left as ambient maintenance debt.
+- Decision: `make end` now runs `make path-leak-check` after
+  `make scripts-check` and before longer style, type, test, and security gates.
+- Why: The runtime map already treated tracked path-leak checking as part of
+  closeout. Wiring the gate into the actual closeout routine keeps tracked
+  docs/code free of local machine paths before clean-main closure.
