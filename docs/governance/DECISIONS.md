@@ -1695,7 +1695,7 @@ or branch history instead.
 - Tags: `closeout`, `git`, `main`, `safety_gate`
 - Human-led: The human lead caught that `make end` could pass on a feature
   branch, which contradicted the repo closeout contract.
-- Decision: `make end` now runs `make end-git-check` as its first step.
+- Decision: `make end` runs `make end-git-check` as its final closeout gate.
   Closeout fails unless the current branch is `main`, the working tree is
   clean, and local `main` is synced with `origin/main`. `make end-git-check`
   remains available as a standalone git-only check.
@@ -2094,3 +2094,171 @@ or branch history instead.
   `GHSA-4xgf-cpjx-pc3j`, with `2.14.2` listed as the fixed version. Updating
   the generated lock keeps the audit gate meaningful while preserving
   `requirements.in` as the direct dependency input.
+
+## D-135: Standardise portfolio mockup runner lifecycle
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `runtime`, `make`, `portfolio`, `shell_scripts`, `hygiene`
+- Human-led: The human lead asked to clear hidden runtime and script surfaces
+  one surface at a time.
+- Decision: `portfolio-mockups` now delegates server lifecycle work to
+  `tools/run_portfolio_mockups.sh`, with explicit `start`, `status`, and
+  `stop` actions, detached `start_new_session` launch, repo-owned PID/log
+  paths, stale PID handling, and a Make status target.
+- Why: The portfolio mockup preview was the remaining background runner with
+  PID/log/start/stop behaviour embedded directly in the Make recipe. Moving
+  lifecycle ownership into a helper script aligns it with the other local
+  runners and gives tests one focused contract to guard.
+
+## D-136: Centralise manual eval health Make dispatch
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `manual_evals`, `make`, `workbench`, `hygiene`
+- Human-led: The human lead asked to keep cleanup focused on one script surface
+  at a time and to clear small Make/runtime blubbles rather than leaving them
+  as warnings.
+- Decision: Manual eval health, feedback, overlay, OCR retry, and
+  reclassification Make targets keep their existing public names, but now route
+  through `MANUAL_EVALS_DB_HEALTH_COMMAND` and a shared Make helper in
+  `makefiles/surfaces.mk`.
+- Why: These targets all dispatch to `tools.manual_evals_db_health` with
+  different flags and argument variables. Centralising the command entrypoint
+  reduces repeated Make recipe text, makes future workbench entrypoint changes
+  one-place edits, and preserves the read-only/preview/apply operator
+  boundaries.
+
+## D-137: Retarget local path-leak audit to runtime config
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `path_leak`, `local_config`, `vscode`, `devcontainer`, `hygiene`
+- Human-led: The human lead asked to treat hidden scripts and local runtime
+  surfaces as first-class maintenance surfaces.
+- Decision: `make path-leak-audit-local` now runs
+  `tools.path_leak_check --scope local-config`, scanning local runtime config
+  surfaces such as `.vscode`, `.devcontainer`, pre-commit config, and the
+  devcontainer setup script. The broader `--scope local` remains available for
+  explicit full local scans.
+- Why: Full local scans include ignored manual-eval evidence bundles and
+  private peanut notes that intentionally preserve absolute source paths as
+  provenance. Retargeting the Make target keeps the hidden-surface audit
+  actionable without treating local evidence provenance as a failure.
+
+## D-138: Guard base OCR transcript workflows consistently
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `ocr`, `evals`, `shell_scripts`, `hygiene`
+- Human-led: The human lead asked to continue script cleanup one surface at a
+  time and to resolve small warnings or blubbles rather than leaving them as
+  ambient maintenance debt.
+- Decision: `tools/run_ocr_base_transcript_workflow.sh` now uses
+  `tools/ocr_workflow_common.sh` and `tools/eval_case_guard.sh` before
+  dispatching base OCR transcript case or stability runners.
+- Why: Growth, focus, and transcript-lane OCR wrappers already used the shared
+  case guard, but the base transcript wrapper only checked that the case file
+  existed. Routing the base wrapper through the same guard keeps missing and
+  empty case-file handling consistent while preserving the existing valid-case
+  runner paths.
+
+## D-139: Make local act runner configurable
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `make`, `local_ci`, `act`, `hygiene`
+- Human-led: The human lead asked to keep hidden and low-frequency tooling
+  surfaces maintained rather than treating them as incidental.
+- Decision: Add `ACT ?= act` to external operator tooling config and route
+  `make act-list` / `make act-ci` through `$(ACT)`.
+- Why: The local CI helper recipes previously hard-coded `act`. Making the
+  executable configurable follows the existing Make pattern for external
+  operator tools, preserves default behavior, and gives local environments one
+  explicit override point.
+
+## D-140: Narrow local privacy helper scope
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `privacy`, `local_config`, `docs`, `hygiene`
+- Human-led: The human lead asked to keep hidden and safety-relevant helper
+  scripts maintained so small local-state problems do not turn into future
+  cleanup debt.
+- Decision: `make privacy-local-on` now installs the machine-local exclude
+  block without marking tracked docs as `skip-worktree`. `make
+  privacy-local-off` remains able to clear legacy docs `skip-worktree` state
+  if an older run left tracked docs hidden.
+- Why: Tracked governance and runtime docs are canonical repo truth and must
+  remain visible during normal refactor work. The local privacy helper should
+  protect explicitly local files without hiding tracked project state.
+
+## D-141: Lock devcontainer setup to repo root
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `devcontainer`, `dependencies`, `local_config`, `hygiene`
+- Human-led: The human lead asked to keep hidden and low-frequency runtime
+  setup scripts maintained so launch-time blubbles do not become repeated
+  operator friction.
+- Decision: `tools/setup_devcontainer.sh` now resolves the git top-level and
+  changes to it before creating `.venv` or installing root and portfolio
+  dependencies.
+- Why: Devcontainer post-create commands and manual local runs should produce
+  the same dependency layout even when the shell starts from a nested
+  directory.
+
+## D-142: Make portfolio browser launch explicit
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `portfolio`, `make`, `local_preview`, `hygiene`
+- Human-led: The human lead asked to keep operator shortcuts predictable and
+  avoid hidden browser-launch behaviour during maintenance.
+- Decision: `make portfolio` keeps the default non-launching URL path, and
+  `make portfolio-open` is the explicit system-browser launcher. The existing
+  `make portfolio-playwright` target remains the explicit Playwright launcher.
+- Why: Docs and viz helpers already separate URL-printing defaults from
+  browser-opening variants. Portfolio preview should follow the same operator
+  pattern.
+
+## D-143: Align dependency lock check resolver
+
+- Date: `2026-06-19`
+- Category: `workflow_environment`
+- Tags: `dependencies`, `pip_tools`, `make`, `hygiene`
+- Human-led: The human lead asked to keep dependency and CI helper scripts in
+  order so recurring checks do not drift into repeated failure cleanup.
+- Decision: `make deps-lock-check` now passes `--resolver=backtracking`,
+  matching `make deps-lock`.
+- Why: The write path and validation path should use the same pip-tools
+  resolver settings so lock freshness checks reflect the lock generation
+  command.
+
+## D-144: Add shell parser checks to script hygiene
+
+- Date: `2026-06-21`
+- Category: `workflow_environment`
+- Tags: `shell_scripts`, `make`, `hygiene`, `closeout`
+- Human-led: The human lead asked to resolve small script blubbles rather than
+  leaving warnings or shell typos as ambient maintenance debt.
+- Decision: `make scripts-check` now validates tracked `tools/*.sh` files with
+  the matching shell parser (`bash -n` or `sh -n`) in addition to shebang,
+  strict-mode, and sourced-helper contract checks.
+- Why: Syntax and quoting errors should fail in the lightweight script hygiene
+  gate before longer style, type, test, security, or closeout runs.
+
+## D-145: Keep public diagram rendering source-first
+
+- Date: `2026-06-21`
+- Category: `workflow_environment`
+- Tags: `docs`, `diagrams`, `d3`, `make`, `hygiene`
+- Human-led: The human lead asked to continue script cleanup one surface at a
+  time and avoid generated-output churn while keeping warnings and tooling
+  blubbles resolved.
+- Decision: `make d3-render` now renders the Evidence Sankey through a
+  temporary SVG and replaces the tracked SVG only when content changes. This
+  aligns the D3 renderer with the existing Mermaid manifest/hash skip behaviour.
+- Why: Public diagrams should remain source-first and intentional. Routine
+  renderer runs should confirm artefacts are current without creating noisy
+  rewrites.

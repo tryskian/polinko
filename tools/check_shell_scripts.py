@@ -16,6 +16,10 @@ EXECUTABLE_STRICT_MODE = {
     "#!/usr/bin/env bash": "set -euo pipefail",
     "#!/usr/bin/env sh": "set -eu",
 }
+SHELL_PARSERS = {
+    "#!/usr/bin/env bash": "bash",
+    "#!/usr/bin/env sh": "sh",
+}
 
 
 def tracked_shell_scripts() -> list[Path]:
@@ -27,6 +31,28 @@ def tracked_shell_scripts() -> list[Path]:
         text=True,
     )
     return [Path(path) for path in result.stdout.splitlines() if path.endswith(".sh")]
+
+
+def shell_syntax_failure(path: Path, shebang: str) -> str | None:
+    parser = SHELL_PARSERS[shebang]
+    try:
+        result = subprocess.run(
+            [parser, "-n", str(REPO_ROOT / path)],
+            cwd=REPO_ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        return f"cannot run {parser!r} syntax parser"
+
+    if result.returncode == 0:
+        return None
+
+    detail = " ".join((result.stderr or result.stdout).split())
+    if detail:
+        return f"fails {parser} syntax check: {detail}"
+    return f"fails {parser} syntax check with exit code {result.returncode}"
 
 
 def check_script(path: Path) -> list[str]:
@@ -47,6 +73,10 @@ def check_script(path: Path) -> list[str]:
             f"{shebang!r}; expected one of {sorted(EXECUTABLE_STRICT_MODE)}"
         )
         return failures
+
+    syntax_failure = shell_syntax_failure(path, shebang)
+    if syntax_failure is not None:
+        failures.append(syntax_failure)
 
     if path in SHELL_LIBRARIES:
         function_name = SHELL_LIBRARIES[path]

@@ -108,6 +108,7 @@ names:
   - `/portfolio`
   - `/assets`
   - `make portfolio`
+  - `make portfolio-open`
   - `make portfolio-install`
   - `make portfolio-build`
   - `make portfolio-mockups`

@@ -84,7 +84,7 @@ path-leak-check:
 	$(PYTHON) -m tools.path_leak_check --scope tracked
 
 path-leak-audit-local:
-	$(PYTHON) -m tools.path_leak_check --scope local
+	$(PYTHON) -m tools.path_leak_check --scope local-config
 
 backend-gate: backend-gate-start doctor-env test quality-gate-deterministic
 
@@ -98,7 +98,7 @@ precommit-run:
 	$(PYTHON) -m pre_commit run --all-files
 
 act-list:
-	act -l
+	$(ACT) -l
 
 act-ci:
-	act -W .github/workflows/ci.yml
+	$(ACT) -W .github/workflows/ci.yml

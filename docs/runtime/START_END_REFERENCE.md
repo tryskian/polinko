@@ -59,6 +59,9 @@ Runner lifecycle rule:
 - `make eval-sidecar-start`, `make eval-sidecar-status`, and
   `make eval-sidecar-stop` delegate lifecycle actions to
   `tools/run_eval_sidecar_start.sh`
+- `make portfolio-mockups`, `make portfolio-mockups-status`, and
+  `make portfolio-mockups-stop` delegate mockup-server lifecycle actions to
+  `tools/run_portfolio_mockups.sh`
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
 

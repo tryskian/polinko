@@ -7,6 +7,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 suite=$1
+common_script=${OCR_WORKFLOW_COMMON_SCRIPT:-./tools/ocr_workflow_common.sh}
 cases_path=${OCR_TRANSCRIPT_CASES:-.local/eval_cases/ocr_transcript_cases_all.json}
 eval_runner_script=${OCR_EVAL_RUNNER_SCRIPT:-./tools/run_eval_ocr_cases.sh}
 stability_runner_script=${OCR_STABILITY_RUNNER_SCRIPT:-./tools/run_eval_ocr_stability.sh}
@@ -20,11 +21,23 @@ cases|stability)
 	;;
 esac
 
-if [ ! -f "$cases_path" ]; then
-	echo "Transcript OCR cases not found: $cases_path"
-	echo "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export"
-	exit 1
-fi
+case "$suite" in
+cases)
+	empty_message="No transcript OCR cases available yet; skipping eval."
+	;;
+stability)
+	empty_message="No transcript OCR cases available yet; skipping stability run."
+	;;
+esac
+
+# shellcheck source=./tools/ocr_workflow_common.sh
+. "$common_script"
+ocr_workflow_use_eval_case_guard
+eval_case_guard_or_exit \
+	"$cases_path" \
+	"Transcript OCR cases not found" \
+	"Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" \
+	"$empty_message"
 
 case "$suite" in
 cases)

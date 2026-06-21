@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ -z "${ROOT}" ]]; then
+	echo "Not inside a git repository."
+	exit 1
+fi
+cd "${ROOT}"
+
 venv_dir="${POLINKO_DEVCONTAINER_VENV_DIR:-.venv}"
 portfolio_app_dir="${POLINKO_DEVCONTAINER_PORTFOLIO_APP_DIR:-apps/portfolio}"
 

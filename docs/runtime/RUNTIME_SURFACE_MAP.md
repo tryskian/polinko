@@ -29,6 +29,7 @@ flowchart TD
     MainSync --> MakeEnd["make end"]
     MakeEnd --> DocsGate["make end-docs-check"]
     MakeEnd --> ScriptGate["make scripts-check"]
+    MakeEnd --> PathLeakGate["make path-leak-check"]
     MakeEnd --> TestGate["style, type, docs, package, tests"]
     MakeEnd --> SecurityGate["make security-checks"]
     MakeEnd --> GitGate["make end-git-check"]
@@ -48,15 +49,19 @@ flowchart TD
 
   subgraph Evals["Manual eval and OCR tooling"]
     ManualWorkbench["manual eval workbench"]
-    DbHealth["manual_evals_db_health modules"]
+    DbHealth["manual_evals_db_health command"]
     OcrInventory["read-only OCR inventory"]
     FeedbackDrafts["local decision drafts and previews"]
     EvalAliases["Make eval aliases and wrappers"]
+    OcrWrappers["OCR workflow wrappers"]
+    SharedCaseGuard["shared OCR case guard"]
     ManualWorkbench --> DbHealth
     ManualWorkbench --> OcrInventory
     ManualWorkbench --> FeedbackDrafts
     DbHealth --> EvalAliases
     OcrInventory --> EvalAliases
+    EvalAliases --> OcrWrappers
+    OcrWrappers --> SharedCaseGuard
   end
 
   subgraph CI["CI and dependency automation"]
@@ -82,10 +87,20 @@ flowchart TD
   for alignment.
 - Closeout is the complete stop-state contract: branch-local validation is
   preflight, but the final gate is `make end` from clean synced `main`.
+  `make path-leak-audit-local` is the focused companion for ignored local
+  runtime config surfaces such as VS Code, devcontainer, and pre-commit files.
+  Devcontainer setup resolves the repo root before installing dependencies.
+  `make privacy-local-on` installs only machine-local exclude patterns; tracked
+  docs remain visible.
 - Core background runners use one ownership pattern for PID files,
-  stale-process handling, logs, and cleanup commands; portfolio mockups remains
-  queued for the same check when that preview lane is next touched.
+  stale-process handling, logs, cleanup commands, and detached launch
+  behaviour across `caffeinate`, `server-daemon`, `eval-sidecar`, and
+  `portfolio-mockups`.
 - Manual eval and OCR tooling remain active workbench surfaces, but eval runs
-  stay separate from startup and read-only inventory commands.
+  stay separate from startup and read-only inventory commands. Health,
+  feedback, overlay, OCR retry, and reclassification Make targets route through
+  one manual eval health command entrypoint while preserving public target
+  names and preview/apply boundaries. Base, growth, focus, and transcript-lane
+  OCR wrappers share the same case guard before launching eval runners.
 - CI and dependency automation should mirror local gates closely enough that
   failed remote runs point to real fixes, not setup drift.

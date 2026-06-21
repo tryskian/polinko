@@ -14,6 +14,7 @@ OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
 OPENAI_ACCOUNT_SCRIPT = REPO_ROOT / "tools" / "openai_account_summary.py"
 SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "run_server_daemon.sh"
+PORTFOLIO_MOCKUP_SCRIPT = REPO_ROOT / "tools" / "run_portfolio_mockups.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
 OCR_WORKFLOW_COMMON_SCRIPT = REPO_ROOT / "tools" / "ocr_workflow_common.sh"
@@ -52,6 +53,7 @@ OCR_REPORT_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_report_workflow.sh"
 OCR_LANE_INVENTORY_SCRIPT = REPO_ROOT / "tools" / "report_ocr_lane_inventory.py"
 OCR_INTAKE_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_intake_workflow.sh"
 SHELL_SCRIPT_CONTRACT_SCRIPT = REPO_ROOT / "tools" / "check_shell_scripts.py"
+LOCAL_PRIVACY_GUARD_SCRIPT = REPO_ROOT / "tools" / "local_privacy_guard.sh"
 
 
 def _makefile_text() -> str:
@@ -134,6 +136,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("include makefiles/config/ops.mk", config_entry_text)
         self.assertIn("include makefiles/config/build.mk", config_entry_text)
         self.assertIn("PYTHON ?=", config_text)
+        self.assertIn("ACT ?= act", config_text)
         self.assertIn("CLI_ENTRYPOINT ?= -m polinko.cli", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
         self.assertIn("LOCAL_BROWSER_LAUNCH ?= none", config_text)
@@ -180,6 +183,11 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
         self.assertIn("OCR_BASE_TRANSCRIPT_WORKFLOW_ENV =", config_text)
+        self.assertIn(
+            'OCR_WORKFLOW_COMMON_SCRIPT="$(OCR_WORKFLOW_COMMON_SCRIPT)"',
+            config_text,
+        )
+        self.assertIn('EVAL_CASE_GUARD_SCRIPT="$(EVAL_CASE_GUARD_SCRIPT)"', config_text)
         self.assertIn(
             "OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT ?= ./tools/run_ocr_transcript_lane_workflow.sh",
             config_text,
@@ -318,6 +326,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-feedback-decision-preview", targets)
         self.assertIn("manual-evals-overlay-comparison-readiness", targets)
         self.assertIn("manualdb-overlay-comparison-readiness", targets)
+        self.assertIn("manual-evals-overlay-source-index-draft", targets)
+        self.assertIn("manualdb-overlay-source-index-draft", targets)
+        self.assertIn("manual-evals-overlay-source-index-validate", targets)
+        self.assertIn("manualdb-overlay-source-index-validate", targets)
         self.assertIn("manual-evals-ocr-retry-candidates", targets)
         self.assertIn("manualdb-ocr-retry-candidates", targets)
         self.assertIn("manual-evals-ocr-retry-source-verification", targets)
@@ -346,6 +358,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-ocr-retry-execution-report", targets)
         self.assertIn("manual-evals-ocr-retry-feedback-closure-preview", targets)
         self.assertIn("manualdb-ocr-retry-feedback-closure-preview", targets)
+        self.assertIn("manual-evals-ocr-retry-feedback-closure-apply", targets)
+        self.assertIn("manualdb-ocr-retry-feedback-closure-apply", targets)
+        self.assertIn("manual-evals-ocr-retry-feedback-closure-apply-report", targets)
+        self.assertIn("manualdb-ocr-retry-feedback-closure-apply-report", targets)
         self.assertIn("manual-evals-no-context-reclassify-preview", targets)
         self.assertIn("manualdb-no-context-reclassify-preview", targets)
         self.assertIn("manual-evals-no-context-reclassify-apply", targets)
@@ -356,6 +372,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-feedback-reclassify-apply", targets)
         self.assertIn("portfolio", targets)
         self.assertIn("portfolio-mockups", targets)
+        self.assertIn("portfolio-mockups-status", targets)
         self.assertIn("pwcli", targets)
 
     def test_manual_eval_db_targets_are_terminal_native_and_backup_first(
@@ -373,9 +390,34 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(PYTHON) -m tools.manual_evals_db_status", text)
         self.assertRegex(text, r"(?m)^manual-evals-db-health manualdb-health:$")
         self.assertIn("$(PYTHON) -m tools.manual_evals_db_health", text)
+        self.assertEqual(
+            1,
+            text.count("$(PYTHON) -m tools.manual_evals_db_health"),
+        )
+        self.assertIn(
+            "MANUAL_EVALS_DB_HEALTH_COMMAND ?= "
+            "$(PYTHON) -m tools.manual_evals_db_health",
+            text,
+        )
+        self.assertIn(
+            "manual_evals_db_health = "
+            "$(MANUAL_EVALS_DB_HEALTH_COMMAND) $(1) $(strip $(2))",
+            text,
+        )
         self.assertRegex(
             text,
             r"(?m)^manual-evals-feedback-actionables manualdb-feedback-actionables:$",
+        )
+        self.assertIn(
+            "$(call manual_evals_db_health,--open-feedback-actionables,"
+            "$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))",
+            text,
+        )
+        self.assertIn(
+            "$(call manual_evals_db_health,--ocr-retry-selection-draft,"
+            "$(MANUAL_EVALS_OCR_RETRY_PLAN_ARGS) "
+            "$(MANUAL_EVALS_OCR_RETRY_SELECTION_DRAFT_ARGS))",
+            text,
         )
         self.assertIn("--open-feedback-actionables", text)
         self.assertIn("MANUAL_EVALS_FEEDBACK_COHORT ?= $(COHORT)", text)
@@ -532,6 +574,18 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("--ocr-retry-feedback-closure-preview", text)
         self.assertRegex(
             text,
+            r"(?m)^manual-evals-ocr-retry-feedback-closure-apply "
+            r"manualdb-ocr-retry-feedback-closure-apply:$",
+        )
+        self.assertIn("--ocr-retry-feedback-closure-apply", text)
+        self.assertRegex(
+            text,
+            r"(?m)^manual-evals-ocr-retry-feedback-closure-apply-report "
+            r"manualdb-ocr-retry-feedback-closure-apply-report:$",
+        )
+        self.assertIn("--ocr-retry-feedback-closure-apply-report", text)
+        self.assertRegex(
+            text,
             r"(?m)^manual-evals-ocr-retry-feedback-closure-restore-preview "
             r"manualdb-ocr-retry-feedback-closure-restore-preview:$",
         )
@@ -579,6 +633,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "MANUAL_EVALS_FEEDBACK_RECLASSIFY_PLAN_PATH ?= $(PLAN_PATH)", text
         )
+        self.assertIn("MANUAL_EVALS_RECLASSIFY_CONFIRM ?= $(CONFIRM)", text)
+        self.assertIn("MANUAL_EVALS_RECLASSIFY_BACKUP_ROOT ?= $(BACKUP_ROOT)", text)
         self.assertIn("MANUAL_EVALS_FEEDBACK_DECISION_PATH ?= $(DECISION_PATH)", text)
         self.assertIn(
             "MANUAL_EVALS_FEEDBACK_DECISION_DRAFT_PATH ?= $(DRAFT_PATH)", text
@@ -588,6 +644,16 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_DECISION_DRAFT_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_RECLASSIFY_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_RECLASSIFY_APPLY_ARGS)", text)
+        self.assertIn(
+            "$(if $(strip $(MANUAL_EVALS_RECLASSIFY_CONFIRM)),"
+            '--confirm "$(MANUAL_EVALS_RECLASSIFY_CONFIRM)")',
+            text,
+        )
+        self.assertIn(
+            "$(if $(strip $(MANUAL_EVALS_RECLASSIFY_BACKUP_ROOT)),"
+            '--backup-root "$(MANUAL_EVALS_RECLASSIFY_BACKUP_ROOT)")',
+            text,
+        )
         self.assertIn("MANUAL_EVALS_OCR_RETRY_ARTIFACT_IDS ?= $(ARTIFACT_IDS)", text)
         self.assertIn(
             "MANUAL_EVALS_OCR_RETRY_SELECTION_PATH ?= $(SELECTION_PATH)", text
@@ -615,6 +681,18 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^caffeinate-off-all:\s*caffeinate-off$")
         self.assertRegex(text, r"(?m)^decaffeinate-status:\s*caffeinate-status$")
 
+    def test_local_privacy_guard_does_not_hide_tracked_docs_on_apply(self) -> None:
+        text = LOCAL_PRIVACY_GUARD_SCRIPT.read_text(encoding="utf-8")
+        apply_body_match = re.search(
+            r"apply_guard\(\) \{\n(?P<body>.*?)\n\}", text, re.S
+        )
+
+        self.assertIsNotNone(apply_body_match)
+        apply_body = apply_body_match.group("body")
+        self.assertIn("write_exclude_block", apply_body)
+        self.assertNotIn("--skip-worktree", apply_body)
+        self.assertIn("install local excludes for machine-local docs", text)
+
     def test_shell_script_contract_check_is_named_and_closeout_visible(self) -> None:
         text = _makefile_contract_text()
         closeout_text = (REPO_ROOT / "tools" / "end_of_day_routine.sh").read_text(
@@ -628,6 +706,8 @@ class MakefileContractTests(unittest.TestCase):
             text,
             r"(?m)^ci-docs:\s*path-leak-check scripts-check lint-docs$",
         )
+        self.assertRegex(text, r"(?m)^path-leak-audit-local:$")
+        self.assertIn("$(PYTHON) -m tools.path_leak_check --scope local-config", text)
         self.assertIn(
             'run_step "scripts-check" make --no-print-directory scripts-check',
             closeout_text,
@@ -676,6 +756,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(
             text, r"(?m)^portfolio:\s*portfolio-build server-daemon-stop server-daemon$"
         )
+        self.assertRegex(text, r"(?m)^portfolio-open:\s*PORTFOLIO_LAUNCH\s*=\s*system$")
+        self.assertRegex(text, r"(?m)^portfolio-open:\s*portfolio$")
         self.assertRegex(
             text, r"(?m)^portfolio-playwright:\s*PORTFOLIO_LAUNCH\s*=\s*playwright$"
         )
@@ -945,8 +1027,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(CAFFEINATE_SCRIPT.is_file())
         self.assertTrue(OPENAI_ACCOUNT_SCRIPT.is_file())
         self.assertTrue(SERVER_DAEMON_SCRIPT.is_file())
+        self.assertTrue(PORTFOLIO_MOCKUP_SCRIPT.is_file())
         self.assertTrue(os.access(CAFFEINATE_SCRIPT, os.X_OK))
         self.assertTrue(os.access(SERVER_DAEMON_SCRIPT, os.X_OK))
+        self.assertTrue(os.access(PORTFOLIO_MOCKUP_SCRIPT, os.X_OK))
         caffeinate_script_text = CAFFEINATE_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("start_new_session=True", caffeinate_script_text)
         self.assertNotIn("nohup $caffeinate_cmd", caffeinate_script_text)
@@ -961,10 +1045,21 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" start', text)
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" stop', text)
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" status', text)
+        self.assertIn(
+            "PORTFOLIO_MOCKUP_SCRIPT ?= ./tools/run_portfolio_mockups.sh", text
+        )
+        self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" start', text)
+        self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" status', text)
+        self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" stop', text)
         self.assertNotIn('rm -f "$(SERVER_PID_FILE)"', text)
         server_daemon_script_text = SERVER_DAEMON_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("start_new_session=True", server_daemon_script_text)
         self.assertNotIn("nohup", server_daemon_script_text)
+        portfolio_mockup_script_text = PORTFOLIO_MOCKUP_SCRIPT.read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("start_new_session=True", portfolio_mockup_script_text)
+        self.assertNotIn("nohup", portfolio_mockup_script_text)
         self.assertNotIn("nohup $(CAFFEINATE_CMD)", text)
         self.assertNotIn('pgrep -f "^/usr/bin/caffeinate -d -i -m', text)
         self.assertNotIn("/usr/bin/pmset -g assertions", text)
@@ -1044,6 +1139,9 @@ class MakefileContractTests(unittest.TestCase):
         base_transcript_workflow_text = OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT.read_text(
             encoding="utf-8"
         )
+        self.assertIn("OCR_WORKFLOW_COMMON_SCRIPT", base_transcript_workflow_text)
+        self.assertIn("ocr_workflow_use_eval_case_guard", base_transcript_workflow_text)
+        self.assertIn("eval_case_guard_or_exit", base_transcript_workflow_text)
         self.assertIn("OCR_EVAL_RUNNER_SCRIPT", base_transcript_workflow_text)
         self.assertIn("OCR_STABILITY_RUNNER_SCRIPT", base_transcript_workflow_text)
         self.assertIn('exec bash "$eval_runner_script"', base_transcript_workflow_text)
@@ -1185,6 +1283,7 @@ class MakefileContractTests(unittest.TestCase):
     ) -> None:
         for target in (
             "portfolio",
+            "portfolio-open",
             "portfolio-playwright",
             "open-api-docs",
             "open-api-docs-browser",

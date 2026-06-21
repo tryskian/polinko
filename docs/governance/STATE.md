@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-19
+Last updated: 2026-06-21
 
 ## Current Truth
 
@@ -78,6 +78,9 @@ Last updated: 2026-06-19
   - OCR-ready candidate cleanup happens upstream of OCR judgment
 - Polinko is entering the next method beta from a frozen Beta 2.3 snapshot:
   - fail-first evaluation is the active posture
+  - active maintenance kernels prioritise runtime/script hygiene and
+    docs/tooling alignment; OCR-specific work is treated as a parked research
+    lane to resume intentionally when that lane reopens
   - Beta 2.3 evidence is frozen under `docs/eval/beta_2_3/`
   - `pre-Beta 2.4` is staged as the next research-model contract
   - the next model-contract review must preserve the original positive
@@ -110,8 +113,18 @@ Last updated: 2026-06-19
     database paths per run, while explicit `SMOKE_PORT`, `SMOKE_BASE_URL`, and
     smoke DB path overrides remain available for fixed-endpoint debugging
   - core background runner lifecycle is script-owned for `caffeinate`,
-    `server-daemon`, and `eval-sidecar`; Make targets delegate start, status,
-    and stop actions to helper scripts with repo-owned PID/log handling
+    `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
+    delegate start, status, and stop actions to helper scripts with repo-owned
+    PID/log handling
+  - manual eval health, feedback, overlay, OCR retry, and reclassification Make
+    targets keep their public names while routing through a single
+    `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper
+  - `make path-leak-audit-local` is an actionable local runtime-config audit:
+    it checks hidden/editor/container config surfaces without failing on
+    ignored manual-eval evidence bundles that intentionally retain source paths
+  - `make privacy-local-on` installs only machine-local exclude patterns;
+    tracked docs stay visible, while `make privacy-local-off` can clear any
+    legacy docs skip-worktree state left by the older helper behaviour
   - `/manual-evals/surface` and `/viz/pass-fail/data` expose read-only
     `data_freshness` status for the local manual eval warehouse so stale,
     schema-old, unknown, or missing source data is visible without rebuilding
@@ -428,11 +441,14 @@ Last updated: 2026-06-19
   - strict status checks enabled
   - squash-only merge
 - Development setup and dependency gates are aligned to canonical paths:
-  - devcontainer setup creates `.venv`
+  - devcontainer setup resolves the git top-level before creating `.venv`
+    and installing root or portfolio dependencies
   - devcontainer VS Code settings use repo-owned Ruff and mypy tooling from
     `.venv`
   - Python dependencies use `requirements.in` plus generated
     `requirements.txt`, matching pip-tools and Dependabot conventions
+  - `make deps-lock` and `make deps-lock-check` use the same explicit
+    pip-tools backtracking resolver
   - Python security pins are tracked through `requirements.in` plus generated
     `requirements.txt`; current refreshed pins include `PyJWT==2.13.0`,
     `pip==26.1.2`, and `pypdf==6.13.3`
@@ -448,10 +464,13 @@ Last updated: 2026-06-19
   - local dependency refreshes are explicit through `make refresh-deps` before
     rerunning `make security-checks`
   - shell helper hygiene is explicit through `make scripts-check`, which
-    verifies tracked `tools/*.sh` shebangs, strict modes, and sourced helper
-    contracts
+    verifies tracked `tools/*.sh` shebangs, strict modes, shell parser syntax,
+    and sourced helper contracts
   - `make ci-docs` and `make end` both run `make scripts-check` so malformed
     shell helpers fail before longer style, type, test, and security gates
+  - public diagram renderers use source-first, write-if-changed behaviour:
+    Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
+    through a temporary SVG before replacing the tracked artefact
   - portfolio Node setup uses `apps/portfolio/`
   - root and portfolio npm locks both have audit and Dependabot coverage
   - portfolio installs prefer `npm ci` when a lockfile is present
@@ -481,7 +500,11 @@ Last updated: 2026-06-19
   - local URL helpers such as `make docs`, `make open-api-docs`, and
     `make viz` print the target URL by default instead of launching a browser
   - explicit browser launch remains available through `make docs-open`,
-    `make open-api-docs-browser`, `make viz-open`, and `make open-viz`
+    `make open-api-docs-browser`, `make viz-open`, `make open-viz`, and
+    `make portfolio-open`
+  - base OCR transcript case and stability workflows now use the same shared
+    case guard as growth, focus, and transcript-lane OCR wrappers, so missing
+    and empty case-file handling stays consistent before eval runners launch
 - Local operator tooling follows a reusable non-mutating contract:
   - `docs/runtime/LOCAL_TOOLING.md` records the repo-local pattern for tools
     that materialize ignored local input, validate it, preview application, and
@@ -501,9 +524,9 @@ Last updated: 2026-06-19
   - `PACKAGE_BOUNDARY` holds the Python package-boundary contract
   - `make package-install-check` verifies the editable-install rail
   - local `SESSION_HANDOFF` holds the active slice
-  - `make end` now runs the clean-main git check first, then the technical
-    closeout routine; feature branches use branch-local validation targets
-    until the protected-main merge flow is complete
+  - `make end` runs the technical closeout routine, then the clean-main git
+    check as the final closure gate; feature branches use branch-local
+    validation targets until the protected-main merge flow is complete
 
 ## Active Priorities
 

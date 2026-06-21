@@ -22,7 +22,7 @@ class OcrBaseTranscriptWorkflowTests(unittest.TestCase):
             cases_path = tmp_path / "cases.json"
             args_file = tmp_path / "runner-args.txt"
             runner_path = tmp_path / "runner.sh"
-            cases_path.write_text('{"cases": []}', encoding="utf-8")
+            cases_path.write_text('{"cases": [{"id": "case-1"}]}', encoding="utf-8")
             _write_executable(
                 runner_path,
                 '#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$RUNNER_ARGS"\n',
@@ -57,7 +57,7 @@ class OcrBaseTranscriptWorkflowTests(unittest.TestCase):
             args_file = tmp_path / "runner-args.txt"
             env_file = tmp_path / "runner-env.txt"
             runner_path = tmp_path / "runner.sh"
-            cases_path.write_text('{"cases": []}', encoding="utf-8")
+            cases_path.write_text('{"cases": [{"id": "case-1"}]}', encoding="utf-8")
             _write_executable(
                 runner_path,
                 (
@@ -131,6 +131,41 @@ class OcrBaseTranscriptWorkflowTests(unittest.TestCase):
             "Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export",
             result.stdout,
         )
+
+    def test_empty_cases_skip_without_running_eval_runner(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            cases_path = tmp_path / "cases.json"
+            marker_path = tmp_path / "runner-called.txt"
+            runner_path = tmp_path / "runner.sh"
+            cases_path.write_text('{"cases": []}', encoding="utf-8")
+            _write_executable(
+                runner_path,
+                ('#!/usr/bin/env sh\nset -eu\nprintf "called\\n" > "$RUNNER_MARKER"\n'),
+            )
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "OCR_TRANSCRIPT_CASES": str(cases_path),
+                    "OCR_EVAL_RUNNER_SCRIPT": str(runner_path),
+                    "RUNNER_MARKER": str(marker_path),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", str(WORKFLOW_SCRIPT.relative_to(REPO_ROOT)), "cases"],
+                cwd=REPO_ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            "No transcript OCR cases available yet; skipping eval.", result.stdout
+        )
+        self.assertFalse(marker_path.exists())
 
     def test_workflow_rejects_unknown_or_missing_suite(self) -> None:
         for args in ([], ["unknown"]):
