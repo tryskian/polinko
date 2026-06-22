@@ -72,6 +72,8 @@ Runner lifecycle rule:
 Active kernel validation:
 
 - During active refactor kernels, use focused checks for the touched surface
+- Use `make risk-scan` when a kernel changes runtime maps, Make gates, CI,
+  background runners, startup/closeout, or local configuration surfaces
 - Use `make pr-preflight` before publishing a PR when you need the local
   CI-equivalent gate plus whitespace diff check
 - Use `make end-preflight` when the kernel is broad enough to need the full
@@ -106,28 +108,30 @@ Sequence:
    - `make scripts-check`
 6. Check tracked docs/code for local path leaks:
    - `make path-leak-check`
-7. Run Python style checks:
+7. Verify runtime risk-surface coverage:
+   - `make risk-scan`
+8. Run Python style checks:
    - `make ci-python-style`
-8. Run Python type checks:
+9. Run Python type checks:
    - `make ci-python-type-check`
-9. Lint docs:
-   - `make lint-docs`
-10. Smoke-test editable package import:
+10. Lint docs:
+    - `make lint-docs`
+11. Smoke-test editable package import:
     - `make package-install-check`
-11. Run tests:
+12. Run tests:
     - `make test`
-12. Check diff whitespace:
+13. Check diff whitespace:
     - `git diff --check`
-13. Run dependency security checks:
+14. Run dependency security checks:
     - `make security-checks`
-14. Stop background tasks:
+15. Stop background tasks:
     - `make eod-stop`
         - `make eval-sidecar-stop`
         - `make portfolio-mockups-stop`
         - `make server-daemon-stop`
         - `make caffeinate-off-all`
         - `make session-status`
-15. Verify the Git closeout state:
+16. Verify the Git closeout state:
     - `make end-git-check`
     - current branch must be `main`
     - working tree must be clean
@@ -148,6 +152,9 @@ Explicit companion checks:
     contracts
 - `make path-leak-check`
   - checks tracked text surfaces for local machine path leaks
+- `make risk-scan`
+  - checks runtime map, Make, CI, runner, and local configuration coverage for
+    known high-risk surfaces
 - `make security-checks`
   - runs local Python and Node dependency audits
 - `make api-smoke`

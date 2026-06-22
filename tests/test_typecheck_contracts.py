@@ -55,7 +55,9 @@ class TypecheckContractTests(unittest.TestCase):
     def test_runbook_make_end_summary_matches_closeout_order(self) -> None:
         runbook = _read("docs/runtime/RUNBOOK.md")
 
-        self.assertIn("background-stop, and final clean-main", runbook)
+        self.assertIn("script/path checks, risk-scan", runbook)
+        self.assertIn("background-stop, and", runbook)
+        self.assertIn("final clean-main Git check", runbook)
         self.assertNotIn("clean-main Git check, transcript", runbook)
 
     def test_pyright_is_repo_owned_advisory_editor_check(self) -> None:

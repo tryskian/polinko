@@ -168,6 +168,8 @@ Use this doc for operator procedure.
 1. Use focused checks during active refactor kernels:
    - touched unit tests
    - `make scripts-check` for script changes
+   - `make risk-scan` for runtime map, Make gate, CI, runner, startup/closeout,
+     or local configuration surface changes
    - `make lint-docs` for docs changes
    - `git diff --check`
 2. Use `make end-preflight` when the kernel is broad enough to need the full
@@ -466,9 +468,9 @@ Use this doc for operator procedure.
     system browser
 - `make end`
   - literal closeout routine from clean synced `main`: docs freshness,
-    transcript fix/check, doctor, script/path checks, Python style/type checks,
-    docs lint, tests, security checks, background-stop, and final clean-main
-    Git check
+    transcript fix/check, doctor, script/path checks, risk-scan, Python
+    style/type checks, docs lint, tests, security checks, background-stop, and
+    final clean-main Git check
 - `make end-docs-check`
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make security-checks`
@@ -484,6 +486,9 @@ Use this doc for operator procedure.
 - `make scripts-check`
   - validates tracked shell helper shebangs, strict modes, and sourced helper
     contracts
+- `make risk-scan`
+  - validates that known high-risk runtime, script, CI, runner, and local
+    configuration surfaces remain visible in tracked docs and Make gates
 - `make ruff-check`
   - Python lint
 - `make ruff-format-check`
