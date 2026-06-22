@@ -710,8 +710,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(
             text,
             r"(?m)^ci-docs:\s*path-leak-check scripts-check risk-scan "
-            r"operator-alias-check lint-docs$",
+            r"operator-alias-check startup-contracts-check lint-docs$",
         )
+        self.assertIn("startup-contracts-check", _phony_targets())
+        self.assertRegex(text, r"(?m)^startup-contracts-check:$")
+        self.assertIn("$(PYTHON) -m unittest tests.test_startup_contracts", text)
         self.assertIn("risk-scan", _phony_targets())
         self.assertRegex(text, r"(?m)^risk-scan:$")
         self.assertIn("$(PYTHON) -m tools.check_runtime_risk_scan", text)

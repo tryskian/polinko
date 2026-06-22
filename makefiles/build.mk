@@ -2,6 +2,7 @@
 .PHONY: pr-preflight ci ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security
 .PHONY: deps-install deps-refresh refresh-deps deps-lock deps-lock-check
 .PHONY: package-install-check
+.PHONY: startup-contracts-check
 .PHONY: python-security-check node-security-check security-checks
 
 pr-preflight: ci
@@ -9,7 +10,7 @@ pr-preflight: ci
 
 ci: ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security
 
-ci-docs: path-leak-check scripts-check risk-scan operator-alias-check lint-docs
+ci-docs: path-leak-check scripts-check risk-scan operator-alias-check startup-contracts-check lint-docs
 
 ci-python-style: ruff-check ruff-format-check
 
@@ -58,6 +59,9 @@ deps-lock-check:
 package-install-check:
 	$(PYTHON) -m pip install --no-build-isolation --no-deps -e .
 	$(PYTHON) tools/check_package_install.py
+
+startup-contracts-check:
+	$(PYTHON) -m unittest tests.test_startup_contracts
 
 python-security-check:
 	$(PYTHON) -m pip_audit -r "$(REQUIREMENTS_LOCK)" $(PIP_AUDIT_ARGS)

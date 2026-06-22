@@ -5,14 +5,15 @@
 Last updated: 2026-06-22
 
 This map shows the local runtime and operator surfaces that need to stay
-maintainable during the current refactor. It separates automatic startup,
+maintainable during the current refactor. It separates manual startup,
 human-led closeout, CI, background runners, and eval/workbench tooling so each
 cleanup kernel can stay scoped.
 
 ```mermaid
 flowchart TD
   subgraph Startup["Startup and workspace bootstrap"]
-    VSCode["VS Code folder-open task"] --> MakeStart["make start"]
+    VSCode["VS Code manual task"] --> MakeStart["make start"]
+    Operator["chat-led startup"] --> MakeStart
     MakeStart --> StartRoutine["tools/start_of_day_routine.sh"]
     StartRoutine --> Doctor["make doctor-env"]
     StartRoutine --> WakeLock["make caffeinate + caffeinate-status"]
@@ -22,10 +23,9 @@ flowchart TD
     StartRoutine --> Rehydrate["rehydrate prompt + alignment pause"]
   end
 
-  subgraph Closeout["Closeout and governance gate"]
+  subgraph Closeout["Active validation and session closeout"]
     EndPreflight["make end-preflight"] --> BranchChecks["branch-local validation"]
-    BranchChecks --> ProtectedPr["protected-main PR flow"]
-    ProtectedPr --> MainSync["clean synced main"]
+    SessionCloseout["session closeout"] --> MainSync["clean synced main"]
     MainSync --> MakeEnd["make end"]
     MakeEnd --> DocsGate["make end-docs-check"]
     MakeEnd --> ScriptGate["make scripts-check"]
@@ -71,7 +71,9 @@ flowchart TD
     GitHubActions["GitHub Actions"]
     Dependabot["Dependabot"]
     DependencyReview["dependency-review"]
+    StartupContracts["startup-contracts-check"]
     AuditTools["pip-audit and npm audit"]
+    GitHubActions --> StartupContracts
     GitHubActions --> DependencyReview
     GitHubActions --> AuditTools
     Dependabot --> GitHubActions
@@ -85,13 +87,17 @@ flowchart TD
 
 ## Reading the Map
 
-- Startup should stay narrow: it verifies environment health, starts the
-  repo-managed wake lock, runs smoke checks with isolated defaults, and stops
-  for alignment.
-- Closeout is the complete stop-state contract: branch-local validation is
-  preflight, but the final gate is `make end` from clean synced `main`.
-  `make risk-scan` verifies that known high-risk runtime, script, CI, and local
-  configuration surfaces remain visible in the tracked map and Make gates.
+- Startup should stay narrow and chat-led: it verifies environment health,
+  starts the repo-managed wake lock, runs smoke checks with isolated defaults,
+  and stops for alignment. VS Code keeps `make start` available as a manual
+  task; folder-open bootstrap is retired.
+- Active validation and session closeout are separate surfaces:
+  `make end-preflight` is branch-local validation, while `make end` is the
+  session closeout routine from clean synced `main`. `make risk-scan` verifies
+  that known high-risk runtime, script, CI, and local configuration surfaces
+  remain visible in the tracked map and Make gates.
+  `make startup-contracts-check` keeps startup/runtime doc contracts in the
+  local docs gate so wording drift fails before a PR-only CI run.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files.
   Devcontainer setup resolves the repo root before installing dependencies.

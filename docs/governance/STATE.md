@@ -474,10 +474,11 @@ Last updated: 2026-06-22
     compatibility aliases and keeps parked OCR eval aliases out of automatic
     startup, closeout, and CI dependencies
   - `make ci-docs` runs `make path-leak-check`, `make scripts-check`,
-    `make risk-scan`, `make operator-alias-check`, and `make lint-docs`;
-    `make end` also runs `make path-leak-check`, `make scripts-check`,
-    `make risk-scan`, and `make operator-alias-check` before longer style,
-    type, test, and security gates
+    `make risk-scan`, `make operator-alias-check`,
+    `make startup-contracts-check`, and `make lint-docs`; `make end` also runs
+    `make path-leak-check`, `make scripts-check`, `make risk-scan`, and
+    `make operator-alias-check` before longer style, type, test, and security
+    gates
   - public diagram renderers use source-first, write-if-changed behaviour:
     Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
     through a temporary SVG before replacing the tracked artefact
@@ -510,8 +511,8 @@ Last updated: 2026-06-22
   - `make eod-stop` closes the core background runner family:
     `eval-sidecar`, `portfolio-mockups`, `server-daemon`, and repo-managed
     `caffeinate`, then prints status for each family member
-  - `make start` can run from VS Code folder-open bootstrap without sharing the
-    default API smoke port or smoke database paths with another active startup
+  - VS Code keeps `make start` available as a manual task; folder-open
+    bootstrap is retired so startup stays chat-led
   - local URL helpers such as `make docs`, `make open-api-docs`, and
     `make viz` print the target URL by default instead of launching a browser
   - explicit browser launch remains available through `make docs-open`,

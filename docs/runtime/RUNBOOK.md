@@ -483,6 +483,8 @@ Use this doc for operator procedure.
 - `make operator-alias-check`
   - validates manual eval compatibility aliases and parked OCR eval alias
     boundaries
+- `make startup-contracts-check`
+  - validates startup and active-kernel runtime doc contracts
 - `make ruff-check`
   - Python lint
 - `make ruff-format-check`
