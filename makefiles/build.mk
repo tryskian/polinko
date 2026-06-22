@@ -1,8 +1,11 @@
 # Build, dependency, and CI checks.
-.PHONY: ci ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security
+.PHONY: pr-preflight ci ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security
 .PHONY: deps-install deps-refresh refresh-deps deps-lock deps-lock-check
 .PHONY: package-install-check
 .PHONY: python-security-check node-security-check security-checks
+
+pr-preflight: ci
+	git diff --check
 
 ci: ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security
 

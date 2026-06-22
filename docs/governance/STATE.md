@@ -575,6 +575,8 @@ Last updated: 2026-06-21
 - `make test`
 - `make security-checks`
 - `make ci` when checking the local equivalent of GitHub CI job targets
+- `make pr-preflight` before publishing PRs that need the CI-equivalent gate
+  plus whitespace diff check
 - `make end` after merge and sync on clean `main`
 - `make end-docs-check` when validating current-truth freshness explicitly
 - `make end-git-check` as the standalone clean-main check

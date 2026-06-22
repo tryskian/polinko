@@ -103,14 +103,16 @@ Use this doc for operator procedure.
 
 1. Work on a feature branch.
 2. Commit locally.
-3. Push the branch.
-4. Open a PR to `main`.
-5. Wait for required checks.
-6. Merge through the protected-main flow.
-7. Sync local `main`:
+3. Run the PR readiness gate:
+   - `make pr-preflight`
+4. Push the branch.
+5. Open a PR to `main`.
+6. Wait for required checks.
+7. Merge through the protected-main flow.
+8. Sync local `main`:
    - `git switch main`
    - `git pull --ff-only`
-8. Final local repo state must be clean and synced with `origin/main`.
+9. Final local repo state must be clean and synced with `origin/main`.
 
 ## End-of-Day Ritual
 
@@ -494,6 +496,8 @@ Use this doc for operator procedure.
   - local aggregate of the named GitHub CI job targets:
     `ci-docs`, `ci-python-style`, `ci-python-type-check`, `ci-package`,
     `ci-test`, `ci-python-security`, and `ci-node-security`
+- `make pr-preflight`
+  - PR readiness gate that runs `make ci` and `git diff --check`
 
 Dependency maintenance:
 
