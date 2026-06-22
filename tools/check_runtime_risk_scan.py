@@ -69,6 +69,7 @@ REQUIRED_CI_DOCS_DEPS = (
     "scripts-check",
     "risk-scan",
     "operator-alias-check",
+    "startup-contracts-check",
     "lint-docs",
 )
 

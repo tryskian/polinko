@@ -68,6 +68,24 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_missing_startup_contracts_dependency_is_reported(self) -> None:
+        failures = check_runtime_risk_scan.check_make_contracts(
+            "\n".join(
+                [
+                    "ci-docs: path-leak-check scripts-check risk-scan "
+                    "operator-alias-check lint-docs",
+                    "risk-scan:",
+                    "operator-alias-check:",
+                    "startup-contracts-check:",
+                ]
+            )
+        )
+
+        self.assertIn(
+            "ci-docs: missing dependency 'startup-contracts-check'",
+            failures,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
