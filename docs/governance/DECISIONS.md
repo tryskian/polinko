@@ -2370,3 +2370,20 @@ or branch history instead.
 - Why: Compatibility aliases can remain useful, but helper targets should use
   current closeout vocabulary. Encoding that distinction keeps future cleanup
   from reintroducing stale operator surfaces.
+
+## D-153: Treat risk-scan gates as human-led contract checks
+
+- Date: `2026-06-22`
+- Category: `workflow_environment`
+- Tags: `risk_scan`, `contract_checks`, `runtime`, `scripts`, `hygiene`
+- Human-led: The human lead identified that hidden script and runtime drift
+  could pass ordinary tests, and asked for risk checks that catch the surfaces
+  the refactor must keep visible.
+- Decision: Treat repo-owned risk-scan and contract-check scripts as active
+  refactor gates. These checks should encode high-value runtime, script,
+  closeout, CI, and operator-surface contracts that are easy to miss during
+  normal feature tests.
+- Why: Polinko has broad test coverage, but tests for known behaviour are not
+  the same as a risk scan for hidden maintenance surfaces. Making these gates
+  explicit keeps the refactor human-led while giving future kernels a concrete
+  way to prevent quiet drift.
