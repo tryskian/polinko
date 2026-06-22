@@ -116,6 +116,9 @@ Last updated: 2026-06-22
     `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned
     PID/log handling
+  - `server-daemon` adopts matching local `uvicorn server:app` processes on
+    start, reports matching servers without PID files on status, and stops
+    matching servers during closeout recovery
   - `eval-sidecar` reports missing current-file drift on start/status and still
     stops the repo-managed PID during closeout
   - `portfolio-mockups` treats a reachable mockup URL without a PID file as a
