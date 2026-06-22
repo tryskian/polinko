@@ -72,6 +72,8 @@ Runner lifecycle rule:
 Active kernel validation:
 
 - During active refactor kernels, use focused checks for the touched surface
+- Use `make pr-preflight` before publishing a PR when you need the local
+  CI-equivalent gate plus whitespace diff check
 - Use `make end-preflight` when the kernel is broad enough to need the full
   branch-local quality suite
 - End each kernel summary with the recommended next kernel
