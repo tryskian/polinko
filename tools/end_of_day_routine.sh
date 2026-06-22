@@ -42,7 +42,7 @@ run_step "security-checks" make --no-print-directory security-checks
 if [ "${END_SKIP_STOP:-}" = "1" ]; then
   echo "[end] stop background tasks skipped (preflight only; day is not closed)"
 else
-  run_step "stop background tasks" make --no-print-directory eod-stop
+  run_step "stop background tasks" make --no-print-directory end-stop
 fi
 
 if [ "${END_SKIP_GIT_CHECK:-}" = "1" ]; then
