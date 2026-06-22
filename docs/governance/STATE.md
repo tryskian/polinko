@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-21
+Last updated: 2026-06-22
 
 ## Current Truth
 
@@ -466,9 +466,13 @@ Last updated: 2026-06-21
   - shell helper hygiene is explicit through `make scripts-check`, which
     verifies tracked `tools/*.sh` shebangs, strict modes, shell parser syntax,
     and sourced helper contracts
-  - `make ci-docs` runs `make path-leak-check`, `make scripts-check`, and
-    `make lint-docs`; `make end` also runs `make path-leak-check` and
-    `make scripts-check` before longer style, type, test, and security gates
+  - runtime risk-surface coverage is explicit through `make risk-scan`, which
+    verifies that known high-risk runtime, script, CI, runner, and local
+    configuration surfaces remain visible in tracked docs and Make gates
+  - `make ci-docs` runs `make path-leak-check`, `make scripts-check`,
+    `make risk-scan`, and `make lint-docs`; `make end` also runs
+    `make path-leak-check`, `make scripts-check`, and `make risk-scan` before
+    longer style, type, test, and security gates
   - public diagram renderers use source-first, write-if-changed behaviour:
     Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
     through a temporary SVG before replacing the tracked artefact
@@ -570,6 +574,7 @@ Last updated: 2026-06-21
 - `make ruff-check`
 - `make ruff-format-check`
 - `make lint-docs`
+- `make risk-scan`
 - `make package-install-check`
 - `make type-check`
 - `make test`

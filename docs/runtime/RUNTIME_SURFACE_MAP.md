@@ -2,7 +2,7 @@
 
 # Runtime Surface Map
 
-Last updated: 2026-06-19
+Last updated: 2026-06-22
 
 This map shows the local runtime and operator surfaces that need to stay
 maintainable during the current refactor. It separates automatic startup,
@@ -30,6 +30,7 @@ flowchart TD
     MakeEnd --> DocsGate["make end-docs-check"]
     MakeEnd --> ScriptGate["make scripts-check"]
     MakeEnd --> PathLeakGate["make path-leak-check"]
+    MakeEnd --> RiskScan["make risk-scan"]
     MakeEnd --> TestGate["style, type, docs, package, tests"]
     MakeEnd --> SecurityGate["make security-checks"]
     MakeEnd --> GitGate["make end-git-check"]
@@ -87,6 +88,8 @@ flowchart TD
   for alignment.
 - Closeout is the complete stop-state contract: branch-local validation is
   preflight, but the final gate is `make end` from clean synced `main`.
+  `make risk-scan` verifies that known high-risk runtime, script, CI, and local
+  configuration surfaces remain visible in the tracked map and Make gates.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files.
   Devcontainer setup resolves the repo root before installing dependencies.

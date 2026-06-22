@@ -2306,3 +2306,22 @@ or branch history instead.
   cleanup path. The compact operator reference needed to describe that active
   behaviour rather than imply that explicit closeout cleanup never stops
   matching unmanaged wake-lock processes.
+
+## D-149: Add a runtime risk-surface scan gate
+
+- Date: `2026-06-22`
+- Category: `workflow_environment`
+- Tags: `risk_scan`, `runtime`, `make`, `ci`, `hygiene`
+- Human-led: The human lead identified that broad script/runtime cleanup needs
+  a risk scan at each kernel boundary, not only tests for already-known
+  behaviour.
+- Decision: Add `make risk-scan`, backed by
+  `tools/check_runtime_risk_scan.py`, and run it through `make ci-docs` and
+  `make end`. The gate verifies that known high-risk runtime, script, CI,
+  background-runner, and local configuration surfaces remain visible in the
+  tracked runtime map and Make gates.
+- Why: The existing test suite checks many encoded behaviours, but it does not
+  guarantee that a cleanup kernel inventoried the right surfaces before
+  prioritising. A named risk-scan gate gives the refactor a lightweight guard
+  against hidden-surface drift while keeping detailed implementation tests
+  focused on the files that actually change.
