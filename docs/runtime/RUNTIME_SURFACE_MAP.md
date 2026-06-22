@@ -71,7 +71,9 @@ flowchart TD
     GitHubActions["GitHub Actions"]
     Dependabot["Dependabot"]
     DependencyReview["dependency-review"]
+    StartupContracts["startup-contracts-check"]
     AuditTools["pip-audit and npm audit"]
+    GitHubActions --> StartupContracts
     GitHubActions --> DependencyReview
     GitHubActions --> AuditTools
     Dependabot --> GitHubActions
@@ -94,6 +96,8 @@ flowchart TD
   session closeout routine from clean synced `main`. `make risk-scan` verifies
   that known high-risk runtime, script, CI, and local configuration surfaces
   remain visible in the tracked map and Make gates.
+  `make startup-contracts-check` keeps startup/runtime doc contracts in the
+  local docs gate so wording drift fails before a PR-only CI run.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files.
   Devcontainer setup resolves the repo root before installing dependencies.

@@ -474,10 +474,11 @@ Last updated: 2026-06-22
     compatibility aliases and keeps parked OCR eval aliases out of automatic
     startup, closeout, and CI dependencies
   - `make ci-docs` runs `make path-leak-check`, `make scripts-check`,
-    `make risk-scan`, `make operator-alias-check`, and `make lint-docs`;
-    `make end` also runs `make path-leak-check`, `make scripts-check`,
-    `make risk-scan`, and `make operator-alias-check` before longer style,
-    type, test, and security gates
+    `make risk-scan`, `make operator-alias-check`,
+    `make startup-contracts-check`, and `make lint-docs`; `make end` also runs
+    `make path-leak-check`, `make scripts-check`, `make risk-scan`, and
+    `make operator-alias-check` before longer style, type, test, and security
+    gates
   - public diagram renderers use source-first, write-if-changed behaviour:
     Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
     through a temporary SVG before replacing the tracked artefact
