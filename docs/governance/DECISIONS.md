@@ -2325,3 +2325,20 @@ or branch history instead.
   prioritising. A named risk-scan gate gives the refactor a lightweight guard
   against hidden-surface drift while keeping detailed implementation tests
   focused on the files that actually change.
+
+## D-150: Guard operator aliases in CI docs and closeout
+
+- Date: `2026-06-22`
+- Category: `workflow_environment`
+- Tags: `operator_aliases`, `manual_evals`, `ocr`, `make`, `hygiene`
+- Human-led: The human lead asked to continue the script refactor one kernel
+  at a time and keep manual eval/OCR operator surfaces from becoming hidden
+  maintenance debt.
+- Decision: Add `make operator-alias-check`, backed by
+  `tools/check_operator_aliases.py`, and run it through `make ci-docs` and
+  `make end`. The gate keeps `manual-evals-*` targets paired with their
+  `manualdb-*` compatibility aliases and keeps parked OCR eval aliases out of
+  automatic startup, closeout, and CI dependencies.
+- Why: The manual eval workbench remains active, while OCR eval execution is
+  parked. A named alias gate preserves current operator commands and catches
+  future drift before alias cleanup accidentally changes execution boundaries.

@@ -709,11 +709,15 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(PYTHON) -m tools.check_shell_scripts", text)
         self.assertRegex(
             text,
-            r"(?m)^ci-docs:\s*path-leak-check scripts-check risk-scan lint-docs$",
+            r"(?m)^ci-docs:\s*path-leak-check scripts-check risk-scan "
+            r"operator-alias-check lint-docs$",
         )
         self.assertIn("risk-scan", _phony_targets())
         self.assertRegex(text, r"(?m)^risk-scan:$")
         self.assertIn("$(PYTHON) -m tools.check_runtime_risk_scan", text)
+        self.assertIn("operator-alias-check", _phony_targets())
+        self.assertRegex(text, r"(?m)^operator-alias-check:$")
+        self.assertIn("$(PYTHON) -m tools.check_operator_aliases", text)
         self.assertRegex(text, r"(?m)^path-leak-audit-local:$")
         self.assertIn("$(PYTHON) -m tools.path_leak_check --scope local-config", text)
         self.assertIn(
@@ -726,6 +730,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn(
             'run_step "risk-scan" make --no-print-directory risk-scan',
+            closeout_text,
+        )
+        self.assertIn(
+            'run_step "operator-alias-check" make --no-print-directory operator-alias-check',
             closeout_text,
         )
         self.assertGreater(
@@ -742,6 +750,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertLess(
             closeout_text.index('run_step "risk-scan"'),
+            closeout_text.index('run_step "operator-alias-check"'),
+        )
+        self.assertLess(
+            closeout_text.index('run_step "operator-alias-check"'),
             closeout_text.index('run_step "ci-python-style"'),
         )
 

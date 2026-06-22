@@ -45,11 +45,28 @@ class RuntimeRiskScanTests(unittest.TestCase):
                 [
                     "ci-docs: path-leak-check scripts-check lint-docs",
                     "risk-scan:",
+                    "operator-alias-check:",
                 ]
             )
         )
 
         self.assertIn("ci-docs: missing dependency 'risk-scan'", failures)
+
+    def test_missing_operator_alias_dependency_is_reported(self) -> None:
+        failures = check_runtime_risk_scan.check_make_contracts(
+            "\n".join(
+                [
+                    "ci-docs: path-leak-check scripts-check risk-scan lint-docs",
+                    "risk-scan:",
+                    "operator-alias-check:",
+                ]
+            )
+        )
+
+        self.assertIn(
+            "ci-docs: missing dependency 'operator-alias-check'",
+            failures,
+        )
 
 
 if __name__ == "__main__":
