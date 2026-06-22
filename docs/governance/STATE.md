@@ -53,6 +53,7 @@ Last updated: 2026-06-22
 - Refactor method is human-led:
   - the human lead owns scope, method, acceptance, and go/no-go decisions
   - Codex owns implementation, validation, Git/PR flow, and hygiene execution
+  - Codex proactively records durable contract changes in the decision log
   - cleanup proceeds one kernel at a time from clean synced `main`
 - Public-facing surfaces remain derived from repo truth:
   - the root README now names the Polinko research model as staged for the
