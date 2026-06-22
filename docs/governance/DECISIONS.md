@@ -2390,3 +2390,20 @@ or branch history instead.
   the same as a risk scan for hidden maintenance surfaces. Making these gates
   explicit keeps the refactor human-led while giving future kernels a concrete
   way to prevent quiet drift.
+
+## D-154: Proactively record durable contract changes
+
+- Date: `2026-06-22`
+- Category: `collaboration_method`
+- Tags: `decision_log`, `human_led`, `kernel_flow`, `governance`, `hygiene`
+- Human-led: The human lead clarified that proactive decision logging is part
+  of the Polinko contract, not an optional follow-up after the human catches a
+  missing record.
+- Engineer implementation: During implementation, Codex should identify when
+  a change creates or clarifies a durable repo contract and add the matching
+  decision-log entry before closing the kernel.
+- Decision: Treat decision-log upkeep as part of engineering hygiene for
+  durable method, workflow, runtime, evidence, and eval-contract changes.
+- Why: The repository is the research object. Durable contract changes need a
+  traceable governance record at the time they are made, so the human lead does
+  not have to reconstruct or request the missing ledger entry afterward.
