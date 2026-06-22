@@ -516,7 +516,7 @@ Last updated: 2026-06-22
     the repo-owned PID without adopting unrelated user wake-lock processes
   - `make caffeinate-off-all` is closeout cleanup for matching repo wake-lock
     command-pattern leftovers after the managed PID stop path runs
-  - `make eod-stop` closes the core background runner family:
+  - `make end-stop` closes the core background runner family:
     `eval-sidecar`, `portfolio-mockups`, `server-daemon`, and repo-managed
     `caffeinate`, then prints status for each family member
   - VS Code keeps `make start` available as a manual task; folder-open

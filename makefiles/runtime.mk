@@ -1,5 +1,5 @@
 # Operator lifecycle, runtime, and local machine targets.
-.PHONY: chat venv env gate start end eod end-preflight end-git-check eod-stop rituals
+.PHONY: chat venv env gate start end eod end-preflight end-git-check end-stop rituals
 .PHONY: localhost server server-daemon server-daemon-stop server-daemon-status session-status
 .PHONY: docs docs-open open-api-docs open-api-docs-browser viz viz-open open-viz
 .PHONY: openai-account-summary openai-costs openai-usage openai-limits
@@ -39,7 +39,7 @@ end-preflight:
 end-git-check:
 	bash ./tools/check_end_git_clean.sh
 
-eod-stop: eval-sidecar-stop portfolio-mockups-stop server-daemon-stop caffeinate-off-all session-status
+end-stop: eval-sidecar-stop portfolio-mockups-stop server-daemon-stop caffeinate-off-all session-status
 
 rituals:
 	@cat docs/runtime/START_END_REFERENCE.md

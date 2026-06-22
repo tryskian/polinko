@@ -672,9 +672,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^eod:\s*end$")
         self.assertIn("end-preflight:", text)
         self.assertIn("END_SKIP_GIT_CHECK=1 END_SKIP_STOP=1", text)
+        self.assertNotIn("eod-stop", _phony_targets())
+        self.assertNotRegex(text, r"(?m)^eod-stop:")
         self.assertRegex(
             text,
-            r"(?m)^eod-stop:\s*eval-sidecar-stop portfolio-mockups-stop "
+            r"(?m)^end-stop:\s*eval-sidecar-stop portfolio-mockups-stop "
             r"server-daemon-stop caffeinate-off-all session-status$",
         )
         self.assertIn('echo "== Eval sidecar =="', text)
@@ -1342,7 +1344,7 @@ class MakefileContractTests(unittest.TestCase):
             "scripts-check",
             "caffeinate-status",
             "caffeinate-off-all",
-            "eod-stop",
+            "end-stop",
             "backend-gate",
             "cgpt-export-index",
             "ocr-cases-from-export-build",

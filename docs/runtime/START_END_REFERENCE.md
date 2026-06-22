@@ -117,7 +117,7 @@ Sequence:
 | 13 | Run tests | `make test` |
 | 14 | Check diff whitespace | `git diff --check` |
 | 15 | Run dependency security checks | `make security-checks` |
-| 16 | Stop background tasks | `make eod-stop` |
+| 16 | Stop background tasks | `make end-stop` |
 | 17 | Verify current branch must be `main` and synced | `make end-git-check` |
 
 Preflight:

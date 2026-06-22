@@ -2342,3 +2342,17 @@ or branch history instead.
 - Why: The manual eval workbench remains active, while OCR eval execution is
   parked. A named alias gate preserves current operator commands and catches
   future drift before alias cleanup accidentally changes execution boundaries.
+
+## D-151: Retire deprecated `eod-stop` surface
+
+- Date: `2026-06-22`
+- Category: `workflow_environment`
+- Tags: `runtime`, `make`, `closeout`, `hygiene`
+- Human-led: The human lead identified that the `eod-stop` target was a
+  deprecated surface that should not remain part of Polinko.
+- Decision: Replace the active stop target with `make end-stop` and route the
+  closeout routine through that current-name target while preserving the same
+  background-runner stop behaviour.
+- Why: `make end` is the canonical closeout surface. The stop helper should
+  use the same current vocabulary so deprecated operator names do not linger as
+  live Make targets.
