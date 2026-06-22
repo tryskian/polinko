@@ -510,8 +510,8 @@ Last updated: 2026-06-22
   - `make eod-stop` closes the core background runner family:
     `eval-sidecar`, `portfolio-mockups`, `server-daemon`, and repo-managed
     `caffeinate`, then prints status for each family member
-  - `make start` can run from VS Code folder-open bootstrap without sharing the
-    default API smoke port or smoke database paths with another active startup
+  - VS Code keeps `make start` available as a manual task; folder-open
+    bootstrap is retired so startup stays chat-led
   - local URL helpers such as `make docs`, `make open-api-docs`, and
     `make viz` print the target URL by default instead of launching a browser
   - explicit browser launch remains available through `make docs-open`,
