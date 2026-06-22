@@ -116,6 +116,9 @@ Last updated: 2026-06-22
     `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned
     PID/log handling
+  - `portfolio-mockups` treats a reachable mockup URL without a PID file as a
+    lifecycle issue: matching local `http.server` processes are adopted, while
+    unmanaged reachable ports fail loudly
   - manual eval health, feedback, overlay, OCR retry, and reclassification Make
     targets keep their public names while routing through a single
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper

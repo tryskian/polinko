@@ -55,24 +55,75 @@ with open(pid_file, "w", encoding="utf-8") as handle:
 PY
 }
 
+pid_is_running() {
+	local pid=$1
+	[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
+}
+
+mockup_server_pids() {
+	if ! command -v lsof >/dev/null 2>&1; then
+		return 0
+	fi
+	lsof -nP -iTCP:"$mockup_port" -sTCP:LISTEN -t 2>/dev/null || true
+}
+
+is_expected_mockup_server() {
+	local pid=$1
+	local command
+	command=$(ps -p "$pid" -o command= 2>/dev/null || true)
+	[[ "$command" == *"http.server"* ]] &&
+		[[ "$command" == *"$mockup_port"* ]] &&
+		[[ "$command" == *"$mockup_dir"* ]]
+}
+
+find_expected_mockup_pid() {
+	local pid
+	for pid in $(mockup_server_pids); do
+		if pid_is_running "$pid" && is_expected_mockup_server "$pid"; then
+			printf "%s\n" "$pid"
+			return 0
+		fi
+	done
+	return 1
+}
+
+adopt_reachable_mockup_server() {
+	local pid
+	pid=$(find_expected_mockup_pid || true)
+	if [ -z "$pid" ]; then
+		return 1
+	fi
+	mkdir -p "$(dirname "$pid_file")"
+	printf "%s" "$pid" >"$pid_file"
+	echo "portfolio mockup server already reachable; adopted PID $pid for lifecycle management: $mockup_url"
+}
+
 start_mockup_server() {
 	if [ ! -f "$mockup_dir/landing-mockups.html" ]; then
 		echo "Portfolio mockup not found: $mockup_dir/landing-mockups.html"
 		exit 1
 	fi
 
-	if curl -fsS "$mockup_url" >/dev/null 2>&1; then
-		echo "portfolio mockup server already reachable: $mockup_url"
-		exit 0
-	fi
-
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
-		if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+		if pid_is_running "$pid"; then
+			if curl -fsS "$mockup_url" >/dev/null 2>&1; then
+				echo "portfolio mockup server already running (PID $pid, URL: $mockup_url)."
+				exit 0
+			fi
 			kill "$pid" 2>/dev/null || true
 			sleep 0.1
 		fi
 		rm -f "$pid_file"
+	fi
+
+	if curl -fsS "$mockup_url" >/dev/null 2>&1; then
+		if adopt_reachable_mockup_server; then
+			exit 0
+		fi
+		echo "portfolio mockup server is reachable but has no managed PID file: $mockup_url"
+		echo "Stop the unmanaged process or choose a free PORTFOLIO_MOCKUP_PORT."
+		exit 1
 	fi
 
 	mkdir -p "$(dirname "$pid_file")" "$(dirname "$log_file")"
@@ -95,7 +146,7 @@ start_mockup_server() {
 status_mockup_server() {
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
-		if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+		if pid_is_running "$pid"; then
 			if curl -fsS "$mockup_url" >/dev/null 2>&1; then
 				echo "portfolio mockup server: RUNNING (PID $pid, URL: $mockup_url)."
 				exit 0
@@ -106,16 +157,36 @@ status_mockup_server() {
 		echo "portfolio mockup server: STALE PID file."
 		exit 1
 	fi
+	if curl -fsS "$mockup_url" >/dev/null 2>&1; then
+		pid=$(find_expected_mockup_pid || true)
+		if [ -n "$pid" ]; then
+			echo "portfolio mockup server: RUNNING without managed PID file (PID $pid, URL: $mockup_url)."
+		else
+			echo "portfolio mockup server: URL reachable without managed PID file: $mockup_url"
+		fi
+		exit 1
+	fi
 	echo "portfolio mockup server: OFF."
 }
 
 stop_mockup_server() {
 	if [ ! -f "$pid_file" ]; then
+		if curl -fsS "$mockup_url" >/dev/null 2>&1; then
+			pid=$(find_expected_mockup_pid || true)
+			if [ -n "$pid" ]; then
+				kill "$pid"
+				sleep 0.1
+				echo "portfolio mockup server stopped (PID $pid)."
+				exit 0
+			fi
+			echo "No portfolio mockup PID file found, but URL is still reachable: $mockup_url"
+			exit 1
+		fi
 		echo "No portfolio mockup PID file found."
 		exit 0
 	fi
 	pid=$(cat "$pid_file" 2>/dev/null || true)
-	if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+	if pid_is_running "$pid"; then
 		kill "$pid"
 		sleep 0.1
 		echo "portfolio mockup server stopped (PID $pid)."

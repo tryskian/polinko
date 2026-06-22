@@ -107,6 +107,9 @@ flowchart TD
   stale-process handling, logs, cleanup commands, and detached launch
   behaviour across `caffeinate`, `server-daemon`, `eval-sidecar`, and
   `portfolio-mockups`.
+  `portfolio-mockups` treats a reachable mockup URL without a PID file as a
+  lifecycle state: matching local `http.server` processes are adopted, while
+  unmanaged reachable ports fail loudly.
 - Manual eval and OCR tooling remain active workbench surfaces, but eval runs
   stay separate from startup and read-only inventory commands. Health,
   feedback, overlay, OCR retry, and reclassification Make targets route through
