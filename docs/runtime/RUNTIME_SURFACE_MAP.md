@@ -107,6 +107,9 @@ flowchart TD
   stale-process handling, logs, cleanup commands, and detached launch
   behaviour across `caffeinate`, `server-daemon`, `eval-sidecar`, and
   `portfolio-mockups`.
+  `server-daemon` adopts matching local `uvicorn server:app` processes on
+  start, reports matching servers without PID files on status, and stops
+  matching servers during closeout recovery.
   `eval-sidecar` reports missing current-file drift on start/status and still
   stops the repo-managed PID during closeout.
   `portfolio-mockups` treats a reachable mockup URL without a PID file as a
