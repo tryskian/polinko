@@ -61,10 +61,27 @@ with open(pid_file, "w", encoding="utf-8") as handle:
 PY
 }
 
+pid_is_running() {
+	local pid=$1
+	[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
+}
+
+stop_managed_pid() {
+	local pid=$1
+	kill "$pid"
+	sleep 0.1
+	rm -f "$pid_file"
+}
+
 start_sidecar() {
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
-		if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+		if pid_is_running "$pid"; then
+			if [ ! -f "$current_file" ]; then
+				echo "eval-sidecar current file missing: $current_file"
+				echo "eval-sidecar already running without run context (PID $pid)."
+				exit 1
+			fi
 			echo "eval-sidecar already running (PID $pid)."
 			exit 0
 		fi
@@ -92,7 +109,7 @@ status_sidecar() {
 	if [ ! -f "$current_file" ]; then
 		if [ -f "$pid_file" ]; then
 			pid=$(cat "$pid_file" 2>/dev/null || true)
-			if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+			if pid_is_running "$pid"; then
 				echo "eval-sidecar: RUNNING (PID $pid)."
 				echo "eval-sidecar current file missing: $current_file"
 				exit 1
@@ -110,10 +127,11 @@ stop_sidecar() {
 	if [ ! -f "$current_file" ]; then
 		if [ -f "$pid_file" ]; then
 			pid=$(cat "$pid_file" 2>/dev/null || true)
-			if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+			if pid_is_running "$pid"; then
 				echo "eval-sidecar current file missing: $current_file"
-				echo "Refusing to stop a live sidecar without run context (PID $pid)."
-				exit 1
+				stop_managed_pid "$pid"
+				echo "eval-sidecar stopped managed PID $pid without current run context."
+				exit 0
 			fi
 			rm -f "$pid_file"
 		fi
