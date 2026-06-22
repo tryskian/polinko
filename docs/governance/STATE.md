@@ -510,6 +510,8 @@ Last updated: 2026-06-22
   - tests reject direct `with sqlite3.connect(...)` usage so Python 3.14
     ResourceWarning noise stays out of `make test`
 - Runtime lifecycle controls are repo-managed:
+  - `make end` is the canonical closeout target; `make eod` remains a
+    compatibility alias only
   - `make caffeinate` launches the managed wake-lock process in a detached
     child session through the configured Python launcher
   - `make caffeinate-status`, `make decaffeinate`, and `make end` operate on

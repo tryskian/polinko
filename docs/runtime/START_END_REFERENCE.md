@@ -97,6 +97,8 @@ make end
 Aliases:
 
 - `make eod`
+  - compatibility alias for `make end`; closeout helper targets use
+    current-name `end-*` vocabulary
 
 Sequence:
 

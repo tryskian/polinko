@@ -461,7 +461,7 @@ Use this doc for operator procedure.
   - literal closeout routine from clean synced `main`: docs freshness,
     transcript fix/check, doctor, script/path checks, risk-scan, operator alias
     checks, Python style/type checks, docs lint, tests, security checks,
-    background-stop, and final clean-main Git check
+    `make end-stop`, and final clean-main Git check
 - `make end-docs-check`
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
 - `make security-checks`

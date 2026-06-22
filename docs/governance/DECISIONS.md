@@ -2356,3 +2356,17 @@ or branch history instead.
 - Why: `make end` is the canonical closeout surface. The stop helper should
   use the same current vocabulary so deprecated operator names do not linger as
   live Make targets.
+
+## D-152: Guard current closeout vocabulary
+
+- Date: `2026-06-22`
+- Category: `workflow_environment`
+- Tags: `runtime`, `risk_scan`, `make`, `closeout`, `hygiene`
+- Human-led: The human lead asked to keep the cleanup exercise focused on
+  current Polinko surfaces and prevent deprecated naming from lingering.
+- Decision: `make risk-scan` now requires the active `end-stop` helper and
+  fails if the deprecated `eod-stop` target returns. Runtime docs also state
+  that `make eod` is only a compatibility alias for canonical `make end`.
+- Why: Compatibility aliases can remain useful, but helper targets should use
+  current closeout vocabulary. Encoding that distinction keeps future cleanup
+  from reintroducing stale operator surfaces.

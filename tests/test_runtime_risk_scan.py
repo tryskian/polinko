@@ -52,6 +52,14 @@ class RuntimeRiskScanTests(unittest.TestCase):
 
         self.assertIn("ci-docs: missing dependency 'risk-scan'", failures)
 
+    def test_deprecated_eod_stop_target_is_reported(self) -> None:
+        failures = check_runtime_risk_scan.check_make_contracts("eod-stop:\n")
+
+        self.assertIn(
+            "make target 'eod-stop': deprecated target is active",
+            failures,
+        )
+
     def test_missing_operator_alias_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             "\n".join(
