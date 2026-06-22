@@ -40,6 +40,7 @@ REQUIRED_MAKE_TARGETS = (
     "start",
     "end",
     "end-preflight",
+    "end-stop",
     "pr-preflight",
     "ci",
     "ci-docs",
@@ -63,6 +64,8 @@ REQUIRED_MAKE_TARGETS = (
     "privacy-local-on",
     "privacy-local-off",
 )
+
+FORBIDDEN_MAKE_TARGETS = ("eod-stop",)
 
 REQUIRED_CI_DOCS_DEPS = (
     "path-leak-check",
@@ -97,6 +100,7 @@ RUNTIME_MAP_SURFACES = (
         (
             "make end-preflight",
             "make end",
+            "make end-stop",
             "make scripts-check",
             "make path-leak-check",
             "make risk-scan",
@@ -200,6 +204,9 @@ def check_make_contracts(text: str) -> list[str]:
     for target in REQUIRED_MAKE_TARGETS:
         if target not in targets:
             failures.append(f"make target {target!r}: missing from Make surface")
+    for target in FORBIDDEN_MAKE_TARGETS:
+        if target in targets:
+            failures.append(f"make target {target!r}: deprecated target is active")
 
     deps = ci_docs_deps(text)
     if not deps:

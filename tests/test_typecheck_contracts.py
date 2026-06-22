@@ -56,7 +56,7 @@ class TypecheckContractTests(unittest.TestCase):
         runbook = _read("docs/runtime/RUNBOOK.md")
 
         self.assertIn("script/path checks, risk-scan", runbook)
-        self.assertIn("background-stop, and", runbook)
+        self.assertIn("`make end-stop`, and", runbook)
         self.assertIn("final clean-main Git check", runbook)
         self.assertNotIn("clean-main Git check, transcript", runbook)
 
