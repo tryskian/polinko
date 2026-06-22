@@ -80,7 +80,7 @@ Active kernel validation:
   branch-local quality suite
 - End each kernel summary with the recommended next kernel
 - Do not run `make end` after every kernel; reserve it for real session
-  closeout or post-merge clean-main verification
+  closeout only
 
 ## End
 

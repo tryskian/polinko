@@ -116,21 +116,12 @@ Use this doc for operator procedure.
 
 ## End-of-Day Ritual
 
-1. Finish branch-local validation before merge:
-   - `make end-preflight`
-2. Package the branch when the kernel is ready.
-3. Merge through the protected-main PR flow.
-4. After merge, switch back to `main` and pull fast-forward only.
-5. Run the literal closeout routine from clean synced `main`:
+1. Run the literal closeout routine from clean synced `main`:
    - `make end`
-6. If you need companion checks as standalone checks, run:
+2. If you need companion checks as standalone checks, run:
    - `make end-docs-check`
    - `make end-git-check`
-7. Update tracked current truth and local handoff before stopping.
-8. End state must be:
-   - merged
-   - clean local `main`
-   - synced with `origin/main`
+3. Update tracked current truth and local handoff before stopping.
 
 ## Local-Only Docs Policy
 
@@ -176,8 +167,7 @@ Use this doc for operator procedure.
 2. Use `make end-preflight` when the kernel is broad enough to need the full
    branch-local quality suite.
 3. End each kernel summary with the recommended next kernel.
-4. Reserve `make end` for real session closeout or post-merge clean-main
-   verification.
+4. Reserve `make end` for real session closeout only.
 
 ## Atomic Commands
 
