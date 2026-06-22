@@ -96,46 +96,25 @@ Aliases:
 
 Sequence:
 
-1. Verify current-truth docs freshness:
-   - `make end-docs-check`
-2. Run transcript repair:
-   - `make transcript-fix`
-3. Validate curated transcripts:
-   - `make transcript-check`
-4. Verify the environment:
-   - `make doctor-env`
-5. Validate shell helper contracts:
-   - `make scripts-check`
-6. Check tracked docs/code for local path leaks:
-   - `make path-leak-check`
-7. Verify runtime risk-surface coverage:
-   - `make risk-scan`
-8. Run Python style checks:
-   - `make ci-python-style`
-9. Run Python type checks:
-   - `make ci-python-type-check`
-10. Lint docs:
-    - `make lint-docs`
-11. Smoke-test editable package import:
-    - `make package-install-check`
-12. Run tests:
-    - `make test`
-13. Check diff whitespace:
-    - `git diff --check`
-14. Run dependency security checks:
-    - `make security-checks`
-15. Stop background tasks:
-    - `make eod-stop`
-        - `make eval-sidecar-stop`
-        - `make portfolio-mockups-stop`
-        - `make server-daemon-stop`
-        - `make caffeinate-off-all`
-        - `make session-status`
-16. Verify the Git closeout state:
-    - `make end-git-check`
-    - current branch must be `main`
-    - working tree must be clean
-    - local `main` must be synced with `origin/main`
+| Step | Action | Command |
+| --- | --- | --- |
+| 1 | Verify current-truth docs freshness | `make end-docs-check` |
+| 2 | Run transcript repair | `make transcript-fix` |
+| 3 | Validate curated transcripts | `make transcript-check` |
+| 4 | Verify the environment | `make doctor-env` |
+| 5 | Validate shell helper contracts | `make scripts-check` |
+| 6 | Check tracked docs/code for local path leaks | `make path-leak-check` |
+| 7 | Verify runtime risk-surface coverage | `make risk-scan` |
+| 8 | Verify operator alias boundaries | `make operator-alias-check` |
+| 9 | Run Python style checks | `make ci-python-style` |
+| 10 | Run Python type checks | `make ci-python-type-check` |
+| 11 | Lint docs | `make lint-docs` |
+| 12 | Smoke-test editable package import | `make package-install-check` |
+| 13 | Run tests | `make test` |
+| 14 | Check diff whitespace | `git diff --check` |
+| 15 | Run dependency security checks | `make security-checks` |
+| 16 | Stop background tasks | `make eod-stop` |
+| 17 | Verify current branch must be `main` and synced | `make end-git-check` |
 
 Preflight:
 
@@ -155,6 +134,9 @@ Explicit companion checks:
 - `make risk-scan`
   - checks runtime map, Make, CI, runner, and local configuration coverage for
     known high-risk surfaces
+- `make operator-alias-check`
+  - checks manual eval compatibility aliases and keeps parked OCR eval aliases
+    out of automatic startup, closeout, and CI dependencies
 - `make security-checks`
   - runs local Python and Node dependency audits
 - `make api-smoke`

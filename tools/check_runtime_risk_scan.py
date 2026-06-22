@@ -22,6 +22,7 @@ REQUIRED_FILES = (
     Path("tools/check_shell_scripts.py"),
     Path("tools/path_leak_check.py"),
     Path("tools/check_runtime_risk_scan.py"),
+    Path("tools/check_operator_aliases.py"),
     Path("tools/manage_caffeinate.sh"),
     Path("tools/run_server_daemon.sh"),
     Path("tools/run_eval_sidecar_start.sh"),
@@ -43,6 +44,7 @@ REQUIRED_MAKE_TARGETS = (
     "ci",
     "ci-docs",
     "risk-scan",
+    "operator-alias-check",
     "scripts-check",
     "path-leak-check",
     "path-leak-audit-local",
@@ -66,6 +68,7 @@ REQUIRED_CI_DOCS_DEPS = (
     "path-leak-check",
     "scripts-check",
     "risk-scan",
+    "operator-alias-check",
     "lint-docs",
 )
 
@@ -116,6 +119,7 @@ RUNTIME_MAP_SURFACES = (
             "manual eval workbench",
             "manual_evals_db_health",
             "read-only OCR inventory",
+            "operator-alias-check",
             "Make eval aliases",
             "OCR workflow wrappers",
         ),

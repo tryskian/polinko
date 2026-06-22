@@ -469,10 +469,15 @@ Last updated: 2026-06-22
   - runtime risk-surface coverage is explicit through `make risk-scan`, which
     verifies that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates
+  - operator alias coverage is explicit through `make operator-alias-check`,
+    which keeps `manual-evals-*` targets paired with their `manualdb-*`
+    compatibility aliases and keeps parked OCR eval aliases out of automatic
+    startup, closeout, and CI dependencies
   - `make ci-docs` runs `make path-leak-check`, `make scripts-check`,
-    `make risk-scan`, and `make lint-docs`; `make end` also runs
-    `make path-leak-check`, `make scripts-check`, and `make risk-scan` before
-    longer style, type, test, and security gates
+    `make risk-scan`, `make operator-alias-check`, and `make lint-docs`;
+    `make end` also runs `make path-leak-check`, `make scripts-check`,
+    `make risk-scan`, and `make operator-alias-check` before longer style,
+    type, test, and security gates
   - public diagram renderers use source-first, write-if-changed behaviour:
     Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
     through a temporary SVG before replacing the tracked artefact
@@ -575,6 +580,7 @@ Last updated: 2026-06-22
 - `make ruff-format-check`
 - `make lint-docs`
 - `make risk-scan`
+- `make operator-alias-check`
 - `make package-install-check`
 - `make type-check`
 - `make test`
