@@ -63,6 +63,8 @@ Runner lifecycle rule:
 - `make eval-sidecar-start`, `make eval-sidecar-status`, and
   `make eval-sidecar-stop` delegate lifecycle actions to
   `tools/run_eval_sidecar_start.sh`
+  - missing current-file state is surfaced by start/status, while stop still
+    cleans the repo-managed PID for closeout
 - `make portfolio-mockups`, `make portfolio-mockups-status`, and
   `make portfolio-mockups-stop` delegate mockup-server lifecycle actions to
   `tools/run_portfolio_mockups.sh`
