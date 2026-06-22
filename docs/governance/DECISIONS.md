@@ -2379,6 +2379,9 @@ or branch history instead.
 - Human-led: The human lead identified that hidden script and runtime drift
   could pass ordinary tests, and asked for risk checks that catch the surfaces
   the refactor must keep visible.
+- Engineer implementation: Encode that signal as repo-owned `risk-scan` and
+  contract-check gates, wired through `make ci-docs`, `make pr-preflight`, and
+  closeout instead of relying on memory, review notes, or manual recall.
 - Decision: Treat repo-owned risk-scan and contract-check scripts as active
   refactor gates. These checks should encode high-value runtime, script,
   closeout, CI, and operator-surface contracts that are easy to miss during
