@@ -2427,3 +2427,23 @@ or branch history instead.
   stale PID files, unmanaged local processes, or wake-lock drift invisible.
   A guarded post-stop status report keeps those small runtime issues visible
   during maintenance kernels and final session closeout.
+
+## D-156: Audit local startup config shape
+
+- Date: `2026-06-22`
+- Category: `workflow_environment`
+- Tags: `startup`, `vscode`, `local_config`, `risk_scan`, `hygiene`
+- Human-led: The human lead identified a VS Code startup/task warning and
+  asked for hidden local runtime scripts and config to be maintained as
+  first-class surfaces.
+- Engineer implementation: Extend `make path-leak-audit-local` with
+  `tools.check_local_runtime_config`, which validates ignored `.vscode` JSON
+  and catches retired folder-open bootstrap tasks or background tasks without
+  readiness signalling.
+- Decision: Treat local ignored VS Code runtime config as an audited operator
+  surface. Startup remains chat-led through manual `make start`, and local
+  task config should not reintroduce folder-open bootstrap behaviour.
+- Why: Local ignored config can break the day-start ritual without showing up
+  in tracked CI. A focused local audit gives the repo a repeatable way to
+  detect startup-task drift without promoting machine-local VS Code settings
+  into tracked source.

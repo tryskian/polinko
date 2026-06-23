@@ -85,6 +85,7 @@ path-leak-check:
 
 path-leak-audit-local:
 	$(PYTHON) -m tools.path_leak_check --scope local-config
+	$(PYTHON) -m tools.check_local_runtime_config
 
 risk-scan:
 	$(PYTHON) -m tools.check_runtime_risk_scan
