@@ -144,6 +144,40 @@ class LocalRuntimeConfigTests(unittest.TestCase):
         )
         self.assertTrue(any("docs/POL1_COMMS.md" in failure for failure in failures))
 
+    def test_retired_local_editor_doc_tokens_are_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _write(
+                root,
+                ".vscode/settings.json",
+                """
+                {
+                  "files.exclude": {
+                    "docs/AGENT_BUILDER_MIRROR.md": true,
+                    "docs/HYBRID_OPENAI_ADOPTION_PLAN.md": true
+                  },
+                  "markdownlint.ignore": [
+                    "**/docs/portfolio/raw_evidence/**"
+                  ]
+                }
+                """,
+            )
+
+            failures = check_local_runtime_config.check_vscode_config(root)
+
+        self.assertEqual(len(failures), 3)
+        self.assertTrue(
+            any("docs/AGENT_BUILDER_MIRROR.md" in failure for failure in failures)
+        )
+        self.assertTrue(
+            any(
+                "docs/HYBRID_OPENAI_ADOPTION_PLAN.md" in failure for failure in failures
+            )
+        )
+        self.assertTrue(
+            any("docs/portfolio/raw_evidence" in failure for failure in failures)
+        )
+
     def test_current_checkout_passes(self) -> None:
         result = subprocess.run(
             [sys.executable, "-m", "tools.check_local_runtime_config"],

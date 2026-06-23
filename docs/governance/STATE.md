@@ -134,7 +134,8 @@ Last updated: 2026-06-23
   - `make path-leak-audit-local` is an actionable local runtime-config audit:
     it checks hidden/editor/container config surfaces without failing on
     ignored manual-eval evidence bundles that intentionally retain source paths,
-    and it validates VS Code task/config shape
+    and it validates VS Code task/config shape plus retired local doc/config
+    tokens
   - `make privacy-local-on` installs the current machine-local handoff exclude
     pattern; tracked docs stay visible, while `make privacy-local-off` can
     clear any legacy docs skip-worktree state left by the older helper

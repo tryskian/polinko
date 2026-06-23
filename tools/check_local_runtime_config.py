@@ -17,6 +17,9 @@ VSCODE_CONFIG_FILES = (
 RETIRED_LOCAL_DOC_PATHS = (
     "docs/INSTANCE_HANDOFF.md",
     "docs/POL1_COMMS.md",
+    "docs/AGENT_BUILDER_MIRROR.md",
+    "docs/HYBRID_OPENAI_ADOPTION_PLAN.md",
+    "docs/portfolio/raw_evidence",
 )
 
 
