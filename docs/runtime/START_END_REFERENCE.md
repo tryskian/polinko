@@ -135,6 +135,8 @@ Explicit companion checks:
 
 - `make end-docs-check`
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
+  - when local `SESSION_HANDOFF` exists, verifies it names the current short
+    commit so same-date stale handoffs fail closeout
 - `make scripts-check`
   - validates tracked shell helper shebangs, strict modes, and sourced helper
     contracts
