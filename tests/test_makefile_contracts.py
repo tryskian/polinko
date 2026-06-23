@@ -15,6 +15,7 @@ CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
 OPENAI_ACCOUNT_SCRIPT = REPO_ROOT / "tools" / "openai_account_summary.py"
 SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "run_server_daemon.sh"
 PORTFOLIO_MOCKUP_SCRIPT = REPO_ROOT / "tools" / "run_portfolio_mockups.sh"
+LOCAL_URL_LAUNCHER_SCRIPT = REPO_ROOT / "tools" / "open_local_url.sh"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
 OCR_WORKFLOW_COMMON_SCRIPT = REPO_ROOT / "tools" / "ocr_workflow_common.sh"
@@ -140,6 +141,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("CLI_ENTRYPOINT ?= -m polinko.cli", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
         self.assertIn("LOCAL_BROWSER_LAUNCH ?= none", config_text)
+        self.assertIn(
+            "LOCAL_URL_LAUNCHER_SCRIPT ?= ./tools/open_local_url.sh", config_text
+        )
         self.assertIn(
             "OPENAI_ACCOUNT_SCRIPT ?= ./tools/openai_account_summary.py", config_text
         )
@@ -1310,17 +1314,31 @@ class MakefileContractTests(unittest.TestCase):
                 )
 
                 self.assertIn(expected_label, result.stdout)
+                self.assertNotIn("LOCAL_URL_LAUNCHER_SCRIPT", result.stdout)
                 self.assertNotIn('open "$URL"', result.stdout)
                 self.assertNotIn("xdg-open", result.stdout)
 
     def test_local_url_targets_require_explicit_browser_launch(self) -> None:
         cases = (
-            (["docs-open"], "docs-open"),
-            (["viz-open"], "viz-open"),
-            (["docs", "LOCAL_BROWSER_LAUNCH=system"], "docs with launch override"),
-            (["viz", "LOCAL_BROWSER_LAUNCH=system"], "viz with launch override"),
+            (["docs-open"], "docs-open", 'bash "./tools/open_local_url.sh" "$URL"'),
+            (["viz-open"], "viz-open", 'bash "./tools/open_local_url.sh" "$URL"'),
+            (
+                ["docs", "LOCAL_BROWSER_LAUNCH=system"],
+                "docs with launch override",
+                'bash "./tools/open_local_url.sh" "$URL"',
+            ),
+            (
+                ["viz", "LOCAL_BROWSER_LAUNCH=system"],
+                "viz with launch override",
+                'bash "./tools/open_local_url.sh" "$URL"',
+            ),
+            (
+                ["portfolio-open"],
+                "portfolio-open",
+                'bash "./tools/open_local_url.sh" "$OPEN_URL"',
+            ),
         )
-        for args, label in cases:
+        for args, label, expected_script_call in cases:
             with self.subTest(target=label):
                 result = subprocess.run(
                     ["make", "-n", *args],
@@ -1330,8 +1348,17 @@ class MakefileContractTests(unittest.TestCase):
                     text=True,
                 )
 
-                self.assertIn('open "$URL"', result.stdout)
-                self.assertIn("xdg-open", result.stdout)
+                self.assertIn(expected_script_call, result.stdout)
+                self.assertNotIn("xdg-open", result.stdout)
+
+    def test_local_url_launcher_owns_system_browser_launch(self) -> None:
+        script_text = LOCAL_URL_LAUNCHER_SCRIPT.read_text(encoding="utf-8")
+
+        self.assertTrue(LOCAL_URL_LAUNCHER_SCRIPT.is_file())
+        self.assertTrue(os.access(LOCAL_URL_LAUNCHER_SCRIPT, os.X_OK))
+        self.assertIn('open "$url"', script_text)
+        self.assertIn('xdg-open "$url"', script_text)
+        self.assertIn("Open this URL in your browser: $url", script_text)
 
     def test_portfolio_build_dry_run_does_not_execute_vite_build(self) -> None:
         result = subprocess.run(

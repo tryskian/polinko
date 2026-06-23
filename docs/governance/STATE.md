@@ -532,7 +532,8 @@ Last updated: 2026-06-23
     `make viz` print the target URL by default instead of launching a browser
   - explicit browser launch remains available through `make docs-open`,
     `make open-api-docs-browser`, `make viz-open`, `make open-viz`, and
-    `make portfolio-open`
+    `make portfolio-open`; those system-launch paths route through
+    `tools/open_local_url.sh`
   - base OCR transcript case and stability workflows now use the same shared
     case guard as growth, focus, and transcript-lane OCR wrappers, so missing
     and empty case-file handling stays consistent before eval runners launch
