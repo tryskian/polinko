@@ -76,6 +76,26 @@ class OperatorAliasCheckTests(unittest.TestCase):
             ["start: automation dependency includes parked OCR eval alias(es): ocrall"],
         )
 
+    def test_parked_ocr_alias_cannot_enter_closeout_helper(self) -> None:
+        failures = check_operator_aliases.check_parked_ocr_aliases(
+            "\n".join(
+                [
+                    "end-stop: eval-sidecar-stop ocrstable",
+                    "ocr-inventory:",
+                    "\t@true",
+                    "ocr-inventory-json: ocr-inventory",
+                ]
+            )
+        )
+
+        self.assertEqual(
+            failures,
+            [
+                "end-stop: automation dependency includes parked OCR eval "
+                "alias(es): ocrstable"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
