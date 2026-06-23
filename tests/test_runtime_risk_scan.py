@@ -60,6 +60,23 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_missing_session_status_target_is_reported(self) -> None:
+        make_lines = [
+            f"{target}:"
+            for target in check_runtime_risk_scan.REQUIRED_MAKE_TARGETS
+            if target != "session-status"
+        ]
+        make_lines.append(
+            "ci-docs: " + " ".join(check_runtime_risk_scan.REQUIRED_CI_DOCS_DEPS)
+        )
+
+        failures = check_runtime_risk_scan.check_make_contracts("\n".join(make_lines))
+
+        self.assertIn(
+            "make target 'session-status': missing from Make surface",
+            failures,
+        )
+
     def test_missing_operator_alias_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             "\n".join(
