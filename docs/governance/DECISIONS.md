@@ -2634,3 +2634,20 @@ or branch history instead.
 - Why: Ignored local config can preserve obsolete workflow state after tracked
   docs and helper scripts have moved on. The existing local runtime config gate
   should catch that drift before startup or operator work gets confusing.
+
+## D-167: Keep startup map aligned with chat-first ritual
+
+- Date: `2026-06-23`
+- Category: `runtime_engineering`
+- Tags: `startup`, `docs`, `runtime_map`, `hygiene`
+- Human-led: The human lead asked for hidden workflow drift and small startup
+  blubbles to be resolved instead of left as future operator confusion.
+- Engineer implementation: Rename the active runtime map startup lane from the
+  retired bootstrap wording to the current alignment wording, and add a startup
+  contract test that keeps the old phrase out of the active runtime map.
+- Decision: Active runtime docs should describe startup as chat-first
+  alignment, not workspace bootstrap. Bootstrap wording remains only as a
+  guarded retired-task signal in local config validation.
+- Why: The retired VS Code folder-open bootstrap path is already blocked in
+  local config. Leaving its name in the active map makes stale workflow
+  vocabulary look current.
