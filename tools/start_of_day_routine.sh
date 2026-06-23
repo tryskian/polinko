@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT_DIR"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tools/repo_root.sh
+source "$script_dir/repo_root.sh"
+
+polinko_cd_repo_root
+ROOT_DIR="$POLINKO_REPO_ROOT"
 
 echo "[start] starting morning routine in: $ROOT_DIR"
 echo "[start] 1/5 workspace context"

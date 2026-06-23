@@ -19,6 +19,7 @@ REQUIRED_FILES = (
     Path("makefiles/evals/gates.mk"),
     Path("tools/start_of_day_routine.sh"),
     Path("tools/end_of_day_routine.sh"),
+    Path("tools/repo_root.sh"),
     Path("tools/check_shell_scripts.py"),
     Path("tools/path_leak_check.py"),
     Path("tools/check_local_runtime_config.py"),
@@ -91,6 +92,7 @@ RUNTIME_MAP_SURFACES = (
         (
             "make start",
             "tools/start_of_day_routine.sh",
+            "tools/repo_root.sh",
             "make doctor-env",
             "make caffeinate",
             "make api-smoke",
@@ -102,6 +104,7 @@ RUNTIME_MAP_SURFACES = (
         (
             "make end-preflight",
             "make end",
+            "tools/repo_root.sh",
             "make end-stop",
             "make session-status",
             "make scripts-check",
@@ -149,6 +152,7 @@ RUNTIME_MAP_SURFACES = (
             "tools.check_local_runtime_config",
             "VS Code",
             "devcontainer",
+            "tools/repo_root.sh",
             "pre-commit",
             "privacy-local-on",
         ),
