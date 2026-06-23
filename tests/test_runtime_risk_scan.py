@@ -39,6 +39,21 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_retired_runtime_map_token_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            map_path = root / "docs" / "runtime" / "RUNTIME_SURFACE_MAP.md"
+            map_path.parent.mkdir(parents=True)
+            map_path.write_text("Startup and workspace bootstrap\n", encoding="utf-8")
+
+            failures = check_runtime_risk_scan.check_runtime_surface_map(root)
+
+        self.assertIn(
+            "docs/runtime/RUNTIME_SURFACE_MAP.md: retired runtime map token "
+            "'Startup and workspace bootstrap' is active",
+            failures,
+        )
+
     def test_missing_ci_docs_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             "\n".join(

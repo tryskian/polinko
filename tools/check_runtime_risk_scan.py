@@ -70,6 +70,7 @@ REQUIRED_MAKE_TARGETS = (
 )
 
 FORBIDDEN_MAKE_TARGETS = ("eod-stop",)
+FORBIDDEN_RUNTIME_MAP_TOKENS = ("Startup and workspace bootstrap",)
 
 REQUIRED_CI_DOCS_DEPS = (
     "path-leak-check",
@@ -232,6 +233,11 @@ def check_make_contracts(text: str) -> list[str]:
 def check_runtime_surface_map(root: Path) -> list[str]:
     text = (root / RUNTIME_SURFACE_MAP).read_text(encoding="utf-8")
     failures: list[str] = []
+    for token in FORBIDDEN_RUNTIME_MAP_TOKENS:
+        if token in text:
+            failures.append(
+                f"{RUNTIME_SURFACE_MAP}: retired runtime map token {token!r} is active"
+            )
     for surface in RUNTIME_MAP_SURFACES:
         for token in surface.required_tokens:
             if token not in text:
