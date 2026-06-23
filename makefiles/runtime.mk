@@ -66,13 +66,7 @@ open-api-docs: server-daemon
 ifeq ($(LOCAL_BROWSER_LAUNCH),system)
 	@set -eu; \
 	URL="$(DEV_API_DOCS_URL)"; \
-	if command -v open >/dev/null 2>&1; then \
-		open "$$URL"; \
-	elif command -v xdg-open >/dev/null 2>&1; then \
-		xdg-open "$$URL" >/dev/null 2>&1 || true; \
-	else \
-		echo "Open this URL in your browser: $$URL"; \
-	fi
+	bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$URL"
 endif
 
 docs: open-api-docs
@@ -80,13 +74,7 @@ docs: open-api-docs
 docs-open open-api-docs-browser: server-daemon
 	@set -eu; \
 	URL="$(DEV_API_DOCS_URL)"; \
-	if command -v open >/dev/null 2>&1; then \
-		open "$$URL"; \
-	elif command -v xdg-open >/dev/null 2>&1; then \
-		xdg-open "$$URL" >/dev/null 2>&1 || true; \
-	else \
-		echo "Open this URL in your browser: $$URL"; \
-	fi; \
+	bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$URL"; \
 	echo "API docs URL: $$URL"
 
 openai-account-summary:
@@ -119,25 +107,13 @@ viz: server-daemon
 ifeq ($(LOCAL_BROWSER_LAUNCH),system)
 	@set -eu; \
 	URL="$(DEV_VIZ_URL)"; \
-	if command -v open >/dev/null 2>&1; then \
-		open "$$URL"; \
-	elif command -v xdg-open >/dev/null 2>&1; then \
-		xdg-open "$$URL" >/dev/null 2>&1 || true; \
-	else \
-		echo "Open this URL in your browser: $$URL"; \
-	fi
+	bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$URL"
 endif
 
 viz-open open-viz: server-daemon
 	@set -eu; \
 	URL="$(DEV_VIZ_URL)"; \
-	if command -v open >/dev/null 2>&1; then \
-		open "$$URL"; \
-	elif command -v xdg-open >/dev/null 2>&1; then \
-		xdg-open "$$URL" >/dev/null 2>&1 || true; \
-	else \
-		echo "Open this URL in your browser: $$URL"; \
-	fi; \
+	bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$URL"; \
 	echo "PASS/FAIL viz URL: $$URL"
 
 session-status:

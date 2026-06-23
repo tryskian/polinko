@@ -2,7 +2,7 @@
 
 # Runtime Surface Map
 
-Last updated: 2026-06-22
+Last updated: 2026-06-23
 
 This map shows the local runtime and operator surfaces that need to stay
 maintainable during the current refactor. It separates manual startup,
@@ -133,3 +133,6 @@ flowchart TD
   same case guard before launching eval runners.
 - CI and dependency automation should mirror local gates closely enough that
   failed remote runs point to real fixes, not setup drift.
+- Local URL targets remain print-first by default. Explicit system-browser
+  launch paths route through `tools/open_local_url.sh` so `docs`, `viz`, and
+  portfolio launch behavior share one audited helper.

@@ -2503,3 +2503,20 @@ or branch history instead.
   automatic implementation trigger. Encoding the ritual in script, docs, and
   tests keeps one-kernel work traceable and prevents drift back into
   checklist-only startup.
+
+## D-160: Centralize explicit local URL launch handling
+
+- Date: `2026-06-23`
+- Category: `workflow_environment`
+- Tags: `local_urls`, `browser_launch`, `make`, `runtime`, `hygiene`
+- Human-led: The human lead asked for scripts and hidden runtime surfaces to
+  stay maintained so repeated helper drift does not interrupt operator work.
+- Engineer implementation: Route explicit system-browser launch paths through
+  `tools/open_local_url.sh`, and guard default print-only behavior plus the
+  helper-owned launch path in Makefile contract tests.
+- Decision: Local URL targets stay print-first by default. Explicit browser
+  launch remains available, but system launch handling belongs to one
+  repo-owned helper.
+- Why: Duplicated `open` / `xdg-open` snippets make browser-launch behavior
+  easy to drift across docs, viz, and portfolio targets. A single helper keeps
+  the no-browser default and explicit-launch escape hatch auditable.

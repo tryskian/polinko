@@ -201,13 +201,7 @@ portfolio: portfolio-build server-daemon-stop server-daemon
 					PLAYWRIGHT_SNAPSHOT_BASE_DIR="$(PLAYWRIGHT_SNAPSHOT_BASE_DIR)" PLAYWRIGHT_SNAPSHOT_DAY="$(PLAYWRIGHT_SNAPSHOT_DAY)" PLAYWRIGHT_SESSION="$(PORTFOLIO_PLAYWRIGHT_SESSION)" "$(PWCLI_TOOL)" open "$$OPEN_URL" --headed; \
 				fi ;; \
 		system) \
-			if command -v open >/dev/null 2>&1; then \
-				open "$$OPEN_URL"; \
-			elif command -v xdg-open >/dev/null 2>&1; then \
-				xdg-open "$$OPEN_URL" >/dev/null 2>&1 || true; \
-			else \
-				echo "Open this URL in your browser: $$OPEN_URL"; \
-			fi ;; \
+			bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$OPEN_URL" ;; \
 		none) \
 			echo "Portfolio URL: $$OPEN_URL" ;; \
 		*) \

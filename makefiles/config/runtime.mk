@@ -6,6 +6,7 @@ ASGI_APP ?= server:app
 DEV_API_DOCS_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/docs
 DEV_VIZ_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/viz/pass-fail
 LOCAL_BROWSER_LAUNCH ?= none
+LOCAL_URL_LAUNCHER_SCRIPT ?= ./tools/open_local_url.sh
 OPENAI_ACCOUNT_SCRIPT ?= ./tools/openai_account_summary.py
 OPENAI_API_BASE_URL ?= https://api.openai.com/v1
 OPENAI_ADMIN_KEY_ENV ?= OPENAI_ADMIN_KEY
