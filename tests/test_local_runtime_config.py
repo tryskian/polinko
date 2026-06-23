@@ -118,6 +118,32 @@ class LocalRuntimeConfigTests(unittest.TestCase):
 
         self.assertEqual(failures, [])
 
+    def test_retired_local_doc_paths_are_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _write(
+                root,
+                ".vscode/settings.json",
+                """
+                {
+                  "files.exclude": {
+                    "docs/INSTANCE_HANDOFF.md": true
+                  },
+                  "search.exclude": {
+                    "docs/POL1_COMMS.md": true
+                  }
+                }
+                """,
+            )
+
+            failures = check_local_runtime_config.check_vscode_config(root)
+
+        self.assertEqual(len(failures), 2)
+        self.assertTrue(
+            any("docs/INSTANCE_HANDOFF.md" in failure for failure in failures)
+        )
+        self.assertTrue(any("docs/POL1_COMMS.md" in failure for failure in failures))
+
     def test_current_checkout_passes(self) -> None:
         result = subprocess.run(
             [sys.executable, "-m", "tools.check_local_runtime_config"],

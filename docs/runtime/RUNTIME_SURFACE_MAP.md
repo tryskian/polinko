@@ -104,7 +104,8 @@ flowchart TD
   that known high-risk runtime, script, CI, and local configuration surfaces
   remain visible in the tracked map and Make gates.
   `make local-runtime-config-check` runs through `make ci-docs` so VS Code
-  task/config drift fails the normal docs/runtime gate.
+  task/config drift and retired local doc references fail the normal
+  docs/runtime gate.
   `make startup-contracts-check` keeps startup/runtime doc contracts in the
   local docs gate so wording drift fails before a PR-only CI run.
   Startup, closeout, devcontainer setup, local privacy guard, OCR workflow,

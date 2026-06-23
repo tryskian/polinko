@@ -2617,3 +2617,20 @@ or branch history instead.
 - Why: The current-truth docs identify `docs/peanut/governance/SESSION_HANDOFF.md`
   as the local carryover surface. Keeping the helper aligned prevents stale
   excludes from looking like active workflow state.
+
+## D-166: Guard ignored VS Code config against retired local docs
+
+- Date: `2026-06-23`
+- Category: `workflow_environment`
+- Tags: `vscode`, `local_config`, `docs`, `hygiene`
+- Human-led: The human lead asked for hidden and local runtime surfaces to stay
+  maintained because ignored config drift can still interrupt operator work.
+- Engineer implementation: Extend `tools.check_local_runtime_config` to reject
+  retired local doc paths in ignored `.vscode` JSON and clean the local
+  workspace settings that still referenced them.
+- Decision: Local VS Code runtime config must not keep retired
+  `docs/INSTANCE_HANDOFF.md` or `docs/POL1_COMMS.md` references. The active
+  local handoff surface remains `docs/peanut/governance/SESSION_HANDOFF.md`.
+- Why: Ignored local config can preserve obsolete workflow state after tracked
+  docs and helper scripts have moved on. The existing local runtime config gate
+  should catch that drift before startup or operator work gets confusing.

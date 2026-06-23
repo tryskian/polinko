@@ -14,6 +14,10 @@ VSCODE_CONFIG_FILES = (
     "tasks.json",
     "mcp.json",
 )
+RETIRED_LOCAL_DOC_PATHS = (
+    "docs/INSTANCE_HANDOFF.md",
+    "docs/POL1_COMMS.md",
+)
 
 
 def _load_json(path: Path) -> tuple[Any | None, str | None]:
@@ -42,6 +46,29 @@ def _has_empty_problem_matcher(task: dict[str, Any]) -> bool:
     return problem_matcher in (None, "", [])
 
 
+def _contains_string(value: Any, needle: str) -> bool:
+    if isinstance(value, str):
+        return needle in value
+    if isinstance(value, list):
+        return any(_contains_string(item, needle) for item in value)
+    if isinstance(value, dict):
+        return any(
+            (isinstance(key, str) and needle in key) or _contains_string(item, needle)
+            for key, item in value.items()
+        )
+    return False
+
+
+def _retired_local_doc_failures(path: Path, value: Any) -> list[str]:
+    failures: list[str] = []
+    for retired_path in RETIRED_LOCAL_DOC_PATHS:
+        if _contains_string(value, retired_path):
+            failures.append(
+                f"{path}: retired local doc path {retired_path!r} is still referenced"
+            )
+    return failures
+
+
 def check_vscode_config(root: Path = ROOT) -> list[str]:
     vscode_dir = root / ".vscode"
     if not vscode_dir.exists():
@@ -61,6 +88,9 @@ def check_vscode_config(root: Path = ROOT) -> list[str]:
             failures.append(f"{path}: expected top-level JSON object")
             continue
         parsed[file_name] = value
+
+    for file_name, value in parsed.items():
+        failures.extend(_retired_local_doc_failures(vscode_dir / file_name, value))
 
     tasks_json = parsed.get("tasks.json")
     if tasks_json is None:
