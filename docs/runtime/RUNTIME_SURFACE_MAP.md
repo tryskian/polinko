@@ -15,6 +15,7 @@ flowchart TD
     VSCode["VS Code manual task"] --> MakeStart["make start"]
     Operator["chat-led startup"] --> MakeStart
     MakeStart --> StartRoutine["tools/start_of_day_routine.sh"]
+    StartRoutine --> RepoRoot["tools/repo_root.sh"]
     StartRoutine --> Doctor["make doctor-env"]
     StartRoutine --> WakeLock["make caffeinate + caffeinate-status"]
     StartRoutine --> ApiSmoke["make api-smoke"]
@@ -27,6 +28,7 @@ flowchart TD
     EndPreflight["make end-preflight"] --> BranchChecks["branch-local validation"]
     SessionCloseout["session closeout"] --> MainSync["clean synced main"]
     MainSync --> MakeEnd["make end"]
+    MakeEnd --> RepoRoot
     MakeEnd --> DocsGate["make end-docs-check"]
     MakeEnd --> ScriptGate["make scripts-check"]
     MakeEnd --> PathLeakGate["make path-leak-check"]
@@ -103,6 +105,9 @@ flowchart TD
   remain visible in the tracked map and Make gates.
   `make startup-contracts-check` keeps startup/runtime doc contracts in the
   local docs gate so wording drift fails before a PR-only CI run.
+  Startup, closeout, devcontainer setup, local privacy guard, OCR workflow,
+  and Playwright snapshot helpers resolve the checkout root through
+  `tools/repo_root.sh`.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files;
   it checks local path leaks and VS Code task/config shape through

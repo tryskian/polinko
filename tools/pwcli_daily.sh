@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$repo_root"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tools/repo_root.sh
+source "$script_dir/repo_root.sh"
+
+polinko_cd_repo_root
+repo_root="$POLINKO_REPO_ROOT"
 
 base_dir="${PLAYWRIGHT_SNAPSHOT_BASE_DIR:-docs/peanut/assets/screenshots/playwright}"
 day="${PLAYWRIGHT_SNAPSHOT_DAY:-$(date +%d-%m-%y)}"

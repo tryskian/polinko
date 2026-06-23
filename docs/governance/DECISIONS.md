@@ -2539,3 +2539,24 @@ or branch history instead.
   maintain across the runner family. A single launcher keeps the shared
   process mechanics consistent without flattening each runner's lifecycle
   contract.
+
+## D-162: Centralize shell repo-root resolution
+
+- Date: `2026-06-23`
+- Category: `runtime_engineering`
+- Tags: `startup`, `closeout`, `devcontainer`, `shell`, `hygiene`
+- Human-led: The human lead asked for hidden scripts and repeated runtime
+  helper patterns to be maintained so small shell drift does not interrupt
+  operator work.
+- Engineer implementation: Add `tools/repo_root.sh` with shared
+  `polinko_repo_root` and `polinko_cd_repo_root` helpers; route startup,
+  closeout, devcontainer setup, local privacy guard, OCR workflow, eval-server
+  daemon, and Playwright snapshot scripts through it; guard the helper in
+  shell/runtime tests.
+- Decision: Shell bootstrap and operator scripts share one repo-root helper.
+  Script-specific workflow logic stays in each script, while checkout-root
+  resolution is owned by `tools/repo_root.sh`.
+- Why: Repeated `BASH_SOURCE` and `git rev-parse` root snippets made startup,
+  closeout, and setup scripts easy to drift independently. A shared helper
+  keeps root discovery consistent without broadening the kernel into Python
+  path cleanup.

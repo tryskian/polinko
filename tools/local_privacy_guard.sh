@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
-if [[ -z "${ROOT}" ]]; then
-  echo "Not inside a git repository."
-  exit 1
-fi
-cd "${ROOT}"
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tools/repo_root.sh
+source "$script_dir/repo_root.sh"
+
+polinko_cd_repo_root
+ROOT="$POLINKO_REPO_ROOT"
 
 EXCLUDE_FILE=".git/info/exclude"
 MARKER_BEGIN="# polinko-local-privacy begin"
