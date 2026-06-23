@@ -11,7 +11,7 @@ cleanup kernel can stay scoped.
 
 ```mermaid
 flowchart TD
-  subgraph Startup["Startup and workspace bootstrap"]
+  subgraph Startup["Startup and alignment"]
     VSCode["VS Code manual task"] --> MakeStart["make start"]
     Operator["chat-led startup"] --> MakeStart
     MakeStart --> StartRoutine["tools/start_of_day_routine.sh"]

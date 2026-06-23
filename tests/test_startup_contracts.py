@@ -28,6 +28,7 @@ class StartupContractTests(unittest.TestCase):
     def test_runtime_docs_match_start_alignment_contract(self) -> None:
         start_reference = _read("docs/runtime/START_END_REFERENCE.md")
         runbook = _read("docs/runtime/RUNBOOK.md")
+        runtime_map = _read("docs/runtime/RUNTIME_SURFACE_MAP.md")
 
         self.assertIn(
             "reply in the morning ritual before implementation", start_reference
@@ -40,6 +41,8 @@ class StartupContractTests(unittest.TestCase):
         self.assertIn("kernel map", runbook)
         self.assertIn("chat-first alignment pass", runbook)
         self.assertIn("Wait for human alignment before implementation", runbook)
+        self.assertIn('Startup["Startup and alignment"]', runtime_map)
+        self.assertNotIn("Startup and workspace bootstrap", runtime_map)
         self.assertNotIn("execute the `Next Slice`", start_reference)
 
     def test_docs_index_links_to_current_ritual_headings(self) -> None:
