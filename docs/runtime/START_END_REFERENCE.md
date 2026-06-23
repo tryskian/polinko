@@ -72,6 +72,9 @@ Runner lifecycle rule:
   `tools/run_portfolio_mockups.sh`
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
+- `make session-status` is the consolidated status surface for the runner
+  family. `make end-stop` runs it after stop cleanup so closeout reports the
+  post-stop state without hiding individual runner drift.
 
 Active kernel validation:
 

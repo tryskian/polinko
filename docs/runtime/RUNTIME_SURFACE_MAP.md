@@ -34,6 +34,7 @@ flowchart TD
     MakeEnd --> TestGate["style, type, docs, package, tests"]
     MakeEnd --> SecurityGate["make security-checks"]
     MakeEnd --> EndStop["make end-stop"]
+    EndStop --> SessionStatus["make session-status"]
     MakeEnd --> GitGate["make end-git-check"]
   end
 
@@ -96,7 +97,8 @@ flowchart TD
   `make end-preflight` is branch-local validation, while `make end` is the
   session closeout routine from clean synced `main`; `make eod` is a
   compatibility alias only. `make end-stop` is the current closeout helper for
-  stopping background runners. `make risk-scan` verifies
+  stopping background runners, then `make session-status` reports each runner
+  family. `make risk-scan` verifies
   that known high-risk runtime, script, CI, and local configuration surfaces
   remain visible in the tracked map and Make gates.
   `make startup-contracts-check` keeps startup/runtime doc contracts in the

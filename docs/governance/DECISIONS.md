@@ -2407,3 +2407,23 @@ or branch history instead.
 - Why: The repository is the research object. Durable contract changes need a
   traceable governance record at the time they are made, so the human lead does
   not have to reconstruct or request the missing ledger entry afterward.
+
+## D-155: Guard runner status reporting as a closeout contract
+
+- Date: `2026-06-22`
+- Category: `workflow_environment`
+- Tags: `runtime`, `risk_scan`, `background_runners`, `closeout`, `hygiene`
+- Human-led: The human lead asked for hidden script and runner surfaces to stay
+  maintained, with warnings and small runtime drift treated as fixable
+  engineering work rather than background noise.
+- Engineer implementation: Add `session-status` to the risk-scan Make target
+  requirements and current runtime map, and test that `make end-stop` ends by
+  reporting each runner family's post-stop state.
+- Decision: Treat `make session-status` as the consolidated background-runner
+  status surface for closeout. The stop helper may clean up runners first, but
+  it must finish by surfacing server, eval sidecar, portfolio mockup, and
+  repo-managed wake-lock status.
+- Why: Stop commands alone can make a closeout appear quiet while leaving
+  stale PID files, unmanaged local processes, or wake-lock drift invisible.
+  A guarded post-stop status report keeps those small runtime issues visible
+  during maintenance kernels and final session closeout.

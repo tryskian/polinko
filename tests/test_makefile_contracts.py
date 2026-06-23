@@ -679,10 +679,16 @@ class MakefileContractTests(unittest.TestCase):
             r"(?m)^end-stop:\s*eval-sidecar-stop portfolio-mockups-stop "
             r"server-daemon-stop caffeinate-off-all session-status$",
         )
+        self.assertIn("session-status", _phony_targets())
+        self.assertRegex(text, r"(?m)^session-status:$")
+        self.assertIn('echo "== Server =="', text)
+        self.assertIn("server-daemon-status || true", text)
         self.assertIn('echo "== Eval sidecar =="', text)
-        self.assertIn("eval-sidecar-status", text)
+        self.assertIn("eval-sidecar-status || true", text)
         self.assertIn('echo "== Portfolio mockups =="', text)
-        self.assertIn("portfolio-mockups-status", text)
+        self.assertIn("portfolio-mockups-status || true", text)
+        self.assertIn('echo "== Keep-awake =="', text)
+        self.assertIn("caffeinate-status || true", text)
         self.assertRegex(text, r"(?m)^caffeinate-on:\s*caffeinate$")
         self.assertRegex(text, r"(?m)^caffeinate-off:\s*decaffeinate$")
         self.assertRegex(text, r"(?m)^caffeinate-off-all:\s*caffeinate-off$")
