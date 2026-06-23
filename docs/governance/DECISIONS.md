@@ -2701,3 +2701,22 @@ or branch history instead.
 - Why: `make end` delegates background cleanup through `make end-stop`. If that
   helper can accumulate parked OCR eval aliases, closeout can drift even while
   the top-level `end` target still looks clean.
+
+## D-171: Guard local editor config against retired doc tokens
+
+- Date: `2026-06-23`
+- Category: `workflow_environment`
+- Tags: `vscode`, `local_config`, `docs`, `hygiene`
+- Human-led: The human lead asked for local/editor runtime surfaces and hidden
+  configuration to stay maintained because ignored workspace config can still
+  interrupt operator work.
+- Engineer implementation: Extend `tools.check_local_runtime_config` to reject
+  retired local doc/config tokens for old mirror/adoption docs and the retired
+  `docs/portfolio/raw_evidence` lane; clean the ignored local VS Code settings
+  that still carried those tokens.
+- Decision: Local VS Code runtime config must follow the current docs lane:
+  private material belongs under `docs/peanut/`, and retired local doc or
+  portfolio raw-evidence tokens should fail the local runtime config check.
+- Why: Ignored editor config can preserve stale local doc lanes after tracked
+  docs have moved on. Guarding those tokens keeps editor search/lint behaviour
+  aligned with the active Polinko structure.
