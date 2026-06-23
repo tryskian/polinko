@@ -160,6 +160,7 @@ Use this doc for operator procedure.
 1. Use focused checks during active refactor kernels:
    - touched unit tests
    - `make scripts-check` for script changes
+   - `make local-runtime-config-check` for VS Code task/config changes
    - `make risk-scan` for runtime map, Make gate, CI, runner, startup/closeout,
      or local configuration surface changes
    - `make operator-alias-check` for manual eval or OCR operator alias changes
@@ -480,6 +481,8 @@ Use this doc for operator procedure.
 - `make scripts-check`
   - validates tracked shell helper shebangs, strict modes, and sourced helper
     contracts
+- `make local-runtime-config-check`
+  - validates VS Code task/config shape through `tools.check_local_runtime_config`
 - `make risk-scan`
   - validates that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates

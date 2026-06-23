@@ -2579,3 +2579,23 @@ or branch history instead.
 - Why: Indirect helper references can bypass Make-target inventories and hide
   drift in scripts, docs, local config, or runtime helpers. A dynamic guard
   makes the inventory repeatable and fails close to the source of future drift.
+
+## D-164: Run local runtime config checks through CI docs
+
+- Date: `2026-06-23`
+- Category: `workflow_environment`
+- Tags: `startup`, `vscode`, `ci-docs`, `local_config`, `hygiene`
+- Human-led: The human lead identified startup/task warnings as critical
+  operator-facing issues and asked for hidden runtime scripts and config to
+  stay maintained through normal workflow checks.
+- Engineer implementation: Promote `tools.check_local_runtime_config` into a
+  named `make local-runtime-config-check` target, wire that target into
+  `make ci-docs`, and keep `make path-leak-audit-local` as the deeper local
+  audit lane.
+- Decision: VS Code task/config shape is part of the normal docs/runtime gate.
+  Retired folder-open bootstrap behaviour and background-task readiness drift
+  should fail before PR or closeout work proceeds.
+- Why: The checker existed, but a startup config regression could stay outside
+  the high-traffic validation path. Running it through `make ci-docs` keeps the
+  startup ritual protected without adding browser launches or global editor
+  settings changes.

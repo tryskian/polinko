@@ -737,7 +737,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(PYTHON) -m tools.check_shell_scripts", text)
         self.assertRegex(
             text,
-            r"(?m)^ci-docs:\s*path-leak-check scripts-check risk-scan "
+            r"(?m)^ci-docs:\s*path-leak-check scripts-check "
+            r"local-runtime-config-check risk-scan "
             r"operator-alias-check startup-contracts-check lint-docs$",
         )
         self.assertIn("startup-contracts-check", _phony_targets())
@@ -746,12 +747,15 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("risk-scan", _phony_targets())
         self.assertRegex(text, r"(?m)^risk-scan:$")
         self.assertIn("$(PYTHON) -m tools.check_runtime_risk_scan", text)
+        self.assertIn("local-runtime-config-check", _phony_targets())
+        self.assertRegex(text, r"(?m)^local-runtime-config-check:$")
+        self.assertIn("$(PYTHON) -m tools.check_local_runtime_config", text)
         self.assertIn("operator-alias-check", _phony_targets())
         self.assertRegex(text, r"(?m)^operator-alias-check:$")
         self.assertIn("$(PYTHON) -m tools.check_operator_aliases", text)
         self.assertRegex(text, r"(?m)^path-leak-audit-local:$")
         self.assertIn("$(PYTHON) -m tools.path_leak_check --scope local-config", text)
-        self.assertIn("$(PYTHON) -m tools.check_local_runtime_config", text)
+        self.assertIn("$(MAKE) --no-print-directory local-runtime-config-check", text)
         self.assertIn(
             'run_step "scripts-check" make --no-print-directory scripts-check',
             closeout_text,

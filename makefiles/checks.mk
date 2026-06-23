@@ -1,6 +1,6 @@
 # Local validation and check targets.
 .PHONY: test test-one test-targeted pycheck type-check pyright-check ruff-check ruff-format-check scripts-check lint-docs backend-gate backend-gate-start
-.PHONY: path-leak-check path-leak-audit-local risk-scan operator-alias-check precommit-install precommit-run act-list act-ci
+.PHONY: path-leak-check path-leak-audit-local local-runtime-config-check risk-scan operator-alias-check precommit-install precommit-run act-list act-ci
 .PHONY: mermaid-render d3-render public-diagrams-render transcript-fix transcript-check end-docs-check doctor-env repo-search repo-search-full
 
 test:
@@ -101,6 +101,9 @@ path-leak-check:
 
 path-leak-audit-local:
 	$(PYTHON) -m tools.path_leak_check --scope local-config
+	$(MAKE) --no-print-directory local-runtime-config-check
+
+local-runtime-config-check:
 	$(PYTHON) -m tools.check_local_runtime_config
 
 risk-scan:
