@@ -1096,6 +1096,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "PORTFOLIO_MOCKUP_SCRIPT ?= ./tools/run_portfolio_mockups.sh", text
         )
+        self.assertIn("PORTFOLIO_MOCKUP_LAUNCHER_PYTHON ?= $(PYTHON)", text)
+        self.assertIn(
+            'PORTFOLIO_MOCKUP_LAUNCHER_PYTHON="$(PORTFOLIO_MOCKUP_LAUNCHER_PYTHON)"',
+            text,
+        )
         self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" start', text)
         self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" status', text)
         self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" stop', text)
