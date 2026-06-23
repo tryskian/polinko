@@ -19,6 +19,8 @@ match_pattern=${CAFFEINATE_MATCH_PATTERN:-^/usr/bin/caffeinate -d -i -m( |$)}
 uname_bin=${UNAME_BIN:-uname}
 pgrep_bin=${PGREP_BIN:-pgrep}
 pmset_bin=${PMSET_BIN:-/usr/bin/pmset}
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+detached_launcher="$script_dir/launch_detached_process.py"
 
 is_darwin() {
 	[ "$("$uname_bin" -s)" = "Darwin" ]
@@ -44,34 +46,10 @@ find_matching_pids() {
 }
 
 launch_detached_caffeinate() {
-	"$launcher_python" - "$pid_file" "$log_file" "$caffeinate_cmd" <<'PY'
-import shlex
-import subprocess
-import sys
-
-pid_file, log_file, command = sys.argv[1:4]
-
-try:
-    args = shlex.split(command)
-except ValueError as exc:
-    raise SystemExit(f"Invalid caffeinate command: {exc}") from exc
-
-if not args:
-    raise SystemExit("Invalid caffeinate command: empty command")
-
-with open(log_file, "ab", buffering=0) as log:
-    process = subprocess.Popen(
-        args,
-        stdin=subprocess.DEVNULL,
-        stdout=log,
-        stderr=subprocess.STDOUT,
-        start_new_session=True,
-        close_fds=True,
-    )
-
-with open(pid_file, "w", encoding="utf-8") as handle:
-    handle.write(str(process.pid))
-PY
+	"$launcher_python" "$detached_launcher" \
+		--pid-file "$pid_file" \
+		--log-file "$log_file" \
+		--command-string "$caffeinate_cmd"
 }
 
 start_caffeinate() {

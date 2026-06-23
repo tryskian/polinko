@@ -22,37 +22,17 @@ mockup_host=${PORTFOLIO_MOCKUP_HOST:-127.0.0.1}
 mockup_url=${PORTFOLIO_MOCKUP_URL:-http://127.0.0.1:${mockup_port}/landing-mockups.html}
 pid_file=${PORTFOLIO_MOCKUP_PID_FILE:-/tmp/polinko-portfolio-mockups.pid}
 log_file=${PORTFOLIO_MOCKUP_LOG:-/tmp/polinko-portfolio-mockups.log}
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+detached_launcher="$script_dir/launch_detached_process.py"
 
 launch_detached_mockup_server() {
-	"$launcher_python" - "$pid_file" "$log_file" "$python_bin" "$mockup_port" "$mockup_host" "$mockup_dir" <<'PY'
-import subprocess
-import sys
-
-pid_file, log_file, python_bin, mockup_port, mockup_host, mockup_dir = sys.argv[1:7]
-args = [
-    python_bin,
-    "-m",
-    "http.server",
-    mockup_port,
-    "--bind",
-    mockup_host,
-    "--directory",
-    mockup_dir,
-]
-
-with open(log_file, "ab", buffering=0) as log:
-    process = subprocess.Popen(
-        args,
-        stdin=subprocess.DEVNULL,
-        stdout=log,
-        stderr=subprocess.STDOUT,
-        start_new_session=True,
-        close_fds=True,
-    )
-
-with open(pid_file, "w", encoding="utf-8") as handle:
-    handle.write(str(process.pid))
-PY
+	"$launcher_python" "$detached_launcher" \
+		--pid-file "$pid_file" \
+		--log-file "$log_file" \
+		-- \
+		"$python_bin" -m http.server "$mockup_port" \
+		--bind "$mockup_host" \
+		--directory "$mockup_dir"
 }
 
 pid_is_running() {

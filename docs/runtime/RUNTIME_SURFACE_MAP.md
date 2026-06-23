@@ -113,7 +113,9 @@ flowchart TD
 - Core background runners use one ownership pattern for PID files,
   stale-process handling, logs, cleanup commands, and detached launch
   behaviour across `caffeinate`, `server-daemon`, `eval-sidecar`, and
-  `portfolio-mockups`.
+  `portfolio-mockups`. Detached child-process launch is centralized through
+  `tools/launch_detached_process.py`; runner scripts retain ownership of
+  their domain-specific liveness and adoption logic.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery.

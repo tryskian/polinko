@@ -16,6 +16,7 @@ OPENAI_ACCOUNT_SCRIPT = REPO_ROOT / "tools" / "openai_account_summary.py"
 SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "run_server_daemon.sh"
 PORTFOLIO_MOCKUP_SCRIPT = REPO_ROOT / "tools" / "run_portfolio_mockups.sh"
 LOCAL_URL_LAUNCHER_SCRIPT = REPO_ROOT / "tools" / "open_local_url.sh"
+DETACHED_PROCESS_LAUNCHER_SCRIPT = REPO_ROOT / "tools" / "launch_detached_process.py"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
 OCR_WORKFLOW_COMMON_SCRIPT = REPO_ROOT / "tools" / "ocr_workflow_common.sh"
@@ -1095,11 +1096,17 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(OPENAI_ACCOUNT_SCRIPT.is_file())
         self.assertTrue(SERVER_DAEMON_SCRIPT.is_file())
         self.assertTrue(PORTFOLIO_MOCKUP_SCRIPT.is_file())
+        self.assertTrue(DETACHED_PROCESS_LAUNCHER_SCRIPT.is_file())
         self.assertTrue(os.access(CAFFEINATE_SCRIPT, os.X_OK))
         self.assertTrue(os.access(SERVER_DAEMON_SCRIPT, os.X_OK))
         self.assertTrue(os.access(PORTFOLIO_MOCKUP_SCRIPT, os.X_OK))
+        detached_launcher_text = DETACHED_PROCESS_LAUNCHER_SCRIPT.read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("start_new_session=True", detached_launcher_text)
+        self.assertIn("pid_file.write_text", detached_launcher_text)
         caffeinate_script_text = CAFFEINATE_SCRIPT.read_text(encoding="utf-8")
-        self.assertIn("start_new_session=True", caffeinate_script_text)
+        self.assertIn("launch_detached_process.py", caffeinate_script_text)
         self.assertNotIn("nohup $caffeinate_cmd", caffeinate_script_text)
         self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" summary', text)
         self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" costs', text)
@@ -1125,12 +1132,12 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" stop', text)
         self.assertNotIn('rm -f "$(SERVER_PID_FILE)"', text)
         server_daemon_script_text = SERVER_DAEMON_SCRIPT.read_text(encoding="utf-8")
-        self.assertIn("start_new_session=True", server_daemon_script_text)
+        self.assertIn("launch_detached_process.py", server_daemon_script_text)
         self.assertNotIn("nohup", server_daemon_script_text)
         portfolio_mockup_script_text = PORTFOLIO_MOCKUP_SCRIPT.read_text(
             encoding="utf-8"
         )
-        self.assertIn("start_new_session=True", portfolio_mockup_script_text)
+        self.assertIn("launch_detached_process.py", portfolio_mockup_script_text)
         self.assertNotIn("nohup", portfolio_mockup_script_text)
         self.assertNotIn("nohup $(CAFFEINATE_CMD)", text)
         self.assertNotIn('pgrep -f "^/usr/bin/caffeinate -d -i -m', text)
@@ -1189,7 +1196,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('bash "$(EVAL_SIDECAR_START_SCRIPT)" status', text)
         self.assertIn('bash "$(EVAL_SIDECAR_START_SCRIPT)" stop', text)
         sidecar_script_text = EVAL_SIDECAR_START_SCRIPT.read_text(encoding="utf-8")
-        self.assertIn("start_new_session=True", sidecar_script_text)
+        self.assertIn("launch_detached_process.py", sidecar_script_text)
         self.assertNotIn("nohup", sidecar_script_text)
         for script in (
             OCR_EVAL_RUNNER_SCRIPT,

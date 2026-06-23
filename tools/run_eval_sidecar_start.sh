@@ -22,43 +22,20 @@ runs_dir=${EVAL_SIDECAR_RUNS_DIR:-.local/eval_runs}
 pid_file=${EVAL_SIDECAR_PID_FILE:-/tmp/polinko-eval-sidecar.pid}
 current_file=${EVAL_SIDECAR_CURRENT_FILE:-$runs_dir/eval_sidecar_current.txt}
 log_path=${EVAL_SIDECAR_LOG:-/tmp/polinko-eval-sidecar.log}
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+detached_launcher="$script_dir/launch_detached_process.py"
 
 launch_detached_sidecar() {
-	"$launcher_python" - "$pid_file" "$log_path" "$python_bin" "$target" "$min_seconds" "$runs_dir" "$current_file" <<'PY'
-import subprocess
-import sys
-
-pid_file, log_path, python_bin, target, min_seconds, runs_dir, current_file = sys.argv[1:8]
-args = [
-    python_bin,
-    "-m",
-    "tools.eval_sidecar",
-    "run",
-    "--target",
-    target,
-    "--min-seconds",
-    min_seconds,
-    "--runs-dir",
-    runs_dir,
-    "--pid-file",
-    pid_file,
-    "--current-file",
-    current_file,
-]
-
-with open(log_path, "ab", buffering=0) as log:
-    process = subprocess.Popen(
-        args,
-        stdin=subprocess.DEVNULL,
-        stdout=log,
-        stderr=subprocess.STDOUT,
-        start_new_session=True,
-        close_fds=True,
-    )
-
-with open(pid_file, "w", encoding="utf-8") as handle:
-    handle.write(str(process.pid))
-PY
+	"$launcher_python" "$detached_launcher" \
+		--pid-file "$pid_file" \
+		--log-file "$log_path" \
+		-- \
+		"$python_bin" -m tools.eval_sidecar run \
+		--target "$target" \
+		--min-seconds "$min_seconds" \
+		--runs-dir "$runs_dir" \
+		--pid-file "$pid_file" \
+		--current-file "$current_file"
 }
 
 pid_is_running() {
