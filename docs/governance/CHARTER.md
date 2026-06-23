@@ -67,6 +67,11 @@ evidence-preserving method work.
   - append-only durable decisions
 - `docs/governance/STATE.md`
   - tracked current truth
+  - updated before session closeout when the repo's current truth changes
+- local `docs/peanut/governance/SESSION_HANDOFF.md`
+  - active kernel and next-session carryover
+  - updated before session closeout when present
+  - names the current short commit so same-date stale handoffs fail closeout
 - `docs/runtime/RUNBOOK.md`
   - operator procedure
 - `docs/runtime/ARCHITECTURE.md`
