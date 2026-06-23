@@ -537,6 +537,13 @@ Last updated: 2026-06-22
   - `docs/runtime/LOCAL_TOOLING.md` records the repo-local pattern for tools
     that materialize ignored local input, validate it, preview application, and
     execute only through a separate explicit follow-up gate
+  - `make repo-search` is the routine active-surface search helper; it keeps
+    maintenance searches focused on implementation, runtime/research docs,
+    tests, and operator scripts without flooding the operator with transcript,
+    archive, generated-output, or long governance-log lanes
+  - `make repo-search-full` is the explicit source/evidence search helper for
+    cases where private transcripts, frozen eval snapshots, or long governance
+    history are the active source
   - required knobs include an ignored local default path, explicit path
     override, no-overwrite default, `FORCE=1`, deterministic
     `schema_version`, source fingerprints, validation command, and
@@ -552,6 +559,9 @@ Last updated: 2026-06-22
   - `PACKAGE_BOUNDARY` holds the Python package-boundary contract
   - `make package-install-check` verifies the editable-install rail
   - local `SESSION_HANDOFF` holds the active slice
+  - `make end-docs-check` verifies `STATE` and local `SESSION_HANDOFF` date
+    freshness; when local `SESSION_HANDOFF` exists, it must also mention the
+    current commit so a same-date but stale handoff cannot pass closeout
 
 ## Active Priorities
 

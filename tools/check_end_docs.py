@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -20,6 +21,11 @@ def parse_args() -> argparse.Namespace:
         default=dt.date.today().isoformat(),
         help="Expected ISO date for Last updated markers.",
     )
+    parser.add_argument(
+        "--expected-commit",
+        default=None,
+        help="Expected short commit hash for local SESSION_HANDOFF freshness.",
+    )
     return parser.parse_args()
 
 
@@ -32,8 +38,24 @@ def find_last_updated(path: Path) -> str | None:
     return match.group(1)
 
 
+def current_git_commit() -> str | None:
+    result = subprocess.run(
+        ["git", "rev-parse", "--short", "HEAD"],
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip() or None
+
+
+def handoff_mentions_commit(path: Path, commit: str) -> bool:
+    return commit in path.read_text(encoding="utf-8")
+
+
 def main() -> int:
     args = parse_args()
+    expected_commit = args.expected_commit or current_git_commit()
     failures: list[str] = []
     checked_docs: list[Path] = []
 
@@ -56,6 +78,13 @@ def main() -> int:
         if actual != args.date:
             failures.append(
                 f"{path}: Last updated is {actual or 'missing'}, expected {args.date}"
+            )
+            continue
+        if expected_commit is not None and not handoff_mentions_commit(
+            path, expected_commit
+        ):
+            failures.append(
+                f"{path}: missing current commit {expected_commit} in active handoff"
             )
 
     if failures:

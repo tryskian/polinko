@@ -17,9 +17,14 @@ def _write_doc(root: Path, relative_path: str, content: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def _run_check(cwd: Path, date: str = TODAY) -> subprocess.CompletedProcess[str]:
+def _run_check(
+    cwd: Path, date: str = TODAY, expected_commit: str | None = None
+) -> subprocess.CompletedProcess[str]:
+    command = [sys.executable, str(SCRIPT), "--date", date]
+    if expected_commit is not None:
+        command.extend(["--expected-commit", expected_commit])
     return subprocess.run(
-        [sys.executable, str(SCRIPT), "--date", date],
+        command,
         cwd=cwd,
         text=True,
         stdout=subprocess.PIPE,
@@ -46,6 +51,7 @@ class CheckEndDocsTests(unittest.TestCase):
         )
 
     def test_passes_with_optional_local_handoff_updated_today(self) -> None:
+        commit = "abc1234"
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _write_doc(
@@ -56,15 +62,38 @@ class CheckEndDocsTests(unittest.TestCase):
             _write_doc(
                 root,
                 "docs/peanut/governance/SESSION_HANDOFF.md",
-                f"# Session Handoff\n\nLast updated: {TODAY}\n",
+                f"# Session Handoff\n\nLast updated: {TODAY}\n\n{commit}\n",
             )
 
-            result = _run_check(root)
+            result = _run_check(root, expected_commit=commit)
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(
             f"end-docs-check: PASS (2 docs updated for {TODAY})",
             result.stdout,
+        )
+
+    def test_fails_when_optional_local_handoff_omits_current_commit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_doc(
+                root,
+                "docs/governance/STATE.md",
+                f"# State\n\nLast updated: {TODAY}\n",
+            )
+            _write_doc(
+                root,
+                "docs/peanut/governance/SESSION_HANDOFF.md",
+                f"# Session Handoff\n\nLast updated: {TODAY}\n\nold1234\n",
+            )
+
+            result = _run_check(root, expected_commit="new5678")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "docs/peanut/governance/SESSION_HANDOFF.md: missing current commit "
+            "new5678 in active handoff",
+            result.stderr,
         )
 
     def test_fails_when_required_state_is_missing(self) -> None:

@@ -2467,3 +2467,20 @@ or branch history instead.
   generated output, or long decision logs and obscure the active task. Named
   search scopes keep maintenance kernels readable without hiding private or
   evidence lanes when the work intentionally needs them.
+
+## D-158: Require handoff to mention the current commit
+
+- Date: `2026-06-22`
+- Category: `workflow_environment`
+- Tags: `handoff`, `closeout`, `current_truth`, `docs`, `hygiene`
+- Human-led: The human lead identified that closeout freshness is not enough
+  when local `SESSION_HANDOFF` still carries an older active slice.
+- Engineer implementation: Extend `tools.check_end_docs` so optional local
+  `docs/peanut/governance/SESSION_HANDOFF.md` must include the current short
+  commit hash when it is present, and cover that contract in unit tests.
+- Decision: Treat local `SESSION_HANDOFF` as a content freshness surface, not
+  only a date freshness surface. `make end-docs-check` now verifies that the
+  handoff points at the current repo commit before closeout can pass.
+- Why: `STATE` and local `SESSION_HANDOFF` are the repo's current-truth and
+  active-slice surfaces. A same-date handoff that still points to old kernels
+  can pass a date-only gate while misleading the next session.
