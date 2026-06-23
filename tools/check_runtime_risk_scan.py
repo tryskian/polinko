@@ -21,6 +21,7 @@ REQUIRED_FILES = (
     Path("tools/end_of_day_routine.sh"),
     Path("tools/check_shell_scripts.py"),
     Path("tools/path_leak_check.py"),
+    Path("tools/check_local_runtime_config.py"),
     Path("tools/check_runtime_risk_scan.py"),
     Path("tools/check_operator_aliases.py"),
     Path("tools/manage_caffeinate.sh"),
@@ -145,6 +146,7 @@ RUNTIME_MAP_SURFACES = (
         "hidden local config",
         (
             "make path-leak-audit-local",
+            "tools.check_local_runtime_config",
             "VS Code",
             "devcontainer",
             "pre-commit",

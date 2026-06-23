@@ -130,7 +130,8 @@ Last updated: 2026-06-22
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper
   - `make path-leak-audit-local` is an actionable local runtime-config audit:
     it checks hidden/editor/container config surfaces without failing on
-    ignored manual-eval evidence bundles that intentionally retain source paths
+    ignored manual-eval evidence bundles that intentionally retain source paths,
+    and it validates VS Code task/config shape
   - `make privacy-local-on` installs only machine-local exclude patterns;
     tracked docs stay visible, while `make privacy-local-off` can clear any
     legacy docs skip-worktree state left by the older helper behaviour

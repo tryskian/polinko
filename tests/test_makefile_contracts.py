@@ -731,6 +731,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(PYTHON) -m tools.check_operator_aliases", text)
         self.assertRegex(text, r"(?m)^path-leak-audit-local:$")
         self.assertIn("$(PYTHON) -m tools.path_leak_check --scope local-config", text)
+        self.assertIn("$(PYTHON) -m tools.check_local_runtime_config", text)
         self.assertIn(
             'run_step "scripts-check" make --no-print-directory scripts-check',
             closeout_text,

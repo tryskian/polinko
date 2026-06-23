@@ -104,7 +104,9 @@ flowchart TD
   `make startup-contracts-check` keeps startup/runtime doc contracts in the
   local docs gate so wording drift fails before a PR-only CI run.
   `make path-leak-audit-local` is the focused companion for ignored local
-  runtime config surfaces such as VS Code, devcontainer, and pre-commit files.
+  runtime config surfaces such as VS Code, devcontainer, and pre-commit files;
+  it checks local path leaks and VS Code task/config shape through
+  `tools.check_local_runtime_config`.
   Devcontainer setup resolves the repo root before installing dependencies.
   `make privacy-local-on` installs only machine-local exclude patterns; tracked
   docs remain visible.
