@@ -14,12 +14,13 @@ class StartupContractTests(unittest.TestCase):
         script = _read("tools/start_of_day_routine.sh")
 
         self.assertIn("Morning startup is complete.", script)
-        self.assertIn("Reply in the morning ritual:", script)
+        self.assertIn("Reply in the morning ritual before implementation:", script)
         self.assertIn("Context: repo root printed above", script)
-        self.assertIn("Kernel candidates: likely lanes", script)
+        self.assertIn("Kernel map: likely lanes", script)
         self.assertIn("one recommended first kernel", script)
+        self.assertIn("chat-first alignment pass", script)
+        self.assertIn("Wait for human alignment before implementation", script)
         self.assertIn("stop before broadening", script)
-        self.assertIn("pause for alignment with the human lead", script)
         self.assertNotIn("/abs/path/to/polinko", script)
         self.assertNotIn("In 5 bullets", script)
         self.assertNotIn("Then execute the Next Slice", script)
@@ -28,13 +29,17 @@ class StartupContractTests(unittest.TestCase):
         start_reference = _read("docs/runtime/START_END_REFERENCE.md")
         runbook = _read("docs/runtime/RUNBOOK.md")
 
-        self.assertIn("reply in the morning ritual", start_reference)
-        self.assertIn("kernel candidates", start_reference)
-        self.assertIn("pause for alignment with the human lead", start_reference)
+        self.assertIn(
+            "reply in the morning ritual before implementation", start_reference
+        )
+        self.assertIn("kernel map", start_reference)
+        self.assertIn("chat-first alignment pass", start_reference)
+        self.assertIn("wait for human alignment before implementation", start_reference)
         self.assertIn("docs/governance/DECISIONS.md", runbook)
         self.assertIn("Reply in the morning ritual before implementation", runbook)
-        self.assertIn("kernel candidates", runbook)
-        self.assertIn("Pause for alignment with the human lead", runbook)
+        self.assertIn("kernel map", runbook)
+        self.assertIn("chat-first alignment pass", runbook)
+        self.assertIn("Wait for human alignment before implementation", runbook)
         self.assertNotIn("execute the `Next Slice`", start_reference)
 
     def test_docs_index_links_to_current_ritual_headings(self) -> None:

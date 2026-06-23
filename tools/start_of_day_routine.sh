@@ -28,15 +28,15 @@ Morning startup is complete.
 
 Read docs/governance/CHARTER.md, docs/governance/STATE.md, docs/governance/DECISIONS.md, docs/runtime/RUNBOOK.md, docs/runtime/ARCHITECTURE.md, and local docs/peanut/governance/SESSION_HANDOFF.md if present.
 
-Reply in the morning ritual:
+Reply in the morning ritual before implementation:
 
 - Context: repo root printed above, host vs devcontainer mode, active branch, clean main or feature branch, and runtime health.
-- Kernel candidates: likely lanes from current docs/state, with one recommended first kernel.
+- Kernel map: likely lanes from current docs/state, with one recommended first kernel.
 - Startup note: one small issue or risk only if something needs attention.
 
 Apply no-guessing controls: prefer repo-scoped edits and do not modify user shell profile file or global VS Code settings unless explicitly approved in-chat.
 
-After alignment, run one active kernel at a time and stop before broadening.
+This reply is the chat-first alignment pass. Wait for human alignment before implementation.
 
-Then pause for alignment with the human lead before implementation.
+After alignment, run one active kernel at a time and stop before broadening.
 EOF

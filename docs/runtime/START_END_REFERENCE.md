@@ -29,15 +29,16 @@ Sequence:
    - the prompt tells the agent to:
      - say morning startup is complete
      - read `CHARTER`, `STATE`, `DECISIONS`, `RUNBOOK`, `ARCHITECTURE`, and local `SESSION_HANDOFF` if present
-     - reply in the morning ritual
+     - reply in the morning ritual before implementation
      - include context: printed repo root, host vs devcontainer mode, active branch, clean `main` or feature branch, and runtime health
-     - include kernel candidates: likely lanes from current docs/state, with
+     - include a kernel map: likely lanes from current docs/state, with
        one recommended first kernel
      - include one startup note only if something needs attention
      - apply the no-guessing controls
+     - treat the reply as the chat-first alignment pass
+     - wait for human alignment before implementation
      - after alignment, run one active kernel at a time and stop before
        broadening
-     - pause for alignment with the human lead before implementation
 
 Source of truth:
 
