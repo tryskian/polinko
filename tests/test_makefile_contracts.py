@@ -374,6 +374,21 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("portfolio-mockups", targets)
         self.assertIn("portfolio-mockups-status", targets)
         self.assertIn("pwcli", targets)
+        self.assertIn("repo-search", targets)
+        self.assertIn("repo-search-full", targets)
+
+    def test_repo_search_targets_keep_routine_and_full_modes_explicit(self) -> None:
+        text = _makefile_contract_text()
+
+        self.assertRegex(text, r"(?m)^repo-search:$")
+        self.assertRegex(text, r"(?m)^repo-search-full:$")
+        self.assertIn('Usage: make repo-search Q="pattern"', text)
+        self.assertIn('Usage: make repo-search-full Q="pattern"', text)
+        self.assertIn('$(PYTHON) -m tools.repo_search --query "$(Q)"', text)
+        self.assertIn(
+            '$(PYTHON) -m tools.repo_search --mode full --query "$(Q)"',
+            text,
+        )
 
     def test_manual_eval_db_targets_are_terminal_native_and_backup_first(
         self,
