@@ -24,6 +24,25 @@ tracked and ignored local evidence, summarize freshness, and print JSON for
 operator review, but they must not execute evals, run OCR, launch browsers, or
 mutate local data.
 
+## Repo Search
+
+Routine repo search uses an explicit operator helper:
+
+- `make repo-search Q="pattern"`
+  - searches the active implementation, runtime docs, research docs, tests, and
+    operator scripts
+  - avoids local evidence, transcript, archive, generated-output, and long
+    governance-log lanes by default
+  - treats no matches as an informational result, not a tooling failure
+- `make repo-search-full Q="pattern"`
+  - intentionally searches the full source and evidence surface, including
+    private and frozen-eval lanes, while still skipping dependency, cache,
+    output, local runtime, and archive directories
+
+Use the routine target during maintenance kernels. Use the full target when the
+task explicitly activates `docs/peanut`, frozen eval snapshots, or long
+governance history.
+
 ## Required Knobs
 
 Every tool that materializes local operator input must expose:

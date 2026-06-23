@@ -1,7 +1,7 @@
 # Local validation and check targets.
 .PHONY: test test-one test-targeted pycheck type-check pyright-check ruff-check ruff-format-check scripts-check lint-docs backend-gate backend-gate-start
 .PHONY: path-leak-check path-leak-audit-local risk-scan operator-alias-check precommit-install precommit-run act-list act-ci
-.PHONY: mermaid-render d3-render public-diagrams-render transcript-fix transcript-check end-docs-check doctor-env
+.PHONY: mermaid-render d3-render public-diagrams-render transcript-fix transcript-check end-docs-check doctor-env repo-search repo-search-full
 
 test:
 	$(PYTHON) -m unittest discover -s tests -p "test_*.py"
@@ -79,6 +79,22 @@ doctor-env:
 	else \
 		"$$PYTHON_PATH" -m tools.doctor_env; \
 	fi
+
+repo-search:
+	@set -eu; \
+	if [ -z "$(Q)" ]; then \
+		echo 'Usage: make repo-search Q="pattern"'; \
+		exit 2; \
+	fi; \
+	$(PYTHON) -m tools.repo_search --query "$(Q)"
+
+repo-search-full:
+	@set -eu; \
+	if [ -z "$(Q)" ]; then \
+		echo 'Usage: make repo-search-full Q="pattern"'; \
+		exit 2; \
+	fi; \
+	$(PYTHON) -m tools.repo_search --mode full --query "$(Q)"
 
 path-leak-check:
 	$(PYTHON) -m tools.path_leak_check --scope tracked

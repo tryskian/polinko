@@ -2447,3 +2447,23 @@ or branch history instead.
   in tracked CI. A focused local audit gives the repo a repeatable way to
   detect startup-task drift without promoting machine-local VS Code settings
   into tracked source.
+
+## D-157: Add explicit repo-search scopes
+
+- Date: `2026-06-22`
+- Category: `workflow_environment`
+- Tags: `search`, `operator_tooling`, `docs_peanut`, `hygiene`
+- Human-led: The human lead asked for same-surface observations to be resolved
+  before a kernel closes, while keeping one active task at a time.
+- Engineer implementation: Add `make repo-search` for routine maintenance
+  search and `make repo-search-full` for intentional full-surface search,
+  backed by `tools.repo_search`.
+- Decision: Treat repo search as an explicit operator surface with two named
+  scopes. Routine search stays focused on active implementation, runtime,
+  research, tests, and scripts. Full search is available when private
+  transcripts, frozen eval snapshots, or long governance history are the active
+  source.
+- Why: Broad ad hoc searches can drown the operator in transcript archives,
+  generated output, or long decision logs and obscure the active task. Named
+  search scopes keep maintenance kernels readable without hiding private or
+  evidence lanes when the work intentionally needs them.
