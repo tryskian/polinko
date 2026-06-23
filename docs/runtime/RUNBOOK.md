@@ -464,6 +464,8 @@ Use this doc for operator procedure.
     `make end-stop`, and final clean-main Git check
 - `make end-docs-check`
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
+  - when local `SESSION_HANDOFF` exists, verifies it names the current short
+    commit so same-date stale handoffs fail closeout
 - `make security-checks`
   - local Python, root Node, and portfolio Node dependency audits
 - `make refresh-deps`
