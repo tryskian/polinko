@@ -13,6 +13,7 @@ AUTOMATION_ENTRYPOINTS = (
     "start",
     "end",
     "end-preflight",
+    "end-stop",
     "pr-preflight",
     "ci",
     "ci-docs",

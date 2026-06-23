@@ -2684,3 +2684,20 @@ or branch history instead.
 - Why: A placeholder path in the runbook made stale startup guidance look active.
   The runtime contract should stay portable while still giving the operator a
   concrete repo root during `make start`.
+
+## D-170: Guard closeout helper against parked OCR aliases
+
+- Date: `2026-06-23`
+- Category: `runtime_engineering`
+- Tags: `operator_aliases`, `ocr`, `closeout`, `hygiene`
+- Human-led: The human lead asked for hidden and high-traffic runtime guards to
+  stay maintained so deprecated OCR/eval paths cannot drift back into normal
+  operator work.
+- Engineer implementation: Add `end-stop` to the operator-alias protected
+  entrypoints and add a focused fixture proving parked OCR aliases fail when
+  attached to the closeout helper.
+- Decision: `make operator-alias-check` protects the active closeout helper, not
+  only top-level automation and CI targets.
+- Why: `make end` delegates background cleanup through `make end-stop`. If that
+  helper can accumulate parked OCR eval aliases, closeout can drift even while
+  the top-level `end` target still looks clean.
