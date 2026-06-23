@@ -724,6 +724,9 @@ class MakefileContractTests(unittest.TestCase):
         apply_body = apply_body_match.group("body")
         self.assertIn("write_exclude_block", apply_body)
         self.assertNotIn("--skip-worktree", apply_body)
+        self.assertIn("docs/peanut/governance/SESSION_HANDOFF.md", text)
+        self.assertNotIn("docs/INSTANCE_HANDOFF.md", text)
+        self.assertNotIn("docs/POL1_COMMS.md", text)
         self.assertIn("install local excludes for machine-local docs", text)
 
     def test_shell_script_contract_check_is_named_and_closeout_visible(self) -> None:

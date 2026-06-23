@@ -13,8 +13,7 @@ MARKER_BEGIN="# polinko-local-privacy begin"
 MARKER_END="# polinko-local-privacy end"
 
 LOCAL_EXCLUDE_PATTERNS=(
-  "docs/INSTANCE_HANDOFF.md"
-  "docs/POL1_COMMS.md"
+  "docs/peanut/governance/SESSION_HANDOFF.md"
 )
 
 list_tracked_docs() {
