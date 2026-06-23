@@ -2520,3 +2520,22 @@ or branch history instead.
 - Why: Duplicated `open` / `xdg-open` snippets make browser-launch behavior
   easy to drift across docs, viz, and portfolio targets. A single helper keeps
   the no-browser default and explicit-launch escape hatch auditable.
+
+## D-161: Centralize detached runner process launch
+
+- Date: `2026-06-23`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `pid_files`, `logs`, `scripts`, `hygiene`
+- Human-led: The human lead asked for high-traffic scripts and hidden runtime
+  surfaces to be maintained as first-class engineering work.
+- Engineer implementation: Add `tools/launch_detached_process.py` for
+  detached child-process launch, log redirection, and PID-file writes; route
+  `server-daemon`, `eval-sidecar`, `portfolio-mockups`, and `caffeinate`
+  launch paths through it.
+- Decision: Background runner scripts share one detached-launch helper while
+  keeping domain-specific liveness, adoption, status, and stop logic in their
+  runner scripts.
+- Why: Repeated Python heredocs made launch behavior harder to audit and
+  maintain across the runner family. A single launcher keeps the shared
+  process mechanics consistent without flattening each runner's lifecycle
+  contract.

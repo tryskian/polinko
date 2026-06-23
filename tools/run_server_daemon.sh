@@ -21,6 +21,8 @@ dev_host=${DEV_HOST:-127.0.0.1}
 dev_backend_port=${DEV_BACKEND_PORT:-8000}
 server_pid_file=${SERVER_PID_FILE:-/tmp/polinko-server.pid}
 server_log=${SERVER_LOG:-/tmp/polinko-server.log}
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+detached_launcher="$script_dir/launch_detached_process.py"
 
 resolve_expected_python() {
 	"$python_bin" -c 'import os,sys; print(os.path.realpath(sys.executable))' 2>/dev/null || true
@@ -68,36 +70,14 @@ polinko_server_pid_on_port() {
 }
 
 launch_detached_server() {
-	"$launcher_python" - "$server_pid_file" "$server_log" "$python_bin" "$asgi_app" "$dev_host" "$dev_backend_port" <<'PY'
-import subprocess
-import sys
-
-pid_file, log_file, python_bin, asgi_app, dev_host, dev_backend_port = sys.argv[1:7]
-args = [
-    python_bin,
-    "-m",
-    "uvicorn",
-    asgi_app,
-    "--host",
-    dev_host,
-    "--port",
-    dev_backend_port,
-    "--reload",
-]
-
-with open(log_file, "ab", buffering=0) as log:
-    process = subprocess.Popen(
-        args,
-        stdin=subprocess.DEVNULL,
-        stdout=log,
-        stderr=subprocess.STDOUT,
-        start_new_session=True,
-        close_fds=True,
-    )
-
-with open(pid_file, "w", encoding="utf-8") as handle:
-    handle.write(str(process.pid))
-PY
+	"$launcher_python" "$detached_launcher" \
+		--pid-file "$server_pid_file" \
+		--log-file "$server_log" \
+		-- \
+		"$python_bin" -m uvicorn "$asgi_app" \
+		--host "$dev_host" \
+		--port "$dev_backend_port" \
+		--reload
 }
 
 start_server() {
