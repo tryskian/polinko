@@ -2599,3 +2599,21 @@ or branch history instead.
   the high-traffic validation path. Running it through `make ci-docs` keeps the
   startup ritual protected without adding browser launches or global editor
   settings changes.
+
+## D-165: Align local privacy guard with current handoff
+
+- Date: `2026-06-23`
+- Category: `workflow_environment`
+- Tags: `privacy`, `local_config`, `docs`, `handoff`, `hygiene`
+- Human-led: The human lead asked for hidden and low-frequency runtime helper
+  surfaces to stay maintained so stale local-state scripts do not interrupt
+  normal operator work.
+- Engineer implementation: Point `tools/local_privacy_guard.sh` at the current
+  local handoff surface, `docs/peanut/governance/SESSION_HANDOFF.md`, and add a
+  contract test that keeps deprecated local doc paths out of the helper.
+- Decision: The local privacy helper should name the active local handoff
+  surface rather than legacy local doc paths, while continuing to avoid
+  `skip-worktree` for tracked docs.
+- Why: The current-truth docs identify `docs/peanut/governance/SESSION_HANDOFF.md`
+  as the local carryover surface. Keeping the helper aligned prevents stale
+  excludes from looking like active workflow state.
