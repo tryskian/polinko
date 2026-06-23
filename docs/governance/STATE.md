@@ -488,7 +488,8 @@ Last updated: 2026-06-23
     tracked `tools/*.py` and `tools/*.sh` helpers have direct test visibility
   - local runtime config coverage is explicit through
     `make local-runtime-config-check`, which validates VS Code task/config
-    shape and runs through `make ci-docs`
+    shape, rejects retired local doc references, and runs through
+    `make ci-docs`
   - operator alias coverage is explicit through `make operator-alias-check`,
     which keeps `manual-evals-*` targets paired with their `manualdb-*`
     compatibility aliases and keeps parked OCR eval aliases out of automatic
