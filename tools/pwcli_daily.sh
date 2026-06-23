@@ -6,7 +6,6 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$script_dir/repo_root.sh"
 
 polinko_cd_repo_root
-repo_root="$POLINKO_REPO_ROOT"
 
 base_dir="${PLAYWRIGHT_SNAPSHOT_BASE_DIR:-docs/peanut/assets/screenshots/playwright}"
 day="${PLAYWRIGHT_SNAPSHOT_DAY:-$(date +%d-%m-%y)}"
