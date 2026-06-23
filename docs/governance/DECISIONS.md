@@ -2651,3 +2651,18 @@ or branch history instead.
 - Why: The retired VS Code folder-open bootstrap path is already blocked in
   local config. Leaving its name in the active map makes stale workflow
   vocabulary look current.
+
+## D-168: Guard active runtime map against stale tokens
+
+- Date: `2026-06-23`
+- Category: `runtime_engineering`
+- Tags: `risk_scan`, `runtime_map`, `docs`, `hygiene`
+- Human-led: The human lead asked for stale and hidden workflow drift to be
+  caught by normal maintenance checks instead of rediscovered manually.
+- Engineer implementation: Extend `tools.check_runtime_risk_scan` with
+  forbidden runtime-map tokens and test coverage for retired startup wording.
+- Decision: Runtime-map stale vocabulary belongs in the risk scan when it can
+  make retired workflow state look active.
+- Why: The runtime map is a high-traffic orientation surface. Guarding retired
+  wording there keeps future cleanup kernels from relying on ad hoc text
+  searches to catch the same drift.
