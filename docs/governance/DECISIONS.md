@@ -2484,3 +2484,22 @@ or branch history instead.
 - Why: `STATE` and local `SESSION_HANDOFF` are the repo's current-truth and
   active-slice surfaces. A same-date handoff that still points to old kernels
   can pass a date-only gate while misleading the next session.
+
+## D-159: Treat startup as a chat-first alignment pass
+
+- Date: `2026-06-23`
+- Category: `collaboration_method`
+- Tags: `startup`, `alignment`, `kernel_flow`, `human_led`, `hygiene`
+- Human-led: The human lead clarified that the morning ritual should preserve a
+  shared chat-first map before implementation, not only a strict checklist.
+- Engineer implementation: Update the `make start` rehydrate prompt, runtime
+  procedure docs, and startup contract tests so startup reports context, a
+  kernel map, and any attention note, then waits for human alignment before
+  implementation.
+- Decision: Treat the morning startup reply as the chat-first alignment pass.
+  Implementation begins only after the human lead aligns on the recommended
+  first kernel.
+- Why: Startup should rehydrate and orient the session without becoming an
+  automatic implementation trigger. Encoding the ritual in script, docs, and
+  tests keeps one-kernel work traceable and prevents drift back into
+  checklist-only startup.

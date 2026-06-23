@@ -58,11 +58,12 @@ Use this doc for operator procedure.
 5. If on `main`, create or switch to a feature branch before edits.
 6. Reply in the morning ritual before implementation:
    - context: printed repo root, host vs devcontainer mode, active branch, clean `main` or feature branch, and runtime health
-   - kernel candidates: likely lanes from current docs/state, with one
+   - kernel map: likely lanes from current docs/state, with one
      recommended first kernel
    - startup note: one small issue or risk only if something needs attention
-7. After alignment, run one active kernel at a time and stop before broadening.
-8. Pause for alignment with the human lead before implementation.
+7. Treat the reply as the chat-first alignment pass.
+8. Wait for human alignment before implementation.
+9. After alignment, run one active kernel at a time and stop before broadening.
 
 ## Environment Doctor
 

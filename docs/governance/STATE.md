@@ -55,6 +55,9 @@ Last updated: 2026-06-23
   - Codex owns implementation, validation, Git/PR flow, and hygiene execution
   - Codex proactively records durable contract changes in the decision log
   - cleanup proceeds one kernel at a time from clean synced `main`
+  - morning startup is a chat-first alignment pass: `make start` rehydrates,
+    reports context, a kernel map, and any attention note, then waits for human
+    alignment before implementation
 - Public-facing surfaces remain derived from repo truth:
   - the root README now names the Polinko research model as staged for the
     next beta, replacing generic maintenance framing with a model-refactor
