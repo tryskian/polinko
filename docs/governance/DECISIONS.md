@@ -2560,3 +2560,22 @@ or branch history instead.
   closeout, and setup scripts easy to drift independently. A shared helper
   keeps root discovery consistent without broadening the kernel into Python
   path cleanup.
+
+## D-163: Guard runtime tool reference test visibility
+
+- Date: `2026-06-23`
+- Category: `runtime_engineering`
+- Tags: `tests`, `runtime`, `tooling`, `coverage`, `hygiene`
+- Human-led: The human lead asked for hidden script and helper surfaces to be
+  actively maintained so workflow interruptions are caught before they become
+  operator-facing failures.
+- Engineer implementation: Add a dynamic unit test that scans tracked runtime,
+  script, docs, and config surfaces for references to tracked `tools/*.py` and
+  `tools/*.sh` helpers, then verifies each referenced helper has direct test
+  visibility by path, filename, stem, or module name.
+- Decision: Runtime helper references must stay visible to tests. New tracked
+  references from active runtime surfaces should either point to an already
+  tested helper or arrive with matching direct test visibility.
+- Why: Indirect helper references can bypass Make-target inventories and hide
+  drift in scripts, docs, local config, or runtime helpers. A dynamic guard
+  makes the inventory repeatable and fails close to the source of future drift.

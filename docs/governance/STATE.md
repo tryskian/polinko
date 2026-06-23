@@ -482,6 +482,9 @@ Last updated: 2026-06-23
   - runtime risk-surface coverage is explicit through `make risk-scan`, which
     verifies that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates
+  - runtime tool reference coverage is explicit through unit tests, which
+    verify that tracked runtime, script, docs, and config references to
+    tracked `tools/*.py` and `tools/*.sh` helpers have direct test visibility
   - operator alias coverage is explicit through `make operator-alias-check`,
     which keeps `manual-evals-*` targets paired with their `manualdb-*`
     compatibility aliases and keeps parked OCR eval aliases out of automatic
