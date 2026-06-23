@@ -22,8 +22,8 @@ Use this doc for operator procedure.
 
 ## Branch, Worktree, and Scope Policy
 
-1. Canonical repo root is:
-   - `/abs/path/to/polinko`
+1. Canonical repo root is the repo root printed by `make start`.
+   Tracked docs should not hard-code machine-local repo paths.
 2. Default workflow is one feature branch per change set:
    - `git switch -c codex/bigbrain/<task-name>`
 3. Start edits from a feature branch.

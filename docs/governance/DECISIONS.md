@@ -2666,3 +2666,21 @@ or branch history instead.
 - Why: The runtime map is a high-traffic orientation surface. Guarding retired
   wording there keeps future cleanup kernels from relying on ad hoc text
   searches to catch the same drift.
+
+## D-169: Keep startup repo-root contract portable
+
+- Date: `2026-06-23`
+- Category: `runtime_engineering`
+- Tags: `startup`, `runbook`, `docs`, `hygiene`
+- Human-led: The human lead asked for startup and hidden runtime surfaces to stay
+  aligned with the chat-first ritual instead of preserving stale bootstrap
+  wording or placeholders.
+- Engineer implementation: Update the runbook to define the canonical repo root
+  as the repo root printed by `make start`, and extend the startup contract test
+  so the retired `/abs/path/to/polinko` placeholder cannot return there.
+- Decision: Active runtime docs use the printed startup repo root as the
+  canonical location signal. Tracked docs should not hard-code machine-local
+  repo paths or placeholder roots.
+- Why: A placeholder path in the runbook made stale startup guidance look active.
+  The runtime contract should stay portable while still giving the operator a
+  concrete repo root during `make start`.
