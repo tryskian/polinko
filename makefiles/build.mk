@@ -10,7 +10,7 @@ pr-preflight: ci
 
 ci: ci-docs ci-python-style ci-python-type-check ci-package ci-test ci-python-security ci-node-security
 
-ci-docs: path-leak-check scripts-check risk-scan operator-alias-check startup-contracts-check lint-docs
+ci-docs: path-leak-check scripts-check local-runtime-config-check risk-scan operator-alias-check startup-contracts-check lint-docs
 
 ci-python-style: ruff-check ruff-format-check
 

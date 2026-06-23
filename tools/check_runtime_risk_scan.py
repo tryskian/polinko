@@ -52,6 +52,7 @@ REQUIRED_MAKE_TARGETS = (
     "scripts-check",
     "path-leak-check",
     "path-leak-audit-local",
+    "local-runtime-config-check",
     "api-smoke",
     "caffeinate",
     "caffeinate-status",
@@ -73,6 +74,7 @@ FORBIDDEN_MAKE_TARGETS = ("eod-stop",)
 REQUIRED_CI_DOCS_DEPS = (
     "path-leak-check",
     "scripts-check",
+    "local-runtime-config-check",
     "risk-scan",
     "operator-alias-check",
     "startup-contracts-check",
@@ -149,6 +151,7 @@ RUNTIME_MAP_SURFACES = (
         "hidden local config",
         (
             "make path-leak-audit-local",
+            "make local-runtime-config-check",
             "tools.check_local_runtime_config",
             "VS Code",
             "devcontainer",

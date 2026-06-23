@@ -44,6 +44,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             "\n".join(
                 [
                     "ci-docs: path-leak-check scripts-check lint-docs",
+                    "local-runtime-config-check:",
                     "risk-scan:",
                     "operator-alias-check:",
                 ]
@@ -82,6 +83,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             "\n".join(
                 [
                     "ci-docs: path-leak-check scripts-check risk-scan lint-docs",
+                    "local-runtime-config-check:",
                     "risk-scan:",
                     "operator-alias-check:",
                 ]
@@ -93,12 +95,32 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_missing_local_runtime_config_dependency_is_reported(self) -> None:
+        failures = check_runtime_risk_scan.check_make_contracts(
+            "\n".join(
+                [
+                    "ci-docs: path-leak-check scripts-check risk-scan "
+                    "operator-alias-check startup-contracts-check lint-docs",
+                    "local-runtime-config-check:",
+                    "risk-scan:",
+                    "operator-alias-check:",
+                    "startup-contracts-check:",
+                ]
+            )
+        )
+
+        self.assertIn(
+            "ci-docs: missing dependency 'local-runtime-config-check'",
+            failures,
+        )
+
     def test_missing_startup_contracts_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             "\n".join(
                 [
                     "ci-docs: path-leak-check scripts-check risk-scan "
                     "operator-alias-check lint-docs",
+                    "local-runtime-config-check:",
                     "risk-scan:",
                     "operator-alias-check:",
                     "startup-contracts-check:",

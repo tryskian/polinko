@@ -485,16 +485,19 @@ Last updated: 2026-06-23
   - runtime tool reference coverage is explicit through unit tests, which
     verify that tracked runtime, script, docs, and config references to
     tracked `tools/*.py` and `tools/*.sh` helpers have direct test visibility
+  - local runtime config coverage is explicit through
+    `make local-runtime-config-check`, which validates VS Code task/config
+    shape and runs through `make ci-docs`
   - operator alias coverage is explicit through `make operator-alias-check`,
     which keeps `manual-evals-*` targets paired with their `manualdb-*`
     compatibility aliases and keeps parked OCR eval aliases out of automatic
     startup, closeout, and CI dependencies
   - `make ci-docs` runs `make path-leak-check`, `make scripts-check`,
-    `make risk-scan`, `make operator-alias-check`,
-    `make startup-contracts-check`, and `make lint-docs`; `make end` also runs
-    `make path-leak-check`, `make scripts-check`, `make risk-scan`, and
-    `make operator-alias-check` before longer style, type, test, and security
-    gates
+    `make local-runtime-config-check`, `make risk-scan`,
+    `make operator-alias-check`, `make startup-contracts-check`, and
+    `make lint-docs`; `make end` also runs `make path-leak-check`,
+    `make scripts-check`, `make risk-scan`, and `make operator-alias-check`
+    before longer style, type, test, and security gates
   - public diagram renderers use source-first, write-if-changed behaviour:
     Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
     through a temporary SVG before replacing the tracked artefact
@@ -614,6 +617,7 @@ Last updated: 2026-06-23
 - `make ruff-format-check`
 - `make lint-docs`
 - `make risk-scan`
+- `make local-runtime-config-check`
 - `make operator-alias-check`
 - `make package-install-check`
 - `make type-check`

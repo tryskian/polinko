@@ -103,6 +103,8 @@ flowchart TD
   family. `make risk-scan` verifies
   that known high-risk runtime, script, CI, and local configuration surfaces
   remain visible in the tracked map and Make gates.
+  `make local-runtime-config-check` runs through `make ci-docs` so VS Code
+  task/config drift fails the normal docs/runtime gate.
   `make startup-contracts-check` keeps startup/runtime doc contracts in the
   local docs gate so wording drift fails before a PR-only CI run.
   Startup, closeout, devcontainer setup, local privacy guard, OCR workflow,
@@ -110,8 +112,8 @@ flowchart TD
   `tools/repo_root.sh`.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files;
-  it checks local path leaks and VS Code task/config shape through
-  `tools.check_local_runtime_config`.
+  it checks local path leaks and reuses `make local-runtime-config-check` for
+  VS Code task/config shape through `tools.check_local_runtime_config`.
   Devcontainer setup resolves the repo root before installing dependencies.
   `make privacy-local-on` installs only machine-local exclude patterns; tracked
   docs remain visible.

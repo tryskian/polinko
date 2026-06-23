@@ -80,6 +80,8 @@ Runner lifecycle rule:
 Active kernel validation:
 
 - During active refactor kernels, use focused checks for the touched surface
+- Use `make local-runtime-config-check` when a kernel changes VS Code task or
+  local runtime config shape
 - Use `make risk-scan` when a kernel changes runtime maps, Make gates, CI,
   background runners, startup/closeout, or local configuration surfaces
 - Use `make pr-preflight` before publishing a PR when you need the local
@@ -143,6 +145,8 @@ Explicit companion checks:
     contracts
 - `make path-leak-check`
   - checks tracked text surfaces for local machine path leaks
+- `make local-runtime-config-check`
+  - validates VS Code task/config shape through `tools.check_local_runtime_config`
 - `make risk-scan`
   - checks runtime map, Make, CI, runner, and local configuration coverage for
     known high-risk surfaces
