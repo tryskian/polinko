@@ -2772,3 +2772,20 @@ or branch history instead.
 - Why: CI does not need write access to run docs, style, type, tests, package, or
   security gates. Making the token scope explicit keeps dependency automation
   aligned with current least-privilege practice.
+
+## D-175: Add operator target for stale remote refs
+
+- Date: `2026-06-23`
+- Category: `operator_workflow`
+- Tags: `git`, `branches`, `refs`, `hygiene`
+- Human-led: The human lead asked for branch and ref cleanup interruptions to
+  be noticed and resolved as part of normal engineering hygiene.
+- Engineer implementation: Prune stale remote-tracking refs and add
+  `make git-prune-stale-refs`, with Makefile contract coverage and runtime
+  docs/STATE references.
+- Decision: Stale `origin/*` remote-tracking branch cleanup is a repo-owned
+  operator target. The target prunes deleted remote refs only and does not
+  delete local branches.
+- Why: Merged or deleted PR branches can remain locally as stale remote-tracking
+  refs and make branch/PR hygiene look noisier than it is. A named target keeps
+  that cleanup repeatable without turning it into ad hoc Git memory.

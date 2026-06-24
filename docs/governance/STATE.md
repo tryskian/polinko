@@ -635,3 +635,5 @@ Last updated: 2026-06-23
 - `make end`
 - `make end-docs-check` when validating current-truth freshness explicitly
 - `make end-git-check` as the standalone clean-main check
+- `make git-prune-stale-refs` after merged or deleted PR branches leave stale
+  `origin/*` remote-tracking refs

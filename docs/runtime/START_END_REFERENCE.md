@@ -168,6 +168,10 @@ Explicit companion checks:
   - verifies current branch is `main`
   - verifies the working tree is clean
   - verifies local `main` is synced with `origin/main`
+- `make git-prune-stale-refs`
+  - prunes stale `origin/*` remote-tracking refs after merged or deleted PR
+    branches
+  - does not delete local branches
 
 Read-only tooling pin:
 
