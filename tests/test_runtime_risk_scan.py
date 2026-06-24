@@ -12,6 +12,11 @@ from tools import check_runtime_risk_scan
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _write_precommit(root: Path, text: str) -> None:
+    path = root / ".pre-commit-config.yaml"
+    path.write_text(text, encoding="utf-8")
+
+
 class RuntimeRiskScanTests(unittest.TestCase):
     def test_current_repo_passes_runtime_risk_scan(self) -> None:
         result = subprocess.run(
@@ -145,6 +150,97 @@ class RuntimeRiskScanTests(unittest.TestCase):
 
         self.assertIn(
             "ci-docs: missing dependency 'startup-contracts-check'",
+            failures,
+        )
+
+    def test_missing_precommit_local_hook_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_precommit(
+                root,
+                """
+                exclude: ^(docs/peanut/|public/portfolio/assets/)
+                repos:
+                  - repo: local
+                    hooks:
+                      - id: polinko-ruff-check
+                        entry: make ruff-check
+                        language: system
+                        pass_filenames: false
+                        stages: [pre-commit, manual]
+                      - id: polinko-ruff-format-check
+                        entry: make ruff-format-check
+                        language: system
+                        pass_filenames: false
+                        stages: [pre-commit, manual]
+                """,
+            )
+
+            failures = check_runtime_risk_scan.check_precommit_config(root)
+
+        self.assertIn(
+            ".pre-commit-config.yaml: missing local hook 'polinko-markdownlint-docs'",
+            failures,
+        )
+
+    def test_precommit_entry_drift_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_precommit(
+                root,
+                """
+                exclude: ^(docs/peanut/|public/portfolio/assets/)
+                repos:
+                  - repo: local
+                    hooks:
+                      - id: polinko-ruff-check
+                        entry: ruff check .
+                        language: system
+                        pass_filenames: false
+                        stages: [pre-commit, manual]
+                      - id: polinko-ruff-format-check
+                        entry: make ruff-format-check
+                        language: system
+                        pass_filenames: false
+                        stages: [pre-commit, manual]
+                      - id: polinko-markdownlint-docs
+                        entry: make lint-docs
+                        language: system
+                        pass_filenames: false
+                        stages: [pre-commit, manual]
+                """,
+            )
+
+            failures = check_runtime_risk_scan.check_precommit_config(root)
+
+        self.assertIn(
+            ".pre-commit-config.yaml: 'polinko-ruff-check' entry must be "
+            "'make ruff-check'",
+            failures,
+        )
+
+    def test_retired_precommit_hook_token_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _write_precommit(
+                root,
+                """
+                exclude: ^(docs/peanut/|public/portfolio/assets/)
+                repos:
+                  - repo: local
+                    hooks:
+                      - id: polinko-isort
+                        entry: isort .
+                        language: system
+                        pass_filenames: false
+                        stages: [pre-commit, manual]
+                """,
+            )
+
+            failures = check_runtime_risk_scan.check_precommit_config(root)
+
+        self.assertIn(
+            ".pre-commit-config.yaml: retired hook token 'isort' is active",
             failures,
         )
 

@@ -9,6 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 RUNTIME_SURFACE_MAP = Path("docs/runtime/RUNTIME_SURFACE_MAP.md")
+PRECOMMIT_CONFIG = Path(".pre-commit-config.yaml")
 
 REQUIRED_FILES = (
     Path("Makefile"),
@@ -71,6 +72,13 @@ REQUIRED_MAKE_TARGETS = (
 
 FORBIDDEN_MAKE_TARGETS = ("eod-stop",)
 FORBIDDEN_RUNTIME_MAP_TOKENS = ("Startup and workspace bootstrap",)
+FORBIDDEN_PRECOMMIT_TOKENS = ("isort", "black")
+REQUIRED_PRECOMMIT_EXCLUDE = r"^(docs/peanut/|public/portfolio/assets/)"
+REQUIRED_PRECOMMIT_LOCAL_HOOKS = {
+    "polinko-ruff-check": "make ruff-check",
+    "polinko-ruff-format-check": "make ruff-format-check",
+    "polinko-markdownlint-docs": "make lint-docs",
+}
 
 REQUIRED_CI_DOCS_DEPS = (
     "path-leak-check",
@@ -247,12 +255,119 @@ def check_runtime_surface_map(root: Path) -> list[str]:
     return failures
 
 
+def _strip_yaml_quotes(value: str) -> str:
+    stripped = value.strip()
+    if len(stripped) >= 2 and stripped[0] == stripped[-1] and stripped[0] in {"'", '"'}:
+        return stripped[1:-1]
+    return stripped
+
+
+def _precommit_scalar(value: str) -> str | bool | list[str]:
+    stripped = _strip_yaml_quotes(value)
+    if stripped.lower() == "false":
+        return False
+    if stripped.lower() == "true":
+        return True
+    if stripped.startswith("[") and stripped.endswith("]"):
+        return [
+            _strip_yaml_quotes(item)
+            for item in stripped[1:-1].split(",")
+            if item.strip()
+        ]
+    return stripped
+
+
+def _precommit_local_hooks(text: str) -> dict[str, dict[str, str | bool | list[str]]]:
+    hooks: dict[str, dict[str, str | bool | list[str]]] = {}
+    in_local_repo = False
+    in_hooks = False
+    current_hook: dict[str, str | bool | list[str]] | None = None
+
+    for raw_line in text.splitlines():
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith("- repo:"):
+            in_local_repo = stripped == "- repo: local"
+            in_hooks = False
+            current_hook = None
+            continue
+        if not in_local_repo:
+            continue
+        if stripped == "hooks:":
+            in_hooks = True
+            continue
+        if not in_hooks:
+            continue
+        if stripped.startswith("- id:"):
+            hook_id = _strip_yaml_quotes(stripped.split(":", 1)[1])
+            current_hook = {}
+            hooks[hook_id] = current_hook
+            continue
+        if current_hook is not None and ":" in stripped:
+            key, raw_value = stripped.split(":", 1)
+            current_hook[key.strip()] = _precommit_scalar(raw_value)
+
+    return hooks
+
+
+def check_precommit_config(root: Path) -> list[str]:
+    path = root / PRECOMMIT_CONFIG
+    failures: list[str] = []
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        return [f"{PRECOMMIT_CONFIG}: cannot read file: {exc}"]
+    for token in FORBIDDEN_PRECOMMIT_TOKENS:
+        if token in text:
+            failures.append(
+                f"{PRECOMMIT_CONFIG}: retired hook token {token!r} is active"
+            )
+
+    exclude_match = re.search(r"(?m)^exclude:\s*(?P<exclude>.+)$", text)
+    exclude = (
+        _strip_yaml_quotes(exclude_match.group("exclude")) if exclude_match else ""
+    )
+    if exclude != REQUIRED_PRECOMMIT_EXCLUDE:
+        failures.append(
+            f"{PRECOMMIT_CONFIG}: exclude must be {REQUIRED_PRECOMMIT_EXCLUDE!r}"
+        )
+
+    hooks_by_id = _precommit_local_hooks(text)
+    if not hooks_by_id:
+        failures.append(f"{PRECOMMIT_CONFIG}: missing local repo hooks")
+        return failures
+
+    for hook_id, entry in REQUIRED_PRECOMMIT_LOCAL_HOOKS.items():
+        hook = hooks_by_id.get(hook_id)
+        if hook is None:
+            failures.append(f"{PRECOMMIT_CONFIG}: missing local hook {hook_id!r}")
+            continue
+        if hook.get("entry") != entry:
+            failures.append(f"{PRECOMMIT_CONFIG}: {hook_id!r} entry must be {entry!r}")
+        if hook.get("language") != "system":
+            failures.append(f"{PRECOMMIT_CONFIG}: {hook_id!r} must use system language")
+        if hook.get("pass_filenames") is not False:
+            failures.append(f"{PRECOMMIT_CONFIG}: {hook_id!r} must not pass filenames")
+        stages = hook.get("stages")
+        if not isinstance(stages, list) or {
+            "pre-commit",
+            "manual",
+        } - set(stages):
+            failures.append(
+                f"{PRECOMMIT_CONFIG}: {hook_id!r} must run at pre-commit and manual stages"
+            )
+
+    return failures
+
+
 def scan(root: Path = ROOT) -> list[str]:
     text = makefile_text(root)
     failures: list[str] = []
     failures.extend(check_required_files(root))
     failures.extend(check_make_contracts(text))
     failures.extend(check_runtime_surface_map(root))
+    failures.extend(check_precommit_config(root))
     return failures
 
 
