@@ -14,6 +14,7 @@ VSCODE_CONFIG_FILES = (
     "tasks.json",
     "mcp.json",
 )
+DEVCONTAINER_CONFIG_FILES = ("devcontainer.json",)
 RETIRED_LOCAL_DOC_PATHS = (
     "docs/INSTANCE_HANDOFF.md",
     "docs/POL1_COMMS.md",
@@ -144,6 +145,36 @@ def check_vscode_config(root: Path = ROOT) -> list[str]:
     return failures
 
 
+def check_devcontainer_config(root: Path = ROOT) -> list[str]:
+    devcontainer_dir = root / ".devcontainer"
+    if not devcontainer_dir.exists():
+        return []
+
+    failures: list[str] = []
+    for file_name in DEVCONTAINER_CONFIG_FILES:
+        path = devcontainer_dir / file_name
+        if not path.exists():
+            continue
+        value, failure = _load_json(path)
+        if failure:
+            failures.append(failure)
+            continue
+        if not isinstance(value, dict):
+            failures.append(f"{path}: expected top-level JSON object")
+            continue
+        failures.extend(_retired_local_doc_failures(path, value))
+
+    return failures
+
+
+def run(root: Path = ROOT) -> list[str]:
+    resolved_root = root.resolve()
+    return [
+        *check_vscode_config(resolved_root),
+        *check_devcontainer_config(resolved_root),
+    ]
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description=(
@@ -162,7 +193,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    failures = check_vscode_config(args.root.resolve())
+    failures = run(args.root)
     if failures:
         print("[fail] local runtime config check found issue(s):", file=sys.stderr)
         for failure in failures:

@@ -2720,3 +2720,20 @@ or branch history instead.
 - Why: Ignored editor config can preserve stale local doc lanes after tracked
   docs have moved on. Guarding those tokens keeps editor search/lint behaviour
   aligned with the active Polinko structure.
+
+## D-172: Guard devcontainer config against retired doc tokens
+
+- Date: `2026-06-23`
+- Category: `workflow_environment`
+- Tags: `devcontainer`, `local_config`, `docs`, `hygiene`
+- Human-led: The human lead asked for hidden/editor/runtime configuration to stay
+  maintained because stale local surfaces can interrupt normal operator work.
+- Engineer implementation: Extend `tools.check_local_runtime_config` to scan
+  tracked `.devcontainer/devcontainer.json` alongside ignored `.vscode` JSON,
+  with focused tests proving retired doc/config tokens fail in both lanes.
+- Decision: The local runtime config gate covers both ignored VS Code config and
+  tracked devcontainer VS Code customizations for retired local doc/config
+  tokens.
+- Why: Devcontainer settings can preserve the same stale editor assumptions as
+  ignored workspace settings. Checking both surfaces keeps host and container
+  workflow config aligned with the current Polinko docs lane.
