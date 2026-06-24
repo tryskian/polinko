@@ -2755,3 +2755,20 @@ or branch history instead.
 - Why: Pre-commit is a hidden workflow gate that can interrupt every commit while
   staying outside app runtime. Guarding its shape in `make ci-docs` catches hook
   drift before branch validation or closeout.
+
+## D-174: Keep CI workflow tokens read-only
+
+- Date: `2026-06-23`
+- Category: `ci`
+- Tags: `github_actions`, `permissions`, `security`, `hygiene`
+- Human-led: The human lead asked for CI and dependency automation failures and
+  hidden workflow risks to stay maintained proactively.
+- Engineer implementation: Add explicit `contents: read` permissions to the main
+  CI workflow and add a contract test that keeps CI and dependency-review
+  workflow permissions read-only.
+- Decision: GitHub Actions workflows that only read the repository should declare
+  read-only repository token permissions instead of relying on default workflow
+  permissions.
+- Why: CI does not need write access to run docs, style, type, tests, package, or
+  security gates. Making the token scope explicit keeps dependency automation
+  aligned with current least-privilege practice.
