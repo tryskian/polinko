@@ -2737,3 +2737,21 @@ or branch history instead.
 - Why: Devcontainer settings can preserve the same stale editor assumptions as
   ignored workspace settings. Checking both surfaces keeps host and container
   workflow config aligned with the current Polinko docs lane.
+
+## D-173: Guard pre-commit hook shape through risk scan
+
+- Date: `2026-06-23`
+- Category: `workflow_environment`
+- Tags: `pre_commit`, `risk_scan`, `local_config`, `hygiene`
+- Human-led: The human lead asked for hidden workflow surfaces and small
+  development interruptions to be maintained proactively instead of rediscovered
+  manually during normal work.
+- Engineer implementation: Extend `tools.check_runtime_risk_scan` to parse
+  `.pre-commit-config.yaml`, enforce the lightweight repo-owned Ruff and
+  markdownlint hook contract, and reject retired `isort` or `black` hook tokens.
+- Decision: Pre-commit hook shape is part of the docs/runtime risk scan. The
+  active hook set stays lightweight and delegates to Make targets instead of
+  preserving retired formatter/import-sorter tools.
+- Why: Pre-commit is a hidden workflow gate that can interrupt every commit while
+  staying outside app runtime. Guarding its shape in `make ci-docs` catches hook
+  drift before branch validation or closeout.
