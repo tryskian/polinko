@@ -178,6 +178,82 @@ class LocalRuntimeConfigTests(unittest.TestCase):
             any("docs/portfolio/raw_evidence" in failure for failure in failures)
         )
 
+    def test_retired_devcontainer_doc_tokens_are_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _write(
+                root,
+                ".devcontainer/devcontainer.json",
+                """
+                {
+                  "customizations": {
+                    "vscode": {
+                      "settings": {
+                        "markdownlint.ignore": [
+                          "**/docs/portfolio/raw_evidence/**"
+                        ],
+                        "files.exclude": {
+                          "docs/AGENT_BUILDER_MIRROR.md": true
+                        }
+                      }
+                    }
+                  }
+                }
+                """,
+            )
+
+            failures = check_local_runtime_config.check_devcontainer_config(root)
+
+        self.assertEqual(len(failures), 2)
+        self.assertTrue(
+            any("docs/AGENT_BUILDER_MIRROR.md" in failure for failure in failures)
+        )
+        self.assertTrue(
+            any("docs/portfolio/raw_evidence" in failure for failure in failures)
+        )
+
+    def test_run_checks_vscode_and_devcontainer_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _write(
+                root,
+                ".vscode/settings.json",
+                """
+                {
+                  "search.exclude": {
+                    "docs/POL1_COMMS.md": true
+                  }
+                }
+                """,
+            )
+            _write(
+                root,
+                ".devcontainer/devcontainer.json",
+                """
+                {
+                  "customizations": {
+                    "vscode": {
+                      "settings": {
+                        "files.exclude": {
+                          "docs/HYBRID_OPENAI_ADOPTION_PLAN.md": true
+                        }
+                      }
+                    }
+                  }
+                }
+                """,
+            )
+
+            failures = check_local_runtime_config.run(root)
+
+        self.assertEqual(len(failures), 2)
+        self.assertTrue(any("docs/POL1_COMMS.md" in failure for failure in failures))
+        self.assertTrue(
+            any(
+                "docs/HYBRID_OPENAI_ADOPTION_PLAN.md" in failure for failure in failures
+            )
+        )
+
     def test_current_checkout_passes(self) -> None:
         result = subprocess.run(
             [sys.executable, "-m", "tools.check_local_runtime_config"],
