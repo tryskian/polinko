@@ -113,6 +113,13 @@ class DependencyHygieneTests(unittest.TestCase):
         self.assertIn('directory: "/"', dependabot)
         self.assertIn('directory: "/apps/portfolio"', dependabot)
 
+    def test_ci_automation_uses_read_only_contents_permissions(self) -> None:
+        ci_workflow = _read(".github/workflows/ci.yml")
+        dependency_review = _read(".github/workflows/dependency-review.yml")
+
+        self.assertIn("permissions:\n  contents: read", ci_workflow)
+        self.assertIn("permissions:\n  contents: read", dependency_review)
+
     def test_dependency_lock_and_check_use_same_resolver(self) -> None:
         build_make = _read("makefiles/build.mk")
 

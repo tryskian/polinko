@@ -473,6 +473,8 @@ Last updated: 2026-06-23
     pushes rely on the pull-request gate to avoid duplicate red runs, and CI
     plus dependency-review workflows cancel superseded runs when a newer commit
     arrives
+  - GitHub CI and dependency-review workflows use explicit read-only repository
+    token permissions
   - Dependabot routine and security updates are grouped by ecosystem so Python,
     root npm, portfolio npm, and GitHub Actions updates stay below GitHub's open
     PR queue limits
