@@ -122,6 +122,7 @@ Use this doc for operator procedure.
 2. If you need companion checks as standalone checks, run:
    - `make end-docs-check`
    - `make end-git-check`
+   - `make git-prune-stale-refs`
 3. Update tracked current truth and local handoff before stopping.
 
 ## Local-Only Docs Policy
@@ -527,3 +528,6 @@ Dependency maintenance:
 - `make end-git-check`
   - standalone clean-main closeout check; `make end` runs it as the final
     closure gate
+- `make git-prune-stale-refs`
+  - prunes stale `origin/*` remote-tracking refs after merged or deleted PR
+    branches without deleting local branches
