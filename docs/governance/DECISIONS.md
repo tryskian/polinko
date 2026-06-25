@@ -2811,3 +2811,20 @@ or branch history instead.
   script still carried its own root-adjacent launcher setup. Using the shared
   root helper keeps direct script execution, Make execution, and closeout
   cleanup aligned without flattening runner-specific lifecycle behaviour.
+
+## D-177: Make clean-main git gate repo-root aware
+
+- Date: `2026-06-25`
+- Category: `runtime_engineering`
+- Tags: `closeout`, `git`, `repo_root`, `hygiene`
+- Human-led: The human lead asked for runtime and script helpers that interrupt
+  operator workflow to be kept in order as part of the script/runtime cleanup.
+- Engineer implementation: Route `tools/check_end_git_clean.sh` through
+  `tools/repo_root.sh`, add contract coverage for the root setup, and adjust
+  the clean-main gate tests to install the script and root helper inside their
+  temporary fixture repositories.
+- Decision: The clean-main git gate resolves the checkout root before checking
+  branch, cleanliness, remote configuration, and local/remote sync.
+- Why: `make end-git-check` is the final closeout guard. It should behave the
+  same from Make, direct script execution, and subdirectory invocation instead
+  of depending on the operator's current working directory.

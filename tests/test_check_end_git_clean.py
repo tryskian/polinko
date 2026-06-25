@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -7,6 +8,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "tools" / "check_end_git_clean.sh"
+REPO_ROOT_HELPER = REPO_ROOT / "tools" / "repo_root.sh"
 
 
 def _run_git(cwd: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -31,6 +33,14 @@ def _commit_file(repo: Path, name: str, content: str) -> None:
     _run_git(repo, "commit", "-m", f"Add {name}")
 
 
+def _install_gate(repo: Path) -> None:
+    tools_dir = repo / "tools"
+    tools_dir.mkdir()
+    shutil.copy2(SCRIPT, tools_dir / SCRIPT.name)
+    shutil.copy2(REPO_ROOT_HELPER, tools_dir / REPO_ROOT_HELPER.name)
+    _run_git(repo, "add", "tools/check_end_git_clean.sh", "tools/repo_root.sh")
+
+
 def _init_repo(root: Path) -> Path:
     remote = root / "origin.git"
     work = root / "work"
@@ -38,6 +48,7 @@ def _init_repo(root: Path) -> Path:
     _run_git(root, "init", "--bare", str(remote))
     _run_git(root, "init", "-b", "main", str(work))
     _configure_identity(work)
+    _install_gate(work)
     _commit_file(work, "tracked.txt", "initial\n")
     _run_git(work, "remote", "add", "origin", str(remote))
     _run_git(work, "push", "-u", "origin", "main")
@@ -45,13 +56,15 @@ def _init_repo(root: Path) -> Path:
     return work
 
 
-def _run_script(cwd: Path) -> subprocess.CompletedProcess[str]:
+def _run_script(
+    cwd: Path, script_path: str = "tools/check_end_git_clean.sh"
+) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["END_GIT_BRANCH"] = "main"
     env["END_GIT_REMOTE"] = "origin"
 
     return subprocess.run(
-        ["bash", str(SCRIPT)],
+        ["bash", script_path],
         cwd=cwd,
         text=True,
         stdout=subprocess.PIPE,
@@ -66,6 +79,20 @@ class CheckEndGitCleanTests(unittest.TestCase):
             work = _init_repo(Path(tmp))
 
             result = _run_script(work)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            "end-git-check: PASS (main clean and synced with origin/main)",
+            result.stdout,
+        )
+
+    def test_passes_from_subdirectory_on_clean_synced_main(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            work = _init_repo(Path(tmp))
+            nested_dir = work / "nested"
+            nested_dir.mkdir()
+
+            result = _run_script(nested_dir, "../tools/check_end_git_clean.sh")
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(
@@ -101,6 +128,7 @@ class CheckEndGitCleanTests(unittest.TestCase):
             work = Path(tmp) / "work"
             _run_git(Path(tmp), "init", "-b", "main", str(work))
             _configure_identity(work)
+            _install_gate(work)
             _commit_file(work, "tracked.txt", "initial\n")
 
             result = _run_script(work)
