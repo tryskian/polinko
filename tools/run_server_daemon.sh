@@ -22,7 +22,10 @@ dev_backend_port=${DEV_BACKEND_PORT:-8000}
 server_pid_file=${SERVER_PID_FILE:-/tmp/polinko-server.pid}
 server_log=${SERVER_LOG:-/tmp/polinko-server.log}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-detached_launcher="$script_dir/launch_detached_process.py"
+# shellcheck source=tools/repo_root.sh
+source "$script_dir/repo_root.sh"
+polinko_cd_repo_root
+detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 
 resolve_expected_python() {
 	"$python_bin" -c 'import os,sys; print(os.path.realpath(sys.executable))' 2>/dev/null || true

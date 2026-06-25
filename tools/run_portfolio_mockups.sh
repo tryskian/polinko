@@ -23,7 +23,10 @@ mockup_url=${PORTFOLIO_MOCKUP_URL:-http://127.0.0.1:${mockup_port}/landing-mocku
 pid_file=${PORTFOLIO_MOCKUP_PID_FILE:-/tmp/polinko-portfolio-mockups.pid}
 log_file=${PORTFOLIO_MOCKUP_LOG:-/tmp/polinko-portfolio-mockups.log}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-detached_launcher="$script_dir/launch_detached_process.py"
+# shellcheck source=tools/repo_root.sh
+source "$script_dir/repo_root.sh"
+polinko_cd_repo_root
+detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 
 launch_detached_mockup_server() {
 	"$launcher_python" "$detached_launcher" \

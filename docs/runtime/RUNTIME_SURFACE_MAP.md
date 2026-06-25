@@ -2,7 +2,7 @@
 
 # Runtime Surface Map
 
-Last updated: 2026-06-23
+Last updated: 2026-06-25
 
 This map shows the local runtime and operator surfaces that need to stay
 maintainable during the current refactor. It separates manual startup,
@@ -124,7 +124,9 @@ flowchart TD
   behaviour across `caffeinate`, `server-daemon`, `eval-sidecar`, and
   `portfolio-mockups`. Detached child-process launch is centralized through
   `tools/launch_detached_process.py`; runner scripts retain ownership of
-  their domain-specific liveness and adoption logic.
+  their domain-specific liveness and adoption logic. Runner scripts resolve
+  the checkout root through `tools/repo_root.sh` before launching child
+  processes or using relative local paths.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery.
