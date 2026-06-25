@@ -56,6 +56,7 @@ OCR_LANE_INVENTORY_SCRIPT = REPO_ROOT / "tools" / "report_ocr_lane_inventory.py"
 OCR_INTAKE_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_intake_workflow.sh"
 SHELL_SCRIPT_CONTRACT_SCRIPT = REPO_ROOT / "tools" / "check_shell_scripts.py"
 LOCAL_PRIVACY_GUARD_SCRIPT = REPO_ROOT / "tools" / "local_privacy_guard.sh"
+END_GIT_CHECK_SCRIPT = REPO_ROOT / "tools" / "check_end_git_clean.sh"
 
 
 def _makefile_text() -> str:
@@ -1107,6 +1108,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(SERVER_DAEMON_SCRIPT.is_file())
         self.assertTrue(PORTFOLIO_MOCKUP_SCRIPT.is_file())
         self.assertTrue(DETACHED_PROCESS_LAUNCHER_SCRIPT.is_file())
+        self.assertTrue(END_GIT_CHECK_SCRIPT.is_file())
         self.assertTrue(os.access(CAFFEINATE_SCRIPT, os.X_OK))
         self.assertTrue(os.access(SERVER_DAEMON_SCRIPT, os.X_OK))
         self.assertTrue(os.access(PORTFOLIO_MOCKUP_SCRIPT, os.X_OK))
@@ -1170,6 +1172,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("nohup $(CAFFEINATE_CMD)", text)
         self.assertNotIn('pgrep -f "^/usr/bin/caffeinate -d -i -m', text)
         self.assertNotIn("/usr/bin/pmset -g assertions", text)
+        end_git_check_text = END_GIT_CHECK_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('source "$script_dir/repo_root.sh"', end_git_check_text)
+        self.assertIn("polinko_cd_repo_root", end_git_check_text)
 
     def test_eval_helper_scripts_are_named_for_their_roles(self) -> None:
         self.assertTrue(OCR_WORKFLOW_SCRIPT.is_file())

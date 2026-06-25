@@ -565,9 +565,9 @@ Last updated: 2026-06-25
     cases where private transcripts, frozen eval snapshots, or long governance
     history are the active source
   - shell bootstrap and operator helpers resolve the checkout root through
-    `tools/repo_root.sh` so startup, closeout, devcontainer setup, local
-    privacy guard, OCR workflow, and Playwright snapshot scripts share one
-    audited root-discovery path
+    `tools/repo_root.sh` so startup, closeout, clean-main git checks,
+    devcontainer setup, local privacy guard, OCR workflow, and Playwright
+    snapshot scripts share one audited root-discovery path
   - required knobs include an ignored local default path, explicit path
     override, no-overwrite default, `FORCE=1`, deterministic
     `schema_version`, source fingerprints, validation command, and

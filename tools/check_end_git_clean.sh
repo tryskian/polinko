@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tools/repo_root.sh
+source "$script_dir/repo_root.sh"
+
+polinko_cd_repo_root
+
 BRANCH="${END_GIT_BRANCH:-main}"
 REMOTE="${END_GIT_REMOTE:-origin}"
 
