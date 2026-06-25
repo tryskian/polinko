@@ -20,7 +20,10 @@ uname_bin=${UNAME_BIN:-uname}
 pgrep_bin=${PGREP_BIN:-pgrep}
 pmset_bin=${PMSET_BIN:-/usr/bin/pmset}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
-detached_launcher="$script_dir/launch_detached_process.py"
+# shellcheck source=tools/repo_root.sh
+source "$script_dir/repo_root.sh"
+polinko_cd_repo_root
+detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 
 is_darwin() {
 	[ "$("$uname_bin" -s)" = "Darwin" ]

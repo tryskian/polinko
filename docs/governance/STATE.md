@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-23
+Last updated: 2026-06-25
 
 ## Current Truth
 
@@ -539,8 +539,9 @@ Last updated: 2026-06-23
     `eval-sidecar`, `portfolio-mockups`, `server-daemon`, and repo-managed
     `caffeinate`, then prints status for each family member
   - background runner scripts launch detached child processes through
-    `tools/launch_detached_process.py`, while each runner keeps its own
-    liveness, adoption, status, and stop logic
+    `tools/launch_detached_process.py` after resolving the checkout root
+    through `tools/repo_root.sh`, while each runner keeps its own liveness,
+    adoption, status, and stop logic
   - VS Code keeps `make start` available as a manual task; folder-open
     bootstrap is retired so startup stays chat-led
   - local URL helpers such as `make docs`, `make open-api-docs`, and

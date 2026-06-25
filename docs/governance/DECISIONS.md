@@ -2789,3 +2789,25 @@ or branch history instead.
 - Why: Merged or deleted PR branches can remain locally as stale remote-tracking
   refs and make branch/PR hygiene look noisier than it is. A named target keeps
   that cleanup repeatable without turning it into ad hoc Git memory.
+
+## D-176: Align runner scripts with shared repo-root helper
+
+- Date: `2026-06-25`
+- Category: `runtime_engineering`
+- Tags: `runners`, `shell`, `repo_root`, `hygiene`
+- Human-led: The human lead asked to continue the script/runtime cleanup one
+  focused surface at a time so hidden helper drift does not interrupt operator
+  work.
+- Engineer implementation: Route `manage_caffeinate.sh`,
+  `run_server_daemon.sh`, `run_eval_sidecar_start.sh`, and
+  `run_portfolio_mockups.sh` through `tools/repo_root.sh` before resolving
+  `tools/launch_detached_process.py`, and add Makefile contract coverage for
+  the runner-family root setup.
+- Decision: Background runner scripts use the shared repo-root helper before
+  launching detached child processes or relying on repo-relative local paths.
+  Runner-specific liveness, adoption, status, and stop logic remains in each
+  runner script.
+- Why: The runner family already shares detached launch mechanics, but each
+  script still carried its own root-adjacent launcher setup. Using the shared
+  root helper keeps direct script execution, Make execution, and closeout
+  cleanup aligned without flattening runner-specific lifecycle behaviour.

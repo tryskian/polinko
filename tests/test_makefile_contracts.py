@@ -1117,6 +1117,12 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("pid_file.write_text", detached_launcher_text)
         caffeinate_script_text = CAFFEINATE_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("launch_detached_process.py", caffeinate_script_text)
+        self.assertIn('source "$script_dir/repo_root.sh"', caffeinate_script_text)
+        self.assertIn("polinko_cd_repo_root", caffeinate_script_text)
+        self.assertIn(
+            'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
+            caffeinate_script_text,
+        )
         self.assertNotIn("nohup $caffeinate_cmd", caffeinate_script_text)
         self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" summary', text)
         self.assertIn('"$(PYTHON)" "$(OPENAI_ACCOUNT_SCRIPT)" costs', text)
@@ -1143,11 +1149,23 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn('rm -f "$(SERVER_PID_FILE)"', text)
         server_daemon_script_text = SERVER_DAEMON_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("launch_detached_process.py", server_daemon_script_text)
+        self.assertIn('source "$script_dir/repo_root.sh"', server_daemon_script_text)
+        self.assertIn("polinko_cd_repo_root", server_daemon_script_text)
+        self.assertIn(
+            'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
+            server_daemon_script_text,
+        )
         self.assertNotIn("nohup", server_daemon_script_text)
         portfolio_mockup_script_text = PORTFOLIO_MOCKUP_SCRIPT.read_text(
             encoding="utf-8"
         )
         self.assertIn("launch_detached_process.py", portfolio_mockup_script_text)
+        self.assertIn('source "$script_dir/repo_root.sh"', portfolio_mockup_script_text)
+        self.assertIn("polinko_cd_repo_root", portfolio_mockup_script_text)
+        self.assertIn(
+            'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
+            portfolio_mockup_script_text,
+        )
         self.assertNotIn("nohup", portfolio_mockup_script_text)
         self.assertNotIn("nohup $(CAFFEINATE_CMD)", text)
         self.assertNotIn('pgrep -f "^/usr/bin/caffeinate -d -i -m', text)
@@ -1207,6 +1225,12 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('bash "$(EVAL_SIDECAR_START_SCRIPT)" stop', text)
         sidecar_script_text = EVAL_SIDECAR_START_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("launch_detached_process.py", sidecar_script_text)
+        self.assertIn('source "$script_dir/repo_root.sh"', sidecar_script_text)
+        self.assertIn("polinko_cd_repo_root", sidecar_script_text)
+        self.assertIn(
+            'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
+            sidecar_script_text,
+        )
         self.assertNotIn("nohup", sidecar_script_text)
         for script in (
             OCR_EVAL_RUNNER_SCRIPT,
