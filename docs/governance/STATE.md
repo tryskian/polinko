@@ -125,7 +125,8 @@ Last updated: 2026-06-25
   - core background runner lifecycle is script-owned for `caffeinate`,
     `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned
-    PID/log handling
+    PID/log handling; direct invocation prefers the repo `.venv` interpreter
+    when `PYTHON` or runner-specific launcher overrides are unset
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery
@@ -550,7 +551,9 @@ Last updated: 2026-06-25
   - background runner scripts launch detached child processes through
     `tools/launch_detached_process.py` after resolving the checkout root
     through `tools/repo_root.sh`, while each runner keeps its own liveness,
-    adoption, status, and stop logic
+    adoption, status, and stop logic; direct invocation uses the shared repo
+    `.venv` interpreter fallback when `PYTHON` or runner-specific launcher
+    overrides are unset
   - VS Code keeps `make start` available as a manual task; folder-open
     bootstrap is retired so startup stays chat-led
   - local URL helpers such as `make docs`, `make open-api-docs`, and

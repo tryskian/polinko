@@ -2,6 +2,7 @@ import os
 import signal
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -139,6 +140,7 @@ class RunEvalSidecarStartTests(unittest.TestCase):
                     "EVAL_SIDECAR_MIN_SECONDS": "42",
                     "EVAL_SIDECAR_RUNS_DIR": str(tmp_path / "runs"),
                     "EVAL_SIDECAR_CURRENT_FILE": str(tmp_path / "current.txt"),
+                    "EVAL_SIDECAR_LAUNCHER_PYTHON": sys.executable,
                 }
             )
 
