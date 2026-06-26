@@ -25,6 +25,8 @@ class RunLocalEvalGateTests(unittest.TestCase):
         self.assertIn("SMOKE_PORT ?=\n", config)
         self.assertIn("SMOKE_BASE_URL ?=\n", config)
         self.assertIn("SMOKE_HISTORY_DB ?=\n", config)
+        self.assertIn("./.venv/bin/python3.14", runner)
+        self.assertIn("python_bin=$(default_python_bin)", runner)
         self.assertIn("/tmp/polinko-eval-smoke-$$-history.db", runner)
         self.assertIn("/tmp/polinko-eval-smoke-$$-memory.db", runner)
         self.assertIn("/tmp/polinko-eval-smoke-$$-vector.db", runner)
@@ -392,6 +394,36 @@ exit "${CURL_EXIT:-0}"
                     "tools.api_smoke",
                     "--base-url",
                     f"http://127.0.0.1:{dynamic_port}",
+                ],
+            )
+
+    def test_api_smoke_runs_from_subdirectory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            server_started.unlink(missing_ok=True)
+
+            result = subprocess.run(
+                ["bash", "../tools/run_local_eval_gate.sh", "api-smoke"],
+                cwd=REPO_ROOT / "docs",
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                self._read_calls(python_args),
+                [
+                    [
+                        "-m",
+                        "uvicorn",
+                        "custom_server:app",
+                        "--host",
+                        "127.0.0.1",
+                        "--port",
+                        "9991",
+                    ],
+                    ["-m", "tools.api_smoke", "--base-url", "http://127.0.0.1:9991"],
                 ],
             )
 
