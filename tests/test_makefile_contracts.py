@@ -383,6 +383,27 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("repo-search", targets)
         self.assertIn("repo-search-full", targets)
 
+    def test_pycheck_uses_configured_python_interpreter(self) -> None:
+        result = subprocess.run(
+            [
+                "make",
+                "-n",
+                "pycheck",
+                "FILES=tools/check_shell_scripts.py",
+                "PYTHON=/tmp/polinko-python",
+            ],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertIn(
+            "/tmp/polinko-python -m py_compile tools/check_shell_scripts.py",
+            result.stdout,
+        )
+        self.assertNotIn("python3 -m py_compile", result.stdout)
+
     def test_repo_search_targets_keep_routine_and_full_modes_explicit(self) -> None:
         text = _makefile_contract_text()
 

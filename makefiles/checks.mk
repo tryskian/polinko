@@ -28,7 +28,7 @@ pycheck:
 		echo 'Usage: make pycheck FILES="tools/check_shell_scripts.py tools/check_runtime_risk_scan.py"'; \
 		exit 2; \
 	fi; \
-	python3 -m py_compile $(FILES)
+	$(PYTHON) -m py_compile $(FILES)
 
 type-check:
 	$(PYTHON) -m mypy --config-file mypy.ini
