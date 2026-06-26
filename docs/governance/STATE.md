@@ -125,8 +125,7 @@ Last updated: 2026-06-25
   - core background runner lifecycle is script-owned for `caffeinate`,
     `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned
-    PID/log handling; direct invocation prefers the repo `.venv` interpreter
-    when `PYTHON` or runner-specific launcher overrides are unset
+    PID/log handling
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery
@@ -551,9 +550,7 @@ Last updated: 2026-06-25
   - background runner scripts launch detached child processes through
     `tools/launch_detached_process.py` after resolving the checkout root
     through `tools/repo_root.sh`, while each runner keeps its own liveness,
-    adoption, status, and stop logic; direct invocation uses the shared repo
-    `.venv` interpreter fallback when `PYTHON` or runner-specific launcher
-    overrides are unset
+    adoption, status, and stop logic
   - VS Code keeps `make start` available as a manual task; folder-open
     bootstrap is retired so startup stays chat-led
   - local URL helpers such as `make docs`, `make open-api-docs`, and
@@ -572,11 +569,6 @@ Last updated: 2026-06-25
   - OCR report workflow/build wrappers resolve the checkout root before
     validating local report inputs or launching report-builder modules, so
     direct script execution behaves like Make and subdirectory invocation
-  - direct OCR eval runner wrappers resolve the checkout root before starting
-    the eval server daemon or launching OCR eval modules, and direct invocation
-    without `PYTHON` prefers the repo `.venv` interpreter
-  - shared OCR workflow guard helpers preserve their source-only contract while
-    using the same repo `.venv` interpreter fallback when `PYTHON` is unset
 - Local operator tooling follows a reusable non-mutating contract:
   - `docs/runtime/LOCAL_TOOLING.md` records the repo-local pattern for tools
     that materialize ignored local input, validate it, preview application, and

@@ -14,6 +14,8 @@ else
 	exit 2
 fi
 
+python_bin=${PYTHON:-python3}
+launcher_python=${PORTFOLIO_MOCKUP_LAUNCHER_PYTHON:-python3}
 mockup_dir=${PORTFOLIO_MOCKUP_DIR:-docs/peanut/assets/portfolio-mockups}
 mockup_port=${PORTFOLIO_MOCKUP_PORT:-8765}
 mockup_host=${PORTFOLIO_MOCKUP_HOST:-127.0.0.1}
@@ -25,8 +27,6 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
 detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
-python_bin=$(polinko_default_python_bin)
-launcher_python=${PORTFOLIO_MOCKUP_LAUNCHER_PYTHON:-$(polinko_default_python_bin)}
 
 launch_detached_mockup_server() {
 	"$launcher_python" "$detached_launcher" \

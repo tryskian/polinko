@@ -19,14 +19,11 @@ class RunEvalOcrStabilityTests(unittest.TestCase):
     def test_runs_server_before_strict_stability_command(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
-            subdir = tmp_path / "subdir"
             server_marker = tmp_path / "server-called"
             args_file = tmp_path / "python-args.txt"
             env_file = tmp_path / "python-env.txt"
-            cwd_file = tmp_path / "python-cwd.txt"
             server_script = tmp_path / "server.sh"
             python_script = tmp_path / "python.sh"
-            subdir.mkdir()
 
             _write_executable(
                 server_script,
@@ -38,7 +35,6 @@ class RunEvalOcrStabilityTests(unittest.TestCase):
                     "#!/usr/bin/env sh\n"
                     "set -eu\n"
                     '[ -f "$SERVER_MARKER" ] || exit 7\n'
-                    'pwd > "$PYTHON_CWD"\n'
                     'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
                     'printf "%s\\n" "${PYTHONUNBUFFERED:-}" > "$PYTHON_ENV"\n'
                 ),
@@ -55,14 +51,13 @@ class RunEvalOcrStabilityTests(unittest.TestCase):
                     "SERVER_MARKER": str(server_marker),
                     "PYTHON_ARGS": str(args_file),
                     "PYTHON_ENV": str(env_file),
-                    "PYTHON_CWD": str(cwd_file),
                 }
             )
 
             result = subprocess.run(
                 [
                     "bash",
-                    str(SCRIPT),
+                    str(SCRIPT.relative_to(REPO_ROOT)),
                     "cases.json",
                     "4",
                     "3",
@@ -72,7 +67,7 @@ class RunEvalOcrStabilityTests(unittest.TestCase):
                     "runs-dir",
                     "out.json",
                 ],
-                cwd=subdir,
+                cwd=REPO_ROOT,
                 env=env,
                 capture_output=True,
                 text=True,
@@ -81,9 +76,6 @@ class RunEvalOcrStabilityTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(server_marker.read_text(encoding="utf-8"), "server\n")
             self.assertEqual(env_file.read_text(encoding="utf-8"), "1\n")
-            self.assertEqual(
-                cwd_file.read_text(encoding="utf-8").strip(), str(REPO_ROOT)
-            )
             self.assertEqual(
                 args_file.read_text(encoding="utf-8").splitlines(),
                 [
