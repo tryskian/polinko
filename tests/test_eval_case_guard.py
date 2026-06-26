@@ -54,6 +54,41 @@ def _run_guarded_runner(cases_path: Path) -> subprocess.CompletedProcess[str]:
 
 
 class EvalCaseGuardTests(unittest.TestCase):
+    def test_common_helper_prefers_local_venv_python_when_unset(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            python_path = tmp_path / ".venv" / "bin" / "python3.14"
+            python_path.parent.mkdir(parents=True)
+            python_path.write_text(
+                "#!/usr/bin/env sh\n"
+                'if [ "${1:-}" = "-V" ]; then\n'
+                '  echo "Python 3.14.0"\n'
+                "  exit 0\n"
+                "fi\n"
+                "exit 1\n",
+                encoding="utf-8",
+            )
+            python_path.chmod(python_path.stat().st_mode | 0o100)
+            env = os.environ.copy()
+            env.pop("PYTHON", None)
+            env["EVAL_CASE_GUARD_SCRIPT"] = str(SCRIPT)
+            script = (
+                f'. "{COMMON_SCRIPT}"; '
+                "ocr_workflow_use_eval_case_guard; "
+                'printf "%s\\n" "$PYTHON"'
+            )
+
+            result = subprocess.run(
+                ["/bin/sh", "-c", script],
+                capture_output=True,
+                cwd=tmp_path,
+                env=env,
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "./.venv/bin/python3.14")
+
     def test_existing_non_empty_cases_continue_recipe(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             cases_path = Path(tmp) / "cases.json"

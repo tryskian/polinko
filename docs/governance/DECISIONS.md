@@ -2969,3 +2969,21 @@ or branch history instead.
   batched, and stability targets. They should behave the same from Make, direct
   script execution, and subdirectory invocation without depending on the
   operator's current working directory.
+
+## D-185: Align OCR workflow helper Python fallback
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `ocr_guard`, `shell`, `python`, `hygiene`
+- Human-led: The human lead approved continuing the focused script/runtime
+  cleanup in normal order after the direct OCR runner wrappers were hardened.
+- Engineer implementation: Keep `ocr_workflow_common.sh` and
+  `eval_case_guard.sh` as source-only POSIX helper libraries, add a repo
+  `.venv` interpreter fallback inside the common helper when `PYTHON` is unset,
+  and add regression coverage with a fake local `.venv` interpreter.
+- Decision: Shared OCR workflow guard helpers preserve their source-only
+  contract while using the same local interpreter fallback as the direct OCR
+  eval runners.
+- Why: OCR guard helpers are invoked before eval runners launch. Their
+  interpreter selection should not drift from the runner layer or depend on a
+  global `python3` when the repo-local environment is available.

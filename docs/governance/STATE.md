@@ -572,6 +572,8 @@ Last updated: 2026-06-25
   - direct OCR eval runner wrappers resolve the checkout root before starting
     the eval server daemon or launching OCR eval modules, and direct invocation
     without `PYTHON` prefers the repo `.venv` interpreter
+  - shared OCR workflow guard helpers preserve their source-only contract while
+    using the same repo `.venv` interpreter fallback when `PYTHON` is unset
 - Local operator tooling follows a reusable non-mutating contract:
   - `docs/runtime/LOCAL_TOOLING.md` records the repo-local pattern for tools
     that materialize ignored local input, validate it, preview application, and
