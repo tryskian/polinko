@@ -2828,3 +2828,21 @@ or branch history instead.
 - Why: `make end-git-check` is the final closeout guard. It should behave the
   same from Make, direct script execution, and subdirectory invocation instead
   of depending on the operator's current working directory.
+
+## D-178: Make eval report wrappers repo-root aware
+
+- Date: `2026-06-25`
+- Category: `runtime_engineering`
+- Tags: `eval_reports`, `shell`, `repo_root`, `hygiene`
+- Human-led: The human lead asked to continue script/runtime cleanup in the
+  normal focused order, keeping Polinko context stable and avoiding broad
+  wrapper changes.
+- Engineer implementation: Convert `run_eval_report.sh` and
+  `run_eval_reports_parallel.sh` to Bash root-helper entrypoints, add
+  subdirectory invocation tests, and extend Makefile contract coverage for the
+  eval report wrapper root setup.
+- Decision: Eval report wrappers resolve the checkout root before creating
+  default report directories or launching report modules.
+- Why: Report-output defaults should behave the same from Make, direct script
+  execution, and subdirectory invocation. Starting with this coherent wrapper
+  pair avoids broad shell-mode churn across the parked OCR/eval wrapper family.

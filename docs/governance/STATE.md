@@ -131,6 +131,9 @@ Last updated: 2026-06-25
   - manual eval health, feedback, overlay, OCR retry, and reclassification Make
     targets keep their public names while routing through a single
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper
+  - eval report wrappers resolve the checkout root before writing default
+    report paths or launching report modules, so direct script execution and
+    Make execution share the same report-output base
   - `make path-leak-audit-local` is an actionable local runtime-config audit:
     it checks hidden/editor/container config surfaces without failing on
     ignored manual-eval evidence bundles that intentionally retain source paths,

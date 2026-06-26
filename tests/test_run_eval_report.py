@@ -172,6 +172,48 @@ class RunEvalReportTests(unittest.TestCase):
                         expected_args,
                     )
 
+    def test_defaults_resolve_from_repo_root_when_called_from_subdirectory(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            args_file = tmp_path / "python-args.txt"
+            python_script = tmp_path / "python.sh"
+            _write_executable(
+                python_script,
+                '#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$PYTHON_ARGS"\n',
+            )
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "PYTHON": str(python_script),
+                    "PYTHON_ARGS": str(args_file),
+                    "EVAL_REPORT_RUN_ID": "run-456",
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", "../tools/run_eval_report.sh", "file-search"],
+                cwd=REPO_ROOT / "docs",
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                args_file.read_text(encoding="utf-8").splitlines(),
+                [
+                    "-m",
+                    "tools.eval_file_search",
+                    "--run-id",
+                    "run-456",
+                    "--report-json",
+                    "eval_reports/file-search-run-456.json",
+                ],
+            )
+
     def test_report_script_rejects_unknown_or_missing_suite(self) -> None:
         for args in ([], ["unknown"]):
             with self.subTest(args=args):

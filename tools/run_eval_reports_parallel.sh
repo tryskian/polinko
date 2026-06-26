@@ -1,5 +1,11 @@
-#!/usr/bin/env sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tools/repo_root.sh
+source "$script_dir/repo_root.sh"
+
+polinko_cd_repo_root
 
 if [ "$#" -ne 0 ]; then
 	echo "Usage: run_eval_reports_parallel.sh" >&2
