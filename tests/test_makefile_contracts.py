@@ -1267,6 +1267,9 @@ class MakefileContractTests(unittest.TestCase):
             OCR_EVAL_RUNNER_SCRIPT,
             OCR_HANDWRITING_EVAL_RUNNER_SCRIPT,
             OCR_STABILITY_RUNNER_SCRIPT,
+            OCR_GROWTH_EVAL_RUNNER_SCRIPT,
+            OCR_GROWTH_BATCH_RUNNER_SCRIPT,
+            OCR_GROWTH_STABILITY_RUNNER_SCRIPT,
         ):
             script_text = script.read_text(encoding="utf-8")
             self.assertIn('source "$script_dir/repo_root.sh"', script_text)

@@ -52,6 +52,33 @@ def _stub_env(tmp_path: Path) -> tuple[dict[str, str], Path, Path, Path]:
     return env, server_marker, args_file, env_file
 
 
+def _repo_root_probe_env(tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
+    server_marker = tmp_path / "server-called"
+    pwd_file = tmp_path / "python-pwd.txt"
+    server_script = tmp_path / "server.sh"
+    python_script = tmp_path / "python.sh"
+
+    _write_executable(
+        server_script,
+        '#!/usr/bin/env sh\nset -eu\nprintf "server\\n" > "$SERVER_MARKER"\n',
+    )
+    _write_executable(
+        python_script,
+        '#!/usr/bin/env sh\nset -eu\npwd > "$PYTHON_PWD"\n',
+    )
+
+    env = os.environ.copy()
+    env.update(
+        {
+            "PYTHON": str(python_script),
+            "EVAL_SERVER_DAEMON_SCRIPT": str(server_script),
+            "SERVER_MARKER": str(server_marker),
+            "PYTHON_PWD": str(pwd_file),
+        }
+    )
+    return env, server_marker, pwd_file
+
+
 class RunEvalOcrGrowthTests(unittest.TestCase):
     def test_growth_cases_runs_server_before_eval_command(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -240,6 +267,71 @@ class RunEvalOcrGrowthTests(unittest.TestCase):
 
                 self.assertEqual(result.returncode, 2)
                 self.assertIn("Usage:", result.stderr)
+
+    def test_growth_scripts_resolve_repo_root_when_called_from_outside_repo(
+        self,
+    ) -> None:
+        cases_args = [
+            "cases.json",
+            "12",
+            "2",
+            "9",
+            "3",
+            "44",
+            "5",
+        ]
+        batch_args = [
+            "cases.json",
+            "40",
+            "3",
+            "44",
+            "2",
+            "9",
+            "runs-dir",
+            "summary.json",
+            "summary.md",
+        ]
+        stability_args = [
+            "cases.json",
+            "5",
+            "2",
+            "9",
+            "12",
+            "3",
+            "44",
+            "55",
+            "66",
+            "7",
+            "runs-dir",
+            "stability.json",
+        ]
+
+        for script, args in (
+            (GROWTH_CASES_SCRIPT, cases_args),
+            (GROWTH_BATCH_SCRIPT, batch_args),
+            (GROWTH_STABILITY_SCRIPT, stability_args),
+        ):
+            with self.subTest(script=script.name):
+                with tempfile.TemporaryDirectory() as tmp:
+                    tmp_path = Path(tmp)
+                    env, server_marker, pwd_file = _repo_root_probe_env(tmp_path)
+
+                    result = subprocess.run(
+                        ["bash", str(script), *args],
+                        cwd=tmp_path,
+                        env=env,
+                        capture_output=True,
+                        text=True,
+                    )
+
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(
+                        server_marker.read_text(encoding="utf-8"), "server\n"
+                    )
+                    self.assertEqual(
+                        pwd_file.read_text(encoding="utf-8").strip(),
+                        str(REPO_ROOT),
+                    )
 
 
 if __name__ == "__main__":

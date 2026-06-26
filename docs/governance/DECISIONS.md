@@ -2948,3 +2948,24 @@ or branch history instead.
   while eval execution remains parked. They should behave the same from Make,
   direct script execution, and subdirectory invocation without requiring a
   caller's current working directory to be the repo root.
+
+## D-184: Make direct OCR growth eval runners repo-root aware
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `ocr_eval`, `growth`, `shell`, `repo_root`, `hygiene`
+- Human-led: The human lead asked to continue the script/runtime refactor in
+  focused kernels, with OCR execution still parked and no eval runs.
+- Engineer implementation: Convert `run_eval_ocr_growth_cases.sh`,
+  `run_eval_ocr_growth_batched.sh`, and `run_eval_ocr_growth_stability.sh` to
+  Bash root-helper entrypoints with repo `.venv` fallback when `PYTHON` is
+  unset, extend fake-command tests for outside-repo invocation, and extend
+  Makefile contract coverage for growth runner root setup.
+- Decision: Direct OCR growth eval runner wrappers resolve the checkout root
+  before starting the server daemon or launching growth eval modules. Direct
+  invocation without `PYTHON` prefers the repo `.venv` interpreter when
+  available.
+- Why: Growth eval wrappers are parked execution surfaces, but they remain
+  operator-facing runtime scripts. They should behave the same from Make,
+  direct script execution, and subdirectory invocation without depending on
+  the caller's current working directory.

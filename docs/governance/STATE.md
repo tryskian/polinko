@@ -572,6 +572,9 @@ Last updated: 2026-06-25
   - direct OCR eval runner wrappers resolve the checkout root before starting
     the server daemon or launching eval modules, and direct invocation without
     `PYTHON` prefers the repo `.venv` interpreter when available
+  - direct OCR growth eval runner wrappers use the same checkout-root and repo
+    `.venv` fallback contract before starting the server daemon or launching
+    growth eval modules
 - Local operator tooling follows a reusable non-mutating contract:
   - `docs/runtime/LOCAL_TOOLING.md` records the repo-local pattern for tools
     that materialize ignored local input, validate it, preview application, and
