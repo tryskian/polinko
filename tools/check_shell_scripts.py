@@ -11,6 +11,14 @@ SHELL_LIBRARIES = {
     Path("tools/eval_case_guard.sh"): "eval_case_guard_or_exit",
     Path("tools/ocr_workflow_common.sh"): "ocr_workflow_use_eval_case_guard",
 }
+ROOT_HELPER_EXEMPT_EXECUTABLES = {
+    Path("tools/open_local_url.sh"),
+    Path("tools/repo_root.sh"),
+}
+ROOT_HELPER_SNIPPETS = (
+    'source "$script_dir/repo_root.sh"',
+    "polinko_cd_repo_root",
+)
 
 EXECUTABLE_STRICT_MODE = {
     "#!/usr/bin/env bash": "set -euo pipefail",
@@ -92,6 +100,11 @@ def check_script(path: Path) -> list[str]:
         failures.append(
             f"does not enable strict mode on line 2 ({expected_strict_mode!r})"
         )
+
+    if path not in ROOT_HELPER_EXEMPT_EXECUTABLES:
+        for snippet in ROOT_HELPER_SNIPPETS:
+            if snippet not in text:
+                failures.append(f"does not include root-helper snippet {snippet!r}")
 
     return failures
 

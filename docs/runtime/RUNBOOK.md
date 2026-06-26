@@ -480,8 +480,8 @@ Use this doc for operator procedure.
 - `make lint-docs`
   - docs lint
 - `make scripts-check`
-  - validates tracked shell helper shebangs, strict modes, and sourced helper
-    contracts
+  - validates tracked shell helper shebangs, strict modes, sourced helper
+    contracts, and root-helper coverage for executable operator scripts
 - `make local-runtime-config-check`
   - validates VS Code task/config shape through `tools.check_local_runtime_config`
 - `make risk-scan`

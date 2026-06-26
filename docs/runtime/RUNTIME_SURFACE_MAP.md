@@ -103,6 +103,9 @@ flowchart TD
   family. `make risk-scan` verifies
   that known high-risk runtime, script, CI, and local configuration surfaces
   remain visible in the tracked map and Make gates.
+  `make scripts-check` validates shell syntax plus root-helper coverage for
+  executable operator scripts; sourced helper libraries, `repo_root.sh`, and
+  the URL-only launcher are the explicit exceptions.
   `make local-runtime-config-check` runs through `make ci-docs` so VS Code
   task/config drift and retired local doc references fail the normal
   docs/runtime gate.

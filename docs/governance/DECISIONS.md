@@ -2969,3 +2969,22 @@ or branch history instead.
   operator-facing runtime scripts. They should behave the same from Make,
   direct script execution, and subdirectory invocation without depending on
   the caller's current working directory.
+
+## D-185: Enforce shell root-helper coverage in scripts-check
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `shell`, `repo_root`, `scripts_check`, `hygiene`
+- Human-led: The human lead asked for script/runtime cleanup to prevent hidden
+  helper drift and to resolve small warnings before they become repeat issues.
+- Engineer implementation: Extend `tools.check_shell_scripts` so executable
+  `tools/*.sh` scripts must include the repo root helper source and
+  `polinko_cd_repo_root`, while keeping explicit exceptions for sourced shell
+  libraries, `tools/repo_root.sh`, and the URL-only launcher. Add focused unit
+  coverage for missing root-helper snippets and intentional exceptions.
+- Decision: `make scripts-check` now enforces shell root-helper coverage for
+  executable operator scripts in addition to shebang, strict-mode, shell syntax,
+  and sourced-helper contracts.
+- Why: Root-helper drift was previously guarded by selected per-script tests
+  and manual inventory. Encoding the contract in the shell-script gate makes
+  future operator-facing wrapper drift fail locally before CI or manual use.
