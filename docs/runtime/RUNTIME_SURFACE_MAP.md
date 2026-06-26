@@ -129,7 +129,9 @@ flowchart TD
   `tools/launch_detached_process.py`; runner scripts retain ownership of
   their domain-specific liveness and adoption logic. Runner scripts resolve
   the checkout root through `tools/repo_root.sh` before launching child
-  processes or using relative local paths.
+  processes or using relative local paths, and direct invocation prefers the
+  repo `.venv` interpreter when `PYTHON` or runner-specific launcher overrides
+  are unset.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery.

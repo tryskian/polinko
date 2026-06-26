@@ -2,6 +2,7 @@ import os
 import signal
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -109,6 +110,7 @@ class RunPortfolioMockupsTests(unittest.TestCase):
                     "PORTFOLIO_MOCKUP_URL": "http://127.0.0.1:9/missing.html",
                     "PORTFOLIO_MOCKUP_PID_FILE": str(pid_file),
                     "PORTFOLIO_MOCKUP_LOG": str(tmp_path / "logs" / "mockups.log"),
+                    "PORTFOLIO_MOCKUP_LAUNCHER_PYTHON": sys.executable,
                 }
             )
 

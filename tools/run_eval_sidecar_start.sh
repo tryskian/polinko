@@ -14,8 +14,6 @@ else
 	exit 2
 fi
 
-python_bin=${PYTHON:-python3}
-launcher_python=${EVAL_SIDECAR_LAUNCHER_PYTHON:-python3}
 target=${EVAL_SIDECAR_TARGET:-quality-gate-deterministic}
 min_seconds=${EVAL_SIDECAR_MIN_SECONDS:-3600}
 runs_dir=${EVAL_SIDECAR_RUNS_DIR:-.local/eval_runs}
@@ -27,6 +25,8 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
 detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
+python_bin=$(polinko_default_python_bin)
+launcher_python=${EVAL_SIDECAR_LAUNCHER_PYTHON:-$(polinko_default_python_bin)}
 
 launch_detached_sidecar() {
 	"$launcher_python" "$detached_launcher" \

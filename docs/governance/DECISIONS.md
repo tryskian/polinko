@@ -2987,3 +2987,21 @@ or branch history instead.
 - Why: OCR guard helpers are invoked before eval runners launch. Their
   interpreter selection should not drift from the runner layer or depend on a
   global `python3` when the repo-local environment is available.
+
+## D-186: Align background runner Python fallback
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `python`, `repo_root`, `hygiene`
+- Human-led: The human lead approved continuing the audit-first script/runtime
+  cleanup after the OCR runner and helper kernels.
+- Engineer implementation: Add `polinko_default_python_bin` to
+  `tools/repo_root.sh`; route `caffeinate`, `server-daemon`, `eval-sidecar`,
+  and `portfolio-mockups` Python and launcher defaults through it; extend
+  helper and runner contract coverage.
+- Decision: Core background runners prefer the repo `.venv` interpreter for
+  direct invocation when `PYTHON` or runner-specific launcher overrides are
+  unset.
+- Why: Make already injects repo Python into these runners, but direct runner
+  use should not drift to a global interpreter when the local environment is
+  available.

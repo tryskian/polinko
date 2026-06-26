@@ -14,7 +14,6 @@ action=$1
 pid_file=${CAFFEINATE_PID_FILE:-/tmp/polinko-caffeinate.pid}
 log_file=${CAFFEINATE_LOG:-/tmp/polinko-caffeinate.log}
 caffeinate_cmd=${CAFFEINATE_CMD:-/usr/bin/caffeinate -d -i -m}
-launcher_python=${CAFFEINATE_LAUNCHER_PYTHON:-python3}
 match_pattern=${CAFFEINATE_MATCH_PATTERN:-^/usr/bin/caffeinate -d -i -m( |$)}
 uname_bin=${UNAME_BIN:-uname}
 pgrep_bin=${PGREP_BIN:-pgrep}
@@ -24,6 +23,7 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
 detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
+launcher_python=${CAFFEINATE_LAUNCHER_PYTHON:-$(polinko_default_python_bin)}
 
 is_darwin() {
 	[ "$("$uname_bin" -s)" = "Darwin" ]

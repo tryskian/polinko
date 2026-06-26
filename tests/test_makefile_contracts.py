@@ -1121,6 +1121,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("launch_detached_process.py", caffeinate_script_text)
         self.assertIn('source "$script_dir/repo_root.sh"', caffeinate_script_text)
         self.assertIn("polinko_cd_repo_root", caffeinate_script_text)
+        self.assertIn("polinko_default_python_bin", caffeinate_script_text)
         self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             caffeinate_script_text,
@@ -1154,6 +1155,13 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('source "$script_dir/repo_root.sh"', server_daemon_script_text)
         self.assertIn("polinko_cd_repo_root", server_daemon_script_text)
         self.assertIn(
+            "python_bin=$(polinko_default_python_bin)", server_daemon_script_text
+        )
+        self.assertIn(
+            "SERVER_LAUNCHER_PYTHON:-$(polinko_default_python_bin)",
+            server_daemon_script_text,
+        )
+        self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             server_daemon_script_text,
         )
@@ -1164,6 +1172,13 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("launch_detached_process.py", portfolio_mockup_script_text)
         self.assertIn('source "$script_dir/repo_root.sh"', portfolio_mockup_script_text)
         self.assertIn("polinko_cd_repo_root", portfolio_mockup_script_text)
+        self.assertIn(
+            "python_bin=$(polinko_default_python_bin)", portfolio_mockup_script_text
+        )
+        self.assertIn(
+            "PORTFOLIO_MOCKUP_LAUNCHER_PYTHON:-$(polinko_default_python_bin)",
+            portfolio_mockup_script_text,
+        )
         self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             portfolio_mockup_script_text,
@@ -1248,6 +1263,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("launch_detached_process.py", sidecar_script_text)
         self.assertIn('source "$script_dir/repo_root.sh"', sidecar_script_text)
         self.assertIn("polinko_cd_repo_root", sidecar_script_text)
+        self.assertIn("python_bin=$(polinko_default_python_bin)", sidecar_script_text)
+        self.assertIn(
+            "EVAL_SIDECAR_LAUNCHER_PYTHON:-$(polinko_default_python_bin)",
+            sidecar_script_text,
+        )
         self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             sidecar_script_text,
