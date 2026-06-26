@@ -564,6 +564,9 @@ Last updated: 2026-06-25
     adoption, status, and stop logic
   - VS Code keeps `make start` available as a manual task; folder-open
     bootstrap is retired so startup stays chat-led
+  - `make doctor-env` reports both the active interpreter path and its source
+    label, so repo `.venv`, override, and host fallback paths are visible
+    during startup
   - local URL helpers such as `make docs`, `make open-api-docs`, and
     `make viz` print the target URL by default instead of launching a browser
   - explicit browser launch remains available through `make docs-open`,
