@@ -1,6 +1,7 @@
 import os
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -46,6 +47,51 @@ class OcrBaseTranscriptWorkflowTests(unittest.TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                args_file.read_text(encoding="utf-8").splitlines(), [str(cases_path)]
+            )
+
+    def test_cases_workflow_uses_default_guard_from_subdirectory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            cases_path = tmp_path / "cases.json"
+            args_file = tmp_path / "runner-args.txt"
+            cwd_file = tmp_path / "runner-cwd.txt"
+            runner_path = tmp_path / "runner.sh"
+            cases_path.write_text('{"cases": [{"id": "case-1"}]}', encoding="utf-8")
+            _write_executable(
+                runner_path,
+                (
+                    "#!/usr/bin/env sh\n"
+                    "set -eu\n"
+                    'printf "%s\\n" "$PWD" > "$RUNNER_CWD"\n'
+                    'printf "%s\\n" "$@" > "$RUNNER_ARGS"\n'
+                ),
+            )
+
+            env = os.environ.copy()
+            env.pop("OCR_WORKFLOW_COMMON_SCRIPT", None)
+            env.pop("EVAL_CASE_GUARD_SCRIPT", None)
+            env.update(
+                {
+                    "PYTHON": sys.executable,
+                    "OCR_TRANSCRIPT_CASES": str(cases_path),
+                    "OCR_EVAL_RUNNER_SCRIPT": str(runner_path),
+                    "RUNNER_ARGS": str(args_file),
+                    "RUNNER_CWD": str(cwd_file),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", "../tools/run_ocr_base_transcript_workflow.sh", "cases"],
+                cwd=REPO_ROOT / "docs",
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(cwd_file.read_text(encoding="utf-8"), f"{REPO_ROOT}\n")
             self.assertEqual(
                 args_file.read_text(encoding="utf-8").splitlines(), [str(cases_path)]
             )

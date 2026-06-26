@@ -70,6 +70,42 @@ class OcrTranscriptLaneWorkflowTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), f"runner args: <{cases_path}>")
 
+    def test_case_lane_uses_default_guarded_runner_from_subdirectory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            cases_path = tmp_path / "handwriting.json"
+            runner_path = tmp_path / "runner.sh"
+            cases_path.write_text('{"cases": [{"id": "hand-a"}]}', encoding="utf-8")
+            _write_runner(runner_path)
+
+            env = os.environ.copy()
+            env.pop("EVAL_CASE_GUARD_SCRIPT", None)
+            env.pop("OCR_GUARDED_CASE_RUNNER_SCRIPT", None)
+            env.pop("OCR_WORKFLOW_COMMON_SCRIPT", None)
+            env.update(
+                {
+                    "PYTHON": sys.executable,
+                    "OCR_EVAL_RUNNER_SCRIPT": str(runner_path),
+                    "OCR_TRANSCRIPT_CASES_HANDWRITING": str(cases_path),
+                }
+            )
+
+            result = subprocess.run(
+                [
+                    "bash",
+                    "../tools/run_ocr_transcript_lane_workflow.sh",
+                    "case",
+                    "handwriting",
+                ],
+                cwd=REPO_ROOT / "docs",
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), f"runner args: <{cases_path}>")
+
     def test_case_lane_preserves_missing_case_guidance(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
