@@ -109,8 +109,8 @@ flowchart TD
   `tools/python_runtime.sh` is the shared shell interpreter helper for direct
   operator wrappers: explicit `PYTHON` wins, then repo `.venv`, then `python3`.
   `make local-runtime-config-check` runs through `make ci-docs` so VS Code
-  task/config drift and retired local doc references fail the normal
-  docs/runtime gate.
+  task/config drift, retired local doc references, and retired extension
+  recommendation drift fail the normal docs/runtime gate.
   `make startup-contracts-check` keeps startup/runtime doc contracts in the
   local docs gate so wording drift fails before a PR-only CI run.
   Startup, closeout, clean-main git checks, devcontainer setup, local eval
@@ -124,8 +124,8 @@ flowchart TD
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files;
   it checks local path leaks and reuses `make local-runtime-config-check` for
-  VS Code task/config shape plus devcontainer config token drift through
-  `tools.check_local_runtime_config`.
+  VS Code task/config shape, extension recommendation drift, and devcontainer
+  config token drift through `tools.check_local_runtime_config`.
   Devcontainer setup resolves the repo root before installing dependencies.
   `make privacy-local-on` installs the current machine-local handoff exclude
   pattern; tracked docs remain visible.

@@ -3079,3 +3079,24 @@ or branch history instead.
 - Why: A correct interpreter path can still be hard to reason about when the
   source is implicit. Making the source visible reduces local-vs-system Python
   drift without changing the existing Make interpreter contract.
+
+## D-191: Guard VS Code extension recommendation drift
+
+- Date: `2026-06-26`
+- Category: `workflow_environment`
+- Tags: `vscode`, `local_config`, `extensions`, `hygiene`
+- Human-led: The human lead asked to keep editor and hidden runtime surfaces
+  maintained because local extension drift has repeatedly interrupted the
+  workspace.
+- Engineer implementation: Extend `tools.check_local_runtime_config` so
+  `.vscode/extensions.json` fails if retired extensions are recommended,
+  missing from `unwantedRecommendations`, or present in both recommendations
+  and unwanted recommendations; also reject retired extension IDs from
+  devcontainer VS Code extensions.
+- Decision: VS Code extension recommendations are part of the local runtime
+  config contract, alongside task shape, retired local doc references, and
+  devcontainer config drift.
+- Why: Extension recommendations can reintroduce retired tooling such as
+  standalone import-sorter or linter extensions even when Make, Ruff, and
+  devcontainer checks are correct. Guarding the recommendations keeps editor
+  setup aligned with the repo-owned toolchain before startup or PR validation.

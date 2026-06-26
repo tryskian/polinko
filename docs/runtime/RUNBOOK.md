@@ -483,7 +483,8 @@ Use this doc for operator procedure.
   - validates tracked shell helper shebangs, strict modes, sourced helper
     contracts, and root-helper coverage for executable operator scripts
 - `make local-runtime-config-check`
-  - validates VS Code task/config shape through `tools.check_local_runtime_config`
+  - validates VS Code task/config shape, extension recommendation drift, and
+    devcontainer config drift through `tools.check_local_runtime_config`
 - `make risk-scan`
   - validates that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates

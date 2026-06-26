@@ -22,6 +22,25 @@ RETIRED_LOCAL_DOC_PATHS = (
     "docs/HYBRID_OPENAI_ADOPTION_PLAN.md",
     "docs/portfolio/raw_evidence",
 )
+RETIRED_VSCODE_EXTENSION_IDS = (
+    "ms-python.pylint",
+    "ms-python.isort",
+    "ms-pyright.pyright",
+    "donjayamanne.python-extension-pack",
+    "kevinrose.vsc-python-indent",
+    "mgesbert.python-path",
+    "formulahendry.code-runner",
+    "ritwickdey.liveserver",
+    "batisteo.vscode-django",
+    "bradlc.vscode-tailwindcss",
+    "vue.volar",
+    "github.copilot-chat",
+    "ms-toolsai.jupyter",
+    "ms-toolsai.datawrangler",
+    "ms-vscode.cpptools-extension-pack",
+    "vscode-arduino.vscode-arduino-community",
+    "ms-vscode.powershell",
+)
 
 
 def _load_json(path: Path) -> tuple[Any | None, str | None]:
@@ -73,6 +92,78 @@ def _retired_local_doc_failures(path: Path, value: Any) -> list[str]:
     return failures
 
 
+def _extension_ids(path: Path, value: Any, key: str) -> tuple[set[str], list[str]]:
+    raw_extensions = value.get(key)
+    if raw_extensions is None:
+        return set(), []
+    if not isinstance(raw_extensions, list):
+        return set(), [f"{path}: {key} must be a list"]
+
+    failures: list[str] = []
+    extension_ids: set[str] = set()
+    for index, raw_extension in enumerate(raw_extensions):
+        if not isinstance(raw_extension, str):
+            failures.append(
+                f"{path}: {key}[{index}] must be a VS Code extension id string"
+            )
+            continue
+        extension_id = raw_extension.strip().lower()
+        if extension_id:
+            extension_ids.add(extension_id)
+    return extension_ids, failures
+
+
+def _retired_extension_failures(
+    path: Path, extension_ids: set[str], surface: str
+) -> list[str]:
+    failures: list[str] = []
+    retired_extensions = set(RETIRED_VSCODE_EXTENSION_IDS)
+    for extension_id in sorted(extension_ids & retired_extensions):
+        failures.append(
+            f"{path}: {surface} includes retired VS Code extension {extension_id!r}"
+        )
+    return failures
+
+
+def _extensions_json_failures(path: Path, value: dict[str, Any]) -> list[str]:
+    recommendations, recommendation_failures = _extension_ids(
+        path, value, "recommendations"
+    )
+    unwanted, unwanted_failures = _extension_ids(path, value, "unwantedRecommendations")
+
+    failures = [*recommendation_failures, *unwanted_failures]
+    for extension_id in sorted(recommendations & unwanted):
+        failures.append(
+            f"{path}: extension {extension_id!r} is both recommended and unwanted"
+        )
+    failures.extend(
+        _retired_extension_failures(path, recommendations, "recommendations")
+    )
+
+    missing_unwanted = set(RETIRED_VSCODE_EXTENSION_IDS) - unwanted
+    for extension_id in sorted(missing_unwanted):
+        failures.append(
+            f"{path}: retired VS Code extension {extension_id!r} is missing from "
+            "unwantedRecommendations"
+        )
+    return failures
+
+
+def _devcontainer_extension_failures(path: Path, value: dict[str, Any]) -> list[str]:
+    customizations = value.get("customizations")
+    if not isinstance(customizations, dict):
+        return []
+    vscode = customizations.get("vscode")
+    if not isinstance(vscode, dict):
+        return []
+
+    extension_ids, failures = _extension_ids(path, vscode, "extensions")
+    return [
+        *failures,
+        *_retired_extension_failures(path, extension_ids, "devcontainer extensions"),
+    ]
+
+
 def check_vscode_config(root: Path = ROOT) -> list[str]:
     vscode_dir = root / ".vscode"
     if not vscode_dir.exists():
@@ -95,6 +186,12 @@ def check_vscode_config(root: Path = ROOT) -> list[str]:
 
     for file_name, value in parsed.items():
         failures.extend(_retired_local_doc_failures(vscode_dir / file_name, value))
+
+    extensions_json = parsed.get("extensions.json")
+    if extensions_json is not None:
+        failures.extend(
+            _extensions_json_failures(vscode_dir / "extensions.json", extensions_json)
+        )
 
     tasks_json = parsed.get("tasks.json")
     if tasks_json is None:
@@ -163,6 +260,7 @@ def check_devcontainer_config(root: Path = ROOT) -> list[str]:
             failures.append(f"{path}: expected top-level JSON object")
             continue
         failures.extend(_retired_local_doc_failures(path, value))
+        failures.extend(_devcontainer_extension_failures(path, value))
 
     return failures
 
