@@ -1283,6 +1283,7 @@ class MakefileContractTests(unittest.TestCase):
         common_text = OCR_WORKFLOW_COMMON_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("EVAL_CASE_GUARD_SCRIPT", common_text)
         self.assertIn("eval_case_guard.sh", common_text)
+        self.assertIn("_ocr_workflow_default_python_bin", common_text)
         self.assertIn('source "$script_dir/repo_root.sh"', guarded_runner_text)
         self.assertIn("polinko_cd_repo_root", guarded_runner_text)
         self.assertIn("OCR_WORKFLOW_COMMON_SCRIPT", guarded_runner_text)
