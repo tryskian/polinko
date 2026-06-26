@@ -19,13 +19,21 @@ class RunEvalOcrHandwritingTests(unittest.TestCase):
     def test_run_mode_builds_strict_handwriting_command(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
+            subdir = tmp_path / "subdir"
             cases_path = tmp_path / "handwriting.json"
             args_file = tmp_path / "python-args.txt"
+            cwd_file = tmp_path / "python-cwd.txt"
             python_script = tmp_path / "python.sh"
+            subdir.mkdir()
             cases_path.write_text("[]\n", encoding="utf-8")
             _write_executable(
                 python_script,
-                '#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$PYTHON_ARGS"\n',
+                (
+                    "#!/usr/bin/env sh\n"
+                    "set -eu\n"
+                    'pwd > "$PYTHON_CWD"\n'
+                    'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
+                ),
             )
 
             env = os.environ.copy()
@@ -33,6 +41,7 @@ class RunEvalOcrHandwritingTests(unittest.TestCase):
                 {
                     "PYTHON": str(python_script),
                     "PYTHON_ARGS": str(args_file),
+                    "PYTHON_CWD": str(cwd_file),
                     "OCR_HANDWRITING_CASES": str(cases_path),
                     "OCR_EVAL_TIMEOUT": "12",
                     "OCR_EVAL_OCR_RETRIES": "3",
@@ -42,14 +51,17 @@ class RunEvalOcrHandwritingTests(unittest.TestCase):
             )
 
             result = subprocess.run(
-                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "run"],
-                cwd=REPO_ROOT,
+                ["bash", str(SCRIPT), "run"],
+                cwd=subdir,
                 env=env,
                 capture_output=True,
                 text=True,
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                cwd_file.read_text(encoding="utf-8").strip(), str(REPO_ROOT)
+            )
             self.assertEqual(
                 args_file.read_text(encoding="utf-8").splitlines(),
                 [
