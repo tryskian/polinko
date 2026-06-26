@@ -7,12 +7,12 @@
 ![Model Refactor](https://img.shields.io/badge/model_refactor-active-F28E2B)
 
 > [!NOTE]
-> **Current status:** The Polinko research model is being staged for the next
-> beta.
+> **Current status:** Polinko is being staged for the next beta.
 >
-> This is an active refactor window for the model contract, evidence snapshots,
-> docs, and supporting tools. Current builds are kept stable while the repo
-> surfaces are simplified, tested, and aligned for the next release.
+> The research model is stable enough to keep building on, but the repo is in
+> an active refactor window. The model contract, evidence snapshots, docs,
+> helper scripts, and local tooling are being tightened so the next beta has a
+> cleaner surface to build from.
 
 Polinko is a human-led research system for inspecting AI behaviour through
 fail-first evaluation, evidence-preserving method work, and repo-native
@@ -38,7 +38,7 @@ smoothing them away.
 OCR is one pressure lane because the expected answer is externally checkable.
 It is part of the theory, not the whole model.
 
-## Current Read
+## Current Position
 
 - `Beta 2.3` is the frozen method snapshot.
 - `pre-Beta 2.4` is staged as the next research-model contract.
@@ -49,16 +49,27 @@ It is part of the theory, not the whole model.
 - Operator burden is the active thin lane.
 - The discarded run-level rollup path is not being carried forward.
 
+## Refactor Map
+
+The current refactor is being handled as a staged path. The diagrams show the
+working loop and the route each major surface has taken through the cleanup.
+
+- [Refactor method](docs/public/diagrams/refactor-method.md): alignment,
+  kernel scope, validation, docs, PR, merge, and clean main.
+- [Refactor journey](docs/public/diagrams/refactor-journey.md): evidence
+  baseline, runtime/package movement, manual eval workbench, and docs closeout.
+
 ## Read Next
 
-| Surface                                      | Use                                      |
-| -------------------------------------------- | ---------------------------------------- |
-| [Field notes](docs/public/README.md)         | shortest reading path                    |
-| [Research surface](docs/research/README.md)  | current notes, beta evidence, hypotheses |
-| [Eval evidence](docs/eval/README.md)         | tracked eval snapshots                   |
-| [Runbook](docs/runtime/RUNBOOK.md)           | operator procedure                       |
-| [Architecture](docs/runtime/ARCHITECTURE.md) | system shape                             |
-| [Decisions](docs/governance/DECISIONS.md)    | durable rationale                        |
+| Surface                                             | Use                                      |
+| --------------------------------------------------- | ---------------------------------------- |
+| [Field notes](docs/public/README.md)                | shortest reading path                    |
+| [Research surface](docs/research/README.md)         | current notes, beta evidence, hypotheses |
+| [Eval evidence](docs/eval/README.md)                | tracked eval snapshots                   |
+| [Refactor diagrams](docs/public/diagrams/README.md) | method and journey maps                  |
+| [Runbook](docs/runtime/RUNBOOK.md)                  | operator procedure                       |
+| [Architecture](docs/runtime/ARCHITECTURE.md)        | system shape                             |
+| [Decisions](docs/governance/DECISIONS.md)           | durable rationale                        |
 
 ## Run Locally
 
