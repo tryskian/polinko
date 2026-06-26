@@ -6,6 +6,8 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$script_dir/repo_root.sh"
 
 polinko_cd_repo_root
+# shellcheck source=tools/python_runtime.sh
+. "$script_dir/python_runtime.sh"
 
 usage() {
 	echo "Usage: run_ocr_intake_workflow.sh <export-index|cases-from-export-build|benchmark|generalization-review|transcript-delta> [lane|extra args...]" >&2
@@ -19,7 +21,7 @@ fi
 suite=$1
 shift
 
-python_bin=${PYTHON:-python3}
+python_bin=$(polinko_default_python_bin)
 export_output_dir=${CGPT_EXPORT_OUTPUT_DIR:-.local/eval_cases}
 transcript_cases_all=${OCR_TRANSCRIPT_CASES_ALL:-.local/eval_cases/ocr_transcript_cases_all.json}
 transcript_cases_growth=${OCR_TRANSCRIPT_CASES_GROWTH:-.local/eval_cases/ocr_transcript_cases_growth.json}

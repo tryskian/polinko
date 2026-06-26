@@ -6,20 +6,8 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$script_dir/repo_root.sh"
 
 polinko_cd_repo_root
-
-default_python_bin() {
-	if [ -n "${PYTHON:-}" ]; then
-		printf "%s\n" "$PYTHON"
-		return
-	fi
-	for candidate in ./.venv/bin/python3.14 ./.venv/bin/python ./.venv/bin/python3; do
-		if [ -x "$candidate" ] && "$candidate" -V >/dev/null 2>&1; then
-			printf "%s\n" "$candidate"
-			return
-		fi
-	done
-	printf "%s\n" python3
-}
+# shellcheck source=tools/python_runtime.sh
+. "$script_dir/python_runtime.sh"
 
 if [ "$#" -ne 7 ]; then
 	echo "Usage: run_eval_ocr_growth_cases.sh <cases-json> <timeout> <offset> <max-cases> <ocr-retries> <ocr-retry-delay-ms> <max-consecutive-rate-limit-errors>" >&2
@@ -34,7 +22,7 @@ ocr_retries=$5
 ocr_retry_delay_ms=$6
 max_consecutive_rate_limit_errors=$7
 
-python_bin=$(default_python_bin)
+python_bin=$(polinko_default_python_bin)
 server_daemon_script=${EVAL_SERVER_DAEMON_SCRIPT:-./tools/ensure_eval_server_daemon.sh}
 
 export PYTHONUNBUFFERED=1

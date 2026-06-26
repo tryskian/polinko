@@ -2,6 +2,7 @@ import os
 import signal
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -103,6 +104,7 @@ class RunPortfolioMockupsTests(unittest.TestCase):
                 {
                     "PYTHON": str(python_script),
                     "PYTHON_ARGS": str(args_file),
+                    "PORTFOLIO_MOCKUP_LAUNCHER_PYTHON": sys.executable,
                     "CHILD_PID_FILE": str(child_pid_file),
                     "PORTFOLIO_MOCKUP_DIR": str(mockup_dir),
                     "PORTFOLIO_MOCKUP_PORT": "8766",

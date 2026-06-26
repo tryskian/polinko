@@ -3042,3 +3042,21 @@ or branch history instead.
   environment. Making the bootstrap choice explicit keeps setup predictable
   while preserving the normal `.venv/bin/python3` dependency-install path after
   the venv exists.
+
+## D-189: Share direct shell Python interpreter selection
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `shell`, `python`, `interpreter`, `hygiene`
+- Human-led: The human lead asked to address recurring local-versus-system
+  Python environment drift and keep script/runtime cleanup focused on
+  operator-facing workflow interruptions.
+- Engineer implementation: Add `tools/python_runtime.sh` as the shared shell
+  interpreter resolver, route direct runtime wrappers through it, register it
+  in shell and runtime risk-surface checks, and add focused fallback-order
+  tests.
+- Decision: Direct runtime shell wrappers should use one interpreter rail:
+  explicit `PYTHON`, then repo `.venv`, then `python3` as the final fallback.
+- Why: Copy/pasted Python fallback logic lets direct script invocation drift
+  away from Make and CI. A shared sourced helper keeps direct wrappers
+  predictable without changing Make's existing `$(PYTHON)` contract.

@@ -1,7 +1,10 @@
 #!/usr/bin/env sh
 
 ocr_workflow_use_eval_case_guard() {
-	PYTHON=${PYTHON:-python3}
+	_ocr_workflow_python_runtime=${PYTHON_RUNTIME_SCRIPT:-./tools/python_runtime.sh}
+	# shellcheck source=./tools/python_runtime.sh
+	. "$_ocr_workflow_python_runtime"
+	PYTHON=$(polinko_default_python_bin)
 	export PYTHON
 
 	_ocr_workflow_guard_script=${EVAL_CASE_GUARD_SCRIPT:-./tools/eval_case_guard.sh}
