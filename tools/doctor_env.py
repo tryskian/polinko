@@ -23,6 +23,26 @@ def _warn(message: str) -> None:
     print(f"[warn] {message}")
 
 
+def _interpreter_source_label(
+    current_raw: Path, current: Path, active_venv: str | None
+) -> str:
+    configured_source = os.environ.get("POLINKO_DOCTOR_INTERPRETER_SOURCE")
+    if configured_source:
+        return configured_source
+
+    if active_venv:
+        return "active VIRTUAL_ENV"
+
+    for path in (current_raw, current):
+        try:
+            path.relative_to(ROOT / ".venv")
+        except ValueError:
+            continue
+        return "repo .venv"
+
+    return "host PATH fallback"
+
+
 def _is_runnable_python(path: Path) -> bool:
     if not path.exists():
         return False
@@ -62,6 +82,7 @@ def _check_interpreter() -> int:
     current_raw = Path(sys.executable)
     current = current_raw.resolve()
     active_venv = os.environ.get("VIRTUAL_ENV")
+    interpreter_source = _interpreter_source_label(current_raw, current, active_venv)
     expected_candidates = _expected_python_candidates(active_venv)
     runnable_candidates = [
         path for path in expected_candidates if _is_runnable_python(path)
@@ -78,11 +99,13 @@ def _check_interpreter() -> int:
         )
         if matching_candidate is not None:
             _ok(f"Interpreter: {current_raw} (resolved: {current})")
+            _ok(f"Interpreter source: {interpreter_source}")
         else:
             expected_raw = runnable_candidates[0]
             expected = expected_raw.resolve()
             issues += 1
             _warn(f"Interpreter mismatch: {current_raw} (resolved: {current})")
+            _warn(f"Interpreter source: {interpreter_source}")
             _warn(f"Expected: {expected_raw} (resolved: {expected})")
             _warn(f"Use: source {expected_raw.parent / 'activate'}")
     else:
@@ -91,6 +114,7 @@ def _check_interpreter() -> int:
             "(common when host is macOS and venv was built in Linux container)."
         )
         _ok(f"Using host interpreter: {current_raw} (resolved: {current})")
+        _ok(f"Interpreter source: {interpreter_source}")
 
     if active_venv:
         _ok(f"VIRTUAL_ENV={active_venv}")

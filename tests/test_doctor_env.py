@@ -42,8 +42,61 @@ class DoctorEnvTests(unittest.TestCase):
         output = stdout.getvalue()
         self.assertEqual(issues, 0)
         self.assertIn("Interpreter:", output)
+        self.assertIn("Interpreter source: active VIRTUAL_ENV", output)
         self.assertIn("VIRTUAL_ENV=", output)
         self.assertNotIn("Interpreter mismatch", output)
+
+    def test_check_interpreter_reports_make_source_label(self) -> None:
+        current_python = doctor_env.ROOT / ".venv" / "bin" / "python3.14"
+        stdout = io.StringIO()
+
+        with patch.object(doctor_env.sys, "executable", str(current_python)):
+            with patch.dict(
+                "os.environ",
+                {
+                    "POLINKO_DOCTOR_INTERPRETER_SOURCE": (
+                        "repo .venv selected by Make"
+                    ),
+                    "VIRTUAL_ENV": str(doctor_env.ROOT / ".venv"),
+                },
+                clear=True,
+            ):
+                with patch("tools.doctor_env._is_runnable_python") as is_runnable:
+                    with patch(
+                        "tools.doctor_env.shutil.which",
+                        return_value=str(current_python),
+                    ):
+                        is_runnable.side_effect = lambda path: (
+                            path.parent.parent == doctor_env.ROOT / ".venv"
+                        )
+                        with redirect_stdout(stdout):
+                            issues = doctor_env._check_interpreter()
+
+        output = stdout.getvalue()
+        self.assertEqual(issues, 0)
+        self.assertIn("Interpreter source: repo .venv selected by Make", output)
+
+    def test_check_interpreter_reports_host_fallback_when_no_venv_exists(self) -> None:
+        stdout = io.StringIO()
+        current_python = Path("/usr/bin/python3")
+
+        with patch.object(doctor_env.sys, "executable", str(current_python)):
+            with patch.dict("os.environ", {}, clear=True):
+                with patch(
+                    "tools.doctor_env._is_runnable_python",
+                    return_value=False,
+                ):
+                    with patch(
+                        "tools.doctor_env.shutil.which",
+                        return_value=str(current_python),
+                    ):
+                        with redirect_stdout(stdout):
+                            issues = doctor_env._check_interpreter()
+
+        output = stdout.getvalue()
+        self.assertEqual(issues, 0)
+        self.assertIn("Using host interpreter", output)
+        self.assertIn("Interpreter source: host PATH fallback", output)
 
     def test_check_interpreter_mismatch_points_to_dotvenv_activation(self) -> None:
         stdout = io.StringIO()
@@ -69,6 +122,7 @@ class DoctorEnvTests(unittest.TestCase):
         output = stdout.getvalue()
         self.assertEqual(issues, 1)
         self.assertIn("Interpreter mismatch", output)
+        self.assertIn("Interpreter source: active VIRTUAL_ENV", output)
         self.assertIn(str(doctor_env.ROOT / ".venv" / "bin" / "activate"), output)
 
 

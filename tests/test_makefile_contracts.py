@@ -280,6 +280,18 @@ class MakefileContractTests(unittest.TestCase):
             config_text,
         )
 
+    def test_doctor_env_passes_interpreter_source_to_python_doctor(self) -> None:
+        text = _makefile_contract_text()
+
+        self.assertRegex(text, r"(?m)^doctor-env:$")
+        self.assertIn('PYTHON_ORIGIN="$(origin PYTHON)"', text)
+        self.assertIn(
+            'POLINKO_DOCTOR_INTERPRETER_SOURCE="$$INTERPRETER_SOURCE"',
+            text,
+        )
+        self.assertIn("repo .venv selected by Make", text)
+        self.assertIn("host python3 fallback selected by Make", text)
+
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(
             ["make", "-n"],

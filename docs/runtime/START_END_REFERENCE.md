@@ -21,6 +21,8 @@ Sequence:
    - `git status --short --branch`
 2. Run the generic startup safety path:
    - `make doctor-env`
+     - reports the active Python interpreter and whether it came from Make's
+       repo `.venv` selection, an override, or host fallback
    - `make caffeinate`
    - `make caffeinate-status`
    - `make api-smoke`

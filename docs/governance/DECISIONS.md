@@ -3060,3 +3060,22 @@ or branch history instead.
 - Why: Copy/pasted Python fallback logic lets direct script invocation drift
   away from Make and CI. A shared sourced helper keeps direct wrappers
   predictable without changing Make's existing `$(PYTHON)` contract.
+
+## D-190: Surface startup Python interpreter source
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `startup`, `doctor-env`, `python`, `interpreter`
+- Human-led: The human lead flagged recurring local-versus-system Python env
+  drift and asked to keep startup/runtime checks on top of these workflow
+  interruptions.
+- Engineer implementation: Pass an explicit interpreter-source label from
+  `make doctor-env` into `tools.doctor_env`, print that label next to the
+  interpreter path, and cover both the Python output and Make handoff with
+  focused tests.
+- Decision: Startup environment diagnostics should show not only the active
+  interpreter path, but also whether it came from Make's repo `.venv`
+  selection, a user override, or host fallback.
+- Why: A correct interpreter path can still be hard to reason about when the
+  source is implicit. Making the source visible reduces local-vs-system Python
+  drift without changing the existing Make interpreter contract.
