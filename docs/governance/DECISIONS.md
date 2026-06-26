@@ -2926,3 +2926,24 @@ or branch history instead.
   OCR inputs and reports. They should behave the same from Make, direct script
   execution, and subdirectory invocation so maintenance checks do not depend on
   the operator's current working directory.
+
+## D-183: Make direct OCR eval runners repo-root aware
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `ocr_eval`, `shell`, `repo_root`, `hygiene`
+- Human-led: The human lead approved continuing the focused script/runtime
+  cleanup in normal order while keeping OCR eval execution outside the active
+  maintenance lane.
+- Engineer implementation: Convert `run_eval_ocr_cases.sh`,
+  `run_eval_ocr_handwriting.sh`, and `run_eval_ocr_stability.sh` to Bash
+  root-helper entrypoints, add subdirectory invocation tests with fake
+  interpreters/servers so no evals run, and extend Makefile contract coverage
+  for direct OCR eval runner root setup.
+- Decision: Direct OCR eval runners resolve the checkout root before starting
+  the eval server daemon or launching OCR eval modules, and direct invocation
+  without `PYTHON` prefers the repo `.venv` interpreter when available.
+- Why: These wrappers are the direct execution layer behind OCR case,
+  handwriting, and stability targets. They should behave the same from Make,
+  direct script execution, and subdirectory invocation without depending on the
+  operator's current working directory.

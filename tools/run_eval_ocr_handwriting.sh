@@ -1,5 +1,25 @@
-#!/usr/bin/env sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tools/repo_root.sh
+source "$script_dir/repo_root.sh"
+
+polinko_cd_repo_root
+
+default_python_bin() {
+	if [ -n "${PYTHON:-}" ]; then
+		printf "%s\n" "$PYTHON"
+		return
+	fi
+	for candidate in ./.venv/bin/python3.14 ./.venv/bin/python ./.venv/bin/python3; do
+		if [ -x "$candidate" ] && "$candidate" -V >/dev/null 2>&1; then
+			printf "%s\n" "$candidate"
+			return
+		fi
+	done
+	printf "%s\n" python3
+}
 
 if [ "$#" -ne 1 ]; then
 	echo "Usage: run_eval_ocr_handwriting.sh <run|report>" >&2
@@ -7,7 +27,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 mode=$1
-python_bin=${PYTHON:-python3}
+python_bin=$(default_python_bin)
 cases_path=${OCR_HANDWRITING_CASES:-.local/eval_cases/ocr_handwriting_eval_cases.json}
 timeout_seconds=${OCR_EVAL_TIMEOUT:-90}
 ocr_retries=${OCR_EVAL_OCR_RETRIES:-2}
