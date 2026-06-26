@@ -25,7 +25,7 @@ test-targeted:
 pycheck:
 	@set -eu; \
 	if [ -z "$(FILES)" ]; then \
-		echo 'Usage: make pycheck FILES="tools/foo.py tools/bar.py"'; \
+		echo 'Usage: make pycheck FILES="tools/check_shell_scripts.py tools/check_runtime_risk_scan.py"'; \
 		exit 2; \
 	fi; \
 	python3 -m py_compile $(FILES)

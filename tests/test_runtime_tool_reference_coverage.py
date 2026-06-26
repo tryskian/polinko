@@ -48,7 +48,27 @@ def _runtime_reference_surfaces(tracked_files: list[str]) -> list[str]:
     return surfaces
 
 
-def _referenced_tracked_tools(text: str, tracked_tools: set[str]) -> set[str]:
+def _active_runtime_reference_surfaces(tracked_files: list[str]) -> list[str]:
+    surfaces: list[str] = []
+    for rel_path in tracked_files:
+        if rel_path == "Makefile" or rel_path.startswith(
+            (
+                "makefiles/",
+                "tools/",
+                ".github/",
+                ".vscode/",
+                ".devcontainer/",
+            )
+        ):
+            surfaces.append(rel_path)
+        elif rel_path in {"README.md", "pyproject.toml", ".pre-commit-config.yaml"}:
+            surfaces.append(rel_path)
+        elif rel_path.startswith(("docs/runtime/", "docs/public/")):
+            surfaces.append(rel_path)
+    return surfaces
+
+
+def _referenced_tools(text: str) -> set[str]:
     path_refs = set(
         re.findall(r"(?:\./|\.\./)*(tools/[A-Za-z0-9_./-]+\.(?:py|sh))", text)
     )
@@ -60,7 +80,11 @@ def _referenced_tracked_tools(text: str, tracked_tools: set[str]) -> set[str]:
             text,
         )
     }
-    return {ref for ref in path_refs | module_refs if ref in tracked_tools}
+    return path_refs | module_refs
+
+
+def _referenced_tracked_tools(text: str, tracked_tools: set[str]) -> set[str]:
+    return {ref for ref in _referenced_tools(text) if ref in tracked_tools}
 
 
 def _test_visibility_tokens(tool_path: str) -> set[str]:
@@ -72,6 +96,25 @@ def _test_visibility_tokens(tool_path: str) -> set[str]:
 
 
 class RuntimeToolReferenceCoverageTests(unittest.TestCase):
+    def test_active_runtime_tool_references_exist(self) -> None:
+        tracked_files = _tracked_files()
+        reference_text = _read_tracked_text(
+            _active_runtime_reference_surfaces(tracked_files)
+        )
+
+        missing_tools = [
+            tool_path
+            for tool_path in sorted(_referenced_tools(reference_text))
+            if not (REPO_ROOT / tool_path).exists()
+        ]
+
+        self.assertEqual(
+            missing_tools,
+            [],
+            "Active Make, CI, runtime, and tooling surfaces must not reference "
+            "missing tools/*.py or tools/*.sh helpers.",
+        )
+
     def test_referenced_runtime_tools_have_direct_test_visibility(self) -> None:
         tracked_files = _tracked_files()
         tracked_tools = {

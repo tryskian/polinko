@@ -498,8 +498,10 @@ Last updated: 2026-06-25
     configuration surfaces remain visible in tracked docs and Make gates,
     including the lightweight pre-commit hook contract
   - runtime tool reference coverage is explicit through unit tests, which
-    verify that tracked runtime, script, docs, and config references to
-    tracked `tools/*.py` and `tools/*.sh` helpers have direct test visibility
+    verify that active Make, CI, runtime, docs, and tooling references point to
+    existing `tools/*.py` and `tools/*.sh` helpers, and that tracked runtime,
+    script, docs, and config references to tracked helpers have direct test
+    visibility
   - local runtime config coverage is explicit through
     `make local-runtime-config-check`, which validates VS Code and
     devcontainer config shape, rejects retired local doc references, and runs through
