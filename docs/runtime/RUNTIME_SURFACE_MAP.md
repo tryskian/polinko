@@ -109,9 +109,10 @@ flowchart TD
   `make startup-contracts-check` keeps startup/runtime doc contracts in the
   local docs gate so wording drift fails before a PR-only CI run.
   Startup, closeout, clean-main git checks, devcontainer setup, local eval
-  gates, local privacy guard, OCR workflow, OCR guard/transcript workflows,
-  OCR report workflows, and Playwright snapshot helpers resolve the checkout
-  root through `tools/repo_root.sh`. Direct local-gate execution also prefers
+  gates, local privacy guard, OCR workflow, OCR intake/focus/growth wrappers,
+  OCR guard/transcript workflows, OCR report workflows, and Playwright snapshot
+  helpers resolve the checkout root through `tools/repo_root.sh`. Direct
+  local-gate execution also prefers
   the repo `.venv` interpreter when `PYTHON` is not set.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files;
@@ -145,9 +146,11 @@ flowchart TD
   `manual-evals-*` targets paired with their `manualdb-*` compatibility aliases
   and keeps parked OCR eval aliases out of automatic startup, closeout, and CI
   dependencies. Eval report wrappers resolve the checkout root before writing
-  default report paths or launching report modules. Base, growth, focus, and
-  transcript-lane OCR wrappers share the same case guard before launching eval
-  runners.
+  default report paths or launching report modules. OCR intake/focus/growth
+  orchestrator wrappers resolve the checkout root before using default local
+  paths, sourcing the shared guard helper, or delegating to eval runners. Base,
+  growth, focus, and transcript-lane OCR wrappers share the same case guard
+  before launching eval runners.
 - CI and dependency automation should mirror local gates closely enough that
   failed remote runs point to real fixes, not setup drift.
 - Local URL targets remain print-first by default. Explicit system-browser

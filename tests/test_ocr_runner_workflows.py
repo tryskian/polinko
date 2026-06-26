@@ -65,7 +65,7 @@ class OcrRunnerWorkflowTests(unittest.TestCase):
             )
 
             result = subprocess.run(
-                ["/bin/sh", str(FOCUS_WORKFLOW.relative_to(REPO_ROOT))],
+                ["bash", str(FOCUS_WORKFLOW)],
                 capture_output=True,
                 cwd=REPO_ROOT,
                 env=env,
@@ -93,7 +93,7 @@ class OcrRunnerWorkflowTests(unittest.TestCase):
             )
 
             result = subprocess.run(
-                ["/bin/sh", str(FOCUS_WORKFLOW.relative_to(REPO_ROOT))],
+                ["bash", str(FOCUS_WORKFLOW)],
                 capture_output=True,
                 cwd=REPO_ROOT,
                 env=env,
@@ -106,6 +106,38 @@ class OcrRunnerWorkflowTests(unittest.TestCase):
             "No OCR focus cases available; skipping focus stability run.",
         )
         self.assertNotIn("runner args:", result.stdout)
+
+    def test_focus_stability_workflow_uses_default_common_from_subdirectory(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            cases_path = tmp_path / "focus_cases.json"
+            runner_path = tmp_path / "runner.sh"
+            cases_path.write_text(
+                '{"cases": [{"id": "focus-subdir"}]}', encoding="utf-8"
+            )
+            _write_runner(runner_path)
+
+            env = _base_env()
+            env.update(
+                {
+                    "OCR_STABILITY_RUNNER_SCRIPT": str(runner_path),
+                    "OCR_FOCUS_CASES_JSON": str(cases_path),
+                    "OCR_FOCUS_SKIP_RECENT_RATE_LIMIT": "false",
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", str(FOCUS_WORKFLOW)],
+                capture_output=True,
+                cwd=REPO_ROOT / "docs",
+                env=env,
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f"runner args: <{cases_path}>", result.stdout)
 
     def test_growth_stability_workflow_preserves_sliced_output_name(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -135,7 +167,7 @@ class OcrRunnerWorkflowTests(unittest.TestCase):
             )
 
             result = subprocess.run(
-                ["/bin/sh", str(GROWTH_WORKFLOW.relative_to(REPO_ROOT))],
+                ["bash", str(GROWTH_WORKFLOW)],
                 capture_output=True,
                 cwd=REPO_ROOT,
                 env=env,
@@ -153,6 +185,37 @@ class OcrRunnerWorkflowTests(unittest.TestCase):
             "<.local/eval_reports/ocr_growth_stability.slice-offset2-max9.json>",
             result.stdout,
         )
+
+    def test_growth_stability_workflow_uses_default_common_from_subdirectory(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            cases_path = tmp_path / "growth_cases.json"
+            runner_path = tmp_path / "runner.sh"
+            cases_path.write_text(
+                '{"cases": [{"id": "growth-subdir"}]}', encoding="utf-8"
+            )
+            _write_runner(runner_path)
+
+            env = _base_env()
+            env.update(
+                {
+                    "OCR_GROWTH_STABILITY_RUNNER_SCRIPT": str(runner_path),
+                    "OCR_TRANSCRIPT_CASES_GROWTH": str(cases_path),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", str(GROWTH_WORKFLOW)],
+                capture_output=True,
+                cwd=REPO_ROOT / "docs",
+                env=env,
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f"runner args: <{cases_path}>", result.stdout)
 
 
 if __name__ == "__main__":

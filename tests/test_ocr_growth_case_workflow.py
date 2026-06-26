@@ -77,6 +77,30 @@ class OcrGrowthCaseWorkflowTests(unittest.TestCase):
             f"runner args: <{cases_path}> <91> <2> <8> <4> <55> <6>",
         )
 
+    def test_eval_suite_uses_default_common_from_subdirectory(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            cases_path = tmp_path / "growth.json"
+            runner_path = tmp_path / "runner.sh"
+            cases_path.write_text(
+                '{"cases": [{"id": "growth-subdir"}]}', encoding="utf-8"
+            )
+            _write_runner(runner_path)
+
+            env = _base_env(runner_path)
+            env["OCR_TRANSCRIPT_CASES_GROWTH"] = str(cases_path)
+
+            result = subprocess.run(
+                ["bash", str(WORKFLOW_SCRIPT), "eval"],
+                cwd=REPO_ROOT / "docs",
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f"runner args: <{cases_path}>", result.stdout)
+
     def test_batched_suite_runs_configured_batch_runner(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

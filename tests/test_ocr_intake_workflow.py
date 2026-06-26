@@ -35,10 +35,15 @@ class OcrIntakeWorkflowTests(unittest.TestCase):
         )
         return env, python_args
 
-    def _run(self, env: dict[str, str], *args: str) -> subprocess.CompletedProcess[str]:
+    def _run(
+        self,
+        env: dict[str, str],
+        *args: str,
+        cwd: Path | None = None,
+    ) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
-            ["bash", str(WORKFLOW_SCRIPT.relative_to(REPO_ROOT)), *args],
-            cwd=REPO_ROOT,
+            ["bash", str(WORKFLOW_SCRIPT), *args],
+            cwd=cwd or REPO_ROOT,
             env=env,
             capture_output=True,
             text=True,
@@ -70,6 +75,31 @@ class OcrIntakeWorkflowTests(unittest.TestCase):
                     str(export_root),
                     "--output-dir",
                     str(output_dir),
+                ],
+            )
+
+    def test_export_index_uses_repo_default_output_dir_from_subdirectory(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            env, python_args = self._python_env(tmp_path)
+            export_root = tmp_path / "export"
+            export_root.mkdir()
+            env["CGPT_EXPORT_ROOT_DEFAULT"] = str(export_root)
+
+            result = self._run(env, "export-index", cwd=REPO_ROOT / "docs")
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                python_args.read_text(encoding="utf-8").splitlines(),
+                [
+                    "-m",
+                    "tools.index_cgpt_export",
+                    "--export-root",
+                    str(export_root),
+                    "--output-dir",
+                    ".local/eval_cases",
                 ],
             )
 

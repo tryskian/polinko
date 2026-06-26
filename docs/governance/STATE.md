@@ -560,9 +560,10 @@ Last updated: 2026-06-25
   - base OCR transcript case and stability workflows now use the same shared
     case guard as growth, focus, and transcript-lane OCR wrappers, so missing
     and empty case-file handling stays consistent before eval runners launch
-  - OCR case-guard and transcript workflow entrypoints resolve the checkout
-    root before sourcing guard helpers or delegating to eval runners, so direct
-    script execution behaves like Make and subdirectory invocation
+  - OCR intake, focus, growth, case-guard, and transcript workflow entrypoints
+    resolve the checkout root before using default local paths, sourcing guard
+    helpers, or delegating to eval runners, so direct script execution behaves
+    like Make and subdirectory invocation
   - OCR report workflow/build wrappers resolve the checkout root before
     validating local report inputs or launching report-builder modules, so
     direct script execution behaves like Make and subdirectory invocation
@@ -579,8 +580,8 @@ Last updated: 2026-06-25
     history are the active source
   - shell bootstrap and operator helpers resolve the checkout root through
     `tools/repo_root.sh` so startup, closeout, clean-main git checks,
-    devcontainer setup, local privacy guard, OCR workflow, and Playwright
-    snapshot scripts share one audited root-discovery path
+    devcontainer setup, local privacy guard, OCR workflow/orchestrator wrappers,
+    and Playwright snapshot scripts share one audited root-discovery path
   - required knobs include an ignored local default path, explicit path
     override, no-overwrite default, `FORCE=1`, deterministic
     `schema_version`, source fingerprints, validation command, and

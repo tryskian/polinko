@@ -1,5 +1,11 @@
-#!/usr/bin/env sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tools/repo_root.sh
+source "$script_dir/repo_root.sh"
+
+polinko_cd_repo_root
 
 usage() {
 	echo "Usage: run_ocr_intake_workflow.sh <export-index|cases-from-export-build|benchmark|generalization-review|transcript-delta> [lane|extra args...]" >&2
