@@ -116,6 +116,10 @@ Last updated: 2026-06-25
   - startup/runtime smoke defaults to isolated localhost port and `/tmp`
     database paths per run, while explicit `SMOKE_PORT`, `SMOKE_BASE_URL`, and
     smoke DB path overrides remain available for fixed-endpoint debugging
+  - local eval gates resolve the checkout root before starting their fresh
+    local server or launching gate modules, so subdirectory invocation uses the
+    same packaged runtime surface as Make execution; direct invocation without
+    `PYTHON` prefers the repo `.venv` interpreter when available
   - core background runner lifecycle is script-owned for `caffeinate`,
     `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned

@@ -1239,6 +1239,11 @@ class MakefileContractTests(unittest.TestCase):
             eval_reports_parallel_script_text,
         )
         self.assertIn("polinko_cd_repo_root", eval_reports_parallel_script_text)
+        local_eval_gate_script_text = LOCAL_EVAL_GATE_RUNNER_SCRIPT.read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('source "$script_dir/repo_root.sh"', local_eval_gate_script_text)
+        self.assertIn("polinko_cd_repo_root", local_eval_gate_script_text)
         sidecar_script_text = EVAL_SIDECAR_START_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("launch_detached_process.py", sidecar_script_text)
         self.assertIn('source "$script_dir/repo_root.sh"', sidecar_script_text)

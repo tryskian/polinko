@@ -2846,3 +2846,22 @@ or branch history instead.
 - Why: Report-output defaults should behave the same from Make, direct script
   execution, and subdirectory invocation. Starting with this coherent wrapper
   pair avoids broad shell-mode churn across the parked OCR/eval wrapper family.
+
+## D-179: Make local eval gate wrapper repo-root aware
+
+- Date: `2026-06-25`
+- Category: `runtime_engineering`
+- Tags: `local_eval_gate`, `shell`, `repo_root`, `hygiene`
+- Human-led: The human lead asked to continue the script/runtime cleanup in
+  focused order, keeping active maintenance separate from eval execution work.
+- Engineer implementation: Convert `run_local_eval_gate.sh` to a Bash
+  root-helper entrypoint with repo `.venv` fallback when `PYTHON` is unset,
+  add subdirectory API-smoke wrapper coverage with fake Python/curl commands,
+  and extend Makefile contract coverage for the local eval gate root setup.
+- Decision: Local eval gates resolve the checkout root before starting their
+  fresh local server or launching gate modules, and direct invocation without
+  `PYTHON` prefers the repo `.venv` interpreter when available.
+- Why: `api-smoke`, `eval-smoke`, hallucination gates, and quality gates are
+  high-traffic runtime checks. They should behave the same from Make, direct
+  script execution, and subdirectory invocation instead of depending on the
+  operator's current working directory.
