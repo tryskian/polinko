@@ -6,6 +6,8 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$script_dir/repo_root.sh"
 
 polinko_cd_repo_root
+# shellcheck source=tools/python_runtime.sh
+. "$script_dir/python_runtime.sh"
 
 if [ "$#" -ne 1 ]; then
 	echo "Usage: run_ocr_report_builder.sh <suite>" >&2
@@ -13,7 +15,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 suite=$1
-python_bin=${PYTHON:-python3}
+python_bin=$(polinko_default_python_bin)
 
 case "$suite" in
 growth-metrics|growth-fail-cohort|focus-cases|focus-fail-patterns)

@@ -125,7 +125,8 @@ Last updated: 2026-06-25
   - core background runner lifecycle is script-owned for `caffeinate`,
     `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned
-    PID/log handling
+    PID/log handling, and direct runner invocation uses the shared
+    `tools/python_runtime.sh` interpreter rail for detached launchers
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery
@@ -506,6 +507,9 @@ Last updated: 2026-06-25
     visibility
   - Make Python helper targets use the configured `$(PYTHON)` interpreter for
     repo-local checks, including `make pycheck`
+  - direct runtime shell wrappers share `tools/python_runtime.sh`, so explicit
+    `PYTHON` wins, repo `.venv` is preferred for direct invocation, and
+    `python3` remains the final fallback
   - local runtime config coverage is explicit through
     `make local-runtime-config-check`, which validates VS Code and
     devcontainer config shape, rejects retired local doc references, and runs through
@@ -578,7 +582,7 @@ Last updated: 2026-06-25
     direct script execution behaves like Make and subdirectory invocation
   - direct OCR eval runner wrappers resolve the checkout root before starting
     the server daemon or launching eval modules, and direct invocation without
-    `PYTHON` prefers the repo `.venv` interpreter when available
+    `PYTHON` uses the shared `tools/python_runtime.sh` repo `.venv` fallback
   - direct OCR growth eval runner wrappers use the same checkout-root and repo
     `.venv` fallback contract before starting the server daemon or launching
     growth eval modules

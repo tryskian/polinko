@@ -2,6 +2,7 @@ import os
 import signal
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 import unittest
@@ -174,6 +175,7 @@ class RunServerDaemonTests(unittest.TestCase):
                 {
                     "PYTHON": str(python_script),
                     "PYTHON_ARGS": str(args_file),
+                    "SERVER_LAUNCHER_PYTHON": sys.executable,
                     "CHILD_PID_FILE": str(child_pid_file),
                     "ASGI_APP": "server:app",
                     "DEV_HOST": "127.0.0.1",

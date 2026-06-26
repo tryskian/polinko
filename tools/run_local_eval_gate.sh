@@ -6,20 +6,8 @@ script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$script_dir/repo_root.sh"
 
 polinko_cd_repo_root
-
-default_python_bin() {
-	if [ -n "${PYTHON:-}" ]; then
-		printf "%s\n" "$PYTHON"
-		return
-	fi
-	for candidate in ./.venv/bin/python3.14 ./.venv/bin/python ./.venv/bin/python3; do
-		if [ -x "$candidate" ] && "$candidate" -V >/dev/null 2>&1; then
-			printf "%s\n" "$candidate"
-			return
-		fi
-	done
-	printf "%s\n" python3
-}
+# shellcheck source=tools/python_runtime.sh
+. "$script_dir/python_runtime.sh"
 
 if [ "$#" -ne 1 ]; then
 	echo "Usage: run_local_eval_gate.sh <suite>" >&2
@@ -27,7 +15,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 suite=$1
-python_bin=$(default_python_bin)
+python_bin=$(polinko_default_python_bin)
 asgi_app=${ASGI_APP:-server:app}
 
 case "$suite" in

@@ -106,6 +106,8 @@ flowchart TD
   `make scripts-check` validates shell syntax plus root-helper coverage for
   executable operator scripts; sourced helper libraries, `repo_root.sh`, and
   the URL-only launcher are the explicit exceptions.
+  `tools/python_runtime.sh` is the shared shell interpreter helper for direct
+  operator wrappers: explicit `PYTHON` wins, then repo `.venv`, then `python3`.
   `make local-runtime-config-check` runs through `make ci-docs` so VS Code
   task/config drift and retired local doc references fail the normal
   docs/runtime gate.
@@ -116,8 +118,9 @@ flowchart TD
   OCR guard/transcript workflows, OCR report workflows, direct OCR eval
   runners, direct OCR growth eval runners, and Playwright snapshot helpers
   resolve the checkout root through `tools/repo_root.sh`. Direct local-gate,
-  direct OCR runner, and direct OCR growth runner execution also prefer
-  the repo `.venv` interpreter when `PYTHON` is not set.
+  background-runner, eval-sidecar, report-builder, portfolio-mockup, OCR
+  runner, and OCR growth runner execution also prefer the repo `.venv`
+  interpreter when `PYTHON` is not set.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files;
   it checks local path leaks and reuses `make local-runtime-config-check` for

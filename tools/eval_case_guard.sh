@@ -20,7 +20,13 @@ eval_case_guard_or_exit() {
 	fi
 
 	_eval_case_guard_status=0
-	_eval_case_guard_case_count=$(${PYTHON:-python3} -m tools.count_eval_cases "$_eval_case_guard_path") || _eval_case_guard_status=$?
+	if ! command -v polinko_default_python_bin >/dev/null 2>&1; then
+		_eval_case_guard_python_runtime=${PYTHON_RUNTIME_SCRIPT:-./tools/python_runtime.sh}
+		# shellcheck source=./tools/python_runtime.sh
+		. "$_eval_case_guard_python_runtime"
+	fi
+	_eval_case_guard_python=$(polinko_default_python_bin)
+	_eval_case_guard_case_count=$("$_eval_case_guard_python" -m tools.count_eval_cases "$_eval_case_guard_path") || _eval_case_guard_status=$?
 	if [ "$_eval_case_guard_status" -ne 0 ]; then
 		exit "$_eval_case_guard_status"
 	fi
