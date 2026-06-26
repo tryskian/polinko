@@ -1297,6 +1297,8 @@ class MakefileContractTests(unittest.TestCase):
         growth_case_workflow_text = OCR_GROWTH_CASE_WORKFLOW_SCRIPT.read_text(
             encoding="utf-8"
         )
+        self.assertIn('source "$script_dir/repo_root.sh"', growth_case_workflow_text)
+        self.assertIn("polinko_cd_repo_root", growth_case_workflow_text)
         self.assertIn("OCR_WORKFLOW_COMMON_SCRIPT", growth_case_workflow_text)
         self.assertIn("OCR_GROWTH_EVAL_RUNNER_SCRIPT", growth_case_workflow_text)
         self.assertIn("OCR_GROWTH_BATCH_RUNNER_SCRIPT", growth_case_workflow_text)
@@ -1310,6 +1312,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("OCR_REPORT_BUILDER_SCRIPT", report_workflow_text)
         self.assertIn('exec bash "$report_builder_script"', report_workflow_text)
         intake_workflow_text = OCR_INTAKE_WORKFLOW_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('source "$script_dir/repo_root.sh"', intake_workflow_text)
+        self.assertIn("polinko_cd_repo_root", intake_workflow_text)
         self.assertIn("tools.build_ocr_cases_from_export", intake_workflow_text)
         self.assertIn("tools.build_handwriting_benchmark_cases", intake_workflow_text)
         self.assertIn("tools.build_ocr_generalization_review", intake_workflow_text)
@@ -1319,6 +1323,8 @@ class MakefileContractTests(unittest.TestCase):
             OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT,
         ):
             script_text = script.read_text(encoding="utf-8")
+            self.assertIn('source "$script_dir/repo_root.sh"', script_text)
+            self.assertIn("polinko_cd_repo_root", script_text)
             self.assertIn("OCR_WORKFLOW_COMMON_SCRIPT", script_text)
             self.assertIn("ocr_workflow_use_eval_case_guard", script_text)
             self.assertIn('exec bash "', script_text)

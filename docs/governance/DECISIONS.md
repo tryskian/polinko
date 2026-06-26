@@ -2904,3 +2904,25 @@ or branch history instead.
   They should behave the same from Make, direct script execution, and
   subdirectory invocation so maintenance checks do not depend on the operator's
   current working directory.
+
+## D-182: Make OCR intake and stability orchestrator wrappers repo-root aware
+
+- Date: `2026-06-25`
+- Category: `runtime_engineering`
+- Tags: `ocr_intake`, `ocr_stability`, `shell`, `repo_root`, `hygiene`
+- Human-led: The human lead approved continuing the focused script/runtime
+  cleanup in normal order while keeping OCR eval execution outside the active
+  maintenance lane.
+- Engineer implementation: Convert `run_ocr_intake_workflow.sh`,
+  `run_ocr_focus_stability_workflow.sh`, `run_ocr_growth_case_workflow.sh`,
+  and `run_ocr_growth_stability_workflow.sh` to Bash root-helper entrypoints,
+  add subdirectory tests for default local paths and shared helper sourcing
+  without running evals, and extend Makefile contract coverage for the root
+  setup.
+- Decision: OCR intake, focus stability, growth case, and growth stability
+  orchestrator wrappers resolve the checkout root before using repo-relative
+  defaults, sourcing shared guard helpers, or delegating to eval runners.
+- Why: These wrappers are operator-facing orchestration surfaces around local
+  OCR inputs and reports. They should behave the same from Make, direct script
+  execution, and subdirectory invocation so maintenance checks do not depend on
+  the operator's current working directory.
