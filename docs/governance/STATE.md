@@ -466,7 +466,9 @@ Last updated: 2026-06-25
   - squash-only merge
 - Development setup and dependency gates are aligned to canonical paths:
   - devcontainer setup resolves the git top-level before creating `.venv`
-    and installing root or portfolio dependencies
+    and installing root or portfolio dependencies; venv creation uses the
+    configurable `POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON` bootstrap interpreter,
+    then pip installs run through the created venv Python
   - devcontainer VS Code settings use repo-owned Ruff and mypy tooling from
     `.venv`
   - Python dependencies use `requirements.in` plus generated

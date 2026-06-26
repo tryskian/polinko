@@ -10,10 +10,12 @@ ROOT="$POLINKO_REPO_ROOT"
 
 venv_dir="${POLINKO_DEVCONTAINER_VENV_DIR:-.venv}"
 portfolio_app_dir="${POLINKO_DEVCONTAINER_PORTFOLIO_APP_DIR:-apps/portfolio}"
+bootstrap_python="${POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON:-python3}"
+venv_python="$venv_dir/bin/python3"
 
-python3 -m venv --copies "$venv_dir"
-"$venv_dir/bin/python3" -m pip install --upgrade pip
-"$venv_dir/bin/python3" -m pip install -r requirements.txt
+"$bootstrap_python" -m venv --copies "$venv_dir"
+"$venv_python" -m pip install --upgrade pip
+"$venv_python" -m pip install -r requirements.txt
 
 if [ -f package-lock.json ]; then
 	npm ci --no-audit --no-fund

@@ -3023,3 +3023,22 @@ or branch history instead.
 - Why: Make already centralizes interpreter selection through `PYTHON`, with
   CI overriding it explicitly. Keeping helper checks on that rail prevents
   local virtualenv drift and makes target behaviour predictable.
+
+## D-188: Make devcontainer bootstrap Python explicit
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `devcontainer`, `python`, `interpreter`, `hygiene`
+- Human-led: The human lead flagged recurring local-versus-system Python env
+  drift and asked to address it as part of the focused script/runtime cleanup.
+- Engineer implementation: Add
+  `POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON` as the explicit venv-creation
+  interpreter for `tools/setup_devcontainer.sh`, keep pip installs routed
+  through the created venv Python, and add a fake-command contract test that
+  proves both interpreter phases.
+- Decision: Devcontainer setup now separates the bootstrap interpreter that
+  creates the venv from the venv interpreter used for dependency installation.
+- Why: Bare `python3` resolution depends on the caller's shell and host
+  environment. Making the bootstrap choice explicit keeps setup predictable
+  while preserving the normal `.venv/bin/python3` dependency-install path after
+  the venv exists.
