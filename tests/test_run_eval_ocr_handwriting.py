@@ -152,6 +152,40 @@ class RunEvalOcrHandwritingTests(unittest.TestCase):
         self.assertEqual(unknown_result.returncode, 2)
         self.assertIn("Unknown OCR handwriting eval mode", unknown_result.stderr)
 
+    def test_resolves_repo_root_when_called_from_outside_repo(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            cases_path = tmp_path / "handwriting.json"
+            pwd_file = tmp_path / "python-pwd.txt"
+            python_script = tmp_path / "python.sh"
+            cases_path.write_text("[]\n", encoding="utf-8")
+            _write_executable(
+                python_script,
+                '#!/usr/bin/env sh\nset -eu\npwd > "$PYTHON_PWD"\n',
+            )
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "PYTHON": str(python_script),
+                    "PYTHON_PWD": str(pwd_file),
+                    "OCR_HANDWRITING_CASES": str(cases_path),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT), "run"],
+                cwd=tmp_path,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                pwd_file.read_text(encoding="utf-8").strip(), str(REPO_ROOT)
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

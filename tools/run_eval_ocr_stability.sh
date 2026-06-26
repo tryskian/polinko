@@ -1,5 +1,25 @@
-#!/usr/bin/env sh
-set -eu
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=tools/repo_root.sh
+source "$script_dir/repo_root.sh"
+
+polinko_cd_repo_root
+
+default_python_bin() {
+	if [ -n "${PYTHON:-}" ]; then
+		printf "%s\n" "$PYTHON"
+		return
+	fi
+	for candidate in ./.venv/bin/python3.14 ./.venv/bin/python ./.venv/bin/python3; do
+		if [ -x "$candidate" ] && "$candidate" -V >/dev/null 2>&1; then
+			printf "%s\n" "$candidate"
+			return
+		fi
+	done
+	printf "%s\n" python3
+}
 
 if [ "$#" -ne 8 ]; then
 	echo "Usage: run_eval_ocr_stability.sh <cases-json> <runs> <ocr-retries> <ocr-retry-delay-ms> <case-delay-ms> <rate-limit-cooldown-ms> <report-dir> <output-json>" >&2
@@ -15,7 +35,7 @@ rate_limit_cooldown_ms=$6
 report_dir=$7
 output_json=$8
 
-python_bin=${PYTHON:-python3}
+python_bin=$(default_python_bin)
 server_daemon_script=${EVAL_SERVER_DAEMON_SCRIPT:-./tools/ensure_eval_server_daemon.sh}
 timeout_seconds=${OCR_EVAL_TIMEOUT:-90}
 max_consecutive_rate_limit_errors=${OCR_MAX_CONSEC_RATE_LIMIT_ERRORS:-3}
