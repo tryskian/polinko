@@ -3100,3 +3100,22 @@ or branch history instead.
   standalone import-sorter or linter extensions even when Make, Ruff, and
   devcontainer checks are correct. Guarding the recommendations keeps editor
   setup aligned with the repo-owned toolchain before startup or PR validation.
+
+## D-192: Keep Python audit tooling lockfile-owned
+
+- Date: `2026-06-26`
+- Category: `dependency_management`
+- Tags: `pip-audit`, `requirements`, `ci`, `security`
+- Human-led: The human lead asked to keep dependency and security runner
+  failures maintained as part of the refactor rather than leaving local or CI
+  drift in place.
+- Engineer implementation: Add `pip-audit==2.10.0` to `requirements.in`,
+  regenerate `requirements.txt`, remove the CI-only ad hoc `pip-audit`
+  install, and add a dependency hygiene test that guards the lockfile-owned
+  audit tool contract.
+- Decision: Python audit tooling belongs in Polinko's dependency input and
+  generated lockfile, the same as the packages it audits.
+- Why: A side-loaded CI audit tool can pass while a clean local environment
+  fails before auditing anything. Keeping `pip-audit` in the locked dependency
+  surface lets Dependabot, local refreshes, CI, and `make security-checks`
+  converge on one auditable source of truth.

@@ -476,9 +476,9 @@ Last updated: 2026-06-26
     `requirements.txt`, matching pip-tools and Dependabot conventions
   - `make deps-lock` and `make deps-lock-check` use the same explicit
     pip-tools backtracking resolver
-  - Python security pins are tracked through `requirements.in` plus generated
-    `requirements.txt`; current refreshed pins include `PyJWT==2.13.0`,
-    `pip==26.1.2`, and `pypdf==6.13.3`
+  - Python security tooling and pins are tracked through `requirements.in` plus
+    generated `requirements.txt`; current refreshed pins include
+    `pip-audit==2.10.0`, `PyJWT==2.13.0`, `pip==26.1.2`, and `pypdf==6.13.3`
   - root Node security locks are tracked through `package-lock.json`; current
     refreshed transitive pins include `undici==7.28.0`
   - GitHub CI runs on pull requests and on pushes to `main`; feature-branch
