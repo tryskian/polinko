@@ -2865,3 +2865,21 @@ or branch history instead.
   high-traffic runtime checks. They should behave the same from Make, direct
   script execution, and subdirectory invocation instead of depending on the
   operator's current working directory.
+
+## D-180: Make OCR report wrappers repo-root aware
+
+- Date: `2026-06-25`
+- Category: `runtime_engineering`
+- Tags: `ocr_reports`, `shell`, `repo_root`, `hygiene`
+- Human-led: The human lead approved continuing the focused script/runtime
+  cleanup in normal order, with OCR eval execution still outside the active
+  maintenance lane.
+- Engineer implementation: Convert `run_ocr_report_workflow.sh` and
+  `run_ocr_report_builder.sh` to Bash root-helper entrypoints, add
+  subdirectory invocation tests for the wrapper pair, and extend Makefile
+  contract coverage for the OCR report wrapper root setup.
+- Decision: OCR report wrappers resolve the checkout root before validating
+  local report inputs or launching report-builder modules.
+- Why: OCR report commands are maintenance/reporting wrappers with repo-relative
+  `.local` defaults. They should behave the same from Make, direct script
+  execution, and subdirectory invocation without starting OCR eval work.
