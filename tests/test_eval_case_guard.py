@@ -35,7 +35,7 @@ def _run_guarded_runner(cases_path: Path) -> subprocess.CompletedProcess[str]:
     env["PYTHON"] = sys.executable
     return subprocess.run(
         [
-            "/bin/sh",
+            "bash",
             str(GUARDED_SCRIPT.relative_to(REPO_ROOT)),
             str(cases_path),
             "Cases not found",

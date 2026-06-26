@@ -2883,3 +2883,24 @@ or branch history instead.
 - Why: OCR report commands are maintenance/reporting wrappers with repo-relative
   `.local` defaults. They should behave the same from Make, direct script
   execution, and subdirectory invocation without starting OCR eval work.
+
+## D-181: Make OCR guard and transcript workflow entrypoints repo-root aware
+
+- Date: `2026-06-25`
+- Category: `runtime_engineering`
+- Tags: `ocr_guard`, `ocr_transcripts`, `shell`, `repo_root`, `hygiene`
+- Human-led: The human lead approved continuing the focused script/runtime
+  cleanup in normal order while keeping OCR eval execution out of the active
+  maintenance lane.
+- Engineer implementation: Convert `run_guarded_ocr_case_eval.sh`,
+  `run_ocr_base_transcript_workflow.sh`, and
+  `run_ocr_transcript_lane_workflow.sh` to Bash root-helper entrypoints, add
+  subdirectory tests that exercise the default guard/common paths without
+  running evals, and extend Makefile contract coverage for the root setup.
+- Decision: OCR case-guard and transcript workflow entrypoints resolve the
+  checkout root before sourcing guard helpers or delegating to OCR eval
+  runners.
+- Why: These wrappers own missing/empty case preflight before OCR execution.
+  They should behave the same from Make, direct script execution, and
+  subdirectory invocation so maintenance checks do not depend on the operator's
+  current working directory.

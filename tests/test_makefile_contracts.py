@@ -1267,12 +1267,18 @@ class MakefileContractTests(unittest.TestCase):
         common_text = OCR_WORKFLOW_COMMON_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("EVAL_CASE_GUARD_SCRIPT", common_text)
         self.assertIn("eval_case_guard.sh", common_text)
+        self.assertIn('source "$script_dir/repo_root.sh"', guarded_runner_text)
+        self.assertIn("polinko_cd_repo_root", guarded_runner_text)
         self.assertIn("OCR_WORKFLOW_COMMON_SCRIPT", guarded_runner_text)
         self.assertIn("ocr_workflow_use_eval_case_guard", guarded_runner_text)
         self.assertIn('exec "$@"', guarded_runner_text)
         base_transcript_workflow_text = OCR_BASE_TRANSCRIPT_WORKFLOW_SCRIPT.read_text(
             encoding="utf-8"
         )
+        self.assertIn(
+            'source "$script_dir/repo_root.sh"', base_transcript_workflow_text
+        )
+        self.assertIn("polinko_cd_repo_root", base_transcript_workflow_text)
         self.assertIn("OCR_WORKFLOW_COMMON_SCRIPT", base_transcript_workflow_text)
         self.assertIn("ocr_workflow_use_eval_case_guard", base_transcript_workflow_text)
         self.assertIn("eval_case_guard_or_exit", base_transcript_workflow_text)
@@ -1282,6 +1288,8 @@ class MakefileContractTests(unittest.TestCase):
         lane_workflow_text = OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT.read_text(
             encoding="utf-8"
         )
+        self.assertIn('source "$script_dir/repo_root.sh"', lane_workflow_text)
+        self.assertIn("polinko_cd_repo_root", lane_workflow_text)
         self.assertIn("OCR_GUARDED_CASE_RUNNER_SCRIPT", lane_workflow_text)
         self.assertIn("OCR_EVAL_RUNNER_SCRIPT", lane_workflow_text)
         self.assertIn("OCR_STABILITY_RUNNER_SCRIPT", lane_workflow_text)
