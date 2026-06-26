@@ -141,8 +141,8 @@ Explicit companion checks:
   - when local `SESSION_HANDOFF` exists, verifies it names the current short
     commit so same-date stale handoffs fail closeout
 - `make scripts-check`
-  - validates tracked shell helper shebangs, strict modes, and sourced helper
-    contracts
+  - validates tracked shell helper shebangs, strict modes, sourced helper
+    contracts, and root-helper coverage for executable operator scripts
 - `make path-leak-check`
   - checks tracked text surfaces for local machine path leaks
 - `make local-runtime-config-check`

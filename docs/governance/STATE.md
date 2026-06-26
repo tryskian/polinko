@@ -491,7 +491,8 @@ Last updated: 2026-06-25
     rerunning `make security-checks`
   - shell helper hygiene is explicit through `make scripts-check`, which
     verifies tracked `tools/*.sh` shebangs, strict modes, shell parser syntax,
-    and sourced helper contracts
+    sourced helper contracts, and root-helper coverage for executable operator
+    scripts
   - runtime risk-surface coverage is explicit through `make risk-scan`, which
     verifies that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates,
