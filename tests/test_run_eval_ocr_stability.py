@@ -119,6 +119,58 @@ class RunEvalOcrStabilityTests(unittest.TestCase):
         self.assertEqual(result.returncode, 2)
         self.assertIn("Usage: run_eval_ocr_stability.sh", result.stderr)
 
+    def test_resolves_repo_root_when_called_from_outside_repo(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            server_marker = tmp_path / "server-called"
+            pwd_file = tmp_path / "python-pwd.txt"
+            server_script = tmp_path / "server.sh"
+            python_script = tmp_path / "python.sh"
+
+            _write_executable(
+                server_script,
+                '#!/usr/bin/env sh\nset -eu\nprintf "server\\n" > "$SERVER_MARKER"\n',
+            )
+            _write_executable(
+                python_script,
+                '#!/usr/bin/env sh\nset -eu\npwd > "$PYTHON_PWD"\n',
+            )
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "PYTHON": str(python_script),
+                    "EVAL_SERVER_DAEMON_SCRIPT": str(server_script),
+                    "SERVER_MARKER": str(server_marker),
+                    "PYTHON_PWD": str(pwd_file),
+                }
+            )
+
+            result = subprocess.run(
+                [
+                    "bash",
+                    str(SCRIPT),
+                    "cases.json",
+                    "4",
+                    "3",
+                    "44",
+                    "55",
+                    "66",
+                    "runs-dir",
+                    "out.json",
+                ],
+                cwd=tmp_path,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(server_marker.read_text(encoding="utf-8"), "server\n")
+            self.assertEqual(
+                pwd_file.read_text(encoding="utf-8").strip(), str(REPO_ROOT)
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

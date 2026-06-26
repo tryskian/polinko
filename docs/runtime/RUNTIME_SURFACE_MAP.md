@@ -110,9 +110,10 @@ flowchart TD
   local docs gate so wording drift fails before a PR-only CI run.
   Startup, closeout, clean-main git checks, devcontainer setup, local eval
   gates, local privacy guard, OCR workflow, OCR intake/focus/growth wrappers,
-  OCR guard/transcript workflows, OCR report workflows, and Playwright snapshot
-  helpers resolve the checkout root through `tools/repo_root.sh`. Direct
-  local-gate execution also prefers
+  OCR guard/transcript workflows, OCR report workflows, direct OCR eval
+  runners, and Playwright snapshot helpers resolve the checkout root through
+  `tools/repo_root.sh`. Direct local-gate and direct OCR runner execution also
+  prefer
   the repo `.venv` interpreter when `PYTHON` is not set.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files;

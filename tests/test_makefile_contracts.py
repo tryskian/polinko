@@ -1263,6 +1263,15 @@ class MakefileContractTests(unittest.TestCase):
             script_text = script.read_text(encoding="utf-8")
             self.assertIn("EVAL_SERVER_DAEMON_SCRIPT", script_text)
             self.assertIn('bash "$server_daemon_script"', script_text)
+        for script in (
+            OCR_EVAL_RUNNER_SCRIPT,
+            OCR_HANDWRITING_EVAL_RUNNER_SCRIPT,
+            OCR_STABILITY_RUNNER_SCRIPT,
+        ):
+            script_text = script.read_text(encoding="utf-8")
+            self.assertIn('source "$script_dir/repo_root.sh"', script_text)
+            self.assertIn("polinko_cd_repo_root", script_text)
+            self.assertIn("python_bin=$(default_python_bin)", script_text)
         guarded_runner_text = OCR_GUARDED_CASE_RUNNER_SCRIPT.read_text(encoding="utf-8")
         common_text = OCR_WORKFLOW_COMMON_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("EVAL_CASE_GUARD_SCRIPT", common_text)
