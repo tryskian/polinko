@@ -2988,3 +2988,21 @@ or branch history instead.
 - Why: Root-helper drift was previously guarded by selected per-script tests
   and manual inventory. Encoding the contract in the shell-script gate makes
   future operator-facing wrapper drift fail locally before CI or manual use.
+
+## D-186: Guard active runtime tool reference existence
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `runtime`, `tooling`, `tests`, `hygiene`
+- Human-led: The human lead asked for script and helper maintenance to catch
+  hidden workflow interruptions before they become operator-facing failures.
+- Engineer implementation: Extend the runtime tool reference coverage test so
+  active Make, CI, runtime, docs, and tooling surfaces fail when they reference
+  missing `tools/*.py` or `tools/*.sh` helpers. Replace the stale `pycheck`
+  usage placeholders with real checker files.
+- Decision: Active runtime/build surfaces must not reference missing tracked
+  helper paths. Runtime tool reference checks now cover helper existence before
+  checking direct test visibility.
+- Why: Test visibility only covers helpers that already exist in Git. A stale
+  Make or CI reference to a deleted helper should fail during local checks
+  instead of surfacing later when an operator runs that specific target.
