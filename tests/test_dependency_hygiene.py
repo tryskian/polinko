@@ -1,4 +1,8 @@
 import json
+import os
+import subprocess
+import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 
@@ -61,6 +65,14 @@ class DependencyHygieneTests(unittest.TestCase):
         self.assertIn("polinko_cd_repo_root", script)
         self.assertIn('ROOT="$POLINKO_REPO_ROOT"', script)
         self.assertIn('venv_dir="${POLINKO_DEVCONTAINER_VENV_DIR:-.venv}"', script)
+        self.assertIn(
+            'bootstrap_python="${POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON:-python3}"',
+            script,
+        )
+        self.assertIn('venv_python="$venv_dir/bin/python3"', script)
+        self.assertIn('"$bootstrap_python" -m venv --copies "$venv_dir"', script)
+        self.assertIn('"$venv_python" -m pip install --upgrade pip', script)
+        self.assertIn('"$venv_python" -m pip install -r requirements.txt', script)
         self.assertIn("requirements.txt", script)
         self.assertIn("npm ci --no-audit --no-fund", script)
         self.assertIn(
@@ -72,6 +84,87 @@ class DependencyHygieneTests(unittest.TestCase):
         )
         self.assertNotIn("frontend", script)
         self.assertNotIn("polinko-repositioning-system", script)
+
+    def test_devcontainer_setup_honors_configured_bootstrap_python(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            fake_bin = tmp / "bin"
+            fake_bin.mkdir()
+            fake_python = fake_bin / "bootstrap-python"
+            fake_npm = fake_bin / "npm"
+            bootstrap_log = tmp / "bootstrap-python.log"
+            venv_python_log = tmp / "venv-python.log"
+            npm_log = tmp / "npm.log"
+            venv_dir = tmp / ".venv-devcontainer"
+
+            fake_python.write_text(
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env bash
+                    set -euo pipefail
+                    printf '%s\\n' "$*" >> "$BOOTSTRAP_PYTHON_LOG"
+                    if [ "$1" = "-m" ] && [ "$2" = "venv" ]; then
+                            venv_dir="${@: -1}"
+                            mkdir -p "$venv_dir/bin"
+                            cat > "$venv_dir/bin/python3" <<'PY'
+                    #!/usr/bin/env bash
+                    set -euo pipefail
+                    printf '%s\\n' "$*" >> "$VENV_PYTHON_LOG"
+                    PY
+                            chmod +x "$venv_dir/bin/python3"
+                    fi
+                    """
+                ),
+                encoding="utf-8",
+            )
+            fake_python.chmod(0o755)
+            fake_npm.write_text(
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env bash
+                    set -euo pipefail
+                    printf '%s\\n' "$*" >> "$NPM_LOG"
+                    """
+                ),
+                encoding="utf-8",
+            )
+            fake_npm.chmod(0o755)
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "BOOTSTRAP_PYTHON_LOG": str(bootstrap_log),
+                    "NPM_LOG": str(npm_log),
+                    "PATH": f"{fake_bin}{os.pathsep}{env['PATH']}",
+                    "POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON": str(fake_python),
+                    "POLINKO_DEVCONTAINER_PORTFOLIO_APP_DIR": "missing-portfolio",
+                    "POLINKO_DEVCONTAINER_VENV_DIR": str(venv_dir),
+                    "VENV_PYTHON_LOG": str(venv_python_log),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", "tools/setup_devcontainer.sh"],
+                cwd=REPO_ROOT,
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                bootstrap_log.read_text(encoding="utf-8").strip(),
+                f"-m venv --copies {venv_dir}",
+            )
+            self.assertEqual(
+                venv_python_log.read_text(encoding="utf-8").splitlines(),
+                ["-m pip install --upgrade pip", "-m pip install -r requirements.txt"],
+            )
+            self.assertEqual(
+                npm_log.read_text(encoding="utf-8").strip(), "ci --no-audit --no-fund"
+            )
+            self.assertIn("Skipping portfolio npm install", result.stdout)
 
     def test_python_lockfile_uses_dependabot_visible_pip_tools_convention(
         self,
