@@ -178,6 +178,85 @@ class LocalRuntimeConfigTests(unittest.TestCase):
             any("docs/portfolio/raw_evidence" in failure for failure in failures)
         )
 
+    def test_extension_recommendation_overlap_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _write(
+                root,
+                ".vscode/extensions.json",
+                """
+                {
+                  "recommendations": [
+                    "charliermarsh.ruff",
+                    "ms-python.isort"
+                  ],
+                  "unwantedRecommendations": [
+                    "charliermarsh.ruff"
+                  ]
+                }
+                """,
+            )
+
+            failures = check_local_runtime_config.check_vscode_config(root)
+
+        self.assertTrue(
+            any("both recommended and unwanted" in failure for failure in failures)
+        )
+        self.assertTrue(
+            any(
+                "includes retired VS Code extension 'ms-python.isort'" in failure
+                for failure in failures
+            )
+        )
+        self.assertTrue(
+            any(
+                "missing from unwantedRecommendations" in failure
+                for failure in failures
+            )
+        )
+
+    def test_retired_extension_recommendations_must_stay_unwanted(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _write(
+                root,
+                ".vscode/extensions.json",
+                """
+                {
+                  "recommendations": [
+                    "ms-python.python"
+                  ],
+                  "unwantedRecommendations": [
+                    "ms-python.pylint",
+                    "ms-pyright.pyright",
+                    "donjayamanne.python-extension-pack",
+                    "kevinrose.vsc-python-indent",
+                    "mgesbert.python-path",
+                    "formulahendry.code-runner",
+                    "ritwickdey.liveserver",
+                    "batisteo.vscode-django",
+                    "bradlc.vscode-tailwindcss",
+                    "vue.volar",
+                    "github.copilot-chat",
+                    "ms-toolsai.jupyter",
+                    "ms-toolsai.datawrangler",
+                    "ms-vscode.cpptools-extension-pack",
+                    "vscode-arduino.vscode-arduino-community",
+                    "ms-vscode.powershell"
+                  ]
+                }
+                """,
+            )
+
+            failures = check_local_runtime_config.check_vscode_config(root)
+
+        self.assertEqual(len(failures), 1)
+        self.assertIn(
+            "retired VS Code extension 'ms-python.isort' is missing from "
+            "unwantedRecommendations",
+            failures[0],
+        )
+
     def test_retired_devcontainer_doc_tokens_are_reported(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -210,6 +289,35 @@ class LocalRuntimeConfigTests(unittest.TestCase):
         )
         self.assertTrue(
             any("docs/portfolio/raw_evidence" in failure for failure in failures)
+        )
+
+    def test_retired_devcontainer_extension_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _write(
+                root,
+                ".devcontainer/devcontainer.json",
+                """
+                {
+                  "customizations": {
+                    "vscode": {
+                      "extensions": [
+                        "charliermarsh.ruff",
+                        "ms-python.isort"
+                      ]
+                    }
+                  }
+                }
+                """,
+            )
+
+            failures = check_local_runtime_config.check_devcontainer_config(root)
+
+        self.assertEqual(len(failures), 1)
+        self.assertIn(
+            "devcontainer extensions includes retired VS Code extension "
+            "'ms-python.isort'",
+            failures[0],
         )
 
     def test_run_checks_vscode_and_devcontainer_config(self) -> None:
