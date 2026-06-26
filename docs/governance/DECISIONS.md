@@ -3006,3 +3006,20 @@ or branch history instead.
 - Why: Test visibility only covers helpers that already exist in Git. A stale
   Make or CI reference to a deleted helper should fail during local checks
   instead of surfacing later when an operator runs that specific target.
+
+## D-187: Route Make Python helper checks through `$(PYTHON)`
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `make`, `python`, `interpreter`, `hygiene`
+- Human-led: The human lead asked to continue the script/runtime cleanup in
+  focused kernels and keep small workflow inconsistencies from becoming repeat
+  interruptions.
+- Engineer implementation: Change `make pycheck` to run `$(PYTHON) -m
+  py_compile` and add a Make dry-run contract test proving a caller-provided
+  `PYTHON` value is honoured.
+- Decision: Repo-local Make targets that execute Python helper checks should
+  use the configured `$(PYTHON)` interpreter rather than hardcoded `python3`.
+- Why: Make already centralizes interpreter selection through `PYTHON`, with
+  CI overriding it explicitly. Keeping helper checks on that rail prevents
+  local virtualenv drift and makes target behaviour predictable.

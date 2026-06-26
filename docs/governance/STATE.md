@@ -502,6 +502,8 @@ Last updated: 2026-06-25
     existing `tools/*.py` and `tools/*.sh` helpers, and that tracked runtime,
     script, docs, and config references to tracked helpers have direct test
     visibility
+  - Make Python helper targets use the configured `$(PYTHON)` interpreter for
+    repo-local checks, including `make pycheck`
   - local runtime config coverage is explicit through
     `make local-runtime-config-check`, which validates VS Code and
     devcontainer config shape, rejects retired local doc references, and runs through
