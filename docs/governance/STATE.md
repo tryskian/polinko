@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-25
+Last updated: 2026-06-26
 
 ## Current Truth
 
@@ -62,6 +62,8 @@ Last updated: 2026-06-25
   - the root README now names the Polinko research model as staged for the
     next beta, replacing generic maintenance framing with a model-refactor
     status note
+  - the root README includes a short refactor map that points readers to the
+    public method and journey diagrams
   - the public status badge set distinguishes the Polinko research model,
     active model refactor, eval contract, research surface, and CI status
   - the root README points to public research docs, not local portfolio
