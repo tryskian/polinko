@@ -2947,3 +2947,25 @@ or branch history instead.
   handwriting, and stability targets. They should behave the same from Make,
   direct script execution, and subdirectory invocation without depending on the
   operator's current working directory.
+
+## D-184: Make direct OCR growth eval runners repo-root aware
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `ocr_growth`, `ocr_eval`, `shell`, `repo_root`, `hygiene`
+- Human-led: The human lead approved continuing the focused script/runtime
+  cleanup in normal order while keeping OCR eval execution outside the active
+  maintenance lane.
+- Engineer implementation: Convert `run_eval_ocr_growth_cases.sh`,
+  `run_eval_ocr_growth_batched.sh`, and
+  `run_eval_ocr_growth_stability.sh` to Bash root-helper entrypoints, add
+  subdirectory invocation tests with fake interpreters/servers so no evals run,
+  and extend Makefile contract coverage for the growth runner root setup.
+- Decision: Direct OCR growth eval runners resolve the checkout root before
+  starting the eval server daemon or launching OCR growth eval modules, and
+  direct invocation without `PYTHON` prefers the repo `.venv` interpreter when
+  available.
+- Why: These wrappers are the direct execution layer behind OCR growth case,
+  batched, and stability targets. They should behave the same from Make, direct
+  script execution, and subdirectory invocation without depending on the
+  operator's current working directory.
