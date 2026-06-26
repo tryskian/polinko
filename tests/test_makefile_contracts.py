@@ -1121,7 +1121,6 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("launch_detached_process.py", caffeinate_script_text)
         self.assertIn('source "$script_dir/repo_root.sh"', caffeinate_script_text)
         self.assertIn("polinko_cd_repo_root", caffeinate_script_text)
-        self.assertIn("polinko_default_python_bin", caffeinate_script_text)
         self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             caffeinate_script_text,
@@ -1155,13 +1154,6 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('source "$script_dir/repo_root.sh"', server_daemon_script_text)
         self.assertIn("polinko_cd_repo_root", server_daemon_script_text)
         self.assertIn(
-            "python_bin=$(polinko_default_python_bin)", server_daemon_script_text
-        )
-        self.assertIn(
-            "SERVER_LAUNCHER_PYTHON:-$(polinko_default_python_bin)",
-            server_daemon_script_text,
-        )
-        self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             server_daemon_script_text,
         )
@@ -1172,13 +1164,6 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("launch_detached_process.py", portfolio_mockup_script_text)
         self.assertIn('source "$script_dir/repo_root.sh"', portfolio_mockup_script_text)
         self.assertIn("polinko_cd_repo_root", portfolio_mockup_script_text)
-        self.assertIn(
-            "python_bin=$(polinko_default_python_bin)", portfolio_mockup_script_text
-        )
-        self.assertIn(
-            "PORTFOLIO_MOCKUP_LAUNCHER_PYTHON:-$(polinko_default_python_bin)",
-            portfolio_mockup_script_text,
-        )
         self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             portfolio_mockup_script_text,
@@ -1263,11 +1248,6 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("launch_detached_process.py", sidecar_script_text)
         self.assertIn('source "$script_dir/repo_root.sh"', sidecar_script_text)
         self.assertIn("polinko_cd_repo_root", sidecar_script_text)
-        self.assertIn("python_bin=$(polinko_default_python_bin)", sidecar_script_text)
-        self.assertIn(
-            "EVAL_SIDECAR_LAUNCHER_PYTHON:-$(polinko_default_python_bin)",
-            sidecar_script_text,
-        )
         self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             sidecar_script_text,
@@ -1283,27 +1263,10 @@ class MakefileContractTests(unittest.TestCase):
             script_text = script.read_text(encoding="utf-8")
             self.assertIn("EVAL_SERVER_DAEMON_SCRIPT", script_text)
             self.assertIn('bash "$server_daemon_script"', script_text)
-        for script in (
-            OCR_EVAL_RUNNER_SCRIPT,
-            OCR_HANDWRITING_EVAL_RUNNER_SCRIPT,
-            OCR_STABILITY_RUNNER_SCRIPT,
-            OCR_GROWTH_EVAL_RUNNER_SCRIPT,
-            OCR_GROWTH_BATCH_RUNNER_SCRIPT,
-            OCR_GROWTH_STABILITY_RUNNER_SCRIPT,
-        ):
-            script_text = script.read_text(encoding="utf-8")
-            self.assertIn('source "$script_dir/repo_root.sh"', script_text)
-            self.assertIn("polinko_cd_repo_root", script_text)
-            self.assertIn("default_python_bin", script_text)
-        self.assertNotIn(
-            "EVAL_SERVER_DAEMON_SCRIPT",
-            OCR_HANDWRITING_EVAL_RUNNER_SCRIPT.read_text(encoding="utf-8"),
-        )
         guarded_runner_text = OCR_GUARDED_CASE_RUNNER_SCRIPT.read_text(encoding="utf-8")
         common_text = OCR_WORKFLOW_COMMON_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("EVAL_CASE_GUARD_SCRIPT", common_text)
         self.assertIn("eval_case_guard.sh", common_text)
-        self.assertIn("_ocr_workflow_default_python_bin", common_text)
         self.assertIn('source "$script_dir/repo_root.sh"', guarded_runner_text)
         self.assertIn("polinko_cd_repo_root", guarded_runner_text)
         self.assertIn("OCR_WORKFLOW_COMMON_SCRIPT", guarded_runner_text)

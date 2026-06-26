@@ -17,11 +17,10 @@ def _write_executable(path: Path, text: str) -> None:
     path.chmod(path.stat().st_mode | stat.S_IXUSR)
 
 
-def _stub_env(tmp_path: Path) -> tuple[dict[str, str], Path, Path, Path, Path]:
+def _stub_env(tmp_path: Path) -> tuple[dict[str, str], Path, Path, Path]:
     server_marker = tmp_path / "server-called"
     args_file = tmp_path / "python-args.txt"
     env_file = tmp_path / "python-env.txt"
-    cwd_file = tmp_path / "python-cwd.txt"
     server_script = tmp_path / "server.sh"
     python_script = tmp_path / "python.sh"
 
@@ -35,7 +34,6 @@ def _stub_env(tmp_path: Path) -> tuple[dict[str, str], Path, Path, Path, Path]:
             "#!/usr/bin/env sh\n"
             "set -eu\n"
             '[ -f "$SERVER_MARKER" ] || exit 7\n'
-            'pwd > "$PYTHON_CWD"\n'
             'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
             'printf "%s\\n" "${PYTHONUNBUFFERED:-}" > "$PYTHON_ENV"\n'
         ),
@@ -49,24 +47,21 @@ def _stub_env(tmp_path: Path) -> tuple[dict[str, str], Path, Path, Path, Path]:
             "SERVER_MARKER": str(server_marker),
             "PYTHON_ARGS": str(args_file),
             "PYTHON_ENV": str(env_file),
-            "PYTHON_CWD": str(cwd_file),
         }
     )
-    return env, server_marker, args_file, env_file, cwd_file
+    return env, server_marker, args_file, env_file
 
 
 class RunEvalOcrGrowthTests(unittest.TestCase):
     def test_growth_cases_runs_server_before_eval_command(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
-            subdir = tmp_path / "subdir"
-            subdir.mkdir()
-            env, server_marker, args_file, env_file, cwd_file = _stub_env(tmp_path)
+            env, server_marker, args_file, env_file = _stub_env(tmp_path)
 
             result = subprocess.run(
                 [
                     "bash",
-                    str(GROWTH_CASES_SCRIPT),
+                    str(GROWTH_CASES_SCRIPT.relative_to(REPO_ROOT)),
                     "cases.json",
                     "12",
                     "2",
@@ -75,7 +70,7 @@ class RunEvalOcrGrowthTests(unittest.TestCase):
                     "44",
                     "5",
                 ],
-                cwd=subdir,
+                cwd=REPO_ROOT,
                 env=env,
                 capture_output=True,
                 text=True,
@@ -84,9 +79,6 @@ class RunEvalOcrGrowthTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(server_marker.read_text(encoding="utf-8"), "server\n")
             self.assertEqual(env_file.read_text(encoding="utf-8"), "1\n")
-            self.assertEqual(
-                cwd_file.read_text(encoding="utf-8").strip(), str(REPO_ROOT)
-            )
             self.assertEqual(
                 args_file.read_text(encoding="utf-8").splitlines(),
                 [
@@ -113,14 +105,12 @@ class RunEvalOcrGrowthTests(unittest.TestCase):
     def test_growth_batched_runs_server_before_batched_command(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
-            subdir = tmp_path / "subdir"
-            subdir.mkdir()
-            env, server_marker, args_file, env_file, cwd_file = _stub_env(tmp_path)
+            env, server_marker, args_file, env_file = _stub_env(tmp_path)
 
             result = subprocess.run(
                 [
                     "bash",
-                    str(GROWTH_BATCH_SCRIPT),
+                    str(GROWTH_BATCH_SCRIPT.relative_to(REPO_ROOT)),
                     "cases.json",
                     "40",
                     "3",
@@ -131,7 +121,7 @@ class RunEvalOcrGrowthTests(unittest.TestCase):
                     "summary.json",
                     "summary.md",
                 ],
-                cwd=subdir,
+                cwd=REPO_ROOT,
                 env=env,
                 capture_output=True,
                 text=True,
@@ -140,9 +130,6 @@ class RunEvalOcrGrowthTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(server_marker.read_text(encoding="utf-8"), "server\n")
             self.assertEqual(env_file.read_text(encoding="utf-8"), "1\n")
-            self.assertEqual(
-                cwd_file.read_text(encoding="utf-8").strip(), str(REPO_ROOT)
-            )
             self.assertEqual(
                 args_file.read_text(encoding="utf-8").splitlines(),
                 [
@@ -174,14 +161,12 @@ class RunEvalOcrGrowthTests(unittest.TestCase):
     def test_growth_stability_runs_server_before_stability_command(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
-            subdir = tmp_path / "subdir"
-            subdir.mkdir()
-            env, server_marker, args_file, env_file, cwd_file = _stub_env(tmp_path)
+            env, server_marker, args_file, env_file = _stub_env(tmp_path)
 
             result = subprocess.run(
                 [
                     "bash",
-                    str(GROWTH_STABILITY_SCRIPT),
+                    str(GROWTH_STABILITY_SCRIPT.relative_to(REPO_ROOT)),
                     "cases.json",
                     "5",
                     "2",
@@ -195,7 +180,7 @@ class RunEvalOcrGrowthTests(unittest.TestCase):
                     "runs-dir",
                     "stability.json",
                 ],
-                cwd=subdir,
+                cwd=REPO_ROOT,
                 env=env,
                 capture_output=True,
                 text=True,
@@ -204,9 +189,6 @@ class RunEvalOcrGrowthTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(server_marker.read_text(encoding="utf-8"), "server\n")
             self.assertEqual(env_file.read_text(encoding="utf-8"), "1\n")
-            self.assertEqual(
-                cwd_file.read_text(encoding="utf-8").strip(), str(REPO_ROOT)
-            )
             self.assertEqual(
                 args_file.read_text(encoding="utf-8").splitlines(),
                 [

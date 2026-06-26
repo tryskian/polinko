@@ -2,7 +2,6 @@ import os
 import signal
 import stat
 import subprocess
-import sys
 import tempfile
 import time
 import unittest
@@ -181,7 +180,6 @@ class RunServerDaemonTests(unittest.TestCase):
                     "DEV_BACKEND_PORT": "8765",
                     "SERVER_PID_FILE": str(pid_file),
                     "SERVER_LOG": str(tmp_path / "logs" / "server.log"),
-                    "SERVER_LAUNCHER_PYTHON": sys.executable,
                 }
             )
 

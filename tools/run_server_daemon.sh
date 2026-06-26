@@ -14,6 +14,8 @@ else
 	exit 2
 fi
 
+python_bin=${PYTHON:-python3}
+launcher_python=${SERVER_LAUNCHER_PYTHON:-python3}
 asgi_app=${ASGI_APP:-server:app}
 dev_host=${DEV_HOST:-127.0.0.1}
 dev_backend_port=${DEV_BACKEND_PORT:-8000}
@@ -24,8 +26,6 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
 detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
-python_bin=$(polinko_default_python_bin)
-launcher_python=${SERVER_LAUNCHER_PYTHON:-$(polinko_default_python_bin)}
 
 resolve_expected_python() {
 	"$python_bin" -c 'import os,sys; print(os.path.realpath(sys.executable))' 2>/dev/null || true
