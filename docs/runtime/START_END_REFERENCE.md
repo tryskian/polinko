@@ -157,7 +157,7 @@ Explicit companion checks:
   - checks manual eval compatibility aliases and keeps parked OCR eval aliases
     out of automatic startup, closeout, and CI dependencies
 - `make security-checks`
-  - runs local Python and Node dependency audits
+  - runs local Python, root Node, and portfolio Node dependency audits
 - `make api-smoke`
   - uses isolated default localhost port and DB paths unless `SMOKE_PORT`,
     `SMOKE_BASE_URL`, and smoke DB paths are set explicitly

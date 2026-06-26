@@ -471,6 +471,8 @@ Use this doc for operator procedure.
     commit so same-date stale handoffs fail closeout
 - `make security-checks`
   - local Python, root Node, and portfolio Node dependency audits
+  - Python audit tooling is installed from `requirements.txt`, not side-loaded
+    in CI
 - `make refresh-deps`
   - refreshes the local Python environment, root npm lock, and portfolio npm
     lock after Dependabot or dependency metadata changes
