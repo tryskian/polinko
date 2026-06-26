@@ -1228,6 +1228,17 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('bash "$(EVAL_SIDECAR_START_SCRIPT)" start', text)
         self.assertIn('bash "$(EVAL_SIDECAR_START_SCRIPT)" status', text)
         self.assertIn('bash "$(EVAL_SIDECAR_START_SCRIPT)" stop', text)
+        eval_report_script_text = EVAL_REPORT_RUNNER_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('source "$script_dir/repo_root.sh"', eval_report_script_text)
+        self.assertIn("polinko_cd_repo_root", eval_report_script_text)
+        eval_reports_parallel_script_text = (
+            EVAL_REPORTS_PARALLEL_RUNNER_SCRIPT.read_text(encoding="utf-8")
+        )
+        self.assertIn(
+            'source "$script_dir/repo_root.sh"',
+            eval_reports_parallel_script_text,
+        )
+        self.assertIn("polinko_cd_repo_root", eval_reports_parallel_script_text)
         sidecar_script_text = EVAL_SIDECAR_START_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("launch_detached_process.py", sidecar_script_text)
         self.assertIn('source "$script_dir/repo_root.sh"', sidecar_script_text)

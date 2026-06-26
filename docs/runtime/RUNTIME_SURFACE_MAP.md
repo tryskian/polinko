@@ -142,8 +142,10 @@ flowchart TD
   names and preview/apply boundaries. `make operator-alias-check` keeps
   `manual-evals-*` targets paired with their `manualdb-*` compatibility aliases
   and keeps parked OCR eval aliases out of automatic startup, closeout, and CI
-  dependencies. Base, growth, focus, and transcript-lane OCR wrappers share the
-  same case guard before launching eval runners.
+  dependencies. Eval report wrappers resolve the checkout root before writing
+  default report paths or launching report modules. Base, growth, focus, and
+  transcript-lane OCR wrappers share the same case guard before launching eval
+  runners.
 - CI and dependency automation should mirror local gates closely enough that
   failed remote runs point to real fixes, not setup drift.
 - Local URL targets remain print-first by default. Explicit system-browser
