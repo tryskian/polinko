@@ -54,6 +54,28 @@ class RunOcrReportBuilderTests(unittest.TestCase):
         )
         return env, args_file
 
+    def _cwd_env(self, tmp_path: Path) -> tuple[dict[str, str], Path]:
+        env, _ = self._base_env(tmp_path)
+        args_file = tmp_path / "python-cwd-args.txt"
+        python_script = tmp_path / "python-cwd.sh"
+        _write_executable(
+            python_script,
+            (
+                "#!/usr/bin/env sh\n"
+                "set -eu\n"
+                'printf "%s\\n" "$PWD" > "$PYTHON_ARGS"\n'
+                'printf "%s\\n" "$@" >> "$PYTHON_ARGS"\n'
+            ),
+        )
+
+        env.update(
+            {
+                "PYTHON": str(python_script),
+                "PYTHON_ARGS": str(args_file),
+            }
+        )
+        return env, args_file
+
     def test_report_builder_suites_build_expected_commands(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -142,6 +164,41 @@ class RunOcrReportBuilderTests(unittest.TestCase):
                         args_file.read_text(encoding="utf-8").splitlines(),
                         expected_args,
                     )
+
+    def test_report_builder_runs_from_repo_root_when_invoked_from_subdirectory(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            env, args_file = self._cwd_env(tmp_path)
+
+            result = subprocess.run(
+                ["bash", "../tools/run_ocr_report_builder.sh", "focus-cases"],
+                cwd=REPO_ROOT / "docs",
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                args_file.read_text(encoding="utf-8").splitlines(),
+                [
+                    str(REPO_ROOT),
+                    "-m",
+                    "tools.build_ocr_focus_cases",
+                    "--cohort",
+                    "fail-cohort.json",
+                    "--source-cases",
+                    "growth-cases.json",
+                    "--output-cases",
+                    "focus-cases.json",
+                    "--max-cases",
+                    "9",
+                    "--exclude-fail-history",
+                    "--exclude-exploratory",
+                ],
+            )
 
     def test_optional_flags_are_omitted_when_disabled(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -560,6 +560,9 @@ Last updated: 2026-06-25
   - base OCR transcript case and stability workflows now use the same shared
     case guard as growth, focus, and transcript-lane OCR wrappers, so missing
     and empty case-file handling stays consistent before eval runners launch
+  - OCR report workflow/build wrappers resolve the checkout root before
+    validating local report inputs or launching report-builder modules, so
+    direct script execution behaves like Make and subdirectory invocation
 - Local operator tooling follows a reusable non-mutating contract:
   - `docs/runtime/LOCAL_TOOLING.md` records the repo-local pattern for tools
     that materialize ignored local input, validate it, preview application, and
