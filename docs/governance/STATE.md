@@ -154,6 +154,11 @@ Last updated: 2026-06-27
     `makefiles/surfaces.mk` and `makefiles/config/surfaces.mk`, while
     role-owned fragments live under matching `makefiles/*/surfaces/`
     directories
+  - manual-eval Make config keeps the public entrypoint at
+    `makefiles/config/surfaces/manual-evals.mk`, while workflow-owned fragments
+    live under `makefiles/config/surfaces/manual-evals/` for shared filters,
+    feedback/reclassify flows, overlay/source-index settings, and OCR retry
+    settings
   - portfolio surface targets keep the public entrypoint at
     `makefiles/surfaces/portfolio.mk`, while workflow-owned fragments live
     under `makefiles/surfaces/portfolio/` for install aliases, static build,

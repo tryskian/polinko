@@ -16,6 +16,9 @@ MAKE_CONFIG_EVALS_OCR_RUNS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs.mk"
 )
 MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
+MAKE_CONFIG_SURFACES_MANUAL_EVALS = (
+    REPO_ROOT / "makefiles" / "config" / "surfaces" / "manual-evals.mk"
+)
 MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_SURFACES_MANUAL_EVALS = REPO_ROOT / "makefiles" / "surfaces" / "manual-evals.mk"
@@ -292,6 +295,9 @@ class MakefileContractTests(unittest.TestCase):
 
     def test_surface_targets_are_extracted_through_role_includes(self) -> None:
         config_surfaces_entry_text = MAKE_CONFIG_SURFACES.read_text(encoding="utf-8")
+        config_manual_evals_entry_text = MAKE_CONFIG_SURFACES_MANUAL_EVALS.read_text(
+            encoding="utf-8"
+        )
         surfaces_entry_text = MAKE_SURFACES.read_text(encoding="utf-8")
         manual_evals_entry_text = MAKE_SURFACES_MANUAL_EVALS.read_text(encoding="utf-8")
         manual_evals_ocr_retry_entry_text = (
@@ -315,6 +321,22 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/surfaces/portfolio.mk",
             config_surfaces_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/surfaces/manual-evals/common.mk",
+            config_manual_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/surfaces/manual-evals/feedback.mk",
+            config_manual_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/surfaces/manual-evals/overlays.mk",
+            config_manual_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/surfaces/manual-evals/ocr-retry.mk",
+            config_manual_evals_entry_text,
         )
         self.assertIn("include makefiles/surfaces/notebooks.mk", surfaces_entry_text)
         self.assertIn("include makefiles/surfaces/manual-evals.mk", surfaces_entry_text)
