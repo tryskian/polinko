@@ -109,7 +109,7 @@ class EntrypointTests(unittest.TestCase):
     def test_operator_entrypoint_compatibility_contract_is_wired(self) -> None:
         boundary = _read("docs/runtime/PACKAGE_BOUNDARY.md")
         decisions = _read("docs/governance/DECISIONS.md")
-        runtime_config = _read("makefiles/config/runtime.mk")
+        runtime_config = _read_makefile_source("makefiles/config/runtime.mk")
         runtime_make = _read_makefile_source("makefiles/runtime.mk")
         pyproject = _read("pyproject.toml")
         dockerfile = _read("Dockerfile")

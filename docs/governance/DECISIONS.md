@@ -3409,3 +3409,24 @@ or branch history instead.
   install/refresh/lock, editable package install checks, startup contract
   checks, and security gates in one file. Role fragments make future build and
   dependency cleanup reviewable without changing the commands operators use.
+
+## D-208: Split runtime Make configuration ownership by role
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `runtime_config`, `caffeinate`, `server_daemon`, `modularity`
+- Human-led: The human lead asked to keep the universal helper script cleanup
+  focused and to manage chaotic runtime helper surfaces in the normal refactor
+  order without changing operator-facing workflows.
+- Engineer implementation: Keep `makefiles/config/runtime.mk` as the public
+  runtime configuration entrypoint, then split runtime defaults into
+  role-owned fragments for core app URLs, local URL launching, OpenAI account
+  summaries, keep-awake state, and server-daemon defaults with include-aware
+  contract coverage.
+- Decision: Runtime configuration names and defaults stay stable, while
+  runtime configuration ownership now lives in role-owned fragments.
+- Why: The old runtime config include mixed app entrypoints, local URL
+  launcher settings, OpenAI account defaults, caffeinate state and activity
+  wiring, and server-daemon defaults in one file. Role fragments make future
+  runtime helper cleanup reviewable without changing the commands operators
+  use.

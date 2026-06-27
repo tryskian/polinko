@@ -162,6 +162,10 @@ Last updated: 2026-06-27
     `makefiles/runtime.mk`, while role-owned fragments live under
     `makefiles/runtime/` for core lifecycle, server-daemon, local URL helpers,
     OpenAI account helpers, keep-awake, and privacy guard surfaces
+  - runtime Make configuration keeps the public entrypoint at
+    `makefiles/config/runtime.mk`, while role-owned fragments live under
+    `makefiles/config/runtime/` for core app URLs, local URL launching,
+    OpenAI account summaries, keep-awake state, and server-daemon defaults
   - check Make targets keep the public entrypoint at `makefiles/checks.mk`,
     while role-owned fragments live under `makefiles/checks/` for tests,
     Python static analysis, docs/rendering, runtime audits, and local
