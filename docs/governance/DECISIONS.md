@@ -3178,3 +3178,22 @@ or branch history instead.
   generic bootstrap fallback can silently reintroduce host or image alias
   ambiguity. Guarding the setup script keeps bootstrap creation explicit while
   preserving the override for unusual container rebuilds.
+
+## D-196: Pair caffeinate command and match-pattern config
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `wake_lock`, `make`, `runner`
+- Human-led: The human lead asked to keep startup/runtime runner failures and
+  hidden workflow interruptions maintained as part of the script refactor.
+- Engineer implementation: Expose `CAFFEINATE_MATCH_PATTERN` beside
+  `CAFFEINATE_CMD` in Make runtime config, pass both values through
+  `CAFFEINATE_ENV`, and add Makefile contract coverage so the pair cannot drift
+  silently.
+- Decision: The wake-lock command and process match pattern are one runtime
+  contract: Make must pass both into `tools/manage_caffeinate.sh` for start,
+  status, and stop-all paths.
+- Why: A customized wake-lock command can start correctly while status and
+  closeout cleanup still search for the default `caffeinate` process shape.
+  Pairing the values keeps operator-visible status and cleanup aligned with
+  the command that was launched.
