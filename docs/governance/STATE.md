@@ -158,6 +158,10 @@ Last updated: 2026-06-27
     `makefiles/config/evals.mk`, while role-owned fragments live under
     `makefiles/config/evals/` for quality gates, OCR case sources, eval
     sidecar, OCR runners, and report workflows
+  - eval alias targets keep the public entrypoint at
+    `makefiles/evals/aliases.mk`, while alias-family fragments live under
+    `makefiles/evals/aliases/` for OCR intake/mining aliases, OCR
+    run/focus/benchmark shorthands, and utility/inventory aliases
   - OCR-run eval config keeps the public entrypoint at
     `makefiles/config/evals/ocr-runs.mk`, while workflow-owned fragments live
     under `makefiles/config/evals/ocr-runs/` for defaults, common helper

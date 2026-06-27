@@ -3472,3 +3472,22 @@ or branch history instead.
   focus stability, and growth workflows in one file. Workflow fragments make
   future OCR-run maintenance reviewable without running evals or changing
   operator commands.
+
+## D-211: Split eval alias target ownership by alias family
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `eval_aliases`, `ocr`, `modularity`
+- Human-led: The human lead asked to continue Make/script cleanup in focused
+  kernels and keep public operator commands stable.
+- Engineer implementation: Keep `makefiles/evals/aliases.mk` as the public
+  alias target entrypoint, then split aliases into family-owned fragments for
+  OCR intake/mining, OCR run/focus/benchmark shorthands, and utility/inventory
+  aliases with include-aware Makefile contract coverage.
+- Decision: Eval alias names and behaviours stay stable, while alias target
+  ownership now lives in alias-family fragments.
+- Why: The old alias include mixed OCR mining shortcuts, OCR run shortcuts,
+  focus shortcuts, benchmark shortcuts, runtime null audits, inventory, data,
+  and notebook workflow helpers in one file. Alias-family fragments make the
+  shorthand command surface easier to maintain without changing operator
+  commands.
