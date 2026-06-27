@@ -79,6 +79,9 @@ This page is the structural map of the tracked system.
 - `makefiles/surfaces/manual-evals/`
   - manual-eval target fragments for warehouse database, feedback,
     overlay/source-index, and OCR retry helper workflows
+- `makefiles/surfaces/manual-evals/ocr-retry/`
+  - manual-eval OCR retry target fragments for read-only packets, selection
+    and readiness, execution/reporting, and feedback closure
 - `makefiles/evals/`
   - eval target fragments for aliases, core suites, gates, OCR intake, and OCR
     runners

@@ -3530,3 +3530,26 @@ or branch history instead.
   frontend aliases, static build, server-backed preview launch modes, and
   mockup lifecycle targets in one file. Workflow fragments make portfolio
   surface maintenance reviewable without changing operator commands.
+
+## D-214: Split manual-eval OCR retry target ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `manual_evals`, `ocr_retry`, `modularity`
+- Human-led: The human lead asked to keep working in complete kernels with a
+  live UI progress tracker while continuing the Make/script cleanup in normal
+  order.
+- Engineer implementation: Keep
+  `makefiles/surfaces/manual-evals/ocr-retry.mk` as the public OCR retry target
+  entrypoint, then split recipes into workflow-owned fragments for read-only
+  packets, selection/readiness, execution/reporting, and feedback closure with
+  include-aware Makefile contract coverage.
+- Decision: Manual-eval OCR retry target names, `manualdb-*` aliases, and
+  mutation gates stay stable, while OCR retry target ownership now lives in
+  workflow-owned fragments.
+- Why: The old OCR retry target include mixed evidence packets, source
+  provenance, rerun planning, human-selection drafts, validation, apply
+  previews, readiness gates, local execution, execution reporting, and
+  feedback-closure mutation/restore targets in one file. Workflow fragments
+  make the manual eval workbench easier to audit without running evals or
+  changing operator commands.
