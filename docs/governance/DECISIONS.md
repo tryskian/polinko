@@ -3553,3 +3553,26 @@ or branch history instead.
   feedback-closure mutation/restore targets in one file. Workflow fragments
   make the manual eval workbench easier to audit without running evals or
   changing operator commands.
+
+## D-215: Split manual-eval config ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `manual_evals`, `config`, `modularity`
+- Human-led: The human lead asked to return to long, end-to-end kernels with a
+  live UI progress tracker and short thought updates while continuing the
+  Make/script refactor in normal order.
+- Engineer implementation: Keep
+  `makefiles/config/surfaces/manual-evals.mk` as the public manual-eval config
+  entrypoint, then split variable defaults and argument assembly into
+  workflow-owned fragments for shared filters, feedback/reclassify flows,
+  overlay/source-index settings, and OCR retry settings with include-aware
+  Makefile contract coverage.
+- Decision: Manual-eval config variable names and public target behaviour stay
+  stable, while manual-eval config ownership now lives in workflow-owned
+  fragments.
+- Why: The old manual-eval config include mixed shared filters, feedback
+  decision defaults, reclassification gates, overlay source-index settings,
+  OCR retry selection settings, execution settings, backup/restore settings,
+  and provider/model options in one file. Workflow fragments make config
+  changes reviewable beside the target fragments they support.
