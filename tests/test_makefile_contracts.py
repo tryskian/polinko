@@ -748,7 +748,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("caffeinate-status || true", text)
         self.assertRegex(text, r"(?m)^caffeinate-on:\s*caffeinate$")
         self.assertRegex(text, r"(?m)^caffeinate-off:\s*decaffeinate$")
-        self.assertRegex(text, r"(?m)^caffeinate-off-all:\s*caffeinate-off$")
+        self.assertRegex(text, r"(?m)^caffeinate-off-all:$")
         self.assertRegex(text, r"(?m)^decaffeinate-status:\s*caffeinate-status$")
 
     def test_local_privacy_guard_does_not_hide_tracked_docs_on_apply(self) -> None:
@@ -1185,10 +1185,12 @@ class MakefileContractTests(unittest.TestCase):
             "PORTFOLIO_MOCKUP_SCRIPT ?= ./tools/run_portfolio_mockups.sh", text
         )
         self.assertIn("PORTFOLIO_MOCKUP_LAUNCHER_PYTHON ?= $(PYTHON)", text)
+        self.assertIn("PORTFOLIO_MOCKUP_ENV =", text)
         self.assertIn(
             'PORTFOLIO_MOCKUP_LAUNCHER_PYTHON="$(PORTFOLIO_MOCKUP_LAUNCHER_PYTHON)"',
             text,
         )
+        self.assertIn('$(PORTFOLIO_MOCKUP_ENV) bash "$(PORTFOLIO_MOCKUP_SCRIPT)"', text)
         self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" start', text)
         self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" status', text)
         self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" stop', text)

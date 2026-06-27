@@ -139,7 +139,7 @@ caffeinate-on: caffeinate
 
 caffeinate-off: decaffeinate
 
-caffeinate-off-all: caffeinate-off
+caffeinate-off-all:
 	@$(CAFFEINATE_ENV) bash "$(CAFFEINATE_SCRIPT)" stop-all
 
 decaffeinate:
