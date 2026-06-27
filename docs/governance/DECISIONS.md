@@ -3331,3 +3331,22 @@ or branch history instead.
 - Why: The old surface includes mixed notebooks, manual eval workbench,
   portfolio, mockup, and browser helper concerns in one file. Role fragments
   make future cleanup reviewable without changing the commands operators use.
+
+## D-204: Split eval Make config ownership by role
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `eval_config`, `ocr`, `modularity`
+- Human-led: The human lead asked to continue script cleanup in the normal
+  focused order and keep overloaded helper surfaces maintainable without
+  changing operator-facing workflows.
+- Engineer implementation: Keep `makefiles/config/evals.mk` as the public
+  eval config entrypoint, then split its variables into role-owned fragments
+  for quality gates, OCR case sources, eval sidecar, OCR runners, and report
+  workflows with recursive Makefile contract coverage.
+- Decision: Eval Make config variable names and public target behaviour stay
+  stable, while the variable ownership now lives in role-owned eval config
+  fragments.
+- Why: The old eval config included mixed quality-gate, smoke, sidecar, OCR
+  intake, OCR runner, and report workflow concerns in one file. Role fragments
+  make future cleanup reviewable without changing the commands operators use.

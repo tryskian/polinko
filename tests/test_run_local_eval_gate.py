@@ -7,6 +7,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
 RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_local_eval_gate.sh"
 
 
@@ -15,11 +16,28 @@ def _write_executable(path: Path, text: str) -> None:
     path.chmod(path.stat().st_mode | stat.S_IXUSR)
 
 
+def _makefile_source_text(path: Path, seen: set[Path] | None = None) -> str:
+    if seen is None:
+        seen = set()
+    resolved_path = path.resolve()
+    if resolved_path in seen:
+        return ""
+    seen.add(resolved_path)
+
+    text = path.read_text(encoding="utf-8")
+    source_texts = [text]
+    for line in text.splitlines():
+        if line.startswith("include "):
+            for include_path in line.removeprefix("include ").split():
+                source_texts.append(
+                    _makefile_source_text(REPO_ROOT / include_path, seen)
+                )
+    return "\n".join(source_texts)
+
+
 class RunLocalEvalGateTests(unittest.TestCase):
     def test_default_smoke_resources_are_run_scoped(self) -> None:
-        config = (REPO_ROOT / "makefiles" / "config" / "evals.mk").read_text(
-            encoding="utf-8"
-        )
+        config = _makefile_source_text(CONFIG_EVALS)
         runner = RUNNER_SCRIPT.read_text(encoding="utf-8")
 
         self.assertIn("SMOKE_PORT ?=\n", config)

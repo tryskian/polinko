@@ -154,6 +154,10 @@ Last updated: 2026-06-27
     `makefiles/surfaces.mk` and `makefiles/config/surfaces.mk`, while
     role-owned fragments live under matching `makefiles/*/surfaces/`
     directories
+  - eval Make config keeps the public entrypoint at
+    `makefiles/config/evals.mk`, while role-owned fragments live under
+    `makefiles/config/evals/` for quality gates, OCR case sources, eval
+    sidecar, OCR runners, and report workflows
   - eval report wrappers resolve the checkout root before writing default
     report paths or launching report modules, so direct script execution and
     Make execution share the same report-output base
