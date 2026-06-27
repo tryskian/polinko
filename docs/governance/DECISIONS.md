@@ -3390,3 +3390,22 @@ or branch history instead.
   pre-commit helpers, and `act` helpers in one file. Role fragments make
   future validation cleanup reviewable without changing the commands
   operators use.
+
+## D-207: Split build Make ownership by role
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `ci`, `dependencies`, `security`, `modularity`
+- Human-led: The human lead asked to keep script cleanup focused and continue
+  clearing overloaded helper surfaces in the normal refactor order without
+  changing the operator-facing workflow.
+- Engineer implementation: Keep `makefiles/build.mk` as the public build and
+  CI target entrypoint, then split its recipes into role-owned fragments for
+  CI aggregation, dependency lock/install flows, package checks, and security
+  gates with recursive Makefile contract coverage.
+- Decision: Build, dependency, CI, package, and security target names stay
+  stable, while build target ownership now lives in role-owned fragments.
+- Why: The old build include mixed PR preflight, CI aggregation, dependency
+  install/refresh/lock, editable package install checks, startup contract
+  checks, and security gates in one file. Role fragments make future build and
+  dependency cleanup reviewable without changing the commands operators use.

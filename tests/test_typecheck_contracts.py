@@ -41,7 +41,7 @@ class TypecheckContractTests(unittest.TestCase):
         self.assertIn("$(PYTHON) -m mypy --config-file mypy.ini", checks_makefile)
 
     def test_typecheck_is_part_of_ci_and_closeout(self) -> None:
-        build_makefile = _read("makefiles/build.mk")
+        build_makefile = _read_makefile_source("makefiles/build.mk")
         ci_workflow = _read(".github/workflows/ci.yml")
         closeout = _read("tools/end_of_day_routine.sh")
         state = _read("docs/governance/STATE.md")
@@ -81,7 +81,7 @@ class TypecheckContractTests(unittest.TestCase):
     def test_pyright_is_repo_owned_advisory_editor_check(self) -> None:
         package = json.loads(_read("package.json"))
         checks_makefile = _read_makefile_source("makefiles/checks.mk")
-        build_makefile = _read("makefiles/build.mk")
+        build_makefile = _read_makefile_source("makefiles/build.mk")
         ci_workflow = _read(".github/workflows/ci.yml")
         state = _read("docs/governance/STATE.md")
 
