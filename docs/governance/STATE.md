@@ -196,6 +196,11 @@ Last updated: 2026-06-27
     `makefiles/surfaces/manual-evals.mk`, while role-owned fragments live under
     `makefiles/surfaces/manual-evals/` for warehouse database, feedback,
     overlay/source-index, and OCR retry helper workflows
+  - manual-eval OCR retry targets keep the public entrypoint at
+    `makefiles/surfaces/manual-evals/ocr-retry.mk`, while workflow-owned
+    fragments live under `makefiles/surfaces/manual-evals/ocr-retry/` for
+    read-only packets, selection/readiness, execution/reporting, and feedback
+    closure
   - eval report wrappers resolve the checkout root before writing default
     report paths or launching report modules, so direct script execution and
     Make execution share the same report-output base
