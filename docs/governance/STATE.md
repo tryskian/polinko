@@ -143,6 +143,10 @@ Last updated: 2026-06-27
   - `portfolio-mockups` treats a reachable mockup URL without a PID file as a
     lifecycle issue: matching local `http.server` processes are adopted, while
     unmanaged reachable ports fail loudly
+  - `portfolio-mockups` trusts managed PID files only when the live PID matches
+    the configured mockup `http.server` process shape; stale PID files that
+    point to unrelated live processes are cleaned without stopping the
+    unrelated process
   - manual eval health, feedback, overlay, OCR retry, and reclassification Make
     targets keep their public names while routing through a single
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper

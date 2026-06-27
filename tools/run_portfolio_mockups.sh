@@ -92,12 +92,16 @@ start_mockup_server() {
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
 		if pid_is_running "$pid"; then
-			if curl -fsS "$mockup_url" >/dev/null 2>&1; then
-				echo "portfolio mockup server already running (PID $pid, URL: $mockup_url)."
-				exit 0
+			if is_expected_mockup_server "$pid"; then
+				if curl -fsS "$mockup_url" >/dev/null 2>&1; then
+					echo "portfolio mockup server already running (PID $pid, URL: $mockup_url)."
+					exit 0
+				fi
+				kill "$pid" 2>/dev/null || true
+				sleep 0.1
+			else
+				echo "portfolio mockup PID file points to a non-mockup process; cleaning up."
 			fi
-			kill "$pid" 2>/dev/null || true
-			sleep 0.1
 		fi
 		rm -f "$pid_file"
 	fi
@@ -132,6 +136,10 @@ status_mockup_server() {
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
 		if pid_is_running "$pid"; then
+			if ! is_expected_mockup_server "$pid"; then
+				echo "portfolio mockup server: STALE PID file (PID $pid is not a matching mockup server)."
+				exit 1
+			fi
 			if curl -fsS "$mockup_url" >/dev/null 2>&1; then
 				echo "portfolio mockup server: RUNNING (PID $pid, URL: $mockup_url)."
 				exit 0
@@ -172,9 +180,13 @@ stop_mockup_server() {
 	fi
 	pid=$(cat "$pid_file" 2>/dev/null || true)
 	if pid_is_running "$pid"; then
-		kill "$pid"
-		sleep 0.1
-		echo "portfolio mockup server stopped (PID $pid)."
+		if is_expected_mockup_server "$pid"; then
+			kill "$pid"
+			sleep 0.1
+			echo "portfolio mockup server stopped (PID $pid)."
+		else
+			echo "portfolio mockup PID file points to a non-mockup process; cleaning up."
+		fi
 	else
 		echo "Stale portfolio mockup PID file; cleaning up."
 	fi

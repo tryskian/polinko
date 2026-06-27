@@ -147,7 +147,9 @@ flowchart TD
   PIDs are cleaned from the PID file without being stopped.
   `portfolio-mockups` treats a reachable mockup URL without a PID file as a
   lifecycle state: matching local `http.server` processes are adopted, while
-  unmanaged reachable ports fail loudly.
+  unmanaged reachable ports fail loudly. It trusts managed PID files only when
+  the live PID matches the configured mockup `http.server` process shape;
+  unrelated live PIDs are cleaned from the PID file without being stopped.
 - Manual eval and OCR tooling remain active workbench surfaces, but eval runs
   stay separate from startup and read-only inventory commands. Health,
   feedback, overlay, OCR retry, and reclassification Make targets route through
