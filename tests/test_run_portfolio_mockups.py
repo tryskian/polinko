@@ -182,6 +182,87 @@ class RunPortfolioMockupsTests(unittest.TestCase):
             self.assertIn("adopted PID", result.stdout)
             self.assertEqual(pid_file.read_text(encoding="utf-8"), str(process.pid))
 
+    def test_start_trusts_matching_managed_pid_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            mockup_dir = tmp_path / "mockups"
+            mockup_dir.mkdir()
+            (mockup_dir / "landing-mockups.html").write_text(
+                "<!doctype html><title>mockup</title>",
+                encoding="utf-8",
+            )
+            pid_file = tmp_path / "mockups.pid"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_terminate_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+            _write_reachable_server_fakes(fake_bin)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "EXPECTED_PID": str(process.pid),
+                    "PORTFOLIO_MOCKUP_DIR": str(mockup_dir),
+                    "PORTFOLIO_MOCKUP_PORT": "8771",
+                    "PORTFOLIO_MOCKUP_PID_FILE": str(pid_file),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("portfolio mockup server already running", result.stdout)
+            self.assertTrue(pid_file.exists())
+            self.assertEqual(pid_file.read_text(encoding="utf-8"), str(process.pid))
+            self.assertIsNone(process.poll())
+
+    def test_start_cleans_nonmatching_live_pid_file_without_killing_process(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            mockup_dir = tmp_path / "mockups"
+            mockup_dir.mkdir()
+            (mockup_dir / "landing-mockups.html").write_text(
+                "<!doctype html><title>mockup</title>",
+                encoding="utf-8",
+            )
+            pid_file = tmp_path / "mockups.pid"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_terminate_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+            _write_executable(fake_bin / "curl", "#!/usr/bin/env bash\nexit 0\n")
+            _write_executable(fake_bin / "lsof", "#!/usr/bin/env bash\nexit 0\n")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "PORTFOLIO_MOCKUP_DIR": str(mockup_dir),
+                    "PORTFOLIO_MOCKUP_PORT": "8772",
+                    "PORTFOLIO_MOCKUP_PID_FILE": str(pid_file),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("non-mockup process", result.stdout)
+            self.assertIn(
+                "portfolio mockup server is reachable but has no managed PID file",
+                result.stdout,
+            )
+            self.assertFalse(pid_file.exists())
+            self.assertIsNone(process.poll())
+
     def test_stop_closes_reachable_expected_server_without_pid_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -269,6 +350,29 @@ class RunPortfolioMockupsTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn("portfolio mockup server: STALE PID file.", result.stdout)
 
+    def test_status_rejects_nonmatching_live_pid_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "mockups.pid"
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_terminate_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PORTFOLIO_MOCKUP_PID_FILE": str(pid_file),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("not a matching mockup server", result.stdout)
+            self.assertIsNone(process.poll())
+
     def test_status_reports_off_without_pid_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -291,6 +395,41 @@ class RunPortfolioMockupsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             pid_file = tmp_path / "mockups.pid"
+            mockup_dir = tmp_path / "mockups"
+            mockup_dir.mkdir()
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_terminate_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+            _write_reachable_server_fakes(fake_bin)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "stop"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "EXPECTED_PID": str(process.pid),
+                    "PORTFOLIO_MOCKUP_DIR": str(mockup_dir),
+                    "PORTFOLIO_MOCKUP_PORT": "8773",
+                    "PORTFOLIO_MOCKUP_PID_FILE": str(pid_file),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("portfolio mockup server stopped", result.stdout)
+            self.assertFalse(pid_file.exists())
+            process.wait(timeout=2)
+
+    def test_stop_cleans_nonmatching_live_pid_file_without_killing_process(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "mockups.pid"
             process = subprocess.Popen(["sleep", "30"])
             self.addCleanup(_terminate_process, process)
             pid_file.write_text(str(process.pid), encoding="utf-8")
@@ -307,9 +446,9 @@ class RunPortfolioMockupsTests(unittest.TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("portfolio mockup server stopped", result.stdout)
+            self.assertIn("non-mockup process", result.stdout)
             self.assertFalse(pid_file.exists())
-            process.wait(timeout=2)
+            self.assertIsNone(process.poll())
 
     def test_rejects_arguments(self) -> None:
         result = subprocess.run(

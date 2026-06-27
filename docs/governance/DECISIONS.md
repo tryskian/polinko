@@ -3235,3 +3235,22 @@ or branch history instead.
   valid or cause closeout cleanup to stop an unrelated process. Ownership
   validation keeps eval runner cleanup precise while preserving current-file
   drift reporting for real sidecar runs.
+
+## D-199: Validate portfolio mockup PID-file ownership
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `portfolio`, `pid_file`, `runner`, `closeout`
+- Human-led: The human lead asked to continue the script/runtime cleanup with
+  one focused runner surface at a time and to keep hidden workflow
+  interruptions maintained as part of normal workflow hygiene.
+- Engineer implementation: Add a portfolio mockup PID ownership check before
+  start/status/stop treats a live PID file as managed, and extend focused
+  runner tests for matching mockup PIDs, non-mockup live PID cleanup,
+  reachable unmanaged-port adoption, and unrelated process preservation.
+- Decision: `portfolio-mockups` may only treat a PID file as managed when the
+  live PID command matches the configured mockup `http.server` process shape.
+- Why: A reused or incorrect PID file can otherwise make mockup status look
+  valid or cause closeout cleanup to stop an unrelated process. Ownership
+  validation keeps local preview cleanup precise while preserving adoption for
+  real mockup servers.
