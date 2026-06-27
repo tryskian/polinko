@@ -174,6 +174,10 @@ Last updated: 2026-06-27
     while role-owned fragments live under `makefiles/build/` for CI
     aggregation, dependency lock/install flows, package checks, and security
     gates
+  - manual-eval Make targets keep the public entrypoint at
+    `makefiles/surfaces/manual-evals.mk`, while role-owned fragments live under
+    `makefiles/surfaces/manual-evals/` for warehouse database, feedback,
+    overlay/source-index, and OCR retry helper workflows
   - eval report wrappers resolve the checkout root before writing default
     report paths or launching report modules, so direct script execution and
     Make execution share the same report-output base

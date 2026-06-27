@@ -70,6 +70,9 @@ This page is the structural map of the tracked system.
 - `makefiles/surfaces/`
   - role-owned target fragments for notebooks, manual eval workbench,
     portfolio/mockup workflows, and local browser helpers
+- `makefiles/surfaces/manual-evals/`
+  - manual-eval target fragments for warehouse database, feedback,
+    overlay/source-index, and OCR retry helper workflows
 - `makefiles/evals/`
   - eval target fragments for aliases, core suites, gates, OCR intake, and OCR
     runners
