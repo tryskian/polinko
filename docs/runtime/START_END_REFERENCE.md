@@ -80,6 +80,9 @@ Runner lifecycle rule:
   `tools/run_portfolio_mockups.sh`
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
+- the shared detached launcher stops a started child process if the PID file
+  cannot be written, so failed starts do not leave unmanaged background
+  processes behind
 - `make session-status` is the consolidated status surface for the runner
   family. `make end-stop` runs it after stop cleanup so closeout reports the
   post-stop state without hiding individual runner drift.

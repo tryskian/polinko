@@ -3254,3 +3254,22 @@ or branch history instead.
   valid or cause closeout cleanup to stop an unrelated process. Ownership
   validation keeps local preview cleanup precise while preserving adoption for
   real mockup servers.
+
+## D-200: Clean up failed detached launches
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `pid_file`, `launcher`, `closeout`
+- Human-led: The human lead asked to continue the script/runtime cleanup with
+  one focused surface at a time and to keep hidden workflow interruptions
+  maintained as part of normal workflow hygiene.
+- Engineer implementation: Add cleanup to `tools/launch_detached_process.py`
+  so a child process that starts successfully is terminated if the PID file
+  write fails, and add regression coverage that forces PID-file write failure
+  while checking that no marked child process remains.
+- Decision: A detached-launch failure after child startup must clean up the
+  child process before returning an error to the caller.
+- Why: The runner scripts treat launcher failure as a failed start, but the
+  shared launcher owns the interval between child creation and PID-file write.
+  Cleaning that interval prevents failed starts from leaving unmanaged
+  background processes behind.

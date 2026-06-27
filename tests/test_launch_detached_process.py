@@ -30,6 +30,16 @@ def _kill_pid_file(path: Path) -> None:
         return
 
 
+def _matching_processes(marker: str) -> list[str]:
+    result = subprocess.run(
+        ["ps", "-axo", "pid=,command="],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return [line for line in result.stdout.splitlines() if marker in line]
+
+
 class LaunchDetachedProcessTests(unittest.TestCase):
     def test_launches_command_args_and_writes_pid(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -159,3 +169,38 @@ class LaunchDetachedProcessTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 2)
             self.assertIn("missing command to launch", result.stderr)
+
+    def test_stops_child_when_pid_file_write_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "process.pid"
+            pid_file.mkdir()
+            log_file = tmp_path / "process.log"
+            marker = f"polinko-detached-launch-test-{os.getpid()}"
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--pid-file",
+                    str(pid_file),
+                    "--log-file",
+                    str(log_file),
+                    "--",
+                    sys.executable,
+                    "-c",
+                    "import time; time.sleep(30)",
+                    marker,
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertTrue(log_file.exists())
+            for _ in range(10):
+                if not _matching_processes(marker):
+                    break
+                time.sleep(0.1)
+            self.assertEqual(_matching_processes(marker), [])
