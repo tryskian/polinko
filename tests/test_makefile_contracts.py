@@ -1213,6 +1213,15 @@ class MakefileContractTests(unittest.TestCase):
             portfolio_mockup_script_text,
         )
         self.assertNotIn("nohup", portfolio_mockup_script_text)
+        self.assertIn(
+            "CAFFEINATE_MATCH_PATTERN ?= ^/usr/bin/caffeinate -d -i -m( |$$)",
+            text,
+        )
+        self.assertIn(
+            'CAFFEINATE_MATCH_PATTERN="$(CAFFEINATE_MATCH_PATTERN)"',
+            text,
+        )
+        self.assertIn("CAFFEINATE_MATCH_PATTERN", caffeinate_script_text)
         self.assertNotIn("nohup $(CAFFEINATE_CMD)", text)
         self.assertNotIn('pgrep -f "^/usr/bin/caffeinate -d -i -m', text)
         self.assertNotIn("/usr/bin/pmset -g assertions", text)
