@@ -3511,3 +3511,22 @@ or branch history instead.
   report aggregation, and trace backfill targets in one file. Eval-family
   fragments make future eval target maintenance reviewable without changing
   operator commands or running evals.
+
+## D-213: Split portfolio surface target ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `portfolio`, `operator_surface`, `modularity`
+- Human-led: The human lead asked to continue Make/script cleanup in normal
+  refactor order and keep one focused kernel at a time.
+- Engineer implementation: Keep `makefiles/surfaces/portfolio.mk` as the
+  public portfolio target entrypoint, then split recipes into workflow-owned
+  fragments for install aliases, static build, preview launch modes, and
+  mockup lifecycle with include-aware Makefile contract coverage.
+- Decision: Portfolio target names, legacy frontend aliases, and browser
+  launch semantics stay stable, while portfolio target ownership now lives in
+  workflow-owned fragments.
+- Why: The old portfolio include mixed dependency installation, legacy
+  frontend aliases, static build, server-backed preview launch modes, and
+  mockup lifecycle targets in one file. Workflow fragments make portfolio
+  surface maintenance reviewable without changing operator commands.
