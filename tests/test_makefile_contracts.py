@@ -1221,6 +1221,25 @@ class MakefileContractTests(unittest.TestCase):
             'CAFFEINATE_MATCH_PATTERN="$(CAFFEINATE_MATCH_PATTERN)"',
             text,
         )
+        self.assertIn("CAFFEINATE_META_FILE ?=", text)
+        self.assertIn("CAFFEINATE_ACTIVITY_FILE ?=", text)
+        self.assertIn("CAFFEINATE_REPO_SLUG ?= polinko", text)
+        self.assertIn("CAFFEINATE_ACTIVE_WINDOW_SECONDS ?= 1800", text)
+        self.assertIn("CAFFEINATE_ALLOW_GLOBAL_CLEANUP ?= 0", text)
+        self.assertIn('CAFFEINATE_META_FILE="$(CAFFEINATE_META_FILE)"', text)
+        self.assertIn(
+            'CAFFEINATE_ACTIVITY_FILE="$(CAFFEINATE_ACTIVITY_FILE)"',
+            text,
+        )
+        self.assertIn('CAFFEINATE_REPO_SLUG="$(CAFFEINATE_REPO_SLUG)"', text)
+        self.assertIn(
+            'CAFFEINATE_ACTIVE_WINDOW_SECONDS="$(CAFFEINATE_ACTIVE_WINDOW_SECONDS)"',
+            text,
+        )
+        self.assertIn(
+            'CAFFEINATE_ALLOW_GLOBAL_CLEANUP="$(CAFFEINATE_ALLOW_GLOBAL_CLEANUP)"',
+            text,
+        )
         self.assertIn("CAFFEINATE_MATCH_PATTERN", caffeinate_script_text)
         self.assertNotIn("nohup $(CAFFEINATE_CMD)", text)
         self.assertNotIn('pgrep -f "^/usr/bin/caffeinate -d -i -m', text)

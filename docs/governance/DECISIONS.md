@@ -3273,3 +3273,24 @@ or branch history instead.
   shared launcher owns the interval between child creation and PID-file write.
   Cleaning that interval prevents failed starts from leaving unmanaged
   background processes behind.
+
+## D-201: Scope caffeinate ownership and activity state
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `pid_file`, `activity_state`, `runner`
+- Human-led: The human lead asked to rewrite the chaotic caffeinate helper
+  rather than continue patching it, and clarified that repo-managed caffeinate
+  should register repo activity so valid PIDs are not mistaken for active work.
+- Engineer implementation: Replace the shell-only caffeinate lifecycle with a
+  thin shell wrapper and Python manager, add repo-scoped PID metadata and repo
+  activity metadata, make status read-only with `ACTIVE`, `QUIET`, `STALE`,
+  and `OFF` states, and make global matching-process cleanup require explicit
+  operator opt-in.
+- Decision: `caffeinate` liveness and repo activity are separate runtime
+  signals. A PID is managed only when the live process and metadata match the
+  current repo, and cleanup is repo-scoped by default.
+- Why: A live wake-lock process can be valid without representing current repo
+  work. Separating wake-lock ownership from activity freshness gives operators
+  useful status while preventing repo closeout from stopping unrelated
+  processes.

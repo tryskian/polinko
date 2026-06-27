@@ -1,3 +1,4 @@
+import json
 import os
 import signal
 import stat
@@ -29,6 +30,39 @@ def _kill_pid_file(path: Path) -> None:
         return
 
 
+def _cleanup_process(process: subprocess.Popen[bytes]) -> None:
+    if process.poll() is not None:
+        return
+    process.terminate()
+    try:
+        process.wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=2)
+
+
+def _write_metadata(meta_file: Path, pid: int, repo_root: Path = REPO_ROOT) -> None:
+    meta_file.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "runner": "caffeinate",
+                "repo_slug": "polinko",
+                "repo_root": str(repo_root),
+                "branch": "test",
+                "commit": "test",
+                "pid": pid,
+                "command": "test command",
+                "match_pattern": "test",
+                "started_at": "2026-06-27T00:00:00Z",
+                "pid_file": "test.pid",
+                "log_file": "test.log",
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 class ManageCaffeinateTests(unittest.TestCase):
     def test_start_skips_on_non_macos(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -47,28 +81,41 @@ class ManageCaffeinateTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("caffeinate is macOS-only; skipping.", result.stdout)
 
-    def test_start_uses_existing_live_pid_without_spawning(self) -> None:
+    def test_start_cleans_live_non_owned_pid_without_killing_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             uname_script = tmp_path / "uname.sh"
             pid_file = tmp_path / "caffeinate.pid"
-            marker_file = tmp_path / "started.txt"
+            meta_file = tmp_path / "caffeinate.meta.json"
+            activity_file = tmp_path / "caffeinate.activity.json"
+            child_pid_file = tmp_path / "child.pid"
             fake_caffeinate = tmp_path / "fake-caffeinate.sh"
-            pid_file.write_text(str(os.getpid()), encoding="utf-8")
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_cleanup_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
             _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
             _write_executable(
                 fake_caffeinate,
-                ('#!/usr/bin/env sh\nset -eu\nprintf started > "$MARKER_FILE"\n'),
+                (
+                    "#!/usr/bin/env sh\n"
+                    "set -eu\n"
+                    'printf "%s" "$$" > "$CHILD_PID_FILE"\n'
+                    "sleep 30\n"
+                ),
             )
 
             env = os.environ.copy()
             env.update(
                 {
                     "UNAME_BIN": str(uname_script),
+                    "CHILD_PID_FILE": str(child_pid_file),
                     "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_META_FILE": str(meta_file),
+                    "CAFFEINATE_ACTIVITY_FILE": str(activity_file),
                     "CAFFEINATE_LOG": str(tmp_path / "caffeinate.log"),
                     "CAFFEINATE_CMD": str(fake_caffeinate),
-                    "MARKER_FILE": str(marker_file),
+                    "CAFFEINATE_MATCH_PATTERN": str(fake_caffeinate),
+                    "PMSET_BIN": str(tmp_path / "missing-pmset"),
                 }
             )
 
@@ -80,9 +127,51 @@ class ManageCaffeinateTests(unittest.TestCase):
                 text=True,
             )
 
+            self.addCleanup(_kill_pid_file, pid_file)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("caffeinate already running", result.stdout)
-            self.assertFalse(marker_file.exists())
+            self.assertIn("Cleaned non-owned caffeinate PID reference", result.stdout)
+            self.assertIn("caffeinate started", result.stdout)
+            self.assertIsNone(process.poll())
+            self.assertTrue(meta_file.exists())
+            self.assertTrue(activity_file.exists())
+
+    def test_start_refreshes_legacy_matching_pid_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            uname_script = tmp_path / "uname.sh"
+            pid_file = tmp_path / "caffeinate.pid"
+            meta_file = tmp_path / "caffeinate.meta.json"
+            activity_file = tmp_path / "caffeinate.activity.json"
+            fake_caffeinate = tmp_path / "fake-caffeinate.sh"
+            _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
+            _write_executable(fake_caffeinate, "#!/usr/bin/env sh\nsleep 30\n")
+            process = subprocess.Popen([str(fake_caffeinate)])
+            self.addCleanup(_cleanup_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "UNAME_BIN": str(uname_script),
+                    "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_META_FILE": str(meta_file),
+                    "CAFFEINATE_ACTIVITY_FILE": str(activity_file),
+                    "CAFFEINATE_CMD": str(fake_caffeinate),
+                    "CAFFEINATE_MATCH_PATTERN": str(fake_caffeinate),
+                    "PMSET_BIN": str(tmp_path / "missing-pmset"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("metadata refreshed", result.stdout)
+            self.assertEqual(
+                json.loads(meta_file.read_text(encoding="utf-8"))["pid"], process.pid
+            )
+            self.assertTrue(activity_file.exists())
 
     def test_start_removes_stale_pid_and_starts_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -111,6 +200,8 @@ class ManageCaffeinateTests(unittest.TestCase):
                     "CAFFEINATE_PID_FILE": str(pid_file),
                     "CAFFEINATE_LOG": str(tmp_path / "logs" / "caffeinate.log"),
                     "CAFFEINATE_CMD": str(fake_caffeinate),
+                    "CAFFEINATE_MATCH_PATTERN": str(fake_caffeinate),
+                    "PMSET_BIN": str(tmp_path / "missing-pmset"),
                 }
             )
 
@@ -135,14 +226,46 @@ class ManageCaffeinateTests(unittest.TestCase):
             )
             self.assertTrue((tmp_path / "logs").is_dir())
 
-    def test_stop_kills_managed_pid_and_removes_pid_file(self) -> None:
+    def test_stop_kills_owned_pid_and_removes_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            uname_script = tmp_path / "uname.sh"
+            pid_file = tmp_path / "caffeinate.pid"
+            meta_file = tmp_path / "caffeinate.meta.json"
+            _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_cleanup_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+            _write_metadata(meta_file, process.pid)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "stop"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "UNAME_BIN": str(uname_script),
+                    "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_META_FILE": str(meta_file),
+                    "CAFFEINATE_MATCH_PATTERN": "sleep 30",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("caffeinate stopped", result.stdout)
+            self.assertFalse(pid_file.exists())
+            self.assertFalse(meta_file.exists())
+            process.wait(timeout=2)
+
+    def test_stop_cleans_non_owned_pid_reference_without_killing_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             uname_script = tmp_path / "uname.sh"
             pid_file = tmp_path / "caffeinate.pid"
             _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
             process = subprocess.Popen(["sleep", "30"])
-            self.addCleanup(process.kill)
+            self.addCleanup(_cleanup_process, process)
             pid_file.write_text(str(process.pid), encoding="utf-8")
 
             result = subprocess.run(
@@ -152,17 +275,18 @@ class ManageCaffeinateTests(unittest.TestCase):
                     **os.environ,
                     "UNAME_BIN": str(uname_script),
                     "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_MATCH_PATTERN": str(tmp_path / "fake-caffeinate.sh"),
                 },
                 capture_output=True,
                 text=True,
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("caffeinate stopped", result.stdout)
+            self.assertIn("Cleaned non-owned caffeinate PID reference", result.stdout)
             self.assertFalse(pid_file.exists())
-            process.wait(timeout=2)
+            self.assertIsNone(process.poll())
 
-    def test_stop_all_kills_matching_pids_and_removes_pid_file(self) -> None:
+    def test_stop_all_is_repo_scoped_by_default(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             uname_script = tmp_path / "uname.sh"
@@ -170,8 +294,8 @@ class ManageCaffeinateTests(unittest.TestCase):
             pid_file = tmp_path / "caffeinate.pid"
             first = subprocess.Popen(["sleep", "30"])
             second = subprocess.Popen(["sleep", "30"])
-            self.addCleanup(first.kill)
-            self.addCleanup(second.kill)
+            self.addCleanup(_cleanup_process, first)
+            self.addCleanup(_cleanup_process, second)
             pid_file.write_text("999999", encoding="utf-8")
             _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
             _write_executable(
@@ -199,8 +323,49 @@ class ManageCaffeinateTests(unittest.TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("Stopped matching caffeinate processes", result.stdout)
+            self.assertIn("Current repo caffeinate cleanup complete", result.stdout)
+            self.assertIn("Global caffeinate cleanup skipped", result.stdout)
             self.assertFalse(pid_file.exists())
+            self.assertIsNone(first.poll())
+            self.assertIsNone(second.poll())
+
+    def test_stop_all_global_cleanup_requires_explicit_opt_in(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            uname_script = tmp_path / "uname.sh"
+            pgrep_script = tmp_path / "pgrep.sh"
+            first = subprocess.Popen(["sleep", "30"])
+            second = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_cleanup_process, first)
+            self.addCleanup(_cleanup_process, second)
+            _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
+            _write_executable(
+                pgrep_script,
+                (
+                    "#!/usr/bin/env sh\n"
+                    "set -eu\n"
+                    'printf "%s\\n%s\\n" "$FIRST_PID" "$SECOND_PID"\n'
+                ),
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "stop-all"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "UNAME_BIN": str(uname_script),
+                    "PGREP_BIN": str(pgrep_script),
+                    "FIRST_PID": str(first.pid),
+                    "SECOND_PID": str(second.pid),
+                    "CAFFEINATE_PID_FILE": str(tmp_path / "missing.pid"),
+                    "CAFFEINATE_ALLOW_GLOBAL_CLEANUP": "1",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Stopped matching caffeinate processes", result.stdout)
             first.wait(timeout=2)
             second.wait(timeout=2)
 
@@ -236,9 +401,40 @@ class ManageCaffeinateTests(unittest.TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("Managed caffeinate: OFF.", result.stdout)
+            self.assertIn("Managed caffeinate: OFF", result.stdout)
             self.assertIn("Unmanaged caffeinate detected (PID 12345)", result.stdout)
             self.assertIn("PreventUserIdleSystemSleep", result.stdout)
+
+    def test_status_reports_quiet_for_owned_pid_without_recent_activity(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            uname_script = tmp_path / "uname.sh"
+            pid_file = tmp_path / "caffeinate.pid"
+            meta_file = tmp_path / "caffeinate.meta.json"
+            _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_cleanup_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+            _write_metadata(meta_file, process.pid)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "UNAME_BIN": str(uname_script),
+                    "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_META_FILE": str(meta_file),
+                    "CAFFEINATE_MATCH_PATTERN": "sleep 30",
+                    "PMSET_BIN": str(tmp_path / "missing-pmset"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Managed caffeinate: QUIET", result.stdout)
+            self.assertIn("no recorded repo activity", result.stdout)
 
     def test_rejects_unknown_action(self) -> None:
         result = subprocess.run(

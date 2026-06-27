@@ -51,14 +51,17 @@ Wake-lock rule:
 - `make caffeinate` records only this repo's managed PID
 - `CAFFEINATE_CMD` and `CAFFEINATE_MATCH_PATTERN` are configured together so
   start, status, and stop-all inspect the same wake-lock shape
+- `make caffeinate` writes repo-scoped metadata for the managed wake-lock PID
+  and the latest repo activity heartbeat
 - the managed process is launched in a detached child session so it survives
   non-interactive host shell command exit
 - `make decaffeinate` stops the repo-owned PID
-- `make caffeinate-status` reports matching unmanaged `caffeinate` processes
-  without adopting their PIDs
-- `make caffeinate-off-all` is closeout cleanup: it stops the repo-owned PID,
-  then clears any remaining process that matches the configured wake-lock
-  command pattern
+- `make caffeinate-status` is read-only; it reports `ACTIVE`, `QUIET`,
+  `STALE`, or `OFF` from PID ownership, metadata, and activity freshness, and
+  reports matching unmanaged `caffeinate` processes without adopting their PIDs
+- `make caffeinate-off-all` is repo-scoped by default: it cleans the managed
+  PID and current repo runtime metadata, while global matching-process cleanup
+  requires explicit operator opt-in
 
 Runner lifecycle rule:
 
