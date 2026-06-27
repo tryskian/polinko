@@ -68,14 +68,12 @@ run_ocr_data() {
 }
 
 run_ocr_notebook_workflow() {
-  if [ -z "${CGPT_EXPORT_ROOT:-}" ]; then
-    echo "CGPT_EXPORT_ROOT is required."
-    echo "Example: make ocr-notebook-workflow CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"
-    exit 1
-  fi
+  local export_root
+  require_export_root "ocr-notebook-workflow"
+  export_root="$EXPORT_ROOT_RESOLVED"
 
   run_make doctor-env
-  run_make ocrmine CGPT_EXPORT_ROOT="$CGPT_EXPORT_ROOT"
+  run_make ocrmine CGPT_EXPORT_ROOT="$export_root"
   run_make ocrall
   run_make ocrstable
   run_make ocrwiden

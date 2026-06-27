@@ -215,3 +215,5 @@ workflow, output surfaces, and tuning knobs.
    - `make ocr-data CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
 4. Full online notebook/eval workflow:
    - `make ocr-notebook-workflow CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT`
+   - export-root resolution matches `ocr-data`: explicit `CGPT_EXPORT_ROOT`,
+     then repo-provided `CGPT_EXPORT_ROOT_DEFAULT`
