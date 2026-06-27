@@ -13,6 +13,24 @@ def _read(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
 
 
+def _read_makefile_source(relative_path: str, seen: set[Path] | None = None) -> str:
+    if seen is None:
+        seen = set()
+    path = REPO_ROOT / relative_path
+    resolved_path = path.resolve()
+    if resolved_path in seen:
+        return ""
+    seen.add(resolved_path)
+
+    text = path.read_text(encoding="utf-8")
+    source_texts = [text]
+    for line in text.splitlines():
+        if line.startswith("include "):
+            for include_path in line.removeprefix("include ").split():
+                source_texts.append(_read_makefile_source(include_path, seen))
+    return "\n".join(source_texts)
+
+
 class EntrypointTests(unittest.TestCase):
     def test_cli_entrypoint_imports_without_running_loop(self) -> None:
         cli_main = importlib.import_module("main")
@@ -92,7 +110,7 @@ class EntrypointTests(unittest.TestCase):
         boundary = _read("docs/runtime/PACKAGE_BOUNDARY.md")
         decisions = _read("docs/governance/DECISIONS.md")
         runtime_config = _read("makefiles/config/runtime.mk")
-        runtime_make = _read("makefiles/runtime.mk")
+        runtime_make = _read_makefile_source("makefiles/runtime.mk")
         pyproject = _read("pyproject.toml")
         dockerfile = _read("Dockerfile")
         server_daemon = _read("tools/run_server_daemon.sh")
