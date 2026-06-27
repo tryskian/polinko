@@ -150,6 +150,10 @@ Last updated: 2026-06-27
   - manual eval health, feedback, overlay, OCR retry, and reclassification Make
     targets keep their public names while routing through a single
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper
+  - surface Make targets and config keep public entrypoints at
+    `makefiles/surfaces.mk` and `makefiles/config/surfaces.mk`, while
+    role-owned fragments live under matching `makefiles/*/surfaces/`
+    directories
   - eval report wrappers resolve the checkout root before writing default
     report paths or launching report modules, so direct script execution and
     Make execution share the same report-output base

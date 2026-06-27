@@ -15,9 +15,7 @@ def _makefile_contract_text() -> str:
         path.read_text(encoding="utf-8")
         for path in [
             REPO_ROOT / "Makefile",
-            *sorted((REPO_ROOT / "makefiles").glob("*.mk")),
-            *sorted((REPO_ROOT / "makefiles" / "config").glob("*.mk")),
-            *sorted((REPO_ROOT / "makefiles" / "evals").glob("*.mk")),
+            *sorted((REPO_ROOT / "makefiles").glob("**/*.mk")),
         ]
     )
 

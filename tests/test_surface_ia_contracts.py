@@ -98,7 +98,7 @@ class SurfaceIaContractTests(unittest.TestCase):
     def test_current_portfolio_source_output_and_server_paths_align(self) -> None:
         makefile = _read("Makefile")
         make_config = _read_make_source("makefiles/config.mk")
-        surfaces_make = _read("makefiles/surfaces.mk")
+        surfaces_make = _read_make_source("makefiles/surfaces.mk")
         vite_config = _read("apps/portfolio/vite.config.js")
         static_builder = _read("tools/build_portfolio_static.py")
         app_factory = _read("src/polinko/api/app_factory.py")

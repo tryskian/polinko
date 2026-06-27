@@ -52,6 +52,12 @@ This page is the structural map of the tracked system.
   - root operator target router and include order
 - `makefiles/`
   - focused Make target families and configuration includes
+- `makefiles/config/surfaces/`
+  - role-owned configuration fragments for notebooks, manual eval workbench,
+    local browser helpers, and portfolio/mockup surfaces
+- `makefiles/surfaces/`
+  - role-owned target fragments for notebooks, manual eval workbench,
+    portfolio/mockup workflows, and local browser helpers
 - `makefiles/evals/`
   - eval target fragments for aliases, core suites, gates, OCR intake, and OCR
     runners
