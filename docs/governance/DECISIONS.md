@@ -3451,3 +3451,24 @@ or branch history instead.
   planning, execution-bundle inspection, feedback closure, and reclassification
   targets in one file. Workflow fragments make the active workbench easier to
   maintain without running evals or changing operator commands.
+
+## D-210: Split OCR-run eval configuration ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `eval_config`, `ocr_runs`, `modularity`
+- Human-led: The human lead asked to keep the script and Make cleanup focused
+  on one kernel at a time, with no eval runs and no operator-facing workflow
+  change.
+- Engineer implementation: Keep `makefiles/config/evals/ocr-runs.mk` as the
+  public OCR-run config entrypoint, then split defaults and environments into
+  workflow-owned fragments for shared defaults, common helper wiring, direct
+  runners, transcript lanes, focus stability, and growth workflows with
+  include-aware Makefile contract coverage.
+- Decision: OCR-run eval configuration names and defaults stay stable, while
+  OCR-run configuration ownership now lives in workflow-owned fragments.
+- Why: The old OCR-run config include mixed retry defaults, local report paths,
+  helper script wiring, direct runner environments, transcript-lane workflows,
+  focus stability, and growth workflows in one file. Workflow fragments make
+  future OCR-run maintenance reviewable without running evals or changing
+  operator commands.

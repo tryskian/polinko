@@ -12,6 +12,9 @@ MAKE_BUILD = REPO_ROOT / "makefiles" / "build.mk"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_CONFIG_RUNTIME = REPO_ROOT / "makefiles" / "config" / "runtime.mk"
 MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
+MAKE_CONFIG_EVALS_OCR_RUNS = (
+    REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs.mk"
+)
 MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
 MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
@@ -184,12 +187,19 @@ class MakefileContractTests(unittest.TestCase):
 
     def test_eval_config_is_extracted_through_role_includes(self) -> None:
         config_evals_entry_text = MAKE_CONFIG_EVALS.read_text(encoding="utf-8")
+        ocr_runs_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS.read_text(encoding="utf-8")
         config_text = _makefile_contract_text()
 
         self.assertIsNone(
             re.search(
                 r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)",
                 config_evals_entry_text,
+            )
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)",
+                ocr_runs_entry_text,
             )
         )
         self.assertIn(
@@ -211,6 +221,30 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/evals/reports.mk",
             config_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/defaults.mk",
+            ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/common.mk",
+            ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/direct-runners.mk",
+            ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/transcript-lanes.mk",
+            ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/focus.mk",
+            ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/growth.mk",
+            ocr_runs_entry_text,
         )
         self.assertIn("LOCAL_EVAL_GATE_RUNNER_ENV =", config_text)
         self.assertIn("OCR_INTAKE_WORKFLOW_ENV =", config_text)

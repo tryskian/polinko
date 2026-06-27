@@ -67,6 +67,9 @@ This page is the structural map of the tracked system.
 - `makefiles/config/evals/`
   - role-owned eval configuration fragments for quality gates, OCR case
     sources, eval sidecar, OCR runners, and report workflows
+- `makefiles/config/evals/ocr-runs/`
+  - OCR-run configuration fragments for defaults, common helper wiring, direct
+    runners, transcript lanes, focus stability, and growth workflows
 - `makefiles/surfaces/`
   - role-owned target fragments for notebooks, manual eval workbench,
     portfolio/mockup workflows, and local browser helpers
