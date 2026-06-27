@@ -1,0 +1,13 @@
+# Server daemon configuration.
+SERVER_PID_FILE ?= /tmp/polinko-server.pid
+SERVER_LOG ?= /tmp/polinko-server.log
+SERVER_LAUNCHER_PYTHON ?= $(PYTHON)
+SERVER_DAEMON_SCRIPT ?= ./tools/run_server_daemon.sh
+SERVER_DAEMON_ENV = \
+	PYTHON="$(PYTHON)" \
+	SERVER_LAUNCHER_PYTHON="$(SERVER_LAUNCHER_PYTHON)" \
+	ASGI_APP="$(ASGI_APP)" \
+	DEV_HOST="$(DEV_HOST)" \
+	DEV_BACKEND_PORT="$(DEV_BACKEND_PORT)" \
+	SERVER_PID_FILE="$(SERVER_PID_FILE)" \
+	SERVER_LOG="$(SERVER_LOG)"

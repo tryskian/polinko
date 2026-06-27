@@ -58,6 +58,9 @@ This page is the structural map of the tracked system.
 - `makefiles/checks/`
   - check target fragments for tests, Python static analysis, docs/rendering,
     runtime audits, and local developer helpers
+- `makefiles/config/runtime/`
+  - runtime configuration fragments for core app URLs, local URL launching,
+    OpenAI account summaries, keep-awake state, and server-daemon defaults
 - `makefiles/config/surfaces/`
   - role-owned configuration fragments for notebooks, manual eval workbench,
     local browser helpers, and portfolio/mockup surfaces

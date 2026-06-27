@@ -10,6 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 MAKEFILE = REPO_ROOT / "Makefile"
 MAKE_BUILD = REPO_ROOT / "makefiles" / "build.mk"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
+MAKE_CONFIG_RUNTIME = REPO_ROOT / "makefiles" / "config" / "runtime.mk"
 MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
 MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
 MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
@@ -252,6 +253,7 @@ class MakefileContractTests(unittest.TestCase):
     def test_shared_config_is_extracted_before_target_families(self) -> None:
         root_text = _makefile_text()
         config_entry_text = MAKE_CONFIG.read_text(encoding="utf-8")
+        runtime_config_entry_text = MAKE_CONFIG_RUNTIME.read_text(encoding="utf-8")
         config_text = _makefile_contract_text()
 
         self.assertLess(
@@ -268,6 +270,24 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("include makefiles/config/evals.mk", config_entry_text)
         self.assertIn("include makefiles/config/ops.mk", config_entry_text)
         self.assertIn("include makefiles/config/build.mk", config_entry_text)
+        self.assertIn(
+            "include makefiles/config/runtime/core.mk", runtime_config_entry_text
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/local-urls.mk",
+            runtime_config_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/openai-account.mk",
+            runtime_config_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/caffeinate.mk",
+            runtime_config_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/server.mk", runtime_config_entry_text
+        )
         self.assertIn("PYTHON ?=", config_text)
         self.assertIn("ACT ?= act", config_text)
         self.assertIn("CLI_ENTRYPOINT ?= -m polinko.cli", config_text)
