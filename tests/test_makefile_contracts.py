@@ -20,6 +20,7 @@ MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_SURFACES_MANUAL_EVALS = REPO_ROOT / "makefiles" / "surfaces" / "manual-evals.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
+MAKE_EVALS_ALIASES = REPO_ROOT / "makefiles" / "evals" / "aliases.mk"
 MAKE_RUNTIME = REPO_ROOT / "makefiles" / "runtime.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
@@ -153,15 +154,33 @@ class MakefileContractTests(unittest.TestCase):
 
     def test_eval_targets_are_extracted_through_role_includes(self) -> None:
         evals_entry_text = MAKE_EVALS.read_text(encoding="utf-8")
+        aliases_entry_text = MAKE_EVALS_ALIASES.read_text(encoding="utf-8")
+        contract_text = _makefile_contract_text()
 
         self.assertIn("include makefiles/evals/aliases.mk", evals_entry_text)
         self.assertIn("include makefiles/evals/core.mk", evals_entry_text)
         self.assertIn("include makefiles/evals/gates.mk", evals_entry_text)
         self.assertIn("include makefiles/evals/ocr-intake.mk", evals_entry_text)
         self.assertIn("include makefiles/evals/ocr-runs.mk", evals_entry_text)
-        self.assertIn("ocrkernel:", _makefile_contract_text())
         self.assertIn(
-            "eval-ocr-transcript-stability-growth:", _makefile_contract_text()
+            "include makefiles/evals/aliases/ocr-intake.mk",
+            aliases_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/ocr-runs.mk",
+            aliases_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/utilities.mk",
+            aliases_entry_text,
+        )
+        self.assertIn("ocrkernel:", contract_text)
+        self.assertIn("ocrminehand: OCR_CASES_FROM_EXPORT_ARGS =", contract_text)
+        self.assertIn("ocrfocus:", contract_text)
+        self.assertIn("runtime-null-audit:", contract_text)
+        self.assertIn(
+            "eval-ocr-transcript-stability-growth:",
+            contract_text,
         )
 
     def test_runtime_targets_are_extracted_through_role_includes(self) -> None:
