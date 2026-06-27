@@ -52,6 +52,9 @@ This page is the structural map of the tracked system.
   - root operator target router and include order
 - `makefiles/`
   - focused Make target families and configuration includes
+- `makefiles/build/`
+  - build target fragments for CI aggregation, dependency lock/install flows,
+    package checks, and security gates
 - `makefiles/checks/`
   - check target fragments for tests, Python static analysis, docs/rendering,
     runtime audits, and local developer helpers

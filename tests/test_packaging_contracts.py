@@ -10,6 +10,27 @@ def _read(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
 
 
+def _read_makefile_source(relative_path: str, seen: set[Path] | None = None) -> str:
+    if seen is None:
+        seen = set()
+
+    path = REPO_ROOT / relative_path
+    resolved_path = path.resolve()
+    if resolved_path in seen:
+        return ""
+
+    seen.add(resolved_path)
+    text = path.read_text(encoding="utf-8")
+    source_texts = [text]
+
+    for line in text.splitlines():
+        if line.startswith("include "):
+            for include_path in line.removeprefix("include ").split():
+                source_texts.append(_read_makefile_source(include_path, seen))
+
+    return "\n".join(source_texts)
+
+
 class PackagingContractTests(unittest.TestCase):
     def test_pyproject_defines_src_layout_package(self) -> None:
         pyproject = tomllib.loads(_read("pyproject.toml"))
@@ -60,7 +81,7 @@ class PackagingContractTests(unittest.TestCase):
         self.assertIn('__version__ = "0.0.0"', init_text)
 
     def test_editable_install_check_is_named_and_ci_exercised(self) -> None:
-        build_make = _read("makefiles/build.mk")
+        build_make = _read_makefile_source("makefiles/build.mk")
         ci_workflow = _read(".github/workflows/ci.yml")
         install_check = _read("tools/check_package_install.py")
         pyright_config = _read("pyrightconfig.json")

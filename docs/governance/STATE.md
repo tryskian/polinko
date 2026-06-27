@@ -166,6 +166,10 @@ Last updated: 2026-06-27
     while role-owned fragments live under `makefiles/checks/` for tests,
     Python static analysis, docs/rendering, runtime audits, and local
     developer helpers
+  - build Make targets keep the public entrypoint at `makefiles/build.mk`,
+    while role-owned fragments live under `makefiles/build/` for CI
+    aggregation, dependency lock/install flows, package checks, and security
+    gates
   - eval report wrappers resolve the checkout root before writing default
     report paths or launching report modules, so direct script execution and
     Make execution share the same report-output base

@@ -8,6 +8,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MAKEFILE = REPO_ROOT / "Makefile"
+MAKE_BUILD = REPO_ROOT / "makefiles" / "build.mk"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
 MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
@@ -110,6 +111,21 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/surfaces\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/evals\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/ops\.mk$")
+
+    def test_build_targets_are_extracted_through_role_includes(self) -> None:
+        build_entry_text = MAKE_BUILD.read_text(encoding="utf-8")
+        contract_text = _makefile_contract_text()
+
+        self.assertIn("include makefiles/build/ci.mk", build_entry_text)
+        self.assertIn("include makefiles/build/dependencies.mk", build_entry_text)
+        self.assertIn("include makefiles/build/package.mk", build_entry_text)
+        self.assertIn("include makefiles/build/security.mk", build_entry_text)
+        self.assertIn("pr-preflight:", contract_text)
+        self.assertIn("ci:", contract_text)
+        self.assertIn("deps-lock-check:", contract_text)
+        self.assertIn("package-install-check:", contract_text)
+        self.assertIn("python-security-check:", contract_text)
+        self.assertIn("node-security-check:", contract_text)
 
     def test_check_targets_are_extracted_through_role_includes(self) -> None:
         checks_entry_text = MAKE_CHECKS.read_text(encoding="utf-8")
