@@ -3491,3 +3491,23 @@ or branch history instead.
   and notebook workflow helpers in one file. Alias-family fragments make the
   shorthand command surface easier to maintain without changing operator
   commands.
+
+## D-212: Split core eval target ownership by eval family
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `modularity`
+- Human-led: The human lead asked to continue Make/script cleanup in focused
+  kernels and keep the refactor in normal order without running evals.
+- Engineer implementation: Keep `makefiles/evals/core.mk` as the public core
+  eval target entrypoint, then split recipes into family-owned fragments for
+  retrieval/file-search, quality and response-behaviour, direct OCR suites,
+  CLIP, report aggregation, and trace maintenance with include-aware Makefile
+  contract coverage.
+- Decision: Core eval target names and behaviours stay stable, while core eval
+  target ownership now lives in eval-family fragments.
+- Why: The old core eval include mixed retrieval, file search, hallucination,
+  style, response behaviour, OCR, OCR safety, handwriting, recovery, CLIP,
+  report aggregation, and trace backfill targets in one file. Eval-family
+  fragments make future eval target maintenance reviewable without changing
+  operator commands or running evals.
