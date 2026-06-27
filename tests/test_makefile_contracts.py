@@ -13,6 +13,7 @@ MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
 MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
+MAKE_RUNTIME = REPO_ROOT / "makefiles" / "runtime.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
 OPENAI_ACCOUNT_SCRIPT = REPO_ROOT / "tools" / "openai_account_summary.py"
@@ -121,6 +122,27 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "eval-ocr-transcript-stability-growth:", _makefile_contract_text()
         )
+
+    def test_runtime_targets_are_extracted_through_role_includes(self) -> None:
+        runtime_entry_text = MAKE_RUNTIME.read_text(encoding="utf-8")
+        contract_text = _makefile_contract_text()
+
+        self.assertIn("include makefiles/runtime/core.mk", runtime_entry_text)
+        self.assertIn("include makefiles/runtime/server.mk", runtime_entry_text)
+        self.assertIn("include makefiles/runtime/local-urls.mk", runtime_entry_text)
+        self.assertIn(
+            "include makefiles/runtime/openai-account.mk",
+            runtime_entry_text,
+        )
+        self.assertIn("include makefiles/runtime/caffeinate.mk", runtime_entry_text)
+        self.assertIn("include makefiles/runtime/privacy.mk", runtime_entry_text)
+        self.assertIn("chat:", contract_text)
+        self.assertIn("start:", contract_text)
+        self.assertIn("server-daemon:", contract_text)
+        self.assertIn("open-api-docs: server-daemon", contract_text)
+        self.assertIn("openai-account-summary:", contract_text)
+        self.assertIn("caffeinate:", contract_text)
+        self.assertIn("privacy-local-on:", contract_text)
 
     def test_eval_config_is_extracted_through_role_includes(self) -> None:
         config_evals_entry_text = MAKE_CONFIG_EVALS.read_text(encoding="utf-8")

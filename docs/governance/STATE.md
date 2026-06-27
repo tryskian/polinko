@@ -158,6 +158,10 @@ Last updated: 2026-06-27
     `makefiles/config/evals.mk`, while role-owned fragments live under
     `makefiles/config/evals/` for quality gates, OCR case sources, eval
     sidecar, OCR runners, and report workflows
+  - runtime Make targets keep the public entrypoint at
+    `makefiles/runtime.mk`, while role-owned fragments live under
+    `makefiles/runtime/` for core lifecycle, server-daemon, local URL helpers,
+    OpenAI account helpers, keep-awake, and privacy guard surfaces
   - eval report wrappers resolve the checkout root before writing default
     report paths or launching report modules, so direct script execution and
     Make execution share the same report-output base

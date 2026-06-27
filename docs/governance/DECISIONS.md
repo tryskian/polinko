@@ -3350,3 +3350,23 @@ or branch history instead.
 - Why: The old eval config included mixed quality-gate, smoke, sidecar, OCR
   intake, OCR runner, and report workflow concerns in one file. Role fragments
   make future cleanup reviewable without changing the commands operators use.
+
+## D-205: Split runtime Make ownership by role
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `runtime_targets`, `operator_surface`, `modularity`
+- Human-led: The human lead asked to continue script cleanup in the normal
+  focused order and keep high-traffic helper surfaces maintainable without
+  changing operator-facing workflows.
+- Engineer implementation: Keep `makefiles/runtime.mk` as the public runtime
+  target entrypoint, then split its recipes into role-owned fragments for core
+  lifecycle, server-daemon, local URL helpers, OpenAI account helpers,
+  keep-awake, and privacy guard targets with recursive Makefile contract
+  coverage.
+- Decision: Runtime Make target names and public behaviour stay stable, while
+  runtime target ownership now lives in role-owned fragments.
+- Why: The old runtime include mixed chat, startup/closeout, server-daemon,
+  URL printing/browser launching, account summaries, caffeinate,
+  session-status, and privacy guard concerns in one file. Role fragments make
+  future cleanup reviewable without changing the commands operators use.

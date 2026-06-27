@@ -64,6 +64,9 @@ This page is the structural map of the tracked system.
 - `makefiles/evals/`
   - eval target fragments for aliases, core suites, gates, OCR intake, and OCR
     runners
+- `makefiles/runtime/`
+  - runtime target fragments for core lifecycle, server-daemon, local URL,
+    OpenAI account, keep-awake, and privacy guard targets
 - `docs/`
   - governance, runtime references, and research docs
 - `apps/portfolio/`
