@@ -3197,3 +3197,22 @@ or branch history instead.
   closeout cleanup still search for the default `caffeinate` process shape.
   Pairing the values keeps operator-visible status and cleanup aligned with
   the command that was launched.
+
+## D-197: Validate server-daemon PID-file ownership
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `server_daemon`, `pid_file`, `runner`, `closeout`
+- Human-led: The human lead asked to continue the script/runtime cleanup and
+  keep hidden runner interruptions maintained as part of normal workflow
+  hygiene.
+- Engineer implementation: Add a server-daemon PID ownership check before
+  start/status/stop trusts a live PID file, and extend focused runner tests for
+  matching server PIDs, non-server live PID cleanup, and unrelated process
+  preservation.
+- Decision: `server-daemon` may only treat a PID file as managed when the live
+  PID command matches the configured Polinko `uvicorn` app.
+- Why: A reused or incorrect PID file can otherwise make status look healthy or
+  cause closeout to stop an unrelated process. Ownership validation keeps
+  runner cleanup precise while preserving port-based adoption for real Polinko
+  servers.

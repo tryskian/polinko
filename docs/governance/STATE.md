@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-26
+Last updated: 2026-06-27
 
 ## Current Truth
 
@@ -132,6 +132,9 @@ Last updated: 2026-06-26
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery
+  - `server-daemon` trusts managed PID files only when the live PID matches
+    the configured Polinko `uvicorn` app; stale PID files that point to
+    unrelated live processes are cleaned without stopping the unrelated process
   - `eval-sidecar` reports missing current-file drift on start/status and still
     stops the repo-managed PID during closeout
   - `portfolio-mockups` treats a reachable mockup URL without a PID file as a
