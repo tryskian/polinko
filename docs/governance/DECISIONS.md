@@ -3430,3 +3430,24 @@ or branch history instead.
   wiring, and server-daemon defaults in one file. Role fragments make future
   runtime helper cleanup reviewable without changing the commands operators
   use.
+
+## D-209: Split manual-eval Make target ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `manual_evals`, `operator_surface`, `modularity`
+- Human-led: The human lead confirmed the manual-eval workbench is still active
+  and asked to keep cleanup focused without running evals or changing the
+  operator-facing workflow.
+- Engineer implementation: Keep `makefiles/surfaces/manual-evals.mk` as the
+  public manual-eval target entrypoint, then split targets into role-owned
+  fragments for warehouse database, feedback, overlay/source-index, and OCR
+  retry helper workflows with recursive Makefile contract coverage.
+- Decision: Manual-eval target names, compatibility aliases, and command
+  behaviour stay stable, while manual-eval target ownership now lives in
+  workflow-owned fragments.
+- Why: The old manual-eval include mixed database rebuild/status, feedback
+  review, decision draft/preview, overlay source-index checks, OCR retry
+  planning, execution-bundle inspection, feedback closure, and reclassification
+  targets in one file. Workflow fragments make the active workbench easier to
+  maintain without running evals or changing operator commands.

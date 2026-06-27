@@ -15,6 +15,7 @@ MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
 MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
 MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
+MAKE_SURFACES_MANUAL_EVALS = REPO_ROOT / "makefiles" / "surfaces" / "manual-evals.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 MAKE_RUNTIME = REPO_ROOT / "makefiles" / "runtime.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
@@ -221,6 +222,7 @@ class MakefileContractTests(unittest.TestCase):
     def test_surface_targets_are_extracted_through_role_includes(self) -> None:
         config_surfaces_entry_text = MAKE_CONFIG_SURFACES.read_text(encoding="utf-8")
         surfaces_entry_text = MAKE_SURFACES.read_text(encoding="utf-8")
+        manual_evals_entry_text = MAKE_SURFACES_MANUAL_EVALS.read_text(encoding="utf-8")
         contract_text = _makefile_contract_text()
 
         self.assertIn(
@@ -244,6 +246,26 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("include makefiles/surfaces/portfolio.mk", surfaces_entry_text)
         self.assertIn(
             "include makefiles/surfaces/local-browser.mk", surfaces_entry_text
+        )
+        self.assertIn(
+            "include makefiles/surfaces/manual-evals/common.mk",
+            manual_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/surfaces/manual-evals/database.mk",
+            manual_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/surfaces/manual-evals/feedback.mk",
+            manual_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/surfaces/manual-evals/overlays.mk",
+            manual_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/surfaces/manual-evals/ocr-retry.mk",
+            manual_evals_entry_text,
         )
         self.assertIn("notebook nb notes:", contract_text)
         self.assertIn("manual-evals-ocr-retry-execute", contract_text)
