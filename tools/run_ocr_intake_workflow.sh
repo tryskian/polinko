@@ -8,6 +8,8 @@ source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
 # shellcheck source=tools/python_runtime.sh
 . "$script_dir/python_runtime.sh"
+# shellcheck source=tools/ocr_workflow_common.sh
+. "$script_dir/ocr_workflow_common.sh"
 
 usage() {
 	echo "Usage: run_ocr_intake_workflow.sh <export-index|cases-from-export-build|benchmark|generalization-review|transcript-delta> [lane|extra args...]" >&2
@@ -47,28 +49,6 @@ typed_benchmark_top_k=${OCR_TYPED_BENCHMARK_TOP_K:-8}
 typed_benchmark_min_anchors=${OCR_TYPED_BENCHMARK_MIN_ANCHORS:-3}
 illustration_benchmark_top_k=${OCR_ILLUSTRATION_BENCHMARK_TOP_K:-6}
 illustration_benchmark_min_anchors=${OCR_ILLUSTRATION_BENCHMARK_MIN_ANCHORS:-2}
-resolved_export_root=
-
-resolve_export_root() {
-	hint_target=$1
-	export_root=${CGPT_EXPORT_ROOT:-}
-
-	if [ -z "$export_root" ]; then
-		export_root=${CGPT_EXPORT_ROOT_DEFAULT:-}
-	fi
-	if [ -z "$export_root" ]; then
-		echo "CGPT_EXPORT_ROOT is required."
-		echo "Run: make $hint_target CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"
-		exit 2
-	fi
-	if [ ! -d "$export_root" ]; then
-		echo "CGPT export root not found: $export_root"
-		echo "Run: make $hint_target CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"
-		exit 2
-	fi
-
-	resolved_export_root=$export_root
-}
 
 require_file() {
 	path=$1
@@ -133,18 +113,18 @@ export-index)
 		usage
 		exit 2
 	fi
-	resolve_export_root "cgpt-export-index"
+	ocr_workflow_require_export_root "cgpt-export-index"
 	exec "$python_bin" -m tools.index_cgpt_export \
-		--export-root "$resolved_export_root" \
+		--export-root "$OCR_WORKFLOW_EXPORT_ROOT" \
 		--output-dir "$export_output_dir"
 	;;
 cases-from-export-build)
-	resolve_export_root "ocr-cases-from-export"
+	ocr_workflow_require_export_root "ocr-cases-from-export"
 	if [ -f "$transcript_review" ]; then
 		cp "$transcript_review" "$transcript_review_prev"
 	fi
 	exec "$python_bin" -m tools.build_ocr_cases_from_export \
-		--export-root "$resolved_export_root" \
+		--export-root "$OCR_WORKFLOW_EXPORT_ROOT" \
 		--output-cases "$transcript_cases_all" \
 		--output-cases-growth "$transcript_cases_growth" \
 		--output-cases-handwriting "$transcript_cases_handwriting" \

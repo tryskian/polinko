@@ -7,42 +7,19 @@ source "$script_dir/repo_root.sh"
 
 polinko_cd_repo_root
 ROOT_DIR="$POLINKO_REPO_ROOT"
+# shellcheck source=tools/ocr_workflow_common.sh
+. "$script_dir/ocr_workflow_common.sh"
 
 MAKE_BIN="${MAKE:-make}"
-EXPORT_ROOT_RESOLVED=""
 
 run_make() {
   "$MAKE_BIN" --no-print-directory "$@"
 }
 
-resolve_export_root() {
-  local export_root="${CGPT_EXPORT_ROOT:-}"
-  if [ -z "$export_root" ]; then
-    export_root="${CGPT_EXPORT_ROOT_DEFAULT:-}"
-  fi
-  printf '%s\n' "$export_root"
-}
-
-require_export_root() {
-  local target_name="$1"
-  EXPORT_ROOT_RESOLVED="$(resolve_export_root)"
-
-  if [ -z "$EXPORT_ROOT_RESOLVED" ]; then
-    echo "CGPT_EXPORT_ROOT is required."
-    echo "Run: make $target_name CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"
-    exit 1
-  fi
-  if [ ! -d "$EXPORT_ROOT_RESOLVED" ]; then
-    echo "CGPT export root not found: $EXPORT_ROOT_RESOLVED"
-    echo "Run: make $target_name CGPT_EXPORT_ROOT=/abs/path/to/CGPT-DATA-EXPORT"
-    exit 1
-  fi
-}
-
 run_ocrkernel() {
   local export_root
-  require_export_root "ocrkernel"
-  export_root="$EXPORT_ROOT_RESOLVED"
+  ocr_workflow_require_export_root "ocrkernel" 1
+  export_root="$OCR_WORKFLOW_EXPORT_ROOT"
 
   run_make doctor-env
   run_make ocrmine CGPT_EXPORT_ROOT="$export_root"
@@ -58,8 +35,8 @@ run_ocrkernel() {
 
 run_ocr_data() {
   local export_root
-  require_export_root "ocr-data"
-  export_root="$EXPORT_ROOT_RESOLVED"
+  ocr_workflow_require_export_root "ocr-data" 1
+  export_root="$OCR_WORKFLOW_EXPORT_ROOT"
 
   run_make doctor-env
   run_make ocrmine CGPT_EXPORT_ROOT="$export_root"
@@ -69,8 +46,8 @@ run_ocr_data() {
 
 run_ocr_notebook_workflow() {
   local export_root
-  require_export_root "ocr-notebook-workflow"
-  export_root="$EXPORT_ROOT_RESOLVED"
+  ocr_workflow_require_export_root "ocr-notebook-workflow" 1
+  export_root="$OCR_WORKFLOW_EXPORT_ROOT"
 
   run_make doctor-env
   run_make ocrmine CGPT_EXPORT_ROOT="$export_root"
