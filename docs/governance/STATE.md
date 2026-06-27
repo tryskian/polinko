@@ -127,6 +127,8 @@ Last updated: 2026-06-26
     delegate start, status, and stop actions to helper scripts with repo-owned
     PID/log handling, and direct runner invocation uses the shared
     `tools/python_runtime.sh` interpreter rail for detached launchers
+  - `caffeinate` command and match-pattern config are paired in Make so status
+    and closeout cleanup inspect the same wake-lock shape that start launches
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery
