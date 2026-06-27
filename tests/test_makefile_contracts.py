@@ -9,6 +9,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MAKEFILE = REPO_ROOT / "Makefile"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
+MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
 MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
@@ -120,6 +121,43 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "eval-ocr-transcript-stability-growth:", _makefile_contract_text()
         )
+
+    def test_eval_config_is_extracted_through_role_includes(self) -> None:
+        config_evals_entry_text = MAKE_CONFIG_EVALS.read_text(encoding="utf-8")
+        config_text = _makefile_contract_text()
+
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)",
+                config_evals_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/config/evals/gates.mk",
+            config_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-cases.mk",
+            config_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/sidecar.mk",
+            config_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs.mk",
+            config_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/reports.mk",
+            config_evals_entry_text,
+        )
+        self.assertIn("LOCAL_EVAL_GATE_RUNNER_ENV =", config_text)
+        self.assertIn("OCR_INTAKE_WORKFLOW_ENV =", config_text)
+        self.assertIn("EVAL_SIDECAR_START_ENV =", config_text)
+        self.assertIn("OCR_BASE_TRANSCRIPT_WORKFLOW_ENV =", config_text)
+        self.assertIn("OCR_GROWTH_CASE_WORKFLOW_ENV =", config_text)
+        self.assertIn("OCR_REPORT_WORKFLOW_ENV =", config_text)
 
     def test_surface_targets_are_extracted_through_role_includes(self) -> None:
         config_surfaces_entry_text = MAKE_CONFIG_SURFACES.read_text(encoding="utf-8")

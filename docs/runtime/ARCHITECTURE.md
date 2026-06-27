@@ -55,6 +55,9 @@ This page is the structural map of the tracked system.
 - `makefiles/config/surfaces/`
   - role-owned configuration fragments for notebooks, manual eval workbench,
     local browser helpers, and portfolio/mockup surfaces
+- `makefiles/config/evals/`
+  - role-owned eval configuration fragments for quality gates, OCR case
+    sources, eval sidecar, OCR runners, and report workflows
 - `makefiles/surfaces/`
   - role-owned target fragments for notebooks, manual eval workbench,
     portfolio/mockup workflows, and local browser helpers
