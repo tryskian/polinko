@@ -137,6 +137,9 @@ Last updated: 2026-06-27
     unrelated live processes are cleaned without stopping the unrelated process
   - `eval-sidecar` reports missing current-file drift on start/status and still
     stops the repo-managed PID during closeout
+  - `eval-sidecar` trusts managed PID files only when the live PID matches the
+    `tools.eval_sidecar run` process shape; stale PID files that point to
+    unrelated live processes are cleaned without stopping the unrelated process
   - `portfolio-mockups` treats a reachable mockup URL without a PID file as a
     lifecycle issue: matching local `http.server` processes are adopted, while
     unmanaged reachable ports fail loudly
