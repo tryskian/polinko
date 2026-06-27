@@ -11,6 +11,7 @@ MAKEFILE = REPO_ROOT / "Makefile"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
 MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
+MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 MAKE_RUNTIME = REPO_ROOT / "makefiles" / "runtime.mk"
@@ -109,6 +110,25 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/surfaces\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/evals\.mk$")
         self.assertRegex(_makefile_text(), r"(?m)^include\s+makefiles/ops\.mk$")
+
+    def test_check_targets_are_extracted_through_role_includes(self) -> None:
+        checks_entry_text = MAKE_CHECKS.read_text(encoding="utf-8")
+        contract_text = _makefile_contract_text()
+
+        self.assertIn("include makefiles/checks/tests.mk", checks_entry_text)
+        self.assertIn("include makefiles/checks/python.mk", checks_entry_text)
+        self.assertIn("include makefiles/checks/docs.mk", checks_entry_text)
+        self.assertIn(
+            "include makefiles/checks/runtime-audits.mk",
+            checks_entry_text,
+        )
+        self.assertIn("include makefiles/checks/dev-tools.mk", checks_entry_text)
+        self.assertIn("test:", contract_text)
+        self.assertIn("backend-gate:", contract_text)
+        self.assertIn("ruff-check:", contract_text)
+        self.assertIn("lint-docs:", contract_text)
+        self.assertIn("risk-scan:", contract_text)
+        self.assertIn("repo-search:", contract_text)
 
     def test_eval_targets_are_extracted_through_role_includes(self) -> None:
         evals_entry_text = MAKE_EVALS.read_text(encoding="utf-8")

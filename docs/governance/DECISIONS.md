@@ -3370,3 +3370,23 @@ or branch history instead.
   URL printing/browser launching, account summaries, caffeinate,
   session-status, and privacy guard concerns in one file. Role fragments make
   future cleanup reviewable without changing the commands operators use.
+
+## D-206: Split check Make ownership by role
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `checks`, `validation`, `modularity`
+- Human-led: The human lead asked to keep script cleanup focused and continue
+  clearing overloaded helper surfaces in the normal refactor order without
+  changing the operator-facing workflow.
+- Engineer implementation: Keep `makefiles/checks.mk` as the public check
+  target entrypoint, then split its recipes into role-owned fragments for
+  tests, Python static analysis, docs/rendering, runtime audits, and local
+  developer helpers with recursive Makefile contract coverage.
+- Decision: Check target names and validation behaviour stay stable, while
+  check target ownership now lives in role-owned fragments.
+- Why: The old checks include mixed unit tests, Python style/type checks,
+  docs/render checks, runtime audits, environment diagnostics, repo search,
+  pre-commit helpers, and `act` helpers in one file. Role fragments make
+  future validation cleanup reviewable without changing the commands
+  operators use.

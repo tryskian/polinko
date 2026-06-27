@@ -10,10 +10,28 @@ def _read(relative_path: str) -> str:
     return (REPO_ROOT / relative_path).read_text(encoding="utf-8")
 
 
+def _read_makefile_source(relative_path: str, seen: set[Path] | None = None) -> str:
+    if seen is None:
+        seen = set()
+    path = REPO_ROOT / relative_path
+    resolved_path = path.resolve()
+    if resolved_path in seen:
+        return ""
+    seen.add(resolved_path)
+
+    text = path.read_text(encoding="utf-8")
+    source_texts = [text]
+    for line in text.splitlines():
+        if line.startswith("include "):
+            for include_path in line.removeprefix("include ").split():
+                source_texts.append(_read_makefile_source(include_path, seen))
+    return "\n".join(source_texts)
+
+
 class TypecheckContractTests(unittest.TestCase):
     def test_mypy_target_uses_active_source_and_tool_surface(self) -> None:
         config = _read("mypy.ini")
-        checks_makefile = _read("makefiles/checks.mk")
+        checks_makefile = _read_makefile_source("makefiles/checks.mk")
 
         self.assertIn("files = src, tools", config)
         self.assertIn("docs/eval/", config)
@@ -62,7 +80,7 @@ class TypecheckContractTests(unittest.TestCase):
 
     def test_pyright_is_repo_owned_advisory_editor_check(self) -> None:
         package = json.loads(_read("package.json"))
-        checks_makefile = _read("makefiles/checks.mk")
+        checks_makefile = _read_makefile_source("makefiles/checks.mk")
         build_makefile = _read("makefiles/build.mk")
         ci_workflow = _read(".github/workflows/ci.yml")
         state = _read("docs/governance/STATE.md")
