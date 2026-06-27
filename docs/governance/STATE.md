@@ -568,6 +568,8 @@ Last updated: 2026-06-27
     the repo-owned PID without adopting unrelated user wake-lock processes
   - repo-managed caffeinate writes metadata for PID ownership and repo activity
     state so status can distinguish `ACTIVE`, `QUIET`, `STALE`, and `OFF`
+  - high-traffic lifecycle and validation Make targets update repo activity
+    metadata without changing wake-lock ownership
   - `make caffeinate-off-all` is repo-scoped by default; global matching-process
     cleanup requires explicit operator opt-in
   - `make end-stop` closes the core background runner family:

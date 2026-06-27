@@ -53,6 +53,8 @@ Wake-lock rule:
   start, status, and stop-all inspect the same wake-lock shape
 - `make caffeinate` writes repo-scoped metadata for the managed wake-lock PID
   and the latest repo activity heartbeat
+- high-traffic lifecycle and validation targets mark repo activity through the
+  same activity metadata without starting, stopping, or adopting a wake-lock PID
 - the managed process is launched in a detached child session so it survives
   non-interactive host shell command exit
 - `make decaffeinate` stops the repo-owned PID
