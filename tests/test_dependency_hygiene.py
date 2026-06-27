@@ -66,7 +66,7 @@ class DependencyHygieneTests(unittest.TestCase):
         self.assertIn('ROOT="$POLINKO_REPO_ROOT"', script)
         self.assertIn('venv_dir="${POLINKO_DEVCONTAINER_VENV_DIR:-.venv}"', script)
         self.assertIn(
-            'bootstrap_python="${POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON:-python3}"',
+            'bootstrap_python="${POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON:-python3.14}"',
             script,
         )
         self.assertIn('venv_python="$venv_dir/bin/python3"', script)

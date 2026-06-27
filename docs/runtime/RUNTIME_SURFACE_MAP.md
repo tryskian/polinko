@@ -125,8 +125,9 @@ flowchart TD
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files;
   it checks local path leaks and reuses `make local-runtime-config-check` for
   VS Code task/config shape, extension recommendation drift, and devcontainer
-  config token drift through `tools.check_local_runtime_config`.
-  Devcontainer setup resolves the repo root before installing dependencies.
+  config and setup-script drift through `tools.check_local_runtime_config`.
+  Devcontainer setup resolves the repo root, defaults venv creation to
+  `python3.14`, and installs dependencies through the created venv.
   `make privacy-local-on` installs the current machine-local handoff exclude
   pattern; tracked docs remain visible.
 - Core background runners use one ownership pattern for PID files,

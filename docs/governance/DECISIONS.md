@@ -3158,3 +3158,23 @@ or branch history instead.
   operator-visible ways. A shared helper keeps explicit `CGPT_EXPORT_ROOT`,
   repo-provided `CGPT_EXPORT_ROOT_DEFAULT`, and wrapper-specific guidance on
   one audited rail.
+
+## D-195: Guard devcontainer bootstrap Python defaults
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `devcontainer`, `python`, `interpreter`, `local_config`
+- Human-led: The human lead asked to keep local-versus-system Python drift from
+  recurring and to treat hidden local/runtime surfaces as critical maintenance
+  surfaces.
+- Engineer implementation: Align `tools/setup_devcontainer.sh` with the
+  recorded explicit-bootstrap decision by defaulting venv creation to
+  `python3.14`, then extend `tools.check_local_runtime_config` so the
+  devcontainer setup-script default and venv-owned pip installs fail the normal
+  local runtime config gate if they drift.
+- Decision: Devcontainer setup-script interpreter drift is part of the local
+  runtime config contract, not only a dependency hygiene test.
+- Why: The devcontainer image and editor paths are Python 3.14-oriented, but a
+  generic bootstrap fallback can silently reintroduce host or image alias
+  ambiguity. Guarding the setup script keeps bootstrap creation explicit while
+  preserving the override for unusual container rebuilds.

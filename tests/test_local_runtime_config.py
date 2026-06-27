@@ -320,6 +320,33 @@ class LocalRuntimeConfigTests(unittest.TestCase):
             failures[0],
         )
 
+    def test_devcontainer_bootstrap_python_default_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _write(
+                root,
+                "tools/setup_devcontainer.sh",
+                """
+                #!/usr/bin/env bash
+                set -euo pipefail
+                bootstrap_python="${POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON:-python3}"
+                venv_python="$venv_dir/bin/python3"
+                "$bootstrap_python" -m venv --copies "$venv_dir"
+                "$venv_python" -m pip install --upgrade pip
+                "$venv_python" -m pip install -r requirements.txt
+                """,
+            )
+
+            failures = check_local_runtime_config.check_devcontainer_setup_script(root)
+
+        self.assertEqual(len(failures), 1)
+        self.assertIn("bootstrap Python default must be python3.14", failures[0])
+
+    def test_devcontainer_setup_script_current_contract_passes(self) -> None:
+        failures = check_local_runtime_config.check_devcontainer_setup_script(REPO_ROOT)
+
+        self.assertEqual(failures, [])
+
     def test_run_checks_vscode_and_devcontainer_config(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

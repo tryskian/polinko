@@ -10,7 +10,7 @@ ROOT="$POLINKO_REPO_ROOT"
 
 venv_dir="${POLINKO_DEVCONTAINER_VENV_DIR:-.venv}"
 portfolio_app_dir="${POLINKO_DEVCONTAINER_PORTFOLIO_APP_DIR:-apps/portfolio}"
-bootstrap_python="${POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON:-python3}"
+bootstrap_python="${POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON:-python3.14}"
 venv_python="$venv_dir/bin/python3"
 
 "$bootstrap_python" -m venv --copies "$venv_dir"
