@@ -1228,6 +1228,17 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("CAFFEINATE_REPO_SLUG ?= polinko", text)
         self.assertIn("CAFFEINATE_ACTIVE_WINDOW_SECONDS ?= 1800", text)
         self.assertIn("CAFFEINATE_ALLOW_GLOBAL_CLEANUP ?= 0", text)
+        self.assertIn("repo_activity = $(CAFFEINATE_ENV)", text)
+        self.assertIn('bash "$(CAFFEINATE_SCRIPT)" activity', text)
+        self.assertIn('CAFFEINATE_ACTIVITY_LABEL="$(1)"', text)
+        self.assertIn('CAFFEINATE_ACTIVITY_TARGET="$(2)"', text)
+        self.assertIn("@$(call repo_activity,make test,test)", text)
+        self.assertIn("@$(call repo_activity,make scripts-check,scripts-check)", text)
+        self.assertIn("@$(call repo_activity,make risk-scan,risk-scan)", text)
+        self.assertIn(
+            "@$(call repo_activity,make package-install-check,package-install-check)",
+            text,
+        )
         self.assertIn('CAFFEINATE_META_FILE="$(CAFFEINATE_META_FILE)"', text)
         self.assertIn(
             'CAFFEINATE_ACTIVITY_FILE="$(CAFFEINATE_ACTIVITY_FILE)"',

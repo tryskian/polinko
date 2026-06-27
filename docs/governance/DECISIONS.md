@@ -3294,3 +3294,22 @@ or branch history instead.
   work. Separating wake-lock ownership from activity freshness gives operators
   useful status while preventing repo closeout from stopping unrelated
   processes.
+
+## D-202: Wire Make targets to repo activity heartbeats
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `make`, `activity_state`, `runtime`
+- Human-led: The human lead clarified that repo-managed caffeinate should
+  register repo activity so well-meaning operators do not report valid
+  wake-lock PIDs as current work.
+- Engineer implementation: Add a first-class `activity` action to the
+  caffeinate manager, expose a shared Make `repo_activity` helper, and wire
+  common lifecycle and validation targets to update activity metadata before
+  they run.
+- Decision: Repo activity heartbeats are independent from wake-lock ownership:
+  Make targets may update activity metadata without starting, stopping,
+  adopting, or inspecting caffeinate PIDs.
+- Why: A valid wake-lock can outlive the current work interval. Updating
+  activity metadata from high-traffic repo actions keeps `caffeinate-status`
+  useful without coupling ordinary checks to process ownership.

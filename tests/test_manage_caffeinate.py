@@ -64,6 +64,38 @@ def _write_metadata(meta_file: Path, pid: int, repo_root: Path = REPO_ROOT) -> N
 
 
 class ManageCaffeinateTests(unittest.TestCase):
+    def test_activity_writes_repo_activity_without_pid_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "caffeinate.pid"
+            meta_file = tmp_path / "caffeinate.meta.json"
+            activity_file = tmp_path / "caffeinate.activity.json"
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "activity"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_META_FILE": str(meta_file),
+                    "CAFFEINATE_ACTIVITY_FILE": str(activity_file),
+                    "CAFFEINATE_ACTIVITY_LABEL": "make test",
+                    "CAFFEINATE_ACTIVITY_TARGET": "test",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(result.stdout, "")
+            self.assertFalse(pid_file.exists())
+            self.assertFalse(meta_file.exists())
+            activity = json.loads(activity_file.read_text(encoding="utf-8"))
+            self.assertEqual(activity["repo_slug"], "polinko")
+            self.assertEqual(activity["repo_root"], str(REPO_ROOT))
+            self.assertEqual(activity["last_activity_label"], "make test")
+            self.assertEqual(activity["last_activity_target"], "test")
+
     def test_start_skips_on_non_macos(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

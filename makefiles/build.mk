@@ -25,9 +25,11 @@ ci-python-security: python-security-check deps-lock-check
 ci-node-security: node-security-check
 
 deps-install:
+	@$(call repo_activity,make deps-install,deps-install)
 	$(PYTHON) -m pip install -r "$(REQUIREMENTS_LOCK)"
 
 deps-refresh refresh-deps:
+	@$(call repo_activity,make deps-refresh,deps-refresh)
 	$(PYTHON) -m pip install --upgrade pip
 	$(PYTHON) -m pip install --upgrade --upgrade-strategy eager -r "$(REQUIREMENTS_LOCK)"
 	npm install --no-audit --no-fund
@@ -36,6 +38,7 @@ deps-refresh refresh-deps:
 	fi
 
 deps-lock:
+	@$(call repo_activity,make deps-lock,deps-lock)
 	@set -eu; \
 	if ! $(PYTHON) -m piptools --version >/dev/null 2>&1; then \
 		$(PYTHON) -m pip install "pip-tools==$(PIP_TOOLS_VERSION)"; \
@@ -48,6 +51,7 @@ deps-lock:
 		"$(REQUIREMENTS_IN)"
 
 deps-lock-check:
+	@$(call repo_activity,make deps-lock-check,deps-lock-check)
 	$(PYTHON) -m piptools compile \
 		--resolver=backtracking \
 		--allow-unsafe \
@@ -57,16 +61,20 @@ deps-lock-check:
 	git diff --exit-code -- "$(REQUIREMENTS_LOCK)"
 
 package-install-check:
+	@$(call repo_activity,make package-install-check,package-install-check)
 	$(PYTHON) -m pip install --no-build-isolation --no-deps -e .
 	$(PYTHON) tools/check_package_install.py
 
 startup-contracts-check:
+	@$(call repo_activity,make startup-contracts-check,startup-contracts-check)
 	$(PYTHON) -m unittest tests.test_startup_contracts
 
 python-security-check:
+	@$(call repo_activity,make python-security-check,python-security-check)
 	$(PYTHON) -m pip_audit -r "$(REQUIREMENTS_LOCK)" $(PIP_AUDIT_ARGS)
 
 node-security-check:
+	@$(call repo_activity,make node-security-check,node-security-check)
 	npm audit --audit-level=moderate
 	@if [ -f "$(PORTFOLIO_APP_DIR)/package.json" ]; then \
 		npm --prefix "$(PORTFOLIO_APP_DIR)" audit --audit-level=moderate; \

@@ -321,6 +321,13 @@ def _write_activity(config: RuntimeConfig, label: str, target: str) -> None:
     )
 
 
+def activity(config: RuntimeConfig) -> int:
+    target = os.environ.get("CAFFEINATE_ACTIVITY_TARGET", "").strip() or config.action
+    label = os.environ.get("CAFFEINATE_ACTIVITY_LABEL", "").strip() or f"make {target}"
+    _write_activity(config, label, target)
+    return 0
+
+
 def _remove_runtime_metadata(config: RuntimeConfig) -> None:
     _remove_path(config.pid_file)
     _remove_path(config.meta_file)
@@ -686,7 +693,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Manage repo-scoped caffeinate runtime state."
     )
-    parser.add_argument("action", choices=("start", "stop", "stop-all", "status"))
+    parser.add_argument(
+        "action", choices=("start", "stop", "stop-all", "status", "activity")
+    )
     args = parser.parse_args(argv)
     config = _load_config(args.action)
 
@@ -698,6 +707,8 @@ def main(argv: list[str] | None = None) -> int:
         return stop_all(config)
     if args.action == "status":
         return status(config)
+    if args.action == "activity":
+        return activity(config)
     return 2
 
 

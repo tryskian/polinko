@@ -26,6 +26,7 @@ venv env:
 gate: quality-gate-deterministic
 
 start:
+	@$(call repo_activity,make start,start)
 	bash ./tools/start_of_day_routine.sh
 
 end:
@@ -34,12 +35,15 @@ end:
 eod: end
 
 end-preflight:
+	@$(call repo_activity,make end-preflight,end-preflight)
 	END_SKIP_GIT_CHECK=1 END_SKIP_STOP=1 bash ./tools/end_of_day_routine.sh
 
 end-git-check:
+	@$(call repo_activity,make end-git-check,end-git-check)
 	bash ./tools/check_end_git_clean.sh
 
 git-prune-stale-refs:
+	@$(call repo_activity,make git-prune-stale-refs,git-prune-stale-refs)
 	git remote prune origin
 
 end-stop: eval-sidecar-stop portfolio-mockups-stop server-daemon-stop caffeinate-off-all session-status

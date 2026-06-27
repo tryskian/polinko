@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-	echo "Usage: manage_caffeinate.sh {start|stop|stop-all|status}" >&2
+	echo "Usage: manage_caffeinate.sh {start|stop|stop-all|status|activity}" >&2
 }
 
 if [ "$#" -ne 1 ]; then
@@ -11,7 +11,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 case "$1" in
-	start | stop | stop-all | status) ;;
+	start | stop | stop-all | status | activity) ;;
 	*)
 		usage
 		exit 2
