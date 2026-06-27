@@ -142,7 +142,9 @@ flowchart TD
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery.
   `eval-sidecar` reports missing current-file drift on start/status and still
-  stops the repo-managed PID during closeout.
+  stops the repo-managed PID during closeout. It trusts PID files only when the
+  live PID matches the `tools.eval_sidecar run` process shape; unrelated live
+  PIDs are cleaned from the PID file without being stopped.
   `portfolio-mockups` treats a reachable mockup URL without a PID file as a
   lifecycle state: matching local `http.server` processes are adopted, while
   unmanaged reachable ports fail loudly.

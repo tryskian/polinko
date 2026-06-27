@@ -48,6 +48,26 @@ pid_is_running() {
 	[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
 }
 
+process_command() {
+	local pid=$1
+	ps -o command= -p "$pid" 2>/dev/null || true
+}
+
+pid_matches_eval_sidecar() {
+	local pid=$1
+	local command parent_pid parent_command
+	command=$(process_command "$pid")
+	if printf '%s\n' "$command" | grep -Fq "tools.eval_sidecar run"; then
+		return 0
+	fi
+	parent_pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ' || true)
+	if [ -z "$parent_pid" ]; then
+		return 1
+	fi
+	parent_command=$(process_command "$parent_pid")
+	printf '%s\n' "$parent_command" | grep -Fq "tools.eval_sidecar run"
+}
+
 stop_managed_pid() {
 	local pid=$1
 	kill "$pid"
@@ -59,15 +79,21 @@ start_sidecar() {
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
 		if pid_is_running "$pid"; then
-			if [ ! -f "$current_file" ]; then
-				echo "eval-sidecar current file missing: $current_file"
-				echo "eval-sidecar already running without run context (PID $pid)."
-				exit 1
+			if ! pid_matches_eval_sidecar "$pid"; then
+				echo "eval-sidecar PID file points to a non-sidecar process; cleaning up."
+				rm -f "$pid_file"
+			else
+				if [ ! -f "$current_file" ]; then
+					echo "eval-sidecar current file missing: $current_file"
+					echo "eval-sidecar already running without run context (PID $pid)."
+					exit 1
+				fi
+				echo "eval-sidecar already running (PID $pid)."
+				exit 0
 			fi
-			echo "eval-sidecar already running (PID $pid)."
-			exit 0
+		else
+			rm -f "$pid_file"
 		fi
-		rm -f "$pid_file"
 	fi
 
 	mkdir -p "$(dirname "$pid_file")" "$(dirname "$log_path")" "$(dirname "$current_file")"
@@ -88,6 +114,18 @@ start_sidecar() {
 }
 
 status_sidecar() {
+	if [ -f "$pid_file" ]; then
+		pid=$(cat "$pid_file" 2>/dev/null || true)
+		if pid_is_running "$pid"; then
+			if ! pid_matches_eval_sidecar "$pid"; then
+				echo "eval-sidecar: STALE PID file (PID $pid is not a matching sidecar)."
+				exit 1
+			fi
+		else
+			echo "eval-sidecar: STALE PID file."
+			exit 1
+		fi
+	fi
 	if [ ! -f "$current_file" ]; then
 		if [ -f "$pid_file" ]; then
 			pid=$(cat "$pid_file" 2>/dev/null || true)
@@ -96,8 +134,6 @@ status_sidecar() {
 				echo "eval-sidecar current file missing: $current_file"
 				exit 1
 			fi
-			echo "eval-sidecar: STALE PID file."
-			exit 1
 		fi
 		echo "eval-sidecar: OFF."
 		exit 0
@@ -110,15 +146,29 @@ stop_sidecar() {
 		if [ -f "$pid_file" ]; then
 			pid=$(cat "$pid_file" 2>/dev/null || true)
 			if pid_is_running "$pid"; then
-				echo "eval-sidecar current file missing: $current_file"
-				stop_managed_pid "$pid"
-				echo "eval-sidecar stopped managed PID $pid without current run context."
+				if ! pid_matches_eval_sidecar "$pid"; then
+					echo "eval-sidecar PID file points to a non-sidecar process; cleaning up."
+					rm -f "$pid_file"
+				else
+					echo "eval-sidecar current file missing: $current_file"
+					stop_managed_pid "$pid"
+					echo "eval-sidecar stopped managed PID $pid without current run context."
+				fi
 				exit 0
 			fi
 			rm -f "$pid_file"
 		fi
 		echo "No eval-sidecar run found."
 		exit 0
+	fi
+	if [ -f "$pid_file" ]; then
+		pid=$(cat "$pid_file" 2>/dev/null || true)
+		if pid_is_running "$pid" && ! pid_matches_eval_sidecar "$pid"; then
+			echo "eval-sidecar PID file points to a non-sidecar process; cleaning up."
+			rm -f "$pid_file"
+		elif ! pid_is_running "$pid"; then
+			rm -f "$pid_file"
+		fi
 	fi
 	"$python_bin" -m tools.eval_sidecar stop --current-file "$current_file" --pid-file "$pid_file"
 }

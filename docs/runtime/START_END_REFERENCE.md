@@ -72,6 +72,9 @@ Runner lifecycle rule:
   `tools/run_eval_sidecar_start.sh`
   - missing current-file state is surfaced by start/status, while stop still
     cleans the repo-managed PID for closeout
+  - live PID files are treated as managed only when the process matches
+    `tools.eval_sidecar run`; unrelated live PIDs are cleaned from the PID file
+    without being stopped
 - `make portfolio-mockups`, `make portfolio-mockups-status`, and
   `make portfolio-mockups-stop` delegate mockup-server lifecycle actions to
   `tools/run_portfolio_mockups.sh`

@@ -3216,3 +3216,22 @@ or branch history instead.
   cause closeout to stop an unrelated process. Ownership validation keeps
   runner cleanup precise while preserving port-based adoption for real Polinko
   servers.
+
+## D-198: Validate eval-sidecar PID-file ownership
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `eval_sidecar`, `pid_file`, `runner`, `closeout`
+- Human-led: The human lead asked to continue the script/runtime cleanup and
+  keep one focused runner surface at a time moving through inspection,
+  validation, and clean Git flow.
+- Engineer implementation: Add an eval-sidecar PID ownership check before
+  start/status/stop treats a live PID file as managed, and extend focused
+  runner tests for matching sidecar PIDs, non-sidecar live PID cleanup, missing
+  current-file status, and unrelated process preservation.
+- Decision: `eval-sidecar` may only treat a PID file as managed when the live
+  PID command matches the `tools.eval_sidecar run` process shape.
+- Why: A reused or incorrect PID file can otherwise make sidecar status look
+  valid or cause closeout cleanup to stop an unrelated process. Ownership
+  validation keeps eval runner cleanup precise while preserving current-file
+  drift reporting for real sidecar runs.
