@@ -73,6 +73,9 @@ This page is the structural map of the tracked system.
 - `makefiles/surfaces/`
   - role-owned target fragments for notebooks, manual eval workbench,
     portfolio/mockup workflows, and local browser helpers
+- `makefiles/surfaces/portfolio/`
+  - portfolio target fragments for dependency install, static build, preview
+    launch modes, and mockup lifecycle
 - `makefiles/surfaces/manual-evals/`
   - manual-eval target fragments for warehouse database, feedback,
     overlay/source-index, and OCR retry helper workflows

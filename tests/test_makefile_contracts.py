@@ -19,6 +19,7 @@ MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
 MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_SURFACES_MANUAL_EVALS = REPO_ROOT / "makefiles" / "surfaces" / "manual-evals.mk"
+MAKE_SURFACES_PORTFOLIO = REPO_ROOT / "makefiles" / "surfaces" / "portfolio.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 MAKE_EVALS_ALIASES = REPO_ROOT / "makefiles" / "evals" / "aliases.mk"
 MAKE_EVALS_CORE = REPO_ROOT / "makefiles" / "evals" / "core.mk"
@@ -290,6 +291,7 @@ class MakefileContractTests(unittest.TestCase):
         config_surfaces_entry_text = MAKE_CONFIG_SURFACES.read_text(encoding="utf-8")
         surfaces_entry_text = MAKE_SURFACES.read_text(encoding="utf-8")
         manual_evals_entry_text = MAKE_SURFACES_MANUAL_EVALS.read_text(encoding="utf-8")
+        portfolio_entry_text = MAKE_SURFACES_PORTFOLIO.read_text(encoding="utf-8")
         contract_text = _makefile_contract_text()
 
         self.assertIn(
@@ -334,8 +336,27 @@ class MakefileContractTests(unittest.TestCase):
             "include makefiles/surfaces/manual-evals/ocr-retry.mk",
             manual_evals_entry_text,
         )
+        self.assertIn(
+            "include makefiles/surfaces/portfolio/install.mk",
+            portfolio_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/surfaces/portfolio/build.mk",
+            portfolio_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/surfaces/portfolio/preview.mk",
+            portfolio_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/surfaces/portfolio/mockups.mk",
+            portfolio_entry_text,
+        )
         self.assertIn("notebook nb notes:", contract_text)
         self.assertIn("manual-evals-ocr-retry-execute", contract_text)
+        self.assertIn("portfolio-install:", contract_text)
+        self.assertIn("portfolio-build:", contract_text)
+        self.assertIn("portfolio-open:", contract_text)
         self.assertIn("portfolio-mockups:", contract_text)
         self.assertIn("pwcli playwright-cli:", contract_text)
 
