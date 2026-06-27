@@ -935,6 +935,8 @@ class MakefileContractTests(unittest.TestCase):
         growth_workflow_text = OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT.read_text(
             encoding="utf-8"
         )
+        intake_workflow_text = OCR_INTAKE_WORKFLOW_SCRIPT.read_text(encoding="utf-8")
+        ocr_workflow_text = OCR_WORKFLOW_SCRIPT.read_text(encoding="utf-8")
 
         self.assertNotIn("$(MAKE)", text)
         self.assertNotIn("import json,pathlib", text)
@@ -942,6 +944,15 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("tools.count_eval_cases", guard_text)
         self.assertIn("EVAL_CASE_GUARD_SCRIPT", common_text)
         self.assertIn("eval_case_guard.sh", common_text)
+        self.assertIn("ocr_workflow_resolve_export_root", common_text)
+        self.assertIn("ocr_workflow_require_export_root", common_text)
+        self.assertIn("OCR_WORKFLOW_EXPORT_ROOT", common_text)
+        self.assertIn("source=tools/ocr_workflow_common.sh", intake_workflow_text)
+        self.assertIn('. "$script_dir/ocr_workflow_common.sh"', intake_workflow_text)
+        self.assertIn("ocr_workflow_require_export_root", intake_workflow_text)
+        self.assertIn("source=tools/ocr_workflow_common.sh", ocr_workflow_text)
+        self.assertIn('. "$script_dir/ocr_workflow_common.sh"', ocr_workflow_text)
+        self.assertIn("ocr_workflow_require_export_root", ocr_workflow_text)
         self.assertIn("ocr_workflow_use_eval_case_guard", guarded_runner_text)
         self.assertIn("eval_case_guard_or_exit", guarded_runner_text)
         self.assertIn("OCR_GUARDED_CASE_RUNNER_SCRIPT", lane_workflow_text)

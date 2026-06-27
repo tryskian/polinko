@@ -3138,3 +3138,23 @@ or branch history instead.
   check while sibling OCR workflow modes used the shared fallback. Aligning the
   branch prevents Make/default configuration drift and keeps parked OCR tooling
   maintainable without running evals.
+
+## D-194: Share OCR export-root resolution through the common helper
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `ocr`, `shell`, `export_root`, `helper`
+- Human-led: The human lead asked to continue the script/runtime cleanup one
+  focused surface at a time and fold same-surface observations into the active
+  kernel before closing it.
+- Engineer implementation: Move OCR export-root resolution into
+  `tools/ocr_workflow_common.sh`, route both OCR intake and workflow wrappers
+  through the shared helper, and extend Makefile contract coverage to pin the
+  helper ownership.
+- Decision: OCR wrappers that need ChatGPT export-root resolution should use
+  `ocr_workflow_require_export_root` from `tools/ocr_workflow_common.sh`
+  instead of carrying local resolver copies.
+- Why: Duplicate resolver logic let OCR wrapper modes drift in small but
+  operator-visible ways. A shared helper keeps explicit `CGPT_EXPORT_ROOT`,
+  repo-provided `CGPT_EXPORT_ROOT_DEFAULT`, and wrapper-specific guidance on
+  one audited rail.
