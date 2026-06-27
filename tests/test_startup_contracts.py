@@ -79,7 +79,9 @@ class StartupContractTests(unittest.TestCase):
 
         self.assertIn("caffeinate-off-all", runtime_makefile)
         self.assertIn("stop-all", caffeinate_script)
-        self.assertIn("configured wake-lock", start_reference)
+        self.assertIn("repo-scoped by default", start_reference)
+        self.assertIn("explicit operator opt-in", start_reference)
+        self.assertIn("`ACTIVE`, `QUIET`,", start_reference)
         self.assertIn("without adopting their PIDs", start_reference)
         self.assertNotIn("never adopted or stopped", start_reference)
 

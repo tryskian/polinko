@@ -566,8 +566,10 @@ Last updated: 2026-06-27
     child session through the configured Python launcher
   - `make caffeinate-status`, `make decaffeinate`, and `make end` operate on
     the repo-owned PID without adopting unrelated user wake-lock processes
-  - `make caffeinate-off-all` is closeout cleanup for matching repo wake-lock
-    command-pattern leftovers after the managed PID stop path runs
+  - repo-managed caffeinate writes metadata for PID ownership and repo activity
+    state so status can distinguish `ACTIVE`, `QUIET`, `STALE`, and `OFF`
+  - `make caffeinate-off-all` is repo-scoped by default; global matching-process
+    cleanup requires explicit operator opt-in
   - `make end-stop` closes the core background runner family:
     `eval-sidecar`, `portfolio-mockups`, `server-daemon`, and repo-managed
     `caffeinate`, then prints status for each family member

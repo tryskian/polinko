@@ -28,6 +28,7 @@ REQUIRED_FILES = (
     Path("tools/check_runtime_risk_scan.py"),
     Path("tools/check_operator_aliases.py"),
     Path("tools/manage_caffeinate.sh"),
+    Path("tools/manage_caffeinate.py"),
     Path("tools/run_server_daemon.sh"),
     Path("tools/run_eval_sidecar_start.sh"),
     Path("tools/run_portfolio_mockups.sh"),

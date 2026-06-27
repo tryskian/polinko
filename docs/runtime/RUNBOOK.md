@@ -179,7 +179,7 @@ Use this doc for operator procedure.
 - `make caffeinate`
   - start repo-managed wake lock
 - `make caffeinate-status`
-  - report repo-managed wake-lock status
+  - report repo-managed wake-lock and repo activity status
 - `make decaffeinate`
   - stop repo-managed wake lock
 - `make decaffeinate-status`
