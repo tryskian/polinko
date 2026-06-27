@@ -149,7 +149,8 @@ Explicit companion checks:
   - checks tracked text surfaces for local machine path leaks
 - `make local-runtime-config-check`
   - validates VS Code task/config shape, extension recommendation drift, and
-    devcontainer config drift through `tools.check_local_runtime_config`
+    devcontainer config/setup-script drift through
+    `tools.check_local_runtime_config`
 - `make risk-scan`
   - checks runtime map, Make, CI, runner, and local configuration coverage for
     known high-risk surfaces

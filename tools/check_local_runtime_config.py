@@ -15,6 +15,10 @@ VSCODE_CONFIG_FILES = (
     "mcp.json",
 )
 DEVCONTAINER_CONFIG_FILES = ("devcontainer.json",)
+DEVCONTAINER_SETUP_SCRIPT = Path("tools/setup_devcontainer.sh")
+DEVCONTAINER_BOOTSTRAP_DEFAULT = (
+    'bootstrap_python="${POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON:-python3.14}"'
+)
 RETIRED_LOCAL_DOC_PATHS = (
     "docs/INSTANCE_HANDOFF.md",
     "docs/POL1_COMMS.md",
@@ -265,11 +269,32 @@ def check_devcontainer_config(root: Path = ROOT) -> list[str]:
     return failures
 
 
+def check_devcontainer_setup_script(root: Path = ROOT) -> list[str]:
+    path = root / DEVCONTAINER_SETUP_SCRIPT
+    if not path.exists():
+        return []
+
+    failures: list[str] = []
+    text = path.read_text(encoding="utf-8")
+    if DEVCONTAINER_BOOTSTRAP_DEFAULT not in text:
+        failures.append(
+            f"{path}: devcontainer bootstrap Python default must be python3.14"
+        )
+    if "POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON" not in text:
+        failures.append(f"{path}: devcontainer bootstrap Python override is missing")
+    if '"$venv_python" -m pip install --upgrade pip' not in text:
+        failures.append(f"{path}: pip upgrade must run through venv_python")
+    if '"$venv_python" -m pip install -r requirements.txt' not in text:
+        failures.append(f"{path}: requirements install must run through venv_python")
+    return failures
+
+
 def run(root: Path = ROOT) -> list[str]:
     resolved_root = root.resolve()
     return [
         *check_vscode_config(resolved_root),
         *check_devcontainer_config(resolved_root),
+        *check_devcontainer_setup_script(resolved_root),
     ]
 
 
