@@ -135,7 +135,9 @@ flowchart TD
   behaviour across `caffeinate`, `server-daemon`, `eval-sidecar`, and
   `portfolio-mockups`. Detached child-process launch is centralized through
   `tools/launch_detached_process.py`; runner scripts retain ownership of
-  their domain-specific liveness and adoption logic. Runner scripts resolve
+  their domain-specific liveness and adoption logic. The shared launcher stops
+  a started child process if the PID file cannot be written, so failed starts
+  do not leave unmanaged background processes behind. Runner scripts resolve
   the checkout root through `tools/repo_root.sh` before launching child
   processes or using relative local paths.
   `server-daemon` adopts matching local `uvicorn server:app` processes on

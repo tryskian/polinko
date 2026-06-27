@@ -48,6 +48,18 @@ def _parse_args(argv: list[str]) -> tuple[Path, Path, list[str]]:
     return args.pid_file, args.log_file, command
 
 
+def _stop_unmanaged_child(process: subprocess.Popen[bytes]) -> None:
+    if process.poll() is not None:
+        return
+
+    process.terminate()
+    try:
+        process.wait(timeout=2)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=2)
+
+
 def main(argv: list[str] | None = None) -> int:
     pid_file, log_file, command = _parse_args(
         list(sys.argv[1:] if argv is None else argv)
@@ -65,7 +77,12 @@ def main(argv: list[str] | None = None) -> int:
             close_fds=True,
         )
 
-    pid_file.write_text(str(process.pid), encoding="utf-8")
+    try:
+        pid_file.write_text(str(process.pid), encoding="utf-8")
+    except OSError:
+        _stop_unmanaged_child(process)
+        raise
+
     return 0
 
 

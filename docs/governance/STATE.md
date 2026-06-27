@@ -575,6 +575,9 @@ Last updated: 2026-06-27
     `tools/launch_detached_process.py` after resolving the checkout root
     through `tools/repo_root.sh`, while each runner keeps its own liveness,
     adoption, status, and stop logic
+  - `tools/launch_detached_process.py` stops a started child process if the
+    PID file cannot be written, so failed starts do not leave unmanaged
+    background processes behind
   - VS Code keeps `make start` available as a manual task; folder-open
     bootstrap is retired so startup stays chat-led
   - `make doctor-env` reports both the active interpreter path and its source
