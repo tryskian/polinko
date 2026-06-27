@@ -3313,3 +3313,21 @@ or branch history instead.
 - Why: A valid wake-lock can outlive the current work interval. Updating
   activity metadata from high-traffic repo actions keeps `caffeinate-status`
   useful without coupling ordinary checks to process ownership.
+
+## D-203: Split surface Make ownership by role
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `surface_ownership`, `manual_evals`, `portfolio`, `modularity`
+- Human-led: The human lead asked to keep script cleanup focused and to bring
+  overloaded helper surfaces into a clearer, maintainable order without
+  changing the operator-facing workflow.
+- Engineer implementation: Keep `makefiles/surfaces.mk` and
+  `makefiles/config/surfaces.mk` as public include entrypoints, then split
+  their implementation into role-owned fragments for notebooks, manual eval
+  workbench, local browser helpers, and portfolio/mockup workflows.
+- Decision: Surface Make target names and compatibility aliases stay stable,
+  while target recipes and config now live in role-owned surface fragments.
+- Why: The old surface includes mixed notebooks, manual eval workbench,
+  portfolio, mockup, and browser helper concerns in one file. Role fragments
+  make future cleanup reviewable without changing the commands operators use.

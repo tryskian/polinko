@@ -9,6 +9,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MAKEFILE = REPO_ROOT / "Makefile"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
+MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
+MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
@@ -118,6 +120,38 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "eval-ocr-transcript-stability-growth:", _makefile_contract_text()
         )
+
+    def test_surface_targets_are_extracted_through_role_includes(self) -> None:
+        config_surfaces_entry_text = MAKE_CONFIG_SURFACES.read_text(encoding="utf-8")
+        surfaces_entry_text = MAKE_SURFACES.read_text(encoding="utf-8")
+        contract_text = _makefile_contract_text()
+
+        self.assertIn(
+            "include makefiles/config/surfaces/notebooks.mk",
+            config_surfaces_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/surfaces/manual-evals.mk",
+            config_surfaces_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/surfaces/local-browser.mk",
+            config_surfaces_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/surfaces/portfolio.mk",
+            config_surfaces_entry_text,
+        )
+        self.assertIn("include makefiles/surfaces/notebooks.mk", surfaces_entry_text)
+        self.assertIn("include makefiles/surfaces/manual-evals.mk", surfaces_entry_text)
+        self.assertIn("include makefiles/surfaces/portfolio.mk", surfaces_entry_text)
+        self.assertIn(
+            "include makefiles/surfaces/local-browser.mk", surfaces_entry_text
+        )
+        self.assertIn("notebook nb notes:", contract_text)
+        self.assertIn("manual-evals-ocr-retry-execute", contract_text)
+        self.assertIn("portfolio-mockups:", contract_text)
+        self.assertIn("pwcli playwright-cli:", contract_text)
 
     def test_shared_config_is_extracted_before_target_families(self) -> None:
         root_text = _makefile_text()
