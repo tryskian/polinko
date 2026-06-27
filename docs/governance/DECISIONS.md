@@ -3119,3 +3119,22 @@ or branch history instead.
   fails before auditing anything. Keeping `pip-audit` in the locked dependency
   surface lets Dependabot, local refreshes, CI, and `make security-checks`
   converge on one auditable source of truth.
+
+## D-193: Align OCR notebook workflow export-root fallback
+
+- Date: `2026-06-26`
+- Category: `runtime_engineering`
+- Tags: `ocr`, `shell`, `export_root`, `hygiene`
+- Human-led: The human lead asked to continue the focused script/runtime
+  cleanup and keep hidden workflow interruptions from recurring.
+- Engineer implementation: Route `ocr-notebook-workflow` through the shared
+  `require_export_root` resolver, pass `CGPT_EXPORT_ROOT_DEFAULT` through the
+  Make target, and add focused fake-Make tests proving subdirectory invocation
+  uses the default export root without running OCR.
+- Decision: OCR workflow wrapper modes share one export-root contract:
+  explicit `CGPT_EXPORT_ROOT`, then `CGPT_EXPORT_ROOT_DEFAULT`, with
+  target-specific guidance on failure.
+- Why: The notebook workflow still carried a one-off manual `CGPT_EXPORT_ROOT`
+  check while sibling OCR workflow modes used the shared fallback. Aligning the
+  branch prevents Make/default configuration drift and keeps parked OCR tooling
+  maintainable without running evals.
