@@ -56,13 +56,17 @@ def _write_server_port_fakes(fake_bin: Path) -> None:
 
 
 class RunServerDaemonTests(unittest.TestCase):
-    def test_uses_existing_live_pid_without_starting_new_process(self) -> None:
+    def test_uses_existing_live_server_pid_without_starting_new_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             pid_file = tmp_path / "server.pid"
             args_file = tmp_path / "python-args.txt"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_terminate_process, process)
             python_script = tmp_path / "python.sh"
-            pid_file.write_text(str(os.getpid()), encoding="utf-8")
+            pid_file.write_text(str(process.pid), encoding="utf-8")
             _write_executable(
                 python_script,
                 (
@@ -75,12 +79,17 @@ class RunServerDaemonTests(unittest.TestCase):
                     'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
                 ),
             )
+            _write_server_port_fakes(fake_bin)
 
             env = os.environ.copy()
             env.update(
                 {
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
                     "PYTHON": str(python_script),
                     "PYTHON_ARGS": str(args_file),
+                    "EXPECTED_PID": str(process.pid),
+                    "ASGI_APP": "server:app",
+                    "DEV_BACKEND_PORT": "8764",
                     "SERVER_PID_FILE": str(pid_file),
                     "SERVER_LOG": str(tmp_path / "server.log"),
                 }
@@ -97,6 +106,66 @@ class RunServerDaemonTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("server-daemon already running", result.stdout)
             self.assertFalse(args_file.exists())
+
+    def test_start_cleans_live_non_server_pid_file_without_killing_process(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "server.pid"
+            args_file = tmp_path / "python-args.txt"
+            child_pid_file = tmp_path / "child.pid"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            _write_executable(fake_bin / "lsof", "#!/usr/bin/env bash\nexit 0\n")
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_terminate_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+            python_script = tmp_path / "python.sh"
+            _write_executable(
+                python_script,
+                (
+                    "#!/usr/bin/env bash\n"
+                    "set -euo pipefail\n"
+                    'if [ "${1:-}" = "-c" ]; then\n'
+                    "  command -v python3\n"
+                    "  exit 0\n"
+                    "fi\n"
+                    'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
+                    'printf "%s" "$$" > "$CHILD_PID_FILE"\n'
+                    "sleep 30\n"
+                ),
+            )
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "PYTHON": str(python_script),
+                    "PYTHON_ARGS": str(args_file),
+                    "SERVER_LAUNCHER_PYTHON": sys.executable,
+                    "CHILD_PID_FILE": str(child_pid_file),
+                    "ASGI_APP": "server:app",
+                    "DEV_HOST": "127.0.0.1",
+                    "DEV_BACKEND_PORT": "8770",
+                    "SERVER_PID_FILE": str(pid_file),
+                    "SERVER_LOG": str(tmp_path / "logs" / "server.log"),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.addCleanup(_kill_pid_file, child_pid_file)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("non-server process; cleaning up", result.stdout)
+            self.assertIn("server-daemon started", result.stdout)
+            self.assertIsNone(process.poll())
 
     def test_start_adopts_matching_server_without_pid_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -254,6 +323,27 @@ class RunServerDaemonTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn("server-daemon: STALE PID file.", result.stdout)
 
+    def test_status_rejects_live_non_server_pid_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "server.pid"
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_terminate_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={**os.environ, "SERVER_PID_FILE": str(pid_file)},
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("not a matching server", result.stdout)
+            self.assertTrue(pid_file.exists())
+            self.assertIsNone(process.poll())
+
     def test_status_reports_matching_server_without_pid_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -299,14 +389,25 @@ class RunServerDaemonTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             pid_file = tmp_path / "server.pid"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
             process = subprocess.Popen(["sleep", "30"])
             self.addCleanup(_terminate_process, process)
             pid_file.write_text(str(process.pid), encoding="utf-8")
+            _write_server_port_fakes(fake_bin)
 
             result = subprocess.run(
                 ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "stop"],
                 cwd=REPO_ROOT,
-                env={**os.environ, "SERVER_PID_FILE": str(pid_file)},
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "PYTHON": sys.executable,
+                    "EXPECTED_PID": str(process.pid),
+                    "ASGI_APP": "server:app",
+                    "DEV_BACKEND_PORT": "8771",
+                    "SERVER_PID_FILE": str(pid_file),
+                },
                 capture_output=True,
                 text=True,
             )
@@ -315,6 +416,34 @@ class RunServerDaemonTests(unittest.TestCase):
             self.assertIn("server-daemon stopped", result.stdout)
             self.assertFalse(pid_file.exists())
             process.wait(timeout=2)
+
+    def test_stop_cleans_live_non_server_pid_file_without_killing_process(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "server.pid"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            _write_executable(fake_bin / "lsof", "#!/usr/bin/env bash\nexit 0\n")
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_terminate_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "stop"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "SERVER_PID_FILE": str(pid_file),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("non-server process; cleaning up", result.stdout)
+            self.assertFalse(pid_file.exists())
+            self.assertIsNone(process.poll())
 
     def test_stop_closes_matching_server_without_pid_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

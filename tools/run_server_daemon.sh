@@ -50,6 +50,21 @@ process_command() {
 	ps -o command= -p "$pid" 2>/dev/null || true
 }
 
+pid_matches_polinko_server() {
+	local pid=$1
+	local command parent_pid parent_command
+	command=$(process_command "$pid")
+	if printf '%s\n' "$command" | grep -Fq "uvicorn $asgi_app"; then
+		return 0
+	fi
+	parent_pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ' || true)
+	if [ -z "$parent_pid" ]; then
+		return 1
+	fi
+	parent_command=$(process_command "$parent_pid")
+	printf '%s\n' "$parent_command" | grep -Fq "uvicorn $asgi_app"
+}
+
 polinko_server_pid_on_port() {
 	local candidate_pid candidate_cmd check_pid check_cmd parent_pid parent_cmd
 	for candidate_pid in $(server_pids_on_port); do
@@ -97,10 +112,15 @@ start_server() {
 	if [ -f "$server_pid_file" ]; then
 		pid=$(cat "$server_pid_file" 2>/dev/null || true)
 		if pid_is_running "$pid"; then
-			echo "server-daemon already running (PID $pid)."
-			exit 0
+			if pid_matches_polinko_server "$pid"; then
+				echo "server-daemon already running (PID $pid)."
+				exit 0
+			fi
+			echo "server-daemon PID file points to a non-server process; cleaning up."
+			rm -f "$server_pid_file"
+		else
+			rm -f "$server_pid_file"
 		fi
-		rm -f "$server_pid_file"
 	fi
 
 	if command -v lsof >/dev/null 2>&1; then
@@ -153,15 +173,22 @@ stop_server() {
 	if [ -f "$server_pid_file" ]; then
 		pid=$(cat "$server_pid_file" 2>/dev/null || true)
 		if pid_is_running "$pid"; then
-			kill "$pid"
-			sleep 0.1
+			if ! pid_matches_polinko_server "$pid"; then
+				echo "server-daemon PID file points to a non-server process; cleaning up."
+				rm -f "$server_pid_file"
+				stale_cleaned=1
+			else
+				kill "$pid"
+				sleep 0.1
+				rm -f "$server_pid_file"
+				echo "server-daemon stopped (PID $pid)."
+				exit 0
+			fi
+		else
+			echo "Stale server-daemon PID file; cleaning up."
 			rm -f "$server_pid_file"
-			echo "server-daemon stopped (PID $pid)."
-			exit 0
+			stale_cleaned=1
 		fi
-		echo "Stale server-daemon PID file; cleaning up."
-		rm -f "$server_pid_file"
-		stale_cleaned=1
 	fi
 
 	pid=$(polinko_server_pid_on_port || true)
@@ -181,6 +208,10 @@ status_server() {
 	if [ -f "$server_pid_file" ]; then
 		pid=$(cat "$server_pid_file" 2>/dev/null || true)
 		if pid_is_running "$pid"; then
+			if ! pid_matches_polinko_server "$pid"; then
+				echo "server-daemon: STALE PID file (PID $pid is not a matching server)."
+				exit 1
+			fi
 			echo "server-daemon: RUNNING (PID $pid)."
 			exit 0
 		fi
