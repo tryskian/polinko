@@ -162,6 +162,10 @@ Last updated: 2026-06-27
     `makefiles/runtime.mk`, while role-owned fragments live under
     `makefiles/runtime/` for core lifecycle, server-daemon, local URL helpers,
     OpenAI account helpers, keep-awake, and privacy guard surfaces
+  - check Make targets keep the public entrypoint at `makefiles/checks.mk`,
+    while role-owned fragments live under `makefiles/checks/` for tests,
+    Python static analysis, docs/rendering, runtime audits, and local
+    developer helpers
   - eval report wrappers resolve the checkout root before writing default
     report paths or launching report modules, so direct script execution and
     Make execution share the same report-output base
