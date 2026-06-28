@@ -3740,3 +3740,24 @@ or branch history instead.
   shorthands, focus/stability aliases, the `ocrkernel` workflow alias, and
   benchmark aliases in one file. Alias-family fragments make shortcut
   maintenance easier to inspect without running evals or changing commands.
+
+## D-224: Split OCR-run transcript-lane config ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep
+  `makefiles/config/evals/ocr-runs/transcript-lanes.mk` as the public
+  OCR-run transcript-lane config entrypoint, then split variable defaults and
+  runner environment wiring into workflow-owned fragments for base transcript
+  workflow env and lane-specific workflow env with include-aware Makefile
+  contract coverage.
+- Decision: OCR-run transcript-lane config variable names and public target
+  behaviour stay stable, while transcript-lane config ownership now lives in
+  workflow-owned fragments.
+- Why: The old transcript-lane config include mixed base transcript workflow
+  env with lane-specific handwriting, typed, illustration, and benchmark env
+  wiring in one file. Workflow fragments make lane config easier to audit
+  without running evals or changing commands.
