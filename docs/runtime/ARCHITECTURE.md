@@ -117,6 +117,10 @@ This page is the structural map of the tracked system.
 - `makefiles/evals/aliases/`
   - eval alias target fragments for OCR intake/mining, OCR run/focus/benchmark
     shorthands, and utility/inventory aliases
+- `makefiles/evals/aliases/ocr-runs/`
+  - OCR-run alias fragments for transcript/growth aliases, modality aliases,
+    focus/stability aliases, the OCR kernel workflow alias, and benchmark
+    aliases
 - `makefiles/runtime/`
   - runtime target fragments for core lifecycle, server-daemon, local URL,
     OpenAI account, keep-awake, and privacy guard targets

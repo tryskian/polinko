@@ -37,6 +37,9 @@ MAKE_SURFACES_MANUAL_EVALS_OCR_RETRY = (
 MAKE_SURFACES_PORTFOLIO = REPO_ROOT / "makefiles" / "surfaces" / "portfolio.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 MAKE_EVALS_ALIASES = REPO_ROOT / "makefiles" / "evals" / "aliases.mk"
+MAKE_EVALS_ALIASES_OCR_RUNS = (
+    REPO_ROOT / "makefiles" / "evals" / "aliases" / "ocr-runs.mk"
+)
 MAKE_EVALS_CORE = REPO_ROOT / "makefiles" / "evals" / "core.mk"
 MAKE_EVALS_OCR_RUNS = REPO_ROOT / "makefiles" / "evals" / "ocr-runs.mk"
 MAKE_RUNTIME = REPO_ROOT / "makefiles" / "runtime.mk"
@@ -193,6 +196,9 @@ class MakefileContractTests(unittest.TestCase):
     def test_eval_targets_are_extracted_through_role_includes(self) -> None:
         evals_entry_text = MAKE_EVALS.read_text(encoding="utf-8")
         aliases_entry_text = MAKE_EVALS_ALIASES.read_text(encoding="utf-8")
+        aliases_ocr_runs_entry_text = MAKE_EVALS_ALIASES_OCR_RUNS.read_text(
+            encoding="utf-8"
+        )
         core_entry_text = MAKE_EVALS_CORE.read_text(encoding="utf-8")
         ocr_runs_entry_text = MAKE_EVALS_OCR_RUNS.read_text(encoding="utf-8")
         contract_text = _makefile_contract_text()
@@ -213,6 +219,32 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/evals/aliases/utilities.mk",
             aliases_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^\.PHONY:|^[-a-zA-Z0-9_]+:",
+                aliases_ocr_runs_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/ocr-runs/transcripts.mk",
+            aliases_ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/ocr-runs/modalities.mk",
+            aliases_ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/ocr-runs/focus.mk",
+            aliases_ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/ocr-runs/workflow.mk",
+            aliases_ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/ocr-runs/benchmarks.mk",
+            aliases_ocr_runs_entry_text,
         )
         self.assertIn("include makefiles/evals/core/retrieval.mk", core_entry_text)
         self.assertIn("include makefiles/evals/core/quality.mk", core_entry_text)

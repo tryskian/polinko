@@ -3721,3 +3721,22 @@ or branch history instead.
   workflow wiring, and lane inventory defaults in one file. Workflow fragments
   make report config easier to audit without running evals or changing
   commands.
+
+## D-223: Split OCR-run alias target ownership by alias family
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `aliases`, `ocr`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/evals/aliases/ocr-runs.mk` as the
+  public OCR-run alias target entrypoint, then split alias targets into
+  family-owned fragments for transcript/growth aliases, modality aliases,
+  focus/stability aliases, the OCR kernel workflow alias, and benchmark
+  aliases with include-aware Makefile contract coverage.
+- Decision: OCR-run alias target names and public behaviour stay stable, while
+  OCR-run alias target ownership now lives in alias-family fragments.
+- Why: The old OCR-run alias include mixed growth shorthands, modality
+  shorthands, focus/stability aliases, the `ocrkernel` workflow alias, and
+  benchmark aliases in one file. Alias-family fragments make shortcut
+  maintenance easier to inspect without running evals or changing commands.
