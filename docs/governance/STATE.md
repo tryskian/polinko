@@ -150,6 +150,9 @@ Last updated: 2026-06-28
     the configured mockup `http.server` process shape; stale PID files that
     point to unrelated live processes are cleaned without stopping the
     unrelated process
+  - `portfolio-mockups` preserves its PID file and fails stop when a matching
+    mockup server remains active after a stop signal, so closeout cannot hide
+    a still-live local preview
   - manual eval health, feedback, overlay, OCR retry, and reclassification Make
     targets keep their public names while routing through a single
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper

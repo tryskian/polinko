@@ -4385,3 +4385,21 @@ or branch history instead.
   sidecar can make closeout look clean while the runner remains alive. Keeping
   the PID file preserves the active-state evidence for the next status or stop
   check.
+
+## D-256: Preserve portfolio mockup PID files when stop does not complete
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `portfolio_mockups`, `pid_file`, `runner`, `closeout`
+- Human-led: The human lead asked to continue the script/runtime cleanup and
+  resolve runner lifecycle interruptions as part of the focused refactor.
+- Engineer implementation: Update `tools/run_portfolio_mockups.sh` to wait for
+  matching mockup servers to exit after stop signals, preserve managed PID
+  files when the process remains active, and add regression coverage for a
+  matching mockup process that ignores the stop signal.
+- Decision: `portfolio-mockups` stop may only remove a managed PID file after
+  the signalled matching mockup server is no longer active.
+- Why: Removing a PID file while a matching local preview is still running can
+  make closeout look clean even though a preview server remains active. Keeping
+  the PID file preserves the active-state evidence for the next status or stop
+  check.

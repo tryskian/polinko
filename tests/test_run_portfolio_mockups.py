@@ -51,7 +51,9 @@ def _write_reachable_server_fakes(fake_bin: Path) -> None:
             '[ "${3:-}" = "-p" ] && [ "${4:-}" = "$EXPECTED_PID" ]; then\n'
             "  printf 'python -m http.server %s --bind 127.0.0.1 --directory %s\\n' "
             '"$PORTFOLIO_MOCKUP_PORT" "$PORTFOLIO_MOCKUP_DIR"\n'
+            "  exit 0\n"
             "fi\n"
+            '/bin/ps "$@"\n'
         ),
     )
 
@@ -424,6 +426,43 @@ class RunPortfolioMockupsTests(unittest.TestCase):
             self.assertIn("portfolio mockup server stopped", result.stdout)
             self.assertFalse(pid_file.exists())
             process.wait(timeout=2)
+
+    def test_stop_preserves_pid_file_when_matching_mockup_does_not_exit(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "mockups.pid"
+            mockup_dir = tmp_path / "mockups"
+            mockup_dir.mkdir()
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            process = subprocess.Popen(
+                ["bash", "-c", "trap '' TERM; while :; do sleep 1; done"]
+            )
+            self.addCleanup(_terminate_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+            _write_reachable_server_fakes(fake_bin)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "stop"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "EXPECTED_PID": str(process.pid),
+                    "PORTFOLIO_MOCKUP_DIR": str(mockup_dir),
+                    "PORTFOLIO_MOCKUP_PORT": "8774",
+                    "PORTFOLIO_MOCKUP_PID_FILE": str(pid_file),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("did not exit after stop signal", result.stdout)
+            self.assertTrue(pid_file.exists())
+            self.assertIsNone(process.poll())
 
     def test_stop_cleans_nonmatching_live_pid_file_without_killing_process(
         self,
