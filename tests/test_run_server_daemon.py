@@ -216,6 +216,94 @@ class RunServerDaemonTests(unittest.TestCase):
             )
             self.assertFalse(args_file.exists())
 
+    def test_start_restarts_matching_server_with_interpreter_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "server.pid"
+            args_file = tmp_path / "python-args.txt"
+            child_pid_file = tmp_path / "child.pid"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_terminate_process, process)
+            expected_python = tmp_path / "expected-python.sh"
+            existing_python = tmp_path / "existing-python.sh"
+            _write_executable(
+                expected_python,
+                (
+                    "#!/usr/bin/env bash\n"
+                    "set -euo pipefail\n"
+                    'if [ "${1:-}" = "-c" ]; then\n'
+                    "  printf '%s\\n' \"$EXPECTED_PYTHON_REAL\"\n"
+                    "  exit 0\n"
+                    "fi\n"
+                    'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
+                    'printf "%s" "$$" > "$CHILD_PID_FILE"\n'
+                    "sleep 30\n"
+                ),
+            )
+            _write_executable(
+                existing_python,
+                (
+                    "#!/usr/bin/env bash\n"
+                    "set -euo pipefail\n"
+                    'if [ "${1:-}" = "-c" ]; then\n'
+                    "  printf '%s\\n' \"$EXISTING_PYTHON_REAL\"\n"
+                    "  exit 0\n"
+                    "fi\n"
+                ),
+            )
+            _write_executable(
+                fake_bin / "lsof",
+                "#!/usr/bin/env bash\nprintf '%s\\n' \"$EXPECTED_PID\"\n",
+            )
+            _write_executable(
+                fake_bin / "ps",
+                (
+                    "#!/usr/bin/env bash\n"
+                    "set -euo pipefail\n"
+                    'if [ "${1:-}" = "-o" ] && [ "${2:-}" = "command=" ] '
+                    '&& [ "${3:-}" = "-p" ] && [ "${4:-}" = "$EXPECTED_PID" ]; then\n'
+                    "  printf '%s -m uvicorn %s --host 127.0.0.1 --port %s --reload\\n' "
+                    '"$EXISTING_PYTHON" "$ASGI_APP" "$DEV_BACKEND_PORT"\n'
+                    "fi\n"
+                ),
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "PYTHON": str(expected_python),
+                    "PYTHON_ARGS": str(args_file),
+                    "SERVER_LAUNCHER_PYTHON": sys.executable,
+                    "CHILD_PID_FILE": str(child_pid_file),
+                    "EXPECTED_PID": str(process.pid),
+                    "EXPECTED_PYTHON_REAL": "/tmp/polinko-expected-python",
+                    "EXISTING_PYTHON": str(existing_python),
+                    "EXISTING_PYTHON_REAL": "/tmp/polinko-existing-python",
+                    "ASGI_APP": "server:app",
+                    "DEV_BACKEND_PORT": "8772",
+                    "SERVER_PID_FILE": str(pid_file),
+                    "SERVER_LOG": str(tmp_path / "server.log"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.addCleanup(_kill_pid_file, child_pid_file)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("interpreter mismatch", result.stdout)
+            self.assertIn("Restarting server-daemon", result.stdout)
+            self.assertIn("server-daemon started", result.stdout)
+            process.wait(timeout=2)
+            self.assertNotEqual(
+                pid_file.read_text(encoding="utf-8").strip(), str(process.pid)
+            )
+            self.assertTrue(args_file.exists())
+
     def test_removes_stale_pid_and_starts_server_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
