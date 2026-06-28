@@ -38,6 +38,9 @@ MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_CHECKS_RUNTIME_AUDITS = REPO_ROOT / "makefiles" / "checks" / "runtime-audits.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_SURFACES_MANUAL_EVALS = REPO_ROOT / "makefiles" / "surfaces" / "manual-evals.mk"
+MAKE_SURFACES_MANUAL_EVALS_FEEDBACK = (
+    REPO_ROOT / "makefiles" / "surfaces" / "manual-evals" / "feedback.mk"
+)
 MAKE_SURFACES_MANUAL_EVALS_OCR_RETRY = (
     REPO_ROOT / "makefiles" / "surfaces" / "manual-evals" / "ocr-retry.mk"
 )
@@ -598,6 +601,9 @@ class MakefileContractTests(unittest.TestCase):
         )
         surfaces_entry_text = MAKE_SURFACES.read_text(encoding="utf-8")
         manual_evals_entry_text = MAKE_SURFACES_MANUAL_EVALS.read_text(encoding="utf-8")
+        manual_evals_feedback_entry_text = (
+            MAKE_SURFACES_MANUAL_EVALS_FEEDBACK.read_text(encoding="utf-8")
+        )
         manual_evals_ocr_retry_entry_text = (
             MAKE_SURFACES_MANUAL_EVALS_OCR_RETRY.read_text(encoding="utf-8")
         )
@@ -656,6 +662,22 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/surfaces/manual-evals/feedback.mk",
             manual_evals_entry_text,
+        )
+        self.assertNotRegex(
+            manual_evals_feedback_entry_text,
+            r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
+        )
+        self.assertIn(
+            "include makefiles/surfaces/manual-evals/feedback/review.mk",
+            manual_evals_feedback_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/surfaces/manual-evals/feedback/decisions.mk",
+            manual_evals_feedback_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/surfaces/manual-evals/feedback/reclassify.mk",
+            manual_evals_feedback_entry_text,
         )
         self.assertIn(
             "include makefiles/surfaces/manual-evals/overlays.mk",

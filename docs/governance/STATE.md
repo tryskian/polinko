@@ -257,7 +257,10 @@ Last updated: 2026-06-28
   - manual-eval Make targets keep the public entrypoint at
     `makefiles/surfaces/manual-evals.mk`, while role-owned fragments live under
     `makefiles/surfaces/manual-evals/` for warehouse database, feedback,
-    overlay/source-index, and OCR retry helper workflows
+    overlay/source-index, and OCR retry helper workflows; feedback targets keep
+    their public entrypoint at `makefiles/surfaces/manual-evals/feedback.mk`,
+    while nested fragments separate review, decision, and reclassification
+    workflows
   - manual-eval OCR retry targets keep the public entrypoint at
     `makefiles/surfaces/manual-evals/ocr-retry.mk`, while workflow-owned
     fragments live under `makefiles/surfaces/manual-evals/ocr-retry/` for

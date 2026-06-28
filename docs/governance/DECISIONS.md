@@ -3852,3 +3852,23 @@ or branch history instead.
 - Why: The old dependency include mixed install, refresh, and lockfile
   workflows in one file. Workflow fragments make dependency maintenance easier
   to audit while preserving operator commands.
+
+## D-230: Split manual-eval feedback target ownership by workflow
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `manual_evals`, `feedback`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/surfaces/manual-evals/feedback.mk`
+  as the public feedback target entrypoint, then split read-only review,
+  feedback decision, and reclassification recipes into workflow fragments with
+  include-aware Makefile contract coverage.
+- Decision: Manual-eval feedback target names, manualdb aliases, review
+  commands, decision previews, and reclassification preview/apply behaviour
+  stay stable, while feedback target ownership now lives in workflow-owned
+  fragments.
+- Why: The old feedback include mixed review/navigation, decision draft and
+  preview, no-context reclassification, and plan-based feedback reclassification
+  targets in one file. Workflow fragments make manual-eval feedback maintenance
+  easier to audit while preserving operator commands.
