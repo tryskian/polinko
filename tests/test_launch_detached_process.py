@@ -8,6 +8,8 @@ import time
 import unittest
 from pathlib import Path
 
+from tools import launch_detached_process
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "tools" / "launch_detached_process.py"
@@ -27,6 +29,13 @@ def _kill_pid_file(path: Path) -> None:
     try:
         os.kill(int(raw_pid), signal.SIGTERM)
     except (ProcessLookupError, ValueError):
+        return
+
+
+def _kill_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
         return
 
 
@@ -199,6 +208,50 @@ class LaunchDetachedProcessTests(unittest.TestCase):
 
             self.assertNotEqual(result.returncode, 0)
             self.assertTrue(log_file.exists())
+            for _ in range(10):
+                if not _matching_processes(marker):
+                    break
+                time.sleep(0.1)
+            self.assertEqual(_matching_processes(marker), [])
+
+    def test_stop_unmanaged_child_terminates_process_group(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            child_pid_file = tmp_path / "child.pid"
+            marker = f"polinko-detached-group-test-{os.getpid()}"
+            command = tmp_path / "command.sh"
+            _write_executable(
+                command,
+                (
+                    "#!/usr/bin/env bash\n"
+                    "set -euo pipefail\n"
+                    '"$PYTHON_BIN" -c "import time; time.sleep(30)" "$MARKER-child" &\n'
+                    'printf "%s" "$!" > "$CHILD_PID_FILE"\n'
+                    "sleep 30\n"
+                ),
+            )
+
+            process = subprocess.Popen(
+                [str(command)],
+                env={
+                    **os.environ,
+                    "CHILD_PID_FILE": str(child_pid_file),
+                    "MARKER": marker,
+                    "PYTHON_BIN": sys.executable,
+                },
+                start_new_session=True,
+            )
+            self.addCleanup(_kill_process_group, process.pid)
+
+            for _ in range(10):
+                if child_pid_file.exists() and _matching_processes(marker):
+                    break
+                time.sleep(0.1)
+            self.assertTrue(child_pid_file.exists())
+            self.assertTrue(_matching_processes(marker))
+
+            launch_detached_process._stop_unmanaged_child(process)
+
             for _ in range(10):
                 if not _matching_processes(marker):
                     break

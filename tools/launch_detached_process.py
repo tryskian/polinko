@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import argparse
+import os
+import signal
 import shlex
 import subprocess
 import sys
@@ -52,11 +54,21 @@ def _stop_unmanaged_child(process: subprocess.Popen[bytes]) -> None:
     if process.poll() is not None:
         return
 
-    process.terminate()
+    try:
+        os.killpg(process.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    except OSError:
+        process.terminate()
     try:
         process.wait(timeout=2)
     except subprocess.TimeoutExpired:
-        process.kill()
+        try:
+            os.killpg(process.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            return
+        except OSError:
+            process.kill()
         process.wait(timeout=2)
 
 

@@ -4348,3 +4348,21 @@ or branch history instead.
   and local Actions-runner ownership in broad files. Tool-owned fragments make
   external helper maintenance easier to audit while preserving operator
   commands.
+
+## D-254: Clean failed detached launches by process group
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `pid_file`, `launcher`, `cleanup`
+- Human-led: The human lead approved continuing the script/runtime refactor as
+  one focused kernel at a time, with warnings and hidden workflow interruptions
+  resolved instead of carried forward.
+- Engineer implementation: Update `tools/launch_detached_process.py` so
+  PID-file write failure terminates the started child process group, not only
+  the direct child, and add regression coverage for nested descendants.
+- Decision: A detached-launch failure after child startup must clean up the
+  started child process group before returning an error to the caller.
+- Why: The launcher creates a new child session for background runners. If a
+  launched command starts descendants before PID-file persistence fails,
+  direct-child termination is not enough to prevent unmanaged background
+  residue.
