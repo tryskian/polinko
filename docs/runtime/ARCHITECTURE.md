@@ -85,6 +85,9 @@ This page is the structural map of the tracked system.
 - `makefiles/config/evals/ocr-runs/`
   - OCR-run configuration fragments for defaults, common helper wiring, direct
     runners, transcript lanes, focus stability, and growth workflows
+- `makefiles/config/evals/ocr-runs/transcript-lanes/`
+  - OCR-run transcript-lane configuration fragments for base transcript
+    workflow env and lane-specific workflow env
 - `makefiles/config/evals/ocr-runs/defaults/`
   - OCR-run default fragments for stability, growth/fail-cohort, focus,
     growth batch, and benchmark defaults
