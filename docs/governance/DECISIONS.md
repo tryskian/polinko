@@ -4481,3 +4481,23 @@ or branch history instead.
 - Why: A fixed sleep can report success before the runner is actually usable or
   fail unpredictably on slower startup. Bounded readiness probes keep startup
   feedback tied to the runtime surface the operator needs.
+
+## D-261: Fail HTTP-readiness runners early on missing probe tooling
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `readiness`, `diagnostics`, `curl`,
+  `local_eval_gate`
+- Human-led: The human lead asked to keep hidden runner/script failures
+  maintained proactively during the focused script/runtime refactor.
+- Engineer implementation: Add a shared shell prerequisite helper in
+  `tools/process_lifecycle_common.sh`, require `curl` before HTTP readiness
+  probes in `tools/run_server_daemon.sh`, `tools/run_portfolio_mockups.sh`,
+  and `tools/run_local_eval_gate.sh`, and remove the local eval gate's
+  external `seq` dependency from the readiness loop.
+- Decision: Runners that depend on HTTP readiness probes must fail before
+  launch or status work when the probe command is unavailable, with a direct
+  missing-command diagnostic.
+- Why: A missing probe command should not look like a server startup,
+  lifecycle, or timeout bug. Early prerequisite diagnostics keep operator
+  failures actionable and prevent false runner-debugging trails.

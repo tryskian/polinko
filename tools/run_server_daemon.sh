@@ -174,6 +174,8 @@ start_server() {
 		fi
 	fi
 
+	polinko_require_command curl "server-daemon readiness check"
+
 	if ! launch_detached_server; then
 		rm -f "$server_pid_file"
 		echo "Failed to start server-daemon. Check $server_log."

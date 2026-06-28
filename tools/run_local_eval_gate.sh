@@ -59,16 +59,7 @@ PY
 }
 
 server_is_running() {
-	if ! kill -0 "$server_pid" 2>/dev/null; then
-		return 1
-	fi
-	state=$(ps -p "$server_pid" -o stat= 2>/dev/null || true)
-	case "$state" in
-	*Z*)
-		return 1
-		;;
-	esac
-	return 0
+	polinko_pid_is_running "$server_pid"
 }
 
 start_local_server() {
@@ -110,7 +101,9 @@ start_local_server() {
 
 	server_pid=$!
 	ready=0
-	for _ in $(seq 1 100); do
+	polinko_require_command curl "local eval gate readiness check"
+	attempt=0
+	while [ "$attempt" -lt 100 ]; do
 		if ! server_is_running; then
 			echo "Server failed to stay running. See $log_path"
 			exit 1
@@ -120,6 +113,7 @@ start_local_server() {
 			break
 		fi
 		sleep 0.2
+		attempt=$((attempt + 1))
 	done
 	if ! server_is_running; then
 		echo "Server failed to stay running. See $log_path"
