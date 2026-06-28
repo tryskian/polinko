@@ -80,6 +80,8 @@ Runner lifecycle rule:
   - live PID files are treated as managed only when the process matches
     `tools.eval_sidecar run`; unrelated live PIDs are cleaned from the PID file
     without being stopped
+  - if a matching sidecar does not exit after a stop signal, the PID file is
+    preserved and the stop action fails instead of hiding the still-live runner
 - `make portfolio-mockups`, `make portfolio-mockups-status`, and
   `make portfolio-mockups-stop` delegate mockup-server lifecycle actions to
   `tools/run_portfolio_mockups.sh`
