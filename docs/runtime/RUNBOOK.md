@@ -177,11 +177,11 @@ Use this doc for operator procedure.
 - `make doctor-env`
   - environment health check
 - `make caffeinate`
-  - start repo-managed wake lock
+  - validate repo-managed wake-lock config and start the wake lock
 - `make caffeinate-status`
-  - report repo-managed wake-lock and repo activity status
+  - validate repo-managed wake-lock config and report wake-lock/activity status
 - `make decaffeinate`
-  - stop repo-managed wake lock
+  - validate repo-managed wake-lock config and stop the wake lock
 - `make decaffeinate-status`
   - report closeout wake-lock status
 - `make api-smoke`

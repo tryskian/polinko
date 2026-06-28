@@ -18,6 +18,10 @@ SCHEMA_VERSION = 1
 DEFAULT_ACTIVE_WINDOW_SECONDS = 30 * 60
 
 
+class ConfigError(ValueError):
+    """Raised when repo-managed caffeinate config is invalid."""
+
+
 @dataclass(frozen=True)
 class RuntimeConfig:
     action: str
@@ -55,18 +59,31 @@ def _utc_now_text() -> str:
     return _utc_now().isoformat().replace("+00:00", "Z")
 
 
-def _truthy(value: str | None) -> bool:
-    return (value or "").strip().lower() in {"1", "true", "yes", "on"}
+def _read_bool_env(name: str) -> bool:
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
+        return False
+    normalized = raw.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise ConfigError(
+        f"{name} must be a boolean flag: 1/0, true/false, yes/no, or on/off."
+    )
 
 
-def _read_positive_int(value: str | None, default: int) -> int:
-    if not value:
+def _read_positive_int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name)
+    if raw is None or raw.strip() == "":
         return default
     try:
-        parsed = int(value)
+        parsed = int(raw)
     except ValueError:
-        return default
-    return parsed if parsed > 0 else default
+        raise ConfigError(f"{name} must be a positive integer.") from None
+    if parsed <= 0:
+        raise ConfigError(f"{name} must be a positive integer.")
+    return parsed
 
 
 def _default_meta_file(pid_file: Path) -> Path:
@@ -140,16 +157,26 @@ def _load_config(action: str) -> RuntimeConfig:
             "CAFFEINATE_DETACHED_LAUNCHER",
             repo_root / "tools" / "launch_detached_process.py",
         ),
-        active_window_seconds=_read_positive_int(
-            os.environ.get("CAFFEINATE_ACTIVE_WINDOW_SECONDS"),
-            DEFAULT_ACTIVE_WINDOW_SECONDS,
+        active_window_seconds=_read_positive_int_env(
+            "CAFFEINATE_ACTIVE_WINDOW_SECONDS", DEFAULT_ACTIVE_WINDOW_SECONDS
         ),
-        allow_global_cleanup=_truthy(os.environ.get("CAFFEINATE_ALLOW_GLOBAL_CLEANUP")),
+        allow_global_cleanup=_read_bool_env("CAFFEINATE_ALLOW_GLOBAL_CLEANUP"),
         uname_bin=os.environ.get("UNAME_BIN", "uname"),
         pgrep_bin=os.environ.get("PGREP_BIN", "pgrep"),
         pmset_bin=os.environ.get("PMSET_BIN", "/usr/bin/pmset"),
         ps_bin=os.environ.get("PS_BIN", "ps"),
     )
+
+
+def _validate_config(config: RuntimeConfig) -> None:
+    if not config.caffeinate_cmd.strip():
+        raise ConfigError("CAFFEINATE_CMD must not be empty.")
+    if not config.match_pattern.strip():
+        raise ConfigError("CAFFEINATE_MATCH_PATTERN must not be empty.")
+    try:
+        re.compile(config.match_pattern)
+    except re.error as exc:
+        raise ConfigError(f"CAFFEINATE_MATCH_PATTERN must be a valid regex: {exc}.")
 
 
 def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
@@ -705,7 +732,12 @@ def main(argv: list[str] | None = None) -> int:
         "action", choices=("start", "stop", "stop-all", "status", "activity")
     )
     args = parser.parse_args(argv)
-    config = _load_config(args.action)
+    try:
+        config = _load_config(args.action)
+        _validate_config(config)
+    except ConfigError as exc:
+        print(f"caffeinate config error: {exc}", file=sys.stderr)
+        return 2
 
     if args.action == "start":
         return start(config)

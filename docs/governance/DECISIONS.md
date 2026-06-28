@@ -4577,3 +4577,20 @@ or branch history instead.
 - Why: Invalid port or loop-bound values should not become indirect `curl`,
   `uvicorn`, `http.server`, or shell timeout failures. Early validation keeps
   operator feedback attached to the exact environment knob that needs fixing.
+
+## D-266: Reject invalid repo-managed caffeinate config before state work
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `runner_config`, `diagnostics`, `wake_lock`
+- Human-led: The human lead asked for hidden runner-script hygiene and for
+  recurring local/runtime failures to be prevented rather than tolerated.
+- Engineer implementation: Validate repo-managed caffeinate command, match
+  pattern regex, active-window seconds, and global-cleanup flag in
+  `tools/manage_caffeinate.py` before activity, start, stop, stop-all, or
+  status work; add focused regression coverage for invalid environment values.
+- Decision: Repo-managed caffeinate must reject invalid runtime config before
+  it reads, reports, launches, stops, or cleans PID/activity state.
+- Why: Silent fallback on invalid wake-lock config can make status and cleanup
+  output look authoritative while using the wrong runtime assumptions. Early
+  validation keeps operator feedback attached to the exact environment knob.
