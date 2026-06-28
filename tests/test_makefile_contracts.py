@@ -22,6 +22,7 @@ MAKE_CONFIG_EVALS_OCR_RUNS = (
 MAKE_CONFIG_EVALS_OCR_RUNS_DEFAULTS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "defaults.mk"
 )
+MAKE_CONFIG_EVALS_REPORTS = REPO_ROOT / "makefiles" / "config" / "evals" / "reports.mk"
 MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
 MAKE_CONFIG_SURFACES_MANUAL_EVALS = (
     REPO_ROOT / "makefiles" / "config" / "surfaces" / "manual-evals.mk"
@@ -297,6 +298,7 @@ class MakefileContractTests(unittest.TestCase):
         ocr_runs_defaults_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS_DEFAULTS.read_text(
             encoding="utf-8"
         )
+        reports_entry_text = MAKE_CONFIG_EVALS_REPORTS.read_text(encoding="utf-8")
         config_text = _makefile_contract_text()
 
         self.assertIsNone(
@@ -321,6 +323,12 @@ class MakefileContractTests(unittest.TestCase):
             re.search(
                 r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)",
                 ocr_runs_entry_text,
+            )
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)",
+                reports_entry_text,
             )
         )
         self.assertIn(
@@ -430,6 +438,26 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/growth.mk",
             ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/reports/runner.mk",
+            reports_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/reports/parallel-runner.mk",
+            reports_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/reports/ocr-builder.mk",
+            reports_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/reports/ocr-workflow.mk",
+            reports_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/reports/lane-inventory.mk",
+            reports_entry_text,
         )
         self.assertIn("LOCAL_EVAL_GATE_RUNNER_ENV =", config_text)
         self.assertIn("OCR_INTAKE_WORKFLOW_ENV =", config_text)
