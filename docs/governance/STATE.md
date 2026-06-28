@@ -199,6 +199,10 @@ Last updated: 2026-06-27
     `makefiles/runtime.mk`, while role-owned fragments live under
     `makefiles/runtime/` for core lifecycle, server-daemon, local URL helpers,
     OpenAI account helpers, keep-awake, and privacy guard surfaces
+  - runtime core targets keep the public entrypoint at
+    `makefiles/runtime/core.mk`, while role-owned fragments live under
+    `makefiles/runtime/core/` for interactive entrypoints, startup/closeout
+    lifecycle, git hygiene, and consolidated status
   - runtime Make configuration keeps the public entrypoint at
     `makefiles/config/runtime.mk`, while role-owned fragments live under
     `makefiles/config/runtime/` for core app URLs, local URL launching,
