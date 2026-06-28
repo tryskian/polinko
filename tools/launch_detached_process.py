@@ -46,6 +46,8 @@ def _parse_args(argv: list[str]) -> tuple[Path, Path, list[str]]:
 
     if not command:
         parser.error("missing command to launch")
+    if not command[0].strip():
+        parser.error("missing executable to launch")
 
     return args.pid_file, args.log_file, command
 
@@ -80,14 +82,27 @@ def main(argv: list[str] | None = None) -> int:
     pid_file.parent.mkdir(parents=True, exist_ok=True)
     log_file.parent.mkdir(parents=True, exist_ok=True)
     with log_file.open("ab", buffering=0) as log:
-        process = subprocess.Popen(
-            command,
-            stdin=subprocess.DEVNULL,
-            stdout=log,
-            stderr=subprocess.STDOUT,
-            start_new_session=True,
-            close_fds=True,
-        )
+        try:
+            process = subprocess.Popen(
+                command,
+                stdin=subprocess.DEVNULL,
+                stdout=log,
+                stderr=subprocess.STDOUT,
+                start_new_session=True,
+                close_fds=True,
+            )
+        except FileNotFoundError:
+            print(
+                f"launch-detached: command not found: {command[0]}",
+                file=sys.stderr,
+            )
+            return 127
+        except OSError as exc:
+            print(
+                f"launch-detached: failed to launch {command[0]}: {exc}",
+                file=sys.stderr,
+            )
+            return 1
 
     try:
         pid_file.write_text(str(process.pid), encoding="utf-8")

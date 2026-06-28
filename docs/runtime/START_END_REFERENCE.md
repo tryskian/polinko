@@ -117,9 +117,9 @@ Runner lifecycle rule:
   process launch, adoption, status, or readiness checks for `server-daemon`,
   `portfolio-mockups`, and local eval gate `SMOKE_PORT` / `GATE_PORT`
   overrides
-- the shared detached launcher stops the started child process group if the PID
-  file cannot be written, so failed starts do not leave unmanaged background
-  descendants behind
+- the shared detached launcher rejects empty, missing, and non-launchable
+  commands with direct diagnostics before PID ownership is recorded, and stops
+  the started child process group if the PID file cannot be written
 - `make session-status` is the consolidated status surface for the runner
   family. `make end-stop` runs it after stop cleanup so closeout reports the
   post-stop state without hiding individual runner drift.
