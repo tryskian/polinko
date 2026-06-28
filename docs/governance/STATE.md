@@ -191,6 +191,10 @@ Last updated: 2026-06-27
     under `makefiles/config/evals/ocr-runs/` for defaults, common helper
     wiring, direct runners, transcript lanes, focus stability, and growth
     workflows
+  - OCR-run default config keeps the public entrypoint at
+    `makefiles/config/evals/ocr-runs/defaults.mk`, while workflow-owned
+    fragments live under `makefiles/config/evals/ocr-runs/defaults/` for
+    stability, growth/fail-cohort, focus, growth batch, and benchmark defaults
   - OCR-run eval targets keep the public entrypoint at
     `makefiles/evals/ocr-runs.mk`, while workflow-owned fragments live under
     `makefiles/evals/ocr-runs/` for base transcript runners, growth runners,
