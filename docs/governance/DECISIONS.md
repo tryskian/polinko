@@ -4037,3 +4037,22 @@ or branch history instead.
   settings, and benchmark output paths in one long assignment. Env-role
   fragments make transcript-lane config maintenance easier to audit while
   preserving OCR lane commands.
+
+## D-239: Split quality eval core targets by eval family
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `quality`, `targets`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/evals/core/quality.mk` as the
+  public quality eval target entrypoint, then split hallucination, style, and
+  response-behaviour targets into eval-family fragments with include-aware
+  Makefile contract coverage.
+- Decision: Quality eval target names, report commands, deterministic
+  hallucination mode, and hallucination threshold calibration stay stable, while
+  quality target ownership now lives in eval-family fragments.
+- Why: The old quality include mixed hallucination, style, and
+  response-behaviour target families in one file. Eval-family fragments make
+  the quality target surface easier to audit while preserving operator
+  commands.
