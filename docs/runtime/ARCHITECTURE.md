@@ -60,6 +60,10 @@ This page is the structural map of the tracked system.
 - `makefiles/checks/`
   - check target fragments for tests, Python static analysis, docs/rendering,
     runtime audits, and local developer helpers
+- `makefiles/checks/tests/`
+  - test target fragments for unit-test entrypoints and the backend gate
+- `makefiles/checks/python/`
+  - Python check fragments for compile helpers, type checks, and Ruff checks
 - `makefiles/checks/dev-tools/`
   - local developer helper target fragments for repo search, pre-commit, and
     local GitHub Actions runner helpers
