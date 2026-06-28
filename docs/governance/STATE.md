@@ -158,7 +158,11 @@ Last updated: 2026-06-28
     `makefiles/config/surfaces/manual-evals.mk`, while workflow-owned fragments
     live under `makefiles/config/surfaces/manual-evals/` for shared filters,
     feedback/reclassify flows, overlay/source-index settings, and OCR retry
-    settings
+    settings. OCR retry config keeps
+    `makefiles/config/surfaces/manual-evals/ocr-retry.mk` as the public
+    config entrypoint, while base inputs, selection args, execution args, and
+    feedback-closure args live under
+    `makefiles/config/surfaces/manual-evals/ocr-retry/`
   - portfolio surface targets keep the public entrypoint at
     `makefiles/surfaces/portfolio.mk`, while workflow-owned fragments live
     under `makefiles/surfaces/portfolio/` for install aliases, static build,

@@ -73,6 +73,9 @@ This page is the structural map of the tracked system.
   - manual-eval configuration fragments for shared filters,
     feedback/reclassify flows, overlay/source-index settings, and OCR retry
     settings
+- `makefiles/config/surfaces/manual-evals/ocr-retry/`
+  - manual-eval OCR retry configuration fragments for base inputs, selection
+    args, execution/report args, and feedback closure backup/restore args
 - `makefiles/config/evals/`
   - role-owned eval configuration fragments for quality gates, OCR case
     sources, eval sidecar, OCR runners, and report workflows

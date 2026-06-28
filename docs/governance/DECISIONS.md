@@ -3889,3 +3889,23 @@ or branch history instead.
 - Why: The old lane target include mixed case-building recipes and stability
   recipes in one file. Workflow-mode fragments make transcript-lane maintenance
   easier to audit while preserving operator commands.
+
+## D-232: Split manual-eval OCR retry config ownership by workflow
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `manual_evals`, `ocr_retry`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep
+  `makefiles/config/surfaces/manual-evals/ocr-retry.mk` as the public OCR retry
+  config entrypoint, then split base inputs, selection args, execution/report
+  args, and feedback-closure backup/restore args into workflow fragments with
+  include-aware Makefile contract coverage.
+- Decision: Manual-eval OCR retry config variable names, public overrides, and
+  composed argument variables stay stable, while OCR retry config ownership now
+  lives in workflow-owned fragments.
+- Why: The old OCR retry config include mixed operator input defaults,
+  selection-plan args, execution/report args, and feedback-closure backup and
+  restore args in one file. Workflow fragments make OCR retry config
+  maintenance easier to audit while preserving operator commands.
