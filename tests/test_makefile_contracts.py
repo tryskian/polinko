@@ -55,6 +55,9 @@ MAKE_CONFIG_SURFACES_MANUAL_EVALS = (
 MAKE_CONFIG_SURFACES_MANUAL_EVALS_OCR_RETRY = (
     REPO_ROOT / "makefiles" / "config" / "surfaces" / "manual-evals" / "ocr-retry.mk"
 )
+MAKE_CONFIG_SURFACES_PORTFOLIO = (
+    REPO_ROOT / "makefiles" / "config" / "surfaces" / "portfolio.mk"
+)
 MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_CHECKS_RUNTIME_AUDITS = REPO_ROOT / "makefiles" / "checks" / "runtime-audits.mk"
 MAKE_CHECKS_RUNTIME_AUDITS_DOCTOR_ENV = (
@@ -833,6 +836,9 @@ class MakefileContractTests(unittest.TestCase):
         config_manual_evals_ocr_retry_entry_text = (
             MAKE_CONFIG_SURFACES_MANUAL_EVALS_OCR_RETRY.read_text(encoding="utf-8")
         )
+        config_portfolio_entry_text = MAKE_CONFIG_SURFACES_PORTFOLIO.read_text(
+            encoding="utf-8"
+        )
         surfaces_entry_text = MAKE_SURFACES.read_text(encoding="utf-8")
         manual_evals_entry_text = MAKE_SURFACES_MANUAL_EVALS.read_text(encoding="utf-8")
         manual_evals_feedback_entry_text = (
@@ -903,6 +909,28 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/surfaces/manual-evals/ocr-retry/feedback-closure.mk",
             config_manual_evals_ocr_retry_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=|\+=)",
+                config_portfolio_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/config/surfaces/portfolio/app.mk",
+            config_portfolio_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/surfaces/portfolio/mockup.mk",
+            config_portfolio_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/surfaces/portfolio/env.mk",
+            config_portfolio_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/surfaces/portfolio/launch.mk",
+            config_portfolio_entry_text,
         )
         self.assertIn("include makefiles/surfaces/notebooks.mk", surfaces_entry_text)
         self.assertIn("include makefiles/surfaces/manual-evals.mk", surfaces_entry_text)

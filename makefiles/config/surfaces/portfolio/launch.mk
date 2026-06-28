@@ -1,0 +1,3 @@
+# Portfolio launch mode defaults.
+PORTFOLIO_LAUNCH ?= none
+PORTFOLIO_PLAYWRIGHT_SESSION ?= $(PLAYWRIGHT_SESSION)

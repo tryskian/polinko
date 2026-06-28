@@ -4093,3 +4093,23 @@ or branch history instead.
 - Why: The old OpenAI account config include mixed script/auth settings,
   costs, usage, limits, and env assembly in one file. Query-role fragments make
   account tooling config easier to inspect while preserving operator commands.
+
+## D-242: Split portfolio surface config by runtime role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `portfolio`, `config`, `surfaces`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/config/surfaces/portfolio.mk` as
+  the public portfolio surface config entrypoint, then split app/path defaults,
+  mockup server defaults, mockup env assembly, and launch-mode defaults into
+  runtime-role fragments with include-aware Makefile contract coverage.
+- Decision: `DEV_PORTFOLIO_URL`, legacy `FRONTEND_DIR` compatibility,
+  portfolio paths, mockup script/PID/log/port/URL defaults,
+  `PORTFOLIO_MOCKUP_ENV`, and launch-mode defaults stay stable, while
+  portfolio config ownership now lives in runtime-role fragments.
+- Why: The old portfolio config include mixed app URL/path defaults, legacy
+  compatibility, mockup server config, env assembly, and launch defaults in
+  one file. Runtime-role fragments make portfolio config easier to audit while
+  preserving portfolio commands.
