@@ -27,6 +27,8 @@ polinko_cd_repo_root
 detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 # shellcheck source=tools/python_runtime.sh
 . "$script_dir/python_runtime.sh"
+# shellcheck source=tools/process_lifecycle_common.sh
+. "$script_dir/process_lifecycle_common.sh"
 python_bin=$(polinko_default_python_bin)
 launcher_python=${PORTFOLIO_MOCKUP_LAUNCHER_PYTHON:-$python_bin}
 
@@ -40,11 +42,6 @@ launch_detached_mockup_server() {
 		--directory "$mockup_dir"
 }
 
-pid_is_running() {
-	local pid=$1
-	[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
-}
-
 mockup_server_pids() {
 	if ! command -v lsof >/dev/null 2>&1; then
 		return 0
@@ -55,7 +52,7 @@ mockup_server_pids() {
 is_expected_mockup_server() {
 	local pid=$1
 	local command
-	command=$(ps -p "$pid" -o command= 2>/dev/null || true)
+	command=$(polinko_process_command "$pid")
 	[[ "$command" == *"http.server"* ]] &&
 		[[ "$command" == *"$mockup_port"* ]] &&
 		[[ "$command" == *"$mockup_dir"* ]]
@@ -64,7 +61,7 @@ is_expected_mockup_server() {
 find_expected_mockup_pid() {
 	local pid
 	for pid in $(mockup_server_pids); do
-		if pid_is_running "$pid" && is_expected_mockup_server "$pid"; then
+		if polinko_pid_is_running "$pid" && is_expected_mockup_server "$pid"; then
 			printf "%s\n" "$pid"
 			return 0
 		fi
@@ -91,7 +88,7 @@ start_mockup_server() {
 
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
-		if pid_is_running "$pid"; then
+		if polinko_pid_is_running "$pid"; then
 			if is_expected_mockup_server "$pid"; then
 				if curl -fsS "$mockup_url" >/dev/null 2>&1; then
 					echo "portfolio mockup server already running (PID $pid, URL: $mockup_url)."
@@ -123,7 +120,7 @@ start_mockup_server() {
 	fi
 	pid=$(cat "$pid_file" 2>/dev/null || true)
 	sleep 0.5
-	if kill -0 "$pid" 2>/dev/null; then
+	if polinko_pid_is_running "$pid"; then
 		echo "portfolio mockup server started (PID $pid, log: $log_file)."
 	else
 		rm -f "$pid_file"
@@ -135,7 +132,7 @@ start_mockup_server() {
 status_mockup_server() {
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
-		if pid_is_running "$pid"; then
+		if polinko_pid_is_running "$pid"; then
 			if ! is_expected_mockup_server "$pid"; then
 				echo "portfolio mockup server: STALE PID file (PID $pid is not a matching mockup server)."
 				exit 1
@@ -179,7 +176,7 @@ stop_mockup_server() {
 		exit 0
 	fi
 	pid=$(cat "$pid_file" 2>/dev/null || true)
-	if pid_is_running "$pid"; then
+	if polinko_pid_is_running "$pid"; then
 		if is_expected_mockup_server "$pid"; then
 			kill "$pid"
 			sleep 0.1
