@@ -59,6 +59,25 @@ class RunLocalEvalGateTests(unittest.TestCase):
         self.assertIn("source=tools/python_runtime.sh", runner)
         self.assertIn('. "$script_dir/python_runtime.sh"', runner)
         self.assertIn("python_bin=$(polinko_default_python_bin)", runner)
+        self.assertIn("LOCAL_EVAL_GATE_START_ATTEMPTS ?= 100", config)
+        self.assertIn("LOCAL_EVAL_GATE_START_SLEEP_SECONDS ?= 0.2", config)
+        self.assertIn(
+            'LOCAL_EVAL_GATE_START_ATTEMPTS="$(LOCAL_EVAL_GATE_START_ATTEMPTS)"',
+            config,
+        )
+        self.assertIn(
+            'LOCAL_EVAL_GATE_START_SLEEP_SECONDS="$(LOCAL_EVAL_GATE_START_SLEEP_SECONDS)"',
+            config,
+        )
+        self.assertIn(
+            "local_eval_gate_start_attempts=${LOCAL_EVAL_GATE_START_ATTEMPTS:-100}",
+            runner,
+        )
+        self.assertIn(
+            'while [ "$attempt" -lt "$local_eval_gate_start_attempts" ]; do',
+            runner,
+        )
+        self.assertIn('sleep "$local_eval_gate_start_sleep_seconds"', runner)
         self.assertIn("/tmp/polinko-eval-smoke-$$-history.db", runner)
         self.assertIn("/tmp/polinko-eval-smoke-$$-memory.db", runner)
         self.assertIn("/tmp/polinko-eval-smoke-$$-vector.db", runner)
@@ -392,6 +411,37 @@ exit "${CURL_EXIT:-0}"
             self.assertIn(
                 "Server failed to start. See /tmp/polinko-api-smoke.log", result.stdout
             )
+            self.assertEqual(
+                self._read_calls(python_args),
+                [
+                    [
+                        "-m",
+                        "uvicorn",
+                        "custom_server:app",
+                        "--host",
+                        "127.0.0.1",
+                        "--port",
+                        "9991",
+                    ]
+                ],
+            )
+
+    def test_readiness_attempts_are_configurable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env["CURL_EXIT"] = "1"
+            env["LOCAL_EVAL_GATE_START_ATTEMPTS"] = "3"
+            env["LOCAL_EVAL_GATE_START_SLEEP_SECONDS"] = "0"
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "Server failed to start. See /tmp/polinko-api-smoke.log",
+                result.stdout,
+            )
+            self.assertEqual(len(Path(env["CURL_ARGS"]).read_text().splitlines()), 3)
             self.assertEqual(
                 self._read_calls(python_args),
                 [

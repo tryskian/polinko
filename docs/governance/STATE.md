@@ -125,8 +125,10 @@ Last updated: 2026-06-28
   - local eval gates clean up their temporary server with bounded stop-wait
     behaviour, preserving the suite exit status when cleanup succeeds and
     failing clearly when the server ignores the stop signal
-  - local eval gates require `curl` before HTTP readiness probing and avoid an
-    extra `seq` dependency in their bounded readiness loop
+  - local eval gates require `curl` before HTTP readiness probing and expose
+    `LOCAL_EVAL_GATE_START_ATTEMPTS` /
+    `LOCAL_EVAL_GATE_START_SLEEP_SECONDS` for their bounded readiness loop,
+    avoiding an extra `seq` dependency
   - core background runner lifecycle is script-owned for `caffeinate`,
     `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned

@@ -19,6 +19,8 @@ fi
 suite=$1
 python_bin=$(polinko_default_python_bin)
 asgi_app=${ASGI_APP:-server:app}
+local_eval_gate_start_attempts=${LOCAL_EVAL_GATE_START_ATTEMPTS:-100}
+local_eval_gate_start_sleep_seconds=${LOCAL_EVAL_GATE_START_SLEEP_SECONDS:-0.2}
 
 case "$suite" in
 api-smoke|eval-smoke|hallucination-gate|quality-gate)
@@ -103,7 +105,7 @@ start_local_server() {
 	ready=0
 	polinko_require_command curl "local eval gate readiness check"
 	attempt=0
-	while [ "$attempt" -lt 100 ]; do
+	while [ "$attempt" -lt "$local_eval_gate_start_attempts" ]; do
 		if ! server_is_running; then
 			echo "Server failed to stay running. See $log_path"
 			exit 1
@@ -112,7 +114,7 @@ start_local_server() {
 			ready=1
 			break
 		fi
-		sleep 0.2
+		sleep "$local_eval_gate_start_sleep_seconds"
 		attempt=$((attempt + 1))
 	done
 	if ! server_is_running; then
