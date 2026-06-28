@@ -41,6 +41,9 @@ MAKE_SURFACES_MANUAL_EVALS_OCR_RETRY = (
     REPO_ROOT / "makefiles" / "surfaces" / "manual-evals" / "ocr-retry.mk"
 )
 MAKE_SURFACES_PORTFOLIO = REPO_ROOT / "makefiles" / "surfaces" / "portfolio.mk"
+MAKE_SURFACES_PORTFOLIO_PREVIEW = (
+    REPO_ROOT / "makefiles" / "surfaces" / "portfolio" / "preview.mk"
+)
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 MAKE_EVALS_ALIASES = REPO_ROOT / "makefiles" / "evals" / "aliases.mk"
 MAKE_EVALS_ALIASES_OCR_RUNS = (
@@ -579,6 +582,9 @@ class MakefileContractTests(unittest.TestCase):
             MAKE_SURFACES_MANUAL_EVALS_OCR_RETRY.read_text(encoding="utf-8")
         )
         portfolio_entry_text = MAKE_SURFACES_PORTFOLIO.read_text(encoding="utf-8")
+        portfolio_preview_entry_text = MAKE_SURFACES_PORTFOLIO_PREVIEW.read_text(
+            encoding="utf-8"
+        )
         contract_text = _makefile_contract_text()
 
         self.assertIn(
@@ -670,6 +676,18 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/surfaces/portfolio/mockups.mk",
             portfolio_entry_text,
+        )
+        self.assertNotRegex(
+            portfolio_preview_entry_text,
+            r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
+        )
+        self.assertIn(
+            "include makefiles/surfaces/portfolio/preview/launch.mk",
+            portfolio_preview_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/surfaces/portfolio/preview/aliases.mk",
+            portfolio_preview_entry_text,
         )
         self.assertIn("notebook nb notes:", contract_text)
         self.assertIn("manual-evals-ocr-retry-execute", contract_text)

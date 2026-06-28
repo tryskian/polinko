@@ -104,6 +104,9 @@ This page is the structural map of the tracked system.
 - `makefiles/surfaces/portfolio/`
   - portfolio target fragments for dependency install, static build, preview
     launch modes, and mockup lifecycle
+- `makefiles/surfaces/portfolio/preview/`
+  - portfolio preview fragments for the server-backed launch recipe and
+    rebuild/system/playwright launch-mode aliases
 - `makefiles/surfaces/manual-evals/`
   - manual-eval target fragments for warehouse database, feedback,
     overlay/source-index, and OCR retry helper workflows

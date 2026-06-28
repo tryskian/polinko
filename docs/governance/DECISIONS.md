@@ -3815,3 +3815,22 @@ or branch history instead.
 - Why: The old eval gate target include mixed smoke, sidecar, reporting, and
   quality-gate recipes in one file. Operator-surface fragments make gate
   maintenance easier to audit while preserving release/check workflows.
+
+## D-228: Split portfolio preview target ownership by launch role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `portfolio`, `operator_surface`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/surfaces/portfolio/preview.mk` as
+  the public portfolio preview target entrypoint, then split the server-backed
+  launch recipe from rebuild and launch-mode aliases with include-aware
+  Makefile contract coverage.
+- Decision: Portfolio preview target names, rebuild aliases, launch-mode
+  overrides, and browser-launch behaviour stay stable, while preview target
+  ownership now lives in launch-role fragments.
+- Why: The old portfolio preview include mixed the primary server-backed
+  preview recipe with rebuild and browser-mode aliases in one file. Launch-role
+  fragments make preview maintenance easier to audit while preserving operator
+  commands.
