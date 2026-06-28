@@ -3576,3 +3576,24 @@ or branch history instead.
   OCR retry selection settings, execution settings, backup/restore settings,
   and provider/model options in one file. Workflow fragments make config
   changes reviewable beside the target fragments they support.
+
+## D-216: Split OCR-run eval target ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  long end-to-end kernels with a live UI progress tracker and short thought
+  updates.
+- Engineer implementation: Keep `makefiles/evals/ocr-runs.mk` as the public
+  OCR-run eval target entrypoint, then split recipes into workflow-owned
+  fragments for base transcript runners, growth runners, transcript lanes,
+  report-derived views, and focus stability with include-aware Makefile
+  contract coverage.
+- Decision: OCR-run eval target names and behaviours stay stable, while OCR-run
+  eval target ownership now lives in workflow-owned fragments.
+- Why: The old OCR-run eval include mixed base transcript case/stability
+  runners, growth case/stability runners, lane case/benchmark runners,
+  report-derived growth/focus views, and focus stability execution in one
+  file. Workflow fragments make the parked OCR target surface easier to audit
+  without changing commands or running evals.

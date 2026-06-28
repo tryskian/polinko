@@ -89,6 +89,9 @@ This page is the structural map of the tracked system.
 - `makefiles/evals/`
   - eval target fragments for aliases, core suites, gates, OCR intake, and OCR
     runners
+- `makefiles/evals/ocr-runs/`
+  - OCR-run target fragments for base transcript runners, growth runners,
+    transcript lanes, report-derived views, and focus stability
 - `makefiles/evals/core/`
   - core eval target fragments for retrieval/file-search, quality and
     response-behaviour, direct OCR suites, CLIP, report aggregation, and trace
