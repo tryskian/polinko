@@ -3761,3 +3761,22 @@ or branch history instead.
   env with lane-specific handwriting, typed, illustration, and benchmark env
   wiring in one file. Workflow fragments make lane config easier to audit
   without running evals or changing commands.
+
+## D-225: Split OCR-run growth config ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/config/evals/ocr-runs/growth.mk`
+  as the public OCR-run growth config entrypoint, then split runner script
+  defaults and environment wiring into workflow-owned fragments for growth
+  stability and growth case/batch workflows with include-aware Makefile
+  contract coverage.
+- Decision: OCR-run growth config variable names and public target behaviour
+  stay stable, while growth config ownership now lives in workflow-owned
+  fragments.
+- Why: The old growth config include mixed stability workflow env with
+  case/batch workflow env in one file. Workflow fragments make growth config
+  easier to audit without running evals or changing commands.

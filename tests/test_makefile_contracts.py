@@ -22,6 +22,9 @@ MAKE_CONFIG_EVALS_OCR_RUNS = (
 MAKE_CONFIG_EVALS_OCR_RUNS_TRANSCRIPT_LANES = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "transcript-lanes.mk"
 )
+MAKE_CONFIG_EVALS_OCR_RUNS_GROWTH = (
+    REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "growth.mk"
+)
 MAKE_CONFIG_EVALS_OCR_RUNS_DEFAULTS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "defaults.mk"
 )
@@ -333,6 +336,9 @@ class MakefileContractTests(unittest.TestCase):
         ocr_runs_transcript_lanes_entry_text = (
             MAKE_CONFIG_EVALS_OCR_RUNS_TRANSCRIPT_LANES.read_text(encoding="utf-8")
         )
+        ocr_runs_growth_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS_GROWTH.read_text(
+            encoding="utf-8"
+        )
         ocr_runs_defaults_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS_DEFAULTS.read_text(
             encoding="utf-8"
         )
@@ -367,6 +373,12 @@ class MakefileContractTests(unittest.TestCase):
             re.search(
                 r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)",
                 ocr_runs_transcript_lanes_entry_text,
+            )
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)",
+                ocr_runs_growth_entry_text,
             )
         )
         self.assertIsNone(
@@ -490,6 +502,14 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/growth.mk",
             ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/growth/stability-workflow.mk",
+            ocr_runs_growth_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/growth/case-workflow.mk",
+            ocr_runs_growth_entry_text,
         )
         self.assertIn(
             "include makefiles/config/evals/reports/runner.mk",

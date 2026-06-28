@@ -201,6 +201,10 @@ Last updated: 2026-06-27
     workflow-owned fragments live under
     `makefiles/config/evals/ocr-runs/transcript-lanes/` for base transcript
     workflow env and lane-specific workflow env
+  - OCR-run growth config keeps the public entrypoint at
+    `makefiles/config/evals/ocr-runs/growth.mk`, while workflow-owned
+    fragments live under `makefiles/config/evals/ocr-runs/growth/` for
+    growth stability workflow env and growth case/batch workflow env
   - OCR-run default config keeps the public entrypoint at
     `makefiles/config/evals/ocr-runs/defaults.mk`, while workflow-owned
     fragments live under `makefiles/config/evals/ocr-runs/defaults/` for
