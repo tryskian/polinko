@@ -157,6 +157,9 @@ This page is the structural map of the tracked system.
   - core eval target fragments for retrieval/file-search, quality and
     response-behaviour, direct OCR suites, CLIP, report aggregation, and trace
     maintenance
+- `makefiles/evals/core/quality/`
+  - quality eval target fragments for hallucination, style, and
+    response-behaviour
 - `makefiles/evals/aliases/`
   - eval alias target fragments for OCR intake/mining, OCR run/focus/benchmark
     shorthands, and utility/inventory aliases

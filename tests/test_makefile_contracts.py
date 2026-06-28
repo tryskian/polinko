@@ -79,6 +79,7 @@ MAKE_EVALS_ALIASES_OCR_RUNS = (
     REPO_ROOT / "makefiles" / "evals" / "aliases" / "ocr-runs.mk"
 )
 MAKE_EVALS_CORE = REPO_ROOT / "makefiles" / "evals" / "core.mk"
+MAKE_EVALS_CORE_QUALITY = REPO_ROOT / "makefiles" / "evals" / "core" / "quality.mk"
 MAKE_EVALS_GATES = REPO_ROOT / "makefiles" / "evals" / "gates.mk"
 MAKE_EVALS_OCR_RUNS = REPO_ROOT / "makefiles" / "evals" / "ocr-runs.mk"
 MAKE_EVALS_OCR_RUNS_LANES = REPO_ROOT / "makefiles" / "evals" / "ocr-runs" / "lanes.mk"
@@ -300,6 +301,7 @@ class MakefileContractTests(unittest.TestCase):
             encoding="utf-8"
         )
         core_entry_text = MAKE_EVALS_CORE.read_text(encoding="utf-8")
+        core_quality_entry_text = MAKE_EVALS_CORE_QUALITY.read_text(encoding="utf-8")
         gates_entry_text = MAKE_EVALS_GATES.read_text(encoding="utf-8")
         ocr_runs_entry_text = MAKE_EVALS_OCR_RUNS.read_text(encoding="utf-8")
         ocr_runs_lanes_entry_text = MAKE_EVALS_OCR_RUNS_LANES.read_text(
@@ -356,6 +358,24 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("include makefiles/evals/core/clip.mk", core_entry_text)
         self.assertIn("include makefiles/evals/core/reports.mk", core_entry_text)
         self.assertIn("include makefiles/evals/core/maintenance.mk", core_entry_text)
+        self.assertIsNone(
+            re.search(
+                r"(?m)^\.PHONY:|^[-a-zA-Z0-9_]+:",
+                core_quality_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/evals/core/quality/hallucination.mk",
+            core_quality_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/core/quality/style.mk",
+            core_quality_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/core/quality/response-behaviour.mk",
+            core_quality_entry_text,
+        )
         self.assertIsNone(
             re.search(
                 r"(?m)^\.PHONY:|^[-a-zA-Z0-9_]+:",
