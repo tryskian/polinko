@@ -1,0 +1,5 @@
+# OCR ChatGPT export intake settings.
+CGPT_EXPORT_ROOT ?=
+CGPT_EXPORT_ROOT_DEFAULT ?=
+CGPT_EXPORT_OUTPUT_DIR ?= .local/eval_cases
+OCR_CASES_FROM_EXPORT_ARGS ?=

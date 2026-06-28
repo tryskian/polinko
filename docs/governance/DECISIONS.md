@@ -3597,3 +3597,26 @@ or branch history instead.
   report-derived growth/focus views, and focus stability execution in one
   file. Workflow fragments make the parked OCR target surface easier to audit
   without changing commands or running evals.
+
+## D-217: Split OCR-case eval config ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `config`, `modularity`
+- Human-led: The human lead approved continuing long end-to-end kernels with a
+  live UI progress tracker while keeping the Make/script refactor in normal
+  order.
+- Engineer implementation: Keep `makefiles/config/evals/ocr-cases.mk` as the
+  public OCR-case eval config entrypoint, then split variable defaults and
+  intake environment wiring into workflow-owned fragments for source paths,
+  export settings, transcript-derived case paths, review outputs, benchmark
+  selectors, and intake workflow wiring with include-aware Makefile contract
+  coverage.
+- Decision: OCR-case config variable names and public target behaviour stay
+  stable, while OCR-case config ownership now lives in workflow-owned
+  fragments.
+- Why: The old OCR-case config include mixed direct case paths, ChatGPT export
+  intake settings, transcript-derived case outputs, review/delta/generalization
+  outputs, benchmark selection knobs, and intake runner wiring in one file.
+  Workflow fragments make the OCR intake config easier to audit beside the
+  target fragments without running evals or changing operator commands.
