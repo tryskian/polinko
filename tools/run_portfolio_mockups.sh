@@ -111,6 +111,7 @@ start_mockup_server() {
 		echo "Portfolio mockup not found: $mockup_dir/landing-mockups.html"
 		exit 1
 	fi
+	polinko_require_process_inspection "portfolio mockup PID inspection"
 	polinko_require_command curl "portfolio mockup HTTP reachability checks"
 
 	if [ -f "$pid_file" ]; then
@@ -158,6 +159,7 @@ start_mockup_server() {
 }
 
 status_mockup_server() {
+	polinko_require_process_inspection "portfolio mockup PID inspection"
 	polinko_require_command curl "portfolio mockup status reachability check"
 
 	if [ -f "$pid_file" ]; then
@@ -190,6 +192,8 @@ status_mockup_server() {
 }
 
 stop_mockup_server() {
+	polinko_require_process_inspection "portfolio mockup PID inspection"
+
 	if [ ! -f "$pid_file" ]; then
 		polinko_require_command curl "portfolio mockup stop reachability check"
 

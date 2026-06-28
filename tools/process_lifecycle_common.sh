@@ -25,6 +25,11 @@ polinko_require_command() {
 	return 1
 }
 
+polinko_require_process_inspection() {
+	_polinko_context=${1:-process lifecycle PID inspection}
+	polinko_require_command ps "$_polinko_context"
+}
+
 polinko_wait_for_pid_exit() {
 	_polinko_pid=$1
 	_polinko_attempts=${2:-50}

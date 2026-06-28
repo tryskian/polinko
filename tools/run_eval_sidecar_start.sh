@@ -93,6 +93,8 @@ wait_for_sidecar_ready() {
 }
 
 start_sidecar() {
+	polinko_require_process_inspection "eval-sidecar PID inspection"
+
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
 		if polinko_pid_is_running "$pid"; then
@@ -130,6 +132,8 @@ start_sidecar() {
 }
 
 status_sidecar() {
+	polinko_require_process_inspection "eval-sidecar PID inspection"
+
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
 		if polinko_pid_is_running "$pid"; then
@@ -158,6 +162,8 @@ status_sidecar() {
 }
 
 stop_sidecar() {
+	polinko_require_process_inspection "eval-sidecar PID inspection"
+
 	if [ ! -f "$current_file" ]; then
 		if [ -f "$pid_file" ]; then
 			pid=$(cat "$pid_file" 2>/dev/null || true)

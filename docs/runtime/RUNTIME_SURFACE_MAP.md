@@ -152,6 +152,9 @@ flowchart TD
   `caffeinate` keeps wake-lock ownership and repo activity separate, treats
   stopped/zombie managed PIDs as stale, and removes owned runtime metadata only
   after bounded terminate/escalate cleanup succeeds.
+  Shell lifecycle runners require `ps` before making PID-state decisions, so
+  missing process-inspection tooling fails early instead of degrading into
+  misleading liveness state.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery. If stop or interpreter-mismatch

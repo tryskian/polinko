@@ -138,6 +138,9 @@ Last updated: 2026-06-28
     and closeout cleanup inspect the same wake-lock shape that start launches
   - `caffeinate` treats stopped/zombie managed PIDs as stale and only removes
     owned runtime metadata after bounded terminate/escalate cleanup succeeds
+  - shell lifecycle runners require `ps` before making PID-state decisions, so
+    missing local process-inspection tooling fails with a direct prerequisite
+    diagnostic
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery
