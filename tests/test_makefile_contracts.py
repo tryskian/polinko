@@ -81,6 +81,9 @@ MAKE_SURFACES_PORTFOLIO_PREVIEW_LAUNCH = (
 )
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 MAKE_EVALS_ALIASES = REPO_ROOT / "makefiles" / "evals" / "aliases.mk"
+MAKE_EVALS_ALIASES_OCR_INTAKE = (
+    REPO_ROOT / "makefiles" / "evals" / "aliases" / "ocr-intake.mk"
+)
 MAKE_EVALS_ALIASES_OCR_RUNS = (
     REPO_ROOT / "makefiles" / "evals" / "aliases" / "ocr-runs.mk"
 )
@@ -88,6 +91,7 @@ MAKE_EVALS_CORE = REPO_ROOT / "makefiles" / "evals" / "core.mk"
 MAKE_EVALS_CORE_QUALITY = REPO_ROOT / "makefiles" / "evals" / "core" / "quality.mk"
 MAKE_EVALS_CORE_OCR = REPO_ROOT / "makefiles" / "evals" / "core" / "ocr.mk"
 MAKE_EVALS_GATES = REPO_ROOT / "makefiles" / "evals" / "gates.mk"
+MAKE_EVALS_OCR_INTAKE = REPO_ROOT / "makefiles" / "evals" / "ocr-intake.mk"
 MAKE_EVALS_OCR_RUNS = REPO_ROOT / "makefiles" / "evals" / "ocr-runs.mk"
 MAKE_EVALS_OCR_RUNS_LANES = REPO_ROOT / "makefiles" / "evals" / "ocr-runs" / "lanes.mk"
 MAKE_RUNTIME = REPO_ROOT / "makefiles" / "runtime.mk"
@@ -304,6 +308,9 @@ class MakefileContractTests(unittest.TestCase):
     def test_eval_targets_are_extracted_through_role_includes(self) -> None:
         evals_entry_text = MAKE_EVALS.read_text(encoding="utf-8")
         aliases_entry_text = MAKE_EVALS_ALIASES.read_text(encoding="utf-8")
+        aliases_ocr_intake_entry_text = MAKE_EVALS_ALIASES_OCR_INTAKE.read_text(
+            encoding="utf-8"
+        )
         aliases_ocr_runs_entry_text = MAKE_EVALS_ALIASES_OCR_RUNS.read_text(
             encoding="utf-8"
         )
@@ -311,6 +318,7 @@ class MakefileContractTests(unittest.TestCase):
         core_quality_entry_text = MAKE_EVALS_CORE_QUALITY.read_text(encoding="utf-8")
         core_ocr_entry_text = MAKE_EVALS_CORE_OCR.read_text(encoding="utf-8")
         gates_entry_text = MAKE_EVALS_GATES.read_text(encoding="utf-8")
+        ocr_intake_entry_text = MAKE_EVALS_OCR_INTAKE.read_text(encoding="utf-8")
         ocr_runs_entry_text = MAKE_EVALS_OCR_RUNS.read_text(encoding="utf-8")
         ocr_runs_lanes_entry_text = MAKE_EVALS_OCR_RUNS_LANES.read_text(
             encoding="utf-8"
@@ -333,6 +341,24 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/evals/aliases/utilities.mk",
             aliases_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^\.PHONY:|^[-a-zA-Z0-9_]+:",
+                aliases_ocr_intake_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/ocr-intake/base.mk",
+            aliases_ocr_intake_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/ocr-intake/lanes.mk",
+            aliases_ocr_intake_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/ocr-intake/filters.mk",
+            aliases_ocr_intake_entry_text,
         )
         self.assertIsNone(
             re.search(
@@ -416,6 +442,24 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("include makefiles/evals/gates/sidecar.mk", gates_entry_text)
         self.assertIn("include makefiles/evals/gates/reports.mk", gates_entry_text)
         self.assertIn("include makefiles/evals/gates/quality.mk", gates_entry_text)
+        self.assertIsNone(
+            re.search(
+                r"(?m)^\.PHONY:|^[-a-zA-Z0-9_]+:",
+                ocr_intake_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/evals/ocr-intake/export.mk",
+            ocr_intake_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/ocr-intake/benchmarks.mk",
+            ocr_intake_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/ocr-intake/review.mk",
+            ocr_intake_entry_text,
+        )
         self.assertIn(
             "include makefiles/evals/ocr-runs/transcripts.mk",
             ocr_runs_entry_text,

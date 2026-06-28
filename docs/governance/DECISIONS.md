@@ -4113,3 +4113,25 @@ or branch history instead.
   compatibility, mockup server config, env assembly, and launch defaults in
   one file. Runtime-role fragments make portfolio config easier to audit while
   preserving portfolio commands.
+
+## D-243: Split OCR intake targets and aliases by workflow role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr_intake`, `aliases`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Leave the cohesive manual-eval OCR retry selection
+  surface intact, then keep `makefiles/evals/ocr-intake.mk` and
+  `makefiles/evals/aliases/ocr-intake.mk` as public entrypoints while splitting
+  OCR intake targets and aliases into workflow-role fragments with
+  include-aware Makefile contract coverage.
+- Decision: OCR intake target names, OCR intake alias names,
+  `OCR_CASES_FROM_EXPORT_ARGS` alias overrides, and
+  `OCR_INTAKE_WORKFLOW_SCRIPT` command routing stay stable, while OCR intake
+  target and alias ownership now lives in workflow-role fragments.
+- Why: The OCR retry selection surface was already cohesive, but the OCR intake
+  target and alias includes mixed export/case-mining, benchmark builders,
+  review/delta helpers, lane filters, and signal/status filters. Splitting the
+  real ownership boundaries improves auditability while preserving operator
+  commands.

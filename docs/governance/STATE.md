@@ -205,6 +205,14 @@ Last updated: 2026-06-28
     `makefiles/evals/aliases.mk`, while alias-family fragments live under
     `makefiles/evals/aliases/` for OCR intake/mining aliases, OCR
     run/focus/benchmark shorthands, and utility/inventory aliases
+  - OCR intake alias targets keep the public entrypoint at
+    `makefiles/evals/aliases/ocr-intake.mk`, while alias-family fragments live
+    under `makefiles/evals/aliases/ocr-intake/` for base intake aliases,
+    lane-filter aliases, and signal/status filter aliases
+  - OCR intake targets keep the public entrypoint at
+    `makefiles/evals/ocr-intake.mk`, while workflow-role fragments live under
+    `makefiles/evals/ocr-intake/` for export/case-mining targets, benchmark
+    case builders, and review/delta helpers
   - eval gate targets keep the public entrypoint at
     `makefiles/evals/gates.mk`, while operator-surface fragments live under
     `makefiles/evals/gates/` for smoke gates, sidecar lifecycle, operator
