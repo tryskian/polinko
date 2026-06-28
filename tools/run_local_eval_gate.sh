@@ -8,6 +8,8 @@ source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
 # shellcheck source=tools/python_runtime.sh
 . "$script_dir/python_runtime.sh"
+# shellcheck source=tools/process_lifecycle_common.sh
+. "$script_dir/process_lifecycle_common.sh"
 
 if [ "$#" -ne 1 ]; then
 	echo "Usage: run_local_eval_gate.sh <suite>" >&2
@@ -30,13 +32,21 @@ esac
 server_pid=
 
 cleanup_server() {
+	exit_status=${1:-0}
 	if [ -n "$server_pid" ]; then
 		kill "$server_pid" 2>/dev/null || true
+		if ! polinko_wait_for_pid_exit "$server_pid" 30 0.1; then
+			echo "Server PID $server_pid did not exit after stop signal." >&2
+			exit 1
+		fi
 		wait "$server_pid" 2>/dev/null || true
 	fi
+	exit "$exit_status"
 }
 
-trap cleanup_server EXIT INT TERM
+trap 'cleanup_server "$?"' EXIT
+trap 'trap - EXIT; cleanup_server 130' INT
+trap 'trap - EXIT; cleanup_server 143' TERM
 
 choose_loopback_port() {
 	"$python_bin" - <<'PY'

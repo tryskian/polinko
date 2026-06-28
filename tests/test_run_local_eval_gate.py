@@ -1,4 +1,5 @@
 import os
+import signal
 import stat
 import subprocess
 import tempfile
@@ -14,6 +15,18 @@ RUNNER_SCRIPT = REPO_ROOT / "tools" / "run_local_eval_gate.sh"
 def _write_executable(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
     path.chmod(path.stat().st_mode | stat.S_IXUSR)
+
+
+def _kill_pid_file(path: Path) -> None:
+    if not path.exists():
+        return
+    raw_pid = path.read_text(encoding="utf-8").strip()
+    if not raw_pid:
+        return
+    try:
+        os.kill(int(raw_pid), signal.SIGKILL)
+    except ProcessLookupError:
+        pass
 
 
 def _makefile_source_text(path: Path, seen: set[Path] | None = None) -> str:
@@ -81,8 +94,12 @@ done
 printf "\\n" >> "$PYTHON_ARGS"
 if [ "${1:-}" = "-m" ] && [ "${2:-}" = "uvicorn" ]; then
 \t: > "$SERVER_STARTED"
+\tprintf "%s" "$$" > "$SERVER_PID_PATH"
 \tif [ "${UVICORN_EXIT_IMMEDIATELY:-0}" = "1" ]; then
 \t\texit 1
+\tfi
+\tif [ "${UVICORN_IGNORE_TERM:-0}" = "1" ]; then
+\t\texec /bin/sh -c 'trap "" TERM; while :; do /bin/sleep 1; done'
 \tfi
 \texec /bin/sleep 30
 fi
@@ -110,6 +127,7 @@ exit "${CURL_EXIT:-0}"
         smoke_vector_db = tmp_path / "smoke-vector.db"
         gate_session_db = tmp_path / "gate-session.db"
         gate_vector_db = tmp_path / "gate-vector.db"
+        server_pid_path = tmp_path / "server.pid"
         for path in (
             smoke_history_db,
             smoke_memory_db,
@@ -127,6 +145,7 @@ exit "${CURL_EXIT:-0}"
                 "PYTHON_ARGS": str(python_args),
                 "CURL_ARGS": str(curl_args),
                 "SERVER_STARTED": str(server_started),
+                "SERVER_PID_PATH": str(server_pid_path),
                 "ASGI_APP": "custom_server:app",
                 "SMOKE_PORT": "9991",
                 "SMOKE_BASE_URL": "http://127.0.0.1:9991",
@@ -385,6 +404,34 @@ exit "${CURL_EXIT:-0}"
                         "--port",
                         "9991",
                     ]
+                ],
+            )
+
+    def test_cleanup_failure_exits_nonzero_when_server_does_not_exit(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env["UVICORN_IGNORE_TERM"] = "1"
+            server_started.unlink(missing_ok=True)
+            self.addCleanup(_kill_pid_file, Path(env["SERVER_PID_PATH"]))
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("Server PID", result.stderr)
+            self.assertIn("did not exit after stop signal", result.stderr)
+            self.assertEqual(
+                self._read_calls(python_args),
+                [
+                    [
+                        "-m",
+                        "uvicorn",
+                        "custom_server:app",
+                        "--host",
+                        "127.0.0.1",
+                        "--port",
+                        "9991",
+                    ],
+                    ["-m", "tools.api_smoke", "--base-url", "http://127.0.0.1:9991"],
                 ],
             )
 
