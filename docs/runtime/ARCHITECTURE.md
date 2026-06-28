@@ -150,6 +150,9 @@ This page is the structural map of the tracked system.
 - `makefiles/evals/`
   - eval target fragments for aliases, core suites, gates, OCR intake, and OCR
     runners
+- `makefiles/evals/ocr-intake/`
+  - OCR intake target fragments for export/case-mining targets, benchmark case
+    builders, and review/delta helpers
 - `makefiles/evals/gates/`
   - eval gate target fragments for smoke gates, sidecar lifecycle, operator
     reports, and quality/hallucination gates
@@ -172,6 +175,9 @@ This page is the structural map of the tracked system.
 - `makefiles/evals/aliases/`
   - eval alias target fragments for OCR intake/mining, OCR run/focus/benchmark
     shorthands, and utility/inventory aliases
+- `makefiles/evals/aliases/ocr-intake/`
+  - OCR intake alias fragments for base intake aliases, lane-filter aliases,
+    and signal/status filter aliases
 - `makefiles/evals/aliases/ocr-runs/`
   - OCR-run alias fragments for transcript/growth aliases, modality aliases,
     focus/stability aliases, the OCR kernel workflow alias, and benchmark

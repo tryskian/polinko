@@ -413,11 +413,12 @@ class EvalVizTests(unittest.TestCase):
     def test_payload_includes_tracked_lane_summaries(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
+            report_root = root / "reports"
             tracked_root = root / "tracked"
             _init_tracked_eval_root(tracked_root)
 
             payload = build_pass_fail_viz_payload(
-                report_root=root,
+                report_root=report_root,
                 tracked_eval_root=tracked_root,
             )
 
