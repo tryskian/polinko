@@ -265,7 +265,12 @@ Last updated: 2026-06-28
   - runtime audit targets keep the public entrypoint at
     `makefiles/checks/runtime-audits.mk`, while role-owned fragments live
     under `makefiles/checks/runtime-audits/` for shell helper audits, path
-    leak checks, runtime config/risk/operator checks, and environment doctor
+    leak checks, runtime config/risk/operator checks, and environment doctor.
+    The environment doctor target keeps
+    `makefiles/checks/runtime-audits/doctor-env.mk` as its public entrypoint,
+    while interpreter source labelling, active virtualenv derivation, module
+    execution, and target wiring live under
+    `makefiles/checks/runtime-audits/doctor-env/`
   - eval report config keeps the public entrypoint at
     `makefiles/config/evals/reports.mk`, while workflow-owned fragments live
     under `makefiles/config/evals/reports/` for report runner env, parallel

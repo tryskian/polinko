@@ -45,6 +45,9 @@ MAKE_CONFIG_SURFACES_MANUAL_EVALS_OCR_RETRY = (
 )
 MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_CHECKS_RUNTIME_AUDITS = REPO_ROOT / "makefiles" / "checks" / "runtime-audits.mk"
+MAKE_CHECKS_RUNTIME_AUDITS_DOCTOR_ENV = (
+    REPO_ROOT / "makefiles" / "checks" / "runtime-audits" / "doctor-env.mk"
+)
 MAKE_CHECKS_DEV_TOOLS = REPO_ROOT / "makefiles" / "checks" / "dev-tools.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_SURFACES_MANUAL_EVALS = REPO_ROOT / "makefiles" / "surfaces" / "manual-evals.mk"
@@ -208,6 +211,9 @@ class MakefileContractTests(unittest.TestCase):
         runtime_audits_entry_text = MAKE_CHECKS_RUNTIME_AUDITS.read_text(
             encoding="utf-8"
         )
+        runtime_audits_doctor_env_entry_text = (
+            MAKE_CHECKS_RUNTIME_AUDITS_DOCTOR_ENV.read_text(encoding="utf-8")
+        )
         dev_tools_entry_text = MAKE_CHECKS_DEV_TOOLS.read_text(encoding="utf-8")
         contract_text = _makefile_contract_text()
 
@@ -250,6 +256,26 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/checks/runtime-audits/doctor-env.mk",
             runtime_audits_entry_text,
+        )
+        self.assertNotRegex(
+            runtime_audits_doctor_env_entry_text,
+            r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
+        )
+        self.assertIn(
+            "include makefiles/checks/runtime-audits/doctor-env/source.mk",
+            runtime_audits_doctor_env_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/checks/runtime-audits/doctor-env/venv.mk",
+            runtime_audits_doctor_env_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/checks/runtime-audits/doctor-env/runner.mk",
+            runtime_audits_doctor_env_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/checks/runtime-audits/doctor-env/target.mk",
+            runtime_audits_doctor_env_entry_text,
         )
         self.assertIn("test:", contract_text)
         self.assertIn("backend-gate:", contract_text)
