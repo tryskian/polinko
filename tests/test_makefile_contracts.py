@@ -32,6 +32,9 @@ MAKE_CONFIG_EVALS_OCR_CASES_INTAKE_WORKFLOW = (
 MAKE_CONFIG_EVALS_OCR_RUNS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs.mk"
 )
+MAKE_CONFIG_EVALS_OCR_RUNS_DIRECT_RUNNERS = (
+    REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "direct-runners.mk"
+)
 MAKE_CONFIG_EVALS_OCR_RUNS_TRANSCRIPT_LANES = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "transcript-lanes.mk"
 )
@@ -657,6 +660,9 @@ class MakefileContractTests(unittest.TestCase):
             MAKE_CONFIG_EVALS_OCR_CASES_INTAKE_WORKFLOW.read_text(encoding="utf-8")
         )
         ocr_runs_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS.read_text(encoding="utf-8")
+        ocr_runs_direct_runners_entry_text = (
+            MAKE_CONFIG_EVALS_OCR_RUNS_DIRECT_RUNNERS.read_text(encoding="utf-8")
+        )
         ocr_runs_transcript_lanes_entry_text = (
             MAKE_CONFIG_EVALS_OCR_RUNS_TRANSCRIPT_LANES.read_text(encoding="utf-8")
         )
@@ -874,6 +880,24 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/direct-runners.mk",
             ocr_runs_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=|\+=)",
+                ocr_runs_direct_runners_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/direct-runners/handwriting.mk",
+            ocr_runs_direct_runners_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/direct-runners/cases.mk",
+            ocr_runs_direct_runners_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/direct-runners/stability.mk",
+            ocr_runs_direct_runners_entry_text,
         )
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/transcript-lanes.mk",

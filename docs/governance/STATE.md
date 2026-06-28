@@ -243,6 +243,10 @@ Last updated: 2026-06-28
     under `makefiles/config/evals/ocr-runs/` for defaults, common helper
     wiring, direct runners, transcript lanes, focus stability, and growth
     workflows
+  - direct OCR runner config keeps the public entrypoint at
+    `makefiles/config/evals/ocr-runs/direct-runners.mk`, while runner-family
+    fragments live under `makefiles/config/evals/ocr-runs/direct-runners/`
+    for handwriting, case, and stability runner env wiring
   - OCR-run transcript-lane config keeps the public entrypoint at
     `makefiles/config/evals/ocr-runs/transcript-lanes.mk`, while
     workflow-owned fragments live under

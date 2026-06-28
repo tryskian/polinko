@@ -1,23 +1,4 @@
-# Direct OCR runner scripts and execution environments.
-OCR_HANDWRITING_EVAL_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_handwriting.sh
-OCR_HANDWRITING_EVAL_RUNNER_ENV = \
-	PYTHON="$(PYTHON)" \
-	OCR_HANDWRITING_CASES="$(OCR_HANDWRITING_CASES)" \
-	OCR_EVAL_TIMEOUT="$(OCR_EVAL_TIMEOUT)" \
-	OCR_EVAL_OCR_RETRIES="$(OCR_EVAL_OCR_RETRIES)" \
-	OCR_EVAL_OCR_RETRY_DELAY_MS="$(OCR_EVAL_OCR_RETRY_DELAY_MS)" \
-	OCR_MAX_CONSEC_RATE_LIMIT_ERRORS="$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
-OCR_EVAL_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_cases.sh
-OCR_EVAL_RUNNER_ENV = \
-	PYTHON="$(PYTHON)" \
-	EVAL_SERVER_DAEMON_SCRIPT="$(EVAL_SERVER_DAEMON_SCRIPT)" \
-	OCR_EVAL_TIMEOUT="$(OCR_EVAL_TIMEOUT)" \
-	OCR_EVAL_OCR_RETRIES="$(OCR_EVAL_OCR_RETRIES)" \
-	OCR_EVAL_OCR_RETRY_DELAY_MS="$(OCR_EVAL_OCR_RETRY_DELAY_MS)" \
-	OCR_MAX_CONSEC_RATE_LIMIT_ERRORS="$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
-OCR_STABILITY_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_stability.sh
-OCR_STABILITY_RUNNER_ENV = \
-	PYTHON="$(PYTHON)" \
-	EVAL_SERVER_DAEMON_SCRIPT="$(EVAL_SERVER_DAEMON_SCRIPT)" \
-	OCR_EVAL_TIMEOUT="$(OCR_EVAL_TIMEOUT)" \
-	OCR_MAX_CONSEC_RATE_LIMIT_ERRORS="$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)"
+# Direct OCR runner scripts and execution environment entrypoint.
+include makefiles/config/evals/ocr-runs/direct-runners/handwriting.mk
+include makefiles/config/evals/ocr-runs/direct-runners/cases.mk
+include makefiles/config/evals/ocr-runs/direct-runners/stability.mk
