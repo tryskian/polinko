@@ -181,6 +181,10 @@ Last updated: 2026-06-27
     under `makefiles/config/evals/ocr-runs/` for defaults, common helper
     wiring, direct runners, transcript lanes, focus stability, and growth
     workflows
+  - OCR-run eval targets keep the public entrypoint at
+    `makefiles/evals/ocr-runs.mk`, while workflow-owned fragments live under
+    `makefiles/evals/ocr-runs/` for base transcript runners, growth runners,
+    transcript lanes, report-derived views, and focus stability
   - runtime Make targets keep the public entrypoint at
     `makefiles/runtime.mk`, while role-owned fragments live under
     `makefiles/runtime/` for core lifecycle, server-daemon, local URL helpers,

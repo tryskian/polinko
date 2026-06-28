@@ -29,6 +29,7 @@ MAKE_SURFACES_PORTFOLIO = REPO_ROOT / "makefiles" / "surfaces" / "portfolio.mk"
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 MAKE_EVALS_ALIASES = REPO_ROOT / "makefiles" / "evals" / "aliases.mk"
 MAKE_EVALS_CORE = REPO_ROOT / "makefiles" / "evals" / "core.mk"
+MAKE_EVALS_OCR_RUNS = REPO_ROOT / "makefiles" / "evals" / "ocr-runs.mk"
 MAKE_RUNTIME = REPO_ROOT / "makefiles" / "runtime.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
@@ -164,6 +165,7 @@ class MakefileContractTests(unittest.TestCase):
         evals_entry_text = MAKE_EVALS.read_text(encoding="utf-8")
         aliases_entry_text = MAKE_EVALS_ALIASES.read_text(encoding="utf-8")
         core_entry_text = MAKE_EVALS_CORE.read_text(encoding="utf-8")
+        ocr_runs_entry_text = MAKE_EVALS_OCR_RUNS.read_text(encoding="utf-8")
         contract_text = _makefile_contract_text()
 
         self.assertIn("include makefiles/evals/aliases.mk", evals_entry_text)
@@ -189,6 +191,26 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("include makefiles/evals/core/clip.mk", core_entry_text)
         self.assertIn("include makefiles/evals/core/reports.mk", core_entry_text)
         self.assertIn("include makefiles/evals/core/maintenance.mk", core_entry_text)
+        self.assertIn(
+            "include makefiles/evals/ocr-runs/transcripts.mk",
+            ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/ocr-runs/growth.mk",
+            ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/ocr-runs/lanes.mk",
+            ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/ocr-runs/reports.mk",
+            ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/ocr-runs/focus.mk",
+            ocr_runs_entry_text,
+        )
         self.assertIn("ocrkernel:", contract_text)
         self.assertIn("ocrminehand: OCR_CASES_FROM_EXPORT_ARGS =", contract_text)
         self.assertIn("ocrfocus:", contract_text)
