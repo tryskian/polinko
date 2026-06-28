@@ -122,6 +122,9 @@ This page is the structural map of the tracked system.
 - `makefiles/surfaces/portfolio/preview/`
   - portfolio preview fragments for the server-backed launch recipe and
     rebuild/system/playwright launch-mode aliases
+- `makefiles/surfaces/portfolio/preview/launch/`
+  - portfolio launch recipe fragments for cache-busted URL construction,
+    Playwright launch, system/no-launch handling, and target wiring
 - `makefiles/surfaces/manual-evals/`
   - manual-eval target fragments for warehouse database, feedback,
     overlay/source-index, and OCR retry helper workflows

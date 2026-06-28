@@ -3971,3 +3971,24 @@ or branch history instead.
   local GitHub Actions runner helpers in one file. Helper-role fragments make
   local developer target maintenance easier to audit while preserving operator
   commands.
+
+## D-236: Split portfolio launch recipe ownership by launch role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `portfolio`, `operator_surface`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep
+  `makefiles/surfaces/portfolio/preview/launch.mk` as the public portfolio
+  launch recipe entrypoint, then split cache-busted URL construction,
+  Playwright launch, system/no-launch handling, and target wiring into
+  launch-role fragments with include-aware Makefile contract coverage.
+- Decision: Portfolio launch target names, dependency edges, cache-busted URL
+  behaviour, Playwright session handling, explicit system launch routing, and
+  no-launch output stay stable, while launch recipe ownership now lives in
+  launch-role fragments.
+- Why: The old portfolio launch include mixed URL construction, Playwright
+  session hygiene, system browser launch, no-launch output, invalid-mode
+  handling, and target wiring in one recipe. Launch-role fragments make the
+  preview launch path easier to audit while preserving operator commands.
