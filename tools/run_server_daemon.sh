@@ -17,6 +17,10 @@ fi
 asgi_app=${ASGI_APP:-server:app}
 dev_host=${DEV_HOST:-127.0.0.1}
 dev_backend_port=${DEV_BACKEND_PORT:-8000}
+server_health_host=${SERVER_HEALTH_HOST:-127.0.0.1}
+server_health_url=${SERVER_HEALTH_URL:-http://$server_health_host:$dev_backend_port/health}
+server_start_attempts=${SERVER_START_ATTEMPTS:-100}
+server_start_sleep_seconds=${SERVER_START_SLEEP_SECONDS:-0.2}
 server_pid_file=${SERVER_PID_FILE:-/tmp/polinko-server.pid}
 server_log=${SERVER_LOG:-/tmp/polinko-server.log}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
@@ -100,6 +104,22 @@ wait_for_server_stop() {
 	fi
 }
 
+wait_for_server_ready() {
+	local pid=$1
+	local attempt=0
+	while [ "$attempt" -lt "$server_start_attempts" ]; do
+		if ! polinko_pid_is_running "$pid"; then
+			return 2
+		fi
+		if curl -fsS "$server_health_url" >/dev/null 2>&1; then
+			return 0
+		fi
+		sleep "$server_start_sleep_seconds"
+		attempt=$((attempt + 1))
+	done
+	return 1
+}
+
 start_server() {
 	expected_py=$(resolve_expected_python)
 	if [ -z "$expected_py" ]; then
@@ -160,8 +180,7 @@ start_server() {
 		exit 1
 	fi
 	pid=$(cat "$server_pid_file" 2>/dev/null || true)
-	sleep 0.2
-	if polinko_pid_is_running "$pid"; then
+	if wait_for_server_ready "$pid"; then
 		echo "server-daemon started (PID $pid, log: $server_log)."
 	else
 		rm -f "$server_pid_file"

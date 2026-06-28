@@ -4461,3 +4461,23 @@ or branch history instead.
   processes look active, and fixed sleeps can make closeout timing brittle.
   Bounded termination keeps wake-lock closeout deterministic while preserving
   accurate PID ownership state.
+
+## D-260: Replace runner startup grace sleeps with readiness probes
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `readiness`, `server_daemon`, `eval_sidecar`,
+  `portfolio_mockups`
+- Human-led: The human lead asked to keep hidden runner scripts maintained and
+  resolve lifecycle interruptions as part of the focused script/runtime
+  refactor.
+- Engineer implementation: Update `tools/run_server_daemon.sh`,
+  `tools/run_eval_sidecar_start.sh`, and `tools/run_portfolio_mockups.sh` so
+  post-launch success waits on bounded readiness probes instead of fixed grace
+  sleeps; add regression coverage with test fakes that expose the relevant
+  health, status, or URL signal.
+- Decision: Background-runner start commands may only report successful launch
+  after the runner-specific readiness signal is observed within a bounded wait.
+- Why: A fixed sleep can report success before the runner is actually usable or
+  fail unpredictably on slower startup. Bounded readiness probes keep startup
+  feedback tied to the runtime surface the operator needs.

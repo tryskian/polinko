@@ -20,6 +20,8 @@ runs_dir=${EVAL_SIDECAR_RUNS_DIR:-.local/eval_runs}
 pid_file=${EVAL_SIDECAR_PID_FILE:-/tmp/polinko-eval-sidecar.pid}
 current_file=${EVAL_SIDECAR_CURRENT_FILE:-$runs_dir/eval_sidecar_current.txt}
 log_path=${EVAL_SIDECAR_LOG:-/tmp/polinko-eval-sidecar.log}
+sidecar_start_attempts=${EVAL_SIDECAR_START_ATTEMPTS:-100}
+sidecar_start_sleep_seconds=${EVAL_SIDECAR_START_SLEEP_SECONDS:-0.1}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
@@ -70,6 +72,26 @@ stop_managed_pid() {
 	rm -f "$pid_file"
 }
 
+wait_for_sidecar_ready() {
+	local pid=$1
+	local attempt=0
+	local run_dir
+	while [ "$attempt" -lt "$sidecar_start_attempts" ]; do
+		if ! polinko_pid_is_running "$pid"; then
+			return 2
+		fi
+		if [ -f "$current_file" ]; then
+			run_dir=$(cat "$current_file" 2>/dev/null || true)
+			if [ -n "$run_dir" ] && [ -f "$run_dir/status.json" ]; then
+				return 0
+			fi
+		fi
+		sleep "$sidecar_start_sleep_seconds"
+		attempt=$((attempt + 1))
+	done
+	return 1
+}
+
 start_sidecar() {
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
@@ -98,8 +120,7 @@ start_sidecar() {
 		exit 1
 	fi
 	pid=$(cat "$pid_file" 2>/dev/null || true)
-	sleep 0.2
-	if polinko_pid_is_running "$pid"; then
+	if wait_for_sidecar_ready "$pid"; then
 		echo "eval-sidecar started (PID $pid, log: $log_path)."
 	else
 		rm -f "$pid_file"

@@ -57,6 +57,10 @@ def _write_server_port_fakes(fake_bin: Path) -> None:
     )
 
 
+def _write_ready_health_fake(fake_bin: Path) -> None:
+    _write_executable(fake_bin / "curl", "#!/usr/bin/env bash\nexit 0\n")
+
+
 class RunServerDaemonTests(unittest.TestCase):
     def test_uses_existing_live_server_pid_without_starting_new_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -120,6 +124,7 @@ class RunServerDaemonTests(unittest.TestCase):
             fake_bin = tmp_path / "bin"
             fake_bin.mkdir()
             _write_executable(fake_bin / "lsof", "#!/usr/bin/env bash\nexit 0\n")
+            _write_ready_health_fake(fake_bin)
             process = subprocess.Popen(["sleep", "30"])
             self.addCleanup(_terminate_process, process)
             pid_file.write_text(str(process.pid), encoding="utf-8")
@@ -176,6 +181,7 @@ class RunServerDaemonTests(unittest.TestCase):
             args_file = tmp_path / "python-args.txt"
             fake_bin = tmp_path / "bin"
             fake_bin.mkdir()
+            _write_ready_health_fake(fake_bin)
             process = subprocess.Popen(["sleep", "30"])
             self.addCleanup(_terminate_process, process)
             python_script = tmp_path / "python.sh"
@@ -226,6 +232,7 @@ class RunServerDaemonTests(unittest.TestCase):
             child_pid_file = tmp_path / "child.pid"
             fake_bin = tmp_path / "bin"
             fake_bin.mkdir()
+            _write_ready_health_fake(fake_bin)
             process = subprocess.Popen(["sleep", "30"])
             self.addCleanup(_terminate_process, process)
             expected_python = tmp_path / "expected-python.sh"
@@ -405,6 +412,9 @@ class RunServerDaemonTests(unittest.TestCase):
             args_file = tmp_path / "python-args.txt"
             child_pid_file = tmp_path / "child.pid"
             python_script = tmp_path / "python.sh"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            _write_ready_health_fake(fake_bin)
             pid_file.write_text("999999", encoding="utf-8")
             _write_executable(
                 python_script,
@@ -425,6 +435,7 @@ class RunServerDaemonTests(unittest.TestCase):
             env.update(
                 {
                     "PYTHON": str(python_script),
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
                     "PYTHON_ARGS": str(args_file),
                     "SERVER_LAUNCHER_PYTHON": sys.executable,
                     "CHILD_PID_FILE": str(child_pid_file),

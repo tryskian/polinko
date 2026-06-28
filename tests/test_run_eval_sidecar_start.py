@@ -53,6 +53,30 @@ def _write_sidecar_pid_fake(fake_bin: Path) -> None:
     )
 
 
+def _sidecar_ready_python_stub() -> str:
+    return (
+        "#!/usr/bin/env sh\n"
+        "set -eu\n"
+        'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
+        'printf "%s" "$$" > "$CHILD_PID_FILE"\n'
+        'current_file=""\n'
+        'while [ "$#" -gt 0 ]; do\n'
+        '  if [ "${1:-}" = "--current-file" ]; then\n'
+        "    shift\n"
+        '    current_file="${1:-}"\n'
+        "  fi\n"
+        "  shift || true\n"
+        "done\n"
+        'if [ -n "$current_file" ]; then\n'
+        '  run_dir="$(dirname "$current_file")/test-run"\n'
+        '  mkdir -p "$run_dir" "$(dirname "$current_file")"\n'
+        '  printf "%s" "$run_dir" > "$current_file"\n'
+        '  printf "{}" > "$run_dir/status.json"\n'
+        "fi\n"
+        "sleep 30\n"
+    )
+
+
 class RunEvalSidecarStartTests(unittest.TestCase):
     def test_uses_existing_live_sidecar_pid_without_starting_new_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -150,16 +174,7 @@ class RunEvalSidecarStartTests(unittest.TestCase):
             self.addCleanup(_terminate_process, process)
             pid_file.write_text(str(process.pid), encoding="utf-8")
             python_script = tmp_path / "python.sh"
-            _write_executable(
-                python_script,
-                (
-                    "#!/usr/bin/env sh\n"
-                    "set -eu\n"
-                    'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
-                    'printf "%s" "$$" > "$CHILD_PID_FILE"\n'
-                    "sleep 30\n"
-                ),
-            )
+            _write_executable(python_script, _sidecar_ready_python_stub())
 
             env = os.environ.copy()
             env.update(
@@ -197,16 +212,7 @@ class RunEvalSidecarStartTests(unittest.TestCase):
             child_pid_file = tmp_path / "child.pid"
             python_script = tmp_path / "python.sh"
             pid_file.write_text("999999", encoding="utf-8")
-            _write_executable(
-                python_script,
-                (
-                    "#!/usr/bin/env sh\n"
-                    "set -eu\n"
-                    'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
-                    'printf "%s" "$$" > "$CHILD_PID_FILE"\n'
-                    "sleep 30\n"
-                ),
-            )
+            _write_executable(python_script, _sidecar_ready_python_stub())
 
             env = os.environ.copy()
             env.update(
