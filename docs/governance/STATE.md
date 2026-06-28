@@ -186,7 +186,12 @@ Last updated: 2026-06-28
     `makefiles/config/evals/ocr-cases.mk`, while workflow-owned fragments live
     under `makefiles/config/evals/ocr-cases/` for source paths, export
     settings, transcript-derived case paths, review outputs, benchmark
-    selectors, and intake workflow wiring
+    selectors, and intake workflow wiring. Intake workflow config keeps
+    `makefiles/config/evals/ocr-cases/intake-workflow.mk` as the public
+    intake workflow entrypoint, while script/base runtime, export-root,
+    transcript case path, transcript review/delta, generalization review,
+    growth cap, and benchmark selector env fragments live under
+    `makefiles/config/evals/ocr-cases/intake-workflow/`
   - eval alias targets keep the public entrypoint at
     `makefiles/evals/aliases.mk`, while alias-family fragments live under
     `makefiles/evals/aliases/` for OCR intake/mining aliases, OCR

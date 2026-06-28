@@ -3928,3 +3928,26 @@ or branch history instead.
 - Why: The old runner config include mixed every suite's environment variables
   in one long assignment. Environment-group fragments make gate-runner config
   maintenance easier to audit while preserving eval gate commands.
+
+## D-234: Split OCR-case intake workflow config ownership by workflow role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr_cases`, `intake`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep
+  `makefiles/config/evals/ocr-cases/intake-workflow.mk` as the public OCR
+  intake workflow config entrypoint, then split script/base runtime,
+  export-root, transcript case path, transcript review/delta, generalization
+  review, growth cap, and benchmark selector assignments into workflow-role
+  fragments with include-aware Makefile contract coverage.
+- Decision: `OCR_WORKFLOW_SCRIPT`, `OCR_INTAKE_WORKFLOW_SCRIPT`, and
+  `OCR_INTAKE_WORKFLOW_ENV` remain the public intake workflow config
+  variables, while the env assignment ownership now lives in workflow-role
+  fragments.
+- Why: The old intake workflow config include mixed script entrypoints,
+  export-root settings, transcript case outputs, review/delta outputs,
+  generalization review knobs, growth caps, and benchmark selectors in one
+  long assignment. Workflow-role fragments make OCR intake maintenance easier
+  to audit while preserving intake commands.
