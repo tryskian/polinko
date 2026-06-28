@@ -12,6 +12,9 @@ MAKE_BUILD = REPO_ROOT / "makefiles" / "build.mk"
 MAKE_BUILD_DEPENDENCIES = REPO_ROOT / "makefiles" / "build" / "dependencies.mk"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_CONFIG_RUNTIME = REPO_ROOT / "makefiles" / "config" / "runtime.mk"
+MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT = (
+    REPO_ROOT / "makefiles" / "config" / "runtime" / "openai-account.mk"
+)
 MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
 MAKE_CONFIG_EVALS_GATES = REPO_ROOT / "makefiles" / "config" / "evals" / "gates.mk"
 MAKE_CONFIG_EVALS_GATES_RUNNER = (
@@ -1019,6 +1022,9 @@ class MakefileContractTests(unittest.TestCase):
         root_text = _makefile_text()
         config_entry_text = MAKE_CONFIG.read_text(encoding="utf-8")
         runtime_config_entry_text = MAKE_CONFIG_RUNTIME.read_text(encoding="utf-8")
+        runtime_openai_account_entry_text = (
+            MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT.read_text(encoding="utf-8")
+        )
         config_text = _makefile_contract_text()
 
         self.assertLess(
@@ -1052,6 +1058,32 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn(
             "include makefiles/config/runtime/server.mk", runtime_config_entry_text
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=|\+=)",
+                runtime_openai_account_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/openai-account/base.mk",
+            runtime_openai_account_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/openai-account/costs.mk",
+            runtime_openai_account_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/openai-account/usage.mk",
+            runtime_openai_account_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/openai-account/limits.mk",
+            runtime_openai_account_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/openai-account/env.mk",
+            runtime_openai_account_entry_text,
         )
         self.assertIn("PYTHON ?=", config_text)
         self.assertIn("ACT ?= act", config_text)

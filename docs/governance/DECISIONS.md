@@ -4074,3 +4074,22 @@ or branch history instead.
 - Why: The old direct OCR include mixed safety, base OCR, handwriting, and
   recovery target families in one file. Suite-family fragments make the OCR
   target surface easier to audit while preserving operator commands.
+
+## D-241: Split OpenAI account runtime config by query role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `runtime`, `openai_account`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/config/runtime/openai-account.mk`
+  as the public OpenAI account config entrypoint, then split base API/auth
+  defaults, cost query defaults, usage query defaults, project/limits defaults,
+  and composed env assembly into query-role fragments with include-aware
+  Makefile contract coverage.
+- Decision: OpenAI account script path, API base URL, admin key env name,
+  timeout, costs/usage/limits defaults, and `OPENAI_ACCOUNT_ENV` stay stable,
+  while account summary config ownership now lives in query-role fragments.
+- Why: The old OpenAI account config include mixed script/auth settings,
+  costs, usage, limits, and env assembly in one file. Query-role fragments make
+  account tooling config easier to inspect while preserving operator commands.

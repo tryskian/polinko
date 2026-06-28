@@ -1,27 +1,6 @@
-# OpenAI account summary configuration.
-OPENAI_ACCOUNT_SCRIPT ?= ./tools/openai_account_summary.py
-OPENAI_API_BASE_URL ?= https://api.openai.com/v1
-OPENAI_ADMIN_KEY_ENV ?= OPENAI_ADMIN_KEY
-OPENAI_ACCOUNT_TIMEOUT ?= 30
-OPENAI_COST_DAYS ?= 30
-OPENAI_COST_BUCKET_WIDTH ?= 1d
-OPENAI_COST_GROUP_BY ?=
-OPENAI_USAGE_DAYS ?= 7
-OPENAI_USAGE_BUCKET_WIDTH ?= 1d
-OPENAI_USAGE_KIND ?= completions
-OPENAI_USAGE_GROUP_BY ?=
-OPENAI_PROJECT_ID ?=
-OPENAI_LIMITS_PAGE_SIZE ?= 100
-OPENAI_ACCOUNT_ENV = \
-	OPENAI_API_BASE_URL="$(OPENAI_API_BASE_URL)" \
-	OPENAI_ADMIN_KEY_ENV="$(OPENAI_ADMIN_KEY_ENV)" \
-	OPENAI_ACCOUNT_TIMEOUT="$(OPENAI_ACCOUNT_TIMEOUT)" \
-	OPENAI_COST_DAYS="$(OPENAI_COST_DAYS)" \
-	OPENAI_COST_BUCKET_WIDTH="$(OPENAI_COST_BUCKET_WIDTH)" \
-	OPENAI_COST_GROUP_BY="$(OPENAI_COST_GROUP_BY)" \
-	OPENAI_USAGE_DAYS="$(OPENAI_USAGE_DAYS)" \
-	OPENAI_USAGE_BUCKET_WIDTH="$(OPENAI_USAGE_BUCKET_WIDTH)" \
-	OPENAI_USAGE_KIND="$(OPENAI_USAGE_KIND)" \
-	OPENAI_USAGE_GROUP_BY="$(OPENAI_USAGE_GROUP_BY)" \
-	OPENAI_PROJECT_ID="$(OPENAI_PROJECT_ID)" \
-	OPENAI_LIMITS_PAGE_SIZE="$(OPENAI_LIMITS_PAGE_SIZE)"
+# OpenAI account summary configuration entrypoint.
+include makefiles/config/runtime/openai-account/base.mk
+include makefiles/config/runtime/openai-account/costs.mk
+include makefiles/config/runtime/openai-account/usage.mk
+include makefiles/config/runtime/openai-account/limits.mk
+include makefiles/config/runtime/openai-account/env.mk
