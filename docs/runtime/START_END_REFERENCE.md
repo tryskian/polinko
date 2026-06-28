@@ -72,6 +72,9 @@ Runner lifecycle rule:
   `tools/run_server_daemon.sh`
   - matching local `uvicorn server:app` processes without PID files are
     adopted on start, surfaced by status, and stopped during closeout recovery
+  - if a matching server does not exit after a stop signal, the PID file is
+    preserved when present and the action fails instead of hiding the
+    still-live server
 - `make eval-sidecar-start`, `make eval-sidecar-status`, and
   `make eval-sidecar-stop` delegate lifecycle actions to
   `tools/run_eval_sidecar_start.sh`

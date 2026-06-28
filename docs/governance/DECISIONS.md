@@ -4403,3 +4403,22 @@ or branch history instead.
   make closeout look clean even though a preview server remains active. Keeping
   the PID file preserves the active-state evidence for the next status or stop
   check.
+
+## D-257: Preserve server-daemon PID files when stop does not complete
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `server_daemon`, `pid_file`, `runner`, `closeout`
+- Human-led: The human lead asked to continue the script/runtime cleanup and
+  keep hidden runner interruptions maintained instead of carried forward.
+- Engineer implementation: Update `tools/run_server_daemon.sh` to wait for
+  matching API server processes to exit after stop signals, preserve managed
+  PID files when the process remains active, fail interpreter-mismatch restart
+  when the old server does not exit, and add regression coverage for both
+  paths.
+- Decision: `server-daemon` stop/restart may only remove or replace a managed
+  server after the signalled matching `uvicorn` process is no longer active.
+- Why: Removing a PID file or starting a replacement while a matching API
+  server remains active can make closeout look clean or create a port
+  collision. Waiting for exit preserves accurate lifecycle state and keeps the
+  next status or stop check actionable.
