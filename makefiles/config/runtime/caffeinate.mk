@@ -1,24 +1,6 @@
-# Repo-managed caffeinate configuration.
-CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
-CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
-CAFFEINATE_META_FILE ?=
-CAFFEINATE_ACTIVITY_FILE ?=
-CAFFEINATE_REPO_SLUG ?= polinko
-CAFFEINATE_ACTIVE_WINDOW_SECONDS ?= 1800
-CAFFEINATE_ALLOW_GLOBAL_CLEANUP ?= 0
-CAFFEINATE_CMD ?= /usr/bin/caffeinate -d -i -m
-CAFFEINATE_MATCH_PATTERN ?= ^/usr/bin/caffeinate -d -i -m( |$$)
-CAFFEINATE_LAUNCHER_PYTHON ?= $(PYTHON)
-CAFFEINATE_SCRIPT ?= ./tools/manage_caffeinate.sh
-CAFFEINATE_ENV = \
-	CAFFEINATE_PID_FILE="$(CAFFEINATE_PID_FILE)" \
-	CAFFEINATE_LOG="$(CAFFEINATE_LOG)" \
-	CAFFEINATE_META_FILE="$(CAFFEINATE_META_FILE)" \
-	CAFFEINATE_ACTIVITY_FILE="$(CAFFEINATE_ACTIVITY_FILE)" \
-	CAFFEINATE_REPO_SLUG="$(CAFFEINATE_REPO_SLUG)" \
-	CAFFEINATE_ACTIVE_WINDOW_SECONDS="$(CAFFEINATE_ACTIVE_WINDOW_SECONDS)" \
-	CAFFEINATE_ALLOW_GLOBAL_CLEANUP="$(CAFFEINATE_ALLOW_GLOBAL_CLEANUP)" \
-	CAFFEINATE_CMD="$(CAFFEINATE_CMD)" \
-	CAFFEINATE_MATCH_PATTERN="$(CAFFEINATE_MATCH_PATTERN)" \
-	CAFFEINATE_LAUNCHER_PYTHON="$(CAFFEINATE_LAUNCHER_PYTHON)"
-repo_activity = $(CAFFEINATE_ENV) CAFFEINATE_ACTIVITY_LABEL="$(1)" CAFFEINATE_ACTIVITY_TARGET="$(2)" bash "$(CAFFEINATE_SCRIPT)" activity
+# Repo-managed caffeinate configuration entrypoint.
+include makefiles/config/runtime/caffeinate/state.mk
+include makefiles/config/runtime/caffeinate/repo.mk
+include makefiles/config/runtime/caffeinate/command.mk
+include makefiles/config/runtime/caffeinate/runner.mk
+include makefiles/config/runtime/caffeinate/env.mk

@@ -82,6 +82,10 @@ This page is the structural map of the tracked system.
 - `makefiles/config/runtime/openai-account/`
   - OpenAI account config fragments for base API/auth defaults, cost defaults,
     usage defaults, project/limits defaults, and env assembly
+- `makefiles/config/runtime/caffeinate/`
+  - repo-managed caffeinate config fragments for state files, repo/activity
+    settings, wake-lock command matching, runner defaults, and env/activity
+    macro assembly
 - `makefiles/config/surfaces/`
   - role-owned configuration fragments for notebooks, manual eval workbench,
     local browser helpers, and portfolio/mockup surfaces

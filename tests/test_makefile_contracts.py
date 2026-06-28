@@ -15,6 +15,9 @@ MAKE_CONFIG_RUNTIME = REPO_ROOT / "makefiles" / "config" / "runtime.mk"
 MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT = (
     REPO_ROOT / "makefiles" / "config" / "runtime" / "openai-account.mk"
 )
+MAKE_CONFIG_RUNTIME_CAFFEINATE = (
+    REPO_ROOT / "makefiles" / "config" / "runtime" / "caffeinate.mk"
+)
 MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
 MAKE_CONFIG_EVALS_GATES = REPO_ROOT / "makefiles" / "config" / "evals" / "gates.mk"
 MAKE_CONFIG_EVALS_GATES_RUNNER = (
@@ -1208,6 +1211,9 @@ class MakefileContractTests(unittest.TestCase):
         runtime_openai_account_entry_text = (
             MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT.read_text(encoding="utf-8")
         )
+        runtime_caffeinate_entry_text = MAKE_CONFIG_RUNTIME_CAFFEINATE.read_text(
+            encoding="utf-8"
+        )
         config_text = _makefile_contract_text()
 
         self.assertLess(
@@ -1267,6 +1273,32 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/runtime/openai-account/env.mk",
             runtime_openai_account_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Za-z_][A-Za-z0-9_]*\s*(?:\?=|:=|=|\+=)",
+                runtime_caffeinate_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/caffeinate/state.mk",
+            runtime_caffeinate_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/caffeinate/repo.mk",
+            runtime_caffeinate_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/caffeinate/command.mk",
+            runtime_caffeinate_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/caffeinate/runner.mk",
+            runtime_caffeinate_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/runtime/caffeinate/env.mk",
+            runtime_caffeinate_entry_text,
         )
         self.assertIn("PYTHON ?=", config_text)
         self.assertIn("ACT ?= act", config_text)

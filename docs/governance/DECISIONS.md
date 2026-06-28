@@ -4217,3 +4217,25 @@ or branch history instead.
   different builder suites in one file. Suite-family fragments make the
   parked OCR report builder surface easier to inspect while preserving report
   workflow commands.
+
+## D-248: Split repo-managed caffeinate config by runtime role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `runtime`, `caffeinate`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/config/runtime/caffeinate.mk` as
+  the public repo-managed caffeinate config entrypoint, then split state-file
+  defaults, repo/activity settings, wake-lock command matching, runner
+  defaults, and env/activity macro assembly into runtime-role fragments with
+  include-aware Makefile contract coverage.
+- Decision: Caffeinate PID/log/meta/activity file defaults, repo slug,
+  active-window/global-cleanup settings, command/match pair,
+  `CAFFEINATE_ENV`, and `repo_activity` stay stable, while repo-managed
+  caffeinate config ownership now lives in runtime-role fragments.
+- Why: The old caffeinate config include mixed state paths, repo activity
+  policy, wake-lock process matching, runner config, env assembly, and the
+  shared repo activity macro in one file. Runtime-role fragments make the
+  high-traffic keep-awake surface easier to audit while preserving runtime
+  commands.

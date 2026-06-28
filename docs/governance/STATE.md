@@ -290,6 +290,11 @@ Last updated: 2026-06-28
     live under `makefiles/config/runtime/openai-account/` for base API/auth
     defaults, cost defaults, usage defaults, project/limits defaults, and env
     assembly
+  - repo-managed caffeinate config keeps the public entrypoint at
+    `makefiles/config/runtime/caffeinate.mk`, while runtime-role fragments
+    live under `makefiles/config/runtime/caffeinate/` for state files,
+    repo/activity settings, wake-lock command matching, runner defaults, and
+    env/activity macro assembly
   - check Make targets keep the public entrypoint at `makefiles/checks.mk`,
     while role-owned fragments live under `makefiles/checks/` for tests,
     Python static analysis, docs/rendering, runtime audits, and local
