@@ -1,0 +1,3 @@
+# OCR focus stability workflow runner-script environment.
+OCR_FOCUS_STABILITY_WORKFLOW_RUNNER_ENV = \
+	OCR_STABILITY_RUNNER_SCRIPT="$(OCR_STABILITY_RUNNER_SCRIPT)"

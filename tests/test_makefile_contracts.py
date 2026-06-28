@@ -32,6 +32,9 @@ MAKE_CONFIG_EVALS_OCR_CASES_INTAKE_WORKFLOW = (
 MAKE_CONFIG_EVALS_OCR_RUNS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs.mk"
 )
+MAKE_CONFIG_EVALS_OCR_RUNS_FOCUS = (
+    REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "focus.mk"
+)
 MAKE_CONFIG_EVALS_OCR_RUNS_DIRECT_RUNNERS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "direct-runners.mk"
 )
@@ -678,6 +681,9 @@ class MakefileContractTests(unittest.TestCase):
             MAKE_CONFIG_EVALS_OCR_CASES_INTAKE_WORKFLOW.read_text(encoding="utf-8")
         )
         ocr_runs_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS.read_text(encoding="utf-8")
+        ocr_runs_focus_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS_FOCUS.read_text(
+            encoding="utf-8"
+        )
         ocr_runs_direct_runners_entry_text = (
             MAKE_CONFIG_EVALS_OCR_RUNS_DIRECT_RUNNERS.read_text(encoding="utf-8")
         )
@@ -970,6 +976,52 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/focus.mk",
             ocr_runs_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=|\+=)",
+                ocr_runs_focus_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/focus/scripts.mk",
+            ocr_runs_focus_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/focus/runtime.mk",
+            ocr_runs_focus_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/focus/runners.mk",
+            ocr_runs_focus_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/focus/eval-guards.mk",
+            ocr_runs_focus_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/focus/cases.mk",
+            ocr_runs_focus_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/focus/run-controls.mk",
+            ocr_runs_focus_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/focus/reports.mk",
+            ocr_runs_focus_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/focus/backoff.mk",
+            ocr_runs_focus_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/focus/fail-cohort.mk",
+            ocr_runs_focus_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/focus/env.mk",
+            ocr_runs_focus_entry_text,
         )
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/growth.mk",

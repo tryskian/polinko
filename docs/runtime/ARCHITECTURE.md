@@ -123,6 +123,10 @@ This page is the structural map of the tracked system.
 - `makefiles/config/evals/ocr-runs/direct-runners/`
   - direct OCR runner configuration fragments for handwriting, case, and
     stability runner env wiring
+- `makefiles/config/evals/ocr-runs/focus/`
+  - OCR focus stability workflow env fragments for script defaults, runtime
+    helpers, runner script, eval guards, case path, run controls, report
+    outputs, rate-limit backoff, fail-cohort input, and composed env assembly
 - `makefiles/config/evals/ocr-runs/transcript-lanes/`
   - OCR-run transcript-lane configuration fragments for base transcript
     workflow env and lane-specific workflow env

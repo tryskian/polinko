@@ -1,0 +1,3 @@
+# OCR focus stability workflow fail-cohort input environment.
+OCR_FOCUS_STABILITY_WORKFLOW_FAIL_COHORT_ENV = \
+	OCR_GROWTH_FAIL_COHORT_JSON="$(OCR_GROWTH_FAIL_COHORT_JSON)"
