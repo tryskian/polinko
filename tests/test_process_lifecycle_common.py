@@ -67,6 +67,56 @@ class ProcessLifecycleCommonTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("Missing required command for pid context: ps", result.stderr)
 
+    def test_require_positive_integer_rejects_zero_or_non_numeric_value(self) -> None:
+        for value in ("0", "abc"):
+            with self.subTest(value=value):
+                result = subprocess.run(
+                    [
+                        "/bin/sh",
+                        "-c",
+                        (
+                            f'. "{HELPER}"; '
+                            "polinko_require_positive_integer "
+                            f"TEST_VALUE {value} 'unit test'"
+                        ),
+                    ],
+                    cwd=REPO_ROOT,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(
+                    "Invalid numeric value for unit test: "
+                    f"TEST_VALUE must be a positive integer (got {value})",
+                    result.stderr,
+                )
+
+    def test_require_non_negative_decimal_rejects_invalid_value(self) -> None:
+        for value in ("", "-1", "1.", ".1", "1.2.3", "abc"):
+            with self.subTest(value=value):
+                result = subprocess.run(
+                    [
+                        "/bin/sh",
+                        "-c",
+                        (
+                            f'. "{HELPER}"; '
+                            "polinko_require_non_negative_decimal "
+                            f"TEST_VALUE '{value}' 'unit test'"
+                        ),
+                    ],
+                    cwd=REPO_ROOT,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(
+                    "Invalid numeric value for unit test: "
+                    "TEST_VALUE must be a non-negative decimal number",
+                    result.stderr,
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -128,7 +128,8 @@ Last updated: 2026-06-28
   - local eval gates require `curl` before HTTP readiness probing and expose
     `LOCAL_EVAL_GATE_START_ATTEMPTS` /
     `LOCAL_EVAL_GATE_START_SLEEP_SECONDS` for their bounded readiness loop,
-    avoiding an extra `seq` dependency
+    avoiding an extra `seq` dependency; lifecycle readiness bounds are
+    validated before runner startup work begins
   - core background runner lifecycle is script-owned for `caffeinate`,
     `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned

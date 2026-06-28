@@ -31,6 +31,14 @@ detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 . "$script_dir/python_runtime.sh"
 # shellcheck source=tools/process_lifecycle_common.sh
 . "$script_dir/process_lifecycle_common.sh"
+polinko_require_positive_integer \
+	EVAL_SIDECAR_START_ATTEMPTS \
+	"$sidecar_start_attempts" \
+	"eval-sidecar readiness"
+polinko_require_non_negative_decimal \
+	EVAL_SIDECAR_START_SLEEP_SECONDS \
+	"$sidecar_start_sleep_seconds" \
+	"eval-sidecar readiness"
 python_bin=$(polinko_default_python_bin)
 launcher_python=${EVAL_SIDECAR_LAUNCHER_PYTHON:-$python_bin}
 

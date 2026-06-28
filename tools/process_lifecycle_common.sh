@@ -30,6 +30,46 @@ polinko_require_process_inspection() {
 	polinko_require_command ps "$_polinko_context"
 }
 
+polinko_invalid_numeric_value() {
+	_polinko_name=$1
+	_polinko_value=$2
+	_polinko_expected=$3
+	_polinko_context=${4:-runtime helper}
+	echo "Invalid numeric value for $_polinko_context: $_polinko_name must be $_polinko_expected (got $_polinko_value)" >&2
+	return 1
+}
+
+polinko_require_positive_integer() {
+	_polinko_name=$1
+	_polinko_value=$2
+	_polinko_context=${3:-runtime helper}
+	case "$_polinko_value" in
+	"" | *[!0123456789]*)
+		polinko_invalid_numeric_value "$_polinko_name" "$_polinko_value" "a positive integer" "$_polinko_context"
+		return $?
+		;;
+	esac
+	case "$_polinko_value" in
+	*[!0]*)
+		return 0
+		;;
+	esac
+	polinko_invalid_numeric_value "$_polinko_name" "$_polinko_value" "a positive integer" "$_polinko_context"
+}
+
+polinko_require_non_negative_decimal() {
+	_polinko_name=$1
+	_polinko_value=$2
+	_polinko_context=${3:-runtime helper}
+	case "$_polinko_value" in
+	"" | *[!0123456789.]* | .* | *.*.* | *.)
+		polinko_invalid_numeric_value "$_polinko_name" "$_polinko_value" "a non-negative decimal number" "$_polinko_context"
+		return $?
+		;;
+	esac
+	return 0
+}
+
 polinko_wait_for_pid_exit() {
 	_polinko_pid=$1
 	_polinko_attempts=${2:-50}

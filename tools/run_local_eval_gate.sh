@@ -21,6 +21,14 @@ python_bin=$(polinko_default_python_bin)
 asgi_app=${ASGI_APP:-server:app}
 local_eval_gate_start_attempts=${LOCAL_EVAL_GATE_START_ATTEMPTS:-100}
 local_eval_gate_start_sleep_seconds=${LOCAL_EVAL_GATE_START_SLEEP_SECONDS:-0.2}
+polinko_require_positive_integer \
+	LOCAL_EVAL_GATE_START_ATTEMPTS \
+	"$local_eval_gate_start_attempts" \
+	"local eval gate readiness"
+polinko_require_non_negative_decimal \
+	LOCAL_EVAL_GATE_START_SLEEP_SECONDS \
+	"$local_eval_gate_start_sleep_seconds" \
+	"local eval gate readiness"
 
 case "$suite" in
 api-smoke|eval-smoke|hallucination-gate|quality-gate)
