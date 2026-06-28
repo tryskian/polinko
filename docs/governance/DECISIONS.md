@@ -3951,3 +3951,23 @@ or branch history instead.
   generalization review knobs, growth caps, and benchmark selectors in one
   long assignment. Workflow-role fragments make OCR intake maintenance easier
   to audit while preserving intake commands.
+
+## D-235: Split dev-tool check target ownership by helper role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `checks`, `dev_tools`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/checks/dev-tools.mk` as the public
+  local developer helper target entrypoint, then split repo search,
+  pre-commit, and local `act` recipes into helper-role fragments with
+  include-aware Makefile contract coverage.
+- Decision: Dev-tool target names, `.PHONY` declarations, repo search
+  behaviour, pre-commit helper behaviour, and local `act` helper behaviour
+  stay stable, while dev-tool target ownership now lives in helper-role
+  fragments.
+- Why: The old dev-tool check include mixed repo search, pre-commit, and
+  local GitHub Actions runner helpers in one file. Helper-role fragments make
+  local developer target maintenance easier to audit while preserving operator
+  commands.
