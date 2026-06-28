@@ -215,6 +215,10 @@ Last updated: 2026-06-27
     while role-owned fragments live under `makefiles/checks/` for tests,
     Python static analysis, docs/rendering, runtime audits, and local
     developer helpers
+  - runtime audit targets keep the public entrypoint at
+    `makefiles/checks/runtime-audits.mk`, while role-owned fragments live
+    under `makefiles/checks/runtime-audits/` for shell helper audits, path
+    leak checks, runtime config/risk/operator checks, and environment doctor
   - build Make targets keep the public entrypoint at `makefiles/build.mk`,
     while role-owned fragments live under `makefiles/build/` for CI
     aggregation, dependency lock/install flows, package checks, and security
