@@ -293,9 +293,12 @@ Last updated: 2026-06-28
     `makefiles/checks/tests.mk`, while unit-test and backend-gate fragments
     live under `makefiles/checks/tests/`. Python check targets keep their
     public entrypoint at `makefiles/checks/python.mk`, while compile, type,
-    and Ruff fragments live under `makefiles/checks/python/`. Dev-tool check
-    targets keep their public entrypoint at `makefiles/checks/dev-tools.mk`,
-    while repo search, pre-commit, and local `act` helper fragments live under
+    and Ruff fragments live under `makefiles/checks/python/`. Documentation
+    checks keep their public entrypoint at `makefiles/checks/docs.mk`, while
+    lint, diagram render, transcript, and closeout freshness fragments live
+    under `makefiles/checks/docs/`. Dev-tool check targets keep their public
+    entrypoint at `makefiles/checks/dev-tools.mk`, while repo search,
+    pre-commit, and local `act` helper fragments live under
     `makefiles/checks/dev-tools/`
   - runtime audit targets keep the public entrypoint at
     `makefiles/checks/runtime-audits.mk`, while role-owned fragments live

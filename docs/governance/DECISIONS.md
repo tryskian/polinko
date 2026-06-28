@@ -4157,3 +4157,23 @@ or branch history instead.
   also exposed a hidden malformed backend-gate line that substring tests did
   not catch. Validation role fragments make the checks layer easier to audit
   while preserving operator commands.
+
+## D-245: Split documentation checks by validation role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `checks`, `docs`, `transcripts`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/checks/docs.mk` as the public
+  documentation checks entrypoint, then split docs linting, public diagram
+  rendering, transcript formatting/validation, and closeout docs freshness into
+  validation-role fragments with include-aware Makefile contract coverage.
+- Decision: `lint-docs`, `mermaid-render`, `d3-render`,
+  `public-diagrams-render`, `transcript-fix`, `transcript-check`, and
+  `end-docs-check` target names and commands stay stable, while documentation
+  check ownership now lives in validation-role fragments.
+- Why: The old docs checks include mixed markdown linting, diagram rendering,
+  transcript maintenance, and closeout freshness in one file. Validation-role
+  fragments make the docs check layer easier to audit while preserving
+  operator commands.
