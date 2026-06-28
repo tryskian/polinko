@@ -4441,3 +4441,23 @@ or branch history instead.
 - Why: A local gate server that ignores `TERM` should fail the wrapper clearly
   instead of leaving the operator waiting on an unbounded `wait` during active
   validation or closeout-adjacent checks.
+
+## D-259: Bound repo-managed caffeinate termination
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `pid_file`, `wake_lock`, `closeout`
+- Human-led: The human lead asked to continue the script/runtime cleanup and
+  keep hidden runner lifecycle issues maintained as part of the focused
+  refactor.
+- Engineer implementation: Update `tools/manage_caffeinate.py` so PID-file
+  evaluation treats stopped/zombie processes as stale, replace fixed post-signal
+  sleeps with bounded terminate/escalate waiting, and add regression coverage
+  for zombie PID-file state and a managed wake-lock process that ignores
+  `TERM`.
+- Decision: Repo-managed `caffeinate` cleanup must bound stop waiting and only
+  remove owned runtime metadata after the managed wake-lock process is stopped.
+- Why: Treating `kill -0` as enough liveness evidence can make stopped
+  processes look active, and fixed sleeps can make closeout timing brittle.
+  Bounded termination keeps wake-lock closeout deterministic while preserving
+  accurate PID ownership state.
