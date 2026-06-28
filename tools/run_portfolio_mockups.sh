@@ -20,6 +20,8 @@ mockup_host=${PORTFOLIO_MOCKUP_HOST:-127.0.0.1}
 mockup_url=${PORTFOLIO_MOCKUP_URL:-http://127.0.0.1:${mockup_port}/landing-mockups.html}
 pid_file=${PORTFOLIO_MOCKUP_PID_FILE:-/tmp/polinko-portfolio-mockups.pid}
 log_file=${PORTFOLIO_MOCKUP_LOG:-/tmp/polinko-portfolio-mockups.log}
+mockup_start_attempts=${PORTFOLIO_MOCKUP_START_ATTEMPTS:-100}
+mockup_start_sleep_seconds=${PORTFOLIO_MOCKUP_START_SLEEP_SECONDS:-0.1}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
@@ -77,6 +79,22 @@ wait_for_mockup_stop() {
 	fi
 }
 
+wait_for_mockup_ready() {
+	local pid=$1
+	local attempt=0
+	while [ "$attempt" -lt "$mockup_start_attempts" ]; do
+		if ! polinko_pid_is_running "$pid"; then
+			return 2
+		fi
+		if curl -fsS "$mockup_url" >/dev/null 2>&1; then
+			return 0
+		fi
+		sleep "$mockup_start_sleep_seconds"
+		attempt=$((attempt + 1))
+	done
+	return 1
+}
+
 adopt_reachable_mockup_server() {
 	local pid
 	pid=$(find_expected_mockup_pid || true)
@@ -129,8 +147,7 @@ start_mockup_server() {
 		exit 1
 	fi
 	pid=$(cat "$pid_file" 2>/dev/null || true)
-	sleep 0.5
-	if polinko_pid_is_running "$pid"; then
+	if wait_for_mockup_ready "$pid"; then
 		echo "portfolio mockup server started (PID $pid, log: $log_file)."
 	else
 		rm -f "$pid_file"

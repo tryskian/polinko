@@ -77,6 +77,8 @@ Runner lifecycle rule:
   - if a matching server does not exit after a stop signal, the PID file is
     preserved when present and the action fails instead of hiding the
     still-live server
+  - start reports success only after the configured local `/health` endpoint is
+    reachable within the bounded readiness wait
 - `make eval-sidecar-start`, `make eval-sidecar-status`, and
   `make eval-sidecar-stop` delegate lifecycle actions to
   `tools/run_eval_sidecar_start.sh`
@@ -87,12 +89,16 @@ Runner lifecycle rule:
     without being stopped
   - if a matching sidecar does not exit after a stop signal, the PID file is
     preserved and the stop action fails instead of hiding the still-live runner
+  - start reports success only after the current-run status file exists within
+    the bounded readiness wait
 - `make portfolio-mockups`, `make portfolio-mockups-status`, and
   `make portfolio-mockups-stop` delegate mockup-server lifecycle actions to
   `tools/run_portfolio_mockups.sh`
   - if a matching mockup server does not exit after a stop signal, the PID
     file is preserved and the stop action fails instead of hiding the
     still-live server
+  - start reports success only after the configured mockup URL is reachable
+    within the bounded readiness wait
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
 - the shared detached launcher stops the started child process group if the PID

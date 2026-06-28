@@ -143,6 +143,8 @@ Last updated: 2026-06-28
   - `server-daemon` preserves managed PID files and fails stop/restart when a
     matching server remains active after a stop signal, so closeout cannot hide
     a still-live local API server
+  - `server-daemon` start waits for the configured local `/health` endpoint
+    before reporting success, rather than relying on a fixed post-launch sleep
   - `eval-sidecar` reports missing current-file drift on start/status and still
     stops the repo-managed PID during closeout
   - `eval-sidecar` trusts managed PID files only when the live PID matches the
@@ -151,6 +153,8 @@ Last updated: 2026-06-28
   - `eval-sidecar` preserves its PID file and fails stop when a matching
     sidecar remains active after a stop signal, so closeout cannot hide a
     still-live runner
+  - `eval-sidecar` start waits for the current-run status file before reporting
+    success, rather than relying on a fixed post-launch sleep
   - `portfolio-mockups` treats a reachable mockup URL without a PID file as a
     lifecycle issue: matching local `http.server` processes are adopted, while
     unmanaged reachable ports fail loudly
@@ -161,6 +165,8 @@ Last updated: 2026-06-28
   - `portfolio-mockups` preserves its PID file and fails stop when a matching
     mockup server remains active after a stop signal, so closeout cannot hide
     a still-live local preview
+  - `portfolio-mockups` start waits for the configured mockup URL before
+    reporting success, rather than relying on a fixed post-launch sleep
   - manual eval health, feedback, overlay, OCR retry, and reclassification Make
     targets keep their public names while routing through a single
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper

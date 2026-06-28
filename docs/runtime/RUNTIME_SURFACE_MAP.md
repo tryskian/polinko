@@ -152,20 +152,26 @@ flowchart TD
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery. If stop or interpreter-mismatch
   restart signals a matching server and the process remains active, managed
-  PID files stay in place and the action exits non-zero.
+  PID files stay in place and the action exits non-zero. Start reports success
+  only after the configured local `/health` endpoint is reachable within the
+  bounded readiness wait.
   `eval-sidecar` reports missing current-file drift on start/status and still
   stops the repo-managed PID during closeout. It trusts PID files only when the
   live PID matches the `tools.eval_sidecar run` process shape; unrelated live
   PIDs are cleaned from the PID file without being stopped. If stop signals a
   matching sidecar without current-run context and the process remains active,
-  the PID file stays in place and the stop exits non-zero.
+  the PID file stays in place and the stop exits non-zero. Start reports
+  success only after the current-run status file exists within the bounded
+  readiness wait.
   `portfolio-mockups` treats a reachable mockup URL without a PID file as a
   lifecycle state: matching local `http.server` processes are adopted, while
   unmanaged reachable ports fail loudly. It trusts managed PID files only when
   the live PID matches the configured mockup `http.server` process shape;
   unrelated live PIDs are cleaned from the PID file without being stopped. If
   stop signals a matching mockup server and the process remains active, the
-  PID file stays in place and the stop exits non-zero.
+  PID file stays in place and the stop exits non-zero. Start reports success
+  only after the configured mockup URL is reachable within the bounded
+  readiness wait.
 - Manual eval and OCR tooling remain active workbench surfaces, but eval runs
   stay separate from startup and read-only inventory commands. Health,
   feedback, overlay, OCR retry, and reclassification Make targets route through

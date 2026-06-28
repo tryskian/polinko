@@ -58,6 +58,19 @@ def _write_reachable_server_fakes(fake_bin: Path) -> None:
     )
 
 
+def _write_curl_ready_after_child_fake(fake_bin: Path) -> None:
+    _write_executable(
+        fake_bin / "curl",
+        (
+            "#!/usr/bin/env bash\n"
+            'if [ -n "${CHILD_PID_FILE:-}" ] && [ -f "$CHILD_PID_FILE" ]; then\n'
+            "  exit 0\n"
+            "fi\n"
+            "exit 1\n"
+        ),
+    )
+
+
 class RunPortfolioMockupsTests(unittest.TestCase):
     def test_start_requires_mockup_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -89,6 +102,9 @@ class RunPortfolioMockupsTests(unittest.TestCase):
             pid_file = tmp_path / "mockups.pid"
             args_file = tmp_path / "python-args.txt"
             child_pid_file = tmp_path / "child.pid"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            _write_curl_ready_after_child_fake(fake_bin)
             python_script = tmp_path / "python.sh"
             pid_file.write_text("999999", encoding="utf-8")
             _write_executable(
@@ -106,6 +122,7 @@ class RunPortfolioMockupsTests(unittest.TestCase):
             env.update(
                 {
                     "PYTHON": str(python_script),
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
                     "PYTHON_ARGS": str(args_file),
                     "PORTFOLIO_MOCKUP_LAUNCHER_PYTHON": sys.executable,
                     "CHILD_PID_FILE": str(child_pid_file),
