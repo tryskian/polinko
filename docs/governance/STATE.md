@@ -162,7 +162,9 @@ Last updated: 2026-06-28
   - portfolio surface targets keep the public entrypoint at
     `makefiles/surfaces/portfolio.mk`, while workflow-owned fragments live
     under `makefiles/surfaces/portfolio/` for install aliases, static build,
-    preview launch modes, and mockup lifecycle
+    preview launch modes, and mockup lifecycle; preview targets keep their
+    own entrypoint at `makefiles/surfaces/portfolio/preview.mk`, while nested
+    fragments separate the launch recipe from rebuild and launch-mode aliases
   - eval Make config keeps the public entrypoint at
     `makefiles/config/evals.mk`, while role-owned fragments live under
     `makefiles/config/evals/` for quality gates, OCR case sources, eval
