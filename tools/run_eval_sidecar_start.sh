@@ -27,6 +27,8 @@ polinko_cd_repo_root
 detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 # shellcheck source=tools/python_runtime.sh
 . "$script_dir/python_runtime.sh"
+# shellcheck source=tools/process_lifecycle_common.sh
+. "$script_dir/process_lifecycle_common.sh"
 python_bin=$(polinko_default_python_bin)
 launcher_python=${EVAL_SIDECAR_LAUNCHER_PYTHON:-$python_bin}
 
@@ -43,28 +45,18 @@ launch_detached_sidecar() {
 		--current-file "$current_file"
 }
 
-pid_is_running() {
-	local pid=$1
-	[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
-}
-
-process_command() {
-	local pid=$1
-	ps -o command= -p "$pid" 2>/dev/null || true
-}
-
 pid_matches_eval_sidecar() {
 	local pid=$1
 	local command parent_pid parent_command
-	command=$(process_command "$pid")
+	command=$(polinko_process_command "$pid")
 	if printf '%s\n' "$command" | grep -Fq "tools.eval_sidecar run"; then
 		return 0
 	fi
-	parent_pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ' || true)
+	parent_pid=$(polinko_parent_pid "$pid")
 	if [ -z "$parent_pid" ]; then
 		return 1
 	fi
-	parent_command=$(process_command "$parent_pid")
+	parent_command=$(polinko_process_command "$parent_pid")
 	printf '%s\n' "$parent_command" | grep -Fq "tools.eval_sidecar run"
 }
 
@@ -78,7 +70,7 @@ stop_managed_pid() {
 start_sidecar() {
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
-		if pid_is_running "$pid"; then
+		if polinko_pid_is_running "$pid"; then
 			if ! pid_matches_eval_sidecar "$pid"; then
 				echo "eval-sidecar PID file points to a non-sidecar process; cleaning up."
 				rm -f "$pid_file"
@@ -104,7 +96,7 @@ start_sidecar() {
 	fi
 	pid=$(cat "$pid_file" 2>/dev/null || true)
 	sleep 0.2
-	if kill -0 "$pid" 2>/dev/null; then
+	if polinko_pid_is_running "$pid"; then
 		echo "eval-sidecar started (PID $pid, log: $log_path)."
 	else
 		rm -f "$pid_file"
@@ -116,7 +108,7 @@ start_sidecar() {
 status_sidecar() {
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
-		if pid_is_running "$pid"; then
+		if polinko_pid_is_running "$pid"; then
 			if ! pid_matches_eval_sidecar "$pid"; then
 				echo "eval-sidecar: STALE PID file (PID $pid is not a matching sidecar)."
 				exit 1
@@ -129,7 +121,7 @@ status_sidecar() {
 	if [ ! -f "$current_file" ]; then
 		if [ -f "$pid_file" ]; then
 			pid=$(cat "$pid_file" 2>/dev/null || true)
-			if pid_is_running "$pid"; then
+			if polinko_pid_is_running "$pid"; then
 				echo "eval-sidecar: RUNNING (PID $pid)."
 				echo "eval-sidecar current file missing: $current_file"
 				exit 1
@@ -145,7 +137,7 @@ stop_sidecar() {
 	if [ ! -f "$current_file" ]; then
 		if [ -f "$pid_file" ]; then
 			pid=$(cat "$pid_file" 2>/dev/null || true)
-			if pid_is_running "$pid"; then
+			if polinko_pid_is_running "$pid"; then
 				if ! pid_matches_eval_sidecar "$pid"; then
 					echo "eval-sidecar PID file points to a non-sidecar process; cleaning up."
 					rm -f "$pid_file"
@@ -163,10 +155,10 @@ stop_sidecar() {
 	fi
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)
-		if pid_is_running "$pid" && ! pid_matches_eval_sidecar "$pid"; then
+		if polinko_pid_is_running "$pid" && ! pid_matches_eval_sidecar "$pid"; then
 			echo "eval-sidecar PID file points to a non-sidecar process; cleaning up."
 			rm -f "$pid_file"
-		elif ! pid_is_running "$pid"; then
+		elif ! polinko_pid_is_running "$pid"; then
 			rm -f "$pid_file"
 		fi
 	fi

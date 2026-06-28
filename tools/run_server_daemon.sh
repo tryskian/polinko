@@ -26,16 +26,13 @@ polinko_cd_repo_root
 detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 # shellcheck source=tools/python_runtime.sh
 . "$script_dir/python_runtime.sh"
+# shellcheck source=tools/process_lifecycle_common.sh
+. "$script_dir/process_lifecycle_common.sh"
 python_bin=$(polinko_default_python_bin)
 launcher_python=${SERVER_LAUNCHER_PYTHON:-$python_bin}
 
 resolve_expected_python() {
 	"$python_bin" -c 'import os,sys; print(os.path.realpath(sys.executable))' 2>/dev/null || true
-}
-
-pid_is_running() {
-	local pid=$1
-	[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null
 }
 
 server_pids_on_port() {
@@ -45,36 +42,31 @@ server_pids_on_port() {
 	lsof -nP -iTCP:"$dev_backend_port" -sTCP:LISTEN -t 2>/dev/null || true
 }
 
-process_command() {
-	local pid=$1
-	ps -o command= -p "$pid" 2>/dev/null || true
-}
-
 pid_matches_polinko_server() {
 	local pid=$1
 	local command parent_pid parent_command
-	command=$(process_command "$pid")
+	command=$(polinko_process_command "$pid")
 	if printf '%s\n' "$command" | grep -Fq "uvicorn $asgi_app"; then
 		return 0
 	fi
-	parent_pid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ' || true)
+	parent_pid=$(polinko_parent_pid "$pid")
 	if [ -z "$parent_pid" ]; then
 		return 1
 	fi
-	parent_command=$(process_command "$parent_pid")
+	parent_command=$(polinko_process_command "$parent_pid")
 	printf '%s\n' "$parent_command" | grep -Fq "uvicorn $asgi_app"
 }
 
 polinko_server_pid_on_port() {
 	local candidate_pid candidate_cmd check_pid check_cmd parent_pid parent_cmd
 	for candidate_pid in $(server_pids_on_port); do
-		candidate_cmd=$(process_command "$candidate_pid")
+		candidate_cmd=$(polinko_process_command "$candidate_pid")
 		check_pid="$candidate_pid"
 		check_cmd="$candidate_cmd"
 		if ! printf '%s\n' "$check_cmd" | grep -Fq "uvicorn $asgi_app"; then
-			parent_pid=$(ps -o ppid= -p "$candidate_pid" 2>/dev/null | tr -d ' ' || true)
+			parent_pid=$(polinko_parent_pid "$candidate_pid")
 			if [ -n "$parent_pid" ]; then
-				parent_cmd=$(process_command "$parent_pid")
+				parent_cmd=$(polinko_process_command "$parent_pid")
 				if printf '%s\n' "$parent_cmd" | grep -Fq "uvicorn $asgi_app"; then
 					check_pid="$parent_pid"
 					check_cmd="$parent_cmd"
@@ -111,7 +103,7 @@ start_server() {
 
 	if [ -f "$server_pid_file" ]; then
 		pid=$(cat "$server_pid_file" 2>/dev/null || true)
-		if pid_is_running "$pid"; then
+		if polinko_pid_is_running "$pid"; then
 			if pid_matches_polinko_server "$pid"; then
 				echo "server-daemon already running (PID $pid)."
 				exit 0
@@ -128,7 +120,7 @@ start_server() {
 		if [ -n "$existing_pids" ]; then
 			polinko_pid=$(polinko_server_pid_on_port || true)
 			if [ -n "$polinko_pid" ]; then
-				polinko_cmd=$(process_command "$polinko_pid")
+				polinko_cmd=$(polinko_process_command "$polinko_pid")
 				existing_py=$(printf '%s\n' "$polinko_cmd" | awk '{print $1}')
 				existing_py_real="$("$existing_py" -c 'import os,sys; print(os.path.realpath(sys.executable))' 2>/dev/null || true)"
 				if [ "$existing_py_real" = "$expected_py" ]; then
@@ -144,7 +136,7 @@ start_server() {
 				sleep 0.2
 			else
 				first_pid=$(printf '%s\n' "$existing_pids" | awk '{print $1}')
-				first_cmd=$(process_command "$first_pid")
+				first_cmd=$(polinko_process_command "$first_pid")
 				echo "Port $dev_backend_port is in use by a non-polinko process."
 				echo "PID $first_pid: $first_cmd"
 				exit 1
@@ -159,7 +151,7 @@ start_server() {
 	fi
 	pid=$(cat "$server_pid_file" 2>/dev/null || true)
 	sleep 0.2
-	if pid_is_running "$pid"; then
+	if polinko_pid_is_running "$pid"; then
 		echo "server-daemon started (PID $pid, log: $server_log)."
 	else
 		rm -f "$server_pid_file"
@@ -172,7 +164,7 @@ stop_server() {
 	stale_cleaned=0
 	if [ -f "$server_pid_file" ]; then
 		pid=$(cat "$server_pid_file" 2>/dev/null || true)
-		if pid_is_running "$pid"; then
+		if polinko_pid_is_running "$pid"; then
 			if ! pid_matches_polinko_server "$pid"; then
 				echo "server-daemon PID file points to a non-server process; cleaning up."
 				rm -f "$server_pid_file"
@@ -207,7 +199,7 @@ stop_server() {
 status_server() {
 	if [ -f "$server_pid_file" ]; then
 		pid=$(cat "$server_pid_file" 2>/dev/null || true)
-		if pid_is_running "$pid"; then
+		if polinko_pid_is_running "$pid"; then
 			if ! pid_matches_polinko_server "$pid"; then
 				echo "server-daemon: STALE PID file (PID $pid is not a matching server)."
 				exit 1
