@@ -4013,3 +4013,27 @@ or branch history instead.
   source classification, virtualenv path derivation, and Python module
   execution in one recipe. Audit-role fragments make the startup/runtime guard
   easier to inspect while preserving operator behaviour.
+
+## D-238: Split transcript-lane workflow config ownership by env role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr_runs`, `transcript_lanes`, `config`,
+  `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep
+  `makefiles/config/evals/ocr-runs/transcript-lanes/lane-workflow.mk` as the
+  public transcript-lane workflow config entrypoint, then split script/runner
+  wiring, case paths, eval runtime knobs, stability/rate-limit knobs,
+  benchmark report outputs, and composed env assembly into env-role fragments
+  with include-aware Makefile contract coverage.
+- Decision: `OCR_TRANSCRIPT_LANE_WORKFLOW_SCRIPT` and
+  `OCR_TRANSCRIPT_LANE_WORKFLOW_ENV` remain the public transcript-lane workflow
+  config variables, while the env assignment ownership now lives in env-role
+  fragments.
+- Why: The old transcript-lane workflow config include mixed script wiring,
+  runner paths, case path inputs, retry/timeouts, stability/rate-limit
+  settings, and benchmark output paths in one long assignment. Env-role
+  fragments make transcript-lane config maintenance easier to audit while
+  preserving OCR lane commands.

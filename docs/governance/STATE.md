@@ -224,7 +224,13 @@ Last updated: 2026-06-28
     `makefiles/config/evals/ocr-runs/transcript-lanes.mk`, while
     workflow-owned fragments live under
     `makefiles/config/evals/ocr-runs/transcript-lanes/` for base transcript
-    workflow env and lane-specific workflow env
+    workflow env and lane-specific workflow env. The lane-specific workflow
+    config keeps
+    `makefiles/config/evals/ocr-runs/transcript-lanes/lane-workflow.mk` as its
+    public entrypoint, while script/runner wiring, case paths, eval runtime
+    knobs, stability/rate-limit knobs, benchmark report outputs, and composed
+    env assembly live under
+    `makefiles/config/evals/ocr-runs/transcript-lanes/lane-workflow/`
   - OCR-run growth config keeps the public entrypoint at
     `makefiles/config/evals/ocr-runs/growth.mk`, while workflow-owned
     fragments live under `makefiles/config/evals/ocr-runs/growth/` for
