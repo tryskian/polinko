@@ -3992,3 +3992,24 @@ or branch history instead.
   session hygiene, system browser launch, no-launch output, invalid-mode
   handling, and target wiring in one recipe. Launch-role fragments make the
   preview launch path easier to audit while preserving operator commands.
+
+## D-237: Split environment doctor target ownership by audit role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `checks`, `doctor_env`, `runtime_audits`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep
+  `makefiles/checks/runtime-audits/doctor-env.mk` as the public environment
+  doctor target entrypoint, then split interpreter source labelling, active
+  virtualenv derivation, module execution, and target wiring into audit-role
+  fragments with include-aware Makefile contract coverage.
+- Decision: `make doctor-env`, repo activity heartbeat behaviour, interpreter
+  source labels, active virtualenv injection, and `tools.doctor_env` execution
+  stay stable, while environment doctor target ownership now lives in
+  audit-role fragments.
+- Why: The old environment doctor include mixed target wiring, Make override
+  source classification, virtualenv path derivation, and Python module
+  execution in one recipe. Audit-role fragments make the startup/runtime guard
+  easier to inspect while preserving operator behaviour.
