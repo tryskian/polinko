@@ -254,7 +254,9 @@ Last updated: 2026-06-28
   - check Make targets keep the public entrypoint at `makefiles/checks.mk`,
     while role-owned fragments live under `makefiles/checks/` for tests,
     Python static analysis, docs/rendering, runtime audits, and local
-    developer helpers
+    developer helpers. Dev-tool check targets keep their public entrypoint at
+    `makefiles/checks/dev-tools.mk`, while repo search, pre-commit, and local
+    `act` helper fragments live under `makefiles/checks/dev-tools/`
   - runtime audit targets keep the public entrypoint at
     `makefiles/checks/runtime-audits.mk`, while role-owned fragments live
     under `makefiles/checks/runtime-audits/` for shell helper audits, path

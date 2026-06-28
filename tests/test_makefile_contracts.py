@@ -45,6 +45,7 @@ MAKE_CONFIG_SURFACES_MANUAL_EVALS_OCR_RETRY = (
 )
 MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_CHECKS_RUNTIME_AUDITS = REPO_ROOT / "makefiles" / "checks" / "runtime-audits.mk"
+MAKE_CHECKS_DEV_TOOLS = REPO_ROOT / "makefiles" / "checks" / "dev-tools.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_SURFACES_MANUAL_EVALS = REPO_ROOT / "makefiles" / "surfaces" / "manual-evals.mk"
 MAKE_SURFACES_MANUAL_EVALS_FEEDBACK = (
@@ -204,6 +205,7 @@ class MakefileContractTests(unittest.TestCase):
         runtime_audits_entry_text = MAKE_CHECKS_RUNTIME_AUDITS.read_text(
             encoding="utf-8"
         )
+        dev_tools_entry_text = MAKE_CHECKS_DEV_TOOLS.read_text(encoding="utf-8")
         contract_text = _makefile_contract_text()
 
         self.assertIn("include makefiles/checks/tests.mk", checks_entry_text)
@@ -214,6 +216,22 @@ class MakefileContractTests(unittest.TestCase):
             checks_entry_text,
         )
         self.assertIn("include makefiles/checks/dev-tools.mk", checks_entry_text)
+        self.assertNotRegex(
+            dev_tools_entry_text,
+            r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
+        )
+        self.assertIn(
+            "include makefiles/checks/dev-tools/search.mk",
+            dev_tools_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/checks/dev-tools/precommit.mk",
+            dev_tools_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/checks/dev-tools/act.mk",
+            dev_tools_entry_text,
+        )
         self.assertIn(
             "include makefiles/checks/runtime-audits/shell.mk",
             runtime_audits_entry_text,
