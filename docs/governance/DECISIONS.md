@@ -4197,3 +4197,23 @@ or branch history instead.
   inventory aliases, and OCR export/notebook workflow aliases in one file.
   Alias-role fragments make the eval utility layer easier to audit while
   preserving operator commands.
+
+## D-247: Split OCR report builder config by suite family
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `reports`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/config/evals/reports/ocr-builder.mk`
+  as the public OCR report builder config entrypoint, then split base runtime,
+  growth-metrics, growth-fail-cohort, focus-case, and focus-fail-pattern env
+  wiring into suite-family fragments with include-aware Makefile contract
+  coverage.
+- Decision: `OCR_REPORT_BUILDER_SCRIPT` and the composed
+  `OCR_REPORT_BUILDER_ENV` stay stable, while OCR report builder config
+  ownership now lives in suite-family fragments.
+- Why: The old OCR report builder config include mixed env wiring for four
+  different builder suites in one file. Suite-family fragments make the
+  parked OCR report builder surface easier to inspect while preserving report
+  workflow commands.

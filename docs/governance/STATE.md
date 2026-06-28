@@ -317,7 +317,12 @@ Last updated: 2026-06-28
     `makefiles/config/evals/reports.mk`, while workflow-owned fragments live
     under `makefiles/config/evals/reports/` for report runner env, parallel
     report runner env, OCR report builder env, OCR report workflow env, and
-    OCR lane inventory defaults
+    OCR lane inventory defaults. OCR report builder config keeps
+    `makefiles/config/evals/reports/ocr-builder.mk` as its public builder
+    config entrypoint, while suite-family fragments live under
+    `makefiles/config/evals/reports/ocr-builder/` for base runtime,
+    growth-metrics, growth-fail-cohort, focus-case, and focus-fail-pattern
+    env wiring
   - build Make targets keep the public entrypoint at `makefiles/build.mk`,
     while role-owned fragments live under `makefiles/build/` for CI
     aggregation, dependency lock/install flows, package checks, and security

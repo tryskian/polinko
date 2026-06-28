@@ -48,6 +48,9 @@ MAKE_CONFIG_EVALS_OCR_RUNS_DEFAULTS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "defaults.mk"
 )
 MAKE_CONFIG_EVALS_REPORTS = REPO_ROOT / "makefiles" / "config" / "evals" / "reports.mk"
+MAKE_CONFIG_EVALS_REPORTS_OCR_BUILDER = (
+    REPO_ROOT / "makefiles" / "config" / "evals" / "reports" / "ocr-builder.mk"
+)
 MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
 MAKE_CONFIG_SURFACES_MANUAL_EVALS = (
     REPO_ROOT / "makefiles" / "config" / "surfaces" / "manual-evals.mk"
@@ -666,6 +669,9 @@ class MakefileContractTests(unittest.TestCase):
             encoding="utf-8"
         )
         reports_entry_text = MAKE_CONFIG_EVALS_REPORTS.read_text(encoding="utf-8")
+        reports_ocr_builder_entry_text = (
+            MAKE_CONFIG_EVALS_REPORTS_OCR_BUILDER.read_text(encoding="utf-8")
+        )
         config_text = _makefile_contract_text()
 
         self.assertIsNone(
@@ -935,6 +941,32 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/evals/reports/ocr-builder.mk",
             reports_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=|\+=)",
+                reports_ocr_builder_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/config/evals/reports/ocr-builder/base.mk",
+            reports_ocr_builder_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/reports/ocr-builder/growth-metrics.mk",
+            reports_ocr_builder_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/reports/ocr-builder/growth-fail-cohort.mk",
+            reports_ocr_builder_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/reports/ocr-builder/focus-cases.mk",
+            reports_ocr_builder_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/reports/ocr-builder/focus-fail-patterns.mk",
+            reports_ocr_builder_entry_text,
         )
         self.assertIn(
             "include makefiles/config/evals/reports/ocr-workflow.mk",
