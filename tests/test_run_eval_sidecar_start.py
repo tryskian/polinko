@@ -509,6 +509,36 @@ class RunEvalSidecarStartTests(unittest.TestCase):
             self.assertFalse(pid_file.exists())
             self.assertIsNone(process.poll())
 
+    def test_rejects_invalid_readiness_attempts_before_start(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "EVAL_SIDECAR_START_ATTEMPTS": "abc"},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "EVAL_SIDECAR_START_ATTEMPTS must be a positive integer",
+            result.stderr,
+        )
+
+    def test_rejects_invalid_readiness_sleep_before_start(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "EVAL_SIDECAR_START_SLEEP_SECONDS": "-1"},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "EVAL_SIDECAR_START_SLEEP_SECONDS must be a non-negative decimal number",
+            result.stderr,
+        )
+
     def test_rejects_arguments(self) -> None:
         result = subprocess.run(
             ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "extra"],

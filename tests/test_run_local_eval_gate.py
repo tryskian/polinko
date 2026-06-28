@@ -457,6 +457,37 @@ exit "${CURL_EXIT:-0}"
                 ],
             )
 
+    def test_rejects_invalid_readiness_attempts_before_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env["LOCAL_EVAL_GATE_START_ATTEMPTS"] = "abc"
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "LOCAL_EVAL_GATE_START_ATTEMPTS must be a positive integer",
+                result.stderr,
+            )
+            self.assertFalse(python_args.exists())
+
+    def test_rejects_invalid_readiness_sleep_before_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env["LOCAL_EVAL_GATE_START_SLEEP_SECONDS"] = "-1"
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "LOCAL_EVAL_GATE_START_SLEEP_SECONDS "
+                "must be a non-negative decimal number",
+                result.stderr,
+            )
+            self.assertFalse(python_args.exists())
+
     def test_cleanup_failure_exits_nonzero_when_server_does_not_exit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             env, python_args, server_started = self._base_env(Path(tmp))

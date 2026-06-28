@@ -127,7 +127,8 @@ flowchart TD
   HTTP-readiness local gates fail early when `curl` is unavailable and use
   configurable `LOCAL_EVAL_GATE_START_ATTEMPTS` /
   `LOCAL_EVAL_GATE_START_SLEEP_SECONDS` bounds for a shell `while` readiness
-  loop instead of an extra `seq` dependency.
+  loop instead of an extra `seq` dependency. Lifecycle readiness bounds are
+  validated before runner startup work begins.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files;
   it checks local path leaks and reuses `make local-runtime-config-check` for

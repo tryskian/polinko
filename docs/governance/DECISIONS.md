@@ -4539,3 +4539,21 @@ or branch history instead.
   because `kill -0` alone cannot distinguish healthy processes from stopped or
   zombie state. Early diagnostics keep runner failures tied to the real
   missing local prerequisite.
+
+## D-264: Validate lifecycle readiness bounds before runner startup
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `local_eval_gate`, `eval_sidecar`, `readiness`,
+  `runner_config`
+- Human-led: The human lead asked for runner-script hygiene to prevent hidden
+  helper-script failures from becoming routine local or CI interruptions.
+- Engineer implementation: Add shared POSIX shell numeric validators in
+  `tools/process_lifecycle_common.sh`, apply them to local eval gate and
+  eval-sidecar readiness attempt/sleep knobs, and add helper plus runner
+  regression coverage.
+- Decision: Shell lifecycle runners must validate configurable readiness loop
+  bounds before startup work begins.
+- Why: Invalid attempt counts or sleep values should not surface later as
+  shell arithmetic, `sleep`, or timeout noise. Early validation keeps operator
+  feedback tied to the exact misconfigured environment variable.
