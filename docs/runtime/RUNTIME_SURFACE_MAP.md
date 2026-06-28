@@ -155,7 +155,9 @@ flowchart TD
   lifecycle state: matching local `http.server` processes are adopted, while
   unmanaged reachable ports fail loudly. It trusts managed PID files only when
   the live PID matches the configured mockup `http.server` process shape;
-  unrelated live PIDs are cleaned from the PID file without being stopped.
+  unrelated live PIDs are cleaned from the PID file without being stopped. If
+  stop signals a matching mockup server and the process remains active, the
+  PID file stays in place and the stop exits non-zero.
 - Manual eval and OCR tooling remain active workbench surfaces, but eval runs
   stay separate from startup and read-only inventory commands. Health,
   feedback, overlay, OCR retry, and reclassification Make targets route through

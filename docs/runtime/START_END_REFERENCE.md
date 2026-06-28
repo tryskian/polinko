@@ -85,6 +85,9 @@ Runner lifecycle rule:
 - `make portfolio-mockups`, `make portfolio-mockups-status`, and
   `make portfolio-mockups-stop` delegate mockup-server lifecycle actions to
   `tools/run_portfolio_mockups.sh`
+  - if a matching mockup server does not exit after a stop signal, the PID
+    file is preserved and the stop action fails instead of hiding the
+    still-live server
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
 - the shared detached launcher stops the started child process group if the PID

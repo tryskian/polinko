@@ -69,6 +69,14 @@ find_expected_mockup_pid() {
 	return 1
 }
 
+wait_for_mockup_stop() {
+	local pid=$1
+	if ! polinko_wait_for_pid_exit "$pid" 30 0.1; then
+		echo "portfolio mockup server did not exit after stop signal (PID $pid)."
+		return 1
+	fi
+}
+
 adopt_reachable_mockup_server() {
 	local pid
 	pid=$(find_expected_mockup_pid || true)
@@ -95,7 +103,9 @@ start_mockup_server() {
 					exit 0
 				fi
 				kill "$pid" 2>/dev/null || true
-				sleep 0.1
+				if ! wait_for_mockup_stop "$pid"; then
+					exit 1
+				fi
 			else
 				echo "portfolio mockup PID file points to a non-mockup process; cleaning up."
 			fi
@@ -165,7 +175,9 @@ stop_mockup_server() {
 			pid=$(find_expected_mockup_pid || true)
 			if [ -n "$pid" ]; then
 				kill "$pid"
-				sleep 0.1
+				if ! wait_for_mockup_stop "$pid"; then
+					exit 1
+				fi
 				echo "portfolio mockup server stopped (PID $pid)."
 				exit 0
 			fi
@@ -179,7 +191,9 @@ stop_mockup_server() {
 	if polinko_pid_is_running "$pid"; then
 		if is_expected_mockup_server "$pid"; then
 			kill "$pid"
-			sleep 0.1
+			if ! wait_for_mockup_stop "$pid"; then
+				exit 1
+			fi
 			echo "portfolio mockup server stopped (PID $pid)."
 		else
 			echo "portfolio mockup PID file points to a non-mockup process; cleaning up."
