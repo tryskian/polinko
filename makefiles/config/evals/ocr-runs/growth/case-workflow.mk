@@ -1,24 +1,8 @@
-# OCR growth case and batch workflow configuration.
-OCR_GROWTH_EVAL_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_growth_cases.sh
-OCR_GROWTH_BATCH_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_growth_batched.sh
-OCR_GROWTH_CASE_WORKFLOW_SCRIPT ?= ./tools/run_ocr_growth_case_workflow.sh
-OCR_GROWTH_CASE_WORKFLOW_ENV = \
-	PYTHON="$(PYTHON)" \
-	OCR_WORKFLOW_COMMON_SCRIPT="$(OCR_WORKFLOW_COMMON_SCRIPT)" \
-	EVAL_CASE_GUARD_SCRIPT="$(EVAL_CASE_GUARD_SCRIPT)" \
-	EVAL_SERVER_DAEMON_SCRIPT="$(EVAL_SERVER_DAEMON_SCRIPT)" \
-	OCR_GROWTH_EVAL_RUNNER_SCRIPT="$(OCR_GROWTH_EVAL_RUNNER_SCRIPT)" \
-	OCR_GROWTH_BATCH_RUNNER_SCRIPT="$(OCR_GROWTH_BATCH_RUNNER_SCRIPT)" \
-	OCR_TRANSCRIPT_CASES_GROWTH="$(OCR_TRANSCRIPT_CASES_GROWTH)" \
-	OCR_EVAL_TIMEOUT="$(OCR_EVAL_TIMEOUT)" \
-	OCR_GROWTH_EVAL_OFFSET="$(OCR_GROWTH_EVAL_OFFSET)" \
-	OCR_GROWTH_EVAL_MAX_CASES="$(OCR_GROWTH_EVAL_MAX_CASES)" \
-	OCR_EVAL_OCR_RETRIES="$(OCR_EVAL_OCR_RETRIES)" \
-	OCR_EVAL_OCR_RETRY_DELAY_MS="$(OCR_EVAL_OCR_RETRY_DELAY_MS)" \
-	OCR_MAX_CONSEC_RATE_LIMIT_ERRORS="$(OCR_MAX_CONSEC_RATE_LIMIT_ERRORS)" \
-	OCR_GROWTH_BATCH_SIZE="$(OCR_GROWTH_BATCH_SIZE)" \
-	OCR_GROWTH_OCR_RETRIES="$(OCR_GROWTH_OCR_RETRIES)" \
-	OCR_GROWTH_OCR_RETRY_DELAY_MS="$(OCR_GROWTH_OCR_RETRY_DELAY_MS)" \
-	OCR_GROWTH_BATCH_REPORT_DIR="$(OCR_GROWTH_BATCH_REPORT_DIR)" \
-	OCR_GROWTH_BATCH_SUMMARY_JSON="$(OCR_GROWTH_BATCH_SUMMARY_JSON)" \
-	OCR_GROWTH_BATCH_SUMMARY_MD="$(OCR_GROWTH_BATCH_SUMMARY_MD)"
+# OCR growth case and batch workflow configuration entrypoint.
+include makefiles/config/evals/ocr-runs/growth/case-workflow/scripts.mk
+include makefiles/config/evals/ocr-runs/growth/case-workflow/runtime.mk
+include makefiles/config/evals/ocr-runs/growth/case-workflow/runners.mk
+include makefiles/config/evals/ocr-runs/growth/case-workflow/cases.mk
+include makefiles/config/evals/ocr-runs/growth/case-workflow/batches.mk
+include makefiles/config/evals/ocr-runs/growth/case-workflow/reports.mk
+include makefiles/config/evals/ocr-runs/growth/case-workflow/env.mk

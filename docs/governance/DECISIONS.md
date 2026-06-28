@@ -4261,3 +4261,25 @@ or branch history instead.
   independent runner families in one file. Runner-family fragments make the
   parked OCR runner config easier to inspect while preserving direct and
   transcript-lane workflow commands.
+
+## D-250: Split OCR growth case workflow config by env role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `growth`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep
+  `makefiles/config/evals/ocr-runs/growth/case-workflow.mk` as the public OCR
+  growth case workflow config entrypoint, then split script defaults, runtime
+  helpers, runner scripts, case knobs, batch knobs, report outputs, and env
+  assembly into env-role fragments with include-aware Makefile contract
+  coverage.
+- Decision: `OCR_GROWTH_EVAL_RUNNER_SCRIPT`,
+  `OCR_GROWTH_BATCH_RUNNER_SCRIPT`, `OCR_GROWTH_CASE_WORKFLOW_SCRIPT`, and
+  the composed `OCR_GROWTH_CASE_WORKFLOW_ENV` stay stable, while growth case
+  workflow config ownership now lives in env-role fragments.
+- Why: The old growth case workflow config include mixed script defaults,
+  workflow runtime helpers, case runner knobs, batch runner knobs, and report
+  output paths in one file. Env-role fragments make the parked OCR growth
+  workflow easier to inspect while preserving dry-run command shape.

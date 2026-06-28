@@ -50,6 +50,15 @@ MAKE_CONFIG_EVALS_OCR_RUNS_TRANSCRIPT_LANES_LANE_WORKFLOW = (
 MAKE_CONFIG_EVALS_OCR_RUNS_GROWTH = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "growth.mk"
 )
+MAKE_CONFIG_EVALS_OCR_RUNS_GROWTH_CASE_WORKFLOW = (
+    REPO_ROOT
+    / "makefiles"
+    / "config"
+    / "evals"
+    / "ocr-runs"
+    / "growth"
+    / "case-workflow.mk"
+)
 MAKE_CONFIG_EVALS_OCR_RUNS_DEFAULTS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "defaults.mk"
 )
@@ -674,6 +683,9 @@ class MakefileContractTests(unittest.TestCase):
         ocr_runs_growth_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS_GROWTH.read_text(
             encoding="utf-8"
         )
+        ocr_runs_growth_case_workflow_entry_text = (
+            MAKE_CONFIG_EVALS_OCR_RUNS_GROWTH_CASE_WORKFLOW.read_text(encoding="utf-8")
+        )
         ocr_runs_defaults_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS_DEFAULTS.read_text(
             encoding="utf-8"
         )
@@ -956,6 +968,40 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/growth/case-workflow.mk",
             ocr_runs_growth_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=|\+=)",
+                ocr_runs_growth_case_workflow_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/growth/case-workflow/scripts.mk",
+            ocr_runs_growth_case_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/growth/case-workflow/runtime.mk",
+            ocr_runs_growth_case_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/growth/case-workflow/runners.mk",
+            ocr_runs_growth_case_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/growth/case-workflow/cases.mk",
+            ocr_runs_growth_case_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/growth/case-workflow/batches.mk",
+            ocr_runs_growth_case_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/growth/case-workflow/reports.mk",
+            ocr_runs_growth_case_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/growth/case-workflow/env.mk",
+            ocr_runs_growth_case_workflow_entry_text,
         )
         self.assertIn(
             "include makefiles/config/evals/reports/runner.mk",
