@@ -3872,3 +3872,20 @@ or branch history instead.
   preview, no-context reclassification, and plan-based feedback reclassification
   targets in one file. Workflow fragments make manual-eval feedback maintenance
   easier to audit while preserving operator commands.
+
+## D-231: Split OCR-run lane target ownership by workflow mode
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr_runs`, `transcript_lanes`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/evals/ocr-runs/lanes.mk` as the
+  public transcript-lane target entrypoint, then split lane case-build recipes
+  and benchmark stability recipes into workflow-mode fragments with
+  include-aware Makefile contract coverage.
+- Decision: OCR transcript lane target names and workflow script calls stay
+  stable, while lane target ownership now lives in workflow-mode fragments.
+- Why: The old lane target include mixed case-building recipes and stability
+  recipes in one file. Workflow-mode fragments make transcript-lane maintenance
+  easier to audit while preserving operator commands.
