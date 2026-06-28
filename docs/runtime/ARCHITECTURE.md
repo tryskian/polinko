@@ -106,6 +106,10 @@ This page is the structural map of the tracked system.
 - `makefiles/config/evals/ocr-runs/transcript-lanes/`
   - OCR-run transcript-lane configuration fragments for base transcript
     workflow env and lane-specific workflow env
+- `makefiles/config/evals/ocr-runs/transcript-lanes/lane-workflow/`
+  - OCR transcript-lane workflow env fragments for script/runner wiring, case
+    paths, eval runtime, stability/rate-limit settings, benchmark report
+    outputs, and composed env assembly
 - `makefiles/config/evals/ocr-runs/growth/`
   - OCR-run growth configuration fragments for growth stability workflow env
     and growth case/batch workflow env

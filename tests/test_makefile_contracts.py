@@ -29,6 +29,15 @@ MAKE_CONFIG_EVALS_OCR_RUNS = (
 MAKE_CONFIG_EVALS_OCR_RUNS_TRANSCRIPT_LANES = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "transcript-lanes.mk"
 )
+MAKE_CONFIG_EVALS_OCR_RUNS_TRANSCRIPT_LANES_LANE_WORKFLOW = (
+    REPO_ROOT
+    / "makefiles"
+    / "config"
+    / "evals"
+    / "ocr-runs"
+    / "transcript-lanes"
+    / "lane-workflow.mk"
+)
 MAKE_CONFIG_EVALS_OCR_RUNS_GROWTH = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "growth.mk"
 )
@@ -472,6 +481,11 @@ class MakefileContractTests(unittest.TestCase):
         ocr_runs_transcript_lanes_entry_text = (
             MAKE_CONFIG_EVALS_OCR_RUNS_TRANSCRIPT_LANES.read_text(encoding="utf-8")
         )
+        ocr_runs_transcript_lanes_lane_workflow_entry_text = (
+            MAKE_CONFIG_EVALS_OCR_RUNS_TRANSCRIPT_LANES_LANE_WORKFLOW.read_text(
+                encoding="utf-8"
+            )
+        )
         ocr_runs_growth_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS_GROWTH.read_text(
             encoding="utf-8"
         )
@@ -690,6 +704,36 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/transcript-lanes/lane-workflow.mk",
             ocr_runs_transcript_lanes_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=|\+=)",
+                ocr_runs_transcript_lanes_lane_workflow_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/transcript-lanes/lane-workflow/base.mk",
+            ocr_runs_transcript_lanes_lane_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/transcript-lanes/lane-workflow/cases.mk",
+            ocr_runs_transcript_lanes_lane_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/transcript-lanes/lane-workflow/eval-runtime.mk",
+            ocr_runs_transcript_lanes_lane_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/transcript-lanes/lane-workflow/stability.mk",
+            ocr_runs_transcript_lanes_lane_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/transcript-lanes/lane-workflow/reports.mk",
+            ocr_runs_transcript_lanes_lane_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/transcript-lanes/lane-workflow/env.mk",
+            ocr_runs_transcript_lanes_lane_workflow_entry_text,
         )
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/focus.mk",
