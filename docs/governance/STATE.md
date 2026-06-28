@@ -269,6 +269,11 @@ Last updated: 2026-06-28
     `makefiles/config/runtime.mk`, while role-owned fragments live under
     `makefiles/config/runtime/` for core app URLs, local URL launching,
     OpenAI account summaries, keep-awake state, and server-daemon defaults
+  - OpenAI account summary config keeps the public entrypoint at
+    `makefiles/config/runtime/openai-account.mk`, while account-query fragments
+    live under `makefiles/config/runtime/openai-account/` for base API/auth
+    defaults, cost defaults, usage defaults, project/limits defaults, and env
+    assembly
   - check Make targets keep the public entrypoint at `makefiles/checks.mk`,
     while role-owned fragments live under `makefiles/checks/` for tests,
     Python static analysis, docs/rendering, runtime audits, and local
