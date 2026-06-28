@@ -439,6 +439,42 @@ class RunEvalSidecarStartTests(unittest.TestCase):
             self.assertFalse(pid_file.exists())
             process.wait(timeout=2)
 
+    def test_stop_preserves_pid_file_when_matching_sidecar_does_not_exit(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "sidecar.pid"
+            current_file = tmp_path / "current.txt"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            process = subprocess.Popen(
+                ["bash", "-c", "trap '' TERM; while :; do sleep 1; done"]
+            )
+            self.addCleanup(_terminate_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+            _write_sidecar_pid_fake(fake_bin)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "stop"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "PYTHON": sys.executable,
+                    "EXPECTED_PID": str(process.pid),
+                    "EVAL_SIDECAR_PID_FILE": str(pid_file),
+                    "EVAL_SIDECAR_CURRENT_FILE": str(current_file),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("did not exit after stop signal", result.stdout)
+            self.assertTrue(pid_file.exists())
+            self.assertIsNone(process.poll())
+
     def test_stop_cleans_live_non_sidecar_pid_file_without_killing_process(
         self,
     ) -> None:

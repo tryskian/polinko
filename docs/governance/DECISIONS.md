@@ -4366,3 +4366,22 @@ or branch history instead.
   launched command starts descendants before PID-file persistence fails,
   direct-child termination is not enough to prevent unmanaged background
   residue.
+
+## D-255: Preserve eval-sidecar PID files when stop does not complete
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `eval_sidecar`, `pid_file`, `runner`, `closeout`
+- Human-led: The human lead asked to continue script/runtime cleanup with
+  small workflow interruptions resolved instead of carried forward.
+- Engineer implementation: Add a shared PID-exit wait helper, treat terminated
+  zombie processes as inactive in shared PID checks, and update
+  `tools/run_eval_sidecar_start.sh` so the missing-current-file stop path keeps
+  the PID file and exits non-zero if the matching sidecar remains active after
+  the stop signal.
+- Decision: `eval-sidecar` stop may only remove a managed PID file after the
+  signalled matching sidecar is no longer active.
+- Why: Removing a PID file immediately after signalling a still-running
+  sidecar can make closeout look clean while the runner remains alive. Keeping
+  the PID file preserves the active-state evidence for the next status or stop
+  check.

@@ -140,6 +140,9 @@ Last updated: 2026-06-28
   - `eval-sidecar` trusts managed PID files only when the live PID matches the
     `tools.eval_sidecar run` process shape; stale PID files that point to
     unrelated live processes are cleaned without stopping the unrelated process
+  - `eval-sidecar` preserves its PID file and fails stop when a matching
+    sidecar remains active after a stop signal, so closeout cannot hide a
+    still-live runner
   - `portfolio-mockups` treats a reachable mockup URL without a PID file as a
     lifecycle issue: matching local `http.server` processes are adopted, while
     unmanaged reachable ports fail loudly

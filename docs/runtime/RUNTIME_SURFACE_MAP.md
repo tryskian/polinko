@@ -139,14 +139,18 @@ flowchart TD
   the started child process group if the PID file cannot be written, so failed
   starts do not leave unmanaged background descendants behind. Runner scripts
   resolve the checkout root through `tools/repo_root.sh` before launching child
-  processes or using relative local paths.
+  processes or using relative local paths. Shared PID checks treat terminated
+  zombie processes as inactive instead of reporting them as healthy live
+  runners.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery.
   `eval-sidecar` reports missing current-file drift on start/status and still
   stops the repo-managed PID during closeout. It trusts PID files only when the
   live PID matches the `tools.eval_sidecar run` process shape; unrelated live
-  PIDs are cleaned from the PID file without being stopped.
+  PIDs are cleaned from the PID file without being stopped. If stop signals a
+  matching sidecar without current-run context and the process remains active,
+  the PID file stays in place and the stop exits non-zero.
   `portfolio-mockups` treats a reachable mockup URL without a PID file as a
   lifecycle state: matching local `http.server` processes are adopted, while
   unmanaged reachable ports fail loudly. It trusts managed PID files only when

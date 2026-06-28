@@ -63,7 +63,10 @@ pid_matches_eval_sidecar() {
 stop_managed_pid() {
 	local pid=$1
 	kill "$pid"
-	sleep 0.1
+	if ! polinko_wait_for_pid_exit "$pid" 30 0.1; then
+		echo "eval-sidecar did not exit after stop signal (PID $pid); leaving PID file in place."
+		return 1
+	fi
 	rm -f "$pid_file"
 }
 
@@ -143,7 +146,9 @@ stop_sidecar() {
 					rm -f "$pid_file"
 				else
 					echo "eval-sidecar current file missing: $current_file"
-					stop_managed_pid "$pid"
+					if ! stop_managed_pid "$pid"; then
+						exit 1
+					fi
 					echo "eval-sidecar stopped managed PID $pid without current run context."
 				fi
 				exit 0
