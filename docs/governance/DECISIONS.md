@@ -3642,3 +3642,21 @@ or branch history instead.
   harness settings, CLIP defaults, and runner environment wiring in one file.
   Workflow fragments make gate config easier to audit beside the gate targets
   without changing operator commands.
+
+## D-219: Split runtime core target ownership by role
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `runtime`, `lifecycle`, `modularity`
+- Human-led: The human lead approved continuing complete Make/script refactor
+  kernels with a live UI progress tracker and short thought updates.
+- Engineer implementation: Keep `makefiles/runtime/core.mk` as the public
+  runtime core target entrypoint, then split recipes into role-owned fragments
+  for interactive entrypoints, startup/closeout lifecycle, git hygiene, and
+  consolidated status with include-aware Makefile contract coverage.
+- Decision: Runtime core target names and behaviours stay stable, while
+  runtime core target ownership now lives in role-owned fragments.
+- Why: The old runtime core include mixed chat/shell entrypoints, startup and
+  closeout aliases, branch-local preflight, git cleanup, ritual docs, and
+  consolidated status reporting in one file. Role fragments make operator
+  lifecycle changes easier to audit without changing commands.
