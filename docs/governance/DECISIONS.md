@@ -4177,3 +4177,23 @@ or branch history instead.
   transcript maintenance, and closeout freshness in one file. Validation-role
   fragments make the docs check layer easier to audit while preserving
   operator commands.
+
+## D-246: Split eval utility aliases by alias role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `aliases`, `utilities`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/evals/aliases/utilities.mk` as the
+  public eval utility alias entrypoint, then split runtime-null audit, OCR
+  inventory, and OCR data/notebook workflow aliases into alias-role fragments
+  with include-aware Makefile contract coverage.
+- Decision: `nulls`, `runtime-null-audit`, `ocr-inventory`,
+  `ocr-inventory-json`, `ocr-data`, and `ocr-notebook-workflow` names and
+  commands stay stable, while utility alias ownership now lives in alias-role
+  fragments.
+- Why: The old utilities include mixed a runtime audit alias, read-only OCR
+  inventory aliases, and OCR export/notebook workflow aliases in one file.
+  Alias-role fragments make the eval utility layer easier to audit while
+  preserving operator commands.
