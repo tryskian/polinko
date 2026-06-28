@@ -4501,3 +4501,21 @@ or branch history instead.
 - Why: A missing probe command should not look like a server startup,
   lifecycle, or timeout bug. Early prerequisite diagnostics keep operator
   failures actionable and prevent false runner-debugging trails.
+
+## D-262: Expose local eval gate readiness bounds through runner config
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `local_eval_gate`, `readiness`, `runner_config`, `make`
+- Human-led: The human lead asked to keep script/runtime cleanup methodical and
+  resolve helper-script drift as the refactor proceeds.
+- Engineer implementation: Add `LOCAL_EVAL_GATE_START_ATTEMPTS` and
+  `LOCAL_EVAL_GATE_START_SLEEP_SECONDS` to the local eval gate runner Make
+  config, consume the same variables in `tools/run_local_eval_gate.sh`, and
+  add regression coverage for overridden readiness attempt bounds.
+- Decision: Local eval gate readiness bounds must be configurable through the
+  same Make-to-script environment rail used by the rest of the local gate
+  runner configuration.
+- Why: Hard-coded readiness bounds make local gate failures harder to tune and
+  differ from the newer background-runner readiness shape. Exposed bounds keep
+  the defaults stable while giving operators a controlled diagnostic knob.

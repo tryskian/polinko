@@ -124,8 +124,10 @@ flowchart TD
   Local eval gates use bounded cleanup for the temporary server they start for
   each gate run: successful cleanup preserves the suite exit status, while a
   server that remains active after the stop signal fails the wrapper clearly.
-  HTTP-readiness local gates fail early when `curl` is unavailable and use a
-  shell `while` readiness loop instead of an extra `seq` dependency.
+  HTTP-readiness local gates fail early when `curl` is unavailable and use
+  configurable `LOCAL_EVAL_GATE_START_ATTEMPTS` /
+  `LOCAL_EVAL_GATE_START_SLEEP_SECONDS` bounds for a shell `while` readiness
+  loop instead of an extra `seq` dependency.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files;
   it checks local path leaks and reuses `make local-runtime-config-check` for

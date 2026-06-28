@@ -1591,7 +1591,17 @@ class MakefileContractTests(unittest.TestCase):
             "LOCAL_EVAL_GATE_RUNNER_SCRIPT ?= ./tools/run_local_eval_gate.sh",
             config_text,
         )
+        self.assertIn("LOCAL_EVAL_GATE_START_ATTEMPTS ?= 100", config_text)
+        self.assertIn("LOCAL_EVAL_GATE_START_SLEEP_SECONDS ?= 0.2", config_text)
         self.assertIn("LOCAL_EVAL_GATE_RUNNER_ENV =", config_text)
+        self.assertIn(
+            'LOCAL_EVAL_GATE_START_ATTEMPTS="$(LOCAL_EVAL_GATE_START_ATTEMPTS)"',
+            config_text,
+        )
+        self.assertIn(
+            'LOCAL_EVAL_GATE_START_SLEEP_SECONDS="$(LOCAL_EVAL_GATE_START_SLEEP_SECONDS)"',
+            config_text,
+        )
         self.assertIn(
             "OCR_EVAL_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_cases.sh", config_text
         )
@@ -2727,7 +2737,14 @@ class MakefileContractTests(unittest.TestCase):
             'polinko_require_command curl "local eval gate readiness check"',
             local_eval_gate_script_text,
         )
-        self.assertIn('while [ "$attempt" -lt 100 ]; do', local_eval_gate_script_text)
+        self.assertIn(
+            'while [ "$attempt" -lt "$local_eval_gate_start_attempts" ]; do',
+            local_eval_gate_script_text,
+        )
+        self.assertIn(
+            'sleep "$local_eval_gate_start_sleep_seconds"',
+            local_eval_gate_script_text,
+        )
         self.assertNotIn("seq 1 100", local_eval_gate_script_text)
         sidecar_script_text = EVAL_SIDECAR_START_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("launch_detached_process.py", sidecar_script_text)

@@ -122,8 +122,10 @@ Active kernel validation:
 - Local eval gates start a temporary server for each gate run and use bounded
   cleanup; if that server remains active after the stop signal, the wrapper
   fails clearly instead of waiting indefinitely
-- Local eval gates require `curl` before their HTTP readiness probe and use a
-  shell `while` loop for the bounded wait, avoiding an extra `seq` dependency
+- Local eval gates require `curl` before their HTTP readiness probe and use
+  configurable `LOCAL_EVAL_GATE_START_ATTEMPTS` /
+  `LOCAL_EVAL_GATE_START_SLEEP_SECONDS` bounds for the shell `while`
+  readiness loop, avoiding an extra `seq` dependency
 - Use `make risk-scan` when a kernel changes runtime maps, Make gates, CI,
   background runners, startup/closeout, or local configuration surfaces
 - Use `make pr-preflight` before publishing a PR when you need the local
