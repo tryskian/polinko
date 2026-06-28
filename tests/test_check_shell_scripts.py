@@ -79,6 +79,11 @@ class CheckShellScriptsTests(unittest.TestCase):
             with self.subTest(script=str(script)):
                 self.assertEqual(check_shell_scripts.check_script(script), [])
 
+    def test_shell_libraries_are_valid(self) -> None:
+        for script in check_shell_scripts.SHELL_LIBRARIES:
+            with self.subTest(script=str(script)):
+                self.assertEqual(check_shell_scripts.check_script(script), [])
+
 
 if __name__ == "__main__":
     unittest.main()
