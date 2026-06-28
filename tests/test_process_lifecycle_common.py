@@ -117,6 +117,30 @@ class ProcessLifecycleCommonTests(unittest.TestCase):
                     result.stderr,
                 )
 
+    def test_require_tcp_port_rejects_invalid_value(self) -> None:
+        for value in ("0", "65536", "100000", "abc"):
+            with self.subTest(value=value):
+                result = subprocess.run(
+                    [
+                        "/bin/sh",
+                        "-c",
+                        (
+                            f'. "{HELPER}"; '
+                            "polinko_require_tcp_port "
+                            f"TEST_PORT '{value}' 'unit test'"
+                        ),
+                    ],
+                    cwd=REPO_ROOT,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(
+                    "Invalid numeric value for unit test: TEST_PORT must be",
+                    result.stderr,
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

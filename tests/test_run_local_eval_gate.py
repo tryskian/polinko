@@ -488,6 +488,30 @@ exit "${CURL_EXIT:-0}"
             )
             self.assertFalse(python_args.exists())
 
+    def test_rejects_invalid_smoke_port_before_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env["SMOKE_PORT"] = "abc"
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("SMOKE_PORT must be", result.stderr)
+            self.assertFalse(python_args.exists())
+
+    def test_rejects_invalid_gate_port_before_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env["GATE_PORT"] = "70000"
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("quality-gate", env)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("GATE_PORT must be", result.stderr)
+            self.assertFalse(python_args.exists())
+
     def test_cleanup_failure_exits_nonzero_when_server_does_not_exit(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             env, python_args, server_started = self._base_env(Path(tmp))

@@ -72,6 +72,34 @@ def _write_curl_ready_after_child_fake(fake_bin: Path) -> None:
 
 
 class RunPortfolioMockupsTests(unittest.TestCase):
+    def test_rejects_invalid_port_before_start(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "PORTFOLIO_MOCKUP_PORT": "abc"},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("PORTFOLIO_MOCKUP_PORT must be", result.stderr)
+
+    def test_rejects_invalid_readiness_bounds_before_start(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "PORTFOLIO_MOCKUP_START_SLEEP_SECONDS": "-1"},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "PORTFOLIO_MOCKUP_START_SLEEP_SECONDS "
+            "must be a non-negative decimal number",
+            result.stderr,
+        )
+
     def test_start_requires_mockup_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

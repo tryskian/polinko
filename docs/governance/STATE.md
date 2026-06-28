@@ -142,6 +142,10 @@ Last updated: 2026-06-28
   - shell lifecycle runners require `ps` before making PID-state decisions, so
     missing local process-inspection tooling fails with a direct prerequisite
     diagnostic
+  - shell lifecycle runners validate launch ports and readiness-loop bounds
+    before launch, adoption, status, or readiness checks; this covers
+    `server-daemon`, `portfolio-mockups`, and local eval gate `SMOKE_PORT` /
+    `GATE_PORT` overrides
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery

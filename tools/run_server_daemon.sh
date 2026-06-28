@@ -32,6 +32,15 @@ detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 . "$script_dir/python_runtime.sh"
 # shellcheck source=tools/process_lifecycle_common.sh
 . "$script_dir/process_lifecycle_common.sh"
+polinko_require_tcp_port DEV_BACKEND_PORT "$dev_backend_port" "server-daemon launch"
+polinko_require_positive_integer \
+	SERVER_START_ATTEMPTS \
+	"$server_start_attempts" \
+	"server-daemon readiness"
+polinko_require_non_negative_decimal \
+	SERVER_START_SLEEP_SECONDS \
+	"$server_start_sleep_seconds" \
+	"server-daemon readiness"
 python_bin=$(polinko_default_python_bin)
 launcher_python=${SERVER_LAUNCHER_PYTHON:-$python_bin}
 

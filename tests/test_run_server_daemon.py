@@ -62,6 +62,30 @@ def _write_ready_health_fake(fake_bin: Path) -> None:
 
 
 class RunServerDaemonTests(unittest.TestCase):
+    def test_rejects_invalid_port_before_start(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "DEV_BACKEND_PORT": "abc"},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("DEV_BACKEND_PORT must be", result.stderr)
+
+    def test_rejects_invalid_readiness_bounds_before_start(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "SERVER_START_ATTEMPTS": "0"},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("SERVER_START_ATTEMPTS must be a positive integer", result.stderr)
+
     def test_uses_existing_live_server_pid_without_starting_new_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

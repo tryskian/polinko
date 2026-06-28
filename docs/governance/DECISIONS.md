@@ -4557,3 +4557,23 @@ or branch history instead.
 - Why: Invalid attempt counts or sleep values should not surface later as
   shell arithmetic, `sleep`, or timeout noise. Early validation keeps operator
   feedback tied to the exact misconfigured environment variable.
+
+## D-265: Validate lifecycle launch ports and background readiness knobs
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `server_daemon`, `portfolio_mockups`,
+  `local_eval_gate`, `runner_config`
+- Human-led: The human lead asked for hidden runner-script hygiene and direct
+  prevention of recurring local and CI failures during the script/runtime
+  refactor.
+- Engineer implementation: Add a shared TCP port validator in
+  `tools/process_lifecycle_common.sh`, validate server-daemon and portfolio
+  mockup port plus readiness bounds before launch work, validate local eval
+  gate `SMOKE_PORT` / `GATE_PORT` overrides, and add focused regression plus
+  contract coverage.
+- Decision: Lifecycle runners must reject invalid port and launch-loop config
+  before process launch, adoption, status, or readiness checks.
+- Why: Invalid port or loop-bound values should not become indirect `curl`,
+  `uvicorn`, `http.server`, or shell timeout failures. Early validation keeps
+  operator feedback attached to the exact environment knob that needs fixing.

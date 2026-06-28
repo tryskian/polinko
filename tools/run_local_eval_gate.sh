@@ -29,6 +29,12 @@ polinko_require_non_negative_decimal \
 	LOCAL_EVAL_GATE_START_SLEEP_SECONDS \
 	"$local_eval_gate_start_sleep_seconds" \
 	"local eval gate readiness"
+if [ -n "${SMOKE_PORT:-}" ]; then
+	polinko_require_tcp_port SMOKE_PORT "$SMOKE_PORT" "local eval gate port"
+fi
+if [ -n "${GATE_PORT:-}" ]; then
+	polinko_require_tcp_port GATE_PORT "$GATE_PORT" "local eval gate port"
+fi
 
 case "$suite" in
 api-smoke|eval-smoke|hallucination-gate|quality-gate)
