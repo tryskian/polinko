@@ -59,6 +59,8 @@ MAKE_CONFIG_SURFACES_PORTFOLIO = (
     REPO_ROOT / "makefiles" / "config" / "surfaces" / "portfolio.mk"
 )
 MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
+MAKE_CHECKS_TESTS = REPO_ROOT / "makefiles" / "checks" / "tests.mk"
+MAKE_CHECKS_PYTHON = REPO_ROOT / "makefiles" / "checks" / "python.mk"
 MAKE_CHECKS_RUNTIME_AUDITS = REPO_ROOT / "makefiles" / "checks" / "runtime-audits.mk"
 MAKE_CHECKS_RUNTIME_AUDITS_DOCTOR_ENV = (
     REPO_ROOT / "makefiles" / "checks" / "runtime-audits" / "doctor-env.mk"
@@ -229,6 +231,8 @@ class MakefileContractTests(unittest.TestCase):
 
     def test_check_targets_are_extracted_through_role_includes(self) -> None:
         checks_entry_text = MAKE_CHECKS.read_text(encoding="utf-8")
+        tests_entry_text = MAKE_CHECKS_TESTS.read_text(encoding="utf-8")
+        python_entry_text = MAKE_CHECKS_PYTHON.read_text(encoding="utf-8")
         runtime_audits_entry_text = MAKE_CHECKS_RUNTIME_AUDITS.read_text(
             encoding="utf-8"
         )
@@ -246,6 +250,34 @@ class MakefileContractTests(unittest.TestCase):
             checks_entry_text,
         )
         self.assertIn("include makefiles/checks/dev-tools.mk", checks_entry_text)
+        self.assertNotRegex(
+            tests_entry_text,
+            r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
+        )
+        self.assertIn(
+            "include makefiles/checks/tests/unit.mk",
+            tests_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/checks/tests/backend-gate.mk",
+            tests_entry_text,
+        )
+        self.assertNotRegex(
+            python_entry_text,
+            r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
+        )
+        self.assertIn(
+            "include makefiles/checks/python/compile.mk",
+            python_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/checks/python/type.mk",
+            python_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/checks/python/ruff.mk",
+            python_entry_text,
+        )
         self.assertNotRegex(
             dev_tools_entry_text,
             r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
@@ -298,9 +330,10 @@ class MakefileContractTests(unittest.TestCase):
             "include makefiles/checks/runtime-audits/doctor-env/target.mk",
             runtime_audits_doctor_env_entry_text,
         )
-        self.assertIn("test:", contract_text)
-        self.assertIn("backend-gate:", contract_text)
-        self.assertIn("ruff-check:", contract_text)
+        self.assertRegex(contract_text, r"(?m)^test:$")
+        self.assertRegex(contract_text, r"(?m)^backend-gate:")
+        self.assertNotRegex(contract_text, r"(?m)^\tbackend-gate:")
+        self.assertRegex(contract_text, r"(?m)^ruff-check:$")
         self.assertIn("lint-docs:", contract_text)
         self.assertIn("risk-scan:", contract_text)
         self.assertIn("repo-search:", contract_text)

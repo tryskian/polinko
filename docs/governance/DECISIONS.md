@@ -4135,3 +4135,25 @@ or branch history instead.
   review/delta helpers, lane filters, and signal/status filters. Splitting the
   real ownership boundaries improves auditability while preserving operator
   commands.
+
+## D-244: Split checks targets by validation role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `checks`, `tests`, `python`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/checks/tests.mk` and
+  `makefiles/checks/python.mk` as public checks entrypoints, then split unit
+  test, backend-gate, Python compile, Python type-check, and Ruff targets into
+  validation-role fragments with include-aware Makefile contract coverage.
+  Normalize the previously tab-indented `backend-gate` rule into a real target
+  and guard that shape explicitly.
+- Decision: Test, backend-gate, pycheck, type-check, pyright, and Ruff target
+  names and commands stay stable, while checks target ownership now lives in
+  validation-role fragments.
+- Why: The old checks includes mixed direct unit-test entrypoints with the
+  backend gate, and Python compile/type/lint commands in one file. The split
+  also exposed a hidden malformed backend-gate line that substring tests did
+  not catch. Validation role fragments make the checks layer easier to audit
+  while preserving operator commands.
