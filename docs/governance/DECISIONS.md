@@ -3620,3 +3620,25 @@ or branch history instead.
   outputs, benchmark selection knobs, and intake runner wiring in one file.
   Workflow fragments make the OCR intake config easier to audit beside the
   target fragments without running evals or changing operator commands.
+
+## D-218: Split eval gate config ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `gates`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  long end-to-end kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/config/evals/gates.mk` as the
+  public eval gate config entrypoint, then split variable defaults and runner
+  environment wiring into workflow-owned fragments for quality-gate server
+  settings, eval-smoke settings, hallucination judge settings, suite harness
+  defaults, and local gate runner wiring with include-aware Makefile contract
+  coverage.
+- Decision: Eval gate config variable names and public target behaviour stay
+  stable, while eval gate config ownership now lives in workflow-owned
+  fragments.
+- Why: The old eval gate config include mixed local gate server defaults,
+  eval-smoke defaults, hallucination judge settings, style/retrieval/response
+  harness settings, CLIP defaults, and runner environment wiring in one file.
+  Workflow fragments make gate config easier to audit beside the gate targets
+  without changing operator commands.
