@@ -133,6 +133,10 @@ This page is the structural map of the tracked system.
   - eval report configuration fragments for report runner env, parallel report
     runner env, OCR report builder env, OCR report workflow env, and OCR lane
     inventory defaults
+- `makefiles/config/evals/reports/ocr-builder/`
+  - OCR report builder configuration fragments for base runtime,
+    growth-metrics, growth-fail-cohort, focus-case, and focus-fail-pattern
+    env wiring
 - `makefiles/surfaces/`
   - role-owned target fragments for notebooks, manual eval workbench,
     portfolio/mockup workflows, and local browser helpers
