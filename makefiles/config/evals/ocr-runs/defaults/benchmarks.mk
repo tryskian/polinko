@@ -1,0 +1,7 @@
+# OCR benchmark stability output defaults.
+OCR_STABILITY_HANDWRITING_BENCHMARK_OUTPUT ?= .local/eval_reports/ocr_handwriting_benchmark_stability.json
+OCR_STABILITY_HANDWRITING_BENCHMARK_REPORT_DIR ?= .local/eval_reports/ocr_handwriting_benchmark_runs
+OCR_STABILITY_TYPED_BENCHMARK_OUTPUT ?= .local/eval_reports/ocr_typed_benchmark_stability.json
+OCR_STABILITY_TYPED_BENCHMARK_REPORT_DIR ?= .local/eval_reports/ocr_typed_benchmark_runs
+OCR_STABILITY_ILLUSTRATION_BENCHMARK_OUTPUT ?= .local/eval_reports/ocr_illustration_benchmark_stability.json
+OCR_STABILITY_ILLUSTRATION_BENCHMARK_REPORT_DIR ?= .local/eval_reports/ocr_illustration_benchmark_runs

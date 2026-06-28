@@ -3660,3 +3660,23 @@ or branch history instead.
   closeout aliases, branch-local preflight, git cleanup, ritual docs, and
   consolidated status reporting in one file. Role fragments make operator
   lifecycle changes easier to audit without changing commands.
+
+## D-220: Split OCR-run default config ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep
+  `makefiles/config/evals/ocr-runs/defaults.mk` as the public OCR-run defaults
+  config entrypoint, then split variable defaults into workflow-owned
+  fragments for stability, growth/fail-cohort, focus, growth batch, and
+  benchmark defaults with include-aware Makefile contract coverage.
+- Decision: OCR-run default variable names and public target behaviour stay
+  stable, while OCR-run default config ownership now lives in workflow-owned
+  fragments.
+- Why: The old OCR-run defaults include mixed direct stability knobs, growth
+  outputs, fail-cohort selectors, focus run throttles, growth batch settings,
+  and benchmark report paths in one file. Workflow fragments make parked OCR
+  config easier to audit without running evals or changing commands.

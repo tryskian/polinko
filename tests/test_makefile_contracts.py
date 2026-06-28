@@ -19,6 +19,9 @@ MAKE_CONFIG_EVALS_OCR_CASES = (
 MAKE_CONFIG_EVALS_OCR_RUNS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs.mk"
 )
+MAKE_CONFIG_EVALS_OCR_RUNS_DEFAULTS = (
+    REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "defaults.mk"
+)
 MAKE_CONFIG_SURFACES = REPO_ROOT / "makefiles" / "config" / "surfaces.mk"
 MAKE_CONFIG_SURFACES_MANUAL_EVALS = (
     REPO_ROOT / "makefiles" / "config" / "surfaces" / "manual-evals.mk"
@@ -271,6 +274,9 @@ class MakefileContractTests(unittest.TestCase):
         gates_entry_text = MAKE_CONFIG_EVALS_GATES.read_text(encoding="utf-8")
         ocr_cases_entry_text = MAKE_CONFIG_EVALS_OCR_CASES.read_text(encoding="utf-8")
         ocr_runs_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS.read_text(encoding="utf-8")
+        ocr_runs_defaults_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS_DEFAULTS.read_text(
+            encoding="utf-8"
+        )
         config_text = _makefile_contract_text()
 
         self.assertIsNone(
@@ -364,6 +370,26 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/defaults.mk",
             ocr_runs_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/defaults/stability.mk",
+            ocr_runs_defaults_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/defaults/growth.mk",
+            ocr_runs_defaults_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/defaults/focus.mk",
+            ocr_runs_defaults_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/defaults/growth-batches.mk",
+            ocr_runs_defaults_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-runs/defaults/benchmarks.mk",
+            ocr_runs_defaults_entry_text,
         )
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/common.mk",
