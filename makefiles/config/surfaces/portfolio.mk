@@ -1,27 +1,5 @@
-# Portfolio app, mockup, and local launch surface configuration.
-DEV_PORTFOLIO_URL ?= http://$(DEV_HOST):$(DEV_BACKEND_PORT)/portfolio
-# Legacy compatibility only: prefer PORTFOLIO_APP_DIR for new usage.
-ifneq ($(origin FRONTEND_DIR), undefined)
-PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)
-else
-PORTFOLIO_APP_DIR ?= apps/portfolio
-endif
-FRONTEND_DIR ?= $(PORTFOLIO_APP_DIR)
-PORTFOLIO_STATIC_DIR ?= public/portfolio
-PORTFOLIO_MOCKUP_DIR ?= docs/peanut/assets/portfolio-mockups
-PORTFOLIO_MOCKUP_PORT ?= 8765
-PORTFOLIO_MOCKUP_URL ?= http://127.0.0.1:$(PORTFOLIO_MOCKUP_PORT)/landing-mockups.html
-PORTFOLIO_MOCKUP_SCRIPT ?= ./tools/run_portfolio_mockups.sh
-PORTFOLIO_MOCKUP_PID_FILE ?= /tmp/polinko-portfolio-mockups.pid
-PORTFOLIO_MOCKUP_LOG ?= /tmp/polinko-portfolio-mockups.log
-PORTFOLIO_MOCKUP_LAUNCHER_PYTHON ?= $(PYTHON)
-PORTFOLIO_MOCKUP_ENV = \
-	PORTFOLIO_MOCKUP_DIR="$(PORTFOLIO_MOCKUP_DIR)" \
-	PORTFOLIO_MOCKUP_PORT="$(PORTFOLIO_MOCKUP_PORT)" \
-	PORTFOLIO_MOCKUP_URL="$(PORTFOLIO_MOCKUP_URL)" \
-	PORTFOLIO_MOCKUP_PID_FILE="$(PORTFOLIO_MOCKUP_PID_FILE)" \
-	PORTFOLIO_MOCKUP_LOG="$(PORTFOLIO_MOCKUP_LOG)" \
-	PORTFOLIO_MOCKUP_LAUNCHER_PYTHON="$(PORTFOLIO_MOCKUP_LAUNCHER_PYTHON)" \
-	PYTHON="$(PYTHON)"
-PORTFOLIO_LAUNCH ?= none
-PORTFOLIO_PLAYWRIGHT_SESSION ?= $(PLAYWRIGHT_SESSION)
+# Portfolio app, mockup, and local launch surface configuration entrypoint.
+include makefiles/config/surfaces/portfolio/app.mk
+include makefiles/config/surfaces/portfolio/mockup.mk
+include makefiles/config/surfaces/portfolio/env.mk
+include makefiles/config/surfaces/portfolio/launch.mk

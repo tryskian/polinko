@@ -174,6 +174,10 @@ Last updated: 2026-06-28
     while URL construction, Playwright launch, system/no-launch handling, and
     target wiring live under
     `makefiles/surfaces/portfolio/preview/launch/`
+  - portfolio Make config keeps the public entrypoint at
+    `makefiles/config/surfaces/portfolio.mk`, while runtime-role fragments
+    live under `makefiles/config/surfaces/portfolio/` for app/path defaults,
+    mockup server defaults, mockup env assembly, and launch-mode defaults
   - eval Make config keeps the public entrypoint at
     `makefiles/config/evals.mk`, while role-owned fragments live under
     `makefiles/config/evals/` for quality gates, OCR case sources, eval
