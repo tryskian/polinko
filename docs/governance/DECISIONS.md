@@ -3797,3 +3797,21 @@ or branch history instead.
 - Why: The old local URL target include mixed API docs and PASS/FAIL viz URL
   recipes in one file. Operator-surface fragments make local URL maintenance
   easier to audit while preserving the print-by-default browser contract.
+
+## D-227: Split eval gate target ownership by operator surface
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `gates`, `operator_surface`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/evals/gates.mk` as the public eval
+  gate target entrypoint, then split smoke gate, sidecar lifecycle, operator
+  report, and quality/hallucination gate recipes into operator-surface
+  fragments with include-aware Makefile contract coverage.
+- Decision: Eval gate target names, deterministic overrides, and public
+  behaviour stay stable, while eval gate target ownership now lives in
+  operator-surface fragments.
+- Why: The old eval gate target include mixed smoke, sidecar, reporting, and
+  quality-gate recipes in one file. Operator-surface fragments make gate
+  maintenance easier to audit while preserving release/check workflows.
