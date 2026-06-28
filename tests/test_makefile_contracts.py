@@ -141,6 +141,7 @@ OPENAI_ACCOUNT_SCRIPT = REPO_ROOT / "tools" / "openai_account_summary.py"
 SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "run_server_daemon.sh"
 PORTFOLIO_MOCKUP_SCRIPT = REPO_ROOT / "tools" / "run_portfolio_mockups.sh"
 LOCAL_URL_LAUNCHER_SCRIPT = REPO_ROOT / "tools" / "open_local_url.sh"
+PROCESS_LIFECYCLE_COMMON_SCRIPT = REPO_ROOT / "tools" / "process_lifecycle_common.sh"
 DETACHED_PROCESS_LAUNCHER_SCRIPT = REPO_ROOT / "tools" / "launch_detached_process.py"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
 EVAL_CASE_GUARD_SCRIPT = REPO_ROOT / "tools" / "eval_case_guard.sh"
@@ -2513,6 +2514,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(OPENAI_ACCOUNT_SCRIPT.is_file())
         self.assertTrue(SERVER_DAEMON_SCRIPT.is_file())
         self.assertTrue(PORTFOLIO_MOCKUP_SCRIPT.is_file())
+        self.assertTrue(PROCESS_LIFECYCLE_COMMON_SCRIPT.is_file())
         self.assertTrue(DETACHED_PROCESS_LAUNCHER_SCRIPT.is_file())
         self.assertTrue(END_GIT_CHECK_SCRIPT.is_file())
         self.assertTrue(os.access(CAFFEINATE_SCRIPT, os.X_OK))
@@ -2562,6 +2564,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('source "$script_dir/repo_root.sh"', server_daemon_script_text)
         self.assertIn("polinko_cd_repo_root", server_daemon_script_text)
         self.assertIn(
+            '. "$script_dir/process_lifecycle_common.sh"',
+            server_daemon_script_text,
+        )
+        self.assertIn("polinko_pid_is_running", server_daemon_script_text)
+        self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             server_daemon_script_text,
         )
@@ -2572,6 +2579,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("launch_detached_process.py", portfolio_mockup_script_text)
         self.assertIn('source "$script_dir/repo_root.sh"', portfolio_mockup_script_text)
         self.assertIn("polinko_cd_repo_root", portfolio_mockup_script_text)
+        self.assertIn(
+            '. "$script_dir/process_lifecycle_common.sh"',
+            portfolio_mockup_script_text,
+        )
+        self.assertIn("polinko_pid_is_running", portfolio_mockup_script_text)
         self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             portfolio_mockup_script_text,
@@ -2695,6 +2707,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("launch_detached_process.py", sidecar_script_text)
         self.assertIn('source "$script_dir/repo_root.sh"', sidecar_script_text)
         self.assertIn("polinko_cd_repo_root", sidecar_script_text)
+        self.assertIn(
+            '. "$script_dir/process_lifecycle_common.sh"',
+            sidecar_script_text,
+        )
+        self.assertIn("polinko_pid_is_running", sidecar_script_text)
         self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             sidecar_script_text,
