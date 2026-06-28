@@ -156,6 +156,9 @@ This page is the structural map of the tracked system.
   - OCR report builder configuration fragments for base runtime,
     growth-metrics, growth-fail-cohort, focus-case, and focus-fail-pattern
     env wiring
+- `makefiles/config/ops/`
+  - external operator-tool config fragments for local GitHub Actions runner,
+    Docker, k6, and Trivy defaults
 - `makefiles/surfaces/`
   - role-owned target fragments for notebooks, manual eval workbench,
     portfolio/mockup workflows, and local browser helpers
@@ -215,6 +218,9 @@ This page is the structural map of the tracked system.
   - OCR-run alias fragments for transcript/growth aliases, modality aliases,
     focus/stability aliases, the OCR kernel workflow alias, and benchmark
     aliases
+- `makefiles/ops/`
+  - external operator-tool target fragments for k6 smoke, Trivy scans, and
+    Docker lifecycle commands
 - `makefiles/runtime/`
   - runtime target fragments for core lifecycle, server-daemon, local URL,
     OpenAI account, keep-awake, and privacy guard targets
