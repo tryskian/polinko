@@ -12,6 +12,7 @@ MAKE_BUILD = REPO_ROOT / "makefiles" / "build.mk"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_CONFIG_RUNTIME = REPO_ROOT / "makefiles" / "config" / "runtime.mk"
 MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
+MAKE_CONFIG_EVALS_GATES = REPO_ROOT / "makefiles" / "config" / "evals" / "gates.mk"
 MAKE_CONFIG_EVALS_OCR_CASES = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-cases.mk"
 )
@@ -252,6 +253,7 @@ class MakefileContractTests(unittest.TestCase):
 
     def test_eval_config_is_extracted_through_role_includes(self) -> None:
         config_evals_entry_text = MAKE_CONFIG_EVALS.read_text(encoding="utf-8")
+        gates_entry_text = MAKE_CONFIG_EVALS_GATES.read_text(encoding="utf-8")
         ocr_cases_entry_text = MAKE_CONFIG_EVALS_OCR_CASES.read_text(encoding="utf-8")
         ocr_runs_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS.read_text(encoding="utf-8")
         config_text = _makefile_contract_text()
@@ -260,6 +262,12 @@ class MakefileContractTests(unittest.TestCase):
             re.search(
                 r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)",
                 config_evals_entry_text,
+            )
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=)",
+                gates_entry_text,
             )
         )
         self.assertIsNone(
@@ -293,6 +301,26 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/evals/reports.mk",
             config_evals_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/gates/server.mk",
+            gates_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/gates/smoke.mk",
+            gates_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/gates/hallucination.mk",
+            gates_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/gates/suites.mk",
+            gates_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/gates/runner.mk",
+            gates_entry_text,
         )
         self.assertIn(
             "include makefiles/config/evals/ocr-cases/source-paths.mk",

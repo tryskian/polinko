@@ -167,6 +167,11 @@ Last updated: 2026-06-27
     `makefiles/config/evals.mk`, while role-owned fragments live under
     `makefiles/config/evals/` for quality gates, OCR case sources, eval
     sidecar, OCR runners, and report workflows
+  - eval gate config keeps the public entrypoint at
+    `makefiles/config/evals/gates.mk`, while workflow-owned fragments live
+    under `makefiles/config/evals/gates/` for quality-gate server settings,
+    eval-smoke settings, hallucination judge settings, suite harness defaults,
+    and local gate runner wiring
   - OCR-case eval config keeps the public entrypoint at
     `makefiles/config/evals/ocr-cases.mk`, while workflow-owned fragments live
     under `makefiles/config/evals/ocr-cases/` for source paths, export
