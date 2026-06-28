@@ -4239,3 +4239,25 @@ or branch history instead.
   shared repo activity macro in one file. Runtime-role fragments make the
   high-traffic keep-awake surface easier to audit while preserving runtime
   commands.
+
+## D-249: Split direct OCR runner config by runner family
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep
+  `makefiles/config/evals/ocr-runs/direct-runners.mk` as the public direct OCR
+  runner config entrypoint, then split handwriting, case, and stability runner
+  env wiring into runner-family fragments with include-aware Makefile contract
+  coverage.
+- Decision: `OCR_HANDWRITING_EVAL_RUNNER_SCRIPT`,
+  `OCR_HANDWRITING_EVAL_RUNNER_ENV`, `OCR_EVAL_RUNNER_SCRIPT`,
+  `OCR_EVAL_RUNNER_ENV`, `OCR_STABILITY_RUNNER_SCRIPT`, and
+  `OCR_STABILITY_RUNNER_ENV` stay stable, while direct OCR runner config
+  ownership now lives in runner-family fragments.
+- Why: The old direct runner config include mixed env wiring for three
+  independent runner families in one file. Runner-family fragments make the
+  parked OCR runner config easier to inspect while preserving direct and
+  transcript-lane workflow commands.
