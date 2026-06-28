@@ -3699,3 +3699,25 @@ or branch history instead.
   local path leak checks, runtime config and alias checks, risk scan, and the
   longer interpreter-source doctor recipe in one file. Role fragments make
   audit maintenance easier to inspect without changing commands.
+
+## D-222: Split eval report config ownership by workflow
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `reports`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/config/evals/reports.mk` as the
+  public eval report config entrypoint, then split variable defaults and
+  runner environment wiring into workflow-owned fragments for report runner
+  env, parallel report runner env, OCR report builder env, OCR report workflow
+  env, and OCR lane inventory defaults with include-aware Makefile contract
+  coverage.
+- Decision: Eval report config variable names and public target behaviour stay
+  stable, while eval report config ownership now lives in workflow-owned
+  fragments.
+- Why: The old eval report config include mixed core report runner wiring,
+  parallel report runner wiring, parked OCR report builder wiring, OCR report
+  workflow wiring, and lane inventory defaults in one file. Workflow fragments
+  make report config easier to audit without running evals or changing
+  commands.

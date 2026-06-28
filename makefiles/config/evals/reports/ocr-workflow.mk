@@ -1,0 +1,5 @@
+# OCR report workflow configuration.
+OCR_REPORT_WORKFLOW_SCRIPT ?= ./tools/run_ocr_report_workflow.sh
+OCR_REPORT_WORKFLOW_ENV = \
+	$(OCR_REPORT_BUILDER_ENV) \
+	OCR_REPORT_BUILDER_SCRIPT="$(OCR_REPORT_BUILDER_SCRIPT)"
