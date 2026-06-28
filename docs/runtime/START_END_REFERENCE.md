@@ -110,6 +110,10 @@ Runner lifecycle rule:
 - shared PID inspection requires `ps` before lifecycle scripts make managed
   PID-state decisions, so missing local process-inspection tooling fails as a
   prerequisite error instead of misleading liveness state
+- lifecycle launch ports and readiness-loop bounds are validated before
+  process launch, adoption, status, or readiness checks for `server-daemon`,
+  `portfolio-mockups`, and local eval gate `SMOKE_PORT` / `GATE_PORT`
+  overrides
 - the shared detached launcher stops the started child process group if the PID
   file cannot be written, so failed starts do not leave unmanaged background
   descendants behind

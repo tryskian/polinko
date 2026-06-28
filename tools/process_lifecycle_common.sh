@@ -70,6 +70,27 @@ polinko_require_non_negative_decimal() {
 	return 0
 }
 
+polinko_require_tcp_port() {
+	_polinko_name=$1
+	_polinko_value=$2
+	_polinko_context=${3:-runtime helper}
+	if ! polinko_require_positive_integer \
+		"$_polinko_name" \
+		"$_polinko_value" \
+		"$_polinko_context"; then
+		return 1
+	fi
+	if [ "${#_polinko_value}" -gt 5 ] || [ "$_polinko_value" -gt 65535 ]; then
+		polinko_invalid_numeric_value \
+			"$_polinko_name" \
+			"$_polinko_value" \
+			"a TCP port from 1 to 65535" \
+			"$_polinko_context"
+		return $?
+	fi
+	return 0
+}
+
 polinko_wait_for_pid_exit() {
 	_polinko_pid=$1
 	_polinko_attempts=${2:-50}

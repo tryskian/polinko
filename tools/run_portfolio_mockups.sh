@@ -31,6 +31,15 @@ detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 . "$script_dir/python_runtime.sh"
 # shellcheck source=tools/process_lifecycle_common.sh
 . "$script_dir/process_lifecycle_common.sh"
+polinko_require_tcp_port PORTFOLIO_MOCKUP_PORT "$mockup_port" "portfolio mockup launch"
+polinko_require_positive_integer \
+	PORTFOLIO_MOCKUP_START_ATTEMPTS \
+	"$mockup_start_attempts" \
+	"portfolio mockup readiness"
+polinko_require_non_negative_decimal \
+	PORTFOLIO_MOCKUP_START_SLEEP_SECONDS \
+	"$mockup_start_sleep_seconds" \
+	"portfolio mockup readiness"
 python_bin=$(polinko_default_python_bin)
 launcher_python=${PORTFOLIO_MOCKUP_LAUNCHER_PYTHON:-$python_bin}
 

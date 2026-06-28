@@ -2582,6 +2582,12 @@ class MakefileContractTests(unittest.TestCase):
             'polinko_require_process_inspection "server-daemon PID inspection"',
             server_daemon_script_text,
         )
+        self.assertIn("polinko_require_tcp_port", server_daemon_script_text)
+        self.assertIn("polinko_require_positive_integer", server_daemon_script_text)
+        self.assertIn(
+            "polinko_require_non_negative_decimal",
+            server_daemon_script_text,
+        )
         self.assertIn(
             'polinko_require_command curl "server-daemon readiness check"',
             server_daemon_script_text,
@@ -2604,6 +2610,15 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("polinko_pid_is_running", portfolio_mockup_script_text)
         self.assertIn(
             'polinko_require_process_inspection "portfolio mockup PID inspection"',
+            portfolio_mockup_script_text,
+        )
+        self.assertIn("polinko_require_tcp_port", portfolio_mockup_script_text)
+        self.assertIn(
+            "polinko_require_positive_integer",
+            portfolio_mockup_script_text,
+        )
+        self.assertIn(
+            "polinko_require_non_negative_decimal",
             portfolio_mockup_script_text,
         )
         self.assertIn(
@@ -2757,6 +2772,7 @@ class MakefileContractTests(unittest.TestCase):
             "polinko_require_non_negative_decimal",
             local_eval_gate_script_text,
         )
+        self.assertIn("polinko_require_tcp_port", local_eval_gate_script_text)
         self.assertIn(
             'while [ "$attempt" -lt "$local_eval_gate_start_attempts" ]; do',
             local_eval_gate_script_text,
