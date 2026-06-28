@@ -79,6 +79,9 @@ Runner lifecycle rule:
     still-live server
   - start reports success only after the configured local `/health` endpoint is
     reachable within the bounded readiness wait
+  - HTTP readiness checks require `curl` before launch work begins, so a
+    missing local probe command fails as a prerequisite error instead of a
+    generic startup timeout
 - `make eval-sidecar-start`, `make eval-sidecar-status`, and
   `make eval-sidecar-stop` delegate lifecycle actions to
   `tools/run_eval_sidecar_start.sh`
@@ -99,6 +102,9 @@ Runner lifecycle rule:
     still-live server
   - start reports success only after the configured mockup URL is reachable
     within the bounded readiness wait
+  - HTTP reachability checks require `curl` before start/status/URL-based stop
+    work, so missing local probe tooling fails with a direct prerequisite
+    diagnostic
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
 - the shared detached launcher stops the started child process group if the PID
@@ -116,6 +122,8 @@ Active kernel validation:
 - Local eval gates start a temporary server for each gate run and use bounded
   cleanup; if that server remains active after the stop signal, the wrapper
   fails clearly instead of waiting indefinitely
+- Local eval gates require `curl` before their HTTP readiness probe and use a
+  shell `while` loop for the bounded wait, avoiding an extra `seq` dependency
 - Use `make risk-scan` when a kernel changes runtime maps, Make gates, CI,
   background runners, startup/closeout, or local configuration surfaces
 - Use `make pr-preflight` before publishing a PR when you need the local

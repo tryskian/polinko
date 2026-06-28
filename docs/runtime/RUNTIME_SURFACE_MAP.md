@@ -2,7 +2,7 @@
 
 # Runtime Surface Map
 
-Last updated: 2026-06-25
+Last updated: 2026-06-28
 
 This map shows the local runtime and operator surfaces that need to stay
 maintainable during the current refactor. It separates manual startup,
@@ -124,6 +124,8 @@ flowchart TD
   Local eval gates use bounded cleanup for the temporary server they start for
   each gate run: successful cleanup preserves the suite exit status, while a
   server that remains active after the stop signal fails the wrapper clearly.
+  HTTP-readiness local gates fail early when `curl` is unavailable and use a
+  shell `while` readiness loop instead of an extra `seq` dependency.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files;
   it checks local path leaks and reuses `make local-runtime-config-check` for
@@ -154,7 +156,8 @@ flowchart TD
   restart signals a matching server and the process remains active, managed
   PID files stay in place and the action exits non-zero. Start reports success
   only after the configured local `/health` endpoint is reachable within the
-  bounded readiness wait.
+  bounded readiness wait, and it fails early with a missing-command diagnostic
+  when `curl` is unavailable for that readiness probe.
   `eval-sidecar` reports missing current-file drift on start/status and still
   stops the repo-managed PID during closeout. It trusts PID files only when the
   live PID matches the `tools.eval_sidecar run` process shape; unrelated live
@@ -171,7 +174,8 @@ flowchart TD
   stop signals a matching mockup server and the process remains active, the
   PID file stays in place and the stop exits non-zero. Start reports success
   only after the configured mockup URL is reachable within the bounded
-  readiness wait.
+  readiness wait; URL-based start/status/stop paths fail early with a
+  missing-command diagnostic when `curl` is unavailable.
 - Manual eval and OCR tooling remain active workbench surfaces, but eval runs
   stay separate from startup and read-only inventory commands. Health,
   feedback, overlay, OCR retry, and reclassification Make targets route through

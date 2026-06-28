@@ -2569,6 +2569,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("polinko_pid_is_running", server_daemon_script_text)
         self.assertIn(
+            'polinko_require_command curl "server-daemon readiness check"',
+            server_daemon_script_text,
+        )
+        self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             server_daemon_script_text,
         )
@@ -2584,6 +2588,18 @@ class MakefileContractTests(unittest.TestCase):
             portfolio_mockup_script_text,
         )
         self.assertIn("polinko_pid_is_running", portfolio_mockup_script_text)
+        self.assertIn(
+            'polinko_require_command curl "portfolio mockup HTTP reachability checks"',
+            portfolio_mockup_script_text,
+        )
+        self.assertIn(
+            'polinko_require_command curl "portfolio mockup status reachability check"',
+            portfolio_mockup_script_text,
+        )
+        self.assertIn(
+            'polinko_require_command curl "portfolio mockup stop reachability check"',
+            portfolio_mockup_script_text,
+        )
         self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             portfolio_mockup_script_text,
@@ -2703,6 +2719,16 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn('source "$script_dir/repo_root.sh"', local_eval_gate_script_text)
         self.assertIn("polinko_cd_repo_root", local_eval_gate_script_text)
+        self.assertIn(
+            '. "$script_dir/process_lifecycle_common.sh"',
+            local_eval_gate_script_text,
+        )
+        self.assertIn(
+            'polinko_require_command curl "local eval gate readiness check"',
+            local_eval_gate_script_text,
+        )
+        self.assertIn('while [ "$attempt" -lt 100 ]; do', local_eval_gate_script_text)
+        self.assertNotIn("seq 1 100", local_eval_gate_script_text)
         sidecar_script_text = EVAL_SIDECAR_START_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("launch_detached_process.py", sidecar_script_text)
         self.assertIn('source "$script_dir/repo_root.sh"', sidecar_script_text)

@@ -15,6 +15,16 @@ polinko_pid_is_running() {
 	return 0
 }
 
+polinko_require_command() {
+	_polinko_command=$1
+	_polinko_context=${2:-runtime helper}
+	if command -v "$_polinko_command" >/dev/null 2>&1; then
+		return 0
+	fi
+	echo "Missing required command for $_polinko_context: $_polinko_command" >&2
+	return 1
+}
+
 polinko_wait_for_pid_exit() {
 	_polinko_pid=$1
 	_polinko_attempts=${2:-50}

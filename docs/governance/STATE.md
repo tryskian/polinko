@@ -125,6 +125,8 @@ Last updated: 2026-06-28
   - local eval gates clean up their temporary server with bounded stop-wait
     behaviour, preserving the suite exit status when cleanup succeeds and
     failing clearly when the server ignores the stop signal
+  - local eval gates require `curl` before HTTP readiness probing and avoid an
+    extra `seq` dependency in their bounded readiness loop
   - core background runner lifecycle is script-owned for `caffeinate`,
     `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned
@@ -145,6 +147,8 @@ Last updated: 2026-06-28
     a still-live local API server
   - `server-daemon` start waits for the configured local `/health` endpoint
     before reporting success, rather than relying on a fixed post-launch sleep
+  - `server-daemon` fails early with a direct missing-command diagnostic if
+    `curl` is unavailable for the HTTP readiness probe
   - `eval-sidecar` reports missing current-file drift on start/status and still
     stops the repo-managed PID during closeout
   - `eval-sidecar` trusts managed PID files only when the live PID matches the
@@ -167,6 +171,8 @@ Last updated: 2026-06-28
     a still-live local preview
   - `portfolio-mockups` start waits for the configured mockup URL before
     reporting success, rather than relying on a fixed post-launch sleep
+  - `portfolio-mockups` URL-based start/status/stop checks fail early with a
+    direct missing-command diagnostic if `curl` is unavailable
   - manual eval health, feedback, overlay, OCR retry, and reclassification Make
     targets keep their public names while routing through a single
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper
