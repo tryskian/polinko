@@ -56,6 +56,7 @@ MAKE_EVALS_ALIASES_OCR_RUNS = (
 MAKE_EVALS_CORE = REPO_ROOT / "makefiles" / "evals" / "core.mk"
 MAKE_EVALS_GATES = REPO_ROOT / "makefiles" / "evals" / "gates.mk"
 MAKE_EVALS_OCR_RUNS = REPO_ROOT / "makefiles" / "evals" / "ocr-runs.mk"
+MAKE_EVALS_OCR_RUNS_LANES = REPO_ROOT / "makefiles" / "evals" / "ocr-runs" / "lanes.mk"
 MAKE_RUNTIME = REPO_ROOT / "makefiles" / "runtime.mk"
 MAKE_RUNTIME_CORE = REPO_ROOT / "makefiles" / "runtime" / "core.mk"
 MAKE_RUNTIME_LOCAL_URLS = REPO_ROOT / "makefiles" / "runtime" / "local-urls.mk"
@@ -236,6 +237,9 @@ class MakefileContractTests(unittest.TestCase):
         core_entry_text = MAKE_EVALS_CORE.read_text(encoding="utf-8")
         gates_entry_text = MAKE_EVALS_GATES.read_text(encoding="utf-8")
         ocr_runs_entry_text = MAKE_EVALS_OCR_RUNS.read_text(encoding="utf-8")
+        ocr_runs_lanes_entry_text = MAKE_EVALS_OCR_RUNS_LANES.read_text(
+            encoding="utf-8"
+        )
         contract_text = _makefile_contract_text()
 
         self.assertIn("include makefiles/evals/aliases.mk", evals_entry_text)
@@ -316,6 +320,20 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/evals/ocr-runs/focus.mk",
             ocr_runs_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^\.PHONY:|^[-a-zA-Z0-9_]+:",
+                ocr_runs_lanes_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/evals/ocr-runs/lanes/cases.mk",
+            ocr_runs_lanes_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/ocr-runs/lanes/stability.mk",
+            ocr_runs_lanes_entry_text,
         )
         self.assertIn("ocrkernel:", contract_text)
         self.assertIn("ocrminehand: OCR_CASES_FROM_EXPORT_ARGS =", contract_text)
