@@ -168,7 +168,12 @@ Last updated: 2026-06-28
     under `makefiles/surfaces/portfolio/` for install aliases, static build,
     preview launch modes, and mockup lifecycle; preview targets keep their
     own entrypoint at `makefiles/surfaces/portfolio/preview.mk`, while nested
-    fragments separate the launch recipe from rebuild and launch-mode aliases
+    fragments separate the launch recipe from rebuild and launch-mode aliases.
+    The launch recipe keeps
+    `makefiles/surfaces/portfolio/preview/launch.mk` as its public entrypoint,
+    while URL construction, Playwright launch, system/no-launch handling, and
+    target wiring live under
+    `makefiles/surfaces/portfolio/preview/launch/`
   - eval Make config keeps the public entrypoint at
     `makefiles/config/evals.mk`, while role-owned fragments live under
     `makefiles/config/evals/` for quality gates, OCR case sources, eval
