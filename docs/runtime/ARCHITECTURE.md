@@ -130,6 +130,9 @@ This page is the structural map of the tracked system.
 - `makefiles/runtime/`
   - runtime target fragments for core lifecycle, server-daemon, local URL,
     OpenAI account, keep-awake, and privacy guard targets
+- `makefiles/runtime/local-urls/`
+  - runtime local URL target fragments for API docs URLs and PASS/FAIL viz
+    URLs
 - `makefiles/runtime/core/`
   - runtime core target fragments for interactive entrypoints,
     startup/closeout lifecycle, git hygiene, and consolidated status

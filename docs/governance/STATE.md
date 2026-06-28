@@ -217,6 +217,10 @@ Last updated: 2026-06-27
     `makefiles/runtime.mk`, while role-owned fragments live under
     `makefiles/runtime/` for core lifecycle, server-daemon, local URL helpers,
     OpenAI account helpers, keep-awake, and privacy guard surfaces
+  - runtime local URL targets keep the public entrypoint at
+    `makefiles/runtime/local-urls.mk`, while operator-surface fragments live
+    under `makefiles/runtime/local-urls/` for API docs URLs and PASS/FAIL viz
+    URLs
   - runtime core targets keep the public entrypoint at
     `makefiles/runtime/core.mk`, while role-owned fragments live under
     `makefiles/runtime/core/` for interactive entrypoints, startup/closeout

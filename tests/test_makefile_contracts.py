@@ -50,6 +50,7 @@ MAKE_EVALS_CORE = REPO_ROOT / "makefiles" / "evals" / "core.mk"
 MAKE_EVALS_OCR_RUNS = REPO_ROOT / "makefiles" / "evals" / "ocr-runs.mk"
 MAKE_RUNTIME = REPO_ROOT / "makefiles" / "runtime.mk"
 MAKE_RUNTIME_CORE = REPO_ROOT / "makefiles" / "runtime" / "core.mk"
+MAKE_RUNTIME_LOCAL_URLS = REPO_ROOT / "makefiles" / "runtime" / "local-urls.mk"
 OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
 OPENAI_ACCOUNT_SCRIPT = REPO_ROOT / "tools" / "openai_account_summary.py"
@@ -296,6 +297,9 @@ class MakefileContractTests(unittest.TestCase):
     def test_runtime_targets_are_extracted_through_role_includes(self) -> None:
         runtime_entry_text = MAKE_RUNTIME.read_text(encoding="utf-8")
         runtime_core_entry_text = MAKE_RUNTIME_CORE.read_text(encoding="utf-8")
+        runtime_local_urls_entry_text = MAKE_RUNTIME_LOCAL_URLS.read_text(
+            encoding="utf-8"
+        )
         contract_text = _makefile_contract_text()
 
         self.assertIn("include makefiles/runtime/core.mk", runtime_entry_text)
@@ -319,6 +323,20 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/runtime/core/status.mk",
             runtime_core_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^\.PHONY:|^[-a-zA-Z0-9_]+:",
+                runtime_local_urls_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/runtime/local-urls/docs.mk",
+            runtime_local_urls_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/runtime/local-urls/viz.mk",
+            runtime_local_urls_entry_text,
         )
         self.assertIn("chat:", contract_text)
         self.assertIn("start:", contract_text)
