@@ -144,7 +144,9 @@ flowchart TD
   runners.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
-  matching servers during closeout recovery.
+  matching servers during closeout recovery. If stop or interpreter-mismatch
+  restart signals a matching server and the process remains active, managed
+  PID files stay in place and the action exits non-zero.
   `eval-sidecar` reports missing current-file drift on start/status and still
   stops the repo-managed PID during closeout. It trusts PID files only when the
   live PID matches the `tools.eval_sidecar run` process shape; unrelated live

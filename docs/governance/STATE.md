@@ -135,6 +135,9 @@ Last updated: 2026-06-28
   - `server-daemon` trusts managed PID files only when the live PID matches
     the configured Polinko `uvicorn` app; stale PID files that point to
     unrelated live processes are cleaned without stopping the unrelated process
+  - `server-daemon` preserves managed PID files and fails stop/restart when a
+    matching server remains active after a stop signal, so closeout cannot hide
+    a still-live local API server
   - `eval-sidecar` reports missing current-file drift on start/status and still
     stops the repo-managed PID during closeout
   - `eval-sidecar` trusts managed PID files only when the live PID matches the

@@ -92,6 +92,14 @@ launch_detached_server() {
 		--reload
 }
 
+wait_for_server_stop() {
+	local pid=$1
+	if ! polinko_wait_for_pid_exit "$pid" 30 0.1; then
+		echo "server-daemon did not exit after stop signal (PID $pid)."
+		return 1
+	fi
+}
+
 start_server() {
 	expected_py=$(resolve_expected_python)
 	if [ -z "$expected_py" ]; then
@@ -133,7 +141,9 @@ start_server() {
 				echo "found:    $existing_py_real"
 				echo "Restarting server-daemon with expected interpreter."
 				kill "$polinko_pid"
-				sleep 0.2
+				if ! wait_for_server_stop "$polinko_pid"; then
+					exit 1
+				fi
 			else
 				first_pid=$(printf '%s\n' "$existing_pids" | awk '{print $1}')
 				first_cmd=$(polinko_process_command "$first_pid")
@@ -171,7 +181,9 @@ stop_server() {
 				stale_cleaned=1
 			else
 				kill "$pid"
-				sleep 0.1
+				if ! wait_for_server_stop "$pid"; then
+					exit 1
+				fi
 				rm -f "$server_pid_file"
 				echo "server-daemon stopped (PID $pid)."
 				exit 0
@@ -186,7 +198,9 @@ stop_server() {
 	pid=$(polinko_server_pid_on_port || true)
 	if [ -n "$pid" ]; then
 		kill "$pid"
-		sleep 0.1
+		if ! wait_for_server_stop "$pid"; then
+			exit 1
+		fi
 		echo "server-daemon stopped matching server without PID file (PID $pid)."
 		exit 0
 	fi
