@@ -3909,3 +3909,22 @@ or branch history instead.
   selection-plan args, execution/report args, and feedback-closure backup and
   restore args in one file. Workflow fragments make OCR retry config
   maintenance easier to audit while preserving operator commands.
+
+## D-233: Split eval gate runner config ownership by environment group
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `gates`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/config/evals/gates/runner.mk` as
+  the public local eval gate runner config entrypoint, then split runner
+  script/base runtime, smoke store, gate store, retrieval/OCR, and
+  behaviour-gate environment assignments into environment-group fragments with
+  include-aware Makefile contract coverage.
+- Decision: `LOCAL_EVAL_GATE_RUNNER_SCRIPT` and
+  `LOCAL_EVAL_GATE_RUNNER_ENV` remain the public runner config variables,
+  while the env assignment ownership now lives in environment-group fragments.
+- Why: The old runner config include mixed every suite's environment variables
+  in one long assignment. Environment-group fragments make gate-runner config
+  maintenance easier to audit while preserving eval gate commands.

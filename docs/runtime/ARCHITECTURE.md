@@ -83,6 +83,9 @@ This page is the structural map of the tracked system.
   - eval gate configuration fragments for quality-gate server settings,
     eval-smoke settings, hallucination judge settings, suite harness defaults,
     and local gate runner wiring
+- `makefiles/config/evals/gates/runner/`
+  - local eval gate runner environment fragments for base runtime, smoke
+    stores, gate stores, retrieval/OCR, and behaviour gates
 - `makefiles/config/evals/ocr-cases/`
   - OCR-case configuration fragments for source paths, export settings,
     transcript-derived case paths, review outputs, benchmark selectors, and

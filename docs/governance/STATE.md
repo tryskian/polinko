@@ -177,7 +177,11 @@ Last updated: 2026-06-28
     `makefiles/config/evals/gates.mk`, while workflow-owned fragments live
     under `makefiles/config/evals/gates/` for quality-gate server settings,
     eval-smoke settings, hallucination judge settings, suite harness defaults,
-    and local gate runner wiring
+    and local gate runner wiring. Local gate runner config keeps
+    `makefiles/config/evals/gates/runner.mk` as the public runner config
+    entrypoint, while base runtime, smoke stores, gate stores, retrieval/OCR,
+    and behaviour-gate env fragments live under
+    `makefiles/config/evals/gates/runner/`
   - OCR-case eval config keeps the public entrypoint at
     `makefiles/config/evals/ocr-cases.mk`, while workflow-owned fragments live
     under `makefiles/config/evals/ocr-cases/` for source paths, export
