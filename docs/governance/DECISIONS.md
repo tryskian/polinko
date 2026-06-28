@@ -4519,3 +4519,23 @@ or branch history instead.
 - Why: Hard-coded readiness bounds make local gate failures harder to tune and
   differ from the newer background-runner readiness shape. Exposed bounds keep
   the defaults stable while giving operators a controlled diagnostic knob.
+
+## D-263: Fail lifecycle runners early on missing PID inspection tooling
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `pid_file`, `diagnostics`, `ps`,
+  `local_eval_gate`
+- Human-led: The human lead asked to keep hidden runner/script failures
+  maintained proactively and resolve interruptions discovered during the
+  focused refactor.
+- Engineer implementation: Add a shared process-inspection prerequisite helper
+  in `tools/process_lifecycle_common.sh`, require `ps` before lifecycle
+  scripts make PID-state decisions, and guard the contract in helper and
+  script-surface tests.
+- Decision: Scripts that rely on shared PID inspection must fail early with a
+  direct missing-command diagnostic if `ps` is unavailable.
+- Why: Without `ps`, PID checks can degrade into misleading liveness state
+  because `kill -0` alone cannot distinguish healthy processes from stopped or
+  zombie state. Early diagnostics keep runner failures tied to the real
+  missing local prerequisite.

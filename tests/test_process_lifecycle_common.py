@@ -47,6 +47,26 @@ class ProcessLifecycleCommonTests(unittest.TestCase):
             result.stderr,
         )
 
+    def test_require_process_inspection_reports_missing_ps(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(
+                [
+                    "/bin/sh",
+                    "-c",
+                    (
+                        f'. "{HELPER}"; '
+                        f'PATH="{tmp}"; '
+                        'polinko_require_process_inspection "pid context"'
+                    ),
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Missing required command for pid context: ps", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

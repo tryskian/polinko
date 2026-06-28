@@ -2579,6 +2579,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("polinko_pid_is_running", server_daemon_script_text)
         self.assertIn(
+            'polinko_require_process_inspection "server-daemon PID inspection"',
+            server_daemon_script_text,
+        )
+        self.assertIn(
             'polinko_require_command curl "server-daemon readiness check"',
             server_daemon_script_text,
         )
@@ -2598,6 +2602,10 @@ class MakefileContractTests(unittest.TestCase):
             portfolio_mockup_script_text,
         )
         self.assertIn("polinko_pid_is_running", portfolio_mockup_script_text)
+        self.assertIn(
+            'polinko_require_process_inspection "portfolio mockup PID inspection"',
+            portfolio_mockup_script_text,
+        )
         self.assertIn(
             'polinko_require_command curl "portfolio mockup HTTP reachability checks"',
             portfolio_mockup_script_text,
@@ -2738,6 +2746,10 @@ class MakefileContractTests(unittest.TestCase):
             local_eval_gate_script_text,
         )
         self.assertIn(
+            'polinko_require_process_inspection "local eval gate PID inspection"',
+            local_eval_gate_script_text,
+        )
+        self.assertIn(
             'while [ "$attempt" -lt "$local_eval_gate_start_attempts" ]; do',
             local_eval_gate_script_text,
         )
@@ -2755,6 +2767,10 @@ class MakefileContractTests(unittest.TestCase):
             sidecar_script_text,
         )
         self.assertIn("polinko_pid_is_running", sidecar_script_text)
+        self.assertIn(
+            'polinko_require_process_inspection "eval-sidecar PID inspection"',
+            sidecar_script_text,
+        )
         self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
             sidecar_script_text,

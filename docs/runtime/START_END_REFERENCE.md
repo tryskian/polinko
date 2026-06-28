@@ -107,6 +107,9 @@ Runner lifecycle rule:
     diagnostic
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
+- shared PID inspection requires `ps` before lifecycle scripts make managed
+  PID-state decisions, so missing local process-inspection tooling fails as a
+  prerequisite error instead of misleading liveness state
 - the shared detached launcher stops the started child process group if the PID
   file cannot be written, so failed starts do not leave unmanaged background
   descendants behind

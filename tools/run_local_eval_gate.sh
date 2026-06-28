@@ -31,6 +31,8 @@ api-smoke|eval-smoke|hallucination-gate|quality-gate)
 	;;
 esac
 
+polinko_require_process_inspection "local eval gate PID inspection"
+
 server_pid=
 
 cleanup_server() {

@@ -126,6 +126,7 @@ start_server() {
 		echo "Unable to resolve expected Python interpreter from $python_bin."
 		exit 1
 	fi
+	polinko_require_process_inspection "server-daemon PID inspection"
 
 	mkdir -p "$(dirname "$server_pid_file")" "$(dirname "$server_log")"
 
@@ -192,6 +193,8 @@ start_server() {
 }
 
 stop_server() {
+	polinko_require_process_inspection "server-daemon PID inspection"
+
 	stale_cleaned=0
 	if [ -f "$server_pid_file" ]; then
 		pid=$(cat "$server_pid_file" 2>/dev/null || true)
@@ -232,6 +235,8 @@ stop_server() {
 }
 
 status_server() {
+	polinko_require_process_inspection "server-daemon PID inspection"
+
 	if [ -f "$server_pid_file" ]; then
 		pid=$(cat "$server_pid_file" 2>/dev/null || true)
 		if polinko_pid_is_running "$pid"; then
