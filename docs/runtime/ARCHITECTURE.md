@@ -160,6 +160,9 @@ This page is the structural map of the tracked system.
 - `makefiles/evals/core/quality/`
   - quality eval target fragments for hallucination, style, and
     response-behaviour
+- `makefiles/evals/core/ocr/`
+  - direct OCR eval target fragments for safety, base OCR, handwriting, and
+    recovery
 - `makefiles/evals/aliases/`
   - eval alias target fragments for OCR intake/mining, OCR run/focus/benchmark
     shorthands, and utility/inventory aliases

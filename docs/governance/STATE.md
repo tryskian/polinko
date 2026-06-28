@@ -219,6 +219,9 @@ Last updated: 2026-06-28
     `makefiles/evals/core/quality.mk`, while quality-family fragments live
     under `makefiles/evals/core/quality/` for hallucination, style, and
     response-behaviour
+  - direct OCR eval targets keep the public entrypoint at
+    `makefiles/evals/core/ocr.mk`, while OCR-suite fragments live under
+    `makefiles/evals/core/ocr/` for safety, base OCR, handwriting, and recovery
   - OCR-run eval config keeps the public entrypoint at
     `makefiles/config/evals/ocr-runs.mk`, while workflow-owned fragments live
     under `makefiles/config/evals/ocr-runs/` for defaults, common helper

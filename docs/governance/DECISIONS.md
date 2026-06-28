@@ -4056,3 +4056,21 @@ or branch history instead.
   response-behaviour target families in one file. Eval-family fragments make
   the quality target surface easier to audit while preserving operator
   commands.
+
+## D-240: Split direct OCR eval core targets by suite family
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `targets`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/evals/core/ocr.mk` as the public
+  direct OCR eval target entrypoint, then split OCR safety, base OCR,
+  handwriting, and recovery targets into suite-family fragments with
+  include-aware Makefile contract coverage.
+- Decision: Direct OCR eval target names, report commands, OCR retry/timeout
+  wiring, handwriting runner wiring, and recovery execution stay stable, while
+  direct OCR target ownership now lives in suite-family fragments.
+- Why: The old direct OCR include mixed safety, base OCR, handwriting, and
+  recovery target families in one file. Suite-family fragments make the OCR
+  target surface easier to audit while preserving operator commands.
