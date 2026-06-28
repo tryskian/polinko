@@ -47,7 +47,8 @@ def _write_reachable_server_fakes(fake_bin: Path) -> None:
         (
             "#!/usr/bin/env bash\n"
             "set -euo pipefail\n"
-            'if [ "${1:-}" = "-p" ] && [ "${2:-}" = "$EXPECTED_PID" ]; then\n'
+            'if [ "${1:-}" = "-o" ] && [ "${2:-}" = "command=" ] && '
+            '[ "${3:-}" = "-p" ] && [ "${4:-}" = "$EXPECTED_PID" ]; then\n'
             "  printf 'python -m http.server %s --bind 127.0.0.1 --directory %s\\n' "
             '"$PORTFOLIO_MOCKUP_PORT" "$PORTFOLIO_MOCKUP_DIR"\n'
             "fi\n"
