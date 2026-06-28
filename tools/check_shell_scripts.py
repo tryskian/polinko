@@ -12,7 +12,6 @@ SHELL_LIBRARIES = {
     Path("tools/ocr_workflow_common.sh"): "ocr_workflow_use_eval_case_guard",
     Path("tools/process_lifecycle_common.sh"): "polinko_pid_is_running",
     Path("tools/python_runtime.sh"): "polinko_default_python_bin",
-    Path("tools/process_lifecycle_common.sh"): "polinko_pid_is_running",
 }
 ROOT_HELPER_EXEMPT_EXECUTABLES = {
     Path("tools/open_local_url.sh"),

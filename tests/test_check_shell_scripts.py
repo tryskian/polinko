@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import ast
 import tempfile
 import unittest
+from collections import Counter
 from pathlib import Path
 
 from tools import check_shell_scripts
@@ -83,6 +85,39 @@ class CheckShellScriptsTests(unittest.TestCase):
         for script in check_shell_scripts.SHELL_LIBRARIES:
             with self.subTest(script=str(script)):
                 self.assertEqual(check_shell_scripts.check_script(script), [])
+
+    def test_shell_library_registry_has_unique_paths(self) -> None:
+        source = Path(check_shell_scripts.__file__).read_text(encoding="utf-8")
+        module = ast.parse(source)
+        library_paths: list[str] = []
+
+        for node in module.body:
+            if not isinstance(node, ast.Assign):
+                continue
+            if not any(
+                isinstance(target, ast.Name) and target.id == "SHELL_LIBRARIES"
+                for target in node.targets
+            ):
+                continue
+            self.assertIsInstance(node.value, ast.Dict)
+            for key in node.value.keys:
+                if (
+                    isinstance(key, ast.Call)
+                    and isinstance(key.func, ast.Name)
+                    and key.func.id == "Path"
+                    and len(key.args) == 1
+                    and isinstance(key.args[0], ast.Constant)
+                    and isinstance(key.args[0].value, str)
+                ):
+                    library_paths.append(key.args[0].value)
+            break
+        else:
+            self.fail("SHELL_LIBRARIES registry not found")
+
+        duplicate_paths = sorted(
+            path for path, count in Counter(library_paths).items() if count > 1
+        )
+        self.assertEqual(duplicate_paths, [])
 
 
 if __name__ == "__main__":
