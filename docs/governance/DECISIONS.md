@@ -4328,3 +4328,23 @@ or branch history instead.
   focus run controls, report output paths, rate-limit backoff settings, and
   fail-cohort input in one file. Env-role fragments make the parked OCR focus
   workflow easier to inspect while preserving dry-run command shape.
+
+## D-253: Split external ops targets and config by tool
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `ops`, `tooling`, `config`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/ops.mk` and
+  `makefiles/config/ops.mk` as public external operator-tool entrypoints, then
+  split k6 smoke, Trivy scan, Docker lifecycle, and local GitHub Actions
+  runner defaults/targets into tool-owned fragments with include-aware
+  Makefile contract coverage.
+- Decision: `k6-chat-smoke`, `trivy-fs`, `trivy-image`, `docker-build`,
+  `docker-run`, and their public config variables stay stable, while external
+  ops target and config ownership now lives in tool-owned fragments.
+- Why: The old ops includes mixed load-smoke, vulnerability scan, container,
+  and local Actions-runner ownership in broad files. Tool-owned fragments make
+  external helper maintenance easier to audit while preserving operator
+  commands.

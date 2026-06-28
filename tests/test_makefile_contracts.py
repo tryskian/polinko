@@ -11,6 +11,7 @@ MAKEFILE = REPO_ROOT / "Makefile"
 MAKE_BUILD = REPO_ROOT / "makefiles" / "build.mk"
 MAKE_BUILD_DEPENDENCIES = REPO_ROOT / "makefiles" / "build" / "dependencies.mk"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
+MAKE_CONFIG_OPS = REPO_ROOT / "makefiles" / "config" / "ops.mk"
 MAKE_CONFIG_RUNTIME = REPO_ROOT / "makefiles" / "config" / "runtime.mk"
 MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT = (
     REPO_ROOT / "makefiles" / "config" / "runtime" / "openai-account.mk"
@@ -130,6 +131,7 @@ MAKE_EVALS_GATES = REPO_ROOT / "makefiles" / "evals" / "gates.mk"
 MAKE_EVALS_OCR_INTAKE = REPO_ROOT / "makefiles" / "evals" / "ocr-intake.mk"
 MAKE_EVALS_OCR_RUNS = REPO_ROOT / "makefiles" / "evals" / "ocr-runs.mk"
 MAKE_EVALS_OCR_RUNS_LANES = REPO_ROOT / "makefiles" / "evals" / "ocr-runs" / "lanes.mk"
+MAKE_OPS = REPO_ROOT / "makefiles" / "ops.mk"
 MAKE_RUNTIME = REPO_ROOT / "makefiles" / "runtime.mk"
 MAKE_RUNTIME_CORE = REPO_ROOT / "makefiles" / "runtime" / "core.mk"
 MAKE_RUNTIME_LOCAL_URLS = REPO_ROOT / "makefiles" / "runtime" / "local-urls.mk"
@@ -1156,6 +1158,23 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("OCR_GROWTH_CASE_WORKFLOW_ENV =", config_text)
         self.assertIn("OCR_REPORT_WORKFLOW_ENV =", config_text)
 
+    def test_ops_targets_are_extracted_through_tool_includes(self) -> None:
+        ops_entry_text = MAKE_OPS.read_text(encoding="utf-8")
+        contract_text = _makefile_contract_text()
+
+        self.assertNotRegex(
+            ops_entry_text,
+            r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
+        )
+        self.assertIn("include makefiles/ops/k6.mk", ops_entry_text)
+        self.assertIn("include makefiles/ops/trivy.mk", ops_entry_text)
+        self.assertIn("include makefiles/ops/docker.mk", ops_entry_text)
+        self.assertIn("k6-chat-smoke:", contract_text)
+        self.assertIn("trivy-fs:", contract_text)
+        self.assertIn("trivy-image:", contract_text)
+        self.assertIn("docker-build:", contract_text)
+        self.assertIn("docker-run:", contract_text)
+
     def test_surface_targets_are_extracted_through_role_includes(self) -> None:
         config_surfaces_entry_text = MAKE_CONFIG_SURFACES.read_text(encoding="utf-8")
         config_manual_evals_entry_text = MAKE_CONFIG_SURFACES_MANUAL_EVALS.read_text(
@@ -1377,6 +1396,7 @@ class MakefileContractTests(unittest.TestCase):
     def test_shared_config_is_extracted_before_target_families(self) -> None:
         root_text = _makefile_text()
         config_entry_text = MAKE_CONFIG.read_text(encoding="utf-8")
+        config_ops_entry_text = MAKE_CONFIG_OPS.read_text(encoding="utf-8")
         runtime_config_entry_text = MAKE_CONFIG_RUNTIME.read_text(encoding="utf-8")
         runtime_openai_account_entry_text = (
             MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT.read_text(encoding="utf-8")
@@ -1400,6 +1420,16 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("include makefiles/config/evals.mk", config_entry_text)
         self.assertIn("include makefiles/config/ops.mk", config_entry_text)
         self.assertIn("include makefiles/config/build.mk", config_entry_text)
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=|\+=)",
+                config_ops_entry_text,
+            )
+        )
+        self.assertIn("include makefiles/config/ops/act.mk", config_ops_entry_text)
+        self.assertIn("include makefiles/config/ops/docker.mk", config_ops_entry_text)
+        self.assertIn("include makefiles/config/ops/k6.mk", config_ops_entry_text)
+        self.assertIn("include makefiles/config/ops/trivy.mk", config_ops_entry_text)
         self.assertIn(
             "include makefiles/config/runtime/core.mk", runtime_config_entry_text
         )

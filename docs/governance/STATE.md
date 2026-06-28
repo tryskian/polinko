@@ -348,6 +348,12 @@ Last updated: 2026-06-28
     `makefiles/config/evals/reports/ocr-builder/` for base runtime,
     growth-metrics, growth-fail-cohort, focus-case, and focus-fail-pattern
     env wiring
+  - external operator tooling keeps the public target entrypoint at
+    `makefiles/ops.mk` and the public config entrypoint at
+    `makefiles/config/ops.mk`, while tool-owned fragments live under
+    `makefiles/ops/` for k6, Trivy, and Docker targets and under
+    `makefiles/config/ops/` for local GitHub Actions runner, Docker, k6, and
+    Trivy defaults
   - build Make targets keep the public entrypoint at `makefiles/build.mk`,
     while role-owned fragments live under `makefiles/build/` for CI
     aggregation, dependency lock/install flows, package checks, and security
