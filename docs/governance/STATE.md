@@ -122,6 +122,9 @@ Last updated: 2026-06-28
     local server or launching gate modules, so subdirectory invocation uses the
     same packaged runtime surface as Make execution; direct invocation without
     `PYTHON` prefers the repo `.venv` interpreter when available
+  - local eval gates clean up their temporary server with bounded stop-wait
+    behaviour, preserving the suite exit status when cleanup succeeds and
+    failing clearly when the server ignores the stop signal
   - core background runner lifecycle is script-owned for `caffeinate`,
     `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned

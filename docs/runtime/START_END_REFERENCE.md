@@ -105,6 +105,9 @@ Active kernel validation:
 - During active refactor kernels, use focused checks for the touched surface
 - Use `make local-runtime-config-check` when a kernel changes VS Code task or
   local runtime config shape
+- Local eval gates start a temporary server for each gate run and use bounded
+  cleanup; if that server remains active after the stop signal, the wrapper
+  fails clearly instead of waiting indefinitely
 - Use `make risk-scan` when a kernel changes runtime maps, Make gates, CI,
   background runners, startup/closeout, or local configuration surfaces
 - Use `make pr-preflight` before publishing a PR when you need the local

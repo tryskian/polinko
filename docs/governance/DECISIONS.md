@@ -4422,3 +4422,22 @@ or branch history instead.
   server remains active can make closeout look clean or create a port
   collision. Waiting for exit preserves accurate lifecycle state and keeps the
   next status or stop check actionable.
+
+## D-258: Bound local eval gate server cleanup
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `local_eval_gate`, `runner`, `cleanup`, `closeout`
+- Human-led: The human lead asked to keep script/runtime cleanup focused and
+  resolve hidden runner interruptions as they are encountered during the
+  refactor.
+- Engineer implementation: Source the shared lifecycle helper from
+  `tools/run_local_eval_gate.sh`, replace unbounded cleanup `wait` behaviour
+  with bounded PID-exit waiting, preserve the original suite exit status when
+  cleanup succeeds, and add regression coverage for a local gate server that
+  ignores the stop signal.
+- Decision: Local eval gates must not hang indefinitely while cleaning up the
+  temporary local server they start for a gate run.
+- Why: A local gate server that ignores `TERM` should fail the wrapper clearly
+  instead of leaving the operator waiting on an unbounded `wait` during active
+  validation or closeout-adjacent checks.
