@@ -20,6 +20,9 @@ MAKE_CONFIG_EVALS_GATES_RUNNER = (
 MAKE_CONFIG_EVALS_OCR_CASES = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-cases.mk"
 )
+MAKE_CONFIG_EVALS_OCR_CASES_INTAKE_WORKFLOW = (
+    REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-cases" / "intake-workflow.mk"
+)
 MAKE_CONFIG_EVALS_OCR_RUNS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs.mk"
 )
@@ -415,6 +418,9 @@ class MakefileContractTests(unittest.TestCase):
             encoding="utf-8"
         )
         ocr_cases_entry_text = MAKE_CONFIG_EVALS_OCR_CASES.read_text(encoding="utf-8")
+        ocr_cases_intake_workflow_entry_text = (
+            MAKE_CONFIG_EVALS_OCR_CASES_INTAKE_WORKFLOW.read_text(encoding="utf-8")
+        )
         ocr_runs_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS.read_text(encoding="utf-8")
         ocr_runs_transcript_lanes_entry_text = (
             MAKE_CONFIG_EVALS_OCR_RUNS_TRANSCRIPT_LANES.read_text(encoding="utf-8")
@@ -559,6 +565,40 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/config/evals/ocr-cases/intake-workflow.mk",
             ocr_cases_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=|\+=)",
+                ocr_cases_intake_workflow_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-cases/intake-workflow/base.mk",
+            ocr_cases_intake_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-cases/intake-workflow/export.mk",
+            ocr_cases_intake_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-cases/intake-workflow/transcript-cases.mk",
+            ocr_cases_intake_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-cases/intake-workflow/transcript-review.mk",
+            ocr_cases_intake_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-cases/intake-workflow/generalization.mk",
+            ocr_cases_intake_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-cases/intake-workflow/growth.mk",
+            ocr_cases_intake_workflow_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/config/evals/ocr-cases/intake-workflow/benchmarks.mk",
+            ocr_cases_intake_workflow_entry_text,
         )
         self.assertIn(
             "include makefiles/config/evals/ocr-runs/defaults.mk",

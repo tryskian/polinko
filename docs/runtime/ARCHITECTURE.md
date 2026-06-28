@@ -90,6 +90,10 @@ This page is the structural map of the tracked system.
   - OCR-case configuration fragments for source paths, export settings,
     transcript-derived case paths, review outputs, benchmark selectors, and
     intake workflow wiring
+- `makefiles/config/evals/ocr-cases/intake-workflow/`
+  - OCR intake workflow environment fragments for script/base runtime,
+    export-root wiring, transcript case paths, transcript review/delta,
+    generalization review, growth caps, and benchmark selectors
 - `makefiles/config/evals/ocr-runs/`
   - OCR-run configuration fragments for defaults, common helper wiring, direct
     runners, transcript lanes, focus stability, and growth workflows
