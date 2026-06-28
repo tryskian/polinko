@@ -3780,3 +3780,20 @@ or branch history instead.
 - Why: The old growth config include mixed stability workflow env with
   case/batch workflow env in one file. Workflow fragments make growth config
   easier to audit without running evals or changing commands.
+
+## D-226: Split runtime local URL target ownership by operator surface
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `runtime_targets`, `operator_surface`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/runtime/local-urls.mk` as the
+  public runtime local URL target entrypoint, then split docs URL and PASS/FAIL
+  viz URL targets into operator-surface fragments with include-aware Makefile
+  contract coverage.
+- Decision: Local URL target names and browser-launch behaviour stay stable,
+  while local URL target ownership now lives in operator-surface fragments.
+- Why: The old local URL target include mixed API docs and PASS/FAIL viz URL
+  recipes in one file. Operator-surface fragments make local URL maintenance
+  easier to audit while preserving the print-by-default browser contract.
