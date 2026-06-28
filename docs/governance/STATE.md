@@ -137,6 +137,9 @@ Last updated: 2026-06-28
     `tools/python_runtime.sh` interpreter rail for detached launchers
   - `caffeinate` command and match-pattern config are paired in Make so status
     and closeout cleanup inspect the same wake-lock shape that start launches
+  - repo-managed caffeinate rejects invalid command, regex, active-window, and
+    global-cleanup config before it reads, reports, launches, stops, or cleans
+    PID/activity state
   - `caffeinate` treats stopped/zombie managed PIDs as stale and only removes
     owned runtime metadata after bounded terminate/escalate cleanup succeeds
   - shell lifecycle runners require `ps` before making PID-state decisions, so
@@ -826,6 +829,8 @@ Last updated: 2026-06-28
     the repo-owned PID without adopting unrelated user wake-lock processes
   - repo-managed caffeinate writes metadata for PID ownership and repo activity
     state so status can distinguish `ACTIVE`, `QUIET`, `STALE`, and `OFF`
+  - repo-managed caffeinate validates command, regex, active-window, and
+    global-cleanup config before PID/activity state work
   - repo-managed caffeinate treats stopped/zombie managed PIDs as stale and
     bounds terminate/escalate cleanup before removing owned runtime metadata
   - high-traffic lifecycle and validation Make targets update repo activity

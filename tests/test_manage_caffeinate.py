@@ -113,6 +113,58 @@ class ManageCaffeinateTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("caffeinate is macOS-only; skipping.", result.stdout)
 
+    def test_rejects_invalid_active_window_seconds(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "activity"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "CAFFEINATE_ACTIVE_WINDOW_SECONDS": "0"},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("caffeinate config error", result.stderr)
+        self.assertIn("CAFFEINATE_ACTIVE_WINDOW_SECONDS", result.stderr)
+
+    def test_rejects_invalid_global_cleanup_flag(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "activity"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "CAFFEINATE_ALLOW_GLOBAL_CLEANUP": "maybe"},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("caffeinate config error", result.stderr)
+        self.assertIn("CAFFEINATE_ALLOW_GLOBAL_CLEANUP", result.stderr)
+
+    def test_rejects_empty_caffeinate_command(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "activity"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "CAFFEINATE_CMD": "  "},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("caffeinate config error", result.stderr)
+        self.assertIn("CAFFEINATE_CMD", result.stderr)
+
+    def test_rejects_invalid_match_pattern(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "activity"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "CAFFEINATE_MATCH_PATTERN": "["},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("caffeinate config error", result.stderr)
+        self.assertIn("CAFFEINATE_MATCH_PATTERN", result.stderr)
+
     def test_start_cleans_live_non_owned_pid_without_killing_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
