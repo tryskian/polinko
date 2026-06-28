@@ -145,6 +145,9 @@ flowchart TD
   processes or using relative local paths. Shared PID checks treat terminated
   zombie processes as inactive instead of reporting them as healthy live
   runners.
+  `caffeinate` keeps wake-lock ownership and repo activity separate, treats
+  stopped/zombie managed PIDs as stale, and removes owned runtime metadata only
+  after bounded terminate/escalate cleanup succeeds.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery. If stop or interpreter-mismatch

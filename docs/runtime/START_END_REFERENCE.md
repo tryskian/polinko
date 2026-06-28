@@ -57,10 +57,12 @@ Wake-lock rule:
   same activity metadata without starting, stopping, or adopting a wake-lock PID
 - the managed process is launched in a detached child session so it survives
   non-interactive host shell command exit
-- `make decaffeinate` stops the repo-owned PID
+- `make decaffeinate` stops the repo-owned PID with bounded
+  terminate/escalate cleanup before owned runtime metadata is removed
 - `make caffeinate-status` is read-only; it reports `ACTIVE`, `QUIET`,
   `STALE`, or `OFF` from PID ownership, metadata, and activity freshness, and
-  reports matching unmanaged `caffeinate` processes without adopting their PIDs
+  reports matching unmanaged `caffeinate` processes without adopting their PIDs;
+  stopped/zombie managed PIDs are treated as stale
 - `make caffeinate-off-all` is repo-scoped by default: it cleans the managed
   PID and current repo runtime metadata, while global matching-process cleanup
   requires explicit operator opt-in

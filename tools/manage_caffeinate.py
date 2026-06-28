@@ -242,7 +242,7 @@ def _evaluate_pid_file(config: RuntimeConfig) -> ProcessState:
     pid = _read_pid(config.pid_file)
     if pid is None:
         return ProcessState("missing", reason="PID file missing or invalid")
-    if not _pid_live(pid):
+    if _pid_stopped(config, pid):
         return ProcessState("stale", pid=pid, reason="PID is not live")
 
     command = _process_command(config, pid)
@@ -402,8 +402,7 @@ def _terminate_pid(config: RuntimeConfig, pid: int) -> bool:
         return True
     except PermissionError:
         return False
-    time.sleep(0.1)
-    if _pid_stopped(config, pid):
+    if _wait_for_pid_stop(config, pid):
         return True
     try:
         os.kill(pid, signal.SIGKILL)
@@ -411,7 +410,16 @@ def _terminate_pid(config: RuntimeConfig, pid: int) -> bool:
         return True
     except PermissionError:
         return False
-    time.sleep(0.1)
+    return _wait_for_pid_stop(config, pid)
+
+
+def _wait_for_pid_stop(
+    config: RuntimeConfig, pid: int, *, attempts: int = 30, delay_seconds: float = 0.1
+) -> bool:
+    for _ in range(attempts):
+        if _pid_stopped(config, pid):
+            return True
+        time.sleep(delay_seconds)
     return _pid_stopped(config, pid)
 
 

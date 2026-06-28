@@ -132,6 +132,8 @@ Last updated: 2026-06-28
     `tools/python_runtime.sh` interpreter rail for detached launchers
   - `caffeinate` command and match-pattern config are paired in Make so status
     and closeout cleanup inspect the same wake-lock shape that start launches
+  - `caffeinate` treats stopped/zombie managed PIDs as stale and only removes
+    owned runtime metadata after bounded terminate/escalate cleanup succeeds
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery
@@ -802,6 +804,8 @@ Last updated: 2026-06-28
     the repo-owned PID without adopting unrelated user wake-lock processes
   - repo-managed caffeinate writes metadata for PID ownership and repo activity
     state so status can distinguish `ACTIVE`, `QUIET`, `STALE`, and `OFF`
+  - repo-managed caffeinate treats stopped/zombie managed PIDs as stale and
+    bounds terminate/escalate cleanup before removing owned runtime metadata
   - high-traffic lifecycle and validation Make targets update repo activity
     metadata without changing wake-lock ownership
   - `make caffeinate-off-all` is repo-scoped by default; global matching-process
