@@ -205,6 +205,10 @@ Last updated: 2026-06-28
     `makefiles/evals/aliases.mk`, while alias-family fragments live under
     `makefiles/evals/aliases/` for OCR intake/mining aliases, OCR
     run/focus/benchmark shorthands, and utility/inventory aliases
+  - eval utility aliases keep the public entrypoint at
+    `makefiles/evals/aliases/utilities.mk`, while runtime-null audit, OCR
+    inventory, and OCR data/notebook workflow alias fragments live under
+    `makefiles/evals/aliases/utilities/`
   - OCR intake alias targets keep the public entrypoint at
     `makefiles/evals/aliases/ocr-intake.mk`, while alias-family fragments live
     under `makefiles/evals/aliases/ocr-intake/` for base intake aliases,

@@ -182,6 +182,9 @@ This page is the structural map of the tracked system.
 - `makefiles/evals/aliases/`
   - eval alias target fragments for OCR intake/mining, OCR run/focus/benchmark
     shorthands, and utility/inventory aliases
+- `makefiles/evals/aliases/utilities/`
+  - utility alias fragments for runtime-null audit, OCR inventory, and OCR
+    data/notebook workflows
 - `makefiles/evals/aliases/ocr-intake/`
   - OCR intake alias fragments for base intake aliases, lane-filter aliases,
     and signal/status filter aliases

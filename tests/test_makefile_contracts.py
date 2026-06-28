@@ -90,6 +90,9 @@ MAKE_EVALS_ALIASES_OCR_INTAKE = (
 MAKE_EVALS_ALIASES_OCR_RUNS = (
     REPO_ROOT / "makefiles" / "evals" / "aliases" / "ocr-runs.mk"
 )
+MAKE_EVALS_ALIASES_UTILITIES = (
+    REPO_ROOT / "makefiles" / "evals" / "aliases" / "utilities.mk"
+)
 MAKE_EVALS_CORE = REPO_ROOT / "makefiles" / "evals" / "core.mk"
 MAKE_EVALS_CORE_QUALITY = REPO_ROOT / "makefiles" / "evals" / "core" / "quality.mk"
 MAKE_EVALS_CORE_OCR = REPO_ROOT / "makefiles" / "evals" / "core" / "ocr.mk"
@@ -369,6 +372,9 @@ class MakefileContractTests(unittest.TestCase):
         aliases_ocr_runs_entry_text = MAKE_EVALS_ALIASES_OCR_RUNS.read_text(
             encoding="utf-8"
         )
+        aliases_utilities_entry_text = MAKE_EVALS_ALIASES_UTILITIES.read_text(
+            encoding="utf-8"
+        )
         core_entry_text = MAKE_EVALS_CORE.read_text(encoding="utf-8")
         core_quality_entry_text = MAKE_EVALS_CORE_QUALITY.read_text(encoding="utf-8")
         core_ocr_entry_text = MAKE_EVALS_CORE_OCR.read_text(encoding="utf-8")
@@ -414,6 +420,24 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/evals/aliases/ocr-intake/filters.mk",
             aliases_ocr_intake_entry_text,
+        )
+        self.assertIsNone(
+            re.search(
+                r"(?m)^\.PHONY:|^[-a-zA-Z0-9_]+:",
+                aliases_utilities_entry_text,
+            )
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/utilities/runtime-null.mk",
+            aliases_utilities_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/utilities/ocr-inventory.mk",
+            aliases_utilities_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/evals/aliases/utilities/ocr-workflows.mk",
+            aliases_utilities_entry_text,
         )
         self.assertIsNone(
             re.search(
