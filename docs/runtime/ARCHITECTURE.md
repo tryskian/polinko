@@ -133,6 +133,10 @@ This page is the structural map of the tracked system.
 - `makefiles/config/evals/ocr-runs/growth/`
   - OCR-run growth configuration fragments for growth stability workflow env
     and growth case/batch workflow env
+- `makefiles/config/evals/ocr-runs/growth/stability-workflow/`
+  - OCR growth stability workflow env fragments for script defaults, runtime
+    helpers, runner script, case path, run-control/rate-limit knobs,
+    report outputs, and composed env assembly
 - `makefiles/config/evals/ocr-runs/growth/case-workflow/`
   - OCR growth case workflow env fragments for script defaults, runtime
     helpers, runner scripts, case knobs, batch knobs, report outputs, and

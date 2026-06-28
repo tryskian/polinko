@@ -1,0 +1,3 @@
+# OCR growth stability workflow case path environment.
+OCR_GROWTH_STABILITY_WORKFLOW_CASE_ENV = \
+	OCR_TRANSCRIPT_CASES_GROWTH="$(OCR_TRANSCRIPT_CASES_GROWTH)"

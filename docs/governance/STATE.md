@@ -262,7 +262,13 @@ Last updated: 2026-06-28
     `makefiles/config/evals/ocr-runs/growth.mk`, while workflow-owned
     fragments live under `makefiles/config/evals/ocr-runs/growth/` for
     growth stability workflow env and growth case/batch workflow env. Growth
-    case workflow config keeps
+    stability workflow config keeps
+    `makefiles/config/evals/ocr-runs/growth/stability-workflow.mk` as its
+    public entrypoint, while script defaults, runtime helpers, runner script,
+    case path, run-control/rate-limit knobs, report outputs, and
+    composed env assembly live under
+    `makefiles/config/evals/ocr-runs/growth/stability-workflow/`. Growth case
+    workflow config keeps
     `makefiles/config/evals/ocr-runs/growth/case-workflow.mk` as its public
     entrypoint, while script defaults, runtime helpers, runner scripts, case
     knobs, batch knobs, report outputs, and composed env assembly live under

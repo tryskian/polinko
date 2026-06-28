@@ -4283,3 +4283,26 @@ or branch history instead.
   workflow runtime helpers, case runner knobs, batch runner knobs, and report
   output paths in one file. Env-role fragments make the parked OCR growth
   workflow easier to inspect while preserving dry-run command shape.
+
+## D-251: Split OCR growth stability workflow config by env role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `growth`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep
+  `makefiles/config/evals/ocr-runs/growth/stability-workflow.mk` as the public
+  OCR growth stability workflow config entrypoint, then split script defaults,
+  runtime helpers, runner script, case path, run-control/rate-limit knobs,
+  report outputs, and env assembly into env-role fragments with
+  include-aware Makefile contract coverage.
+- Decision: `OCR_GROWTH_STABILITY_RUNNER_SCRIPT`,
+  `OCR_GROWTH_STABILITY_WORKFLOW_SCRIPT`, and the composed
+  `OCR_GROWTH_STABILITY_WORKFLOW_ENV` stay stable, while growth stability
+  workflow config ownership now lives in env-role fragments.
+- Why: The old growth stability workflow config included mixed script defaults,
+  workflow runtime helpers, runner script wiring, case-selection knobs,
+  stability/rate-limit settings, and report output paths in one file. Env-role
+  fragments make the parked OCR growth stability workflow easier to inspect
+  while preserving dry-run command shape.
