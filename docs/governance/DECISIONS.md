@@ -3834,3 +3834,21 @@ or branch history instead.
   preview recipe with rebuild and browser-mode aliases in one file. Launch-role
   fragments make preview maintenance easier to audit while preserving operator
   commands.
+
+## D-229: Split build dependency target ownership by workflow
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `dependencies`, `lockfiles`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/build/dependencies.mk` as the
+  public dependency target entrypoint, then split install, refresh, and
+  lockfile recipes into workflow fragments with include-aware Makefile
+  contract coverage.
+- Decision: Dependency target names, lockfile checks, and dependency refresh
+  behaviour stay stable, while dependency target ownership now lives in
+  workflow-owned fragments.
+- Why: The old dependency include mixed install, refresh, and lockfile
+  workflows in one file. Workflow fragments make dependency maintenance easier
+  to audit while preserving operator commands.

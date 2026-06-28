@@ -251,7 +251,9 @@ Last updated: 2026-06-28
   - build Make targets keep the public entrypoint at `makefiles/build.mk`,
     while role-owned fragments live under `makefiles/build/` for CI
     aggregation, dependency lock/install flows, package checks, and security
-    gates
+    gates; dependency targets keep their public entrypoint at
+    `makefiles/build/dependencies.mk`, while nested fragments separate install,
+    refresh, and lockfile workflows
   - manual-eval Make targets keep the public entrypoint at
     `makefiles/surfaces/manual-evals.mk`, while role-owned fragments live under
     `makefiles/surfaces/manual-evals/` for warehouse database, feedback,
