@@ -3680,3 +3680,22 @@ or branch history instead.
   outputs, fail-cohort selectors, focus run throttles, growth batch settings,
   and benchmark report paths in one file. Workflow fragments make parked OCR
   config easier to audit without running evals or changing commands.
+
+## D-221: Split runtime audit target ownership by role
+
+- Date: `2026-06-27`
+- Category: `runtime_engineering`
+- Tags: `make`, `checks`, `runtime`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep `makefiles/checks/runtime-audits.mk` as the
+  public runtime audit target entrypoint, then split recipes into role-owned
+  fragments for shell helper audits, path leak checks, runtime
+  config/risk/operator checks, and environment doctor with include-aware
+  Makefile contract coverage.
+- Decision: Runtime audit target names and behaviours stay stable, while
+  runtime audit target ownership now lives in role-owned fragments.
+- Why: The old runtime audit include mixed shell script contracts, tracked and
+  local path leak checks, runtime config and alias checks, risk scan, and the
+  longer interpreter-source doctor recipe in one file. Role fragments make
+  audit maintenance easier to inspect without changing commands.
