@@ -113,6 +113,9 @@ This page is the structural map of the tracked system.
 - `makefiles/evals/`
   - eval target fragments for aliases, core suites, gates, OCR intake, and OCR
     runners
+- `makefiles/evals/gates/`
+  - eval gate target fragments for smoke gates, sidecar lifecycle, operator
+    reports, and quality/hallucination gates
 - `makefiles/evals/ocr-runs/`
   - OCR-run target fragments for base transcript runners, growth runners,
     transcript lanes, report-derived views, and focus stability
