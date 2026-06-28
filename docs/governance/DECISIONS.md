@@ -4306,3 +4306,25 @@ or branch history instead.
   stability/rate-limit settings, and report output paths in one file. Env-role
   fragments make the parked OCR growth stability workflow easier to inspect
   while preserving dry-run command shape.
+
+## D-252: Split OCR focus workflow config by env role
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `ocr`, `focus`, `modularity`
+- Human-led: The human lead approved continuing the Make/script refactor in
+  complete kernels with a live UI progress tracker.
+- Engineer implementation: Keep
+  `makefiles/config/evals/ocr-runs/focus.mk` as the public OCR focus stability
+  workflow config entrypoint, then split script defaults, runtime helpers,
+  runner script, eval guard knobs, case path, run-control knobs, report
+  outputs, rate-limit backoff, fail-cohort input, and env assembly into
+  env-role fragments with include-aware Makefile contract coverage.
+- Decision: `OCR_FOCUS_STABILITY_WORKFLOW_SCRIPT` and the composed
+  `OCR_FOCUS_STABILITY_WORKFLOW_ENV` stay stable, while focus stability
+  workflow config ownership now lives in env-role fragments.
+- Why: The old focus workflow config included mixed script defaults, workflow
+  runtime helpers, runner script wiring, eval guard settings, case input,
+  focus run controls, report output paths, rate-limit backoff settings, and
+  fail-cohort input in one file. Env-role fragments make the parked OCR focus
+  workflow easier to inspect while preserving dry-run command shape.

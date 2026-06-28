@@ -1,0 +1,4 @@
+# OCR focus stability workflow report-output environment.
+OCR_FOCUS_STABILITY_WORKFLOW_REPORT_ENV = \
+	OCR_FOCUS_REPORT_DIR="$(OCR_FOCUS_REPORT_DIR)" \
+	OCR_FOCUS_OUTPUT="$(OCR_FOCUS_OUTPUT)"
