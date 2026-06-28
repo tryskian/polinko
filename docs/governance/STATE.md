@@ -844,6 +844,9 @@ Last updated: 2026-06-28
     `tools/launch_detached_process.py` after resolving the checkout root
     through `tools/repo_root.sh`, while each runner keeps its own liveness,
     adoption, status, and stop logic
+  - `tools/launch_detached_process.py` rejects empty, missing, and
+    non-launchable commands with direct diagnostics before PID ownership is
+    recorded
   - `tools/launch_detached_process.py` stops the started child process group if
     the PID file cannot be written, so failed starts do not leave unmanaged
     background descendants behind

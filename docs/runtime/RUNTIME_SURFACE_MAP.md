@@ -143,9 +143,11 @@ flowchart TD
   behaviour across `caffeinate`, `server-daemon`, `eval-sidecar`, and
   `portfolio-mockups`. Detached child-process launch is centralized through
   `tools/launch_detached_process.py`; runner scripts retain ownership of
-  their domain-specific liveness and adoption logic. The shared launcher stops
-  the started child process group if the PID file cannot be written, so failed
-  starts do not leave unmanaged background descendants behind. Runner scripts
+  their domain-specific liveness and adoption logic. The shared launcher
+  rejects empty, missing, and non-launchable commands with direct diagnostics
+  before PID ownership is recorded; it also stops the started child process
+  group if the PID file cannot be written, so failed starts do not leave
+  unmanaged background descendants behind. Runner scripts
   resolve the checkout root through `tools/repo_root.sh` before launching child
   processes or using relative local paths. Shared PID checks treat terminated
   zombie processes as inactive instead of reporting them as healthy live

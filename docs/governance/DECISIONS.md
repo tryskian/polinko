@@ -4594,3 +4594,23 @@ or branch history instead.
 - Why: Silent fallback on invalid wake-lock config can make status and cleanup
   output look authoritative while using the wrong runtime assumptions. Early
   validation keeps operator feedback attached to the exact environment knob.
+
+## D-267: Fail detached launcher command errors with direct diagnostics
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `detached_launcher`, `diagnostics`,
+  `process_lifecycle`
+- Human-led: The human lead asked for hidden runner-script hygiene and for
+  recurring runtime failures to be prevented as the helper-script refactor
+  proceeds.
+- Engineer implementation: Update `tools/launch_detached_process.py` so empty
+  executables, missing commands, and non-launchable commands fail with bounded
+  diagnostics and no PID file; add focused regression coverage that rejects
+  traceback-shaped launcher failures.
+- Decision: The shared detached process launcher must fail command-launch
+  errors before PID ownership is recorded, with a direct diagnostic for the
+  missing or non-launchable executable.
+- Why: The launcher sits under `caffeinate`, `server-daemon`, `eval-sidecar`,
+  and `portfolio-mockups`; raw `subprocess` tracebacks make a local command
+  prerequisite look like a runner-domain failure.

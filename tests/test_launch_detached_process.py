@@ -179,6 +179,88 @@ class LaunchDetachedProcessTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertIn("missing command to launch", result.stderr)
 
+    def test_rejects_empty_executable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--pid-file",
+                    str(tmp_path / "process.pid"),
+                    "--log-file",
+                    str(tmp_path / "process.log"),
+                    "--command-string",
+                    "''",
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("missing executable to launch", result.stderr)
+
+    def test_reports_missing_executable_without_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "process.pid"
+            log_file = tmp_path / "process.log"
+            missing_command = tmp_path / "missing-command"
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--pid-file",
+                    str(pid_file),
+                    "--log-file",
+                    str(log_file),
+                    "--",
+                    str(missing_command),
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 127)
+            self.assertIn("launch-detached: command not found", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertFalse(pid_file.exists())
+            self.assertTrue(log_file.exists())
+
+    def test_reports_unlaunchable_executable_without_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "process.pid"
+            log_file = tmp_path / "process.log"
+            command = tmp_path / "command.sh"
+            command.write_text("#!/usr/bin/env sh\nsleep 30\n", encoding="utf-8")
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--pid-file",
+                    str(pid_file),
+                    "--log-file",
+                    str(log_file),
+                    "--",
+                    str(command),
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("launch-detached: failed to launch", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertFalse(pid_file.exists())
+            self.assertTrue(log_file.exists())
+
     def test_stops_child_when_pid_file_write_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
