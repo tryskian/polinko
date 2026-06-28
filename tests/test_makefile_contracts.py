@@ -9,6 +9,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 MAKEFILE = REPO_ROOT / "Makefile"
 MAKE_BUILD = REPO_ROOT / "makefiles" / "build.mk"
+MAKE_BUILD_DEPENDENCIES = REPO_ROOT / "makefiles" / "build" / "dependencies.mk"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_CONFIG_RUNTIME = REPO_ROOT / "makefiles" / "config" / "runtime.mk"
 MAKE_CONFIG_EVALS = REPO_ROOT / "makefiles" / "config" / "evals.mk"
@@ -153,12 +154,31 @@ class MakefileContractTests(unittest.TestCase):
 
     def test_build_targets_are_extracted_through_role_includes(self) -> None:
         build_entry_text = MAKE_BUILD.read_text(encoding="utf-8")
+        build_dependencies_entry_text = MAKE_BUILD_DEPENDENCIES.read_text(
+            encoding="utf-8"
+        )
         contract_text = _makefile_contract_text()
 
         self.assertIn("include makefiles/build/ci.mk", build_entry_text)
         self.assertIn("include makefiles/build/dependencies.mk", build_entry_text)
         self.assertIn("include makefiles/build/package.mk", build_entry_text)
         self.assertIn("include makefiles/build/security.mk", build_entry_text)
+        self.assertNotRegex(
+            build_dependencies_entry_text,
+            r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
+        )
+        self.assertIn(
+            "include makefiles/build/dependencies/install.mk",
+            build_dependencies_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/build/dependencies/refresh.mk",
+            build_dependencies_entry_text,
+        )
+        self.assertIn(
+            "include makefiles/build/dependencies/lockfile.mk",
+            build_dependencies_entry_text,
+        )
         self.assertIn("pr-preflight:", contract_text)
         self.assertIn("ci:", contract_text)
         self.assertIn("deps-lock-check:", contract_text)
