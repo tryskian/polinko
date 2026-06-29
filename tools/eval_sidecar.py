@@ -18,8 +18,32 @@ from typing import Any
 DEFAULT_TARGET = "quality-gate-deterministic"
 DEFAULT_MIN_SECONDS = 3600
 DEFAULT_RUNS_DIR = Path(".local/eval_runs")
-DEFAULT_PID_FILE = Path("/tmp/polinko-eval-sidecar.pid")
-DEFAULT_LOG_FILE = Path("/tmp/polinko-eval-sidecar.log")
+
+
+def _default_repo_slug() -> str:
+    repo_root = os.environ.get("POLINKO_REPO_ROOT")
+    slug = Path(repo_root).name if repo_root else Path.cwd().name
+    return slug or "polinko"
+
+
+def _env_path(name: str, default: Path) -> Path:
+    raw_value = os.environ.get(name)
+    if raw_value:
+        return Path(raw_value)
+    return default
+
+
+DEFAULT_REPO_SLUG = os.environ.get("EVAL_SIDECAR_REPO_SLUG") or _default_repo_slug()
+DEFAULT_RUNTIME_ROOT = _env_path(
+    "EVAL_SIDECAR_RUNTIME_ROOT", Path("/tmp/polinko-runtime")
+)
+DEFAULT_STATE_DIR = _env_path(
+    "EVAL_SIDECAR_STATE_DIR", DEFAULT_RUNTIME_ROOT / DEFAULT_REPO_SLUG
+)
+DEFAULT_PID_FILE = _env_path(
+    "EVAL_SIDECAR_PID_FILE", DEFAULT_STATE_DIR / "eval-sidecar.pid"
+)
+DEFAULT_LOG_FILE = _env_path("EVAL_SIDECAR_LOG", DEFAULT_STATE_DIR / "eval-sidecar.log")
 DEFAULT_CURRENT_FILE = DEFAULT_RUNS_DIR / "eval_sidecar_current.txt"
 STATUS_FILE_NAME = "status.json"
 SUMMARY_FILE_NAME = "summary.log"

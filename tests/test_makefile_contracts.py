@@ -30,6 +30,7 @@ MAKE_CONFIG_EVALS_OCR_CASES = (
 MAKE_CONFIG_EVALS_OCR_CASES_INTAKE_WORKFLOW = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-cases" / "intake-workflow.mk"
 )
+MAKE_CONFIG_EVALS_SIDECAR = REPO_ROOT / "makefiles" / "config" / "evals" / "sidecar.mk"
 MAKE_CONFIG_EVALS_OCR_RUNS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs.mk"
 )
@@ -672,6 +673,7 @@ class MakefileContractTests(unittest.TestCase):
         ocr_cases_intake_workflow_entry_text = (
             MAKE_CONFIG_EVALS_OCR_CASES_INTAKE_WORKFLOW.read_text(encoding="utf-8")
         )
+        sidecar_entry_text = MAKE_CONFIG_EVALS_SIDECAR.read_text(encoding="utf-8")
         ocr_runs_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS.read_text(encoding="utf-8")
         ocr_runs_focus_entry_text = MAKE_CONFIG_EVALS_OCR_RUNS_FOCUS.read_text(
             encoding="utf-8"
@@ -1141,6 +1143,43 @@ class MakefileContractTests(unittest.TestCase):
             "include makefiles/config/evals/reports/lane-inventory.mk",
             reports_entry_text,
         )
+        self.assertIn(
+            "EVAL_SIDECAR_REPO_SLUG ?= $(notdir $(CURDIR))",
+            sidecar_entry_text,
+        )
+        self.assertIn(
+            "EVAL_SIDECAR_RUNTIME_ROOT ?= /tmp/polinko-runtime",
+            sidecar_entry_text,
+        )
+        self.assertIn(
+            (
+                "EVAL_SIDECAR_STATE_DIR ?= "
+                "$(EVAL_SIDECAR_RUNTIME_ROOT)/$(EVAL_SIDECAR_REPO_SLUG)"
+            ),
+            sidecar_entry_text,
+        )
+        self.assertIn(
+            "EVAL_SIDECAR_PID_FILE ?= $(EVAL_SIDECAR_STATE_DIR)/eval-sidecar.pid",
+            sidecar_entry_text,
+        )
+        self.assertIn(
+            "EVAL_SIDECAR_LOG ?= $(EVAL_SIDECAR_STATE_DIR)/eval-sidecar.log",
+            sidecar_entry_text,
+        )
+        self.assertIn(
+            'EVAL_SIDECAR_REPO_SLUG="$(EVAL_SIDECAR_REPO_SLUG)"',
+            sidecar_entry_text,
+        )
+        self.assertIn(
+            'EVAL_SIDECAR_RUNTIME_ROOT="$(EVAL_SIDECAR_RUNTIME_ROOT)"',
+            sidecar_entry_text,
+        )
+        self.assertIn(
+            'EVAL_SIDECAR_STATE_DIR="$(EVAL_SIDECAR_STATE_DIR)"',
+            sidecar_entry_text,
+        )
+        self.assertNotIn("/tmp/polinko-eval-sidecar.pid", sidecar_entry_text)
+        self.assertNotIn("/tmp/polinko-eval-sidecar.log", sidecar_entry_text)
         self.assertIn("LOCAL_EVAL_GATE_RUNNER_ENV =", config_text)
         self.assertIn("OCR_INTAKE_WORKFLOW_ENV =", config_text)
         self.assertIn("EVAL_SIDECAR_START_ENV =", config_text)

@@ -181,6 +181,9 @@ flowchart TD
   only after the configured local `/health` endpoint is reachable within the
   bounded readiness wait, and it fails early with a missing-command diagnostic
   when `curl` is unavailable for that readiness probe.
+  `eval-sidecar` PID and log defaults live under repo-scoped
+  `EVAL_SIDECAR_STATE_DIR`, and status reports repo context plus
+  PID/log/current-file paths before liveness.
   `eval-sidecar` reports missing current-file drift on start/status and still
   stops the repo-managed PID during closeout. It validates
   `EVAL_SIDECAR_MIN_SECONDS` before detached launch, so invalid duration config
