@@ -84,7 +84,7 @@ class StartupContractTests(unittest.TestCase):
         self.assertIn("During active refactor kernels", start_reference)
         self.assertIn("make end-preflight", start_reference)
         self.assertIn("recommended next kernel", start_reference)
-        self.assertIn("Do not run `make end` after every kernel", start_reference)
+        self.assertIn("Reserve `make end` for real session closeout", start_reference)
         self.assertIn("Active Kernel Validation", runbook)
         self.assertIn("Use focused checks during active refactor kernels", runbook)
         self.assertIn("recommended next kernel", runbook)

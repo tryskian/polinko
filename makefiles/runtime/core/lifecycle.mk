@@ -1,5 +1,5 @@
-# Startup, closeout, and lifecycle aliases.
-.PHONY: gate start end eod end-preflight end-stop rituals
+# Startup, closeout, and lifecycle targets.
+.PHONY: gate start end end-preflight end-stop rituals
 
 gate: quality-gate-deterministic
 
@@ -10,8 +10,6 @@ start:
 end:
 	@$(call repo_activity,make end,end)
 	bash ./tools/end_of_day_routine.sh
-
-eod: end
 
 end-preflight:
 	@$(call repo_activity,make end-preflight,end-preflight)

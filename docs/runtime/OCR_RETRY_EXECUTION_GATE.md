@@ -27,7 +27,6 @@ The command is explicit and hard to run by accident:
 
 - target:
   - `make manual-evals-ocr-retry-execute`
-  - alias: `make manualdb-ocr-retry-execute`
 - required inputs:
   - `SELECTION_PATH=<path>`
   - `CONFIRM=ocr-retry-execute`
@@ -99,7 +98,6 @@ The implementation must not close feedback, write live eval rows, or refresh
 Generated execution bundles are inspected before any follow-up mutation gate:
 
 - `make manual-evals-ocr-retry-execution-report`
-- alias: `make manualdb-ocr-retry-execution-report`
 - required input: `RUN_DIR=<path>`
 - JSON schema:
   `schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`
@@ -122,7 +120,6 @@ Report states:
 Closure remains non-mutating. The current follow-up target previews only:
 
 - `make manual-evals-ocr-retry-feedback-closure-preview`
-- alias: `make manualdb-ocr-retry-feedback-closure-preview`
 - required input: `RUN_DIR=<path>`
 - JSON schema:
   `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`
@@ -146,7 +143,6 @@ It is exposed through:
 
 - target:
   - `make manual-evals-ocr-retry-feedback-closure-apply`
-  - alias: `make manualdb-ocr-retry-feedback-closure-apply`
 - required inputs:
   - `RUN_DIR=<path>`
   - `CONFIRM=ocr-retry-feedback-closure-apply`
@@ -195,7 +191,6 @@ The apply-report target is read-only:
 
 - target:
   - `make manual-evals-ocr-retry-feedback-closure-apply-report`
-  - alias: `make manualdb-ocr-retry-feedback-closure-apply-report`
 - required input: `RUN_DIR=<path>`
 - JSON schema:
   `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`
@@ -214,10 +209,8 @@ It is exposed through:
 
 - preview target:
   - `make manual-evals-ocr-retry-feedback-closure-restore-preview`
-  - alias: `make manualdb-ocr-retry-feedback-closure-restore-preview`
 - restore target:
   - `make manual-evals-ocr-retry-feedback-closure-restore`
-  - alias: `make manualdb-ocr-retry-feedback-closure-restore`
 - required restore inputs:
   - `BACKUP_DIR=<path>`
   - `CONFIRM=ocr-retry-feedback-closure-restore`

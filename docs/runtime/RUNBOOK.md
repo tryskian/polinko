@@ -164,7 +164,7 @@ Use this doc for operator procedure.
    - `make local-runtime-config-check` for VS Code task/config changes
    - `make risk-scan` for runtime map, Make gate, CI, runner, startup/closeout,
      or local configuration surface changes
-   - `make operator-alias-check` for manual eval or OCR operator alias changes
+   - `make operator-command-check` for manual eval or OCR operator command changes
    - `make lint-docs` for docs changes
    - `git diff --check`
 2. Use `make end-preflight` when the kernel is broad enough to need the full
@@ -462,7 +462,7 @@ Use this doc for operator procedure.
     system browser
 - `make end`
   - literal closeout routine from clean synced `main`: docs freshness,
-    transcript fix/check, doctor, script/path checks, risk-scan, operator alias
+    transcript fix/check, doctor, script/path checks, risk-scan, operator command
     checks, Python style/type checks, docs lint, tests, security checks,
     `make end-stop`, and final clean-main Git check
 - `make end-docs-check`
@@ -500,8 +500,8 @@ Use this doc for operator procedure.
 - `make risk-scan`
   - validates that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates
-- `make operator-alias-check`
-  - validates manual eval compatibility aliases and parked OCR eval alias
+- `make operator-command-check`
+  - validates canonical manual eval commands and parked OCR eval shortcut
     boundaries
 - `make startup-contracts-check`
   - validates startup and active-kernel runtime doc contracts
@@ -521,7 +521,7 @@ Use this doc for operator procedure.
   - PR-safe build hygiene gate that runs `doctor-env`, `transcript-check`,
     `make ci`, and `git diff --check`
 - `make pr-preflight`
-  - local PR readiness alias for `make build-hygiene`
+  - local PR readiness command for `make build-hygiene`
 
 Dependency maintenance:
 

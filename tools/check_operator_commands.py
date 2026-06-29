@@ -19,7 +19,7 @@ AUTOMATION_ENTRYPOINTS = (
     "ci-docs",
 )
 
-PARKED_OCR_EVAL_ALIASES = frozenset(
+PARKED_OCR_EVAL_SHORTCUTS = frozenset(
     {
         "ocrall",
         "ocrwiden",
@@ -46,6 +46,9 @@ PARKED_OCR_EVAL_ALIASES = frozenset(
         "ocrdelta",
     }
 )
+
+FORBIDDEN_OPERATOR_TARGET_PREFIXES = ("manualdb",)
+FORBIDDEN_OPERATOR_TARGETS = ("eod",)
 
 
 @dataclass(frozen=True)
@@ -95,50 +98,30 @@ def make_rules(text: str) -> list[MakeRule]:
     return rules
 
 
-def expected_manualdb_alias(canonical: str) -> str:
-    if canonical == "manual-evals-db":
-        return "manualdb"
-    if canonical.startswith("manual-evals-db-"):
-        return f"manualdb-{canonical.removeprefix('manual-evals-db-')}"
-    return f"manualdb-{canonical.removeprefix('manual-evals-')}"
-
-
-def check_manual_eval_aliases(text: str) -> list[str]:
+def check_canonical_operator_targets(text: str) -> list[str]:
     failures: list[str] = []
     phony = phony_targets(text)
     rules = make_rules(text)
-    rules_by_target: dict[str, list[MakeRule]] = {}
+
+    for target in sorted(phony):
+        if target in FORBIDDEN_OPERATOR_TARGETS or target.startswith(
+            FORBIDDEN_OPERATOR_TARGET_PREFIXES
+        ):
+            failures.append(f"{target}: duplicate operator target is active")
+
     for rule in rules:
         for target in rule.targets:
-            rules_by_target.setdefault(target, []).append(rule)
-
-    canonical_targets = sorted(
-        target for target in phony if target.startswith("manual-evals-")
-    )
-    for canonical in canonical_targets:
-        alias = expected_manualdb_alias(canonical)
-        if alias not in phony:
-            failures.append(f"{canonical}: missing .PHONY compatibility alias {alias}")
-            continue
-        if canonical not in rules_by_target:
-            failures.append(f"{canonical}: missing recipe target")
-            continue
-        matching_rules = [
-            rule for rule in rules_by_target[canonical] if alias in rule.targets
-        ]
-        if not matching_rules:
-            line_numbers = ", ".join(
-                str(rule.line) for rule in rules_by_target[canonical]
-            )
-            failures.append(
-                f"{canonical}: alias {alias} is not on the same recipe line "
-                f"(canonical line(s): {line_numbers})"
-            )
+            if target in FORBIDDEN_OPERATOR_TARGETS or target.startswith(
+                FORBIDDEN_OPERATOR_TARGET_PREFIXES
+            ):
+                failures.append(
+                    f"{target}: duplicate operator rule is active on line {rule.line}"
+                )
 
     return failures
 
 
-def check_parked_ocr_aliases(text: str) -> list[str]:
+def check_parked_ocr_shortcuts(text: str) -> list[str]:
     failures: list[str] = []
     rules = make_rules(text)
     rules_by_target: dict[str, list[MakeRule]] = {}
@@ -146,17 +129,17 @@ def check_parked_ocr_aliases(text: str) -> list[str]:
         for target in rule.targets:
             rules_by_target.setdefault(target, []).append(rule)
 
-    for alias in ("ocr-inventory", "ocr-inventory-json"):
-        if alias not in rules_by_target:
-            failures.append(f"{alias}: missing read-only OCR inventory target")
+    for target in ("ocr-inventory", "ocr-inventory-json"):
+        if target not in rules_by_target:
+            failures.append(f"{target}: missing read-only OCR inventory target")
 
     for entrypoint in AUTOMATION_ENTRYPOINTS:
         for rule in rules_by_target.get(entrypoint, []):
-            blocked = sorted(PARKED_OCR_EVAL_ALIASES.intersection(rule.deps))
+            blocked = sorted(PARKED_OCR_EVAL_SHORTCUTS.intersection(rule.deps))
             if blocked:
                 failures.append(
                     f"{entrypoint}: automation dependency includes parked OCR "
-                    f"eval alias(es): {', '.join(blocked)}"
+                    f"eval shortcut(s): {', '.join(blocked)}"
                 )
 
     return failures
@@ -165,25 +148,25 @@ def check_parked_ocr_aliases(text: str) -> list[str]:
 def run(root: Path) -> list[str]:
     text = makefile_text(root)
     failures: list[str] = []
-    failures.extend(check_manual_eval_aliases(text))
-    failures.extend(check_parked_ocr_aliases(text))
+    failures.extend(check_canonical_operator_targets(text))
+    failures.extend(check_parked_ocr_shortcuts(text))
     return failures
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Check manual eval and OCR operator alias contracts.",
+        description="Check canonical operator command contracts.",
     )
     parser.parse_args(argv)
 
     failures = run(ROOT)
     if failures:
-        print("operator-alias-check: FAIL", file=sys.stderr)
+        print("operator-command-check: FAIL", file=sys.stderr)
         for failure in failures:
             print(f"- {failure}", file=sys.stderr)
         return 1
 
-    print("[ok] operator alias check passed")
+    print("[ok] operator command check passed")
     return 0
 
 

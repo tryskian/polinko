@@ -54,18 +54,18 @@ flowchart TD
     ManualWorkbench["manual eval workbench"]
     DbHealth["manual_evals_db_health command"]
     OcrInventory["read-only OCR inventory"]
-    AliasCheck["operator-alias-check"]
+    CommandCheck["operator-command-check"]
     FeedbackDrafts["local decision drafts and previews"]
-    EvalAliases["Make eval aliases and wrappers"]
+    EvalShortcuts["Make eval shortcuts and wrappers"]
     OcrWrappers["OCR workflow wrappers"]
     SharedCaseGuard["shared OCR case guard"]
     ManualWorkbench --> DbHealth
     ManualWorkbench --> OcrInventory
-    ManualWorkbench --> AliasCheck
+    ManualWorkbench --> CommandCheck
     ManualWorkbench --> FeedbackDrafts
-    DbHealth --> EvalAliases
-    OcrInventory --> EvalAliases
-    EvalAliases --> OcrWrappers
+    DbHealth --> EvalShortcuts
+    OcrInventory --> EvalShortcuts
+    EvalShortcuts --> OcrWrappers
     OcrWrappers --> SharedCaseGuard
   end
 
@@ -95,10 +95,9 @@ flowchart TD
   task; folder-open bootstrap is retired.
 - Active validation and session closeout are separate surfaces:
   `make end-preflight` is branch-local validation, while `make end` is the
-  session closeout routine from clean synced `main`; `make eod` is a
-  compatibility alias only. `make end-stop` is the current closeout helper for
-  stopping background runners, then `make session-status` reports each runner
-  family. `make risk-scan` verifies
+  session closeout routine from clean synced `main`. `make end-stop` is the
+  current closeout helper for stopping background runners, then
+  `make session-status` reports each runner family. `make risk-scan` verifies
   that known high-risk runtime, script, CI, and local configuration surfaces
   remain visible in the tracked map and Make gates.
   `make scripts-check` validates shell syntax plus root-helper coverage for
@@ -202,10 +201,10 @@ flowchart TD
   stay separate from startup and read-only inventory commands. Health,
   feedback, overlay, OCR retry, and reclassification Make targets route through
   one manual eval health command entrypoint while preserving public target
-  names and preview/apply boundaries. `make operator-alias-check` keeps
-  `manual-evals-*` targets paired with their `manualdb-*` compatibility aliases
-  and keeps parked OCR eval aliases out of automatic startup, closeout, and CI
-  dependencies. Eval report wrappers resolve the checkout root before writing
+  names and preview/apply boundaries. `make operator-command-check` keeps
+  `manual-evals-*` targets canonical and keeps parked OCR eval shortcuts out of
+  automatic startup, closeout, and CI dependencies. Eval report wrappers resolve
+  the checkout root before writing
   default report paths or launching report modules. OCR intake/focus/growth
   orchestrator wrappers resolve the checkout root before using default local
   paths, sourcing the shared guard helper, or delegating to eval runners. Base,

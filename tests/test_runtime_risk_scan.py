@@ -95,6 +95,16 @@ class RuntimeRiskScanTests(unittest.TestCase):
 
         self.assertIn("ci-docs: missing dependency 'risk-scan'", failures)
 
+    def test_duplicate_eod_target_is_reported(self) -> None:
+        failures = check_runtime_risk_scan.check_make_contracts(
+            _make_contract_text(extra_lines=("eod:",))
+        )
+
+        self.assertIn(
+            "make target 'eod': deprecated target is active",
+            failures,
+        )
+
     def test_deprecated_eod_stop_target_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             _make_contract_text(extra_lines=("eod-stop:",))
@@ -115,7 +125,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
-    def test_missing_operator_alias_dependency_is_reported(self) -> None:
+    def test_missing_operator_command_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             _make_contract_text(
                 ci_docs_deps=(
@@ -128,7 +138,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
         )
 
         self.assertIn(
-            "ci-docs: missing dependency 'operator-alias-check'",
+            "ci-docs: missing dependency 'operator-command-check'",
             failures,
         )
 
@@ -139,7 +149,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
                     "path-leak-check",
                     "scripts-check",
                     "risk-scan",
-                    "operator-alias-check",
+                    "operator-command-check",
                     "startup-contracts-check",
                     "lint-docs",
                 )
@@ -158,7 +168,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
                     "path-leak-check",
                     "scripts-check",
                     "risk-scan",
-                    "operator-alias-check",
+                    "operator-command-check",
                     "lint-docs",
                 )
             )

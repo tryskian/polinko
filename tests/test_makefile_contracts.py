@@ -1646,69 +1646,38 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("openai-usage", targets)
         self.assertIn("openai-limits", targets)
         self.assertIn("manual-evals-db", targets)
-        self.assertIn("manualdb", targets)
         self.assertIn("manual-evals-db-refresh", targets)
-        self.assertIn("manualdb-refresh", targets)
         self.assertIn("manual-evals-db-status", targets)
-        self.assertIn("manualdb-status", targets)
         self.assertIn("manual-evals-db-health", targets)
-        self.assertIn("manualdb-health", targets)
         self.assertIn("manual-evals-feedback-actionables", targets)
-        self.assertIn("manualdb-feedback-actionables", targets)
         self.assertIn("manual-evals-feedback-cohorts", targets)
-        self.assertIn("manualdb-feedback-cohorts", targets)
         self.assertIn("manual-evals-feedback-source-context", targets)
-        self.assertIn("manualdb-feedback-source-context", targets)
         self.assertIn("manual-evals-feedback-decision-draft", targets)
-        self.assertIn("manualdb-feedback-decision-draft", targets)
         self.assertIn("manual-evals-feedback-decision-preview", targets)
-        self.assertIn("manualdb-feedback-decision-preview", targets)
         self.assertIn("manual-evals-overlay-comparison-readiness", targets)
-        self.assertIn("manualdb-overlay-comparison-readiness", targets)
         self.assertIn("manual-evals-overlay-source-index-draft", targets)
-        self.assertIn("manualdb-overlay-source-index-draft", targets)
         self.assertIn("manual-evals-overlay-source-index-validate", targets)
-        self.assertIn("manualdb-overlay-source-index-validate", targets)
         self.assertIn("manual-evals-ocr-retry-candidates", targets)
-        self.assertIn("manualdb-ocr-retry-candidates", targets)
         self.assertIn("manual-evals-ocr-retry-source-verification", targets)
-        self.assertIn("manualdb-ocr-retry-source-verification", targets)
         self.assertIn("manual-evals-ocr-retry-source-provenance", targets)
-        self.assertIn("manualdb-ocr-retry-source-provenance", targets)
         self.assertIn("manual-evals-ocr-retry-input-packet", targets)
-        self.assertIn("manualdb-ocr-retry-input-packet", targets)
         self.assertIn("manual-evals-ocr-retry-rerun-manifest", targets)
-        self.assertIn("manualdb-ocr-retry-rerun-manifest", targets)
         self.assertIn("manual-evals-ocr-retry-rerun-plan", targets)
-        self.assertIn("manualdb-ocr-retry-rerun-plan", targets)
         self.assertIn("manual-evals-ocr-retry-selection-review", targets)
-        self.assertIn("manualdb-ocr-retry-selection-review", targets)
         self.assertIn("manual-evals-ocr-retry-selection-template", targets)
-        self.assertIn("manualdb-ocr-retry-selection-template", targets)
         self.assertIn("manual-evals-ocr-retry-selection-validate", targets)
-        self.assertIn("manualdb-ocr-retry-selection-validate", targets)
         self.assertIn("manual-evals-ocr-retry-selection-apply-preview", targets)
-        self.assertIn("manualdb-ocr-retry-selection-apply-preview", targets)
         self.assertIn("manual-evals-ocr-retry-execution-readiness", targets)
-        self.assertIn("manualdb-ocr-retry-execution-readiness", targets)
         self.assertIn("manual-evals-ocr-retry-execute", targets)
-        self.assertIn("manualdb-ocr-retry-execute", targets)
         self.assertIn("manual-evals-ocr-retry-execution-report", targets)
-        self.assertIn("manualdb-ocr-retry-execution-report", targets)
         self.assertIn("manual-evals-ocr-retry-feedback-closure-preview", targets)
-        self.assertIn("manualdb-ocr-retry-feedback-closure-preview", targets)
         self.assertIn("manual-evals-ocr-retry-feedback-closure-apply", targets)
-        self.assertIn("manualdb-ocr-retry-feedback-closure-apply", targets)
         self.assertIn("manual-evals-ocr-retry-feedback-closure-apply-report", targets)
-        self.assertIn("manualdb-ocr-retry-feedback-closure-apply-report", targets)
         self.assertIn("manual-evals-no-context-reclassify-preview", targets)
-        self.assertIn("manualdb-no-context-reclassify-preview", targets)
         self.assertIn("manual-evals-no-context-reclassify-apply", targets)
-        self.assertIn("manualdb-no-context-reclassify-apply", targets)
         self.assertIn("manual-evals-feedback-reclassify-preview", targets)
-        self.assertIn("manualdb-feedback-reclassify-preview", targets)
         self.assertIn("manual-evals-feedback-reclassify-apply", targets)
-        self.assertIn("manualdb-feedback-reclassify-apply", targets)
+        self.assertFalse(any(target.startswith("manualdb") for target in targets))
         self.assertNotIn("portfolio", targets)
         self.assertNotIn("portfolio-mockups", targets)
         self.assertNotIn("portfolio-mockups-status", targets)
@@ -1757,13 +1726,13 @@ class MakefileContractTests(unittest.TestCase):
 
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-db manualdb manual-evals-db-refresh manualdb-refresh:$",
+            r"(?m)^manual-evals-db manual-evals-db-refresh:$",
         )
         self.assertIn("--backup-existing", text)
         self.assertIn("--status-summary", text)
-        self.assertRegex(text, r"(?m)^manual-evals-db-status manualdb-status:$")
+        self.assertRegex(text, r"(?m)^manual-evals-db-status:$")
         self.assertIn("$(PYTHON) -m tools.manual_evals_db_status", text)
-        self.assertRegex(text, r"(?m)^manual-evals-db-health manualdb-health:$")
+        self.assertRegex(text, r"(?m)^manual-evals-db-health:$")
         self.assertIn("$(PYTHON) -m tools.manual_evals_db_health", text)
         self.assertEqual(
             1,
@@ -1781,7 +1750,7 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-feedback-actionables manualdb-feedback-actionables:$",
+            r"(?m)^manual-evals-feedback-actionables:$",
         )
         self.assertIn(
             "$(call manual_evals_db_health,--open-feedback-actionables,"
@@ -1816,183 +1785,155 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(MANUAL_EVALS_OVERLAY_SOURCE_INDEX_VALIDATE_ARGS)", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-feedback-cohorts manualdb-feedback-cohorts:$",
+            r"(?m)^manual-evals-feedback-cohorts:$",
         )
         self.assertIn("--open-feedback-cohorts", text)
         self.assertIn("--cohort", text)
         self.assertIn("$(MANUAL_EVALS_FEEDBACK_FILTER_ARGS)", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-feedback-source-context "
-            r"manualdb-feedback-source-context:$",
+            r"(?m)^manual-evals-feedback-source-context:$",
         )
         self.assertIn("--feedback-source-context", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-feedback-decision-draft "
-            r"manualdb-feedback-decision-draft:$",
+            r"(?m)^manual-evals-feedback-decision-draft:$",
         )
         self.assertIn("--feedback-decision-draft", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-feedback-decision-preview "
-            r"manualdb-feedback-decision-preview:$",
+            r"(?m)^manual-evals-feedback-decision-preview:$",
         )
         self.assertIn("--feedback-decision-preview", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-overlay-comparison-readiness "
-            r"manualdb-overlay-comparison-readiness:$",
+            r"(?m)^manual-evals-overlay-comparison-readiness:$",
         )
         self.assertIn("--overlay-ocr-comparison-readiness", text)
         self.assertIn("--overlay-source-index", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-overlay-source-index-draft "
-            r"manualdb-overlay-source-index-draft:$",
+            r"(?m)^manual-evals-overlay-source-index-draft:$",
         )
         self.assertIn("--overlay-source-index-draft", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-overlay-source-index-validate "
-            r"manualdb-overlay-source-index-validate:$",
+            r"(?m)^manual-evals-overlay-source-index-validate:$",
         )
         self.assertIn("--overlay-source-index-validate", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-candidates manualdb-ocr-retry-candidates:$",
+            r"(?m)^manual-evals-ocr-retry-candidates:$",
         )
         self.assertIn("--ocr-retry-candidates", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-source-verification "
-            r"manualdb-ocr-retry-source-verification:$",
+            r"(?m)^manual-evals-ocr-retry-source-verification:$",
         )
         self.assertIn("--ocr-retry-source-verification", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-source-provenance "
-            r"manualdb-ocr-retry-source-provenance:$",
+            r"(?m)^manual-evals-ocr-retry-source-provenance:$",
         )
         self.assertIn("--ocr-retry-source-provenance", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-input-packet "
-            r"manualdb-ocr-retry-input-packet:$",
+            r"(?m)^manual-evals-ocr-retry-input-packet:$",
         )
         self.assertIn("--ocr-retry-input-packet", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-rerun-manifest "
-            r"manualdb-ocr-retry-rerun-manifest:$",
+            r"(?m)^manual-evals-ocr-retry-rerun-manifest:$",
         )
         self.assertIn("--ocr-retry-rerun-manifest", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-rerun-plan "
-            r"manualdb-ocr-retry-rerun-plan:$",
+            r"(?m)^manual-evals-ocr-retry-rerun-plan:$",
         )
         self.assertIn("--ocr-retry-rerun-plan", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-selection-review "
-            r"manualdb-ocr-retry-selection-review:$",
+            r"(?m)^manual-evals-ocr-retry-selection-review:$",
         )
         self.assertIn("--ocr-retry-selection-review", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-selection-template "
-            r"manualdb-ocr-retry-selection-template:$",
+            r"(?m)^manual-evals-ocr-retry-selection-template:$",
         )
         self.assertIn("--ocr-retry-selection-template", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-selection-draft "
-            r"manualdb-ocr-retry-selection-draft:$",
+            r"(?m)^manual-evals-ocr-retry-selection-draft:$",
         )
         self.assertIn("--ocr-retry-selection-draft", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-selection-validate "
-            r"manualdb-ocr-retry-selection-validate:$",
+            r"(?m)^manual-evals-ocr-retry-selection-validate:$",
         )
         self.assertIn("--ocr-retry-selection-validate", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-selection-apply-preview "
-            r"manualdb-ocr-retry-selection-apply-preview:$",
+            r"(?m)^manual-evals-ocr-retry-selection-apply-preview:$",
         )
         self.assertIn("--ocr-retry-selection-apply-preview", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-execution-readiness "
-            r"manualdb-ocr-retry-execution-readiness:$",
+            r"(?m)^manual-evals-ocr-retry-execution-readiness:$",
         )
         self.assertIn("--ocr-retry-execution-readiness", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-execute "
-            r"manualdb-ocr-retry-execute:$",
+            r"(?m)^manual-evals-ocr-retry-execute:$",
         )
         self.assertIn("--ocr-retry-execute", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-execution-report "
-            r"manualdb-ocr-retry-execution-report:$",
+            r"(?m)^manual-evals-ocr-retry-execution-report:$",
         )
         self.assertIn("--ocr-retry-execution-report", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-feedback-closure-preview "
-            r"manualdb-ocr-retry-feedback-closure-preview:$",
+            r"(?m)^manual-evals-ocr-retry-feedback-closure-preview:$",
         )
         self.assertIn("--ocr-retry-feedback-closure-preview", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-feedback-closure-apply "
-            r"manualdb-ocr-retry-feedback-closure-apply:$",
+            r"(?m)^manual-evals-ocr-retry-feedback-closure-apply:$",
         )
         self.assertIn("--ocr-retry-feedback-closure-apply", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-feedback-closure-apply-report "
-            r"manualdb-ocr-retry-feedback-closure-apply-report:$",
+            r"(?m)^manual-evals-ocr-retry-feedback-closure-apply-report:$",
         )
         self.assertIn("--ocr-retry-feedback-closure-apply-report", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-feedback-closure-restore-preview "
-            r"manualdb-ocr-retry-feedback-closure-restore-preview:$",
+            r"(?m)^manual-evals-ocr-retry-feedback-closure-restore-preview:$",
         )
         self.assertIn("--ocr-retry-feedback-closure-restore-preview", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-ocr-retry-feedback-closure-restore "
-            r"manualdb-ocr-retry-feedback-closure-restore:$",
+            r"(?m)^manual-evals-ocr-retry-feedback-closure-restore:$",
         )
         self.assertIn("--ocr-retry-feedback-closure-restore", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-no-context-reclassify-preview "
-            r"manualdb-no-context-reclassify-preview:$",
+            r"(?m)^manual-evals-no-context-reclassify-preview:$",
         )
         self.assertIn("--no-context-feedback-reclassify-preview", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-no-context-reclassify-apply "
-            r"manualdb-no-context-reclassify-apply:$",
+            r"(?m)^manual-evals-no-context-reclassify-apply:$",
         )
         self.assertIn("--no-context-feedback-reclassify-apply", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-feedback-reclassify-preview "
-            r"manualdb-feedback-reclassify-preview:$",
+            r"(?m)^manual-evals-feedback-reclassify-preview:$",
         )
         self.assertIn("--feedback-reclassify-preview", text)
         self.assertRegex(
             text,
-            r"(?m)^manual-evals-feedback-reclassify-apply "
-            r"manualdb-feedback-reclassify-apply:$",
+            r"(?m)^manual-evals-feedback-reclassify-apply:$",
         )
         self.assertIn("--feedback-reclassify-apply", text)
         self.assertIn("MANUAL_EVALS_OCR_RETRY_CONFIRM ?= $(CONFIRM)", text)
@@ -2041,10 +1982,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(MANUAL_EVALS_OCR_RETRY_SELECTION_DRAFT_ARGS)", text)
         self.assertIn("$(MANUAL_EVALS_OCR_RETRY_SELECTION_VALIDATE_ARGS)", text)
 
-    def test_lifecycle_aliases_delegate_to_canonical_targets(self) -> None:
+    def test_lifecycle_targets_keep_canonical_names(self) -> None:
         text = _makefile_contract_text()
 
-        self.assertRegex(text, r"(?m)^eod:\s*end$")
+        self.assertNotIn("eod", _phony_targets())
+        self.assertNotRegex(text, r"(?m)^eod:")
         self.assertIn("end-preflight:", text)
         self.assertIn("END_SKIP_GIT_CHECK=1 END_SKIP_STOP=1", text)
         self.assertIn("git-prune-stale-refs", _phony_targets())
@@ -2098,7 +2040,7 @@ class MakefileContractTests(unittest.TestCase):
             text,
             r"(?m)^ci-docs:\s*path-leak-check scripts-check "
             r"local-runtime-config-check risk-scan "
-            r"operator-alias-check startup-contracts-check lint-docs$",
+            r"operator-command-check startup-contracts-check lint-docs$",
         )
         self.assertIn("startup-contracts-check", _phony_targets())
         self.assertRegex(text, r"(?m)^startup-contracts-check:$")
@@ -2109,9 +2051,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("local-runtime-config-check", _phony_targets())
         self.assertRegex(text, r"(?m)^local-runtime-config-check:$")
         self.assertIn("$(PYTHON) -m tools.check_local_runtime_config", text)
-        self.assertIn("operator-alias-check", _phony_targets())
-        self.assertRegex(text, r"(?m)^operator-alias-check:$")
-        self.assertIn("$(PYTHON) -m tools.check_operator_aliases", text)
+        self.assertIn("operator-command-check", _phony_targets())
+        self.assertRegex(text, r"(?m)^operator-command-check:$")
+        self.assertIn("$(PYTHON) -m tools.check_operator_commands", text)
         self.assertRegex(text, r"(?m)^path-leak-audit-local:$")
         self.assertIn("$(PYTHON) -m tools.path_leak_check --scope local-config", text)
         self.assertIn("$(MAKE) --no-print-directory local-runtime-config-check", text)
@@ -2128,7 +2070,7 @@ class MakefileContractTests(unittest.TestCase):
             closeout_text,
         )
         self.assertIn(
-            'run_step "operator-alias-check" make --no-print-directory operator-alias-check',
+            'run_step "operator-command-check" make --no-print-directory operator-command-check',
             closeout_text,
         )
         self.assertGreater(
@@ -2145,10 +2087,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertLess(
             closeout_text.index('run_step "risk-scan"'),
-            closeout_text.index('run_step "operator-alias-check"'),
+            closeout_text.index('run_step "operator-command-check"'),
         )
         self.assertLess(
-            closeout_text.index('run_step "operator-alias-check"'),
+            closeout_text.index('run_step "operator-command-check"'),
             closeout_text.index('run_step "ci-python-style"'),
         )
 

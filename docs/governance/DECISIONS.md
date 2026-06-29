@@ -4948,3 +4948,22 @@ or branch history instead.
   human memory.
 - Why: A beabot-managed engineering workflow should make routine risk signals
   observable by design.
+
+## D-286: Keep operator commands canonical
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `make`, `operator_commands`, `manual_evals`, `closeout`, `hygiene`
+- Human-led: The human lead clarified that active repo surfaces should describe
+  what Polinko is now, with one name for one thing; history belongs in the
+  decision ledger.
+- Engineer implementation: Remove active `make eod` and `manualdb-*` Make
+  targets, replace the operator alias checker with `operator-command-check`,
+  update CI/closeout wiring, and teach risk-scan/tests to reject duplicate
+  operator command names.
+- Decision: Operator-facing Make surfaces should expose one canonical command
+  per action. `make end` is the closeout command, and manual eval operations use
+  `manual-evals-*` targets.
+- Why: Duplicate compatibility names make the active runtime harder to reason
+  about, create stale documentation pressure, and weaken automated contract
+  checks.

@@ -158,13 +158,12 @@ Active kernel validation:
 - Use `make build-hygiene` for the PR-safe hygiene gate that mirrors the
   build, docs, dependency, test, transcript, environment, and whitespace
   surfaces
-- Use `make pr-preflight` before publishing a PR as the local alias for
+- Use `make pr-preflight` before publishing a PR as the local readiness command for
   `make build-hygiene`
 - Use `make end-preflight` when the kernel is broad enough to need the full
   branch-local quality suite
 - End each kernel summary with the recommended next kernel
-- Do not run `make end` after every kernel; reserve it for real session
-  closeout only
+- Reserve `make end` for real session closeout only
 
 ## End
 
@@ -173,12 +172,6 @@ Command:
 ```bash
 make end
 ```
-
-Aliases:
-
-- `make eod`
-  - compatibility alias for `make end`; closeout helper targets use
-    current-name `end-*` vocabulary
 
 Sequence:
 
@@ -191,7 +184,7 @@ Sequence:
 | 5 | Validate shell helper contracts | `make scripts-check` |
 | 6 | Check tracked docs/code for local path leaks | `make path-leak-check` |
 | 7 | Verify runtime risk-surface coverage | `make risk-scan` |
-| 8 | Verify operator alias boundaries | `make operator-alias-check` |
+| 8 | Verify operator command boundaries | `make operator-command-check` |
 | 9 | Run Python style checks | `make ci-python-style` |
 | 10 | Run Python type checks | `make ci-python-type-check` |
 | 11 | Lint docs | `make lint-docs` |
@@ -226,9 +219,9 @@ Explicit companion checks:
 - `make risk-scan`
   - checks runtime map, Make, CI, runner, and local configuration coverage for
     known high-risk surfaces
-- `make operator-alias-check`
-  - checks manual eval compatibility aliases and keeps parked OCR eval aliases
-    out of automatic startup, closeout, and CI dependencies
+- `make operator-command-check`
+  - checks canonical manual eval commands and keeps parked OCR eval shortcuts out
+    of automatic startup, closeout, and CI dependencies
 - `make security-checks`
   - runs local Python and root Node dependency audits
 - `make api-smoke`
