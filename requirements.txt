@@ -55,7 +55,7 @@ distlib==0.4.0
     # via virtualenv
 distro==1.9.0
     # via openai
-fastapi==0.138.0
+fastapi==0.138.1
     # via -r requirements.in
 filelock==3.25.2
     # via
@@ -71,7 +71,7 @@ h11==0.16.0
     #   uvicorn
 httpcore==1.0.9
     # via httpx
-httpcore2==2.4.0
+httpcore2==2.5.0
     # via httpx2
 httpx==0.28.1
     # via
@@ -79,7 +79,7 @@ httpx==0.28.1
     #   openai
 httpx-sse==0.4.3
     # via mcp
-httpx2==2.4.0
+httpx2==2.5.0
     # via -r requirements.in
 identify==2.6.18
     # via pre-commit
@@ -115,11 +115,11 @@ mypy-extensions==1.1.0
     # via mypy
 nodeenv==1.10.0
     # via pre-commit
-openai==2.43.0
+openai==2.44.0
     # via
     #   -r requirements.in
     #   openai-agents
-openai-agents==0.17.6
+openai-agents==0.17.7
     # via -r requirements.in
 packageurl-python==0.17.6
     # via cyclonedx-python-lib
@@ -138,7 +138,7 @@ pillow==12.2.0
     # via -r requirements.in
 pip-api==0.0.34
     # via pip-audit
-pip-audit==2.10.0
+pip-audit==2.10.1
     # via -r requirements.in
 pip-requirements-parser==32.0.1
     # via pip-audit
@@ -176,7 +176,7 @@ pyjwt==2.13.0
     # via mcp
 pyparsing==3.3.2
     # via pip-requirements-parser
-pypdf==6.13.3
+pypdf==6.14.2
     # via -r requirements.in
 pyproject-hooks==1.2.0
     # via
@@ -212,7 +212,7 @@ rpds-py==0.30.0
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.18
+ruff==0.15.20
     # via -r requirements.in
 sniffio==1.3.1
     # via openai
@@ -238,8 +238,6 @@ truststore==0.10.4
     #   httpx2
 types-pyyaml==6.0.12.20260518
     # via -r requirements.in
-types-requests==2.33.0.20260408
-    # via openai-agents
 typing-extensions==4.15.0
     # via
     #   fastapi
@@ -257,9 +255,7 @@ typing-inspection==0.4.2
     #   pydantic
     #   pydantic-settings
 urllib3==2.7.0
-    # via
-    #   requests
-    #   types-requests
+    # via requests
 uvicorn==0.49.0
     # via
     #   -r requirements.in
