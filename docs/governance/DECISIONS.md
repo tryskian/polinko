@@ -4839,3 +4839,20 @@ or branch history instead.
   to their current role instead of appended as logs.
 - Why: Long trailing docs create stale context, raise maintenance cost, and make
   the repo harder to use as the research source of truth.
+
+## D-280: Namespace server-daemon runtime files
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `server_daemon`, `runtime_state`, `pid_file`, `repo_scope`
+- Human-led: The human lead asked for lifecycle state to stay understandable
+  across repos so valid background PIDs do not become ambiguous.
+- Engineer implementation: Move server-daemon PID and log defaults into
+  `SERVER_STATE_DIR`, derive that state directory from a repo-scoped
+  `SERVER_RUNTIME_ROOT` namespace, pass the values through Make, and print repo
+  context plus PID/log paths during status.
+- Decision: `server-daemon` PID and log files should default to a repo-scoped
+  runtime namespace and expose their ownership context during status checks.
+- Why: Flat `/tmp` server files make process ownership harder to reason about
+  when the helper pattern is reused across repos. Namespaced state keeps
+  daemon ownership visible while preserving explicit override support.

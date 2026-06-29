@@ -170,6 +170,9 @@ flowchart TD
   must include an explicit port matching the launched server port before
   readiness, adoption, status, or launch work depends on the URL; this covers
   `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and `GATE_BASE_URL`.
+  Server daemon PID and log defaults live under repo-scoped
+  `SERVER_STATE_DIR`, and status reports repo context plus PID/log paths before
+  liveness.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery. If stop or interpreter-mismatch

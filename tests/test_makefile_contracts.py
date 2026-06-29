@@ -2521,6 +2521,17 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('bash "$(CAFFEINATE_SCRIPT)" activity', text)
         self.assertIn('CAFFEINATE_ACTIVITY_LABEL="$(1)"', text)
         self.assertIn('CAFFEINATE_ACTIVITY_TARGET="$(2)"', text)
+        self.assertIn("SERVER_REPO_SLUG ?= $(notdir $(CURDIR))", text)
+        self.assertIn("SERVER_RUNTIME_ROOT ?= /tmp/polinko-runtime", text)
+        self.assertIn(
+            "SERVER_STATE_DIR ?= $(SERVER_RUNTIME_ROOT)/$(SERVER_REPO_SLUG)",
+            text,
+        )
+        self.assertIn("SERVER_PID_FILE ?= $(SERVER_STATE_DIR)/server.pid", text)
+        self.assertIn("SERVER_LOG ?= $(SERVER_STATE_DIR)/server.log", text)
+        self.assertIn('SERVER_REPO_SLUG="$(SERVER_REPO_SLUG)"', text)
+        self.assertIn('SERVER_RUNTIME_ROOT="$(SERVER_RUNTIME_ROOT)"', text)
+        self.assertIn('SERVER_STATE_DIR="$(SERVER_STATE_DIR)"', text)
         self.assertIn("@$(call repo_activity,make test,test)", text)
         self.assertIn("@$(call repo_activity,make scripts-check,scripts-check)", text)
         self.assertIn("@$(call repo_activity,make risk-scan,risk-scan)", text)
