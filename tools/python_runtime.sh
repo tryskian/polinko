@@ -1,11 +1,22 @@
 #!/usr/bin/env sh
 
+polinko_require_python_command() {
+	_polinko_python_name=$1
+	_polinko_python_value=$2
+	_polinko_python_context=${3:-python runtime}
+	if command -v "$_polinko_python_value" >/dev/null 2>&1; then
+		return 0
+	fi
+	printf "Configured %s is not executable or not on PATH for %s: %s\n" \
+		"$_polinko_python_name" \
+		"$_polinko_python_context" \
+		"$_polinko_python_value" >&2
+	return 2
+}
+
 polinko_default_python_bin() {
 	if [ -n "${PYTHON:-}" ]; then
-		if ! command -v "$PYTHON" >/dev/null 2>&1; then
-			printf "Configured PYTHON is not executable or not on PATH: %s\n" "$PYTHON" >&2
-			return 2
-		fi
+		polinko_require_python_command PYTHON "$PYTHON" "python runtime" || return $?
 		printf "%s\n" "$PYTHON"
 		return
 	fi

@@ -4632,3 +4632,25 @@ or branch history instead.
 - Why: A bad `PYTHON` override should not surface later as a runner, import,
   or detached-launch failure. Early interpreter validation keeps diagnostics
   tied to the actual local environment problem.
+
+## D-269: Validate runner launcher Python overrides before PID state
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `python_runtime`, `diagnostics`,
+  `process_lifecycle`
+- Human-led: The human lead asked for hidden runner-script hygiene and for
+  recurring local/runtime failures to be prevented as the helper-script
+  refactor proceeds.
+- Engineer implementation: Add a named Python-command validator to
+  `tools/python_runtime.sh`, use it for `PYTHON`, and apply it to
+  `CAFFEINATE_LAUNCHER_PYTHON`, `SERVER_LAUNCHER_PYTHON`,
+  `EVAL_SIDECAR_LAUNCHER_PYTHON`, and `PORTFOLIO_MOCKUP_LAUNCHER_PYTHON`
+  before manager exec or detached launch; add focused regression coverage for
+  each runner family.
+- Decision: Runner-specific launcher Python overrides must resolve to an
+  executable command before any manager exec, detached launch, PID file write, or
+  runtime-state mutation.
+- Why: Invalid launcher interpreters should not surface as raw shell command
+  errors, generic startup failures, or stale PID/log state. Early validation
+  keeps the diagnostic tied to the exact override that needs correction.

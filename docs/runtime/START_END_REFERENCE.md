@@ -120,6 +120,9 @@ Runner lifecycle rule:
 - the shared detached launcher rejects empty, missing, and non-launchable
   commands with direct diagnostics before PID ownership is recorded, and stops
   the started child process group if the PID file cannot be written
+- runner-specific `*_LAUNCHER_PYTHON` overrides are validated before manager
+  exec or detached launch, so bad launcher interpreters fail before PID state is
+  written
 - `make session-status` is the consolidated status surface for the runner
   family. `make end-stop` runs it after stop cleanup so closeout reports the
   post-stop state without hiding individual runner drift.

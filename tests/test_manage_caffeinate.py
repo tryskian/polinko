@@ -165,6 +165,27 @@ class ManageCaffeinateTests(unittest.TestCase):
         self.assertIn("caffeinate config error", result.stderr)
         self.assertIn("CAFFEINATE_MATCH_PATTERN", result.stderr)
 
+    def test_rejects_invalid_launcher_python_before_manager_exec(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            activity_file = tmp_path / "caffeinate.activity.json"
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "activity"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "CAFFEINATE_LAUNCHER_PYTHON": str(tmp_path / "missing-python"),
+                    "CAFFEINATE_ACTIVITY_FILE": str(activity_file),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("Configured CAFFEINATE_LAUNCHER_PYTHON", result.stderr)
+            self.assertFalse(activity_file.exists())
+
     def test_start_cleans_live_non_owned_pid_without_killing_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

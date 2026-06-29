@@ -135,6 +135,9 @@ Last updated: 2026-06-28
     delegate start, status, and stop actions to helper scripts with repo-owned
     PID/log handling, and direct runner invocation uses the shared
     `tools/python_runtime.sh` interpreter rail for detached launchers
+  - runner-specific `*_LAUNCHER_PYTHON` overrides are validated before manager
+    exec or detached launch, so bad launcher interpreters fail before PID state
+    is written
   - `caffeinate` command and match-pattern config are paired in Make so status
     and closeout cleanup inspect the same wake-lock shape that start launches
   - repo-managed caffeinate rejects invalid command, regex, active-window, and
@@ -845,6 +848,9 @@ Last updated: 2026-06-28
     `tools/launch_detached_process.py` after resolving the checkout root
     through `tools/repo_root.sh`, while each runner keeps its own liveness,
     adoption, status, and stop logic
+  - runner-specific `*_LAUNCHER_PYTHON` overrides are validated before manager
+    exec or detached launch, so bad launcher interpreters fail before PID state
+    is written
   - `tools/launch_detached_process.py` rejects empty, missing, and
     non-launchable commands with direct diagnostics before PID ownership is
     recorded
