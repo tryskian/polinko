@@ -4931,3 +4931,20 @@ or branch history instead.
   maintenance.
 - Why: Automated checks only reduce risk if their failures are visible to the
   working operator before stale state accumulates.
+
+## D-285: Treat CI failure visibility as automation, not manual polling
+
+- Date: `2026-06-29`
+- Category: `ci`
+- Tags: `github_actions`, `notifications`, `operator_runtime`, `automation`
+- Human-led: The human lead corrected the framing: Polinko’s working runtime
+  should not depend on manual polling when a precise automated surface can
+  detect and report failures.
+- Engineer implementation: Treat the CI/build-hygiene notification helper as an
+  automation requirement for the refactor, with repo-aware failure detection,
+  actionable output, and no browser-dependent notification path.
+- Decision: Failure visibility for PR and build-hygiene checks belongs in a
+  maintained automation surface, not in manual refreshes, ad hoc polling, or
+  human memory.
+- Why: A beabot-managed engineering workflow should make routine risk signals
+  observable by design.
