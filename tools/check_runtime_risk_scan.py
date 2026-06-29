@@ -27,7 +27,7 @@ REQUIRED_FILES = (
     Path("tools/path_leak_check.py"),
     Path("tools/check_local_runtime_config.py"),
     Path("tools/check_runtime_risk_scan.py"),
-    Path("tools/check_operator_aliases.py"),
+    Path("tools/check_operator_commands.py"),
     Path("tools/manage_caffeinate.sh"),
     Path("tools/manage_caffeinate.py"),
     Path("tools/run_server_daemon.sh"),
@@ -52,7 +52,7 @@ REQUIRED_MAKE_TARGETS = (
     "ci",
     "ci-docs",
     "risk-scan",
-    "operator-alias-check",
+    "operator-command-check",
     "scripts-check",
     "path-leak-check",
     "path-leak-audit-local",
@@ -70,7 +70,7 @@ REQUIRED_MAKE_TARGETS = (
     "privacy-local-off",
 )
 
-FORBIDDEN_MAKE_TARGETS = ("eod-stop",)
+FORBIDDEN_MAKE_TARGETS = ("eod", "eod-stop")
 FORBIDDEN_RUNTIME_MAP_TOKENS = ("Startup and workspace bootstrap",)
 FORBIDDEN_PRECOMMIT_TOKENS = ("isort", "black")
 REQUIRED_PRECOMMIT_EXCLUDE = r"^docs/peanut/"
@@ -85,7 +85,7 @@ REQUIRED_CI_DOCS_DEPS = (
     "scripts-check",
     "local-runtime-config-check",
     "risk-scan",
-    "operator-alias-check",
+    "operator-command-check",
     "startup-contracts-check",
     "lint-docs",
 )
@@ -147,8 +147,8 @@ RUNTIME_MAP_SURFACES = (
             "manual eval workbench",
             "manual_evals_db_health",
             "read-only OCR inventory",
-            "operator-alias-check",
-            "Make eval aliases",
+            "operator-command-check",
+            "Make eval shortcuts",
             "OCR workflow wrappers",
         ),
     ),

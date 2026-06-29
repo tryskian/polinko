@@ -7,7 +7,7 @@ This page is the structural map of the tracked system.
 - Use `docs/runtime/RUNBOOK.md` for operator procedure.
 - Use `docs/runtime/OCR_REFERENCE.md` for the OCR lane reference.
 - Use `docs/runtime/SURFACE_IA.md` for web surface path roles, manual eval
-  workbench naming, and legacy compatibility aliases.
+  workbench naming, and command naming.
 - Use `docs/runtime/PACKAGE_BOUNDARY.md` for the Python package-boundary
   contract and remaining root launcher compatibility.
 - Use `docs/runtime/LOCAL_TOOLING.md` for local operator tooling patterns that
@@ -194,18 +194,18 @@ This page is the structural map of the tracked system.
   - direct OCR eval target fragments for safety, base OCR, handwriting, and
     recovery
 - `makefiles/evals/aliases/`
-  - eval alias target fragments for OCR intake/mining, OCR run/focus/benchmark
-    shorthands, and utility/inventory aliases
+  - eval shortcut target fragments for OCR intake/mining, OCR run/focus/benchmark
+    shorthands, and utility/inventory shortcuts
 - `makefiles/evals/aliases/utilities/`
-  - utility alias fragments for runtime-null audit, OCR inventory, and OCR
+  - utility shortcut fragments for runtime-null audit, OCR inventory, and OCR
     data/notebook workflows
 - `makefiles/evals/aliases/ocr-intake/`
-  - OCR intake alias fragments for base intake aliases, lane-filter aliases,
-    and signal/status filter aliases
+  - OCR intake shortcut fragments for base intake shortcuts, lane-filter
+    shortcuts, and signal/status filter shortcuts
 - `makefiles/evals/aliases/ocr-runs/`
-  - OCR-run alias fragments for transcript/growth aliases, modality aliases,
-    focus/stability aliases, the OCR kernel workflow alias, and benchmark
-    aliases
+  - OCR-run shortcut fragments for transcript/growth shortcuts, modality
+    shortcuts, focus/stability shortcuts, the OCR kernel workflow shortcut, and
+    benchmark shortcuts
 - `makefiles/ops/`
   - external operator-tool target fragments for k6 smoke, Trivy scans, and
     Docker lifecycle commands

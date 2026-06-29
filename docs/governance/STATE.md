@@ -100,8 +100,7 @@ Last updated: 2026-06-29
   - active eval visualization labels use source-first monitor wording rather
     than retired run-level rollup labels
   - source-first manual eval payloads expose `summary_unit` for lane-summary
-    wording; the temporary `rollup_unit` compatibility alias was retired after
-    a tracked and local consumer audit found no active dependency
+    wording
   - source-first manual eval payloads expose
     `schema_version=polinko.manual_eval_source_first.v1`; generated
     `manual_evals.db` metadata exposes
@@ -226,18 +225,18 @@ Last updated: 2026-06-29
     transcript case path, transcript review/delta, generalization review,
     growth cap, and benchmark selector env fragments live under
     `makefiles/config/evals/ocr-cases/intake-workflow/`
-  - eval alias targets keep the public entrypoint at
-    `makefiles/evals/aliases.mk`, while alias-family fragments live under
-    `makefiles/evals/aliases/` for OCR intake/mining aliases, OCR
-    run/focus/benchmark shorthands, and utility/inventory aliases
-  - eval utility aliases keep the public entrypoint at
+  - eval shortcut targets keep the public entrypoint at
+    `makefiles/evals/aliases.mk`, while shortcut-family fragments live under
+    `makefiles/evals/aliases/` for OCR intake/mining shortcuts, OCR
+    run/focus/benchmark shorthands, and utility/inventory shortcuts
+  - eval utility shortcuts keep the public entrypoint at
     `makefiles/evals/aliases/utilities.mk`, while runtime-null audit, OCR
-    inventory, and OCR data/notebook workflow alias fragments live under
+    inventory, and OCR data/notebook workflow shortcut fragments live under
     `makefiles/evals/aliases/utilities/`
-  - OCR intake alias targets keep the public entrypoint at
-    `makefiles/evals/aliases/ocr-intake.mk`, while alias-family fragments live
-    under `makefiles/evals/aliases/ocr-intake/` for base intake aliases,
-    lane-filter aliases, and signal/status filter aliases
+  - OCR intake shortcut targets keep the public entrypoint at
+    `makefiles/evals/aliases/ocr-intake.mk`, while shortcut-family fragments live
+    under `makefiles/evals/aliases/ocr-intake/` for base intake shortcuts,
+    lane-filter shortcuts, and signal/status filter shortcuts
   - OCR intake targets keep the public entrypoint at
     `makefiles/evals/ocr-intake.mk`, while workflow-role fragments live under
     `makefiles/evals/ocr-intake/` for export/case-mining targets, benchmark
@@ -246,11 +245,11 @@ Last updated: 2026-06-29
     `makefiles/evals/gates.mk`, while operator-surface fragments live under
     `makefiles/evals/gates/` for smoke gates, sidecar lifecycle, operator
     reports, and quality/hallucination gates
-  - OCR-run alias targets keep the public entrypoint at
-    `makefiles/evals/aliases/ocr-runs.mk`, while alias-family fragments live
-    under `makefiles/evals/aliases/ocr-runs/` for transcript/growth aliases,
-    modality aliases, focus/stability aliases, the OCR kernel workflow alias,
-    and benchmark aliases
+  - OCR-run shortcut targets keep the public entrypoint at
+    `makefiles/evals/aliases/ocr-runs.mk`, while shortcut-family fragments live
+    under `makefiles/evals/aliases/ocr-runs/` for transcript/growth shortcuts,
+    modality shortcuts, focus/stability shortcuts, the OCR kernel workflow
+    shortcut, and benchmark shortcuts
   - core eval targets keep the public entrypoint at
     `makefiles/evals/core.mk`, while eval-family fragments live under
     `makefiles/evals/core/` for retrieval/file-search, quality and
@@ -647,10 +646,10 @@ Last updated: 2026-06-29
     modules; parser boolean flag registration now reuses the shared parser
     helper while preserving public option order, with option-order and
     coordinator-order contract tests, and
-    manual-eval CLI contract aliases now keep
+    manual-eval CLI contract modules keep
     `tools/manual_eval_cli_contracts.py` as the stable public facade while
     grouped feedback, overlay, OCR retry, and shared contract modules own the
-    underlying schema/default aliases with a focused export-order test; OCR
+    underlying schema/default exports with a focused export-order test; OCR
     retry dispatch now keeps `tools/manual_eval_cli_ocr_retry_dispatch.py` as
     the stable coordinator while selection/source planning, execution, and
     feedback-closure command bodies live in lifecycle-owned dispatch modules
@@ -775,20 +774,19 @@ Last updated: 2026-06-29
     devcontainer config shape, rejects retired local doc references, guards
     retired VS Code extension recommendation drift, and runs through
     `make ci-docs`
-  - operator alias coverage is explicit through `make operator-alias-check`,
-    which keeps `manual-evals-*` targets paired with their `manualdb-*`
-    compatibility aliases and keeps parked OCR eval aliases out of automatic
-    startup, closeout, and CI dependencies
+  - operator command coverage is explicit through `make operator-command-check`,
+    which keeps `manual-evals-*` targets canonical and keeps parked OCR eval
+    shortcuts out of automatic startup, closeout, and CI dependencies
   - `make ci-docs` runs `make path-leak-check`, `make scripts-check`,
     `make local-runtime-config-check`, `make risk-scan`,
-    `make operator-alias-check`, `make startup-contracts-check`, and
+    `make operator-command-check`, `make startup-contracts-check`, and
     `make lint-docs`; `make end` also runs `make path-leak-check`,
-    `make scripts-check`, `make risk-scan`, and `make operator-alias-check`
+    `make scripts-check`, `make risk-scan`, and `make operator-command-check`
     before longer style, type, test, and security gates
   - `make build-hygiene` is the PR-safe aggregate hygiene gate for
     environment doctor, transcript validation, CI build/test/security/doc
     gates, and whitespace diff checks; every PR runs it as a first-class CI job
-    and `make pr-preflight` aliases it locally
+    and `make pr-preflight` provides the local readiness command
   - public diagram renderers use source-first, write-if-changed behaviour:
     Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
     through a temporary SVG before replacing the tracked artefact
@@ -809,8 +807,7 @@ Last updated: 2026-06-29
   - tests reject direct `with sqlite3.connect(...)` usage so Python 3.14
     ResourceWarning noise stays out of `make test`
 - Runtime lifecycle controls are repo-managed:
-  - `make end` is the canonical closeout target; `make eod` remains a
-    compatibility alias only
+  - `make end` is the session closeout target
   - `make caffeinate` launches the managed wake-lock process in a detached
     child session through the configured Python launcher
   - `make caffeinate-status`, `make decaffeinate`, and `make end` operate on
@@ -951,14 +948,14 @@ Last updated: 2026-06-29
 - `make lint-docs`
 - `make risk-scan`
 - `make local-runtime-config-check`
-- `make operator-alias-check`
+- `make operator-command-check`
 - `make package-install-check`
 - `make type-check`
 - `make test`
 - `make security-checks`
 - `make ci` when checking the local equivalent of GitHub CI job targets
 - `make build-hygiene` when checking the complete PR-safe hygiene surface
-- `make pr-preflight` before publishing PRs as the local alias for
+- `make pr-preflight` before publishing PRs as the local readiness command for
   `make build-hygiene`
 - `make end`
 - `make end-docs-check` when validating current-truth freshness explicitly

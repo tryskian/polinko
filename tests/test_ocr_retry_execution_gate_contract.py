@@ -117,7 +117,7 @@ class OcrRetryExecutionGateContractTests(unittest.TestCase):
 
         self.assertIsNotNone(
             re.search(
-                r"(?m)^manual-evals-ocr-retry-execute\s+manualdb-ocr-retry-execute:",
+                r"(?m)^manual-evals-ocr-retry-execute:",
                 makefile_text,
             )
         )
