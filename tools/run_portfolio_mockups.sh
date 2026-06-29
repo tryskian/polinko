@@ -32,6 +32,11 @@ detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 # shellcheck source=tools/process_lifecycle_common.sh
 . "$script_dir/process_lifecycle_common.sh"
 polinko_require_tcp_port PORTFOLIO_MOCKUP_PORT "$mockup_port" "portfolio mockup launch"
+polinko_require_url_port_matches \
+	PORTFOLIO_MOCKUP_URL \
+	"$mockup_url" \
+	"$mockup_port" \
+	"portfolio mockup reachability"
 polinko_require_positive_integer \
 	PORTFOLIO_MOCKUP_START_ATTEMPTS \
 	"$mockup_start_attempts" \

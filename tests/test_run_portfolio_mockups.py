@@ -100,6 +100,37 @@ class RunPortfolioMockupsTests(unittest.TestCase):
             result.stderr,
         )
 
+    def test_rejects_mockup_url_port_mismatch_before_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            mockup_dir = tmp_path / "mockups"
+            mockup_dir.mkdir()
+            (mockup_dir / "landing-mockups.html").write_text(
+                "<!doctype html><title>mockup</title>",
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PORTFOLIO_MOCKUP_DIR": str(mockup_dir),
+                    "PORTFOLIO_MOCKUP_PORT": "8782",
+                    "PORTFOLIO_MOCKUP_URL": "http://127.0.0.1:8783/missing.html",
+                    "PORTFOLIO_MOCKUP_PID_FILE": str(tmp_path / "mockups.pid"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "PORTFOLIO_MOCKUP_URL port must match 8782",
+                result.stderr,
+            )
+            self.assertFalse((tmp_path / "mockups.pid").exists())
+
     def test_start_requires_mockup_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -143,7 +174,7 @@ class RunPortfolioMockupsTests(unittest.TestCase):
                     ),
                     "PORTFOLIO_MOCKUP_DIR": str(mockup_dir),
                     "PORTFOLIO_MOCKUP_PORT": "8782",
-                    "PORTFOLIO_MOCKUP_URL": "http://127.0.0.1:9/missing.html",
+                    "PORTFOLIO_MOCKUP_URL": "http://127.0.0.1:8782/missing.html",
                     "PORTFOLIO_MOCKUP_PID_FILE": str(tmp_path / "mockups.pid"),
                     "PORTFOLIO_MOCKUP_LOG": str(tmp_path / "mockups.log"),
                 },
@@ -193,7 +224,7 @@ class RunPortfolioMockupsTests(unittest.TestCase):
                     "CHILD_PID_FILE": str(child_pid_file),
                     "PORTFOLIO_MOCKUP_DIR": str(mockup_dir),
                     "PORTFOLIO_MOCKUP_PORT": "8766",
-                    "PORTFOLIO_MOCKUP_URL": "http://127.0.0.1:9/missing.html",
+                    "PORTFOLIO_MOCKUP_URL": "http://127.0.0.1:8766/missing.html",
                     "PORTFOLIO_MOCKUP_PID_FILE": str(pid_file),
                     "PORTFOLIO_MOCKUP_LOG": str(tmp_path / "logs" / "mockups.log"),
                 }

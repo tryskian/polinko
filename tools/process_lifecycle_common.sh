@@ -106,6 +106,56 @@ polinko_require_tcp_port() {
 	return 0
 }
 
+polinko_url_explicit_port() {
+	_polinko_url=$1
+	case "$_polinko_url" in
+	*://*)
+		;;
+	*)
+		return 1
+		;;
+	esac
+	_polinko_authority=${_polinko_url#*://}
+	_polinko_authority=${_polinko_authority%%/*}
+	_polinko_authority=${_polinko_authority%%\?*}
+	_polinko_authority=${_polinko_authority%%\#*}
+	case "$_polinko_authority" in
+	*:*)
+		_polinko_port=${_polinko_authority##*:}
+		;;
+	*)
+		return 1
+		;;
+	esac
+	case "$_polinko_port" in
+	"" | *[!0123456789]*)
+		return 2
+		;;
+	esac
+	printf "%s\n" "$_polinko_port"
+}
+
+polinko_require_url_port_matches() {
+	_polinko_name=$1
+	_polinko_url=$2
+	_polinko_port=$3
+	_polinko_context=${4:-runtime helper}
+	_polinko_status=0
+	_polinko_url_port=$(polinko_url_explicit_port "$_polinko_url" 2>/dev/null) ||
+		_polinko_status=$?
+	if [ "$_polinko_status" -eq 1 ]; then
+		echo "Invalid URL value for $_polinko_context: $_polinko_name must include an explicit port matching $_polinko_port (got $_polinko_url)" >&2
+		return 1
+	elif [ "$_polinko_status" -ne 0 ]; then
+		echo "Invalid URL value for $_polinko_context: $_polinko_name is not a valid URL with an explicit port (got $_polinko_url)" >&2
+		return 1
+	fi
+	if [ "$_polinko_url_port" != "$_polinko_port" ]; then
+		echo "Invalid URL value for $_polinko_context: $_polinko_name port must match $_polinko_port (got $_polinko_url)" >&2
+		return 1
+	fi
+}
+
 polinko_wait_for_pid_exit() {
 	_polinko_pid=$1
 	_polinko_attempts=${2:-50}

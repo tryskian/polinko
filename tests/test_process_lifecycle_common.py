@@ -185,6 +185,52 @@ class ProcessLifecycleCommonTests(unittest.TestCase):
                     result.stderr,
                 )
 
+    def test_url_explicit_port_extracts_port(self) -> None:
+        result = subprocess.run(
+            [
+                "/bin/sh",
+                "-c",
+                (
+                    f'. "{HELPER}"; '
+                    "polinko_url_explicit_port "
+                    "'http://127.0.0.1:8765/path?x=1#fragment'"
+                ),
+            ],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "8765")
+
+    def test_require_url_port_matches_rejects_missing_or_mismatched_port(
+        self,
+    ) -> None:
+        cases = (
+            ("http://127.0.0.1/path", "must include an explicit port matching 8765"),
+            ("http://127.0.0.1:8766/path", "TEST_URL port must match 8765"),
+        )
+        for url, expected in cases:
+            with self.subTest(url=url):
+                result = subprocess.run(
+                    [
+                        "/bin/sh",
+                        "-c",
+                        (
+                            f'. "{HELPER}"; '
+                            "polinko_require_url_port_matches "
+                            f"TEST_URL '{url}' 8765 'unit test'"
+                        ),
+                    ],
+                    cwd=REPO_ROOT,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(expected, result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
