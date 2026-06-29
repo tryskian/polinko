@@ -744,6 +744,7 @@ esac
 
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("Managed caffeinate: OFF", result.stdout)
+            self.assertIn(f"Repo root: {REPO_ROOT}", result.stdout)
             self.assertIn("Unmanaged caffeinate detected (PID 12345)", result.stdout)
             self.assertIn("PreventUserIdleSystemSleep", result.stdout)
 
@@ -776,6 +777,7 @@ esac
 
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("Managed caffeinate: QUIET", result.stdout)
+            self.assertIn(f"Repo root: {REPO_ROOT}", result.stdout)
             self.assertIn("no recorded repo activity", result.stdout)
 
     def test_status_treats_zombie_pid_file_as_stale(self) -> None:

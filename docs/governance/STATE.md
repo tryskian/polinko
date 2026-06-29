@@ -152,6 +152,9 @@ Last updated: 2026-06-29
     server port before readiness, adoption, status, or launch work depends on
     the URL; this covers `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and
     `GATE_BASE_URL`
+  - `server-daemon` PID and log defaults live under repo-scoped
+    `SERVER_STATE_DIR`, and status reports repo context plus PID/log paths
+    before liveness
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery
@@ -165,6 +168,9 @@ Last updated: 2026-06-29
     before reporting success, rather than relying on a fixed post-launch sleep
   - `server-daemon` fails early with a direct missing-command diagnostic if
     `curl` is unavailable for the HTTP readiness probe
+  - `eval-sidecar` PID and log defaults live under repo-scoped
+    `EVAL_SIDECAR_STATE_DIR`, and status reports repo context plus
+    PID/log/current-file paths before liveness
   - `eval-sidecar` reports missing current-file drift on start/status and still
     stops the repo-managed PID during closeout
   - `eval-sidecar` validates `EVAL_SIDECAR_MIN_SECONDS` before detached launch,

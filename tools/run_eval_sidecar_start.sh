@@ -16,16 +16,22 @@ fi
 
 target=${EVAL_SIDECAR_TARGET:-quality-gate-deterministic}
 min_seconds=${EVAL_SIDECAR_MIN_SECONDS:-3600}
-runs_dir=${EVAL_SIDECAR_RUNS_DIR:-.local/eval_runs}
-pid_file=${EVAL_SIDECAR_PID_FILE:-/tmp/polinko-eval-sidecar.pid}
-current_file=${EVAL_SIDECAR_CURRENT_FILE:-$runs_dir/eval_sidecar_current.txt}
-log_path=${EVAL_SIDECAR_LOG:-/tmp/polinko-eval-sidecar.log}
 sidecar_start_attempts=${EVAL_SIDECAR_START_ATTEMPTS:-100}
 sidecar_start_sleep_seconds=${EVAL_SIDECAR_START_SLEEP_SECONDS:-0.1}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
+sidecar_repo_slug=${EVAL_SIDECAR_REPO_SLUG:-${POLINKO_REPO_ROOT##*/}}
+if [ -z "$sidecar_repo_slug" ]; then
+	sidecar_repo_slug=polinko
+fi
+sidecar_runtime_root=${EVAL_SIDECAR_RUNTIME_ROOT:-/tmp/polinko-runtime}
+sidecar_state_dir=${EVAL_SIDECAR_STATE_DIR:-$sidecar_runtime_root/$sidecar_repo_slug}
+runs_dir=${EVAL_SIDECAR_RUNS_DIR:-.local/eval_runs}
+pid_file=${EVAL_SIDECAR_PID_FILE:-$sidecar_state_dir/eval-sidecar.pid}
+current_file=${EVAL_SIDECAR_CURRENT_FILE:-$runs_dir/eval_sidecar_current.txt}
+log_path=${EVAL_SIDECAR_LOG:-$sidecar_state_dir/eval-sidecar.log}
 detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 # shellcheck source=tools/python_runtime.sh
 . "$script_dir/python_runtime.sh"
@@ -104,6 +110,14 @@ wait_for_sidecar_ready() {
 	return 1
 }
 
+print_sidecar_context() {
+	echo "Repo: $sidecar_repo_slug"
+	echo "Repo root: $POLINKO_REPO_ROOT"
+	echo "PID file: $pid_file"
+	echo "Log file: $log_path"
+	echo "Current file: $current_file"
+}
+
 start_sidecar() {
 	polinko_require_process_inspection "eval-sidecar PID inspection"
 
@@ -151,6 +165,7 @@ start_sidecar() {
 
 status_sidecar() {
 	polinko_require_process_inspection "eval-sidecar PID inspection"
+	print_sidecar_context
 
 	if [ -f "$pid_file" ]; then
 		pid=$(cat "$pid_file" 2>/dev/null || true)

@@ -21,12 +21,18 @@ server_health_host=${SERVER_HEALTH_HOST:-127.0.0.1}
 server_health_url=${SERVER_HEALTH_URL:-http://$server_health_host:$dev_backend_port/health}
 server_start_attempts=${SERVER_START_ATTEMPTS:-100}
 server_start_sleep_seconds=${SERVER_START_SLEEP_SECONDS:-0.2}
-server_pid_file=${SERVER_PID_FILE:-/tmp/polinko-server.pid}
-server_log=${SERVER_LOG:-/tmp/polinko-server.log}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
+server_repo_slug=${SERVER_REPO_SLUG:-${POLINKO_REPO_ROOT##*/}}
+if [ -z "$server_repo_slug" ]; then
+	server_repo_slug=polinko
+fi
+server_runtime_root=${SERVER_RUNTIME_ROOT:-/tmp/polinko-runtime}
+server_state_dir=${SERVER_STATE_DIR:-$server_runtime_root/$server_repo_slug}
+server_pid_file=${SERVER_PID_FILE:-$server_state_dir/server.pid}
+server_log=${SERVER_LOG:-$server_state_dir/server.log}
 detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 # shellcheck source=tools/python_runtime.sh
 . "$script_dir/python_runtime.sh"
@@ -132,6 +138,13 @@ wait_for_server_ready() {
 		attempt=$((attempt + 1))
 	done
 	return 1
+}
+
+print_server_context() {
+	echo "Repo: $server_repo_slug"
+	echo "Repo root: $POLINKO_REPO_ROOT"
+	echo "PID file: $server_pid_file"
+	echo "Log file: $server_log"
 }
 
 start_server() {
@@ -256,6 +269,7 @@ stop_server() {
 
 status_server() {
 	polinko_require_process_inspection "server-daemon PID inspection"
+	print_server_context
 
 	if [ -f "$server_pid_file" ]; then
 		pid=$(cat "$server_pid_file" 2>/dev/null || true)

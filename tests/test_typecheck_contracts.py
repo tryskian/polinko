@@ -80,12 +80,21 @@ class TypecheckContractTests(unittest.TestCase):
 
     def test_pyright_is_repo_owned_advisory_editor_check(self) -> None:
         package = json.loads(_read("package.json"))
+        package_lock = json.loads(_read("package-lock.json"))
         checks_makefile = _read_makefile_source("makefiles/checks.mk")
         build_makefile = _read_makefile_source("makefiles/build.mk")
         ci_workflow = _read(".github/workflows/ci.yml")
         state = _read("docs/governance/STATE.md")
+        pyright_version = package["devDependencies"]["pyright"]
 
-        self.assertEqual(package["devDependencies"]["pyright"], "1.1.410")
+        self.assertEqual(
+            package_lock["packages"][""]["devDependencies"]["pyright"],
+            pyright_version,
+        )
+        self.assertEqual(
+            package_lock["packages"]["node_modules/pyright"]["version"],
+            pyright_version,
+        )
         self.assertEqual(
             package["scripts"]["typecheck:pyright"],
             "pyright --project pyrightconfig.json",
