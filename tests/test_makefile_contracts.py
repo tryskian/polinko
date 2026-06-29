@@ -2514,7 +2514,7 @@ class MakefileContractTests(unittest.TestCase):
             "CAFFEINATE_ACTIVITY_FILE ?= $(CAFFEINATE_STATE_DIR)/activity.meta.json",
             text,
         )
-        self.assertIn("CAFFEINATE_REPO_SLUG ?= polinko", text)
+        self.assertIn("CAFFEINATE_REPO_SLUG ?= $(notdir $(CURDIR))", text)
         self.assertIn("CAFFEINATE_ACTIVE_WINDOW_SECONDS ?= 1800", text)
         self.assertIn("CAFFEINATE_ALLOW_GLOBAL_CLEANUP ?= 0", text)
         self.assertIn("repo_activity = $(CAFFEINATE_ENV)", text)
