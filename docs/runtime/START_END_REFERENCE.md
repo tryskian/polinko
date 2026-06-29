@@ -51,11 +51,15 @@ Wake-lock rule:
 - `make caffeinate` records only this repo's managed PID
 - `CAFFEINATE_CMD` and `CAFFEINATE_MATCH_PATTERN` are configured together so
   start, status, and stop-all inspect the same wake-lock shape
+- caffeinate PID, log, ownership metadata, and activity metadata default to a
+  repo-scoped runtime namespace under `CAFFEINATE_STATE_DIR`
 - `make caffeinate` and companion wake-lock targets reject invalid command,
   match-pattern regex, active-window, and global-cleanup config before they
   read, report, launch, stop, or clean PID/activity state
 - `make caffeinate` writes repo-scoped metadata for the managed wake-lock PID
   and the latest repo activity heartbeat
+- mutating caffeinate lifecycle actions migrate owned legacy flat runtime files
+  before launch or stop decisions and clean stale legacy PID metadata
 - high-traffic lifecycle and validation targets mark repo activity through the
   same activity metadata without starting, stopping, or adopting a wake-lock PID
 - the managed process is launched in a detached child session so it survives

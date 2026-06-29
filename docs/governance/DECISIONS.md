@@ -4728,3 +4728,23 @@ or branch history instead.
 - Why: A runner can launch on one port and probe another when URL and port
   overrides drift apart. Shared validation keeps these failures direct and
   consistent across local HTTP runner surfaces.
+
+## D-274: Namespace repo-managed caffeinate runtime files
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `runtime_state`, `pid_file`, `migration`
+- Human-led: The human lead asked for repo-managed caffeinate state to identify
+  the owning repo and distinguish active work from a merely valid wake-lock PID.
+- Engineer implementation: Move Make defaults from flat `/tmp` files into a
+  repo-scoped runtime namespace, pass the explicit state paths through
+  `CAFFEINATE_ENV`, and teach the manager to migrate owned legacy flat files on
+  mutating lifecycle actions before launch or stop decisions.
+- Decision: Repo-managed caffeinate PID, log, ownership metadata, and activity
+  metadata must live under a repo namespace by default; existing flat legacy
+  files are migrated only when they are owned by the current repo or cleaned
+  when stale.
+- Why: Flat runtime files are harder to reason about across repos and can make a
+  valid old PID look like an unmanaged process after config changes. Namespaced
+  state keeps ownership visible while migration avoids duplicate wake-lock
+  launches during rollout.
