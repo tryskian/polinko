@@ -9,7 +9,6 @@ polinko_cd_repo_root
 ROOT="$POLINKO_REPO_ROOT"
 
 venv_dir="${POLINKO_DEVCONTAINER_VENV_DIR:-.venv}"
-portfolio_app_dir="${POLINKO_DEVCONTAINER_PORTFOLIO_APP_DIR:-apps/portfolio}"
 bootstrap_python="${POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON:-python3.14}"
 venv_python="$venv_dir/bin/python3"
 
@@ -21,14 +20,4 @@ if [ -f package-lock.json ]; then
 	npm ci --no-audit --no-fund
 else
 	npm install --no-audit --no-fund
-fi
-
-if [ -f "$portfolio_app_dir/package.json" ]; then
-	if [ -f "$portfolio_app_dir/package-lock.json" ]; then
-		npm --prefix "$portfolio_app_dir" ci --no-audit --no-fund
-	else
-		npm --prefix "$portfolio_app_dir" install --no-audit --no-fund
-	fi
-else
-	echo "Skipping portfolio npm install; source app not present at $portfolio_app_dir/package.json."
 fi

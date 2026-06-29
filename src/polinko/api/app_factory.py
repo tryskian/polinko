@@ -3,7 +3,6 @@ import binascii
 import hashlib
 import json
 import logging
-import os
 import re
 import sqlite3
 import time
@@ -15,8 +14,7 @@ from typing import Any, Literal, cast
 from agents import Agent, Runner, RunConfig
 from agents.memory import Session
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, HTMLResponse
 from openai import (
     APIConnectionError,
     APIStatusError,
@@ -32,7 +30,6 @@ from polinko.api.eval_viz import (
     render_pass_fail_viz_html,
 )
 from polinko.api.manual_evals_surface import build_manual_evals_surface_payload
-from polinko.api.portfolio_sankey import build_portfolio_sankey_payload
 from polinko.core.history_store import (
     ChatHistoryStore,
     ChatSummary,
@@ -63,455 +60,11 @@ def _find_repo_root(start: Path) -> Path:
 
 _API_PACKAGE_ROOT = Path(__file__).resolve().parent
 _REPO_ROOT = _find_repo_root(_API_PACKAGE_ROOT)
-_PORTFOLIO_FAVICON_PNG = _API_PACKAGE_ROOT / "static" / "favicon.png"
 _VIZ_ARTIFACT_ALLOWED_ROOTS = (
     _REPO_ROOT / "docs" / "eval",
     _REPO_ROOT / "docs" / "research",
     _REPO_ROOT / "docs" / "public" / "diagrams",
 )
-_PORTFOLIO_DESCRIPTION = (
-    "Krystian Fernando is an applied AI research engineer working in "
-    "human-AI interaction and designing evals around the useful signals "
-    "models reveal when they fail."
-)
-
-
-def _repo_path_from_env(env_name: str, default_relative_path: str) -> Path:
-    raw_path = os.environ.get(env_name) or default_relative_path
-    path = Path(raw_path).expanduser()
-    if path.is_absolute():
-        return path
-    return _REPO_ROOT / path
-
-
-_PORTFOLIO_FALLBACK_HTML = """<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Krystian Fernando | Applied AI Research Engineer</title>
-  <meta name="description" content="__PORTFOLIO_DESCRIPTION__">
-  <meta name="author" content="Krystian Fernando">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://www.krystian.io/">
-  <link rel="icon" href="/favicon.png" type="image/png">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://www.krystian.io/">
-  <meta property="og:site_name" content="Krystian Fernando">
-  <meta property="og:title" content="Krystian Fernando | Applied AI Research Engineer">
-  <meta property="og:description" content="__PORTFOLIO_DESCRIPTION__">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Krystian Fernando | Applied AI Research Engineer">
-  <meta name="twitter:description" content="__PORTFOLIO_DESCRIPTION__">
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@graph": [
-        {
-          "@type": "WebSite",
-          "@id": "https://www.krystian.io/#website",
-          "url": "https://www.krystian.io/",
-          "name": "Krystian Fernando",
-          "alternateName": [
-            "krystian.io",
-            "Krystian.io",
-            "Krystian Fernando Applied AI Research"
-          ],
-          "publisher": {
-            "@id": "https://www.krystian.io/#person"
-          }
-        },
-        {
-          "@type": "Person",
-          "@id": "https://www.krystian.io/#person",
-          "name": "Krystian Fernando",
-          "url": "https://www.krystian.io/",
-          "jobTitle": "Applied AI Research Engineer",
-          "description": "__PORTFOLIO_DESCRIPTION__",
-          "sameAs": [
-            "https://github.com/tryskian",
-            "https://www.linkedin.com/in/krystianfernando/"
-          ],
-          "knowsAbout": [
-            "AI evaluation",
-            "human-AI interaction",
-            "AI safety",
-            "AI alignment",
-            "LLM product design",
-            "OCR reliability"
-          ]
-        }
-      ]
-    }
-  </script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700;800&display=swap">
-  <style>
-    :root {
-      --paper: #fdfdfd;
-      --ink: #262626;
-      --muted: #686868;
-      --copy-rhythm: clamp(3.05rem, 5.4svh, 4.4rem);
-      --font-main:
-        "Instrument Sans",
-        "Helvetica Neue",
-        Helvetica,
-        Arial,
-        sans-serif;
-      --page-inline: clamp(4.5rem, 8.8vw, 8rem);
-      --page-block-start: clamp(3.5rem, 7vh, 5rem);
-      background: var(--paper);
-      color: var(--ink);
-      font-family: var(--font-main);
-    }
-
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100svh;
-      background: var(--paper);
-      color: var(--ink);
-      overflow-x: hidden;
-    }
-
-    .portal {
-      min-height: 100svh;
-      position: relative;
-      padding: var(--page-block-start) var(--page-inline) 5.5rem;
-    }
-
-    main {
-      bottom: 0;
-      inline-size: calc(100% - (var(--page-inline) * 2));
-      left: var(--page-inline);
-      position: absolute;
-      top: 0;
-    }
-
-    a {
-      color: inherit;
-    }
-
-    .identity-menu {
-      display: grid;
-      justify-items: start;
-      inline-size: max-content;
-      left: var(--page-inline);
-      position: absolute;
-      top: clamp(4.9rem, 8.5svh, 5.5rem);
-      z-index: 2;
-    }
-
-    .identity-name {
-      color: var(--ink);
-      font-family: var(--font-main);
-      font-size: 0.86rem;
-      font-style: normal;
-      font-weight: 700;
-      letter-spacing: 0.17em;
-      line-height: 1;
-      margin: 0;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .because-link:focus-visible {
-      outline: 1px solid currentColor;
-      outline-offset: 6px;
-    }
-
-    .bio {
-      display: flex;
-      flex-direction: column;
-      gap: var(--copy-rhythm);
-      align-items: flex-start;
-      bottom: var(--page-inline);
-      inline-size: 100%;
-      left: 0;
-      position: absolute;
-      top: auto;
-    }
-
-    .copy-block {
-      display: grid;
-      gap: var(--copy-rhythm);
-      margin: 0;
-    }
-
-    .copy-line {
-      color: var(--ink);
-      font-family: var(--font-main);
-      margin: 0;
-      max-width: min(70vw, 56rem);
-      font-size: 2.1875rem;
-      font-style: normal;
-      font-weight: 300;
-      letter-spacing: 0;
-      line-height: normal;
-      text-wrap: pretty;
-    }
-
-    .compact-line {
-      max-width: 18rem;
-    }
-
-    .because-link {
-      color: var(--ink);
-      display: inline-block;
-      font-family: var(--font-main);
-      margin: 0;
-      position: relative;
-      font-size: 2.1875rem;
-      font-style: normal;
-      font-weight: 500;
-      letter-spacing: 0;
-      line-height: normal;
-      text-decoration: none;
-      text-wrap: balance;
-      transition:
-        color 320ms cubic-bezier(0.22, 1, 0.36, 1),
-        text-decoration-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .cta-stack {
-      display: grid;
-      gap: 0;
-      inline-size: min(83vw, 64rem);
-      margin-left: 0;
-      padding-top: 0;
-    }
-
-    .because-link:hover,
-    .because-link:focus-visible {
-      color: #4a4a4a;
-    }
-
-    .because-text,
-    .link-icon {
-      text-decoration-line: underline;
-      text-decoration-thickness: 1px;
-      text-decoration-color: transparent;
-      text-underline-offset: 0.16em;
-      transition: text-decoration-color 320ms cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .because-link:hover .because-text,
-    .because-link:hover .link-icon,
-    .because-link:focus-visible .because-text,
-    .because-link:focus-visible .link-icon {
-      text-decoration-color: currentColor;
-    }
-
-    .repo-tooltip {
-      color: #747474;
-      display: inline-block;
-      font-family: var(--font-main);
-      font-size: clamp(0.82rem, 1.08vw, 1.02rem);
-      font-weight: 500;
-      line-height: 1.1;
-      opacity: 0;
-      padding-top: 0.65rem;
-      pointer-events: none;
-      transform: translateY(-0.22rem);
-      transition:
-        color 320ms cubic-bezier(0.22, 1, 0.36, 1),
-        opacity 360ms cubic-bezier(0.22, 1, 0.36, 1),
-        transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
-    }
-
-    .because-link:hover + .repo-tooltip,
-    .because-link:focus-visible + .repo-tooltip,
-    .repo-tooltip:hover {
-      color: #747474;
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .because-link,
-      .repo-tooltip {
-        transition: none;
-      }
-    }
-
-    .sr-only {
-      block-size: 1px;
-      clip: rect(0 0 0 0);
-      clip-path: inset(50%);
-      inline-size: 1px;
-      overflow: hidden;
-      position: absolute;
-      white-space: nowrap;
-    }
-
-    .link-icon {
-      display: inline-block;
-      block-size: 0.78em;
-      inline-size: 0.78em;
-      margin-inline-start: 0.22em;
-      stroke: currentColor;
-      stroke-linecap: square;
-      stroke-linejoin: miter;
-      stroke-width: 1.75;
-      text-decoration: none;
-      vertical-align: -0.08em;
-    }
-
-    @media (max-width: 1180px) {
-      :root {
-        --page-inline: clamp(32px, 8vw, 96px);
-      }
-
-      .copy-line {
-        font-size: clamp(1.75rem, 2.9vw, 2.1875rem);
-        max-width: min(74vw, 54rem);
-      }
-
-      .because-link {
-        font-size: clamp(1.75rem, 2.9vw, 2.1875rem);
-      }
-
-      .cta-stack {
-        inline-size: min(82vw, 64rem);
-        margin-left: 0;
-      }
-    }
-
-    @media (min-width: 861px) {
-      .because-link {
-        text-wrap: nowrap;
-        white-space: nowrap;
-      }
-    }
-
-    @media (max-width: 860px) {
-      :root {
-        --page-inline: clamp(28px, 8vw, 56px);
-        --page-block-start: 30px;
-      }
-
-      .portal {
-        display: grid;
-        grid-template-rows: auto 1fr;
-        min-height: 100svh;
-        padding-block-end: clamp(4.25rem, 8svh, 5.5rem);
-        padding-block-start: clamp(4.7rem, 9svh, 6.25rem);
-        padding-inline: var(--page-inline);
-      }
-
-      .identity-menu {
-        left: auto;
-        position: static;
-        top: auto;
-      }
-
-      .identity-name {
-        font-size: clamp(0.76rem, 2.95vw, 0.96rem);
-        letter-spacing: clamp(0.11em, 1.75vw, 0.16em);
-      }
-
-      main {
-        align-items: flex-end;
-        display: flex;
-        left: 0;
-        inline-size: 100%;
-        position: relative;
-        top: auto;
-        transform: none;
-        padding-top: clamp(5rem, 12svh, 8rem);
-      }
-
-      .bio {
-        position: static;
-      }
-
-      .bio {
-        gap: clamp(2.7rem, 5.8svh, 4.15rem);
-      }
-
-      .copy-line {
-        font-size: clamp(1.48rem, 6.1vw, 2.05rem);
-        font-weight: 400;
-        line-height: normal;
-        max-width: 100%;
-      }
-
-      .because-link {
-        font-size: clamp(1.48rem, 6.1vw, 2.05rem);
-        line-height: normal;
-      }
-
-      .cta-stack {
-        inline-size: 100%;
-        margin-left: 0;
-      }
-    }
-
-    @media (max-height: 760px) and (min-width: 861px) {
-      .bio {
-        gap: 1.85rem;
-      }
-
-      .copy-line {
-        font-size: 1.85rem;
-      }
-
-      .because-link {
-        font-size: 1.85rem;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="portal">
-    <div class="identity-menu">
-      <h1 class="identity-name">Krystian Fernando</h1>
-    </div>
-    <main>
-      <div class="bio">
-        <section class="copy-block" aria-label="Origin and research focus">
-          <p class="copy-line">
-            creative designer who somehow became an applied AI&nbsp;research
-            engineer when one idea came with its own hypothesis.
-          </p>
-          <p class="copy-line">
-            so now i design evals around the useful signals that models reveal
-            when they fail.
-          </p>
-        </section>
-        <section class="copy-block" aria-label="Method">
-          <p class="copy-line compact-line">for fun.</p>
-        </section>
-        <div class="cta-stack">
-          <a
-            class="because-link"
-            href="https://github.com/tryskian/polinko"
-            aria-describedby="repo-link-destination"
-          >
-            <span class="because-text">because every signal reshapes the experiment.</span>
-            <svg class="link-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-              <path d="M4 12 12 4" fill="none"></path>
-              <path d="M6 4h6v6" fill="none"></path>
-            </svg>
-          </a>
-          <span class="repo-tooltip" aria-hidden="true">github.com/tryskian/polinko</span>
-          <span id="repo-link-destination" class="sr-only">Opens the Polinko repository on GitHub.</span>
-        </div>
-      </div>
-    </main>
-  </div>
-</body>
-</html>
-""".replace("__PORTFOLIO_DESCRIPTION__", _PORTFOLIO_DESCRIPTION)
-
-
 _LATENCY_BUCKET_EDGES_MS = (10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2000.0)
 _OCR_VECTOR_CHUNK_CHARS = 700
 _OCR_VECTOR_CHUNK_OVERLAP = 120
@@ -1908,7 +1461,7 @@ def _build_collaboration_note(state: CollaborationState | None) -> str | None:
     if state is None:
         return None
     lines = [
-        "[COLLABORATION_CONTEXT: active portfolio collaborator mode. "
+        "[COLLABORATION_CONTEXT: active collaboration handoff mode. "
         "Apply silently and do not mention this block.]",
         f"- active_agent_id: {state.active_agent_id}",
         f"- active_role: {state.active_role}",
@@ -3562,17 +3115,6 @@ def create_app(config: AppConfig) -> FastAPI:
         run_config=create_run_config(store=True),
         agent=create_agent(),
     )
-    portfolio_static_dir = _repo_path_from_env(
-        "POLINKO_PORTFOLIO_STATIC_DIR",
-        "public/portfolio",
-    )
-    portfolio_assets_dir = portfolio_static_dir / "assets"
-    if portfolio_assets_dir.exists():
-        app.mount(
-            "/assets",
-            StaticFiles(directory=str(portfolio_assets_dir)),
-            name="portfolio-assets",
-        )
 
     @app.middleware("http")
     async def request_logging(request: Request, call_next):
@@ -3619,27 +3161,13 @@ def create_app(config: AppConfig) -> FastAPI:
         }
 
     @app.get("/")
-    def portfolio_root_redirect() -> RedirectResponse:
-        return RedirectResponse(url="/portfolio")
-
-    @app.get("/favicon.png", include_in_schema=False)
-    def portfolio_favicon_png() -> FileResponse:
-        if not _PORTFOLIO_FAVICON_PNG.is_file():
-            raise HTTPException(status_code=404, detail="Favicon file not found.")
-        return FileResponse(path=_PORTFOLIO_FAVICON_PNG, media_type="image/png")
-
-    @app.get("/portfolio")
-    def portfolio_shell() -> Any:
-        shell_path = portfolio_static_dir / "index.html"
-        if not shell_path.is_file():
-            return HTMLResponse(content=_PORTFOLIO_FALLBACK_HTML)
-        return FileResponse(path=shell_path)
-
-    @app.get("/portfolio/sankey-data")
-    def portfolio_sankey_data(max_reports: int = 120) -> dict[str, Any]:
-        return build_portfolio_sankey_payload(
-            max_reports=max(1, min(max_reports, 240)),
-        )
+    def root() -> dict[str, str]:
+        return {
+            "status": "ok",
+            "surface": "polinko-api",
+            "health": "/health",
+            "pass_fail_viz": "/viz/pass-fail",
+        }
 
     @app.get("/viz/pass-fail", response_class=HTMLResponse)
     def pass_fail_viz(refresh_ms: int = 4000, chart_max_points: int = 20) -> str:

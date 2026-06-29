@@ -5,7 +5,7 @@ import unittest
 from contextlib import closing
 from pathlib import Path
 
-from polinko.api.portfolio_sankey import build_portfolio_sankey_payload
+from polinko.api.evidence_sankey import build_evidence_sankey_payload
 
 
 def _init_manual_evals_db(path: Path) -> None:
@@ -195,11 +195,11 @@ def _write_binary_reports(root: Path) -> None:
     )
 
 
-class PortfolioSankeyTests(unittest.TestCase):
+class EvidenceSankeyTests(unittest.TestCase):
     def test_payload_requires_real_legacy_and_current_sources(self) -> None:
         with tempfile.TemporaryDirectory() as tmp_dir:
             root = Path(tmp_dir)
-            payload = build_portfolio_sankey_payload(
+            payload = build_evidence_sankey_payload(
                 manual_db_path=root / "missing-manual.db",
                 report_root=root / "missing-reports",
             )
@@ -219,7 +219,7 @@ class PortfolioSankeyTests(unittest.TestCase):
             _init_manual_evals_db(manual_db)
             _write_binary_reports(report_root)
 
-            payload = build_portfolio_sankey_payload(
+            payload = build_evidence_sankey_payload(
                 manual_db_path=manual_db,
                 report_root=report_root,
             )

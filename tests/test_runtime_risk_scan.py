@@ -159,7 +159,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             _write_precommit(
                 root,
                 """
-                exclude: ^(docs/peanut/|public/portfolio/assets/)
+                exclude: ^docs/peanut/
                 repos:
                   - repo: local
                     hooks:
@@ -189,7 +189,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             _write_precommit(
                 root,
                 """
-                exclude: ^(docs/peanut/|public/portfolio/assets/)
+                exclude: ^docs/peanut/
                 repos:
                   - repo: local
                     hooks:
@@ -225,7 +225,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             _write_precommit(
                 root,
                 """
-                exclude: ^(docs/peanut/|public/portfolio/assets/)
+                exclude: ^docs/peanut/
                 repos:
                   - repo: local
                     hooks:

@@ -3,7 +3,6 @@ import hashlib
 import json
 import logging
 import os
-import re
 import tempfile
 import unittest
 import httpx
@@ -112,55 +111,24 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(body["status"], "ok")
         self.assertIn("prompt_version", body)
 
-    def test_root_redirects_to_portfolio(self) -> None:
-        resp = self.client.get("/", follow_redirects=False)
-        self.assertEqual(resp.status_code, 307)
-        self.assertEqual(resp.headers.get("location"), "/portfolio")
-
-    def test_portfolio_shell_returns_html(self) -> None:
-        resp = self.client.get("/portfolio")
+    def test_root_returns_api_surface_summary(self) -> None:
+        resp = self.client.get("/")
         self.assertEqual(resp.status_code, 200)
-        self.assertEqual(resp.headers.get("content-type"), "text/html; charset=utf-8")
-        self.assertTrue(resp.text.lstrip().lower().startswith("<!doctype html>"))
-        self.assertIn("<title>POLINKOfolio Interface Board</title>", resp.text)
-        self.assertIn(
-            '<canvas id="webgl-stage" aria-hidden="true"></canvas>', resp.text
+        self.assertEqual(
+            resp.json(),
+            {
+                "status": "ok",
+                "surface": "polinko-api",
+                "health": "/health",
+                "pass_fail_viz": "/viz/pass-fail",
+            },
         )
-        self.assertIn('aria-label="Portfolio interface layout board"', resp.text)
-        self.assertIn('id="evidence-map"', resp.text)
-        self.assertIn('href="/assets/', resp.text)
-        self.assertIn('src="/assets/', resp.text)
-        self.assertIn("pipeline-fpo", resp.text)
-        self.assertIn("stacked-evidence-map-fpo", resp.text)
 
-    def test_portfolio_favicons_are_served(self) -> None:
-        png_resp = self.client.get("/favicon.png")
-        self.assertEqual(png_resp.status_code, 200)
-        self.assertEqual(png_resp.headers.get("content-type"), "image/png")
-
-    def test_portfolio_shell_assets_are_served(self) -> None:
-        resp = self.client.get("/portfolio")
-        self.assertEqual(resp.status_code, 200)
-        asset_paths = set(re.findall(r'(?:href|src)="(/assets/[^"]+)"', resp.text))
-        if not asset_paths:
-            self.assertIn("Krystian Fernando", resp.text)
-            return
-        for asset_path in asset_paths:
-            asset_resp = self.client.get(asset_path)
-            self.assertEqual(asset_resp.status_code, 200)
-
-    def test_portfolio_sankey_data_endpoint_returns_contract_shape(self) -> None:
-        resp = self.client.get("/portfolio/sankey-data")
-        self.assertEqual(resp.status_code, 200)
-        payload = resp.json()
-        self.assertIn("available", payload)
-        self.assertEqual(payload["source_integrity"], "real_data_only")
-        self.assertIn("summary", payload)
-        self.assertIn("sources", payload)
-        self.assertIn("graphs", payload)
-        self.assertIn("legacy", payload["graphs"])
-        self.assertIn("bridge", payload["graphs"])
-        self.assertIn("current", payload["graphs"])
+    def test_deprecated_portfolio_routes_are_absent(self) -> None:
+        for path in ("/portfolio", "/portfolio/sankey-data", "/favicon.png"):
+            with self.subTest(path=path):
+                resp = self.client.get(path)
+                self.assertEqual(resp.status_code, 404)
 
     def test_pass_fail_artifact_route_serves_tracked_eval_file(self) -> None:
         resp = self.client.get(
@@ -4213,17 +4181,17 @@ class PolinkoApiTests(unittest.TestCase):
             "/chats/s-collab/collaboration/handoff",
             headers={"x-api-key": "test-server-key"},
             json={
-                "to_agent_id": "portfolio_strategist",
-                "to_role": "Portfolio Strategist",
-                "objective": "Shape clear strategic options for portfolio narratives.",
+                "to_agent_id": "research_strategist",
+                "to_role": "Research Strategist",
+                "objective": "Shape clear strategic options for research narratives.",
                 "reason": "Switching from general ideation to structured planning.",
             },
         )
         self.assertEqual(handoff_resp.status_code, 200)
         payload = handoff_resp.json()
         self.assertEqual(payload["session_id"], "s-collab")
-        self.assertEqual(payload["active"]["active_agent_id"], "portfolio_strategist")
-        self.assertEqual(payload["active"]["active_role"], "Portfolio Strategist")
+        self.assertEqual(payload["active"]["active_agent_id"], "research_strategist")
+        self.assertEqual(payload["active"]["active_role"], "Research Strategist")
         self.assertEqual(len(payload["handoffs"]), 1)
         self.assertIsNone(payload["handoffs"][0]["from_agent_id"])
 
@@ -4234,7 +4202,7 @@ class PolinkoApiTests(unittest.TestCase):
         self.assertEqual(timeline.status_code, 200)
         timeline_payload = timeline.json()
         self.assertEqual(
-            timeline_payload["active"]["active_agent_id"], "portfolio_strategist"
+            timeline_payload["active"]["active_agent_id"], "research_strategist"
         )
         self.assertEqual(len(timeline_payload["handoffs"]), 1)
 
@@ -4250,8 +4218,8 @@ class PolinkoApiTests(unittest.TestCase):
             )
         self.assertEqual(chat_resp.status_code, 200)
         self.assertIn("COLLABORATION_CONTEXT", captured["input"])
-        self.assertIn("portfolio_strategist", captured["input"])
-        self.assertIn("Portfolio Strategist", captured["input"])
+        self.assertIn("research_strategist", captured["input"])
+        self.assertIn("Research Strategist", captured["input"])
 
     def test_collaboration_handoff_tracks_transitions(self) -> None:
         first = self.client.post(

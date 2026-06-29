@@ -2,7 +2,7 @@
 
 # Runtime Surface Map
 
-Last updated: 2026-06-28
+Last updated: 2026-06-29
 
 This map shows the local runtime and operator surfaces that need to stay
 maintainable during the current refactor. It separates manual startup,
@@ -117,7 +117,7 @@ flowchart TD
   OCR guard/transcript workflows, OCR report workflows, direct OCR eval
   runners, direct OCR growth eval runners, and Playwright snapshot helpers
   resolve the checkout root through `tools/repo_root.sh`. Direct local-gate,
-  background-runner, eval-sidecar, report-builder, portfolio-mockup, OCR
+  background-runner, eval-sidecar, report-builder, OCR
   runner, and OCR growth runner execution also prefer the repo `.venv`
   interpreter when `PYTHON` is not set.
   Local eval gates use bounded cleanup for the temporary server they start for
@@ -188,9 +188,10 @@ flowchart TD
   remains active, the PID file stays in place and the stop exits non-zero.
   Start reports success only after the current-run status file exists within
   the bounded readiness wait.
-- Portfolio mockup targets remain available as a deprecated manual surface, but
-  they are no longer part of active closeout/status or the core background
-  runner family. New portfolio work moves to the separate `krystian.io` repo.
+- Deprecated portfolio app, static output, preview/mockup helpers, and Netlify
+  config are quarantined under `.archive/quarantine/portfolio-2026-06-29/` for
+  porting to the separate `krystian.io` repo. They are not active runtime,
+  Make, CI, dependency, or closeout surfaces.
 - Manual eval and OCR tooling remain active workbench surfaces, but eval runs
   stay separate from startup and read-only inventory commands. Health,
   feedback, overlay, OCR retry, and reclassification Make targets route through
@@ -207,5 +208,5 @@ flowchart TD
 - CI and dependency automation should mirror local gates closely enough that
   failed remote runs point to real fixes, not setup drift.
 - Local URL targets remain print-first by default. Explicit system-browser
-  launch paths route through `tools/open_local_url.sh` so `docs`, `viz`, and
-  portfolio launch behavior share one audited helper.
+  launch paths route through `tools/open_local_url.sh` so `docs` and `viz`
+  launch behavior share one audited helper.

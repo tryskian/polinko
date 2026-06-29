@@ -26,9 +26,6 @@ venv/
 # Node and local build artifacts
 node_modules/
 dist/
-# Portfolio source and served static output are tracked.
-apps/portfolio/test-results/
-apps/portfolio/playwright-report/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -71,9 +68,6 @@ polinko.code-workspace
 # Local peanut knowledge lane (confidential/local-only)
 docs/peanut/**
 !docs/peanut/.gitkeep
-!docs/peanut/assets/
-!docs/peanut/assets/portfolio-mockups/
-!docs/peanut/assets/portfolio-mockups/.gitkeep
 docs/eval/**
 !docs/eval/.gitkeep
 !docs/eval/README.md

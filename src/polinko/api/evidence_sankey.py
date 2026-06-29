@@ -554,7 +554,7 @@ def _bridge_graph(legacy: dict[str, Any], current: dict[str, Any]) -> dict[str, 
     }
 
 
-def build_portfolio_sankey_payload(
+def build_evidence_sankey_payload(
     *,
     manual_db_path: Path | None = None,
     report_root: Path | None = None,

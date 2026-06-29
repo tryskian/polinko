@@ -4803,3 +4803,39 @@ or branch history instead.
   runtime closeout contract. Keeping the old manual targets parked avoids a
   broad deletion while preventing stale portfolio state from interfering with
   session closure.
+
+## D-278: Quarantine deprecated portfolio surfaces before porting
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `portfolio`, `surface_ia`, `quarantine`, `krystian_io`
+- Human-led: The human lead clarified that portfolio work is deprecated in
+  Polinko and should be preserved only so it can be ported to the proper
+  `krystian.io` repo.
+- Engineer implementation: Produce a portfolio-surface inventory report before
+  edits, classify each surface as keep active, re-home active, quarantine
+  portable, or remove active wiring, and avoid blindly quarantining active
+  Polinko evidence helpers such as the Sankey payload.
+- Decision: Deprecated portfolio website, build, mockup, static-output, and
+  runtime wiring should be quarantined as portable source material before
+  removal from Polinko's active surface map.
+- Why: Porting needs the useful source preserved, while Polinko should stop
+  maintaining deprecated portfolio runtime, CI, dependency, and Make surfaces as
+  active project infrastructure.
+
+## D-279: Keep state and handoff docs current, not trailing
+
+- Date: `2026-06-29`
+- Category: `governance`
+- Tags: `docs_hygiene`, `state`, `session_handoff`, `refactor`
+- Human-led: The human lead clarified that `STATE.md` and local session handoff
+  docs are current reports, not append-only logs, and that documentation should
+  stay concise rather than trailing every kernel.
+- Engineer implementation: Treat `docs/governance/STATE.md` as tracked current
+  truth, local `docs/peanut/governance/SESSION_HANDOFF.md` as one daily handoff,
+  runtime docs as role-specific procedure or architecture, and
+  `docs/governance/DECISIONS.md` as the additive record.
+- Decision: During the refactor, current-state and handoff docs must be refreshed
+  to their current role instead of appended as logs.
+- Why: Long trailing docs create stale context, raise maintenance cost, and make
+  the repo harder to use as the research source of truth.

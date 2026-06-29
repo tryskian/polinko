@@ -61,10 +61,6 @@ class DependencyHygieneTests(unittest.TestCase):
             ["--config-file", "mypy.ini"],
         )
         self.assertIn(
-            "**/apps/portfolio/node_modules/**",
-            vscode["settings"]["python.analysis.exclude"],
-        )
-        self.assertIn(
             "**/docs/peanut/**",
             vscode["settings"]["markdownlint.ignore"],
         )
@@ -74,7 +70,7 @@ class DependencyHygieneTests(unittest.TestCase):
         self.assertNotIn("ms-python.isort", extensions)
         self.assertNotIn("ms-pyright.pyright", extensions)
 
-    def test_devcontainer_setup_script_uses_locked_root_and_portfolio_deps(
+    def test_devcontainer_setup_script_uses_locked_root_deps(
         self,
     ) -> None:
         script = _read("tools/setup_devcontainer.sh")
@@ -93,13 +89,8 @@ class DependencyHygieneTests(unittest.TestCase):
         self.assertIn('"$venv_python" -m pip install -r requirements.txt', script)
         self.assertIn("requirements.txt", script)
         self.assertIn("npm ci --no-audit --no-fund", script)
-        self.assertIn(
-            'portfolio_app_dir="${POLINKO_DEVCONTAINER_PORTFOLIO_APP_DIR:-apps/portfolio}"',
-            script,
-        )
-        self.assertIn(
-            'npm --prefix "$portfolio_app_dir" ci --no-audit --no-fund', script
-        )
+        self.assertNotIn("POLINKO_DEVCONTAINER_PORTFOLIO_APP_DIR", script)
+        self.assertNotIn('npm --prefix "$portfolio_app_dir"', script)
         self.assertNotIn("frontend", script)
         self.assertNotIn("polinko-repositioning-system", script)
 
@@ -155,7 +146,6 @@ class DependencyHygieneTests(unittest.TestCase):
                     "NPM_LOG": str(npm_log),
                     "PATH": f"{fake_bin}{os.pathsep}{env['PATH']}",
                     "POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON": str(fake_python),
-                    "POLINKO_DEVCONTAINER_PORTFOLIO_APP_DIR": "missing-portfolio",
                     "POLINKO_DEVCONTAINER_VENV_DIR": str(venv_dir),
                     "VENV_PYTHON_LOG": str(venv_python_log),
                 }
@@ -182,7 +172,6 @@ class DependencyHygieneTests(unittest.TestCase):
             self.assertEqual(
                 npm_log.read_text(encoding="utf-8").strip(), "ci --no-audit --no-fund"
             )
-            self.assertIn("Skipping portfolio npm install", result.stdout)
 
     def test_python_lockfile_uses_dependabot_visible_pip_tools_convention(
         self,
@@ -215,17 +204,14 @@ class DependencyHygieneTests(unittest.TestCase):
         self.assertNotIn("polinko-repositioning-system", main_text)
         self.assertNotIn("polinko-repositioning-system", doctor_text)
 
-    def test_node_security_covers_root_and_portfolio_locks(self) -> None:
+    def test_node_security_covers_root_lock(self) -> None:
         build_make = _read_makefile_source("makefiles/build.mk")
         dependabot = _read(".github/dependabot.yml")
 
         self.assertIn("npm audit --audit-level=moderate", build_make)
-        self.assertIn(
-            'npm --prefix "$(PORTFOLIO_APP_DIR)" audit --audit-level=moderate',
-            build_make,
-        )
+        self.assertNotIn("PORTFOLIO_APP_DIR", build_make)
         self.assertIn('directory: "/"', dependabot)
-        self.assertIn('directory: "/apps/portfolio"', dependabot)
+        self.assertNotIn('directory: "/apps/portfolio"', dependabot)
 
     def test_ci_automation_uses_read_only_contents_permissions(self) -> None:
         ci_workflow = _read(".github/workflows/ci.yml")
@@ -242,7 +228,7 @@ class DependencyHygieneTests(unittest.TestCase):
     def test_precommit_uses_repo_owned_lightweight_style_and_doc_checks(self) -> None:
         precommit = _read(".pre-commit-config.yaml")
 
-        self.assertIn("exclude: ^(docs/peanut/|public/portfolio/assets/)", precommit)
+        self.assertIn("exclude: ^docs/peanut/", precommit)
         self.assertIn("id: polinko-ruff-check", precommit)
         self.assertIn("entry: make ruff-check", precommit)
         self.assertIn("id: polinko-ruff-format-check", precommit)

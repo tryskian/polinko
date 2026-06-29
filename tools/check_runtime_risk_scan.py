@@ -31,7 +31,6 @@ REQUIRED_FILES = (
     Path("tools/manage_caffeinate.py"),
     Path("tools/run_server_daemon.sh"),
     Path("tools/run_eval_sidecar_start.sh"),
-    Path("tools/run_portfolio_mockups.sh"),
     Path("tools/setup_devcontainer.sh"),
     Path("tools/local_privacy_guard.sh"),
     Path(".github/workflows/ci.yml"),
@@ -65,9 +64,6 @@ REQUIRED_MAKE_TARGETS = (
     "eval-sidecar-start",
     "eval-sidecar-status",
     "eval-sidecar-stop",
-    "portfolio-mockups",
-    "portfolio-mockups-status",
-    "portfolio-mockups-stop",
     "privacy-local-on",
     "privacy-local-off",
 )
@@ -75,7 +71,7 @@ REQUIRED_MAKE_TARGETS = (
 FORBIDDEN_MAKE_TARGETS = ("eod-stop",)
 FORBIDDEN_RUNTIME_MAP_TOKENS = ("Startup and workspace bootstrap",)
 FORBIDDEN_PRECOMMIT_TOKENS = ("isort", "black")
-REQUIRED_PRECOMMIT_EXCLUDE = r"^(docs/peanut/|public/portfolio/assets/)"
+REQUIRED_PRECOMMIT_EXCLUDE = r"^docs/peanut/"
 REQUIRED_PRECOMMIT_LOCAL_HOOKS = {
     "polinko-ruff-check": "make ruff-check",
     "polinko-ruff-format-check": "make ruff-format-check",

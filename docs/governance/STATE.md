@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-28
+Last updated: 2026-06-29
 
 ## Current Truth
 
@@ -66,18 +66,12 @@ Last updated: 2026-06-28
     public method and journey diagrams
   - the public status badge set distinguishes the Polinko research model,
     active model refactor, eval contract, research surface, and CI status
-  - the root README points to public research docs, not local portfolio
-    commands
-  - portfolio source lives under `apps/portfolio/`, while tracked static output
-    stays under `public/portfolio/`
-  - `frontend` and `ui` are retired web-surface names; remaining Make/config
-    references are compatibility aliases only
-  - private portfolio mockups and screenshots stay in `docs/peanut/`
-  - private portfolio mockups use `docs/peanut/assets/portfolio-mockups/`
-  - ignore policy preserves only the current private portfolio mockup
-    placeholder under `docs/peanut/assets/portfolio-mockups/`
-  - promotion from private portfolio work to public docs requires explicit
-    approval
+  - the root README points to public research docs, not local portfolio commands
+  - deprecated portfolio app, static output, Netlify config, and mockup/build
+    helpers are quarantined under
+    `.archive/quarantine/portfolio-2026-06-29/` for porting to `krystian.io`
+  - `frontend`, root `ui/`, and `apps/portfolio` are retired web-surface names
+  - manual eval workbench entrypoints are API routes, not a standalone web app
 - The eval contract is explicit and binary:
   - release outcomes are `pass` / `fail`
   - OCR case judgment remains `pass` / `fail`
@@ -183,9 +177,8 @@ Last updated: 2026-06-28
     still-live runner
   - `eval-sidecar` start waits for the current-run status file before reporting
     success, rather than relying on a fixed post-launch sleep
-  - portfolio mockup targets remain available as a deprecated manual surface,
-    but they are no longer part of active closeout/status or the core
-    background runner family
+  - deprecated portfolio mockup targets have been removed from active Make
+    wiring and preserved only in the quarantine bundle for porting
   - manual eval health, feedback, overlay, OCR retry, and reclassification Make
     targets keep their public names while routing through a single
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper
@@ -202,21 +195,8 @@ Last updated: 2026-06-28
     config entrypoint, while base inputs, selection args, execution args, and
     feedback-closure args live under
     `makefiles/config/surfaces/manual-evals/ocr-retry/`
-  - portfolio surface targets keep the public entrypoint at
-    `makefiles/surfaces/portfolio.mk`, while workflow-owned fragments live
-    under `makefiles/surfaces/portfolio/` for install aliases, static build,
-    preview launch modes, and mockup lifecycle; preview targets keep their
-    own entrypoint at `makefiles/surfaces/portfolio/preview.mk`, while nested
-    fragments separate the launch recipe from rebuild and launch-mode aliases.
-    The launch recipe keeps
-    `makefiles/surfaces/portfolio/preview/launch.mk` as its public entrypoint,
-    while URL construction, Playwright launch, system/no-launch handling, and
-    target wiring live under
-    `makefiles/surfaces/portfolio/preview/launch/`
-  - portfolio Make config keeps the public entrypoint at
-    `makefiles/config/surfaces/portfolio.mk`, while runtime-role fragments
-    live under `makefiles/config/surfaces/portfolio/` for app/path defaults,
-    mockup server defaults, mockup env assembly, and launch-mode defaults
+  - portfolio Make/config fragments are retired from active includes and kept
+    only in the quarantine bundle
   - eval Make config keeps the public entrypoint at
     `makefiles/config/evals.mk`, while role-owned fragments live under
     `makefiles/config/evals/` for quality gates, OCR case sources, eval
@@ -740,7 +720,7 @@ Last updated: 2026-06-28
   - squash-only merge
 - Development setup and dependency gates are aligned to canonical paths:
   - devcontainer setup resolves the git top-level before creating `.venv`
-    and installing root or portfolio dependencies; venv creation uses the
+    and installing root dependencies; venv creation uses the
     configurable `POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON` bootstrap interpreter,
     then pip installs run through the created venv Python
   - devcontainer VS Code settings use repo-owned Ruff and mypy tooling from
@@ -761,8 +741,8 @@ Last updated: 2026-06-28
   - GitHub CI and dependency-review workflows use explicit read-only repository
     token permissions
   - Dependabot routine and security updates are grouped by ecosystem so Python,
-    root npm, portfolio npm, and GitHub Actions updates stay below GitHub's open
-    PR queue limits
+    root npm, and GitHub Actions updates stay below GitHub's open PR queue
+    limits
   - local dependency refreshes are explicit through `make refresh-deps` before
     rerunning `make security-checks`
   - shell helper hygiene is explicit through `make scripts-check`, which
@@ -802,9 +782,6 @@ Last updated: 2026-06-28
   - public diagram renderers use source-first, write-if-changed behaviour:
     Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
     through a temporary SVG before replacing the tracked artefact
-  - portfolio Node setup uses `apps/portfolio/`
-  - root and portfolio npm locks both have audit and Dependabot coverage
-  - portfolio installs prefer `npm ci` when a lockfile is present
   - pre-commit runs lightweight repo-owned Ruff and markdownlint checks, while
     mypy remains a CI/closeout gate and Pyright remains advisory
 - The type-check gate is explicit and scoped:
@@ -874,9 +851,8 @@ Last updated: 2026-06-28
   - local URL helpers such as `make docs`, `make open-api-docs`, and
     `make viz` print the target URL by default instead of launching a browser
   - explicit browser launch remains available through `make docs-open`,
-    `make open-api-docs-browser`, `make viz-open`, `make open-viz`, and
-    `make portfolio-open`; those system-launch paths route through
-    `tools/open_local_url.sh`
+    `make open-api-docs-browser`, `make viz-open`, and `make open-viz`; those
+    system-launch paths route through `tools/open_local_url.sh`
   - base OCR transcript case and stability workflows now use the same shared
     case guard as growth, focus, and transcript-lane OCR wrappers, so missing
     and empty case-file handling stays consistent before eval runners launch

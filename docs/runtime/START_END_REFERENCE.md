@@ -108,10 +108,10 @@ Runner lifecycle rule:
     preserved and the stop action fails instead of hiding the still-live runner
   - start reports success only after the current-run status file exists within
     the bounded readiness wait
-- `make portfolio-mockups`, `make portfolio-mockups-status`, and
-  `make portfolio-mockups-stop` remain available as a deprecated manual
-  surface. They are not part of `make end-stop` or `make session-status`.
-  New portfolio work moves to the separate `krystian.io` repo.
+- Deprecated portfolio app, static output, preview/mockup helpers, and Netlify
+  config are quarantined under `.archive/quarantine/portfolio-2026-06-29/` for
+  porting to the separate `krystian.io` repo. They are not part of active
+  runtime, Make, CI, dependency, or closeout surfaces.
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
 - shared PID inspection requires `ps` before lifecycle scripts make managed
@@ -223,13 +223,13 @@ Explicit companion checks:
   - checks manual eval compatibility aliases and keeps parked OCR eval aliases
     out of automatic startup, closeout, and CI dependencies
 - `make security-checks`
-  - runs local Python, root Node, and portfolio Node dependency audits
+  - runs local Python and root Node dependency audits
 - `make api-smoke`
   - uses isolated default localhost port and DB paths unless `SMOKE_PORT`,
     `SMOKE_BASE_URL`, and smoke DB paths are set explicitly
 - `make refresh-deps`
-  - refreshes local Python, root npm, and portfolio npm dependency surfaces
-    after Dependabot or dependency metadata changes
+  - refreshes local Python and root npm dependency surfaces after Dependabot
+    or dependency metadata changes
 - `make type-check`
   - runs mypy against active `src/` and `tools/` Python surfaces
 - `make end-git-check`

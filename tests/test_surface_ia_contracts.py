@@ -27,18 +27,56 @@ def _read_make_source(relative_path: str, seen: set[Path] | None = None) -> str:
 
 
 class SurfaceIaContractTests(unittest.TestCase):
-    def test_current_and_retired_surface_paths_are_documented(self) -> None:
+    def test_portfolio_surfaces_are_quarantined_not_active(self) -> None:
         surface_ia = _read("docs/runtime/SURFACE_IA.md")
+        make_config = _read_make_source("makefiles/config.mk")
+        surfaces_make = _read_make_source("makefiles/surfaces.mk")
+        app_factory = _read("src/polinko/api/app_factory.py")
+        dependabot = _read(".github/dependabot.yml")
+        precommit = _read(".pre-commit-config.yaml")
 
-        for path in (
-            "frontend/",
-            "ui/",
-            "apps/portfolio/",
-            "public/portfolio/",
-            "docs/peanut/assets/tumbles/portfolio/",
-            "docs/peanut/assets/portfolio-mockups/",
+        self.assertIn(".archive/quarantine/portfolio-2026-06-29/", surface_ia)
+        for token in (
+            "`apps/portfolio/`",
+            "`public/portfolio/`",
+            "`/portfolio`",
+            "`make portfolio`",
+            "archived portfolio static builder helper",
+            "archived portfolio mockup runner helper",
+            "`netlify.toml`",
         ):
-            self.assertIn(path, surface_ia)
+            self.assertIn(token, surface_ia)
+
+        for retired_token in (
+            "PORTFOLIO_APP_DIR",
+            "PORTFOLIO_STATIC_DIR",
+            "POLINKO_PORTFOLIO_STATIC_DIR",
+            "portfolio-build",
+            "portfolio-mockups",
+            'directory: "/apps/portfolio"',
+            "public/portfolio/assets",
+        ):
+            self.assertNotIn(retired_token, make_config + surfaces_make)
+            self.assertNotIn(retired_token, dependabot + precommit)
+
+        self.assertNotIn('"/portfolio"', app_factory)
+        self.assertNotIn('"/assets"', app_factory)
+
+    def test_ambiguous_legacy_surface_paths_are_not_active_web_directories(
+        self,
+    ) -> None:
+        self.assertFalse((REPO_ROOT / "frontend").exists())
+        self.assertFalse((REPO_ROOT / "ui").exists())
+        self.assertFalse((REPO_ROOT / "apps" / "portfolio" / "package.json").exists())
+        self.assertFalse((REPO_ROOT / "public" / "portfolio" / "index.html").exists())
+
+    def test_evidence_sankey_helper_stays_active(self) -> None:
+        surface_ia = _read("docs/runtime/SURFACE_IA.md")
+        renderer = _read("tools/render_public_d3_diagrams.py")
+
+        self.assertIn("src/polinko/api/evidence_sankey.py", surface_ia)
+        self.assertIn("build_evidence_sankey_payload", renderer)
+        self.assertNotIn("portfolio_sankey", renderer)
 
     def test_manual_eval_workbench_scope_is_documented(self) -> None:
         surface_ia = _read("docs/runtime/SURFACE_IA.md")
@@ -57,83 +95,6 @@ class SurfaceIaContractTests(unittest.TestCase):
             "Do not move chat-facing manual eval routes",
         ):
             self.assertIn(expected, surface_ia)
-
-    def test_ambiguous_legacy_surface_paths_are_not_active_directories(self) -> None:
-        self.assertFalse((REPO_ROOT / "frontend").exists())
-        self.assertFalse((REPO_ROOT / "ui").exists())
-
-    def test_private_portfolio_mockup_placeholder_stays_trackable(self) -> None:
-        gitignore = _read(".gitignore")
-
-        self.assertIn("!docs/peanut/assets/", gitignore)
-        self.assertIn("!docs/peanut/assets/portfolio-mockups/", gitignore)
-        self.assertIn("!docs/peanut/assets/portfolio-mockups/.gitkeep", gitignore)
-        self.assertNotIn("!docs/peanut/assets/tumbles/portfolio/", gitignore)
-
-    def test_tracked_portfolio_static_output_lives_under_public_portfolio(self) -> None:
-        self.assertTrue((REPO_ROOT / "public" / "portfolio" / "index.html").is_file())
-        self.assertTrue((REPO_ROOT / "public" / "portfolio" / "assets").is_dir())
-
-    def test_portfolio_board_uses_clipped_stage_viewport(self) -> None:
-        styles = _read("apps/portfolio/src/styles.css")
-        main_js = _read("apps/portfolio/src/main.js")
-
-        for expected in (
-            "--stage-width",
-            "--stage-height",
-            "overflow: hidden;",
-            "overscroll-behavior: none;",
-            "width: var(--stage-width);",
-            "height: var(--stage-height);",
-            "--scene-x: calc(var(--stage-width) * 2);",
-            "--scene-y: calc(var(--stage-height) * 4);",
-        ):
-            self.assertIn(expected, styles)
-        self.assertNotIn("calc(100vw + 2px)", styles)
-        self.assertNotIn("calc(100vh + 2px)", styles)
-        self.assertIn("function syncStageViewport()", main_js)
-        self.assertIn('"--stage-width", `${window.innerWidth}px`', main_js)
-        self.assertIn('"--stage-height", `${window.innerHeight}px`', main_js)
-
-    def test_current_portfolio_source_output_and_server_paths_align(self) -> None:
-        makefile = _read("Makefile")
-        make_config = _read_make_source("makefiles/config.mk")
-        surfaces_make = _read_make_source("makefiles/surfaces.mk")
-        vite_config = _read("apps/portfolio/vite.config.js")
-        static_builder = _read("tools/build_portfolio_static.py")
-        app_factory = _read("src/polinko/api/app_factory.py")
-
-        self.assertIn("include makefiles/config.mk", makefile)
-        self.assertIn("PORTFOLIO_APP_DIR ?= apps/portfolio", make_config)
-        self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", make_config)
-        self.assertIn("FRONTEND_DIR ?= $(PORTFOLIO_APP_DIR)", make_config)
-        self.assertIn("PORTFOLIO_STATIC_DIR ?= public/portfolio", make_config)
-        self.assertIn(
-            "PORTFOLIO_MOCKUP_DIR ?= docs/peanut/assets/portfolio-mockups", make_config
-        )
-        self.assertIn("portfolio-install:", surfaces_make)
-        self.assertIn(
-            "portfolio-app-install frontend-install: portfolio-install", surfaces_make
-        )
-        self.assertIn("Legacy alias: use make portfolio-install.", surfaces_make)
-        self.assertIn("Legacy alias: use make portfolio-build.", surfaces_make)
-        self.assertIn("$(PORTFOLIO_APP_DIR)/package.json", surfaces_make)
-        self.assertIn("POLINKO_PORTFOLIO_STATIC_DIR", surfaces_make)
-        self.assertIn("$(PORTFOLIO_STATIC_DIR)", surfaces_make)
-        self.assertIn("POLINKO_PORTFOLIO_STATIC_DIR", vite_config)
-        self.assertIn('path.resolve(repoRoot, "public/portfolio")', vite_config)
-        self.assertIn(
-            'PORTFOLIO_APP_DIR = _repo_path_from_env("POLINKO_PORTFOLIO_APP_DIR", "apps/portfolio")',
-            static_builder,
-        )
-        self.assertIn(
-            '"public/portfolio"',
-            static_builder,
-        )
-        self.assertIn(
-            '"public/portfolio"',
-            app_factory,
-        )
 
     def test_manual_eval_trace_labels_are_not_ui_named(self) -> None:
         backfill = _read("tools/backfill_eval_trace_artifacts.py")
