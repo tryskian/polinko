@@ -35,6 +35,10 @@ polinko_require_positive_integer \
 	EVAL_SIDECAR_START_ATTEMPTS \
 	"$sidecar_start_attempts" \
 	"eval-sidecar readiness"
+polinko_require_positive_integer \
+	EVAL_SIDECAR_MIN_SECONDS \
+	"$min_seconds" \
+	"eval-sidecar duration"
 polinko_require_non_negative_decimal \
 	EVAL_SIDECAR_START_SLEEP_SECONDS \
 	"$sidecar_start_sleep_seconds" \

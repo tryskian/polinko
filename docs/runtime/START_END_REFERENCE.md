@@ -90,6 +90,8 @@ Runner lifecycle rule:
   `tools/run_eval_sidecar_start.sh`
   - missing current-file state is surfaced by start/status, while stop still
     cleans the repo-managed PID for closeout
+  - `EVAL_SIDECAR_MIN_SECONDS` is validated before detached launch, so invalid
+    duration config fails before PID/log state is written
   - live PID files are treated as managed only when the process matches
     `tools.eval_sidecar run`; unrelated live PIDs are cleaned from the PID file
     without being stopped

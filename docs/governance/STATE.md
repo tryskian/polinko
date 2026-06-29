@@ -173,6 +173,8 @@ Last updated: 2026-06-28
     `curl` is unavailable for the HTTP readiness probe
   - `eval-sidecar` reports missing current-file drift on start/status and still
     stops the repo-managed PID during closeout
+  - `eval-sidecar` validates `EVAL_SIDECAR_MIN_SECONDS` before detached launch,
+    so invalid duration config cannot become a child-process argparse failure
   - `eval-sidecar` trusts managed PID files only when the live PID matches the
     `tools.eval_sidecar run` process shape; stale PID files that point to
     unrelated live processes are cleaned without stopping the unrelated process
