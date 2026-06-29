@@ -4708,3 +4708,23 @@ or branch history instead.
 - Why: Invalid duration config should not surface later as an argparse failure
   inside a detached process. Early validation keeps operator feedback attached
   to the environment knob that needs correction.
+
+## D-273: Share HTTP runner URL-port validation
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `runner_config`, `diagnostics`, `readiness`
+- Human-led: The human lead asked for hidden runner-script hygiene and for
+  recurring local/runtime failures to be prevented as the helper-script
+  refactor proceeds.
+- Engineer implementation: Move explicit URL-port matching into
+  `tools/process_lifecycle_common.sh`, reuse it from local eval gates,
+  `server-daemon`, and `portfolio-mockups`, and add focused regression
+  coverage for shared helper, server health URL, and portfolio mockup URL
+  mismatch cases.
+- Decision: HTTP runner probe URLs must include an explicit port matching the
+  local server port before readiness, adoption, status, or launch work depends
+  on that URL.
+- Why: A runner can launch on one port and probe another when URL and port
+  overrides drift apart. Shared validation keeps these failures direct and
+  consistent across local HTTP runner surfaces.

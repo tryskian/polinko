@@ -33,6 +33,11 @@ detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 # shellcheck source=tools/process_lifecycle_common.sh
 . "$script_dir/process_lifecycle_common.sh"
 polinko_require_tcp_port DEV_BACKEND_PORT "$dev_backend_port" "server-daemon launch"
+polinko_require_url_port_matches \
+	SERVER_HEALTH_URL \
+	"$server_health_url" \
+	"$dev_backend_port" \
+	"server-daemon health check"
 polinko_require_positive_integer \
 	SERVER_START_ATTEMPTS \
 	"$server_start_attempts" \
