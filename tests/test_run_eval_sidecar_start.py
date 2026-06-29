@@ -320,8 +320,46 @@ class RunEvalSidecarStartTests(unittest.TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Repo: polinko", result.stdout)
+            self.assertIn(f"Repo root: {REPO_ROOT}", result.stdout)
+            self.assertIn(f"PID file: {pid_file}", result.stdout)
+            self.assertIn("Log file: ", result.stdout)
+            self.assertIn(f"Current file: {current_file}", result.stdout)
             self.assertIn("eval-sidecar: OFF.", result.stdout)
             self.assertFalse(args_file.exists())
+
+    def test_status_derives_pid_and_log_from_state_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            state_dir = tmp_path / "state"
+            runs_dir = tmp_path / "runs"
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "EVAL_SIDECAR_REPO_SLUG": "toyrepo",
+                    "EVAL_SIDECAR_STATE_DIR": str(state_dir),
+                    "EVAL_SIDECAR_RUNS_DIR": str(runs_dir),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Repo: toyrepo", result.stdout)
+            self.assertIn(f"Repo root: {REPO_ROOT}", result.stdout)
+            self.assertIn(
+                f"PID file: {state_dir / 'eval-sidecar.pid'}",
+                result.stdout,
+            )
+            self.assertIn(f"Log file: {state_dir / 'eval-sidecar.log'}", result.stdout)
+            self.assertIn(
+                f"Current file: {runs_dir / 'eval_sidecar_current.txt'}",
+                result.stdout,
+            )
+            self.assertIn("eval-sidecar: OFF.", result.stdout)
 
     def test_status_reports_stale_pid_file_without_current_run(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

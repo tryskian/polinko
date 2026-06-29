@@ -567,6 +567,36 @@ class RunServerDaemonTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("server-daemon: OFF.", result.stdout)
+            self.assertIn(f"Repo root: {REPO_ROOT}", result.stdout)
+            self.assertIn(f"PID file: {tmp_path / 'server.pid'}", result.stdout)
+
+    def test_status_derives_pid_and_log_from_state_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            state_dir = tmp_path / "runtime" / "toyrepo"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            _write_executable(fake_bin / "lsof", "#!/usr/bin/env bash\nexit 0\n")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "SERVER_REPO_SLUG": "toyrepo",
+                    "SERVER_STATE_DIR": str(state_dir),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Repo: toyrepo", result.stdout)
+            self.assertIn(f"Repo root: {REPO_ROOT}", result.stdout)
+            self.assertIn(f"PID file: {state_dir / 'server.pid'}", result.stdout)
+            self.assertIn(f"Log file: {state_dir / 'server.log'}", result.stdout)
+            self.assertIn("server-daemon: OFF.", result.stdout)
 
     def test_status_reports_stale_pid_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

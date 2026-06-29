@@ -170,6 +170,9 @@ flowchart TD
   must include an explicit port matching the launched server port before
   readiness, adoption, status, or launch work depends on the URL; this covers
   `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and `GATE_BASE_URL`.
+  Server daemon PID and log defaults live under repo-scoped
+  `SERVER_STATE_DIR`, and status reports repo context plus PID/log paths before
+  liveness.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery. If stop or interpreter-mismatch
@@ -178,6 +181,9 @@ flowchart TD
   only after the configured local `/health` endpoint is reachable within the
   bounded readiness wait, and it fails early with a missing-command diagnostic
   when `curl` is unavailable for that readiness probe.
+  `eval-sidecar` PID and log defaults live under repo-scoped
+  `EVAL_SIDECAR_STATE_DIR`, and status reports repo context plus
+  PID/log/current-file paths before liveness.
   `eval-sidecar` reports missing current-file drift on start/status and still
   stops the repo-managed PID during closeout. It validates
   `EVAL_SIDECAR_MIN_SECONDS` before detached launch, so invalid duration config

@@ -602,11 +602,16 @@ def _branch_commit(config: RuntimeConfig) -> str:
     return f"{_branch(config.repo_root)} @ {_commit(config.repo_root)}"
 
 
+def _print_repo_context(config: RuntimeConfig) -> None:
+    print(f"Repo: {config.repo_slug}")
+    print(f"Repo root: {config.repo_root}")
+
+
 def _print_owned_status(config: RuntimeConfig, pid: int) -> None:
     state, detail = _activity_state(config)
     wake_state, wake_lines = _wake_assertion_text(config)
     print(f"Managed caffeinate: {state}")
-    print(f"Repo: {config.repo_slug}")
+    _print_repo_context(config)
     print(f"PID: {pid}")
     print(f"Wake-lock age: {_metadata_started_age(config)}")
     print(f"Last repo activity: {detail}")
@@ -769,11 +774,14 @@ def status(config: RuntimeConfig) -> int:
         _print_owned_status(config, state.pid)
     elif state.status == "legacy-owned" and state.pid is not None:
         print("Managed caffeinate: STALE")
+        _print_repo_context(config)
+        print(f"PID: {state.pid}")
         print("Reason: PID is live but metadata is missing")
         print("Action: run make caffeinate to refresh repo metadata")
     elif state.status == "missing":
         print("Managed caffeinate: OFF")
-        print(f"Repo: {config.repo_slug}")
+        _print_repo_context(config)
+        print(f"Branch: {_branch_commit(config)}")
         pids = [pid for pid in _find_matching_pids(config) if pid != os.getpid()]
         if pids:
             rendered = " ".join(str(pid) for pid in pids)
@@ -786,6 +794,9 @@ def status(config: RuntimeConfig) -> int:
             print(wake_lines)
     else:
         print("Managed caffeinate: STALE")
+        _print_repo_context(config)
+        if state.pid is not None:
+            print(f"PID: {state.pid}")
         if state.reason:
             print(f"Reason: {state.reason}")
         print("Action: run make decaffeinate to clean repo PID metadata")

@@ -32,6 +32,17 @@ def _read_makefile_source(relative_path: str, seen: set[Path] | None = None) -> 
     return "\n".join(source_texts)
 
 
+def _direct_requirement_pins(requirements_input: str) -> dict[str, str]:
+    pins: dict[str, str] = {}
+    for line in requirements_input.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "==" not in stripped:
+            continue
+        name, version = stripped.split("==", 1)
+        pins[name.lower()] = version
+    return pins
+
+
 class DependencyHygieneTests(unittest.TestCase):
     def test_devcontainer_setup_uses_canonical_paths(self) -> None:
         devcontainer = json.loads(_read(".devcontainer/devcontainer.json"))
@@ -186,12 +197,10 @@ class DependencyHygieneTests(unittest.TestCase):
         self.assertIn("pip install -r requirements.txt", workflow)
         self.assertNotIn("pip install --upgrade pip pip-audit", workflow)
         self.assertIn("--output-file=requirements.txt", lockfile)
-        self.assertIn("httpx2==2.4.0", requirements_input)
-        self.assertIn("httpx2==2.4.0", lockfile)
-        self.assertIn("starlette==1.3.1", requirements_input)
-        self.assertIn("starlette==1.3.1", lockfile)
-        self.assertIn("pip-audit==2.10.0", requirements_input)
-        self.assertIn("pip-audit==2.10.0", lockfile)
+        direct_pins = _direct_requirement_pins(requirements_input)
+        for dependency in ("httpx2", "starlette", "pip-audit"):
+            self.assertIn(dependency, direct_pins)
+            self.assertIn(f"{dependency}=={direct_pins[dependency]}", lockfile)
         self.assertIn("#   -r requirements.in", lockfile)
         self.assertFalse((REPO_ROOT / "requirements.lock").exists())
 
