@@ -4875,3 +4875,23 @@ or branch history instead.
 - Why: Flat `/tmp` sidecar files make process ownership harder to reason about
   when the helper pattern is reused across repos. Namespaced state keeps
   sidecar ownership visible while preserving explicit override support.
+
+## D-282: Guard dependency contract tests against stale version literals
+
+- Date: `2026-06-29`
+- Category: `dependency_management`
+- Tags: `dependabot`, `ci`, `risk_scan`, `tests`
+- Human-led: The human lead called out that recurring Dependabot test failures
+  are repo-maintenance signals the engineer should notice and act on
+  proactively.
+- Engineer implementation: Update dependency hygiene and typecheck contract
+  tests to derive expected dependency versions from `requirements.in`,
+  `requirements.txt`, `package.json`, and `package-lock.json`; extend
+  `make risk-scan` so tests fail if they hard-code live dependency pins or root
+  Node dependency versions.
+- Decision: Dependency contract tests should validate ownership and lockfile
+  consistency without freezing exact current dependency versions in test
+  literals.
+- Why: Version literals inside tests turn routine Dependabot bumps into
+  avoidable CI failures. Deriving expectations from dependency source files
+  keeps the contract strong while allowing dependency automation to run cleanly.
