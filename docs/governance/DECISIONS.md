@@ -4895,3 +4895,22 @@ or branch history instead.
 - Why: Version literals inside tests turn routine Dependabot bumps into
   avoidable CI failures. Deriving expectations from dependency source files
   keeps the contract strong while allowing dependency automation to run cleanly.
+
+## D-283: Run build hygiene as a first-class PR gate
+
+- Date: `2026-06-29`
+- Category: `ci`
+- Tags: `github_actions`, `build_hygiene`, `pr_preflight`, `closeout`
+- Human-led: The human lead identified that passing PR checks are not enough if
+  closeout-only hygiene scripts can still reveal stale or missing state after
+  merge.
+- Engineer implementation: Add `make build-hygiene` as the PR-safe hygiene gate,
+  route `make pr-preflight` through it, run it as a first-class GitHub Actions
+  job on every PR, and extend runtime risk scan coverage so its required
+  dependency shape cannot drift quietly.
+- Decision: Every PR should exercise the complete PR-safe build hygiene surface:
+  environment doctor, transcript validation, CI build/test/security/doc gates,
+  and whitespace diff checks.
+- Why: The engineer should notice hygiene drift through automated gates before
+  closeout, rather than relying on manual polling or the human lead catching the
+  failure.

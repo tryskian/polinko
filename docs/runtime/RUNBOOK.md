@@ -517,8 +517,11 @@ Use this doc for operator procedure.
   - local aggregate of the named GitHub CI job targets:
     `ci-docs`, `ci-python-style`, `ci-python-type-check`, `ci-package`,
     `ci-test`, `ci-python-security`, and `ci-node-security`
+- `make build-hygiene`
+  - PR-safe build hygiene gate that runs `doctor-env`, `transcript-check`,
+    `make ci`, and `git diff --check`
 - `make pr-preflight`
-  - PR readiness gate that runs `make ci` and `git diff --check`
+  - local PR readiness alias for `make build-hygiene`
 
 Dependency maintenance:
 

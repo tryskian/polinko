@@ -17,6 +17,33 @@ def _write_precommit(root: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
 
 
+def _make_contract_text(
+    *,
+    ci_docs_deps: tuple[str, ...] | None = None,
+    build_hygiene_deps: tuple[str, ...] | None = None,
+    omit_targets: set[str] | None = None,
+    extra_lines: tuple[str, ...] = (),
+) -> str:
+    omit = omit_targets or set()
+    lines = [
+        f"{target}:"
+        for target in check_runtime_risk_scan.REQUIRED_MAKE_TARGETS
+        if target not in omit
+    ]
+    lines.append(
+        "ci-docs: "
+        + " ".join(ci_docs_deps or check_runtime_risk_scan.REQUIRED_CI_DOCS_DEPS)
+    )
+    lines.append(
+        "build-hygiene: "
+        + " ".join(
+            build_hygiene_deps or check_runtime_risk_scan.REQUIRED_BUILD_HYGIENE_DEPS
+        )
+    )
+    lines.extend(extra_lines)
+    return "\n".join(lines)
+
+
 class RuntimeRiskScanTests(unittest.TestCase):
     def test_current_repo_passes_runtime_risk_scan(self) -> None:
         result = subprocess.run(
@@ -61,20 +88,17 @@ class RuntimeRiskScanTests(unittest.TestCase):
 
     def test_missing_ci_docs_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
-            "\n".join(
-                [
-                    "ci-docs: path-leak-check scripts-check lint-docs",
-                    "local-runtime-config-check:",
-                    "risk-scan:",
-                    "operator-alias-check:",
-                ]
+            _make_contract_text(
+                ci_docs_deps=("path-leak-check", "scripts-check", "lint-docs")
             )
         )
 
         self.assertIn("ci-docs: missing dependency 'risk-scan'", failures)
 
     def test_deprecated_eod_stop_target_is_reported(self) -> None:
-        failures = check_runtime_risk_scan.check_make_contracts("eod-stop:\n")
+        failures = check_runtime_risk_scan.check_make_contracts(
+            _make_contract_text(extra_lines=("eod-stop:",))
+        )
 
         self.assertIn(
             "make target 'eod-stop': deprecated target is active",
@@ -82,16 +106,9 @@ class RuntimeRiskScanTests(unittest.TestCase):
         )
 
     def test_missing_session_status_target_is_reported(self) -> None:
-        make_lines = [
-            f"{target}:"
-            for target in check_runtime_risk_scan.REQUIRED_MAKE_TARGETS
-            if target != "session-status"
-        ]
-        make_lines.append(
-            "ci-docs: " + " ".join(check_runtime_risk_scan.REQUIRED_CI_DOCS_DEPS)
+        failures = check_runtime_risk_scan.check_make_contracts(
+            _make_contract_text(omit_targets={"session-status"})
         )
-
-        failures = check_runtime_risk_scan.check_make_contracts("\n".join(make_lines))
 
         self.assertIn(
             "make target 'session-status': missing from Make surface",
@@ -100,13 +117,13 @@ class RuntimeRiskScanTests(unittest.TestCase):
 
     def test_missing_operator_alias_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
-            "\n".join(
-                [
-                    "ci-docs: path-leak-check scripts-check risk-scan lint-docs",
-                    "local-runtime-config-check:",
-                    "risk-scan:",
-                    "operator-alias-check:",
-                ]
+            _make_contract_text(
+                ci_docs_deps=(
+                    "path-leak-check",
+                    "scripts-check",
+                    "risk-scan",
+                    "lint-docs",
+                )
             )
         )
 
@@ -117,15 +134,15 @@ class RuntimeRiskScanTests(unittest.TestCase):
 
     def test_missing_local_runtime_config_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
-            "\n".join(
-                [
-                    "ci-docs: path-leak-check scripts-check risk-scan "
-                    "operator-alias-check startup-contracts-check lint-docs",
-                    "local-runtime-config-check:",
-                    "risk-scan:",
-                    "operator-alias-check:",
-                    "startup-contracts-check:",
-                ]
+            _make_contract_text(
+                ci_docs_deps=(
+                    "path-leak-check",
+                    "scripts-check",
+                    "risk-scan",
+                    "operator-alias-check",
+                    "startup-contracts-check",
+                    "lint-docs",
+                )
             )
         )
 
@@ -136,20 +153,29 @@ class RuntimeRiskScanTests(unittest.TestCase):
 
     def test_missing_startup_contracts_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
-            "\n".join(
-                [
-                    "ci-docs: path-leak-check scripts-check risk-scan "
-                    "operator-alias-check lint-docs",
-                    "local-runtime-config-check:",
-                    "risk-scan:",
-                    "operator-alias-check:",
-                    "startup-contracts-check:",
-                ]
+            _make_contract_text(
+                ci_docs_deps=(
+                    "path-leak-check",
+                    "scripts-check",
+                    "risk-scan",
+                    "operator-alias-check",
+                    "lint-docs",
+                )
             )
         )
 
         self.assertIn(
             "ci-docs: missing dependency 'startup-contracts-check'",
+            failures,
+        )
+
+    def test_missing_build_hygiene_dependency_is_reported(self) -> None:
+        failures = check_runtime_risk_scan.check_make_contracts(
+            _make_contract_text(build_hygiene_deps=("transcript-check", "ci"))
+        )
+
+        self.assertIn(
+            "build-hygiene: missing dependency 'doctor-env'",
             failures,
         )
 

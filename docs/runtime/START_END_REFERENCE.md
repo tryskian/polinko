@@ -155,8 +155,11 @@ Active kernel validation:
   bounds are validated before runner startup work begins
 - Use `make risk-scan` when a kernel changes runtime maps, Make gates, CI,
   background runners, startup/closeout, or local configuration surfaces
-- Use `make pr-preflight` before publishing a PR when you need the local
-  CI-equivalent gate plus whitespace diff check
+- Use `make build-hygiene` for the PR-safe hygiene gate that mirrors the
+  build, docs, dependency, test, transcript, environment, and whitespace
+  surfaces
+- Use `make pr-preflight` before publishing a PR as the local alias for
+  `make build-hygiene`
 - Use `make end-preflight` when the kernel is broad enough to need the full
   branch-local quality suite
 - End each kernel summary with the recommended next kernel

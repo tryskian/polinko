@@ -785,6 +785,10 @@ Last updated: 2026-06-29
     `make lint-docs`; `make end` also runs `make path-leak-check`,
     `make scripts-check`, `make risk-scan`, and `make operator-alias-check`
     before longer style, type, test, and security gates
+  - `make build-hygiene` is the PR-safe aggregate hygiene gate for
+    environment doctor, transcript validation, CI build/test/security/doc
+    gates, and whitespace diff checks; every PR runs it as a first-class CI job
+    and `make pr-preflight` aliases it locally
   - public diagram renderers use source-first, write-if-changed behaviour:
     Mermaid SVGs use the diagram manifest, and the D3 Evidence Sankey renders
     through a temporary SVG before replacing the tracked artefact
@@ -953,8 +957,9 @@ Last updated: 2026-06-29
 - `make test`
 - `make security-checks`
 - `make ci` when checking the local equivalent of GitHub CI job targets
-- `make pr-preflight` before publishing PRs that need the CI-equivalent gate
-  plus whitespace diff check
+- `make build-hygiene` when checking the complete PR-safe hygiene surface
+- `make pr-preflight` before publishing PRs as the local alias for
+  `make build-hygiene`
 - `make end`
 - `make end-docs-check` when validating current-truth freshness explicitly
 - `make end-git-check` as the standalone clean-main check
