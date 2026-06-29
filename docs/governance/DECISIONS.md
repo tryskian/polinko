@@ -4690,3 +4690,21 @@ or branch history instead.
 - Why: A mismatched base URL can make a healthy local server look broken by
   probing the wrong endpoint. Early validation keeps the diagnostic attached to
   the configuration pair that needs to be corrected.
+
+## D-272: Validate eval sidecar duration before detached launch
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `eval_sidecar`, `runner_config`, `diagnostics`, `process_lifecycle`
+- Human-led: The human lead asked for hidden runner-script hygiene and for
+  recurring local/runtime failures to be prevented as the helper-script
+  refactor proceeds.
+- Engineer implementation: Update `tools/run_eval_sidecar_start.sh` so
+  `EVAL_SIDECAR_MIN_SECONDS` must be a positive integer before sidecar startup
+  work begins; add focused regression coverage that rejects invalid duration
+  config before PID/log state is written.
+- Decision: Eval-sidecar duration config must be validated in the shell
+  lifecycle wrapper before detached launch.
+- Why: Invalid duration config should not surface later as an argparse failure
+  inside a detached process. Early validation keeps operator feedback attached
+  to the environment knob that needs correction.

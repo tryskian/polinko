@@ -178,13 +178,15 @@ flowchart TD
   bounded readiness wait, and it fails early with a missing-command diagnostic
   when `curl` is unavailable for that readiness probe.
   `eval-sidecar` reports missing current-file drift on start/status and still
-  stops the repo-managed PID during closeout. It trusts PID files only when the
-  live PID matches the `tools.eval_sidecar run` process shape; unrelated live
-  PIDs are cleaned from the PID file without being stopped. If stop signals a
-  matching sidecar without current-run context and the process remains active,
-  the PID file stays in place and the stop exits non-zero. Start reports
-  success only after the current-run status file exists within the bounded
-  readiness wait.
+  stops the repo-managed PID during closeout. It validates
+  `EVAL_SIDECAR_MIN_SECONDS` before detached launch, so invalid duration config
+  cannot become a child-process argparse failure. It trusts PID files only when
+  the live PID matches the `tools.eval_sidecar run` process shape; unrelated
+  live PIDs are cleaned from the PID file without being stopped. If stop
+  signals a matching sidecar without current-run context and the process
+  remains active, the PID file stays in place and the stop exits non-zero.
+  Start reports success only after the current-run status file exists within
+  the bounded readiness wait.
   `portfolio-mockups` treats a reachable mockup URL without a PID file as a
   lifecycle state: matching local `http.server` processes are adopted, while
   unmanaged reachable ports fail loudly. It trusts managed PID files only when
