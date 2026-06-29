@@ -47,6 +47,7 @@ REQUIRED_MAKE_TARGETS = (
     "end-preflight",
     "end-stop",
     "session-status",
+    "build-hygiene",
     "pr-preflight",
     "ci",
     "ci-docs",
@@ -87,6 +88,12 @@ REQUIRED_CI_DOCS_DEPS = (
     "operator-alias-check",
     "startup-contracts-check",
     "lint-docs",
+)
+
+REQUIRED_BUILD_HYGIENE_DEPS = (
+    "doctor-env",
+    "transcript-check",
+    "ci",
 )
 
 
@@ -201,11 +208,15 @@ def make_targets(text: str) -> set[str]:
     return targets
 
 
-def ci_docs_deps(text: str) -> tuple[str, ...]:
-    match = re.search(r"(?m)^ci-docs:\s*(?P<deps>.+)$", text)
+def make_target_deps(text: str, target: str) -> tuple[str, ...]:
+    match = re.search(rf"(?m)^{re.escape(target)}:\s*(?P<deps>.+)$", text)
     if not match:
         return ()
     return tuple(match.group("deps").split())
+
+
+def ci_docs_deps(text: str) -> tuple[str, ...]:
+    return make_target_deps(text, "ci-docs")
 
 
 def check_required_files(root: Path) -> list[str]:
@@ -234,6 +245,14 @@ def check_make_contracts(text: str) -> list[str]:
         for dep in REQUIRED_CI_DOCS_DEPS:
             if dep not in deps:
                 failures.append(f"ci-docs: missing dependency {dep!r}")
+
+    build_hygiene_deps = make_target_deps(text, "build-hygiene")
+    if not build_hygiene_deps:
+        failures.append("build-hygiene: missing Make target")
+    else:
+        for dep in REQUIRED_BUILD_HYGIENE_DEPS:
+            if dep not in build_hygiene_deps:
+                failures.append(f"build-hygiene: missing dependency {dep!r}")
     return failures
 
 
