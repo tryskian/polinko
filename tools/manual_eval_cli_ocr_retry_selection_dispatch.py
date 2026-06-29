@@ -8,6 +8,7 @@ from tools.manual_eval_cli_dispatch_support import (
     FinishReport,
     ReportFormatter,
     STATUS_WRITTEN_OK,
+    first_enabled_command,
     finish_report_with_error_default,
     local_artifact_paths,
     ocr_retry_report_kwargs,
@@ -162,18 +163,19 @@ def handle_ocr_retry_selection_post_feedback_commands(
     db_path: Path,
     finish: FinishReport,
 ) -> int | None:
-    for command in OCR_RETRY_SELECTION_REPORT_COMMANDS:
-        if getattr(args, command.flag):
-            report_kwargs = ocr_retry_report_kwargs(
-                args,
-                include_artifact_ids=command.include_artifact_ids,
-            )
-            if command.include_selection_path:
-                report_kwargs["selection_path"] = local_artifact_paths(
-                    args
-                ).selection_path
+    command = first_enabled_command(
+        args=args,
+        commands=OCR_RETRY_SELECTION_REPORT_COMMANDS,
+    )
+    if command is None:
+        return None
 
-            report = command.builder(db_path=db_path, **report_kwargs)
-            return finish(report, command.formatter)
+    report_kwargs = ocr_retry_report_kwargs(
+        args,
+        include_artifact_ids=command.include_artifact_ids,
+    )
+    if command.include_selection_path:
+        report_kwargs["selection_path"] = local_artifact_paths(args).selection_path
 
-    return None
+    report = command.builder(db_path=db_path, **report_kwargs)
+    return finish(report, command.formatter)

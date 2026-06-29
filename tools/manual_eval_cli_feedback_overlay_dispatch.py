@@ -12,6 +12,7 @@ from tools.manual_eval_cli_dispatch_support import (
     STATUS_READY_OK,
     STATUS_WRITTEN_OK,
     filtered_report_kwargs,
+    first_enabled_command,
     finish_report_with_error_default,
     local_artifact_paths,
 )
@@ -97,27 +98,27 @@ def handle_feedback_overlay_commands(
 ) -> int | None:
     paths = local_artifact_paths(args)
 
-    for command in FEEDBACK_OVERLAY_COMMANDS:
-        if getattr(args, command.flag):
-            report = command.builder(
-                db_path=db_path,
-                **_feedback_overlay_report_kwargs(
-                    command=command,
-                    args=args,
-                    paths=paths,
-                ),
-            )
-            if command.use_error_default:
-                return finish_report_with_error_default(
-                    finish=finish,
-                    report=report,
-                    formatter=command.formatter,
-                    status_by_state=command.status_by_state,
-                )
-            return finish(
-                report,
-                command.formatter,
-                status_by_state=command.status_by_state,
-            )
+    command = first_enabled_command(args=args, commands=FEEDBACK_OVERLAY_COMMANDS)
+    if command is None:
+        return None
 
-    return None
+    report = command.builder(
+        db_path=db_path,
+        **_feedback_overlay_report_kwargs(
+            command=command,
+            args=args,
+            paths=paths,
+        ),
+    )
+    if command.use_error_default:
+        return finish_report_with_error_default(
+            finish=finish,
+            report=report,
+            formatter=command.formatter,
+            status_by_state=command.status_by_state,
+        )
+    return finish(
+        report,
+        command.formatter,
+        status_by_state=command.status_by_state,
+    )
