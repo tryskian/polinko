@@ -2689,6 +2689,14 @@ class MakefileContractTests(unittest.TestCase):
             text,
         )
         self.assertIn(
+            "@$(call repo_activity,make eval-sidecar-start,eval-sidecar-start)",
+            text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make eval-sidecar-stop,eval-sidecar-stop)",
+            text,
+        )
+        self.assertIn(
             "@$(call repo_activity,make openai-account-summary,openai-account-summary)",
             text,
         )
@@ -2714,6 +2722,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertNotIn(
             "@$(call repo_activity,make server-daemon-status,server-daemon-status)",
+            text,
+        )
+        self.assertNotIn(
+            "@$(call repo_activity,make eval-sidecar-status,eval-sidecar-status)",
             text,
         )
         self.assertNotIn(

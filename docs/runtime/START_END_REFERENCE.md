@@ -63,6 +63,8 @@ Wake-lock rule:
 - high-traffic lifecycle, validation, and runtime operator work targets mark
   repo activity through the same activity metadata without starting, stopping,
   or adopting a wake-lock PID
+- current background-runner start/stop targets that own local process state
+  mark repo activity before lifecycle work begins
 - pure status/read-only targets stay read-only so status checks do not refresh
   activity freshness
 - the managed process is launched in a detached child session so it survives

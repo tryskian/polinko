@@ -853,6 +853,8 @@ Last updated: 2026-06-28
     bounds terminate/escalate cleanup before removing owned runtime metadata
   - high-traffic lifecycle, validation, and runtime operator work Make targets
     update repo activity metadata without changing wake-lock ownership
+  - current background-runner start/stop targets that own local process state
+    update repo activity before lifecycle work begins
   - pure status/read-only targets stay read-only so status checks do not refresh
     activity freshness
   - `make caffeinate-off-all` is repo-scoped by default; global matching-process
