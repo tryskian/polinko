@@ -166,8 +166,9 @@ flowchart TD
   misleading liveness state.
   `server-daemon` and `portfolio-mockups` validate launch ports and
   readiness-loop bounds before process launch, adoption, status, or readiness
-  checks. Local eval gates validate `SMOKE_PORT` / `GATE_PORT` overrides
-  before starting a temporary server.
+  checks. Local eval gates validate `SMOKE_PORT` / `GATE_PORT` overrides and
+  require `SMOKE_BASE_URL` / `GATE_BASE_URL` ports to match the temporary
+  server port before starting a temporary server.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery. If stop or interpreter-mismatch

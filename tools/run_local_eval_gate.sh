@@ -76,6 +76,55 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
 PY
 }
 
+base_url_port() {
+	_base_url=$1
+	case "$_base_url" in
+	*://*)
+		;;
+	*)
+		return 1
+		;;
+	esac
+	_authority=${_base_url#*://}
+	_authority=${_authority%%/*}
+	_authority=${_authority%%\?*}
+	_authority=${_authority%%\#*}
+	case "$_authority" in
+	*:*)
+		_port=${_authority##*:}
+		;;
+	*)
+		return 1
+		;;
+	esac
+	case "$_port" in
+	"" | *[!0123456789]*)
+		return 2
+		;;
+	esac
+	printf "%s\n" "$_port"
+}
+
+require_base_url_port_matches() {
+	name=$1
+	base_url=$2
+	port=$3
+	context=$4
+	status=0
+	parsed_port=$(base_url_port "$base_url" 2>/dev/null) || status=$?
+	if [ "$status" -eq 1 ]; then
+		echo "Invalid URL value for $context: $name must include an explicit port matching $port (got $base_url)" >&2
+		return 1
+	elif [ "$status" -ne 0 ]; then
+		echo "Invalid URL value for $context: $name is not a valid URL with an explicit port (got $base_url)" >&2
+		return 1
+	fi
+	if [ "$parsed_port" != "$port" ]; then
+		echo "Invalid URL value for $context: $name port must match $port (got $base_url)" >&2
+		return 1
+	fi
+}
+
 server_is_running() {
 	polinko_pid_is_running "$server_pid"
 }
@@ -146,6 +195,7 @@ start_local_server() {
 run_api_smoke() {
 	port=${SMOKE_PORT:-$(choose_loopback_port)}
 	base_url=${SMOKE_BASE_URL:-http://127.0.0.1:$port}
+	require_base_url_port_matches SMOKE_BASE_URL "$base_url" "$port" "api-smoke local server"
 
 	echo "Running API smoke (fresh local server + small endpoint calls)..."
 	start_local_server smoke "$base_url" "$port" /tmp/polinko-api-smoke.log
@@ -156,6 +206,7 @@ run_api_smoke() {
 run_eval_smoke() {
 	port=${SMOKE_PORT:-$(choose_loopback_port)}
 	base_url=${SMOKE_BASE_URL:-http://127.0.0.1:$port}
+	require_base_url_port_matches SMOKE_BASE_URL "$base_url" "$port" "eval-smoke local server"
 
 	echo "Running eval smoke (fresh local server + api smoke + response behaviour + retrieval + file search)..."
 	start_local_server smoke "$base_url" "$port" /tmp/polinko-eval-smoke.log
@@ -171,10 +222,12 @@ run_eval_smoke() {
 }
 
 run_hallucination_gate() {
-	base_url=${GATE_BASE_URL:-http://127.0.0.1:8066}
+	port=${GATE_PORT:-8066}
+	base_url=${GATE_BASE_URL:-http://127.0.0.1:$port}
+	require_base_url_port_matches GATE_BASE_URL "$base_url" "$port" "hallucination-gate local server"
 
 	echo "Running hallucination gate..."
-	start_local_server gate "$base_url" "${GATE_PORT:-8066}" /tmp/polinko-hallucination-gate.log
+	start_local_server gate "$base_url" "$port" /tmp/polinko-hallucination-gate.log
 	"$python_bin" -m tools.eval_hallucination \
 		--base-url "$base_url" \
 		--strict \
@@ -188,10 +241,12 @@ run_hallucination_gate() {
 }
 
 run_quality_gate() {
-	base_url=${GATE_BASE_URL:-http://127.0.0.1:8066}
+	port=${GATE_PORT:-8066}
+	base_url=${GATE_BASE_URL:-http://127.0.0.1:$port}
+	require_base_url_port_matches GATE_BASE_URL "$base_url" "$port" "quality-gate local server"
 
 	echo "Running quality gate (tests + retrieval eval + file-search eval + OCR eval + style eval + response-behaviour eval + hallucination eval)..."
-	start_local_server gate "$base_url" "${GATE_PORT:-8066}" /tmp/polinko-quality-gate.log
+	start_local_server gate "$base_url" "$port" /tmp/polinko-quality-gate.log
 	"$python_bin" -m unittest discover -s tests -p "test_*.py"
 	"$python_bin" -m tools.eval_retrieval \
 		--base-url "$base_url" \
