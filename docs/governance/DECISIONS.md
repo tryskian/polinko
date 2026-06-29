@@ -4766,3 +4766,21 @@ or branch history instead.
 - Why: Activity state is useful only when it distinguishes actual repo work
   from observation. Status checks that refresh activity would hide quiet/stale
   sessions, while operator work should leave a clear freshness trail.
+
+## D-276: Heartbeat current background-runner start and stop work
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `eval_sidecar`, `repo_activity`, `make`, `background_runners`
+- Human-led: The human lead clarified that deprecated portfolio surfaces should
+  not be improved while current process-running surfaces should stay
+  maintained.
+- Engineer implementation: Add repo-activity heartbeats to `eval-sidecar`
+  start/stop Make targets, keep `eval-sidecar-status` read-only, and extend
+  Make contract coverage for both behaviours.
+- Decision: Current background-runner start/stop targets that own local process
+  state should refresh repo activity before lifecycle work begins, while status
+  targets remain read-only.
+- Why: Starting or stopping a current runner is active repo work and should
+  leave a freshness signal. Checking runner status is observation and should
+  not make a quiet session look active.

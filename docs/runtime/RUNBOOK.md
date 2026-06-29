@@ -487,6 +487,8 @@ Use this doc for operator procedure.
 - repo activity heartbeat
   - common lifecycle, validation, and runtime operator work Make targets mark
     repo activity before running their work
+  - current background-runner start/stop targets that own local process state
+    mark repo activity before lifecycle work begins
   - activity marking updates caffeinate activity metadata only; it does not
     start, stop, adopt, or inspect wake-lock PIDs
   - pure status/read-only targets stay read-only so status checks do not refresh
