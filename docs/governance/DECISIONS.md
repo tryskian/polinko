@@ -4748,3 +4748,21 @@ or branch history instead.
   valid old PID look like an unmanaged process after config changes. Namespaced
   state keeps ownership visible while migration avoids duplicate wake-lock
   launches during rollout.
+
+## D-275: Heartbeat runtime operator work without refreshing status checks
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `repo_activity`, `make`, `runtime`
+- Human-led: The human lead asked for repo activity to reflect real repo work
+  so valid wake-lock PIDs are not mistaken for active work.
+- Engineer implementation: Add repo-activity heartbeats to runtime operator
+  targets that start, stop, close out, query account data, enter the app, or
+  apply local privacy settings; keep status/read-only status targets free of
+  heartbeats and add Make contract coverage for both sides.
+- Decision: Runtime operator work targets should refresh repo activity
+  metadata before work begins, while status/read-only targets must not refresh
+  activity freshness.
+- Why: Activity state is useful only when it distinguishes actual repo work
+  from observation. Status checks that refresh activity would hide quiet/stale
+  sessions, while operator work should leave a clear freshness trail.

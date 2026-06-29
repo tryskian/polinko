@@ -851,8 +851,10 @@ Last updated: 2026-06-28
     global-cleanup config before PID/activity state work
   - repo-managed caffeinate treats stopped/zombie managed PIDs as stale and
     bounds terminate/escalate cleanup before removing owned runtime metadata
-  - high-traffic lifecycle and validation Make targets update repo activity
-    metadata without changing wake-lock ownership
+  - high-traffic lifecycle, validation, and runtime operator work Make targets
+    update repo activity metadata without changing wake-lock ownership
+  - pure status/read-only targets stay read-only so status checks do not refresh
+    activity freshness
   - `make caffeinate-off-all` is repo-scoped by default; global matching-process
     cleanup requires explicit operator opt-in
   - `make end-stop` closes the core background runner family:

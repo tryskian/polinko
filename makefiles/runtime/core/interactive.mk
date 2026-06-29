@@ -2,9 +2,11 @@
 .PHONY: chat venv env
 
 chat:
+	@$(call repo_activity,make chat,chat)
 	$(PYTHON) $(CLI_ENTRYPOINT)
 
 venv env:
+	@$(call repo_activity,make $@,$@)
 	@set -eu; \
 	if [ -f ./.venv/bin/activate ]; then \
 		ACTIVATE_PATH="./.venv/bin/activate"; \

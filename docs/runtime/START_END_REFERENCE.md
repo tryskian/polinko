@@ -60,8 +60,11 @@ Wake-lock rule:
   and the latest repo activity heartbeat
 - mutating caffeinate lifecycle actions migrate owned legacy flat runtime files
   before launch or stop decisions and clean stale legacy PID metadata
-- high-traffic lifecycle and validation targets mark repo activity through the
-  same activity metadata without starting, stopping, or adopting a wake-lock PID
+- high-traffic lifecycle, validation, and runtime operator work targets mark
+  repo activity through the same activity metadata without starting, stopping,
+  or adopting a wake-lock PID
+- pure status/read-only targets stay read-only so status checks do not refresh
+  activity freshness
 - the managed process is launched in a detached child session so it survives
   non-interactive host shell command exit
 - `make decaffeinate` stops the repo-owned PID with bounded
