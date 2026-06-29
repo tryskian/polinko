@@ -84,6 +84,8 @@ Runner lifecycle rule:
 - `make server-daemon`, `make server-daemon-status`, and
   `make server-daemon-stop` delegate lifecycle actions to
   `tools/run_server_daemon.sh`
+  - PID and log defaults live under repo-scoped `SERVER_STATE_DIR`, and status
+    reports repo context plus PID/log paths before liveness
   - matching local `uvicorn server:app` processes without PID files are
     adopted on start, surfaced by status, and stopped during closeout recovery
   - if a matching server does not exit after a stop signal, the PID file is
