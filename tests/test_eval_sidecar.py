@@ -4,12 +4,22 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from tools.eval_sidecar import DEFAULT_LOG_FILE
+from tools.eval_sidecar import DEFAULT_PID_FILE
 from tools.eval_sidecar import _extract_failure_signals
 from tools.eval_sidecar import _failure_counter
 from tools.eval_sidecar import _render_status
 
 
 class EvalSidecarTests(unittest.TestCase):
+    def test_default_runtime_files_are_repo_scoped(self) -> None:
+        self.assertEqual(
+            DEFAULT_PID_FILE, Path("/tmp/polinko-runtime/polinko/eval-sidecar.pid")
+        )
+        self.assertEqual(
+            DEFAULT_LOG_FILE, Path("/tmp/polinko-runtime/polinko/eval-sidecar.log")
+        )
+
     def test_extract_failure_signals_reads_fail_lines(self) -> None:
         text = "\n".join(
             [

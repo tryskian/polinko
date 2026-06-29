@@ -99,6 +99,8 @@ Runner lifecycle rule:
 - `make eval-sidecar-start`, `make eval-sidecar-status`, and
   `make eval-sidecar-stop` delegate lifecycle actions to
   `tools/run_eval_sidecar_start.sh`
+  - PID and log defaults live under repo-scoped `EVAL_SIDECAR_STATE_DIR`, and
+    status reports repo context plus PID/log/current-file paths before liveness
   - missing current-file state is surfaced by start/status, while stop still
     cleans the repo-managed PID for closeout
   - `EVAL_SIDECAR_MIN_SECONDS` is validated before detached launch, so invalid

@@ -4856,3 +4856,22 @@ or branch history instead.
 - Why: Flat `/tmp` server files make process ownership harder to reason about
   when the helper pattern is reused across repos. Namespaced state keeps
   daemon ownership visible while preserving explicit override support.
+
+## D-281: Namespace eval-sidecar runtime files
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `eval_sidecar`, `runtime_state`, `pid_file`, `repo_scope`
+- Human-led: The human lead asked for background runner PIDs to stay legible
+  across repos and for valid repo-owned processes not to be mistaken for
+  ambiguous global state.
+- Engineer implementation: Move eval-sidecar PID and log defaults into
+  `EVAL_SIDECAR_STATE_DIR`, derive that state directory from a repo-scoped
+  `EVAL_SIDECAR_RUNTIME_ROOT` namespace, pass the values through Make, update
+  direct Python defaults, and print repo context plus PID/log/current-file paths
+  during status.
+- Decision: `eval-sidecar` PID and log files should default to a repo-scoped
+  runtime namespace and expose ownership context during status checks.
+- Why: Flat `/tmp` sidecar files make process ownership harder to reason about
+  when the helper pattern is reused across repos. Namespaced state keeps
+  sidecar ownership visible while preserving explicit override support.

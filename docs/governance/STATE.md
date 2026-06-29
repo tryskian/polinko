@@ -168,6 +168,9 @@ Last updated: 2026-06-29
     before reporting success, rather than relying on a fixed post-launch sleep
   - `server-daemon` fails early with a direct missing-command diagnostic if
     `curl` is unavailable for the HTTP readiness probe
+  - `eval-sidecar` PID and log defaults live under repo-scoped
+    `EVAL_SIDECAR_STATE_DIR`, and status reports repo context plus
+    PID/log/current-file paths before liveness
   - `eval-sidecar` reports missing current-file drift on start/status and still
     stops the repo-managed PID during closeout
   - `eval-sidecar` validates `EVAL_SIDECAR_MIN_SECONDS` before detached launch,
