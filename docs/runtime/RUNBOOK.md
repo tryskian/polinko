@@ -485,10 +485,12 @@ Use this doc for operator procedure.
   - validates tracked shell helper shebangs, strict modes, sourced helper
     contracts, and root-helper coverage for executable operator scripts
 - repo activity heartbeat
-  - common lifecycle and validation Make targets mark repo activity before
-    running their checks
+  - common lifecycle, validation, and runtime operator work Make targets mark
+    repo activity before running their work
   - activity marking updates caffeinate activity metadata only; it does not
     start, stop, adopt, or inspect wake-lock PIDs
+  - pure status/read-only targets stay read-only so status checks do not refresh
+    activity freshness
 - `make local-runtime-config-check`
   - validates VS Code task/config shape, extension recommendation drift, and
     devcontainer config/setup-script drift through

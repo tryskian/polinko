@@ -134,9 +134,12 @@ class EntrypointTests(unittest.TestCase):
         )
         self.assertIn("CLI_ENTRYPOINT ?= -m polinko.cli", runtime_config)
         self.assertIn("ASGI_APP ?= server:app", runtime_config)
-        self.assertIn("chat:\n\t$(PYTHON) $(CLI_ENTRYPOINT)", runtime_make)
         self.assertIn(
-            "localhost server:\n\t$(PYTHON) -m uvicorn $(ASGI_APP)",
+            "chat:\n\t@$(call repo_activity,make chat,chat)\n\t$(PYTHON) $(CLI_ENTRYPOINT)",
+            runtime_make,
+        )
+        self.assertIn(
+            "localhost server:\n\t@$(call repo_activity,make $@,$@)\n\t$(PYTHON) -m uvicorn $(ASGI_APP)",
             runtime_make,
         )
         self.assertIn('polinko-chat = "polinko.cli:main"', pyproject)

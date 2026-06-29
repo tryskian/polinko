@@ -8,6 +8,7 @@ start:
 	bash ./tools/start_of_day_routine.sh
 
 end:
+	@$(call repo_activity,make end,end)
 	bash ./tools/end_of_day_routine.sh
 
 eod: end

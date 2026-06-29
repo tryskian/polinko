@@ -2677,6 +2677,53 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("@$(call repo_activity,make test,test)", text)
         self.assertIn("@$(call repo_activity,make scripts-check,scripts-check)", text)
         self.assertIn("@$(call repo_activity,make risk-scan,risk-scan)", text)
+        self.assertIn("@$(call repo_activity,make $@,$@)", text)
+        self.assertIn("@$(call repo_activity,make chat,chat)", text)
+        self.assertIn("@$(call repo_activity,make end,end)", text)
+        self.assertIn(
+            "@$(call repo_activity,make server-daemon,server-daemon)",
+            text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make server-daemon-stop,server-daemon-stop)",
+            text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make openai-account-summary,openai-account-summary)",
+            text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make openai-costs,openai-costs)",
+            text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make openai-usage,openai-usage)",
+            text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make openai-limits,openai-limits)",
+            text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make privacy-local-on,privacy-local-on)",
+            text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make privacy-local-off,privacy-local-off)",
+            text,
+        )
+        self.assertNotIn(
+            "@$(call repo_activity,make server-daemon-status,server-daemon-status)",
+            text,
+        )
+        self.assertNotIn(
+            "@$(call repo_activity,make privacy-local-status,privacy-local-status)",
+            text,
+        )
+        self.assertNotIn(
+            "@$(call repo_activity,make caffeinate-status,caffeinate-status)",
+            text,
+        )
         self.assertIn(
             "@$(call repo_activity,make package-install-check,package-install-check)",
             text,
