@@ -155,6 +155,9 @@ Last updated: 2026-06-28
     before launch, adoption, status, or readiness checks; this covers
     `server-daemon`, `portfolio-mockups`, and local eval gate `SMOKE_PORT` /
     `GATE_PORT` overrides
+  - local eval gate `SMOKE_BASE_URL` / `GATE_BASE_URL` overrides must include
+    an explicit port that matches the temporary server port before startup work
+    begins
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery

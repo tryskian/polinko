@@ -120,6 +120,9 @@ Runner lifecycle rule:
   process launch, adoption, status, or readiness checks for `server-daemon`,
   `portfolio-mockups`, and local eval gate `SMOKE_PORT` / `GATE_PORT`
   overrides
+- local eval gate `SMOKE_BASE_URL` / `GATE_BASE_URL` overrides must include an
+  explicit port that matches the temporary server port before startup work
+  begins
 - the shared detached launcher rejects empty, missing, and non-launchable
   commands with direct diagnostics before PID ownership is recorded, and stops
   the started child process group if the PID file cannot be written

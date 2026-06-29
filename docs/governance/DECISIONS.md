@@ -4672,3 +4672,21 @@ or branch history instead.
 - Why: PID files are runtime state, not trusted input. Values such as `0`,
   negative numbers, or malformed strings must not reach process-group-sensitive
   shell `kill` calls or make runner status look live.
+
+## D-271: Require local eval gate base URLs to match launch ports
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `local_eval_gate`, `runner_config`, `diagnostics`, `readiness`
+- Human-led: The human lead asked for hidden runner-script hygiene and for
+  recurring local/runtime failures to be prevented as the helper-script
+  refactor proceeds.
+- Engineer implementation: Update `tools/run_local_eval_gate.sh` so
+  `SMOKE_BASE_URL` and `GATE_BASE_URL` must include an explicit port that
+  matches the temporary local server port being launched; add focused
+  regression coverage for mismatch and missing-port cases.
+- Decision: Local eval gate URL overrides must match the local server port
+  before startup work begins.
+- Why: A mismatched base URL can make a healthy local server look broken by
+  probing the wrong endpoint. Early validation keeps the diagnostic attached to
+  the configuration pair that needs to be corrected.
