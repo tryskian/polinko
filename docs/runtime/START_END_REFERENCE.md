@@ -109,16 +109,9 @@ Runner lifecycle rule:
   - start reports success only after the current-run status file exists within
     the bounded readiness wait
 - `make portfolio-mockups`, `make portfolio-mockups-status`, and
-  `make portfolio-mockups-stop` delegate mockup-server lifecycle actions to
-  `tools/run_portfolio_mockups.sh`
-  - if a matching mockup server does not exit after a stop signal, the PID
-    file is preserved and the stop action fails instead of hiding the
-    still-live server
-  - start reports success only after the configured mockup URL is reachable
-    within the bounded readiness wait
-  - HTTP reachability checks require `curl` before start/status/URL-based stop
-    work, so missing local probe tooling fails with a direct prerequisite
-    diagnostic
+  `make portfolio-mockups-stop` remain available as a deprecated manual
+  surface. They are not part of `make end-stop` or `make session-status`.
+  New portfolio work moves to the separate `krystian.io` repo.
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
 - shared PID inspection requires `ps` before lifecycle scripts make managed
@@ -128,13 +121,11 @@ Runner lifecycle rule:
   stop decisions, so malformed, zero, or negative PID-file values cannot be
   treated as live runner processes
 - lifecycle launch ports and readiness-loop bounds are validated before
-  process launch, adoption, status, or readiness checks for `server-daemon`,
-  `portfolio-mockups`, and local eval gate `SMOKE_PORT` / `GATE_PORT`
-  overrides
+  process launch, adoption, status, or readiness checks for `server-daemon`
+  and local eval gate `SMOKE_PORT` / `GATE_PORT` overrides
 - HTTP runner probe URLs must include an explicit port matching the launched
   server port before readiness, adoption, status, or launch work depends on the
-  URL; this covers `SERVER_HEALTH_URL`, `PORTFOLIO_MOCKUP_URL`,
-  `SMOKE_BASE_URL`, and `GATE_BASE_URL`
+  URL; this covers `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and `GATE_BASE_URL`
 - the shared detached launcher rejects empty, missing, and non-launchable
   commands with direct diagnostics before PID ownership is recorded, and stops
   the started child process group if the PID file cannot be written

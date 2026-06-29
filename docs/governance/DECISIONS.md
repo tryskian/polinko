@@ -4784,3 +4784,22 @@ or branch history instead.
 - Why: Starting or stopping a current runner is active repo work and should
   leave a freshness signal. Checking runner status is observation and should
   not make a quiet session look active.
+
+## D-277: Retire portfolio mockups from active closeout
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `portfolio`, `closeout`, `background_runners`, `krystian_io`
+- Human-led: The human lead clarified that portfolio work is deprecated in
+  Polinko because `krystian.io` is moving to its own repo and a different
+  direction.
+- Engineer implementation: Remove portfolio mockup stop/status calls from
+  `end-stop` and `session-status`, update the runtime risk map and tests, and
+  leave the legacy portfolio mockup targets available as manual/deprecated
+  surfaces for now.
+- Decision: Polinko closeout should manage only current local runtime runners:
+  `eval-sidecar`, `server-daemon`, and repo-managed `caffeinate`.
+- Why: Deprecated portfolio preview work should not keep shaping the active
+  runtime closeout contract. Keeping the old manual targets parked avoids a
+  broad deletion while preventing stale portfolio state from interfering with
+  session closure.

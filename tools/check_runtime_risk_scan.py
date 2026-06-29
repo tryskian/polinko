@@ -131,7 +131,6 @@ RUNTIME_MAP_SURFACES = (
         (
             "server-daemon",
             "eval-sidecar",
-            "portfolio mockups",
             "repo-managed caffeinate",
             "tools/python_runtime.sh",
             "PID",

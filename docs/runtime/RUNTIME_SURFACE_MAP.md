@@ -43,12 +43,10 @@ flowchart TD
   subgraph Runners["Background runner family"]
     ServerDaemon["server-daemon"]
     EvalSidecar["eval-sidecar"]
-    PortfolioMockups["portfolio mockups"]
     ManagedCaffeinate["repo-managed caffeinate"]
     RunnerContract["shared PID, liveness, log, and cleanup pattern"]
     ServerDaemon --> RunnerContract
     EvalSidecar --> RunnerContract
-    PortfolioMockups --> RunnerContract
     ManagedCaffeinate --> RunnerContract
   end
 
@@ -141,8 +139,8 @@ flowchart TD
   pattern; tracked docs remain visible.
 - Core background runners use one ownership pattern for PID files,
   stale-process handling, logs, cleanup commands, and detached launch
-  behaviour across `caffeinate`, `server-daemon`, `eval-sidecar`, and
-  `portfolio-mockups`. Detached child-process launch is centralized through
+  behaviour across `caffeinate`, `server-daemon`, and `eval-sidecar`.
+  Detached child-process launch is centralized through
   `tools/launch_detached_process.py`; runner scripts retain ownership of
   their domain-specific liveness and adoption logic. The shared launcher
   rejects empty, missing, and non-launchable commands with direct diagnostics
@@ -167,12 +165,11 @@ flowchart TD
   Shell lifecycle runners require `ps` before making PID-state decisions, so
   missing process-inspection tooling fails early instead of degrading into
   misleading liveness state.
-  `server-daemon` and `portfolio-mockups` validate launch ports and
-  readiness-loop bounds before process launch, adoption, status, or readiness
-  checks. HTTP runner probe URLs must include an explicit port matching the
-  launched server port before readiness, adoption, status, or launch work
-  depends on the URL; this covers `SERVER_HEALTH_URL`,
-  `PORTFOLIO_MOCKUP_URL`, `SMOKE_BASE_URL`, and `GATE_BASE_URL`.
+  `server-daemon` validates launch ports and readiness-loop bounds before
+  process launch, adoption, status, or readiness checks. HTTP runner probe URLs
+  must include an explicit port matching the launched server port before
+  readiness, adoption, status, or launch work depends on the URL; this covers
+  `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and `GATE_BASE_URL`.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery. If stop or interpreter-mismatch
@@ -191,16 +188,9 @@ flowchart TD
   remains active, the PID file stays in place and the stop exits non-zero.
   Start reports success only after the current-run status file exists within
   the bounded readiness wait.
-  `portfolio-mockups` treats a reachable mockup URL without a PID file as a
-  lifecycle state: matching local `http.server` processes are adopted, while
-  unmanaged reachable ports fail loudly. It trusts managed PID files only when
-  the live PID matches the configured mockup `http.server` process shape;
-  unrelated live PIDs are cleaned from the PID file without being stopped. If
-  stop signals a matching mockup server and the process remains active, the
-  PID file stays in place and the stop exits non-zero. Start reports success
-  only after the configured mockup URL is reachable within the bounded
-  readiness wait; URL-based start/status/stop paths fail early with a
-  missing-command diagnostic when `curl` is unavailable.
+- Portfolio mockup targets remain available as a deprecated manual surface, but
+  they are no longer part of active closeout/status or the core background
+  runner family. New portfolio work moves to the separate `krystian.io` repo.
 - Manual eval and OCR tooling remain active workbench surfaces, but eval runs
   stay separate from startup and read-only inventory commands. Health,
   feedback, overlay, OCR retry, and reclassification Make targets route through
