@@ -2106,8 +2106,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotRegex(text, r"(?m)^eod-stop:")
         self.assertRegex(
             text,
-            r"(?m)^end-stop:\s*eval-sidecar-stop portfolio-mockups-stop "
-            r"server-daemon-stop caffeinate-off-all session-status$",
+            r"(?m)^end-stop:\s*eval-sidecar-stop server-daemon-stop "
+            r"caffeinate-off-all session-status$",
         )
         self.assertIn("session-status", _phony_targets())
         self.assertRegex(text, r"(?m)^session-status:$")
@@ -2115,8 +2115,6 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("server-daemon-status || true", text)
         self.assertIn('echo "== Eval sidecar =="', text)
         self.assertIn("eval-sidecar-status || true", text)
-        self.assertIn('echo "== Portfolio mockups =="', text)
-        self.assertIn("portfolio-mockups-status || true", text)
         self.assertIn('echo "== Keep-awake =="', text)
         self.assertIn("caffeinate-status || true", text)
         self.assertRegex(text, r"(?m)^caffeinate-on:\s*caffeinate$")

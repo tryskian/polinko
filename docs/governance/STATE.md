@@ -131,7 +131,7 @@ Last updated: 2026-06-28
     avoiding an extra `seq` dependency; lifecycle readiness bounds are
     validated before runner startup work begins
   - core background runner lifecycle is script-owned for `caffeinate`,
-    `server-daemon`, `eval-sidecar`, and `portfolio-mockups`; Make targets
+    `server-daemon`, and `eval-sidecar`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned
     PID/log handling, and direct runner invocation uses the shared
     `tools/python_runtime.sh` interpreter rail for detached launchers
@@ -153,12 +153,11 @@ Last updated: 2026-06-28
     treated as live runner processes
   - shell lifecycle runners validate launch ports and readiness-loop bounds
     before launch, adoption, status, or readiness checks; this covers
-    `server-daemon`, `portfolio-mockups`, and local eval gate `SMOKE_PORT` /
-    `GATE_PORT` overrides
+    `server-daemon` and local eval gate `SMOKE_PORT` / `GATE_PORT` overrides
   - HTTP runner probe URLs must include an explicit port matching the launched
     server port before readiness, adoption, status, or launch work depends on
-    the URL; this covers `SERVER_HEALTH_URL`, `PORTFOLIO_MOCKUP_URL`,
-    `SMOKE_BASE_URL`, and `GATE_BASE_URL`
+    the URL; this covers `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and
+    `GATE_BASE_URL`
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery
@@ -184,20 +183,9 @@ Last updated: 2026-06-28
     still-live runner
   - `eval-sidecar` start waits for the current-run status file before reporting
     success, rather than relying on a fixed post-launch sleep
-  - `portfolio-mockups` treats a reachable mockup URL without a PID file as a
-    lifecycle issue: matching local `http.server` processes are adopted, while
-    unmanaged reachable ports fail loudly
-  - `portfolio-mockups` trusts managed PID files only when the live PID matches
-    the configured mockup `http.server` process shape; stale PID files that
-    point to unrelated live processes are cleaned without stopping the
-    unrelated process
-  - `portfolio-mockups` preserves its PID file and fails stop when a matching
-    mockup server remains active after a stop signal, so closeout cannot hide
-    a still-live local preview
-  - `portfolio-mockups` start waits for the configured mockup URL before
-    reporting success, rather than relying on a fixed post-launch sleep
-  - `portfolio-mockups` URL-based start/status/stop checks fail early with a
-    direct missing-command diagnostic if `curl` is unavailable
+  - portfolio mockup targets remain available as a deprecated manual surface,
+    but they are no longer part of active closeout/status or the core
+    background runner family
   - manual eval health, feedback, overlay, OCR retry, and reclassification Make
     targets keep their public names while routing through a single
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper
@@ -860,8 +848,8 @@ Last updated: 2026-06-28
   - `make caffeinate-off-all` is repo-scoped by default; global matching-process
     cleanup requires explicit operator opt-in
   - `make end-stop` closes the core background runner family:
-    `eval-sidecar`, `portfolio-mockups`, `server-daemon`, and repo-managed
-    `caffeinate`, then prints status for each family member
+    `eval-sidecar`, `server-daemon`, and repo-managed `caffeinate`, then
+    prints status for each family member
   - background runner scripts launch detached child processes through
     `tools/launch_detached_process.py` after resolving the checkout root
     through `tools/repo_root.sh`, while each runner keeps its own liveness,
