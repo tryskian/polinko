@@ -21,8 +21,7 @@
         "python.analysis.exclude": [
           "**/.history/**",
           "**/.venv/**",
-          "**/node_modules/**",
-          "**/apps/portfolio/node_modules/**"
+          "**/node_modules/**"
         ],
         "ruff.importStrategy": "fromEnvironment",
         "ruff.path": ["${containerWorkspaceFolder}/.venv/bin/ruff"],

@@ -40,8 +40,8 @@ Tracked packaging rail:
 - `src/polinko/config.py`
   - canonical environment loading and validation implementation
 - `src/polinko/api/`
-  - canonical HTTP routes, middleware, app factory, manual-eval surfaces, public
-    portfolio data helpers, and packaged API static assets
+  - canonical HTTP routes, middleware, app factory, manual-eval surfaces,
+    evidence visualisation helpers, and packaged API static assets
 - `src/polinko/core/`
   - canonical prompt, runtime, history, rate-limit, response parsing, and
     vector-store logic

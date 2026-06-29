@@ -17,8 +17,8 @@ that matches the question you are trying to answer.
   notebooks, local evidence databases, `make chat`, `POST /chat`, and
   `/chats/*` are active manual-eval surfaces; do not prune them as dead
   surfaces.
-- Private portfolio mockups and screenshots stay in `docs/peanut/` unless
-  explicitly promoted.
+- Deprecated portfolio surfaces are quarantined for porting to `krystian.io`;
+  they are not active Polinko runtime.
 
 ## Reading Paths
 

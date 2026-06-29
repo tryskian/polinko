@@ -88,10 +88,7 @@ This page is the structural map of the tracked system.
     macro assembly
 - `makefiles/config/surfaces/`
   - role-owned configuration fragments for notebooks, manual eval workbench,
-    local browser helpers, and portfolio/mockup surfaces
-- `makefiles/config/surfaces/portfolio/`
-  - portfolio configuration fragments for app/path defaults, mockup server
-    defaults, mockup env assembly, and launch-mode defaults
+    and local browser helpers
 - `makefiles/config/surfaces/manual-evals/`
   - manual-eval configuration fragments for shared filters,
     feedback/reclassify flows, overlay/source-index settings, and OCR retry
@@ -161,16 +158,7 @@ This page is the structural map of the tracked system.
     Docker, k6, and Trivy defaults
 - `makefiles/surfaces/`
   - role-owned target fragments for notebooks, manual eval workbench,
-    portfolio/mockup workflows, and local browser helpers
-- `makefiles/surfaces/portfolio/`
-  - portfolio target fragments for dependency install, static build, preview
-    launch modes, and mockup lifecycle
-- `makefiles/surfaces/portfolio/preview/`
-  - portfolio preview fragments for the server-backed launch recipe and
-    rebuild/system/playwright launch-mode aliases
-- `makefiles/surfaces/portfolio/preview/launch/`
-  - portfolio launch recipe fragments for cache-busted URL construction,
-    Playwright launch, system/no-launch handling, and target wiring
+    and local browser helpers
 - `makefiles/surfaces/manual-evals/`
   - manual-eval target fragments for warehouse database, feedback,
     overlay/source-index, and OCR retry helper workflows
@@ -232,15 +220,14 @@ This page is the structural map of the tracked system.
     startup/closeout lifecycle, git hygiene, and consolidated status
 - `docs/`
   - governance, runtime references, and research docs
-- `apps/portfolio/`
-  - current Vite source app for the public portfolio doorway
-  - default `PORTFOLIO_APP_DIR`
-- `public/portfolio/`
-  - current tracked static build output served by `/portfolio`
-  - default `PORTFOLIO_STATIC_DIR`
-- `frontend/` and `ui/`
+- `.archive/quarantine/portfolio-2026-06-29/`
+  - deprecated portfolio app, static output, Netlify config, and mockup/build
+    helpers preserved for porting to the separate `krystian.io` repo
+- `frontend/` and `apps/portfolio/`
   - retired web surface directory names
-  - legacy Make/config aliases remain compatibility-only where documented
+- `ui/`
+  - retired root web-surface name; current manual-eval workbench entrypoints are
+    API routes under `src/polinko/api/`
 
 ## Runtime Flow
 
@@ -308,8 +295,6 @@ This page is the structural map of the tracked system.
   - `docs/`
 - private transcripts and working notes:
   - local `docs/peanut/`
-- private portfolio mockups and screenshots:
-  - local `docs/peanut/assets/portfolio-mockups/`
 - web surface source/output naming:
   - `docs/runtime/SURFACE_IA.md`
 - manual eval workbench trace naming:

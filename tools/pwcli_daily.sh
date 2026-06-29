@@ -24,7 +24,7 @@ if [[ "$#" -eq 0 ]]; then
 Usage: tools/pwcli_daily.sh <playwright-cli args>
 
 Snapshot directory: $snapshot_dir
-Example: tools/pwcli_daily.sh --session portfolio open http://127.0.0.1:8000/portfolio
+Example: tools/pwcli_daily.sh --session pass-fail open http://127.0.0.1:8000/viz/pass-fail
 EOF
   exit 2
 fi

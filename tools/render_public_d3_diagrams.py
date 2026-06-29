@@ -5,7 +5,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from polinko.api.portfolio_sankey import build_portfolio_sankey_payload
+from polinko.api.evidence_sankey import build_evidence_sankey_payload
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -24,7 +24,7 @@ def main() -> None:
     if not NODE_RENDERER.is_file():
         raise FileNotFoundError(f"D3 renderer not found: {NODE_RENDERER}")
 
-    payload = build_portfolio_sankey_payload(max_reports=120)
+    payload = build_evidence_sankey_payload(max_reports=120)
     if not payload.get("available"):
         raise RuntimeError(
             "Evidence Sankey payload is unavailable; cannot render public D3 Sankey."

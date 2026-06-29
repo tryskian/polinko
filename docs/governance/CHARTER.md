@@ -19,8 +19,8 @@ evidence-preserving method work.
   - local/private lanes stay local, with explicit approval for any wider scope
 - Public-facing surfaces are derived from repo truth:
   - the repository remains the canonical research surface
-  - local portfolio commands, mockups, and screenshots stay private unless
-    explicitly promoted
+  - deprecated portfolio surfaces stay quarantined for porting, not active
+    Polinko runtime
 - Eval semantics stay scoped:
   - OCR case outcomes are `pass` / `fail`
   - broader manual and non-OCR lanes may still use `retain` / `evict` after

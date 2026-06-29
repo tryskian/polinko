@@ -50,7 +50,6 @@ ROUTINE_PATHS = (
     "README.md",
     "main.py",
     "mypy.ini",
-    "netlify.toml",
     "package.json",
     "pyproject.toml",
     "pyrightconfig.json",

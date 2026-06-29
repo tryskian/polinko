@@ -470,12 +470,12 @@ Use this doc for operator procedure.
   - when local `SESSION_HANDOFF` exists, verifies it names the current short
     commit so same-date stale handoffs fail closeout
 - `make security-checks`
-  - local Python, root Node, and portfolio Node dependency audits
+  - local Python and root Node dependency audits
   - Python audit tooling is installed from `requirements.txt`, not side-loaded
     in CI
 - `make refresh-deps`
-  - refreshes the local Python environment, root npm lock, and portfolio npm
-    lock after Dependabot or dependency metadata changes
+  - refreshes the local Python environment and root npm lock after Dependabot
+    or dependency metadata changes
 - `make package-install-check`
   - install the root package editable without dependencies and verify package
     metadata/import identity

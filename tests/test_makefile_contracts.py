@@ -86,9 +86,6 @@ MAKE_CONFIG_SURFACES_MANUAL_EVALS = (
 MAKE_CONFIG_SURFACES_MANUAL_EVALS_OCR_RETRY = (
     REPO_ROOT / "makefiles" / "config" / "surfaces" / "manual-evals" / "ocr-retry.mk"
 )
-MAKE_CONFIG_SURFACES_PORTFOLIO = (
-    REPO_ROOT / "makefiles" / "config" / "surfaces" / "portfolio.mk"
-)
 MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_CHECKS_TESTS = REPO_ROOT / "makefiles" / "checks" / "tests.mk"
 MAKE_CHECKS_PYTHON = REPO_ROOT / "makefiles" / "checks" / "python.mk"
@@ -105,13 +102,6 @@ MAKE_SURFACES_MANUAL_EVALS_FEEDBACK = (
 )
 MAKE_SURFACES_MANUAL_EVALS_OCR_RETRY = (
     REPO_ROOT / "makefiles" / "surfaces" / "manual-evals" / "ocr-retry.mk"
-)
-MAKE_SURFACES_PORTFOLIO = REPO_ROOT / "makefiles" / "surfaces" / "portfolio.mk"
-MAKE_SURFACES_PORTFOLIO_PREVIEW = (
-    REPO_ROOT / "makefiles" / "surfaces" / "portfolio" / "preview.mk"
-)
-MAKE_SURFACES_PORTFOLIO_PREVIEW_LAUNCH = (
-    REPO_ROOT / "makefiles" / "surfaces" / "portfolio" / "preview" / "launch.mk"
 )
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
 MAKE_EVALS_ALIASES = REPO_ROOT / "makefiles" / "evals" / "aliases.mk"
@@ -139,7 +129,6 @@ OCR_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_workflow.sh"
 CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
 OPENAI_ACCOUNT_SCRIPT = REPO_ROOT / "tools" / "openai_account_summary.py"
 SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "run_server_daemon.sh"
-PORTFOLIO_MOCKUP_SCRIPT = REPO_ROOT / "tools" / "run_portfolio_mockups.sh"
 LOCAL_URL_LAUNCHER_SCRIPT = REPO_ROOT / "tools" / "open_local_url.sh"
 PROCESS_LIFECYCLE_COMMON_SCRIPT = REPO_ROOT / "tools" / "process_lifecycle_common.sh"
 DETACHED_PROCESS_LAUNCHER_SCRIPT = REPO_ROOT / "tools" / "launch_detached_process.py"
@@ -1184,9 +1173,6 @@ class MakefileContractTests(unittest.TestCase):
         config_manual_evals_ocr_retry_entry_text = (
             MAKE_CONFIG_SURFACES_MANUAL_EVALS_OCR_RETRY.read_text(encoding="utf-8")
         )
-        config_portfolio_entry_text = MAKE_CONFIG_SURFACES_PORTFOLIO.read_text(
-            encoding="utf-8"
-        )
         surfaces_entry_text = MAKE_SURFACES.read_text(encoding="utf-8")
         manual_evals_entry_text = MAKE_SURFACES_MANUAL_EVALS.read_text(encoding="utf-8")
         manual_evals_feedback_entry_text = (
@@ -1194,13 +1180,6 @@ class MakefileContractTests(unittest.TestCase):
         )
         manual_evals_ocr_retry_entry_text = (
             MAKE_SURFACES_MANUAL_EVALS_OCR_RETRY.read_text(encoding="utf-8")
-        )
-        portfolio_entry_text = MAKE_SURFACES_PORTFOLIO.read_text(encoding="utf-8")
-        portfolio_preview_entry_text = MAKE_SURFACES_PORTFOLIO_PREVIEW.read_text(
-            encoding="utf-8"
-        )
-        portfolio_preview_launch_entry_text = (
-            MAKE_SURFACES_PORTFOLIO_PREVIEW_LAUNCH.read_text(encoding="utf-8")
         )
         contract_text = _makefile_contract_text()
 
@@ -1216,7 +1195,7 @@ class MakefileContractTests(unittest.TestCase):
             "include makefiles/config/surfaces/local-browser.mk",
             config_surfaces_entry_text,
         )
-        self.assertIn(
+        self.assertNotIn(
             "include makefiles/config/surfaces/portfolio.mk",
             config_surfaces_entry_text,
         )
@@ -1258,31 +1237,9 @@ class MakefileContractTests(unittest.TestCase):
             "include makefiles/config/surfaces/manual-evals/ocr-retry/feedback-closure.mk",
             config_manual_evals_ocr_retry_entry_text,
         )
-        self.assertIsNone(
-            re.search(
-                r"(?m)^[A-Z][A-Z0-9_]*\s*(?:\?=|:=|=|\+=)",
-                config_portfolio_entry_text,
-            )
-        )
-        self.assertIn(
-            "include makefiles/config/surfaces/portfolio/app.mk",
-            config_portfolio_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/config/surfaces/portfolio/mockup.mk",
-            config_portfolio_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/config/surfaces/portfolio/env.mk",
-            config_portfolio_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/config/surfaces/portfolio/launch.mk",
-            config_portfolio_entry_text,
-        )
         self.assertIn("include makefiles/surfaces/notebooks.mk", surfaces_entry_text)
         self.assertIn("include makefiles/surfaces/manual-evals.mk", surfaces_entry_text)
-        self.assertIn("include makefiles/surfaces/portfolio.mk", surfaces_entry_text)
+        self.assertNotIn("include makefiles/surfaces/portfolio.mk", surfaces_entry_text)
         self.assertIn(
             "include makefiles/surfaces/local-browser.mk", surfaces_entry_text
         )
@@ -1338,60 +1295,12 @@ class MakefileContractTests(unittest.TestCase):
             "include makefiles/surfaces/manual-evals/ocr-retry/feedback-closure.mk",
             manual_evals_ocr_retry_entry_text,
         )
-        self.assertIn(
-            "include makefiles/surfaces/portfolio/install.mk",
-            portfolio_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/surfaces/portfolio/build.mk",
-            portfolio_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/surfaces/portfolio/preview.mk",
-            portfolio_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/surfaces/portfolio/mockups.mk",
-            portfolio_entry_text,
-        )
-        self.assertNotRegex(
-            portfolio_preview_entry_text,
-            r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
-        )
-        self.assertIn(
-            "include makefiles/surfaces/portfolio/preview/launch.mk",
-            portfolio_preview_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/surfaces/portfolio/preview/aliases.mk",
-            portfolio_preview_entry_text,
-        )
-        self.assertNotRegex(
-            portfolio_preview_launch_entry_text,
-            r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
-        )
-        self.assertIn(
-            "include makefiles/surfaces/portfolio/preview/launch/url.mk",
-            portfolio_preview_launch_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/surfaces/portfolio/preview/launch/playwright.mk",
-            portfolio_preview_launch_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/surfaces/portfolio/preview/launch/system.mk",
-            portfolio_preview_launch_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/surfaces/portfolio/preview/launch/target.mk",
-            portfolio_preview_launch_entry_text,
-        )
         self.assertIn("notebook nb notes:", contract_text)
         self.assertIn("manual-evals-ocr-retry-execute", contract_text)
-        self.assertIn("portfolio-install:", contract_text)
-        self.assertIn("portfolio-build:", contract_text)
-        self.assertIn("portfolio-open:", contract_text)
-        self.assertIn("portfolio-mockups:", contract_text)
+        self.assertNotIn("portfolio-install:", contract_text)
+        self.assertNotIn("portfolio-build:", contract_text)
+        self.assertNotIn("portfolio-open:", contract_text)
+        self.assertNotIn("portfolio-mockups:", contract_text)
         self.assertIn("pwcli playwright-cli:", contract_text)
 
     def test_shared_config_is_extracted_before_target_families(self) -> None:
@@ -1521,9 +1430,9 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("SERVER_LAUNCHER_PYTHON ?= $(PYTHON)", config_text)
         self.assertIn("SERVER_DAEMON_ENV =", config_text)
-        self.assertIn("PORTFOLIO_APP_DIR ?= apps/portfolio", config_text)
-        self.assertIn("PORTFOLIO_APP_DIR ?= $(FRONTEND_DIR)", config_text)
-        self.assertIn("FRONTEND_DIR ?= $(PORTFOLIO_APP_DIR)", config_text)
+        self.assertNotIn("PORTFOLIO_APP_DIR", config_text)
+        self.assertNotIn("PORTFOLIO_STATIC_DIR", config_text)
+        self.assertNotIn("FRONTEND_DIR", config_text)
         self.assertIn("PIP_AUDIT_IGNORED_VULNS ?= PYSEC-2025-183", config_text)
         self.assertIn(
             "PIP_AUDIT_ARGS = $(foreach vuln,$(PIP_AUDIT_IGNORED_VULNS),--ignore-vuln $(vuln))",
@@ -1761,9 +1670,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("manualdb-feedback-reclassify-preview", targets)
         self.assertIn("manual-evals-feedback-reclassify-apply", targets)
         self.assertIn("manualdb-feedback-reclassify-apply", targets)
-        self.assertIn("portfolio", targets)
-        self.assertIn("portfolio-mockups", targets)
-        self.assertIn("portfolio-mockups-status", targets)
+        self.assertNotIn("portfolio", targets)
+        self.assertNotIn("portfolio-mockups", targets)
+        self.assertNotIn("portfolio-mockups-status", targets)
         self.assertIn("pwcli", targets)
         self.assertIn("repo-search", targets)
         self.assertIn("repo-search-full", targets)
@@ -2236,15 +2145,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^open-cost-console:\s*openai-account-summary$")
         self.assertRegex(text, r"(?m)^viz:\s*server-daemon$")
         self.assertRegex(text, r"(?m)^viz-open open-viz:\s*server-daemon$")
-        self.assertRegex(
-            text, r"(?m)^portfolio:\s*portfolio-build server-daemon-stop server-daemon$"
-        )
-        self.assertRegex(text, r"(?m)^portfolio-open:\s*PORTFOLIO_LAUNCH\s*=\s*system$")
-        self.assertRegex(text, r"(?m)^portfolio-open:\s*portfolio$")
-        self.assertRegex(
-            text, r"(?m)^portfolio-playwright:\s*PORTFOLIO_LAUNCH\s*=\s*playwright$"
-        )
-        self.assertRegex(text, r"(?m)^portfolio-playwright:\s*portfolio$")
+        self.assertNotRegex(text, r"(?m)^portfolio:")
+        self.assertNotRegex(text, r"(?m)^portfolio-open:")
+        self.assertNotRegex(text, r"(?m)^portfolio-playwright:")
         self.assertRegex(
             text,
             r"(?m)^eval-reports:\s*eval-retrieval-report eval-file-search-report eval-ocr-report eval-style-report eval-response-behaviour-report eval-ocr-safety-report eval-hallucination-report$",
@@ -2521,13 +2424,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(CAFFEINATE_SCRIPT.is_file())
         self.assertTrue(OPENAI_ACCOUNT_SCRIPT.is_file())
         self.assertTrue(SERVER_DAEMON_SCRIPT.is_file())
-        self.assertTrue(PORTFOLIO_MOCKUP_SCRIPT.is_file())
         self.assertTrue(PROCESS_LIFECYCLE_COMMON_SCRIPT.is_file())
         self.assertTrue(DETACHED_PROCESS_LAUNCHER_SCRIPT.is_file())
         self.assertTrue(END_GIT_CHECK_SCRIPT.is_file())
         self.assertTrue(os.access(CAFFEINATE_SCRIPT, os.X_OK))
         self.assertTrue(os.access(SERVER_DAEMON_SCRIPT, os.X_OK))
-        self.assertTrue(os.access(PORTFOLIO_MOCKUP_SCRIPT, os.X_OK))
         detached_launcher_text = DETACHED_PROCESS_LAUNCHER_SCRIPT.read_text(
             encoding="utf-8"
         )
@@ -2553,19 +2454,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" start', text)
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" stop', text)
         self.assertIn('bash "$(SERVER_DAEMON_SCRIPT)" status', text)
-        self.assertIn(
-            "PORTFOLIO_MOCKUP_SCRIPT ?= ./tools/run_portfolio_mockups.sh", text
-        )
-        self.assertIn("PORTFOLIO_MOCKUP_LAUNCHER_PYTHON ?= $(PYTHON)", text)
-        self.assertIn("PORTFOLIO_MOCKUP_ENV =", text)
-        self.assertIn(
-            'PORTFOLIO_MOCKUP_LAUNCHER_PYTHON="$(PORTFOLIO_MOCKUP_LAUNCHER_PYTHON)"',
-            text,
-        )
-        self.assertIn('$(PORTFOLIO_MOCKUP_ENV) bash "$(PORTFOLIO_MOCKUP_SCRIPT)"', text)
-        self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" start', text)
-        self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" status', text)
-        self.assertIn('bash "$(PORTFOLIO_MOCKUP_SCRIPT)" stop', text)
+        self.assertNotIn("PORTFOLIO_MOCKUP_SCRIPT", text)
+        self.assertNotIn("run_portfolio_mockups.sh", text)
         self.assertNotIn('rm -f "$(SERVER_PID_FILE)"', text)
         server_daemon_script_text = SERVER_DAEMON_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("launch_detached_process.py", server_daemon_script_text)
@@ -2595,47 +2485,6 @@ class MakefileContractTests(unittest.TestCase):
             server_daemon_script_text,
         )
         self.assertNotIn("nohup", server_daemon_script_text)
-        portfolio_mockup_script_text = PORTFOLIO_MOCKUP_SCRIPT.read_text(
-            encoding="utf-8"
-        )
-        self.assertIn("launch_detached_process.py", portfolio_mockup_script_text)
-        self.assertIn('source "$script_dir/repo_root.sh"', portfolio_mockup_script_text)
-        self.assertIn("polinko_cd_repo_root", portfolio_mockup_script_text)
-        self.assertIn(
-            '. "$script_dir/process_lifecycle_common.sh"',
-            portfolio_mockup_script_text,
-        )
-        self.assertIn("polinko_pid_is_running", portfolio_mockup_script_text)
-        self.assertIn(
-            'polinko_require_process_inspection "portfolio mockup PID inspection"',
-            portfolio_mockup_script_text,
-        )
-        self.assertIn("polinko_require_tcp_port", portfolio_mockup_script_text)
-        self.assertIn(
-            "polinko_require_positive_integer",
-            portfolio_mockup_script_text,
-        )
-        self.assertIn(
-            "polinko_require_non_negative_decimal",
-            portfolio_mockup_script_text,
-        )
-        self.assertIn(
-            'polinko_require_command curl "portfolio mockup HTTP reachability checks"',
-            portfolio_mockup_script_text,
-        )
-        self.assertIn(
-            'polinko_require_command curl "portfolio mockup status reachability check"',
-            portfolio_mockup_script_text,
-        )
-        self.assertIn(
-            'polinko_require_command curl "portfolio mockup stop reachability check"',
-            portfolio_mockup_script_text,
-        )
-        self.assertIn(
-            'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',
-            portfolio_mockup_script_text,
-        )
-        self.assertNotIn("nohup", portfolio_mockup_script_text)
         self.assertIn(
             "CAFFEINATE_MATCH_PATTERN ?= ^/usr/bin/caffeinate -d -i -m( |$$)",
             text,
@@ -2972,55 +2821,6 @@ class MakefileContractTests(unittest.TestCase):
         self.assertFalse((REPO_ROOT / "tools" / "ocr_workflow.sh").exists())
         self.assertFalse((REPO_ROOT / "tools" / "ensure_server_daemon.sh").exists())
 
-    def test_frontend_surface_names_are_legacy_portfolio_aliases(self) -> None:
-        text = _makefile_contract_text()
-
-        self.assertRegex(
-            text,
-            (
-                r"(?m)^portfolio-app-install frontend-install:"
-                r"\s*portfolio-install\n"
-                r"\t@echo \"Legacy alias: use make portfolio-install\.\"$"
-            ),
-        )
-        self.assertRegex(
-            text,
-            (
-                r"(?m)^frontend-build:\s*portfolio-build\n"
-                r"\t@echo \"Legacy alias: use make portfolio-build\.\"$"
-            ),
-        )
-
-    def test_portfolio_app_dir_is_canonical_but_legacy_frontend_override_still_works(
-        self,
-    ) -> None:
-        legacy_result = subprocess.run(
-            ["make", "-n", "portfolio-build", "FRONTEND_DIR=legacy-app"],
-            cwd=REPO_ROOT,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-        canonical_result = subprocess.run(
-            [
-                "make",
-                "-n",
-                "portfolio-build",
-                "FRONTEND_DIR=legacy-app",
-                "PORTFOLIO_APP_DIR=canonical-app",
-            ],
-            cwd=REPO_ROOT,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-
-        self.assertIn("legacy-app/package.json", legacy_result.stdout)
-        self.assertIn('npm --prefix "legacy-app"', legacy_result.stdout)
-        self.assertIn("canonical-app/package.json", canonical_result.stdout)
-        self.assertIn('npm --prefix "canonical-app"', canonical_result.stdout)
-        self.assertNotIn("legacy-app/package.json", canonical_result.stdout)
-
     def test_local_url_targets_do_not_launch_a_browser_by_default(self) -> None:
         for target, expected_label in (
             ("docs", "API docs URL"),
@@ -3054,11 +2854,6 @@ class MakefileContractTests(unittest.TestCase):
                 "viz with launch override",
                 'bash "./tools/open_local_url.sh" "$URL"',
             ),
-            (
-                ["portfolio-open"],
-                "portfolio-open",
-                'bash "./tools/open_local_url.sh" "$OPEN_URL"',
-            ),
         )
         for args, label, expected_script_call in cases:
             with self.subTest(target=label):
@@ -3082,26 +2877,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn('xdg-open "$url"', script_text)
         self.assertIn("Open this URL in your browser: $url", script_text)
 
-    def test_portfolio_build_dry_run_does_not_execute_vite_build(self) -> None:
-        result = subprocess.run(
-            ["make", "-n", "portfolio-build"],
-            cwd=REPO_ROOT,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
-
-        self.assertIn('npm --prefix "apps/portfolio" run build', result.stdout)
-        self.assertNotIn("vite v", result.stdout + result.stderr)
-        self.assertNotIn("built in", result.stdout + result.stderr)
-
     def test_operator_wrapper_dry_runs_resolve_without_recursive_variable_errors(
         self,
     ) -> None:
         for target in (
-            "portfolio",
-            "portfolio-open",
-            "portfolio-playwright",
             "open-api-docs",
             "open-api-docs-browser",
             "docs-open",
