@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from dataclasses import dataclass
@@ -359,6 +360,51 @@ def check_precommit_config(root: Path) -> list[str]:
     return failures
 
 
+def _direct_requirement_pins(root: Path) -> tuple[str, ...]:
+    pins: list[str] = []
+    requirements_input = root / "requirements.in"
+    if not requirements_input.exists():
+        return ()
+    for line in requirements_input.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#") and "==" in stripped:
+            pins.append(stripped)
+    return tuple(pins)
+
+
+def _root_node_dependency_versions(root: Path) -> tuple[str, ...]:
+    package_json = root / "package.json"
+    if not package_json.exists():
+        return ()
+    package = json.loads(package_json.read_text(encoding="utf-8"))
+    versions = set(package.get("dependencies", {}).values())
+    versions.update(package.get("devDependencies", {}).values())
+    return tuple(sorted(versions))
+
+
+def check_dependency_test_contracts(root: Path) -> list[str]:
+    tests_dir = root / "tests"
+    if not tests_dir.exists():
+        return []
+
+    blocked_literals = set(_direct_requirement_pins(root))
+    blocked_literals.update(_root_node_dependency_versions(root))
+    if not blocked_literals:
+        return []
+
+    failures: list[str] = []
+    for path in sorted(tests_dir.glob("test_*.py")):
+        text = path.read_text(encoding="utf-8")
+        for literal in sorted(blocked_literals):
+            if literal in text:
+                failures.append(
+                    f"{path.relative_to(root)}: dependency test contract hard-codes "
+                    f"live dependency version {literal!r}; derive it from the "
+                    "dependency source file instead"
+                )
+    return failures
+
+
 def scan(root: Path = ROOT) -> list[str]:
     text = makefile_text(root)
     failures: list[str] = []
@@ -366,6 +412,7 @@ def scan(root: Path = ROOT) -> list[str]:
     failures.extend(check_make_contracts(text))
     failures.extend(check_runtime_surface_map(root))
     failures.extend(check_precommit_config(root))
+    failures.extend(check_dependency_test_contracts(root))
     return failures
 
 

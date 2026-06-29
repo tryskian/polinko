@@ -244,6 +244,62 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_dependency_pin_literal_in_tests_is_reported(self) -> None:
+        httpx2_pin = "httpx2==" + "2.5.0"
+        pyright_version = "1.1." + "411"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tests_dir = root / "tests"
+            tests_dir.mkdir()
+            (root / "requirements.in").write_text(f"{httpx2_pin}\n", encoding="utf-8")
+            (root / "package.json").write_text(
+                f'{{"devDependencies": {{"pyright": "{pyright_version}"}}}}',
+                encoding="utf-8",
+            )
+            (tests_dir / "test_dependency_contract.py").write_text(
+                f'self.assertIn("{httpx2_pin}", requirements_input)\n',
+                encoding="utf-8",
+            )
+
+            failures = check_runtime_risk_scan.check_dependency_test_contracts(root)
+
+        self.assertEqual(
+            failures,
+            [
+                "tests/test_dependency_contract.py: dependency test contract "
+                f"hard-codes live dependency version {httpx2_pin!r}; derive it "
+                "from the dependency source file instead"
+            ],
+        )
+
+    def test_node_dependency_version_literal_in_tests_is_reported(self) -> None:
+        pyright_version = "1.1." + "411"
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tests_dir = root / "tests"
+            tests_dir.mkdir()
+            (root / "requirements.in").write_text("", encoding="utf-8")
+            (root / "package.json").write_text(
+                f'{{"devDependencies": {{"pyright": "{pyright_version}"}}}}',
+                encoding="utf-8",
+            )
+            (tests_dir / "test_typecheck_contract.py").write_text(
+                "self.assertEqual("
+                f'package["devDependencies"]["pyright"], "{pyright_version}")\n',
+                encoding="utf-8",
+            )
+
+            failures = check_runtime_risk_scan.check_dependency_test_contracts(root)
+
+        self.assertEqual(
+            failures,
+            [
+                "tests/test_typecheck_contract.py: dependency test contract "
+                f"hard-codes live dependency version {pyright_version!r}; "
+                "derive it from the dependency source file instead"
+            ],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
