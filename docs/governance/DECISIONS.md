@@ -4914,3 +4914,20 @@ or branch history instead.
 - Why: The engineer should notice hygiene drift through automated gates before
   closeout, rather than relying on manual polling or the human lead catching the
   failure.
+
+## D-284: Add repo-aware CI failure notification helper
+
+- Date: `2026-06-29`
+- Category: `ci`
+- Tags: `github_actions`, `notifications`, `build_hygiene`, `operator_runtime`
+- Human-led: The human lead clarified that the missing layer is a script that
+  notifies the engineer when relevant CI or PR hygiene checks fail, rather than
+  relying on manual polling.
+- Engineer implementation: Queue a repo-aware notification helper for CI and PR
+  check failures, scoped to actionable Polinko build-hygiene surfaces and
+  designed to avoid noisy browser-dependent workflows.
+- Decision: Polinko should provide an operator-friendly notification surface for
+  failed CI/build-hygiene runs so failures are surfaced promptly during active
+  maintenance.
+- Why: Automated checks only reduce risk if their failures are visible to the
+  working operator before stale state accumulates.
