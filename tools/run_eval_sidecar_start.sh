@@ -124,6 +124,12 @@ start_sidecar() {
 	fi
 
 	mkdir -p "$(dirname "$pid_file")" "$(dirname "$log_path")" "$(dirname "$current_file")"
+	if ! polinko_require_python_command \
+		EVAL_SIDECAR_LAUNCHER_PYTHON \
+		"$launcher_python" \
+		"eval-sidecar detached launcher"; then
+		exit 2
+	fi
 	if ! launch_detached_sidecar; then
 		rm -f "$pid_file"
 		echo "Failed to start eval-sidecar. Check $log_path."

@@ -118,6 +118,43 @@ class RunPortfolioMockupsTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertIn("Portfolio mockup not found", result.stdout)
 
+    def test_start_rejects_invalid_launcher_python_before_launch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            mockup_dir = tmp_path / "mockups"
+            fake_bin = tmp_path / "bin"
+            mockup_dir.mkdir()
+            fake_bin.mkdir()
+            (mockup_dir / "landing-mockups.html").write_text(
+                "<!doctype html><title>mockup</title>",
+                encoding="utf-8",
+            )
+            _write_executable(fake_bin / "curl", "#!/usr/bin/env bash\nexit 1\n")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "PYTHON": sys.executable,
+                    "PORTFOLIO_MOCKUP_LAUNCHER_PYTHON": str(
+                        tmp_path / "missing-python"
+                    ),
+                    "PORTFOLIO_MOCKUP_DIR": str(mockup_dir),
+                    "PORTFOLIO_MOCKUP_PORT": "8782",
+                    "PORTFOLIO_MOCKUP_URL": "http://127.0.0.1:9/missing.html",
+                    "PORTFOLIO_MOCKUP_PID_FILE": str(tmp_path / "mockups.pid"),
+                    "PORTFOLIO_MOCKUP_LOG": str(tmp_path / "mockups.log"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("Configured PORTFOLIO_MOCKUP_LAUNCHER_PYTHON", result.stderr)
+            self.assertFalse((tmp_path / "mockups.pid").exists())
+
     def test_start_removes_stale_pid_and_starts_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

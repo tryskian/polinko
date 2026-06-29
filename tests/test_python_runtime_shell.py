@@ -56,6 +56,33 @@ class PythonRuntimeShellTests(unittest.TestCase):
             self.assertEqual(result.returncode, 2)
             self.assertIn("Configured PYTHON is not executable", result.stderr)
 
+    def test_require_python_command_reports_named_override(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            missing_python = Path(tmpdir) / "missing-python"
+
+            result = subprocess.run(
+                [
+                    "sh",
+                    "-c",
+                    (
+                        f'. "{HELPER}"; '
+                        "polinko_require_python_command "
+                        f"UNIT_PYTHON '{missing_python}' 'unit launcher'"
+                    ),
+                ],
+                cwd=tmpdir,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn(
+                "Configured UNIT_PYTHON is not executable or not on PATH "
+                "for unit launcher",
+                result.stderr,
+            )
+
     def test_repo_venv_python_is_preferred_before_system_python3(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

@@ -26,6 +26,10 @@ polinko_cd_repo_root
 . "$script_dir/python_runtime.sh"
 
 launcher_python=${CAFFEINATE_LAUNCHER_PYTHON:-$(polinko_default_python_bin)}
+polinko_require_python_command \
+	CAFFEINATE_LAUNCHER_PYTHON \
+	"$launcher_python" \
+	"caffeinate manager"
 detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"
 export CAFFEINATE_DETACHED_LAUNCHER=${CAFFEINATE_DETACHED_LAUNCHER:-"$detached_launcher"}
 if [ -z "${CAFFEINATE_MATCH_PATTERN:-}" ]; then

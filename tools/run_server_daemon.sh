@@ -185,6 +185,12 @@ start_server() {
 	fi
 
 	polinko_require_command curl "server-daemon readiness check"
+	if ! polinko_require_python_command \
+		SERVER_LAUNCHER_PYTHON \
+		"$launcher_python" \
+		"server-daemon detached launcher"; then
+		exit 2
+	fi
 
 	if ! launch_detached_server; then
 		rm -f "$server_pid_file"

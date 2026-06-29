@@ -148,11 +148,13 @@ flowchart TD
   rejects empty, missing, and non-launchable commands with direct diagnostics
   before PID ownership is recorded; it also stops the started child process
   group if the PID file cannot be written, so failed starts do not leave
-  unmanaged background descendants behind. Runner scripts
-  resolve the checkout root through `tools/repo_root.sh` before launching child
-  processes or using relative local paths. Shared PID checks treat terminated
-  zombie processes as inactive instead of reporting them as healthy live
-  runners.
+  unmanaged background descendants behind. Runner-specific
+  `*_LAUNCHER_PYTHON` overrides are validated before manager exec or detached
+  launch, so bad launcher interpreters fail before PID state is written.
+  Runner scripts resolve the checkout root through `tools/repo_root.sh` before
+  launching child processes or using relative local paths. Shared PID checks
+  treat terminated zombie processes as inactive instead of reporting them as
+  healthy live runners.
   `caffeinate` keeps wake-lock ownership and repo activity separate, treats
   stopped/zombie managed PIDs as stale, and removes owned runtime metadata only
   after bounded terminate/escalate cleanup succeeds. It validates command,

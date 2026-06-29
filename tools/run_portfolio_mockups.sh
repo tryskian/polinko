@@ -152,6 +152,12 @@ start_mockup_server() {
 	fi
 
 	mkdir -p "$(dirname "$pid_file")" "$(dirname "$log_file")"
+	if ! polinko_require_python_command \
+		PORTFOLIO_MOCKUP_LAUNCHER_PYTHON \
+		"$launcher_python" \
+		"portfolio mockup detached launcher"; then
+		exit 2
+	fi
 	if ! launch_detached_mockup_server; then
 		rm -f "$pid_file"
 		echo "Failed to start portfolio mockup server. Check $log_file."
