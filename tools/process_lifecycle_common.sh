@@ -1,8 +1,23 @@
 #!/usr/bin/env sh
 
+polinko_pid_is_positive_integer() {
+	_polinko_pid_value=$1
+	case "$_polinko_pid_value" in
+	"" | *[!0123456789]*)
+		return 1
+		;;
+	esac
+	case "$_polinko_pid_value" in
+	*[!0]*)
+		return 0
+		;;
+	esac
+	return 1
+}
+
 polinko_pid_is_running() {
 	_polinko_pid=$1
-	[ -n "$_polinko_pid" ] || return 1
+	polinko_pid_is_positive_integer "$_polinko_pid" || return 1
 	kill -0 "$_polinko_pid" 2>/dev/null || return 1
 	_polinko_pid_state=$(
 		ps -o stat= -p "$_polinko_pid" 2>/dev/null | tr -d ' ' || true

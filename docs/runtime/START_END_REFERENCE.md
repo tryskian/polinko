@@ -113,6 +113,9 @@ Runner lifecycle rule:
 - shared PID inspection requires `ps` before lifecycle scripts make managed
   PID-state decisions, so missing local process-inspection tooling fails as a
   prerequisite error instead of misleading liveness state
+- shared shell PID checks require positive-integer PID values before liveness or
+  stop decisions, so malformed, zero, or negative PID-file values cannot be
+  treated as live runner processes
 - lifecycle launch ports and readiness-loop bounds are validated before
   process launch, adoption, status, or readiness checks for `server-daemon`,
   `portfolio-mockups`, and local eval gate `SMOKE_PORT` / `GATE_PORT`
