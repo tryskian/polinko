@@ -31,10 +31,30 @@ class PythonRuntimeShellTests(unittest.TestCase):
 
     def test_python_override_wins(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            custom_python = root / "custom-python"
+            _write_executable(custom_python, "#!/usr/bin/env sh\nexit 0\n")
             env = os.environ.copy()
-            env["PYTHON"] = "/custom/python"
+            env["PYTHON"] = str(custom_python)
 
-            self.assertEqual(self._run_resolver(Path(tmpdir), env), "/custom/python")
+            self.assertEqual(self._run_resolver(root, env), str(custom_python))
+
+    def test_python_override_must_resolve_to_executable(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            env = os.environ.copy()
+            env["PYTHON"] = str(Path(tmpdir) / "missing-python")
+
+            result = subprocess.run(
+                ["sh", "-c", f'. "{HELPER}"; polinko_default_python_bin'],
+                cwd=tmpdir,
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("Configured PYTHON is not executable", result.stderr)
 
     def test_repo_venv_python_is_preferred_before_system_python3(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

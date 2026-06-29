@@ -781,8 +781,9 @@ Last updated: 2026-06-28
   - Make Python helper targets use the configured `$(PYTHON)` interpreter for
     repo-local checks, including `make pycheck`
   - direct runtime shell wrappers share `tools/python_runtime.sh`, so explicit
-    `PYTHON` wins, repo `.venv` is preferred for direct invocation, and
-    `python3` remains the final fallback
+    `PYTHON` wins only when it resolves to an executable command, repo `.venv`
+    is preferred for direct invocation, and `python3` remains the final
+    fallback when available
   - local runtime config coverage is explicit through
     `make local-runtime-config-check`, which validates VS Code and
     devcontainer config shape, rejects retired local doc references, guards

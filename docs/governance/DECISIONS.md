@@ -4614,3 +4614,21 @@ or branch history instead.
 - Why: The launcher sits under `caffeinate`, `server-daemon`, `eval-sidecar`,
   and `portfolio-mockups`; raw `subprocess` tracebacks make a local command
   prerequisite look like a runner-domain failure.
+
+## D-268: Validate explicit Python overrides in shell runtime helper
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `python_runtime`, `shell_helpers`, `diagnostics`, `interpreter`
+- Human-led: The human lead called out recurring local-vs-system Python
+  environment drift as a maintenance issue during the script/runtime refactor.
+- Engineer implementation: Update `tools/python_runtime.sh` so explicit
+  `PYTHON` overrides must resolve to an executable command, preserve the repo
+  `.venv` preference when no override is set, and fail clearly when no usable
+  fallback interpreter exists; add focused shell-helper regression coverage.
+- Decision: Direct shell wrappers that use the shared Python runtime helper
+  must fail on invalid explicit interpreter overrides before invoking runner
+  logic.
+- Why: A bad `PYTHON` override should not surface later as a runner, import,
+  or detached-launch failure. Early interpreter validation keeps diagnostics
+  tied to the actual local environment problem.
