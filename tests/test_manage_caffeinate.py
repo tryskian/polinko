@@ -278,6 +278,197 @@ class ManageCaffeinateTests(unittest.TestCase):
             )
             self.assertTrue(activity_file.exists())
 
+    def test_start_migrates_legacy_runtime_files_without_duplicate_launch(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            uname_script = tmp_path / "uname.sh"
+            state_dir = tmp_path / "state" / "polinko"
+            pid_file = state_dir / "caffeinate.pid"
+            log_file = state_dir / "caffeinate.log"
+            meta_file = state_dir / "caffeinate.meta.json"
+            activity_file = state_dir / "activity.meta.json"
+            legacy_pid_file = tmp_path / "polinko-caffeinate.pid"
+            legacy_log_file = tmp_path / "polinko-caffeinate.log"
+            legacy_meta_file = tmp_path / "polinko-caffeinate.meta.json"
+            legacy_activity_file = tmp_path / "polinko-caffeinate.activity.json"
+            fake_caffeinate = tmp_path / "fake-caffeinate.sh"
+            launcher_marker = tmp_path / "launcher-called"
+            detached_launcher = tmp_path / "launch-detached.py"
+
+            _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
+            _write_executable(fake_caffeinate, "#!/usr/bin/env sh\nsleep 30\n")
+            detached_launcher.write_text(
+                (
+                    "from pathlib import Path\n"
+                    f"Path({str(launcher_marker)!r}).write_text('called')\n"
+                    "raise SystemExit(1)\n"
+                ),
+                encoding="utf-8",
+            )
+            process = subprocess.Popen([str(fake_caffeinate)])
+            self.addCleanup(_cleanup_process, process)
+            legacy_pid_file.write_text(str(process.pid), encoding="utf-8")
+            legacy_log_file.write_text("legacy log\n", encoding="utf-8")
+            legacy_activity_file.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "repo_slug": "polinko",
+                        "repo_root": str(REPO_ROOT),
+                        "branch": "test",
+                        "commit": "test",
+                        "last_activity_at": "2026-06-27T00:00:00Z",
+                        "last_activity_label": "make test",
+                        "last_activity_target": "test",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "UNAME_BIN": str(uname_script),
+                    "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_LOG": str(log_file),
+                    "CAFFEINATE_META_FILE": str(meta_file),
+                    "CAFFEINATE_ACTIVITY_FILE": str(activity_file),
+                    "CAFFEINATE_LEGACY_PID_FILE": str(legacy_pid_file),
+                    "CAFFEINATE_LEGACY_LOG": str(legacy_log_file),
+                    "CAFFEINATE_LEGACY_META_FILE": str(legacy_meta_file),
+                    "CAFFEINATE_LEGACY_ACTIVITY_FILE": str(legacy_activity_file),
+                    "CAFFEINATE_DETACHED_LAUNCHER": str(detached_launcher),
+                    "CAFFEINATE_CMD": str(fake_caffeinate),
+                    "CAFFEINATE_MATCH_PATTERN": str(fake_caffeinate),
+                    "PMSET_BIN": str(tmp_path / "missing-pmset"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Migrated legacy caffeinate runtime files", result.stdout)
+            self.assertIn("caffeinate already running", result.stdout)
+            self.assertFalse(launcher_marker.exists())
+            self.assertFalse(legacy_pid_file.exists())
+            self.assertTrue(pid_file.exists())
+            self.assertEqual(
+                pid_file.read_text(encoding="utf-8").strip(), str(process.pid)
+            )
+            self.assertFalse(legacy_log_file.exists())
+            self.assertEqual(log_file.read_text(encoding="utf-8"), "legacy log\n")
+            self.assertFalse(legacy_activity_file.exists())
+            self.assertTrue(activity_file.exists())
+            metadata = json.loads(meta_file.read_text(encoding="utf-8"))
+            self.assertEqual(metadata["pid"], process.pid)
+            self.assertEqual(metadata["pid_file"], str(pid_file))
+
+    def test_start_finds_default_legacy_tmp_runtime_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            slug = f"polinko-test-{os.getpid()}-{time.time_ns()}"
+            uname_script = tmp_path / "uname.sh"
+            state_dir = tmp_path / "state" / slug
+            pid_file = state_dir / "caffeinate.pid"
+            meta_file = state_dir / "caffeinate.meta.json"
+            activity_file = state_dir / "activity.meta.json"
+            legacy_pid_file = Path("/tmp") / f"{slug}-caffeinate.pid"
+            legacy_log_file = Path("/tmp") / f"{slug}-caffeinate.log"
+            legacy_meta_file = Path("/tmp") / f"{slug}-caffeinate.meta.json"
+            legacy_activity_file = Path("/tmp") / f"{slug}-caffeinate.activity.json"
+            fake_caffeinate = tmp_path / "fake-caffeinate.sh"
+            _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
+            _write_executable(fake_caffeinate, "#!/usr/bin/env sh\nsleep 30\n")
+            process = subprocess.Popen([str(fake_caffeinate)])
+            self.addCleanup(_cleanup_process, process)
+            self.addCleanup(_kill_pid_file, pid_file)
+            for path in (
+                legacy_pid_file,
+                legacy_log_file,
+                legacy_meta_file,
+                legacy_activity_file,
+            ):
+                self.addCleanup(lambda p=path: p.unlink(missing_ok=True))
+            legacy_pid_file.write_text(str(process.pid), encoding="utf-8")
+            legacy_log_file.write_text("legacy log\n", encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "UNAME_BIN": str(uname_script),
+                    "CAFFEINATE_REPO_SLUG": slug,
+                    "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_META_FILE": str(meta_file),
+                    "CAFFEINATE_ACTIVITY_FILE": str(activity_file),
+                    "CAFFEINATE_CMD": str(fake_caffeinate),
+                    "CAFFEINATE_MATCH_PATTERN": str(fake_caffeinate),
+                    "PMSET_BIN": str(tmp_path / "missing-pmset"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Migrated legacy caffeinate runtime files", result.stdout)
+            self.assertFalse(legacy_pid_file.exists())
+            self.assertTrue(pid_file.exists())
+            self.assertEqual(
+                pid_file.read_text(encoding="utf-8").strip(), str(process.pid)
+            )
+
+    def test_start_cleans_stale_legacy_runtime_metadata_before_launch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            uname_script = tmp_path / "uname.sh"
+            pid_file = tmp_path / "state" / "polinko" / "caffeinate.pid"
+            legacy_pid_file = tmp_path / "polinko-caffeinate.pid"
+            legacy_meta_file = tmp_path / "polinko-caffeinate.meta.json"
+            child_pid_file = tmp_path / "child.pid"
+            fake_caffeinate = tmp_path / "fake-caffeinate.sh"
+            legacy_pid_file.write_text("999999", encoding="utf-8")
+            legacy_meta_file.write_text("{}", encoding="utf-8")
+            _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
+            _write_executable(
+                fake_caffeinate,
+                (
+                    "#!/usr/bin/env sh\n"
+                    "set -eu\n"
+                    'printf "%s" "$$" > "$CHILD_PID_FILE"\n'
+                    "sleep 30\n"
+                ),
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "UNAME_BIN": str(uname_script),
+                    "CHILD_PID_FILE": str(child_pid_file),
+                    "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_LEGACY_PID_FILE": str(legacy_pid_file),
+                    "CAFFEINATE_LEGACY_META_FILE": str(legacy_meta_file),
+                    "CAFFEINATE_CMD": str(fake_caffeinate),
+                    "CAFFEINATE_MATCH_PATTERN": str(fake_caffeinate),
+                    "PMSET_BIN": str(tmp_path / "missing-pmset"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.addCleanup(_kill_pid_file, pid_file)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Cleaned stale legacy caffeinate PID metadata", result.stdout)
+            self.assertIn("caffeinate started", result.stdout)
+            self.assertFalse(legacy_pid_file.exists())
+            self.assertFalse(legacy_meta_file.exists())
+
     def test_start_removes_stale_pid_and_starts_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

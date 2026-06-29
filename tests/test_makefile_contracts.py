@@ -2646,8 +2646,27 @@ class MakefileContractTests(unittest.TestCase):
             'CAFFEINATE_MATCH_PATTERN="$(CAFFEINATE_MATCH_PATTERN)"',
             text,
         )
-        self.assertIn("CAFFEINATE_META_FILE ?=", text)
-        self.assertIn("CAFFEINATE_ACTIVITY_FILE ?=", text)
+        self.assertIn("CAFFEINATE_RUNTIME_ROOT ?= /tmp/polinko-runtime", text)
+        self.assertIn(
+            "CAFFEINATE_STATE_DIR ?= $(CAFFEINATE_RUNTIME_ROOT)/$(CAFFEINATE_REPO_SLUG)",
+            text,
+        )
+        self.assertIn(
+            "CAFFEINATE_PID_FILE ?= $(CAFFEINATE_STATE_DIR)/caffeinate.pid",
+            text,
+        )
+        self.assertIn(
+            "CAFFEINATE_LOG ?= $(CAFFEINATE_STATE_DIR)/caffeinate.log",
+            text,
+        )
+        self.assertIn(
+            "CAFFEINATE_META_FILE ?= $(CAFFEINATE_STATE_DIR)/caffeinate.meta.json",
+            text,
+        )
+        self.assertIn(
+            "CAFFEINATE_ACTIVITY_FILE ?= $(CAFFEINATE_STATE_DIR)/activity.meta.json",
+            text,
+        )
         self.assertIn("CAFFEINATE_REPO_SLUG ?= polinko", text)
         self.assertIn("CAFFEINATE_ACTIVE_WINDOW_SECONDS ?= 1800", text)
         self.assertIn("CAFFEINATE_ALLOW_GLOBAL_CLEANUP ?= 0", text)
@@ -2667,6 +2686,8 @@ class MakefileContractTests(unittest.TestCase):
             'CAFFEINATE_ACTIVITY_FILE="$(CAFFEINATE_ACTIVITY_FILE)"',
             text,
         )
+        self.assertIn('CAFFEINATE_RUNTIME_ROOT="$(CAFFEINATE_RUNTIME_ROOT)"', text)
+        self.assertIn('CAFFEINATE_STATE_DIR="$(CAFFEINATE_STATE_DIR)"', text)
         self.assertIn('CAFFEINATE_REPO_SLUG="$(CAFFEINATE_REPO_SLUG)"', text)
         self.assertIn(
             'CAFFEINATE_ACTIVE_WINDOW_SECONDS="$(CAFFEINATE_ACTIVE_WINDOW_SECONDS)"',

@@ -840,8 +840,13 @@ Last updated: 2026-06-28
     child session through the configured Python launcher
   - `make caffeinate-status`, `make decaffeinate`, and `make end` operate on
     the repo-owned PID without adopting unrelated user wake-lock processes
+  - repo-managed caffeinate stores PID, log, ownership metadata, and activity
+    metadata under a repo-scoped runtime namespace by default
   - repo-managed caffeinate writes metadata for PID ownership and repo activity
     state so status can distinguish `ACTIVE`, `QUIET`, `STALE`, and `OFF`
+  - repo-managed caffeinate migrates owned legacy flat runtime files on
+    mutating lifecycle actions and cleans stale legacy PID metadata before
+    launch or stop decisions
   - repo-managed caffeinate validates command, regex, active-window, and
     global-cleanup config before PID/activity state work
   - repo-managed caffeinate treats stopped/zombie managed PIDs as stale and

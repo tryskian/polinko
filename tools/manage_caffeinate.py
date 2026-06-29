@@ -8,7 +8,7 @@ import signal
 import subprocess
 import sys
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -31,6 +31,10 @@ class RuntimeConfig:
     log_file: Path
     meta_file: Path
     activity_file: Path
+    legacy_pid_file: Path
+    legacy_log_file: Path
+    legacy_meta_file: Path
+    legacy_activity_file: Path
     caffeinate_cmd: str
     match_pattern: str
     launcher_python: str
@@ -98,6 +102,14 @@ def _default_activity_file(pid_file: Path) -> Path:
     return pid_file.with_name(f"{pid_file.name}.activity.json")
 
 
+def _default_runtime_root() -> Path:
+    return Path("/tmp") / "polinko-runtime"
+
+
+def _legacy_runtime_file(repo_slug: str, suffix: str) -> Path:
+    return Path("/tmp") / f"{repo_slug}-caffeinate{suffix}"
+
+
 def _path_from_env(name: str, default: Path) -> Path:
     raw = os.environ.get(name, "").strip()
     return Path(raw).expanduser() if raw else default
@@ -129,12 +141,10 @@ def _load_config(action: str) -> RuntimeConfig:
     if not repo_slug:
         repo_slug = repo_root.name
 
-    pid_file = _path_from_env(
-        "CAFFEINATE_PID_FILE", Path(f"/tmp/{repo_slug}-caffeinate.pid")
-    )
-    log_file = _path_from_env(
-        "CAFFEINATE_LOG", Path(f"/tmp/{repo_slug}-caffeinate.log")
-    )
+    runtime_root = _path_from_env("CAFFEINATE_RUNTIME_ROOT", _default_runtime_root())
+    state_dir = _path_from_env("CAFFEINATE_STATE_DIR", runtime_root / repo_slug)
+    pid_file = _path_from_env("CAFFEINATE_PID_FILE", state_dir / "caffeinate.pid")
+    log_file = _path_from_env("CAFFEINATE_LOG", state_dir / "caffeinate.log")
     meta_file = _path_from_env("CAFFEINATE_META_FILE", _default_meta_file(pid_file))
     activity_file = _path_from_env(
         "CAFFEINATE_ACTIVITY_FILE", _default_activity_file(pid_file)
@@ -148,6 +158,22 @@ def _load_config(action: str) -> RuntimeConfig:
         log_file=log_file,
         meta_file=meta_file,
         activity_file=activity_file,
+        legacy_pid_file=_path_from_env(
+            "CAFFEINATE_LEGACY_PID_FILE",
+            _legacy_runtime_file(repo_slug, ".pid"),
+        ),
+        legacy_log_file=_path_from_env(
+            "CAFFEINATE_LEGACY_LOG",
+            _legacy_runtime_file(repo_slug, ".log"),
+        ),
+        legacy_meta_file=_path_from_env(
+            "CAFFEINATE_LEGACY_META_FILE",
+            _legacy_runtime_file(repo_slug, ".meta.json"),
+        ),
+        legacy_activity_file=_path_from_env(
+            "CAFFEINATE_LEGACY_ACTIVITY_FILE",
+            _legacy_runtime_file(repo_slug, ".activity.json"),
+        ),
         caffeinate_cmd=os.environ.get("CAFFEINATE_CMD", "/usr/bin/caffeinate -d -i -m"),
         match_pattern=os.environ.get(
             "CAFFEINATE_MATCH_PATTERN", r"^/usr/bin/caffeinate -d -i -m( |$)"
@@ -360,6 +386,48 @@ def _remove_runtime_metadata(config: RuntimeConfig) -> None:
     _remove_path(config.meta_file)
 
 
+def _legacy_config(config: RuntimeConfig) -> RuntimeConfig:
+    return replace(
+        config,
+        pid_file=config.legacy_pid_file,
+        log_file=config.legacy_log_file,
+        meta_file=config.legacy_meta_file,
+        activity_file=config.legacy_activity_file,
+    )
+
+
+def _move_legacy_file(source: Path, destination: Path) -> None:
+    if not source.exists() or destination.exists():
+        return
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    source.replace(destination)
+
+
+def _migrate_legacy_runtime_state(config: RuntimeConfig) -> None:
+    if config.pid_file.exists() or config.legacy_pid_file == config.pid_file:
+        return
+
+    legacy = _legacy_config(config)
+    state = _evaluate_pid_file(legacy)
+    if state.status == "missing":
+        return
+    if state.status == "live-non-owned":
+        print("Legacy caffeinate PID reference is non-owned; leaving it untouched.")
+        return
+    if state.status == "stale":
+        _remove_runtime_metadata(legacy)
+        print("Cleaned stale legacy caffeinate PID metadata.")
+        return
+
+    _move_legacy_file(config.legacy_pid_file, config.pid_file)
+    _move_legacy_file(config.legacy_log_file, config.log_file)
+    _move_legacy_file(config.legacy_meta_file, config.meta_file)
+    _move_legacy_file(config.legacy_activity_file, config.activity_file)
+    if state.pid is not None:
+        _write_caffeinate_metadata(config, state.pid)
+    print("Migrated legacy caffeinate runtime files into repo namespace.")
+
+
 def _is_darwin(config: RuntimeConfig) -> bool:
     try:
         result = subprocess.run(
@@ -552,6 +620,7 @@ def start(config: RuntimeConfig) -> int:
     if _skip_unless_darwin(config):
         return 0
 
+    _migrate_legacy_runtime_state(config)
     config.pid_file.parent.mkdir(parents=True, exist_ok=True)
     config.log_file.parent.mkdir(parents=True, exist_ok=True)
     config.meta_file.parent.mkdir(parents=True, exist_ok=True)
@@ -618,6 +687,7 @@ def stop(config: RuntimeConfig, *, quiet_missing: bool = False) -> int:
     if _skip_unless_darwin(config):
         return 0
 
+    _migrate_legacy_runtime_state(config)
     state = _evaluate_pid_file(config)
     if state.status == "missing":
         _remove_runtime_metadata(config)

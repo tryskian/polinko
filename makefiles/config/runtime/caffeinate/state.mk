@@ -1,5 +1,7 @@
 # Repo-managed caffeinate state-file configuration.
-CAFFEINATE_PID_FILE ?= /tmp/polinko-caffeinate.pid
-CAFFEINATE_LOG ?= /tmp/polinko-caffeinate.log
-CAFFEINATE_META_FILE ?=
-CAFFEINATE_ACTIVITY_FILE ?=
+CAFFEINATE_RUNTIME_ROOT ?= /tmp/polinko-runtime
+CAFFEINATE_STATE_DIR ?= $(CAFFEINATE_RUNTIME_ROOT)/$(CAFFEINATE_REPO_SLUG)
+CAFFEINATE_PID_FILE ?= $(CAFFEINATE_STATE_DIR)/caffeinate.pid
+CAFFEINATE_LOG ?= $(CAFFEINATE_STATE_DIR)/caffeinate.log
+CAFFEINATE_META_FILE ?= $(CAFFEINATE_STATE_DIR)/caffeinate.meta.json
+CAFFEINATE_ACTIVITY_FILE ?= $(CAFFEINATE_STATE_DIR)/activity.meta.json
