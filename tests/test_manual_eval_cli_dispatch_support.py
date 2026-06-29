@@ -9,6 +9,7 @@ from tools.manual_eval_cli_dispatch_support import (
     filtered_command_args,
     filtered_report_kwargs,
     finish_report_with_error_default,
+    first_enabled_command,
     local_artifact_paths,
     ocr_retry_command_args,
     ocr_retry_filters,
@@ -59,6 +60,41 @@ class ManualEvalCliDispatchSupportTests(unittest.TestCase):
 
         self.assertIsNone(status)
         self.assertEqual(calls, ["first", "second"])
+
+    def test_first_enabled_command_preserves_order_and_short_circuits(self) -> None:
+        commands = (
+            SimpleNamespace(flag="first"),
+            SimpleNamespace(flag="second"),
+            SimpleNamespace(flag="third"),
+        )
+
+        command = first_enabled_command(
+            args=SimpleNamespace(first=False, second=True, third=True),
+            commands=commands,
+        )
+
+        self.assertIs(command, commands[1])
+
+    def test_first_enabled_command_returns_none_when_no_flag_matches(self) -> None:
+        command = first_enabled_command(
+            args=SimpleNamespace(first=False, second=False),
+            commands=(
+                SimpleNamespace(flag="first"),
+                SimpleNamespace(flag="second"),
+            ),
+        )
+
+        self.assertIsNone(command)
+
+    def test_first_enabled_command_keeps_missing_flag_errors_loud(self) -> None:
+        with self.assertRaises(AttributeError):
+            first_enabled_command(
+                args=SimpleNamespace(first=False),
+                commands=(
+                    SimpleNamespace(flag="first"),
+                    SimpleNamespace(flag="missing"),
+                ),
+            )
 
     def test_finish_report_with_error_default_uses_shared_default_status(self) -> None:
         calls: list[dict[str, Any]] = []

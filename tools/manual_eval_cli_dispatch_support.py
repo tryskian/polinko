@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, Protocol, TypeVar
 
 FinishReport = Callable[..., int]
 ReportFormatter = Callable[[dict[str, Any]], str]
 CommandHandler = Callable[..., int | None]
+FlaggedCommandT = TypeVar("FlaggedCommandT", bound="FlaggedCommand")
 DEFAULT_ERROR_STATUS = 2
 OCR_RETRY_DEFAULT_COHORT = "ocr_retry_evidence"
 OCR_RETRY_DEFAULT_OUTCOME = "partial"
@@ -27,6 +28,11 @@ STATUS_OCR_EXECUTION = {
 class DefaultFilters(NamedTuple):
     outcome: str
     cohort: str
+
+
+class FlaggedCommand(Protocol):
+    @property
+    def flag(self) -> str: ...
 
 
 class FilteredCommandArgs(NamedTuple):
@@ -66,6 +72,15 @@ def dispatch_first_match(
         status = handler(args=args, db_path=db_path, finish=finish)
         if status is not None:
             return status
+    return None
+
+
+def first_enabled_command(
+    *, args: Any, commands: Iterable[FlaggedCommandT]
+) -> FlaggedCommandT | None:
+    for command in commands:
+        if getattr(args, command.flag):
+            return command
     return None
 
 

@@ -12,6 +12,7 @@ from tools.manual_eval_cli_dispatch_support import (
     STATUS_BLOCKED_ERROR,
     STATUS_OK,
     STATUS_RESTORED_OK,
+    first_enabled_command,
     finish_report_with_error_default,
     local_artifact_paths,
 )
@@ -132,27 +133,30 @@ def handle_ocr_retry_feedback_closure_commands(
 ) -> int | None:
     paths = local_artifact_paths(args)
 
-    for command in OCR_RETRY_FEEDBACK_CLOSURE_COMMANDS:
-        if getattr(args, command.flag):
-            report = command.builder(
-                **_feedback_closure_report_kwargs(
-                    command=command,
-                    db_path=db_path,
-                    paths=paths,
-                    confirm_token=str(args.confirm or ""),
-                )
-            )
-            if command.guarded_finish:
-                return finish_report_with_error_default(
-                    finish=finish,
-                    report=report,
-                    formatter=command.formatter,
-                    status_by_state=command.status_by_state,
-                )
-            return finish(
-                report,
-                command.formatter,
-                status_by_state=command.status_by_state,
-            )
+    command = first_enabled_command(
+        args=args,
+        commands=OCR_RETRY_FEEDBACK_CLOSURE_COMMANDS,
+    )
+    if command is None:
+        return None
 
-    return None
+    report = command.builder(
+        **_feedback_closure_report_kwargs(
+            command=command,
+            db_path=db_path,
+            paths=paths,
+            confirm_token=str(args.confirm or ""),
+        )
+    )
+    if command.guarded_finish:
+        return finish_report_with_error_default(
+            finish=finish,
+            report=report,
+            formatter=command.formatter,
+            status_by_state=command.status_by_state,
+        )
+    return finish(
+        report,
+        command.formatter,
+        status_by_state=command.status_by_state,
+    )
