@@ -4654,3 +4654,21 @@ or branch history instead.
 - Why: Invalid launcher interpreters should not surface as raw shell command
   errors, generic startup failures, or stale PID/log state. Early validation
   keeps the diagnostic tied to the exact override that needs correction.
+
+## D-270: Require positive-integer PID values in shared shell lifecycle checks
+
+- Date: `2026-06-28`
+- Category: `runtime_engineering`
+- Tags: `background_runners`, `pid_file`, `process_lifecycle`, `safety`
+- Human-led: The human lead asked for hidden runner-script hygiene and for
+  recurring local/runtime failures to be prevented as the helper-script
+  refactor proceeds.
+- Engineer implementation: Update `tools/process_lifecycle_common.sh` so shared
+  shell PID liveness checks reject malformed, zero, and negative values before
+  running `kill -0`; add focused regression coverage for unsafe PID inputs and
+  the current-shell positive case.
+- Decision: Shell lifecycle helpers must only treat positive-integer PID values
+  as candidates for liveness, status, or stop decisions.
+- Why: PID files are runtime state, not trusted input. Values such as `0`,
+  negative numbers, or malformed strings must not reach process-group-sensitive
+  shell `kill` calls or make runner status look live.

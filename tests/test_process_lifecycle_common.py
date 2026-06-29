@@ -9,6 +9,50 @@ HELPER = REPO_ROOT / "tools" / "process_lifecycle_common.sh"
 
 
 class ProcessLifecycleCommonTests(unittest.TestCase):
+    def test_pid_positive_integer_rejects_unsafe_values(self) -> None:
+        for value in ("", "0", "000", "-1", "1 2", "abc"):
+            with self.subTest(value=value):
+                result = subprocess.run(
+                    [
+                        "/bin/sh",
+                        "-c",
+                        (f'. "{HELPER}"; polinko_pid_is_positive_integer "$TEST_PID"'),
+                    ],
+                    cwd=REPO_ROOT,
+                    env={"TEST_PID": value},
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 1)
+
+    def test_pid_is_running_rejects_unsafe_values(self) -> None:
+        for value in ("", "0", "000", "-1", "1 2", "abc"):
+            with self.subTest(value=value):
+                result = subprocess.run(
+                    [
+                        "/bin/sh",
+                        "-c",
+                        f'. "{HELPER}"; polinko_pid_is_running "$TEST_PID"',
+                    ],
+                    cwd=REPO_ROOT,
+                    env={"TEST_PID": value},
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 1)
+
+    def test_pid_is_running_accepts_current_shell_pid(self) -> None:
+        result = subprocess.run(
+            ["/bin/sh", "-c", f'. "{HELPER}"; polinko_pid_is_running "$$"'],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_require_command_accepts_shell_builtins(self) -> None:
         result = subprocess.run(
             [

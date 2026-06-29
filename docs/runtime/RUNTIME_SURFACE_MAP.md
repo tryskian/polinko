@@ -153,6 +153,7 @@ flowchart TD
   launch, so bad launcher interpreters fail before PID state is written.
   Runner scripts resolve the checkout root through `tools/repo_root.sh` before
   launching child processes or using relative local paths. Shared PID checks
+  require positive-integer PID values before liveness or stop decisions, and
   treat terminated zombie processes as inactive instead of reporting them as
   healthy live runners.
   `caffeinate` keeps wake-lock ownership and repo activity separate, treats

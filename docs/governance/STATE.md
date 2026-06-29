@@ -148,6 +148,9 @@ Last updated: 2026-06-28
   - shell lifecycle runners require `ps` before making PID-state decisions, so
     missing local process-inspection tooling fails with a direct prerequisite
     diagnostic
+  - shared shell PID checks require positive-integer PID values before liveness
+    or stop decisions, so malformed, zero, or negative PID-file values cannot be
+    treated as live runner processes
   - shell lifecycle runners validate launch ports and readiness-loop bounds
     before launch, adoption, status, or readiness checks; this covers
     `server-daemon`, `portfolio-mockups`, and local eval gate `SMOKE_PORT` /
@@ -848,6 +851,9 @@ Last updated: 2026-06-28
     `tools/launch_detached_process.py` after resolving the checkout root
     through `tools/repo_root.sh`, while each runner keeps its own liveness,
     adoption, status, and stop logic
+  - shared shell PID checks require positive-integer PID values before liveness
+    or stop decisions, so malformed, zero, or negative PID-file values cannot be
+    treated as live runner processes
   - runner-specific `*_LAUNCHER_PYTHON` overrides are validated before manager
     exec or detached launch, so bad launcher interpreters fail before PID state
     is written
