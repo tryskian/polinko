@@ -5085,3 +5085,17 @@ or branch history instead.
   case files.
 - Why: Duplicate operator flags weaken source clarity and make wrapper/script
   contracts harder to audit.
+
+## D-294: Keep package-boundary wording current-source
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `package_boundary`, `docs_hygiene`, `source_truth`
+- Human-led: The human lead clarified that active docs should name what exists,
+  while history belongs in the decision ledger.
+- Engineer implementation: Replace historical package-boundary wording with
+  the current runtime-script surface name.
+- Decision: `PACKAGE_BOUNDARY` names current launchers, runtime scripts, and
+  operator defaults.
+- Why: Current runtime docs should orient the next operator to the maintained
+  source shape without stale historical phrasing.

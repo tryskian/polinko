@@ -67,7 +67,7 @@ Current audit result:
 | Compatibility surface | Active references | Change after |
 | --- | --- | --- |
 | `main.py` | stable direct `python main.py` launcher and project-venv restart hints | an approved replacement exists for direct root CLI launches |
-| `server.py` | stable `server:app` ASGI string used by Make defaults, server-daemon, local eval gates, Docker, and older scripts | operator, Docker, and eval defaults have an approved replacement ASGI string |
+| `server.py` | stable `server:app` ASGI string used by Make defaults, server-daemon, local eval gates, Docker, and runtime scripts | operator, Docker, and eval defaults have an approved replacement ASGI string |
 
 ## Entrypoint Compatibility Contract
 
