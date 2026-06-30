@@ -5114,3 +5114,17 @@ or branch history instead.
   maintained repo-scoped wake-lock behaviour.
 - Why: High-traffic operator output should be clear during startup and
   closeout, especially when repairing PID/runtime metadata.
+
+## D-296: Keep local privacy helper wording current-source
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `local_privacy`, `docs_hygiene`, `operator_commands`, `source_truth`
+- Human-led: The human lead clarified that active helper surfaces should state
+  current behaviour instead of historical cleanup framing.
+- Engineer implementation: Update the local privacy guard output, usage text,
+  and current state note to describe tracked docs skip-worktree cleanup.
+- Decision: Local privacy helper surfaces describe the current machine-local
+  exclude and tracked-doc cleanup behaviour.
+- Why: Operator helper output should stay direct and current, especially for
+  commands that touch local Git metadata.

@@ -391,9 +391,8 @@ Last updated: 2026-06-29
     and it validates approved VS Code task/config shape plus local doc/config
     boundaries
   - `make privacy-local-on` installs the current machine-local handoff exclude
-    pattern; tracked docs stay visible, while `make privacy-local-off` can
-    clear any legacy docs skip-worktree state left by the older helper
-    behaviour
+    pattern; tracked docs stay visible, while `make privacy-local-off` clears
+    tracked docs skip-worktree state
   - `/manual-evals/surface` and `/viz/pass-fail/data` expose read-only
     `data_freshness` status for the local manual eval warehouse so stale,
     schema-old, unknown, or missing source data is visible without rebuilding
