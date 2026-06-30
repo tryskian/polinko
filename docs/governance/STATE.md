@@ -55,7 +55,8 @@ Last updated: 2026-06-29
     public method and journey diagrams
   - the public status badge set distinguishes the Polinko research model,
     active model refactor, eval contract, research surface, and CI status
-  - the root README points to public research docs, not local portfolio commands
+  - the root README points to public research docs and keeps public navigation
+    focused on repo-owned research surfaces
   - portfolio app, static output, Netlify config, and mockup/build helpers are
     quarantined under
     `.archive/quarantine/portfolio-2026-06-29/` for porting to `krystian.io`
@@ -682,7 +683,7 @@ Last updated: 2026-06-29
     text fixtures and stay historical source-name debt until curated source
     files are promoted
   - generated trace artifacts from manual submissions use manual eval workbench
-    names, not `ui` names
+    names rather than `ui` names
   - co-reasoning is the first promoted non-OCR lane
   - uncertainty-boundary, hallucination-boundary, retrieval, and
     response-behaviour surfaces are operationalized

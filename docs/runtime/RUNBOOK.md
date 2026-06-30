@@ -23,7 +23,7 @@ Use this doc for operator procedure.
 ## Branch, Worktree, and Scope Policy
 
 1. Canonical repo root is the repo root printed by `make start`.
-   Tracked docs should not hard-code machine-local repo paths.
+   Tracked docs use repo-relative paths for portable repo references.
 2. Default workflow is one feature branch per change set:
    - `git switch -c codex/bigbrain/<task-name>`
 3. Start edits from a feature branch.
@@ -360,7 +360,7 @@ Use this doc for operator procedure.
     explicit local decision files
   - default output is
     `.local/manual_eval_decisions/ocr_retry_selection_draft.json`; existing
-    files are not overwritten unless `FORCE=1`
+    files remain in place unless `FORCE=1`
   - fill the draft locally, then validate it with
     `make manual-evals-ocr-retry-selection-validate SELECTION_PATH=<path>`
     before any apply preview or execution surface
@@ -474,8 +474,7 @@ Use this doc for operator procedure.
     commit so same-date stale handoffs fail closeout
 - `make security-checks`
   - local Python and root Node dependency audits
-  - Python audit tooling is installed from `requirements.txt`, not side-loaded
-    in CI
+  - Python audit tooling is installed from `requirements.txt` in CI
 - `make refresh-deps`
   - refreshes the local Python environment and root npm lock after Dependabot
     or dependency metadata changes

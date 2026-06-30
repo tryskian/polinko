@@ -5246,3 +5246,17 @@ or branch history instead.
 - Decision: Runtime docs describe local preparation tooling by the live state it
   preserves.
 - Why: The operator contract stays consistent across the local-tooling surfaces.
+
+## D-305: Keep active runtime docs current-source
+
+- Date: `2026-06-29`
+- Category: `docs_hygiene`
+- Tags: `runtime_docs`, `state`, `source_truth`, `operator_commands`
+- Human-led: The human lead clarified that active docs should state current
+  source truth directly while history stays in `DECISIONS`.
+- Engineer implementation: Rewrite remaining high-traffic runtime and state
+  sentences around portable paths, branch-local preflight, local decision
+  packets, repo-search result shape, and current naming.
+- Decision: Active runtime docs lead with the current maintained behaviour.
+- Why: Current docs stay compact when they avoid contrast with retired or
+  non-current surfaces.

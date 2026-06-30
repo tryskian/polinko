@@ -33,7 +33,7 @@ Routine repo search uses an explicit operator helper:
     operator scripts
   - avoids local evidence, transcript, archive, generated-output, and long
     governance-log lanes by default
-  - treats no matches as an informational result, not a tooling failure
+  - reports no matches as an informational successful result
 - `make repo-search-full Q="pattern"`
   - intentionally searches the full source and evidence surface, including
     private and frozen-eval lanes, while still skipping dependency, cache,
@@ -75,8 +75,8 @@ their mutation target, reuse the validator, and keep a preview path available.
 
 ## Manual Feedback Decision Packets
 
-Manual feedback decision packets are local operator inputs, not warehouse
-updates. The workflow is:
+Manual feedback decision packets are local operator inputs for warehouse review.
+The workflow is:
 
 1. Inspect the open feedback slice with source-context tooling.
 2. Write an ignored local decision draft.
@@ -266,8 +266,9 @@ evidence inspection:
 
 ## Adoption Rule
 
-Future Polinko tooling should adopt the contract, not the OCR-specific
-implementation. The reusable part is the operator workflow:
+Future Polinko tooling should adopt this contract. The OCR-specific
+implementation is the current reference instance. The reusable part is the
+operator workflow:
 
 - local ignored input
 - explicit path override
