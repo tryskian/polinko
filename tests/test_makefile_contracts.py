@@ -2914,6 +2914,8 @@ class MakefileContractTests(unittest.TestCase):
 
         self.assertTrue(LOCAL_URL_LAUNCHER_SCRIPT.is_file())
         self.assertTrue(os.access(LOCAL_URL_LAUNCHER_SCRIPT, os.X_OK))
+        self.assertIn("is_local_url()", script_text)
+        self.assertIn("Refusing to launch non-local URL", script_text)
         self.assertIn('open "$url"', script_text)
         self.assertIn('xdg-open "$url"', script_text)
         self.assertIn("Open this URL in your browser: $url", script_text)

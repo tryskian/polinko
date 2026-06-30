@@ -220,4 +220,5 @@ flowchart TD
   before local runtime checks.
 - Local URL targets remain print-first by default. Explicit system-browser
   launch paths route through `tools/open_local_url.sh` so `docs` and `viz`
-  launch behavior share one audited helper.
+  launch behavior share one audited helper. The launcher accepts local
+  destinations only.
