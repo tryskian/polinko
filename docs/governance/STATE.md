@@ -13,19 +13,11 @@ Last updated: 2026-06-29
   - root `server.py` remains the `uvicorn server:app` compatibility shim
   - CLI chat implementation lives in `src/polinko/cli.py`
   - `make chat`, `polinko-chat`, and root `main.py` launch the packaged CLI
-  - legacy root `app.py` has been retired after the deprecation/removal
-    preflight found no active tracked or focused local ignored-lane launcher
-    usage
+  - active root Python modules are `main.py` and `server.py`
   - Python package-boundary contract is documented; `config`, API,
     and core runtime implementation now live under `src/polinko/`
   - `pyproject.toml` and `src/polinko/` provide the editable-install rail for
     the runtime package
-  - legacy root `config.py` has been retired after the legacy-import preflight
-    found no active tracked or focused local ignored-lane root import usage
-  - legacy root `api/` has been retired after the legacy-import preflight
-    found no active tracked or focused local ignored-lane root import usage
-  - legacy root `core/` has been retired after the legacy-import preflight
-    found no active tracked or focused local ignored-lane root import usage
   - the package-boundary audit confirms active `src/` and `tools/` Python
     imports use `polinko.*`, while remaining root compatibility surfaces are
     launchers only
@@ -33,13 +25,10 @@ Last updated: 2026-06-29
     `polinko-chat`, `make server`, `make localhost`, `make server-daemon`,
     local eval gates, and Docker to their packaged CLI or ASGI implementation
     paths
-  - the root launcher readiness audit records `server.py` as not
-    retirement-ready
-    while `server:app` remains active in Docker, Make defaults, server-daemon,
-    and local eval gates
-  - `app.py`, `config.py`, root `api/`, and root `core/` are retired;
-    remaining root launcher retirement work stays surface-specific and must
-    preserve manual eval and operator workflows
+  - `server:app` remains active in Docker, Make defaults, server-daemon, and
+    local eval gates
+  - root launcher changes stay surface-specific and must preserve manual eval
+    and operator workflows
   - prompt and runtime behaviour stay minimal and deterministic
   - notebooks, local evidence databases, `/chat`, and `/chats/*` remain active
     because they feed manual evals, feedback, checkpoints, exports, and

@@ -5016,3 +5016,20 @@ or branch history instead.
   continues through local runtime setup.
 - Why: Startup is the first operator contact point for repo health, so it should
   expose remote build-hygiene state before implementation begins.
+
+## D-290: Keep package-boundary docs current-source
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `package_boundary`, `docs_hygiene`, `runtime_contract`, `source_truth`
+- Human-led: The human lead clarified that current runtime docs should describe
+  what Polinko is now, with historical removal language kept in the decision
+  ledger.
+- Engineer implementation: Rewrite the package-boundary and linked current
+  state/runtime notes around active root modules, packaged imports, stable
+  entrypoints, and boundary requirements; update package-boundary tests to
+  guard the active contract language.
+- Decision: `PACKAGE_BOUNDARY` is a current package-shape contract, not a
+  removal narrative.
+- Why: Current operator docs should make the active runtime shape easy to audit
+  without mixing source-of-truth instructions with historical cleanup notes.

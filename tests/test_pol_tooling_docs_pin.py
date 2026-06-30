@@ -73,7 +73,7 @@ class PolToolingDocsPinTests(unittest.TestCase):
             ),
             "docs/runtime/PACKAGE_BOUNDARY.md": (
                 "`tools/report_ocr_lane_inventory.py`",
-                "Keep local evidence inventory and operator tooling repo-local",
+                "Local evidence inventory and operator tooling stay repo-local",
             ),
         }
 

@@ -7,8 +7,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 ACTIVE_FILE_EXTENSIONS = {".py", ".sh", ".mk"}
 ACTIVE_ROOT_FILES = {"Makefile", "Dockerfile", "pyproject.toml"}
-RETIRED_ROOT_IMPORTS = ("api", "config", "core")
-RETIRED_ROOT_SURFACES = ("app.py", "config.py", "api", "core")
+PACKAGED_ROOT_IMPORTS = ("api", "config", "core")
+ABSENT_ROOT_SURFACES = ("app.py", "config.py", "api", "core")
 
 
 def _read(relative_path: str) -> str:
@@ -90,7 +90,6 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "Tracked root compatibility launchers",
             "`main.py`",
             "compatibility launcher for `python main.py`",
-            "legacy root `app.py` launcher is retired",
             "`server.py`",
             "compatibility shim for `uvicorn server:app`",
             "`src/polinko/cli.py`",
@@ -98,17 +97,15 @@ class PackageBoundaryContractTests(unittest.TestCase):
             "`src/polinko/asgi.py`",
             "canonical ASGI app construction",
             "`polinko-chat`",
-            "legacy root `config.py` import shim is retired",
-            "legacy root `api/` import shims are retired",
-            "legacy root `core/` import shims are retired",
+            "active root Python modules are `main.py` and",
             "The runtime import package is `polinko` under `src/polinko/`.",
             "`src/polinko/config.py`",
             "`src/polinko/api/`",
             "`src/polinko/core/`",
             "root `tools/`",
             "Keep `polinko-chat` as the installed console-script entrypoint.",
-            "Keep runtime modules under `src/polinko/`",
-            "Do not change ASGI import compatibility for `server:app`.",
+            "Runtime modules stay under `src/polinko/`",
+            "ASGI compatibility stays on `server:app`",
         ):
             self.assertIn(expected, boundary)
 
@@ -117,23 +114,16 @@ class PackageBoundaryContractTests(unittest.TestCase):
 
         for expected in (
             "## Current Boundary",
-            "active runtime and tool imports should use `polinko.*`",
-            "remaining root compatibility surfaces are launchers, not import shims",
-            "compatibility launcher retirement must happen through",
-            "active `server:app` references still exist in Docker",
-            "legacy `app.py` launcher is retired",
-            "legacy root `config.py` import shim is retired",
-            "### Readiness Snapshot: 2026-05-20",
-            "retired in a separate deprecation/removal kernel",
-            "not retirement-ready",
+            "active runtime and tool imports use `polinko.*`",
+            "root compatibility surfaces are launchers only",
+            "future launcher changes happen through",
+            "`server:app` is the active ASGI compatibility string",
+            "config imports use `polinko.config`",
+            "API imports use `polinko.api.*`",
+            "core runtime imports use `polinko.core.*`",
             "`server.py`",
             "Make defaults, server-daemon, local eval gates, Docker",
-            "`config.py`",
-            "focused local ignored-lane search found no legacy root import usage",
-            "`api/`",
-            "replacement imports use `polinko.api.*`",
-            "`core/`",
-            "replacement imports use `polinko.core.*`",
+            "## Boundary Requirements",
         ):
             self.assertIn(expected, boundary)
 
@@ -146,8 +136,8 @@ class PackageBoundaryContractTests(unittest.TestCase):
         self.assertIn("docs/runtime/PACKAGE_BOUNDARY.md", architecture)
         self.assertIn("`PACKAGE_BOUNDARY`", architecture)
         self.assertIn("package-boundary contract is documented", state)
-        self.assertIn("legacy root `api/` has been retired", state)
-        self.assertIn("legacy root `core/` has been retired", state)
+        self.assertIn("active root Python modules are `main.py` and `server.py`", state)
+        self.assertIn("active `src/` and `tools/` Python", state)
         self.assertIn("`PACKAGE_BOUNDARY` holds the Python", state)
         self.assertIn("docs/runtime/PACKAGE_BOUNDARY.md", docs_index)
         self.assertIn(
@@ -250,11 +240,11 @@ class PackageBoundaryContractTests(unittest.TestCase):
                 if isinstance(node, ast.Import):
                     for alias in node.names:
                         root_name = alias.name.split(".", maxsplit=1)[0]
-                        if root_name in RETIRED_ROOT_IMPORTS:
+                        if root_name in PACKAGED_ROOT_IMPORTS:
                             violations.append(f"{relative_path}:{node.lineno}")
                 elif isinstance(node, ast.ImportFrom) and node.module is not None:
                     root_name = node.module.split(".", maxsplit=1)[0]
-                    if root_name in RETIRED_ROOT_IMPORTS:
+                    if root_name in PACKAGED_ROOT_IMPORTS:
                         violations.append(f"{relative_path}:{node.lineno}")
 
         self.assertEqual(violations, [])
@@ -277,12 +267,12 @@ class PackageBoundaryContractTests(unittest.TestCase):
                     source = _read(relative_path)
                 self.assertIn(expected, source)
 
-    def test_retired_root_surfaces_stay_absent(self) -> None:
-        for relative_path in RETIRED_ROOT_SURFACES:
+    def test_non_package_root_surfaces_stay_absent(self) -> None:
+        for relative_path in ABSENT_ROOT_SURFACES:
             with self.subTest(relative_path=relative_path):
                 self.assertFalse((REPO_ROOT / relative_path).exists())
 
-    def test_active_tracked_files_do_not_regain_retired_root_imports(self) -> None:
+    def test_active_tracked_files_keep_runtime_imports_packaged(self) -> None:
         allowed_paths = {
             "docs/governance/DECISIONS.md",
             "docs/governance/STATE.md",
@@ -292,14 +282,14 @@ class PackageBoundaryContractTests(unittest.TestCase):
         }
         mentions = []
 
-        for root_name in RETIRED_ROOT_IMPORTS:
+        for root_name in PACKAGED_ROOT_IMPORTS:
             mentions.extend(
                 _retired_root_import_mentions(root_name, allowed_paths=allowed_paths)
             )
 
         self.assertEqual(mentions, [])
 
-    def test_active_tracked_files_do_not_regain_retired_app_launcher_calls(
+    def test_active_tracked_files_keep_cli_launches_on_packaged_entrypoints(
         self,
     ) -> None:
         allowed_paths = {
