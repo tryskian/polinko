@@ -118,6 +118,32 @@ class LocalRuntimeConfigTests(unittest.TestCase):
 
         self.assertEqual(failures, [])
 
+    def test_quarantined_portfolio_task_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            _write(
+                root,
+                ".vscode/tasks.json",
+                """
+                {
+                  "tasks": [
+                    {
+                      "label": "make portfolio",
+                      "type": "shell",
+                      "command": "make portfolio",
+                      "problemMatcher": []
+                    }
+                  ]
+                }
+                """,
+            )
+
+            failures = check_local_runtime_config.check_vscode_config(root)
+
+        self.assertEqual(len(failures), 1)
+        self.assertIn("quarantined portfolio task", failures[0])
+        self.assertIn("'make portfolio'", failures[0])
+
     def test_retired_local_doc_paths_are_reported(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

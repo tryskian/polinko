@@ -45,6 +45,13 @@ RETIRED_VSCODE_EXTENSION_IDS = (
     "vscode-arduino.vscode-arduino-community",
     "ms-vscode.powershell",
 )
+QUARANTINED_VSCODE_TASK_COMMANDS = (
+    "make portfolio",
+    "make portfolio-open",
+    "make portfolio-build",
+    "make portfolio-install",
+    "make portfolio-mockups",
+)
 
 
 def _load_json(path: Path) -> tuple[Any | None, str | None]:
@@ -223,6 +230,11 @@ def check_vscode_config(root: Path = ROOT) -> list[str]:
         if _has_folder_open_run(raw_task):
             failures.append(
                 f"{vscode_dir / 'tasks.json'}: {name!r} uses retired folderOpen runOn"
+            )
+        if command_text in QUARANTINED_VSCODE_TASK_COMMANDS:
+            failures.append(
+                f"{vscode_dir / 'tasks.json'}: {name!r} points to quarantined "
+                f"portfolio task {command_text!r}"
             )
         if raw_task.get("isBackground") is True and _has_empty_problem_matcher(
             raw_task
