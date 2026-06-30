@@ -5,12 +5,33 @@ from __future__ import annotations
 from importlib import metadata, resources
 from importlib.util import find_spec
 
-import polinko
-from polinko.config import AppConfig, load_config
+
+EDITABLE_INSTALL_HINT = (
+    "run `make package-install-check` or install the package editable with "
+    "`python -m pip install --no-build-isolation --no-deps -e .`"
+)
+
+
+def require_importable_package(module_name: str = "polinko") -> None:
+    if find_spec(module_name) is None:
+        raise SystemExit(
+            f"{module_name} package is not importable; {EDITABLE_INSTALL_HINT}"
+        )
 
 
 def main() -> None:
-    installed_version = metadata.version("polinko")
+    require_importable_package()
+
+    import polinko
+    from polinko.config import AppConfig, load_config
+
+    try:
+        installed_version = metadata.version("polinko")
+    except metadata.PackageNotFoundError as exc:
+        raise SystemExit(
+            f"polinko package metadata is not installed; {EDITABLE_INSTALL_HINT}"
+        ) from exc
+
     if installed_version != polinko.__version__:
         raise SystemExit(
             "polinko metadata version "
