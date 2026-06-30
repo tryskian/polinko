@@ -71,7 +71,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
-    def test_retired_runtime_map_token_is_reported(self) -> None:
+    def test_non_current_runtime_map_token_is_reported(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             map_path = root / "docs" / "runtime" / "RUNTIME_SURFACE_MAP.md"
@@ -81,7 +81,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures = check_runtime_risk_scan.check_runtime_surface_map(root)
 
         self.assertIn(
-            "docs/runtime/RUNTIME_SURFACE_MAP.md: retired runtime map token "
+            "docs/runtime/RUNTIME_SURFACE_MAP.md: non-current runtime map token "
             "'Startup and workspace bootstrap' is active",
             failures,
         )
@@ -101,21 +101,21 @@ class RuntimeRiskScanTests(unittest.TestCase):
         )
 
         self.assertIn(
-            "make target 'eod': deprecated target is active",
+            "make target 'eod': non-canonical target is active",
             failures,
         )
 
-    def test_deprecated_eod_stop_target_is_reported(self) -> None:
+    def test_non_canonical_eod_stop_target_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             _make_contract_text(extra_lines=("eod-stop:",))
         )
 
         self.assertIn(
-            "make target 'eod-stop': deprecated target is active",
+            "make target 'eod-stop': non-canonical target is active",
             failures,
         )
 
-    def test_retired_eval_shortcut_include_path_is_reported(self) -> None:
+    def test_non_current_eval_shortcut_include_path_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             _make_contract_text(
                 extra_lines=("include makefiles/evals/aliases/ocr-runs.mk",)
@@ -123,7 +123,8 @@ class RuntimeRiskScanTests(unittest.TestCase):
         )
 
         self.assertIn(
-            "Make surface: retired include token 'makefiles/evals/aliases' is active",
+            "Make surface: non-current include token "
+            "'makefiles/evals/aliases' is active",
             failures,
         )
 
@@ -134,7 +135,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             tool_path.parent.mkdir(parents=True)
             tool_path.write_text('"--handwriting-cases"\n', encoding="utf-8")
 
-            failures = check_runtime_risk_scan.check_forbidden_tool_tokens(root)
+            failures = check_runtime_risk_scan.check_non_current_tool_tokens(root)
 
         self.assertIn(
             "tools/build_handwriting_benchmark_cases.py: stale operator flag "
@@ -282,7 +283,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
-    def test_retired_precommit_hook_token_is_reported(self) -> None:
+    def test_non_current_precommit_hook_token_is_reported(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             _write_precommit(
@@ -303,7 +304,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures = check_runtime_risk_scan.check_precommit_config(root)
 
         self.assertIn(
-            ".pre-commit-config.yaml: retired hook token 'isort' is active",
+            ".pre-commit-config.yaml: non-current hook token 'isort' is active",
             failures,
         )
 

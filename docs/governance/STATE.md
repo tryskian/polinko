@@ -838,8 +838,8 @@ Last updated: 2026-06-29
   - `tools/launch_detached_process.py` stops the started child process group
     before exit when the PID file write fails, preserving clean background
     state
-  - VS Code keeps `make start` available as a manual task; folder-open
-    bootstrap is retired so startup stays chat-led
+  - VS Code keeps `make start` available as a manual task; startup stays
+    chat-led through the morning alignment pass
   - `make doctor-env` reports both the active interpreter path and its source
     label, so repo `.venv`, override, and host fallback paths are visible
     during startup
