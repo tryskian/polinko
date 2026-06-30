@@ -93,7 +93,7 @@ status_guard() {
 
 clear_guard() {
   if list_skip_worktree_docs | rg '^S' >/dev/null 2>&1; then
-    echo "Clearing legacy docs skip-worktree state."
+    echo "Clearing tracked docs skip-worktree state."
     list_tracked_docs | xargs -r git update-index --no-skip-worktree
   fi
   remove_exclude_block
@@ -106,7 +106,7 @@ usage() {
 Usage: tools/local_privacy_guard.sh [apply|status|clear]
   apply  - install local excludes for machine-local docs
   status - show current local privacy guard state
-  clear  - remove local excludes and clear legacy docs skip-worktree state
+  clear  - remove local excludes and clear tracked docs skip-worktree state
 EOF
 }
 
