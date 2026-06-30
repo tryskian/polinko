@@ -12,7 +12,7 @@ Polinko separates public proof from working material.
 - Eval docs and report schemas define the evidence contract.
 - Beta 1.0 materials preserve the transition from manual review to binary evals.
 - Current eval reports show operational `fail` / `pass` pressure.
-- Diagrams are research instruments, not decoration.
+- Diagrams are research instruments.
 - Notebook/query outputs stay local unless explicitly curated.
 
 Gate rule:
@@ -24,7 +24,7 @@ Gate rule:
 - rerun after evictions and judge `pass / fail` again
 - then interpret the richer meaning
 - `retain` keeps the failure as in-scope evidence
-- `evict` removes bad cases upstream; it does not become a third gate state
+- `evict` removes bad cases upstream while the gate state stays binary
 
 ## Beta 1.0
 

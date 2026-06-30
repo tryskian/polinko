@@ -5260,3 +5260,17 @@ or branch history instead.
 - Decision: Active runtime docs lead with the current maintained behaviour.
 - Why: Current docs stay compact when they avoid contrast with retired or
   non-current surfaces.
+
+## D-306: Keep public docs source-led
+
+- Date: `2026-06-29`
+- Category: `docs_hygiene`
+- Tags: `public_docs`, `authorship`, `evidence`, `source_truth`
+- Human-led: The human lead clarified that active docs should say what Polinko
+  is, with history and contrast kept in the decision log.
+- Engineer implementation: Rewrite public in-brief, evidence, and method notes
+  around the repo research surface, failure signal, binary gate state, diagrams
+  as instruments, and human-owned source authority.
+- Decision: Public docs describe Polinko through current source-led claims.
+- Why: Reader-facing docs stay clearer when they lead with the maintained
+  research shape.
