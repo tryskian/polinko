@@ -5052,3 +5052,21 @@ or branch history instead.
   stays backend/manual-eval/API centred.
 - Why: Current source docs should orient operators to the active repo shape
   without turning archive history into runtime instructions.
+
+## D-292: Keep local-config docs current-source
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `local_runtime_config`, `docs_hygiene`, `vscode`, `devcontainer`,
+  `source_truth`
+- Human-led: The human lead clarified that current docs should state the active
+  contract, while historical cleanup wording belongs in the decision ledger and
+  failure diagnostics.
+- Engineer implementation: Rewrite current local-config docs around approved
+  VS Code task/config shape, devcontainer config shape, extension
+  recommendation boundaries, and chat-led startup; keep scanner diagnostics
+  precise in code/tests.
+- Decision: Local runtime config docs describe the approved machine-local and
+  devcontainer contract. Failure tools may still name rejected stale patterns.
+- Why: Operator docs should explain the maintained surface without turning
+  stale-state examples into current instructions.

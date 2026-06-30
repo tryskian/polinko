@@ -95,7 +95,7 @@ flowchart TD
 - Startup should stay narrow and chat-led: it reports GitHub health attention,
   verifies environment health, starts the repo-managed wake lock, runs smoke
   checks with isolated defaults, and stops for alignment. VS Code keeps
-  `make start` available as a manual task; folder-open bootstrap is retired.
+  `make start` available as a manual task.
 - Active validation and session closeout are separate surfaces:
   `make end-preflight` is branch-local validation, while `make end` is the
   session closeout routine from clean synced `main`. `make end-stop` is the
@@ -109,9 +109,9 @@ flowchart TD
   `tools/python_runtime.sh` is the shared shell interpreter helper for direct
   operator wrappers: explicit `PYTHON` wins only when it resolves to an
   executable command, then repo `.venv`, then available `python3`.
-  `make local-runtime-config-check` runs through `make ci-docs` so VS Code
-  task/config drift, retired local doc references, and retired extension
-  recommendation drift fail the normal docs/runtime gate.
+  `make local-runtime-config-check` runs through `make ci-docs` so VS Code,
+  devcontainer, and extension recommendation drift fail the normal
+  docs/runtime gate.
   `make startup-contracts-check` keeps startup/runtime doc contracts in the
   local docs gate so wording drift fails before a PR-only CI run.
   Startup, closeout, clean-main git checks, devcontainer setup, local eval

@@ -388,8 +388,8 @@ Last updated: 2026-06-29
   - `make path-leak-audit-local` is an actionable local runtime-config audit:
     it checks hidden/editor/container config surfaces without failing on
     ignored manual-eval evidence bundles that intentionally retain source paths,
-    and it validates VS Code task/config shape plus retired local doc/config
-    tokens
+    and it validates approved VS Code task/config shape plus local doc/config
+    boundaries
   - `make privacy-local-on` installs the current machine-local handoff exclude
     pattern; tracked docs stay visible, while `make privacy-local-off` can
     clear any legacy docs skip-worktree state left by the older helper
@@ -761,9 +761,8 @@ Last updated: 2026-06-29
     fallback when available
   - local runtime config coverage is explicit through
     `make local-runtime-config-check`, which validates VS Code and
-    devcontainer config shape, rejects retired local doc references, guards
-    retired VS Code extension recommendation drift, and runs through
-    `make ci-docs`
+    devcontainer config shape, guards approved extension recommendations, and
+    runs through `make ci-docs`
   - operator command coverage is explicit through `make operator-command-check`,
     which keeps `manual-evals-*` targets canonical and keeps parked OCR eval
     shortcuts out of automatic startup, closeout, and CI dependencies
