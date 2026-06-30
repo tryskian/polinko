@@ -5607,3 +5607,20 @@ or branch history instead.
   plan.
 - Why: Closeout output should remain accurate when checks are added, removed,
   or reordered without requiring a separate manual counter update.
+
+## D-329: Require process inspection before caffeinate PID decisions
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `pid_file`, `diagnostics`, `ps`
+- Human-led: The human lead asked for script-maintenance work to surface hidden
+  runner dependencies through automation.
+- Engineer implementation: Update `tools/manage_caffeinate.py` so start,
+  status, stop, and stop-all require a working `PS_BIN` before classifying or
+  cleaning PID state; add focused regression coverage for missing process
+  inspection on start and status.
+- Decision: Repo-managed `caffeinate` requires process-inspection tooling
+  before PID ownership classification or cleanup.
+- Why: Without `ps`, PID ownership checks can collapse into misleading stale or
+  non-owned state and remove useful runtime metadata. Early validation keeps the
+  diagnostic attached to the missing process-inspection tool.

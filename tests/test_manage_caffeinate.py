@@ -186,6 +186,68 @@ class ManageCaffeinateTests(unittest.TestCase):
             self.assertIn("Configured CAFFEINATE_LAUNCHER_PYTHON", result.stderr)
             self.assertFalse(activity_file.exists())
 
+    def test_start_rejects_missing_ps_before_pid_cleanup(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            uname_script = tmp_path / "uname.sh"
+            pid_file = tmp_path / "caffeinate.pid"
+            meta_file = tmp_path / "caffeinate.meta.json"
+            _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
+            pid_file.write_text("999999", encoding="utf-8")
+            meta_file.write_text("{}", encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "UNAME_BIN": str(uname_script),
+                    "PS_BIN": str(tmp_path / "missing-ps"),
+                    "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_META_FILE": str(meta_file),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("PS_BIN command not found", result.stderr)
+            self.assertTrue(pid_file.exists())
+            self.assertTrue(meta_file.exists())
+
+    def test_status_rejects_missing_ps_before_pid_classification(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            uname_script = tmp_path / "uname.sh"
+            pid_file = tmp_path / "caffeinate.pid"
+            meta_file = tmp_path / "caffeinate.meta.json"
+            _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_cleanup_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+            _write_metadata(meta_file, process.pid)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "UNAME_BIN": str(uname_script),
+                    "PS_BIN": str(tmp_path / "missing-ps"),
+                    "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_META_FILE": str(meta_file),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("PS_BIN command not found", result.stderr)
+            self.assertEqual(
+                pid_file.read_text(encoding="utf-8").strip(), str(process.pid)
+            )
+            self.assertTrue(meta_file.exists())
+
     def test_start_cleans_live_non_owned_pid_without_killing_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

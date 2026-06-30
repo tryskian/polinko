@@ -126,7 +126,8 @@ Last updated: 2026-06-30
     and closeout cleanup inspect the same wake-lock shape that start launches
   - repo-managed caffeinate rejects invalid command, regex, active-window, and
     global-cleanup config before it reads, reports, launches, stops, or cleans
-    PID/activity state
+    PID/activity state, and requires process-inspection tooling before PID
+    ownership classification or cleanup
   - `caffeinate` treats stopped/zombie managed PIDs as stale and only removes
     owned runtime metadata after bounded terminate/escalate cleanup succeeds
   - shell lifecycle runners require `ps` before making PID-state decisions, so
@@ -811,7 +812,8 @@ Last updated: 2026-06-30
     mutating lifecycle actions and cleans orphaned flat PID metadata before
     launch or stop decisions
   - repo-managed caffeinate validates command, regex, active-window, and
-    global-cleanup config before PID/activity state work
+    global-cleanup config before PID/activity state work, and requires
+    process-inspection tooling before PID ownership classification or cleanup
   - repo-managed caffeinate treats stopped/zombie managed PIDs as stale and
     bounds terminate/escalate cleanup before removing owned runtime metadata
   - high-traffic lifecycle, validation, and runtime operator work Make targets
