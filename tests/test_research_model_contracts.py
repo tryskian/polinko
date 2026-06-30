@@ -264,7 +264,7 @@ class ResearchModelContractTests(unittest.TestCase):
         for expected in (
             "The manual eval workbench is the human-judged research workspace",
             "`make notes`",
-            "aliases: `make notebook`, `make nb`",
+            "shortcuts: `make notebook`, `make nb`",
             "default local path: `.local/notebooks/`",
             "`POST /chat`",
             "`/chats/*`",

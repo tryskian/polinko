@@ -105,15 +105,15 @@ MAKE_SURFACES_MANUAL_EVALS_OCR_RETRY = (
     REPO_ROOT / "makefiles" / "surfaces" / "manual-evals" / "ocr-retry.mk"
 )
 MAKE_EVALS = REPO_ROOT / "makefiles" / "evals.mk"
-MAKE_EVALS_ALIASES = REPO_ROOT / "makefiles" / "evals" / "aliases.mk"
-MAKE_EVALS_ALIASES_OCR_INTAKE = (
-    REPO_ROOT / "makefiles" / "evals" / "aliases" / "ocr-intake.mk"
+MAKE_EVALS_SHORTCUTS = REPO_ROOT / "makefiles" / "evals" / "shortcuts.mk"
+MAKE_EVALS_SHORTCUTS_OCR_INTAKE = (
+    REPO_ROOT / "makefiles" / "evals" / "shortcuts" / "ocr-intake.mk"
 )
-MAKE_EVALS_ALIASES_OCR_RUNS = (
-    REPO_ROOT / "makefiles" / "evals" / "aliases" / "ocr-runs.mk"
+MAKE_EVALS_SHORTCUTS_OCR_RUNS = (
+    REPO_ROOT / "makefiles" / "evals" / "shortcuts" / "ocr-runs.mk"
 )
-MAKE_EVALS_ALIASES_UTILITIES = (
-    REPO_ROOT / "makefiles" / "evals" / "aliases" / "utilities.mk"
+MAKE_EVALS_SHORTCUTS_UTILITIES = (
+    REPO_ROOT / "makefiles" / "evals" / "shortcuts" / "utilities.mk"
 )
 MAKE_EVALS_CORE = REPO_ROOT / "makefiles" / "evals" / "core.mk"
 MAKE_EVALS_CORE_QUALITY = REPO_ROOT / "makefiles" / "evals" / "core" / "quality.mk"
@@ -388,14 +388,14 @@ class MakefileContractTests(unittest.TestCase):
 
     def test_eval_targets_are_extracted_through_role_includes(self) -> None:
         evals_entry_text = MAKE_EVALS.read_text(encoding="utf-8")
-        aliases_entry_text = MAKE_EVALS_ALIASES.read_text(encoding="utf-8")
-        aliases_ocr_intake_entry_text = MAKE_EVALS_ALIASES_OCR_INTAKE.read_text(
+        shortcuts_entry_text = MAKE_EVALS_SHORTCUTS.read_text(encoding="utf-8")
+        shortcuts_ocr_intake_entry_text = MAKE_EVALS_SHORTCUTS_OCR_INTAKE.read_text(
             encoding="utf-8"
         )
-        aliases_ocr_runs_entry_text = MAKE_EVALS_ALIASES_OCR_RUNS.read_text(
+        shortcuts_ocr_runs_entry_text = MAKE_EVALS_SHORTCUTS_OCR_RUNS.read_text(
             encoding="utf-8"
         )
-        aliases_utilities_entry_text = MAKE_EVALS_ALIASES_UTILITIES.read_text(
+        shortcuts_utilities_entry_text = MAKE_EVALS_SHORTCUTS_UTILITIES.read_text(
             encoding="utf-8"
         )
         core_entry_text = MAKE_EVALS_CORE.read_text(encoding="utf-8")
@@ -409,84 +409,84 @@ class MakefileContractTests(unittest.TestCase):
         )
         contract_text = _makefile_contract_text()
 
-        self.assertIn("include makefiles/evals/aliases.mk", evals_entry_text)
+        self.assertIn("include makefiles/evals/shortcuts.mk", evals_entry_text)
         self.assertIn("include makefiles/evals/core.mk", evals_entry_text)
         self.assertIn("include makefiles/evals/gates.mk", evals_entry_text)
         self.assertIn("include makefiles/evals/ocr-intake.mk", evals_entry_text)
         self.assertIn("include makefiles/evals/ocr-runs.mk", evals_entry_text)
         self.assertIn(
-            "include makefiles/evals/aliases/ocr-intake.mk",
-            aliases_entry_text,
+            "include makefiles/evals/shortcuts/ocr-intake.mk",
+            shortcuts_entry_text,
         )
         self.assertIn(
-            "include makefiles/evals/aliases/ocr-runs.mk",
-            aliases_entry_text,
+            "include makefiles/evals/shortcuts/ocr-runs.mk",
+            shortcuts_entry_text,
         )
         self.assertIn(
-            "include makefiles/evals/aliases/utilities.mk",
-            aliases_entry_text,
+            "include makefiles/evals/shortcuts/utilities.mk",
+            shortcuts_entry_text,
         )
         self.assertIsNone(
             re.search(
                 r"(?m)^\.PHONY:|^[-a-zA-Z0-9_]+:",
-                aliases_ocr_intake_entry_text,
+                shortcuts_ocr_intake_entry_text,
             )
         )
         self.assertIn(
-            "include makefiles/evals/aliases/ocr-intake/base.mk",
-            aliases_ocr_intake_entry_text,
+            "include makefiles/evals/shortcuts/ocr-intake/base.mk",
+            shortcuts_ocr_intake_entry_text,
         )
         self.assertIn(
-            "include makefiles/evals/aliases/ocr-intake/lanes.mk",
-            aliases_ocr_intake_entry_text,
+            "include makefiles/evals/shortcuts/ocr-intake/lanes.mk",
+            shortcuts_ocr_intake_entry_text,
         )
         self.assertIn(
-            "include makefiles/evals/aliases/ocr-intake/filters.mk",
-            aliases_ocr_intake_entry_text,
+            "include makefiles/evals/shortcuts/ocr-intake/filters.mk",
+            shortcuts_ocr_intake_entry_text,
         )
         self.assertIsNone(
             re.search(
                 r"(?m)^\.PHONY:|^[-a-zA-Z0-9_]+:",
-                aliases_utilities_entry_text,
+                shortcuts_utilities_entry_text,
             )
         )
         self.assertIn(
-            "include makefiles/evals/aliases/utilities/runtime-null.mk",
-            aliases_utilities_entry_text,
+            "include makefiles/evals/shortcuts/utilities/runtime-null.mk",
+            shortcuts_utilities_entry_text,
         )
         self.assertIn(
-            "include makefiles/evals/aliases/utilities/ocr-inventory.mk",
-            aliases_utilities_entry_text,
+            "include makefiles/evals/shortcuts/utilities/ocr-inventory.mk",
+            shortcuts_utilities_entry_text,
         )
         self.assertIn(
-            "include makefiles/evals/aliases/utilities/ocr-workflows.mk",
-            aliases_utilities_entry_text,
+            "include makefiles/evals/shortcuts/utilities/ocr-workflows.mk",
+            shortcuts_utilities_entry_text,
         )
         self.assertIsNone(
             re.search(
                 r"(?m)^\.PHONY:|^[-a-zA-Z0-9_]+:",
-                aliases_ocr_runs_entry_text,
+                shortcuts_ocr_runs_entry_text,
             )
         )
         self.assertIn(
-            "include makefiles/evals/aliases/ocr-runs/transcripts.mk",
-            aliases_ocr_runs_entry_text,
+            "include makefiles/evals/shortcuts/ocr-runs/transcripts.mk",
+            shortcuts_ocr_runs_entry_text,
         )
         self.assertIn(
-            "include makefiles/evals/aliases/ocr-runs/modalities.mk",
-            aliases_ocr_runs_entry_text,
+            "include makefiles/evals/shortcuts/ocr-runs/modalities.mk",
+            shortcuts_ocr_runs_entry_text,
         )
         self.assertIn(
-            "include makefiles/evals/aliases/ocr-runs/focus.mk",
-            aliases_ocr_runs_entry_text,
+            "include makefiles/evals/shortcuts/ocr-runs/focus.mk",
+            shortcuts_ocr_runs_entry_text,
         )
         self.assertIn(
-            "include makefiles/evals/aliases/ocr-runs/workflow.mk",
-            aliases_ocr_runs_entry_text,
+            "include makefiles/evals/shortcuts/ocr-runs/workflow.mk",
+            shortcuts_ocr_runs_entry_text,
         )
         self.assertIn(
-            "include makefiles/evals/aliases/ocr-runs/benchmarks.mk",
-            aliases_ocr_runs_entry_text,
+            "include makefiles/evals/shortcuts/ocr-runs/benchmarks.mk",
+            shortcuts_ocr_runs_entry_text,
         )
         self.assertIn("include makefiles/evals/core/retrieval.mk", core_entry_text)
         self.assertIn("include makefiles/evals/core/quality.mk", core_entry_text)

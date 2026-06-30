@@ -1,4 +1,4 @@
-# OCR intake lane aliases.
+# OCR intake lane shortcuts.
 .PHONY: ocrminehand ocrminetype ocrmineillu
 
 ocrminehand: OCR_CASES_FROM_EXPORT_ARGS = --include-lanes handwriting

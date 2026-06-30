@@ -169,7 +169,7 @@ This page is the structural map of the tracked system.
   - manual-eval OCR retry target fragments for read-only packets, selection
     and readiness, execution/reporting, and feedback closure
 - `makefiles/evals/`
-  - eval target fragments for aliases, core suites, gates, OCR intake, and OCR
+  - eval target fragments for shortcuts, core suites, gates, OCR intake, and OCR
     runners
 - `makefiles/evals/ocr-intake/`
   - OCR intake target fragments for export/case-mining targets, benchmark case
@@ -193,16 +193,16 @@ This page is the structural map of the tracked system.
 - `makefiles/evals/core/ocr/`
   - direct OCR eval target fragments for safety, base OCR, handwriting, and
     recovery
-- `makefiles/evals/aliases/`
+- `makefiles/evals/shortcuts/`
   - eval shortcut target fragments for OCR intake/mining, OCR run/focus/benchmark
     shorthands, and utility/inventory shortcuts
-- `makefiles/evals/aliases/utilities/`
+- `makefiles/evals/shortcuts/utilities/`
   - utility shortcut fragments for runtime-null audit, OCR inventory, and OCR
     data/notebook workflows
-- `makefiles/evals/aliases/ocr-intake/`
+- `makefiles/evals/shortcuts/ocr-intake/`
   - OCR intake shortcut fragments for base intake shortcuts, lane-filter
     shortcuts, and signal/status filter shortcuts
-- `makefiles/evals/aliases/ocr-runs/`
+- `makefiles/evals/shortcuts/ocr-runs/`
   - OCR-run shortcut fragments for transcript/growth shortcuts, modality
     shortcuts, focus/stability shortcuts, the OCR kernel workflow shortcut, and
     benchmark shortcuts

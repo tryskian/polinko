@@ -1,4 +1,4 @@
-# OCR data and notebook workflow aliases.
+# OCR data and notebook workflow shortcuts.
 .PHONY: ocr-data ocr-notebook-workflow
 
 ocr-data:

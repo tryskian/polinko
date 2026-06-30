@@ -1,4 +1,4 @@
-# OCR benchmark aliases.
+# OCR benchmark shortcuts.
 .PHONY: ocrhandbench ocrtypebench ocrillubench
 .PHONY: ocrstablehand ocrstabletype ocrstableillu
 

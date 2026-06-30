@@ -18,6 +18,7 @@ REQUIRED_FILES = (
     Path("makefiles/checks.mk"),
     Path("makefiles/runtime.mk"),
     Path("makefiles/surfaces.mk"),
+    Path("makefiles/evals/shortcuts.mk"),
     Path("makefiles/evals/gates.mk"),
     Path("tools/start_of_day_routine.sh"),
     Path("tools/end_of_day_routine.sh"),
@@ -71,6 +72,7 @@ REQUIRED_MAKE_TARGETS = (
 )
 
 FORBIDDEN_MAKE_TARGETS = ("eod", "eod-stop")
+FORBIDDEN_MAKE_INCLUDE_TOKENS = ("makefiles/evals/aliases",)
 FORBIDDEN_RUNTIME_MAP_TOKENS = ("Startup and workspace bootstrap",)
 FORBIDDEN_PRECOMMIT_TOKENS = ("isort", "black")
 REQUIRED_PRECOMMIT_EXCLUDE = r"^docs/peanut/"
@@ -231,6 +233,9 @@ def check_required_files(root: Path) -> list[str]:
 def check_make_contracts(text: str) -> list[str]:
     failures: list[str] = []
     targets = make_targets(text)
+    for token in FORBIDDEN_MAKE_INCLUDE_TOKENS:
+        if token in text:
+            failures.append(f"Make surface: retired include token {token!r} is active")
     for target in REQUIRED_MAKE_TARGETS:
         if target not in targets:
             failures.append(f"make target {target!r}: missing from Make surface")

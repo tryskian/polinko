@@ -1,4 +1,4 @@
-# OCR kernel workflow alias.
+# OCR kernel workflow shortcut.
 .PHONY: ocrkernel
 
 ocrkernel:
