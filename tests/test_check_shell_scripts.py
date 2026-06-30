@@ -65,6 +65,10 @@ class CheckShellScriptsTests(unittest.TestCase):
                 check_shell_scripts.REPO_ROOT = original_repo_root
 
         self.assertIn(
+            "does not include root-helper script_dir resolver",
+            failures,
+        )
+        self.assertIn(
             "does not include root-helper snippet 'source \"$script_dir/repo_root.sh\"'",
             failures,
         )
@@ -72,6 +76,47 @@ class CheckShellScriptsTests(unittest.TestCase):
             "does not include root-helper snippet 'polinko_cd_repo_root'",
             failures,
         )
+
+    def test_check_script_reports_missing_script_dir_resolver(self) -> None:
+        original_repo_root = check_shell_scripts.REPO_ROOT
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script = root / "tools" / "unsafe-root.sh"
+            helper = root / "tools" / "repo_root.sh"
+            script.parent.mkdir()
+            helper.write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        "polinko_cd_repo_root() { :; }",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            script.write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        'source "$script_dir/repo_root.sh"',
+                        "polinko_cd_repo_root",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            check_shell_scripts.REPO_ROOT = root
+            try:
+                failures = check_shell_scripts.check_script(
+                    Path("tools/unsafe-root.sh")
+                )
+            finally:
+                check_shell_scripts.REPO_ROOT = original_repo_root
+
+        self.assertEqual(failures, ["does not include root-helper script_dir resolver"])
 
     def test_root_helper_exempt_executables_are_valid(self) -> None:
         for script in (
