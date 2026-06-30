@@ -128,7 +128,7 @@ class ResearchModelContractTests(unittest.TestCase):
             "`Beta 2.3`",
             "`pre-Beta 2.4`",
             "docs/eval/beta_2_3/",
-            "discarded run-level rollup hypothesis",
+            "staged contract is source-first",
             "source-first research claims",
             "manual eval workbench evidence from notebooks",
             "`POST /chat`",
@@ -138,19 +138,19 @@ class ResearchModelContractTests(unittest.TestCase):
             "`.local/runtime_dbs/active/history.db`",
             "`pass` / `fail`",
             "source artefacts used",
-            "Run-level verdicts are not canonical rollups",
+            "Canonical pre-Beta 2.4 claims stay source-first and row/case-bound",
             "docs/eval/beta_2_4/",
         ):
             self.assertIn(expected, contract)
-
-        normalized = " ".join(contract.split())
-        self.assertIn("is not being carried forward as the next method", normalized)
 
         for rejected in (
             "Non-OCR research pulses can use run-level",
             "final pulse verdict",
             "source artefact to row label to pulse verdict",
             "Pulse-level verdicts are not canonical rollups",
+            "discarded run-level rollup hypothesis",
+            "is not being carried forward as the next method",
+            "Run-level verdicts are not canonical rollups",
         ):
             self.assertNotIn(rejected, contract)
 
@@ -164,19 +164,21 @@ class ResearchModelContractTests(unittest.TestCase):
         ):
             self.assertIn("pre-Beta 2.4", _read(path), path)
 
-    def test_current_truth_surfaces_reject_pulse_carry_forward(self) -> None:
+    def test_current_truth_surfaces_name_source_first_method_shape(self) -> None:
         expectations = {
-            "README.md": "run-level rollup path is not being carried forward",
+            "README.md": "Source-first row and case evidence is the pre-Beta 2.4 method foundation",
             "docs/research/README.md": (
-                "run-level rollup hypothesis is not being carried forward"
+                "source-first row and case evidence is the method foundation"
             ),
             "docs/eval/README.md": (
-                "run-level rollup hypothesis is not being carried forward"
+                "source-first row and case evidence is the method foundation"
             ),
             "docs/governance/STATE.md": (
-                "run-level rollup hypothesis is not being carried forward"
+                "source-first row and case evidence is the pre-Beta 2.4 method foundation"
             ),
-            "docs/public/HYPOTHESIS.md": ("run-level verdicts are not carried forward"),
+            "docs/public/HYPOTHESIS.md": (
+                "source-first row and case evidence is the method shape"
+            ),
         }
 
         for path, expected in expectations.items():
@@ -207,7 +209,7 @@ class ResearchModelContractTests(unittest.TestCase):
 
         labels = {artifact["label"] for artifact in manifest["artifacts"]}
         self.assertIn(
-            "Fail-pressure pulse hypothesis (not carried forward)",
+            "Fail-pressure method evidence (historical)",
             labels,
         )
 
@@ -270,7 +272,7 @@ class ResearchModelContractTests(unittest.TestCase):
             "`/chats/*`",
             "`.local/runtime_dbs/active/manual_evals.db`",
             "manual eval workbench sources stay canonical inputs",
-            "run-level verdicts are not canonical rollups for the active manual eval",
+            "active manual eval workbench claims stay row/case-bound and source-first",
         ):
             self.assertIn(expected, eval_map)
 

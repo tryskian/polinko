@@ -36,7 +36,7 @@ classifies them, and uses them to update the next research boundary instead of
 smoothing them away.
 
 OCR is one pressure lane because the expected answer is externally checkable.
-It is part of the theory, not the whole model.
+It is one part of the broader research model.
 
 ## Current Position
 
@@ -47,7 +47,7 @@ It is part of the theory, not the whole model.
 - Retrieval, response behaviour, uncertainty boundary, and hallucination
   boundary are operationalised support surfaces.
 - Operator burden is the active thin lane.
-- The discarded run-level rollup path is not being carried forward.
+- Source-first row and case evidence is the pre-Beta 2.4 method foundation.
 
 ## Refactor Map
 

@@ -19,7 +19,7 @@ enough to read in public.
   - OCR now moves into broader generalisation pressure
   - intake now combines transcript-mined episodes with OCR-ready candidates
 - `pre-Beta 2.4` is staged as the next research-model contract:
-  - the discarded run-level rollup hypothesis is not being carried forward
+  - source-first row and case evidence is the method foundation
   - row and case evidence stay visible before lane-level summaries
   - manual eval workbench sources remain evidence, including notebooks,
     databases, chat artefacts, feedback, and checkpoints
@@ -45,7 +45,7 @@ enough to read in public.
   - `1` evicted fail row
   - widened backlog: `9` conversations / `8` families
 - the current lane map is explicit:
-  - it is a live research surface, not a closed or finished method claim
+  - it is a live research surface for the next method claim
 
 ## Non-OCR Lane Inventory
 
@@ -84,7 +84,7 @@ enough to read in public.
   - [Operator burden row promotion](./operator-burden-promotion-2026-05-09.md)
   - [Operator burden mining update](./operator-burden-mining-2026-05-09.md)
   - [Operator burden signal shape](./operator-burden-signal-shape-2026-05-12.md)
-- historical hypothesis, not carried forward:
+- historical method evidence:
   - [Fail-pressure pulse hypothesis](./fail-pressure-pulse-hypothesis-2026-05-16.md)
 - backlog context:
   - [Behaviour backlog snapshot](./behaviour-backlog-2026-05-08.md)
