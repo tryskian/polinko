@@ -5,6 +5,7 @@ import json
 import os
 import re
 import signal
+import shutil
 import subprocess
 import sys
 import time
@@ -451,6 +452,16 @@ def _skip_unless_darwin(config: RuntimeConfig) -> bool:
     return True
 
 
+def _require_process_inspection(config: RuntimeConfig) -> bool:
+    if shutil.which(config.ps_bin) is not None:
+        return True
+    print(
+        f"caffeinate config error: PS_BIN command not found: {config.ps_bin}",
+        file=sys.stderr,
+    )
+    return False
+
+
 def _launch_detached(config: RuntimeConfig) -> bool:
     try:
         result = subprocess.run(
@@ -624,6 +635,8 @@ def _print_owned_status(config: RuntimeConfig, pid: int) -> None:
 def start(config: RuntimeConfig) -> int:
     if _skip_unless_darwin(config):
         return 0
+    if not _require_process_inspection(config):
+        return 2
 
     _migrate_legacy_runtime_state(config)
     config.pid_file.parent.mkdir(parents=True, exist_ok=True)
@@ -691,6 +704,8 @@ def start(config: RuntimeConfig) -> int:
 def stop(config: RuntimeConfig, *, quiet_missing: bool = False) -> int:
     if _skip_unless_darwin(config):
         return 0
+    if not _require_process_inspection(config):
+        return 2
 
     _migrate_legacy_runtime_state(config)
     state = _evaluate_pid_file(config)
@@ -768,6 +783,8 @@ def stop_all(config: RuntimeConfig) -> int:
 def status(config: RuntimeConfig) -> int:
     if _skip_unless_darwin(config):
         return 0
+    if not _require_process_inspection(config):
+        return 2
 
     state = _evaluate_pid_file(config)
     if state.status == "owned" and state.pid is not None:
