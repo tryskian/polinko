@@ -467,7 +467,7 @@ class ResearchModelContractTests(unittest.TestCase):
             "read-only readiness flags",
             "`make manual-evals-ocr-retry-source-verification` prints a read-only",
             "`schema_version=polinko.manual_eval_ocr_retry_source_verification.v1`",
-            "exact not-confirmed reasons",
+            "exact confirmation blockers",
             "`make manual-evals-ocr-retry-source-provenance` prints a read-only",
             "`schema_version=polinko.manual_eval_ocr_retry_source_provenance.v1`",
             "source-history feedback message",
@@ -510,10 +510,10 @@ class ResearchModelContractTests(unittest.TestCase):
             ".local/manual_eval_runs/ocr_retry/",
             "`make manual-evals-ocr-retry-execution-report` inspects one local",
             "`schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`",
-            "no-warehouse-mutation boundary",
+            "warehouse mutation boundary",
             "`make manual-evals-ocr-retry-feedback-closure-preview` previews feedback",
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`",
-            "do not close feedback, write action-taken text",
+            "keep feedback, action-taken text",
             "`make manual-evals-ocr-retry-feedback-closure-apply` applies OCR retry",
             "`schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply.v1`",
             "`CONFIRM=ocr-retry-feedback-closure-apply`",
@@ -571,7 +571,7 @@ class ResearchModelContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_ocr_retry_source_verification.v1`",
             eval_map,
         )
-        self.assertIn("exact not-confirmed reasons", eval_map)
+        self.assertIn("exact confirmation blockers", eval_map)
         self.assertIn(
             "`make manual-evals-ocr-retry-source-provenance`",
             eval_map,
@@ -664,7 +664,7 @@ class ResearchModelContractTests(unittest.TestCase):
             "`schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`",
             eval_map,
         )
-        self.assertIn("no-warehouse-mutation", eval_map)
+        self.assertIn("warehouse mutation boundary", eval_map)
         self.assertIn(
             "`make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`",
             eval_map,

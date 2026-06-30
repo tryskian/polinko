@@ -141,14 +141,14 @@ notes, exports, and runtime history.
     `schema_version=polinko.manual_eval_ocr_retry_source_verification.v1`
   - source-verification packets include feedback note/action text, candidate
     source image names, OCR run IDs, OCR previews, and readiness flags
-  - exact not-confirmed reasons are included without inferring links
+  - exact confirmation blockers are included without inferring links
   - drill into source-history message provenance without mutation with
     `make manual-evals-ocr-retry-source-provenance`
   - JSON OCR retry source-provenance export uses
     `schema_version=polinko.manual_eval_ocr_retry_source_provenance.v1`
   - source-provenance packets expose source-history feedback message presence
     and exact OCR source/result message IDs when they are already present,
-    while preserving context-only OCR rows as not exact links
+    while preserving context-only OCR rows as context evidence
   - build a concrete OCR retry input packet without mutation with
     `make manual-evals-ocr-retry-input-packet`
   - JSON OCR retry input-packet export uses
@@ -226,8 +226,8 @@ notes, exports, and runtime history.
   - JSON OCR retry execution-bundle reports use
     `schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`
   - execution-bundle reports verify files, run IDs, request/response counts,
-    provider failure status, stop reasons, and the no-warehouse-mutation
-    boundary before feedback closure or any warehouse mutation
+    provider failure status, stop reasons, and the warehouse mutation boundary
+    before feedback closure or any warehouse mutation
   - preview OCR retry feedback closure without mutation with
     `make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`
   - JSON OCR retry feedback-closure previews use
