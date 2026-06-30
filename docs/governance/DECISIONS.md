@@ -5424,3 +5424,18 @@ or branch history instead.
   Python fallback.
 - Why: Startup and helper scripts should choose the repo interpreter whenever a
   runnable project venv exists.
+
+## D-317: Enforce local-only browser launch helper destinations
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `local_urls`, `browser_launch`, `runtime_guards`, `make`
+- Human-led: The human lead asked for active script maintenance across helper
+  surfaces while keeping browser launch behaviour explicit.
+- Engineer implementation: Add a local-destination guard to
+  `tools/open_local_url.sh`, keep docs/viz print-by-default behaviour stable,
+  and add executable tests with a fake launcher so validation cannot open a
+  real browser.
+- Decision: The shared local URL launcher accepts only local destinations.
+- Why: Explicit browser launch should stay bounded to local operator surfaces
+  and reject accidental external URLs before invoking system launch tools.
