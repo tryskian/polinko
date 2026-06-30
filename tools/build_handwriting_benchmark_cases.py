@@ -200,11 +200,6 @@ def parse_args() -> argparse.Namespace:
         help="Path to lane OCR cases JSON.",
     )
     parser.add_argument(
-        "--handwriting-cases",
-        dest="lane_cases",
-        help="Deprecated alias for --lane-cases.",
-    )
-    parser.add_argument(
         "--output-cases",
         default=".local/eval_cases/ocr_handwriting_benchmark_cases.json",
         help="Path to output lane benchmark cases JSON.",
