@@ -127,6 +127,21 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_stale_handwriting_cases_flag_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tool_path = root / "tools" / "build_handwriting_benchmark_cases.py"
+            tool_path.parent.mkdir(parents=True)
+            tool_path.write_text('"--handwriting-cases"\n', encoding="utf-8")
+
+            failures = check_runtime_risk_scan.check_forbidden_tool_tokens(root)
+
+        self.assertIn(
+            "tools/build_handwriting_benchmark_cases.py: stale operator flag "
+            "'--handwriting-cases' is active",
+            failures,
+        )
+
     def test_missing_session_status_target_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             _make_contract_text(omit_targets={"session-status"})

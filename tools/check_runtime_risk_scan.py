@@ -79,6 +79,9 @@ FORBIDDEN_MAKE_TARGETS = ("eod", "eod-stop")
 FORBIDDEN_MAKE_INCLUDE_TOKENS = ("makefiles/evals/aliases",)
 FORBIDDEN_RUNTIME_MAP_TOKENS = ("Startup and workspace bootstrap",)
 FORBIDDEN_PRECOMMIT_TOKENS = ("isort", "black")
+FORBIDDEN_TOOL_TOKENS = {
+    Path("tools/build_handwriting_benchmark_cases.py"): ("--handwriting-cases",),
+}
 REQUIRED_PRECOMMIT_EXCLUDE = r"^docs/peanut/"
 REQUIRED_PRECOMMIT_LOCAL_HOOKS = {
     "polinko-ruff-check": "make ruff-check",
@@ -390,6 +393,20 @@ def check_precommit_config(root: Path) -> list[str]:
     return failures
 
 
+def check_forbidden_tool_tokens(root: Path) -> list[str]:
+    failures: list[str] = []
+    for path, tokens in FORBIDDEN_TOOL_TOKENS.items():
+        try:
+            text = (root / path).read_text(encoding="utf-8")
+        except OSError as exc:
+            failures.append(f"{path}: cannot read file: {exc}")
+            continue
+        for token in tokens:
+            if token in text:
+                failures.append(f"{path}: stale operator flag {token!r} is active")
+    return failures
+
+
 def _direct_requirement_pins(root: Path) -> tuple[str, ...]:
     pins: list[str] = []
     requirements_input = root / "requirements.in"
@@ -442,6 +459,7 @@ def scan(root: Path = ROOT) -> list[str]:
     failures.extend(check_make_contracts(text))
     failures.extend(check_runtime_surface_map(root))
     failures.extend(check_precommit_config(root))
+    failures.extend(check_forbidden_tool_tokens(root))
     failures.extend(check_dependency_test_contracts(root))
     return failures
 

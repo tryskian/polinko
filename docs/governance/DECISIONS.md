@@ -5070,3 +5070,18 @@ or branch history instead.
   devcontainer contract. Failure tools may still name rejected stale patterns.
 - Why: Operator docs should explain the maintained surface without turning
   stale-state examples into current instructions.
+
+## D-293: Remove stale handwriting benchmark flag
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `operator_commands`, `ocr`, `scripts`, `risk_scan`, `source_truth`
+- Human-led: The human lead clarified that active operator surfaces should use
+  one name for one thing.
+- Engineer implementation: Remove the `--handwriting-cases` compatibility flag
+  from the handwriting benchmark builder and add a runtime risk-scan guard so
+  the stale flag cannot return unnoticed.
+- Decision: `--lane-cases` is the single active input flag for lane benchmark
+  case files.
+- Why: Duplicate operator flags weaken source clarity and make wrapper/script
+  contracts harder to audit.
