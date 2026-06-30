@@ -204,6 +204,30 @@ class ProcessLifecycleCommonTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), "8765")
 
+    def test_join_path_handles_root_and_trailing_slashes(self) -> None:
+        cases = (
+            ("/tmp", "artifact.log", "/tmp/artifact.log"),
+            ("/tmp/", "artifact.log", "/tmp/artifact.log"),
+            ("/", "artifact.log", "/artifact.log"),
+            ("/tmp", "/artifact.log", "/tmp/artifact.log"),
+        )
+        for root, leaf, expected in cases:
+            with self.subTest(root=root, leaf=leaf):
+                result = subprocess.run(
+                    [
+                        "/bin/sh",
+                        "-c",
+                        (f'. "{HELPER}"; polinko_join_path "$TEST_ROOT" "$TEST_LEAF"'),
+                    ],
+                    cwd=REPO_ROOT,
+                    env={"TEST_ROOT": root, "TEST_LEAF": leaf},
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout.strip(), expected)
+
     def test_require_url_port_matches_rejects_missing_or_mismatched_port(
         self,
     ) -> None:
