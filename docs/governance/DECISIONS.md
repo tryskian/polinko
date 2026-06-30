@@ -5454,3 +5454,19 @@ or branch history instead.
   from the capture command, regardless of preceding options.
 - Why: Local browser helpers should keep deterministic artifact paths even when
   operators pass CLI options before `snapshot`, `screenshot`, or `pdf`.
+
+## D-319: Fail devcontainer bootstrap on missing prerequisites
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `devcontainer`, `bootstrap`, `dependencies`, `helper_scripts`
+- Human-led: The human lead asked for active maintenance of hidden helper
+  scripts and local runtime surfaces.
+- Engineer implementation: Add explicit prerequisite checks to
+  `tools/setup_devcontainer.sh` for the configured bootstrap Python and `npm`,
+  verify the created venv Python path before dependency installs, and cover
+  missing-command paths in dependency-hygiene tests.
+- Decision: Devcontainer setup verifies local prerequisites before mutating
+  project dependency state.
+- Why: Bootstrap failures should point to missing tools directly instead of
+  failing later through partial venv or Node dependency setup.
