@@ -5318,3 +5318,18 @@ or branch history instead.
   resolver that makes that helper safe from any working directory.
 - Why: Runtime helper contracts should fail early when an entrypoint can only
   work from the repo root by accident.
+
+## D-310: Keep local privacy cleanup portable on macOS
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `local_privacy`, `shell_scripts`, `macos`, `portability`
+- Human-led: The human lead asked for active script maintenance across helper
+  surfaces.
+- Engineer implementation: Replace GNU-only `xargs -r` in
+  `tools/local_privacy_guard.sh` with a Bash read loop and pin the contract in
+  `tests.test_makefile_contracts`.
+- Decision: Local privacy cleanup uses shell-native iteration for tracked-doc
+  `skip-worktree` cleanup.
+- Why: Machine-local helpers should run consistently on the macOS host where
+  Polinko is operated.

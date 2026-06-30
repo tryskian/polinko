@@ -94,7 +94,10 @@ status_guard() {
 clear_guard() {
   if list_skip_worktree_docs | rg '^S' >/dev/null 2>&1; then
     echo "Clearing tracked docs skip-worktree state."
-    list_tracked_docs | xargs -r git update-index --no-skip-worktree
+    while IFS= read -r tracked_doc_path; do
+      [[ -n "${tracked_doc_path}" ]] || continue
+      git update-index --no-skip-worktree -- "${tracked_doc_path}"
+    done < <(list_tracked_docs)
   fi
   remove_exclude_block
   echo "Local privacy guard cleared."
