@@ -3,7 +3,7 @@
 # Surface IA
 
 This page maps current operator-facing surface names during the beta refactor.
-It is about path roles, not visual direction.
+It defines path roles and operator ownership boundaries.
 
 ## Active Surfaces
 

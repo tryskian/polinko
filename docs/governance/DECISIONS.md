@@ -5289,3 +5289,17 @@ or branch history instead.
   action.
 - Why: Runtime docs stay precise without leading with retired or contrast-led
   phrasing.
+
+## D-308: Keep state surface roles direct
+
+- Date: `2026-06-29`
+- Category: `docs_hygiene`
+- Tags: `state`, `surface_ia`, `runner_state`, `source_truth`
+- Human-led: The human lead clarified that active current-truth docs should
+  state current roles directly.
+- Engineer implementation: Rewrite remaining state and surface-IA wording around
+  reported still-live runners, stale handoff closeout failure, and path-role
+  ownership.
+- Decision: Current-truth docs describe roles and failure reporting directly.
+- Why: Operator-facing docs stay easier to scan when they name the maintained
+  surface role.

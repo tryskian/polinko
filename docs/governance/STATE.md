@@ -150,8 +150,8 @@ Last updated: 2026-06-29
     the configured Polinko `uvicorn` app; stale PID files that point to
     unrelated live processes are cleaned without stopping the unrelated process
   - `server-daemon` preserves managed PID files and fails stop/restart when a
-    matching server remains active after a stop signal, so closeout cannot hide
-    a still-live local API server
+    matching server remains active after a stop signal; closeout reports the
+    still-live local API server
   - `server-daemon` start waits for the configured local `/health` endpoint
     before reporting success, rather than relying on a fixed post-launch sleep
   - `server-daemon` fails early with a direct missing-command diagnostic if
@@ -167,8 +167,8 @@ Last updated: 2026-06-29
     `tools.eval_sidecar run` process shape; stale PID files that point to
     unrelated live processes are cleaned without stopping the unrelated process
   - `eval-sidecar` preserves its PID file and fails stop when a matching
-    sidecar remains active after a stop signal, so closeout cannot hide a
-    still-live runner
+    sidecar remains active after a stop signal; closeout reports the still-live
+    runner
   - `eval-sidecar` start waits for the current-run status file before reporting
     success, rather than relying on a fixed post-launch sleep
   - portfolio mockup targets live in the quarantine bundle for porting
@@ -897,7 +897,7 @@ Last updated: 2026-06-29
   - local `SESSION_HANDOFF` holds the active slice
   - `make end-docs-check` verifies `STATE` and local `SESSION_HANDOFF` date
     freshness; when local `SESSION_HANDOFF` exists, it must also mention the
-    current commit so a same-date but stale handoff cannot pass closeout
+    current commit so same-date stale handoffs fail closeout
 
 ## Active Priorities
 
