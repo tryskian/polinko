@@ -19,6 +19,10 @@ fi
 suite=$1
 python_bin=$(polinko_default_python_bin)
 asgi_app=${ASGI_APP:-server:app}
+local_eval_gate_temp_root=${LOCAL_EVAL_GATE_TEMP_ROOT:-/tmp}
+if [ "$local_eval_gate_temp_root" != "/" ]; then
+	local_eval_gate_temp_root=${local_eval_gate_temp_root%/}
+fi
 local_eval_gate_start_attempts=${LOCAL_EVAL_GATE_START_ATTEMPTS:-100}
 local_eval_gate_start_sleep_seconds=${LOCAL_EVAL_GATE_START_SLEEP_SECONDS:-0.2}
 polinko_require_positive_integer \
@@ -48,6 +52,10 @@ esac
 polinko_require_process_inspection "local eval gate PID inspection"
 
 server_pid=
+
+temp_artifact_path() {
+	printf "%s/%s" "$local_eval_gate_temp_root" "$1"
+}
 
 cleanup_server() {
 	exit_status=${1:-0}
@@ -86,11 +94,13 @@ start_local_server() {
 	port=$3
 	log_path=$4
 
+	mkdir -p "$local_eval_gate_temp_root"
+
 	case "$scope" in
 	smoke)
-		smoke_history_db=${SMOKE_HISTORY_DB:-/tmp/polinko-eval-smoke-$$-history.db}
-		smoke_memory_db=${SMOKE_MEMORY_DB:-/tmp/polinko-eval-smoke-$$-memory.db}
-		smoke_vector_db=${SMOKE_VECTOR_DB:-/tmp/polinko-eval-smoke-$$-vector.db}
+		smoke_history_db=${SMOKE_HISTORY_DB:-$(temp_artifact_path "polinko-eval-smoke-$$-history.db")}
+		smoke_memory_db=${SMOKE_MEMORY_DB:-$(temp_artifact_path "polinko-eval-smoke-$$-memory.db")}
+		smoke_vector_db=${SMOKE_VECTOR_DB:-$(temp_artifact_path "polinko-eval-smoke-$$-vector.db")}
 		rm -f \
 			"$smoke_history_db" \
 			"$smoke_memory_db" \
@@ -102,11 +112,13 @@ start_local_server() {
 			"$python_bin" -m uvicorn "$asgi_app" --host 127.0.0.1 --port "$port" >"$log_path" 2>&1 &
 		;;
 	gate)
+		gate_session_db=${GATE_SESSION_DB:-$(temp_artifact_path "polinko-quality-gate-sessions.db")}
+		gate_vector_db=${GATE_VECTOR_DB:-$(temp_artifact_path "polinko-quality-gate-vector.db")}
 		rm -f \
-			"${GATE_SESSION_DB:-/tmp/polinko-quality-gate-sessions.db}" \
-			"${GATE_VECTOR_DB:-/tmp/polinko-quality-gate-vector.db}"
-		POLINKO_SESSION_DB_PATH="${GATE_SESSION_DB:-/tmp/polinko-quality-gate-sessions.db}" \
-			POLINKO_VECTOR_DB_PATH="${GATE_VECTOR_DB:-/tmp/polinko-quality-gate-vector.db}" \
+			"$gate_session_db" \
+			"$gate_vector_db"
+		POLINKO_SESSION_DB_PATH="$gate_session_db" \
+			POLINKO_VECTOR_DB_PATH="$gate_vector_db" \
 			POLINKO_VECTOR_EMBEDDING_PROVIDER="${GATE_VECTOR_EMBEDDING_PROVIDER:-openai}" \
 			POLINKO_VECTOR_LOCAL_EMBEDDING_FALLBACK=true \
 			"$python_bin" -m uvicorn "$asgi_app" --host 127.0.0.1 --port "$port" >"$log_path" 2>&1 &
@@ -149,7 +161,7 @@ run_api_smoke() {
 	polinko_require_url_port_matches SMOKE_BASE_URL "$base_url" "$port" "api-smoke local server"
 
 	echo "Running API smoke (fresh local server + small endpoint calls)..."
-	start_local_server smoke "$base_url" "$port" /tmp/polinko-api-smoke.log
+	start_local_server smoke "$base_url" "$port" "$(temp_artifact_path "polinko-api-smoke.log")"
 	"$python_bin" -m tools.api_smoke --base-url "$base_url"
 	echo "API smoke passed."
 }
@@ -160,7 +172,7 @@ run_eval_smoke() {
 	polinko_require_url_port_matches SMOKE_BASE_URL "$base_url" "$port" "eval-smoke local server"
 
 	echo "Running eval smoke (fresh local server + api smoke + response behaviour + retrieval + file search)..."
-	start_local_server smoke "$base_url" "$port" /tmp/polinko-eval-smoke.log
+	start_local_server smoke "$base_url" "$port" "$(temp_artifact_path "polinko-eval-smoke.log")"
 	"$python_bin" -m tools.api_smoke --base-url "$base_url"
 	"$python_bin" -m tools.eval_response_behaviour --base-url "$base_url" --strict
 	"$python_bin" -m tools.eval_retrieval \
@@ -178,7 +190,7 @@ run_hallucination_gate() {
 	polinko_require_url_port_matches GATE_BASE_URL "$base_url" "$port" "hallucination-gate local server"
 
 	echo "Running hallucination gate..."
-	start_local_server gate "$base_url" "$port" /tmp/polinko-hallucination-gate.log
+	start_local_server gate "$base_url" "$port" "$(temp_artifact_path "polinko-hallucination-gate.log")"
 	"$python_bin" -m tools.eval_hallucination \
 		--base-url "$base_url" \
 		--strict \
@@ -197,7 +209,7 @@ run_quality_gate() {
 	polinko_require_url_port_matches GATE_BASE_URL "$base_url" "$port" "quality-gate local server"
 
 	echo "Running quality gate (tests + retrieval eval + file-search eval + OCR eval + style eval + response-behaviour eval + hallucination eval)..."
-	start_local_server gate "$base_url" "$port" /tmp/polinko-quality-gate.log
+	start_local_server gate "$base_url" "$port" "$(temp_artifact_path "polinko-quality-gate.log")"
 	"$python_bin" -m unittest discover -s tests -p "test_*.py"
 	"$python_bin" -m tools.eval_retrieval \
 		--base-url "$base_url" \

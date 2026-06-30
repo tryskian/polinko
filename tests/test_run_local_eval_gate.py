@@ -59,8 +59,18 @@ class RunLocalEvalGateTests(unittest.TestCase):
         self.assertIn("source=tools/python_runtime.sh", runner)
         self.assertIn('. "$script_dir/python_runtime.sh"', runner)
         self.assertIn("python_bin=$(polinko_default_python_bin)", runner)
+        self.assertIn(
+            "local_eval_gate_temp_root=${LOCAL_EVAL_GATE_TEMP_ROOT:-/tmp}",
+            runner,
+        )
+        self.assertIn("temp_artifact_path()", runner)
         self.assertIn("LOCAL_EVAL_GATE_START_ATTEMPTS ?= 100", config)
         self.assertIn("LOCAL_EVAL_GATE_START_SLEEP_SECONDS ?= 0.2", config)
+        self.assertIn("LOCAL_EVAL_GATE_TEMP_ROOT ?= /tmp", config)
+        self.assertIn(
+            'LOCAL_EVAL_GATE_TEMP_ROOT="$(LOCAL_EVAL_GATE_TEMP_ROOT)"',
+            config,
+        )
         self.assertIn(
             'LOCAL_EVAL_GATE_START_ATTEMPTS="$(LOCAL_EVAL_GATE_START_ATTEMPTS)"',
             config,
@@ -78,9 +88,18 @@ class RunLocalEvalGateTests(unittest.TestCase):
             runner,
         )
         self.assertIn('sleep "$local_eval_gate_start_sleep_seconds"', runner)
-        self.assertIn("/tmp/polinko-eval-smoke-$$-history.db", runner)
-        self.assertIn("/tmp/polinko-eval-smoke-$$-memory.db", runner)
-        self.assertIn("/tmp/polinko-eval-smoke-$$-vector.db", runner)
+        self.assertIn(
+            '$(temp_artifact_path "polinko-eval-smoke-$$-history.db")',
+            runner,
+        )
+        self.assertIn(
+            '$(temp_artifact_path "polinko-eval-smoke-$$-memory.db")',
+            runner,
+        )
+        self.assertIn(
+            '$(temp_artifact_path "polinko-eval-smoke-$$-vector.db")',
+            runner,
+        )
 
     def _base_env(self, tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
         bin_dir = tmp_path / "bin"
@@ -89,6 +108,7 @@ class RunLocalEvalGateTests(unittest.TestCase):
         python_args = tmp_path / "python-args.tsv"
         curl_args = tmp_path / "curl-args.txt"
         server_started = tmp_path / "server-started"
+        server_env_path = tmp_path / "server-env.tsv"
         python_script = bin_dir / "python.sh"
         curl_script = bin_dir / "curl"
         sleep_script = bin_dir / "sleep"
@@ -112,6 +132,14 @@ for arg in "$@"; do
 done
 printf "\\n" >> "$PYTHON_ARGS"
 if [ "${1:-}" = "-m" ] && [ "${2:-}" = "uvicorn" ]; then
+\tif [ -n "${SERVER_ENV_PATH:-}" ]; then
+\t\t{
+\t\t\tprintf "POLINKO_HISTORY_DB_PATH\\t%s\\n" "${POLINKO_HISTORY_DB_PATH:-}"
+\t\t\tprintf "POLINKO_MEMORY_DB_PATH\\t%s\\n" "${POLINKO_MEMORY_DB_PATH:-}"
+\t\t\tprintf "POLINKO_VECTOR_DB_PATH\\t%s\\n" "${POLINKO_VECTOR_DB_PATH:-}"
+\t\t\tprintf "POLINKO_SESSION_DB_PATH\\t%s\\n" "${POLINKO_SESSION_DB_PATH:-}"
+\t\t} >> "$SERVER_ENV_PATH"
+\tfi
 \t: > "$SERVER_STARTED"
 \tprintf "%s" "$$" > "$SERVER_PID_PATH"
 \tif [ "${UVICORN_EXIT_IMMEDIATELY:-0}" = "1" ]; then
@@ -164,6 +192,7 @@ exit "${CURL_EXIT:-0}"
                 "PYTHON_ARGS": str(python_args),
                 "CURL_ARGS": str(curl_args),
                 "SERVER_STARTED": str(server_started),
+                "SERVER_ENV_PATH": str(server_env_path),
                 "SERVER_PID_PATH": str(server_pid_path),
                 "ASGI_APP": "custom_server:app",
                 "SMOKE_PORT": "9991",
@@ -215,6 +244,19 @@ exit "${CURL_EXIT:-0}"
             for line in path.read_text(encoding="utf-8").splitlines()
             if line
         ]
+
+    def _read_env_rows(self, env: dict[str, str]) -> dict[str, str]:
+        env_path = Path(env["SERVER_ENV_PATH"])
+        if not env_path.exists():
+            return {}
+        return {
+            key: value
+            for key, value in (
+                line.split("\t", 1)
+                for line in env_path.read_text(encoding="utf-8").splitlines()
+                if line
+            )
+        }
 
     def test_local_eval_gate_suites_run_expected_commands(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -398,6 +440,37 @@ exit "${CURL_EXIT:-0}"
 
                     self.assertEqual(result.returncode, 0, result.stderr)
                     self.assertEqual(self._read_calls(python_args), expected)
+
+    def test_temp_root_override_controls_default_smoke_artifacts(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, _python_args, server_started = self._base_env(Path(tmp))
+            temp_root = Path(tmp) / "gate-temp-root"
+            env["LOCAL_EVAL_GATE_TEMP_ROOT"] = f"{temp_root}/"
+            for name in (
+                "SMOKE_HISTORY_DB",
+                "SMOKE_MEMORY_DB",
+                "SMOKE_VECTOR_DB",
+                "GATE_SESSION_DB",
+                "GATE_VECTOR_DB",
+            ):
+                env.pop(name)
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            rows = self._read_env_rows(env)
+            expected_names = {
+                "POLINKO_HISTORY_DB_PATH": r"polinko-eval-smoke-\d+-history\.db",
+                "POLINKO_MEMORY_DB_PATH": r"polinko-eval-smoke-\d+-memory\.db",
+                "POLINKO_VECTOR_DB_PATH": r"polinko-eval-smoke-\d+-vector\.db",
+            }
+            for key, name_pattern in expected_names.items():
+                path = Path(rows[key])
+                self.assertEqual(path.parent, temp_root)
+                self.assertRegex(path.name, name_pattern)
+            self.assertEqual(rows["POLINKO_SESSION_DB_PATH"], "")
+            self.assertTrue(temp_root.is_dir())
 
     def test_readiness_failure_stops_before_eval_commands(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
