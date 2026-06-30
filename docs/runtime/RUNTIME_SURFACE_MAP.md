@@ -121,7 +121,7 @@ flowchart TD
   resolve the checkout root through `tools/repo_root.sh`. Direct local-gate,
   background-runner, eval-sidecar, report-builder, OCR
   runner, and OCR growth runner execution also prefer the repo `.venv`
-  interpreter when `PYTHON` is not set.
+  interpreter when `PYTHON` is unset.
   Local eval gates use bounded cleanup for the temporary server they start for
   each gate run: successful cleanup preserves the suite exit status, while a
   server that remains active after the stop signal fails the wrapper clearly.
@@ -146,9 +146,9 @@ flowchart TD
   `tools/launch_detached_process.py`; runner scripts retain ownership of
   their domain-specific liveness and adoption logic. The shared launcher
   rejects empty, missing, and non-launchable commands with direct diagnostics
-  before PID ownership is recorded; it also stops the started child process
-  group if the PID file cannot be written, so failed starts do not leave
-  unmanaged background descendants behind. Runner-specific
+  before PID ownership is recorded; PID-file write failure stops the started
+  child process group before exit, preserving clean background state.
+  Runner-specific
   `*_LAUNCHER_PYTHON` overrides are validated before manager exec or detached
   launch, so bad launcher interpreters fail before PID state is written.
   Runner scripts resolve the checkout root through `tools/repo_root.sh` before
@@ -188,10 +188,10 @@ flowchart TD
   PID/log/current-file paths before liveness.
   `eval-sidecar` reports missing current-file drift on start/status and still
   stops the repo-managed PID during closeout. It validates
-  `EVAL_SIDECAR_MIN_SECONDS` before detached launch, so invalid duration config
-  cannot become a child-process argparse failure. It trusts PID files only when
-  the live PID matches the `tools.eval_sidecar run` process shape; unrelated
-  live PIDs are cleaned from the PID file without being stopped. If stop
+  `EVAL_SIDECAR_MIN_SECONDS` before detached launch, so invalid duration
+  config fails before child-process argparse. It trusts PID files only when the
+  live PID matches the `tools.eval_sidecar run` process shape; unrelated live
+  PIDs are cleaned from the PID file without being stopped. If stop
   signals a matching sidecar without current-run context and the process
   remains active, the PID file stays in place and the stop exits non-zero.
   Start reports success only after the current-run status file exists within
@@ -214,7 +214,7 @@ flowchart TD
   growth, focus, and transcript-lane OCR wrappers share the same case guard
   before launching eval runners.
 - CI and dependency automation should mirror local gates closely enough that
-  failed remote runs point to real fixes, not setup drift. `make github-health`
+  failed remote runs point to real fixes instead of setup drift. `make github-health`
   reports `gh` auth state, recent failed workflow runs, open PR check state,
   and the next useful `gh` command; startup surfaces it as an attention pass
   before local runtime checks.

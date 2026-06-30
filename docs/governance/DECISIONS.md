@@ -5274,3 +5274,18 @@ or branch history instead.
 - Decision: Public docs describe Polinko through current source-led claims.
 - Why: Reader-facing docs stay clearer when they lead with the maintained
   research shape.
+
+## D-307: Keep lifecycle docs failure-state direct
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `lifecycle`, `runtime_docs`, `runner_state`, `source_truth`
+- Human-led: The human lead clarified that active docs should use current-source
+  language while preserving precise operator boundaries.
+- Engineer implementation: Rewrite lifecycle documentation around unset
+  interpreter selection, PID-file write failure cleanup, invalid sidecar
+  duration handling, stale PID rejection, and CI drift language.
+- Decision: Lifecycle docs describe failure handling by the maintained runtime
+  action.
+- Why: Runtime docs stay precise without leading with retired or contrast-led
+  phrasing.
