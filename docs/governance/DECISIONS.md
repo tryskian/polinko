@@ -5470,3 +5470,18 @@ or branch history instead.
   project dependency state.
 - Why: Bootstrap failures should point to missing tools directly instead of
   failing later through partial venv or Node dependency setup.
+
+## D-320: Align pull request template with current PR gate
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `pull_requests`, `ci`, `build_hygiene`, `workflow`
+- Human-led: The human lead asked for script and automation surfaces to stay
+  maintained without manual process drift.
+- Engineer implementation: Replace the older PR-template validation checklist
+  with focused local checks, `make pr-preflight`, and green GitHub PR checks;
+  add dependency-hygiene coverage for the template contract.
+- Decision: Pull request validation guidance names the current PR readiness
+  gate.
+- Why: PR process surfaces should point contributors to the gate that mirrors
+  build hygiene and CI instead of listing older partial checks.

@@ -8,9 +8,9 @@
 - Behaviour drift: none | intentional (explain below)
 
 ## Validation
-- [ ] `make lint-docs`
-- [ ] `make test`
-- [ ] `make quality-gate-deterministic` (when applicable)
+- [ ] Focused local checks run
+- [ ] `make pr-preflight`
+- [ ] GitHub PR checks green
 
 ## Notes
 - Risks / follow-ups:
