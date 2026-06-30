@@ -95,6 +95,9 @@ class DependencyHygieneTests(unittest.TestCase):
             script,
         )
         self.assertIn('venv_python="$venv_dir/bin/python3"', script)
+        self.assertIn('require_command "bootstrap Python" "$bootstrap_python"', script)
+        self.assertIn('require_command "npm" "npm"', script)
+        self.assertIn('[ ! -x "$venv_python" ]', script)
         self.assertIn('"$bootstrap_python" -m venv --copies "$venv_dir"', script)
         self.assertIn('"$venv_python" -m pip install --upgrade pip', script)
         self.assertIn('"$venv_python" -m pip install -r requirements.txt', script)
@@ -183,6 +186,83 @@ class DependencyHygieneTests(unittest.TestCase):
             self.assertEqual(
                 npm_log.read_text(encoding="utf-8").strip(), "ci --no-audit --no-fund"
             )
+
+    def test_devcontainer_setup_reports_missing_bootstrap_python(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            venv_dir = tmp / ".venv-devcontainer"
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON": (
+                        "missing-polinko-bootstrap-python"
+                    ),
+                    "POLINKO_DEVCONTAINER_VENV_DIR": str(venv_dir),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", "tools/setup_devcontainer.sh"],
+                cwd=REPO_ROOT,
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(
+                "setup-devcontainer: missing bootstrap Python command: "
+                "missing-polinko-bootstrap-python",
+                result.stderr,
+            )
+            self.assertFalse(venv_dir.exists())
+
+    def test_devcontainer_setup_reports_missing_npm_before_bootstrap(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmp = Path(tmpdir)
+            fake_bin = tmp / "bin"
+            fake_bin.mkdir()
+            fake_python = fake_bin / "bootstrap-python"
+            bootstrap_log = tmp / "bootstrap-python.log"
+            venv_dir = tmp / ".venv-devcontainer"
+
+            fake_python.write_text(
+                textwrap.dedent(
+                    """\
+                    #!/usr/bin/env bash
+                    set -euo pipefail
+                    printf '%s\\n' "$*" >> "$BOOTSTRAP_PYTHON_LOG"
+                    """
+                ),
+                encoding="utf-8",
+            )
+            fake_python.chmod(0o755)
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "BOOTSTRAP_PYTHON_LOG": str(bootstrap_log),
+                    "PATH": f"{fake_bin}{os.pathsep}/usr/bin:/bin",
+                    "POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON": str(fake_python),
+                    "POLINKO_DEVCONTAINER_VENV_DIR": str(venv_dir),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", "tools/setup_devcontainer.sh"],
+                cwd=REPO_ROOT,
+                env=env,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("setup-devcontainer: missing npm command: npm", result.stderr)
+            self.assertFalse(bootstrap_log.exists())
+            self.assertFalse(venv_dir.exists())
 
     def test_python_lockfile_uses_dependabot_visible_pip_tools_convention(
         self,
