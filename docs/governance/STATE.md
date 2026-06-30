@@ -131,8 +131,8 @@ Last updated: 2026-06-29
     missing local process-inspection tooling fails with a direct prerequisite
     diagnostic
   - shared shell PID checks require positive-integer PID values before liveness
-    or stop decisions, so malformed, zero, or negative PID-file values cannot be
-    treated as live runner processes
+    or stop decisions, so malformed, zero, or negative PID-file values are
+    rejected as live runner processes
   - shell lifecycle runners validate launch ports and readiness-loop bounds
     before launch, adoption, status, or readiness checks; this covers
     `server-daemon` and local eval gate `SMOKE_PORT` / `GATE_PORT` overrides
@@ -162,7 +162,7 @@ Last updated: 2026-06-29
   - `eval-sidecar` reports missing current-file drift on start/status and still
     stops the repo-managed PID during closeout
   - `eval-sidecar` validates `EVAL_SIDECAR_MIN_SECONDS` before detached launch,
-    so invalid duration config cannot become a child-process argparse failure
+    so invalid duration config fails before child-process argparse
   - `eval-sidecar` trusts managed PID files only when the live PID matches the
     `tools.eval_sidecar run` process shape; stale PID files that point to
     unrelated live processes are cleaned without stopping the unrelated process
@@ -828,8 +828,8 @@ Last updated: 2026-06-29
     through `tools/repo_root.sh`, while each runner keeps its own liveness,
     adoption, status, and stop logic
   - shared shell PID checks require positive-integer PID values before liveness
-    or stop decisions, so malformed, zero, or negative PID-file values cannot be
-    treated as live runner processes
+    or stop decisions, so malformed, zero, or negative PID-file values are
+    rejected as live runner processes
   - runner-specific `*_LAUNCHER_PYTHON` overrides are validated before manager
     exec or detached launch, so bad launcher interpreters fail before PID state
     is written

@@ -91,9 +91,9 @@ Runner lifecycle rule:
     reports repo context plus PID/log paths before liveness
   - matching local `uvicorn server:app` processes without PID files are
     adopted on start, surfaced by status, and stopped during closeout recovery
-  - if a matching server does not exit after a stop signal, the PID file is
-    preserved when present and the action fails instead of hiding the
-    still-live server
+  - matching servers that remain active after a stop signal preserve the PID
+    file when present and fail the action instead of hiding the still-live
+    server
   - start reports success only after the configured local `/health` endpoint is
     reachable within the bounded readiness wait
   - HTTP readiness checks require `curl` before launch work begins, so a
@@ -111,8 +111,8 @@ Runner lifecycle rule:
   - live PID files are treated as managed only when the process matches
     `tools.eval_sidecar run`; unrelated live PIDs are cleaned from the PID file
     without being stopped
-  - if a matching sidecar does not exit after a stop signal, the PID file is
-    preserved and the stop action fails instead of hiding the still-live runner
+  - matching sidecars that remain active after a stop signal preserve the PID
+    file and fail the stop action instead of hiding the still-live runner
   - start reports success only after the current-run status file exists within
     the bounded readiness wait
 - Portfolio app, static output, preview/mockup helpers, and Netlify config live
@@ -125,8 +125,8 @@ Runner lifecycle rule:
   PID-state decisions, so missing local process-inspection tooling fails as a
   prerequisite error instead of misleading liveness state
 - shared shell PID checks require positive-integer PID values before liveness or
-  stop decisions, so malformed, zero, or negative PID-file values cannot be
-  treated as live runner processes
+  stop decisions, so malformed, zero, or negative PID-file values are rejected
+  as live runner processes
 - lifecycle launch ports and readiness-loop bounds are validated before
   process launch, adoption, status, or readiness checks for `server-daemon`
   and local eval gate `SMOKE_PORT` / `GATE_PORT` overrides
@@ -135,7 +135,7 @@ Runner lifecycle rule:
   URL; this covers `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and `GATE_BASE_URL`
 - the shared detached launcher rejects empty, missing, and non-launchable
   commands with direct diagnostics before PID ownership is recorded, and stops
-  the started child process group if the PID file cannot be written
+  the started child process group on PID-file write failure
 - runner-specific `*_LAUNCHER_PYTHON` overrides are validated before manager
   exec or detached launch, so bad launcher interpreters fail before PID state is
   written
