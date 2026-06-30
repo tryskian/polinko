@@ -2103,41 +2103,44 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^path-leak-audit-local:$")
         self.assertIn("$(PYTHON) -m tools.path_leak_check --scope local-config", text)
         self.assertIn("$(MAKE) --no-print-directory local-runtime-config-check", text)
+        self.assertIn("CORE_STEPS=(", closeout_text)
+        self.assertIn("TOTAL_STEPS=${#CORE_STEPS[@]}", closeout_text)
+        self.assertNotIn("TOTAL_STEPS=17", closeout_text)
         self.assertIn(
-            'run_step "scripts-check" make --no-print-directory scripts-check',
+            '"scripts-check|make --no-print-directory scripts-check"',
             closeout_text,
         )
         self.assertIn(
-            'run_step "path-leak-check" make --no-print-directory path-leak-check',
+            '"path-leak-check|make --no-print-directory path-leak-check"',
             closeout_text,
         )
         self.assertIn(
-            'run_step "risk-scan" make --no-print-directory risk-scan',
+            '"risk-scan|make --no-print-directory risk-scan"',
             closeout_text,
         )
         self.assertIn(
-            'run_step "operator-command-check" make --no-print-directory operator-command-check',
+            '"operator-command-check|make --no-print-directory operator-command-check"',
             closeout_text,
         )
         self.assertGreater(
-            closeout_text.index('run_step "scripts-check"'),
-            closeout_text.index('run_step "doctor-env"'),
+            closeout_text.index('"scripts-check|'),
+            closeout_text.index('"doctor-env|'),
         )
         self.assertLess(
-            closeout_text.index('run_step "scripts-check"'),
-            closeout_text.index('run_step "path-leak-check"'),
+            closeout_text.index('"scripts-check|'),
+            closeout_text.index('"path-leak-check|'),
         )
         self.assertLess(
-            closeout_text.index('run_step "path-leak-check"'),
-            closeout_text.index('run_step "risk-scan"'),
+            closeout_text.index('"path-leak-check|'),
+            closeout_text.index('"risk-scan|'),
         )
         self.assertLess(
-            closeout_text.index('run_step "risk-scan"'),
-            closeout_text.index('run_step "operator-command-check"'),
+            closeout_text.index('"risk-scan|'),
+            closeout_text.index('"operator-command-check|'),
         )
         self.assertLess(
-            closeout_text.index('run_step "operator-command-check"'),
-            closeout_text.index('run_step "ci-python-style"'),
+            closeout_text.index('"operator-command-check|'),
+            closeout_text.index('"ci-python-style|'),
         )
 
     def test_shell_script_contract_checker_accepts_tracked_scripts(self) -> None:

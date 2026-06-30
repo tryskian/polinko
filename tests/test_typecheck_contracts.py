@@ -63,7 +63,7 @@ class TypecheckContractTests(unittest.TestCase):
         )
         self.assertGreater(
             closeout.index('run_step "end-git-check"'),
-            closeout.index('run_step "security-checks"'),
+            closeout.index('"security-checks|'),
         )
         self.assertIn("expected branch $BRANCH", git_check)
         self.assertIn("rerunning make end", git_check)
