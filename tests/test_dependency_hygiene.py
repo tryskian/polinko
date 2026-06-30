@@ -81,6 +81,16 @@ class DependencyHygieneTests(unittest.TestCase):
         self.assertNotIn("ms-python.isort", extensions)
         self.assertNotIn("ms-pyright.pyright", extensions)
 
+    def test_pull_request_template_uses_current_pr_gate(self) -> None:
+        template = _read(".github/pull_request_template.md")
+
+        self.assertIn("Focused local checks run", template)
+        self.assertIn("`make pr-preflight`", template)
+        self.assertIn("GitHub PR checks green", template)
+        self.assertNotIn("`make lint-docs`", template)
+        self.assertNotIn("`make test`", template)
+        self.assertNotIn("`make quality-gate-deterministic`", template)
+
     def test_devcontainer_setup_script_uses_locked_root_deps(
         self,
     ) -> None:
