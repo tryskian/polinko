@@ -5560,3 +5560,19 @@ or branch history instead.
   only.
 - Why: Editor task lists should not keep parked portfolio entrypoints in the
   normal Polinko workflow after those surfaces move to the quarantine lane.
+
+## D-326: Keep package-install diagnostics operator-readable
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `package_install`, `diagnostics`, `runtime_guards`, `build_hygiene`
+- Human-led: The human lead asked for script-maintenance failures to be
+  automated, precise, and actionable instead of requiring manual diagnosis.
+- Engineer implementation: Make `tools/check_package_install.py` import-safe
+  before the editable package is installed, emit a one-line remediation hint for
+  missing package imports or metadata, and add focused coverage for the direct
+  failure path.
+- Decision: Package-install guard failures report the required editable-install
+  action before importing packaged runtime modules.
+- Why: Operators should see the active recovery command when the checker runs
+  under the wrong Python environment instead of reading a raw import traceback.

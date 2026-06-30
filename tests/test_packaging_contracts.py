@@ -2,6 +2,8 @@ import tomllib
 import unittest
 from pathlib import Path
 
+from tools import check_package_install
+
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -107,6 +109,21 @@ class PackagingContractTests(unittest.TestCase):
         self.assertIn('metadata.entry_points(group="console_scripts")', install_check)
         self.assertIn('"polinko-chat"', install_check)
         self.assertIn('"src"', pyright_config)
+
+    def test_editable_install_check_reports_missing_package_without_traceback(
+        self,
+    ) -> None:
+        with self.assertRaises(SystemExit) as context:
+            check_package_install.require_importable_package(
+                "definitely_missing_polinko_package"
+            )
+
+        self.assertEqual(
+            str(context.exception),
+            "definitely_missing_polinko_package package is not importable; "
+            "run `make package-install-check` or install the package editable with "
+            "`python -m pip install --no-build-isolation --no-deps -e .`",
+        )
 
 
 if __name__ == "__main__":
