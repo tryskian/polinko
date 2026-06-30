@@ -123,6 +123,16 @@ class RuntimeRiskScanTests(unittest.TestCase):
 
         self.assertIn("ci-docs: missing dependency 'risk-scan'", failures)
 
+    def test_missing_python_runtime_resolver_token_is_reported(self) -> None:
+        failures = check_runtime_risk_scan.check_make_contracts(_make_contract_text())
+
+        self.assertIn(
+            "Make surface: missing runtime token "
+            '\'VENV="$(VENV)" . ./tools/python_runtime.sh; '
+            "polinko_default_python_bin'",
+            failures,
+        )
+
     def test_duplicate_eod_target_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             _make_contract_text(extra_lines=("eod:",))

@@ -5516,3 +5516,17 @@ or branch history instead.
   resolver.
 - Why: Interpreter selection should prefer the repo runtime consistently
   without duplicating fallback logic across Make and shell surfaces.
+
+## D-323: Guard the shared Python resolver contract in risk scan
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `python_runtime`, `risk_scan`, `make`, `runtime_guards`
+- Human-led: The human lead asked for script-maintenance improvements to be
+  automated rather than manually remembered.
+- Engineer implementation: Extend `tools.check_runtime_risk_scan` so
+  `makefiles/config/base.mk` remains a required runtime surface and the Make
+  aggregate must source `tools/python_runtime.sh` for default `PYTHON`.
+- Decision: Runtime risk scan guards the shared Make/shell Python resolver.
+- Why: Interpreter fallback drift should fail through the normal runtime gate
+  before it reaches startup, closeout, or PR CI.

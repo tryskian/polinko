@@ -17,6 +17,7 @@ REQUIRED_FILES = (
     Path("makefiles/build.mk"),
     Path("makefiles/checks.mk"),
     Path("makefiles/checks/dev-tools/github.mk"),
+    Path("makefiles/config/base.mk"),
     Path("makefiles/config/ops/github.mk"),
     Path("makefiles/runtime.mk"),
     Path("makefiles/surfaces.mk"),
@@ -114,6 +115,10 @@ REQUIRED_BUILD_HYGIENE_DEPS = (
     "doctor-env",
     "transcript-check",
     "ci",
+)
+
+REQUIRED_MAKE_RUNTIME_TOKENS = (
+    'VENV="$(VENV)" . ./tools/python_runtime.sh; polinko_default_python_bin',
 )
 
 
@@ -264,6 +269,10 @@ def check_make_contracts(text: str) -> list[str]:
     for target in NON_CANONICAL_MAKE_TARGETS:
         if target in targets:
             failures.append(f"make target {target!r}: non-canonical target is active")
+
+    for token in REQUIRED_MAKE_RUNTIME_TOKENS:
+        if token not in text:
+            failures.append(f"Make surface: missing runtime token {token!r}")
 
     deps = ci_docs_deps(text)
     if not deps:
