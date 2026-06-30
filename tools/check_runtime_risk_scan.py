@@ -116,6 +116,7 @@ RUNTIME_MAP_SURFACES = (
             "make start",
             "tools/start_of_day_routine.sh",
             "tools/repo_root.sh",
+            "make github-health",
             "make doctor-env",
             "make caffeinate",
             "make api-smoke",

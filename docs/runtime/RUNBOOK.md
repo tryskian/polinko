@@ -44,6 +44,8 @@ Use this doc for operator procedure.
 
 1. Run:
    - `make start`
+   - startup includes a GitHub health attention pass before local runtime
+     checks
 2. Read in this order from the printed rehydrate prompt:
    - `docs/governance/CHARTER.md`
    - `docs/governance/STATE.md`
@@ -53,6 +55,7 @@ Use this doc for operator procedure.
    - local `docs/peanut/governance/SESSION_HANDOFF.md` if present
 3. Confirm execution location:
    - printed repo root and host vs devcontainer mode
+   - GitHub health attention, if printed
 4. Confirm active branch:
    - `git branch --show-current`
 5. If on `main`, create or switch to a feature branch before edits.

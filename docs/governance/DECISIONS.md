@@ -5001,3 +5001,18 @@ or branch history instead.
   helper for PR and workflow failure visibility.
 - Why: The build-hygiene gates are only useful if their failures are easy to
   see from the repo runtime without depending on a browser refresh or memory.
+
+## D-289: Surface GitHub health during startup
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `startup`, `github_actions`, `operator_runtime`, `build_hygiene`
+- Human-led: The human lead clarified that CI and PR failures should be visible
+  through maintained repo tooling during active work.
+- Engineer implementation: Run `make github-health` as a non-blocking startup
+  attention pass before local runtime checks, and add startup/runtime contract
+  coverage so the surface stays wired.
+- Decision: `make start` surfaces GitHub health during morning startup and
+  continues through local runtime setup.
+- Why: Startup is the first operator contact point for repo health, so it should
+  expose remote build-hygiene state before implementation begins.

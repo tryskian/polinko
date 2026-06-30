@@ -16,6 +16,7 @@ flowchart TD
     Operator["chat-led startup"] --> MakeStart
     MakeStart --> StartRoutine["tools/start_of_day_routine.sh"]
     StartRoutine --> RepoRoot["tools/repo_root.sh"]
+    StartRoutine --> GitHubHealth["make github-health"]
     StartRoutine --> Doctor["make doctor-env"]
     StartRoutine --> WakeLock["make caffeinate + caffeinate-status"]
     StartRoutine --> ApiSmoke["make api-smoke"]
@@ -91,10 +92,10 @@ flowchart TD
 
 ## Reading the Map
 
-- Startup should stay narrow and chat-led: it verifies environment health,
-  starts the repo-managed wake lock, runs smoke checks with isolated defaults,
-  and stops for alignment. VS Code keeps `make start` available as a manual
-  task; folder-open bootstrap is retired.
+- Startup should stay narrow and chat-led: it reports GitHub health attention,
+  verifies environment health, starts the repo-managed wake lock, runs smoke
+  checks with isolated defaults, and stops for alignment. VS Code keeps
+  `make start` available as a manual task; folder-open bootstrap is retired.
 - Active validation and session closeout are separate surfaces:
   `make end-preflight` is branch-local validation, while `make end` is the
   session closeout routine from clean synced `main`. `make end-stop` is the
@@ -215,7 +216,8 @@ flowchart TD
 - CI and dependency automation should mirror local gates closely enough that
   failed remote runs point to real fixes, not setup drift. `make github-health`
   reports `gh` auth state, recent failed workflow runs, open PR check state,
-  and the next useful `gh` command.
+  and the next useful `gh` command; startup surfaces it as an attention pass
+  before local runtime checks.
 - Local URL targets remain print-first by default. Explicit system-browser
   launch paths route through `tools/open_local_url.sh` so `docs` and `viz`
   launch behavior share one audited helper.

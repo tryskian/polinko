@@ -43,6 +43,20 @@ class StartupContractTests(unittest.TestCase):
         self.assertNotIn("In 5 bullets", script)
         self.assertNotIn("Then execute the Next Slice", script)
 
+    def test_startup_surfaces_github_health_without_blocking(self) -> None:
+        script = _read("tools/start_of_day_routine.sh")
+
+        self.assertIn("make --no-print-directory github-health", script)
+        self.assertIn(
+            "github-health reported attention; continuing startup",
+            script,
+        )
+        self.assertIn("make --no-print-directory doctor-env", script)
+        self.assertLess(
+            script.index("make --no-print-directory github-health"),
+            script.index("make --no-print-directory doctor-env"),
+        )
+
     def test_runtime_docs_match_start_alignment_contract(self) -> None:
         start_reference = _read("docs/runtime/START_END_REFERENCE.md")
         runbook = _read("docs/runtime/RUNBOOK.md")
@@ -52,16 +66,22 @@ class StartupContractTests(unittest.TestCase):
             "reply in the morning ritual before implementation", start_reference
         )
         self.assertIn("kernel map", start_reference)
+        self.assertIn("make github-health", start_reference)
+        self.assertIn("continues local startup", start_reference)
         self.assertIn("chat-first alignment pass", start_reference)
         self.assertIn("wait for human alignment before implementation", start_reference)
         self.assertIn("docs/governance/DECISIONS.md", runbook)
         self.assertIn("Reply in the morning ritual before implementation", runbook)
         self.assertIn("repo root printed by `make start`", runbook)
+        self.assertIn("GitHub health attention", runbook)
         self.assertIn("kernel map", runbook)
         self.assertIn("chat-first alignment pass", runbook)
         self.assertIn("Wait for human alignment before implementation", runbook)
         self.assertNotIn("/abs/path/to/polinko", runbook)
         self.assertIn('Startup["Startup and alignment"]', runtime_map)
+        self.assertIn(
+            'StartRoutine --> GitHubHealth["make github-health"]', runtime_map
+        )
         self.assertNotIn("Startup and workspace bootstrap", runtime_map)
         self.assertNotIn("execute the `Next Slice`", start_reference)
 

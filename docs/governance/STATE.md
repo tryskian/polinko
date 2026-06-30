@@ -56,8 +56,8 @@ Last updated: 2026-06-29
   - Codex proactively records durable contract changes in the decision log
   - cleanup proceeds one kernel at a time from clean synced `main`
   - morning startup is a chat-first alignment pass: `make start` rehydrates,
-    reports context, a kernel map, and any attention note, then waits for human
-    alignment before implementation
+    reports context, GitHub health attention, a kernel map, and any attention
+    note, then waits for human alignment before implementation
 - Public-facing surfaces remain derived from repo truth:
   - the root README now names the Polinko research model as staged for the
     next beta, replacing generic maintenance framing with a model-refactor
@@ -747,7 +747,8 @@ Last updated: 2026-06-29
     token permissions
   - GitHub check visibility is explicit through `make github-health`, which
     reports `gh` auth state, recent failed workflow runs, open PR check state,
-    and the next useful `gh` command
+    and the next useful `gh` command; `make start` surfaces it before local
+    runtime checks
   - Dependabot routine and security updates are grouped by ecosystem so Python,
     root npm, and GitHub Actions updates stay below GitHub's open PR queue
     limits
