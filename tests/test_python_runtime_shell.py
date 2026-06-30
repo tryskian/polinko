@@ -94,6 +94,18 @@ class PythonRuntimeShellTests(unittest.TestCase):
 
             self.assertEqual(self._run_resolver(root, env), "./.venv/bin/python3.14")
 
+    def test_repo_venv_python3_is_preferred_before_repo_python(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            venv_bin = root / ".venv" / "bin"
+            venv_bin.mkdir(parents=True)
+            _write_executable(venv_bin / "python3", "#!/usr/bin/env sh\nexit 0\n")
+            _write_executable(venv_bin / "python", "#!/usr/bin/env sh\nexit 0\n")
+            env = os.environ.copy()
+            env.pop("PYTHON", None)
+
+            self.assertEqual(self._run_resolver(root, env), "./.venv/bin/python3")
+
     def test_system_python3_is_final_fallback(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             env = os.environ.copy()

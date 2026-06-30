@@ -5408,3 +5408,19 @@ or branch history instead.
 - Decision: Current operator docs use canonical lifecycle command names only.
 - Why: Operator-facing docs should stay current-source while the decision log
   remains the place for historical context.
+
+## D-316: Align repo Python interpreter selection order
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `python_runtime`, `doctor_env`, `make`, `startup`
+- Human-led: The human lead called out recurring local-versus-system Python
+  environment friction during script maintenance.
+- Engineer implementation: Align Make and shell helper interpreter selection
+  with `doctor-env`: prefer repo `.venv/bin/python3.14`, then
+  `.venv/bin/python3`, then `.venv/bin/python`, then host `python3`; add unit
+  and Makefile contract coverage for the order.
+- Decision: Repo-local Python 3 candidates take precedence before any host
+  Python fallback.
+- Why: Startup and helper scripts should choose the repo interpreter whenever a
+  runnable project venv exists.
