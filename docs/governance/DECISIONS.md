@@ -5485,3 +5485,19 @@ or branch history instead.
   gate.
 - Why: PR process surfaces should point contributors to the gate that mirrors
   build hygiene and CI instead of listing older partial checks.
+
+## D-321: Guard sourced shell helper registration
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `shell`, `helper_scripts`, `scripts_check`, `runtime_guards`
+- Human-led: The human lead asked for hidden helper scripts and workflow
+  interruptions to stay actively maintained during the script refactor.
+- Engineer implementation: Extend `tools.check_shell_scripts` to discover
+  shell helpers sourced through `$script_dir`, fail untracked sourced paths, and
+  fail sourced helpers that are missing from `SHELL_LIBRARIES`; add focused
+  contract coverage.
+- Decision: Sourced shell helpers must be explicit in the shell-script contract
+  registry.
+- Why: Helper-library drift should fail during script checks instead of being
+  discovered later through startup, closeout, or background-runner behaviour.
