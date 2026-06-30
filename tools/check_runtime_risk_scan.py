@@ -75,11 +75,11 @@ REQUIRED_MAKE_TARGETS = (
     "privacy-local-off",
 )
 
-FORBIDDEN_MAKE_TARGETS = ("eod", "eod-stop")
-FORBIDDEN_MAKE_INCLUDE_TOKENS = ("makefiles/evals/aliases",)
-FORBIDDEN_RUNTIME_MAP_TOKENS = ("Startup and workspace bootstrap",)
-FORBIDDEN_PRECOMMIT_TOKENS = ("isort", "black")
-FORBIDDEN_TOOL_TOKENS = {
+NON_CANONICAL_MAKE_TARGETS = ("eod", "eod-stop")
+NON_CURRENT_MAKE_INCLUDE_TOKENS = ("makefiles/evals/aliases",)
+NON_CURRENT_RUNTIME_MAP_TOKENS = ("Startup and workspace bootstrap",)
+NON_CURRENT_PRECOMMIT_TOKENS = ("isort", "black")
+NON_CURRENT_TOOL_TOKENS = {
     Path("tools/build_handwriting_benchmark_cases.py"): ("--handwriting-cases",),
 }
 REQUIRED_PRECOMMIT_EXCLUDE = r"^docs/peanut/"
@@ -242,15 +242,17 @@ def check_required_files(root: Path) -> list[str]:
 def check_make_contracts(text: str) -> list[str]:
     failures: list[str] = []
     targets = make_targets(text)
-    for token in FORBIDDEN_MAKE_INCLUDE_TOKENS:
+    for token in NON_CURRENT_MAKE_INCLUDE_TOKENS:
         if token in text:
-            failures.append(f"Make surface: retired include token {token!r} is active")
+            failures.append(
+                f"Make surface: non-current include token {token!r} is active"
+            )
     for target in REQUIRED_MAKE_TARGETS:
         if target not in targets:
             failures.append(f"make target {target!r}: missing from Make surface")
-    for target in FORBIDDEN_MAKE_TARGETS:
+    for target in NON_CANONICAL_MAKE_TARGETS:
         if target in targets:
-            failures.append(f"make target {target!r}: deprecated target is active")
+            failures.append(f"make target {target!r}: non-canonical target is active")
 
     deps = ci_docs_deps(text)
     if not deps:
@@ -273,10 +275,10 @@ def check_make_contracts(text: str) -> list[str]:
 def check_runtime_surface_map(root: Path) -> list[str]:
     text = (root / RUNTIME_SURFACE_MAP).read_text(encoding="utf-8")
     failures: list[str] = []
-    for token in FORBIDDEN_RUNTIME_MAP_TOKENS:
+    for token in NON_CURRENT_RUNTIME_MAP_TOKENS:
         if token in text:
             failures.append(
-                f"{RUNTIME_SURFACE_MAP}: retired runtime map token {token!r} is active"
+                f"{RUNTIME_SURFACE_MAP}: non-current runtime map token {token!r} is active"
             )
     for surface in RUNTIME_MAP_SURFACES:
         for token in surface.required_tokens:
@@ -350,10 +352,10 @@ def check_precommit_config(root: Path) -> list[str]:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:
         return [f"{PRECOMMIT_CONFIG}: cannot read file: {exc}"]
-    for token in FORBIDDEN_PRECOMMIT_TOKENS:
+    for token in NON_CURRENT_PRECOMMIT_TOKENS:
         if token in text:
             failures.append(
-                f"{PRECOMMIT_CONFIG}: retired hook token {token!r} is active"
+                f"{PRECOMMIT_CONFIG}: non-current hook token {token!r} is active"
             )
 
     exclude_match = re.search(r"(?m)^exclude:\s*(?P<exclude>.+)$", text)
@@ -393,9 +395,9 @@ def check_precommit_config(root: Path) -> list[str]:
     return failures
 
 
-def check_forbidden_tool_tokens(root: Path) -> list[str]:
+def check_non_current_tool_tokens(root: Path) -> list[str]:
     failures: list[str] = []
-    for path, tokens in FORBIDDEN_TOOL_TOKENS.items():
+    for path, tokens in NON_CURRENT_TOOL_TOKENS.items():
         try:
             text = (root / path).read_text(encoding="utf-8")
         except OSError as exc:
@@ -459,7 +461,7 @@ def scan(root: Path = ROOT) -> list[str]:
     failures.extend(check_make_contracts(text))
     failures.extend(check_runtime_surface_map(root))
     failures.extend(check_precommit_config(root))
-    failures.extend(check_forbidden_tool_tokens(root))
+    failures.extend(check_non_current_tool_tokens(root))
     failures.extend(check_dependency_test_contracts(root))
     return failures
 

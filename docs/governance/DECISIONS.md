@@ -5174,3 +5174,18 @@ or branch history instead.
   gate and preserved surfaces directly.
 - Why: High-traffic operator docs stay easier to audit when they state the
   maintained boundary instead of repeating exclusion phrasing.
+
+## D-300: Keep risk-scan vocabulary current-source
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `risk_scan`, `operator_commands`, `docs_hygiene`, `source_truth`
+- Human-led: The human lead clarified that active surfaces should use current
+  source language and one name for one thing.
+- Engineer implementation: Rename risk-scan constants, diagnostics, and tests
+  from history-shaped wording to non-current or non-canonical vocabulary; update
+  the active state bullet for chat-led startup.
+- Decision: Runtime risk-scan messages describe current command contracts with
+  canonical/non-current language.
+- Why: Guardrails stay clearer when the checker reports the maintained command
+  vocabulary instead of embedding deprecated-path language.
