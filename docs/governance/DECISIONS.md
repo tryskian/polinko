@@ -5203,3 +5203,17 @@ or branch history instead.
 - Decision: The eval evidence map describes operator commands by active mode.
 - Why: The high-traffic eval map is easier to scan when each command bullet
   leads with what the command does.
+
+## D-302: Keep operator-command checker vocabulary canonical
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `operator_commands`, `make_targets`, `runtime_checks`, `source_truth`
+- Human-led: The human lead clarified that command surfaces should use one name
+  for one thing.
+- Engineer implementation: Rename operator-command checker constants and
+  diagnostics from duplicate/forbidden wording to non-canonical command
+  vocabulary while preserving the same guard behaviour.
+- Decision: Operator-command guard failures describe non-canonical targets and
+  rules.
+- Why: The checker should report the maintained command contract directly.

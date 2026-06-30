@@ -32,8 +32,8 @@ class OperatorCommandCheckTests(unittest.TestCase):
         self.assertEqual(
             failures,
             [
-                "manualdb-feedback-actionables: duplicate operator target is active",
-                "manualdb-feedback-actionables: duplicate operator rule is active on line 2",
+                "manualdb-feedback-actionables: non-canonical operator target is active",
+                "manualdb-feedback-actionables: non-canonical operator rule is active on line 2",
             ],
         )
 
@@ -52,8 +52,8 @@ class OperatorCommandCheckTests(unittest.TestCase):
         self.assertEqual(
             failures,
             [
-                "eod: duplicate operator target is active",
-                "eod: duplicate operator rule is active on line 4",
+                "eod: non-canonical operator target is active",
+                "eod: non-canonical operator rule is active on line 4",
             ],
         )
 

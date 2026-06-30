@@ -47,8 +47,8 @@ PARKED_OCR_EVAL_SHORTCUTS = frozenset(
     }
 )
 
-FORBIDDEN_OPERATOR_TARGET_PREFIXES = ("manualdb",)
-FORBIDDEN_OPERATOR_TARGETS = ("eod",)
+NON_CANONICAL_OPERATOR_TARGET_PREFIXES = ("manualdb",)
+NON_CANONICAL_OPERATOR_TARGETS = ("eod",)
 
 
 @dataclass(frozen=True)
@@ -104,18 +104,18 @@ def check_canonical_operator_targets(text: str) -> list[str]:
     rules = make_rules(text)
 
     for target in sorted(phony):
-        if target in FORBIDDEN_OPERATOR_TARGETS or target.startswith(
-            FORBIDDEN_OPERATOR_TARGET_PREFIXES
+        if target in NON_CANONICAL_OPERATOR_TARGETS or target.startswith(
+            NON_CANONICAL_OPERATOR_TARGET_PREFIXES
         ):
-            failures.append(f"{target}: duplicate operator target is active")
+            failures.append(f"{target}: non-canonical operator target is active")
 
     for rule in rules:
         for target in rule.targets:
-            if target in FORBIDDEN_OPERATOR_TARGETS or target.startswith(
-                FORBIDDEN_OPERATOR_TARGET_PREFIXES
+            if target in NON_CANONICAL_OPERATOR_TARGETS or target.startswith(
+                NON_CANONICAL_OPERATOR_TARGET_PREFIXES
             ):
                 failures.append(
-                    f"{target}: duplicate operator rule is active on line {rule.line}"
+                    f"{target}: non-canonical operator rule is active on line {rule.line}"
                 )
 
     return failures
