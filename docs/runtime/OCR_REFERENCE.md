@@ -197,7 +197,7 @@ workflow, output surfaces, and tuning knobs.
 
 1. Notebook surface:
    - `make notes`
-   - aliases: `make notebook`, `make nb`
+   - shortcuts: `make notebook`, `make nb`
    - default local workspace: `.local/notebooks/`
    - optional starter override:
      - `make notes NOTEBOOK_START_PATH=/abs/path/to/notebook.ipynb`

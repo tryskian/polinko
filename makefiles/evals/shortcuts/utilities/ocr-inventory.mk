@@ -1,4 +1,4 @@
-# OCR inventory aliases.
+# OCR inventory shortcuts.
 .PHONY: ocr-inventory ocr-inventory-json
 
 ocr-inventory:

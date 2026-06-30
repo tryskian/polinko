@@ -115,6 +115,18 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_retired_eval_shortcut_include_path_is_reported(self) -> None:
+        failures = check_runtime_risk_scan.check_make_contracts(
+            _make_contract_text(
+                extra_lines=("include makefiles/evals/aliases/ocr-runs.mk",)
+            )
+        )
+
+        self.assertIn(
+            "Make surface: retired include token 'makefiles/evals/aliases' is active",
+            failures,
+        )
+
     def test_missing_session_status_target_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             _make_contract_text(omit_targets={"session-status"})

@@ -4967,3 +4967,21 @@ or branch history instead.
 - Why: Duplicate compatibility names make the active runtime harder to reason
   about, create stale documentation pressure, and weaken automated contract
   checks.
+
+## D-287: Name eval shortcuts as shortcuts
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `make`, `evals`, `shortcuts`, `operator_commands`, `hygiene`
+- Human-led: The human lead clarified that active repo surfaces should use one
+  current name for one thing; historical wording belongs in the decision ledger.
+- Engineer implementation: Rename the active eval Make shortcut entrypoint and
+  fragments from `makefiles/evals/aliases*` to `makefiles/evals/shortcuts*`,
+  update current runtime/docs/test references, and add a risk-scan guard against
+  the retired include path returning to active Make surfaces.
+- Decision: Eval shorthand Make targets are active shortcuts. Their ownership
+  surface is `makefiles/evals/shortcuts.mk` and role-owned fragments under
+  `makefiles/evals/shortcuts/`.
+- Why: The previous path name implied compatibility aliases even when the
+  current surface is shorthand commands. Naming the active surface as shortcuts
+  keeps operator language current and easier to audit.

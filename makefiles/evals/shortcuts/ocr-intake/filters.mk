@@ -1,4 +1,4 @@
-# OCR intake filter aliases.
+# OCR intake filter shortcuts.
 .PHONY: ocrminehigh ocrminelow ocrminebacklog
 
 ocrminehigh: OCR_CASES_FROM_EXPORT_ARGS = --include-signal-strengths high

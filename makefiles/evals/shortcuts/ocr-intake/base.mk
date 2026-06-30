@@ -1,4 +1,4 @@
-# OCR intake base aliases.
+# OCR intake base shortcuts.
 .PHONY: ocrindex ocrmine ocrdelta
 
 ocrindex: cgpt-export-index

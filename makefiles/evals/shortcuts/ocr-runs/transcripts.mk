@@ -1,4 +1,4 @@
-# OCR transcript and growth aliases.
+# OCR transcript and growth shortcuts.
 .PHONY: ocrall ocrwiden ocrwidensync ocrwidenbatch ocrwidenall
 
 ocrall: eval-ocr-transcript-cases

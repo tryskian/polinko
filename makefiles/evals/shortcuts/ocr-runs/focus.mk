@@ -1,4 +1,4 @@
-# OCR focus and stability aliases.
+# OCR focus and stability shortcuts.
 .PHONY: ocrstable ocrstablegrowth ocrgrowth ocrfails ocrfocus
 .PHONY: ocrfocuscases ocrfocusreport
 

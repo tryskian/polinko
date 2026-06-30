@@ -226,16 +226,16 @@ Last updated: 2026-06-29
     growth cap, and benchmark selector env fragments live under
     `makefiles/config/evals/ocr-cases/intake-workflow/`
   - eval shortcut targets keep the public entrypoint at
-    `makefiles/evals/aliases.mk`, while shortcut-family fragments live under
-    `makefiles/evals/aliases/` for OCR intake/mining shortcuts, OCR
+    `makefiles/evals/shortcuts.mk`, while shortcut-family fragments live under
+    `makefiles/evals/shortcuts/` for OCR intake/mining shortcuts, OCR
     run/focus/benchmark shorthands, and utility/inventory shortcuts
   - eval utility shortcuts keep the public entrypoint at
-    `makefiles/evals/aliases/utilities.mk`, while runtime-null audit, OCR
+    `makefiles/evals/shortcuts/utilities.mk`, while runtime-null audit, OCR
     inventory, and OCR data/notebook workflow shortcut fragments live under
-    `makefiles/evals/aliases/utilities/`
+    `makefiles/evals/shortcuts/utilities/`
   - OCR intake shortcut targets keep the public entrypoint at
-    `makefiles/evals/aliases/ocr-intake.mk`, while shortcut-family fragments live
-    under `makefiles/evals/aliases/ocr-intake/` for base intake shortcuts,
+    `makefiles/evals/shortcuts/ocr-intake.mk`, while shortcut-family fragments live
+    under `makefiles/evals/shortcuts/ocr-intake/` for base intake shortcuts,
     lane-filter shortcuts, and signal/status filter shortcuts
   - OCR intake targets keep the public entrypoint at
     `makefiles/evals/ocr-intake.mk`, while workflow-role fragments live under
@@ -246,8 +246,8 @@ Last updated: 2026-06-29
     `makefiles/evals/gates/` for smoke gates, sidecar lifecycle, operator
     reports, and quality/hallucination gates
   - OCR-run shortcut targets keep the public entrypoint at
-    `makefiles/evals/aliases/ocr-runs.mk`, while shortcut-family fragments live
-    under `makefiles/evals/aliases/ocr-runs/` for transcript/growth shortcuts,
+    `makefiles/evals/shortcuts/ocr-runs.mk`, while shortcut-family fragments live
+    under `makefiles/evals/shortcuts/ocr-runs/` for transcript/growth shortcuts,
     modality shortcuts, focus/stability shortcuts, the OCR kernel workflow
     shortcut, and benchmark shortcuts
   - core eval targets keep the public entrypoint at
