@@ -156,8 +156,8 @@ Use this doc for operator procedure.
 4. Required knobs include an ignored default output path, explicit path
    override, no-overwrite default, `FORCE=1`, deterministic `schema_version`,
    validation command, and apply-preview command.
-5. Preparation and inventory tools must not launch a browser, run OCR, close
-   feedback, write live eval rows, or mutate the manual eval warehouse.
+5. Preparation and inventory tools preserve browser state, OCR execution,
+   feedback status, live eval rows, and the manual eval warehouse.
 
 ## Active Kernel Validation
 

@@ -5232,3 +5232,17 @@ or branch history instead.
   mode.
 - Why: Operator docs stay easier to scan when preparation tools state what they
   preserve and which gate performs the next action.
+
+## D-304: Keep local-tooling follow-up boundaries preserved-state
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `local_tooling`, `runtime_docs`, `read_only`, `source_truth`
+- Human-led: The human lead clarified that active docs should keep current
+  behaviour phrasing consistent across the repo.
+- Engineer implementation: Update the remaining local-tooling boundary
+  sentences in runtime docs to describe preserved live state and explicit
+  execution gates.
+- Decision: Runtime docs describe local preparation tooling by the live state it
+  preserves.
+- Why: The operator contract stays consistent across the local-tooling surfaces.
