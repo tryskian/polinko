@@ -5545,3 +5545,18 @@ or branch history instead.
   wake-lock liveness.
 - Why: Operators should see whether the repo is quiet or recently active
   without inferring from PID state alone.
+
+## D-325: Remove quarantined portfolio tasks from VS Code runtime tasks
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `vscode`, `portfolio`, `quarantine`, `runtime_guards`
+- Human-led: The human lead clarified that portfolio surfaces are parked for
+  porting to the separate `krystian.io` repo.
+- Engineer implementation: Remove the local ignored `make portfolio` task from
+  `.vscode/tasks.json` and teach `tools/check_local_runtime_config.py` to fail
+  VS Code tasks that point at quarantined portfolio Make targets.
+- Decision: Local VS Code task surfaces expose active Polinko runtime tasks
+  only.
+- Why: Editor task lists should not keep parked portfolio entrypoints in the
+  normal Polinko workflow after those surfaces move to the quarantine lane.
