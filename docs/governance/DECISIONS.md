@@ -5333,3 +5333,19 @@ or branch history instead.
   `skip-worktree` cleanup.
 - Why: Machine-local helpers should run consistently on the macOS host where
   Polinko is operated.
+
+## D-311: Make local eval gate artifacts temp-root aware
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `eval_gate`, `runtime_artifacts`, `portability`, `make`
+- Human-led: The human lead asked for active script maintenance across helper
+  surfaces.
+- Engineer implementation: Add `LOCAL_EVAL_GATE_TEMP_ROOT` to the eval gate
+  runner environment, route default smoke/gate databases and logs through the
+  configured root, normalize trailing slashes, and add unit coverage for the
+  override path.
+- Decision: Local eval gate runtime artifacts use one configurable temporary
+  root while keeping `/tmp` as the default host fallback.
+- Why: Gate helpers should be portable across host environments and easier to
+  isolate during CI, local debug, and parallel repo work.

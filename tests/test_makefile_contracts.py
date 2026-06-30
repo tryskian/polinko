@@ -1554,6 +1554,11 @@ class MakefileContractTests(unittest.TestCase):
             "LOCAL_EVAL_GATE_RUNNER_SCRIPT ?= ./tools/run_local_eval_gate.sh",
             config_text,
         )
+        self.assertIn("LOCAL_EVAL_GATE_TEMP_ROOT ?= /tmp", config_text)
+        self.assertIn(
+            'LOCAL_EVAL_GATE_TEMP_ROOT="$(LOCAL_EVAL_GATE_TEMP_ROOT)"',
+            config_text,
+        )
         self.assertIn("LOCAL_EVAL_GATE_START_ATTEMPTS ?= 100", config_text)
         self.assertIn("LOCAL_EVAL_GATE_START_SLEEP_SECONDS ?= 0.2", config_text)
         self.assertIn("LOCAL_EVAL_GATE_RUNNER_ENV =", config_text)
