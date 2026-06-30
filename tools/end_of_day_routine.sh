@@ -8,12 +8,34 @@ source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
 ROOT_DIR="$POLINKO_REPO_ROOT"
 
-TOTAL_STEPS=17
+CORE_STEPS=(
+  "end-docs-check|make --no-print-directory end-docs-check"
+  "transcript-fix|make --no-print-directory transcript-fix"
+  "transcript-check|make --no-print-directory transcript-check"
+  "doctor-env|make --no-print-directory doctor-env"
+  "scripts-check|make --no-print-directory scripts-check"
+  "path-leak-check|make --no-print-directory path-leak-check"
+  "risk-scan|make --no-print-directory risk-scan"
+  "operator-command-check|make --no-print-directory operator-command-check"
+  "ci-python-style|make --no-print-directory ci-python-style"
+  "ci-python-type-check|make --no-print-directory ci-python-type-check"
+  "lint-docs|make --no-print-directory lint-docs"
+  "package-install-check|make --no-print-directory package-install-check"
+  "test|make --no-print-directory test"
+  "git diff --check|git diff --check"
+  "security-checks|make --no-print-directory security-checks"
+)
+
+TOTAL_STEPS=${#CORE_STEPS[@]}
 if [ "${END_SKIP_STOP:-}" = "1" ]; then
-  TOTAL_STEPS=$((TOTAL_STEPS - 1))
+  :
+else
+  TOTAL_STEPS=$((TOTAL_STEPS + 1))
 fi
 if [ "${END_SKIP_GIT_CHECK:-}" = "1" ]; then
-  TOTAL_STEPS=$((TOTAL_STEPS - 1))
+  :
+else
+  TOTAL_STEPS=$((TOTAL_STEPS + 1))
 fi
 
 STEP=1
@@ -26,22 +48,20 @@ run_step() {
   STEP=$((STEP + 1))
 }
 
+run_planned_step() {
+  local record="$1"
+  local label="${record%%|*}"
+  local command="${record#*|}"
+  local argv=()
+
+  read -r -a argv <<< "$command"
+  run_step "$label" "${argv[@]}"
+}
+
 echo "[end] starting end-of-day routine in: $ROOT_DIR"
-run_step "end-docs-check" make --no-print-directory end-docs-check
-run_step "transcript-fix" make --no-print-directory transcript-fix
-run_step "transcript-check" make --no-print-directory transcript-check
-run_step "doctor-env" make --no-print-directory doctor-env
-run_step "scripts-check" make --no-print-directory scripts-check
-run_step "path-leak-check" make --no-print-directory path-leak-check
-run_step "risk-scan" make --no-print-directory risk-scan
-run_step "operator-command-check" make --no-print-directory operator-command-check
-run_step "ci-python-style" make --no-print-directory ci-python-style
-run_step "ci-python-type-check" make --no-print-directory ci-python-type-check
-run_step "lint-docs" make --no-print-directory lint-docs
-run_step "package-install-check" make --no-print-directory package-install-check
-run_step "test" make --no-print-directory test
-run_step "git diff --check" git diff --check
-run_step "security-checks" make --no-print-directory security-checks
+for planned_step in "${CORE_STEPS[@]}"; do
+  run_planned_step "$planned_step"
+done
 
 if [ "${END_SKIP_STOP:-}" = "1" ]; then
   echo "[end] stop background tasks skipped (preflight only; day is not closed)"

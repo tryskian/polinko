@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-29
+Last updated: 2026-06-30
 
 ## Current Truth
 
@@ -47,6 +47,8 @@ Last updated: 2026-06-29
   - morning startup is a chat-first alignment pass: `make start` rehydrates,
     reports context, GitHub health attention, a kernel map, and any attention
     note, then waits for human alignment before implementation
+  - closeout progress derives from the declared `make end` step plan so
+    displayed step counts stay aligned with the checks that actually run
 - Public-facing surfaces remain derived from repo truth:
   - the root README now names the Polinko research model as staged for the
     next beta, replacing generic maintenance framing with a model-refactor

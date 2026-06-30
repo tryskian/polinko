@@ -5591,3 +5591,19 @@ or branch history instead.
 - Decision: `doctor-env` validates venv ownership by executable path.
 - Why: Startup diagnostics should point to venv activation when host Python
   shares the same binary target but lacks the repo package environment.
+
+## D-328: Derive closeout progress from the planned step list
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `closeout`, `make_end`, `scripts`, `runtime_hygiene`
+- Human-led: The human lead asked for script-maintenance work to remove small
+  runtime drift risks instead of leaving them to manual attention.
+- Engineer implementation: Refactor `tools/end_of_day_routine.sh` so core
+  closeout steps live in one declared plan and the displayed step count derives
+  from that plan plus enabled optional closeout steps; add regression coverage
+  against fixed numeric closeout totals.
+- Decision: `make end` progress numbering follows the declared closeout step
+  plan.
+- Why: Closeout output should remain accurate when checks are added, removed,
+  or reordered without requiring a separate manual counter update.
