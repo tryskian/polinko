@@ -19,14 +19,17 @@ Sequence:
    - repo root
    - active branch
    - `git status --short --branch`
-2. Run the generic startup safety path:
+2. Surface GitHub health attention:
+   - `make github-health`
+   - reported attention continues local startup
+3. Run the generic startup safety path:
    - `make doctor-env`
      - reports the active Python interpreter and whether it came from Make's
        repo `.venv` selection, an override, or host fallback
    - `make caffeinate`
    - `make caffeinate-status`
    - `make api-smoke`
-3. Stop before repo action:
+4. Stop before repo action:
    - print the canonical rehydrate prompt
    - the prompt tells the agent to:
      - say morning startup is complete

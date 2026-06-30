@@ -9,21 +9,26 @@ polinko_cd_repo_root
 ROOT_DIR="$POLINKO_REPO_ROOT"
 
 echo "[start] starting morning routine in: $ROOT_DIR"
-echo "[start] 1/5 workspace context"
+echo "[start] 1/6 workspace context"
 printf 'repo root: %s\n' "$ROOT_DIR"
 printf 'branch: %s\n' "$(git branch --show-current)"
 git status --short --branch
 
-echo "[start] 2/5 doctor-env"
+echo "[start] 2/6 github-health"
+if ! make --no-print-directory github-health; then
+  echo "[start] github-health reported attention; continuing startup."
+fi
+
+echo "[start] 3/6 doctor-env"
 make --no-print-directory doctor-env
 
-echo "[start] 3/5 caffeinate"
+echo "[start] 4/6 caffeinate"
 make --no-print-directory caffeinate
 
-echo "[start] 4/5 caffeinate-status"
+echo "[start] 5/6 caffeinate-status"
 make --no-print-directory caffeinate-status
 
-echo "[start] 5/5 api-smoke"
+echo "[start] 6/6 api-smoke"
 make --no-print-directory api-smoke
 
 echo "[start] REHYDRATE PROMPT"
