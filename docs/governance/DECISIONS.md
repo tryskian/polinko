@@ -5394,3 +5394,17 @@ or branch history instead.
   intentionally pending.
 - Why: Unknown CI states should surface as action items instead of being hidden
   by a too-permissive health check.
+
+## D-315: Guard current docs against retired lifecycle command names
+
+- Date: `2026-06-30`
+- Category: `docs_hygiene`
+- Tags: `runtime_docs`, `operator_commands`, `risk_scan`, `source_truth`
+- Human-led: The human lead clarified that current docs should use one command
+  name for one lifecycle action, with history preserved in decisions.
+- Engineer implementation: Extend `tools.check_runtime_risk_scan` to check
+  current operator docs for retired lifecycle command names while leaving
+  `docs/governance/DECISIONS.md` as the additive history surface.
+- Decision: Current operator docs use canonical lifecycle command names only.
+- Why: Operator-facing docs should stay current-source while the decision log
+  remains the place for historical context.

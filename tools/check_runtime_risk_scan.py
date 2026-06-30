@@ -79,6 +79,17 @@ NON_CANONICAL_MAKE_TARGETS = ("eod", "eod-stop")
 NON_CURRENT_MAKE_INCLUDE_TOKENS = ("makefiles/evals/aliases",)
 NON_CURRENT_RUNTIME_MAP_TOKENS = ("Startup and workspace bootstrap",)
 NON_CURRENT_PRECOMMIT_TOKENS = ("isort", "black")
+CANONICAL_LIFECYCLE_DOC_NAMES = {
+    "make eod": "make end",
+    "make eod-stop": "make end-stop",
+}
+CURRENT_OPERATOR_DOC_PATHS = (
+    Path("README.md"),
+    Path("docs/governance/CHARTER.md"),
+    Path("docs/governance/STATE.md"),
+    Path("docs/runtime"),
+    Path("docs/public"),
+)
 NON_CURRENT_TOOL_TOKENS = {
     Path("tools/build_handwriting_benchmark_cases.py"): ("--handwriting-cases",),
 }
@@ -289,6 +300,30 @@ def check_runtime_surface_map(root: Path) -> list[str]:
     return failures
 
 
+def current_operator_doc_paths(root: Path) -> tuple[Path, ...]:
+    paths: list[Path] = []
+    for path in CURRENT_OPERATOR_DOC_PATHS:
+        absolute = root / path
+        if absolute.is_dir():
+            paths.extend(sorted(absolute.glob("*.md")))
+        elif absolute.exists():
+            paths.append(absolute)
+    return tuple(paths)
+
+
+def check_current_lifecycle_doc_names(root: Path) -> list[str]:
+    failures: list[str] = []
+    for path in current_operator_doc_paths(root):
+        text = path.read_text(encoding="utf-8")
+        relative = path.relative_to(root)
+        for current, canonical in CANONICAL_LIFECYCLE_DOC_NAMES.items():
+            if re.search(rf"(?<![\w-]){re.escape(current)}(?![\w-])", text):
+                failures.append(
+                    f"{relative}: use canonical lifecycle command {canonical!r}"
+                )
+    return failures
+
+
 def _strip_yaml_quotes(value: str) -> str:
     stripped = value.strip()
     if len(stripped) >= 2 and stripped[0] == stripped[-1] and stripped[0] in {"'", '"'}:
@@ -460,6 +495,7 @@ def scan(root: Path = ROOT) -> list[str]:
     failures.extend(check_required_files(root))
     failures.extend(check_make_contracts(text))
     failures.extend(check_runtime_surface_map(root))
+    failures.extend(check_current_lifecycle_doc_names(root))
     failures.extend(check_precommit_config(root))
     failures.extend(check_non_current_tool_tokens(root))
     failures.extend(check_dependency_test_contracts(root))
