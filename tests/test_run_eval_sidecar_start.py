@@ -77,6 +77,36 @@ def _sidecar_ready_python_stub() -> str:
     )
 
 
+def _sidecar_unready_python_stub() -> str:
+    return (
+        "#!/usr/bin/env sh\n"
+        "set -eu\n"
+        'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
+        'printf "%s" "$$" > "$CHILD_PID_FILE"\n'
+        "sleep 30\n"
+    )
+
+
+def _write_matching_sidecar_ps_fake(fake_bin: Path) -> None:
+    _write_executable(
+        fake_bin / "ps",
+        (
+            "#!/usr/bin/env bash\n"
+            "set -euo pipefail\n"
+            'if [ "${1:-}" = "-o" ] && [ "${2:-}" = "command=" ]; then\n'
+            '  printf "%s -m tools.eval_sidecar run --target %s\\n" '
+            '"$PYTHON" "${EVAL_SIDECAR_TARGET:-quality-gate-deterministic}"\n'
+            "  exit 0\n"
+            "fi\n"
+            'if [ "${1:-}" = "-o" ] && [ "${2:-}" = "stat=" ]; then\n'
+            "  printf 'S\\n'\n"
+            "  exit 0\n"
+            "fi\n"
+            '/bin/ps "$@"\n'
+        ),
+    )
+
+
 class RunEvalSidecarStartTests(unittest.TestCase):
     def test_start_rejects_invalid_launcher_python_before_launch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -288,6 +318,53 @@ class RunEvalSidecarStartTests(unittest.TestCase):
                 ],
             )
             self.assertTrue((tmp_path / "logs").is_dir())
+
+    def test_start_preserves_live_pid_when_sidecar_does_not_become_ready(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "sidecar.pid"
+            args_file = tmp_path / "python-args.txt"
+            child_pid_file = tmp_path / "child.pid"
+            current_file = tmp_path / "current.txt"
+            python_script = tmp_path / "python.sh"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            _write_executable(python_script, _sidecar_unready_python_stub())
+            _write_matching_sidecar_ps_fake(fake_bin)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "PYTHON": str(python_script),
+                    "PYTHON_ARGS": str(args_file),
+                    "EVAL_SIDECAR_LAUNCHER_PYTHON": sys.executable,
+                    "CHILD_PID_FILE": str(child_pid_file),
+                    "EVAL_SIDECAR_PID_FILE": str(pid_file),
+                    "EVAL_SIDECAR_LOG": str(tmp_path / "logs" / "sidecar.log"),
+                    "EVAL_SIDECAR_RUNS_DIR": str(tmp_path / "runs"),
+                    "EVAL_SIDECAR_CURRENT_FILE": str(current_file),
+                    "EVAL_SIDECAR_START_ATTEMPTS": "1",
+                    "EVAL_SIDECAR_START_SLEEP_SECONDS": "0",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.addCleanup(_kill_pid_file, pid_file)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("did not become ready", result.stdout)
+            self.assertIn("leaving PID file in place", result.stdout)
+            self.assertTrue(pid_file.exists())
+            self.assertFalse(current_file.exists())
+            self.assertEqual(
+                pid_file.read_text(encoding="utf-8").strip(),
+                child_pid_file.read_text(encoding="utf-8").strip(),
+            )
 
     def test_status_reports_off_without_current_run(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

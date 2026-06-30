@@ -157,7 +157,11 @@ start_sidecar() {
 	if wait_for_sidecar_ready "$pid"; then
 		echo "eval-sidecar started (PID $pid, log: $log_path)."
 	else
-		rm -f "$pid_file"
+		if polinko_pid_is_running "$pid" && pid_matches_eval_sidecar "$pid"; then
+			echo "eval-sidecar did not become ready (PID $pid); leaving PID file in place."
+		else
+			rm -f "$pid_file"
+		fi
 		echo "Failed to start eval-sidecar. Check $log_path."
 		exit 1
 	fi

@@ -5624,3 +5624,20 @@ or branch history instead.
 - Why: Without `ps`, PID ownership checks can collapse into misleading stale or
   non-owned state and remove useful runtime metadata. Early validation keeps the
   diagnostic attached to the missing process-inspection tool.
+
+## D-330: Preserve eval-sidecar PID files on startup readiness failure
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `eval_sidecar`, `pid_file`, `runner`, `startup`
+- Human-led: The human lead asked for hidden runner dependencies and failure
+  paths to be maintained through automation.
+- Engineer implementation: Update `tools/run_eval_sidecar_start.sh` so a
+  launched matching sidecar that remains live after startup readiness failure
+  keeps its PID file, and add focused regression coverage for a live sidecar
+  that never writes the current-run file.
+- Decision: `eval-sidecar` startup may only remove a managed PID file after the
+  launched process exits or stops matching the sidecar process shape.
+- Why: Removing a PID file while a matching sidecar remains active hides the
+  recovery evidence that status and stop need. Preserving the PID file keeps
+  failed startup state inspectable and stoppable.
