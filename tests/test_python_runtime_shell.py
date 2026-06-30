@@ -106,6 +106,32 @@ class PythonRuntimeShellTests(unittest.TestCase):
 
             self.assertEqual(self._run_resolver(root, env), "./.venv/bin/python3")
 
+    def test_venv_override_uses_configured_relative_venv(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            venv_python = root / "custom-venv" / "bin" / "python3.14"
+            venv_python.parent.mkdir(parents=True)
+            _write_executable(venv_python, "#!/usr/bin/env sh\nexit 0\n")
+            env = os.environ.copy()
+            env.pop("PYTHON", None)
+            env["VENV"] = "custom-venv"
+
+            self.assertEqual(
+                self._run_resolver(root, env), "./custom-venv/bin/python3.14"
+            )
+
+    def test_absolute_venv_override_is_preserved(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            venv_python = root / "external-venv" / "bin" / "python3"
+            venv_python.parent.mkdir(parents=True)
+            _write_executable(venv_python, "#!/usr/bin/env sh\nexit 0\n")
+            env = os.environ.copy()
+            env.pop("PYTHON", None)
+            env["VENV"] = str(root / "external-venv")
+
+            self.assertEqual(self._run_resolver(root, env), str(venv_python))
+
     def test_system_python3_is_final_fallback(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             env = os.environ.copy()

@@ -106,9 +106,10 @@ flowchart TD
   `make scripts-check` validates shell syntax plus root-helper coverage for
   executable operator scripts; sourced helper libraries, `repo_root.sh`, and
   the URL-only launcher are the explicit exceptions.
-  `tools/python_runtime.sh` is the shared shell interpreter helper for direct
-  operator wrappers: explicit `PYTHON` wins only when it resolves to an
-  executable command, then repo `.venv`, then available `python3`.
+  `tools/python_runtime.sh` is the shared interpreter helper for Make's
+  default `PYTHON` and direct operator wrappers: explicit `PYTHON` wins only
+  when it resolves to an executable command, then repo `.venv`, then available
+  `python3`.
   `make local-runtime-config-check` runs through `make ci-docs` so VS Code,
   devcontainer, and extension recommendation drift fail the normal
   docs/runtime gate.

@@ -5501,3 +5501,18 @@ or branch history instead.
   registry.
 - Why: Helper-library drift should fail during script checks instead of being
   discovered later through startup, closeout, or background-runner behaviour.
+
+## D-322: Use one Python runtime resolver for Make and shell wrappers
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `python_runtime`, `make`, `helper_scripts`, `venv`
+- Human-led: The human lead asked for local-vs-system Python drift to stay
+  actively maintained during script refactor work.
+- Engineer implementation: Route Make's default `PYTHON` through
+  `tools/python_runtime.sh`, teach the helper to honour `VENV`, and add shell
+  tests for relative and absolute venv overrides.
+- Decision: Make and direct shell wrappers share one Python interpreter
+  resolver.
+- Why: Interpreter selection should prefer the repo runtime consistently
+  without duplicating fallback logic across Make and shell surfaces.

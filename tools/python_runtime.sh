@@ -14,6 +14,21 @@ polinko_require_python_command() {
 	return 2
 }
 
+polinko_venv_dir() {
+	_polinko_venv_value=${VENV:-.venv}
+	if [ -z "$_polinko_venv_value" ]; then
+		_polinko_venv_value=.venv
+	fi
+	case "$_polinko_venv_value" in
+		/* | ./*)
+			printf "%s\n" "$_polinko_venv_value"
+			;;
+		*)
+			printf "./%s\n" "$_polinko_venv_value"
+			;;
+	esac
+}
+
 polinko_default_python_bin() {
 	if [ -n "${PYTHON:-}" ]; then
 		polinko_require_python_command PYTHON "$PYTHON" "python runtime" || return $?
@@ -21,7 +36,8 @@ polinko_default_python_bin() {
 		return
 	fi
 
-	for candidate in ./.venv/bin/python3.14 ./.venv/bin/python3 ./.venv/bin/python; do
+	_polinko_venv_dir=$(polinko_venv_dir)
+	for candidate in "$_polinko_venv_dir/bin/python3.14" "$_polinko_venv_dir/bin/python3" "$_polinko_venv_dir/bin/python"; do
 		if [ -x "$candidate" ] && "$candidate" -V >/dev/null 2>&1; then
 			printf "%s\n" "$candidate"
 			return
