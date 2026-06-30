@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +16,9 @@ SHELL_LIBRARIES = {
 }
 ROOT_HELPER_EXEMPT_EXECUTABLES = {
     Path("tools/open_local_url.sh"),
+    Path("tools/repo_root.sh"),
+}
+SOURCE_LIBRARY_EXEMPTIONS = {
     Path("tools/repo_root.sh"),
 }
 ROOT_HELPER_SNIPPETS = (
@@ -34,6 +38,18 @@ SHELL_PARSERS = {
     "#!/usr/bin/env bash": "bash",
     "#!/usr/bin/env sh": "sh",
 }
+SCRIPT_DIR_SOURCE_RE = re.compile(
+    r"""(?mx)
+    ^\s*
+    (?:source|\.)
+    \s+
+    (?P<quote>["']?)
+    \$script_dir/
+    (?P<name>[^"'\s]+\.sh)
+    (?P=quote)
+    (?:\s|$)
+    """
+)
 
 
 def tracked_shell_scripts() -> list[Path]:
@@ -67,6 +83,20 @@ def shell_syntax_failure(path: Path, shebang: str) -> str | None:
     if detail:
         return f"fails {parser} syntax check: {detail}"
     return f"fails {parser} syntax check with exit code {result.returncode}"
+
+
+def sourced_shell_paths(shell_scripts: list[Path]) -> set[Path]:
+    sourced: set[Path] = set()
+    for path in shell_scripts:
+        text = (REPO_ROOT / path).read_text(encoding="utf-8")
+        for match in SCRIPT_DIR_SOURCE_RE.finditer(text):
+            sourced.add(Path("tools") / match.group("name"))
+    return sourced
+
+
+def unregistered_sourced_shell_libraries(shell_scripts: list[Path]) -> set[Path]:
+    registered = set(SHELL_LIBRARIES) | SOURCE_LIBRARY_EXEMPTIONS
+    return sourced_shell_paths(shell_scripts) - registered
 
 
 def check_script(path: Path) -> list[str]:
@@ -123,6 +153,16 @@ def main() -> int:
 
     if not shell_scripts:
         failures.append("no tracked tools/*.sh scripts found")
+
+    tracked = set(shell_scripts)
+    for path in sorted(sourced_shell_paths(shell_scripts) - tracked):
+        failures.append(f"{path}: is sourced but is not a tracked tools/*.sh script")
+
+    for path in sorted(unregistered_sourced_shell_libraries(shell_scripts)):
+        failures.append(
+            f"{path}: is sourced by another shell script but is not registered "
+            "in SHELL_LIBRARIES"
+        )
 
     for path in shell_scripts:
         for failure in check_script(path):

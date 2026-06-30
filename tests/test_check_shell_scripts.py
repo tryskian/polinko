@@ -131,6 +131,53 @@ class CheckShellScriptsTests(unittest.TestCase):
             with self.subTest(script=str(script)):
                 self.assertEqual(check_shell_scripts.check_script(script), [])
 
+    def test_sourced_shell_libraries_are_registered(self) -> None:
+        missing = check_shell_scripts.unregistered_sourced_shell_libraries(
+            check_shell_scripts.tracked_shell_scripts()
+        )
+
+        self.assertEqual(missing, set())
+
+    def test_unregistered_sourced_shell_libraries_are_reported(self) -> None:
+        original_repo_root = check_shell_scripts.REPO_ROOT
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tools = root / "tools"
+            tools.mkdir()
+            (tools / "wrapper.sh").write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        'script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"',
+                        '. "$script_dir/new_common.sh"',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            (tools / "new_common.sh").write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        "new_common() { :; }",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            check_shell_scripts.REPO_ROOT = root
+            try:
+                missing = check_shell_scripts.unregistered_sourced_shell_libraries(
+                    [Path("tools/wrapper.sh"), Path("tools/new_common.sh")]
+                )
+            finally:
+                check_shell_scripts.REPO_ROOT = original_repo_root
+
+        self.assertEqual(missing, {Path("tools/new_common.sh")})
+
     def test_shell_library_registry_has_unique_paths(self) -> None:
         source = Path(check_shell_scripts.__file__).read_text(encoding="utf-8")
         module = ast.parse(source)
