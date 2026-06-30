@@ -5,10 +5,32 @@ usage() {
 	echo "Usage: open_local_url.sh <url>" >&2
 }
 
+is_loopback_ipv4_host() {
+	local host=$1
+	local octet
+
+	[[ "$host" =~ ^127\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] ||
+		return 1
+
+	for octet in "${BASH_REMATCH[@]:1}"; do
+		((10#$octet <= 255)) || return 1
+	done
+}
+
 is_local_url() {
-	[[ "$1" =~ ^https?://localhost(:[0-9]+)?(/.*)?$ ]] ||
-		[[ "$1" =~ ^https?://127(\.[0-9]{1,3}){3}(:[0-9]+)?(/.*)?$ ]] ||
-		[[ "$1" =~ ^https?://\[::1\](:[0-9]+)?(/.*)?$ ]]
+	local url=$1
+	local host
+
+	[[ "$url" =~ ^https?://localhost(:[0-9]+)?([/\?\#].*)?$ ]] && return 0
+	[[ "$url" =~ ^https?://\[::1\](:[0-9]+)?([/\?\#].*)?$ ]] && return 0
+
+	if [[ "$url" =~ ^https?://([^/:]+)(:[0-9]+)?([/\?\#].*)?$ ]]; then
+		host=${BASH_REMATCH[1]}
+		is_loopback_ipv4_host "$host"
+		return
+	fi
+
+	return 1
 }
 
 if [ "$#" -ne 1 ]; then

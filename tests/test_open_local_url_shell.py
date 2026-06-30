@@ -40,8 +40,11 @@ class OpenLocalUrlShellTests(unittest.TestCase):
     def test_launcher_accepts_local_urls(self) -> None:
         urls = (
             "http://127.0.0.1:8000/docs",
+            "http://127.255.255.255:8000/docs",
             "https://localhost:8000/docs",
+            "https://localhost:8000/docs?tab=api",
             "http://[::1]:8000/docs",
+            "http://[::1]:8000/docs#health",
         )
 
         for url in urls:
@@ -57,6 +60,9 @@ class OpenLocalUrlShellTests(unittest.TestCase):
     def test_launcher_rejects_external_urls_before_launch(self) -> None:
         urls = (
             "https://example.com/docs",
+            "http://128.0.0.1/docs",
+            "http://127.256.0.1/docs",
+            "http://127.0.999.1/docs",
             "http://127.example.com/docs",
             "http://127.0.0.1.example.com/docs",
         )
