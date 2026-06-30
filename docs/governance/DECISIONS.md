@@ -5530,3 +5530,18 @@ or branch history instead.
 - Decision: Runtime risk scan guards the shared Make/shell Python resolver.
 - Why: Interpreter fallback drift should fail through the normal runtime gate
   before it reaches startup, closeout, or PR CI.
+
+## D-324: Report repo activity when caffeinate is off
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `repo_activity`, `status`, `runtime_visibility`
+- Human-led: The human lead asked for repo-managed caffeinate status to expose
+  repo activity context, including active versus idle state.
+- Engineer implementation: Update `tools/manage_caffeinate.py` so
+  `caffeinate-status` prints last repo activity even when the managed wake lock
+  is off, and add focused coverage for the OFF status path.
+- Decision: Caffeinate status reports recent repo activity independently of
+  wake-lock liveness.
+- Why: Operators should see whether the repo is quiet or recently active
+  without inferring from PID state alone.
