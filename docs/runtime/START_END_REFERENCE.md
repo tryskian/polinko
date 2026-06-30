@@ -68,8 +68,8 @@ Wake-lock rule:
   or adopting a wake-lock PID
 - current background-runner start/stop targets that own local process state
   mark repo activity before lifecycle work begins
-- pure status/read-only targets stay read-only so status checks do not refresh
-  activity freshness
+- pure status/read-only targets report state while preserving activity
+  freshness
 - the managed process is launched in a detached child session so it survives
   non-interactive host shell command exit
 - `make decaffeinate` stops the repo-owned PID with bounded
