@@ -5349,3 +5349,18 @@ or branch history instead.
   root while keeping `/tmp` as the default host fallback.
 - Why: Gate helpers should be portable across host environments and easier to
   isolate during CI, local debug, and parallel repo work.
+
+## D-312: Keep quality-gate DB defaults under the eval temp root
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `eval_gate`, `quality_gate`, `make`, `runtime_artifacts`
+- Human-led: The human lead asked for active script maintenance across helper
+  surfaces.
+- Engineer implementation: Update `GATE_SESSION_DB` and `GATE_VECTOR_DB`
+  defaults to derive from `LOCAL_EVAL_GATE_TEMP_ROOT`, and pin the relationship
+  in Makefile contract tests.
+- Decision: Quality-gate database defaults follow the local eval gate artifact
+  root.
+- Why: A single artifact root keeps gate runtime state portable and prevents
+  Make defaults from bypassing the runner's configured temp-root behaviour.
