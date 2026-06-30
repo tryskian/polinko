@@ -2042,6 +2042,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("docs/POL1_COMMS.md", text)
         self.assertIn("install local excludes for machine-local docs", text)
         self.assertIn("clear tracked docs skip-worktree state", text)
+        self.assertNotIn("xargs -r", text)
+        self.assertIn("git update-index --no-skip-worktree --", text)
 
     def test_shell_script_contract_check_is_named_and_closeout_visible(self) -> None:
         text = _makefile_contract_text()
