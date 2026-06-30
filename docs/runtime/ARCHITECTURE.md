@@ -226,8 +226,8 @@ This page is the structural map of the tracked system.
 - `frontend/` and `apps/portfolio/`
   - retired web surface directory names
 - `ui/`
-  - retired root web-surface name; current manual-eval workbench entrypoints are
-    API routes under `src/polinko/api/`
+  - current manual-eval workbench entrypoints are API routes under
+    `src/polinko/api/`
 
 ## Runtime Flow
 
@@ -247,8 +247,7 @@ This page is the structural map of the tracked system.
    - broader manual and non-OCR lanes may still use `retain` / `evict` after
      `fail` as upstream case curation
 9. CLI chat implementation runs through `polinko.cli`; `make chat`,
-   `polinko-chat`, and root `main.py` launch that packaged entrypoint. The
-   legacy root `app.py` launcher is retired.
+   `polinko-chat`, and root `main.py` launch that packaged entrypoint.
 
 ## Data Surfaces
 

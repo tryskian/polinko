@@ -4,9 +4,8 @@
 
 This page records the package-boundary contract for the beta refactor.
 The packaging rail exists now; `config`, API, and core runtime implementation
-are under `src/polinko/`. The legacy root `app.py` launcher is retired. The
-legacy root `config.py` import shim is retired. The legacy root `api/` import
-shims are retired. The legacy root `core/` import shims are retired.
+live under `src/polinko/`. The active root Python modules are `main.py` and
+`server.py`, both as compatibility launchers.
 
 ## Current Tracked Shape
 
@@ -53,30 +52,27 @@ Tracked packaging rail:
 
 Current audit result:
 
-- active runtime and tool imports should use `polinko.*`
-- remaining root compatibility surfaces are launchers, not import shims
-- compatibility launcher retirement must happen through surface-specific
-  kernels with evidence
-- active `server:app` references still exist in Docker, Make runtime defaults,
-  server-daemon startup, and local eval gate startup
-- the legacy `app.py` launcher is retired; use `make chat`, `python -m
-  polinko.cli`, `polinko-chat`, or root `main.py` for CLI chat launches
-- the legacy root `config.py` import shim is retired; use `polinko.config`
-  imports
-- the legacy root `api/` import shims are retired; use `polinko.api.*`
-  imports
-- the legacy root `core/` import shims are retired; use `polinko.core.*`
-  imports
+- active runtime and tool imports use `polinko.*`
+- root compatibility surfaces are launchers only
+- CLI chat launches through `make chat`, `python -m polinko.cli`,
+  `polinko-chat`, or root `main.py`
+- config imports use `polinko.config`
+- API imports use `polinko.api.*`
+- core runtime imports use `polinko.core.*`
+- `server:app` is the active ASGI compatibility string in Docker, Make
+  runtime defaults, server-daemon startup, and local eval gate startup
+- future launcher changes happen through surface-specific kernels with
+  evidence
 
-| Compatibility surface | Required by active references | Retire only after |
+| Compatibility surface | Active references | Change after |
 | --- | --- | --- |
-| `main.py` | stable direct `python main.py` launcher and project-venv restart hints | direct root CLI launches are no longer supported |
+| `main.py` | stable direct `python main.py` launcher and project-venv restart hints | an approved replacement exists for direct root CLI launches |
 | `server.py` | stable `server:app` ASGI string used by Make defaults, server-daemon, local eval gates, Docker, and older scripts | operator, Docker, and eval defaults have an approved replacement ASGI string |
 
 ## Entrypoint Compatibility Contract
 
-The remaining root files are compatibility launchers. They do not own runtime
-implementation.
+The current root runtime files are compatibility launchers. Runtime
+implementation lives under `src/polinko/`.
 
 | Operator path | Stable target | Canonical implementation |
 | --- | --- | --- |
@@ -93,40 +89,6 @@ Changing the CLI target requires updating the Make runtime config, root
 tests in the same kernel. Changing the ASGI target requires updating Docker,
 Make runtime config, server-daemon startup, local eval gates, API smoke
 expectations, and this package-boundary contract in the same kernel.
-
-### Readiness Snapshot: 2026-05-20
-
-This snapshot records the current retirement posture after the root-surface
-reference audit.
-
-| Surface | Current evidence | Retirement posture |
-| --- | --- | --- |
-| `main.py` | root CLI launcher is still a stable direct operator entrypoint and preserves project-venv restart hints | keep until direct `python main.py` launches are intentionally deprecated |
-| `app.py` | no active tracked code caller before removal; focused local ignored-lane search found no legacy launcher usage | retired in a separate deprecation/removal kernel |
-| `server.py` | `server:app` remains the default ASGI string in Make, Docker, server-daemon, and local eval gates | not retirement-ready |
-| `config.py` | active `src/` and `tools/` imports use `polinko.config`; focused local ignored-lane search found no legacy root import usage | retired in a separate deprecation/removal kernel |
-| `api/` | active `src/` and `tools/` imports use `polinko.api.*`; focused local ignored-lane search found no legacy root import usage | retired in a separate deprecation/removal kernel |
-| `core/` | active `src/` and `tools/` imports use `polinko.core.*`; focused local ignored-lane search found no legacy root import usage | retired in a separate deprecation/removal kernel |
-
-Retired root surfaces:
-
-- `app.py`
-  - removed after the deprecation/removal preflight found no active tracked
-    caller and no focused local ignored-lane launcher usage
-  - replacement launchers are `make chat`, `python -m polinko.cli`,
-    `polinko-chat`, and root `main.py`
-- `config.py`
-  - removed after the legacy-import preflight found no active tracked caller
-    and no focused local ignored-lane import usage
-  - replacement imports use `polinko.config`
-- `api/`
-  - removed after the legacy-import preflight found no active tracked caller
-    and no focused local ignored-lane import usage
-  - replacement imports use `polinko.api.*`
-- `core/`
-  - removed after the legacy-import preflight found no active tracked caller
-    and no focused local ignored-lane import usage
-  - replacement imports use `polinko.core.*`
 
 ## Package Shape
 
@@ -165,25 +127,25 @@ Current placement:
 4. Move or split `tools/` only after runtime imports and tests are stable.
 5. Keep `polinko-chat` as the installed console-script entrypoint.
 
-## Guardrails
+## Boundary Requirements
 
-- Keep runtime modules under `src/polinko/`.
-- Do not reintroduce root `config.py`; use `polinko.config`.
-- Do not reintroduce root `api/`; use `polinko.api.*`.
-- Do not reintroduce root `core/`; use `polinko.core.*`.
-- Do not change public operator commands:
+- Runtime modules stay under `src/polinko/`.
+- Config imports use `polinko.config`.
+- API imports use `polinko.api.*`.
+- Core runtime imports use `polinko.core.*`.
+- Public operator commands stay stable:
   - `make chat`
   - `polinko-chat`
   - `make server`
   - `make localhost`
   - `make server-daemon`
-- Do not change ASGI import compatibility for `server:app`.
-- Do not reintroduce root `app.py`; use `make chat`, `python -m polinko.cli`,
-  `polinko-chat`, or root `main.py`.
-- Do not package `tools/` into the runtime app before runtime imports and
-  compatibility launchers are stable.
-- Keep local evidence inventory and operator tooling repo-local unless a
-  later tooling split is explicitly approved.
+- ASGI compatibility stays on `server:app` while Docker, Make runtime defaults,
+  server-daemon startup, and local eval gates use that string.
+- CLI chat launchers stay on `make chat`, `python -m polinko.cli`,
+  `polinko-chat`, and root `main.py`.
+- `tools/` stays repo-local until a tooling split is explicitly approved.
+- Local evidence inventory and operator tooling stay repo-local unless a later
+  tooling split is explicitly approved.
 
 ## Validation
 
