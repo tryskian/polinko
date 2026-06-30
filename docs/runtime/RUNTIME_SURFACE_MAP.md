@@ -196,10 +196,10 @@ flowchart TD
   remains active, the PID file stays in place and the stop exits non-zero.
   Start reports success only after the current-run status file exists within
   the bounded readiness wait.
-- Deprecated portfolio app, static output, preview/mockup helpers, and Netlify
-  config are quarantined under `.archive/quarantine/portfolio-2026-06-29/` for
-  porting to the separate `krystian.io` repo. They are not active runtime,
-  Make, CI, dependency, or closeout surfaces.
+- Portfolio app, static output, preview/mockup helpers, and Netlify config live
+  under `.archive/quarantine/portfolio-2026-06-29/` for porting to the separate
+  `krystian.io` repo. Active runtime, Make, CI, dependency, and closeout
+  surfaces stay backend/manual-eval/API centred.
 - Manual eval and OCR tooling remain active workbench surfaces, but eval runs
   stay separate from startup and read-only inventory commands. Health,
   feedback, overlay, OCR retry, and reclassification Make targets route through

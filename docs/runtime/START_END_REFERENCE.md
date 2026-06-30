@@ -115,10 +115,10 @@ Runner lifecycle rule:
     preserved and the stop action fails instead of hiding the still-live runner
   - start reports success only after the current-run status file exists within
     the bounded readiness wait
-- Deprecated portfolio app, static output, preview/mockup helpers, and Netlify
-  config are quarantined under `.archive/quarantine/portfolio-2026-06-29/` for
-  porting to the separate `krystian.io` repo. They are not part of active
-  runtime, Make, CI, dependency, or closeout surfaces.
+- Portfolio app, static output, preview/mockup helpers, and Netlify config live
+  under `.archive/quarantine/portfolio-2026-06-29/` for porting to the separate
+  `krystian.io` repo. Active runtime, Make, CI, dependency, and closeout
+  surfaces stay backend/manual-eval/API centred.
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
 - shared PID inspection requires `ps` before lifecycle scripts make managed

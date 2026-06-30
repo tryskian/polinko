@@ -27,7 +27,7 @@ def _read_make_source(relative_path: str, seen: set[Path] | None = None) -> str:
 
 
 class SurfaceIaContractTests(unittest.TestCase):
-    def test_portfolio_surfaces_are_quarantined_not_active(self) -> None:
+    def test_portfolio_surfaces_are_archived_for_porting(self) -> None:
         surface_ia = _read("docs/runtime/SURFACE_IA.md")
         make_config = _read_make_source("makefiles/config.mk")
         surfaces_make = _read_make_source("makefiles/surfaces.mk")
@@ -47,7 +47,7 @@ class SurfaceIaContractTests(unittest.TestCase):
         ):
             self.assertIn(token, surface_ia)
 
-        for retired_token in (
+        for archive_only_token in (
             "PORTFOLIO_APP_DIR",
             "PORTFOLIO_STATIC_DIR",
             "POLINKO_PORTFOLIO_STATIC_DIR",
@@ -56,13 +56,13 @@ class SurfaceIaContractTests(unittest.TestCase):
             'directory: "/apps/portfolio"',
             "public/portfolio/assets",
         ):
-            self.assertNotIn(retired_token, make_config + surfaces_make)
-            self.assertNotIn(retired_token, dependabot + precommit)
+            self.assertNotIn(archive_only_token, make_config + surfaces_make)
+            self.assertNotIn(archive_only_token, dependabot + precommit)
 
         self.assertNotIn('"/portfolio"', app_factory)
         self.assertNotIn('"/assets"', app_factory)
 
-    def test_ambiguous_legacy_surface_paths_are_not_active_web_directories(
+    def test_archive_surface_paths_are_absent_from_active_web_directories(
         self,
     ) -> None:
         self.assertFalse((REPO_ROOT / "frontend").exists())
@@ -92,7 +92,7 @@ class SurfaceIaContractTests(unittest.TestCase):
             "`POST /chat`",
             "`/chats/*`",
             "Automated eval reports, strict OCR gates, and tracked beta snapshots",
-            "Do not move chat-facing manual eval routes",
+            "Chat-facing manual eval routes stay in the API workbench",
         ):
             self.assertIn(expected, surface_ia)
 

@@ -221,10 +221,10 @@ This page is the structural map of the tracked system.
 - `docs/`
   - governance, runtime references, and research docs
 - `.archive/quarantine/portfolio-2026-06-29/`
-  - deprecated portfolio app, static output, Netlify config, and mockup/build
-    helpers preserved for porting to the separate `krystian.io` repo
+  - portfolio app, static output, Netlify config, and mockup/build helpers
+    preserved for porting to the separate `krystian.io` repo
 - `frontend/` and `apps/portfolio/`
-  - retired web surface directory names
+  - web app directory names that belong to the portfolio archive lane
 - `ui/`
   - current manual-eval workbench entrypoints are API routes under
     `src/polinko/api/`

@@ -5033,3 +5033,22 @@ or branch history instead.
   removal narrative.
 - Why: Current operator docs should make the active runtime shape easy to audit
   without mixing source-of-truth instructions with historical cleanup notes.
+
+## D-291: Keep web-surface docs current-source
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `surface_ia`, `portfolio`, `manual_evals`, `docs_hygiene`,
+  `source_truth`
+- Human-led: The human lead clarified that active docs should describe the
+  current Polinko surface map with one name for one thing; history belongs in
+  the decision ledger and archive lanes.
+- Engineer implementation: Rewrite current public, governance, and runtime
+  web-surface notes around the portfolio archive bundle, API-backed manual eval
+  workbench, and active surface requirements; update the Surface IA contract
+  tests to pin the current-source wording.
+- Decision: Web-surface docs are current surface contracts. Portfolio material
+  lives in the quarantine bundle for porting to `krystian.io`; Polinko runtime
+  stays backend/manual-eval/API centred.
+- Why: Current source docs should orient operators to the active repo shape
+  without turning archive history into runtime instructions.

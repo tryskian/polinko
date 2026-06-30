@@ -29,15 +29,15 @@ It is about path roles, not visual direction.
   - `tools/render_public_d3_diagrams.py`
   - `src/polinko/api/evidence_sankey.py`
 
-## Quarantined Surfaces
+## Portfolio Archive
 
-The deprecated portfolio app, static output, preview/mockup helpers, and
-Netlify config are preserved for porting under:
+The portfolio app, static output, preview/mockup helpers, and Netlify config
+are preserved for porting under:
 
 - `.archive/quarantine/portfolio-2026-06-29/`
 
-The old active surfaces are intentionally not wired into Make, FastAPI,
-Dependabot, devcontainer setup, pre-commit excludes, or runtime risk scans:
+The active web-surface map is backend/manual-eval/API centred. Portfolio
+route, build, deploy, and dependency names are archive contents:
 
 - `apps/portfolio/`
 - `public/portfolio/`
@@ -54,8 +54,9 @@ Dependabot, devcontainer setup, pre-commit excludes, or runtime risk scans:
 
 ## Manual Eval Workbench
 
-The manual eval workbench is the human-judged research workspace, not an
-automated eval runner and not the discarded run-level rollup path.
+The manual eval workbench is the human-judged research workspace. It owns
+chat-facing manual eval surfaces, feedback, checkpoints, notes, exports, and
+runtime history.
 
 It includes:
 
@@ -90,12 +91,13 @@ names:
 - tool name: `manual_eval_workbench/eval_submission`
 - trace type: `manual_eval_workbench_submission`
 
-## Guardrails
+## Active Surface Requirements
 
-- Do not move chat-facing manual eval routes as part of web-surface cleanup.
-- Do not reintroduce `frontend/`, `ui/`, `apps/portfolio/`, or
-  `public/portfolio/` as active standalone web surfaces.
-- Do not promote private `docs/peanut/` work into public docs without an
-  explicit promotion decision.
-- Do not introduce generated artifacts or docs that name the manual eval
-  workbench as `ui`.
+- Chat-facing manual eval routes stay in the API workbench during web-surface
+  cleanup.
+- Active standalone web surfaces use current repo-approved names and
+  ownership.
+- Private `docs/peanut/` work moves to public docs through an explicit
+  promotion decision.
+- Generated artifacts and docs name the manual eval workbench as the manual
+  eval workbench.
