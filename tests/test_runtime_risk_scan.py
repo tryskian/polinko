@@ -86,6 +86,34 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_current_operator_docs_use_canonical_lifecycle_names(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            docs_path = root / "docs" / "runtime" / "START_END_REFERENCE.md"
+            docs_path.parent.mkdir(parents=True)
+            docs_path.write_text("Use `make eod` for closeout.\n", encoding="utf-8")
+
+            failures = check_runtime_risk_scan.check_current_lifecycle_doc_names(root)
+
+        self.assertIn(
+            "docs/runtime/START_END_REFERENCE.md: use canonical lifecycle command "
+            "'make end'",
+            failures,
+        )
+
+    def test_decision_log_can_retain_lifecycle_history(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            decisions_path = root / "docs" / "governance" / "DECISIONS.md"
+            decisions_path.parent.mkdir(parents=True)
+            decisions_path.write_text(
+                "Historical note: `make eod`.\n", encoding="utf-8"
+            )
+
+            failures = check_runtime_risk_scan.check_current_lifecycle_doc_names(root)
+
+        self.assertEqual([], failures)
+
     def test_missing_ci_docs_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             _make_contract_text(
