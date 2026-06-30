@@ -75,7 +75,7 @@ Last updated: 2026-06-29
   - the next model-contract review must preserve the original positive
     instruction shape by describing the behaviours the model should produce as
     the primary contract
-  - the discarded run-level rollup hypothesis is not being carried forward
+  - source-first row and case evidence is the pre-Beta 2.4 method foundation
   - non-OCR lanes stay source-first rather than run-verdict-first
   - the manual eval workbench, including notebooks, local evidence databases,
     `/chat`, `/chats/*`, and runtime history, remains source evidence for that

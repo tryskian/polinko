@@ -93,13 +93,13 @@ live together so claims can be traced back to source material.
   - the lane now tests transfer under harder visual conditions
 - pre-Beta 2.4 stages the next research-model contract:
   - OCR stays case-level `pass` / `fail`
-  - run-level verdicts are not carried forward as the method shape
+  - source-first row and case evidence is the method shape
   - row and case evidence stay inspectable before any lane-level claim is
     promoted
 
 ## Why The Repo Is The Surface
 
-The work is not just the final UI. The work is the evidence system:
+The work includes the final UI and the evidence system:
 
 - what was tested
 - what failed

@@ -14,9 +14,8 @@ Status: `staged`
 `pre-Beta 2.4` names the next research-model contract before new evidence is
 cut. The first evidence folder is cut when real evidence exists.
 
-The discarded run-level rollup hypothesis from `2026-05-16` is not being
-carried forward as the next method. It remains historical negative evidence
-because that shape did not work properly as a stable research surface.
+Historical method evidence stays in its dated research note and Decisions. The
+staged contract is source-first.
 
 The active question is whether Polinko can move from lane snapshots to
 source-first research claims while preserving row evidence and the manual eval
@@ -45,7 +44,7 @@ flowchart TD
     and chat artefacts
   - row-local or case-local `pass` / `fail` where binary judgement is earned
   - qualitative notes where the lane is still thin
-- Run-level verdicts are not canonical rollups for pre-Beta 2.4.
+- Canonical pre-Beta 2.4 claims stay source-first and row/case-bound.
 - Any promotion claim must stay traceable to source artefacts, row/case
   judgement, and repeated lane signal.
 
@@ -68,9 +67,9 @@ Canonical source surfaces include:
 - tracked eval reports and research notes under `docs/eval/` and
   `docs/research/`
 
-The staged contract sits above these sources and keeps them canonical. It does
-not replace the workbench, flatten manual evals, or convert thin lanes into
-run-level verdicts.
+The staged contract sits above these sources, keeps them canonical, preserves
+manual eval row evidence, and keeps thin lanes staged before hard gates are
+promoted.
 
 ## First Kernel Shape
 

@@ -27,7 +27,7 @@ Use it when you need:
     material promoted only after explicit curation
 - `pre-Beta 2.4`
   - staged research-model contract before the next evidence folder is cut
-  - the discarded run-level rollup hypothesis is not being carried forward
+  - source-first row and case evidence is the method foundation
   - row and case evidence remain source-bound before lane-level summaries
   - manual eval workbench sources stay canonical inputs
 
@@ -296,7 +296,7 @@ Manual evals and strict OCR gate reports answer different questions:
   - the underlying tracked artefact
   - the promoted research note when that lane has one
 
-Do not flatten one into the other.
+Keep those evidence lanes separate.
 
 ## Tracked Gate Contract
 
@@ -306,13 +306,12 @@ Do not flatten one into the other.
   - duplicate candidates
   - known-bad inputs
 - non-OCR lanes can still use richer staged or thin-lane method surfaces where
-  the research question is not simple extraction correctness
-- judge detail and qualitative notes can enrich a report, but they do not
-  create a third OCR gate state
+  the research question differs from simple extraction correctness
+- judge detail and qualitative notes can enrich a report while the OCR gate
+  state remains binary
 - thin new lanes can begin as row-local human `pass` / `fail` evidence before
   larger automation
-- run-level verdicts are not canonical rollups for the active manual eval
-  workbench
+- active manual eval workbench claims stay row/case-bound and source-first
 
 ## What Is Tracked Here
 
@@ -322,15 +321,15 @@ Do not flatten one into the other.
 - archived build snapshot material under
   `docs/eval/beta_1_0/build_snapshot_polinko-incase/`
 - role in the evidence map:
-  - left-side/legacy evidence for the Sankey payload
+  - baseline evidence for the Sankey payload
 
 ### Beta 2.0
 
 - active-era case files and report snapshots under `docs/eval/beta_2_0/`
 - includes OCR, OCR recovery, OCR safety, hallucination, retrieval, file
   search, style, response behaviour, CLIP A/B, and operator burden
-- append-only eval trace artefacts stay local under `eval_reports/`; they are
-  not auto-promoted into the tracked beta surface
+- append-only eval trace artefacts stay local under `eval_reports/` until
+  explicitly promoted into the tracked beta surface
 - current non-OCR promoted lane lives in the tracked style surface for
   co-reasoning reliability
 - current thin-lane operator burden surface lives in:
@@ -369,11 +368,12 @@ Do not flatten one into the other.
 - full Beta 1.0 local snapshot databases and runtime state
 - private exports, scratch screenshots, and raw local audit material
 
-Do not commit the full Beta 1.0 snapshot wholesale. Promote only curated
-evidence or explicitly approved artefacts.
+Promote only curated evidence or explicitly approved artefacts from the full
+Beta 1.0 snapshot.
 
 ## Interpretation Rule
 
-- compare Beta 1.0 and Beta 2.0 by role, not by artefact neatness
+- compare Beta 1.0 and Beta 2.0 by role, with artefact neatness secondary
 - treat transcripts, screenshots, and raw reports as source evidence
-- let decisions and public notes interpret the evidence, not replace it
+- let decisions and public notes interpret evidence while preserving the source
+  chain

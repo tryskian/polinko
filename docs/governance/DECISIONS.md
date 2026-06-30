@@ -5128,3 +5128,19 @@ or branch history instead.
   exclude and tracked-doc cleanup behaviour.
 - Why: Operator helper output should stay direct and current, especially for
   commands that touch local Git metadata.
+
+## D-297: Keep active method surfaces source-first
+
+- Date: `2026-06-29`
+- Category: `research_model`
+- Tags: `source_first`, `docs_hygiene`, `current_truth`, `pre_beta_2_4`
+- Human-led: The human lead clarified that active surfaces should state what
+  Polinko is rather than describe discarded paths.
+- Engineer implementation: Update current README, governance, eval, public,
+  and research contract surfaces to name the source-first row/case evidence
+  method directly while leaving historical evidence in dated research notes and
+  Decisions.
+- Decision: Active method surfaces describe pre-Beta 2.4 as source-first and
+  row/case-bound.
+- Why: Current-truth docs should make the active research model legible without
+  using historical exclusions as the primary frame.
