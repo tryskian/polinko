@@ -5189,3 +5189,17 @@ or branch history instead.
   canonical/non-current language.
 - Why: Guardrails stay clearer when the checker reports the maintained command
   vocabulary instead of embedding deprecated-path language.
+
+## D-301: Keep eval evidence map operator modes direct
+
+- Date: `2026-06-29`
+- Category: `docs_hygiene`
+- Tags: `eval_evidence`, `manual_evals`, `operator_commands`, `source_truth`
+- Human-led: The human lead clarified that active docs should state the current
+  mode directly.
+- Engineer implementation: Rewrite repeated eval README operator bullets from
+  exclusion-led phrasing into direct read, preview, validate, verify, and build
+  modes while preserving command names and boundaries.
+- Decision: The eval evidence map describes operator commands by active mode.
+- Why: The high-traffic eval map is easier to scan when each command bullet
+  leads with what the command does.

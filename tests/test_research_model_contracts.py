@@ -535,7 +535,7 @@ class ResearchModelContractTests(unittest.TestCase):
 
         self.assertIn("read-only `data_freshness` status", eval_map)
         self.assertIn("evidence-bearing import scope", eval_map)
-        self.assertIn("inspect freshness without mutation", eval_map)
+        self.assertIn("read freshness with `make manual-evals-db-status`", eval_map)
         self.assertIn("`.local_archive/manual-evals-db-refresh-*`", eval_map)
         self.assertIn(
             "inspect warehouse health with `make manual-evals-db-health`", eval_map
@@ -702,7 +702,7 @@ class ResearchModelContractTests(unittest.TestCase):
             eval_map,
         )
         self.assertIn("pre-restore backup", eval_map)
-        self.assertIn("without inferring links", eval_map)
+        self.assertIn("explicit source links", eval_map)
         self.assertIn("matching files inside", eval_map)
         self.assertIn("tracked `docs/eval/` snapshots", eval_map)
         self.assertIn("Dropbox screenshot sync root", eval_map)
