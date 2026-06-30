@@ -5439,3 +5439,18 @@ or branch history instead.
 - Decision: The shared local URL launcher accepts only local destinations.
 - Why: Explicit browser launch should stay bounded to local operator surfaces
   and reject accidental external URLs before invoking system launch tools.
+
+## D-318: Detect Playwright capture commands across option values
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `playwright`, `local_browser`, `helper_scripts`, `snapshots`
+- Human-led: The human lead asked for active script maintenance across helper
+  surfaces.
+- Engineer implementation: Update `tools/pwcli_daily.sh` to detect supported
+  capture commands directly before appending default snapshot filenames, and
+  add wrapper tests for option/value pairs before the command.
+- Decision: Playwright daily snapshot helpers infer default output filenames
+  from the capture command, regardless of preceding options.
+- Why: Local browser helpers should keep deterministic artifact paths even when
+  operators pass CLI options before `snapshot`, `screenshot`, or `pdf`.

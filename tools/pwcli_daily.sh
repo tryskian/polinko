@@ -60,17 +60,9 @@ if [[ "$has_session" != "true" ]]; then
 fi
 
 command_name=""
-for ((i = 0; i < ${#args[@]}; i++)); do
-  arg="${args[$i]}"
+for arg in "${args[@]}"; do
   case "$arg" in
-    --session|-s)
-      ((i += 1))
-      ;;
-    --session=*|-s=*)
-      ;;
-    --*)
-      ;;
-    *)
+    snapshot|screenshot|pdf)
       command_name="$arg"
       break
       ;;

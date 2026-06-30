@@ -88,6 +88,63 @@ class PwcliDailyTests(unittest.TestCase):
             )
             self.assertTrue(args[-1].endswith(".png"))
 
+    def test_capture_command_detection_skips_preceding_option_values(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            bin_dir = tmp_path / "bin"
+            bin_dir.mkdir()
+            npx = bin_dir / "npx"
+            pwcli = tmp_path / "playwright_cli.sh"
+            args_file = tmp_path / "args.txt"
+            snapshot_base = tmp_path / "snapshots"
+            _write_executable(npx, "#!/usr/bin/env sh\nset -eu\nexit 0\n")
+            _write_executable(
+                pwcli,
+                '#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$PWCLI_ARGS_FILE"\n',
+            )
+
+            result = subprocess.run(
+                [
+                    "/bin/bash",
+                    str(SCRIPT.relative_to(REPO_ROOT)),
+                    "--viewport",
+                    "1280,720",
+                    "screenshot",
+                    "http://127.0.0.1:8000/",
+                ],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
+                    "PWCLI": str(pwcli),
+                    "PWCLI_ARGS_FILE": str(args_file),
+                    "PLAYWRIGHT_SESSION": "daily",
+                    "PLAYWRIGHT_SNAPSHOT_BASE_DIR": str(snapshot_base),
+                    "PLAYWRIGHT_SNAPSHOT_DAY": "23-06-26",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            args = args_file.read_text(encoding="utf-8").splitlines()
+            self.assertEqual(
+                args[:6],
+                [
+                    "--session",
+                    "daily",
+                    "--viewport",
+                    "1280,720",
+                    "screenshot",
+                    "http://127.0.0.1:8000/",
+                ],
+            )
+            self.assertEqual(args[-2], "--filename")
+            self.assertTrue(
+                args[-1].startswith(str(snapshot_base / "23-06-26" / "screenshot-"))
+            )
+            self.assertTrue(args[-1].endswith(".png"))
+
     def test_explicit_session_and_filename_are_preserved(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
