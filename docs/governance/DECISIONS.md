@@ -5099,3 +5099,18 @@ or branch history instead.
   operator defaults.
 - Why: Current runtime docs should orient the next operator to the maintained
   source shape without stale historical phrasing.
+
+## D-295: Keep caffeinate lifecycle wording current-source
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `runtime_lifecycle`, `docs_hygiene`, `source_truth`
+- Human-led: The human lead clarified that active runtime surfaces should name
+  current behaviour directly.
+- Engineer implementation: Update repo-managed caffeinate operator output,
+  tests, and active runtime docs to describe flat runtime-file migration and
+  orphaned PID metadata cleanup without historical phrasing.
+- Decision: Caffeinate lifecycle docs and user-facing messages describe the
+  maintained repo-scoped wake-lock behaviour.
+- Why: High-traffic operator output should be clear during startup and
+  closeout, especially when repairing PID/runtime metadata.

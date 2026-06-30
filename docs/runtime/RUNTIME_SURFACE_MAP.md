@@ -160,8 +160,8 @@ flowchart TD
   stopped/zombie managed PIDs as stale, and removes owned runtime metadata only
   after bounded terminate/escalate cleanup succeeds. Its PID, log, ownership
   metadata, and activity metadata default to a repo-scoped runtime namespace,
-  with mutating lifecycle actions migrating owned legacy flat files or cleaning
-  stale legacy PID metadata before launch or stop decisions. It validates
+  with mutating lifecycle actions migrating owned flat runtime files or cleaning
+  orphaned flat PID metadata before launch or stop decisions. It validates
   command, match-pattern regex, active-window, and global-cleanup config before
   activity, start, stop, stop-all, or status work touches PID/activity state.
   Shell lifecycle runners require `ps` before making PID-state decisions, so
