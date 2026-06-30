@@ -7,7 +7,7 @@ and where the responsibility boundary sits.
 
 Krystian Fernando owns the research framework, hypotheses, evidence selection,
 judgement, and final claims. AI systems are used as instruments inside that
-process, not as independent authors or source authority.
+process; source authority and final authorship stay human-owned.
 
 ## AI Role
 
@@ -16,8 +16,8 @@ collaborator for implementation, refactoring, validation, review, and
 documentation maintenance. OpenAI Platform APIs are used where Polinko makes
 model-backed calls for OCR, evals, retrieval, and runtime experiments.
 
-These tools help implement and inspect the work. They do not define the claims
-or own publication decisions.
+These tools help implement and inspect the work. Claim definition and
+publication decisions remain human-owned.
 
 ## Collaboration Model
 
@@ -34,8 +34,8 @@ or own publication decisions.
 - Concept formation remains human-owned.
 - Judgement and selection remain human-owned.
 - Final claims remain human-owned.
-- AI assistance is cited as part of the method, not treated as source
-  authority.
+- AI assistance is cited as part of the method; source authority remains
+  human-owned.
 
 ## Practical Rule
 

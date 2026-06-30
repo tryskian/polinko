@@ -6,8 +6,7 @@ Polinko is a human-led, repo-native research lab for inspecting AI behaviour
 through fail-first evaluation, grounding, co-reasoning, operator burden, and
 human-AI collaboration.
 
-It is not mainly a website or a demo app. The website is a doorway. The
-repository is the research surface.
+The website is the doorway. The repository is the research surface.
 
 ## What Polinko Fundamentally Is
 
@@ -17,8 +16,8 @@ docs to study grounded behaviour and drift.
 
 ## Governing Theory
 
-The strongest signal is in failure and in what is not yet well-defined.
-Binary `pass` / `fail` gates preserve that signal instead of smoothing it away.
+The strongest signal is in failure and unsettled boundaries. Binary
+`pass` / `fail` gates preserve that signal instead of smoothing it away.
 
 Reliability improves when the system re-grounds in source evidence or the
 artefact itself instead of trusting:
@@ -28,12 +27,12 @@ artefact itself instead of trusting:
 - compressed summaries
 - confident continuation without evidence
 
-In short: confidence must not outrun evidence.
+In short: confidence follows evidence.
 
 ## What Makes It Distinct
 
-- Failure is the main signal, not a side effect.
-- The transcript lane is primary-source research material, not just notes.
+- Failure is the main signal.
+- The transcript lane is primary-source research material.
 - Human authorship stays explicit:
   - Krystian owns theory, judgement, and publication decisions.
   - Codex supports implementation, validation, and repo maintenance.
@@ -65,7 +64,7 @@ In short: confidence must not outrun evidence.
   - rerun
   - `pass / fail`
 - `retain` keeps the failure as in-scope evidence
-- `evict` is upstream case correction, not a third release state
+- `evict` is upstream case correction inside the binary release model
 - co-reasoning is now the first promoted non-OCR lane:
   - tracked style stress surface: `14/14` pass
 - uncertainty-boundary stability is now closed:
@@ -76,7 +75,7 @@ In short: confidence must not outrun evidence.
   - `4` pass rows
   - `2` retained fail rows
   - `1` evicted fail row
-  - current top backlog slice is duplicate-heavy, not fresh row pressure
+  - current top backlog slice carries duplicate-heavy backlog pressure
 - current mature method lane is still green:
   - transcript-backed OCR growth set: `25/25` stable
   - fail-history cohort: `0` active cases
