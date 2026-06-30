@@ -6,17 +6,17 @@ Status: `implemented-local-bundle`
 
 This page defines the OCR retry execution gate. The gate is active only as a
 guarded local-bundle writer. It can assemble and execute selected OCR retry
-requests, but it does not close feedback, write live eval rows, refresh
-`manual_evals.db`, or mutate the manual eval warehouse.
+requests while feedback, live eval rows, `manual_evals.db`, and the manual
+eval warehouse remain unchanged.
 
 ## Current Boundary
 
 - The OCR retry execution Make target exists only as a guarded local-bundle
   writer.
 - `manual-evals-ocr-retry-execute` writes only ignored local run bundles.
-- No feedback row is closed by this gate.
-- No live eval row is written by this gate.
-- No manual eval warehouse mutation happens from this gate.
+- Feedback rows close only through explicit feedback-closure apply gates.
+- Live eval rows are written only through future live-eval gates.
+- Manual eval warehouse mutation belongs to explicit follow-up gates.
 
 Feedback closure, live eval writes, and warehouse mutation remain separate
 follow-up gates.
@@ -46,8 +46,8 @@ The command is explicit and hard to run by accident:
 `scaffold` is provider-safe and records stub responses for binary images.
 Use `OCR_PROVIDER=openai` only when live OCR calls are intentionally approved.
 
-The command must recompute readiness inside the same process. It must not trust
-a stale readiness JSON copied from a prior run.
+The command recomputes readiness inside the same process from current source
+truth. Copied readiness JSON from prior runs is reference material only.
 
 ## Required Preconditions
 
@@ -65,9 +65,8 @@ Execution is allowed only when all of these are true:
 6. at least one executable item exists.
 7. the operator provided the exact confirmation token.
 
-`context_only` decisions stay non-executing. They can be included in the
-selection file for bookkeeping, but the execution command must not run OCR for
-them.
+`context_only` decisions stay non-executing and remain available only for
+selection-file bookkeeping.
 
 ## First Mutation Target
 
@@ -88,10 +87,10 @@ The bundle records:
 - OCR provider and model configuration
 - response status and extracted text preview
 - per-item success or failure
-- zero warehouse mutation state
+- warehouse unchanged state
 
-The implementation must not close feedback, write live eval rows, or refresh
-`manual_evals.db`. Those are separate follow-up gates.
+Feedback closure, live eval writes, `manual_evals.db` refresh, and warehouse
+mutation are separate follow-up gates.
 
 ## Inspection Target
 
@@ -105,8 +104,8 @@ Generated execution bundles are inspected before any follow-up mutation gate:
 The report target is read-only. It reads the bundle files, verifies that they
 stay under the run directory, checks schema versions, run ID alignment,
 request/response counts, response status counts, stop reasons, and the
-local-bundle mutation boundary. Terminal output hides source file paths and
-prints only the run ID, directory name, counts, and blocker/warning summary.
+warehouse mutation boundary. Terminal output hides source file paths and prints
+only the run ID, directory name, counts, and blocker/warning summary.
 
 Report states:
 
@@ -130,9 +129,9 @@ ID. It proposes which feedback rows would be closeable, marks mixed provider
 status as `attention`, and blocks when the bundle inspection has structural or
 mutation-boundary errors.
 
-The preview does not write feedback status, action-taken text, live eval rows,
-or `manual_evals.db`. It also keeps terminal output path-safe by printing run
-ID, directory name, feedback counts, and closure item states only.
+The preview preserves feedback status, action-taken text, live eval rows, and
+`manual_evals.db`. It also keeps terminal output path-safe by printing run ID,
+directory name, feedback counts, and closure item states only.
 
 ## Feedback-Closure Apply Gate
 
@@ -168,10 +167,11 @@ The apply gate may update only the feedback rows named by the preview:
 
 It blocks without a backup or mutation when confirmation is missing, the bundle
 or preview is not `ok`, the target feedback rows are missing, or any target
-feedback row is no longer open. It must not write live eval rows, run OCR,
-refresh `manual_evals.db`, mutate OCR run rows, or infer new source links. It
-writes a local apply summary beside the run bundle and includes the backup
-path, updated feedback IDs, skipped feedback IDs, and restore guidance.
+feedback row is no longer open. The apply gate updates only feedback rows; live
+eval rows, OCR run rows, OCR execution, warehouse refresh, and inferred source
+links stay outside this gate. It writes a local apply summary beside the run
+bundle and includes the backup path, updated feedback IDs, skipped feedback
+IDs, and restore guidance.
 
 Rollback for the apply gate is the explicit restore gate:
 
@@ -198,8 +198,9 @@ The apply-report target is read-only:
 It reads `feedback_closure_apply_summary.json` from the run bundle, verifies
 the backup DB integrity check is `ok`, verifies backup feedback rows remain
 open, verifies active feedback rows are closed, and verifies action-taken text
-is present. It must not restore from backup, reopen feedback, close feedback,
-write live eval rows, run OCR, or mutate the manual eval warehouse.
+is present. It verifies only; backup restore, feedback reopen/close operations,
+live eval writes, OCR execution, and warehouse mutation stay outside the report
+gate.
 
 ## Feedback-Closure Restore Gate
 
@@ -228,9 +229,9 @@ The restore target first backs up the active warehouse under:
 
 Then it restores the whole manual eval warehouse from the verified apply
 backup. This is intentionally a whole-database rollback, not a row patch, so it
-must not run while a local server is using `manual_evals.db`. It must not run
-OCR, refresh the warehouse from history, write live eval rows, infer source
-links, or touch pulse surfaces.
+requires the local server to be stopped before it runs. OCR execution,
+warehouse refresh from history, live eval writes, source-link inference, and
+pulse surfaces stay outside the restore gate.
 
 ## Rollback Story
 
@@ -254,8 +255,8 @@ The command fails closed:
 - validation/apply-preview/readiness not ready: exit non-zero before any
   provider call
 - missing source file: exit non-zero before any provider call
-- partial provider failure: write the local run bundle and mark failed items,
-  but do not close feedback or mutate the warehouse
+- partial provider failure: write the local run bundle and mark failed items;
+  feedback closure and warehouse mutation remain follow-up gates
 - rate limit or provider outage: stop remaining items and write a summary with
   retry-after/backoff evidence when available
 
@@ -265,8 +266,8 @@ The implementation includes tests proving:
 
 - readiness is recomputed from current source truth
 - missing confirmation blocks before provider calls
-- `context_only` selections do not run OCR
+- `context_only` selections remain non-executing
 - missing source files block before provider calls
 - partial failures write local evidence only
-- no feedback closure or manual eval warehouse mutation happens in the first
-  execution implementation
+- the first execution implementation preserves feedback and manual eval
+  warehouse state

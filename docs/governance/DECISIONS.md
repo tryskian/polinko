@@ -5159,3 +5159,18 @@ or branch history instead.
   provides before relying on exclusion wording.
 - Why: Current-truth docs stay easier to scan when high-traffic command
   behaviour is stated directly.
+
+## D-299: Keep OCR retry runtime docs boundary-first
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `ocr_retry`, `runtime_docs`, `docs_hygiene`, `source_truth`
+- Human-led: The human lead clarified that active docs should use current
+  behaviour language and one name for one boundary.
+- Engineer implementation: Rewrite active OCR retry runtime docs around
+  preserved state, local-bundle execution, explicit follow-up gates, and the
+  `warehouse mutation boundary`; update the execution-gate contract test.
+- Decision: OCR retry runtime docs should describe the current local-bundle
+  gate and preserved surfaces directly.
+- Why: High-traffic operator docs stay easier to audit when they state the
+  maintained boundary instead of repeating exclusion phrasing.

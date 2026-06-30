@@ -302,7 +302,7 @@ Use this doc for operator procedure.
   - combine with `COHORT=<cohort_id>`, `OUTCOME=<outcome>`, and `LIMIT=<n>`
     for explicit manual triage slices
   - use feedback notes/actions, source image names, OCR previews, readiness
-    flags, and exact not-confirmed reasons before reruns or feedback closure
+    flags, and exact confirmation blockers before reruns or feedback closure
 - `make manual-evals-ocr-retry-source-provenance`
   - print the read-only OCR retry source-history provenance packet for the
     default `ocr_retry_evidence` partial slice
@@ -396,8 +396,8 @@ Use this doc for operator procedure.
     `rerun_input` and `curated_case` artifacts for existing source files and
     payload-only command previews
   - use this as the final read-only readiness gate before a separate explicit
-    execution kernel; it still does not run OCR, close feedback, write live
-    eval rows, or mutate the manual eval warehouse
+    execution kernel; OCR execution, feedback closure, live eval writes, and
+    manual eval warehouse mutation stay in separate gates
 - OCR retry execution:
   - `docs/runtime/OCR_RETRY_EXECUTION_GATE.md`
   - `make manual-evals-ocr-retry-execute`
@@ -406,19 +406,19 @@ Use this doc for operator procedure.
   - recomputes validation, apply-preview, and execution readiness in-process
   - writes only a local ignored execution bundle under
     `.local/manual_eval_runs/ocr_retry/`
-  - does not close feedback, write live eval rows, refresh `manual_evals.db`,
-    or mutate the manual eval warehouse
+  - leaves feedback, live eval rows, `manual_evals.db`, and the manual eval
+    warehouse unchanged
 - OCR retry execution bundle inspection:
   - `make manual-evals-ocr-retry-execution-report RUN_DIR=<path>`
-  - reads one local ignored execution bundle without running OCR or mutating
-    eval data
+  - reads one local ignored execution bundle while OCR execution and eval data
+    remain unchanged
   - reports `ok`, `attention`, or `error` after checking files, run IDs,
     request/response counts, provider failure status, stop reasons, and the
-    local-bundle mutation boundary
+    warehouse mutation boundary
 - OCR retry feedback-closure preview:
   - `make manual-evals-ocr-retry-feedback-closure-preview RUN_DIR=<path>`
-  - reads one inspected local execution bundle without closing feedback or
-    mutating eval data
+  - reads one inspected local execution bundle while feedback and eval data
+    remain unchanged
   - groups OCR retry responses by feedback ID, proposes closeable feedback
     items only as preview data, and marks mixed provider status as `attention`
 - OCR retry feedback-closure apply:
@@ -492,10 +492,10 @@ Use this doc for operator procedure.
     repo activity before running their work
   - current background-runner start/stop targets that own local process state
     mark repo activity before lifecycle work begins
-  - activity marking updates caffeinate activity metadata only; it does not
-    start, stop, adopt, or inspect wake-lock PIDs
-  - pure status/read-only targets stay read-only so status checks do not refresh
-    activity freshness
+  - activity marking updates caffeinate activity metadata only; wake-lock PID
+    ownership stays unchanged
+  - pure status/read-only targets report state while preserving activity
+    freshness
 - `make local-runtime-config-check`
   - validates VS Code task/config shape, extension recommendation drift, and
     devcontainer config/setup-script drift through

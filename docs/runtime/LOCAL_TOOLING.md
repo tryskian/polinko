@@ -124,20 +124,20 @@ operator input tooling:
     existing source files and payload-only command previews
   - emits
     `schema_version=polinko.manual_eval_ocr_retry_execution_readiness.v1`
-  - stays read-only and does not run OCR, close feedback, write eval rows, or
-    mutate the manual eval warehouse
+  - stays read-only; OCR execution, feedback closure, eval rows, and the manual
+    eval warehouse remain unchanged
 - `make manual-evals-ocr-retry-execute`
   - requires `SELECTION_PATH=<path>` and `CONFIRM=ocr-retry-execute`
   - recomputes validation, apply-preview, and execution readiness in-process
   - writes local ignored run bundles under `.local/manual_eval_runs/ocr_retry/`
-  - does not close feedback, write eval rows, refresh `manual_evals.db`, or
-    mutate the manual eval warehouse
+  - leaves feedback, eval rows, `manual_evals.db`, and the manual eval
+    warehouse unchanged
 - `make manual-evals-ocr-retry-execution-report`
   - reads one local ignored run bundle through `RUN_DIR=<path>`
   - emits
     `schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`
   - checks bundle files, run ID alignment, request/response counts, provider
-    failure status, stop reasons, and the no-warehouse-mutation boundary
+    failure status, stop reasons, and the warehouse mutation boundary
   - stays read-only and hides source file paths from terminal output
 - `make manual-evals-ocr-retry-feedback-closure-preview`
   - reads the same local ignored run bundle through `RUN_DIR=<path>`
@@ -145,8 +145,8 @@ operator input tooling:
     `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`
   - groups successful OCR retry responses by feedback ID and previews which
     feedback rows would be closeable
-  - stays read-only and does not close feedback, write action-taken text,
-    refresh `manual_evals.db`, write eval rows, or mutate the warehouse
+  - stays read-only; feedback status, action-taken text, `manual_evals.db`,
+    eval rows, and the warehouse remain unchanged
 - `make manual-evals-ocr-retry-feedback-closure-apply`
   - reads the same local ignored run bundle through `RUN_DIR=<path>`
   - requires `CONFIRM=ocr-retry-feedback-closure-apply`
@@ -161,8 +161,7 @@ operator input tooling:
     `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`
   - verifies backup DB integrity, backup feedback rows still open, active
     feedback rows closed, and action-taken text present
-  - stays read-only and does not restore, reopen, close, or mutate warehouse
-    rows
+  - stays read-only while warehouse rows remain unchanged
 - `make manual-evals-ocr-retry-feedback-closure-restore-preview`
   - reads one apply backup through `BACKUP_DIR=<path>`
   - emits
@@ -189,8 +188,8 @@ operator input tooling:
     a row ready
   - exposes source context, source-image candidates, exact blockers, and
     payload-only previews for a future overlay/OCR comparison lane
-  - stays read-only and does not run OCR, close feedback, write eval rows,
-    mutate source history, or mutate the manual eval warehouse
+  - stays read-only; OCR execution, feedback closure, eval rows, source
+    history, and the manual eval warehouse remain unchanged
 - `make manual-evals-overlay-source-index-draft`
   - writes a local ignored fillable overlay/source image context index to
     `.local/manual_eval_decisions/overlay_source_context_index.json`
@@ -213,8 +212,8 @@ operator input tooling:
     `schema_version=polinko.manual_eval_overlay_source_context_index_validation.v1`
   - reuses the readiness fingerprint gate, local image-path checks, and
     blocker reporting before any future comparison lane exists
-  - stays read-only and does not run OCR, close feedback, write eval rows,
-    mutate source history, or mutate the manual eval warehouse
+  - stays read-only; OCR execution, feedback closure, eval rows, source
+    history, and the manual eval warehouse remain unchanged
 - `make manual-evals-no-context-reclassify-preview`
   - previews overlay-hypothesis OCR feedback rows that have no same-session
     OCR context and whose source response asked for new image evidence
