@@ -58,6 +58,29 @@ def _is_runnable_python(path: Path) -> bool:
     return proc.returncode == 0
 
 
+def _path_is_relative_to(path: Path, parent: Path) -> bool:
+    try:
+        path.relative_to(parent)
+    except ValueError:
+        return False
+    return True
+
+
+def _matches_expected_interpreter(current_raw: Path, expected: Path) -> bool:
+    current = current_raw.expanduser()
+    if not current.is_absolute():
+        current = (Path.cwd() / current).resolve()
+
+    expected = expected.expanduser()
+    if not expected.is_absolute():
+        expected = (Path.cwd() / expected).resolve()
+
+    expected_venv = expected.parent.parent
+    return current == expected or (
+        current.name == expected.name and _path_is_relative_to(current, expected_venv)
+    )
+
+
 def _expected_python_candidates(active_venv: str | None) -> list[Path]:
     roots: list[Path] = []
     seen: set[Path] = set()
@@ -93,7 +116,7 @@ def _check_interpreter() -> int:
             (
                 path
                 for path in runnable_candidates
-                if current_raw.resolve() == path.resolve() or current_raw == path
+                if _matches_expected_interpreter(current_raw, path)
             ),
             None,
         )

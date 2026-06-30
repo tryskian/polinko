@@ -98,6 +98,31 @@ class DoctorEnvTests(unittest.TestCase):
         self.assertIn("Using host interpreter", output)
         self.assertIn("Interpreter source: host PATH fallback", output)
 
+    def test_check_interpreter_rejects_host_binary_matching_venv_symlink(
+        self,
+    ) -> None:
+        stdout = io.StringIO()
+        current_python = Path("/usr/local/bin/python3.14")
+
+        with patch.object(doctor_env.sys, "executable", str(current_python)):
+            with patch.dict("os.environ", {}, clear=True):
+                with patch("tools.doctor_env._is_runnable_python") as is_runnable:
+                    with patch(
+                        "tools.doctor_env.shutil.which",
+                        return_value=str(current_python),
+                    ):
+                        is_runnable.side_effect = lambda path: (
+                            path.parent.parent == doctor_env.ROOT / ".venv"
+                        )
+                        with redirect_stdout(stdout):
+                            issues = doctor_env._check_interpreter()
+
+        output = stdout.getvalue()
+        self.assertEqual(issues, 1)
+        self.assertIn("Interpreter mismatch", output)
+        self.assertIn("Expected:", output)
+        self.assertIn(str(doctor_env.ROOT / ".venv" / "bin" / "activate"), output)
+
     def test_check_interpreter_mismatch_points_to_dotvenv_activation(self) -> None:
         stdout = io.StringIO()
         current_python = Path("/usr/bin/python3")
