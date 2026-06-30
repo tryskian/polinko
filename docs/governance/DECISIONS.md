@@ -5217,3 +5217,18 @@ or branch history instead.
 - Decision: Operator-command guard failures describe non-canonical targets and
   rules.
 - Why: The checker should report the maintained command contract directly.
+
+## D-303: Keep local-tooling boundaries active-source
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `local_tooling`, `operator_commands`, `read_only`, `source_truth`
+- Human-led: The human lead clarified that active docs should state current
+  behaviour directly.
+- Engineer implementation: Rewrite local-tooling docs and mirrored CLI help
+  around read-only reports, preview gates, explicit execution gates, and
+  preserved warehouse/source state.
+- Decision: Local-tooling boundary language leads with the current operator
+  mode.
+- Why: Operator docs stay easier to scan when preparation tools state what they
+  preserve and which gate performs the next action.

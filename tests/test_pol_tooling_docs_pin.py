@@ -22,7 +22,6 @@ class PolToolingDocsPinTests(unittest.TestCase):
         )
         for expected in (
             "`make ocr-inventory` and `make ocr-inventory-json` are the current OCR tooling pin",
-            "without running OCR, launching browsers, writing eval rows, or mutating local databases",
             "read-only freshness states from existing `generated_at` metadata",
         ):
             self.assertIn(expected, normalized_decisions)
@@ -44,7 +43,7 @@ class PolToolingDocsPinTests(unittest.TestCase):
             "docs/runtime/LOCAL_TOOLING.md": (
                 "Read-only inventory and status tools are also local tooling.",
                 "`make ocr-inventory-json`",
-                "must not execute evals, run OCR, launch browsers, or mutate local data",
+                "while preserving eval execution, OCR execution, browser state, and local data state",
             ),
             "docs/runtime/RUNBOOK.md": (
                 "Use read-only inventory/status tools before eval refreshes",

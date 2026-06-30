@@ -4,7 +4,7 @@
 
 This page names the reusable local-tooling pattern established during the beta
 refactor. It is a repo-local contract for Polinko's future operator tools. It
-is not a shared package.
+stays inside this repo.
 
 ## Contract Shape
 
@@ -13,16 +13,16 @@ must separate preparation from execution:
 
 1. Generate ignored local input.
 2. Validate that local input against current source truth.
-3. Preview the application without mutation.
+3. Preview the application as a read-only would-apply step.
 4. Execute only through a separate explicit follow-up gate.
 
 The first three stages are safe to add as local tooling. The fourth stage needs
 its own approval and validation kernel.
 
-Read-only inventory and status tools are also local tooling. They may inspect
+Read-only inventory and status tools are also local tooling. They inspect
 tracked and ignored local evidence, summarize freshness, and print JSON for
-operator review, but they must not execute evals, run OCR, launch browsers, or
-mutate local data.
+operator review while preserving eval execution, OCR execution, browser state,
+and local data state.
 
 ## Repo Search
 
@@ -59,16 +59,16 @@ Every tool that materializes local operator input must expose:
 - an apply-preview command that prints the would-apply payloads only after
   validation passes
 
-## Mutation Boundary
+## Preserved Boundaries
 
-Preparation tools must not:
+Preparation tools preserve:
 
-- launch a browser
-- run OCR
-- close feedback
-- write live eval rows
-- mutate the manual eval warehouse
-- infer source links that are not present in current source truth
+- browser state
+- OCR execution state
+- feedback status
+- live eval rows
+- manual eval warehouse state
+- source links present in current source truth
 
 Execution tools may be added only as explicit follow-up gates. They must state
 their mutation target, reuse the validator, and keep a preview path available.
@@ -90,9 +90,8 @@ updates. The workflow is:
 For overlay-assisted OCR hypothesis rows, `keep_open` is the default evidence
 posture when the row has no exact OCR retry execution target. Those rows remain
 active hypothesis pressure until there is a real OCR comparison lane with
-attached overlay/source image context. A decision preview can record that local
-human-reviewed posture without running OCR, closing feedback, writing eval rows,
-or mutating the manual eval warehouse.
+attached overlay/source image context. A decision preview records that local
+human-reviewed posture as preserved-state evidence.
 
 The OCR retry execution gate is documented in
 `docs/runtime/OCR_RETRY_EXECUTION_GATE.md`. It writes local ignored run bundles
@@ -167,7 +166,7 @@ operator input tooling:
   - emits
     `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_restore.v1`
   - verifies backup integrity, backup-open rows, and active closed apply
-    markers without mutation
+    markers while preserving active warehouse state
 - `make manual-evals-ocr-retry-feedback-closure-restore`
   - reads one apply backup through `BACKUP_DIR=<path>`
   - requires `CONFIRM=ocr-retry-feedback-closure-restore`
@@ -257,7 +256,8 @@ evidence inspection:
 
 - `make ocr-inventory`
   - prints tracked OCR cases, local case inputs, local reports, manual-eval DB
-    paths, and notebook paths without running OCR or mutating data
+    paths, and notebook paths while preserving OCR execution and local data
+    state
   - reports JSON shape, row-source counts, and freshness state from existing
     `generated_at` metadata
 - `make ocr-inventory-json`

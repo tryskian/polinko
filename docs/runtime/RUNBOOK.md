@@ -149,7 +149,7 @@ Use this doc for operator procedure.
 2. Keep preparation separate from execution:
    - generate ignored local input
    - validate that input against current source truth
-   - preview application without mutation
+   - preview application as a read-only would-apply step
    - execute only through a separate explicit follow-up gate
 3. Use read-only inventory/status tools before eval refreshes when local
    evidence state is unclear.
@@ -437,7 +437,7 @@ Use this doc for operator procedure.
     `ok`
 - OCR retry feedback-closure apply report:
   - `make manual-evals-ocr-retry-feedback-closure-apply-report RUN_DIR=<path>`
-  - reads the local apply summary without mutation
+  - reads the local apply summary as a read-only report
   - emits
     `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_apply_report.v1`
   - verifies active feedback rows are closed and backup feedback rows remain
@@ -445,7 +445,7 @@ Use this doc for operator procedure.
 - OCR retry feedback-closure restore:
   - `make manual-evals-ocr-retry-feedback-closure-restore-preview
     BACKUP_DIR=<path>`
-  - previews restore readiness without mutation
+  - previews restore readiness as a read-only gate
   - `make manual-evals-ocr-retry-feedback-closure-restore BACKUP_DIR=<path>
     CONFIRM=ocr-retry-feedback-closure-restore`
   - emits
