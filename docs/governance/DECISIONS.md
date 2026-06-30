@@ -4985,3 +4985,19 @@ or branch history instead.
 - Why: The previous path name implied compatibility aliases even when the
   current surface is shorthand commands. Naming the active surface as shortcuts
   keeps operator language current and easier to audit.
+
+## D-288: Add GitHub health as an operator visibility surface
+
+- Date: `2026-06-29`
+- Category: `ci`
+- Tags: `github_actions`, `operator_runtime`, `build_hygiene`, `automation`
+- Human-led: The human lead clarified that CI and PR check failures should be
+  surfaced by maintained tooling rather than manual browser polling.
+- Engineer implementation: Add `make github-health`, backed by
+  `tools.github_health`, to report `gh` auth state, recent failed workflow
+  runs, open PR check state, and the next useful `gh` command; add Make,
+  parser, runtime risk-scan, and docs coverage.
+- Decision: Polinko’s local operator surface includes a read-only GitHub health
+  helper for PR and workflow failure visibility.
+- Why: The build-hygiene gates are only useful if their failures are easy to
+  see from the repo runtime without depending on a browser refresh or memory.

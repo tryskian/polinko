@@ -12,6 +12,7 @@ MAKE_BUILD = REPO_ROOT / "makefiles" / "build.mk"
 MAKE_BUILD_DEPENDENCIES = REPO_ROOT / "makefiles" / "build" / "dependencies.mk"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_CONFIG_OPS = REPO_ROOT / "makefiles" / "config" / "ops.mk"
+MAKE_CONFIG_OPS_GITHUB = REPO_ROOT / "makefiles" / "config" / "ops" / "github.mk"
 MAKE_CONFIG_RUNTIME = REPO_ROOT / "makefiles" / "config" / "runtime.mk"
 MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT = (
     REPO_ROOT / "makefiles" / "config" / "runtime" / "openai-account.mk"
@@ -96,6 +97,9 @@ MAKE_CHECKS_RUNTIME_AUDITS_DOCTOR_ENV = (
     REPO_ROOT / "makefiles" / "checks" / "runtime-audits" / "doctor-env.mk"
 )
 MAKE_CHECKS_DEV_TOOLS = REPO_ROOT / "makefiles" / "checks" / "dev-tools.mk"
+MAKE_CHECKS_DEV_TOOLS_GITHUB = (
+    REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "github.mk"
+)
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_SURFACES_MANUAL_EVALS = REPO_ROOT / "makefiles" / "surfaces" / "manual-evals.mk"
 MAKE_SURFACES_MANUAL_EVALS_FEEDBACK = (
@@ -268,6 +272,7 @@ class MakefileContractTests(unittest.TestCase):
             MAKE_CHECKS_RUNTIME_AUDITS_DOCTOR_ENV.read_text(encoding="utf-8")
         )
         dev_tools_entry_text = MAKE_CHECKS_DEV_TOOLS.read_text(encoding="utf-8")
+        dev_tools_github_text = MAKE_CHECKS_DEV_TOOLS_GITHUB.read_text(encoding="utf-8")
         contract_text = _makefile_contract_text()
 
         self.assertIn("include makefiles/checks/tests.mk", checks_entry_text)
@@ -343,6 +348,12 @@ class MakefileContractTests(unittest.TestCase):
             dev_tools_entry_text,
         )
         self.assertIn(
+            "include makefiles/checks/dev-tools/github.mk",
+            dev_tools_entry_text,
+        )
+        self.assertIn("github-health:", dev_tools_github_text)
+        self.assertIn('$(PYTHON) -m tools.github_health --gh "$(GH)"', contract_text)
+        self.assertIn(
             "include makefiles/checks/runtime-audits/shell.mk",
             runtime_audits_entry_text,
         )
@@ -384,6 +395,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(contract_text, r"(?m)^ruff-check:$")
         self.assertIn("lint-docs:", contract_text)
         self.assertIn("risk-scan:", contract_text)
+        self.assertIn("github-health:", contract_text)
         self.assertIn("repo-search:", contract_text)
 
     def test_eval_targets_are_extracted_through_role_includes(self) -> None:
@@ -1346,6 +1358,7 @@ class MakefileContractTests(unittest.TestCase):
         root_text = _makefile_text()
         config_entry_text = MAKE_CONFIG.read_text(encoding="utf-8")
         config_ops_entry_text = MAKE_CONFIG_OPS.read_text(encoding="utf-8")
+        config_ops_github_text = MAKE_CONFIG_OPS_GITHUB.read_text(encoding="utf-8")
         runtime_config_entry_text = MAKE_CONFIG_RUNTIME.read_text(encoding="utf-8")
         runtime_openai_account_entry_text = (
             MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT.read_text(encoding="utf-8")
@@ -1377,8 +1390,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("include makefiles/config/ops/act.mk", config_ops_entry_text)
         self.assertIn("include makefiles/config/ops/docker.mk", config_ops_entry_text)
+        self.assertIn("include makefiles/config/ops/github.mk", config_ops_entry_text)
         self.assertIn("include makefiles/config/ops/k6.mk", config_ops_entry_text)
         self.assertIn("include makefiles/config/ops/trivy.mk", config_ops_entry_text)
+        self.assertIn("GH ?= gh", config_ops_github_text)
         self.assertIn(
             "include makefiles/config/runtime/core.mk", runtime_config_entry_text
         )

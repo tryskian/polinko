@@ -73,12 +73,14 @@ flowchart TD
     GitHubActions["GitHub Actions"]
     Dependabot["Dependabot"]
     DependencyReview["dependency-review"]
+    GitHubHealth["make github-health"]
     StartupContracts["startup-contracts-check"]
     AuditTools["pip-audit and npm audit"]
     GitHubActions --> StartupContracts
     GitHubActions --> DependencyReview
     GitHubActions --> AuditTools
     Dependabot --> GitHubActions
+    GitHubHealth --> GitHubActions
   end
 
   Rehydrate --> Closeout
@@ -211,7 +213,9 @@ flowchart TD
   growth, focus, and transcript-lane OCR wrappers share the same case guard
   before launching eval runners.
 - CI and dependency automation should mirror local gates closely enough that
-  failed remote runs point to real fixes, not setup drift.
+  failed remote runs point to real fixes, not setup drift. `make github-health`
+  reports `gh` auth state, recent failed workflow runs, open PR check state,
+  and the next useful `gh` command.
 - Local URL targets remain print-first by default. Explicit system-browser
   launch paths route through `tools/open_local_url.sh` so `docs` and `viz`
   launch behavior share one audited helper.
