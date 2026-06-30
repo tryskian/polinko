@@ -15,10 +15,9 @@ that matches the question you are trying to answer.
   [docs/runtime/RUNBOOK.md](./runtime/RUNBOOK.md#end-of-day-ritual)
 - Manual eval workbench:
   notebooks, local evidence databases, `make chat`, `POST /chat`, and
-  `/chats/*` are active manual-eval surfaces; do not prune them as dead
-  surfaces.
-- Deprecated portfolio surfaces are quarantined for porting to `krystian.io`;
-  they are not active Polinko runtime.
+  `/chats/*` remain owned manual-eval surfaces.
+- Portfolio archive surfaces are quarantined for porting to `krystian.io`;
+  Polinko runtime stays backend/manual-eval/API centred.
 
 ## Reading Paths
 

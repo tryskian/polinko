@@ -56,11 +56,11 @@ Last updated: 2026-06-29
   - the public status badge set distinguishes the Polinko research model,
     active model refactor, eval contract, research surface, and CI status
   - the root README points to public research docs, not local portfolio commands
-  - deprecated portfolio app, static output, Netlify config, and mockup/build
-    helpers are quarantined under
+  - portfolio app, static output, Netlify config, and mockup/build helpers are
+    quarantined under
     `.archive/quarantine/portfolio-2026-06-29/` for porting to `krystian.io`
-  - `frontend`, root `ui/`, and `apps/portfolio` are retired web-surface names
-  - manual eval workbench entrypoints are API routes, not a standalone web app
+  - the active web/eval surface is the API-backed manual eval workbench
+  - manual eval workbench entrypoints are API routes under `src/polinko/api/`
 - The eval contract is explicit and binary:
   - release outcomes are `pass` / `fail`
   - OCR case judgment remains `pass` / `fail`
@@ -86,8 +86,7 @@ Last updated: 2026-06-29
   - `/viz/pass-fail` also uses feedback-to-result message matching for manual
     eval rows, so run-specific chart rows do not borrow unrelated session
     feedback
-  - active eval visualization labels use source-first monitor wording rather
-    than retired run-level rollup labels
+  - active eval visualization labels use source-first monitor wording
   - source-first manual eval payloads expose `summary_unit` for lane-summary
     wording
   - source-first manual eval payloads expose
@@ -171,8 +170,7 @@ Last updated: 2026-06-29
     still-live runner
   - `eval-sidecar` start waits for the current-run status file before reporting
     success, rather than relying on a fixed post-launch sleep
-  - deprecated portfolio mockup targets have been removed from active Make
-    wiring and preserved only in the quarantine bundle for porting
+  - portfolio mockup targets live in the quarantine bundle for porting
   - manual eval health, feedback, overlay, OCR retry, and reclassification Make
     targets keep their public names while routing through a single
     `MANUAL_EVALS_DB_HEALTH_COMMAND` entrypoint and shared Make helper
@@ -189,8 +187,7 @@ Last updated: 2026-06-29
     config entrypoint, while base inputs, selection args, execution args, and
     feedback-closure args live under
     `makefiles/config/surfaces/manual-evals/ocr-retry/`
-  - portfolio Make/config fragments are retired from active includes and kept
-    only in the quarantine bundle
+  - portfolio Make/config fragments live in the quarantine bundle for porting
   - eval Make config keeps the public entrypoint at
     `makefiles/config/evals.mk`, while role-owned fragments live under
     `makefiles/config/evals/` for quality gates, OCR case sources, eval
