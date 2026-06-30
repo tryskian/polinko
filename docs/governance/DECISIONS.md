@@ -5576,3 +5576,18 @@ or branch history instead.
   action before importing packaged runtime modules.
 - Why: Operators should see the active recovery command when the checker runs
   under the wrong Python environment instead of reading a raw import traceback.
+
+## D-327: Match doctor-env against the venv path, not the host binary target
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `doctor_env`, `python_runtime`, `venv`, `startup`
+- Human-led: The human lead identified recurring local-vs-system Python drift
+  as a startup reliability issue.
+- Engineer implementation: Update `tools/doctor_env.py` so interpreter matching
+  requires the executable path to live under the expected venv instead of
+  accepting any host binary that resolves to the same Python executable; add
+  focused regression coverage for the host-binary false-positive case.
+- Decision: `doctor-env` validates venv ownership by executable path.
+- Why: Startup diagnostics should point to venv activation when host Python
+  shares the same binary target but lacks the repo package environment.
