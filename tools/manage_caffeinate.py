@@ -412,11 +412,11 @@ def _migrate_legacy_runtime_state(config: RuntimeConfig) -> None:
     if state.status == "missing":
         return
     if state.status == "live-non-owned":
-        print("Legacy caffeinate PID reference is non-owned; leaving it untouched.")
+        print("Flat caffeinate PID reference is non-owned; leaving it untouched.")
         return
     if state.status == "stale":
         _remove_runtime_metadata(legacy)
-        print("Cleaned stale legacy caffeinate PID metadata.")
+        print("Cleaned orphaned flat caffeinate PID metadata.")
         return
 
     _move_legacy_file(config.legacy_pid_file, config.pid_file)
@@ -425,7 +425,7 @@ def _migrate_legacy_runtime_state(config: RuntimeConfig) -> None:
     _move_legacy_file(config.legacy_activity_file, config.activity_file)
     if state.pid is not None:
         _write_caffeinate_metadata(config, state.pid)
-    print("Migrated legacy caffeinate runtime files into repo namespace.")
+    print("Migrated flat caffeinate runtime files into repo namespace.")
 
 
 def _is_darwin(config: RuntimeConfig) -> bool:

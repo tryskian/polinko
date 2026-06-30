@@ -278,7 +278,7 @@ class ManageCaffeinateTests(unittest.TestCase):
             )
             self.assertTrue(activity_file.exists())
 
-    def test_start_migrates_legacy_runtime_files_without_duplicate_launch(
+    def test_start_migrates_flat_runtime_files_without_duplicate_launch(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -351,7 +351,7 @@ class ManageCaffeinateTests(unittest.TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("Migrated legacy caffeinate runtime files", result.stdout)
+            self.assertIn("Migrated flat caffeinate runtime files", result.stdout)
             self.assertIn("caffeinate already running", result.stdout)
             self.assertFalse(launcher_marker.exists())
             self.assertFalse(legacy_pid_file.exists())
@@ -367,7 +367,7 @@ class ManageCaffeinateTests(unittest.TestCase):
             self.assertEqual(metadata["pid"], process.pid)
             self.assertEqual(metadata["pid_file"], str(pid_file))
 
-    def test_start_finds_default_legacy_tmp_runtime_files(self) -> None:
+    def test_start_finds_default_flat_tmp_runtime_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             slug = f"polinko-test-{os.getpid()}-{time.time_ns()}"
@@ -415,14 +415,14 @@ class ManageCaffeinateTests(unittest.TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("Migrated legacy caffeinate runtime files", result.stdout)
+            self.assertIn("Migrated flat caffeinate runtime files", result.stdout)
             self.assertFalse(legacy_pid_file.exists())
             self.assertTrue(pid_file.exists())
             self.assertEqual(
                 pid_file.read_text(encoding="utf-8").strip(), str(process.pid)
             )
 
-    def test_start_cleans_stale_legacy_runtime_metadata_before_launch(self) -> None:
+    def test_start_cleans_orphaned_flat_runtime_metadata_before_launch(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             uname_script = tmp_path / "uname.sh"
@@ -464,7 +464,9 @@ class ManageCaffeinateTests(unittest.TestCase):
 
             self.addCleanup(_kill_pid_file, pid_file)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("Cleaned stale legacy caffeinate PID metadata", result.stdout)
+            self.assertIn(
+                "Cleaned orphaned flat caffeinate PID metadata", result.stdout
+            )
             self.assertIn("caffeinate started", result.stdout)
             self.assertFalse(legacy_pid_file.exists())
             self.assertFalse(legacy_meta_file.exists())
