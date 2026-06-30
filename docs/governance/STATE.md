@@ -84,8 +84,8 @@ Last updated: 2026-06-29
     source/result messages when a case link exists, rather than treating the
     latest OCR run in a session as the judged case
   - `/viz/pass-fail` also uses feedback-to-result message matching for manual
-    eval rows, so run-specific chart rows do not borrow unrelated session
-    feedback
+    eval rows, so run-specific chart rows stay scoped to matching
+    source/result feedback
   - active eval visualization labels use source-first monitor wording
   - source-first manual eval payloads expose `summary_unit` for lane-summary
     wording
@@ -398,8 +398,8 @@ Last updated: 2026-06-29
     schema-old, unknown, or missing source data is visible without rebuilding
     local databases
   - `data_freshness` compares source history counts against the manual eval
-    import scope, so idle chats outside feedback/checkpoint/OCR evidence do
-    not make a freshly rebuilt warehouse stale
+    import scope, so freshly rebuilt warehouses stay current when only idle
+    chats change outside feedback/checkpoint/OCR evidence
   - `make manual-evals-db-status` prints terminal-native freshness without
     mutating local databases, while `make manual-evals-db` preserves an
     existing warehouse under `.local_archive/manual-evals-db-refresh-*` before
@@ -421,15 +421,15 @@ Last updated: 2026-06-29
   - `make manual-evals-feedback-source-context` prints read-only
     source-history context for selected open feedback rows using
     `schema_version=polinko.manual_eval_feedback_source_context.v1`; it
-    defaults to the `grounding_source_verification` fail slice and does not
-    mutate feedback, OCR rows, eval rows, or source history
+    defaults to the `grounding_source_verification` fail slice and remains
+    read-only across feedback, OCR rows, eval rows, and source history
   - `make manual-evals-feedback-decision-draft` writes a local ignored
     feedback-decision draft for the current source-context slice using
     `schema_version=polinko.manual_eval_feedback_decision_draft.v1`; it
     defaults to `.local/manual_eval_decisions/feedback_decision.json`, refuses
     overwrite unless `FORCE=1`, preserves source-context fingerprints, and
-    does not mutate feedback, OCR rows, eval rows, the warehouse, or source
-    history
+    leaves feedback, OCR rows, eval rows, the warehouse, and source history
+    unchanged
   - `make manual-evals-feedback-decision-preview` reads a local
     human-reviewed decision through `DECISION_PATH=<path>` without mutation,
     validates it against the current source-context slice, and emits
@@ -492,13 +492,13 @@ Last updated: 2026-06-29
     `schema_version=polinko.manual_eval_ocr_retry_source_verification.v1`
   - OCR retry source-verification packets expose feedback note/action text,
     candidate source image names, OCR run IDs, OCR previews, readiness flags,
-    and exact not-confirmed reasons before any rerun or feedback closure
+    and exact confirmation blockers before any rerun or feedback closure
   - `make manual-evals-ocr-retry-source-provenance` prints a read-only
     source-history provenance packet for selected OCR retry candidates, using
     `schema_version=polinko.manual_eval_ocr_retry_source_provenance.v1`
   - OCR retry source-provenance packets expose source-history feedback message
     presence plus exact OCR source/result message IDs when they are already
-    present in the warehouse; context-only OCR rows remain not exact links
+    present in the warehouse; context-only OCR rows remain context evidence
   - `make manual-evals-ocr-retry-input-packet` prints a read-only OCR retry
     input packet for selected OCR retry candidates, using
     `schema_version=polinko.manual_eval_ocr_retry_input_packet.v1`
@@ -577,23 +577,23 @@ Last updated: 2026-06-29
     executor; it requires `SELECTION_PATH=<path>` plus
     `CONFIRM=ocr-retry-execute`, recomputes validation/apply-preview/readiness
     in-process, writes ignored run bundles under
-    `.local/manual_eval_runs/ocr_retry/`, and does not close feedback, write
-    live eval rows, refresh `manual_evals.db`, or mutate the warehouse
+    `.local/manual_eval_runs/ocr_retry/`, and leaves feedback, live eval rows,
+    `manual_evals.db`, and the warehouse unchanged
   - `make manual-evals-ocr-retry-execution-report` inspects one local OCR retry
     execution bundle with `RUN_DIR=<path>`, using
     `schema_version=polinko.manual_eval_ocr_retry_execution_report.v1`
   - OCR retry execution bundle reports are read-only, hide source file paths in
     terminal output, and check bundle files, run ID alignment,
     request/response counts, provider failure status, stop reasons, and the
-    no-warehouse-mutation boundary before closure or any warehouse gate
+    warehouse mutation boundary before closure or any warehouse gate
   - `make manual-evals-ocr-retry-feedback-closure-preview` previews feedback
     closure from one inspected OCR retry execution bundle with
     `RUN_DIR=<path>`, using
     `schema_version=polinko.manual_eval_ocr_retry_feedback_closure_preview.v1`
   - OCR retry feedback-closure previews group successful responses by feedback
     ID, mark mixed provider status as `attention`, and remain read-only: they
-    do not close feedback, write action-taken text, refresh `manual_evals.db`,
-    write eval rows, or mutate the warehouse
+    keep feedback, action-taken text, `manual_evals.db`, eval rows, and the
+    warehouse unchanged
   - `make manual-evals-ocr-retry-feedback-closure-apply` applies OCR retry
     feedback closure from one inspected local execution bundle only when
     `RUN_DIR=<path>` and `CONFIRM=ocr-retry-feedback-closure-apply` are
@@ -815,8 +815,8 @@ Last updated: 2026-06-29
     update repo activity metadata without changing wake-lock ownership
   - current background-runner start/stop targets that own local process state
     update repo activity before lifecycle work begins
-  - pure status/read-only targets stay read-only so status checks do not refresh
-    activity freshness
+  - pure status/read-only targets report state while preserving activity
+    freshness
   - `make caffeinate-off-all` is repo-scoped by default; global matching-process
     cleanup requires explicit operator opt-in
   - `make end-stop` closes the core background runner family:
@@ -835,9 +835,9 @@ Last updated: 2026-06-29
   - `tools/launch_detached_process.py` rejects empty, missing, and
     non-launchable commands with direct diagnostics before PID ownership is
     recorded
-  - `tools/launch_detached_process.py` stops the started child process group if
-    the PID file cannot be written, so failed starts do not leave unmanaged
-    background descendants behind
+  - `tools/launch_detached_process.py` stops the started child process group
+    before exit when the PID file write fails, preserving clean background
+    state
   - VS Code keeps `make start` available as a manual task; folder-open
     bootstrap is retired so startup stays chat-led
   - `make doctor-env` reports both the active interpreter path and its source

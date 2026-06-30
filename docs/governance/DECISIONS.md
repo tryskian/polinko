@@ -5144,3 +5144,18 @@ or branch history instead.
   row/case-bound.
 - Why: Current-truth docs should make the active research model legible without
   using historical exclusions as the primary frame.
+
+## D-298: Keep runtime state bullets behaviour-first
+
+- Date: `2026-06-29`
+- Category: `runtime_engineering`
+- Tags: `state_doc`, `docs_hygiene`, `operator_commands`, `source_truth`
+- Human-led: The human lead clarified that active docs should use direct
+  current-source language where possible.
+- Engineer implementation: Rewrite selected `STATE.md` runtime bullets to
+  describe scoped matching, read-only surfaces, unchanged warehouse state, and
+  clean background-process handling as positive behaviours.
+- Decision: Runtime state bullets should state the behaviour each command
+  provides before relying on exclusion wording.
+- Why: Current-truth docs stay easier to scan when high-traffic command
+  behaviour is stated directly.
