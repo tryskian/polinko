@@ -113,8 +113,9 @@ Runner lifecycle rule:
   - live PID files are treated as managed only when the process matches
     `tools.eval_sidecar run`; unrelated live PIDs are cleaned from the PID file
     without being stopped
-  - matching sidecars that remain active after a stop signal preserve the PID
-    file and fail the stop action instead of hiding the still-live runner
+  - matching sidecars that remain active after startup readiness failure or
+    stop signal preserve the PID file and fail the action instead of hiding the
+    still-live runner
   - start reports success only after the current-run status file exists within
     the bounded readiness wait
 - Portfolio app, static output, preview/mockup helpers, and Netlify config live

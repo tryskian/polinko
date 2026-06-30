@@ -194,9 +194,10 @@ flowchart TD
   `EVAL_SIDECAR_MIN_SECONDS` before detached launch, so invalid duration
   config fails before child-process argparse. It trusts PID files only when the
   live PID matches the `tools.eval_sidecar run` process shape; unrelated live
-  PIDs are cleaned from the PID file without being stopped. If stop
-  signals a matching sidecar without current-run context and the process
-  remains active, the PID file stays in place and the stop exits non-zero.
+  PIDs are cleaned from the PID file without being stopped. If startup
+  readiness fails while the matching sidecar remains active, or if stop signals
+  a matching sidecar without current-run context and the process remains
+  active, the PID file stays in place and the action exits non-zero.
   Start reports success only after the current-run status file exists within
   the bounded readiness wait.
 - Portfolio app, static output, preview/mockup helpers, and Netlify config live

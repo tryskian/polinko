@@ -169,9 +169,9 @@ Last updated: 2026-06-30
   - `eval-sidecar` trusts managed PID files only when the live PID matches the
     `tools.eval_sidecar run` process shape; stale PID files that point to
     unrelated live processes are cleaned without stopping the unrelated process
-  - `eval-sidecar` preserves its PID file and fails stop when a matching
-    sidecar remains active after a stop signal; closeout reports the still-live
-    runner
+  - `eval-sidecar` preserves its PID file when a matching sidecar remains live
+    after startup readiness failure or stop signal; failed actions report the
+    still-live runner
   - `eval-sidecar` start waits for the current-run status file before reporting
     success, rather than relying on a fixed post-launch sleep
   - portfolio mockup targets live in the quarantine bundle for porting
