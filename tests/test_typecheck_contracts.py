@@ -68,7 +68,10 @@ class TypecheckContractTests(unittest.TestCase):
         self.assertIn("expected branch $BRANCH", git_check)
         self.assertIn("rerunning make end", git_check)
         self.assertIn("current branch must be `main`", start_reference)
-        self.assertIn("skips final clean-main Git closeout", start_reference)
+        self.assertIn(
+            "leaves final clean-main Git closeout for the real session close",
+            start_reference,
+        )
 
     def test_runbook_make_end_summary_matches_closeout_order(self) -> None:
         runbook = _read("docs/runtime/RUNBOOK.md")

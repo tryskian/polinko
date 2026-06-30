@@ -202,7 +202,7 @@ Preflight:
 
 - `make end-preflight`
 - runs branch-local validation without stopping background tasks
-- skips final clean-main Git closeout because it is not the real day close
+- leaves final clean-main Git closeout for the real session close
 
 Explicit companion checks:
 
@@ -243,7 +243,7 @@ Explicit companion checks:
 - `make git-prune-stale-refs`
   - prunes stale `origin/*` remote-tracking refs after merged or deleted PR
     branches
-  - does not delete local branches
+  - leaves local branches in place
 
 Read-only tooling pin:
 
