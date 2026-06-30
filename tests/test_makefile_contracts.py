@@ -2329,6 +2329,10 @@ class MakefileContractTests(unittest.TestCase):
             "quality-gate",
         ):
             self.assertIn(
+                f"@$(call repo_activity,make {suite},{suite})",
+                text,
+            )
+            self.assertIn(
                 f'bash "$(LOCAL_EVAL_GATE_RUNNER_SCRIPT)" {suite}',
                 text,
             )

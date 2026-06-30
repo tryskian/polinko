@@ -5364,3 +5364,18 @@ or branch history instead.
   root.
 - Why: A single artifact root keeps gate runtime state portable and prevents
   Make defaults from bypassing the runner's configured temp-root behaviour.
+
+## D-313: Record repo activity for eval gate targets
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `eval_gate`, `repo_activity`, `caffeinate`, `make`
+- Human-led: The human lead asked for active script maintenance across helper
+  surfaces.
+- Engineer implementation: Add repo-activity hooks to `api-smoke`,
+  `eval-smoke`, `hallucination-gate`, and `quality-gate`, then pin the hooks in
+  Makefile contract tests.
+- Decision: Eval gate targets refresh repo activity before running their gate
+  runner.
+- Why: `caffeinate-status` should report meaningful recent repo work after
+  startup, smoke, and quality-gate runs.

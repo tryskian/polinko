@@ -2,9 +2,11 @@
 .PHONY: hallucination-gate quality-gate quality-gate-deterministic
 
 hallucination-gate:
+	@$(call repo_activity,make hallucination-gate,hallucination-gate)
 	@$(LOCAL_EVAL_GATE_RUNNER_ENV) bash "$(LOCAL_EVAL_GATE_RUNNER_SCRIPT)" hallucination-gate
 
 quality-gate:
+	@$(call repo_activity,make quality-gate,quality-gate)
 	@$(LOCAL_EVAL_GATE_RUNNER_ENV) bash "$(LOCAL_EVAL_GATE_RUNNER_SCRIPT)" quality-gate
 
 quality-gate-deterministic: HALLUCINATION_EVAL_MODE = deterministic
