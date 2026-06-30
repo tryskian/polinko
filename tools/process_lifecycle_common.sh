@@ -156,6 +156,25 @@ polinko_require_url_port_matches() {
 	fi
 }
 
+polinko_join_path() {
+	_polinko_path_root=$1
+	_polinko_path_leaf=${2#/}
+	case "$_polinko_path_root" in
+	"")
+		printf "%s\n" "$_polinko_path_leaf"
+		;;
+	/)
+		printf "/%s\n" "$_polinko_path_leaf"
+		;;
+	*/)
+		printf "%s%s\n" "$_polinko_path_root" "$_polinko_path_leaf"
+		;;
+	*)
+		printf "%s/%s\n" "$_polinko_path_root" "$_polinko_path_leaf"
+		;;
+	esac
+}
+
 polinko_wait_for_pid_exit() {
 	_polinko_pid=$1
 	_polinko_attempts=${2:-50}

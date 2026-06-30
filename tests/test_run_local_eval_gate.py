@@ -64,6 +64,10 @@ class RunLocalEvalGateTests(unittest.TestCase):
             runner,
         )
         self.assertIn("temp_artifact_path()", runner)
+        self.assertIn(
+            'polinko_join_path "$local_eval_gate_temp_root" "$1"',
+            runner,
+        )
         self.assertIn("LOCAL_EVAL_GATE_START_ATTEMPTS ?= 100", config)
         self.assertIn("LOCAL_EVAL_GATE_START_SLEEP_SECONDS ?= 0.2", config)
         self.assertIn("LOCAL_EVAL_GATE_TEMP_ROOT ?= /tmp", config)

@@ -54,7 +54,7 @@ polinko_require_process_inspection "local eval gate PID inspection"
 server_pid=
 
 temp_artifact_path() {
-	printf "%s/%s" "$local_eval_gate_temp_root" "$1"
+	polinko_join_path "$local_eval_gate_temp_root" "$1"
 }
 
 cleanup_server() {
