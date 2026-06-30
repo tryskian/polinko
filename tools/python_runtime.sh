@@ -21,7 +21,7 @@ polinko_default_python_bin() {
 		return
 	fi
 
-	for candidate in ./.venv/bin/python3.14 ./.venv/bin/python ./.venv/bin/python3; do
+	for candidate in ./.venv/bin/python3.14 ./.venv/bin/python3 ./.venv/bin/python; do
 		if [ -x "$candidate" ] && "$candidate" -V >/dev/null 2>&1; then
 			printf "%s\n" "$candidate"
 			return

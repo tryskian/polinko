@@ -1469,6 +1469,10 @@ class MakefileContractTests(unittest.TestCase):
             runtime_caffeinate_entry_text,
         )
         self.assertIn("PYTHON ?=", config_text)
+        self.assertLess(
+            config_text.index("./$(VENV)/bin/python3 ]"),
+            config_text.index("./$(VENV)/bin/python ]"),
+        )
         self.assertIn("ACT ?= act", config_text)
         self.assertIn("CLI_ENTRYPOINT ?= -m polinko.cli", config_text)
         self.assertIn("ASGI_APP ?= server:app", config_text)
