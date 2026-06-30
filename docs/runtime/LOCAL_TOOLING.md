@@ -294,5 +294,5 @@ This contract preserves the active manual-eval evidence surfaces:
 - read-only OCR inventory through `make ocr-inventory` and
   `make ocr-inventory-json`
 
-Local tooling can prepare decisions for those surfaces, but it must not mutate
-them without a separate explicit execution gate.
+Local tooling prepares decisions for those surfaces while preserving their live
+state until a separate explicit execution gate is active.
