@@ -1559,6 +1559,20 @@ class MakefileContractTests(unittest.TestCase):
             'LOCAL_EVAL_GATE_TEMP_ROOT="$(LOCAL_EVAL_GATE_TEMP_ROOT)"',
             config_text,
         )
+        self.assertIn(
+            (
+                "GATE_SESSION_DB ?= "
+                "$(LOCAL_EVAL_GATE_TEMP_ROOT)/polinko-quality-gate-sessions.db"
+            ),
+            config_text,
+        )
+        self.assertIn(
+            (
+                "GATE_VECTOR_DB ?= "
+                "$(LOCAL_EVAL_GATE_TEMP_ROOT)/polinko-quality-gate-vector.db"
+            ),
+            config_text,
+        )
         self.assertIn("LOCAL_EVAL_GATE_START_ATTEMPTS ?= 100", config_text)
         self.assertIn("LOCAL_EVAL_GATE_START_SLEEP_SECONDS ?= 0.2", config_text)
         self.assertIn("LOCAL_EVAL_GATE_RUNNER_ENV =", config_text)
