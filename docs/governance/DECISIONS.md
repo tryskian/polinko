@@ -5379,3 +5379,18 @@ or branch history instead.
   runner.
 - Why: `caffeinate-status` should report meaningful recent repo work after
   startup, smoke, and quality-gate runs.
+
+## D-314: Treat unknown PR check rollups as GitHub health attention
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `github_health`, `ci`, `pr_checks`, `repo_activity`
+- Human-led: The human lead asked for CI and PR health to stay maintained
+  without relying on manual noticing.
+- Engineer implementation: Classify unknown PR check rollup states separately,
+  report them as `github-health` failures, add unit coverage, and record
+  `make github-health` as repo activity.
+- Decision: GitHub health passes only when open PR checks are known-passing or
+  intentionally pending.
+- Why: Unknown CI states should surface as action items instead of being hidden
+  by a too-permissive health check.

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import io
+from contextlib import redirect_stdout
 import unittest
 
 from tools import github_health
@@ -75,6 +77,42 @@ class GitHubHealthTests(unittest.TestCase):
 
         self.assertEqual(signal.name, "dependency-review")
         self.assertEqual(signal.bucket, "pass")
+
+    def test_unknown_status_check_rollup_is_reported(self) -> None:
+        prs = [
+            {
+                "number": 11,
+                "title": "Unexpected check shape",
+                "statusCheckRollup": [
+                    {"name": "new-check", "status": "COMPLETED", "conclusion": None},
+                ],
+            }
+        ]
+
+        unknown = github_health.pr_unknown(prs)
+
+        self.assertEqual(list(unknown), [11])
+        self.assertEqual(unknown[11][0].name, "new-check")
+        self.assertEqual(unknown[11][0].bucket, "unknown")
+
+    def test_report_pr_checks_fails_unknown_rollup(self) -> None:
+        prs = [
+            {
+                "number": 12,
+                "title": "Needs attention",
+                "statusCheckRollup": [
+                    {"name": "new-check", "status": "COMPLETED", "conclusion": None},
+                ],
+            }
+        ]
+        stdout = io.StringIO()
+
+        with redirect_stdout(stdout):
+            result = github_health.report_pr_checks(prs)
+
+        self.assertEqual(result, 1)
+        self.assertIn("[fail] open PR checks", stdout.getvalue())
+        self.assertIn("new-check: COMPLETED", stdout.getvalue())
 
     def test_gh_command_adds_repo_when_supplied(self) -> None:
         command = github_health.gh_command(

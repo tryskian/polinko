@@ -112,6 +112,18 @@ def pr_pending(prs: list[dict[str, Any]]) -> dict[int, list[CheckSignal]]:
     return pending
 
 
+def pr_unknown(prs: list[dict[str, Any]]) -> dict[int, list[CheckSignal]]:
+    unknown: dict[int, list[CheckSignal]] = {}
+    for pr in prs:
+        number = int(pr["number"])
+        signals = [
+            signal for signal in pr_check_signals(pr) if signal.bucket == "unknown"
+        ]
+        if signals:
+            unknown[number] = signals
+    return unknown
+
+
 def run_command(command: list[str]) -> CommandResult:
     try:
         result = subprocess.run(
@@ -204,12 +216,13 @@ def _pr_title(prs: list[dict[str, Any]], number: int) -> str:
 def report_pr_checks(prs: list[dict[str, Any]]) -> int:
     failures = pr_failures(prs)
     pending = pr_pending(prs)
+    unknown = pr_unknown(prs)
 
     if not prs:
         print("[ok] open PR checks")
         return 0
 
-    if not failures and not pending:
+    if not failures and not pending and not unknown:
         print("[ok] open PR checks")
         return 0
 
@@ -221,11 +234,12 @@ def report_pr_checks(prs: list[dict[str, Any]]) -> int:
                 print(f"    - {signal.name}: {signal.state}")
             print(f"    action: gh pr checks {number} --watch --interval 10")
 
-    if not failures:
+    if not failures and not unknown:
         return 0
 
     print("[fail] open PR checks")
-    for number, signals in failures.items():
+    for number in sorted(set(failures) | set(unknown)):
+        signals = failures.get(number, []) + unknown.get(number, [])
         print(f"  - #{number}: {_pr_title(prs, number)}")
         for signal in signals:
             print(f"    - {signal.name}: {signal.state}")

@@ -352,6 +352,10 @@ class MakefileContractTests(unittest.TestCase):
             dev_tools_entry_text,
         )
         self.assertIn("github-health:", dev_tools_github_text)
+        self.assertIn(
+            "@$(call repo_activity,make github-health,github-health)",
+            dev_tools_github_text,
+        )
         self.assertIn('$(PYTHON) -m tools.github_health --gh "$(GH)"', contract_text)
         self.assertIn(
             "include makefiles/checks/runtime-audits/shell.mk",
