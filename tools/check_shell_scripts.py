@@ -21,6 +21,10 @@ ROOT_HELPER_SNIPPETS = (
     'source "$script_dir/repo_root.sh"',
     "polinko_cd_repo_root",
 )
+ROOT_HELPER_SCRIPT_DIR_SNIPPETS = (
+    'script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"',
+    'script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)',
+)
 
 EXECUTABLE_STRICT_MODE = {
     "#!/usr/bin/env bash": "set -euo pipefail",
@@ -104,6 +108,8 @@ def check_script(path: Path) -> list[str]:
         )
 
     if path not in ROOT_HELPER_EXEMPT_EXECUTABLES:
+        if not any(snippet in text for snippet in ROOT_HELPER_SCRIPT_DIR_SNIPPETS):
+            failures.append("does not include root-helper script_dir resolver")
         for snippet in ROOT_HELPER_SNIPPETS:
             if snippet not in text:
                 failures.append(f"does not include root-helper snippet {snippet!r}")

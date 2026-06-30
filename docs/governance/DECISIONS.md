@@ -5303,3 +5303,18 @@ or branch history instead.
 - Decision: Current-truth docs describe roles and failure reporting directly.
 - Why: Operator-facing docs stay easier to scan when they name the maintained
   surface role.
+
+## D-309: Require root-helper resolver coverage in shell checks
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `shell_scripts`, `runtime_checks`, `root_helper`, `source_truth`
+- Human-led: The human lead asked to continue script/runtime maintenance with
+  parked side notes.
+- Engineer implementation: Extend `tools.check_shell_scripts` so executable
+  shell scripts must include the `script_dir` resolver before sourcing
+  `tools/repo_root.sh`; add unit coverage for the missing-resolver failure.
+- Decision: Shell-script guardrails validate both root-helper use and the
+  resolver that makes that helper safe from any working directory.
+- Why: Runtime helper contracts should fail early when an entrypoint can only
+  work from the repo root by accident.
