@@ -719,6 +719,7 @@ esac
             uname_script = tmp_path / "uname.sh"
             pgrep_script = tmp_path / "pgrep.sh"
             pmset_script = tmp_path / "pmset.sh"
+            activity_file = tmp_path / "caffeinate.activity.json"
             _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
             _write_executable(pgrep_script, "#!/usr/bin/env sh\nprintf '12345\\n'\n")
             _write_executable(
@@ -728,6 +729,21 @@ esac
                     "set -eu\n"
                     "printf 'PreventUserIdleSystemSleep 1\\n'\n"
                 ),
+            )
+            activity_file.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "repo_slug": "polinko",
+                        "repo_root": str(REPO_ROOT),
+                        "branch": "test",
+                        "commit": "test",
+                        "last_activity_at": "2026-06-27T00:00:00Z",
+                        "last_activity_label": "make test",
+                        "last_activity_target": "test",
+                    }
+                ),
+                encoding="utf-8",
             )
 
             result = subprocess.run(
@@ -739,6 +755,7 @@ esac
                     "PGREP_BIN": str(pgrep_script),
                     "PMSET_BIN": str(pmset_script),
                     "CAFFEINATE_PID_FILE": str(tmp_path / "missing.pid"),
+                    "CAFFEINATE_ACTIVITY_FILE": str(activity_file),
                 },
                 capture_output=True,
                 text=True,
@@ -747,6 +764,8 @@ esac
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("Managed caffeinate: OFF", result.stdout)
             self.assertIn(f"Repo root: {REPO_ROOT}", result.stdout)
+            self.assertIn("Last repo activity:", result.stdout)
+            self.assertIn("via make test", result.stdout)
             self.assertIn("Unmanaged caffeinate detected (PID 12345)", result.stdout)
             self.assertIn("PreventUserIdleSystemSleep", result.stdout)
 

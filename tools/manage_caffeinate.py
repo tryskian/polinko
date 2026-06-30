@@ -782,6 +782,8 @@ def status(config: RuntimeConfig) -> int:
         print("Managed caffeinate: OFF")
         _print_repo_context(config)
         print(f"Branch: {_branch_commit(config)}")
+        _, detail = _activity_state(config)
+        print(f"Last repo activity: {detail}")
         pids = [pid for pid in _find_matching_pids(config) if pid != os.getpid()]
         if pids:
             rendered = " ".join(str(pid) for pid in pids)
