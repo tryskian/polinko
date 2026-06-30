@@ -41,9 +41,9 @@ workflow, output surfaces, and tuning knobs.
     updating feedback `status`, `action_taken`, and `updated_at`
   - use `make manual-evals-ocr-retry-feedback-closure-apply-report
     RUN_DIR=<path>` to verify backup integrity, backup-open rows, and
-    active-closed rows after apply without mutation
+    active-closed rows after apply as a read-only report
   - use `make manual-evals-ocr-retry-feedback-closure-restore-preview
-    BACKUP_DIR=<path>` to inspect restore readiness without mutation
+    BACKUP_DIR=<path>` to inspect restore readiness as a read-only gate
   - use `make manual-evals-ocr-retry-feedback-closure-restore
     BACKUP_DIR=<path> CONFIRM=ocr-retry-feedback-closure-restore` only after
     restore preview is `ok`; it writes a pre-restore backup before restoring
@@ -67,7 +67,7 @@ workflow, output surfaces, and tuning knobs.
 1. Read-only lane inventory:
    - `make ocr-inventory`
    - reports tracked cases plus local case, report, manual-eval DB, and
-     notebook paths without running OCR or mutating local data
+     notebook paths while preserving OCR execution and local data state
    - use this before any eval refresh while eval execution is pinned
 2. End-to-end kernel:
    - `make ocrkernel`

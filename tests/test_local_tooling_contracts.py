@@ -18,7 +18,7 @@ class LocalToolingContractTests(unittest.TestCase):
             "Local Tooling Contract",
             "Generate ignored local input.",
             "Validate that local input against current source truth.",
-            "Preview the application without mutation.",
+            "Preview the application as a read-only would-apply step.",
             "Execute only through a separate explicit follow-up gate.",
             "ignored default output path under `.local/`",
             "DRAFT_PATH=<path>",
@@ -29,16 +29,16 @@ class LocalToolingContractTests(unittest.TestCase):
             "source provenance or fingerprints",
             "validation command",
             "apply-preview command",
-            "launch a browser",
-            "run OCR",
-            "close feedback",
-            "write live eval rows",
-            "mutate the manual eval warehouse",
+            "browser state",
+            "OCR execution state",
+            "feedback status",
+            "live eval rows",
+            "manual eval warehouse state",
         ):
             self.assertIn(expected, contract)
 
         self.assertIn(
-            "repo-local contract for Polinko's future operator tools. It is not a shared package.",
+            "repo-local contract for Polinko's future operator tools. It stays inside this repo.",
             normalized_contract,
         )
 

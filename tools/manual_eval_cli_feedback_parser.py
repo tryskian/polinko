@@ -20,11 +20,11 @@ FEEDBACK_CONTEXT_FLAGS = (
     ),
     BooleanFlagArg(
         "--feedback-decision-preview",
-        "Preview a local human-reviewed feedback decision without mutation.",
+        "Preview a local human-reviewed feedback decision as read-only.",
     ),
     BooleanFlagArg(
         "--feedback-decision-draft",
-        "Write a local manual feedback decision draft without mutation.",
+        "Write a local manual feedback decision draft.",
     ),
     BooleanFlagArg(
         "--overlay-ocr-comparison-readiness",

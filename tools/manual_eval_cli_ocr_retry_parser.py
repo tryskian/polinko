@@ -65,7 +65,7 @@ OCR_RETRY_FLAGS = (
     ),
     BooleanFlagArg(
         "--ocr-retry-execution-report",
-        "Inspect a local OCR retry execution run bundle without mutation.",
+        "Inspect a local OCR retry execution run bundle as read-only.",
     ),
     BooleanFlagArg(
         "--ocr-retry-feedback-closure-preview",
@@ -77,7 +77,7 @@ OCR_RETRY_FLAGS = (
     ),
     BooleanFlagArg(
         "--ocr-retry-feedback-closure-apply-report",
-        "Inspect an OCR retry feedback-closure apply summary without mutation.",
+        "Inspect an OCR retry feedback-closure apply summary as read-only.",
     ),
     BooleanFlagArg(
         "--ocr-retry-feedback-closure-restore-preview",
