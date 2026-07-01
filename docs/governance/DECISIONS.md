@@ -5641,3 +5641,21 @@ or branch history instead.
 - Why: Removing a PID file while a matching sidecar remains active hides the
   recovery evidence that status and stop need. Preserving the PID file keeps
   failed startup state inspectable and stoppable.
+
+## D-331: Preserve server-daemon PID files on startup readiness failure
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `server_daemon`, `pid_file`, `runner`, `startup`
+- Human-led: The human lead asked for hidden runner dependencies and failure
+  paths to be maintained through automation.
+- Engineer implementation: Update `tools/run_server_daemon.sh` so a launched
+  matching local API server that remains live after startup readiness failure
+  keeps its PID file, and add focused regression coverage for a live server that
+  never passes the `/health` readiness probe.
+- Decision: `server-daemon` startup may only remove a managed PID file after
+  the launched process exits or stops matching the configured `uvicorn` app
+  shape.
+- Why: Removing a PID file while a matching server remains active hides the
+  recovery evidence that status and stop need. Preserving the PID file keeps
+  failed startup state inspectable and stoppable.

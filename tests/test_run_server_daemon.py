@@ -61,6 +61,30 @@ def _write_ready_health_fake(fake_bin: Path) -> None:
     _write_executable(fake_bin / "curl", "#!/usr/bin/env bash\nexit 0\n")
 
 
+def _write_unready_health_fake(fake_bin: Path) -> None:
+    _write_executable(fake_bin / "curl", "#!/usr/bin/env bash\nexit 1\n")
+
+
+def _write_matching_server_ps_fake(fake_bin: Path) -> None:
+    _write_executable(
+        fake_bin / "ps",
+        (
+            "#!/usr/bin/env bash\n"
+            "set -euo pipefail\n"
+            'if [ "${1:-}" = "-o" ] && [ "${2:-}" = "command=" ]; then\n'
+            "  printf '%s -m uvicorn %s --host 127.0.0.1 --port %s --reload\\n' "
+            '"$PYTHON" "$ASGI_APP" "$DEV_BACKEND_PORT"\n'
+            "  exit 0\n"
+            "fi\n"
+            'if [ "${1:-}" = "-o" ] && [ "${2:-}" = "stat=" ]; then\n'
+            "  printf 'S\\n'\n"
+            "  exit 0\n"
+            "fi\n"
+            '/bin/ps "$@"\n'
+        ),
+    )
+
+
 class RunServerDaemonTests(unittest.TestCase):
     def test_rejects_invalid_port_before_start(self) -> None:
         result = subprocess.run(
@@ -545,6 +569,67 @@ class RunServerDaemonTests(unittest.TestCase):
                 ],
             )
             self.assertTrue((tmp_path / "logs").is_dir())
+
+    def test_start_preserves_live_pid_when_server_does_not_become_ready(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "server.pid"
+            args_file = tmp_path / "python-args.txt"
+            child_pid_file = tmp_path / "child.pid"
+            python_script = tmp_path / "python.sh"
+            fake_bin = tmp_path / "bin"
+            fake_bin.mkdir()
+            _write_executable(fake_bin / "lsof", "#!/usr/bin/env bash\nexit 0\n")
+            _write_unready_health_fake(fake_bin)
+            _write_matching_server_ps_fake(fake_bin)
+            _write_executable(
+                python_script,
+                (
+                    "#!/usr/bin/env bash\n"
+                    "set -euo pipefail\n"
+                    'if [ "${1:-}" = "-c" ]; then\n'
+                    "  command -v python3\n"
+                    "  exit 0\n"
+                    "fi\n"
+                    'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
+                    'printf "%s" "$$" > "$CHILD_PID_FILE"\n'
+                    "sleep 30\n"
+                ),
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": f"{fake_bin}:{os.environ['PATH']}",
+                    "PYTHON": str(python_script),
+                    "PYTHON_ARGS": str(args_file),
+                    "SERVER_LAUNCHER_PYTHON": sys.executable,
+                    "CHILD_PID_FILE": str(child_pid_file),
+                    "ASGI_APP": "server:app",
+                    "DEV_HOST": "127.0.0.1",
+                    "DEV_BACKEND_PORT": "8766",
+                    "SERVER_PID_FILE": str(pid_file),
+                    "SERVER_LOG": str(tmp_path / "logs" / "server.log"),
+                    "SERVER_START_ATTEMPTS": "1",
+                    "SERVER_START_SLEEP_SECONDS": "0",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.addCleanup(_kill_pid_file, pid_file)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("did not become ready", result.stdout)
+            self.assertIn("leaving PID file in place", result.stdout)
+            self.assertTrue(pid_file.exists())
+            self.assertEqual(
+                pid_file.read_text(encoding="utf-8").strip(),
+                child_pid_file.read_text(encoding="utf-8").strip(),
+            )
 
     def test_status_reports_off_without_pid_file(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
