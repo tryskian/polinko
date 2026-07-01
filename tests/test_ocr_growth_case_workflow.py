@@ -139,6 +139,45 @@ class OcrGrowthCaseWorkflowTests(unittest.TestCase):
             "<runs-dir> <summary.json> <summary.md>",
         )
 
+    def test_workflow_rejects_invalid_growth_slice_controls(self) -> None:
+        for env_name in ("OCR_GROWTH_EVAL_OFFSET", "OCR_GROWTH_EVAL_MAX_CASES"):
+            with self.subTest(env_name=env_name):
+                with tempfile.TemporaryDirectory() as tmp:
+                    tmp_path = Path(tmp)
+                    cases_path = tmp_path / "growth.json"
+                    runner_path = tmp_path / "runner.sh"
+                    cases_path.write_text(
+                        '{"cases": [{"id": "growth-invalid"}]}',
+                        encoding="utf-8",
+                    )
+                    _write_runner(runner_path)
+
+                    env = _base_env(runner_path)
+                    env.update(
+                        {
+                            "OCR_TRANSCRIPT_CASES_GROWTH": str(cases_path),
+                            "OCR_GROWTH_EVAL_OFFSET": "0",
+                            "OCR_GROWTH_EVAL_MAX_CASES": "0",
+                            env_name: "abc",
+                        }
+                    )
+
+                    result = subprocess.run(
+                        ["bash", str(WORKFLOW_SCRIPT.relative_to(REPO_ROOT)), "eval"],
+                        cwd=REPO_ROOT,
+                        env=env,
+                        capture_output=True,
+                        text=True,
+                    )
+
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(
+                    "Invalid numeric value for OCR growth case workflow: "
+                    f"{env_name} must be a non-negative integer (got abc)",
+                    result.stderr,
+                )
+                self.assertNotIn("runner args:", result.stdout)
+
     def test_missing_cases_fail_with_existing_guidance(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)

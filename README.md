@@ -13,6 +13,9 @@
 > an active refactor window. The model contract, evidence snapshots, docs,
 > helper scripts, and local tooling are being tightened so the next beta has a
 > cleaner surface to build from.
+>
+> Refactor map: [method](docs/public/diagrams/refactor-method.md) ·
+> [journey](docs/public/diagrams/refactor-journey.md).
 
 Polinko is a human-led research system for inspecting AI behaviour through
 fail-first evaluation, evidence-preserving method work, and repo-native

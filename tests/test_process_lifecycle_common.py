@@ -136,6 +136,52 @@ class ProcessLifecycleCommonTests(unittest.TestCase):
                     result.stderr,
                 )
 
+    def test_require_non_negative_integer_accepts_zero_and_positive_value(self) -> None:
+        for value in ("0", "12"):
+            with self.subTest(value=value):
+                result = subprocess.run(
+                    [
+                        "/bin/sh",
+                        "-c",
+                        (
+                            f'. "{HELPER}"; '
+                            "polinko_require_non_negative_integer "
+                            f"TEST_VALUE '{value}' 'unit test'"
+                        ),
+                    ],
+                    cwd=REPO_ROOT,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stderr, "")
+
+    def test_require_non_negative_integer_rejects_invalid_value(self) -> None:
+        for value in ("", "-1", "1.5", "abc"):
+            with self.subTest(value=value):
+                result = subprocess.run(
+                    [
+                        "/bin/sh",
+                        "-c",
+                        (
+                            f'. "{HELPER}"; '
+                            "polinko_require_non_negative_integer "
+                            f"TEST_VALUE '{value}' 'unit test'"
+                        ),
+                    ],
+                    cwd=REPO_ROOT,
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(
+                    "Invalid numeric value for unit test: "
+                    "TEST_VALUE must be a non-negative integer",
+                    result.stderr,
+                )
+
     def test_require_non_negative_decimal_rejects_invalid_value(self) -> None:
         for value in ("", "-1", "1.", ".1", "1.2.3", "abc"):
             with self.subTest(value=value):

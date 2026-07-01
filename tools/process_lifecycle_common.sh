@@ -72,6 +72,19 @@ polinko_require_positive_integer() {
 	polinko_invalid_numeric_value "$_polinko_name" "$_polinko_value" "a positive integer" "$_polinko_context"
 }
 
+polinko_require_non_negative_integer() {
+	_polinko_name=$1
+	_polinko_value=$2
+	_polinko_context=${3:-runtime helper}
+	case "$_polinko_value" in
+	"" | *[!0123456789]*)
+		polinko_invalid_numeric_value "$_polinko_name" "$_polinko_value" "a non-negative integer" "$_polinko_context"
+		return $?
+		;;
+	esac
+	return 0
+}
+
 polinko_require_non_negative_decimal() {
 	_polinko_name=$1
 	_polinko_value=$2
