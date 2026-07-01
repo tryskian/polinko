@@ -241,6 +241,37 @@ def _remove_path(path: Path) -> None:
         return
 
 
+def _prepare_output_path(path: Path, label: str) -> bool:
+    if path.exists() and path.is_dir():
+        print(
+            f"caffeinate runtime error: {label} path is a directory: {path}",
+            file=sys.stderr,
+        )
+        return False
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        print(
+            f"caffeinate runtime error: failed to prepare {label} parent "
+            f"{path.parent}: {exc}",
+            file=sys.stderr,
+        )
+        return False
+    return True
+
+
+def _prepare_runtime_paths(config: RuntimeConfig) -> bool:
+    return all(
+        _prepare_output_path(path, label)
+        for path, label in (
+            (config.pid_file, "PID file"),
+            (config.log_file, "log file"),
+            (config.meta_file, "metadata file"),
+            (config.activity_file, "activity metadata"),
+        )
+    )
+
+
 def _pid_live(pid: int) -> bool:
     try:
         os.kill(pid, 0)
@@ -376,6 +407,8 @@ def _write_activity(config: RuntimeConfig, label: str, target: str) -> None:
 
 
 def activity(config: RuntimeConfig) -> int:
+    if not _prepare_output_path(config.activity_file, "activity metadata"):
+        return 1
     target = os.environ.get("CAFFEINATE_ACTIVITY_TARGET", "").strip() or config.action
     label = os.environ.get("CAFFEINATE_ACTIVITY_LABEL", "").strip() or f"make {target}"
     _write_activity(config, label, target)
@@ -637,12 +670,10 @@ def start(config: RuntimeConfig) -> int:
         return 0
     if not _require_process_inspection(config):
         return 2
+    if not _prepare_runtime_paths(config):
+        return 1
 
     _migrate_legacy_runtime_state(config)
-    config.pid_file.parent.mkdir(parents=True, exist_ok=True)
-    config.log_file.parent.mkdir(parents=True, exist_ok=True)
-    config.meta_file.parent.mkdir(parents=True, exist_ok=True)
-    config.activity_file.parent.mkdir(parents=True, exist_ok=True)
 
     state = _evaluate_pid_file(config)
     if state.status == "owned" and state.pid is not None:
@@ -706,6 +737,8 @@ def stop(config: RuntimeConfig, *, quiet_missing: bool = False) -> int:
         return 0
     if not _require_process_inspection(config):
         return 2
+    if not _prepare_runtime_paths(config):
+        return 1
 
     _migrate_legacy_runtime_state(config)
     state = _evaluate_pid_file(config)

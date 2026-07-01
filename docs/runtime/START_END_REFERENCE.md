@@ -59,6 +59,8 @@ Wake-lock rule:
 - `make caffeinate` and companion wake-lock targets reject invalid command,
   match-pattern regex, active-window, and global-cleanup config before they
   read, report, launch, stop, or clean PID/activity state
+- caffeinate start, stop, and activity actions reject invalid runtime output
+  paths with direct diagnostics before launch, cleanup, or metadata writes
 - caffeinate start, status, stop, and stop-all require process-inspection
   tooling before PID ownership classification or cleanup
 - `make caffeinate` writes repo-scoped metadata for the managed wake-lock PID
