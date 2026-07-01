@@ -44,6 +44,13 @@ start_eval_server_daemon() {
 	bash "$server_daemon_script"
 }
 
+prepare_report_dir() {
+	if ! mkdir -p "$report_dir" 2>/dev/null; then
+		echo "ocr-handwriting failed to prepare report directory: $report_dir" >&2
+		return 1
+	fi
+}
+
 case "$mode" in
 run)
 	start_eval_server_daemon
@@ -57,7 +64,9 @@ run)
 		--max-consecutive-rate-limit-errors "$max_consecutive_rate_limit_errors"
 	;;
 report)
-	mkdir -p "$report_dir"
+	if ! prepare_report_dir; then
+		exit 1
+	fi
 	start_eval_server_daemon
 	exec "$python_bin" -m tools.eval_ocr \
 		--timeout "$timeout_seconds" \

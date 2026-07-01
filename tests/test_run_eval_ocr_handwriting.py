@@ -160,6 +160,54 @@ class RunEvalOcrHandwritingTests(unittest.TestCase):
                 ],
             )
 
+    def test_report_mode_reports_blocked_report_directory_before_server_start(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            cases_path = tmp_path / "handwriting.json"
+            blocked_parent = tmp_path / "blocked-parent"
+            server_marker = tmp_path / "server-called"
+            args_file = tmp_path / "python-args.txt"
+            server_script = tmp_path / "server.sh"
+            python_script = tmp_path / "python.sh"
+            cases_path.write_text("[]\n", encoding="utf-8")
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+            _write_executable(
+                server_script,
+                '#!/usr/bin/env sh\nset -eu\nprintf "server\\n" > "$SERVER_MARKER"\n',
+            )
+            _write_executable(
+                python_script,
+                ('#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$PYTHON_ARGS"\n'),
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "report"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PYTHON": str(python_script),
+                    "EVAL_SERVER_DAEMON_SCRIPT": str(server_script),
+                    "PYTHON_ARGS": str(args_file),
+                    "OCR_HANDWRITING_CASES": str(cases_path),
+                    "EVAL_REPORTS_DIR": str(blocked_parent / "reports"),
+                    "EVAL_REPORT_RUN_ID": "run-456",
+                    "SERVER_MARKER": str(server_marker),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "ocr-handwriting failed to prepare report directory: "
+                f"{blocked_parent / 'reports'}",
+                result.stderr,
+            )
+            self.assertFalse(server_marker.exists())
+            self.assertFalse(args_file.exists())
+
     def test_rejects_missing_cases_or_unknown_mode(self) -> None:
         missing_result = subprocess.run(
             ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "run"],
