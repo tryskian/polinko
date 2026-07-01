@@ -118,6 +118,23 @@ print_sidecar_context() {
 	echo "Current file: $current_file"
 }
 
+prepare_runtime_parent() {
+	local label path parent
+	label=$1
+	path=$2
+	parent=$(dirname "$path")
+	if ! mkdir -p "$parent" 2>/dev/null; then
+		echo "eval-sidecar failed to prepare $label parent: $parent" >&2
+		return 1
+	fi
+}
+
+prepare_runtime_paths() {
+	prepare_runtime_parent "PID file" "$pid_file" || return 1
+	prepare_runtime_parent "log file" "$log_path" || return 1
+	prepare_runtime_parent "current file" "$current_file" || return 1
+}
+
 start_sidecar() {
 	polinko_require_process_inspection "eval-sidecar PID inspection"
 
@@ -141,7 +158,9 @@ start_sidecar() {
 		fi
 	fi
 
-	mkdir -p "$(dirname "$pid_file")" "$(dirname "$log_path")" "$(dirname "$current_file")"
+	if ! prepare_runtime_paths; then
+		exit 1
+	fi
 	if ! polinko_require_python_command \
 		EVAL_SIDECAR_LAUNCHER_PYTHON \
 		"$launcher_python" \
