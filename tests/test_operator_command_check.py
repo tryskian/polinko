@@ -57,6 +57,26 @@ class OperatorCommandCheckTests(unittest.TestCase):
             ],
         )
 
+    def test_duplicate_closeout_stop_target_is_reported(self) -> None:
+        failures = check_operator_commands.check_canonical_operator_targets(
+            "\n".join(
+                [
+                    ".PHONY: end-stop eod-stop",
+                    "end-stop:",
+                    "\t@true",
+                    "eod-stop: end-stop",
+                ]
+            )
+        )
+
+        self.assertEqual(
+            failures,
+            [
+                "eod-stop: non-canonical operator target is active",
+                "eod-stop: non-canonical operator rule is active on line 4",
+            ],
+        )
+
     def test_parked_ocr_shortcut_cannot_enter_automation_entrypoint(self) -> None:
         failures = check_operator_commands.check_parked_ocr_shortcuts(
             "\n".join(
