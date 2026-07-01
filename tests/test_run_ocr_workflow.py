@@ -16,50 +16,91 @@ def _write_executable(path: Path, text: str) -> None:
     path.chmod(path.stat().st_mode | stat.S_IXUSR)
 
 
+def _fake_make_run(target: str) -> tuple[list[str], Path]:
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        export_root = tmp_path / "export"
+        export_root.mkdir()
+        make_log = tmp_path / "make.log"
+        fake_make = tmp_path / "make.sh"
+        _write_executable(
+            fake_make,
+            textwrap.dedent(
+                """\
+                #!/usr/bin/env sh
+                set -eu
+                printf 'pwd=%s args:' "$PWD" >> "$MAKE_LOG"
+                for arg in "$@"; do
+                    printf ' <%s>' "$arg" >> "$MAKE_LOG"
+                done
+                printf '\\n' >> "$MAKE_LOG"
+                """
+            ),
+        )
+        env = os.environ.copy()
+        env.update(
+            {
+                "CGPT_EXPORT_ROOT": "",
+                "CGPT_EXPORT_ROOT_DEFAULT": str(export_root),
+                "MAKE": str(fake_make),
+                "MAKE_LOG": str(make_log),
+            }
+        )
+
+        result = subprocess.run(
+            ["bash", str(SCRIPT), target],
+            cwd=REPO_ROOT / "docs",
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+
+        if result.returncode != 0:
+            raise AssertionError(result.stderr or result.stdout)
+        return make_log.read_text(encoding="utf-8").splitlines(), export_root
+
+
 class RunOcrWorkflowTests(unittest.TestCase):
+    def test_ocrkernel_uses_expected_make_sequence_from_subdirectory(self) -> None:
+        log_lines, export_root = _fake_make_run("ocrkernel")
+
+        self.assertEqual(
+            log_lines,
+            [
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <doctor-env>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <ocrmine> "
+                f"<CGPT_EXPORT_ROOT={export_root}>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <ocrdelta>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <ocrwiden>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <ocrstablegrowth>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <ocrgrowth>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <ocrfails>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <ocrfocuscases>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> "
+                "<eval-ocr-focus-stability>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <ocrfocusreport>",
+            ],
+        )
+
+    def test_ocr_data_uses_expected_make_sequence_from_subdirectory(self) -> None:
+        log_lines, export_root = _fake_make_run("ocr-data")
+
+        self.assertEqual(
+            log_lines,
+            [
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <doctor-env>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <ocrmine> "
+                f"<CGPT_EXPORT_ROOT={export_root}>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> "
+                "<ocr-generalization-review>",
+                f"pwd={REPO_ROOT} args: <--no-print-directory> <ocrdelta>",
+            ],
+        )
+
     def test_ocr_notebook_workflow_uses_default_export_root_from_subdirectory(
         self,
     ) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_path = Path(tmp)
-            export_root = tmp_path / "export"
-            export_root.mkdir()
-            make_log = tmp_path / "make.log"
-            fake_make = tmp_path / "make.sh"
-            _write_executable(
-                fake_make,
-                textwrap.dedent(
-                    """\
-                    #!/usr/bin/env sh
-                    set -eu
-                    printf 'pwd=%s args:' "$PWD" >> "$MAKE_LOG"
-                    for arg in "$@"; do
-                        printf ' <%s>' "$arg" >> "$MAKE_LOG"
-                    done
-                    printf '\\n' >> "$MAKE_LOG"
-                    """
-                ),
-            )
-            env = os.environ.copy()
-            env.update(
-                {
-                    "CGPT_EXPORT_ROOT": "",
-                    "CGPT_EXPORT_ROOT_DEFAULT": str(export_root),
-                    "MAKE": str(fake_make),
-                    "MAKE_LOG": str(make_log),
-                }
-            )
-
-            result = subprocess.run(
-                ["bash", str(SCRIPT), "ocr-notebook-workflow"],
-                cwd=REPO_ROOT / "docs",
-                env=env,
-                capture_output=True,
-                text=True,
-            )
-
-            self.assertEqual(result.returncode, 0, result.stderr)
-            log_lines = make_log.read_text(encoding="utf-8").splitlines()
+        log_lines, export_root = _fake_make_run("ocr-notebook-workflow")
 
         self.assertEqual(
             log_lines,
