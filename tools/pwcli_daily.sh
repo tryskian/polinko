@@ -13,7 +13,16 @@ snapshot_stamp="${PLAYWRIGHT_SNAPSHOT_STAMP:-}"
 snapshot_dir="${base_dir%/}/${day}"
 default_session="${PLAYWRIGHT_SESSION:-polinko}"
 
-mkdir -p "$snapshot_dir"
+prepare_snapshot_dir() {
+  if ! mkdir -p "$snapshot_dir" 2>/dev/null; then
+    echo "pwcli-daily failed to prepare snapshot directory: $snapshot_dir" >&2
+    return 1
+  fi
+}
+
+if ! prepare_snapshot_dir; then
+  exit 1
+fi
 
 if [[ "${1:-}" == "--print-dir" ]]; then
   printf '%s\n' "$snapshot_dir"

@@ -37,6 +37,32 @@ class PwcliDailyTests(unittest.TestCase):
             self.assertEqual(result.stdout.strip(), str(snapshot_base / "23-06-26"))
             self.assertTrue((snapshot_base / "23-06-26").is_dir())
 
+    def test_reports_blocked_snapshot_directory_before_print_dir(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            blocked_parent = tmp_path / "blocked-parent"
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+
+            result = subprocess.run(
+                ["/bin/bash", str(SCRIPT.relative_to(REPO_ROOT)), "--print-dir"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PLAYWRIGHT_SNAPSHOT_BASE_DIR": str(blocked_parent / "snapshots"),
+                    "PLAYWRIGHT_SNAPSHOT_DAY": "23-06-26",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "pwcli-daily failed to prepare snapshot directory: "
+                f"{blocked_parent / 'snapshots' / '23-06-26'}",
+                result.stderr,
+            )
+            self.assertEqual(result.stdout, "")
+
     def test_screenshot_injects_default_session_and_filename(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
