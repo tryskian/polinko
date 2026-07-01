@@ -553,5 +553,5 @@ Dependency maintenance:
     closure gate
 - `make git-prune-stale-refs`
   - runs during `make end` immediately before the final clean-main Git check
-  - prunes stale `origin/*` remote-tracking refs after merged or deleted PR
-    branches without deleting local branches
+  - prunes stale remote-tracking refs for the configured closeout remote after
+    merged or deleted PR branches without deleting local branches

@@ -970,4 +970,4 @@ Last updated: 2026-07-01
 - `make end-git-check` as the standalone clean-main check
 - `make git-prune-stale-refs` during `make end` before the final clean-main
   Git check, or as a standalone cleanup after merged or deleted PR branches
-  leave stale `origin/*` remote-tracking refs
+  leave stale remote-tracking refs for the configured closeout remote

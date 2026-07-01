@@ -2063,7 +2063,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("END_SKIP_GIT_CHECK=1 END_SKIP_STOP=1", text)
         self.assertIn("git-prune-stale-refs", _phony_targets())
         self.assertRegex(text, r"(?m)^git-prune-stale-refs:$")
-        self.assertIn("git remote prune origin", text)
+        self.assertIn("bash ./tools/git_prune_stale_refs.sh", text)
         self.assertNotIn("eod-stop", _phony_targets())
         self.assertNotRegex(text, r"(?m)^eod-stop:")
         self.assertRegex(
