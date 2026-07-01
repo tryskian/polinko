@@ -261,6 +261,80 @@ class LaunchDetachedProcessTests(unittest.TestCase):
             self.assertFalse(pid_file.exists())
             self.assertTrue(log_file.exists())
 
+    def test_reports_pid_parent_prepare_failure_without_launching_child(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            blocked_parent = tmp_path / "blocked"
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+            pid_file = blocked_parent / "process.pid"
+            log_file = tmp_path / "process.log"
+            marker = f"polinko-detached-pid-parent-test-{os.getpid()}"
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--pid-file",
+                    str(pid_file),
+                    "--log-file",
+                    str(log_file),
+                    "--",
+                    sys.executable,
+                    "-c",
+                    "import time; time.sleep(30)",
+                    marker,
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "launch-detached: failed to prepare PID file parent",
+                result.stderr,
+            )
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertFalse(log_file.exists())
+            self.assertEqual(_matching_processes(marker), [])
+
+    def test_reports_log_parent_prepare_failure_without_launching_child(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            blocked_parent = tmp_path / "blocked"
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+            pid_file = tmp_path / "process.pid"
+            log_file = blocked_parent / "process.log"
+            marker = f"polinko-detached-log-parent-test-{os.getpid()}"
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--pid-file",
+                    str(pid_file),
+                    "--log-file",
+                    str(log_file),
+                    "--",
+                    sys.executable,
+                    "-c",
+                    "import time; time.sleep(30)",
+                    marker,
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "launch-detached: failed to prepare log file parent",
+                result.stderr,
+            )
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertFalse(pid_file.exists())
+            self.assertEqual(_matching_processes(marker), [])
+
     def test_stops_child_when_pid_file_write_fails(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
