@@ -22,21 +22,31 @@ require_command() {
 	fi
 }
 
+run_setup_step() {
+	local label=$1
+	shift
+
+	if ! "$@"; then
+		printf "setup-devcontainer: failed to %s\n" "$label" >&2
+		return 1
+	fi
+}
+
 require_command "bootstrap Python" "$bootstrap_python"
 require_command "npm" "npm"
 
-"$bootstrap_python" -m venv --copies "$venv_dir"
+run_setup_step "create virtual environment: $venv_dir" "$bootstrap_python" -m venv --copies "$venv_dir"
 
 if [ ! -x "$venv_python" ]; then
 	printf "setup-devcontainer: expected venv Python not found: %s\n" "$venv_python" >&2
 	exit 1
 fi
 
-"$venv_python" -m pip install --upgrade pip
-"$venv_python" -m pip install -r requirements.txt
+run_setup_step "upgrade pip" "$venv_python" -m pip install --upgrade pip
+run_setup_step "install Python requirements" "$venv_python" -m pip install -r requirements.txt
 
 if [ -f package-lock.json ]; then
-	npm ci --no-audit --no-fund
+	run_setup_step "install Node dependencies from lockfile" npm ci --no-audit --no-fund
 else
-	npm install --no-audit --no-fund
+	run_setup_step "install Node dependencies" npm install --no-audit --no-fund
 fi
