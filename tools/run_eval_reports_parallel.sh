@@ -21,7 +21,10 @@ run_id=${EVAL_REPORTS_PARALLEL_RUN_ID:-$(date +%Y%m%d-%H%M%S)}
 hallucination_mode=${HALLUCINATION_EVAL_MODE:-judge}
 hallucination_min_acceptable_score=${HALLUCINATION_MIN_ACCEPTABLE_SCORE:-5}
 
-bash "$server_daemon_script"
+if ! bash "$server_daemon_script"; then
+	echo "eval-reports-parallel failed to start eval server daemon: $server_daemon_script" >&2
+	exit 1
+fi
 exec "$python_bin" -m tools.eval_parallel_orchestrator \
 	--base-url "$base_url" \
 	--run-id "$run_id" \
