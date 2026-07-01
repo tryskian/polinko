@@ -244,6 +244,48 @@ class RunEvalReportTests(unittest.TestCase):
                 ],
             )
 
+    def test_reports_blocked_report_directory_before_server_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            blocked_parent = tmp_path / "blocked-parent"
+            args_file = tmp_path / "python-args.txt"
+            server_log = tmp_path / "server.log"
+            server_script = tmp_path / "server.sh"
+            python_script = tmp_path / "python.sh"
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+            _write_executable(
+                server_script,
+                '#!/usr/bin/env sh\nset -eu\nprintf "server\\n" > "$SERVER_LOG"\n',
+            )
+            _write_executable(
+                python_script,
+                ('#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$PYTHON_ARGS"\n'),
+            )
+
+            result = subprocess.run(
+                ["bash", str(REPORT_SCRIPT.relative_to(REPO_ROOT)), "file-search"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PYTHON": str(python_script),
+                    "EVAL_SERVER_DAEMON_SCRIPT": str(server_script),
+                    "PYTHON_ARGS": str(args_file),
+                    "SERVER_LOG": str(server_log),
+                    "EVAL_REPORTS_DIR": str(blocked_parent / "reports"),
+                    "EVAL_REPORT_RUN_ID": "run-789",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                f"eval-report failed to prepare report directory: {blocked_parent / 'reports'}",
+                result.stderr,
+            )
+            self.assertFalse(server_log.exists())
+            self.assertFalse(args_file.exists())
+
     def test_report_script_rejects_unknown_or_missing_suite(self) -> None:
         for args in ([], ["unknown"]):
             with self.subTest(args=args):

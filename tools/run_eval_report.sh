@@ -29,7 +29,16 @@ retrieval|file-search|hallucination|style|response-behaviour|ocr-safety|ocr|ocr-
 	;;
 esac
 
-mkdir -p "$report_dir"
+prepare_report_dir() {
+	if ! mkdir -p "$report_dir" 2>/dev/null; then
+		echo "eval-report failed to prepare report directory: $report_dir" >&2
+		return 1
+	fi
+}
+
+if ! prepare_report_dir; then
+	exit 1
+fi
 bash "$server_daemon_script"
 
 case "$suite" in
