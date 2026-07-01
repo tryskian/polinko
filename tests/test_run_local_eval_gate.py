@@ -476,6 +476,23 @@ exit "${CURL_EXIT:-0}"
             self.assertEqual(rows["POLINKO_SESSION_DB_PATH"], "")
             self.assertTrue(temp_root.is_dir())
 
+    def test_reports_blocked_temp_root_before_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            blocked_parent = Path(tmp) / "blocked-parent"
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+            env["LOCAL_EVAL_GATE_TEMP_ROOT"] = str(blocked_parent / "child")
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                f"local eval gate failed to prepare temp root: {blocked_parent / 'child'}",
+                result.stderr,
+            )
+            self.assertFalse(python_args.exists())
+
     def test_readiness_failure_stops_before_eval_commands(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             env, python_args, server_started = self._base_env(Path(tmp))
