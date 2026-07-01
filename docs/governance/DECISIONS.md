@@ -5978,3 +5978,18 @@ or branch history instead.
   diagnostic.
 - Why: A traceback from a missing local binary obscures the actual maintenance
   action; the helper should name the missing prerequisite directly.
+
+## D-352: Make local act helpers explicit
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `act`, `operator_output`, `tooling`, `diagnostics`
+- Human-led: The human lead asked for hidden helper surfaces to be maintained
+  so repo-local automation failures stay direct and actionable.
+- Engineer implementation: Add repo activity tracking to `make act-list` and
+  `make act-ci`, report a missing `act` CLI before invoking it, and cover the
+  helper contract with focused Makefile tests.
+- Decision: Local GitHub Actions runner helpers now check and name the required
+  `act` CLI.
+- Why: Developer helper targets should fail with one precise prerequisite
+  message instead of relying on shell-level command-not-found output.
