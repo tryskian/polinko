@@ -16,6 +16,7 @@ fi
 
 mode=$1
 python_bin=$(polinko_default_python_bin)
+server_daemon_script=${EVAL_SERVER_DAEMON_SCRIPT:-./tools/ensure_eval_server_daemon.sh}
 cases_path=${OCR_HANDWRITING_CASES:-.local/eval_cases/ocr_handwriting_eval_cases.json}
 timeout_seconds=${OCR_EVAL_TIMEOUT:-90}
 ocr_retries=${OCR_EVAL_OCR_RETRIES:-2}
@@ -39,8 +40,13 @@ if [ ! -f "$cases_path" ]; then
 	exit 1
 fi
 
+start_eval_server_daemon() {
+	bash "$server_daemon_script"
+}
+
 case "$mode" in
 run)
+	start_eval_server_daemon
 	exec "$python_bin" -m tools.eval_ocr \
 		--timeout "$timeout_seconds" \
 		--cases "$cases_path" \
@@ -52,6 +58,7 @@ run)
 	;;
 report)
 	mkdir -p "$report_dir"
+	start_eval_server_daemon
 	exec "$python_bin" -m tools.eval_ocr \
 		--timeout "$timeout_seconds" \
 		--cases "$cases_path" \

@@ -5822,3 +5822,19 @@ or branch history instead.
 - Why: The wrapper coordinates multiple Make targets, so target order and
   repo-root execution are runtime contracts, not incidental implementation
   details.
+
+## D-342: Align OCR handwriting server preflight
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `ocr`, `handwriting`, `server_daemon`, `operator_hygiene`
+- Human-led: The human lead asked for repo-wide script maintenance and hidden
+  runtime interruptions to be resolved as they are found.
+- Engineer implementation: Update `tools/run_eval_ocr_handwriting.sh` to start
+  the eval server daemon before `run` and `report` execution, pass
+  `EVAL_SERVER_DAEMON_SCRIPT` through the Make runner environment, and add
+  focused regression coverage for both modes and outside-repo invocation.
+- Decision: Direct OCR handwriting evals use the same server preflight contract
+  as the other direct OCR eval runners.
+- Why: `tools.eval_ocr` targets the local Polinko API, so direct handwriting
+  runs should establish the API runtime before handing off to Python.
