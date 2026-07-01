@@ -166,8 +166,9 @@ flowchart TD
   orphaned flat PID metadata before launch or stop decisions. It validates
   command, match-pattern regex, active-window, and global-cleanup config before
   activity, start, stop, stop-all, or status work touches PID/activity state,
-  and requires process-inspection tooling before PID ownership classification or
-  cleanup.
+  rejects invalid runtime output paths with direct diagnostics before launch,
+  cleanup, or metadata writes, and requires process-inspection tooling before
+  PID ownership classification or cleanup.
   Shell lifecycle runners require `ps` before making PID-state decisions, so
   missing process-inspection tooling fails early instead of degrading into
   misleading liveness state.

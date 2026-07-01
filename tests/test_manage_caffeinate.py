@@ -96,6 +96,30 @@ class ManageCaffeinateTests(unittest.TestCase):
             self.assertEqual(activity["last_activity_label"], "make test")
             self.assertEqual(activity["last_activity_target"], "test")
 
+    def test_activity_reports_directory_path_without_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            activity_file = tmp_path / "caffeinate.activity.json"
+            activity_file.mkdir()
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "activity"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "CAFFEINATE_ACTIVITY_FILE": str(activity_file),
+                    "CAFFEINATE_ACTIVITY_LABEL": "make test",
+                    "CAFFEINATE_ACTIVITY_TARGET": "test",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("caffeinate runtime error", result.stderr)
+            self.assertIn("activity metadata path is a directory", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+
     def test_start_skips_on_non_macos(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -112,6 +136,37 @@ class ManageCaffeinateTests(unittest.TestCase):
 
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("caffeinate is macOS-only; skipping.", result.stdout)
+
+    def test_start_reports_bad_state_parent_without_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            uname_script = tmp_path / "uname.sh"
+            blocked_parent = tmp_path / "blocked-parent"
+            _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "UNAME_BIN": str(uname_script),
+                    "CAFFEINATE_PID_FILE": str(blocked_parent / "caffeinate.pid"),
+                    "CAFFEINATE_LOG": str(tmp_path / "caffeinate.log"),
+                    "CAFFEINATE_META_FILE": str(tmp_path / "caffeinate.meta.json"),
+                    "CAFFEINATE_ACTIVITY_FILE": str(
+                        tmp_path / "caffeinate.activity.json"
+                    ),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("caffeinate runtime error", result.stderr)
+            self.assertIn("failed to prepare PID file parent", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertFalse((blocked_parent / "caffeinate.pid").exists())
 
     def test_rejects_invalid_active_window_seconds(self) -> None:
         result = subprocess.run(

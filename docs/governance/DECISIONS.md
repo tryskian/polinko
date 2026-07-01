@@ -5677,3 +5677,20 @@ or branch history instead.
 - Why: Runner scripts depend on the launcher for PID/log ownership. Tracebacks
   in shared launch failure paths obscure the recovery action and can hide
   whether a child process was launched, stopped, or never started.
+
+## D-333: Preflight repo-managed caffeinate output paths
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `runtime_state`, `diagnostics`, `metadata`
+- Human-led: The human lead asked for hidden runner dependencies and failure
+  paths to be maintained through automation.
+- Engineer implementation: Update `tools/manage_caffeinate.py` so start, stop,
+  and activity actions validate PID, log, metadata, and activity output paths
+  before launch, cleanup, or metadata writes; add focused regression coverage
+  for bad activity-file and state-parent paths.
+- Decision: Repo-managed `caffeinate` lifecycle actions preflight runtime
+  output paths and report failures as operator-readable diagnostics.
+- Why: `caffeinate` status and closeout rely on PID and metadata files. A bad
+  runtime path should fail before process launch or cleanup instead of surfacing
+  as a Python traceback.
