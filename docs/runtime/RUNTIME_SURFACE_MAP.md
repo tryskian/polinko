@@ -2,7 +2,7 @@
 
 # Runtime Surface Map
 
-Last updated: 2026-06-29
+Last updated: 2026-07-01
 
 This map shows the local runtime and operator surfaces that need to stay
 maintainable during the current refactor. It separates manual startup,
@@ -38,7 +38,8 @@ flowchart TD
     MakeEnd --> SecurityGate["make security-checks"]
     MakeEnd --> EndStop["make end-stop"]
     EndStop --> SessionStatus["make session-status"]
-    MakeEnd --> GitPrune["make git-prune-stale-refs"]
+    MakeEnd --> GitHubHealth
+    GitHubHealth --> GitPrune["make git-prune-stale-refs"]
     GitPrune --> GitGate["make end-git-check"]
   end
 

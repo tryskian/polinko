@@ -469,7 +469,8 @@ Use this doc for operator procedure.
   - literal closeout routine from clean synced `main`: docs freshness,
     transcript fix/check, doctor, script/path checks, risk-scan, operator command
     checks, Python style/type checks, docs lint, tests, security checks,
-    `make end-stop`, stale-ref prune, and final clean-main Git check
+    `make end-stop`, GitHub health, stale-ref prune, and final clean-main Git
+    check
 - `make end-docs-check`
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
   - when local `SESSION_HANDOFF` exists, verifies it names the current short

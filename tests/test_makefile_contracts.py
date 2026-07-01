@@ -2143,7 +2143,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(MAKE) --no-print-directory local-runtime-config-check", text)
         self.assertIn("CORE_STEPS=(", closeout_text)
         self.assertIn("TOTAL_STEPS=${#CORE_STEPS[@]}", closeout_text)
-        self.assertIn("TOTAL_STEPS=$((TOTAL_STEPS + 2))", closeout_text)
+        self.assertIn("TOTAL_STEPS=$((TOTAL_STEPS + 3))", closeout_text)
         self.assertNotIn("TOTAL_STEPS=17", closeout_text)
         self.assertIn(
             '"scripts-check|make --no-print-directory scripts-check"',
@@ -2163,6 +2163,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn(
             'run_step "git-prune-stale-refs" make --no-print-directory git-prune-stale-refs',
+            closeout_text,
+        )
+        self.assertIn(
+            'run_step "github-health" make --no-print-directory github-health',
             closeout_text,
         )
         self.assertIn(
@@ -2191,6 +2195,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertLess(
             closeout_text.index('"security-checks|'),
+            closeout_text.index('run_step "github-health"'),
+        )
+        self.assertLess(
+            closeout_text.index('run_step "github-health"'),
             closeout_text.index('run_step "git-prune-stale-refs"'),
         )
         self.assertLess(

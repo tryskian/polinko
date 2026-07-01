@@ -35,7 +35,7 @@ fi
 if [ "${END_SKIP_GIT_CHECK:-}" = "1" ]; then
   :
 else
-  TOTAL_STEPS=$((TOTAL_STEPS + 2))
+  TOTAL_STEPS=$((TOTAL_STEPS + 3))
 fi
 
 STEP=1
@@ -72,6 +72,7 @@ fi
 if [ "${END_SKIP_GIT_CHECK:-}" = "1" ]; then
   echo "[end] git closeout skipped (preflight only; day is not closed)"
 else
+  run_step "github-health" make --no-print-directory github-health
   run_step "git-prune-stale-refs" make --no-print-directory git-prune-stale-refs
   run_step "end-git-check" make --no-print-directory end-git-check
 fi

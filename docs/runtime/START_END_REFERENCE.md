@@ -209,8 +209,9 @@ Sequence:
 | 14 | Check diff whitespace | `git diff --check` |
 | 15 | Run dependency security checks | `make security-checks` |
 | 16 | Stop background tasks | `make end-stop` |
-| 17 | Prune stale remote-tracking refs | `make git-prune-stale-refs` |
-| 18 | Verify current branch must be `main` and synced | `make end-git-check` |
+| 17 | Surface GitHub health attention | `make github-health` |
+| 18 | Prune stale remote-tracking refs | `make git-prune-stale-refs` |
+| 19 | Verify current branch must be `main` and synced | `make end-git-check` |
 
 Preflight:
 

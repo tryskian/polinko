@@ -62,11 +62,19 @@ class TypecheckContractTests(unittest.TestCase):
             closeout,
         )
         self.assertIn(
+            'run_step "github-health" make --no-print-directory github-health',
+            closeout,
+        )
+        self.assertIn(
             'run_step "end-git-check" make --no-print-directory end-git-check',
             closeout,
         )
         self.assertGreater(
             closeout.index('run_step "git-prune-stale-refs"'),
+            closeout.index('run_step "github-health"'),
+        )
+        self.assertGreater(
+            closeout.index('run_step "github-health"'),
             closeout.index('"security-checks|'),
         )
         self.assertGreater(
@@ -85,7 +93,7 @@ class TypecheckContractTests(unittest.TestCase):
         runbook = _read("docs/runtime/RUNBOOK.md")
 
         self.assertIn("script/path checks, risk-scan", runbook)
-        self.assertIn("`make end-stop`, stale-ref prune, and", runbook)
+        self.assertIn("`make end-stop`, GitHub health, stale-ref prune, and", runbook)
         self.assertIn("final clean-main Git check", runbook)
         self.assertNotIn("clean-main Git check, transcript", runbook)
 
