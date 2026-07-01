@@ -5902,3 +5902,19 @@ or branch history instead.
 - Why: Closeout should prune and validate the same remote so custom or future
   remote configuration cannot produce a clean-looking but inconsistent final
   Git state.
+
+## D-347: Surface pending GitHub workflow runs
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `github_health`, `ci`, `operator_output`, `startup`
+- Human-led: The human lead asked for CI and dependency automation failures to
+  be kept visible through maintained helper surfaces instead of manual polling.
+- Engineer implementation: Update `tools/github_health.py` so latest queued or
+  in-progress workflow surfaces are reported as informational attention, keep
+  failed latest workflow surfaces blocking, and add focused regression
+  coverage.
+- Decision: GitHub health reports latest pending workflow surfaces in addition
+  to latest failed workflow surfaces.
+- Why: Startup should distinguish healthy, pending, and failed remote CI state
+  so in-flight checks are visible without being treated as failures.

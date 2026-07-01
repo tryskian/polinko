@@ -227,9 +227,9 @@ flowchart TD
   before launching eval runners.
 - CI and dependency automation should mirror local gates closely enough that
   failed remote runs point to real fixes instead of setup drift. `make
-  github-health` reports `gh` auth state, latest failed workflow surfaces, open
-  PR check state, and the next useful `gh` command; startup surfaces it as an
-  attention pass before local runtime checks.
+  github-health` reports `gh` auth state, latest pending or failed workflow
+  surfaces, open PR check state, and the next useful `gh` command; startup
+  surfaces it as an attention pass before local runtime checks.
 - Local URL targets remain print-first by default. Explicit system-browser
   launch paths route through `tools/open_local_url.sh` so `docs` and `viz`
   launch behavior share one audited helper. The launcher accepts local

@@ -95,6 +95,32 @@ class GitHubHealthTests(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertIn("[ok] latest workflow surfaces", stdout.getvalue())
 
+    def test_pending_workflow_run_is_reported_without_failure(self) -> None:
+        runs = [
+            {
+                "databaseId": 129,
+                "workflowName": "CI",
+                "displayTitle": "Run checks",
+                "headBranch": "codex/bigbrain/example",
+                "event": "pull_request",
+                "status": "in_progress",
+                "conclusion": None,
+                "createdAt": "2026-06-30T10:03:00Z",
+            }
+        ]
+        stdout = io.StringIO()
+
+        self.assertEqual(
+            [run["databaseId"] for run in github_health.pending_runs(runs)], [129]
+        )
+        with redirect_stdout(stdout):
+            result = github_health.report_failed_runs(runs)
+
+        self.assertEqual(result, 0)
+        self.assertIn("[info] latest workflow surfaces pending", stdout.getvalue())
+        self.assertIn("CI #129: in_progress", stdout.getvalue())
+        self.assertIn("action: gh run watch 129", stdout.getvalue())
+
     def test_status_check_rollup_failure_is_reported(self) -> None:
         prs = [
             {
