@@ -5964,3 +5964,17 @@ or branch history instead.
   Make, CI, config, and tooling surfaces.
 - Why: Historical decision entries should remain searchable rationale without
   expanding current runtime coverage obligations.
+
+## D-351: Report missing repo-search tooling directly
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `repo_search`, `operator_output`, `tooling`, `diagnostics`
+- Human-led: The human lead asked for script/runtime helpers to avoid hidden
+  workflow interruptions and keep maintenance surfaces precise.
+- Engineer implementation: Catch missing `rg` in `tools.repo_search`, return a
+  direct operator failure code, and cover the diagnostic path in unit tests.
+- Decision: Repo-search reports missing ripgrep as an explicit operator
+  diagnostic.
+- Why: A traceback from a missing local binary obscures the actual maintenance
+  action; the helper should name the missing prerequisite directly.
