@@ -21,7 +21,7 @@ list_tracked_docs() {
 }
 
 list_skip_worktree_docs() {
-  git ls-files -v docs | rg '^S' || true
+  git ls-files -v docs | awk '/^S/ { print }'
 }
 
 write_exclude_block() {
@@ -64,11 +64,13 @@ apply_guard() {
 }
 
 status_guard() {
+  local skip_worktree_docs
+  skip_worktree_docs=$(list_skip_worktree_docs)
   echo "Skip-worktree docs:"
-  if ! list_skip_worktree_docs | rg '^S' >/dev/null 2>&1; then
+  if [[ -z "${skip_worktree_docs}" ]]; then
     echo "(none)"
   else
-    list_skip_worktree_docs
+    printf '%s\n' "${skip_worktree_docs}"
   fi
   echo ""
   echo "Local excludes:"
@@ -79,7 +81,7 @@ status_guard() {
       $0 == b { show=1; next }
       $0 == e { show=0; next }
       show == 1 { print }
-      ' "${EXCLUDE_FILE}" || true
+      ' "${EXCLUDE_FILE}"
     )"
     if [[ -n "${block}" ]]; then
       printf '%s\n' "${block}"
@@ -92,7 +94,9 @@ status_guard() {
 }
 
 clear_guard() {
-  if list_skip_worktree_docs | rg '^S' >/dev/null 2>&1; then
+  local skip_worktree_docs
+  skip_worktree_docs=$(list_skip_worktree_docs)
+  if [[ -n "${skip_worktree_docs}" ]]; then
     echo "Clearing tracked docs skip-worktree state."
     while IFS= read -r tracked_doc_path; do
       [[ -n "${tracked_doc_path}" ]] || continue
