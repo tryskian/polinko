@@ -5806,3 +5806,19 @@ or branch history instead.
   the workflow-wrapper boundary.
 - Why: Malformed slice controls should fail with a direct project diagnostic
   instead of shell arithmetic noise or downstream runner drift.
+
+## D-341: Lock OCR workflow target sequences
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `ocr`, `workflow_wrappers`, `tests`, `operator_hygiene`
+- Human-led: The human lead asked for repo-wide script maintenance and
+  automation coverage to keep runtime surfaces reliable.
+- Engineer implementation: Add direct `tools/run_ocr_workflow.sh` regression
+  coverage for the `ocrkernel` and `ocr-data` lanes, using a fake `make`
+  command from a subdirectory to verify repo-root normalization and exact
+  target order.
+- Decision: Top-level OCR workflow wrapper lanes have direct sequence coverage.
+- Why: The wrapper coordinates multiple Make targets, so target order and
+  repo-root execution are runtime contracts, not incidental implementation
+  details.
