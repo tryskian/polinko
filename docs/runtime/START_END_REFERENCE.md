@@ -65,6 +65,9 @@ Wake-lock rule:
   tooling before PID ownership classification or cleanup
 - `make caffeinate` writes repo-scoped metadata for the managed wake-lock PID
   and the latest repo activity heartbeat
+- `make caffeinate` reports only the start/already-running action; detailed
+  PID, repo-activity, and wake-assertion output belongs to
+  `make caffeinate-status`
 - mutating caffeinate lifecycle actions migrate owned flat runtime files before
   launch or stop decisions and clean orphaned flat PID metadata
 - high-traffic lifecycle, validation, and runtime operator work targets mark

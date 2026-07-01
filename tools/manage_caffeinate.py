@@ -679,13 +679,11 @@ def start(config: RuntimeConfig) -> int:
     if state.status == "owned" and state.pid is not None:
         _write_activity(config, "make caffeinate", "caffeinate")
         print(f"caffeinate already running (PID {state.pid}).")
-        _print_owned_status(config, state.pid)
         return 0
     if state.status == "legacy-owned" and state.pid is not None:
         _write_caffeinate_metadata(config, state.pid)
         _write_activity(config, "make caffeinate", "caffeinate")
         print(f"caffeinate already running (PID {state.pid}); metadata refreshed.")
-        _print_owned_status(config, state.pid)
         return 0
     if state.status in {"stale", "live-non-owned"}:
         if state.status == "live-non-owned" and state.pid is not None:
@@ -728,7 +726,6 @@ def start(config: RuntimeConfig) -> int:
     _write_caffeinate_metadata(config, pid)
     _write_activity(config, "make caffeinate", "caffeinate")
     print(f"caffeinate started (PID {pid}).")
-    _print_owned_status(config, pid)
     return 0
 
 
