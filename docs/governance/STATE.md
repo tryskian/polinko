@@ -809,6 +809,9 @@ Last updated: 2026-06-30
     metadata under a repo-scoped runtime namespace by default
   - repo-managed caffeinate writes metadata for PID ownership and repo activity
     state so status can distinguish `ACTIVE`, `QUIET`, `STALE`, and `OFF`
+  - `make caffeinate` reports only the start/already-running action; detailed
+    PID, repo-activity, and wake-assertion output belongs to
+    `make caffeinate-status`
   - repo-managed caffeinate migrates owned flat runtime files on
     mutating lifecycle actions and cleans orphaned flat PID metadata before
     launch or stop decisions

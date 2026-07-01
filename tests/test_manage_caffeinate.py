@@ -353,6 +353,8 @@ class ManageCaffeinateTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("Cleaned non-owned caffeinate PID reference", result.stdout)
             self.assertIn("caffeinate started", result.stdout)
+            self.assertNotIn("Managed caffeinate:", result.stdout)
+            self.assertNotIn("Wake assertion:", result.stdout)
             self.assertIsNone(process.poll())
             self.assertTrue(meta_file.exists())
             self.assertTrue(activity_file.exists())
@@ -470,6 +472,8 @@ class ManageCaffeinateTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("Migrated flat caffeinate runtime files", result.stdout)
             self.assertIn("caffeinate already running", result.stdout)
+            self.assertNotIn("Managed caffeinate:", result.stdout)
+            self.assertNotIn("Wake assertion:", result.stdout)
             self.assertFalse(launcher_marker.exists())
             self.assertFalse(legacy_pid_file.exists())
             self.assertTrue(pid_file.exists())
@@ -631,6 +635,8 @@ class ManageCaffeinateTests(unittest.TestCase):
             self.addCleanup(_kill_pid_file, pid_file)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("caffeinate started", result.stdout)
+            self.assertNotIn("Managed caffeinate:", result.stdout)
+            self.assertNotIn("Wake assertion:", result.stdout)
             for _ in range(10):
                 if child_pid_file.exists():
                     break

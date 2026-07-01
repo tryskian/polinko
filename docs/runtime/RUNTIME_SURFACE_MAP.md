@@ -159,13 +159,15 @@ flowchart TD
   treat terminated zombie processes as inactive instead of reporting them as
   healthy live runners.
   `caffeinate` keeps wake-lock ownership and repo activity separate, treats
-  stopped/zombie managed PIDs as stale, and removes owned runtime metadata only
-  after bounded terminate/escalate cleanup succeeds. Its PID, log, ownership
-  metadata, and activity metadata default to a repo-scoped runtime namespace,
-  with mutating lifecycle actions migrating owned flat runtime files or cleaning
-  orphaned flat PID metadata before launch or stop decisions. It validates
-  command, match-pattern regex, active-window, and global-cleanup config before
-  activity, start, stop, stop-all, or status work touches PID/activity state,
+  stopped/zombie managed PIDs as stale, removes owned runtime metadata only after
+  bounded terminate/escalate cleanup succeeds, and keeps start output concise
+  while `caffeinate-status` owns detailed PID, repo-activity, and wake-assertion
+  reporting. Its PID, log, ownership metadata, and activity metadata default to a
+  repo-scoped runtime namespace, with mutating lifecycle actions migrating owned
+  flat runtime files or cleaning orphaned flat PID metadata before launch or stop
+  decisions. It validates command, match-pattern regex, active-window, and
+  global-cleanup config before activity, start, stop, stop-all, or status work
+  touches PID/activity state,
   rejects invalid runtime output paths with direct diagnostics before launch,
   cleanup, or metadata writes, and requires process-inspection tooling before
   PID ownership classification or cleanup.

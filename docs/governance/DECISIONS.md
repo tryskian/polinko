@@ -5694,3 +5694,20 @@ or branch history instead.
 - Why: `caffeinate` status and closeout rely on PID and metadata files. A bad
   runtime path should fail before process launch or cleanup instead of surfacing
   as a Python traceback.
+
+## D-334: Keep caffeinate start output concise
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `startup`, `operator_output`, `status`
+- Human-led: The human lead asked for hidden startup/runtime output blubbles to
+  be resolved as part of script maintenance.
+- Engineer implementation: Update `tools/manage_caffeinate.py` so start and
+  already-running paths print only the action result while `status` remains the
+  detailed PID, repo-activity, and wake-assertion reporting surface; add focused
+  regression assertions for concise start output.
+- Decision: `make caffeinate` reports the start action concisely, and
+  `make caffeinate-status` owns detailed runtime status output.
+- Why: `make start` runs `caffeinate` and then `caffeinate-status`. Duplicating
+  the full status block in both steps makes startup noisy and obscures the
+  actual runtime state.
