@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import time
 import unittest
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -923,6 +924,60 @@ esac
             self.assertIn("Managed caffeinate: QUIET", result.stdout)
             self.assertIn(f"Repo root: {REPO_ROOT}", result.stdout)
             self.assertIn("no recorded repo activity", result.stdout)
+
+    def test_status_reports_active_repo_owned_pid(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            uname_script = tmp_path / "uname.sh"
+            pid_file = tmp_path / "caffeinate.pid"
+            meta_file = tmp_path / "caffeinate.meta.json"
+            activity_file = tmp_path / "caffeinate.activity.json"
+            _write_executable(uname_script, "#!/usr/bin/env sh\nprintf Darwin\n")
+            process = subprocess.Popen(["sleep", "30"])
+            self.addCleanup(_cleanup_process, process)
+            pid_file.write_text(str(process.pid), encoding="utf-8")
+            _write_metadata(meta_file, process.pid)
+            activity_file.write_text(
+                json.dumps(
+                    {
+                        "schema_version": 1,
+                        "repo_slug": "polinko",
+                        "repo_root": str(REPO_ROOT),
+                        "branch": "test",
+                        "commit": "test",
+                        "last_activity_at": datetime.now(UTC).isoformat(),
+                        "last_activity_label": "make active-test",
+                        "last_activity_target": "active-test",
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "UNAME_BIN": str(uname_script),
+                    "CAFFEINATE_PID_FILE": str(pid_file),
+                    "CAFFEINATE_META_FILE": str(meta_file),
+                    "CAFFEINATE_ACTIVITY_FILE": str(activity_file),
+                    "CAFFEINATE_MATCH_PATTERN": "sleep 30",
+                    "PMSET_BIN": str(tmp_path / "missing-pmset"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("Managed caffeinate: ACTIVE", result.stdout)
+            self.assertIn("Repo: polinko", result.stdout)
+            self.assertIn(f"Repo root: {REPO_ROOT}", result.stdout)
+            self.assertIn(f"PID: {process.pid}", result.stdout)
+            self.assertIn("Wake-lock age:", result.stdout)
+            self.assertIn("Last repo activity:", result.stdout)
+            self.assertIn("via make active-test", result.stdout)
+            self.assertIn("Wake assertion: UNKNOWN", result.stdout)
 
     def test_status_treats_zombie_pid_file_as_stale(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
