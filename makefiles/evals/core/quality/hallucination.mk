@@ -2,10 +2,10 @@
 .PHONY: eval-hallucination eval-hallucination-deterministic
 .PHONY: eval-hallucination-report calibrate-hallucination-threshold
 
-eval-hallucination:
+eval-hallucination: server-daemon
 	$(PYTHON) -m tools.eval_hallucination --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
-eval-hallucination-deterministic:
+eval-hallucination-deterministic: server-daemon
 	$(PYTHON) -m tools.eval_hallucination --evaluation-mode deterministic --min-acceptable-score "$(HALLUCINATION_MIN_ACCEPTABLE_SCORE)"
 
 eval-hallucination-report:
