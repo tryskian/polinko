@@ -37,6 +37,26 @@ class OpenLocalUrlShellTests(unittest.TestCase):
             text=True,
         )
 
+    def run_launcher_with_xdg_open(
+        self, url: str, tool_dir: Path
+    ) -> subprocess.CompletedProcess[str]:
+        opener = tool_dir / "xdg-open"
+        opener.write_text("#!/bin/sh\nexit 7\n", encoding="utf-8")
+        opener.chmod(opener.stat().st_mode | stat.S_IXUSR)
+
+        env = {
+            **os.environ,
+            "PATH": str(tool_dir),
+        }
+        return subprocess.run(
+            ["/bin/bash", str(SCRIPT), url],
+            cwd=REPO_ROOT,
+            env=env,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
     def test_launcher_accepts_local_urls(self) -> None:
         urls = (
             "http://127.0.0.1:8000/docs",
@@ -77,6 +97,15 @@ class OpenLocalUrlShellTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 2)
                 self.assertIn("Refusing to launch non-local URL", result.stderr)
                 self.assertFalse(capture_path.exists())
+
+    def test_launcher_surfaces_xdg_open_failures(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = self.run_launcher_with_xdg_open(
+                "http://127.0.0.1:8000/docs", Path(tmp)
+            )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Failed to launch local URL with xdg-open", result.stderr)
 
 
 if __name__ == "__main__":
