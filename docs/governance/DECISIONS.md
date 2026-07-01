@@ -5773,3 +5773,19 @@ or branch history instead.
   clean-main Git gate.
 - Why: Deleted merged PR branches should not leave stale refs for future
   kernels or make repo state look noisier than it is.
+
+## D-339: Surface local URL launcher failures
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `local_urls`, `operator_commands`, `failure_signals`, `hygiene`
+- Human-led: The human lead asked for hidden script failures and small warnings
+  to be resolved as maintained runtime surfaces.
+- Engineer implementation: Update `tools/open_local_url.sh` so `open` and
+  `xdg-open` failures return non-zero with direct diagnostics; add shell
+  regression coverage for the `xdg-open` failure path and update current
+  runtime docs.
+- Decision: Explicit browser-launch helper targets remain local-only and now
+  surface system-launch failures to Make and CI-style checks.
+- Why: A helper that hides launch failure can make a browser-opening operator
+  target look successful while nothing opened.

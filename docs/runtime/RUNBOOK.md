@@ -457,12 +457,14 @@ Use this doc for operator procedure.
   - start or reuse the local server and print the API docs URL
 - `make docs-open`
   - start or reuse the local server and launch the API docs URL in the system
-    browser through the local-only URL launcher
+    browser through the local-only URL launcher; launcher failures return
+    non-zero
 - `make viz`
   - start or reuse the local server and print the PASS/FAIL viz URL
 - `make viz-open`
   - start or reuse the local server and launch the PASS/FAIL viz URL in the
-    system browser through the local-only URL launcher
+    system browser through the local-only URL launcher; launcher failures
+    return non-zero
 - `make end`
   - literal closeout routine from clean synced `main`: docs freshness,
     transcript fix/check, doctor, script/path checks, risk-scan, operator command

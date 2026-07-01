@@ -233,4 +233,4 @@ flowchart TD
 - Local URL targets remain print-first by default. Explicit system-browser
   launch paths route through `tools/open_local_url.sh` so `docs` and `viz`
   launch behavior share one audited helper. The launcher accepts local
-  destinations only.
+  destinations only and returns failure when the system launcher fails.

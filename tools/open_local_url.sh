@@ -46,9 +46,15 @@ if ! is_local_url "$url"; then
 fi
 
 if command -v open >/dev/null 2>&1; then
-	open "$url"
+	if ! open "$url"; then
+		echo "Failed to launch local URL with open: $url" >&2
+		exit 1
+	fi
 elif command -v xdg-open >/dev/null 2>&1; then
-	xdg-open "$url" >/dev/null 2>&1 || true
+	if ! xdg-open "$url" >/dev/null 2>&1; then
+		echo "Failed to launch local URL with xdg-open: $url" >&2
+		exit 1
+	fi
 else
 	echo "Open this URL in your browser: $url"
 fi
