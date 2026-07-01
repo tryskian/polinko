@@ -9,6 +9,7 @@ polinko_cd_repo_root
 
 base_dir="${PLAYWRIGHT_SNAPSHOT_BASE_DIR:-docs/peanut/assets/screenshots/playwright}"
 day="${PLAYWRIGHT_SNAPSHOT_DAY:-$(date +%d-%m-%y)}"
+snapshot_stamp="${PLAYWRIGHT_SNAPSHOT_STAMP:-}"
 snapshot_dir="${base_dir%/}/${day}"
 default_session="${PLAYWRIGHT_SESSION:-polinko}"
 
@@ -70,7 +71,11 @@ for arg in "${args[@]}"; do
 done
 
 if [[ "$has_filename" != "true" ]]; then
-  timestamp="$(date -u +%Y-%m-%dT%H-%M-%SZ)-$RANDOM"
+  if [[ -n "$snapshot_stamp" ]]; then
+    timestamp="$snapshot_stamp"
+  else
+    timestamp="$(date -u +%Y-%m-%dT%H-%M-%SZ)-$$"
+  fi
   case "$command_name" in
     snapshot)
       args+=(--filename "$snapshot_dir/snapshot-$timestamp.md")
