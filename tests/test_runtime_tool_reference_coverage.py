@@ -28,27 +28,7 @@ def _read_tracked_text(paths: list[str]) -> str:
     return "\n".join(chunks)
 
 
-def _runtime_reference_surfaces(tracked_files: list[str]) -> list[str]:
-    surfaces: list[str] = []
-    for rel_path in tracked_files:
-        if rel_path == "Makefile" or rel_path.startswith(
-            (
-                "makefiles/",
-                "tools/",
-                ".github/",
-                ".vscode/",
-                ".devcontainer/",
-            )
-        ):
-            surfaces.append(rel_path)
-        elif rel_path in {"README.md", "pyproject.toml", ".pre-commit-config.yaml"}:
-            surfaces.append(rel_path)
-        elif rel_path.startswith(("docs/runtime/", "docs/governance/", "docs/public/")):
-            surfaces.append(rel_path)
-    return surfaces
-
-
-def _active_runtime_reference_surfaces(tracked_files: list[str]) -> list[str]:
+def _current_runtime_reference_surfaces(tracked_files: list[str]) -> list[str]:
     surfaces: list[str] = []
     for rel_path in tracked_files:
         if rel_path == "Makefile" or rel_path.startswith(
@@ -99,7 +79,7 @@ class RuntimeToolReferenceCoverageTests(unittest.TestCase):
     def test_active_runtime_tool_references_exist(self) -> None:
         tracked_files = _tracked_files()
         reference_text = _read_tracked_text(
-            _active_runtime_reference_surfaces(tracked_files)
+            _current_runtime_reference_surfaces(tracked_files)
         )
 
         missing_tools = [
@@ -122,7 +102,9 @@ class RuntimeToolReferenceCoverageTests(unittest.TestCase):
             for rel_path in tracked_files
             if rel_path.startswith("tools/") and rel_path.endswith((".py", ".sh"))
         }
-        reference_text = _read_tracked_text(_runtime_reference_surfaces(tracked_files))
+        reference_text = _read_tracked_text(
+            _current_runtime_reference_surfaces(tracked_files)
+        )
         test_text = _read_tracked_text(
             [
                 rel_path

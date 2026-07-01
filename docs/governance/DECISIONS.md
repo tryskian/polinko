@@ -5948,3 +5948,19 @@ or branch history instead.
 - Why: Startup should reveal remote attention before local work begins, and
   closeout should reveal remote CI or PR attention before declaring the synced
   `main` state closed.
+
+## D-350: Scope runtime tool coverage to current surfaces
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `runtime`, `tooling`, `tests`, `source_truth`
+- Human-led: The human lead clarified that decision history is the historical
+  ledger, while other runtime and governance surfaces should describe current
+  truth.
+- Engineer implementation: Update runtime tool reference coverage so direct
+  helper visibility is computed from current active surfaces rather than the
+  historical decision log.
+- Decision: Runtime tool reference coverage follows current runtime, public,
+  Make, CI, config, and tooling surfaces.
+- Why: Historical decision entries should remain searchable rationale without
+  expanding current runtime coverage obligations.
