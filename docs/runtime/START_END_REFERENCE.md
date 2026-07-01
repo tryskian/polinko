@@ -256,8 +256,8 @@ Explicit companion checks:
   - verifies local `main` is synced with `origin/main`
 - `make git-prune-stale-refs`
   - runs during `make end` immediately before the final clean-main Git check
-  - prunes stale `origin/*` remote-tracking refs after merged or deleted PR
-    branches
+  - prunes stale remote-tracking refs for the configured closeout remote after
+    merged or deleted PR branches
   - leaves local branches in place
 
 Read-only tooling pin:
@@ -273,4 +273,5 @@ Source of truth:
 
 - [tools/end_of_day_routine.sh](../../tools/end_of_day_routine.sh)
 - [tools/check_end_git_clean.sh](../../tools/check_end_git_clean.sh)
+- [tools/git_prune_stale_refs.sh](../../tools/git_prune_stale_refs.sh)
 - [Makefile](../../Makefile)

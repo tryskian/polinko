@@ -5885,3 +5885,20 @@ or branch history instead.
   stamp while keeping the normal timestamped default.
 - Why: Reproducible browser artifacts make visual checks easier to compare and
   avoid relying on shell-specific random suffixes.
+
+## D-346: Align stale-ref pruning with closeout remote
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `git`, `closeout`, `stale_refs`, `operator_hygiene`
+- Human-led: The human lead asked for GitHub health and closeout hygiene
+  helpers to keep automation precise and repo-wide.
+- Engineer implementation: Route `make git-prune-stale-refs` through
+  `tools/git_prune_stale_refs.sh`, share `END_GIT_REMOTE` with the final
+  clean-main gate, add direct diagnostics for missing remotes, and cover custom
+  remote pruning with focused tests.
+- Decision: Stale-ref pruning uses the configured closeout remote instead of a
+  hardcoded `origin` command.
+- Why: Closeout should prune and validate the same remote so custom or future
+  remote configuration cannot produce a clean-looking but inconsistent final
+  Git state.

@@ -7,4 +7,4 @@ end-git-check:
 
 git-prune-stale-refs:
 	@$(call repo_activity,make git-prune-stale-refs,git-prune-stale-refs)
-	git remote prune origin
+	bash ./tools/git_prune_stale_refs.sh
