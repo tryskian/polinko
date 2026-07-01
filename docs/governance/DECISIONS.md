@@ -5870,3 +5870,18 @@ or branch history instead.
   on `server-daemon`.
 - Why: Operators should be able to run direct eval targets without first
   remembering a separate local API startup step.
+
+## D-345: Add deterministic Playwright snapshot stamps
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `playwright`, `local_browser`, `helper_scripts`, `operator_hygiene`
+- Human-led: The human lead asked to continue repo-wide script maintenance with
+  small helper interruptions resolved as they are found.
+- Engineer implementation: Add optional `PLAYWRIGHT_SNAPSHOT_STAMP` support to
+  `tools/pwcli_daily.sh`, pass the setting through `make pwcli`, and lock the
+  wrapper/Make contract with focused tests.
+- Decision: Playwright helper captures can use an explicit stable snapshot
+  stamp while keeping the normal timestamped default.
+- Why: Reproducible browser artifacts make visual checks easier to compare and
+  avoid relying on shell-specific random suffixes.

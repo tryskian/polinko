@@ -1363,6 +1363,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("portfolio-open:", contract_text)
         self.assertNotIn("portfolio-mockups:", contract_text)
         self.assertIn("pwcli playwright-cli:", contract_text)
+        self.assertIn("PLAYWRIGHT_SNAPSHOT_STAMP ?=", contract_text)
+        self.assertIn(
+            'PLAYWRIGHT_SNAPSHOT_STAMP="$(PLAYWRIGHT_SNAPSHOT_STAMP)"',
+            contract_text,
+        )
 
     def test_shared_config_is_extracted_before_target_families(self) -> None:
         root_text = _makefile_text()
