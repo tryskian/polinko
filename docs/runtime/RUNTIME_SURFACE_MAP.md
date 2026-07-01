@@ -146,9 +146,10 @@ flowchart TD
   Detached child-process launch is centralized through
   `tools/launch_detached_process.py`; runner scripts retain ownership of
   their domain-specific liveness and adoption logic. The shared launcher
-  rejects empty, missing, and non-launchable commands with direct diagnostics
-  before PID ownership is recorded; PID-file write failure stops the started
-  child process group before exit, preserving clean background state.
+  rejects empty, missing, non-launchable commands, and output-path failures
+  with direct diagnostics before PID ownership is recorded; PID-file write
+  failure stops the started child process group before exit, preserving clean
+  background state.
   Runner-specific
   `*_LAUNCHER_PYTHON` overrides are validated before manager exec or detached
   launch, so bad launcher interpreters fail before PID state is written.

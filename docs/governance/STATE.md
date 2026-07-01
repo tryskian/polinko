@@ -837,9 +837,9 @@ Last updated: 2026-06-30
   - runner-specific `*_LAUNCHER_PYTHON` overrides are validated before manager
     exec or detached launch, so bad launcher interpreters fail before PID state
     is written
-  - `tools/launch_detached_process.py` rejects empty, missing, and
-    non-launchable commands with direct diagnostics before PID ownership is
-    recorded
+  - `tools/launch_detached_process.py` rejects empty, missing,
+    non-launchable commands, and output-path failures with direct diagnostics
+    before PID ownership is recorded
   - `tools/launch_detached_process.py` stops the started child process group
     before exit when the PID file write fails, preserving clean background
     state

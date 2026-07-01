@@ -5659,3 +5659,21 @@ or branch history instead.
 - Why: Removing a PID file while a matching server remains active hides the
   recovery evidence that status and stop need. Preserving the PID file keeps
   failed startup state inspectable and stoppable.
+
+## D-332: Report detached-launch output path failures directly
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `detached_launcher`, `pid_file`, `log_file`, `diagnostics`
+- Human-led: The human lead asked for hidden runner dependencies and failure
+  paths to be maintained through automation.
+- Engineer implementation: Update `tools/launch_detached_process.py` so PID
+  parent preparation, log-file open, and PID-file write failures emit direct
+  diagnostics without tracebacks; keep process-group cleanup on PID-file write
+  failure and add focused regression coverage for log-open and PID-write
+  failure paths.
+- Decision: The shared detached launcher reports output-path failures as
+  operator-readable launch diagnostics.
+- Why: Runner scripts depend on the launcher for PID/log ownership. Tracebacks
+  in shared launch failure paths obscure the recovery action and can hide
+  whether a child process was launched, stopped, or never started.

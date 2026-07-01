@@ -288,12 +288,47 @@ class LaunchDetachedProcessTests(unittest.TestCase):
                 text=True,
             )
 
-            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("launch-detached: failed to write PID file", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
             self.assertTrue(log_file.exists())
             for _ in range(10):
                 if not _matching_processes(marker):
                     break
                 time.sleep(0.1)
+            self.assertEqual(_matching_processes(marker), [])
+
+    def test_reports_log_file_open_failure_without_launching_child(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            pid_file = tmp_path / "process.pid"
+            log_file = tmp_path / "process.log"
+            log_file.mkdir()
+            marker = f"polinko-detached-log-open-test-{os.getpid()}"
+
+            result = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--pid-file",
+                    str(pid_file),
+                    "--log-file",
+                    str(log_file),
+                    "--",
+                    sys.executable,
+                    "-c",
+                    "import time; time.sleep(30)",
+                    marker,
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("launch-detached: failed to open log file", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertFalse(pid_file.exists())
             self.assertEqual(_matching_processes(marker), [])
 
     def test_stop_unmanaged_child_terminates_process_group(self) -> None:
