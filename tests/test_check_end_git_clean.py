@@ -153,6 +153,19 @@ class CheckEndGitCleanTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("local main is not synced with origin/main", result.stderr)
 
+    def test_fails_when_remote_branch_is_missing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            work = _init_repo(root)
+            remote = root / "origin.git"
+            _run_git(remote, "update-ref", "-d", "refs/heads/main")
+
+            result = _run_script(work)
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("could not resolve origin/main", result.stderr)
+        self.assertIn("rerunning make end", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
