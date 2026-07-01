@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import io
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 import unittest
 
 from tools import github_health
@@ -213,6 +213,27 @@ class GitHubHealthTests(unittest.TestCase):
         )
 
         self.assertEqual(command, ["gh", "pr", "list", "--repo", "tryskian/polinko"])
+
+    def test_limit_arguments_must_be_positive(self) -> None:
+        parser = github_health.build_parser()
+        stderr = io.StringIO()
+
+        parsed = parser.parse_args(["--run-limit", "1", "--pr-limit", "2"])
+        self.assertEqual(parsed.run_limit, 1)
+        self.assertEqual(parsed.pr_limit, 2)
+
+        with redirect_stderr(stderr), self.assertRaises(SystemExit) as exc:
+            parser.parse_args(["--run-limit", "0"])
+
+        self.assertEqual(exc.exception.code, 2)
+        self.assertIn("must be a positive integer", stderr.getvalue())
+
+        stderr = io.StringIO()
+        with redirect_stderr(stderr), self.assertRaises(SystemExit) as exc:
+            parser.parse_args(["--pr-limit", "-1"])
+
+        self.assertEqual(exc.exception.code, 2)
+        self.assertIn("must be a positive integer", stderr.getvalue())
 
 
 if __name__ == "__main__":

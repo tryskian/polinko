@@ -290,6 +290,16 @@ def report_pr_checks(prs: list[dict[str, Any]]) -> int:
     return 1
 
 
+def positive_int(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("must be a positive integer") from exc
+    if parsed < 1:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Report GitHub PR and workflow health for this repository."
@@ -305,13 +315,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--run-limit",
-        type=int,
+        type=positive_int,
         default=20,
         help="number of recent workflow runs to inspect",
     )
     parser.add_argument(
         "--pr-limit",
-        type=int,
+        type=positive_int,
         default=20,
         help="number of open pull requests to inspect",
     )

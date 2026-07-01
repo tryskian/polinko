@@ -5918,3 +5918,17 @@ or branch history instead.
   to latest failed workflow surfaces.
 - Why: Startup should distinguish healthy, pending, and failed remote CI state
   so in-flight checks are visible without being treated as failures.
+
+## D-348: Validate GitHub health limits locally
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `github_health`, `cli_validation`, `operator_output`
+- Human-led: The human lead asked for CI helper surfaces to remove manual
+  ambiguity and keep automation precise.
+- Engineer implementation: Add positive-integer validation for
+  `tools.github_health` `--run-limit` and `--pr-limit` arguments, and cover the
+  accepted and rejected parser paths with unit tests.
+- Decision: GitHub health limit arguments are validated before invoking `gh`.
+- Why: Invalid limits should produce one direct local operator error instead of
+  a later GitHub CLI failure that obscures the actual input issue.
