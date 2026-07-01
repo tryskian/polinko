@@ -1603,6 +1603,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("OCR_HANDWRITING_EVAL_RUNNER_ENV =", config_text)
         self.assertIn(
+            'EVAL_SERVER_DAEMON_SCRIPT="$(EVAL_SERVER_DAEMON_SCRIPT)"',
+            config_text,
+        )
+        self.assertIn(
             "OCR_STABILITY_RUNNER_SCRIPT ?= ./tools/run_eval_ocr_stability.sh",
             config_text,
         )
