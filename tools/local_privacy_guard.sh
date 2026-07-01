@@ -24,19 +24,45 @@ list_skip_worktree_docs() {
   git ls-files -v docs | awk '/^S/ { print }'
 }
 
-write_exclude_block() {
-  mkdir -p "$(dirname "${EXCLUDE_FILE}")"
-  touch "${EXCLUDE_FILE}"
+prepare_exclude_file() {
+  local exclude_parent
+  exclude_parent="$(dirname "${EXCLUDE_FILE}")"
+  if ! mkdir -p "$exclude_parent" 2>/dev/null; then
+    echo "local-privacy failed to prepare exclude file parent: $exclude_parent" >&2
+    return 1
+  fi
+  if ! touch "${EXCLUDE_FILE}" 2>/dev/null; then
+    echo "local-privacy failed to prepare exclude file: ${EXCLUDE_FILE}" >&2
+    return 1
+  fi
+}
 
-  # Remove old managed block if present, then append fresh block.
-  awk -v b="${MARKER_BEGIN}" -v e="${MARKER_END}" '
+rewrite_exclude_without_block() {
+  local tmp_file
+  tmp_file="${EXCLUDE_FILE}.tmp"
+  if ! awk -v b="${MARKER_BEGIN}" -v e="${MARKER_END}" '
     $0 == b { skip=1; next }
     $0 == e { skip=0; next }
     skip != 1 { print }
-  ' "${EXCLUDE_FILE}" >"${EXCLUDE_FILE}.tmp"
-  mv "${EXCLUDE_FILE}.tmp" "${EXCLUDE_FILE}"
+  ' "${EXCLUDE_FILE}" >"$tmp_file"; then
+    echo "local-privacy failed to rewrite exclude file: ${EXCLUDE_FILE}" >&2
+    rm -f "$tmp_file"
+    return 1
+  fi
+  if ! mv "$tmp_file" "${EXCLUDE_FILE}"; then
+    echo "local-privacy failed to replace exclude file: ${EXCLUDE_FILE}" >&2
+    rm -f "$tmp_file"
+    return 1
+  fi
+}
 
-  {
+write_exclude_block() {
+  prepare_exclude_file || return 1
+
+  # Remove old managed block if present, then append fresh block.
+  rewrite_exclude_without_block || return 1
+
+  if ! {
     echo ""
     echo "${MARKER_BEGIN}"
     echo "# Local internal docs (machine-local)"
@@ -44,17 +70,15 @@ write_exclude_block() {
       echo "${pattern}"
     done
     echo "${MARKER_END}"
-  } >>"${EXCLUDE_FILE}"
+  } >>"${EXCLUDE_FILE}"; then
+    echo "local-privacy failed to append exclude block: ${EXCLUDE_FILE}" >&2
+    return 1
+  fi
 }
 
 remove_exclude_block() {
   [[ -f "${EXCLUDE_FILE}" ]] || return 0
-  awk -v b="${MARKER_BEGIN}" -v e="${MARKER_END}" '
-    $0 == b { skip=1; next }
-    $0 == e { skip=0; next }
-    skip != 1 { print }
-  ' "${EXCLUDE_FILE}" >"${EXCLUDE_FILE}.tmp"
-  mv "${EXCLUDE_FILE}.tmp" "${EXCLUDE_FILE}"
+  rewrite_exclude_without_block
 }
 
 apply_guard() {
