@@ -15,20 +15,85 @@ class GitHubHealthTests(unittest.TestCase):
                 "workflowName": "CI",
                 "displayTitle": "Refactor scripts",
                 "headBranch": "codex/bigbrain/example",
+                "event": "pull_request",
                 "conclusion": "failure",
+                "createdAt": "2026-06-30T10:00:00Z",
             },
             {
                 "databaseId": 124,
                 "workflowName": "Dependency Review",
                 "displayTitle": "Clean dependency check",
                 "headBranch": "main",
+                "event": "pull_request",
                 "conclusion": "success",
+                "createdAt": "2026-06-30T10:01:00Z",
             },
         ]
 
         failures = github_health.failed_runs(runs)
 
         self.assertEqual([run["databaseId"] for run in failures], [123])
+
+    def test_superseded_failed_workflow_run_is_ignored(self) -> None:
+        runs = [
+            {
+                "databaseId": 125,
+                "workflowName": "CI",
+                "displayTitle": "First attempt",
+                "headBranch": "codex/bigbrain/example",
+                "event": "pull_request",
+                "conclusion": "failure",
+                "createdAt": "2026-06-30T10:00:00Z",
+            },
+            {
+                "databaseId": 126,
+                "workflowName": "CI",
+                "displayTitle": "Second attempt",
+                "headBranch": "codex/bigbrain/example",
+                "event": "pull_request",
+                "conclusion": "success",
+                "createdAt": "2026-06-30T10:02:00Z",
+            },
+        ]
+
+        failures = github_health.failed_runs(runs)
+
+        self.assertEqual(failures, [])
+
+    def test_latest_failed_workflow_run_is_reported(self) -> None:
+        runs = [
+            {
+                "databaseId": 127,
+                "workflowName": "CI",
+                "displayTitle": "First attempt",
+                "headBranch": "codex/bigbrain/example",
+                "event": "pull_request",
+                "conclusion": "success",
+                "createdAt": "2026-06-30T10:00:00Z",
+            },
+            {
+                "databaseId": 128,
+                "workflowName": "CI",
+                "displayTitle": "Second attempt",
+                "headBranch": "codex/bigbrain/example",
+                "event": "pull_request",
+                "conclusion": "failure",
+                "createdAt": "2026-06-30T10:02:00Z",
+            },
+        ]
+
+        failures = github_health.failed_runs(runs)
+
+        self.assertEqual([run["databaseId"] for run in failures], [128])
+
+    def test_report_failed_runs_uses_latest_surface_label(self) -> None:
+        stdout = io.StringIO()
+
+        with redirect_stdout(stdout):
+            result = github_health.report_failed_runs([])
+
+        self.assertEqual(result, 0)
+        self.assertIn("[ok] latest workflow surfaces", stdout.getvalue())
 
     def test_status_check_rollup_failure_is_reported(self) -> None:
         prs = [

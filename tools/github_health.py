@@ -79,9 +79,27 @@ def classify_check(check: dict[str, Any]) -> CheckSignal:
     return CheckSignal(name=check_name(check), state=label, bucket=bucket)
 
 
+def run_surface_key(run: dict[str, Any]) -> tuple[str, str, str]:
+    workflow = str(run.get("workflowName") or "workflow")
+    branch = str(run.get("headBranch") or "unknown branch")
+    event = str(run.get("event") or "unknown event")
+    return (workflow, branch, event)
+
+
+def latest_runs_by_surface(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    latest: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for run in sorted(
+        runs, key=lambda item: str(item.get("createdAt") or ""), reverse=True
+    ):
+        latest.setdefault(run_surface_key(run), run)
+    return list(latest.values())
+
+
 def failed_runs(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [
-        run for run in runs if _normalise(run.get("conclusion")) in FAILED_CONCLUSIONS
+        run
+        for run in latest_runs_by_surface(runs)
+        if _normalise(run.get("conclusion")) in FAILED_CONCLUSIONS
     ]
 
 
@@ -190,10 +208,10 @@ def auth_status(gh: str) -> bool:
 def report_failed_runs(runs: list[dict[str, Any]]) -> int:
     failures = failed_runs(runs)
     if not failures:
-        print("[ok] recent workflow runs")
+        print("[ok] latest workflow surfaces")
         return 0
 
-    print("[fail] recent workflow runs")
+    print("[fail] latest workflow surfaces")
     for run in failures:
         run_id = run.get("databaseId")
         workflow = run.get("workflowName") or "workflow"

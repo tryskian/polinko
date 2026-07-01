@@ -5726,3 +5726,18 @@ or branch history instead.
   of hardcoded per-step counters.
 - Why: `make start` is the daily entrypoint. Centralized step reporting keeps
   the displayed startup count aligned when the routine changes.
+
+## D-336: Report latest GitHub health failures
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `github_health`, `ci`, `operator_output`, `startup`
+- Human-led: The human lead asked for CI failures and hidden workflow
+  interruptions to be maintained through automation.
+- Engineer implementation: Update `tools/github_health.py` so recent workflow
+  runs are grouped by workflow, branch, and event before failure reporting, and
+  add regression coverage for superseded failed runs and latest failed runs.
+- Decision: GitHub health reports latest failed workflow surfaces instead of
+  stale failed runs that have already been superseded by a newer pass.
+- Why: `make start` surfaces GitHub health before local runtime checks. Its
+  attention output should point to current work, not already-recovered CI noise.

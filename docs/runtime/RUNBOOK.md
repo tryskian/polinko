@@ -525,8 +525,8 @@ Use this doc for operator procedure.
 - `make pr-preflight`
   - local PR readiness command for `make build-hygiene`
 - `make github-health`
-  - read-only GitHub helper that reports `gh` auth state, recent failed
-    workflow runs, open PR check state, and the next useful `gh` command
+  - read-only GitHub helper that reports `gh` auth state, latest failed
+    workflow surfaces, open PR check state, and the next useful `gh` command
 
 Dependency maintenance:
 
