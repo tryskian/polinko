@@ -57,6 +57,13 @@ temp_artifact_path() {
 	polinko_join_path "$local_eval_gate_temp_root" "$1"
 }
 
+prepare_temp_root() {
+	if ! mkdir -p "$local_eval_gate_temp_root" 2>/dev/null; then
+		echo "local eval gate failed to prepare temp root: $local_eval_gate_temp_root" >&2
+		return 1
+	fi
+}
+
 cleanup_server() {
 	exit_status=${1:-0}
 	if [ -n "$server_pid" ]; then
@@ -94,7 +101,9 @@ start_local_server() {
 	port=$3
 	log_path=$4
 
-	mkdir -p "$local_eval_gate_temp_root"
+	if ! prepare_temp_root; then
+		exit 1
+	fi
 
 	case "$scope" in
 	smoke)
