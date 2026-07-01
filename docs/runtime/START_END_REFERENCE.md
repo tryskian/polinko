@@ -15,6 +15,9 @@ make start
 
 Sequence:
 
+The startup routine owns numbered step output through a single step helper, so
+step labels and counts stay aligned as the routine changes.
+
 1. Print workspace context:
    - repo root
    - active branch

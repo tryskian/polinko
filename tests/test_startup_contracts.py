@@ -57,6 +57,28 @@ class StartupContractTests(unittest.TestCase):
             script.index("make --no-print-directory doctor-env"),
         )
 
+    def test_startup_step_reporting_is_centralized(self) -> None:
+        script = _read("tools/start_of_day_routine.sh")
+
+        expected_steps = [
+            "workspace context",
+            "github-health",
+            "doctor-env",
+            "caffeinate",
+            "caffeinate-status",
+            "api-smoke",
+        ]
+        self.assertIn("START_TOTAL_STEPS=6", script)
+        self.assertIn("start_step()", script)
+        self.assertEqual(
+            len(expected_steps),
+            sum(f'start_step "{step}"' in script for step in expected_steps),
+        )
+        positions = [script.index(f'start_step "{step}"') for step in expected_steps]
+        self.assertEqual(sorted(positions), positions)
+        for hardcoded_step in range(1, 7):
+            self.assertNotIn(f'echo "[start] {hardcoded_step}/6', script)
+
     def test_runtime_docs_match_start_alignment_contract(self) -> None:
         start_reference = _read("docs/runtime/START_END_REFERENCE.md")
         runbook = _read("docs/runtime/RUNBOOK.md")
