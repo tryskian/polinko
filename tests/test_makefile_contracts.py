@@ -2110,6 +2110,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("$(MAKE) --no-print-directory local-runtime-config-check", text)
         self.assertIn("CORE_STEPS=(", closeout_text)
         self.assertIn("TOTAL_STEPS=${#CORE_STEPS[@]}", closeout_text)
+        self.assertIn("TOTAL_STEPS=$((TOTAL_STEPS + 2))", closeout_text)
         self.assertNotIn("TOTAL_STEPS=17", closeout_text)
         self.assertIn(
             '"scripts-check|make --no-print-directory scripts-check"',
@@ -2125,6 +2126,14 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn(
             '"operator-command-check|make --no-print-directory operator-command-check"',
+            closeout_text,
+        )
+        self.assertIn(
+            'run_step "git-prune-stale-refs" make --no-print-directory git-prune-stale-refs',
+            closeout_text,
+        )
+        self.assertIn(
+            'run_step "end-git-check" make --no-print-directory end-git-check',
             closeout_text,
         )
         self.assertGreater(
@@ -2146,6 +2155,14 @@ class MakefileContractTests(unittest.TestCase):
         self.assertLess(
             closeout_text.index('"operator-command-check|'),
             closeout_text.index('"ci-python-style|'),
+        )
+        self.assertLess(
+            closeout_text.index('"security-checks|'),
+            closeout_text.index('run_step "git-prune-stale-refs"'),
+        )
+        self.assertLess(
+            closeout_text.index('run_step "git-prune-stale-refs"'),
+            closeout_text.index('run_step "end-git-check"'),
         )
 
     def test_shell_script_contract_checker_accepts_tracked_scripts(self) -> None:
