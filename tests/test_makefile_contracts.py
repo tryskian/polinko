@@ -2225,6 +2225,19 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^open-cost-console:\s*openai-account-summary$")
         self.assertRegex(text, r"(?m)^viz:\s*server-daemon$")
         self.assertRegex(text, r"(?m)^viz-open open-viz:\s*server-daemon$")
+        for target in (
+            "eval-clip-ab",
+            "eval-file-search",
+            "eval-hallucination",
+            "eval-hallucination-deterministic",
+            "eval-ocr",
+            "eval-ocr-recovery",
+            "eval-ocr-safety",
+            "eval-response-behaviour",
+            "eval-retrieval",
+            "eval-style",
+        ):
+            self.assertRegex(text, rf"(?m)^{target}:\s*server-daemon$")
         self.assertNotRegex(text, r"(?m)^portfolio:")
         self.assertNotRegex(text, r"(?m)^portfolio-open:")
         self.assertNotRegex(text, r"(?m)^portfolio-playwright:")

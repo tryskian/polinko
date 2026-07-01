@@ -5855,3 +5855,18 @@ or branch history instead.
 - Why: Report commands call eval modules that use the local Polinko API, so the
   wrapper should provide the runtime preflight instead of relying on a separate
   manual server step.
+
+## D-344: Add server prerequisites to direct eval targets
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `evals`, `makefiles`, `server_daemon`, `operator_hygiene`
+- Human-led: The human lead asked for script maintenance to remove manual
+  runtime assumptions from operator-facing commands.
+- Engineer implementation: Add `server-daemon` prerequisites to direct
+  API-backed eval targets and lock the dependency edges in Makefile contract
+  coverage.
+- Decision: Direct eval Make targets that call API-backed eval modules depend
+  on `server-daemon`.
+- Why: Operators should be able to run direct eval targets without first
+  remembering a separate local API startup step.

@@ -1,7 +1,7 @@
 # OCR recovery eval targets and reports.
 .PHONY: eval-ocr-recovery eval-ocr-recovery-report
 
-eval-ocr-recovery:
+eval-ocr-recovery: server-daemon
 	$(PYTHON) -m tools.eval_ocr_recovery
 
 eval-ocr-recovery-report:

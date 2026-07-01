@@ -1,7 +1,7 @@
 # Response-behaviour eval targets and reports.
 .PHONY: eval-response-behaviour eval-response-behaviour-report
 
-eval-response-behaviour:
+eval-response-behaviour: server-daemon
 	$(PYTHON) -m tools.eval_response_behaviour
 
 eval-response-behaviour-report:
