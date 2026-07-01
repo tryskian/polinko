@@ -5932,3 +5932,19 @@ or branch history instead.
 - Decision: GitHub health limit arguments are validated before invoking `gh`.
 - Why: Invalid limits should produce one direct local operator error instead of
   a later GitHub CLI failure that obscures the actual input issue.
+
+## D-349: Surface GitHub health during final closeout
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `github_health`, `closeout`, `ci`, `operator_hygiene`
+- Human-led: The human lead asked for CI failures and remote workflow drift to
+  be maintained through automation instead of manual polling.
+- Engineer implementation: Run `make github-health` during final `make end`
+  closeout, keep `make end-preflight` branch-local by leaving the step outside
+  `CORE_STEPS`, and update closeout order tests plus runtime docs.
+- Decision: Final session closeout surfaces GitHub health before stale-ref
+  pruning and the clean-main Git gate.
+- Why: Startup should reveal remote attention before local work begins, and
+  closeout should reveal remote CI or PR attention before declaring the synced
+  `main` state closed.
