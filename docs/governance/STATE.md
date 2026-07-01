@@ -744,9 +744,9 @@ Last updated: 2026-07-01
   - GitHub CI and dependency-review workflows use explicit read-only repository
     token permissions
   - GitHub check visibility is explicit through `make github-health`, which
-    reports `gh` auth state, latest failed workflow surfaces, open PR check
-    state, and the next useful `gh` command; `make start` surfaces it before
-    local runtime checks
+    reports `gh` auth state, latest pending or failed workflow surfaces, open
+    PR check state, and the next useful `gh` command; `make start` surfaces it
+    before local runtime checks
   - Dependabot routine and security updates are grouped by ecosystem so Python,
     root npm, and GitHub Actions updates stay below GitHub's open PR queue
     limits

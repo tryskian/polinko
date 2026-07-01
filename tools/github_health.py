@@ -103,6 +103,14 @@ def failed_runs(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     ]
 
 
+def pending_runs(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        run
+        for run in latest_runs_by_surface(runs)
+        if _normalise(run.get("status")) in PENDING_STATES
+    ]
+
+
 def pr_check_signals(pr: dict[str, Any]) -> list[CheckSignal]:
     rollup = pr.get("statusCheckRollup") or []
     return [classify_check(check) for check in rollup if isinstance(check, dict)]
@@ -207,8 +215,25 @@ def auth_status(gh: str) -> bool:
 
 def report_failed_runs(runs: list[dict[str, Any]]) -> int:
     failures = failed_runs(runs)
-    if not failures:
+    pending = pending_runs(runs)
+
+    if not failures and not pending:
         print("[ok] latest workflow surfaces")
+        return 0
+
+    if pending:
+        print("[info] latest workflow surfaces pending")
+        for run in pending:
+            run_id = run.get("databaseId")
+            workflow = run.get("workflowName") or "workflow"
+            title = run.get("displayTitle") or "untitled run"
+            branch = run.get("headBranch") or "unknown branch"
+            status = run.get("status") or "unknown"
+            print(f"  - {workflow} #{run_id}: {status} on {branch} - {title}")
+            if run_id:
+                print(f"    action: gh run watch {run_id}")
+
+    if not failures:
         return 0
 
     print("[fail] latest workflow surfaces")
