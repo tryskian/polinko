@@ -38,7 +38,8 @@ flowchart TD
     MakeEnd --> SecurityGate["make security-checks"]
     MakeEnd --> EndStop["make end-stop"]
     EndStop --> SessionStatus["make session-status"]
-    MakeEnd --> GitGate["make end-git-check"]
+    MakeEnd --> GitPrune["make git-prune-stale-refs"]
+    GitPrune --> GitGate["make end-git-check"]
   end
 
   subgraph Runners["Background runner family"]
@@ -101,7 +102,8 @@ flowchart TD
   session closeout routine from clean synced `main`. `make end-stop` is the
   current closeout helper for stopping background runners, then
   `make session-status` reports each runner family and returns failure when a
-  child status surface reports drift. `make risk-scan` verifies
+  child status surface reports drift. `make git-prune-stale-refs` runs before
+  the final clean-main Git check. `make risk-scan` verifies
   that known high-risk runtime, script, CI, and local configuration surfaces
   remain visible in the tracked map and Make gates.
   `make scripts-check` validates shell syntax plus root-helper coverage for

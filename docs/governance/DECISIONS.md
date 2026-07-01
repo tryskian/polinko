@@ -5757,3 +5757,19 @@ or branch history instead.
   gives automation a failure signal when a child status surface fails.
 - Why: A status report that prints drift but exits green makes closeout and
   automation look healthy while a runner surface still needs attention.
+
+## D-338: Prune stale refs during session closeout
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `git`, `closeout`, `stale_refs`, `operator_hygiene`
+- Human-led: The human lead asked for stale remote-tracking refs to be noticed
+  and resolved as workflow interruptions.
+- Engineer implementation: Update `tools/end_of_day_routine.sh` so real
+  `make end` runs `make git-prune-stale-refs` immediately before
+  `make end-git-check`; keep branch-local `make end-preflight` free of final
+  git closeout work; add contract coverage and update current runtime docs.
+- Decision: Session closeout prunes stale `origin/*` refs before the final
+  clean-main Git gate.
+- Why: Deleted merged PR branches should not leave stale refs for future
+  kernels or make repo state look noisier than it is.

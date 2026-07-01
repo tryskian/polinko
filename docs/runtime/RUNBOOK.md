@@ -467,7 +467,7 @@ Use this doc for operator procedure.
   - literal closeout routine from clean synced `main`: docs freshness,
     transcript fix/check, doctor, script/path checks, risk-scan, operator command
     checks, Python style/type checks, docs lint, tests, security checks,
-    `make end-stop`, and final clean-main Git check
+    `make end-stop`, stale-ref prune, and final clean-main Git check
 - `make end-docs-check`
   - verifies `STATE` and local `SESSION_HANDOFF` were refreshed today
   - when local `SESSION_HANDOFF` exists, verifies it names the current short
@@ -550,5 +550,6 @@ Dependency maintenance:
   - standalone clean-main closeout check; `make end` runs it as the final
     closure gate
 - `make git-prune-stale-refs`
+  - runs during `make end` immediately before the final clean-main Git check
   - prunes stale `origin/*` remote-tracking refs after merged or deleted PR
     branches without deleting local branches

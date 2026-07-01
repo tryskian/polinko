@@ -58,12 +58,20 @@ class TypecheckContractTests(unittest.TestCase):
 
         self.assertIn("END_SKIP_GIT_CHECK", closeout)
         self.assertIn(
+            'run_step "git-prune-stale-refs" make --no-print-directory git-prune-stale-refs',
+            closeout,
+        )
+        self.assertIn(
             'run_step "end-git-check" make --no-print-directory end-git-check',
             closeout,
         )
         self.assertGreater(
-            closeout.index('run_step "end-git-check"'),
+            closeout.index('run_step "git-prune-stale-refs"'),
             closeout.index('"security-checks|'),
+        )
+        self.assertGreater(
+            closeout.index('run_step "end-git-check"'),
+            closeout.index('run_step "git-prune-stale-refs"'),
         )
         self.assertIn("expected branch $BRANCH", git_check)
         self.assertIn("rerunning make end", git_check)
@@ -77,7 +85,7 @@ class TypecheckContractTests(unittest.TestCase):
         runbook = _read("docs/runtime/RUNBOOK.md")
 
         self.assertIn("script/path checks, risk-scan", runbook)
-        self.assertIn("`make end-stop`, and", runbook)
+        self.assertIn("`make end-stop`, stale-ref prune, and", runbook)
         self.assertIn("final clean-main Git check", runbook)
         self.assertNotIn("clean-main Git check, transcript", runbook)
 
