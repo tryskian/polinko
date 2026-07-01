@@ -151,8 +151,10 @@ Runner lifecycle rule:
   exec or detached launch, so bad launcher interpreters fail before PID state is
   written
 - `make session-status` is the consolidated status surface for the runner
-  family. `make end-stop` runs it after stop cleanup so closeout reports the
-  post-stop state without hiding individual runner drift.
+  family. It reports every runner family and returns a non-zero status if any
+  child status surface reports runner drift. `make end-stop` runs it after stop
+  cleanup so closeout reports the post-stop state without hiding individual
+  runner drift.
 
 Active kernel validation:
 

@@ -5741,3 +5741,19 @@ or branch history instead.
   stale failed runs that have already been superseded by a newer pass.
 - Why: `make start` surfaces GitHub health before local runtime checks. Its
   attention output should point to current work, not already-recovered CI noise.
+
+## D-337: Make session status fail on runner drift
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `session_status`, `background_runners`, `closeout`, `operator_output`
+- Human-led: The human lead asked for hidden runner issues and small warnings
+  to be treated as maintained engineering surfaces.
+- Engineer implementation: Update `make session-status` so it reports every
+  runner family, captures child status failures, and returns a non-zero exit
+  when any child status surface reports drift; update Makefile contract
+  coverage and current-truth runtime docs.
+- Decision: `make session-status` remains a full runner-family report and now
+  gives automation a failure signal when a child status surface fails.
+- Why: A status report that prints drift but exits green makes closeout and
+  automation look healthy while a runner surface still needs attention.

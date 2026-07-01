@@ -833,7 +833,8 @@ Last updated: 2026-06-30
     cleanup requires explicit operator opt-in
   - `make end-stop` closes the core background runner family:
     `eval-sidecar`, `server-daemon`, and repo-managed `caffeinate`, then
-    prints status for each family member
+    prints status for each family member; `make session-status` reports every
+    family and returns failure when a child status surface reports runner drift
   - background runner scripts launch detached child processes through
     `tools/launch_detached_process.py` after resolving the checkout root
     through `tools/repo_root.sh`, while each runner keeps its own liveness,
