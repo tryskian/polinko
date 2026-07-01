@@ -106,6 +106,7 @@ MAKE_CHECKS_DEV_TOOLS = REPO_ROOT / "makefiles" / "checks" / "dev-tools.mk"
 MAKE_CHECKS_DEV_TOOLS_GITHUB = (
     REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "github.mk"
 )
+MAKE_CHECKS_DEV_TOOLS_ACT = REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "act.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_SURFACES_MANUAL_EVALS = REPO_ROOT / "makefiles" / "surfaces" / "manual-evals.mk"
 MAKE_SURFACES_MANUAL_EVALS_FEEDBACK = (
@@ -279,6 +280,7 @@ class MakefileContractTests(unittest.TestCase):
         )
         dev_tools_entry_text = MAKE_CHECKS_DEV_TOOLS.read_text(encoding="utf-8")
         dev_tools_github_text = MAKE_CHECKS_DEV_TOOLS_GITHUB.read_text(encoding="utf-8")
+        dev_tools_act_text = MAKE_CHECKS_DEV_TOOLS_ACT.read_text(encoding="utf-8")
         contract_text = _makefile_contract_text()
 
         self.assertIn("include makefiles/checks/tests.mk", checks_entry_text)
@@ -362,6 +364,10 @@ class MakefileContractTests(unittest.TestCase):
             "@$(call repo_activity,make github-health,github-health)",
             dev_tools_github_text,
         )
+        self.assertIn(
+            "@$(call repo_activity,make act-list,act-list)", dev_tools_act_text
+        )
+        self.assertIn("@$(call repo_activity,make act-ci,act-ci)", dev_tools_act_text)
         self.assertIn('$(PYTHON) -m tools.github_health --gh "$(GH)"', contract_text)
         self.assertIn(
             "include makefiles/checks/runtime-audits/shell.mk",
@@ -1791,6 +1797,16 @@ class MakefileContractTests(unittest.TestCase):
             text,
         )
 
+    def test_act_targets_report_missing_cli_before_running(self) -> None:
+        text = _makefile_contract_text()
+
+        self.assertRegex(text, r"(?m)^act-list:$")
+        self.assertRegex(text, r"(?m)^act-ci:$")
+        self.assertIn('command -v "$(ACT)"', text)
+        self.assertIn("act helper: missing required command: $(ACT)", text)
+        self.assertIn("$(ACT) -l", text)
+        self.assertIn("$(ACT) -W .github/workflows/ci.yml", text)
+
     def test_manual_eval_db_targets_are_terminal_native_and_backup_first(
         self,
     ) -> None:
@@ -2708,6 +2724,8 @@ class MakefileContractTests(unittest.TestCase):
             "@$(call repo_activity,make package-install-check,package-install-check)",
             text,
         )
+        self.assertIn("@$(call repo_activity,make act-list,act-list)", text)
+        self.assertIn("@$(call repo_activity,make act-ci,act-ci)", text)
         self.assertIn('CAFFEINATE_META_FILE="$(CAFFEINATE_META_FILE)"', text)
         self.assertIn(
             'CAFFEINATE_ACTIVITY_FILE="$(CAFFEINATE_ACTIVITY_FILE)"',
