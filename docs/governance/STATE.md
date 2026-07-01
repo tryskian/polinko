@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-06-30
+Last updated: 2026-07-01
 
 ## Current Truth
 
@@ -392,6 +392,12 @@ Last updated: 2026-06-30
   - eval report wrappers resolve the checkout root before writing default
     report paths or launching report modules, so direct script execution and
     Make execution share the same report-output base
+  - direct API-backed eval Make targets start the repo server daemon before
+    dispatching local API calls, keeping direct target execution aligned with
+    report and workflow wrappers
+  - OCR growth workflow wrappers validate non-negative offset and case-limit
+    controls before dispatch, so slice runs fail before partial runtime work
+    begins
   - `make path-leak-audit-local` is an actionable local runtime-config audit:
     it checks hidden/editor/container config surfaces without failing on
     ignored manual-eval evidence bundles that intentionally retain source paths,
