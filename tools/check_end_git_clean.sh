@@ -36,7 +36,9 @@ if ! git remote get-url "$REMOTE" >/dev/null 2>&1; then
 fi
 
 local_sha="$(git rev-parse "refs/heads/$BRANCH")"
-remote_sha="$(git ls-remote --exit-code --heads "$REMOTE" "$BRANCH" | awk '{print $1}')"
+if ! remote_sha="$(git ls-remote --exit-code --heads "$REMOTE" "$BRANCH" | awk '{print $1}')"; then
+	fail "could not resolve $REMOTE/$BRANCH"
+fi
 
 if [ -z "$remote_sha" ]; then
 	fail "could not resolve $REMOTE/$BRANCH"
