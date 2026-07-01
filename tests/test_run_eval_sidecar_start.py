@@ -132,6 +132,86 @@ class RunEvalSidecarStartTests(unittest.TestCase):
             self.assertIn("Configured EVAL_SIDECAR_LAUNCHER_PYTHON", result.stderr)
             self.assertFalse((tmp_path / "sidecar.pid").exists())
 
+    def test_start_reports_blocked_pid_file_parent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            blocked_parent = tmp_path / "pid-parent"
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PYTHON": sys.executable,
+                    "EVAL_SIDECAR_PID_FILE": str(blocked_parent / "sidecar.pid"),
+                    "EVAL_SIDECAR_LOG": str(tmp_path / "sidecar.log"),
+                    "EVAL_SIDECAR_CURRENT_FILE": str(tmp_path / "current.txt"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                f"eval-sidecar failed to prepare PID file parent: {blocked_parent}",
+                result.stderr,
+            )
+
+    def test_start_reports_blocked_log_file_parent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            blocked_parent = tmp_path / "log-parent"
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PYTHON": sys.executable,
+                    "EVAL_SIDECAR_PID_FILE": str(tmp_path / "sidecar.pid"),
+                    "EVAL_SIDECAR_LOG": str(blocked_parent / "sidecar.log"),
+                    "EVAL_SIDECAR_CURRENT_FILE": str(tmp_path / "current.txt"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                f"eval-sidecar failed to prepare log file parent: {blocked_parent}",
+                result.stderr,
+            )
+            self.assertFalse((tmp_path / "sidecar.pid").exists())
+
+    def test_start_reports_blocked_current_file_parent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            blocked_parent = tmp_path / "current-parent"
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PYTHON": sys.executable,
+                    "EVAL_SIDECAR_PID_FILE": str(tmp_path / "sidecar.pid"),
+                    "EVAL_SIDECAR_LOG": str(tmp_path / "sidecar.log"),
+                    "EVAL_SIDECAR_CURRENT_FILE": str(blocked_parent / "current.txt"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                f"eval-sidecar failed to prepare current file parent: {blocked_parent}",
+                result.stderr,
+            )
+            self.assertFalse((tmp_path / "sidecar.pid").exists())
+
     def test_uses_existing_live_sidecar_pid_without_starting_new_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
