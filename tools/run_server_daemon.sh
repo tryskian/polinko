@@ -147,6 +147,22 @@ print_server_context() {
 	echo "Log file: $server_log"
 }
 
+prepare_runtime_parent() {
+	local label path parent
+	label=$1
+	path=$2
+	parent=$(dirname "$path")
+	if ! mkdir -p "$parent" 2>/dev/null; then
+		echo "server-daemon failed to prepare $label parent: $parent" >&2
+		return 1
+	fi
+}
+
+prepare_runtime_paths() {
+	prepare_runtime_parent "PID file" "$server_pid_file" || return 1
+	prepare_runtime_parent "log file" "$server_log" || return 1
+}
+
 start_server() {
 	expected_py=$(resolve_expected_python)
 	if [ -z "$expected_py" ]; then
@@ -155,7 +171,9 @@ start_server() {
 	fi
 	polinko_require_process_inspection "server-daemon PID inspection"
 
-	mkdir -p "$(dirname "$server_pid_file")" "$(dirname "$server_log")"
+	if ! prepare_runtime_paths; then
+		exit 1
+	fi
 
 	if [ -f "$server_pid_file" ]; then
 		pid=$(cat "$server_pid_file" 2>/dev/null || true)

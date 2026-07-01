@@ -155,6 +155,59 @@ class RunServerDaemonTests(unittest.TestCase):
             self.assertIn("Configured SERVER_LAUNCHER_PYTHON", result.stderr)
             self.assertFalse((tmp_path / "server.pid").exists())
 
+    def test_start_reports_blocked_pid_file_parent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            blocked_parent = tmp_path / "pid-parent"
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PYTHON": sys.executable,
+                    "DEV_BACKEND_PORT": "8781",
+                    "SERVER_PID_FILE": str(blocked_parent / "server.pid"),
+                    "SERVER_LOG": str(tmp_path / "server.log"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                f"server-daemon failed to prepare PID file parent: {blocked_parent}",
+                result.stderr,
+            )
+
+    def test_start_reports_blocked_log_file_parent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            blocked_parent = tmp_path / "log-parent"
+            blocked_parent.write_text("not a directory", encoding="utf-8")
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PYTHON": sys.executable,
+                    "DEV_BACKEND_PORT": "8781",
+                    "SERVER_PID_FILE": str(tmp_path / "server.pid"),
+                    "SERVER_LOG": str(blocked_parent / "server.log"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                f"server-daemon failed to prepare log file parent: {blocked_parent}",
+                result.stderr,
+            )
+            self.assertFalse((tmp_path / "server.pid").exists())
+
     def test_uses_existing_live_server_pid_without_starting_new_process(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
