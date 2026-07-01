@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import contextlib
+import io
 import subprocess
 import unittest
 from unittest import mock
@@ -39,6 +41,16 @@ class RepoSearchTests(unittest.TestCase):
             run.return_value = subprocess.CompletedProcess(args=["rg"], returncode=2)
 
             self.assertEqual(repo_search.run("bad", mode="routine"), 2)
+
+    def test_missing_rg_reports_operator_error(self) -> None:
+        with mock.patch("tools.repo_search.subprocess.run") as run:
+            run.side_effect = FileNotFoundError
+            stderr = io.StringIO()
+
+            with contextlib.redirect_stderr(stderr):
+                self.assertEqual(repo_search.run("needle", mode="routine"), 127)
+
+        self.assertIn("repo-search: missing required command: rg", stderr.getvalue())
 
 
 if __name__ == "__main__":

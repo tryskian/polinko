@@ -89,7 +89,11 @@ def build_command(query: str, *, mode: str) -> list[str]:
 
 
 def run(query: str, *, mode: str) -> int:
-    result = subprocess.run(build_command(query, mode=mode), cwd=REPO_ROOT)
+    try:
+        result = subprocess.run(build_command(query, mode=mode), cwd=REPO_ROOT)
+    except FileNotFoundError:
+        print("repo-search: missing required command: rg", file=sys.stderr)
+        return 127
     if result.returncode == 1:
         print("repo-search: no matches")
         return 0
