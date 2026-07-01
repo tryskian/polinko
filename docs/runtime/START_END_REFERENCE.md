@@ -93,9 +93,9 @@ Runner lifecycle rule:
     reports repo context plus PID/log paths before liveness
   - matching local `uvicorn server:app` processes without PID files are
     adopted on start, surfaced by status, and stopped during closeout recovery
-  - matching servers that remain active after a stop signal preserve the PID
-    file when present and fail the action instead of hiding the still-live
-    server
+  - matching servers that remain active after startup readiness failure, stop
+    signal, or interpreter-mismatch restart preserve the PID file when present
+    and fail the action instead of hiding the still-live server
   - start reports success only after the configured local `/health` endpoint is
     reachable within the bounded readiness wait
   - HTTP readiness checks require `curl` before launch work begins, so a

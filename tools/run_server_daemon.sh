@@ -219,7 +219,11 @@ start_server() {
 	if wait_for_server_ready "$pid"; then
 		echo "server-daemon started (PID $pid, log: $server_log)."
 	else
-		rm -f "$server_pid_file"
+		if polinko_pid_is_running "$pid" && pid_matches_polinko_server "$pid"; then
+			echo "server-daemon did not become ready (PID $pid); leaving PID file in place."
+		else
+			rm -f "$server_pid_file"
+		fi
 		echo "Failed to start server-daemon. Check $server_log."
 		exit 1
 	fi

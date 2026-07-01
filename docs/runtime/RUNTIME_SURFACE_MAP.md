@@ -180,12 +180,13 @@ flowchart TD
   liveness.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
-  matching servers during closeout recovery. If stop or interpreter-mismatch
-  restart signals a matching server and the process remains active, managed
-  PID files stay in place and the action exits non-zero. Start reports success
-  only after the configured local `/health` endpoint is reachable within the
-  bounded readiness wait, and it fails early with a missing-command diagnostic
-  when `curl` is unavailable for that readiness probe.
+  matching servers during closeout recovery. If startup readiness fails while
+  the matching server remains active, or if stop or interpreter-mismatch
+  restart signals a matching server and the process remains active, managed PID
+  files stay in place and the action exits non-zero. Start reports success only
+  after the configured local `/health` endpoint is reachable within the bounded
+  readiness wait, and it fails early with a missing-command diagnostic when
+  `curl` is unavailable for that readiness probe.
   `eval-sidecar` PID and log defaults live under repo-scoped
   `EVAL_SIDECAR_STATE_DIR`, and status reports repo context plus
   PID/log/current-file paths before liveness.

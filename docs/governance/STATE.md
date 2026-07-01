@@ -152,9 +152,9 @@ Last updated: 2026-06-30
   - `server-daemon` trusts managed PID files only when the live PID matches
     the configured Polinko `uvicorn` app; stale PID files that point to
     unrelated live processes are cleaned without stopping the unrelated process
-  - `server-daemon` preserves managed PID files and fails stop/restart when a
-    matching server remains active after a stop signal; closeout reports the
-    still-live local API server
+  - `server-daemon` preserves managed PID files when a matching server remains
+    live after startup readiness failure, stop signal, or interpreter-mismatch
+    restart; failed actions report the still-live local API server
   - `server-daemon` start waits for the configured local `/health` endpoint
     before reporting success, rather than relying on a fixed post-launch sleep
   - `server-daemon` fails early with a direct missing-command diagnostic if
