@@ -5789,3 +5789,20 @@ or branch history instead.
   surface system-launch failures to Make and CI-style checks.
 - Why: A helper that hides launch failure can make a browser-opening operator
   target look successful while nothing opened.
+
+## D-340: Validate OCR growth slice controls
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `ocr`, `shell_scripts`, `numeric_guards`, `operator_hygiene`
+- Human-led: The human lead asked to include the README refactor-map pointer in
+  the current script-maintenance kernel.
+- Engineer implementation: Add a shared non-negative-integer validator to
+  `tools/process_lifecycle_common.sh`, use it in the OCR growth case and
+  growth stability workflow wrappers before runner handoff or shell arithmetic,
+  add wrapper regression coverage, and surface the refactor method/journey links
+  in the root README status note.
+- Decision: OCR growth slice controls are validated as non-negative integers at
+  the workflow-wrapper boundary.
+- Why: Malformed slice controls should fail with a direct project diagnostic
+  instead of shell arithmetic noise or downstream runner drift.

@@ -4,6 +4,8 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
+# shellcheck source=tools/process_lifecycle_common.sh
+. "$script_dir/process_lifecycle_common.sh"
 
 polinko_cd_repo_root
 
@@ -31,6 +33,15 @@ eval_case_guard_or_exit \
 	"Transcript OCR growth cases not found" \
 	"Run: make ocr-cases-from-export CGPT_EXPORT_ROOT=/path/to/export" \
 	"No transcript OCR growth cases available yet; skipping stability run."
+
+polinko_require_non_negative_integer \
+	"OCR_GROWTH_EVAL_OFFSET" \
+	"$growth_eval_offset" \
+	"OCR growth stability workflow"
+polinko_require_non_negative_integer \
+	"OCR_GROWTH_EVAL_MAX_CASES" \
+	"$growth_eval_max_cases" \
+	"OCR growth stability workflow"
 
 output_json=$growth_stability_output
 if [ "$growth_eval_offset" -gt 0 ] || [ "$growth_eval_max_cases" -gt 0 ]; then
