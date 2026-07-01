@@ -5838,3 +5838,20 @@ or branch history instead.
   as the other direct OCR eval runners.
 - Why: `tools.eval_ocr` targets the local Polinko API, so direct handwriting
   runs should establish the API runtime before handing off to Python.
+
+## D-343: Align eval report server preflight
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `eval_reports`, `server_daemon`, `operator_hygiene`, `tests`
+- Human-led: The human lead asked for script maintenance to remove manual
+  runtime assumptions from operator-facing commands.
+- Engineer implementation: Update `tools/run_eval_report.sh` and
+  `tools/run_eval_reports_parallel.sh` to start the eval server daemon before
+  Python report execution, pass `EVAL_SERVER_DAEMON_SCRIPT` through both Make
+  report runner environments, and add focused regression coverage.
+- Decision: Eval report wrapper commands establish the local API runtime before
+  launching API-backed report modules.
+- Why: Report commands call eval modules that use the local Polinko API, so the
+  wrapper should provide the runtime preflight instead of relying on a separate
+  manual server step.

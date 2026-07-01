@@ -16,6 +16,7 @@ fi
 
 suite=$1
 python_bin=$(polinko_default_python_bin)
+server_daemon_script=${EVAL_SERVER_DAEMON_SCRIPT:-./tools/ensure_eval_server_daemon.sh}
 report_dir=${EVAL_REPORTS_DIR:-eval_reports}
 run_id=${EVAL_REPORT_RUN_ID:-$(date +%Y%m%d-%H%M%S)}
 
@@ -29,6 +30,7 @@ retrieval|file-search|hallucination|style|response-behaviour|ocr-safety|ocr|ocr-
 esac
 
 mkdir -p "$report_dir"
+bash "$server_daemon_script"
 
 case "$suite" in
 retrieval)
