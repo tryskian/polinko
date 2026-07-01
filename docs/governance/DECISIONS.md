@@ -5993,3 +5993,18 @@ or branch history instead.
   `act` CLI.
 - Why: Developer helper targets should fail with one precise prerequisite
   message instead of relying on shell-level command-not-found output.
+
+## D-353: Track repo-search helper activity
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `repo_search`, `activity`, `tooling`, `operator_hygiene`
+- Human-led: The human lead asked for helper surfaces to preserve repo activity
+  signals so maintained automation reflects active work.
+- Engineer implementation: Add repo activity tracking to `make repo-search`
+  and `make repo-search-full` after their query guards, and cover both targets
+  in Makefile contract tests.
+- Decision: Repo-search helper targets now register repo activity when they
+  run.
+- Why: Active developer helper targets should update the same managed activity
+  signal as other maintained repo commands.

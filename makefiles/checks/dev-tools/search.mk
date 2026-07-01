@@ -6,7 +6,8 @@ repo-search:
 	if [ -z "$(Q)" ]; then \
 		echo 'Usage: make repo-search Q="pattern"'; \
 		exit 2; \
-	fi; \
+	fi
+	@$(call repo_activity,make repo-search,repo-search)
 	$(PYTHON) -m tools.repo_search --query "$(Q)"
 
 repo-search-full:
@@ -14,5 +15,6 @@ repo-search-full:
 	if [ -z "$(Q)" ]; then \
 		echo 'Usage: make repo-search-full Q="pattern"'; \
 		exit 2; \
-	fi; \
+	fi
+	@$(call repo_activity,make repo-search-full,repo-search-full)
 	$(PYTHON) -m tools.repo_search --mode full --query "$(Q)"
