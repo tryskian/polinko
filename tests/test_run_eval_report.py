@@ -286,6 +286,46 @@ class RunEvalReportTests(unittest.TestCase):
             self.assertFalse(server_log.exists())
             self.assertFalse(args_file.exists())
 
+    def test_reports_server_daemon_failure_before_eval_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            args_file = tmp_path / "python-args.txt"
+            report_dir = tmp_path / "eval_reports"
+            server_script = tmp_path / "server.sh"
+            python_script = tmp_path / "python.sh"
+            _write_executable(
+                server_script,
+                '#!/usr/bin/env sh\nset -eu\nprintf "server fail\\n" >&2\nexit 7\n',
+            )
+            _write_executable(
+                python_script,
+                ('#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$PYTHON_ARGS"\n'),
+            )
+
+            result = subprocess.run(
+                ["bash", str(REPORT_SCRIPT.relative_to(REPO_ROOT)), "file-search"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PYTHON": str(python_script),
+                    "EVAL_SERVER_DAEMON_SCRIPT": str(server_script),
+                    "PYTHON_ARGS": str(args_file),
+                    "EVAL_REPORTS_DIR": str(report_dir),
+                    "EVAL_REPORT_RUN_ID": "run-server-fail",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertTrue(report_dir.is_dir())
+            self.assertIn("server fail", result.stderr)
+            self.assertIn(
+                f"eval-report failed to start eval server daemon: {server_script}",
+                result.stderr,
+            )
+            self.assertFalse(args_file.exists())
+
     def test_report_script_rejects_unknown_or_missing_suite(self) -> None:
         for args in ([], ["unknown"]):
             with self.subTest(args=args):

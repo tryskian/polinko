@@ -39,7 +39,10 @@ prepare_report_dir() {
 if ! prepare_report_dir; then
 	exit 1
 fi
-bash "$server_daemon_script"
+if ! bash "$server_daemon_script"; then
+	echo "eval-report failed to start eval server daemon: $server_daemon_script" >&2
+	exit 1
+fi
 
 case "$suite" in
 retrieval)
