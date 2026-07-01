@@ -2075,6 +2075,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("docs/POL1_COMMS.md", text)
         self.assertIn("install local excludes for machine-local docs", text)
         self.assertIn("clear tracked docs skip-worktree state", text)
+        self.assertIn("git ls-files -v docs | awk", text)
+        self.assertIn("skip_worktree_docs=$(list_skip_worktree_docs)", text)
+        self.assertNotIn("rg '^S'", text)
+        self.assertNotIn("|| true", text)
         self.assertNotIn("xargs -r", text)
         self.assertIn("git update-index --no-skip-worktree --", text)
 
