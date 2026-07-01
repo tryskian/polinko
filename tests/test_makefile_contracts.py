@@ -78,6 +78,12 @@ MAKE_CONFIG_EVALS_OCR_RUNS_DEFAULTS = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "ocr-runs" / "defaults.mk"
 )
 MAKE_CONFIG_EVALS_REPORTS = REPO_ROOT / "makefiles" / "config" / "evals" / "reports.mk"
+MAKE_CONFIG_EVALS_REPORTS_RUNNER = (
+    REPO_ROOT / "makefiles" / "config" / "evals" / "reports" / "runner.mk"
+)
+MAKE_CONFIG_EVALS_REPORTS_PARALLEL_RUNNER = (
+    REPO_ROOT / "makefiles" / "config" / "evals" / "reports" / "parallel-runner.mk"
+)
 MAKE_CONFIG_EVALS_REPORTS_OCR_BUILDER = (
     REPO_ROOT / "makefiles" / "config" / "evals" / "reports" / "ocr-builder.mk"
 )
@@ -1370,6 +1376,12 @@ class MakefileContractTests(unittest.TestCase):
         runtime_caffeinate_entry_text = MAKE_CONFIG_RUNTIME_CAFFEINATE.read_text(
             encoding="utf-8"
         )
+        reports_runner_entry_text = MAKE_CONFIG_EVALS_REPORTS_RUNNER.read_text(
+            encoding="utf-8"
+        )
+        reports_parallel_runner_entry_text = (
+            MAKE_CONFIG_EVALS_REPORTS_PARALLEL_RUNNER.read_text(encoding="utf-8")
+        )
         config_text = _makefile_contract_text()
 
         self.assertLess(
@@ -1549,10 +1561,18 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("EVAL_REPORT_RUNNER_ENV =", config_text)
         self.assertIn(
+            'EVAL_SERVER_DAEMON_SCRIPT="$(EVAL_SERVER_DAEMON_SCRIPT)"',
+            reports_runner_entry_text,
+        )
+        self.assertIn(
             "EVAL_REPORTS_PARALLEL_RUNNER_SCRIPT ?= ./tools/run_eval_reports_parallel.sh",
             config_text,
         )
         self.assertIn("EVAL_REPORTS_PARALLEL_RUNNER_ENV =", config_text)
+        self.assertIn(
+            'EVAL_SERVER_DAEMON_SCRIPT="$(EVAL_SERVER_DAEMON_SCRIPT)"',
+            reports_parallel_runner_entry_text,
+        )
         self.assertIn(
             "EVAL_SIDECAR_START_SCRIPT ?= ./tools/run_eval_sidecar_start.sh",
             config_text,

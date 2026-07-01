@@ -15,11 +15,13 @@ if [ "$#" -ne 0 ]; then
 fi
 
 python_bin=$(polinko_default_python_bin)
+server_daemon_script=${EVAL_SERVER_DAEMON_SCRIPT:-./tools/ensure_eval_server_daemon.sh}
 base_url=${BASE_URL:-http://127.0.0.1:8000}
 run_id=${EVAL_REPORTS_PARALLEL_RUN_ID:-$(date +%Y%m%d-%H%M%S)}
 hallucination_mode=${HALLUCINATION_EVAL_MODE:-judge}
 hallucination_min_acceptable_score=${HALLUCINATION_MIN_ACCEPTABLE_SCORE:-5}
 
+bash "$server_daemon_script"
 exec "$python_bin" -m tools.eval_parallel_orchestrator \
 	--base-url "$base_url" \
 	--run-id "$run_id" \

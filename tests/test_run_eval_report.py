@@ -20,18 +20,31 @@ class RunEvalReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             args_file = tmp_path / "python-args.txt"
+            server_log = tmp_path / "server.log"
             report_dir = tmp_path / "eval_reports"
+            server_script = tmp_path / "server.sh"
             python_script = tmp_path / "python.sh"
             _write_executable(
+                server_script,
+                '#!/usr/bin/env sh\nset -eu\nprintf "server\\n" > "$SERVER_LOG"\n',
+            )
+            _write_executable(
                 python_script,
-                '#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$PYTHON_ARGS"\n',
+                (
+                    "#!/usr/bin/env sh\n"
+                    "set -eu\n"
+                    '[ -f "$SERVER_LOG" ] || exit 7\n'
+                    'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
+                ),
             )
 
             env = os.environ.copy()
             env.update(
                 {
                     "PYTHON": str(python_script),
+                    "EVAL_SERVER_DAEMON_SCRIPT": str(server_script),
                     "PYTHON_ARGS": str(args_file),
+                    "SERVER_LOG": str(server_log),
                     "EVAL_REPORTS_DIR": str(report_dir),
                     "EVAL_REPORT_RUN_ID": "run-123",
                     "RETRIEVAL_REQUEST_RETRIES": "8",
@@ -156,6 +169,8 @@ class RunEvalReportTests(unittest.TestCase):
                 with self.subTest(suite=suite):
                     if args_file.exists():
                         args_file.unlink()
+                    if server_log.exists():
+                        server_log.unlink()
 
                     result = subprocess.run(
                         ["bash", str(REPORT_SCRIPT.relative_to(REPO_ROOT)), suite],
@@ -166,6 +181,7 @@ class RunEvalReportTests(unittest.TestCase):
                     )
 
                     self.assertEqual(result.returncode, 0, result.stderr)
+                    self.assertEqual(server_log.read_text(encoding="utf-8"), "server\n")
                     self.assertTrue(report_dir.is_dir())
                     self.assertEqual(
                         args_file.read_text(encoding="utf-8").splitlines(),
@@ -178,17 +194,30 @@ class RunEvalReportTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
             args_file = tmp_path / "python-args.txt"
+            server_log = tmp_path / "server.log"
+            server_script = tmp_path / "server.sh"
             python_script = tmp_path / "python.sh"
             _write_executable(
+                server_script,
+                '#!/usr/bin/env sh\nset -eu\nprintf "server\\n" > "$SERVER_LOG"\n',
+            )
+            _write_executable(
                 python_script,
-                '#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$PYTHON_ARGS"\n',
+                (
+                    "#!/usr/bin/env sh\n"
+                    "set -eu\n"
+                    '[ -f "$SERVER_LOG" ] || exit 7\n'
+                    'printf "%s\\n" "$@" > "$PYTHON_ARGS"\n'
+                ),
             )
 
             env = os.environ.copy()
             env.update(
                 {
                     "PYTHON": str(python_script),
+                    "EVAL_SERVER_DAEMON_SCRIPT": str(server_script),
                     "PYTHON_ARGS": str(args_file),
+                    "SERVER_LOG": str(server_log),
                     "EVAL_REPORT_RUN_ID": "run-456",
                 }
             )
@@ -202,6 +231,7 @@ class RunEvalReportTests(unittest.TestCase):
             )
 
             self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(server_log.read_text(encoding="utf-8"), "server\n")
             self.assertEqual(
                 args_file.read_text(encoding="utf-8").splitlines(),
                 [
