@@ -136,9 +136,9 @@ Runner lifecycle rule:
 - HTTP runner probe URLs must include an explicit port matching the launched
   server port before readiness, adoption, status, or launch work depends on the
   URL; this covers `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and `GATE_BASE_URL`
-- the shared detached launcher rejects empty, missing, and non-launchable
-  commands with direct diagnostics before PID ownership is recorded, and stops
-  the started child process group on PID-file write failure
+- the shared detached launcher rejects empty, missing, non-launchable commands,
+  and output-path failures with direct diagnostics before PID ownership is
+  recorded, and stops the started child process group on PID-file write failure
 - runner-specific `*_LAUNCHER_PYTHON` overrides are validated before manager
   exec or detached launch, so bad launcher interpreters fail before PID state is
   written

@@ -74,14 +74,38 @@ def _stop_unmanaged_child(process: subprocess.Popen[bytes]) -> None:
         process.wait(timeout=2)
 
 
+def _prepare_parent(path: Path, label: str) -> bool:
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        print(
+            f"launch-detached: failed to prepare {label} parent {path.parent}: {exc}",
+            file=sys.stderr,
+        )
+        return False
+    return True
+
+
 def main(argv: list[str] | None = None) -> int:
     pid_file, log_file, command = _parse_args(
         list(sys.argv[1:] if argv is None else argv)
     )
 
-    pid_file.parent.mkdir(parents=True, exist_ok=True)
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-    with log_file.open("ab", buffering=0) as log:
+    if not _prepare_parent(pid_file, "PID file"):
+        return 1
+    if not _prepare_parent(log_file, "log file"):
+        return 1
+
+    try:
+        log = log_file.open("ab", buffering=0)
+    except OSError as exc:
+        print(
+            f"launch-detached: failed to open log file {log_file}: {exc}",
+            file=sys.stderr,
+        )
+        return 1
+
+    with log:
         try:
             process = subprocess.Popen(
                 command,
@@ -106,9 +130,13 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         pid_file.write_text(str(process.pid), encoding="utf-8")
-    except OSError:
+    except OSError as exc:
         _stop_unmanaged_child(process)
-        raise
+        print(
+            f"launch-detached: failed to write PID file {pid_file}: {exc}",
+            file=sys.stderr,
+        )
+        return 1
 
     return 0
 
