@@ -135,6 +135,45 @@ class RunEvalReportsParallelTests(unittest.TestCase):
                 ],
             )
 
+    def test_reports_server_daemon_failure(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            args_file = tmp_path / "python-args.txt"
+            server_script = tmp_path / "server.sh"
+            python_script = tmp_path / "python.sh"
+            _write_executable(
+                server_script,
+                "#!/usr/bin/env sh\nset -eu\nexit 24\n",
+            )
+            _write_executable(
+                python_script,
+                ('#!/usr/bin/env sh\nset -eu\nprintf "%s\\n" "$@" > "$PYTHON_ARGS"\n'),
+            )
+
+            env = os.environ.copy()
+            env.update(
+                {
+                    "PYTHON": str(python_script),
+                    "EVAL_SERVER_DAEMON_SCRIPT": str(server_script),
+                    "PYTHON_ARGS": str(args_file),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT))],
+                cwd=REPO_ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                f"eval-reports-parallel failed to start eval server daemon: {server_script}",
+                result.stderr,
+            )
+            self.assertFalse(args_file.exists())
+
     def test_rejects_arguments(self) -> None:
         result = subprocess.run(
             ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "extra"],
