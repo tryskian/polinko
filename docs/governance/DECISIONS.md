@@ -5711,3 +5711,18 @@ or branch history instead.
 - Why: `make start` runs `caffeinate` and then `caffeinate-status`. Duplicating
   the full status block in both steps makes startup noisy and obscures the
   actual runtime state.
+
+## D-335: Centralize startup step reporting
+
+- Date: `2026-06-30`
+- Category: `runtime_engineering`
+- Tags: `startup`, `operator_output`, `step_reporting`, `contracts`
+- Human-led: The human lead asked for hidden startup/runtime output blubbles to
+  be resolved as part of script maintenance.
+- Engineer implementation: Update `tools/start_of_day_routine.sh` so startup
+  step labels use one numbering helper, and add regression coverage that checks
+  the step labels and order stay centralized.
+- Decision: Startup step output is generated through one routine helper instead
+  of hardcoded per-step counters.
+- Why: `make start` is the daily entrypoint. Centralized step reporting keeps
+  the displayed startup count aligned when the routine changes.

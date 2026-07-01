@@ -94,8 +94,8 @@ flowchart TD
 
 - Startup should stay narrow and chat-led: it reports GitHub health attention,
   verifies environment health, starts the repo-managed wake lock, runs smoke
-  checks with isolated defaults, and stops for alignment. VS Code keeps
-  `make start` available as a manual task.
+  checks with isolated defaults, centralizes numbered step output, and stops
+  for alignment. VS Code keeps `make start` available as a manual task.
 - Active validation and session closeout are separate surfaces:
   `make end-preflight` is branch-local validation, while `make end` is the
   session closeout routine from clean synced `main`. `make end-stop` is the

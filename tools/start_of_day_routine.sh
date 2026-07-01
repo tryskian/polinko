@@ -8,27 +8,35 @@ source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
 ROOT_DIR="$POLINKO_REPO_ROOT"
 
+START_TOTAL_STEPS=6
+start_step_number=0
+
+start_step() {
+  start_step_number=$((start_step_number + 1))
+  printf '[start] %s/%s %s\n' "$start_step_number" "$START_TOTAL_STEPS" "$1"
+}
+
 echo "[start] starting morning routine in: $ROOT_DIR"
-echo "[start] 1/6 workspace context"
+start_step "workspace context"
 printf 'repo root: %s\n' "$ROOT_DIR"
 printf 'branch: %s\n' "$(git branch --show-current)"
 git status --short --branch
 
-echo "[start] 2/6 github-health"
+start_step "github-health"
 if ! make --no-print-directory github-health; then
   echo "[start] github-health reported attention; continuing startup."
 fi
 
-echo "[start] 3/6 doctor-env"
+start_step "doctor-env"
 make --no-print-directory doctor-env
 
-echo "[start] 4/6 caffeinate"
+start_step "caffeinate"
 make --no-print-directory caffeinate
 
-echo "[start] 5/6 caffeinate-status"
+start_step "caffeinate-status"
 make --no-print-directory caffeinate-status
 
-echo "[start] 6/6 api-smoke"
+start_step "api-smoke"
 make --no-print-directory api-smoke
 
 echo "[start] REHYDRATE PROMPT"
