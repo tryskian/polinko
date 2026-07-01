@@ -13,6 +13,8 @@ MAKE_BUILD_DEPENDENCIES = REPO_ROOT / "makefiles" / "build" / "dependencies.mk"
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_CONFIG_OPS = REPO_ROOT / "makefiles" / "config" / "ops.mk"
 MAKE_CONFIG_OPS_GITHUB = REPO_ROOT / "makefiles" / "config" / "ops" / "github.mk"
+MAKE_CONFIG_OPS_K6 = REPO_ROOT / "makefiles" / "config" / "ops" / "k6.mk"
+MAKE_CONFIG_OPS_TRIVY = REPO_ROOT / "makefiles" / "config" / "ops" / "trivy.mk"
 MAKE_CONFIG_RUNTIME = REPO_ROOT / "makefiles" / "config" / "runtime.mk"
 MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT = (
     REPO_ROOT / "makefiles" / "config" / "runtime" / "openai-account.mk"
@@ -1231,6 +1233,33 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("trivy-image:", contract_text)
         self.assertIn("docker-build:", contract_text)
         self.assertIn("docker-run:", contract_text)
+        self.assertIn(
+            "@$(call repo_activity,make k6-chat-smoke,k6-chat-smoke)",
+            contract_text,
+        )
+        self.assertIn("@$(call repo_activity,make trivy-fs,trivy-fs)", contract_text)
+        self.assertIn(
+            "@$(call repo_activity,make trivy-image,trivy-image)",
+            contract_text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make docker-build,docker-build)",
+            contract_text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make docker-run,docker-run)", contract_text
+        )
+        self.assertIn("k6 helper: missing required command: $(K6)", contract_text)
+        self.assertIn("trivy helper: missing required command: $(TRIVY)", contract_text)
+        self.assertIn(
+            "trivy helper: missing required command: $(DOCKER)", contract_text
+        )
+        self.assertIn(
+            "docker helper: missing required command: $(DOCKER)", contract_text
+        )
+        self.assertIn("$(K6) run tests/perf/chat_smoke.js", contract_text)
+        self.assertIn('$(TRIVY) fs --severity "$(TRIVY_SEVERITY)"', contract_text)
+        self.assertIn('$(TRIVY) image --severity "$(TRIVY_SEVERITY)"', contract_text)
 
     def test_surface_targets_are_extracted_through_role_includes(self) -> None:
         config_surfaces_entry_text = MAKE_CONFIG_SURFACES.read_text(encoding="utf-8")
@@ -1380,6 +1409,8 @@ class MakefileContractTests(unittest.TestCase):
         config_entry_text = MAKE_CONFIG.read_text(encoding="utf-8")
         config_ops_entry_text = MAKE_CONFIG_OPS.read_text(encoding="utf-8")
         config_ops_github_text = MAKE_CONFIG_OPS_GITHUB.read_text(encoding="utf-8")
+        config_ops_k6_text = MAKE_CONFIG_OPS_K6.read_text(encoding="utf-8")
+        config_ops_trivy_text = MAKE_CONFIG_OPS_TRIVY.read_text(encoding="utf-8")
         runtime_config_entry_text = MAKE_CONFIG_RUNTIME.read_text(encoding="utf-8")
         runtime_openai_account_entry_text = (
             MAKE_CONFIG_RUNTIME_OPENAI_ACCOUNT.read_text(encoding="utf-8")
@@ -1421,6 +1452,8 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("include makefiles/config/ops/k6.mk", config_ops_entry_text)
         self.assertIn("include makefiles/config/ops/trivy.mk", config_ops_entry_text)
         self.assertIn("GH ?= gh", config_ops_github_text)
+        self.assertIn("K6 ?= k6", config_ops_k6_text)
+        self.assertIn("TRIVY ?= trivy", config_ops_trivy_text)
         self.assertIn(
             "include makefiles/config/runtime/core.mk", runtime_config_entry_text
         )
@@ -2736,6 +2769,11 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("@$(call repo_activity,make act-list,act-list)", text)
         self.assertIn("@$(call repo_activity,make act-ci,act-ci)", text)
+        self.assertIn("@$(call repo_activity,make k6-chat-smoke,k6-chat-smoke)", text)
+        self.assertIn("@$(call repo_activity,make trivy-fs,trivy-fs)", text)
+        self.assertIn("@$(call repo_activity,make trivy-image,trivy-image)", text)
+        self.assertIn("@$(call repo_activity,make docker-build,docker-build)", text)
+        self.assertIn("@$(call repo_activity,make docker-run,docker-run)", text)
         self.assertIn('CAFFEINATE_META_FILE="$(CAFFEINATE_META_FILE)"', text)
         self.assertIn(
             'CAFFEINATE_ACTIVITY_FILE="$(CAFFEINATE_ACTIVITY_FILE)"',

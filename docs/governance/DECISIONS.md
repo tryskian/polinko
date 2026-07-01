@@ -6008,3 +6008,19 @@ or branch history instead.
   run.
 - Why: Active developer helper targets should update the same managed activity
   signal as other maintained repo commands.
+
+## D-354: Make ops helpers explicit
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `ops`, `docker`, `trivy`, `k6`, `diagnostics`
+- Human-led: The human lead asked for hidden helper surfaces to be maintained
+  so local tooling failures stay explicit.
+- Engineer implementation: Add configurable `K6` and `TRIVY` command variables,
+  register repo activity for Docker, Trivy, and k6 helper targets, report
+  missing commands before invoking them, and cover the contracts in Makefile
+  tests.
+- Decision: Local ops helper targets now check and name their required command
+  dependencies.
+- Why: Optional operator helpers should fail with direct prerequisite messages
+  instead of raw shell command-not-found output.
