@@ -57,11 +57,15 @@ def _init_repo(root: Path) -> Path:
 
 
 def _run_script(
-    cwd: Path, script_path: str = "tools/check_end_git_clean.sh"
+    cwd: Path,
+    script_path: str = "tools/check_end_git_clean.sh",
+    *,
+    branch_name: str = "main",
+    remote_name: str = "origin",
 ) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
-    env["END_GIT_BRANCH"] = "main"
-    env["END_GIT_REMOTE"] = "origin"
+    env["END_GIT_BRANCH"] = branch_name
+    env["END_GIT_REMOTE"] = remote_name
 
     return subprocess.run(
         ["bash", script_path],
@@ -135,6 +139,24 @@ class CheckEndGitCleanTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 1)
         self.assertIn("remote origin is not configured", result.stderr)
+
+    def test_fails_on_malformed_branch_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            work = _init_repo(Path(tmp))
+
+            result = _run_script(work, branch_name="main branch")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("END_GIT_BRANCH must be a non-empty branch name", result.stderr)
+
+    def test_fails_on_malformed_remote_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            work = _init_repo(Path(tmp))
+
+            result = _run_script(work, remote_name="origin remote")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("END_GIT_REMOTE must be a non-empty remote name", result.stderr)
 
     def test_fails_when_local_main_lags_remote(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

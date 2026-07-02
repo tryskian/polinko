@@ -560,7 +560,9 @@ Dependency maintenance:
 - `make end-git-check`
   - standalone clean-main closeout check; `make end` runs it as the final
     closure gate
+  - validates explicit closeout branch and remote config before Git work
 - `make git-prune-stale-refs`
   - runs during `make end` immediately before the final clean-main Git check
+  - validates explicit closeout remote config before Git work
   - prunes stale remote-tracking refs for the configured closeout remote after
     merged or deleted PR branches without deleting local branches

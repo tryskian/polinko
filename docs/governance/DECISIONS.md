@@ -6256,3 +6256,19 @@ or branch history instead.
 - Why: Status reporting is a closeout-adjacent runtime surface. Keeping the
   sequencing in a helper makes failure propagation and runner-family ownership
   easier to test without expanding Makefile shell glue.
+
+## D-370: Validate closeout git helper config early
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `git`, `closeout`, `stale_refs`, `operator_hygiene`
+- Human-led: The human lead asked to continue runtime-helper maintenance from
+  clean `main`.
+- Engineer implementation: Add explicit branch/remote config validation to
+  `tools/check_end_git_clean.sh` and remote config validation to
+  `tools/git_prune_stale_refs.sh`; add focused tests for malformed values.
+- Decision: Closeout git helpers validate explicit config before running Git
+  commands.
+- Why: Final closeout and stale-ref cleanup should fail with direct operator
+  diagnostics when helper config is malformed, instead of passing unclear
+  values into Git and surfacing weaker downstream errors.

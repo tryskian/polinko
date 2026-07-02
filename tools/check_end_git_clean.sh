@@ -17,6 +17,18 @@ fail() {
 	exit 1
 }
 
+require_git_value() {
+	name=$1
+	value=$2
+	kind=$3
+	if [[ -z "$value" || "$value" =~ [[:space:]] ]]; then
+		fail "$name must be a non-empty $kind without whitespace"
+	fi
+}
+
+require_git_value "END_GIT_BRANCH" "$BRANCH" "branch name"
+require_git_value "END_GIT_REMOTE" "$REMOTE" "remote name"
+
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 	fail "not inside a git worktree"
 fi

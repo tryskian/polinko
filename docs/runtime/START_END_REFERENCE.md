@@ -261,11 +261,13 @@ Explicit companion checks:
   - runs mypy against active `src/` and `tools/` Python surfaces
 - `make end-git-check`
   - also available as a standalone git-only closeout check
+  - validates explicit closeout branch and remote config before Git work
   - verifies current branch is `main`
   - verifies the working tree is clean
   - verifies local `main` is synced with `origin/main`
 - `make git-prune-stale-refs`
   - runs during `make end` immediately before the final clean-main Git check
+  - validates explicit closeout remote config before Git work
   - prunes stale remote-tracking refs for the configured closeout remote after
     merged or deleted PR branches
   - leaves local branches in place

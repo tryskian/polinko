@@ -16,6 +16,14 @@ fail() {
 	exit 1
 }
 
+require_git_remote() {
+	if [[ -z "$REMOTE" || "$REMOTE" =~ [[:space:]] ]]; then
+		fail "END_GIT_REMOTE must be a non-empty remote name without whitespace"
+	fi
+}
+
+require_git_remote
+
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
 	fail "not inside a git worktree"
 fi
