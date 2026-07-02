@@ -133,6 +133,26 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_missing_local_url_contract_token_is_reported(self) -> None:
+        make_text = "\n".join(
+            (
+                _make_contract_text(),
+                *check_runtime_risk_scan.REQUIRED_MAKE_RUNTIME_TOKENS,
+                *(
+                    token
+                    for token in check_runtime_risk_scan.REQUIRED_LOCAL_URL_TOKENS
+                    if token != "LOCAL_BROWSER_LAUNCH ?= none"
+                ),
+            )
+        )
+
+        failures = check_runtime_risk_scan.check_make_contracts(make_text)
+
+        self.assertIn(
+            "Make surface: missing local URL token 'LOCAL_BROWSER_LAUNCH ?= none'",
+            failures,
+        )
+
     def test_duplicate_eod_target_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             _make_contract_text(extra_lines=("eod:",))

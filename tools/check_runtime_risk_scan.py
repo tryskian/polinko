@@ -72,6 +72,10 @@ REQUIRED_MAKE_TARGETS = (
     "eval-sidecar-start",
     "eval-sidecar-status",
     "eval-sidecar-stop",
+    "docs",
+    "docs-open",
+    "viz",
+    "viz-open",
     "privacy-local-on",
     "privacy-local-off",
 )
@@ -119,6 +123,13 @@ REQUIRED_BUILD_HYGIENE_DEPS = (
 
 REQUIRED_MAKE_RUNTIME_TOKENS = (
     'VENV="$(VENV)" . ./tools/python_runtime.sh; polinko_default_python_bin',
+)
+
+REQUIRED_LOCAL_URL_TOKENS = (
+    "LOCAL_BROWSER_LAUNCH ?= none",
+    "LOCAL_URL_LAUNCHER_SCRIPT ?= ./tools/open_local_url.sh",
+    'case "$(LOCAL_BROWSER_LAUNCH)" in none|system)',
+    'bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$URL"',
 )
 
 
@@ -273,6 +284,10 @@ def check_make_contracts(text: str) -> list[str]:
     for token in REQUIRED_MAKE_RUNTIME_TOKENS:
         if token not in text:
             failures.append(f"Make surface: missing runtime token {token!r}")
+
+    for token in REQUIRED_LOCAL_URL_TOKENS:
+        if token not in text:
+            failures.append(f"Make surface: missing local URL token {token!r}")
 
     deps = ci_docs_deps(text)
     if not deps:
