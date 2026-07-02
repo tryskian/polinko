@@ -6163,3 +6163,19 @@ or branch history instead.
   current target name.
 - Why: `venv` names the actual runtime surface, while `env` is too broad for a
   maintained operator command.
+
+## D-364: Keep local URL helpers canonical
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `local_urls`, `make`, `operator_commands`, `aliases`
+- Human-led: The human lead clarified that command surfaces should keep one
+  current name per operation.
+- Engineer implementation: Make `make docs` and `make viz` own URL printing
+  directly, keep `make docs-open` and `make viz-open` as the browser launch
+  helpers, remove descriptive alias targets, update current state docs, and
+  guard retired local URL targets in `make operator-command-check`.
+- Decision: Local URL helpers expose one print target and one browser-launch
+  target per local URL surface.
+- Why: Local browser helpers should be easy to scan and should not maintain
+  duplicate command names for the same operator action.

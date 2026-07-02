@@ -53,8 +53,11 @@ NON_CANONICAL_OPERATOR_TARGETS = (
     "eod",
     "eod-stop",
     "open-billing",
+    "open-api-docs",
+    "open-api-docs-browser",
     "open-cost-console",
     "open-limits",
+    "open-viz",
     "open-usage",
     "refresh-deps",
 )

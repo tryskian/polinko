@@ -734,7 +734,7 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("chat:", contract_text)
         self.assertIn("start:", contract_text)
         self.assertIn("server-daemon:", contract_text)
-        self.assertIn("open-api-docs: server-daemon", contract_text)
+        self.assertIn("docs: server-daemon", contract_text)
         self.assertIn("openai-account-summary:", contract_text)
         self.assertIn("caffeinate:", contract_text)
         self.assertIn("privacy-local-on:", contract_text)
@@ -2375,17 +2375,17 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("$(call repo_activity,make test-one,test-one)", text)
         self.assertIn("$(call repo_activity,make test-targeted,test-targeted)", text)
-        self.assertRegex(text, r"(?m)^docs:\s*open-api-docs$")
-        self.assertRegex(text, r"(?m)^open-api-docs:\s*server-daemon$")
-        self.assertRegex(
-            text, r"(?m)^docs-open open-api-docs-browser:\s*server-daemon$"
-        )
+        self.assertRegex(text, r"(?m)^docs:\s*server-daemon$")
+        self.assertRegex(text, r"(?m)^docs-open:\s*server-daemon$")
+        self.assertNotRegex(text, r"(?m)^open-api-docs:")
+        self.assertNotRegex(text, r"(?m)^open-api-docs-browser:")
         self.assertNotRegex(text, r"(?m)^open-limits:")
         self.assertNotRegex(text, r"(?m)^open-usage:")
         self.assertNotRegex(text, r"(?m)^open-billing:")
         self.assertNotRegex(text, r"(?m)^open-cost-console:")
         self.assertRegex(text, r"(?m)^viz:\s*server-daemon$")
-        self.assertRegex(text, r"(?m)^viz-open open-viz:\s*server-daemon$")
+        self.assertRegex(text, r"(?m)^viz-open:\s*server-daemon$")
+        self.assertNotRegex(text, r"(?m)^open-viz:")
         for target in (
             "eval-clip-ab",
             "eval-file-search",
@@ -3179,12 +3179,10 @@ class MakefileContractTests(unittest.TestCase):
         self,
     ) -> None:
         for target in (
-            "open-api-docs",
-            "open-api-docs-browser",
+            "docs",
             "docs-open",
             "viz",
             "viz-open",
-            "open-viz",
             "openai-account-summary",
             "openai-costs",
             "openai-usage",

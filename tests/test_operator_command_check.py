@@ -137,6 +137,34 @@ class OperatorCommandCheckTests(unittest.TestCase):
             ],
         )
 
+    def test_local_url_alias_targets_are_reported(self) -> None:
+        failures = check_operator_commands.check_canonical_operator_targets(
+            "\n".join(
+                [
+                    ".PHONY: docs open-api-docs open-api-docs-browser viz open-viz",
+                    "docs:",
+                    "\t@true",
+                    "open-api-docs: docs",
+                    "open-api-docs-browser: docs-open",
+                    "viz:",
+                    "\t@true",
+                    "open-viz: viz-open",
+                ]
+            )
+        )
+
+        self.assertEqual(
+            failures,
+            [
+                "open-api-docs: non-canonical operator target is active",
+                "open-api-docs-browser: non-canonical operator target is active",
+                "open-viz: non-canonical operator target is active",
+                "open-api-docs: non-canonical operator rule is active on line 4",
+                "open-api-docs-browser: non-canonical operator rule is active on line 5",
+                "open-viz: non-canonical operator rule is active on line 8",
+            ],
+        )
+
     def test_parked_ocr_shortcut_cannot_enter_automation_entrypoint(self) -> None:
         failures = check_operator_commands.check_parked_ocr_shortcuts(
             "\n".join(

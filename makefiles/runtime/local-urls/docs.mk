@@ -1,7 +1,7 @@
 # API docs local URL print and launch targets.
-.PHONY: docs docs-open open-api-docs open-api-docs-browser
+.PHONY: docs docs-open
 
-open-api-docs: server-daemon
+docs: server-daemon
 	@set -eu; \
 	URL="$(DEV_API_DOCS_URL)"; \
 	case "$(LOCAL_BROWSER_LAUNCH)" in none|system) ;; \
@@ -14,9 +14,7 @@ ifeq ($(LOCAL_BROWSER_LAUNCH),system)
 	bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$URL"
 endif
 
-docs: open-api-docs
-
-docs-open open-api-docs-browser: server-daemon
+docs-open: server-daemon
 	@set -eu; \
 	URL="$(DEV_API_DOCS_URL)"; \
 	bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$URL"; \
