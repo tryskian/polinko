@@ -11,6 +11,7 @@ test-one:
 		echo 'Usage: make test-one TEST=tests.test_eval_file_search'; \
 		exit 2; \
 	fi; \
+	$(call repo_activity,make test-one,test-one); \
 	$(PYTHON) -m unittest $(TEST)
 
 test-targeted:
@@ -19,4 +20,5 @@ test-targeted:
 		echo 'Usage: make test-targeted TESTS="tests.test_eval_file_search tests.test_eval_retrieval"'; \
 		exit 2; \
 	fi; \
+	$(call repo_activity,make test-targeted,test-targeted); \
 	$(PYTHON) -m unittest $(TESTS)

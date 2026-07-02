@@ -6089,3 +6089,18 @@ or branch history instead.
 - Why: Manual eval workbench targets are active research-operation surfaces,
   so their execution should be visible in the same repo-managed activity
   metadata as other maintained helpers.
+
+## D-359: Track focused validation helper activity
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `validation`, `tests`, `activity`, `operator_hygiene`, `make`
+- Human-led: The human lead asked for helper scripts and validation surfaces
+  to stay maintained while the script refactor proceeds.
+- Engineer implementation: Add repo activity tracking to `make pycheck`,
+  `make test-one`, `make test-targeted`, and `make backend-gate-start`, with
+  focused Makefile contract coverage.
+- Decision: Focused local validation helpers now register repo activity after
+  their operator argument guards pass.
+- Why: Targeted validation commands are active development surfaces, so their
+  execution should be visible without changing their usage guidance.
