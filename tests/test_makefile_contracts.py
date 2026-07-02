@@ -417,6 +417,12 @@ class MakefileContractTests(unittest.TestCase):
             dev_tools_precommit_text,
         )
         self.assertIn('$(PYTHON) -m tools.github_health --gh "$(GH)"', contract_text)
+        self.assertIn('--run-limit "$(GITHUB_HEALTH_RUN_LIMIT)"', contract_text)
+        self.assertIn('--pr-limit "$(GITHUB_HEALTH_PR_LIMIT)"', contract_text)
+        self.assertIn(
+            '$(if $(strip $(GITHUB_HEALTH_REPO)),--repo "$(GITHUB_HEALTH_REPO)",)',
+            contract_text,
+        )
         self.assertIn(
             "include makefiles/checks/runtime-audits/shell.mk",
             runtime_audits_entry_text,
@@ -1525,6 +1531,9 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("include makefiles/config/ops/k6.mk", config_ops_entry_text)
         self.assertIn("include makefiles/config/ops/trivy.mk", config_ops_entry_text)
         self.assertIn("GH ?= gh", config_ops_github_text)
+        self.assertIn("GITHUB_HEALTH_REPO ?=", config_ops_github_text)
+        self.assertIn("GITHUB_HEALTH_RUN_LIMIT ?= 20", config_ops_github_text)
+        self.assertIn("GITHUB_HEALTH_PR_LIMIT ?= 20", config_ops_github_text)
         self.assertIn("K6 ?= k6", config_ops_k6_text)
         self.assertIn("TRIVY ?= trivy", config_ops_trivy_text)
         self.assertIn(

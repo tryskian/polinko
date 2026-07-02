@@ -233,8 +233,10 @@ flowchart TD
 - CI and dependency automation should mirror local gates closely enough that
   failed remote runs point to real fixes instead of setup drift. `make
   github-health` reports `gh` auth state, latest pending or failed workflow
-  surfaces, open PR check state, and the next useful `gh` command; startup
-  surfaces it as an attention pass before local runtime checks.
+  surfaces, open PR check state, and the next useful `gh` command. Make config
+  exposes `GITHUB_HEALTH_REPO`, `GITHUB_HEALTH_RUN_LIMIT`, and
+  `GITHUB_HEALTH_PR_LIMIT` so scan scope changes stay operator-configured;
+  startup surfaces it as an attention pass before local runtime checks.
 - Local URL targets remain print-first by default. Explicit system-browser
   launch paths route through `tools/open_local_url.sh` so `docs` and `viz`
   launch behavior share one audited helper. The launcher accepts local

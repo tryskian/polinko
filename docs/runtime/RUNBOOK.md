@@ -536,6 +536,8 @@ Use this doc for operator procedure.
   - read-only GitHub helper that reports `gh` auth state, latest pending or
     failed workflow surfaces, open PR check state, and the next useful `gh`
     command
+  - scan scope is configured with `GITHUB_HEALTH_REPO`,
+    `GITHUB_HEALTH_RUN_LIMIT`, and `GITHUB_HEALTH_PR_LIMIT`
 
 Dependency maintenance:
 

@@ -24,6 +24,8 @@ step labels and counts stay aligned as the routine changes.
    - `git status --short --branch`
 2. Surface GitHub health attention:
    - `make github-health`
+   - optional scope: `GITHUB_HEALTH_REPO`, `GITHUB_HEALTH_RUN_LIMIT`,
+     `GITHUB_HEALTH_PR_LIMIT`
    - reported attention continues local startup
 3. Run the generic startup safety path:
    - `make doctor-env`
