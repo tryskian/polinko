@@ -115,6 +115,7 @@ MAKE_CHECKS_DEV_TOOLS_GITHUB = (
 MAKE_CHECKS_DEV_TOOLS_ACT = REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "act.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_SURFACES_LOCAL_BROWSER = REPO_ROOT / "makefiles" / "surfaces" / "local-browser.mk"
+MAKE_SURFACES_NOTEBOOKS = REPO_ROOT / "makefiles" / "surfaces" / "notebooks.mk"
 MAKE_SURFACES_MANUAL_EVALS = REPO_ROOT / "makefiles" / "surfaces" / "manual-evals.mk"
 MAKE_SURFACES_MANUAL_EVALS_FEEDBACK = (
     REPO_ROOT / "makefiles" / "surfaces" / "manual-evals" / "feedback.mk"
@@ -1415,6 +1416,20 @@ class MakefileContractTests(unittest.TestCase):
             manual_evals_ocr_retry_entry_text,
         )
         self.assertIn("notebook nb notes:", contract_text)
+        notebooks_text = MAKE_SURFACES_NOTEBOOKS.read_text(encoding="utf-8")
+        self.assertIn(
+            "@$(call repo_activity,make notebook-setup,notebook-setup)",
+            notebooks_text,
+        )
+        self.assertIn("@$(call repo_activity,make $@,$@)", notebooks_text)
+        self.assertIn(
+            "notebook helper: missing requirements file: requirements.notebook.txt",
+            notebooks_text,
+        )
+        self.assertIn(
+            "notebook helper: missing Python module: jupyter (run make notebook-setup)",
+            notebooks_text,
+        )
         self.assertIn("manual-evals-ocr-retry-execute", contract_text)
         self.assertNotIn("portfolio-install:", contract_text)
         self.assertNotIn("portfolio-build:", contract_text)
@@ -2817,6 +2832,10 @@ class MakefileContractTests(unittest.TestCase):
             "@$(call repo_activity,make transcript-check,transcript-check)", text
         )
         self.assertIn("@$(call repo_activity,make $@,$@)", text)
+        self.assertIn(
+            "@$(call repo_activity,make notebook-setup,notebook-setup)",
+            text,
+        )
         self.assertIn(
             "@$(call repo_activity,make playwright-snapshot-dir,playwright-snapshot-dir)",
             text,
