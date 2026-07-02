@@ -6194,3 +6194,19 @@ or branch history instead.
 - Why: Browser-launch helpers are active operator surfaces. Their target names,
   default behaviour, and shared local-only launcher should drift only through a
   deliberate runtime change.
+
+## D-366: Name runtime tool-reference coverage as a first-class gate
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `runtime_tools`, `make`, `ci_docs`, `closeout`, `tooling_hygiene`
+- Human-led: The human lead asked for the script/runtime refactor to keep
+  helper surfaces precise and automated rather than manually remembered.
+- Engineer implementation: Add `make runtime-tool-reference-check`, route it
+  through `ci-docs` and `make end`, guard it in `make risk-scan`, and update
+  current runtime docs to name the gate.
+- Decision: Runtime tool-reference coverage is a named Make gate, not an
+  implicit unit-test-only surface.
+- Why: Active Make, CI, runtime, docs, and tooling references to repo-local
+  helpers should be discoverable, runnable, and protected by the same hygiene
+  surfaces as other runtime contracts.

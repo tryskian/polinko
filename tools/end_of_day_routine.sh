@@ -16,6 +16,7 @@ CORE_STEPS=(
   "scripts-check|make --no-print-directory scripts-check"
   "path-leak-check|make --no-print-directory path-leak-check"
   "risk-scan|make --no-print-directory risk-scan"
+  "runtime-tool-reference-check|make --no-print-directory runtime-tool-reference-check"
   "operator-command-check|make --no-print-directory operator-command-check"
   "ci-python-style|make --no-print-directory ci-python-style"
   "ci-python-type-check|make --no-print-directory ci-python-type-check"

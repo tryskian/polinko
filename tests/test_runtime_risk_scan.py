@@ -235,6 +235,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
                     "path-leak-check",
                     "scripts-check",
                     "risk-scan",
+                    "runtime-tool-reference-check",
                     "operator-command-check",
                     "startup-contracts-check",
                     "lint-docs",
@@ -247,6 +248,26 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_missing_runtime_tool_reference_dependency_is_reported(self) -> None:
+        failures = check_runtime_risk_scan.check_make_contracts(
+            _make_contract_text(
+                ci_docs_deps=(
+                    "path-leak-check",
+                    "scripts-check",
+                    "local-runtime-config-check",
+                    "risk-scan",
+                    "operator-command-check",
+                    "startup-contracts-check",
+                    "lint-docs",
+                )
+            )
+        )
+
+        self.assertIn(
+            "ci-docs: missing dependency 'runtime-tool-reference-check'",
+            failures,
+        )
+
     def test_missing_startup_contracts_dependency_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             _make_contract_text(
@@ -254,6 +275,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
                     "path-leak-check",
                     "scripts-check",
                     "risk-scan",
+                    "runtime-tool-reference-check",
                     "operator-command-check",
                     "lint-docs",
                 )

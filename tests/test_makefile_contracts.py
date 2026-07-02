@@ -2266,7 +2266,8 @@ class MakefileContractTests(unittest.TestCase):
             text,
             r"(?m)^ci-docs:\s*path-leak-check scripts-check "
             r"local-runtime-config-check risk-scan "
-            r"operator-command-check startup-contracts-check lint-docs$",
+            r"runtime-tool-reference-check operator-command-check "
+            r"startup-contracts-check lint-docs$",
         )
         self.assertIn("startup-contracts-check", _phony_targets())
         self.assertRegex(text, r"(?m)^startup-contracts-check:$")
@@ -2274,6 +2275,12 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("risk-scan", _phony_targets())
         self.assertRegex(text, r"(?m)^risk-scan:$")
         self.assertIn("$(PYTHON) -m tools.check_runtime_risk_scan", text)
+        self.assertIn("runtime-tool-reference-check", _phony_targets())
+        self.assertRegex(text, r"(?m)^runtime-tool-reference-check:$")
+        self.assertIn(
+            "$(PYTHON) -m unittest tests.test_runtime_tool_reference_coverage",
+            text,
+        )
         self.assertIn("local-runtime-config-check", _phony_targets())
         self.assertRegex(text, r"(?m)^local-runtime-config-check:$")
         self.assertIn("$(PYTHON) -m tools.check_local_runtime_config", text)
@@ -2297,6 +2304,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn(
             '"risk-scan|make --no-print-directory risk-scan"',
+            closeout_text,
+        )
+        self.assertIn(
+            '"runtime-tool-reference-check|make --no-print-directory runtime-tool-reference-check"',
             closeout_text,
         )
         self.assertIn(
@@ -2329,6 +2340,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertLess(
             closeout_text.index('"risk-scan|'),
+            closeout_text.index('"runtime-tool-reference-check|'),
+        )
+        self.assertLess(
+            closeout_text.index('"runtime-tool-reference-check|'),
             closeout_text.index('"operator-command-check|'),
         )
         self.assertLess(

@@ -171,6 +171,8 @@ Active kernel validation:
   bounds are validated before runner startup work begins
 - Use `make risk-scan` when a kernel changes runtime maps, Make gates, CI,
   background runners, startup/closeout, or local configuration surfaces
+- Use `make runtime-tool-reference-check` when a kernel changes runtime,
+  Make, CI, or docs references to `tools/*.py` or `tools/*.sh` helpers
 - Use `make build-hygiene` for the PR-safe hygiene gate that mirrors the
   build, docs, dependency, test, transcript, environment, and whitespace
   surfaces
@@ -200,18 +202,19 @@ Sequence:
 | 5 | Validate shell helper contracts | `make scripts-check` |
 | 6 | Check tracked docs/code for local path leaks | `make path-leak-check` |
 | 7 | Verify runtime risk-surface coverage | `make risk-scan` |
-| 8 | Verify operator command boundaries | `make operator-command-check` |
-| 9 | Run Python style checks | `make ci-python-style` |
-| 10 | Run Python type checks | `make ci-python-type-check` |
-| 11 | Lint docs | `make lint-docs` |
-| 12 | Smoke-test editable package import | `make package-install-check` |
-| 13 | Run tests | `make test` |
-| 14 | Check diff whitespace | `git diff --check` |
-| 15 | Run dependency security checks | `make security-checks` |
-| 16 | Stop background tasks | `make end-stop` |
-| 17 | Surface GitHub health attention | `make github-health` |
-| 18 | Prune stale remote-tracking refs | `make git-prune-stale-refs` |
-| 19 | Verify current branch must be `main` and synced | `make end-git-check` |
+| 8 | Verify runtime tool reference coverage | `make runtime-tool-reference-check` |
+| 9 | Verify operator command boundaries | `make operator-command-check` |
+| 10 | Run Python style checks | `make ci-python-style` |
+| 11 | Run Python type checks | `make ci-python-type-check` |
+| 12 | Lint docs | `make lint-docs` |
+| 13 | Smoke-test editable package import | `make package-install-check` |
+| 14 | Run tests | `make test` |
+| 15 | Check diff whitespace | `git diff --check` |
+| 16 | Run dependency security checks | `make security-checks` |
+| 17 | Stop background tasks | `make end-stop` |
+| 18 | Surface GitHub health attention | `make github-health` |
+| 19 | Prune stale remote-tracking refs | `make git-prune-stale-refs` |
+| 20 | Verify current branch must be `main` and synced | `make end-git-check` |
 
 Preflight:
 
@@ -237,6 +240,8 @@ Explicit companion checks:
 - `make risk-scan`
   - checks runtime map, Make, CI, runner, and local configuration coverage for
     known high-risk surfaces
+- `make runtime-tool-reference-check`
+  - checks runtime references to tracked `tools/*.py` and `tools/*.sh` helpers
 - `make operator-command-check`
   - checks current operator command names and keeps parked OCR eval shortcuts
     out of automatic startup, closeout, and CI dependencies

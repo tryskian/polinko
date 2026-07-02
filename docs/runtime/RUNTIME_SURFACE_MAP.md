@@ -78,8 +78,10 @@ flowchart TD
     DependencyReview["dependency-review"]
     GitHubHealth["make github-health"]
     StartupContracts["startup-contracts-check"]
+    RuntimeToolRefs["runtime-tool-reference-check"]
     AuditTools["pip-audit and npm audit"]
     GitHubActions --> StartupContracts
+    GitHubActions --> RuntimeToolRefs
     GitHubActions --> DependencyReview
     GitHubActions --> AuditTools
     Dependabot --> GitHubActions
@@ -219,7 +221,9 @@ flowchart TD
   one manual eval health command entrypoint while preserving public target
   names and preview/apply boundaries. `make operator-command-check` keeps
   current operator command names canonical and keeps parked OCR eval shortcuts
-  out of automatic startup, closeout, and CI dependencies. Eval report wrappers
+  out of automatic startup, closeout, and CI dependencies.
+  `make runtime-tool-reference-check` keeps active Make, CI, docs, and runtime
+  references pointed at existing tracked tool helpers. Eval report wrappers
   resolve the checkout root before writing
   default report paths or launching report modules. OCR intake/focus/growth
   orchestrator wrappers resolve the checkout root before using default local

@@ -762,11 +762,11 @@ Last updated: 2026-07-02
     configuration surfaces remain visible in tracked docs and Make gates,
     including the lightweight pre-commit hook contract and local URL
     target/config/launcher wiring
-  - runtime tool reference coverage is explicit through unit tests, which
-    verify that active Make, CI, runtime, docs, and tooling references point to
-    existing `tools/*.py` and `tools/*.sh` helpers, and that tracked runtime,
-    script, docs, and config references to tracked helpers have direct test
-    visibility
+  - runtime tool reference coverage is explicit through
+    `make runtime-tool-reference-check`, which verifies that active Make, CI,
+    runtime, docs, and tooling references point to existing `tools/*.py` and
+    `tools/*.sh` helpers, and that tracked runtime, script, docs, and config
+    references to tracked helpers have direct test visibility
   - Make Python helper targets use the configured `$(PYTHON)` interpreter for
     repo-local checks, including `make pycheck`
   - direct runtime shell wrappers share `tools/python_runtime.sh`, so explicit
@@ -782,9 +782,10 @@ Last updated: 2026-07-02
     eval shortcuts out of automatic startup, closeout, and CI dependencies
   - `make ci-docs` runs `make path-leak-check`, `make scripts-check`,
     `make local-runtime-config-check`, `make risk-scan`,
-    `make operator-command-check`, `make startup-contracts-check`, and
-    `make lint-docs`; `make end` also runs `make path-leak-check`,
-    `make scripts-check`, `make risk-scan`, and `make operator-command-check`
+    `make runtime-tool-reference-check`, `make operator-command-check`,
+    `make startup-contracts-check`, and `make lint-docs`; `make end` also
+    runs `make path-leak-check`, `make scripts-check`, `make risk-scan`,
+    `make runtime-tool-reference-check`, and `make operator-command-check`
     before longer style, type, test, and security gates
   - `make build-hygiene` is the PR-safe aggregate hygiene gate for
     environment doctor, transcript validation, CI build/test/security/doc
@@ -959,6 +960,7 @@ Last updated: 2026-07-02
 - `make ruff-format-check`
 - `make lint-docs`
 - `make risk-scan`
+- `make runtime-tool-reference-check`
 - `make local-runtime-config-check`
 - `make operator-command-check`
 - `make package-install-check`
