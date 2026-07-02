@@ -8,26 +8,26 @@ source "$script_dir/repo_root.sh"
 polinko_cd_repo_root
 ROOT_DIR="$POLINKO_REPO_ROOT"
 
-CORE_STEPS=(
-  "end-docs-check|make --no-print-directory end-docs-check"
-  "transcript-fix|make --no-print-directory transcript-fix"
-  "transcript-check|make --no-print-directory transcript-check"
-  "doctor-env|make --no-print-directory doctor-env"
-  "scripts-check|make --no-print-directory scripts-check"
-  "path-leak-check|make --no-print-directory path-leak-check"
-  "risk-scan|make --no-print-directory risk-scan"
-  "runtime-tool-reference-check|make --no-print-directory runtime-tool-reference-check"
-  "operator-command-check|make --no-print-directory operator-command-check"
-  "ci-python-style|make --no-print-directory ci-python-style"
-  "ci-python-type-check|make --no-print-directory ci-python-type-check"
-  "lint-docs|make --no-print-directory lint-docs"
-  "package-install-check|make --no-print-directory package-install-check"
-  "test|make --no-print-directory test"
-  "git diff --check|git diff --check"
-  "security-checks|make --no-print-directory security-checks"
+CORE_STEP_LABELS=(
+  "end-docs-check"
+  "transcript-fix"
+  "transcript-check"
+  "doctor-env"
+  "scripts-check"
+  "path-leak-check"
+  "risk-scan"
+  "runtime-tool-reference-check"
+  "operator-command-check"
+  "ci-python-style"
+  "ci-python-type-check"
+  "lint-docs"
+  "package-install-check"
+  "test"
+  "git diff --check"
+  "security-checks"
 )
 
-TOTAL_STEPS=${#CORE_STEPS[@]}
+TOTAL_STEPS=${#CORE_STEP_LABELS[@]}
 if [ "${END_SKIP_STOP:-}" = "1" ]; then
   :
 else
@@ -49,19 +49,44 @@ run_step() {
   STEP=$((STEP + 1))
 }
 
-run_planned_step() {
-  local record="$1"
-  local label="${record%%|*}"
-  local command="${record#*|}"
-  local argv=()
+run_make_step() {
+  local label="$1"
+  local target="$2"
+  run_step "$label" make --no-print-directory "$target"
+}
 
-  read -r -a argv <<< "$command"
-  run_step "$label" "${argv[@]}"
+run_core_step() {
+  local label="$1"
+
+  case "$label" in
+    "git diff --check") run_step "$label" git diff --check ;;
+    end-docs-check | \
+      transcript-fix | \
+      transcript-check | \
+      doctor-env | \
+      scripts-check | \
+      path-leak-check | \
+      risk-scan | \
+      runtime-tool-reference-check | \
+      operator-command-check | \
+      ci-python-style | \
+      ci-python-type-check | \
+      lint-docs | \
+      package-install-check | \
+      test | \
+      security-checks)
+      run_make_step "$label" "$label"
+      ;;
+    *)
+      echo "[end] unknown closeout step: $label" >&2
+      exit 2
+      ;;
+  esac
 }
 
 echo "[end] starting end-of-day routine in: $ROOT_DIR"
-for planned_step in "${CORE_STEPS[@]}"; do
-  run_planned_step "$planned_step"
+for core_step_label in "${CORE_STEP_LABELS[@]}"; do
+  run_core_step "$core_step_label"
 done
 
 if [ "${END_SKIP_STOP:-}" = "1" ]; then

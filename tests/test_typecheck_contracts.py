@@ -75,7 +75,7 @@ class TypecheckContractTests(unittest.TestCase):
         )
         self.assertGreater(
             closeout.index('run_step "github-health"'),
-            closeout.index('"security-checks|'),
+            closeout.index('"security-checks"'),
         )
         self.assertGreater(
             closeout.index('run_step "end-git-check"'),
