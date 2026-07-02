@@ -134,6 +134,15 @@ REQUIRED_LOCAL_URL_TOKENS = (
     'bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$URL"',
 )
 
+REQUIRED_GITHUB_HEALTH_TOKENS = (
+    "GITHUB_HEALTH_REPO ?=",
+    "GITHUB_HEALTH_RUN_LIMIT ?= 20",
+    "GITHUB_HEALTH_PR_LIMIT ?= 20",
+    '--run-limit "$(GITHUB_HEALTH_RUN_LIMIT)"',
+    '--pr-limit "$(GITHUB_HEALTH_PR_LIMIT)"',
+    '$(if $(strip $(GITHUB_HEALTH_REPO)),--repo "$(GITHUB_HEALTH_REPO)",)',
+)
+
 
 @dataclass(frozen=True)
 class MapSurface:
@@ -291,6 +300,10 @@ def check_make_contracts(text: str) -> list[str]:
     for token in REQUIRED_LOCAL_URL_TOKENS:
         if token not in text:
             failures.append(f"Make surface: missing local URL token {token!r}")
+
+    for token in REQUIRED_GITHUB_HEALTH_TOKENS:
+        if token not in text:
+            failures.append(f"Make surface: missing GitHub health token {token!r}")
 
     deps = ci_docs_deps(text)
     if not deps:

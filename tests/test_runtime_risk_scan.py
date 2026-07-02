@@ -138,6 +138,7 @@ class RuntimeRiskScanTests(unittest.TestCase):
             (
                 _make_contract_text(),
                 *check_runtime_risk_scan.REQUIRED_MAKE_RUNTIME_TOKENS,
+                *check_runtime_risk_scan.REQUIRED_GITHUB_HEALTH_TOKENS,
                 *(
                     token
                     for token in check_runtime_risk_scan.REQUIRED_LOCAL_URL_TOKENS
@@ -150,6 +151,28 @@ class RuntimeRiskScanTests(unittest.TestCase):
 
         self.assertIn(
             "Make surface: missing local URL token 'LOCAL_BROWSER_LAUNCH ?= none'",
+            failures,
+        )
+
+    def test_missing_github_health_contract_token_is_reported(self) -> None:
+        omitted_token = '--pr-limit "$(GITHUB_HEALTH_PR_LIMIT)"'
+        make_text = "\n".join(
+            (
+                _make_contract_text(),
+                *check_runtime_risk_scan.REQUIRED_MAKE_RUNTIME_TOKENS,
+                *check_runtime_risk_scan.REQUIRED_LOCAL_URL_TOKENS,
+                *(
+                    token
+                    for token in check_runtime_risk_scan.REQUIRED_GITHUB_HEALTH_TOKENS
+                    if token != omitted_token
+                ),
+            )
+        )
+
+        failures = check_runtime_risk_scan.check_make_contracts(make_text)
+
+        self.assertIn(
+            f"Make surface: missing GitHub health token {omitted_token!r}",
             failures,
         )
 

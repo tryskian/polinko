@@ -6210,3 +6210,17 @@ or branch history instead.
 - Why: Active Make, CI, runtime, docs, and tooling references to repo-local
   helpers should be discoverable, runnable, and protected by the same hygiene
   surfaces as other runtime contracts.
+
+## D-367: Expose GitHub health scan scope through Make config
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `github_health`, `make`, `ci`, `operator_hygiene`
+- Human-led: The human lead asked for CI/check visibility to be maintained
+  through automated helper surfaces rather than manual polling.
+- Engineer implementation: Add `GITHUB_HEALTH_REPO`,
+  `GITHUB_HEALTH_RUN_LIMIT`, and `GITHUB_HEALTH_PR_LIMIT` Make config, pass
+  them through `make github-health`, and guard the wiring in `make risk-scan`.
+- Decision: GitHub health scan scope is configured through Make.
+- Why: The startup/closeout health surface should be easy to widen for PR
+  queues or cross-repo checks without changing helper code.
