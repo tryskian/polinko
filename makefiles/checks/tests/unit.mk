@@ -6,19 +6,11 @@ test:
 	$(PYTHON) -m unittest discover -s tests -p "test_*.py"
 
 test-one:
-	@set -eu; \
-	if [ -z "$(TEST)" ]; then \
-		echo 'Usage: make test-one TEST=tests.test_eval_file_search'; \
-		exit 2; \
-	fi; \
-	$(call repo_activity,make test-one,test-one); \
+	@$(PYTHON) -m tools.validate_make_variable --value "$(TEST)" --usage 'Usage: make test-one TEST=tests.test_eval_file_search'
+	@$(call repo_activity,make test-one,test-one)
 	$(PYTHON) -m unittest $(TEST)
 
 test-targeted:
-	@set -eu; \
-	if [ -z "$(TESTS)" ]; then \
-		echo 'Usage: make test-targeted TESTS="tests.test_eval_file_search tests.test_eval_retrieval"'; \
-		exit 2; \
-	fi; \
-	$(call repo_activity,make test-targeted,test-targeted); \
+	@$(PYTHON) -m tools.validate_make_variable --value "$(TESTS)" --usage 'Usage: make test-targeted TESTS="tests.test_eval_file_search tests.test_eval_retrieval"'
+	@$(call repo_activity,make test-targeted,test-targeted)
 	$(PYTHON) -m unittest $(TESTS)

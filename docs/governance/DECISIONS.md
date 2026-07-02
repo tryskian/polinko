@@ -6304,3 +6304,17 @@ or branch history instead.
 - Why: Search behaviour belongs in the search helper; Make should keep the
   public entrypoints and repo-activity ordering without carrying inline shell
   validation.
+
+## D-373: Centralize simple Make variable validation
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `make`, `tests`, `pycheck`, `operator_hygiene`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Add `tools.validate_make_variable`, route
+  `test-one`, `test-targeted`, and `pycheck` through it before repo-activity
+  logging, and add focused helper and Make contract tests.
+- Decision: Simple required Make-variable validation is helper-owned.
+- Why: Developer test entrypoints should keep Make declarative, preserve their
+  public commands, and validate required input before recording repo activity.
