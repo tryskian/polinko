@@ -2380,10 +2380,10 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(
             text, r"(?m)^docs-open open-api-docs-browser:\s*server-daemon$"
         )
-        self.assertRegex(text, r"(?m)^open-limits:\s*openai-limits$")
-        self.assertRegex(text, r"(?m)^open-usage:\s*openai-usage$")
-        self.assertRegex(text, r"(?m)^open-billing:\s*openai-costs$")
-        self.assertRegex(text, r"(?m)^open-cost-console:\s*openai-account-summary$")
+        self.assertNotRegex(text, r"(?m)^open-limits:")
+        self.assertNotRegex(text, r"(?m)^open-usage:")
+        self.assertNotRegex(text, r"(?m)^open-billing:")
+        self.assertNotRegex(text, r"(?m)^open-cost-console:")
         self.assertRegex(text, r"(?m)^viz:\s*server-daemon$")
         self.assertRegex(text, r"(?m)^viz-open open-viz:\s*server-daemon$")
         for target in (
@@ -3189,10 +3189,6 @@ class MakefileContractTests(unittest.TestCase):
             "openai-costs",
             "openai-usage",
             "openai-limits",
-            "open-cost-console",
-            "open-usage",
-            "open-billing",
-            "open-limits",
             "caffeinate",
             "scripts-check",
             "caffeinate-status",

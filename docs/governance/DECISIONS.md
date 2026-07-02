@@ -6104,3 +6104,17 @@ or branch history instead.
   their operator argument guards pass.
 - Why: Targeted validation commands are active development surfaces, so their
   execution should be visible without changing their usage guidance.
+
+## D-360: Keep OpenAI account helper names canonical
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `openai_account`, `make`, `operator_hygiene`, `aliases`
+- Human-led: The human lead clarified that runtime command surfaces should use
+  one current name per operation.
+- Engineer implementation: Remove undocumented `open-*` OpenAI account aliases
+  and pin their absence in Makefile contract tests.
+- Decision: OpenAI account helper targets use the documented `openai-*`
+  command names only.
+- Why: Canonical target names reduce operator ambiguity and keep runtime docs,
+  tests, and Make surfaces aligned.
