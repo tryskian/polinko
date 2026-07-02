@@ -6073,3 +6073,19 @@ or branch history instead.
   setup prerequisite before running.
 - Why: Notebook entrypoints are active local research helpers, so they should
   fail with direct operator guidance when their setup surface has not run.
+
+## D-358: Track manual-eval helper activity
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `manual_evals`, `activity`, `operator_hygiene`, `make`
+- Human-led: The human lead kept manual eval workbench surfaces active while
+  the refactor focused on runtime and script hygiene.
+- Engineer implementation: Add repo activity tracking to manual-eval database
+  rebuild targets and the shared manual-eval workbench command helper, with
+  focused Makefile contract coverage.
+- Decision: Manual-eval workbench commands now register repo activity when
+  they generate, review, draft, or apply manual-eval outputs.
+- Why: Manual eval workbench targets are active research-operation surfaces,
+  so their execution should be visible in the same repo-managed activity
+  metadata as other maintained helpers.
