@@ -55,6 +55,7 @@ NON_CANONICAL_OPERATOR_TARGETS = (
     "open-cost-console",
     "open-limits",
     "open-usage",
+    "refresh-deps",
 )
 
 

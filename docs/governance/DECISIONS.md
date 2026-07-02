@@ -6133,3 +6133,18 @@ or branch history instead.
   guard, alongside lifecycle and manual-eval command-name checks.
 - Why: The guard should prevent recurrence of removed operator aliases, not
   only document the canonical names after cleanup.
+
+## D-362: Keep dependency refresh target canonical
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `dependencies`, `make`, `operator_commands`, `aliases`
+- Human-led: The human lead clarified that command surfaces should keep one
+  current name per operation.
+- Engineer implementation: Remove the `refresh-deps` duplicate target, keep
+  `make deps-refresh` as the dependency refresh command, update current runtime
+  docs, and guard the retired target in `make operator-command-check`.
+- Decision: Dependency refresh work uses `make deps-refresh` as the single
+  current target name.
+- Why: A single dependency refresh command keeps maintenance docs, Make
+  targets, and operator checks aligned.
