@@ -6039,3 +6039,21 @@ or branch history instead.
 - Why: Documentation helper commands can generate or validate tracked project
   surfaces, so they should update the same activity signal as other maintained
   repo commands.
+
+## D-356: Track local browser helper activity
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `playwright`, `local_browser`, `activity`, `diagnostics`,
+  `operator_hygiene`
+- Human-led: The human lead asked for hidden helper surfaces to stay maintained
+  without changing the explicit browser-launch contract.
+- Engineer implementation: Add repo activity tracking to `make pwcli`,
+  `make playwright-cli`, and `make playwright-snapshot-dir`, report a missing
+  `PWCLI_TOOL` executable directly, and cover the helper contract in Makefile
+  tests.
+- Decision: Local browser helper targets register repo activity and name their
+  required wrapper before running.
+- Why: Playwright helper commands create local operator artifacts, so they
+  should update activity metadata and fail with an actionable prerequisite
+  message when the wrapper is unavailable.
