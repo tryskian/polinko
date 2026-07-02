@@ -222,6 +222,7 @@ Preflight:
 
 - `make end-preflight`
 - runs branch-local validation without stopping background tasks
+- exercises the same labelled core closeout step dispatch as `make end`
 - leaves final clean-main Git closeout for the real session close
 
 Explicit companion checks:

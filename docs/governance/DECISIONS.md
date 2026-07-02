@@ -6224,3 +6224,18 @@ or branch history instead.
 - Decision: GitHub health scan scope is configured through Make.
 - Why: The startup/closeout health surface should be easy to widen for PR
   queues or cross-repo checks without changing helper code.
+
+## D-368: Dispatch closeout steps by label
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `closeout`, `make`, `shell`, `operator_hygiene`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Replace pipe-delimited closeout command records and
+  argv reparsing with declared step labels plus explicit shell dispatch, and
+  update contract tests for the new shape.
+- Decision: `tools/end_of_day_routine.sh` owns closeout order through labelled
+  steps and explicit dispatch.
+- Why: Closeout should keep stable step counts and readable operator output
+  without relying on ad hoc command-string parsing.

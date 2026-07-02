@@ -2299,28 +2299,36 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^path-leak-audit-local:$")
         self.assertIn("$(PYTHON) -m tools.path_leak_check --scope local-config", text)
         self.assertIn("$(MAKE) --no-print-directory local-runtime-config-check", text)
-        self.assertIn("CORE_STEPS=(", closeout_text)
-        self.assertIn("TOTAL_STEPS=${#CORE_STEPS[@]}", closeout_text)
+        self.assertIn("CORE_STEP_LABELS=(", closeout_text)
+        self.assertIn("TOTAL_STEPS=${#CORE_STEP_LABELS[@]}", closeout_text)
         self.assertIn("TOTAL_STEPS=$((TOTAL_STEPS + 3))", closeout_text)
         self.assertNotIn("TOTAL_STEPS=17", closeout_text)
+        self.assertNotIn("run_planned_step", closeout_text)
+        self.assertNotIn("read -r -a", closeout_text)
+        self.assertNotIn("record%%|", closeout_text)
+        self.assertIn('run_make_step "$label" "$label"', closeout_text)
         self.assertIn(
-            '"scripts-check|make --no-print-directory scripts-check"',
+            '"git diff --check") run_step "$label" git diff --check',
             closeout_text,
         )
         self.assertIn(
-            '"path-leak-check|make --no-print-directory path-leak-check"',
+            '"scripts-check"',
             closeout_text,
         )
         self.assertIn(
-            '"risk-scan|make --no-print-directory risk-scan"',
+            '"path-leak-check"',
             closeout_text,
         )
         self.assertIn(
-            '"runtime-tool-reference-check|make --no-print-directory runtime-tool-reference-check"',
+            '"risk-scan"',
             closeout_text,
         )
         self.assertIn(
-            '"operator-command-check|make --no-print-directory operator-command-check"',
+            '"runtime-tool-reference-check"',
+            closeout_text,
+        )
+        self.assertIn(
+            '"operator-command-check"',
             closeout_text,
         )
         self.assertIn(
@@ -2336,31 +2344,31 @@ class MakefileContractTests(unittest.TestCase):
             closeout_text,
         )
         self.assertGreater(
-            closeout_text.index('"scripts-check|'),
-            closeout_text.index('"doctor-env|'),
+            closeout_text.index('"scripts-check"'),
+            closeout_text.index('"doctor-env"'),
         )
         self.assertLess(
-            closeout_text.index('"scripts-check|'),
-            closeout_text.index('"path-leak-check|'),
+            closeout_text.index('"scripts-check"'),
+            closeout_text.index('"path-leak-check"'),
         )
         self.assertLess(
-            closeout_text.index('"path-leak-check|'),
-            closeout_text.index('"risk-scan|'),
+            closeout_text.index('"path-leak-check"'),
+            closeout_text.index('"risk-scan"'),
         )
         self.assertLess(
-            closeout_text.index('"risk-scan|'),
-            closeout_text.index('"runtime-tool-reference-check|'),
+            closeout_text.index('"risk-scan"'),
+            closeout_text.index('"runtime-tool-reference-check"'),
         )
         self.assertLess(
-            closeout_text.index('"runtime-tool-reference-check|'),
-            closeout_text.index('"operator-command-check|'),
+            closeout_text.index('"runtime-tool-reference-check"'),
+            closeout_text.index('"operator-command-check"'),
         )
         self.assertLess(
-            closeout_text.index('"operator-command-check|'),
-            closeout_text.index('"ci-python-style|'),
+            closeout_text.index('"operator-command-check"'),
+            closeout_text.index('"ci-python-style"'),
         )
         self.assertLess(
-            closeout_text.index('"security-checks|'),
+            closeout_text.index('"security-checks"'),
             closeout_text.index('run_step "github-health"'),
         )
         self.assertLess(

@@ -49,8 +49,9 @@ Last updated: 2026-07-02
     note, then waits for human alignment before implementation
   - morning startup step output is numbered through one routine helper so step
     labels and counts stay aligned as the routine changes
-  - closeout progress derives from the declared `make end` step plan so
-    displayed step counts stay aligned with the checks that actually run
+  - closeout progress derives from the declared `make end` step labels and
+    explicit step dispatch so displayed counts stay aligned with the checks
+    that actually run
 - Public-facing surfaces remain derived from repo truth:
   - the root README now names the Polinko research model as staged for the
     next beta, replacing generic maintenance framing with a model-refactor
