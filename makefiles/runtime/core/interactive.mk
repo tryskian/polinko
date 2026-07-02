@@ -1,11 +1,11 @@
 # Interactive runtime entrypoints.
-.PHONY: chat venv env
+.PHONY: chat venv
 
 chat:
 	@$(call repo_activity,make chat,chat)
 	$(PYTHON) $(CLI_ENTRYPOINT)
 
-venv env:
+venv:
 	@$(call repo_activity,make $@,$@)
 	@set -eu; \
 	if [ -f ./.venv/bin/activate ]; then \

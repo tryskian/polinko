@@ -6148,3 +6148,18 @@ or branch history instead.
   current target name.
 - Why: A single dependency refresh command keeps maintenance docs, Make
   targets, and operator checks aligned.
+
+## D-363: Keep virtualenv shell helper canonical
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `interactive`, `make`, `operator_commands`, `aliases`
+- Human-led: The human lead clarified that command surfaces should keep one
+  current name per operation.
+- Engineer implementation: Remove the `env` duplicate target, keep `make venv`
+  as the interactive virtualenv shell helper, and guard the retired target in
+  `make operator-command-check`.
+- Decision: Interactive virtualenv shell work uses `make venv` as the single
+  current target name.
+- Why: `venv` names the actual runtime surface, while `env` is too broad for a
+  maintained operator command.
