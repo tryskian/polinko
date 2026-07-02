@@ -751,7 +751,7 @@ Last updated: 2026-07-01
   - Dependabot routine and security updates are grouped by ecosystem so Python,
     root npm, and GitHub Actions updates stay below GitHub's open PR queue
     limits
-  - local dependency refreshes are explicit through `make refresh-deps` before
+  - local dependency refreshes are explicit through `make deps-refresh` before
     rerunning `make security-checks`
   - shell helper hygiene is explicit through `make scripts-check`, which
     verifies tracked `tools/*.sh` shebangs, strict modes, shell parser syntax,

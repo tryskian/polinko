@@ -478,7 +478,7 @@ Use this doc for operator procedure.
 - `make security-checks`
   - local Python and root Node dependency audits
   - Python audit tooling is installed from `requirements.txt` in CI
-- `make refresh-deps`
+- `make deps-refresh`
   - refreshes the local Python environment and root npm lock after Dependabot
     or dependency metadata changes
 - `make package-install-check`
@@ -537,7 +537,7 @@ Dependency maintenance:
 1. Merge grouped Dependabot PRs before single-package duplicates.
 2. Close duplicate single-package PRs once the grouped PR contains the same
    bump.
-3. Run `make refresh-deps` after syncing `main`.
+3. Run `make deps-refresh` after syncing `main`.
 4. Run `make security-checks`.
 5. Finish with `make end` on clean synced `main`.
 

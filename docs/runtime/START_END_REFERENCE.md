@@ -245,7 +245,7 @@ Explicit companion checks:
 - `make api-smoke`
   - uses isolated default localhost port and DB paths unless `SMOKE_PORT`,
     `SMOKE_BASE_URL`, and smoke DB paths are set explicitly
-- `make refresh-deps`
+- `make deps-refresh`
   - refreshes local Python and root npm dependency surfaces after Dependabot
     or dependency metadata changes
 - `make type-check`
