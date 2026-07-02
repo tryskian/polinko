@@ -147,6 +147,8 @@ flowchart TD
   `python3.14`, and installs dependencies through the created venv.
   `make privacy-local-on` installs the current machine-local handoff exclude
   pattern; tracked docs remain visible.
+- Interactive virtualenv shells enter through `make venv`; Make records repo
+  activity and delegates shell activation to `tools/open_venv_shell.sh`.
 - Core background runners use one ownership pattern for PID files,
   stale-process handling, logs, cleanup commands, and detached launch
   behaviour across `caffeinate`, `server-daemon`, and `eval-sidecar`.

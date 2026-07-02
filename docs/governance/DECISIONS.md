@@ -6272,3 +6272,19 @@ or branch history instead.
 - Why: Final closeout and stale-ref cleanup should fail with direct operator
   diagnostics when helper config is malformed, instead of passing unclear
   values into Git and surfacing weaker downstream errors.
+
+## D-371: Move interactive venv shell activation into a helper
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `venv`, `make`, `shell`, `operator_hygiene`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Add `tools/open_venv_shell.sh`, route `make venv`
+  through it after repo-activity logging, and add a contract test for Make and
+  helper ownership.
+- Decision: `make venv` delegates interactive virtualenv shell activation to a
+  shell helper.
+- Why: Interactive shell activation is runtime behaviour. Keeping it in a
+  helper makes Make declarative while preserving the existing operator command
+  and output shape.
