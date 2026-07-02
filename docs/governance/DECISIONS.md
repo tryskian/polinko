@@ -6057,3 +6057,19 @@ or branch history instead.
 - Why: Playwright helper commands create local operator artifacts, so they
   should update activity metadata and fail with an actionable prerequisite
   message when the wrapper is unavailable.
+
+## D-357: Make notebook helpers explicit
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `notebooks`, `activity`, `diagnostics`, `operator_hygiene`
+- Human-led: The human lead asked for hidden helper surfaces to stay maintained
+  as part of the script/runtime refactor.
+- Engineer implementation: Add repo activity tracking to `make notebook-setup`,
+  `make notebook`, `make nb`, and `make notes`, check the notebook
+  requirements file before installation, report a missing Jupyter module with
+  the setup target, and cover the helper contract in Makefile tests.
+- Decision: Notebook helper targets register repo activity and name their
+  setup prerequisite before running.
+- Why: Notebook entrypoints are active local research helpers, so they should
+  fail with direct operator guidance when their setup surface has not run.
