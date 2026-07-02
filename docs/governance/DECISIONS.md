@@ -6288,3 +6288,19 @@ or branch history instead.
 - Why: Interactive shell activation is runtime behaviour. Keeping it in a
   helper makes Make declarative while preserving the existing operator command
   and output shape.
+
+## D-372: Validate repo-search query input in the helper
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `repo_search`, `make`, `tooling`, `operator_hygiene`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Move blank-query validation for `make repo-search`
+  and `make repo-search-full` into `tools.repo_search`, keep Make activity
+  logging after successful validation, and cover helper and Make contracts in
+  focused tests.
+- Decision: Repo-search query validation is owned by `tools.repo_search`.
+- Why: Search behaviour belongs in the search helper; Make should keep the
+  public entrypoints and repo-activity ordering without carrying inline shell
+  validation.

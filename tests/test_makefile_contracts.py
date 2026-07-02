@@ -1928,8 +1928,15 @@ class MakefileContractTests(unittest.TestCase):
 
         self.assertRegex(text, r"(?m)^repo-search:$")
         self.assertRegex(text, r"(?m)^repo-search-full:$")
-        self.assertIn('Usage: make repo-search Q="pattern"', text)
-        self.assertIn('Usage: make repo-search-full Q="pattern"', text)
+        self.assertNotIn('if [ -z "$(Q)" ]', text)
+        self.assertIn(
+            '@$(PYTHON) -m tools.repo_search --check-query --make-target repo-search --query "$(Q)"',
+            text,
+        )
+        self.assertIn(
+            '@$(PYTHON) -m tools.repo_search --check-query --make-target repo-search-full --query "$(Q)"',
+            text,
+        )
         self.assertIn("@$(call repo_activity,make repo-search,repo-search)", text)
         self.assertIn(
             "@$(call repo_activity,make repo-search-full,repo-search-full)",

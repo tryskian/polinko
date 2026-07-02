@@ -10,6 +10,34 @@ from tools import repo_search
 
 
 class RepoSearchTests(unittest.TestCase):
+    def test_blank_query_reports_make_usage(self) -> None:
+        stdout = io.StringIO()
+
+        with contextlib.redirect_stdout(stdout):
+            self.assertEqual(
+                repo_search.validate_query("", make_target="repo-search"),
+                2,
+            )
+
+        self.assertEqual(stdout.getvalue(), 'Usage: make repo-search Q="pattern"\n')
+
+    def test_check_query_exits_before_search(self) -> None:
+        with mock.patch("tools.repo_search.subprocess.run") as run:
+            self.assertEqual(
+                repo_search.main(
+                    [
+                        "--check-query",
+                        "--make-target",
+                        "repo-search-full",
+                        "--query",
+                        "needle",
+                    ]
+                ),
+                0,
+            )
+
+        run.assert_not_called()
+
     def test_routine_search_uses_safe_source_set(self) -> None:
         command = repo_search.build_command("needle", mode="routine")
 

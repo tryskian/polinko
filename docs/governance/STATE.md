@@ -904,6 +904,9 @@ Last updated: 2026-07-02
     maintenance searches focused on implementation, runtime/research docs,
     tests, and operator scripts without flooding the operator with transcript,
     archive, generated-output, or long governance-log lanes
+  - repo-search query validation lives in `tools.repo_search`; Make preserves
+    the activity contract by recording repo activity only after query
+    validation succeeds
   - `make repo-search-full` is the explicit source/evidence search helper for
     cases where private transcripts, frozen eval snapshots, or long governance
     history are the active source
