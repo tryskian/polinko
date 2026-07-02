@@ -113,6 +113,9 @@ MAKE_CHECKS_DEV_TOOLS_GITHUB = (
     REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "github.mk"
 )
 MAKE_CHECKS_DEV_TOOLS_ACT = REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "act.mk"
+MAKE_CHECKS_DEV_TOOLS_PRECOMMIT = (
+    REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "precommit.mk"
+)
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
 MAKE_SURFACES_LOCAL_BROWSER = REPO_ROOT / "makefiles" / "surfaces" / "local-browser.mk"
 MAKE_SURFACES_NOTEBOOKS = REPO_ROOT / "makefiles" / "surfaces" / "notebooks.mk"
@@ -291,6 +294,9 @@ class MakefileContractTests(unittest.TestCase):
         dev_tools_entry_text = MAKE_CHECKS_DEV_TOOLS.read_text(encoding="utf-8")
         dev_tools_github_text = MAKE_CHECKS_DEV_TOOLS_GITHUB.read_text(encoding="utf-8")
         dev_tools_act_text = MAKE_CHECKS_DEV_TOOLS_ACT.read_text(encoding="utf-8")
+        dev_tools_precommit_text = MAKE_CHECKS_DEV_TOOLS_PRECOMMIT.read_text(
+            encoding="utf-8"
+        )
         contract_text = _makefile_contract_text()
 
         self.assertIn("include makefiles/checks/tests.mk", checks_entry_text)
@@ -394,6 +400,22 @@ class MakefileContractTests(unittest.TestCase):
             "@$(call repo_activity,make act-list,act-list)", dev_tools_act_text
         )
         self.assertIn("@$(call repo_activity,make act-ci,act-ci)", dev_tools_act_text)
+        self.assertIn(
+            "@$(call repo_activity,make precommit-install,precommit-install)",
+            dev_tools_precommit_text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make precommit-run,precommit-run)",
+            dev_tools_precommit_text,
+        )
+        self.assertIn(
+            "$(PYTHON) -m pre_commit install --install-hooks --hook-type pre-commit",
+            dev_tools_precommit_text,
+        )
+        self.assertIn(
+            "$(PYTHON) -m pre_commit run --all-files",
+            dev_tools_precommit_text,
+        )
         self.assertIn('$(PYTHON) -m tools.github_health --gh "$(GH)"', contract_text)
         self.assertIn(
             "include makefiles/checks/runtime-audits/shell.mk",
