@@ -167,6 +167,8 @@ Use this doc for operator procedure.
    - `make local-runtime-config-check` for VS Code task/config changes
    - `make risk-scan` for runtime map, Make gate, CI, runner, startup/closeout,
      or local configuration surface changes
+   - `make runtime-tool-reference-check` for runtime, Make, CI, or docs
+     references to tracked tool helpers
    - `make operator-command-check` for manual eval or OCR operator command changes
    - `make lint-docs` for docs changes
    - `git diff --check`
@@ -505,6 +507,9 @@ Use this doc for operator procedure.
 - `make risk-scan`
   - validates that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates
+- `make runtime-tool-reference-check`
+  - validates active references to tracked `tools/*.py` and `tools/*.sh`
+    helpers
 - `make operator-command-check`
   - validates current operator command names and parked OCR eval shortcut
     boundaries
