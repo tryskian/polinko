@@ -1866,6 +1866,10 @@ class MakefileContractTests(unittest.TestCase):
             "/tmp/polinko-python -m py_compile tools/check_shell_scripts.py",
             result.stdout,
         )
+        self.assertIn(
+            'CAFFEINATE_ACTIVITY_LABEL="make pycheck"',
+            result.stdout,
+        )
         self.assertNotIn("python3 -m py_compile", result.stdout)
 
     def test_repo_search_targets_keep_routine_and_full_modes_explicit(self) -> None:
@@ -2343,6 +2347,12 @@ class MakefileContractTests(unittest.TestCase):
             text,
             r"(?m)^backend-gate:\s*backend-gate-start doctor-env test quality-gate-deterministic$",
         )
+        self.assertIn(
+            "@$(call repo_activity,make backend-gate-start,backend-gate-start)",
+            text,
+        )
+        self.assertIn("$(call repo_activity,make test-one,test-one)", text)
+        self.assertIn("$(call repo_activity,make test-targeted,test-targeted)", text)
         self.assertRegex(text, r"(?m)^docs:\s*open-api-docs$")
         self.assertRegex(text, r"(?m)^open-api-docs:\s*server-daemon$")
         self.assertRegex(
