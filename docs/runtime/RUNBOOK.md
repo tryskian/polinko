@@ -79,6 +79,14 @@ Use this doc for operator procedure.
    - shell setup
 3. Resolve actionable issues before runtime or eval work.
 
+## Interactive Venv Shell
+
+1. Run:
+   - `make venv`
+2. It records repo activity, then delegates to
+   [tools/open_venv_shell.sh](../../tools/open_venv_shell.sh).
+3. The helper opens an interactive shell after sourcing `./.venv/bin/activate`.
+
 ## Inspect-First Rule
 
 1. If a file, path, screenshot, log, report, or transcript is named, inspect

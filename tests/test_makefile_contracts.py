@@ -196,6 +196,7 @@ SHELL_SCRIPT_CONTRACT_SCRIPT = REPO_ROOT / "tools" / "check_shell_scripts.py"
 LOCAL_PRIVACY_GUARD_SCRIPT = REPO_ROOT / "tools" / "local_privacy_guard.sh"
 END_GIT_CHECK_SCRIPT = REPO_ROOT / "tools" / "check_end_git_clean.sh"
 SESSION_STATUS_SCRIPT = REPO_ROOT / "tools" / "session_status.sh"
+OPEN_VENV_SHELL_SCRIPT = REPO_ROOT / "tools" / "open_venv_shell.sh"
 
 
 def _makefile_text() -> str:
@@ -1819,6 +1820,24 @@ class MakefileContractTests(unittest.TestCase):
         lines = result.stdout.splitlines()
         self.assertTrue(lines)
         self.assertTrue(any("-m polinko.cli" in line for line in lines), lines)
+
+    def test_venv_entrypoint_delegates_to_helper(self) -> None:
+        text = _makefile_contract_text()
+        script = OPEN_VENV_SHELL_SCRIPT.read_text(encoding="utf-8")
+
+        self.assertRegex(text, r"(?m)^venv:$")
+        self.assertIn("@$(call repo_activity,make $@,$@)", text)
+        self.assertIn("bash ./tools/open_venv_shell.sh", text)
+        self.assertNotIn('exec "$$SHELL" -i', text)
+        self.assertIn('activate_path="./.venv/bin/activate"', script)
+        self.assertIn(
+            "No local activation script found (checked $activate_path).", script
+        )
+        self.assertIn(
+            'echo "Opening shell with virtual environment: $activate_path"', script
+        )
+        self.assertIn('. "$activate_path"', script)
+        self.assertIn('exec "$SHELL" -i', script)
 
     def test_phony_targets_are_unique(self) -> None:
         targets = _phony_targets()

@@ -870,6 +870,8 @@ Last updated: 2026-07-02
   - `make doctor-env` reports both the active interpreter path and its source
     label, so repo `.venv`, override, and host fallback paths are visible
     during startup
+  - `make venv` records repo activity and delegates interactive shell activation
+    to `tools/open_venv_shell.sh`
   - local URL helpers `make docs` and `make viz` print the target URL by
     default instead of launching a browser
   - explicit browser launch remains available through `make docs-open` and
