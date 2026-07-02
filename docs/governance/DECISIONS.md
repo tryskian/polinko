@@ -6179,3 +6179,18 @@ or branch history instead.
   target per local URL surface.
 - Why: Local browser helpers should be easy to scan and should not maintain
   duplicate command names for the same operator action.
+
+## D-365: Guard local URL helper wiring in risk scan
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `local_urls`, `risk_scan`, `make`, `operator_hygiene`
+- Human-led: The human lead asked to continue script/runtime maintenance from
+  clean `main` and keep helper surfaces precise.
+- Engineer implementation: Extend `make risk-scan` to require the local URL
+  targets, default print-first config, and shared launcher wiring; add a
+  focused runtime-risk test for that guard.
+- Decision: Local URL helper wiring is part of the runtime risk-surface guard.
+- Why: Browser-launch helpers are active operator surfaces. Their target names,
+  default behaviour, and shared local-only launcher should drift only through a
+  deliberate runtime change.

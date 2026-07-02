@@ -760,7 +760,8 @@ Last updated: 2026-07-02
   - runtime risk-surface coverage is explicit through `make risk-scan`, which
     verifies that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates,
-    including the lightweight pre-commit hook contract
+    including the lightweight pre-commit hook contract and local URL
+    target/config/launcher wiring
   - runtime tool reference coverage is explicit through unit tests, which
     verify that active Make, CI, runtime, docs, and tooling references point to
     existing `tools/*.py` and `tools/*.sh` helpers, and that tracked runtime,
@@ -868,7 +869,9 @@ Last updated: 2026-07-02
   - explicit browser launch remains available through `make docs-open` and
     `make viz-open`; those system-launch paths route through
     `tools/open_local_url.sh`, which accepts local destinations only and
-    returns failure when the system launcher fails
+    returns failure when the system launcher fails; `make risk-scan` guards
+    the local URL targets, default print-first config, and shared launcher
+    wiring
   - base OCR transcript case and stability workflows now use the same shared
     case guard as growth, focus, and transcript-lane OCR wrappers, so missing
     and empty case-file handling stays consistent before eval runners launch
