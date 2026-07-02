@@ -126,6 +126,16 @@ class GitPruneStaleRefsTests(unittest.TestCase):
             result.stdout,
         )
 
+    def test_fails_on_malformed_remote_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            work = _init_repo(Path(tmp))
+
+            result = _run_script(work, remote_name="origin remote")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("git-prune-stale-refs: FAIL", result.stderr)
+        self.assertIn("END_GIT_REMOTE must be a non-empty remote name", result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
