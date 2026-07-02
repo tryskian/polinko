@@ -1922,7 +1922,13 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn(
             "manual_evals_db_health = "
+            "@$(call repo_activity,make $@,$@) && "
             "$(MANUAL_EVALS_DB_HEALTH_COMMAND) $(1) $(strip $(2))",
+            text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make $@,$@)\n"
+            "\t$(PYTHON) -m tools.build_manual_evals_db",
             text,
         )
         self.assertRegex(
@@ -1941,6 +1947,11 @@ class MakefileContractTests(unittest.TestCase):
             text,
         )
         self.assertIn("--open-feedback-actionables", text)
+        self.assertIn(
+            "$(call manual_evals_db_health,--open-feedback-actionables,"
+            "$(MANUAL_EVALS_FEEDBACK_ACTIONABLE_ARGS))",
+            text,
+        )
         self.assertIn("MANUAL_EVALS_FEEDBACK_COHORT ?= $(COHORT)", text)
         self.assertIn("MANUAL_EVALS_FEEDBACK_OUTCOME ?= $(OUTCOME)", text)
         self.assertIn("MANUAL_EVALS_FEEDBACK_LIMIT ?= $(LIMIT)", text)

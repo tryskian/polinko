@@ -3,6 +3,7 @@
 .PHONY: manual-evals-db-status manual-evals-db-health
 
 manual-evals-db manual-evals-db-refresh:
+	@$(call repo_activity,make $@,$@)
 	$(PYTHON) -m tools.build_manual_evals_db \
 		--optional-history-source beta_1_0=.local/legacy_eval/archive_legacy_eval/databases/.polinko_history.db \
 		--history-source current=.local/runtime_dbs/active/history.db \
