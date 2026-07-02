@@ -777,8 +777,8 @@ Last updated: 2026-07-01
     devcontainer config shape, guards approved extension recommendations, and
     runs through `make ci-docs`
   - operator command coverage is explicit through `make operator-command-check`,
-    which keeps `manual-evals-*` targets canonical and keeps parked OCR eval
-    shortcuts out of automatic startup, closeout, and CI dependencies
+    which keeps current operator command names canonical and keeps parked OCR
+    eval shortcuts out of automatic startup, closeout, and CI dependencies
   - `make ci-docs` runs `make path-leak-check`, `make scripts-check`,
     `make local-runtime-config-check`, `make risk-scan`,
     `make operator-command-check`, `make startup-contracts-check`, and

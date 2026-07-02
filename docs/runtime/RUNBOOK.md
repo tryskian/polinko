@@ -506,7 +506,7 @@ Use this doc for operator procedure.
   - validates that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates
 - `make operator-command-check`
-  - validates canonical manual eval commands and parked OCR eval shortcut
+  - validates current operator command names and parked OCR eval shortcut
     boundaries
 - `make startup-contracts-check`
   - validates startup and active-kernel runtime doc contracts

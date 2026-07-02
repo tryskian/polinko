@@ -6118,3 +6118,18 @@ or branch history instead.
   command names only.
 - Why: Canonical target names reduce operator ambiguity and keep runtime docs,
   tests, and Make surfaces aligned.
+
+## D-361: Guard retired OpenAI account aliases
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `openai_account`, `operator_commands`, `aliases`, `risk_scan`
+- Human-led: The human lead clarified that command surfaces should keep one
+  current name per operation.
+- Engineer implementation: Extend `make operator-command-check` to fail if
+  retired OpenAI account alias targets return, and update tracked runtime docs
+  to describe current operator-command coverage.
+- Decision: Retired OpenAI account aliases are part of the operator-command
+  guard, alongside lifecycle and manual-eval command-name checks.
+- Why: The guard should prevent recurrence of removed operator aliases, not
+  only document the canonical names after cleanup.
