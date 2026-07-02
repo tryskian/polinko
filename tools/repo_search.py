@@ -65,9 +65,21 @@ ROUTINE_EXCLUDES = (
     "docs/peanut/**",
 )
 
+MAKE_USAGE = {
+    "repo-search": 'Usage: make repo-search Q="pattern"',
+    "repo-search-full": 'Usage: make repo-search-full Q="pattern"',
+}
+
 
 def _existing_paths(paths: tuple[str, ...]) -> list[str]:
     return [path for path in paths if (REPO_ROOT / path).exists()]
+
+
+def validate_query(query: str, *, make_target: str) -> int:
+    if query.strip():
+        return 0
+    print(MAKE_USAGE[make_target])
+    return 2
 
 
 def build_command(query: str, *, mode: str) -> list[str]:
@@ -106,6 +118,17 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--query", required=True, help="Ripgrep pattern to search for.")
     parser.add_argument(
+        "--check-query",
+        action="store_true",
+        help="Validate Make query input and exit before running rg.",
+    )
+    parser.add_argument(
+        "--make-target",
+        choices=tuple(MAKE_USAGE),
+        default="repo-search",
+        help="Make target name used for query usage output.",
+    )
+    parser.add_argument(
         "--mode",
         choices=("routine", "full"),
         default="routine",
@@ -116,6 +139,9 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if argv is None else argv)
+    query_status = validate_query(args.query, make_target=args.make_target)
+    if query_status != 0 or args.check_query:
+        return query_status
     return run(args.query, mode=args.mode)
 
 
