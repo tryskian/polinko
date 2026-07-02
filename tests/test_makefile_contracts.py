@@ -100,6 +100,10 @@ MAKE_CHECKS = REPO_ROOT / "makefiles" / "checks.mk"
 MAKE_CHECKS_TESTS = REPO_ROOT / "makefiles" / "checks" / "tests.mk"
 MAKE_CHECKS_PYTHON = REPO_ROOT / "makefiles" / "checks" / "python.mk"
 MAKE_CHECKS_DOCS = REPO_ROOT / "makefiles" / "checks" / "docs.mk"
+MAKE_CHECKS_DOCS_DIAGRAMS = REPO_ROOT / "makefiles" / "checks" / "docs" / "diagrams.mk"
+MAKE_CHECKS_DOCS_TRANSCRIPTS = (
+    REPO_ROOT / "makefiles" / "checks" / "docs" / "transcripts.mk"
+)
 MAKE_CHECKS_RUNTIME_AUDITS = REPO_ROOT / "makefiles" / "checks" / "runtime-audits.mk"
 MAKE_CHECKS_RUNTIME_AUDITS_DOCTOR_ENV = (
     REPO_ROOT / "makefiles" / "checks" / "runtime-audits" / "doctor-env.mk"
@@ -274,6 +278,8 @@ class MakefileContractTests(unittest.TestCase):
         tests_entry_text = MAKE_CHECKS_TESTS.read_text(encoding="utf-8")
         python_entry_text = MAKE_CHECKS_PYTHON.read_text(encoding="utf-8")
         docs_entry_text = MAKE_CHECKS_DOCS.read_text(encoding="utf-8")
+        docs_diagrams_text = MAKE_CHECKS_DOCS_DIAGRAMS.read_text(encoding="utf-8")
+        docs_transcripts_text = MAKE_CHECKS_DOCS_TRANSCRIPTS.read_text(encoding="utf-8")
         runtime_audits_entry_text = MAKE_CHECKS_RUNTIME_AUDITS.read_text(
             encoding="utf-8"
         )
@@ -340,6 +346,22 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "include makefiles/checks/docs/closeout.mk",
             docs_entry_text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make mermaid-render,mermaid-render)",
+            docs_diagrams_text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make d3-render,d3-render)",
+            docs_diagrams_text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make transcript-fix,transcript-fix)",
+            docs_transcripts_text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make transcript-check,transcript-check)",
+            docs_transcripts_text,
         )
         self.assertNotRegex(
             dev_tools_entry_text,
@@ -2774,6 +2796,12 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("@$(call repo_activity,make trivy-image,trivy-image)", text)
         self.assertIn("@$(call repo_activity,make docker-build,docker-build)", text)
         self.assertIn("@$(call repo_activity,make docker-run,docker-run)", text)
+        self.assertIn("@$(call repo_activity,make mermaid-render,mermaid-render)", text)
+        self.assertIn("@$(call repo_activity,make d3-render,d3-render)", text)
+        self.assertIn("@$(call repo_activity,make transcript-fix,transcript-fix)", text)
+        self.assertIn(
+            "@$(call repo_activity,make transcript-check,transcript-check)", text
+        )
         self.assertIn('CAFFEINATE_META_FILE="$(CAFFEINATE_META_FILE)"', text)
         self.assertIn(
             'CAFFEINATE_ACTIVITY_FILE="$(CAFFEINATE_ACTIVITY_FILE)"',

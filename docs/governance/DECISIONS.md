@@ -6024,3 +6024,18 @@ or branch history instead.
   dependencies.
 - Why: Optional operator helpers should fail with direct prerequisite messages
   instead of raw shell command-not-found output.
+
+## D-355: Track docs helper activity
+
+- Date: `2026-07-01`
+- Category: `runtime_engineering`
+- Tags: `docs`, `diagrams`, `transcripts`, `activity`, `operator_hygiene`
+- Human-led: The human lead asked for helper surfaces to keep maintained repo
+  automation visible and precise.
+- Engineer implementation: Add repo activity tracking to diagram render and
+  transcript maintenance helpers, and cover those hooks in Makefile contract
+  tests.
+- Decision: Docs helper targets register repo activity when they run.
+- Why: Documentation helper commands can generate or validate tracked project
+  surfaces, so they should update the same activity signal as other maintained
+  repo commands.
