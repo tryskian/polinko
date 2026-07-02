@@ -114,6 +114,7 @@ MAKE_CHECKS_DEV_TOOLS_GITHUB = (
 )
 MAKE_CHECKS_DEV_TOOLS_ACT = REPO_ROOT / "makefiles" / "checks" / "dev-tools" / "act.mk"
 MAKE_SURFACES = REPO_ROOT / "makefiles" / "surfaces.mk"
+MAKE_SURFACES_LOCAL_BROWSER = REPO_ROOT / "makefiles" / "surfaces" / "local-browser.mk"
 MAKE_SURFACES_MANUAL_EVALS = REPO_ROOT / "makefiles" / "surfaces" / "manual-evals.mk"
 MAKE_SURFACES_MANUAL_EVALS_FEEDBACK = (
     REPO_ROOT / "makefiles" / "surfaces" / "manual-evals" / "feedback.mk"
@@ -1419,7 +1420,20 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("portfolio-build:", contract_text)
         self.assertNotIn("portfolio-open:", contract_text)
         self.assertNotIn("portfolio-mockups:", contract_text)
+        local_browser_text = MAKE_SURFACES_LOCAL_BROWSER.read_text(encoding="utf-8")
         self.assertIn("pwcli playwright-cli:", contract_text)
+        self.assertIn(
+            "@$(call repo_activity,make $@,$@)",
+            local_browser_text,
+        )
+        self.assertIn(
+            "@$(call repo_activity,make playwright-snapshot-dir,playwright-snapshot-dir)",
+            local_browser_text,
+        )
+        self.assertIn(
+            "local browser helper: missing executable: $(PWCLI_TOOL)",
+            local_browser_text,
+        )
         self.assertIn("PLAYWRIGHT_SNAPSHOT_STAMP ?=", contract_text)
         self.assertIn(
             'PLAYWRIGHT_SNAPSHOT_STAMP="$(PLAYWRIGHT_SNAPSHOT_STAMP)"',
@@ -2801,6 +2815,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("@$(call repo_activity,make transcript-fix,transcript-fix)", text)
         self.assertIn(
             "@$(call repo_activity,make transcript-check,transcript-check)", text
+        )
+        self.assertIn("@$(call repo_activity,make $@,$@)", text)
+        self.assertIn(
+            "@$(call repo_activity,make playwright-snapshot-dir,playwright-snapshot-dir)",
+            text,
         )
         self.assertIn('CAFFEINATE_META_FILE="$(CAFFEINATE_META_FILE)"', text)
         self.assertIn(
