@@ -195,6 +195,7 @@ OCR_INTAKE_WORKFLOW_SCRIPT = REPO_ROOT / "tools" / "run_ocr_intake_workflow.sh"
 SHELL_SCRIPT_CONTRACT_SCRIPT = REPO_ROOT / "tools" / "check_shell_scripts.py"
 LOCAL_PRIVACY_GUARD_SCRIPT = REPO_ROOT / "tools" / "local_privacy_guard.sh"
 END_GIT_CHECK_SCRIPT = REPO_ROOT / "tools" / "check_end_git_clean.sh"
+SESSION_STATUS_SCRIPT = REPO_ROOT / "tools" / "session_status.sh"
 
 
 def _makefile_text() -> str:
@@ -2224,14 +2225,18 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("session-status", _phony_targets())
         self.assertRegex(text, r"(?m)^session-status:$")
-        self.assertIn("status=0;", text)
-        self.assertIn('echo "== Server =="', text)
-        self.assertIn("server-daemon-status || status=$$?", text)
-        self.assertIn('echo "== Eval sidecar =="', text)
-        self.assertIn("eval-sidecar-status || status=$$?", text)
-        self.assertIn('echo "== Keep-awake =="', text)
-        self.assertIn("caffeinate-status || status=$$?", text)
-        self.assertIn("exit $$status", text)
+        self.assertIn("bash ./tools/session_status.sh", text)
+        status_script = SESSION_STATUS_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("STATUS_STEP_LABELS=(", status_script)
+        self.assertIn('"Server"', status_script)
+        self.assertIn('"Eval sidecar"', status_script)
+        self.assertIn('"Keep-awake"', status_script)
+        self.assertIn('"server-daemon-status"', status_script)
+        self.assertIn('"eval-sidecar-status"', status_script)
+        self.assertIn('"caffeinate-status"', status_script)
+        self.assertIn("status=0", status_script)
+        self.assertIn("step_status=$?", status_script)
+        self.assertIn('exit "$status"', status_script)
         self.assertNotIn("server-daemon-status || true", text)
         self.assertNotIn("eval-sidecar-status || true", text)
         self.assertNotIn("caffeinate-status || true", text)

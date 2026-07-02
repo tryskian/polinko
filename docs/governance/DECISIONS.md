@@ -6239,3 +6239,20 @@ or branch history instead.
   steps and explicit dispatch.
 - Why: Closeout should keep stable step counts and readable operator output
   without relying on ad hoc command-string parsing.
+
+## D-369: Dispatch session status by label
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `session_status`, `background_runners`, `make`, `shell`,
+  `operator_hygiene`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Move the inline `session-status` Make shell block
+  into `tools/session_status.sh`, keep Make as the operator entrypoint, and
+  update contract tests for labelled runner-family dispatch.
+- Decision: `make session-status` delegates runner-family status reporting to
+  a shell helper with declared labels and explicit target dispatch.
+- Why: Status reporting is a closeout-adjacent runtime surface. Keeping the
+  sequencing in a helper makes failure propagation and runner-family ownership
+  easier to test without expanding Makefile shell glue.
