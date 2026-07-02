@@ -48,7 +48,14 @@ PARKED_OCR_EVAL_SHORTCUTS = frozenset(
 )
 
 NON_CANONICAL_OPERATOR_TARGET_PREFIXES = ("manualdb",)
-NON_CANONICAL_OPERATOR_TARGETS = ("eod", "eod-stop")
+NON_CANONICAL_OPERATOR_TARGETS = (
+    "eod",
+    "eod-stop",
+    "open-billing",
+    "open-cost-console",
+    "open-limits",
+    "open-usage",
+)
 
 
 @dataclass(frozen=True)

@@ -218,9 +218,9 @@ flowchart TD
   feedback, overlay, OCR retry, and reclassification Make targets route through
   one manual eval health command entrypoint while preserving public target
   names and preview/apply boundaries. `make operator-command-check` keeps
-  `manual-evals-*` targets canonical and keeps parked OCR eval shortcuts out of
-  automatic startup, closeout, and CI dependencies. Eval report wrappers resolve
-  the checkout root before writing
+  current operator command names canonical and keeps parked OCR eval shortcuts
+  out of automatic startup, closeout, and CI dependencies. Eval report wrappers
+  resolve the checkout root before writing
   default report paths or launching report modules. OCR intake/focus/growth
   orchestrator wrappers resolve the checkout root before using default local
   paths, sourcing the shared guard helper, or delegating to eval runners. Base,

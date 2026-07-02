@@ -77,6 +77,26 @@ class OperatorCommandCheckTests(unittest.TestCase):
             ],
         )
 
+    def test_openai_account_alias_targets_are_reported(self) -> None:
+        failures = check_operator_commands.check_canonical_operator_targets(
+            "\n".join(
+                [
+                    ".PHONY: openai-limits open-limits",
+                    "openai-limits:",
+                    "\t@true",
+                    "open-limits: openai-limits",
+                ]
+            )
+        )
+
+        self.assertEqual(
+            failures,
+            [
+                "open-limits: non-canonical operator target is active",
+                "open-limits: non-canonical operator rule is active on line 4",
+            ],
+        )
+
     def test_parked_ocr_shortcut_cannot_enter_automation_entrypoint(self) -> None:
         failures = check_operator_commands.check_parked_ocr_shortcuts(
             "\n".join(

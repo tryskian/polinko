@@ -238,8 +238,8 @@ Explicit companion checks:
   - checks runtime map, Make, CI, runner, and local configuration coverage for
     known high-risk surfaces
 - `make operator-command-check`
-  - checks canonical manual eval commands and keeps parked OCR eval shortcuts out
-    of automatic startup, closeout, and CI dependencies
+  - checks current operator command names and keeps parked OCR eval shortcuts
+    out of automatic startup, closeout, and CI dependencies
 - `make security-checks`
   - runs local Python and root Node dependency audits
 - `make api-smoke`
