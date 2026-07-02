@@ -1914,6 +1914,10 @@ class MakefileContractTests(unittest.TestCase):
         )
 
         self.assertIn(
+            "/tmp/polinko-python -m tools.validate_make_variable",
+            result.stdout,
+        )
+        self.assertIn(
             "/tmp/polinko-python -m py_compile tools/check_shell_scripts.py",
             result.stdout,
         )
@@ -1922,6 +1926,25 @@ class MakefileContractTests(unittest.TestCase):
             result.stdout,
         )
         self.assertNotIn("python3 -m py_compile", result.stdout)
+
+    def test_simple_make_argument_validation_delegates_to_helper(self) -> None:
+        text = _makefile_contract_text()
+
+        self.assertNotIn('if [ -z "$(TEST)" ]', text)
+        self.assertNotIn('if [ -z "$(TESTS)" ]', text)
+        self.assertNotIn('if [ -z "$(FILES)" ]', text)
+        self.assertIn(
+            '@$(PYTHON) -m tools.validate_make_variable --value "$(TEST)"',
+            text,
+        )
+        self.assertIn(
+            '@$(PYTHON) -m tools.validate_make_variable --value "$(TESTS)"',
+            text,
+        )
+        self.assertIn(
+            '@$(PYTHON) -m tools.validate_make_variable --value "$(FILES)"',
+            text,
+        )
 
     def test_repo_search_targets_keep_routine_and_full_modes_explicit(self) -> None:
         text = _makefile_contract_text()

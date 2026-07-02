@@ -773,6 +773,10 @@ Last updated: 2026-07-02
     references to tracked helpers have direct test visibility
   - Make Python helper targets use the configured `$(PYTHON)` interpreter for
     repo-local checks, including `make pycheck`
+  - simple required Make-variable validation for developer test helpers lives
+    in `tools.validate_make_variable`; `test-one`, `test-targeted`, and
+    `pycheck` record repo activity only after required input validation
+    succeeds
   - direct runtime shell wrappers share `tools/python_runtime.sh`, so explicit
     `PYTHON` wins only when it resolves to an executable command, repo `.venv`
     is preferred for direct invocation, and `python3` remains the final
