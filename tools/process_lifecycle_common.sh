@@ -48,6 +48,20 @@ polinko_invalid_numeric_value() {
 	return 1
 }
 
+polinko_require_non_empty_token() {
+	_polinko_name=$1
+	_polinko_value=$2
+	_polinko_kind=${3:-value}
+	_polinko_context=${4:-runtime helper}
+	case "$_polinko_value" in
+	"" | *[[:space:]]*)
+		echo "Invalid value for $_polinko_context: $_polinko_name must be a non-empty $_polinko_kind without whitespace (got $_polinko_value)" >&2
+		return 1
+		;;
+	esac
+	return 0
+}
+
 polinko_require_positive_integer() {
 	_polinko_name=$1
 	_polinko_value=$2
