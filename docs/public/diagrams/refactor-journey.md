@@ -3,8 +3,8 @@
 # Refactor Journey Diagrams
 
 These diagrams show the refactor journey by lane: first evidence baseline,
-runtime/package movement, manual-eval workbench preservation, and docs/closeout
-propagation.
+runtime/package movement, automation-backed contracts, manual-eval workbench
+preservation, and docs/closeout propagation.
 
 ## Refactor Journey: Evidence First
 
@@ -53,6 +53,32 @@ flowchart TD
   class C,D,E,F,G bridge;
   class H,I,J evidence;
   class K pass;
+```
+
+## Refactor Journey: Automation-Backed Contracts
+
+![Refactor Journey: Automation-Backed Contracts](refactor-journey-automation-backed-contracts.svg)
+
+```mermaid
+flowchart TD
+  A["CI runner refactor:\nshared build gates"] --> B["Operator friction signal:\nrepeated shell-style failures"]
+  B --> C["Promote as repo contract:\nmake scripts-check"]
+  C --> D["Cover active execution surfaces:\nshell helpers\nMake recipe files"]
+  D --> E["Allow safe output patterns:\nquoted heredoc Markdown"]
+  E --> F["Focused contract tests:\nshell scripts\nMakefile integration"]
+  F --> G["Validation path:\npr-preflight\nPR checks\nmain CI"]
+  G --> H["Current-truth docs:\nSTATE\nruntime references\nD-395"]
+  H --> I["Next automation lane:\nCI failure visibility"]
+
+  classDef source fill:#EEF4FB,stroke:#4E79A7,color:#1F1F1F;
+  classDef bridge fill:#FBF5E8,stroke:#F28E2B,color:#1F1F1F;
+  classDef pass fill:#EEF7EE,stroke:#59A14F,color:#1F1F1F;
+  classDef evidence fill:#EEF7F6,stroke:#76B7B2,color:#1F1F1F;
+
+  class A source;
+  class B,C,D bridge;
+  class E,F,G pass;
+  class H,I evidence;
 ```
 
 ## Refactor Journey: Manual Eval Workbench
