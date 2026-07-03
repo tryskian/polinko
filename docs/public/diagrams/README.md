@@ -38,5 +38,6 @@ that generate them.
 
 - [Refactor Journey: Evidence First](refactor-journey-evidence-first.svg)
 - [Refactor Journey: Runtime Package Boundary](refactor-journey-runtime-package-boundary.svg)
+- [Refactor Journey: Automation-Backed Contracts](refactor-journey-automation-backed-contracts.svg)
 - [Refactor Journey: Manual Eval Workbench](refactor-journey-manual-eval-workbench.svg)
 - [Refactor Journey: Docs And Closeout](refactor-journey-docs-and-closeout.svg)
