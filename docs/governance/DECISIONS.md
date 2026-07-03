@@ -6571,3 +6571,19 @@ or branch history instead.
 - Why: Blank closeout overrides should not silently alias back to `main` or
   `origin`; the operator should see a direct config diagnostic before the
   final session gate runs Git checks.
+
+## D-390: Preserve explicit blank stale-ref prune config as invalid
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `git`, `closeout`, `stale_refs`, `operator_hygiene`, `config`
+- Human-led: The human lead asked for hidden closeout scripts to stay precise
+  and aligned with the active closeout contract.
+- Engineer implementation: Update `tools/git_prune_stale_refs.sh` so
+  `END_GIT_REMOTE` defaults only when unset, then add focused regression
+  coverage for unset and explicit blank values.
+- Decision: The stale-ref prune helper treats unset remote config as
+  defaulted, while explicit blank config fails before Git work.
+- Why: The prune helper runs immediately before the final closeout Git gate;
+  both helpers should surface blank closeout remote config as an operator
+  error instead of silently pruning `origin`.

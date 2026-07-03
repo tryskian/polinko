@@ -107,7 +107,7 @@ flowchart TD
   `make session-status` delegates runner-family reporting to
   `tools/session_status.sh` and returns failure when a child status surface
   reports drift. `make git-prune-stale-refs` runs before the final clean-main
-  Git check. The final Git check treats unset closeout branch or remote config
+  Git check. The prune helper and final Git check treat unset closeout config
   as defaulted, while explicit blank config fails before Git work. `make
   risk-scan` verifies
   that known high-risk runtime, script, CI, and local configuration surfaces

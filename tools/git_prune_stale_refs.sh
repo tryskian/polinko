@@ -7,7 +7,7 @@ source "$script_dir/repo_root.sh"
 
 polinko_cd_repo_root
 
-REMOTE="${END_GIT_REMOTE:-origin}"
+REMOTE="${END_GIT_REMOTE-origin}"
 
 fail() {
 	echo "git-prune-stale-refs: FAIL" >&2
