@@ -6555,3 +6555,19 @@ or branch history instead.
 - Why: Blank repo identity overrides should fail with a clear operator
   diagnostic instead of silently aliasing sidecar runtime state into a fallback
   namespace.
+
+## D-389: Preserve explicit blank closeout Git config as invalid
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `git`, `closeout`, `operator_hygiene`, `config`
+- Human-led: The human lead asked for runtime-helper maintenance to keep
+  hidden closeout scripts precise and warning-free.
+- Engineer implementation: Update `tools/check_end_git_clean.sh` so
+  `END_GIT_BRANCH` and `END_GIT_REMOTE` default only when unset, then add
+  focused regression coverage for explicit blank values.
+- Decision: The final closeout Git gate treats unset branch or remote config
+  as defaulted, while explicit blank config fails before Git work.
+- Why: Blank closeout overrides should not silently alias back to `main` or
+  `origin`; the operator should see a direct config diagnostic before the
+  final session gate runs Git checks.
