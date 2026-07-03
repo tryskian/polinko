@@ -446,21 +446,12 @@ class MakefileContractTests(unittest.TestCase):
             r"(?m)^(?:\.PHONY|[A-Za-z0-9_.-]+(?:\s+[A-Za-z0-9_.-]+)*:)",
         )
         self.assertIn(
-            "include makefiles/checks/runtime-audits/doctor-env/source.mk",
-            runtime_audits_doctor_env_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/checks/runtime-audits/doctor-env/venv.mk",
-            runtime_audits_doctor_env_entry_text,
-        )
-        self.assertIn(
-            "include makefiles/checks/runtime-audits/doctor-env/runner.mk",
-            runtime_audits_doctor_env_entry_text,
-        )
-        self.assertIn(
             "include makefiles/checks/runtime-audits/doctor-env/target.mk",
             runtime_audits_doctor_env_entry_text,
         )
+        self.assertNotIn("doctor-env/source.mk", runtime_audits_doctor_env_entry_text)
+        self.assertNotIn("doctor-env/venv.mk", runtime_audits_doctor_env_entry_text)
+        self.assertNotIn("doctor-env/runner.mk", runtime_audits_doctor_env_entry_text)
         self.assertRegex(contract_text, r"(?m)^test:$")
         self.assertRegex(contract_text, r"(?m)^backend-gate:")
         self.assertNotRegex(contract_text, r"(?m)^\tbackend-gate:")
@@ -1811,13 +1802,13 @@ class MakefileContractTests(unittest.TestCase):
         text = _makefile_contract_text()
 
         self.assertRegex(text, r"(?m)^doctor-env:$")
-        self.assertIn('PYTHON_ORIGIN="$(origin PYTHON)"', text)
         self.assertIn(
-            'POLINKO_DOCTOR_INTERPRETER_SOURCE="$$INTERPRETER_SOURCE"',
+            '$(PYTHON) -m tools.run_doctor_env --python "$(PYTHON)"',
             text,
         )
-        self.assertIn("repo .venv selected by Make", text)
-        self.assertIn("host python3 fallback selected by Make", text)
+        self.assertIn('--python-origin "$(origin PYTHON)"', text)
+        self.assertNotIn("POLINKO_DOCTOR_INTERPRETER_SOURCE", text)
+        self.assertNotIn("doctor_env_interpreter_source", text)
 
     def test_no_argument_make_still_launches_chat_entrypoint(self) -> None:
         result = subprocess.run(

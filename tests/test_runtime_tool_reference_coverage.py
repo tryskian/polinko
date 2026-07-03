@@ -23,6 +23,8 @@ def _read_tracked_text(paths: list[str]) -> str:
     for rel_path in paths:
         try:
             chunks.append((REPO_ROOT / rel_path).read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            continue
         except UnicodeDecodeError:
             continue
     return "\n".join(chunks)
