@@ -91,6 +91,16 @@ def _read_positive_int_env(name: str, default: int) -> int:
     return parsed
 
 
+def _read_non_empty_env(name: str, default: str) -> str:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    value = raw.strip()
+    if not value:
+        raise ConfigError(f"{name} must not be empty when set.")
+    return value
+
+
 def _default_meta_file(pid_file: Path) -> Path:
     if pid_file.suffix == ".pid":
         return pid_file.with_suffix(".meta.json")
@@ -138,9 +148,7 @@ def _commit(repo_root: Path) -> str:
 
 def _load_config(action: str) -> RuntimeConfig:
     repo_root = Path(os.environ.get("POLINKO_REPO_ROOT", Path.cwd())).resolve()
-    repo_slug = os.environ.get("CAFFEINATE_REPO_SLUG", repo_root.name).strip()
-    if not repo_slug:
-        repo_slug = repo_root.name
+    repo_slug = _read_non_empty_env("CAFFEINATE_REPO_SLUG", repo_root.name)
 
     runtime_root = _path_from_env("CAFFEINATE_RUNTIME_ROOT", _default_runtime_root())
     state_dir = _path_from_env("CAFFEINATE_STATE_DIR", runtime_root / repo_slug)
@@ -409,8 +417,8 @@ def _write_activity(config: RuntimeConfig, label: str, target: str) -> None:
 def activity(config: RuntimeConfig) -> int:
     if not _prepare_output_path(config.activity_file, "activity metadata"):
         return 1
-    target = os.environ.get("CAFFEINATE_ACTIVITY_TARGET", "").strip() or config.action
-    label = os.environ.get("CAFFEINATE_ACTIVITY_LABEL", "").strip() or f"make {target}"
+    target = _read_non_empty_env("CAFFEINATE_ACTIVITY_TARGET", config.action)
+    label = _read_non_empty_env("CAFFEINATE_ACTIVITY_LABEL", f"make {target}")
     _write_activity(config, label, target)
     return 0
 
@@ -869,16 +877,20 @@ def main(argv: list[str] | None = None) -> int:
         print(f"caffeinate config error: {exc}", file=sys.stderr)
         return 2
 
-    if args.action == "start":
-        return start(config)
-    if args.action == "stop":
-        return stop(config)
-    if args.action == "stop-all":
-        return stop_all(config)
-    if args.action == "status":
-        return status(config)
-    if args.action == "activity":
-        return activity(config)
+    try:
+        if args.action == "start":
+            return start(config)
+        if args.action == "stop":
+            return stop(config)
+        if args.action == "stop-all":
+            return stop_all(config)
+        if args.action == "status":
+            return status(config)
+        if args.action == "activity":
+            return activity(config)
+    except ConfigError as exc:
+        print(f"caffeinate config error: {exc}", file=sys.stderr)
+        return 2
     return 2
 
 

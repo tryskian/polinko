@@ -6505,3 +6505,19 @@ or branch history instead.
 - Why: An explicit empty sidecar target should fail at the operator wrapper
   with a clear config diagnostic instead of launching a long-running runner
   without a meaningful Make target.
+
+## D-386: Validate caffeinate repo and activity identity config
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `caffeinate`, `runtime`, `operator_hygiene`, `config`
+- Human-led: The human lead asked for wake-lock helpers to report repo activity
+  precisely across multiple repos.
+- Engineer implementation: Route `CAFFEINATE_REPO_SLUG`,
+  `CAFFEINATE_ACTIVITY_LABEL`, and `CAFFEINATE_ACTIVITY_TARGET` through
+  explicit non-empty validation in `tools/manage_caffeinate.py`, then add
+  focused regression coverage.
+- Decision: Explicit caffeinate repo and activity identity overrides are
+  validated before runtime metadata writes.
+- Why: Blank identity overrides should fail with clear config diagnostics
+  instead of silently aliasing wake-lock activity into fallback repo metadata.

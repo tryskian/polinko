@@ -181,9 +181,10 @@ flowchart TD
   reporting. Its PID, log, ownership metadata, and activity metadata default to a
   repo-scoped runtime namespace, with mutating lifecycle actions migrating owned
   flat runtime files or cleaning orphaned flat PID metadata before launch or stop
-  decisions. It validates command, match-pattern regex, active-window, and
-  global-cleanup config before activity, start, stop, stop-all, or status work
-  touches PID/activity state,
+  decisions. It validates command, match-pattern regex, repo-slug,
+  activity-label, activity-target, active-window, and global-cleanup config
+  before activity, start, stop, stop-all, or status work touches
+  PID/activity state,
   rejects invalid runtime output paths with direct diagnostics before launch,
   cleanup, or metadata writes, and requires process-inspection tooling before
   PID ownership classification or cleanup.
