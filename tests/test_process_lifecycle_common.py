@@ -105,6 +105,30 @@ class ProcessLifecycleCommonTests(unittest.TestCase):
             result.stderr,
         )
 
+    def test_require_labeled_command_reports_missing_command_with_label(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(
+                [
+                    "/bin/sh",
+                    "-c",
+                    (
+                        f'. "{HELPER}"; '
+                        f'PATH="{tmp}"; '
+                        "polinko_require_labeled_command definitely-missing "
+                        '"bootstrap Python" "setup-devcontainer"'
+                    ),
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "setup-devcontainer: missing bootstrap Python command: definitely-missing",
+            result.stderr,
+        )
+
     def test_require_process_inspection_reports_missing_ps(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             result = subprocess.run(

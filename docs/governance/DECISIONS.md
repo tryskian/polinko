@@ -6394,3 +6394,19 @@ or branch history instead.
 - Why: Make-command selection and missing-command diagnostics should stay
   consistent across direct shell entrypoints while keeping each caller's
   failure message specific.
+
+## D-379: Share devcontainer command prerequisite checks
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `devcontainer`, `shell`, `dependencies`, `operator_hygiene`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Add a labelled-command prerequisite helper to
+  `tools/process_lifecycle_common.sh`, route `tools/setup_devcontainer.sh`
+  bootstrap Python and npm checks through it, and add focused helper and
+  devcontainer regression coverage.
+- Decision: Devcontainer setup command prerequisites use the shared shell
+  command-precondition helper.
+- Why: Devcontainer bootstrap should keep specific missing-command diagnostics
+  while avoiding local command-check logic inside the setup script.

@@ -726,7 +726,9 @@ Last updated: 2026-07-02
   - devcontainer setup resolves the git top-level before creating `.venv`
     and installing root dependencies; venv creation uses the
     configurable `POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON` bootstrap interpreter,
-    then pip installs run through the created venv Python
+    then pip installs run through the created venv Python; bootstrap Python
+    and npm prerequisite checks use the shared shell command-precondition
+    helper
   - devcontainer VS Code settings use repo-owned Ruff and mypy tooling from
     `.venv`
   - Python dependencies use `requirements.in` plus generated
