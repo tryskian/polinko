@@ -60,7 +60,7 @@ resolve_expected_python() {
 }
 
 server_pids_on_port() {
-	if ! command -v lsof >/dev/null 2>&1; then
+	if ! polinko_command_available lsof; then
 		return 0
 	fi
 	lsof -nP -iTCP:"$dev_backend_port" -sTCP:LISTEN -t 2>/dev/null || true
@@ -189,7 +189,7 @@ start_server() {
 		fi
 	fi
 
-	if command -v lsof >/dev/null 2>&1; then
+	if polinko_command_available lsof; then
 		existing_pids=$(server_pids_on_port | tr '\n' ' ' || true)
 		if [ -n "$existing_pids" ]; then
 			polinko_pid=$(polinko_server_pid_on_port || true)

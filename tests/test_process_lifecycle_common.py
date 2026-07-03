@@ -67,6 +67,35 @@ class ProcessLifecycleCommonTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_command_available_accepts_shell_builtins(self) -> None:
+        result = subprocess.run(
+            ["/bin/sh", "-c", f'. "{HELPER}"; polinko_command_available :'],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_command_available_rejects_missing_command(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(
+                [
+                    "/bin/sh",
+                    "-c",
+                    (
+                        f'. "{HELPER}"; '
+                        f'PATH="{tmp}"; '
+                        "polinko_command_available definitely-missing"
+                    ),
+                ],
+                cwd=REPO_ROOT,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(result.returncode, 1)
+
     def test_require_command_accepts_shell_builtins(self) -> None:
         result = subprocess.run(
             [
