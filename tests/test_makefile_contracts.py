@@ -2492,7 +2492,8 @@ class MakefileContractTests(unittest.TestCase):
         )
 
         self.assertIn("shell-script-contracts: PASS", result.stdout)
-        self.assertIn("scripts checked", result.stdout)
+        self.assertIn("scripts,", result.stdout)
+        self.assertIn("Make files checked", result.stdout)
 
     def test_operator_wrappers_use_dependency_edges_for_internal_chains(self) -> None:
         text = _makefile_contract_text()

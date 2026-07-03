@@ -52,6 +52,52 @@ SCRIPT_DIR_SOURCE_RE = re.compile(
     (?:\s|$)
     """
 )
+QUOTED_HEREDOC_START_RE = re.compile(
+    r"""
+    <<(?P<strip_tabs>-?)\s*
+    (?P<quote>['"])
+    (?P<marker>[A-Za-z_][A-Za-z0-9_]*)
+    (?P=quote)
+    """,
+    re.VERBOSE,
+)
+
+
+def legacy_backtick_failures(
+    lines: list[str], *, make_recipe_tabs: bool = False
+) -> list[str]:
+    failures: list[str] = []
+    quoted_heredoc_marker: str | None = None
+    quoted_heredoc_strips_tabs = False
+
+    for line_number, line in enumerate(lines, start=1):
+        if quoted_heredoc_marker is not None:
+            terminator = (
+                line.lstrip("\t")
+                if quoted_heredoc_strips_tabs or make_recipe_tabs
+                else line
+            )
+            if terminator == quoted_heredoc_marker:
+                quoted_heredoc_marker = None
+                quoted_heredoc_strips_tabs = False
+            continue
+
+        stripped = line.lstrip()
+        if stripped.startswith("#"):
+            continue
+
+        if "`" in line:
+            failures.append(
+                f"line {line_number} uses legacy backtick command substitution; "
+                "use $(...)"
+            )
+
+        heredoc_match = QUOTED_HEREDOC_START_RE.search(line)
+        if heredoc_match is not None:
+            quoted_heredoc_marker = heredoc_match.group("marker")
+            quoted_heredoc_strips_tabs = bool(heredoc_match.group("strip_tabs"))
+
+    return failures
 
 
 def tracked_shell_scripts() -> list[Path]:
@@ -63,6 +109,21 @@ def tracked_shell_scripts() -> list[Path]:
         text=True,
     )
     return [Path(path) for path in result.stdout.splitlines() if path.endswith(".sh")]
+
+
+def tracked_makefiles() -> list[Path]:
+    result = subprocess.run(
+        ["git", "ls-files", "Makefile", "makefiles"],
+        cwd=REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return [
+        Path(path)
+        for path in result.stdout.splitlines()
+        if path == "Makefile" or path.endswith(".mk")
+    ]
 
 
 def shell_syntax_failure(path: Path, shebang: str) -> str | None:
@@ -124,6 +185,8 @@ def check_script(path: Path) -> list[str]:
     if syntax_failure is not None:
         failures.append(syntax_failure)
 
+    failures.extend(legacy_backtick_failures(lines))
+
     if path in SHELL_LIBRARIES:
         function_name = SHELL_LIBRARIES[path]
         direct_execution_guard = f'if [ "${{0##*/}}" = "{path.name}" ]; then'
@@ -149,9 +212,22 @@ def check_script(path: Path) -> list[str]:
     return failures
 
 
+def check_makefile(path: Path) -> list[str]:
+    text = (REPO_ROOT / path).read_text(encoding="utf-8")
+    failures: list[str] = []
+
+    if "\r\n" in text:
+        failures.append("uses CRLF line endings")
+
+    failures.extend(legacy_backtick_failures(text.splitlines(), make_recipe_tabs=True))
+
+    return failures
+
+
 def main() -> int:
     failures: list[str] = []
     shell_scripts = tracked_shell_scripts()
+    makefiles = tracked_makefiles()
 
     if not shell_scripts:
         failures.append("no tracked tools/*.sh scripts found")
@@ -170,13 +246,20 @@ def main() -> int:
         for failure in check_script(path):
             failures.append(f"{path}: {failure}")
 
+    for path in makefiles:
+        for failure in check_makefile(path):
+            failures.append(f"{path}: {failure}")
+
     if failures:
         print("shell-script-contracts: FAIL", file=sys.stderr)
         for failure in failures:
             print(f"- {failure}", file=sys.stderr)
         return 1
 
-    print(f"shell-script-contracts: PASS ({len(shell_scripts)} scripts checked)")
+    print(
+        "shell-script-contracts: PASS "
+        f"({len(shell_scripts)} scripts, {len(makefiles)} Make files checked)"
+    )
     return 0
 
 

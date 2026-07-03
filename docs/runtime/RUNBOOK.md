@@ -498,7 +498,9 @@ Use this doc for operator procedure.
   - docs lint
 - `make scripts-check`
   - validates tracked shell helper shebangs, strict modes, sourced helper
-    contracts, and root-helper coverage for executable operator scripts
+    contracts, `$()` command substitution in active shell surfaces, and
+    root-helper coverage for executable operator scripts
+  - supports literal Markdown code spans through quoted heredoc output
   - keeps runtime shell wrappers on shared command helper surfaces, including
     `tools/make_runtime.sh` and `tools/shell_command_common.sh`
 - repo activity heartbeat
