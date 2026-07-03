@@ -224,6 +224,40 @@ class RuntimeRiskScanTests(unittest.TestCase):
             failures,
         )
 
+    def test_direct_command_probe_outside_shared_helpers_is_reported(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tool_path = root / "tools" / "custom_wrapper.sh"
+            tool_path.parent.mkdir(parents=True)
+            tool_path.write_text("command -v gh >/dev/null 2>&1\n", encoding="utf-8")
+
+            failures = check_runtime_risk_scan.check_direct_command_probes(root)
+
+        self.assertEqual(
+            failures,
+            [
+                "tools/custom_wrapper.sh:1: route command availability probe "
+                "'command -v' through tools/shell_command_common.sh or "
+                "tools/python_runtime.sh"
+            ],
+        )
+
+    def test_command_probe_helpers_are_allowed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            tools_dir = root / "tools"
+            tools_dir.mkdir()
+            (tools_dir / "shell_command_common.sh").write_text(
+                'command -v "$tool" >/dev/null 2>&1\n', encoding="utf-8"
+            )
+            (tools_dir / "python_runtime.sh").write_text(
+                "command -v python3 >/dev/null 2>&1\n", encoding="utf-8"
+            )
+
+            failures = check_runtime_risk_scan.check_direct_command_probes(root)
+
+        self.assertEqual([], failures)
+
     def test_missing_session_status_target_is_reported(self) -> None:
         failures = check_runtime_risk_scan.check_make_contracts(
             _make_contract_text(omit_targets={"session-status"})
