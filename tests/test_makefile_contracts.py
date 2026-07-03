@@ -156,6 +156,7 @@ CAFFEINATE_SCRIPT = REPO_ROOT / "tools" / "manage_caffeinate.sh"
 OPENAI_ACCOUNT_SCRIPT = REPO_ROOT / "tools" / "openai_account_summary.py"
 SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "run_server_daemon.sh"
 LOCAL_URL_LAUNCHER_SCRIPT = REPO_ROOT / "tools" / "open_local_url.sh"
+PWCLI_DAILY_SCRIPT = REPO_ROOT / "tools" / "pwcli_daily.sh"
 PROCESS_LIFECYCLE_COMMON_SCRIPT = REPO_ROOT / "tools" / "process_lifecycle_common.sh"
 DETACHED_PROCESS_LAUNCHER_SCRIPT = REPO_ROOT / "tools" / "launch_detached_process.py"
 EVAL_SERVER_DAEMON_SCRIPT = REPO_ROOT / "tools" / "ensure_eval_server_daemon.sh"
@@ -1501,6 +1502,13 @@ class MakefileContractTests(unittest.TestCase):
             "local browser helper: missing executable: $(PWCLI_TOOL)",
             local_browser_text,
         )
+        pwcli_daily_text = PWCLI_DAILY_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('. "$script_dir/process_lifecycle_common.sh"', pwcli_daily_text)
+        self.assertIn(
+            'polinko_require_labeled_command "npx" "npx" "pwcli-daily"',
+            pwcli_daily_text,
+        )
+        self.assertNotIn("command -v npx", pwcli_daily_text)
         self.assertIn("PLAYWRIGHT_SNAPSHOT_STAMP ?=", contract_text)
         self.assertIn(
             'PLAYWRIGHT_SNAPSHOT_STAMP="$(PLAYWRIGHT_SNAPSHOT_STAMP)"',

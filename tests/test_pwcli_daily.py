@@ -1,4 +1,5 @@
 import os
+import shutil
 import stat
 import subprocess
 import tempfile
@@ -13,6 +14,13 @@ SCRIPT = REPO_ROOT / "tools" / "pwcli_daily.sh"
 def _write_executable(path: Path, text: str) -> None:
     path.write_text(text, encoding="utf-8")
     path.chmod(path.stat().st_mode | stat.S_IXUSR)
+
+
+def _symlink_required_command(bin_dir: Path, command: str) -> None:
+    command_path = shutil.which(command)
+    if command_path is None:
+        raise AssertionError(f"required test command not found: {command}")
+    os.symlink(command_path, bin_dir / command)
 
 
 class PwcliDailyTests(unittest.TestCase):
@@ -62,6 +70,35 @@ class PwcliDailyTests(unittest.TestCase):
                 result.stderr,
             )
             self.assertEqual(result.stdout, "")
+
+    def test_missing_npx_uses_shared_command_prerequisite_message(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            bin_dir = tmp_path / "bin"
+            bin_dir.mkdir()
+            _symlink_required_command(bin_dir, "dirname")
+            _symlink_required_command(bin_dir, "mkdir")
+
+            result = subprocess.run(
+                [
+                    "/bin/bash",
+                    str(SCRIPT.relative_to(REPO_ROOT)),
+                    "snapshot",
+                    "http://127.0.0.1:8000/",
+                ],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PATH": str(bin_dir),
+                    "PLAYWRIGHT_SNAPSHOT_BASE_DIR": str(tmp_path / "snapshots"),
+                    "PLAYWRIGHT_SNAPSHOT_DAY": "23-06-26",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("pwcli-daily: missing npx command: npx", result.stderr)
 
     def test_screenshot_injects_default_session_and_filename(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
