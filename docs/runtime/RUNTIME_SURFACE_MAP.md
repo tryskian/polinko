@@ -107,7 +107,9 @@ flowchart TD
   `make session-status` delegates runner-family reporting to
   `tools/session_status.sh` and returns failure when a child status surface
   reports drift. `make git-prune-stale-refs` runs before the final clean-main
-  Git check. `make risk-scan` verifies
+  Git check. The final Git check treats unset closeout branch or remote config
+  as defaulted, while explicit blank config fails before Git work. `make
+  risk-scan` verifies
   that known high-risk runtime, script, CI, and local configuration surfaces
   remain visible in the tracked map and Make gates.
   `make scripts-check` validates shell syntax plus root-helper coverage for

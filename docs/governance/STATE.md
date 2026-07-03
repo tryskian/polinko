@@ -1028,5 +1028,5 @@ Last updated: 2026-07-03
 - `make git-prune-stale-refs` during `make end` before the final clean-main
   Git check, or as a standalone cleanup after merged or deleted PR branches
   leave stale remote-tracking refs for the configured closeout remote
-- closeout git helpers validate explicit branch and remote config before Git
-  work begins
+- closeout git helpers use defaults only when branch and remote config are
+  unset; explicit blank branch or remote config fails before Git work begins
