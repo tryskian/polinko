@@ -3163,6 +3163,7 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("polinko_require_positive_integer", sidecar_script_text)
         self.assertIn("polinko_require_non_empty_token", sidecar_script_text)
+        self.assertIn("EVAL_SIDECAR_REPO_SLUG", sidecar_script_text)
         self.assertIn("polinko_require_non_negative_decimal", sidecar_script_text)
         self.assertIn(
             'detached_launcher="$POLINKO_REPO_ROOT/tools/launch_detached_process.py"',

@@ -174,6 +174,8 @@ Last updated: 2026-07-03
   - `eval-sidecar` PID and log defaults live under repo-scoped
     `EVAL_SIDECAR_STATE_DIR`, and status reports repo context plus
     PID/log/current-file paths before liveness
+  - `eval-sidecar` validates explicit repo-slug config before deriving
+    repo-scoped PID/log paths
   - `eval-sidecar` reports missing current-file drift on start/status and still
     stops the repo-managed PID during closeout
   - `eval-sidecar` validates `EVAL_SIDECAR_TARGET` and

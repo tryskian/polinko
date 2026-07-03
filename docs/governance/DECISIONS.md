@@ -6538,3 +6538,20 @@ or branch history instead.
 - Why: Blank repo identity overrides should fail with a clear operator
   diagnostic instead of silently aliasing server runtime state into a fallback
   namespace.
+
+## D-388: Validate eval-sidecar repo identity config
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `eval-sidecar`, `runtime`, `operator_hygiene`, `config`
+- Human-led: The human lead asked for repo-managed runtime helpers to preserve
+  one repo-scoped identity per runner.
+- Engineer implementation: Route `EVAL_SIDECAR_REPO_SLUG` through the shared
+  `polinko_require_non_empty_token` helper before deriving
+  `EVAL_SIDECAR_STATE_DIR` in `tools/run_eval_sidecar_start.sh`, then add
+  focused sidecar and Make contract coverage.
+- Decision: Explicit eval-sidecar repo identity config is validated before
+  repo-scoped PID/log path derivation.
+- Why: Blank repo identity overrides should fail with a clear operator
+  diagnostic instead of silently aliasing sidecar runtime state into a fallback
+  namespace.

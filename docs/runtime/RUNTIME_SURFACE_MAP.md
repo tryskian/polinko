@@ -213,6 +213,8 @@ flowchart TD
   `eval-sidecar` PID and log defaults live under repo-scoped
   `EVAL_SIDECAR_STATE_DIR`, and status reports repo context plus
   PID/log/current-file paths before liveness.
+  Explicit `EVAL_SIDECAR_REPO_SLUG` config is validated before repo-scoped
+  PID/log paths are derived.
   `eval-sidecar` reports missing current-file drift on start/status and still
   stops the repo-managed PID during closeout. It validates
   `EVAL_SIDECAR_TARGET` and `EVAL_SIDECAR_MIN_SECONDS` before detached launch,

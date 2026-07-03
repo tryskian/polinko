@@ -119,6 +119,8 @@ Runner lifecycle rule:
   `tools/run_eval_sidecar_start.sh`
   - PID and log defaults live under repo-scoped `EVAL_SIDECAR_STATE_DIR`, and
     status reports repo context plus PID/log/current-file paths before liveness
+  - explicit `EVAL_SIDECAR_REPO_SLUG` config is validated before repo-scoped
+    PID/log paths are derived
   - missing current-file state is surfaced by start/status, while stop still
     cleans the repo-managed PID for closeout
   - `EVAL_SIDECAR_TARGET` and `EVAL_SIDECAR_MIN_SECONDS` are validated before
