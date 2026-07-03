@@ -6489,3 +6489,19 @@ or branch history instead.
 - Why: `api-smoke` is part of startup and should not fail because an unrelated
   quality-gate port override is malformed; gate suites should likewise ignore
   unrelated smoke-only port drift.
+
+## D-385: Validate eval-sidecar target before launch
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `eval-sidecar`, `shell`, `operator_hygiene`, `config`
+- Human-led: The human lead asked to keep hidden runner scripts maintained and
+  to resolve small warnings before they become workflow interruptions.
+- Engineer implementation: Add `polinko_require_non_empty_token` to
+  `tools/process_lifecycle_common.sh`, route `EVAL_SIDECAR_TARGET` validation
+  through it in `tools/run_eval_sidecar_start.sh`, and add focused helper,
+  wrapper, and Make contract coverage.
+- Decision: Eval-sidecar target config is validated before detached launch.
+- Why: An explicit empty sidecar target should fail at the operator wrapper
+  with a clear config diagnostic instead of launching a long-running runner
+  without a meaningful Make target.

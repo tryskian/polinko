@@ -158,6 +158,51 @@ class ProcessLifecycleCommonTests(unittest.TestCase):
             result.stderr,
         )
 
+    def test_require_non_empty_token_rejects_empty_or_whitespace_values(self) -> None:
+        for value in ("", "two words", "tab\tvalue"):
+            with self.subTest(value=value):
+                result = subprocess.run(
+                    [
+                        "/bin/sh",
+                        "-c",
+                        (
+                            f'. "{HELPER}"; '
+                            "polinko_require_non_empty_token "
+                            "TEST_VALUE \"$TEST_VALUE\" 'Make target' 'unit test'"
+                        ),
+                    ],
+                    cwd=REPO_ROOT,
+                    env={"TEST_VALUE": value},
+                    capture_output=True,
+                    text=True,
+                )
+
+                self.assertEqual(result.returncode, 1)
+                self.assertIn(
+                    "Invalid value for unit test: "
+                    "TEST_VALUE must be a non-empty Make target without whitespace",
+                    result.stderr,
+                )
+
+    def test_require_non_empty_token_accepts_single_token(self) -> None:
+        result = subprocess.run(
+            [
+                "/bin/sh",
+                "-c",
+                (
+                    f'. "{HELPER}"; '
+                    "polinko_require_non_empty_token "
+                    "TEST_VALUE quality-gate-deterministic 'Make target' 'unit test'"
+                ),
+            ],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stderr, "")
+
     def test_require_process_inspection_reports_missing_ps(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             result = subprocess.run(

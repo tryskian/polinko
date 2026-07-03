@@ -14,7 +14,7 @@ else
 	exit 2
 fi
 
-target=${EVAL_SIDECAR_TARGET:-quality-gate-deterministic}
+target=${EVAL_SIDECAR_TARGET-quality-gate-deterministic}
 min_seconds=${EVAL_SIDECAR_MIN_SECONDS:-3600}
 sidecar_start_attempts=${EVAL_SIDECAR_START_ATTEMPTS:-100}
 sidecar_start_sleep_seconds=${EVAL_SIDECAR_START_SLEEP_SECONDS:-0.1}
@@ -41,6 +41,11 @@ polinko_require_positive_integer \
 	EVAL_SIDECAR_START_ATTEMPTS \
 	"$sidecar_start_attempts" \
 	"eval-sidecar readiness"
+polinko_require_non_empty_token \
+	EVAL_SIDECAR_TARGET \
+	"$target" \
+	"Make target" \
+	"eval-sidecar target"
 polinko_require_positive_integer \
 	EVAL_SIDECAR_MIN_SECONDS \
 	"$min_seconds" \

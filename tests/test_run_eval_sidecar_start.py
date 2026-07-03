@@ -743,6 +743,32 @@ class RunEvalSidecarStartTests(unittest.TestCase):
             result.stderr,
         )
 
+    def test_rejects_empty_target_before_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "EVAL_SIDECAR_TARGET": "",
+                    "EVAL_SIDECAR_PID_FILE": str(tmp_path / "sidecar.pid"),
+                    "EVAL_SIDECAR_LOG": str(tmp_path / "sidecar.log"),
+                    "EVAL_SIDECAR_RUNS_DIR": str(tmp_path / "runs"),
+                    "EVAL_SIDECAR_CURRENT_FILE": str(tmp_path / "current.txt"),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "EVAL_SIDECAR_TARGET must be a non-empty Make target without whitespace",
+                result.stderr,
+            )
+            self.assertFalse((tmp_path / "sidecar.pid").exists())
+
     def test_rejects_invalid_readiness_sleep_before_start(self) -> None:
         result = subprocess.run(
             ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
