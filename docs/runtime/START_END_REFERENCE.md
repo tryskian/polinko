@@ -62,8 +62,9 @@ Wake-lock rule:
 - caffeinate PID, log, ownership metadata, and activity metadata default to a
   repo-scoped runtime namespace under `CAFFEINATE_STATE_DIR`
 - `make caffeinate` and companion wake-lock targets reject invalid command,
-  match-pattern regex, active-window, and global-cleanup config before they
-  read, report, launch, stop, or clean PID/activity state
+  match-pattern regex, repo-slug, activity-label, activity-target,
+  active-window, and global-cleanup config before they read, report, launch,
+  stop, or clean PID/activity state
 - caffeinate start, stop, and activity actions reject invalid runtime output
   paths with direct diagnostics before launch, cleanup, or metadata writes
 - caffeinate start, status, stop, and stop-all require process-inspection

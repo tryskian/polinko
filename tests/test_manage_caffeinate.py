@@ -195,6 +195,67 @@ class ManageCaffeinateTests(unittest.TestCase):
         self.assertIn("caffeinate config error", result.stderr)
         self.assertIn("CAFFEINATE_ALLOW_GLOBAL_CLEANUP", result.stderr)
 
+    def test_rejects_empty_repo_slug_when_set(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "activity"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "CAFFEINATE_REPO_SLUG": "  "},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("caffeinate config error", result.stderr)
+        self.assertIn("CAFFEINATE_REPO_SLUG", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_activity_rejects_empty_activity_target_when_set(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            activity_file = tmp_path / "caffeinate.activity.json"
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "activity"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "CAFFEINATE_ACTIVITY_FILE": str(activity_file),
+                    "CAFFEINATE_ACTIVITY_TARGET": "  ",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("caffeinate config error", result.stderr)
+            self.assertIn("CAFFEINATE_ACTIVITY_TARGET", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertFalse(activity_file.exists())
+
+    def test_activity_rejects_empty_activity_label_when_set(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            activity_file = tmp_path / "caffeinate.activity.json"
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "activity"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "CAFFEINATE_ACTIVITY_FILE": str(activity_file),
+                    "CAFFEINATE_ACTIVITY_LABEL": "  ",
+                    "CAFFEINATE_ACTIVITY_TARGET": "test",
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("caffeinate config error", result.stderr)
+            self.assertIn("CAFFEINATE_ACTIVITY_LABEL", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertFalse(activity_file.exists())
+
     def test_rejects_empty_caffeinate_command(self) -> None:
         result = subprocess.run(
             ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "activity"],

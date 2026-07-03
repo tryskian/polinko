@@ -863,10 +863,11 @@ Last updated: 2026-07-03
   - repo-managed caffeinate migrates owned flat runtime files on
     mutating lifecycle actions and cleans orphaned flat PID metadata before
     launch or stop decisions
-  - repo-managed caffeinate validates command, regex, active-window, and
-    global-cleanup config before PID/activity state work, rejects invalid
-    runtime output paths with direct diagnostics, and requires process-inspection
-    tooling before PID ownership classification or cleanup
+  - repo-managed caffeinate validates command, regex, repo-slug, activity-label,
+    activity-target, active-window, and global-cleanup config before
+    PID/activity state work, rejects invalid runtime output paths with direct
+    diagnostics, and requires process-inspection tooling before PID ownership
+    classification or cleanup
   - repo-managed caffeinate treats stopped/zombie managed PIDs as stale and
     bounds terminate/escalate cleanup before removing owned runtime metadata
   - high-traffic lifecycle, validation, and runtime operator work Make targets
