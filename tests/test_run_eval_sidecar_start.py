@@ -485,6 +485,31 @@ class RunEvalSidecarStartTests(unittest.TestCase):
             self.assertIn("eval-sidecar: OFF.", result.stdout)
             self.assertFalse(args_file.exists())
 
+    def test_rejects_empty_repo_slug_before_state_derivation(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            runtime_root = tmp_path / "runtime"
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "status"],
+                cwd=REPO_ROOT,
+                env={
+                    **os.environ,
+                    "PYTHON": sys.executable,
+                    "EVAL_SIDECAR_REPO_SLUG": "  ",
+                    "EVAL_SIDECAR_RUNTIME_ROOT": str(runtime_root),
+                },
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "EVAL_SIDECAR_REPO_SLUG must be a non-empty repo slug",
+                result.stderr,
+            )
+            self.assertFalse(runtime_root.exists())
+
     def test_status_derives_pid_and_log_from_state_dir(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
