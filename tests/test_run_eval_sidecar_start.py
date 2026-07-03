@@ -768,6 +768,21 @@ class RunEvalSidecarStartTests(unittest.TestCase):
             result.stderr,
         )
 
+    def test_rejects_empty_readiness_attempts_before_start(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "EVAL_SIDECAR_START_ATTEMPTS": ""},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "EVAL_SIDECAR_START_ATTEMPTS must be a positive integer",
+            result.stderr,
+        )
+
     def test_rejects_empty_target_before_start(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             tmp_path = Path(tmp)
@@ -799,6 +814,21 @@ class RunEvalSidecarStartTests(unittest.TestCase):
             ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
             cwd=REPO_ROOT,
             env={**os.environ, "EVAL_SIDECAR_START_SLEEP_SECONDS": "-1"},
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn(
+            "EVAL_SIDECAR_START_SLEEP_SECONDS must be a non-negative decimal number",
+            result.stderr,
+        )
+
+    def test_rejects_empty_readiness_sleep_before_start(self) -> None:
+        result = subprocess.run(
+            ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "start"],
+            cwd=REPO_ROOT,
+            env={**os.environ, "EVAL_SIDECAR_START_SLEEP_SECONDS": ""},
             capture_output=True,
             text=True,
         )

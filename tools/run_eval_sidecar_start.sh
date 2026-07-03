@@ -16,8 +16,8 @@ fi
 
 target=${EVAL_SIDECAR_TARGET-quality-gate-deterministic}
 min_seconds=${EVAL_SIDECAR_MIN_SECONDS-3600}
-sidecar_start_attempts=${EVAL_SIDECAR_START_ATTEMPTS:-100}
-sidecar_start_sleep_seconds=${EVAL_SIDECAR_START_SLEEP_SECONDS:-0.1}
+sidecar_start_attempts=${EVAL_SIDECAR_START_ATTEMPTS-100}
+sidecar_start_sleep_seconds=${EVAL_SIDECAR_START_SLEEP_SECONDS-0.1}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
