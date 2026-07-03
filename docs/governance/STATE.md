@@ -153,6 +153,8 @@ Last updated: 2026-07-02
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery
+  - `server-daemon` optional port-owner discovery uses the shared command
+    availability helper for `lsof`, preserving no-`lsof` fallback behaviour
   - `server-daemon` trusts managed PID files only when the live PID matches
     the configured Polinko `uvicorn` app; stale PID files that point to
     unrelated live processes are cleaned without stopping the unrelated process

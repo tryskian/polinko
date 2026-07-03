@@ -2857,6 +2857,8 @@ class MakefileContractTests(unittest.TestCase):
             'polinko_require_process_inspection "server-daemon PID inspection"',
             server_daemon_script_text,
         )
+        self.assertIn("polinko_command_available lsof", server_daemon_script_text)
+        self.assertNotIn("command -v lsof", server_daemon_script_text)
         self.assertIn("polinko_require_tcp_port", server_daemon_script_text)
         self.assertIn("polinko_require_positive_integer", server_daemon_script_text)
         self.assertIn(

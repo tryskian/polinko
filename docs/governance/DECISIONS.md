@@ -6426,3 +6426,19 @@ or branch history instead.
 - Why: Playwright helper launch should keep a specific missing-`npx`
   diagnostic while avoiding local command-check logic inside the snapshot
   wrapper.
+
+## D-381: Share server-daemon optional command availability checks
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `server-daemon`, `shell`, `operator_hygiene`, `process_lifecycle`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Add `polinko_command_available` to
+  `tools/process_lifecycle_common.sh`, route `tools/run_server_daemon.sh`
+  optional `lsof` probes through it, and add helper plus daemon contract
+  coverage.
+- Decision: Optional server-daemon command availability checks use the shared
+  process lifecycle helper.
+- Why: `server-daemon` should preserve no-`lsof` fallback behaviour while
+  keeping command probing in one audited shell helper.
