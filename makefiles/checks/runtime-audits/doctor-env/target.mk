@@ -3,7 +3,4 @@
 
 doctor-env:
 	@$(call repo_activity,make doctor-env,doctor-env)
-	@set -eu; \
-	$(doctor_env_interpreter_source); \
-	$(doctor_env_active_venv); \
-	$(doctor_env_run)
+	$(PYTHON) -m tools.run_doctor_env --python "$(PYTHON)" --python-origin "$(origin PYTHON)"

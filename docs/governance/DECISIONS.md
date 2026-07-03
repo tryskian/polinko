@@ -6346,3 +6346,18 @@ or branch history instead.
 - Decision: Local URL print and launch policy is helper-owned.
 - Why: Local URL targets should keep their public commands while centralizing
   browser-launch validation and preserving no-browser defaults.
+
+## D-376: Move doctor-env dispatch into a runner helper
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `make`, `doctor_env`, `startup`, `operator_hygiene`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Add `tools.run_doctor_env`, route `make
+  doctor-env` through it, and remove the retired Make source, venv, and runner
+  macro files.
+- Decision: Doctor-env interpreter metadata and process dispatch are
+  helper-owned.
+- Why: Startup/runtime checks should preserve interpreter-source diagnostics
+  while keeping Make as the entrypoint instead of the logic carrier.
