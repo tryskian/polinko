@@ -4,7 +4,7 @@
 
 These diagrams show the refactor journey by lane: first evidence baseline,
 runtime/package movement, automation-backed contracts, manual-eval workbench
-preservation, and docs/closeout propagation.
+preservation, and documentation pocket routing.
 
 ## Refactor Journey: Evidence First
 
@@ -106,30 +106,37 @@ flowchart TD
   class H pass;
 ```
 
-## Refactor Journey: Docs And Closeout
+## Refactor Journey: Documentation Pockets
 
-![Refactor Journey: Docs And Closeout](refactor-journey-docs-and-closeout.svg)
+![Refactor Journey: Documentation Pockets](refactor-journey-documentation-pockets.svg)
 
 ```mermaid
-flowchart LR
-  A["Kernel lands"] --> B["Update current truth:\ndocs/governance/STATE.md"]
-  B --> C{"Durable decision?"}
-  C -->|"Yes"| D["Record:\ndocs/governance/DECISIONS.md"]
-  C -->|"No"| E["Keep in handoff\nor branch history"]
-  D --> F["Refresh operator procedure:\ndocs/runtime/RUNBOOK.md\nwhen commands change"]
-  E --> G["Local continuity:\ndocs/peanut/governance/SESSION_HANDOFF.md"]
-  F --> H["Validation and PR"]
-  G --> H
-  H --> I["Squash merge"]
-  I --> J["Final gate on synced main:\nmake end"]
+flowchart TD
+  A["Kernel lands"] --> B["Classify documentation pocket"]
+  B --> C["Governance pocket:\nCHARTER\nSTATE\nDECISIONS"]
+  B --> D["Runtime pocket:\nRUNBOOK\nARCHITECTURE\nruntime maps"]
+  B --> E["Evidence pocket:\neval\nresearch\npublic docs"]
+  B --> F["Local pocket:\ndocs/peanut\nSESSION_HANDOFF"]
+  C --> G["Current snapshot:\nSTATE stays compact"]
+  C --> H["Durable history:\nDECISIONS only"]
+  D --> I["Operational procedure\nand surface maps"]
+  E --> J["Source-led public\nand research references"]
+  F --> K["Working notes\nand next-session carryover"]
+  G --> L["Validation and PR"]
+  H --> L
+  I --> L
+  J --> L
+  K --> L
+  L --> M["Squash merge"]
+  M --> N["Final gate on synced main:\nmake end"]
 
   classDef source fill:#EEF4FB,stroke:#4E79A7,color:#1F1F1F;
   classDef bridge fill:#FBF5E8,stroke:#F28E2B,color:#1F1F1F;
   classDef pass fill:#EEF7EE,stroke:#59A14F,color:#1F1F1F;
   classDef evidence fill:#EEF7F6,stroke:#76B7B2,color:#1F1F1F;
 
-  class A,B,F,G,H source;
-  class C bridge;
-  class D,E evidence;
-  class I,J pass;
+  class A,B source;
+  class C,D,E,F bridge;
+  class G,H,I,J,K evidence;
+  class L,M,N pass;
 ```
