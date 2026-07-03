@@ -84,7 +84,7 @@ class RunLocalEvalGateTests(unittest.TestCase):
             config,
         )
         self.assertIn(
-            "local_eval_gate_start_attempts=${LOCAL_EVAL_GATE_START_ATTEMPTS:-100}",
+            "local_eval_gate_start_attempts=${LOCAL_EVAL_GATE_START_ATTEMPTS-100}",
             runner,
         )
         self.assertIn(
@@ -566,10 +566,41 @@ exit "${CURL_EXIT:-0}"
             )
             self.assertFalse(python_args.exists())
 
+    def test_rejects_empty_readiness_attempts_before_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env["LOCAL_EVAL_GATE_START_ATTEMPTS"] = ""
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "LOCAL_EVAL_GATE_START_ATTEMPTS must be a positive integer",
+                result.stderr,
+            )
+            self.assertFalse(python_args.exists())
+
     def test_rejects_invalid_readiness_sleep_before_start(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             env, python_args, server_started = self._base_env(Path(tmp))
             env["LOCAL_EVAL_GATE_START_SLEEP_SECONDS"] = "-1"
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn(
+                "LOCAL_EVAL_GATE_START_SLEEP_SECONDS "
+                "must be a non-negative decimal number",
+                result.stderr,
+            )
+            self.assertFalse(python_args.exists())
+
+    def test_rejects_empty_readiness_sleep_before_start(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env["LOCAL_EVAL_GATE_START_SLEEP_SECONDS"] = ""
             server_started.unlink(missing_ok=True)
 
             result = self._run_suite("api-smoke", env)

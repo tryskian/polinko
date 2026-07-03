@@ -6635,3 +6635,20 @@ or branch history instead.
 - Why: Blank server-daemon overrides should fail through the same direct
   operator diagnostics as malformed values, instead of silently using default
   launch, health, identity, or readiness bounds.
+
+## D-394: Preserve explicit blank local-eval readiness config as invalid
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `local_eval_gate`, `runtime`, `readiness`, `operator_hygiene`, `config`
+- Human-led: The human lead asked for hidden runner scripts to stay precise and
+  for small config gaps to be resolved as they are found.
+- Engineer implementation: Update `tools/run_local_eval_gate.sh` so
+  `LOCAL_EVAL_GATE_START_ATTEMPTS` and
+  `LOCAL_EVAL_GATE_START_SLEEP_SECONDS` default only when unset, then add
+  focused blank-config regressions.
+- Decision: Local eval gate readiness config treats unset config as defaulted,
+  while explicit blank config fails before runner startup work.
+- Why: Blank local eval readiness overrides should fail through the same direct
+  operator diagnostics as malformed values, instead of silently using default
+  readiness bounds.

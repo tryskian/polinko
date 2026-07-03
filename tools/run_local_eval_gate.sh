@@ -23,8 +23,8 @@ local_eval_gate_temp_root=${LOCAL_EVAL_GATE_TEMP_ROOT:-/tmp}
 if [ "$local_eval_gate_temp_root" != "/" ]; then
 	local_eval_gate_temp_root=${local_eval_gate_temp_root%/}
 fi
-local_eval_gate_start_attempts=${LOCAL_EVAL_GATE_START_ATTEMPTS:-100}
-local_eval_gate_start_sleep_seconds=${LOCAL_EVAL_GATE_START_SLEEP_SECONDS:-0.2}
+local_eval_gate_start_attempts=${LOCAL_EVAL_GATE_START_ATTEMPTS-100}
+local_eval_gate_start_sleep_seconds=${LOCAL_EVAL_GATE_START_SLEEP_SECONDS-0.2}
 polinko_require_positive_integer \
 	LOCAL_EVAL_GATE_START_ATTEMPTS \
 	"$local_eval_gate_start_attempts" \
