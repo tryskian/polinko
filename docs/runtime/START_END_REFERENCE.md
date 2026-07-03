@@ -124,8 +124,8 @@ Runner lifecycle rule:
   - missing current-file state is surfaced by start/status, while stop still
     cleans the repo-managed PID for closeout
   - `EVAL_SIDECAR_TARGET` and `EVAL_SIDECAR_MIN_SECONDS` are validated before
-    detached launch, so invalid target or duration config fails before
-    PID/log state is written
+    detached launch; unset duration config uses the default, while explicit
+    blank duration config fails before PID/log state is written
   - live PID files are treated as managed only when the process matches
     `tools.eval_sidecar run`; unrelated live PIDs are cleaned from the PID file
     without being stopped
