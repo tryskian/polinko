@@ -935,6 +935,9 @@ Last updated: 2026-07-02
     `tools/repo_root.sh` so startup, closeout, clean-main git checks,
     devcontainer setup, local privacy guard, OCR workflow/orchestrator wrappers,
     and Playwright snapshot scripts share one audited root-discovery path
+  - Playwright daily snapshot helpers use the shared labelled-command
+    precondition helper for the `npx` prerequisite before invoking the
+    configured wrapper
   - required knobs include an ignored local default path, explicit path
     override, no-overwrite default, `FORCE=1`, deterministic
     `schema_version`, source fingerprints, validation command, and

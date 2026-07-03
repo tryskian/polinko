@@ -4,6 +4,8 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
+# shellcheck source=tools/process_lifecycle_common.sh
+. "$script_dir/process_lifecycle_common.sh"
 
 polinko_cd_repo_root
 
@@ -39,10 +41,7 @@ EOF
   exit 2
 fi
 
-if ! command -v npx >/dev/null 2>&1; then
-  echo "Error: npx is required but was not found on PATH." >&2
-  exit 1
-fi
+polinko_require_labeled_command "npx" "npx" "pwcli-daily"
 
 has_session="false"
 has_filename="false"

@@ -6410,3 +6410,19 @@ or branch history instead.
   command-precondition helper.
 - Why: Devcontainer bootstrap should keep specific missing-command diagnostics
   while avoiding local command-check logic inside the setup script.
+
+## D-380: Share Playwright CLI command prerequisite checks
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `playwright`, `shell`, `operator_hygiene`, `dependencies`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Route `tools/pwcli_daily.sh` `npx` detection
+  through the shared labelled-command prerequisite helper and add focused
+  script and Make contract coverage.
+- Decision: Playwright daily snapshot command prerequisites use the shared
+  shell command-precondition helper.
+- Why: Playwright helper launch should keep a specific missing-`npx`
+  diagnostic while avoiding local command-check logic inside the snapshot
+  wrapper.
