@@ -199,6 +199,7 @@ SHELL_SCRIPT_CONTRACT_SCRIPT = REPO_ROOT / "tools" / "check_shell_scripts.py"
 LOCAL_PRIVACY_GUARD_SCRIPT = REPO_ROOT / "tools" / "local_privacy_guard.sh"
 END_GIT_CHECK_SCRIPT = REPO_ROOT / "tools" / "check_end_git_clean.sh"
 SESSION_STATUS_SCRIPT = REPO_ROOT / "tools" / "session_status.sh"
+MAKE_RUNTIME_SCRIPT = REPO_ROOT / "tools" / "make_runtime.sh"
 OPEN_VENV_SHELL_SCRIPT = REPO_ROOT / "tools" / "open_venv_shell.sh"
 
 
@@ -2300,6 +2301,16 @@ class MakefileContractTests(unittest.TestCase):
         self.assertRegex(text, r"(?m)^session-status:$")
         self.assertIn("bash ./tools/session_status.sh", text)
         status_script = SESSION_STATUS_SCRIPT.read_text(encoding="utf-8")
+        make_runtime_script = MAKE_RUNTIME_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("polinko_make_bin()", make_runtime_script)
+        self.assertIn("polinko_require_make_command()", make_runtime_script)
+        self.assertIn("command -v", make_runtime_script)
+        self.assertIn('source "$script_dir/make_runtime.sh"', status_script)
+        self.assertIn(
+            'MAKE_BIN=$(polinko_require_make_command "session-status")',
+            status_script,
+        )
+        self.assertNotIn('command -v "$MAKE_BIN"', status_script)
         self.assertIn("STATUS_STEP_LABELS=(", status_script)
         self.assertIn('"Server"', status_script)
         self.assertIn('"Eval sidecar"', status_script)
@@ -3135,6 +3146,20 @@ class MakefileContractTests(unittest.TestCase):
             sidecar_script_text,
         )
         self.assertNotIn("nohup", sidecar_script_text)
+        eval_server_daemon_text = EVAL_SERVER_DAEMON_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('source "$script_dir/make_runtime.sh"', eval_server_daemon_text)
+        self.assertIn(
+            'MAKE_BIN=$(polinko_require_make_command "ensure-eval-server-daemon")',
+            eval_server_daemon_text,
+        )
+        self.assertNotIn('command -v "$MAKE_BIN"', eval_server_daemon_text)
+        ocr_workflow_text = OCR_WORKFLOW_SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('source "$script_dir/make_runtime.sh"', ocr_workflow_text)
+        self.assertIn(
+            'MAKE_BIN=$(polinko_require_make_command "ocr-workflow")',
+            ocr_workflow_text,
+        )
+        self.assertNotIn('command -v "$MAKE_BIN"', ocr_workflow_text)
         for script in (
             OCR_EVAL_RUNNER_SCRIPT,
             OCR_STABILITY_RUNNER_SCRIPT,

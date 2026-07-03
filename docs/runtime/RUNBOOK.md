@@ -499,6 +499,7 @@ Use this doc for operator procedure.
 - `make scripts-check`
   - validates tracked shell helper shebangs, strict modes, sourced helper
     contracts, and root-helper coverage for executable operator scripts
+  - keeps runtime shell wrappers on the shared Make-command helper
 - repo activity heartbeat
   - common lifecycle, validation, and runtime operator work Make targets mark
     repo activity before running their work

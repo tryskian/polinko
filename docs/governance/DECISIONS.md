@@ -6377,3 +6377,20 @@ or branch history instead.
 - Why: Dependency lock targets should keep their public Make entrypoints while
   removing inline shell conditionals and keeping pip-tools bootstrap policy
   testable.
+
+## D-378: Share Make-command handling across runtime shell wrappers
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `shell`, `make`, `runtime`, `operator_hygiene`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Add `tools/make_runtime.sh`, route
+  `tools/session_status.sh`, `tools/ensure_eval_server_daemon.sh`, and
+  `tools/run_ocr_workflow.sh` through it, and add focused helper, shell
+  contract, and caller regression coverage.
+- Decision: Runtime shell wrappers that dispatch back into Make use the shared
+  Make-command helper.
+- Why: Make-command selection and missing-command diagnostics should stay
+  consistent across direct shell entrypoints while keeping each caller's
+  failure message specific.

@@ -4,13 +4,15 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
+# shellcheck source=tools/make_runtime.sh
+source "$script_dir/make_runtime.sh"
 
 polinko_cd_repo_root
 ROOT_DIR="$POLINKO_REPO_ROOT"
 # shellcheck source=tools/ocr_workflow_common.sh
 . "$script_dir/ocr_workflow_common.sh"
 
-MAKE_BIN="${MAKE:-make}"
+MAKE_BIN=$(polinko_require_make_command "ocr-workflow")
 
 run_make() {
   "$MAKE_BIN" --no-print-directory "$@"
