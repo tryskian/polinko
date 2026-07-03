@@ -143,7 +143,8 @@ flowchart TD
   configurable `LOCAL_EVAL_GATE_START_ATTEMPTS` /
   `LOCAL_EVAL_GATE_START_SLEEP_SECONDS` bounds for a shell `while` readiness
   loop instead of an extra `seq` dependency. Lifecycle readiness bounds are
-  validated before runner startup work begins.
+  validated before runner startup work begins. Smoke-only and gate-only local
+  eval port overrides are validated inside the active suite.
   `make path-leak-audit-local` is the focused companion for ignored local
   runtime config surfaces such as VS Code, devcontainer, and pre-commit files;
   it checks local path leaks and reuses `make local-runtime-config-check` for
@@ -190,10 +191,11 @@ flowchart TD
   missing process-inspection tooling fails early instead of degrading into
   misleading liveness state.
   `server-daemon` validates launch ports and readiness-loop bounds before
-  process launch, adoption, status, or readiness checks. HTTP runner probe URLs
-  must include an explicit port matching the launched server port before
-  readiness, adoption, status, or launch work depends on the URL; this covers
-  `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and `GATE_BASE_URL`.
+  process launch, adoption, status, or readiness checks. Local eval gates
+  validate smoke-only and gate-only port overrides inside the active suite.
+  HTTP runner probe URLs must include an explicit port matching the launched
+  server port before readiness, adoption, status, or launch work depends on the
+  URL; this covers `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and `GATE_BASE_URL`.
   Server daemon PID and log defaults live under repo-scoped
   `SERVER_STATE_DIR`, and status reports repo context plus PID/log paths before
   liveness.

@@ -6473,3 +6473,19 @@ or branch history instead.
 - Decision: Direct command availability probes are guarded by `make risk-scan`.
 - Why: New shell wrappers should route command probing through the audited
   helper surfaces before the pattern reaches PR review or session closeout.
+
+## D-384: Validate local eval gate ports by active suite
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `local_eval_gate`, `startup`, `operator_hygiene`, `config`
+- Human-led: The human lead asked to keep the script refactor focused on
+  concrete workflow interruptions and hidden helper-script drift.
+- Engineer implementation: Move smoke-port validation into smoke suites and
+  gate-port validation into gate suites inside `tools/run_local_eval_gate.sh`,
+  then add focused regressions for unrelated invalid suite config.
+- Decision: Local eval gate runner config validation is suite-local for
+  smoke-only and gate-only port settings.
+- Why: `api-smoke` is part of startup and should not fail because an unrelated
+  quality-gate port override is malformed; gate suites should likewise ignore
+  unrelated smoke-only port drift.

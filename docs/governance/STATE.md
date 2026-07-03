@@ -117,6 +117,9 @@ Last updated: 2026-07-03
     `LOCAL_EVAL_GATE_START_SLEEP_SECONDS` for their bounded readiness loop,
     avoiding an extra `seq` dependency; lifecycle readiness bounds are
     validated before runner startup work begins
+  - local eval gates validate smoke and gate port overrides inside the suite
+    that uses them, so unrelated suite config drift does not block startup
+    smoke checks
   - core background runner lifecycle is script-owned for `caffeinate`,
     `server-daemon`, and `eval-sidecar`; Make targets
     delegate start, status, and stop actions to helper scripts with repo-owned
@@ -141,8 +144,9 @@ Last updated: 2026-07-03
     or stop decisions, so malformed, zero, or negative PID-file values are
     rejected as live runner processes
   - shell lifecycle runners validate launch ports and readiness-loop bounds
-    before launch, adoption, status, or readiness checks; this covers
-    `server-daemon` and local eval gate `SMOKE_PORT` / `GATE_PORT` overrides
+    before launch, adoption, status, or readiness checks; `server-daemon`
+    validates its launch port globally, while local eval gates validate
+    smoke-only and gate-only port overrides inside the active suite
   - HTTP runner probe URLs must include an explicit port matching the launched
     server port before readiness, adoption, status, or launch work depends on
     the URL; this covers `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and
