@@ -777,6 +777,9 @@ Last updated: 2026-07-02
     in `tools.validate_make_variable`; `test-one`, `test-targeted`, and
     `pycheck` record repo activity only after required input validation
     succeeds
+  - external command prerequisite checks for `act`, Docker, k6, and Trivy
+    helper targets live in `tools.require_command`, preserving direct
+    operator diagnostics while keeping Make targets declarative
   - direct runtime shell wrappers share `tools/python_runtime.sh`, so explicit
     `PYTHON` wins only when it resolves to an executable command, repo `.venv`
     is preferred for direct invocation, and `python3` remains the final

@@ -3,18 +3,10 @@
 
 docker-build:
 	@$(call repo_activity,make docker-build,docker-build)
-	@set -eu; \
-	if ! command -v "$(DOCKER)" >/dev/null 2>&1; then \
-		echo "docker helper: missing required command: $(DOCKER)" >&2; \
-		exit 127; \
-	fi
+	@$(PYTHON) -m tools.require_command --command "$(DOCKER)" --label "docker helper"
 	$(DOCKER) build -t $(DOCKER_IMAGE) .
 
 docker-run:
 	@$(call repo_activity,make docker-run,docker-run)
-	@set -eu; \
-	if ! command -v "$(DOCKER)" >/dev/null 2>&1; then \
-		echo "docker helper: missing required command: $(DOCKER)" >&2; \
-		exit 127; \
-	fi
+	@$(PYTHON) -m tools.require_command --command "$(DOCKER)" --label "docker helper"
 	$(DOCKER) run --rm -p $(DOCKER_PORT):8000 --env-file $(ENV_FILE) $(DOCKER_IMAGE)

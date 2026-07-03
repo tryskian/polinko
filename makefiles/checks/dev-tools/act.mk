@@ -3,18 +3,10 @@
 
 act-list:
 	@$(call repo_activity,make act-list,act-list)
-	@set -eu; \
-	if ! command -v "$(ACT)" >/dev/null 2>&1; then \
-		echo "act helper: missing required command: $(ACT)" >&2; \
-		exit 127; \
-	fi; \
+	@$(PYTHON) -m tools.require_command --command "$(ACT)" --label "act helper"
 	$(ACT) -l
 
 act-ci:
 	@$(call repo_activity,make act-ci,act-ci)
-	@set -eu; \
-	if ! command -v "$(ACT)" >/dev/null 2>&1; then \
-		echo "act helper: missing required command: $(ACT)" >&2; \
-		exit 127; \
-	fi; \
+	@$(PYTHON) -m tools.require_command --command "$(ACT)" --label "act helper"
 	$(ACT) -W .github/workflows/ci.yml
