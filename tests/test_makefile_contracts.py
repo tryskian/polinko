@@ -10,6 +10,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 MAKEFILE = REPO_ROOT / "Makefile"
 MAKE_BUILD = REPO_ROOT / "makefiles" / "build.mk"
 MAKE_BUILD_DEPENDENCIES = REPO_ROOT / "makefiles" / "build" / "dependencies.mk"
+MAKE_BUILD_DEPENDENCIES_LOCKFILE = (
+    REPO_ROOT / "makefiles" / "build" / "dependencies" / "lockfile.mk"
+)
 MAKE_CONFIG = REPO_ROOT / "makefiles" / "config.mk"
 MAKE_CONFIG_OPS = REPO_ROOT / "makefiles" / "config" / "ops.mk"
 MAKE_CONFIG_OPS_GITHUB = REPO_ROOT / "makefiles" / "config" / "ops" / "github.mk"
@@ -279,6 +282,22 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn("package-install-check:", contract_text)
         self.assertIn("python-security-check:", contract_text)
         self.assertIn("node-security-check:", contract_text)
+
+    def test_dependency_lock_targets_use_helper_dispatch(self) -> None:
+        lockfile_text = MAKE_BUILD_DEPENDENCIES_LOCKFILE.read_text(encoding="utf-8")
+
+        self.assertRegex(lockfile_text, r"(?m)^deps-lock:$")
+        self.assertRegex(lockfile_text, r"(?m)^deps-lock-check:$")
+        self.assertEqual(lockfile_text.count("tools.run_dependency_lock"), 2)
+        self.assertIn('--python "$(PYTHON)"', lockfile_text)
+        self.assertIn('--requirements-in "$(REQUIREMENTS_IN)"', lockfile_text)
+        self.assertIn('--requirements-lock "$(REQUIREMENTS_LOCK)"', lockfile_text)
+        self.assertIn('--pip-tools-version "$(PIP_TOOLS_VERSION)"', lockfile_text)
+        self.assertIn("--ensure-pip-tools", lockfile_text)
+        self.assertIn("--check-lockfile", lockfile_text)
+        self.assertNotIn("@set -eu", lockfile_text)
+        self.assertNotIn("piptools --version", lockfile_text)
+        self.assertNotIn("git diff --exit-code", lockfile_text)
 
     def test_check_targets_are_extracted_through_role_includes(self) -> None:
         checks_entry_text = MAKE_CHECKS.read_text(encoding="utf-8")
