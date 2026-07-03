@@ -594,6 +594,31 @@ exit "${CURL_EXIT:-0}"
             self.assertIn("SMOKE_PORT must be", result.stderr)
             self.assertFalse(python_args.exists())
 
+    def test_api_smoke_ignores_unrelated_invalid_gate_port(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env["GATE_PORT"] = "abc"
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("api-smoke", env)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                self._read_calls(python_args),
+                [
+                    [
+                        "-m",
+                        "uvicorn",
+                        "custom_server:app",
+                        "--host",
+                        "127.0.0.1",
+                        "--port",
+                        "9991",
+                    ],
+                    ["-m", "tools.api_smoke", "--base-url", "http://127.0.0.1:9991"],
+                ],
+            )
+
     def test_rejects_invalid_gate_port_before_start(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             env, python_args, server_started = self._base_env(Path(tmp))
@@ -605,6 +630,29 @@ exit "${CURL_EXIT:-0}"
             self.assertEqual(result.returncode, 1)
             self.assertIn("GATE_PORT must be", result.stderr)
             self.assertFalse(python_args.exists())
+
+    def test_quality_gate_ignores_unrelated_invalid_smoke_port(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            env, python_args, server_started = self._base_env(Path(tmp))
+            env["SMOKE_PORT"] = "abc"
+            server_started.unlink(missing_ok=True)
+
+            result = self._run_suite("quality-gate", env)
+
+            self.assertEqual(result.returncode, 0, result.stderr)
+            calls = self._read_calls(python_args)
+            self.assertEqual(
+                calls[0],
+                [
+                    "-m",
+                    "uvicorn",
+                    "custom_server:app",
+                    "--host",
+                    "127.0.0.1",
+                    "--port",
+                    "9992",
+                ],
+            )
 
     def test_rejects_smoke_base_url_port_mismatch_before_start(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -144,8 +144,9 @@ Runner lifecycle rule:
   stop decisions, so malformed, zero, or negative PID-file values are rejected
   as live runner processes
 - lifecycle launch ports and readiness-loop bounds are validated before
-  process launch, adoption, status, or readiness checks for `server-daemon`
-  and local eval gate `SMOKE_PORT` / `GATE_PORT` overrides
+  process launch, adoption, status, or readiness checks; `server-daemon`
+  validates its launch port globally, while local eval gates validate
+  smoke-only and gate-only port overrides inside the active suite
 - HTTP runner probe URLs must include an explicit port matching the launched
   server port before readiness, adoption, status, or launch work depends on the
   URL; this covers `SERVER_HEALTH_URL`, `SMOKE_BASE_URL`, and `GATE_BASE_URL`

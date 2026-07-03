@@ -33,13 +33,6 @@ polinko_require_non_negative_decimal \
 	LOCAL_EVAL_GATE_START_SLEEP_SECONDS \
 	"$local_eval_gate_start_sleep_seconds" \
 	"local eval gate readiness"
-if [ -n "${SMOKE_PORT:-}" ]; then
-	polinko_require_tcp_port SMOKE_PORT "$SMOKE_PORT" "local eval gate port"
-fi
-if [ -n "${GATE_PORT:-}" ]; then
-	polinko_require_tcp_port GATE_PORT "$GATE_PORT" "local eval gate port"
-fi
-
 case "$suite" in
 api-smoke|eval-smoke|hallucination-gate|quality-gate)
 	;;
@@ -164,7 +157,20 @@ start_local_server() {
 	fi
 }
 
+validate_smoke_server_config() {
+	if [ -n "${SMOKE_PORT:-}" ]; then
+		polinko_require_tcp_port SMOKE_PORT "$SMOKE_PORT" "local eval gate port"
+	fi
+}
+
+validate_gate_server_config() {
+	if [ -n "${GATE_PORT:-}" ]; then
+		polinko_require_tcp_port GATE_PORT "$GATE_PORT" "local eval gate port"
+	fi
+}
+
 run_api_smoke() {
+	validate_smoke_server_config
 	port=${SMOKE_PORT:-$(choose_loopback_port)}
 	base_url=${SMOKE_BASE_URL:-http://127.0.0.1:$port}
 	polinko_require_url_port_matches SMOKE_BASE_URL "$base_url" "$port" "api-smoke local server"
@@ -176,6 +182,7 @@ run_api_smoke() {
 }
 
 run_eval_smoke() {
+	validate_smoke_server_config
 	port=${SMOKE_PORT:-$(choose_loopback_port)}
 	base_url=${SMOKE_BASE_URL:-http://127.0.0.1:$port}
 	polinko_require_url_port_matches SMOKE_BASE_URL "$base_url" "$port" "eval-smoke local server"
@@ -194,6 +201,7 @@ run_eval_smoke() {
 }
 
 run_hallucination_gate() {
+	validate_gate_server_config
 	port=${GATE_PORT:-8066}
 	base_url=${GATE_BASE_URL:-http://127.0.0.1:$port}
 	polinko_require_url_port_matches GATE_BASE_URL "$base_url" "$port" "hallucination-gate local server"
@@ -213,6 +221,7 @@ run_hallucination_gate() {
 }
 
 run_quality_gate() {
+	validate_gate_server_config
 	port=${GATE_PORT:-8066}
 	base_url=${GATE_BASE_URL:-http://127.0.0.1:$port}
 	polinko_require_url_port_matches GATE_BASE_URL "$base_url" "$port" "quality-gate local server"
