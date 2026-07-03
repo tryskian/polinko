@@ -4,6 +4,8 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
+# shellcheck source=tools/process_lifecycle_common.sh
+. "$script_dir/process_lifecycle_common.sh"
 
 polinko_cd_repo_root
 ROOT="$POLINKO_REPO_ROOT"
@@ -11,16 +13,6 @@ ROOT="$POLINKO_REPO_ROOT"
 venv_dir="${POLINKO_DEVCONTAINER_VENV_DIR:-.venv}"
 bootstrap_python="${POLINKO_DEVCONTAINER_BOOTSTRAP_PYTHON:-python3.14}"
 venv_python="$venv_dir/bin/python3"
-
-require_command() {
-	local label=$1
-	local command_name=$2
-
-	if ! command -v "$command_name" >/dev/null 2>&1; then
-		printf "setup-devcontainer: missing %s command: %s\n" "$label" "$command_name" >&2
-		return 1
-	fi
-}
 
 run_setup_step() {
 	local label=$1
@@ -32,8 +24,8 @@ run_setup_step() {
 	fi
 }
 
-require_command "bootstrap Python" "$bootstrap_python"
-require_command "npm" "npm"
+polinko_require_labeled_command "$bootstrap_python" "bootstrap Python" "setup-devcontainer"
+polinko_require_labeled_command "npm" "npm" "setup-devcontainer"
 
 run_setup_step "create virtual environment: $venv_dir" "$bootstrap_python" -m venv --copies "$venv_dir"
 

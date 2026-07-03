@@ -40,6 +40,20 @@ polinko_require_command() {
 	return 1
 }
 
+polinko_require_labeled_command() {
+	_polinko_command=$1
+	_polinko_label=$2
+	_polinko_context=${3:-runtime helper}
+	if command -v "$_polinko_command" >/dev/null 2>&1; then
+		return 0
+	fi
+	printf "%s: missing %s command: %s\n" \
+		"$_polinko_context" \
+		"$_polinko_label" \
+		"$_polinko_command" >&2
+	return 1
+}
+
 polinko_require_process_inspection() {
 	_polinko_context=${1:-process lifecycle PID inspection}
 	polinko_require_command ps "$_polinko_context"

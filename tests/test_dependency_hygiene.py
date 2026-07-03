@@ -105,8 +105,16 @@ class DependencyHygieneTests(unittest.TestCase):
             script,
         )
         self.assertIn('venv_python="$venv_dir/bin/python3"', script)
-        self.assertIn('require_command "bootstrap Python" "$bootstrap_python"', script)
-        self.assertIn('require_command "npm" "npm"', script)
+        self.assertIn('. "$script_dir/process_lifecycle_common.sh"', script)
+        self.assertIn(
+            'polinko_require_labeled_command "$bootstrap_python" '
+            '"bootstrap Python" "setup-devcontainer"',
+            script,
+        )
+        self.assertIn(
+            'polinko_require_labeled_command "npm" "npm" "setup-devcontainer"',
+            script,
+        )
         self.assertIn(
             'run_setup_step "create virtual environment: $venv_dir" '
             '"$bootstrap_python" -m venv --copies "$venv_dir"',
