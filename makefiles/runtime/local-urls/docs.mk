@@ -2,20 +2,7 @@
 .PHONY: docs docs-open
 
 docs: server-daemon
-	@set -eu; \
-	URL="$(DEV_API_DOCS_URL)"; \
-	case "$(LOCAL_BROWSER_LAUNCH)" in none|system) ;; \
-		*) echo "Invalid LOCAL_BROWSER_LAUNCH='$(LOCAL_BROWSER_LAUNCH)' (expected none or system)."; exit 2 ;; \
-	esac; \
-	echo "API docs URL: $$URL"
-ifeq ($(LOCAL_BROWSER_LAUNCH),system)
-	@set -eu; \
-	URL="$(DEV_API_DOCS_URL)"; \
-	bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$URL"
-endif
+	@$(PYTHON) -m tools.local_url --url "$(DEV_API_DOCS_URL)" --label "API docs URL" --mode "$(LOCAL_BROWSER_LAUNCH)" $(if $(filter system,$(LOCAL_BROWSER_LAUNCH)),--launcher "$(LOCAL_URL_LAUNCHER_SCRIPT)",)
 
 docs-open: server-daemon
-	@set -eu; \
-	URL="$(DEV_API_DOCS_URL)"; \
-	bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$URL"; \
-	echo "API docs URL: $$URL"
+	@$(PYTHON) -m tools.local_url --url "$(DEV_API_DOCS_URL)" --label "API docs URL" --mode system --launcher "$(LOCAL_URL_LAUNCHER_SCRIPT)"

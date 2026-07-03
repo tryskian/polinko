@@ -780,6 +780,9 @@ Last updated: 2026-07-02
   - external command prerequisite checks for `act`, Docker, k6, and Trivy
     helper targets live in `tools.require_command`, preserving direct
     operator diagnostics while keeping Make targets declarative
+  - local URL print and launch policy for `docs`, `docs-open`, `viz`, and
+    `viz-open` lives in `tools.local_url`, preserving the no-browser default
+    and explicit `LOCAL_BROWSER_LAUNCH=system` path
   - direct runtime shell wrappers share `tools/python_runtime.sh`, so explicit
     `PYTHON` wins only when it resolves to an executable command, repo `.venv`
     is preferred for direct invocation, and `python3` remains the final

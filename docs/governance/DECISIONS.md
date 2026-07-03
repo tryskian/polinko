@@ -6332,3 +6332,17 @@ or branch history instead.
 - Decision: Local command prerequisite diagnostics are helper-owned.
 - Why: Optional operator-tool targets should keep direct missing-command
   diagnostics while removing repeated shell prerequisite blocks from Make.
+
+## D-375: Move local URL launch policy into a helper
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `make`, `local_urls`, `operator_hygiene`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Add `tools.local_url`, route `docs`, `docs-open`,
+  `viz`, and `viz-open` through it, and update focused helper, Make contract,
+  and runtime risk-scan coverage.
+- Decision: Local URL print and launch policy is helper-owned.
+- Why: Local URL targets should keep their public commands while centralizing
+  browser-launch validation and preserving no-browser defaults.
