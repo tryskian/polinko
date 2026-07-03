@@ -283,7 +283,8 @@ Explicit companion checks:
   - verifies local `main` is synced with `origin/main`
 - `make git-prune-stale-refs`
   - runs during `make end` immediately before the final clean-main Git check
-  - validates explicit closeout remote config before Git work
+  - uses default closeout remote only when config is unset
+  - rejects explicit blank closeout remote config before Git work
   - prunes stale remote-tracking refs for the configured closeout remote after
     merged or deleted PR branches
   - leaves local branches in place

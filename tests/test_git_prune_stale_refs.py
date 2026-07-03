@@ -57,10 +57,11 @@ def _init_repo(root: Path, remote_name: str = "origin") -> Path:
 
 
 def _run_script(
-    cwd: Path, remote_name: str = "origin"
+    cwd: Path, remote_name: str | None = None
 ) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
-    env["END_GIT_REMOTE"] = remote_name
+    if remote_name is not None:
+        env["END_GIT_REMOTE"] = remote_name
 
     return subprocess.run(
         ["bash", "tools/git_prune_stale_refs.sh"],
@@ -114,17 +115,27 @@ class GitPruneStaleRefsTests(unittest.TestCase):
         self.assertIn("git-prune-stale-refs: FAIL", result.stderr)
         self.assertIn("remote missing is not configured", result.stderr)
 
-    def test_empty_remote_name_uses_default_remote(self) -> None:
+    def test_unset_remote_name_uses_default_remote(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             work = _init_repo(Path(tmp))
 
-            result = _run_script(work, remote_name="")
+            result = _run_script(work)
 
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn(
             "git-prune-stale-refs: PASS (checked stale refs for origin)",
             result.stdout,
         )
+
+    def test_fails_on_empty_remote_config(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            work = _init_repo(Path(tmp))
+
+            result = _run_script(work, remote_name="")
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("git-prune-stale-refs: FAIL", result.stderr)
+        self.assertIn("END_GIT_REMOTE must be a non-empty remote name", result.stderr)
 
     def test_fails_on_malformed_remote_config(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
