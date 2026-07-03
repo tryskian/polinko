@@ -118,6 +118,171 @@ class CheckShellScriptsTests(unittest.TestCase):
 
         self.assertEqual(failures, ["does not include root-helper script_dir resolver"])
 
+    def test_check_script_reports_legacy_backtick_command_substitution(self) -> None:
+        original_repo_root = check_shell_scripts.REPO_ROOT
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script = root / "tools" / "legacy-substitution.sh"
+            script.parent.mkdir()
+            script.write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        'script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"',
+                        'source "$script_dir/repo_root.sh"',
+                        "polinko_cd_repo_root",
+                        "repo=`pwd`",
+                        'printf "%s\\n" "$repo"',
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            check_shell_scripts.REPO_ROOT = root
+            try:
+                failures = check_shell_scripts.check_script(
+                    Path("tools/legacy-substitution.sh")
+                )
+            finally:
+                check_shell_scripts.REPO_ROOT = original_repo_root
+
+        self.assertIn(
+            "line 6 uses legacy backtick command substitution; use $(...)",
+            failures,
+        )
+
+    def test_check_script_allows_markdown_backticks_in_quoted_heredocs(self) -> None:
+        original_repo_root = check_shell_scripts.REPO_ROOT
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script = root / "tools" / "quoted-heredoc.sh"
+            script.parent.mkdir()
+            script.write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        'script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"',
+                        'source "$script_dir/repo_root.sh"',
+                        "polinko_cd_repo_root",
+                        "cat <<'MARKDOWN'",
+                        "Run `make start` before editing.",
+                        "MARKDOWN",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            check_shell_scripts.REPO_ROOT = root
+            try:
+                failures = check_shell_scripts.check_script(
+                    Path("tools/quoted-heredoc.sh")
+                )
+            finally:
+                check_shell_scripts.REPO_ROOT = original_repo_root
+
+        self.assertEqual(failures, [])
+
+    def test_check_script_reports_backticks_in_unquoted_heredocs(self) -> None:
+        original_repo_root = check_shell_scripts.REPO_ROOT
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            script = root / "tools" / "unquoted-heredoc.sh"
+            script.parent.mkdir()
+            script.write_text(
+                "\n".join(
+                    [
+                        "#!/usr/bin/env bash",
+                        "set -euo pipefail",
+                        'script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"',
+                        'source "$script_dir/repo_root.sh"',
+                        "polinko_cd_repo_root",
+                        "cat <<MARKDOWN",
+                        "Run `make start` before editing.",
+                        "MARKDOWN",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            check_shell_scripts.REPO_ROOT = root
+            try:
+                failures = check_shell_scripts.check_script(
+                    Path("tools/unquoted-heredoc.sh")
+                )
+            finally:
+                check_shell_scripts.REPO_ROOT = original_repo_root
+
+        self.assertIn(
+            "line 7 uses legacy backtick command substitution; use $(...)",
+            failures,
+        )
+
+    def test_check_makefile_reports_legacy_backtick_command_substitution(self) -> None:
+        original_repo_root = check_shell_scripts.REPO_ROOT
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            makefile = root / "makefiles" / "runtime.mk"
+            makefile.parent.mkdir()
+            makefile.write_text(
+                "\n".join(
+                    [
+                        ".PHONY: sample",
+                        "sample:",
+                        "\tvalue=`pwd`; printf '%s\\n' \"$$value\"",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            check_shell_scripts.REPO_ROOT = root
+            try:
+                failures = check_shell_scripts.check_makefile(
+                    Path("makefiles/runtime.mk")
+                )
+            finally:
+                check_shell_scripts.REPO_ROOT = original_repo_root
+
+        self.assertEqual(
+            failures,
+            ["line 3 uses legacy backtick command substitution; use $(...)"],
+        )
+
+    def test_check_makefile_allows_markdown_backticks_in_quoted_heredocs(
+        self,
+    ) -> None:
+        original_repo_root = check_shell_scripts.REPO_ROOT
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            makefile = root / "makefiles" / "docs.mk"
+            makefile.parent.mkdir()
+            makefile.write_text(
+                "\n".join(
+                    [
+                        ".PHONY: print-doc",
+                        "print-doc:",
+                        "\tcat <<'MARKDOWN'",
+                        "\tRun `make start` before editing.",
+                        "\tMARKDOWN",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            check_shell_scripts.REPO_ROOT = root
+            try:
+                failures = check_shell_scripts.check_makefile(Path("makefiles/docs.mk"))
+            finally:
+                check_shell_scripts.REPO_ROOT = original_repo_root
+
+        self.assertEqual(failures, [])
+
     def test_root_helper_exempt_executables_are_valid(self) -> None:
         for script in (
             Path("tools/open_local_url.sh"),

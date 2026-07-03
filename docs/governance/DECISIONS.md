@@ -6652,3 +6652,19 @@ or branch history instead.
 - Why: Blank local eval readiness overrides should fail through the same direct
   operator diagnostics as malformed values, instead of silently using default
   readiness bounds.
+
+## D-395: Guard shell command substitution style
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `shell`, `operator_hygiene`, `scripts`, `automation`
+- Human-led: The human lead clarified that repeated shell quoting friction
+  should be handled by automation rather than operator memory.
+- Engineer implementation: Extend `tools.check_shell_scripts` so
+  `make scripts-check` rejects legacy shell backtick command substitution in
+  tracked shell helpers and Make recipes, while allowing literal Markdown code
+  spans inside quoted heredoc output, then add focused regression coverage.
+- Decision: Tracked active shell surfaces use `$()` for command substitution.
+- Why: Operator command safety belongs in maintained checks, so repeated shell
+  quoting failures produce a local gate failure before they reach PR or
+  closeout surfaces.

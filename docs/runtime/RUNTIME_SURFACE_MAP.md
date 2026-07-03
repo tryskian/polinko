@@ -112,9 +112,11 @@ flowchart TD
   risk-scan` verifies
   that known high-risk runtime, script, CI, and local configuration surfaces
   remain visible in the tracked map and Make gates.
-  `make scripts-check` validates shell syntax plus root-helper coverage for
-  executable operator scripts; sourced helper libraries, `repo_root.sh`, and
-  the URL-only launcher are the explicit exceptions.
+  `make scripts-check` validates shell syntax, `$()` command substitution in
+  active shell surfaces, and root-helper coverage for executable operator
+  scripts; sourced helper libraries, `repo_root.sh`, and the URL-only launcher
+  are the explicit exceptions. Quoted heredoc output is the supported path for
+  literal Markdown code spans inside shell helpers and Make recipes.
   `tools/make_runtime.sh` is the shared Make-command helper for runtime shell
   wrappers that dispatch back into Make.
   `tools/shell_command_common.sh` is the shared shell helper for command

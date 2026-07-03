@@ -252,7 +252,9 @@ Explicit companion checks:
     commit so same-date stale handoffs fail closeout
 - `make scripts-check`
   - validates tracked shell helper shebangs, strict modes, sourced helper
-    contracts, and root-helper coverage for executable operator scripts
+    contracts, `$()` command substitution in active shell surfaces, and
+    root-helper coverage for executable operator scripts
+  - supports literal Markdown code spans through quoted heredoc output
   - keeps shared command helper surfaces registered for runtime shell wrappers
 - `make path-leak-check`
   - checks tracked text surfaces for local machine path leaks

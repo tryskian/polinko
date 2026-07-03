@@ -780,8 +780,10 @@ Last updated: 2026-07-03
     rerunning `make security-checks`
   - shell helper hygiene is explicit through `make scripts-check`, which
     verifies tracked `tools/*.sh` shebangs, strict modes, shell parser syntax,
-    sourced helper contracts, and root-helper coverage for executable operator
-    scripts
+    sourced helper contracts, `$()` command-substitution usage in active shell
+    surfaces, and root-helper coverage for executable operator scripts; quoted
+    heredoc bodies remain the supported path for printing literal Markdown code
+    spans
   - shell command availability and missing-command diagnostics live in
     `tools/shell_command_common.sh`; runtime shell helpers use this surface for
     Make, local browser opener, eval-case guard, and process lifecycle command
