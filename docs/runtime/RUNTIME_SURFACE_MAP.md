@@ -202,7 +202,9 @@ flowchart TD
   Server daemon PID and log defaults live under repo-scoped
   `SERVER_STATE_DIR`, and status reports repo context plus PID/log paths before
   liveness. Explicit `SERVER_REPO_SLUG` config is validated before repo-scoped
-  PID/log paths are derived.
+  PID/log paths are derived. Launch port, health URL, repo-slug, and readiness
+  config uses defaults only when unset; explicit blank config fails before
+  launch or state derivation.
   `server-daemon` adopts matching local `uvicorn server:app` processes on
   start, reports matching servers without PID files on status, and stops
   matching servers during closeout recovery. If startup readiness fails while

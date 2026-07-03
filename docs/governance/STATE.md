@@ -156,6 +156,9 @@ Last updated: 2026-07-03
     before liveness
   - `server-daemon` validates explicit repo-slug config before deriving
     repo-scoped PID/log paths
+  - `server-daemon` launch port, health URL, repo-slug, and readiness config
+    uses defaults only when unset; explicit blank config fails before launch or
+    state derivation
   - `server-daemon` adopts matching local `uvicorn server:app` processes on
     start, reports matching servers without PID files on status, and stops
     matching servers during closeout recovery

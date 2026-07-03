@@ -16,11 +16,11 @@ fi
 
 asgi_app=${ASGI_APP:-server:app}
 dev_host=${DEV_HOST:-127.0.0.1}
-dev_backend_port=${DEV_BACKEND_PORT:-8000}
+dev_backend_port=${DEV_BACKEND_PORT-8000}
 server_health_host=${SERVER_HEALTH_HOST:-127.0.0.1}
-server_health_url=${SERVER_HEALTH_URL:-http://$server_health_host:$dev_backend_port/health}
-server_start_attempts=${SERVER_START_ATTEMPTS:-100}
-server_start_sleep_seconds=${SERVER_START_SLEEP_SECONDS:-0.2}
+server_health_url=${SERVER_HEALTH_URL-http://$server_health_host:$dev_backend_port/health}
+server_start_attempts=${SERVER_START_ATTEMPTS-100}
+server_start_sleep_seconds=${SERVER_START_SLEEP_SECONDS-0.2}
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 # shellcheck source=tools/repo_root.sh
 source "$script_dir/repo_root.sh"
@@ -29,7 +29,7 @@ polinko_cd_repo_root
 . "$script_dir/python_runtime.sh"
 # shellcheck source=tools/process_lifecycle_common.sh
 . "$script_dir/process_lifecycle_common.sh"
-server_repo_slug=${SERVER_REPO_SLUG:-${POLINKO_REPO_ROOT##*/}}
+server_repo_slug=${SERVER_REPO_SLUG-${POLINKO_REPO_ROOT##*/}}
 polinko_require_non_empty_token \
 	SERVER_REPO_SLUG \
 	"$server_repo_slug" \
