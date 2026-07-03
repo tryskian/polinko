@@ -499,7 +499,8 @@ Use this doc for operator procedure.
 - `make scripts-check`
   - validates tracked shell helper shebangs, strict modes, sourced helper
     contracts, and root-helper coverage for executable operator scripts
-  - keeps runtime shell wrappers on the shared Make-command helper
+  - keeps runtime shell wrappers on shared command helper surfaces, including
+    `tools/make_runtime.sh` and `tools/shell_command_common.sh`
 - repo activity heartbeat
   - common lifecycle, validation, and runtime operator work Make targets mark
     repo activity before running their work
@@ -516,6 +517,8 @@ Use this doc for operator procedure.
 - `make risk-scan`
   - validates that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates
+  - verifies direct command probes route through approved shared shell helper
+    surfaces
 - `make runtime-tool-reference-check`
   - validates active references to tracked `tools/*.py` and `tools/*.sh`
     helpers

@@ -2,7 +2,7 @@
 
 # Runtime Surface Map
 
-Last updated: 2026-07-01
+Last updated: 2026-07-03
 
 This map shows the local runtime and operator surfaces that need to stay
 maintainable during the current refactor. It separates manual startup,
@@ -115,6 +115,10 @@ flowchart TD
   the URL-only launcher are the explicit exceptions.
   `tools/make_runtime.sh` is the shared Make-command helper for runtime shell
   wrappers that dispatch back into Make.
+  `tools/shell_command_common.sh` is the shared shell helper for command
+  availability and missing-command diagnostics; runtime shell wrappers route
+  command probes through this surface, while `make risk-scan` guards new direct
+  command probes outside the approved helper surfaces.
   `tools/python_runtime.sh` is the shared interpreter helper for Make's
   default `PYTHON` and direct operator wrappers: explicit `PYTHON` wins only
   when it resolves to an executable command, then repo `.venv`, then available

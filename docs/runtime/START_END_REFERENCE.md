@@ -134,6 +134,9 @@ Runner lifecycle rule:
   surfaces stay backend/manual-eval/API centred.
 - Make targets stay thin; helper scripts own PID files, log paths, stale state,
   idle state, and detached child-session launch behaviour
+- shared shell command checks live in `tools/shell_command_common.sh`, so
+  command availability and missing-command diagnostics stay consistent across
+  runtime shell wrappers
 - shared PID inspection requires `ps` before lifecycle scripts make managed
   PID-state decisions, so missing local process-inspection tooling fails as a
   prerequisite error instead of misleading liveness state
@@ -174,6 +177,8 @@ Active kernel validation:
   bounds are validated before runner startup work begins
 - Use `make risk-scan` when a kernel changes runtime maps, Make gates, CI,
   background runners, startup/closeout, or local configuration surfaces
+  - this includes direct command-probe routing through the shared shell command
+    helper surfaces
 - Use `make runtime-tool-reference-check` when a kernel changes runtime,
   Make, CI, or docs references to `tools/*.py` or `tools/*.sh` helpers
 - Use `make build-hygiene` for the PR-safe hygiene gate that mirrors the
@@ -235,7 +240,7 @@ Explicit companion checks:
 - `make scripts-check`
   - validates tracked shell helper shebangs, strict modes, sourced helper
     contracts, and root-helper coverage for executable operator scripts
-  - keeps the shared Make-command helper registered for runtime shell wrappers
+  - keeps shared command helper surfaces registered for runtime shell wrappers
 - `make path-leak-check`
   - checks tracked text surfaces for local machine path leaks
 - `make local-runtime-config-check`
@@ -245,6 +250,8 @@ Explicit companion checks:
 - `make risk-scan`
   - checks runtime map, Make, CI, runner, and local configuration coverage for
     known high-risk surfaces
+  - verifies direct command probes route through approved shared shell helper
+    surfaces
 - `make runtime-tool-reference-check`
   - checks runtime references to tracked `tools/*.py` and `tools/*.sh` helpers
 - `make operator-command-check`
