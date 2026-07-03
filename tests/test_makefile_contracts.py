@@ -2862,6 +2862,10 @@ class MakefileContractTests(unittest.TestCase):
         )
         self.assertIn("polinko_pid_is_running", server_daemon_script_text)
         self.assertIn(
+            "polinko_require_non_empty_token",
+            server_daemon_script_text,
+        )
+        self.assertIn(
             'polinko_require_process_inspection "server-daemon PID inspection"',
             server_daemon_script_text,
         )

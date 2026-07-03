@@ -6521,3 +6521,20 @@ or branch history instead.
   validated before runtime metadata writes.
 - Why: Blank identity overrides should fail with clear config diagnostics
   instead of silently aliasing wake-lock activity into fallback repo metadata.
+
+## D-387: Validate server-daemon repo identity config
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `server-daemon`, `runtime`, `operator_hygiene`, `config`
+- Human-led: The human lead asked for repo-managed runtime helpers to preserve
+  one repo-scoped identity per runner.
+- Engineer implementation: Route `SERVER_REPO_SLUG` through the shared
+  `polinko_require_non_empty_token` helper before deriving `SERVER_STATE_DIR`
+  in `tools/run_server_daemon.sh`, then add focused daemon and Make contract
+  coverage.
+- Decision: Explicit server-daemon repo identity config is validated before
+  repo-scoped PID/log path derivation.
+- Why: Blank repo identity overrides should fail with a clear operator
+  diagnostic instead of silently aliasing server runtime state into a fallback
+  namespace.
