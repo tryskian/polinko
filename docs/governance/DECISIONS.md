@@ -6318,3 +6318,17 @@ or branch history instead.
 - Decision: Simple required Make-variable validation is helper-owned.
 - Why: Developer test entrypoints should keep Make declarative, preserve their
   public commands, and validate required input before recording repo activity.
+
+## D-374: Centralize local command prerequisite checks
+
+- Date: `2026-07-02`
+- Category: `runtime_engineering`
+- Tags: `make`, `ops`, `act`, `operator_hygiene`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Add `tools.require_command`, route local `act`,
+  Docker, k6, and Trivy Make prerequisite checks through it, and add focused
+  helper and Make contract tests.
+- Decision: Local command prerequisite diagnostics are helper-owned.
+- Why: Optional operator-tool targets should keep direct missing-command
+  diagnostics while removing repeated shell prerequisite blocks from Make.

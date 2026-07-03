@@ -1303,14 +1303,25 @@ class MakefileContractTests(unittest.TestCase):
         self.assertIn(
             "@$(call repo_activity,make docker-run,docker-run)", contract_text
         )
-        self.assertIn("k6 helper: missing required command: $(K6)", contract_text)
-        self.assertIn("trivy helper: missing required command: $(TRIVY)", contract_text)
         self.assertIn(
-            "trivy helper: missing required command: $(DOCKER)", contract_text
+            '$(PYTHON) -m tools.require_command --command "$(K6)" --label "k6 helper"',
+            contract_text,
         )
         self.assertIn(
-            "docker helper: missing required command: $(DOCKER)", contract_text
+            '$(PYTHON) -m tools.require_command --command "$(TRIVY)" --label "trivy helper"',
+            contract_text,
         )
+        self.assertIn(
+            '$(PYTHON) -m tools.require_command --command "$(DOCKER)" --label "trivy helper"',
+            contract_text,
+        )
+        self.assertIn(
+            '$(PYTHON) -m tools.require_command --command "$(DOCKER)" --label "docker helper"',
+            contract_text,
+        )
+        self.assertNotIn('command -v "$(DOCKER)"', contract_text)
+        self.assertNotIn('command -v "$(K6)"', contract_text)
+        self.assertNotIn('command -v "$(TRIVY)"', contract_text)
         self.assertIn("$(K6) run tests/perf/chat_smoke.js", contract_text)
         self.assertIn('$(TRIVY) fs --severity "$(TRIVY_SEVERITY)"', contract_text)
         self.assertIn('$(TRIVY) image --severity "$(TRIVY_SEVERITY)"', contract_text)
@@ -1976,8 +1987,11 @@ class MakefileContractTests(unittest.TestCase):
 
         self.assertRegex(text, r"(?m)^act-list:$")
         self.assertRegex(text, r"(?m)^act-ci:$")
-        self.assertIn('command -v "$(ACT)"', text)
-        self.assertIn("act helper: missing required command: $(ACT)", text)
+        self.assertIn(
+            '$(PYTHON) -m tools.require_command --command "$(ACT)" --label "act helper"',
+            text,
+        )
+        self.assertNotIn('command -v "$(ACT)"', text)
         self.assertIn("$(ACT) -l", text)
         self.assertIn("$(ACT) -W .github/workflows/ci.yml", text)
 
