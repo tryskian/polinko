@@ -3232,23 +3232,32 @@ class MakefileContractTests(unittest.TestCase):
                 )
 
                 self.assertIn(expected_label, result.stdout)
+                self.assertIn("tools.local_url", result.stdout)
                 self.assertNotIn("LOCAL_URL_LAUNCHER_SCRIPT", result.stdout)
                 self.assertNotIn('open "$URL"', result.stdout)
                 self.assertNotIn("xdg-open", result.stdout)
 
     def test_local_url_targets_require_explicit_browser_launch(self) -> None:
         cases = (
-            (["docs-open"], "docs-open", 'bash "./tools/open_local_url.sh" "$URL"'),
-            (["viz-open"], "viz-open", 'bash "./tools/open_local_url.sh" "$URL"'),
+            (
+                ["docs-open"],
+                "docs-open",
+                '--mode system --launcher "./tools/open_local_url.sh"',
+            ),
+            (
+                ["viz-open"],
+                "viz-open",
+                '--mode system --launcher "./tools/open_local_url.sh"',
+            ),
             (
                 ["docs", "LOCAL_BROWSER_LAUNCH=system"],
                 "docs with launch override",
-                'bash "./tools/open_local_url.sh" "$URL"',
+                '--mode "system" --launcher "./tools/open_local_url.sh"',
             ),
             (
                 ["viz", "LOCAL_BROWSER_LAUNCH=system"],
                 "viz with launch override",
-                'bash "./tools/open_local_url.sh" "$URL"',
+                '--mode "system" --launcher "./tools/open_local_url.sh"',
             ),
         )
         for args, label, expected_script_call in cases:
@@ -3261,6 +3270,7 @@ class MakefileContractTests(unittest.TestCase):
                     text=True,
                 )
 
+                self.assertIn("tools.local_url", result.stdout)
                 self.assertIn(expected_script_call, result.stdout)
                 self.assertNotIn("xdg-open", result.stdout)
 

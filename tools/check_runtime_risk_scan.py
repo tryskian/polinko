@@ -130,8 +130,9 @@ REQUIRED_MAKE_RUNTIME_TOKENS = (
 REQUIRED_LOCAL_URL_TOKENS = (
     "LOCAL_BROWSER_LAUNCH ?= none",
     "LOCAL_URL_LAUNCHER_SCRIPT ?= ./tools/open_local_url.sh",
-    'case "$(LOCAL_BROWSER_LAUNCH)" in none|system)',
-    'bash "$(LOCAL_URL_LAUNCHER_SCRIPT)" "$$URL"',
+    "$(PYTHON) -m tools.local_url",
+    '--mode "$(LOCAL_BROWSER_LAUNCH)"',
+    '--launcher "$(LOCAL_URL_LAUNCHER_SCRIPT)"',
 )
 
 REQUIRED_GITHUB_HEALTH_TOKENS = (
