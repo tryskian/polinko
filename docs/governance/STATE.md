@@ -115,8 +115,10 @@ Last updated: 2026-07-03
   - local eval gates require `curl` before HTTP readiness probing and expose
     `LOCAL_EVAL_GATE_START_ATTEMPTS` /
     `LOCAL_EVAL_GATE_START_SLEEP_SECONDS` for their bounded readiness loop,
-    avoiding an extra `seq` dependency; lifecycle readiness bounds are
-    validated before runner startup work begins
+    avoiding an extra `seq` dependency
+  - local eval gate readiness config uses defaults only when unset; explicit
+    blank readiness config fails before runner startup work begins
+  - lifecycle readiness bounds are validated before runner startup work begins
   - local eval gates validate smoke and gate port overrides inside the suite
     that uses them, so unrelated suite config drift does not block startup
     smoke checks
