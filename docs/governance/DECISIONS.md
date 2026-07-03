@@ -6442,3 +6442,19 @@ or branch history instead.
   process lifecycle helper.
 - Why: `server-daemon` should preserve no-`lsof` fallback behaviour while
   keeping command probing in one audited shell helper.
+
+## D-382: Move shared shell command checks into a generic helper
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `shell`, `operator_hygiene`, `runtime`, `command_prerequisites`
+- Human-led: The human lead asked to continue normal script/runtime
+  maintenance with helper surfaces kept precise.
+- Engineer implementation: Add `tools/shell_command_common.sh`, route Make
+  runtime, local URL launch, eval-case guard, and process lifecycle command
+  checks through it, and add focused shell helper plus contract coverage.
+- Decision: Generic shell command availability and missing-command diagnostics
+  live in `tools/shell_command_common.sh`.
+- Why: Command probing is a shared shell concern; keeping it in one helper
+  makes shell-specific false results and diagnostics consistent across
+  operator entrypoints.

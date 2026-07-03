@@ -2,7 +2,7 @@
 
 # Project State
 
-Last updated: 2026-07-02
+Last updated: 2026-07-03
 
 ## Current Truth
 
@@ -765,6 +765,10 @@ Last updated: 2026-07-02
     verifies tracked `tools/*.sh` shebangs, strict modes, shell parser syntax,
     sourced helper contracts, and root-helper coverage for executable operator
     scripts
+  - shell command availability and missing-command diagnostics live in
+    `tools/shell_command_common.sh`; runtime shell helpers use this surface for
+    Make, local browser opener, eval-case guard, and process lifecycle command
+    checks
   - runtime risk-surface coverage is explicit through `make risk-scan`, which
     verifies that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates,

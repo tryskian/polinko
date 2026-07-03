@@ -201,6 +201,7 @@ LOCAL_PRIVACY_GUARD_SCRIPT = REPO_ROOT / "tools" / "local_privacy_guard.sh"
 END_GIT_CHECK_SCRIPT = REPO_ROOT / "tools" / "check_end_git_clean.sh"
 SESSION_STATUS_SCRIPT = REPO_ROOT / "tools" / "session_status.sh"
 MAKE_RUNTIME_SCRIPT = REPO_ROOT / "tools" / "make_runtime.sh"
+SHELL_COMMAND_COMMON_SCRIPT = REPO_ROOT / "tools" / "shell_command_common.sh"
 OPEN_VENV_SHELL_SCRIPT = REPO_ROOT / "tools" / "open_venv_shell.sh"
 
 
@@ -2312,7 +2313,9 @@ class MakefileContractTests(unittest.TestCase):
         make_runtime_script = MAKE_RUNTIME_SCRIPT.read_text(encoding="utf-8")
         self.assertIn("polinko_make_bin()", make_runtime_script)
         self.assertIn("polinko_require_make_command()", make_runtime_script)
-        self.assertIn("command -v", make_runtime_script)
+        self.assertIn("polinko_command_available", make_runtime_script)
+        self.assertIn("shell_command_common.sh", make_runtime_script)
+        self.assertNotIn("command -v", make_runtime_script)
         self.assertIn('source "$script_dir/make_runtime.sh"', status_script)
         self.assertIn(
             'MAKE_BIN=$(polinko_require_make_command "session-status")',
@@ -2599,6 +2602,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertNotIn("import json,pathlib", text)
         self.assertNotIn("CASE_COUNT=", text)
         self.assertIn("tools.count_eval_cases", guard_text)
+        self.assertIn("shell_command_common.sh", guard_text)
+        self.assertIn(
+            "polinko_command_available polinko_default_python_bin", guard_text
+        )
+        self.assertNotIn("command -v polinko_default_python_bin", guard_text)
         self.assertIn("EVAL_CASE_GUARD_SCRIPT", common_text)
         self.assertIn("eval_case_guard.sh", common_text)
         self.assertIn("ocr_workflow_resolve_export_root", common_text)
@@ -3326,6 +3334,11 @@ class MakefileContractTests(unittest.TestCase):
         self.assertTrue(os.access(LOCAL_URL_LAUNCHER_SCRIPT, os.X_OK))
         self.assertIn("is_local_url()", script_text)
         self.assertIn("Refusing to launch non-local URL", script_text)
+        self.assertIn("shell_command_common.sh", script_text)
+        self.assertIn("polinko_command_available open", script_text)
+        self.assertIn("polinko_command_available xdg-open", script_text)
+        self.assertNotIn("command -v open", script_text)
+        self.assertNotIn("command -v xdg-open", script_text)
         self.assertIn('open "$url"', script_text)
         self.assertIn('xdg-open "$url"', script_text)
         self.assertIn("Open this URL in your browser: $url", script_text)
