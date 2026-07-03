@@ -138,6 +138,34 @@ class RunOcrWorkflowTests(unittest.TestCase):
             result.stdout,
         )
 
+    def test_reports_missing_make_command(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            missing_make = Path(tmp) / "missing-make"
+            export_root = Path(tmp) / "export"
+            export_root.mkdir()
+            env = os.environ.copy()
+            env.update(
+                {
+                    "CGPT_EXPORT_ROOT": str(export_root),
+                    "CGPT_EXPORT_ROOT_DEFAULT": "",
+                    "MAKE": str(missing_make),
+                }
+            )
+
+            result = subprocess.run(
+                ["bash", str(SCRIPT.relative_to(REPO_ROOT)), "ocr-data"],
+                cwd=REPO_ROOT,
+                env=env,
+                capture_output=True,
+                text=True,
+            )
+
+            self.assertEqual(result.returncode, 2)
+            self.assertIn(
+                f"ocr-workflow: missing make command: {missing_make}",
+                result.stderr,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

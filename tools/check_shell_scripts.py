@@ -10,6 +10,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 SHELL_LIBRARIES = {
     Path("tools/eval_case_guard.sh"): "eval_case_guard_or_exit",
+    Path("tools/make_runtime.sh"): "polinko_make_bin",
     Path("tools/ocr_workflow_common.sh"): "ocr_workflow_use_eval_case_guard",
     Path("tools/process_lifecycle_common.sh"): "polinko_pid_is_running",
     Path("tools/python_runtime.sh"): "polinko_default_python_bin",

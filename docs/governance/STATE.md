@@ -789,6 +789,9 @@ Last updated: 2026-07-02
   - dependency lock workflows dispatch through `tools.run_dependency_lock`,
     keeping pip-tools bootstrap, compile, and lockfile diff-check behaviour in
     a tested Python helper
+  - runtime shell wrappers that dispatch back into Make share
+    `tools/make_runtime.sh`, which resolves the configured `MAKE` command and
+    reports missing Make prerequisites with caller-specific diagnostics
   - direct runtime shell wrappers share `tools/python_runtime.sh`, so explicit
     `PYTHON` wins only when it resolves to an executable command, repo `.venv`
     is preferred for direct invocation, and `python3` remains the final

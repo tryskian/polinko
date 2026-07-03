@@ -235,6 +235,7 @@ Explicit companion checks:
 - `make scripts-check`
   - validates tracked shell helper shebangs, strict modes, sourced helper
     contracts, and root-helper coverage for executable operator scripts
+  - keeps the shared Make-command helper registered for runtime shell wrappers
 - `make path-leak-check`
   - checks tracked text surfaces for local machine path leaks
 - `make local-runtime-config-check`
