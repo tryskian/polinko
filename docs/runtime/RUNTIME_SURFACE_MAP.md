@@ -221,9 +221,11 @@ flowchart TD
   stops the repo-managed PID during closeout. It validates
   `EVAL_SIDECAR_TARGET` and `EVAL_SIDECAR_MIN_SECONDS` before detached launch,
   using the default duration only when duration config is unset and failing on
-  explicit blank duration config before child-process argparse. It trusts PID
-  files only when the live PID matches the `tools.eval_sidecar run` process
-  shape; unrelated live PIDs are cleaned from the PID file without
+  explicit blank duration config before child-process argparse. Readiness
+  attempt and sleep config uses defaults only when unset, and explicit blank
+  readiness config fails before launch. It trusts PID files only when the live
+  PID matches the `tools.eval_sidecar run` process shape; unrelated live PIDs
+  are cleaned from the PID file without
   being stopped. If startup readiness fails while the matching sidecar remains
   active, or if stop signals a matching sidecar without current-run context and
   the process remains active, the PID file stays in place and the action exits

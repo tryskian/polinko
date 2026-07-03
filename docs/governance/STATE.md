@@ -182,6 +182,8 @@ Last updated: 2026-07-03
     `EVAL_SIDECAR_MIN_SECONDS` before detached launch; unset duration config
     uses the default, while explicit blank duration config fails before
     child-process argparse
+  - `eval-sidecar` readiness attempt and sleep config uses defaults only when
+    unset; explicit blank readiness config fails before launch
   - `eval-sidecar` trusts managed PID files only when the live PID matches the
     `tools.eval_sidecar run` process shape; stale PID files that point to
     unrelated live processes are cleaned without stopping the unrelated process

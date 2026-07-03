@@ -6603,3 +6603,19 @@ or branch history instead.
 - Why: Blank duration overrides should fail with the same direct operator
   diagnostic as invalid numeric values, instead of silently launching the
   sidecar for the default duration.
+
+## D-392: Preserve explicit blank eval-sidecar readiness config as invalid
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `eval-sidecar`, `runtime`, `readiness`, `operator_hygiene`, `config`
+- Human-led: The human lead asked for hidden runner scripts to stay precise and
+  for small config gaps to be resolved as they are found.
+- Engineer implementation: Update `tools/run_eval_sidecar_start.sh` so
+  `EVAL_SIDECAR_START_ATTEMPTS` and `EVAL_SIDECAR_START_SLEEP_SECONDS` default
+  only when unset, then add focused blank-config regressions.
+- Decision: Eval-sidecar readiness config treats unset config as defaulted,
+  while explicit blank config fails before launch.
+- Why: Blank readiness overrides should fail through the same direct operator
+  diagnostics as malformed values, instead of silently using default readiness
+  bounds.

@@ -126,6 +126,8 @@ Runner lifecycle rule:
   - `EVAL_SIDECAR_TARGET` and `EVAL_SIDECAR_MIN_SECONDS` are validated before
     detached launch; unset duration config uses the default, while explicit
     blank duration config fails before PID/log state is written
+  - readiness attempt and sleep config uses defaults only when unset; explicit
+    blank readiness config fails before launch
   - live PID files are treated as managed only when the process matches
     `tools.eval_sidecar run`; unrelated live PIDs are cleaned from the PID file
     without being stopped
