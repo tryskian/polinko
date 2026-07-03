@@ -27,6 +27,7 @@ REQUIRED_FILES = (
     Path("tools/end_of_day_routine.sh"),
     Path("tools/repo_root.sh"),
     Path("tools/python_runtime.sh"),
+    Path("tools/shell_command_common.sh"),
     Path("tools/check_shell_scripts.py"),
     Path("tools/path_leak_check.py"),
     Path("tools/check_local_runtime_config.py"),
@@ -99,6 +100,18 @@ CURRENT_OPERATOR_DOC_PATHS = (
 NON_CURRENT_TOOL_TOKENS = {
     Path("tools/build_handwriting_benchmark_cases.py"): ("--handwriting-cases",),
 }
+DIRECT_COMMAND_PROBE_ALLOWLIST = {
+    Path("tools/python_runtime.sh"),
+    Path("tools/shell_command_common.sh"),
+}
+DIRECT_COMMAND_PROBE_GLOBS = (
+    "Makefile",
+    "makefiles/**/*.mk",
+    "tools/*.sh",
+)
+DIRECT_COMMAND_PROBE_PATTERN = re.compile(
+    r"(?P<probe>\bcommand\s+-v\b|\btype\s+-P\b|\bwhich\s+)"
+)
 REQUIRED_PRECOMMIT_EXCLUDE = r"^docs/peanut/"
 REQUIRED_PRECOMMIT_LOCAL_HOOKS = {
     "polinko-ruff-check": "make ruff-check",
@@ -485,6 +498,31 @@ def check_non_current_tool_tokens(root: Path) -> list[str]:
     return failures
 
 
+def _direct_command_probe_paths(root: Path) -> tuple[Path, ...]:
+    paths: set[Path] = set()
+    for pattern in DIRECT_COMMAND_PROBE_GLOBS:
+        paths.update(path for path in root.glob(pattern) if path.is_file())
+    return tuple(sorted(paths))
+
+
+def check_direct_command_probes(root: Path) -> list[str]:
+    failures: list[str] = []
+    for absolute in _direct_command_probe_paths(root):
+        relative = absolute.relative_to(root)
+        if relative in DIRECT_COMMAND_PROBE_ALLOWLIST:
+            continue
+        text = absolute.read_text(encoding="utf-8")
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            for match in DIRECT_COMMAND_PROBE_PATTERN.finditer(line):
+                probe = " ".join(match.group("probe").split())
+                failures.append(
+                    f"{relative}:{line_number}: route command availability probe "
+                    f"{probe!r} through tools/shell_command_common.sh or "
+                    "tools/python_runtime.sh"
+                )
+    return failures
+
+
 def _direct_requirement_pins(root: Path) -> tuple[str, ...]:
     pins: list[str] = []
     requirements_input = root / "requirements.in"
@@ -539,6 +577,7 @@ def scan(root: Path = ROOT) -> list[str]:
     failures.extend(check_current_lifecycle_doc_names(root))
     failures.extend(check_precommit_config(root))
     failures.extend(check_non_current_tool_tokens(root))
+    failures.extend(check_direct_command_probes(root))
     failures.extend(check_dependency_test_contracts(root))
     return failures
 

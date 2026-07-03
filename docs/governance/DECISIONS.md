@@ -6458,3 +6458,18 @@ or branch history instead.
 - Why: Command probing is a shared shell concern; keeping it in one helper
   makes shell-specific false results and diagnostics consistent across
   operator entrypoints.
+
+## D-383: Guard direct command probes in runtime risk scan
+
+- Date: `2026-07-03`
+- Category: `runtime_engineering`
+- Tags: `risk_scan`, `shell`, `operator_hygiene`, `command_prerequisites`
+- Human-led: The human lead asked that recurring manual cleanup discoveries be
+  converted into automated maintenance checks.
+- Engineer implementation: Teach `tools/check_runtime_risk_scan.py` to scan
+  Make and shell runtime surfaces for direct command availability probes, allow
+  only `tools/shell_command_common.sh` and `tools/python_runtime.sh`, and add
+  focused regression coverage.
+- Decision: Direct command availability probes are guarded by `make risk-scan`.
+- Why: New shell wrappers should route command probing through the audited
+  helper surfaces before the pattern reaches PR review or session closeout.

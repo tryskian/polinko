@@ -772,8 +772,9 @@ Last updated: 2026-07-03
   - runtime risk-surface coverage is explicit through `make risk-scan`, which
     verifies that known high-risk runtime, script, CI, runner, and local
     configuration surfaces remain visible in tracked docs and Make gates,
-    including the lightweight pre-commit hook contract and local URL
-    target/config/launcher wiring
+    including the lightweight pre-commit hook contract, local URL
+    target/config/launcher wiring, and direct command-probe routing through
+    shared shell helpers
   - runtime tool reference coverage is explicit through
     `make runtime-tool-reference-check`, which verifies that active Make, CI,
     runtime, docs, and tooling references point to existing `tools/*.py` and
